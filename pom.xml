@@ -35,10 +35,10 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
-		<bw-core.skip.tests>true</bw-core.skip.tests>
-		<skipTests>${bw-core.skip.tests}</skipTests>
-		<bw-core.test.includes />
-		<bw-core.test.excludes>**/*Test.java</bw-core.test.excludes>
+		<core.skip.tests>true</core.skip.tests>
+		<skipTests>${core.skip.tests}</skipTests>
+		<core.test.includes />
+		<core.test.excludes>**/*Test.java</core.test.excludes>
 	</properties>
 
 	<dependencies>
@@ -110,10 +110,10 @@
 				<version>2.9</version>
 				<configuration>
 					<excludes>
-						<exclude>${bw-core.test.excludes}</exclude>
+						<exclude>${core.test.excludes}</exclude>
 					</excludes>
 					<includes>
-						<include>${bw-core.test.includes}</include>
+						<include>${core.test.includes}</include>
 					</includes>
 				</configuration>
 			</plugin>
