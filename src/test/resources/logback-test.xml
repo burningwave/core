@@ -31,7 +31,7 @@
 	 -->
 	<appender name="ERRORS-FILE"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${LOGS_HOME}/bw-core-error.log</file>
+		<file>${LOGS_HOME}/core-error.log</file>
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 			<Pattern>
 				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
@@ -43,7 +43,7 @@
 	        <onMismatch>DENY</onMismatch>
 	    </filter>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>${LOGS_HOME}/archived/bw-core-error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+			<fileNamePattern>${LOGS_HOME}/archived/core-error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
 			<timeBasedFileNamingAndTriggeringPolicy
 				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
 				<maxFileSize>25MB</maxFileSize>
