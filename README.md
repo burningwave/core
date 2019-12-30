@@ -3,7 +3,7 @@ It’s possible to search classes by every criteria that your immagination can m
 
 **This library is useful also for creating classes during runtime, facilitate the use of reflection and much more...**
 
-Below you will find how to include BurningWave core in you're projects and a simple code example and in the [wiki](https://github.com/burningwave/bw-core/wiki) you will find more detailed examples.
+Below you will find how to include BurningWave core in you're projects and a simple code example and in the [wiki](https://github.com/burningwave/core/wiki) you will find more detailed examples.
 
 ## Get started
 
@@ -12,64 +12,64 @@ Below you will find how to include BurningWave core in you're projects and a sim
 * **Apache Maven**:
 ```xml
 <dependency>
-    <groupId>com.github.burningwave</groupId>
-    <artifactId>bw-core</artifactId>
-    <version>1.7.5</version>
+    <groupId>org.burningwave</groupId>
+    <artifactId>core</artifactId>
+    <version>2.0.0</version>
 </dependency>
 ```
 
 * **Gradle Groovy**:
 ```
-implementation 'com.github.burningwave:bw-core:1.7.5'
+implementation 'org.burningwave:core:2.0.0'
 ```
 
 * **Gradle Kotlin**:
 ```
-implementation("com.github.burningwave:bw-core:1.7.5")
+implementation("org.burningwave:core:2.0.0")
 ```
 
 * **Scala**:
 ```
-libraryDependencies += "com.github.burningwave" % "bw-core" % "1.7.5"
+libraryDependencies += "org.burningwave" % "core" % "2.0.0"
 ```
 
 * **Apache Ivy**:
 ```
-<dependency org="com.github.burningwave" name="bw-core" rev="1.7.5" />
+<dependency org="org.burningwave" name="core" rev="2.0.0" />
 ```
 
 * **Groovy Grape**:
 ```
 @Grapes(
-  @Grab(group='com.github.burningwave', module='bw-core', version='1.7.5')
+  @Grab(group='org.burningwave', module='core', version='2.0.0')
 )
 ```
 
 * **Leiningen**:
 ```
-[com.github.burningwave/bw-core "1.7.5"]
+[org.burningwave/core "2.0.0"]
 ```
 
 * **Apache Buildr**:
 ```
-'com.github.burningwave:bw-core:jar:1.7.5'
+'org.burningwave:core:jar:2.0.0'
 ```
 
 * **PURL**:
 ```
-pkg:maven/com.github.burningwave/bw-core@1.7.5
+pkg:maven/org.burningwave/core@2.0.0
 ```
 
 ## ... And now the code: let's retrieve all classes of the runtime classpath!
 ```java
 import java.util.Collection;
 
-import com.github.burningwave.core.assembler.ComponentContainer;
-import com.github.burningwave.core.classes.hunter.ClassHunter;
-import com.github.burningwave.core.classes.hunter.ClassHunter.SearchResult;
-import com.github.burningwave.core.classes.hunter.SearchCriteria;
-import com.github.burningwave.core.classes.hunter.SearchForPathCriteria;
-import com.github.burningwave.core.io.PathHelper;
+import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.classes.hunter.ClassHunter;
+import org.burningwave.core.classes.hunter.ClassHunter.SearchResult;
+import org.burningwave.core.classes.hunter.SearchCriteria;
+import org.burningwave.core.classes.hunter.SearchForPathCriteria;
+import org.burningwave.core.io.PathHelper;
 
 public class Finder {
 

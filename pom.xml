@@ -210,8 +210,8 @@
 		</repository>
 	</distributionManagement>
 	<scm>
-		<connection>scm:git:git://github.com/burningwave/bw-core.git</connection>
-		<developerConnection>scm:git:git@github.com/burningwave/bw-core.git</developerConnection>
+		<connection>scm:git:git://github.com/burningwave/core.git</connection>
+		<developerConnection>scm:git:git@github.com/burningwave/core.git</developerConnection>
 		<url>https://github.com/burningwave/bw-core</url>
 		<tag>HEAD</tag>
 	</scm>
