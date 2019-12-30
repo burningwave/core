@@ -1,0 +1,30 @@
+package ${packageName};
+
+
+import java.lang.invoke.MethodHandles;
+import java.util.Objects;
+${imports}
+
+@FunctionalInterface
+public interface ${className}<${generics_01}> extends Virtual {
+
+    boolean test(${genericParams_01});
+
+    default ${className}<${generics_01}> and(${className}<${generics_02}> other) {
+        Objects.requireNonNull(other);
+        return (${genericParams_01}) -> test(${params_01}) && other.test(${params_01});
+    }
+
+    default ${className}<${generics_01}> negate() {
+        return (${genericParams_01}) -> !test(${params_01});
+    }
+
+    default ${className}<${generics_01}> or(${className}<${generics_02}> other) {
+        Objects.requireNonNull(other);
+        return (${genericParams_01}) -> test(${params_01}) || other.test(${params_01});
+    }
+    
+    static MethodHandles.Lookup ${callerRetrieverMethodName}() {
+    	return MethodHandles.lookup();
+    }
+}

@@ -1,0 +1,307 @@
+package org.burningwave.core;
+
+import java.lang.reflect.Constructor;
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
+import org.burningwave.Throwables;
+import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.function.TriPredicate;
+
+@SuppressWarnings("unchecked")
+public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> implements Component {
+	protected BiPredicate<T, E> predicate;
+	protected Function<BiPredicate<T, E>, BiPredicate<T, E>> logicalOperator;
+	
+	@SuppressWarnings("resource")
+	public final static <E, C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> Criteria<E, C, T> of(final BiPredicate<T, E> predicate) {
+		return new Criteria<E, C, T>().allThat(predicate);
+	}
+	
+	public C and(){
+		logicalOperator = (predicate) -> this.predicate.and(predicate);
+		return (C)this;
+	}	
+	
+	public C or(){
+		logicalOperator = (predicate) -> this.predicate.or(predicate);
+		return (C)this;
+	}
+	
+	public C and(C criteria) {
+		return logicOperation((C)this.createCopy(), criteria.createCopy(), (predicate) -> predicate::and, newInstance());
+	}
+	
+	public C or(C criteria) {
+		return logicOperation((C)this.createCopy(), criteria.createCopy(), (predicate) -> predicate::or, newInstance());
+	}
+	
+	protected C logicOperation(C leftCriteria, C rightCriteria, 
+		Function<BiPredicate<T, E>, Function<BiPredicate<? super T, ? super E>, BiPredicate<T, E>>> binaryOperator, 
+		C targetCriteria
+	) {
+		targetCriteria.predicate = 
+			leftCriteria.predicate != null?
+				(rightCriteria.predicate != null?
+					binaryOperator.apply(leftCriteria.predicate).apply(rightCriteria.predicate) :
+					leftCriteria.predicate):
+				rightCriteria.predicate;
+		return targetCriteria;
+	}
+	
+	public C allThat(final Predicate<E> predicate) {
+		return (C)allThat((context, entity) -> predicate.test(entity)) ;
+	}
+	
+	
+	public C allThat(final BiPredicate<T, E> predicate) {
+		this.predicate = concat(
+			this.predicate,
+			(context, entity) -> predicate.test(context, entity)
+		);
+		return (C)this;
+	}
+	
+	
+	protected C newInstance() {
+		return ThrowingSupplier.get(() -> {
+			Constructor<?> constructor = getClass().getDeclaredConstructor();
+			constructor.setAccessible(true);
+			return (C)constructor.newInstance();
+		});
+	}
+	
+	BiPredicate<T, E> getPredicateWrapper(
+		BiPredicate<T, E> function
+	) {
+		return Optional.ofNullable(function).map(innPredWrap ->
+			(BiPredicate<T, E>) (criteria, entity) -> innPredWrap.test(criteria, entity)
+		).orElse(null);
+	}
+	
+	protected <V> BiPredicate<T, E> getPredicateWrapper(
+		final BiFunction<T, E, V[]> valueSupplier,
+		final TriPredicate<T, V[], Integer> predicate
+	) {
+		return getPredicateWrapper((criteria, entity) -> {
+			V[] array = valueSupplier.apply(criteria, entity);
+			boolean result = false;
+			for (int i = 0; i < array.length; i++) {
+				if (result = predicate.test(criteria, array, i)) {
+					break;
+				}				
+			}
+			//logDebug("test for {} return {}", entity, result);
+			return result;
+		});			
+	}
+	
+	protected BiPredicate<T, E> concat(
+		BiPredicate<T, E> mainPredicate,
+		BiPredicate<T, E> otherPredicate
+	) {
+		BiPredicate<T, E> predicate = concat(mainPredicate, this.logicalOperator, otherPredicate);
+		this.logicalOperator = null;
+		return predicate;
+	}
+	
+	@SuppressWarnings("hiding")
+	protected <E, C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> BiPredicate<T, E> concat(
+		BiPredicate<T, E> mainPredicate,
+		Function<BiPredicate<T, E>, BiPredicate<T, E>> logicalOperator,
+		BiPredicate<T, E> otherPredicate
+	) {
+		return Optional.ofNullable(otherPredicate).map(othPred ->
+			Optional.ofNullable(mainPredicate).map(mainPred ->
+				consumeLogicalOperator(othPred, logicalOperator)			
+			).orElse(othPred)
+		).orElse(mainPredicate);
+	}
+	
+	
+	@SuppressWarnings("hiding")
+	<E, C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> BiPredicate<T,E> consumeLogicalOperator(
+		BiPredicate<T, E> input,
+		Function<BiPredicate<T, E>, 
+		BiPredicate<T, E>> logicalOperator
+	) {
+		return Optional.ofNullable(logicalOperator).map(logOp -> {
+			return logicalOperator.apply(input);
+		}).orElseThrow(() -> 
+			Throwables.toRuntimeException(
+				"A call to and/or method is necessary before calling " +
+				Thread.currentThread().getStackTrace()[9].getMethodName() + " at " +
+				Thread.currentThread().getStackTrace()[10]
+			)
+		);
+	}
+	
+	public boolean hasNoPredicate() {
+		return this.predicate == null;
+	}
+	
+	public T testAndReturnFalseIfNullOrTrueByDefault(E entity) {
+		T context = createTestContext();
+		testAndReturnFalseIfNullOrTrueByDefault(context, entity);
+		return (T)context;
+	}
+	
+	public T testAndReturnTrueIfNullOrTrueByDefault(E entity) {
+		T context = createTestContext();
+		testAndReturnTrueIfNullOrTrueByDefault(context, entity);
+		return (T)context;
+	}
+	
+	public T testAndReturnFalseIfNullOrFalseByDefault(E entity) {
+		T context = createTestContext();
+		testAndReturnFalseIfNullOrFalseByDefault(context, entity);
+		return (T)context;
+	}
+	
+	public T testAndReturnTrueIfNullOrFalseByDefault(E entity) {
+		T context = createTestContext();
+		testAndReturnTrueIfNullOrFalseByDefault(context, entity);
+		return (T)context;
+	}
+	
+	public Predicate<E> getPredicateOrFalsePredicateIfNull() {
+		return getPredicateOrFalsePredicateIfNull(createTestContext());
+	}	
+	
+	public Predicate<E> getPredicateOrTruePredicateIfNull() {
+		return getPredicateOrTruePredicateIfNull(createTestContext());
+	}
+	
+	public T getContextOfPredicateOrFalsePredicateIfNull() {
+		T context = createTestContext();
+		getPredicateOrFalsePredicateIfNull(context);
+		return context;
+	}	
+	
+	public T getContextOfPredicateOrTruePredicateIfNull() {
+		T context = createTestContext();
+		getPredicateOrTruePredicateIfNull(context);
+		return context;
+	}
+	
+	private boolean testAndReturnFalseIfNullOrTrueByDefault(T context, E entity) {
+		return Optional.ofNullable(entity).map(ent -> getPredicateOrTruePredicateIfNull(context).test(ent)).orElseGet(() -> 
+			context.setEntity(entity).setResult(false).getResult()
+		);
+	}
+	
+	private boolean testAndReturnTrueIfNullOrTrueByDefault(T context, E entity) {
+		return Optional.ofNullable(entity).map(ent -> getPredicateOrTruePredicateIfNull(context).test(ent)).orElseGet(() -> 
+			context.setEntity(entity).setResult(true).getResult()
+		);
+	}
+	
+	private boolean testAndReturnFalseIfNullOrFalseByDefault(T context, E entity) {
+		return Optional.ofNullable(entity).map(ent -> getPredicateOrFalsePredicateIfNull(context).test(ent)).orElseGet(() -> 
+			context.setEntity(entity).setResult(false).getResult()
+		);
+	}
+	
+	private boolean testAndReturnTrueIfNullOrFalseByDefault(T context, E entity) {
+		return Optional.ofNullable(entity).map(ent -> getPredicateOrFalsePredicateIfNull(context).test(ent)).orElseGet(() -> 
+			context.setEntity(entity).setResult(true).getResult()
+		);
+	}
+	
+	private Predicate<E> getPredicateOrFalsePredicateIfNull(T context) {
+		return context.setPredicate(
+			this.predicate != null?
+				(entity) -> {
+				return context.setEntity(entity).setResult(this.predicate.test(
+					context, 
+					entity
+				)).getResult();
+			} :
+			(entity) -> {
+				return context.setEntity(entity).setResult(false).getResult();
+			}
+		).getPredicate();
+	}
+	
+	
+	private Predicate<E> getPredicateOrTruePredicateIfNull(T context) {
+		return context.setPredicate(
+			this.predicate != null?
+			(entity) -> {
+				return context.setEntity(entity).setResult(this.predicate.test(
+					context, 
+					entity
+				)).getResult();
+			} :
+			(entity) -> {
+				return context.setEntity(entity).setResult(true).getResult();
+			}
+		).getPredicate();
+	}
+	
+	
+	public C createCopy() {
+		C copy = newInstance();
+		copy.predicate = this.predicate;
+		copy.logicalOperator = this.logicalOperator;
+		return copy;
+	}
+	
+	
+	public T createTestContext() {
+		return (T)TestContext.<E, C, T>create((C)this);
+	}
+	
+	
+	public static class TestContext<E, C extends Criteria<E, C, ?>> extends Context {
+		private enum Elements {
+			ENTITY,
+			PREDICATE,
+			TEST_RESULT,
+			THIS_CRITERIA
+		}
+		
+		protected TestContext(C criteria) {
+			super();
+			put(Elements.THIS_CRITERIA, criteria);
+		}
+		
+		public static <E, C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> TestContext<E, C> create(C criteria) {
+			return (TestContext<E, C>)new TestContext<>(criteria);
+		}
+		
+		public C getCriteria() {
+			return get(Elements.THIS_CRITERIA);
+		}
+		
+		<T extends Criteria.TestContext<E, C>> T setEntity(E entity) {
+			put(Elements.ENTITY, entity);
+			return (T) this;
+		}
+		
+		public E getEntity() {
+			return get(Elements.ENTITY);
+		}
+		
+		<T extends Criteria.TestContext<E, C>> T setResult(Boolean result) {
+			put(Elements.TEST_RESULT, result);
+			return (T) this;
+		}
+		
+		public Predicate<E> getPredicate() {
+			return get(Elements.PREDICATE);
+		}
+		
+		<T extends Criteria.TestContext<E, C>> T setPredicate(Predicate<E> predicate) {
+			put(Elements.PREDICATE, predicate);
+			return (T)this;
+		}
+		
+		public Boolean getResult() {
+			return super.get(Elements.TEST_RESULT);
+		}
+	}
+}

@@ -1,0 +1,13 @@
+package ${packageName};
+
+
+${imports}
+
+
+public class ${className} implements Virtual {
+
+    public ${returnType} execute(ComponentSupplier componentSupplier) throws Throwable {
+    	${code}
+    }
+    
+}

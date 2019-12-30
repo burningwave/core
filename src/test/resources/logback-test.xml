@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<property name="LOGS_HOME" value="${user.home}/BurningWave-logs" />
+
+	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+	<!-- 
+	<appender name="AUDIT-FILE"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${LOGS_HOME}/bw-core-debug.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
+			</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${LOGS_HOME}/archived/bw-core-debug.%d{yyyy-MM-dd}.%i.log
+                        </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>25MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+		</rollingPolicy>
+
+	</appender>
+	 -->
+	<appender name="ERRORS-FILE"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${LOGS_HOME}/bw-core-error.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
+			</Pattern>
+		</encoder>
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+	        <level>ERROR</level>
+	        <onMatch>ACCEPT</onMatch>
+	        <onMismatch>DENY</onMismatch>
+	    </filter>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${LOGS_HOME}/archived/bw-core-error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>25MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+		</rollingPolicy>
+
+	</appender>
+
+	<root level="DEBUG">
+		<!-- 
+		<appender-ref ref="AUDIT-FILE" />
+		 -->
+		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="ERRORS-FILE" />
+	</root>
+
+</configuration>
