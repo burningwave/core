@@ -31,7 +31,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	private Map<String, ByteBuffer> notLoadedCompiledClasses;
 	private Map<String, ByteBuffer> loadedCompiledClasses;
 	private Vector<Class<?>> definedClasses;
-	private Map<String, Package> definedPackages;
+	private Map<String, ?> definedPackages;
 	private boolean defaultPackageDefined = false;
 		
 	
@@ -130,10 +130,10 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     		String specVersion, String specVendor, String implTitle,
     		String implVersion, String implVendor, URL sealBase)
     		throws IllegalArgumentException {
-    	Package pack = definedPackages.get(name);
+    	Package pack = (Package)definedPackages.get(name);
     	if (pack == null) {
     		synchronized (definedPackages) {
-    			pack = definedPackages.get(name);
+    			pack = (Package)definedPackages.get(name);
     			if (pack == null) {
     				pack = super.definePackage(name, specTitle, specVersion, specVendor, implTitle,
 			    			implVersion, implVendor, sealBase);

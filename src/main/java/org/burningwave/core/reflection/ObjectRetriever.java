@@ -1,5 +1,7 @@
 package org.burningwave.core.reflection;
 
+//import java.lang.invoke.MethodHandles;
+//import java.lang.invoke.VarHandle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -52,11 +54,24 @@ public class ObjectRetriever implements Component {
 	}
 	
 	public Vector<Class<?>> retrieveClasses(ClassLoader classLoader) {
-		return byFieldOrByMethodPropertyAccessor.get(classLoader, "classes");
+//		try {
+//			MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(ClassLoader.class, MethodHandles.lookup());
+//			VarHandle varHandle = lookup.findVarHandle(ClassLoader.class, "classes", Vector.class);
+//			return (Vector<Class<?>>)varHandle.get(classLoader);
+//			
+//		} catch (Throwable exc) {
+			return byFieldOrByMethodPropertyAccessor.get(classLoader, "classes");
+//		}
 	}
 	
-	public Map<String, Package> retrievePackages(ClassLoader classLoader) {
-		return byFieldOrByMethodPropertyAccessor.get(classLoader, "packages");
+	public Map<String, ?> retrievePackages(ClassLoader classLoader) {
+//		try {
+//			MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(ClassLoader.class, MethodHandles.lookup());
+//			VarHandle varHandle = lookup.findVarHandle(ClassLoader.class, "packages", java.util.concurrent.ConcurrentHashMap.class);
+//			return (Map<String, ?>)varHandle.get(classLoader);
+//		} catch (Throwable exc) {
+			return byFieldOrByMethodPropertyAccessor.get(classLoader, "packages");
+//		}
 	}
 	
 	@SuppressWarnings("unchecked")

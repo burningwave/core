@@ -139,7 +139,7 @@ public class ClassHelper implements Component {
 		Method defineClassMethod, 
 		Collection<Class<?>> definedClasses,
 		Method definePackageMethod,
-		Map<String, Package> definedPackages
+		Map<String, ?> definedPackages
 	) throws ClassNotFoundException {
     	ByteBuffer byteCode = getByteCode(toLoad);
     	String className = extractClassName(Streams.shareContent(byteCode));
@@ -228,12 +228,12 @@ public class ClassHelper implements Component {
 		String implVersion, String implVendor, URL sealBase,
 		ClassLoader classLoader,
 		Method definePackageMethod,
-		Map<String, Package> definedPackages
+		Map<String, ?> definedPackages
 	) throws IllegalArgumentException {
-    	Package pack = definedPackages.get(name);
+    	Package pack = (Package)definedPackages.get(name);
     	if (pack == null) {
     		synchronized (definedPackages) {
-    			pack = definedPackages.get(name);
+    			pack = (Package)definedPackages.get(name);
     			if (pack == null) {
     				pack = definePackage(name, specTitle, specVersion, specVendor, implTitle, implVersion, implVendor,
 							sealBase, classLoader, definePackageMethod);
@@ -246,7 +246,7 @@ public class ClassHelper implements Component {
 	private void definePackageFor(Class<?> cls, 
 		ClassLoader classLoader,
 		Method definePackageMethod,
-		Map<String, Package> definedPackages
+		Map<String, ?> definedPackages
 	) {
 		if (cls.getName().contains(".")) {
 			String pckgName = cls.getName().substring(
