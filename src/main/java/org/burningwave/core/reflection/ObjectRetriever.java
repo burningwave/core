@@ -57,18 +57,17 @@ public class ObjectRetriever implements Component {
 //		try {
 //			MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(ClassLoader.class, MethodHandles.lookup());
 //			VarHandle varHandle = lookup.findVarHandle(ClassLoader.class, "classes", Vector.class);
-//			return (Vector<Class<?>>)varHandle.get(classLoader);
-//			
+//			return (Vector<Class<?>>)varHandle.get(classLoader);		
 //		} catch (Throwable exc) {
 			return byFieldOrByMethodPropertyAccessor.get(classLoader, "classes");
 //		}
 	}
 	
-	public Map<String, ?> retrievePackages(ClassLoader classLoader) {
+	public Map<String, Package> retrievePackages(ClassLoader classLoader) {
 //		try {
 //			MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(ClassLoader.class, MethodHandles.lookup());
 //			VarHandle varHandle = lookup.findVarHandle(ClassLoader.class, "packages", java.util.concurrent.ConcurrentHashMap.class);
-//			return (Map<String, ?>)varHandle.get(classLoader);
+//			return (Map<String, Package>)varHandle.get(classLoader);
 //		} catch (Throwable exc) {
 			return byFieldOrByMethodPropertyAccessor.get(classLoader, "packages");
 //		}

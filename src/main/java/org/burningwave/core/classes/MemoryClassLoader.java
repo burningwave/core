@@ -31,7 +31,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	private Map<String, ByteBuffer> notLoadedCompiledClasses;
 	private Map<String, ByteBuffer> loadedCompiledClasses;
 	private Vector<Class<?>> definedClasses;
-	private Map<String, ?> definedPackages;
+	private Map<String, Package> definedPackages;
 	private boolean defaultPackageDefined = false;
 		
 	
