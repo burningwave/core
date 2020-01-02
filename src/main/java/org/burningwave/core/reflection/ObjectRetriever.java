@@ -278,6 +278,7 @@ public class ObjectRetriever implements Component {
 		classLoaderDelegate = null;
 		packageMapTester = null;
 		packageRetriever = null;
+		this.unsafe = null;
 	}
 	
 }
