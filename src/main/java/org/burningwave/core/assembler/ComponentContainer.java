@@ -414,6 +414,7 @@ public class ComponentContainer implements ComponentSupplier {
 			ObjectRetriever.create(
 				() -> getClassHelper(),
 				() -> getClassFactory(),
+				getMemberFinder(),
 				getStreamHelper(),
 				getIterableObjectHelper()
 			)
@@ -424,7 +425,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public ClassHelper getClassHelper() {
 		return getOrCreate(ClassHelper.class, () ->
 			ClassHelper.create(
-				getMemberFinder(),
 				() -> getClassFactory(),
 				getObjectRetriever()
 				

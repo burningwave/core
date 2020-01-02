@@ -2,6 +2,10 @@ package org.burningwave.core.reflection;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.nio.ByteBuffer;
+import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -19,6 +23,8 @@ import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.ClassLoaderDelegate;
 import org.burningwave.core.classes.JavaMemoryCompiler.MemoryFileObject;
+import org.burningwave.core.classes.MemberFinder;
+import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.common.JVMChecker;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.TriFunction;
@@ -34,6 +40,7 @@ public class ObjectRetriever implements Component {
 	private ClassHelper classHelper;
 	private Supplier<ClassFactory> classFactorySupplier;
 	private ClassFactory classFactory;
+	private MemberFinder memberFinder;
 	private StreamHelper streamHelper;
 	private ClassLoaderDelegate classLoaderDelegate;
 	private Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
@@ -45,11 +52,13 @@ public class ObjectRetriever implements Component {
 	private ObjectRetriever(
 		Supplier<ClassHelper> classHelperSupplier,
 		Supplier<ClassFactory> classFactorySupplier,
+		MemberFinder memberFinder,
 		StreamHelper streamHelper,
 		IterableObjectHelper iterableObjectHelper
 	) {
 		this.classHelperSupplier = classHelperSupplier;
 		this.classFactorySupplier = classFactorySupplier;
+		this.memberFinder = memberFinder;
 		this.streamHelper = streamHelper;
 		this.iterableObjectHelper = iterableObjectHelper;
 		this.classLoadersClasses = new ConcurrentHashMap<>();
@@ -86,10 +95,11 @@ public class ObjectRetriever implements Component {
 	public static ObjectRetriever create(
 		Supplier<ClassHelper> classHelperSupplier,
 		Supplier<ClassFactory> classFactorySupplier,
+		MemberFinder memberFinder,
 		StreamHelper streamHelper,
 		IterableObjectHelper iterableObjectHelper
 	) {
-		return new ObjectRetriever(classHelperSupplier, classFactorySupplier, streamHelper, iterableObjectHelper);
+		return new ObjectRetriever(classHelperSupplier, classFactorySupplier, memberFinder, streamHelper, iterableObjectHelper);
 	}
 	
 	public Unsafe getUnsafe() {
@@ -113,6 +123,33 @@ public class ObjectRetriever implements Component {
 		return classFactory != null ?
 			classFactory :
 			(classFactory = classFactorySupplier.get());
+	}
+	
+	public Method findDefinePackageMethod(ClassLoader classLoader) {
+		return  memberFinder.findAll(
+			MethodCriteria.byScanUpTo((cls) -> 
+				cls.getName().equals(ClassLoader.class.getName())
+			).name(
+				"definePackage"::equals
+			).and().parameterTypesAreAssignableFrom(
+				String.class, String.class, String.class, String.class,
+				String.class, String.class, String.class, URL.class
+			),
+			classLoader
+		).stream().findFirst().orElse(null);
+	}
+	
+	public Method findDefineClassMethod(ClassLoader classLoader) {
+		return memberFinder.findAll(
+			MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
+				"defineClass"::equals
+			).and().parameterTypes(params -> 
+				params.length == 3
+			).and().parameterTypesAreAssignableFrom(
+				String.class, ByteBuffer.class, ProtectionDomain.class
+			).and().returnType((cls) -> cls.getName().equals(Class.class.getName())),
+			classLoader
+		).stream().findFirst().orElse(null);
 	}
 	
 	@SuppressWarnings({ "unchecked" })
@@ -227,6 +264,25 @@ public class ObjectRetriever implements Component {
 	public void unregister(ClassLoader classLoader) {
 		classLoadersClasses.remove(classLoader);
 		classLoadersPackages.remove(classLoader);
+	}
+	
+	@Override
+	public void close() {
+		Component.super.close();
+		classLoadersClasses.clear();
+		classLoadersClasses = null;
+		classLoadersPackages.clear();
+		classLoadersPackages = null;
+		iterableObjectHelper = null;
+		classHelperSupplier = null;
+		classHelper = null;
+		classFactorySupplier = null;
+		classFactory = null;
+		memberFinder = null;
+		streamHelper = null;
+		classLoaderDelegate = null;
+		packageMapTester = null;
+		packageRetriever = null;
 	}
 	
 }

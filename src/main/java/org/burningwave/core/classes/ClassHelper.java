@@ -5,7 +5,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -25,23 +24,20 @@ import org.burningwave.core.reflection.ObjectRetriever;
 import org.objectweb.asm.ClassReader;
 
 public class ClassHelper implements Component {
-	private MemberFinder memberFinder;
 	private ObjectRetriever objectRetriever;
 	private ClassFactory classFactory;
 	private Supplier<ClassFactory> classFactorySupplier;
 	
 	private ClassHelper(
-		MemberFinder memberFinder,
 		Supplier<ClassFactory> classFactorySupplier,
 		ObjectRetriever objectRetriever
 	) {
-		this.memberFinder = memberFinder;
 		this.classFactorySupplier = classFactorySupplier;
 		this.objectRetriever = objectRetriever;
 	}
 	
-	public static ClassHelper create(MemberFinder memberFinder, Supplier<ClassFactory> classFactorySupplier, ObjectRetriever objectRetriever) {
-		return new ClassHelper(memberFinder, classFactorySupplier, objectRetriever);
+	public static ClassHelper create(Supplier<ClassFactory> classFactorySupplier, ObjectRetriever objectRetriever) {
+		return new ClassHelper(classFactorySupplier, objectRetriever);
 	}
 	
 	private ClassFactory getClassFactory() {
@@ -99,38 +95,11 @@ public class ClassHelper implements Component {
 	) throws ClassNotFoundException {
 		return loadOrUploadClass(
 			toLoad, classLoader,
-			findDefineClassMethod(classLoader), 
+			objectRetriever.findDefineClassMethod(classLoader), 
 			objectRetriever.retrieveClasses(classLoader),
-			findDefinePackageMethod(classLoader),
+			objectRetriever.findDefinePackageMethod(classLoader),
 			objectRetriever.retrievePackages(classLoader)
 		);
-	}
-
-	private Method findDefinePackageMethod(ClassLoader classLoader) {
-		return  memberFinder.findAll(
-			MethodCriteria.byScanUpTo((cls) -> 
-				cls.getName().equals(ClassLoader.class.getName())
-			).name(
-				"definePackage"::equals
-			).and().parameterTypesAreAssignableFrom(
-				String.class, String.class, String.class, String.class,
-				String.class, String.class, String.class, URL.class
-			),
-			classLoader
-		).stream().findFirst().orElse(null);
-	}
-	
-	private Method findDefineClassMethod(ClassLoader classLoader) {
-		return memberFinder.findAll(
-			MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
-				"defineClass"::equals
-			).and().parameterTypes(params -> 
-				params.length == 3
-			).and().parameterTypesAreAssignableFrom(
-				String.class, ByteBuffer.class, ProtectionDomain.class
-			).and().returnType((cls) -> cls.getName().equals(Class.class.getName())),
-			classLoader
-		).stream().findFirst().orElse(null);
 	}
 	
 	private Class<?> loadOrUploadClass(
@@ -298,7 +267,6 @@ public class ClassHelper implements Component {
 	
 	@Override
 	public void close() {
-		memberFinder = null;
 		objectRetriever = null;
 		classFactory = null;
 		classFactorySupplier = null;
