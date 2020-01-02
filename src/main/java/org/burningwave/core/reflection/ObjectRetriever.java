@@ -264,20 +264,20 @@ public class ObjectRetriever implements Component {
 	@Override
 	public void close() {
 		Component.super.close();
-		classLoadersClasses.clear();
-		classLoadersClasses = null;
-		classLoadersPackages.clear();
-		classLoadersPackages = null;
-		iterableObjectHelper = null;
-		classHelperSupplier = null;
-		classHelper = null;
-		classFactorySupplier = null;
-		classFactory = null;
-		memberFinder = null;
-		streamHelper = null;
-		classLoaderDelegate = null;
-		packageMapTester = null;
-		packageRetriever = null;
+		this.classLoadersClasses.clear();
+		this.classLoadersClasses = null;
+		this.classLoadersPackages.clear();
+		this.classLoadersPackages = null;
+		this.iterableObjectHelper = null;
+		this.classHelperSupplier = null;
+		this.classHelper = null;
+		this.classFactorySupplier = null;
+		this.classFactory = null;
+		this.memberFinder = null;
+		this.streamHelper = null;
+		this.classLoaderDelegate = null;
+		this.packageMapTester = null;
+		this.packageRetriever = null;
 		this.unsafe = null;
 	}
 	
