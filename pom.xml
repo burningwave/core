@@ -8,6 +8,7 @@
 	<packaging>jar</packaging>
 	<name>BurningWave core</name>
 	<url>https://www.burningwave.org/</url>
+	
 	<licenses>
 		<license>
 			<name>MIT License</name>
@@ -19,6 +20,7 @@
 		<name>Burningwave</name>
 		<url>https://www.burningwave.org/</url>
 	</organization>
+	
 	<description>
 		Burningwave core is an advanced, free and open source Java library that contains THE MOST POWERFUL CLASSPATH SCANNER for criteria based classes search.
 		It’s possible to search classes by every criteria that your immagination can made by using lambda expressions.
