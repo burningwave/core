@@ -9,7 +9,8 @@
 	<version>2.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>BurningWave core</name>
-	<url>https://github.com/burningwave/core</url>
+	<url>https://www.burningwave.org/</url>
+	
 	<description>
 		Burningwave core is an advanced, free and open source Java library that contains THE MOST POWERFUL CLASSPATH SCANNER for criteria based classes search.
 		It’s possible to search classes by every criteria that your immagination can made by using lambda expressions.
@@ -223,9 +224,9 @@
 		</repository>
 	</distributionManagement>
 	<scm>
+		<url>https://github.com/burningwave/core</url>
 		<connection>scm:git:git://github.com/burningwave/core.git</connection>
 		<developerConnection>scm:git:git@github.com/burningwave/core.git</developerConnection>
-		<url>https://github.com/burningwave/bw-core</url>
 		<tag>HEAD</tag>
 	</scm>
 
