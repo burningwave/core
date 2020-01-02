@@ -24,6 +24,7 @@ import org.burningwave.core.classes.JavaMemoryCompiler.MemoryFileObject;
 import org.burningwave.core.classes.MethodHelper;
 import org.burningwave.core.common.JVMChecker;
 import org.burningwave.core.common.Strings;
+import org.burningwave.core.function.TriFunction;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
 
@@ -41,6 +42,9 @@ public class ObjectRetriever implements Component {
 	private ClassLoaderDelegate classLoaderDelegate;
 	private Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
 	private Map<ClassLoader, Map<String, Package>> classLoadersPackages;
+	private Predicate<Object> packageMapTester;
+	private TriFunction<ClassLoader, Object, String, Package> packageRetriever;
+	
 	
 	private ObjectRetriever(
 		Supplier<ClassHelper> classHelperSupplier,
@@ -56,6 +60,31 @@ public class ObjectRetriever implements Component {
 		this.iterableObjectHelper = iterableObjectHelper;
 		this.classLoadersClasses = new ConcurrentHashMap<>();
 		this.classLoadersPackages = new ConcurrentHashMap<>();
+		try {
+			Class.forName("java.lang.NamedPackage");
+			packageMapTester = (object) -> object != null && object instanceof ConcurrentHashMap;
+			packageRetriever = (classLoader, object, packageName) -> {
+				if (classLoaderDelegate != null) {
+					return classLoaderDelegate.getPackage(classLoader, packageName);
+				} else {
+					try {
+						Collection<MemoryFileObject> classLoaderDelegateByteCode = getClassFactory().build(
+							this.streamHelper.getResourceAsStringBuffer("org/burningwave/core/classes/ClassLoaderDelegate4JDKVersioneLaterThan8.java").toString()
+						);
+						
+						Class<?> cls = getUnsafe().defineAnonymousClass(classHelper.getClass(), classLoaderDelegateByteCode.stream().findFirst().get().toByteArray(), null);
+						classLoaderDelegate = (ClassLoaderDelegate) cls.getConstructor().newInstance();
+					} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+							| InvocationTargetException | NoSuchMethodException | SecurityException exc) {
+						throw Throwables.toRuntimeException(exc);
+					}
+				}
+				return null;
+			};
+		} catch (ClassNotFoundException e) {
+			packageMapTester = (object) -> object != null && object instanceof HashMap;
+			packageRetriever = (classLoader, object, packageName) -> (Package)object;
+		}
 	}
 	
 	public static ObjectRetriever create(
@@ -124,12 +153,7 @@ public class ObjectRetriever implements Component {
 					packages = classLoadersPackages.get(classLoader);
 					if (packages == null) {
 						packages = (Map<String, Package>)iterateClassLoaderFields(
-							classLoader,
-							(object) ->
-								object != null &&
-								//TODO: gestione versione Java
-								(//object instanceof ConcurrentHashMap || 
-								object.getClass().equals(HashMap.class))
+							classLoader, packageMapTester
 						);
 						classLoadersPackages.put(classLoader, packages);
 						return packages;
@@ -169,26 +193,7 @@ public class ObjectRetriever implements Component {
 		Map<String, Package> packages = retrievePackages(classLoader);
 		Object pckgToFind = packages.get(pkgNm);
 		if (pckgToFind != null) {
-			if (pckgToFind instanceof Package) {
-				return (Package)pckgToFind;
-			} else {
-				if (classLoaderDelegate != null) {
-					return classLoaderDelegate.getPackage(classLoader, pkgNm);
-				} else {
-					try {
-						Collection<MemoryFileObject> classLoaderDelegateByteCode = getClassFactory().build(
-							streamHelper.getResourceAsStringBuffer("org/burningwave/core/classes/ClassLoaderDelegate4JDKVersioneLaterThan8.java").toString()
-						);
-						
-						Class<?> cls = getUnsafe().defineAnonymousClass(classHelper.getClass(), classLoaderDelegateByteCode.stream().findFirst().get().toByteArray(), null);
-						classLoaderDelegate = (ClassLoaderDelegate) cls.getConstructor().newInstance();
-					} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-							| InvocationTargetException | NoSuchMethodException | SecurityException exc) {
-						throw Throwables.toRuntimeException(exc);
-					}
-				}
-				return methodHelper.invoke(classLoader, "getDefinedPackage", pkgNm);
-			}
+			return packageRetriever.apply(classLoader, pckgToFind, pkgNm);
 		} else if (classLoader.getParent() != null) {
 			return retrievePackage(pkgNm, classLoader.getParent());
 		} else {
