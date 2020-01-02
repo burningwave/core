@@ -97,8 +97,7 @@ public class ClassHelper implements Component {
 			toLoad, classLoader,
 			objectRetriever.findDefineClassMethod(classLoader), 
 			objectRetriever.retrieveClasses(classLoader),
-			objectRetriever.findDefinePackageMethod(classLoader),
-			objectRetriever.retrievePackages(classLoader)
+			objectRetriever.findDefinePackageMethod(classLoader)
 		);
 	}
 	
@@ -107,8 +106,7 @@ public class ClassHelper implements Component {
 		ClassLoader classLoader, 
 		Method defineClassMethod, 
 		Collection<Class<?>> definedClasses,
-		Method definePackageMethod,
-		Map<String, ?> definedPackages
+		Method definePackageMethod
 	) throws ClassNotFoundException {
     	ByteBuffer byteCode = getByteCode(toLoad);
     	String className = extractClassName(Streams.shareContent(byteCode));
@@ -124,27 +122,27 @@ public class ClassHelper implements Component {
 		    		if (className.equals(notFoundClassName)) {
 		    			try {
 		            		cls = defineClass(classLoader, defineClassMethod, className, Streams.shareContent(byteCode));
-		            		definePackageFor(cls, classLoader, definePackageMethod, definedPackages);
+		            		definePackageFor(cls, classLoader, definePackageMethod);
 		            	} catch (NoClassDefFoundError innerExc) {
 		            		String newNotFoundClassName = innerExc.getMessage().replace("/", ".");
 		            		loadOrUploadClass(
 		            			Class.forName(
 		            				newNotFoundClassName, false, toLoad.getClassLoader()
 		            			),
-		            			classLoader, defineClassMethod, definedClasses, definePackageMethod, definedPackages
+		            			classLoader, defineClassMethod, definedClasses, definePackageMethod
 		            		);
 		            		cls = defineClass(classLoader, defineClassMethod, className, Streams.shareContent(byteCode));
-		            		definePackageFor(cls, classLoader, definePackageMethod, definedPackages);
+		            		definePackageFor(cls, classLoader, definePackageMethod);
 		            	}
 		    		} else {
 		    			loadOrUploadClass(
 		    				Class.forName(
 		    					notFoundClassName, false, toLoad.getClassLoader()
 		    				),
-		    				classLoader, defineClassMethod, definedClasses, definePackageMethod, definedPackages
+		    				classLoader, defineClassMethod, definedClasses, definePackageMethod
 		    			);
 		    			cls = defineClass(classLoader, defineClassMethod, className, byteCode);
-		        		definePackageFor(cls, classLoader, definePackageMethod, definedPackages);
+		        		definePackageFor(cls, classLoader, definePackageMethod);
 		    		}
     			}
     		}
@@ -184,8 +182,7 @@ public class ClassHelper implements Component {
 		String specVersion, String specVendor, String implTitle,
 		String implVersion, String implVendor, URL sealBase,
 		ClassLoader classLoader,
-		Method definePackageMethod,
-		Map<String, ?> definedPackages
+		Method definePackageMethod
 	) throws IllegalArgumentException {
     	return ThrowingSupplier.get(() -> {
     		try {
@@ -201,8 +198,7 @@ public class ClassHelper implements Component {
     
 	private void definePackageFor(Class<?> cls, 
 		ClassLoader classLoader,
-		Method definePackageMethod,
-		Map<String, ?> definedPackages
+		Method definePackageMethod
 	) {
 		if (cls.getName().contains(".")) {
 			String pckgName = cls.getName().substring(
@@ -210,7 +206,7 @@ public class ClassHelper implements Component {
 		    );
 		    Package pkg = objectRetriever.retrievePackage(pckgName, classLoader);
 		    if (pkg == null) {
-		    	pkg = definePackage(pckgName, null, null, null, null, null, null, null, classLoader, definePackageMethod, definedPackages);
+		    	pkg = definePackage(pckgName, null, null, null, null, null, null, null, classLoader, definePackageMethod);
 			}	
 		}
 	}
