@@ -415,7 +415,6 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getClassHelper(),
 				() -> getClassFactory(),
 				getStreamHelper(),
-				getMethodHelper(),
 				getIterableObjectHelper()
 			)
 		);

@@ -1,7 +1,5 @@
 package org.burningwave.core.reflection;
 
-//import java.lang.invoke.MethodHandles;
-//import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -21,7 +19,6 @@ import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.ClassLoaderDelegate;
 import org.burningwave.core.classes.JavaMemoryCompiler.MemoryFileObject;
-import org.burningwave.core.classes.MethodHelper;
 import org.burningwave.core.common.JVMChecker;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.TriFunction;
@@ -30,9 +27,8 @@ import org.burningwave.core.iterable.IterableObjectHelper;
 
 import sun.misc.Unsafe;
 
-@SuppressWarnings("restriction")
+//@SuppressWarnings("restriction")
 public class ObjectRetriever implements Component {
-	private MethodHelper methodHelper;
 	private IterableObjectHelper iterableObjectHelper;
 	private Supplier<ClassHelper> classHelperSupplier;
 	private ClassHelper classHelper;
@@ -50,13 +46,11 @@ public class ObjectRetriever implements Component {
 		Supplier<ClassHelper> classHelperSupplier,
 		Supplier<ClassFactory> classFactorySupplier,
 		StreamHelper streamHelper,
-		MethodHelper methodHelper, 
 		IterableObjectHelper iterableObjectHelper
 	) {
 		this.classHelperSupplier = classHelperSupplier;
 		this.classFactorySupplier = classFactorySupplier;
 		this.streamHelper = streamHelper;
-		this.methodHelper = methodHelper;
 		this.iterableObjectHelper = iterableObjectHelper;
 		this.classLoadersClasses = new ConcurrentHashMap<>();
 		this.classLoadersPackages = new ConcurrentHashMap<>();
@@ -93,10 +87,9 @@ public class ObjectRetriever implements Component {
 		Supplier<ClassHelper> classHelperSupplier,
 		Supplier<ClassFactory> classFactorySupplier,
 		StreamHelper streamHelper,
-		MethodHelper methodHelper,
 		IterableObjectHelper iterableObjectHelper
 	) {
-		return new ObjectRetriever(classHelperSupplier, classFactorySupplier, streamHelper, methodHelper, iterableObjectHelper);
+		return new ObjectRetriever(classHelperSupplier, classFactorySupplier, streamHelper, iterableObjectHelper);
 	}
 	
 	public Unsafe getUnsafe() {
