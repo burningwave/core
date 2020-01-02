@@ -157,7 +157,6 @@ public class ClassHelper implements Component {
 		ByteBuffer byteCode
 	) throws ClassNotFoundException {
 		try {
-			method.setAccessible(true);
 			Class<?> cls = (Class<?>)method.invoke(classLoader, className, byteCode, null);
 			if (classLoader instanceof MemoryClassLoader) {
 				((MemoryClassLoader)classLoader).addLoadedCompiledClass(className, byteCode);
@@ -186,7 +185,6 @@ public class ClassHelper implements Component {
 	) throws IllegalArgumentException {
     	return ThrowingSupplier.get(() -> {
     		try {
-    			definePackageMethod.setAccessible(true);
     			return (Package) definePackageMethod.invoke(classLoader, name, specTitle, specVersion, specVendor, implTitle,
     				implVersion, implVendor, sealBase);
     		} catch (IllegalArgumentException exc) {

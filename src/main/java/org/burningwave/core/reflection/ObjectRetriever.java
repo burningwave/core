@@ -122,7 +122,7 @@ public class ObjectRetriever implements Component {
 	}
 	
 	public Method findDefinePackageMethod(ClassLoader classLoader) {
-		return  memberFinder.findAll(
+		Method method = memberFinder.findAll(
 			MethodCriteria.byScanUpTo((cls) -> 
 				cls.getName().equals(ClassLoader.class.getName())
 			).name(
@@ -133,10 +133,12 @@ public class ObjectRetriever implements Component {
 			),
 			classLoader
 		).stream().findFirst().orElse(null);
+		method.setAccessible(true);
+		return method;
 	}
 	
 	public Method findDefineClassMethod(ClassLoader classLoader) {
-		return memberFinder.findAll(
+		Method method = memberFinder.findAll(
 			MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
 				"defineClass"::equals
 			).and().parameterTypes(params -> 
@@ -146,6 +148,8 @@ public class ObjectRetriever implements Component {
 			).and().returnType((cls) -> cls.getName().equals(Class.class.getName())),
 			classLoader
 		).stream().findFirst().orElse(null);
+		method.setAccessible(true);
+		return method;
 	}
 	
 	@SuppressWarnings({ "unchecked" })
