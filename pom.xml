@@ -39,11 +39,11 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<core.jdk.version>8</core.jdk.version>
 		<core.skip.tests>true</core.skip.tests>
 		<skipTests>${core.skip.tests}</skipTests>
 		<core.test.includes />
 		<core.test.excludes>**/*Test.java</core.test.excludes>
-		<core.jdk.version>8</core.jdk.version>
 	</properties>
 
 	<dependencies>
