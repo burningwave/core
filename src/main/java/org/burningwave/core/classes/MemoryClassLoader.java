@@ -122,10 +122,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     	Stream.of(classes).forEach(classObject -> addCompiledClass(classObject.getKey(), classObject.getValue()));	
 	} 
     
-    private Package definePackage(String pkgNm) {
-		return definePackage(pkgNm, null, null, null, null, null, null, null);
-	}
-    
 	public boolean hasPackageBeenDefined(String packageName) {
 		if (packageName != null) {
 			return definedPackages.get(packageName) != null;
@@ -139,15 +135,15 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		String specVersion, String specVendor, String implTitle,
 		String implVersion, String implVendor, URL sealBase
 	) throws IllegalArgumentException {
-    	Package pack = (Package)definedPackages.get(name);
+    	Package pack = objectRetriever.retrievePackage(name, this);
     	if (pack == null) {
-    		synchronized (definedPackages) {
-    			pack = (Package)definedPackages.get(name);
-    			if (pack == null) {
-    				pack = super.definePackage(name, specTitle, specVersion, specVendor, implTitle,
-			    			implVersion, implVendor, sealBase);
-    			}
-    		}
+    		try {
+				pack = super.definePackage(name, specTitle, specVersion, specVendor, implTitle,
+		    			implVersion, implVendor, sealBase);
+			} catch (IllegalArgumentException exc) {
+				logWarn(pack.getName() + " already defined");
+				pack = objectRetriever.retrievePackage(name, this);
+			}
     	}
     	return pack;
     }
@@ -158,7 +154,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		    	0, cls.getName().lastIndexOf(".")
 		    );
 		    if (objectRetriever.retrievePackage(pckgName, this) == null) {
-		    	definePackage(pckgName);
+		    	definePackage(pckgName, null, null, null, null, null, null, null);
 			}	
 		} else {
 			defaultPackageDefined = true;
