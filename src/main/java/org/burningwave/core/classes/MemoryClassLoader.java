@@ -30,7 +30,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	private Map<String, ByteBuffer> notLoadedCompiledClasses;
 	private Map<String, ByteBuffer> loadedCompiledClasses;
 	private Vector<Class<?>> definedClasses;
-	private Map<String, Package> definedPackages;
+	private Map<String, ?> definedPackages;
 	private boolean defaultPackageDefined = false;
 		
 	
@@ -126,8 +126,8 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 				pack = super.definePackage(name, specTitle, specVersion, specVendor, implTitle,
 		    			implVersion, implVendor, sealBase);
 			} catch (IllegalArgumentException exc) {
-				logWarn(pack.getName() + " already defined");
-				pack = objectRetriever.retrievePackage(name, this);
+				logError("Package " + name + " already defined");
+    			return objectRetriever.retrievePackage(name, this);
 			}
     	}
     	return pack;

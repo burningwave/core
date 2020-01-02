@@ -108,7 +108,7 @@ public class ClassHelper implements Component {
 		Method defineClassMethod, 
 		Collection<Class<?>> definedClasses,
 		Method definePackageMethod,
-		Map<String, Package> definedPackages
+		Map<String, ?> definedPackages
 	) throws ClassNotFoundException {
     	ByteBuffer byteCode = getByteCode(toLoad);
     	String className = extractClassName(Streams.shareContent(byteCode));
@@ -179,43 +179,30 @@ public class ClassHelper implements Component {
 	}
 	
 	
-	private Package definePackage(String name, String specTitle, String specVersion, String specVendor,
-		String implTitle, String implVersion, String implVendor, URL sealBase, ClassLoader classLoader,
-		Method method
-	) {
-		return ThrowingSupplier.get(() -> {
-			method.setAccessible(true);
-			return (Package) method.invoke(classLoader, name, specTitle, specVersion, specVendor, implTitle,
-				implVersion, implVendor, sealBase);
-		});
-	}
-	
-	
     private Package definePackage(
 		String name, String specTitle,
 		String specVersion, String specVendor, String implTitle,
 		String implVersion, String implVendor, URL sealBase,
 		ClassLoader classLoader,
 		Method definePackageMethod,
-		Map<String, Package> definedPackages
+		Map<String, ?> definedPackages
 	) throws IllegalArgumentException {
-    	Package pack = (Package)definedPackages.get(name);
-    	if (pack == null) {
-    		synchronized (definedPackages) {
-    			pack = (Package)definedPackages.get(name);
-    			if (pack == null) {
-    				pack = definePackage(name, specTitle, specVersion, specVendor, implTitle, implVersion, implVendor,
-							sealBase, classLoader, definePackageMethod);
-    			}
+    	return ThrowingSupplier.get(() -> {
+    		try {
+    			definePackageMethod.setAccessible(true);
+    			return (Package) definePackageMethod.invoke(classLoader, name, specTitle, specVersion, specVendor, implTitle,
+    				implVersion, implVendor, sealBase);
+    		} catch (IllegalArgumentException exc) {
+    			logError("Package " + name + " already defined");
+    			return objectRetriever.retrievePackage(name, classLoader);
     		}
-    	}
-    	return pack;
+		});
     }
     
 	private void definePackageFor(Class<?> cls, 
 		ClassLoader classLoader,
 		Method definePackageMethod,
-		Map<String, Package> definedPackages
+		Map<String, ?> definedPackages
 	) {
 		if (cls.getName().contains(".")) {
 			String pckgName = cls.getName().substring(

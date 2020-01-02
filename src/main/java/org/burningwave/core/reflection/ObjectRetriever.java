@@ -44,7 +44,7 @@ public class ObjectRetriever implements Component {
 	private StreamHelper streamHelper;
 	private ClassLoaderDelegate classLoaderDelegate;
 	private Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
-	private Map<ClassLoader, Map<String, Package>> classLoadersPackages;
+	private Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 	private Predicate<Object> packageMapTester;
 	private TriFunction<ClassLoader, Object, String, Package> packageRetriever;
 	
@@ -174,8 +174,8 @@ public class ObjectRetriever implements Component {
 	}
 	
 	@SuppressWarnings({ "unchecked" })
-	public Map<String, Package> retrievePackages(ClassLoader classLoader) {
-		Map<String, Package> packages = classLoadersPackages.get(classLoader);
+	public Map<String, ?> retrievePackages(ClassLoader classLoader) {
+		Map<String, ?> packages = classLoadersPackages.get(classLoader);
 		if (packages != null) {
 			return packages;
 		} else {
@@ -222,7 +222,7 @@ public class ObjectRetriever implements Component {
 	}
 	
 	public Package retrievePackage(String pkgNm, ClassLoader classLoader) {
-		Map<String, Package> packages = retrievePackages(classLoader);
+		Map<String, ?> packages = retrievePackages(classLoader);
 		Object pckgToFind = packages.get(pkgNm);
 		if (pckgToFind != null) {
 			return packageRetriever.apply(classLoader, pckgToFind, pkgNm);
