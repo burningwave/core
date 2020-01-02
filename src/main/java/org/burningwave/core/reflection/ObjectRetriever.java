@@ -47,7 +47,7 @@ public class ObjectRetriever implements Component {
 	private Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 	private Predicate<Object> packageMapTester;
 	private TriFunction<ClassLoader, Object, String, Package> packageRetriever;
-	
+	private Unsafe unsafe;
 	
 	private ObjectRetriever(
 		Supplier<ClassHelper> classHelperSupplier,
@@ -55,7 +55,14 @@ public class ObjectRetriever implements Component {
 		MemberFinder memberFinder,
 		StreamHelper streamHelper,
 		IterableObjectHelper iterableObjectHelper
-	) {
+	) {	
+		try {
+			Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+			theUnsafeField.setAccessible(true);
+			this.unsafe = (Unsafe)theUnsafeField.get(null);
+		} catch (Throwable exc) {
+			Throwables.toRuntimeException(exc);
+		}
 		this.classHelperSupplier = classHelperSupplier;
 		this.classFactorySupplier = classFactorySupplier;
 		this.memberFinder = memberFinder;
@@ -77,7 +84,7 @@ public class ObjectRetriever implements Component {
 							).toString()
 						);
 						byte[] byteCode = classLoaderDelegateByteCode.stream().findFirst().get().toByteArray();
-						Class<?> cls = getUnsafe().defineAnonymousClass(getClassHelper().getClass(), byteCode, null);
+						Class<?> cls = unsafe.defineAnonymousClass(getClassHelper().getClass(), byteCode, null);
 						classLoaderDelegate = (ClassLoaderDelegate) cls.getConstructor().newInstance();
 					} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 							| InvocationTargetException | NoSuchMethodException | SecurityException exc) {
@@ -103,14 +110,7 @@ public class ObjectRetriever implements Component {
 	}
 	
 	public Unsafe getUnsafe() {
-		try {
-			Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
-			theUnsafeField.setAccessible(true);
-			return (Unsafe)theUnsafeField.get(null);
-		} catch (Throwable exc) {
-			Throwables.toRuntimeException(exc);
-		}
-		return null;
+		return unsafe;
 	}
 	
 	private ClassHelper getClassHelper() {
@@ -210,7 +210,6 @@ public class ObjectRetriever implements Component {
 			offset = 16;
 			step = 8;
 		}
-		Unsafe unsafe = getUnsafe();
 		while (true) {
 			Object object = unsafe.getObject(classLoader, offset);
 			//logDebug(offset + " " + object);
