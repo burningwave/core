@@ -109,10 +109,6 @@ public class ObjectRetriever implements Component {
 		return new ObjectRetriever(classHelperSupplier, classFactorySupplier, memberFinder, streamHelper, iterableObjectHelper);
 	}
 	
-	public Unsafe getUnsafe() {
-		return unsafe;
-	}
-	
 	private ClassHelper getClassHelper() {
 		return classHelper != null ?
 			classHelper :
