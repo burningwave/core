@@ -33,7 +33,7 @@ import org.burningwave.core.iterable.IterableObjectHelper;
 
 import sun.misc.Unsafe;
 
-//@SuppressWarnings("restriction")
+@SuppressWarnings("restriction")
 public class ObjectRetriever implements Component {
 	private IterableObjectHelper iterableObjectHelper;
 	private Supplier<ClassHelper> classHelperSupplier;
