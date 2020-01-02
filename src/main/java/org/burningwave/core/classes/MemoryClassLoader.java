@@ -32,7 +32,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	private Vector<Class<?>> definedClasses;
 	private Map<String, Package> definedPackages;
 	private boolean defaultPackageDefined = false;
-	private boolean initialized = false;
 		
 	
 	protected MemoryClassLoader(
@@ -46,7 +45,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		definedPackages = this.objectRetriever.retrievePackages(this);
 		notLoadedCompiledClasses = new ConcurrentHashMap<>();
 		loadedCompiledClasses = new ConcurrentHashMap<>();
-		initialized = true;
 	}
 	
 	static {
@@ -57,23 +55,10 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	public static MemoryClassLoader create(ClassLoader parentClassLoader, ClassHelper classHelper, ObjectRetriever objectRetriever) {
 		return new MemoryClassLoader(parentClassLoader, classHelper, objectRetriever);
 	}
-	
-	public boolean isInitialized() {
-		return initialized;
-	}
-
 
 
 	public boolean isEmpty() {
 		return definedClasses.isEmpty() && notLoadedCompiledClasses.isEmpty();
-	}
-	
-	public Vector<Class<?>> getDefinedClassesVector() {
-		return definedClasses;
-	}	
-
-    public Map<String, Package> getDefinedPackagesMap() {
-		return definedPackages;
 	}
 
 	public void addCompiledClass(String name, ByteBuffer byteCode) {
@@ -326,6 +311,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	@Override
 	public void close() {
 		clear();
+		objectRetriever.unregister(this);
 		notLoadedCompiledClasses = null;
 		loadedCompiledClasses = null;
 		definedClasses = null;

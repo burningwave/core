@@ -224,4 +224,9 @@ public class ObjectRetriever implements Component {
 		return getClassHelper().executeCode(imports, className, supplierCode, returnedClass, componentSupplier);
 	}
 	
+	public void unregister(ClassLoader classLoader) {
+		classLoadersClasses.remove(classLoader);
+		classLoadersPackages.remove(classLoader);
+	}
+	
 }
