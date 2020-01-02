@@ -238,6 +238,10 @@ public class JavaMemoryCompiler implements Component {
 	    public ByteBuffer toByteBuffer() {
 	    	return baos.getBuffer();
 	    }
+	    
+	    public byte[] toByteArray() {
+	    	return baos.toByteArray();
+	    }
 
 	    @Override
 	    public ByteBufferOutputStream openOutputStream() {

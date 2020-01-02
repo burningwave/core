@@ -13,7 +13,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
@@ -33,6 +32,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	private Vector<Class<?>> definedClasses;
 	private Map<String, Package> definedPackages;
 	private boolean defaultPackageDefined = false;
+	private boolean initialized = false;
 		
 	
 	protected MemoryClassLoader(
@@ -42,10 +42,11 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		super(parentClassLoader);
 		this.classHelper = classHelper;
 		this.objectRetriever = objectRetriever;
-		notLoadedCompiledClasses = new ConcurrentHashMap<>();
-		loadedCompiledClasses = new ConcurrentHashMap<>();
 		definedClasses = this.objectRetriever.retrieveClasses(this);
 		definedPackages = this.objectRetriever.retrievePackages(this);
+		notLoadedCompiledClasses = new ConcurrentHashMap<>();
+		loadedCompiledClasses = new ConcurrentHashMap<>();
+		initialized = true;
 	}
 	
 	static {
@@ -57,17 +58,25 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		return new MemoryClassLoader(parentClassLoader, classHelper, objectRetriever);
 	}
 	
+	public boolean isInitialized() {
+		return initialized;
+	}
+
+
+
 	public boolean isEmpty() {
 		return definedClasses.isEmpty() && notLoadedCompiledClasses.isEmpty();
 	}
 	
-	public Set<Class<?>> getDefinedClasses() {
-		synchronized (definedClasses) {
-			return definedClasses.stream().collect(Collectors.toSet());
-		}		
+	public Vector<Class<?>> getDefinedClassesVector() {
+		return definedClasses;
+	}	
+
+    public Map<String, Package> getDefinedPackagesMap() {
+		return definedPackages;
 	}
 
-    public void addCompiledClass(String name, ByteBuffer byteCode) {
+	public void addCompiledClass(String name, ByteBuffer byteCode) {
     	if (getLoadedClass(name) == null) {
     		synchronized(definedClasses) {
 				if (getLoadedClass(name) == null) {
@@ -127,9 +136,9 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
     @Override
     protected Package definePackage(String name, String specTitle,
-    		String specVersion, String specVendor, String implTitle,
-    		String implVersion, String implVendor, URL sealBase)
-    		throws IllegalArgumentException {
+		String specVersion, String specVendor, String implTitle,
+		String implVersion, String implVendor, URL sealBase
+	) throws IllegalArgumentException {
     	Package pack = (Package)definedPackages.get(name);
     	if (pack == null) {
     		synchronized (definedPackages) {
@@ -148,9 +157,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			String pckgName = cls.getName().substring(
 		    	0, cls.getName().lastIndexOf(".")
 		    );
-		    if (objectRetriever.retrievePackage(pckgName, this) == null && 
-		    	(getParent() == null || objectRetriever.retrievePackage(pckgName, getParent()) == null)
-		    ) {
+		    if (objectRetriever.retrievePackage(pckgName, this) == null) {
 		    	definePackage(pckgName);
 			}	
 		} else {

@@ -433,7 +433,7 @@ public abstract class CodeGenerator implements Component {
 	}
 	
 	
-	public static class ForCodeExecutor  extends CodeGenerator {
+	public static class ForCodeExecutor extends CodeGenerator {
 		
 		private ForCodeExecutor(
 				MemberFinder memberFinder,

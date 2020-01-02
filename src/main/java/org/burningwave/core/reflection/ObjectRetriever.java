@@ -2,49 +2,81 @@ package org.burningwave.core.reflection;
 
 //import java.lang.invoke.MethodHandles;
 //import java.lang.invoke.VarHandle;
-import java.util.ArrayList;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHelper;
+import org.burningwave.core.classes.ClassLoaderDelegate;
+import org.burningwave.core.classes.JavaMemoryCompiler.MemoryFileObject;
 import org.burningwave.core.classes.MethodHelper;
+import org.burningwave.core.common.JVMChecker;
 import org.burningwave.core.common.Strings;
+import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
 
+import sun.misc.Unsafe;
+
+@SuppressWarnings("restriction")
 public class ObjectRetriever implements Component {
-	private PropertyAccessor.ByFieldOrByMethod byFieldOrByMethodPropertyAccessor;
 	private MethodHelper methodHelper;
 	private IterableObjectHelper iterableObjectHelper;
 	private Supplier<ClassHelper> classHelperSupplier;
 	private ClassHelper classHelper;
-
+	private Supplier<ClassFactory> classFactorySupplier;
+	private ClassFactory classFactory;
+	private StreamHelper streamHelper;
+	private ClassLoaderDelegate classLoaderDelegate;
+	private Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
+	private Map<ClassLoader, Map<String, Package>> classLoadersPackages;
 	
 	private ObjectRetriever(
 		Supplier<ClassHelper> classHelperSupplier,
-		PropertyAccessor.ByFieldOrByMethod byFieldOrByMethodPropertyAccessor, 
+		Supplier<ClassFactory> classFactorySupplier,
+		StreamHelper streamHelper,
 		MethodHelper methodHelper, 
 		IterableObjectHelper iterableObjectHelper
 	) {
 		this.classHelperSupplier = classHelperSupplier;
-		this.byFieldOrByMethodPropertyAccessor = byFieldOrByMethodPropertyAccessor;
+		this.classFactorySupplier = classFactorySupplier;
+		this.streamHelper = streamHelper;
 		this.methodHelper = methodHelper;
 		this.iterableObjectHelper = iterableObjectHelper;
+		this.classLoadersClasses = new ConcurrentHashMap<>();
+		this.classLoadersPackages = new ConcurrentHashMap<>();
 	}
 	
 	public static ObjectRetriever create(
 		Supplier<ClassHelper> classHelperSupplier,
-		PropertyAccessor.ByFieldOrByMethod byFieldOrByMethodPropertyAccessor,
+		Supplier<ClassFactory> classFactorySupplier,
+		StreamHelper streamHelper,
 		MethodHelper methodHelper,
 		IterableObjectHelper iterableObjectHelper
 	) {
-		return new ObjectRetriever(classHelperSupplier, byFieldOrByMethodPropertyAccessor, methodHelper, iterableObjectHelper);
+		return new ObjectRetriever(classHelperSupplier, classFactorySupplier, streamHelper, methodHelper, iterableObjectHelper);
+	}
+	
+	public Unsafe getUnsafe() {
+		try {
+			Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+			theUnsafeField.setAccessible(true);
+			return (Unsafe)theUnsafeField.get(null);
+		} catch (Throwable exc) {
+			Throwables.toRuntimeException(exc);
+		}
+		return null;
 	}
 	
 	private ClassHelper getClassHelper() {
@@ -53,39 +85,116 @@ public class ObjectRetriever implements Component {
 			(classHelper = classHelperSupplier.get());
 	}
 	
+	private ClassFactory getClassFactory() {
+		return classFactory != null ?
+			classFactory :
+			(classFactory = classFactorySupplier.get());
+	}
+	
+	@SuppressWarnings({ "unchecked" })
 	public Vector<Class<?>> retrieveClasses(ClassLoader classLoader) {
-//		try {
-//			MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(ClassLoader.class, MethodHandles.lookup());
-//			VarHandle varHandle = lookup.findVarHandle(ClassLoader.class, "classes", Vector.class);
-//			return (Vector<Class<?>>)varHandle.get(classLoader);		
-//		} catch (Throwable exc) {
-			return byFieldOrByMethodPropertyAccessor.get(classLoader, "classes");
-//		}
+		Vector<Class<?>> classes = classLoadersClasses.get(classLoader);
+		if (classes != null) {
+			return classes;
+		} else {
+			classes = classLoadersClasses.get(classLoader);
+			if (classes == null) {
+				synchronized (classLoadersClasses) {
+					classes = classLoadersClasses.get(classLoader);
+					if (classes == null) {
+						classes = (Vector<Class<?>>)iterateClassLoaderFields(classLoader, (object) -> object instanceof Vector);
+						classLoadersClasses.put(classLoader, classes);
+						return classes;
+					}
+				}
+			}
+		}
+		throw Throwables.toRuntimeException("Could not find classes Vector on " + classLoader);
 	}
 	
+	@SuppressWarnings({ "unchecked" })
 	public Map<String, Package> retrievePackages(ClassLoader classLoader) {
-//		try {
-//			MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(ClassLoader.class, MethodHandles.lookup());
-//			VarHandle varHandle = lookup.findVarHandle(ClassLoader.class, "packages", java.util.concurrent.ConcurrentHashMap.class);
-//			return (Map<String, Package>)varHandle.get(classLoader);
-//		} catch (Throwable exc) {
-			return byFieldOrByMethodPropertyAccessor.get(classLoader, "packages");
-//		}
+		Map<String, Package> packages = classLoadersPackages.get(classLoader);
+		if (packages != null) {
+			return packages;
+		} else {
+			packages = classLoadersPackages.get(classLoader);
+			if (packages == null) {
+				synchronized (classLoadersPackages) {
+					packages = classLoadersPackages.get(classLoader);
+					if (packages == null) {
+						packages = (Map<String, Package>)iterateClassLoaderFields(
+							classLoader,
+							(object) ->
+								object != null &&
+								(//object instanceof ConcurrentHashMap || 
+								object.getClass().equals(HashMap.class))
+						);
+						classLoadersPackages.put(classLoader, packages);
+						return packages;
+					}
+				}
+			}
+		}
+		throw Throwables.toRuntimeException("Could not find packages Map on " + classLoader);
 	}
 	
-	@SuppressWarnings("unchecked")
-	public Package retrievePackage(String pkgNm, ClassLoader... classLoaders) {
-		if (classLoaders == null || classLoaders.length == 0) {
-			throw Throwables.toRuntimeException("classLoaders parameter must be valorized");
+
+	protected Object iterateClassLoaderFields(ClassLoader classLoader, Predicate<Object> predicate) {
+		long offset;
+		long step;
+		if (JVMChecker.is32Bit()) {
+			offset = 8;
+			step = 4;
+		} else if (!JVMChecker.isCompressedOopsOffOn64Bit()) {
+			offset = 12;
+			step = 4;
+		} else {
+			offset = 16;
+			step = 8;
 		}
-		Supplier<Package>[] suppliers = new Supplier[classLoaders.length * 2];
-		int idx = 0;
-		for (ClassLoader classLoader : classLoaders) {
-			suppliers[idx++] = () -> methodHelper.invoke(classLoader, "getPackage", pkgNm);
-			suppliers[idx++] = () -> methodHelper.invoke(classLoader, "getDefinedPackage", pkgNm);
+		Unsafe unsafe = getUnsafe();
+		while (true) {
+			Object object = unsafe.getObject(classLoader, offset);
+			//logDebug(offset + " " + object);
+			if (predicate.test(object)) {
+				return object;
+			}
+			offset+=step;
 		}
-		return retrieveByIntrospection(suppliers);
+	}
+	
+	public Package retrievePackage(String pkgNm, ClassLoader classLoader) {
+		Map<String, Package> packages = retrievePackages(classLoader);
+		Object pckgToFind = packages.get(pkgNm);
+		if (pckgToFind != null) {
+			if (pckgToFind instanceof Package) {
+				return (Package)pckgToFind;
+			} else {
+				if (classLoaderDelegate != null) {
+					return classLoaderDelegate.getPackage(classLoader, pkgNm);
+				} else {
+					try {
+						Collection<MemoryFileObject> classLoaderDelegateByteCode = getClassFactory().build(
+							streamHelper.getResourceAsStringBuffer("org/burningwave/core/classes/ClassLoaderDelegate4JDKVersioneLaterThan8.java").toString()
+						);
+						
+						Class<?> cls = getUnsafe().defineAnonymousClass(classHelper.getClass(), classLoaderDelegateByteCode.stream().findFirst().get().toByteArray(), null);
+						classLoaderDelegate = (ClassLoaderDelegate) cls.getConstructor().newInstance();
+					} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+							| InvocationTargetException | NoSuchMethodException | SecurityException exc) {
+						throw Throwables.toRuntimeException(exc);
+					}
+				}
+				return methodHelper.invoke(classLoader, "getDefinedPackage", pkgNm);
+			}
+		} else if (classLoader.getParent() != null) {
+			return retrievePackage(pkgNm, classLoader.getParent());
+		} else {
+			return null;
+		}
 	}	
+
 	
 	public <T> T retrieveFromProperties(
 		Properties config, 
@@ -113,25 +222,5 @@ public class ObjectRetriever implements Component {
 		String className = returnedClass.getSimpleName() + "Supplier";
 		return getClassHelper().executeCode(imports, className, supplierCode, returnedClass, componentSupplier);
 	}
-
 	
-	@SuppressWarnings("unchecked")
-	public <T> T retrieveByIntrospection(Supplier<T>... suppliers) {
-		List<Throwable> exceptions = new ArrayList<>();
-		for (Supplier<T> supplier : suppliers) {
-			try {
-				return supplier.get();
-			} catch (Throwable exc) {
-				exceptions.add(exc);
-			}
-		}
-		if (exceptions.size() == suppliers.length) {
-			StringBuffer exceptionsMessages = new StringBuffer();
-			for (Throwable exc : exceptions) {
-				exceptionsMessages.append(exc.getMessage());
-			}
-			throw Throwables.toRuntimeException(exceptionsMessages.toString());
-		}
-		return null;
-	}
 }
