@@ -127,6 +127,7 @@ public class ObjectRetriever implements Component {
 							classLoader,
 							(object) ->
 								object != null &&
+								//TODO: gestione versione Java
 								(//object instanceof ConcurrentHashMap || 
 								object.getClass().equals(HashMap.class))
 						);
