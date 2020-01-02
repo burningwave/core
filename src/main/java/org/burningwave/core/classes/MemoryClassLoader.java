@@ -126,7 +126,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 				pack = super.definePackage(name, specTitle, specVersion, specVendor, implTitle,
 		    			implVersion, implVendor, sealBase);
 			} catch (IllegalArgumentException exc) {
-				logError("Package " + name + " already defined");
+				logWarn("Package " + name + " already defined");
     			return objectRetriever.retrievePackage(name, this);
 			}
     	}

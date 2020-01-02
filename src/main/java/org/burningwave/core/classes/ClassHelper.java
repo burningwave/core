@@ -193,7 +193,7 @@ public class ClassHelper implements Component {
     			return (Package) definePackageMethod.invoke(classLoader, name, specTitle, specVersion, specVendor, implTitle,
     				implVersion, implVendor, sealBase);
     		} catch (IllegalArgumentException exc) {
-    			logError("Package " + name + " already defined");
+    			logWarn("Package " + name + " already defined");
     			return objectRetriever.retrievePackage(name, classLoader);
     		}
 		});

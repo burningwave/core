@@ -40,7 +40,21 @@
 		<filter class="ch.qos.logback.classic.filter.LevelFilter">
 	        <level>ERROR</level>
 	        <onMatch>ACCEPT</onMatch>
+	        <!-- 
 	        <onMismatch>DENY</onMismatch>
+	         -->
+	    </filter>
+	    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+	        <level>WARN</level>
+	        <onMatch>ACCEPT</onMatch>
+	    </filter>
+	    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+	        <level>INFO</level>
+	        <onMatch>DENY</onMatch>
+	    </filter>
+	    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+	        <level>DEBUG</level>
+	        <onMatch>DENY</onMatch>
 	    </filter>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 			<fileNamePattern>${LOGS_HOME}/archived/core-error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
