@@ -69,17 +69,19 @@ public class ObjectRetriever implements Component {
 				} else {
 					try {
 						Collection<MemoryFileObject> classLoaderDelegateByteCode = getClassFactory().build(
-							this.streamHelper.getResourceAsStringBuffer("org/burningwave/core/classes/ClassLoaderDelegate4JDKVersioneLaterThan8.java").toString()
+							this.streamHelper.getResourceAsStringBuffer(
+								getClassHelper().getClass().getPackage().getName().replaceAll("\\.", "/") + "/ClassLoaderDelegate4JDKVersionLaterThan8.java"
+							).toString()
 						);
-						
-						Class<?> cls = getUnsafe().defineAnonymousClass(classHelper.getClass(), classLoaderDelegateByteCode.stream().findFirst().get().toByteArray(), null);
+						byte[] byteCode = classLoaderDelegateByteCode.stream().findFirst().get().toByteArray();
+						Class<?> cls = getUnsafe().defineAnonymousClass(getClassHelper().getClass(), byteCode, null);
 						classLoaderDelegate = (ClassLoaderDelegate) cls.getConstructor().newInstance();
 					} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 							| InvocationTargetException | NoSuchMethodException | SecurityException exc) {
 						throw Throwables.toRuntimeException(exc);
 					}
+					return null;
 				}
-				return null;
 			};
 		} catch (ClassNotFoundException e) {
 			packageMapTester = (object) -> object != null && object instanceof HashMap;
