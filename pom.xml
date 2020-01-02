@@ -226,7 +226,7 @@
 	<scm>
 		<url>https://github.com/burningwave/core</url>
 		<connection>scm:git:git://github.com/burningwave/core.git</connection>
-		<developerConnection>scm:git:git@github.com/burningwave/core.git</developerConnection>
+		<developerConnection>scm:git:git@github.com:burningwave/core.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 
