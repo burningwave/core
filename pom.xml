@@ -16,6 +16,7 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
+	
 	<organization>
 		<name>Burningwave</name>
 		<url>https://www.burningwave.org/</url>
@@ -28,6 +29,7 @@
 		searches are executed in multithreading context and are not affected by “the issue of the same class loaded by different classloaders” (normally if you try to execute "isAssignableFrom" method on a same class loaded from different classloader it return false).
 		This library is useful also for creating classes during runtime, facilitate the use of reflection and much more...
 	</description>
+	
 	<developers>
 		<developer>
 			<name>Roberto Gentili</name>
