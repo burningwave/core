@@ -3,7 +3,7 @@ It’s possible to search classes by every criteria that your immagination can m
 
 **This library is tested for Java versions ranging from 8 to 13 and is also useful for creating classes during runtime, facilitate the use of reflection and much more...**
 
-Below you will find how to include BurningWave core in you're projects and a simple code example and in the [wiki](https://github.com/burningwave/core/wiki) you will find more detailed examples.
+Below you will find how to include BurningWave core in your projects and a simple code example and in the [wiki](https://github.com/burningwave/core/wiki) you will find more detailed examples.
 
 ## Get started
 
