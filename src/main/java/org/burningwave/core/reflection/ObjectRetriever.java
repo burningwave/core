@@ -70,8 +70,10 @@ public class ObjectRetriever implements Component {
 		this.iterableObjectHelper = iterableObjectHelper;
 		this.classLoadersClasses = new ConcurrentHashMap<>();
 		this.classLoadersPackages = new ConcurrentHashMap<>();
-		try {
-			Class.forName("java.lang.NamedPackage");
+		if (findGetDefinedPackageMethod() == null) {
+			packageMapTester = (object) -> object != null && object instanceof HashMap;
+			packageRetriever = (classLoader, object, packageName) -> (Package)object;
+		} else {
 			packageMapTester = (object) -> object != null && object instanceof ConcurrentHashMap;
 			packageRetriever = (classLoader, object, packageName) -> {
 				if (classLoaderDelegate != null) {
@@ -93,9 +95,6 @@ public class ObjectRetriever implements Component {
 					return null;
 				}
 			};
-		} catch (ClassNotFoundException e) {
-			packageMapTester = (object) -> object != null && object instanceof HashMap;
-			packageRetriever = (classLoader, object, packageName) -> (Package)object;
 		}
 	}
 	
@@ -121,7 +120,7 @@ public class ObjectRetriever implements Component {
 			(classFactory = classFactorySupplier.get());
 	}
 	
-	public Method findDefinePackageMethod(ClassLoader classLoader) {
+	public Method findDefinePackageMethodAndMakeItAccesible(ClassLoader classLoader) {
 		Method method = memberFinder.findAll(
 			MethodCriteria.byScanUpTo((cls) -> 
 				cls.getName().equals(ClassLoader.class.getName())
@@ -137,7 +136,7 @@ public class ObjectRetriever implements Component {
 		return method;
 	}
 	
-	public Method findDefineClassMethod(ClassLoader classLoader) {
+	public Method findDefineClassMethodAndMakeItAccesible(ClassLoader classLoader) {
 		Method method = memberFinder.findAll(
 			MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
 				"defineClass"::equals
@@ -149,6 +148,20 @@ public class ObjectRetriever implements Component {
 			classLoader
 		).stream().findFirst().orElse(null);
 		method.setAccessible(true);
+		return method;
+	}
+	
+	public Method findGetDefinedPackageMethod() {
+		Method method = memberFinder.findAll(
+			MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
+				"getDefinedPackage"::equals
+			).and().parameterTypes(params -> 
+				params.length == 1
+			).and().parameterTypesAreAssignableFrom(
+				String.class
+			).and().returnType((cls) -> cls.getName().equals(Package.class.getName())),
+			ClassLoader.class
+		).stream().findFirst().orElse(null);
 		return method;
 	}
 	

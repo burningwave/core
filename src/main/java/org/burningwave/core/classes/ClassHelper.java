@@ -94,9 +94,9 @@ public class ClassHelper implements Component {
 	) throws ClassNotFoundException {
 		return loadOrUploadClass(
 			toLoad, classLoader,
-			objectRetriever.findDefineClassMethod(classLoader), 
+			objectRetriever.findDefineClassMethodAndMakeItAccesible(classLoader), 
 			objectRetriever.retrieveClasses(classLoader),
-			objectRetriever.findDefinePackageMethod(classLoader)
+			objectRetriever.findDefinePackageMethodAndMakeItAccesible(classLoader)
 		);
 	}
 	
