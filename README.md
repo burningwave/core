@@ -14,50 +14,50 @@ Below you will find how to include BurningWave core in your projects and a simpl
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>2.1.1</version>
+    <version>2.1.3</version>
 </dependency>
 ```
 
 * **Gradle Groovy**:
 ```
-implementation 'org.burningwave:core:2.1.1'
+implementation 'org.burningwave:core:2.1.3'
 ```
 
 * **Gradle Kotlin**:
 ```
-implementation("org.burningwave:core:2.1.1")
+implementation("org.burningwave:core:2.1.3")
 ```
 
 * **Scala**:
 ```
-libraryDependencies += "org.burningwave" % "core" % "2.1.1"
+libraryDependencies += "org.burningwave" % "core" % "2.1.3"
 ```
 
 * **Apache Ivy**:
 ```
-<dependency org="org.burningwave" name="core" rev="2.1.1" />
+<dependency org="org.burningwave" name="core" rev="2.1.3" />
 ```
 
 * **Groovy Grape**:
 ```
 @Grapes(
-  @Grab(group='org.burningwave', module='core', version='2.1.1')
+  @Grab(group='org.burningwave', module='core', version='2.1.3')
 )
 ```
 
 * **Leiningen**:
 ```
-[org.burningwave/core "2.1.1"]
+[org.burningwave/core "2.1.3"]
 ```
 
 * **Apache Buildr**:
 ```
-'org.burningwave:core:jar:2.1.1'
+'org.burningwave:core:jar:2.1.3'
 ```
 
 * **PURL**:
 ```
-pkg:maven/org.burningwave/core@2.1.1
+pkg:maven/org.burningwave/core@2.1.3
 ```
 
 ## ... And now the code: let's retrieve all classes of the runtime classpath!
