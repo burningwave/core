@@ -70,11 +70,15 @@ public class ObjectRetriever implements Component {
 		this.iterableObjectHelper = iterableObjectHelper;
 		this.classLoadersClasses = new ConcurrentHashMap<>();
 		this.classLoadersPackages = new ConcurrentHashMap<>();
-		if (findGetDefinedPackageMethod() == null) {
+		try {
+			Class.forName("java.lang.NamedPackage");
+			packageMapTester = (object) -> object != null && object instanceof ConcurrentHashMap;
+		} catch (ClassNotFoundException e) {
 			packageMapTester = (object) -> object != null && object instanceof HashMap;
+		}
+		if (findGetDefinedPackageMethod() == null) {
 			packageRetriever = (classLoader, object, packageName) -> (Package)object;
 		} else {
-			packageMapTester = (object) -> object != null && object instanceof ConcurrentHashMap;
 			packageRetriever = (classLoader, object, packageName) -> {
 				if (classLoaderDelegate != null) {
 					return classLoaderDelegate.getPackage(classLoader, packageName);
