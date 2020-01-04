@@ -31,7 +31,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	private Map<String, ByteBuffer> loadedCompiledClasses;
 	private Vector<Class<?>> definedClasses;
 	private Map<String, ?> definedPackages;
-	private boolean defaultPackageDefined = false;
+	private boolean defaultPackageDefined;
 		
 	
 	protected MemoryClassLoader(
@@ -109,31 +109,36 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
 	public boolean hasPackageBeenDefined(String packageName) {
 		if (packageName != null) {
-			return definedPackages.get(packageName) != null;
+			return objectRetriever.retrievePackage(packageName, this) != null;
 		} else {
 			return defaultPackageDefined;
 		}
 	}
     
     @Override
-    protected Package definePackage(String name, String specTitle,
+    protected Package definePackage(String packageName, String specTitle,
 		String specVersion, String specVendor, String implTitle,
 		String implVersion, String implVendor, URL sealBase
 	) throws IllegalArgumentException {
-    	Package pack = objectRetriever.retrievePackage(name, this);
-    	if (pack == null) {
-    		try {
-				pack = super.definePackage(name, specTitle, specVersion, specVendor, implTitle,
-		    			implVersion, implVendor, sealBase);
-			} catch (IllegalArgumentException exc) {
-				logWarn("Package " + name + " already defined");
-    			return objectRetriever.retrievePackage(name, this);
-			}
+    	Package pkg = null;
+    	if (packageName != null) {
+    		pkg = objectRetriever.retrievePackage(packageName, this);
+    		if (pkg == null) {
+    			try {
+    				pkg = super.definePackage(packageName, specTitle, specVersion, specVendor, implTitle,
+    		    			implVersion, implVendor, sealBase);
+    			} catch (IllegalArgumentException exc) {
+    				logWarn("Package " + packageName + " already defined");
+    				pkg = objectRetriever.retrievePackage(packageName, this);
+    			}
+    		}
+    	} else if (!defaultPackageDefined) {
+    		defaultPackageDefined = true;
     	}
-    	return pack;
+    	return pkg;
     }
     
-	protected void definePackageForIfNotDefined(Class<?> cls) {
+	protected void definePackageOf(Class<?> cls) {
 		if (cls.getName().contains(".")) {
 			String pckgName = cls.getName().substring(
 		    	0, cls.getName().lastIndexOf(".")
@@ -142,7 +147,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		    	definePackage(pckgName, null, null, null, null, null, null, null);
 			}	
 		} else {
-			defaultPackageDefined = true;
+			definePackage(null, null, null, null, null, null, null, null);
 		}
 	}
     
@@ -198,7 +203,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 						try {
 	                		cls = defineClass(className, byteCode, null);
 	                		addLoadedCompiledClass(className, byteCode);
-	                		definePackageForIfNotDefined(cls);
+	                		definePackageOf(cls);
 	                	} catch (NoClassDefFoundError noClassDefFoundError) {
 	                		String notFoundClassName = noClassDefFoundError.getMessage().replace("/", ".");
 	                		while (!notFoundClassName.equals(className)) {
