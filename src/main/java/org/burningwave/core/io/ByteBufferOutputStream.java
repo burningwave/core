@@ -58,10 +58,6 @@ public class ByteBufferOutputStream extends OutputStream {
         buffer.put(sourceBuffer);
     }
 
-    public ByteBuffer buffer() {
-        return buffer;
-    }
-
     public int position() {
         return buffer.position();
     }
