@@ -172,11 +172,13 @@ public class JavaMemoryCompiler implements Component {
 		
 		private String getPackageNameFromErrorMessage(String message) {
 			String objName = null;
-			if (message.contains("package")){
-				objName = message.substring(message.indexOf("package") + 8);
-				int firstOccOfSpaceIdx = objName.indexOf(" ");
-				if(firstOccOfSpaceIdx!=-1) {
-					objName = objName.substring(0, firstOccOfSpaceIdx);
+			if (!message.contains("package exists in another module")) {
+				if (message.contains("package")){
+					objName = message.substring(message.indexOf("package") + 8);
+					int firstOccOfSpaceIdx = objName.indexOf(" ");
+					if(firstOccOfSpaceIdx!=-1) {
+						objName = objName.substring(0, firstOccOfSpaceIdx);
+					}
 				}
 			}
 			return objName;
