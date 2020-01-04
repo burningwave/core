@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
@@ -19,6 +20,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.MemberFinder;
+import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.common.JVMChecker;
 import org.burningwave.core.common.Strings;
@@ -124,7 +126,7 @@ public class ObjectRetriever implements Component {
 	private Method findDefineClassMethodAndMakeItAccesible(ClassLoader classLoader) {
 		Method method = memberFinder.findAll(
 			MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
-				"defineClass"::equals
+				(classLoader instanceof MemoryClassLoader? "_defineClass" : "defineClass")::equals
 			).and().parameterTypes(params -> 
 				params.length == 3
 			).and().parameterTypesAreAssignableFrom(
@@ -231,13 +233,30 @@ public class ObjectRetriever implements Component {
 		}
 	}
 	
-	public Package retrievePackage(String pkgNm, ClassLoader classLoader) {
+	public Class<?> retrieveClass(ClassLoader classLoader, String className) {
+		Vector<Class<?>> definedClasses = retrieveClasses(classLoader);
+		synchronized(definedClasses) {
+			Iterator<?> itr = definedClasses.iterator();
+			while(itr.hasNext()) {
+				Class<?> cls = (Class<?>)itr.next();
+				if (cls.getName().equals(className)) {
+					return cls;
+				}
+			}
+		}
+		if (classLoader.getParent() != null) {
+			return retrieveClass(classLoader.getParent(), className);
+		}
+		return null;
+	}	
+	
+	public Package retrievePackage(ClassLoader classLoader, String packageName) {
 		Map<String, ?> packages = retrievePackages(classLoader);
-		Object pckgToFind = packages.get(pkgNm);
-		if (pckgToFind != null) {
-			return packageRetriever.apply(classLoader, pckgToFind, pkgNm);
+		Object packageToFind = packages.get(packageName);
+		if (packageToFind != null) {
+			return packageRetriever.apply(classLoader, packageToFind, packageName);
 		} else if (classLoader.getParent() != null) {
-			return retrievePackage(pkgNm, classLoader.getParent());
+			return retrievePackage(classLoader.getParent(), packageName);
 		} else {
 			return null;
 		}

@@ -191,11 +191,7 @@ public class ClassHelper implements Component {
 		ByteBuffer byteCode
 	) throws ClassNotFoundException {
 		try {
-			Class<?> cls = (Class<?>)method.invoke(classLoader, className, byteCode, null);
-			if (classLoader instanceof MemoryClassLoader) {
-				((MemoryClassLoader)classLoader).addLoadedCompiledClass(className, byteCode);
-			}
-			return cls;
+			return (Class<?>)method.invoke(classLoader, className, byteCode, null);
 		} catch (InvocationTargetException iTE) {
 			Throwable targetExcption = iTE.getTargetException();
 			if (targetExcption instanceof ClassNotFoundException) {
@@ -223,7 +219,7 @@ public class ClassHelper implements Component {
     				implVersion, implVendor, sealBase);
     		} catch (IllegalArgumentException exc) {
     			logWarn("Package " + name + " already defined");
-    			return objectRetriever.retrievePackage(name, classLoader);
+    			return objectRetriever.retrievePackage(classLoader, name);
     		}
 		});
     }
@@ -236,7 +232,7 @@ public class ClassHelper implements Component {
 			String pckgName = cls.getName().substring(
 		    	0, cls.getName().lastIndexOf(".")
 		    );
-		    Package pkg = objectRetriever.retrievePackage(pckgName, classLoader);
+		    Package pkg = objectRetriever.retrievePackage(classLoader, pckgName);
 		    if (pkg == null) {
 		    	pkg = definePackage(pckgName, null, null, null, null, null, null, null, classLoader, definePackageMethod);
 			}	

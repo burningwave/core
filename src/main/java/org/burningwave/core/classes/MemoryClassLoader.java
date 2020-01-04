@@ -3,6 +3,7 @@ package org.burningwave.core.classes;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -17,6 +18,7 @@ import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.io.ByteBufferInputStream;
+import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.reflection.ObjectRetriever;
 
 
@@ -60,14 +62,8 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 
 	public void addCompiledClass(String name, ByteBuffer byteCode) {
-    	if (getLoadedClass(name) == null) {
-    		synchronized(definedClasses) {
-				if (getLoadedClass(name) == null) {
-    				notLoadedCompiledClasses.put(name, byteCode);
-    			} else {
-    				logWarn("Could not add compiled class {} cause it's already defined", name);
-    			} 
-			}
+    	if (objectRetriever.retrieveClass(this, name) == null) {
+    		notLoadedCompiledClasses.put(name, byteCode);
 		} else {
 			logWarn("Could not add compiled class {} cause it's already defined", name);
 		} 
@@ -107,7 +103,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
 	public boolean hasPackageBeenDefined(String packageName) {
 		if (packageName != null) {
-			return objectRetriever.retrievePackage(packageName, this) != null;
+			return objectRetriever.retrievePackage(this, packageName) != null;
 		} else {
 			return true;
 		}
@@ -120,14 +116,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	) throws IllegalArgumentException {
     	Package pkg = null;
     	if (packageName != null) {
-    		pkg = objectRetriever.retrievePackage(packageName, this);
+    		pkg = objectRetriever.retrievePackage(this, packageName);
     		if (pkg == null) {
     			try {
     				pkg = super.definePackage(packageName, specTitle, specVersion, specVendor, implTitle,
     		    			implVersion, implVendor, sealBase);
     			} catch (IllegalArgumentException exc) {
     				logWarn("Package " + packageName + " already defined");
-    				pkg = objectRetriever.retrievePackage(packageName, this);
+    				pkg = objectRetriever.retrievePackage(this, packageName);
     			}
     		}
     	}
@@ -139,7 +135,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			String pckgName = cls.getName().substring(
 		    	0, cls.getName().lastIndexOf(".")
 		    );
-		    if (objectRetriever.retrievePackage(pckgName, this) == null) {
+		    if (objectRetriever.retrievePackage(this, pckgName) == null) {
 		    	definePackage(pckgName, null, null, null, null, null, null, null);
 			}	
 		}
@@ -192,18 +188,17 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		if (byteCode != null) {
 			synchronized (byteCode) {
 				if ((byteCode = notLoadedCompiledClasses.get(className)) != null) {
-					cls = getLoadedClass(className);
+					cls = objectRetriever.retrieveClass(this, className);
 					if (cls == null) {
 						try {
-	                		cls = defineClass(className, byteCode, null);
-	                		addLoadedCompiledClass(className, byteCode);
-	                		definePackageOf(cls);
+	                		cls = _defineClass(className, byteCode, null);
 	                	} catch (NoClassDefFoundError noClassDefFoundError) {
 	                		String notFoundClassName = noClassDefFoundError.getMessage().replace("/", ".");
 	                		while (!notFoundClassName.equals(className)) {
 	                			try {
 	                				findClass(notFoundClassName);
 	                				cls = findClass(className);
+	                				definePackageOf(cls);
 	                			} catch (ClassNotFoundException exc) {
 	                				String newNotFoundClass = noClassDefFoundError.getMessage().replace("/", ".");
 	                				if (newNotFoundClass.equals(notFoundClassName)) {
@@ -236,7 +231,19 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		}
 	}
 
-
+	 protected Class<?> _defineClass(String className, java.nio.ByteBuffer byteCode, ProtectionDomain protectionDomain) {
+		 Class<?> cls = super.defineClass(className, byteCode, protectionDomain);
+		 addLoadedCompiledClass(className, byteCode);
+		 return cls;
+	 }
+	 
+	 protected final Class<?> _defineClass(String className, byte[] byteCode, int off, int len, ProtectionDomain protectionDomain) {
+		 try (ByteBufferOutputStream bBOS = new ByteBufferOutputStream()) {
+			 bBOS.write(byteCode, 0, byteCode.length);
+			 ByteBuffer byteCodeAsByteBuffer = bBOS.getBuffer();
+			 return _defineClass(className, byteCodeAsByteBuffer, protectionDomain);
+		 }
+	 }
 
 	public void removeNotLoadedCompiledClass(String name) {
 		synchronized (notLoadedCompiledClasses) {
@@ -262,20 +269,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			}
 		}
 		return toRet;
-	}
-	
-	
-	private Class<?> getLoadedClass(String name) {
-		synchronized(definedClasses) {
-			Iterator<?> itr = definedClasses.iterator();
-			while(itr.hasNext()) {
-				Class<?> cls = (Class<?>)itr.next();
-				if (cls.getName().equals(name)) {
-					return cls;
-				}
-			}
-		}
-		return null;
 	}
 	
 	public void forceCompiledClassesLoading() {
