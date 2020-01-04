@@ -64,7 +64,7 @@ public class ObjectRetriever implements Component {
 		} catch (ClassNotFoundException e) {
 			packageMapTester = (object) -> object != null && object instanceof HashMap;
 		}
-		if (findGetDefinedPackageMethod() != null) {
+		if (findGetDefinedPackageMethod() == null) {
 			packageRetriever = (classLoader, object, packageName) -> (Package)object;
 		} else {
 			packageRetriever = (classLoader, object, packageName) -> getClassHelper().getClassLoaderDelegate("ForJDKVersionLaterThan8").getPackage(classLoader, packageName);
