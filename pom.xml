@@ -6,7 +6,7 @@
 
 	<version>2.1.4-SNAPSHOT</version>
 	<packaging>jar</packaging>
-	<name>BurningWave core</name>
+	<name>Burningwave Core</name>
 	<url>https://www.burningwave.org/</url>
 	
 	<licenses>
@@ -18,7 +18,7 @@
 	</licenses>
 	
 	<organization>
-		<name>BurningWave</name>
+		<name>Burningwave</name>
 		<url>https://www.burningwave.org/</url>
 	</organization>
 	
@@ -35,7 +35,7 @@
 			<name>Roberto Gentili</name>
 			<id>roberto.gentili</id>
 			<email>roberto.gentili.1980@gmail.com</email>
-			<organization>BurningWave</organization>
+			<organization>Burningwave</organization>
 			<organizationUrl>https://www.burningwave.org/</organizationUrl>
 			<roles>
 				<role>Administrator</role>
