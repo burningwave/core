@@ -1,4 +1,4 @@
-**Burningwave core** is an advanced, free and open source Java library that contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria based classes search.
+**Burningwave Core** is an advanced, free and open source Java library that contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria based classes search.
 It’s possible to search classes by every criteria that your immagination can made by using lambda expressions. **Scan engine is highly optimized using direct allocated ByteBuffers to avoid heap saturation; searches are executed in multithreading context and are not affected by “_the issue of the same class loaded by different classloaders_”** (normally if you try to execute "isAssignableFrom" method on a same class loaded from different classloader it returns false).
 
 **Tested for Java versions ranging from 8 to 13 Burningwave core is also useful for creating classes during runtime, facilitate the use of reflection and much more...**
