@@ -1,13 +1,11 @@
 package org.burningwave.core.reflection;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -19,16 +17,12 @@ import java.util.function.Supplier;
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHelper;
-import org.burningwave.core.classes.ClassLoaderDelegate;
-import org.burningwave.core.classes.JavaMemoryCompiler.MemoryFileObject;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.common.JVMChecker;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.TriFunction;
-import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
 
 import sun.misc.Unsafe;
@@ -38,11 +32,7 @@ public class ObjectRetriever implements Component {
 	private IterableObjectHelper iterableObjectHelper;
 	private Supplier<ClassHelper> classHelperSupplier;
 	private ClassHelper classHelper;
-	private Supplier<ClassFactory> classFactorySupplier;
-	private ClassFactory classFactory;
 	private MemberFinder memberFinder;
-	private StreamHelper streamHelper;
-	private ClassLoaderDelegate classLoaderDelegate;
 	private Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
 	private Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 	private Predicate<Object> packageMapTester;
@@ -51,9 +41,7 @@ public class ObjectRetriever implements Component {
 	
 	private ObjectRetriever(
 		Supplier<ClassHelper> classHelperSupplier,
-		Supplier<ClassFactory> classFactorySupplier,
 		MemberFinder memberFinder,
-		StreamHelper streamHelper,
 		IterableObjectHelper iterableObjectHelper
 	) {	
 		try {
@@ -64,9 +52,7 @@ public class ObjectRetriever implements Component {
 			Throwables.toRuntimeException(exc);
 		}
 		this.classHelperSupplier = classHelperSupplier;
-		this.classFactorySupplier = classFactorySupplier;
 		this.memberFinder = memberFinder;
-		this.streamHelper = streamHelper;
 		this.iterableObjectHelper = iterableObjectHelper;
 		this.classLoadersClasses = new ConcurrentHashMap<>();
 		this.classLoadersPackages = new ConcurrentHashMap<>();
@@ -79,37 +65,16 @@ public class ObjectRetriever implements Component {
 		if (findGetDefinedPackageMethod() == null) {
 			packageRetriever = (classLoader, object, packageName) -> (Package)object;
 		} else {
-			packageRetriever = (classLoader, object, packageName) -> {
-				if (classLoaderDelegate != null) {
-					return classLoaderDelegate.getPackage(classLoader, packageName);
-				} else {
-					try {
-						Collection<MemoryFileObject> classLoaderDelegateByteCode = getClassFactory().build(
-							this.streamHelper.getResourceAsStringBuffer(
-								getClassHelper().getClass().getPackage().getName().replaceAll("\\.", "/") + "/ClassLoaderDelegate4JDKVersionLaterThan8.java"
-							).toString()
-						);
-						byte[] byteCode = classLoaderDelegateByteCode.stream().findFirst().get().toByteArray();
-						Class<?> cls = unsafe.defineAnonymousClass(getClassHelper().getClass(), byteCode, null);
-						classLoaderDelegate = (ClassLoaderDelegate) cls.getConstructor().newInstance();
-					} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-							| InvocationTargetException | NoSuchMethodException | SecurityException exc) {
-						throw Throwables.toRuntimeException(exc);
-					}
-					return null;
-				}
-			};
+			packageRetriever = (classLoader, object, packageName) -> getClassHelper().getClassLoaderDelegate("ForJDKVersionLaterThan8").getPackage(classLoader, packageName);
 		}
 	}
 	
 	public static ObjectRetriever create(
 		Supplier<ClassHelper> classHelperSupplier,
-		Supplier<ClassFactory> classFactorySupplier,
 		MemberFinder memberFinder,
-		StreamHelper streamHelper,
 		IterableObjectHelper iterableObjectHelper
 	) {
-		return new ObjectRetriever(classHelperSupplier, classFactorySupplier, memberFinder, streamHelper, iterableObjectHelper);
+		return new ObjectRetriever(classHelperSupplier, memberFinder, iterableObjectHelper);
 	}
 	
 	private ClassHelper getClassHelper() {
@@ -118,10 +83,8 @@ public class ObjectRetriever implements Component {
 			(classHelper = classHelperSupplier.get());
 	}
 	
-	private ClassFactory getClassFactory() {
-		return classFactory != null ?
-			classFactory :
-			(classFactory = classFactorySupplier.get());
+	public Unsafe getUnsafe() {
+		return this.unsafe;
 	}
 	
 	public Method findDefinePackageMethodAndMakeItAccesible(ClassLoader classLoader) {
@@ -292,11 +255,7 @@ public class ObjectRetriever implements Component {
 		this.iterableObjectHelper = null;
 		this.classHelperSupplier = null;
 		this.classHelper = null;
-		this.classFactorySupplier = null;
-		this.classFactory = null;
 		this.memberFinder = null;
-		this.streamHelper = null;
-		this.classLoaderDelegate = null;
 		this.packageMapTester = null;
 		this.packageRetriever = null;
 		this.unsafe = null;
