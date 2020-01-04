@@ -144,6 +144,13 @@ abstract class SearchCriteriaAbst<S extends SearchCriteriaAbst<S>> extends Crite
 		return (S)this;
 	}
 	
+	public S isolateClassLoader() {
+		useSharedClassLoaderAsParent = false;
+		useSharedClassLoaderAsMain = false;		
+		parentClassLoaderForMainClassLoader = null;
+		return (S)this;
+	}
+	
 	public S waitForSearchEnding(boolean waitForSearchEnding) {
 		this.waitForSearchEnding = waitForSearchEnding;
 		return (S)this;
