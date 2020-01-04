@@ -7,7 +7,7 @@ Below you will find how to include the library in your projects and a simple cod
 
 ## Get started
 
-**To include Burningwave core library in your projects simply use with**:
+**To include Burningwave Core library in your projects simply use with**:
 
 * **Apache Maven**:
 ```xml
