@@ -31,8 +31,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	private Map<String, ByteBuffer> loadedCompiledClasses;
 	private Vector<Class<?>> definedClasses;
 	private Map<String, ?> definedPackages;
-	private boolean defaultPackageDefined;
-		
 	
 	protected MemoryClassLoader(
 		ClassLoader parentClassLoader,
@@ -111,7 +109,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		if (packageName != null) {
 			return objectRetriever.retrievePackage(packageName, this) != null;
 		} else {
-			return defaultPackageDefined;
+			return true;
 		}
 	}
     
@@ -132,8 +130,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     				pkg = objectRetriever.retrievePackage(packageName, this);
     			}
     		}
-    	} else if (!defaultPackageDefined) {
-    		defaultPackageDefined = true;
     	}
     	return pkg;
     }
@@ -146,8 +142,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		    if (objectRetriever.retrievePackage(pckgName, this) == null) {
 		    	definePackage(pckgName, null, null, null, null, null, null, null);
 			}	
-		} else {
-			definePackage(null, null, null, null, null, null, null, null);
 		}
 	}
     
@@ -310,7 +304,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		loadedCompiledClasses.clear();
 		definedClasses.clear();
 		definedPackages.clear();
-		defaultPackageDefined = false;
 	}
 	
 	@Override

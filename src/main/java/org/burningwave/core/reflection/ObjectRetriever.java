@@ -38,6 +38,7 @@ public class ObjectRetriever implements Component {
 	private Predicate<Object> packageMapTester;
 	private TriFunction<ClassLoader, Object, String, Package> packageRetriever;
 	private Unsafe unsafe;
+	private Map<String, Method> classLoadersMethods;
 	
 	private ObjectRetriever(
 		Supplier<ClassHelper> classHelperSupplier,
@@ -56,13 +57,14 @@ public class ObjectRetriever implements Component {
 		this.iterableObjectHelper = iterableObjectHelper;
 		this.classLoadersClasses = new ConcurrentHashMap<>();
 		this.classLoadersPackages = new ConcurrentHashMap<>();
+		this.classLoadersMethods = new ConcurrentHashMap<>();
 		try {
 			Class.forName("java.lang.NamedPackage");
 			packageMapTester = (object) -> object != null && object instanceof ConcurrentHashMap;
 		} catch (ClassNotFoundException e) {
 			packageMapTester = (object) -> object != null && object instanceof HashMap;
 		}
-		if (findGetDefinedPackageMethod() == null) {
+		if (findGetDefinedPackageMethod() != null) {
 			packageRetriever = (classLoader, object, packageName) -> (Package)object;
 		} else {
 			packageRetriever = (classLoader, object, packageName) -> getClassHelper().getClassLoaderDelegate("ForJDKVersionLaterThan8").getPackage(classLoader, packageName);
@@ -87,7 +89,15 @@ public class ObjectRetriever implements Component {
 		return this.unsafe;
 	}
 	
-	public Method findDefinePackageMethodAndMakeItAccesible(ClassLoader classLoader) {
+	public Method getDefinePackageMethod(ClassLoader classLoader) {
+		return getMethod(
+			classLoader,
+			classLoader.getClass().getName() + "_" + "definePackage",
+			() -> findDefinePackageMethodAndMakeItAccesible(classLoader)
+		);
+	}
+	
+	private Method findDefinePackageMethodAndMakeItAccesible(ClassLoader classLoader) {
 		Method method = memberFinder.findAll(
 			MethodCriteria.byScanUpTo((cls) -> 
 				cls.getName().equals(ClassLoader.class.getName())
@@ -103,7 +113,15 @@ public class ObjectRetriever implements Component {
 		return method;
 	}
 	
-	public Method findDefineClassMethodAndMakeItAccesible(ClassLoader classLoader) {
+	public Method getDefineClassMethod(ClassLoader classLoader) {
+		return getMethod(
+			classLoader,
+			classLoader.getClass().getName() + "_" + "defineClass",
+			() -> findDefineClassMethodAndMakeItAccesible(classLoader)
+		);
+	}
+	
+	private Method findDefineClassMethodAndMakeItAccesible(ClassLoader classLoader) {
 		Method method = memberFinder.findAll(
 			MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
 				"defineClass"::equals
@@ -115,6 +133,19 @@ public class ObjectRetriever implements Component {
 			classLoader
 		).stream().findFirst().orElse(null);
 		method.setAccessible(true);
+		return method;
+	}
+	
+	private Method getMethod(ClassLoader classLoader, String key, Supplier<Method> methodSupplier) {
+		Method method = classLoadersMethods.get(key);
+		if (method == null) {
+			synchronized (classLoadersMethods) {
+				method = classLoadersMethods.get(key);
+				if (method == null) {
+					classLoadersMethods.put(key, method = methodSupplier.get());
+				}
+			}
+		}
 		return method;
 	}
 	
@@ -260,5 +291,5 @@ public class ObjectRetriever implements Component {
 		this.packageRetriever = null;
 		this.unsafe = null;
 	}
-	
+
 }
