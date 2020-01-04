@@ -17,23 +17,23 @@ import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberCriteria;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.hunter.SearchCriteriaAbst.TestContext;
-import org.burningwave.core.common.Strings;
 import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileSystemHelper;
+import org.burningwave.core.io.FileSystemHelper.Scan;
+import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
-import org.burningwave.core.io.FileSystemHelper.Scan;
 import org.burningwave.core.reflection.ObjectRetriever;
 
 
-public class ClassHunter extends CacherHunter<String, Class<?>, ClassHunter.SearchContext, ClassHunter.SearchResult> {
+public class FSIClassHunter extends CacherHunter<FileSystemItem, Class<?>, FSIClassHunter.SearchContext, FSIClassHunter.SearchResult> {
 	PathMemoryClassLoader pathMemoryClassLoader;
-	public final static String PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY = "classHunter.pathMemoryClassLoader.parent.supplier.imports";
-	public final static String PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY = "classHunter.pathMemoryClassLoader.parent";
+	public final static String PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY = "fSIClassHunter.pathMemoryClassLoader.parent.supplier.imports";
+	public final static String PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY = "fSIClassHunter.pathMemoryClassLoader.parent";
 	public final static Map<String, String> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
 	
-	private ClassHunter(
+	private FSIClassHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemHelper fileSystemHelper, 
@@ -54,7 +54,7 @@ public class ClassHunter extends CacherHunter<String, Class<?>, ClassHunter.Sear
 			classHelper,
 			memberFinder,
 			objectRetriever, 
-			(variableInitObjects) -> ClassHunter.SearchContext._create(
+			(variableInitObjects) -> FSIClassHunter.SearchContext._create(
 				fileSystemHelper, streamHelper, variableInitObjects, objectRetriever
 			),
 			(context) -> new SearchResult(context)
@@ -65,11 +65,11 @@ public class ClassHunter extends CacherHunter<String, Class<?>, ClassHunter.Sear
 	}
 	
 	static {
-		DEFAULT_CONFIG_VALUES.put(ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "");
-		DEFAULT_CONFIG_VALUES.put(ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "null");
+		DEFAULT_CONFIG_VALUES.put(FSIClassHunter.PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "");
+		DEFAULT_CONFIG_VALUES.put(FSIClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "null");
 	}
 	
-	public static ClassHunter create(
+	public static FSIClassHunter create(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier, 
 		Supplier<ClassHunter> classHunterSupplier, 
 		FileSystemHelper fileSystemHelper, 
@@ -81,7 +81,7 @@ public class ClassHunter extends CacherHunter<String, Class<?>, ClassHunter.Sear
 		ObjectRetriever objectRetriever,
 		ClassLoader parentClassLoader
 	) {
-		return new ClassHunter(
+		return new FSIClassHunter(
 			byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classFactory, classHelper, memberFinder, objectRetriever, parentClassLoader
 		);
 	}	
@@ -98,38 +98,39 @@ public class ClassHunter extends CacherHunter<String, Class<?>, ClassHunter.Sear
 		return (SearchResult)super.findBy(criteria);
 	}
 	
+
 	@Override
-	<S extends SearchCriteriaAbst<S>> TestContext<S>  testCachedItem(ClassHunter.SearchContext context, String path, String key, Class<?> cls) {
+	<S extends SearchCriteriaAbst<S>> TestContext<S> testCachedItem(SearchContext context, String path,
+			FileSystemItem key, Class<?> cls) {
 		return context.testCriteria(cls);
 	}
 	
 	@Override
-	<S extends SearchCriteriaAbst<S>> void addCachedItemToContext(
-		ClassHunter.SearchContext context, TestContext<S> testContext, String path, Entry<String, Class<?>> cachedItemAsEntry
-	) {
+	<S extends SearchCriteriaAbst<S>> void addCachedItemToContext(SearchContext context, TestContext<S> testContext,
+			String path, Entry<FileSystemItem, Class<?>> cachedItemAsEntry) {
 		context.addItemFound(path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue(), testContext.getMembersFound());
 	}
 	
 	@Override
 	void retrieveItemFromFileInputStream(
-		ClassHunter.SearchContext context, 
+		FSIClassHunter.SearchContext context, 
 		TestContext<SearchCriteria> criteriaTestContext,
 		Scan.ItemContext<FileInputStream> scanItemContext, 
 		JavaClass javaClass
 	) {
 		context.addItemFound(
 			scanItemContext.getBasePathAsString(),
-			Strings.Paths.clean(scanItemContext.getInput().getAbsolutePath()),
+			FileSystemItem.ofPath(scanItemContext.getInput().getAbsolutePath()),
 			criteriaTestContext.getEntity(),
 			criteriaTestContext.getMembersFound()
 		);
 	}
 
 	@Override
-	void retrieveItemFromZipEntry(ClassHunter.SearchContext context, TestContext<SearchCriteria> criteriaTestContext, Scan.ItemContext<ZipInputStream.Entry> scanItemContext, JavaClass javaClass) {
+	void retrieveItemFromZipEntry(FSIClassHunter.SearchContext context, TestContext<SearchCriteria> criteriaTestContext, Scan.ItemContext<ZipInputStream.Entry> scanItemContext, JavaClass javaClass) {
 		context.addItemFound(
 			scanItemContext.getBasePathAsString(),
-			Strings.Paths.clean(scanItemContext.getInput().getAbsolutePath()),
+			FileSystemItem.ofPath(scanItemContext.getInput().getAbsolutePath()),
 			criteriaTestContext.getEntity(),
 			criteriaTestContext.getMembersFound()
 		);
@@ -143,7 +144,7 @@ public class ClassHunter extends CacherHunter<String, Class<?>, ClassHunter.Sear
 		super.close();
 	}
 	
-	public static class SearchContext extends org.burningwave.core.classes.hunter.SearchContext<String, Class<?>> {
+	public static class SearchContext extends org.burningwave.core.classes.hunter.SearchContext<FileSystemItem, Class<?>> {
 		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound;
 		private Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap;
 		
@@ -158,7 +159,7 @@ public class ClassHunter extends CacherHunter<String, Class<?>, ClassHunter.Sear
 			membersFoundFlatMap = new ConcurrentHashMap<>();
 		}
 		
-		void addItemFound(String path, String key, Class<?> item, Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersForCriteria) {
+		void addItemFound(String path, FileSystemItem key, Class<?> item, Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersForCriteria) {
 			super.addItemFound(path, key, item);
 			this.membersFound.put(item, membersForCriteria);
 			membersForCriteria.forEach((criteria, memberList) -> {
@@ -194,7 +195,7 @@ public class ClassHunter extends CacherHunter<String, Class<?>, ClassHunter.Sear
 		}
 	}
 
-	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<String, Class<?>> {
+	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<FileSystemItem, Class<?>> {
 		SearchResult(SearchContext context) {
 			super(context);
 		}

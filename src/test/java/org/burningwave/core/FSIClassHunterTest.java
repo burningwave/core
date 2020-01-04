@@ -14,13 +14,13 @@ import org.burningwave.core.classes.hunter.SearchCriteria;
 import org.burningwave.core.classes.hunter.SearchForPathCriteria;
 import org.junit.jupiter.api.Test;
 
-public class ClassHunterTest extends BaseTest {
+public class FSIClassHunterTest extends BaseTest {
 	
 	@Test
 	public void findAllTestOne() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePath("libs-for-test.zip")
 				)
@@ -34,7 +34,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllSubtypeOfTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 					//Search in the runtime Classpaths. Here you can add all absolute path you want:
 					//both folders, zip and jar will be scanned recursively
@@ -58,7 +58,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllSubtypeOfTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
@@ -76,7 +76,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllSubtypeOfTestThree() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
@@ -101,7 +101,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllSubtypeOfTestFour() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 					//Search in the runtime Classpaths. Here you can add all absolute path you want:
 					//both folders, zip and jar will be scanned recursively
@@ -125,7 +125,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllSubtypeOfWithMethodsTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
@@ -153,7 +153,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllSubtypeOfWithMethodsTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
@@ -181,7 +181,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllSubtypeOfWithMethodsTestThree() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
@@ -221,7 +221,7 @@ public class ClassHunterTest extends BaseTest {
 		);
 		
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 					componentSupplier.getPathHelper().getAllClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
@@ -254,7 +254,7 @@ public class ClassHunterTest extends BaseTest {
 		);
 		
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 					componentSupplier.getPathHelper().getAllClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
@@ -285,7 +285,7 @@ public class ClassHunterTest extends BaseTest {
 		);
 		
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).byMembers(
@@ -323,7 +323,7 @@ public class ClassHunterTest extends BaseTest {
 		);
 		
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 					componentSupplier.getPathHelper().getAllClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
@@ -351,7 +351,7 @@ public class ClassHunterTest extends BaseTest {
 		);
 		
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).byMembers(
@@ -381,7 +381,7 @@ public class ClassHunterTest extends BaseTest {
 		);
 		
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 					componentSupplier.getPathHelper().getAllClassPaths()
 				).byMembers(
@@ -406,7 +406,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllSubtypeOfWithMethodsAndConcatenatedCriteriaTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
@@ -461,7 +461,7 @@ public class ClassHunterTest extends BaseTest {
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(criteria),
+			() -> componentSupplier.getFSIClassHunter().findBy(criteria),
 			(result) -> result.getItemsFound()
 		);
 		criteria.byClasses((uploadedClasses, currentScannedClass) -> 
@@ -470,7 +470,7 @@ public class ClassHunterTest extends BaseTest {
 			Closeable.class
 		);
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(criteria),
+			() -> componentSupplier.getFSIClassHunter().findBy(criteria),
 			(result) -> result.getItemsFound()
 		);
 	}
@@ -481,11 +481,11 @@ public class ClassHunterTest extends BaseTest {
 		SearchForPathCriteria criteria = SearchCriteria.forPaths(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
-		componentSupplier.getClassHunter().loadCache(
+		componentSupplier.getFSIClassHunter().loadCache(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(criteria),
+			() -> componentSupplier.getFSIClassHunter().findBy(criteria),
 			(result) -> result.getItemsFound()
 		);
 		criteria.byClasses((uploadedClasses, currentScannedClass) -> 
@@ -494,7 +494,7 @@ public class ClassHunterTest extends BaseTest {
 			Closeable.class
 		);
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(criteria),
+			() -> componentSupplier.getFSIClassHunter().findBy(criteria),
 			(result) -> result.getItemsFound()
 		);
 	}
@@ -503,7 +503,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllBurningWaveClasses() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 					componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/classes"))
 				).allThat((currentScannedClass) -> 
@@ -518,7 +518,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllAnnotatedMethods() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getFSIClassHunter().findBy(
 				SearchCriteria.forPaths(
 						componentSupplier.getPathHelper().getMainClassPaths()
 				).allThat((cls) -> {

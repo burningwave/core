@@ -11,20 +11,21 @@ import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.CodeGenerator;
+import org.burningwave.core.classes.CodeGenerator.ForCodeExecutor;
+import org.burningwave.core.classes.CodeGenerator.ForConsumer;
+import org.burningwave.core.classes.CodeGenerator.ForFunction;
+import org.burningwave.core.classes.CodeGenerator.ForPojo;
+import org.burningwave.core.classes.CodeGenerator.ForPredicate;
 import org.burningwave.core.classes.ConstructorHelper;
 import org.burningwave.core.classes.FieldHelper;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodHelper;
-import org.burningwave.core.classes.CodeGenerator.ForCodeExecutor;
-import org.burningwave.core.classes.CodeGenerator.ForConsumer;
-import org.burningwave.core.classes.CodeGenerator.ForFunction;
-import org.burningwave.core.classes.CodeGenerator.ForPojo;
-import org.burningwave.core.classes.CodeGenerator.ForPredicate;
 import org.burningwave.core.classes.hunter.ByteCodeHunter;
 import org.burningwave.core.classes.hunter.ClassHunter;
 import org.burningwave.core.classes.hunter.ClassPathHunter;
+import org.burningwave.core.classes.hunter.FSIClassHunter;
 import org.burningwave.core.concurrent.ConcurrentHelper;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemItem;
@@ -252,7 +253,31 @@ public class ComponentContainer implements ComponentSupplier {
 			);
 		});
 	}
-
+	
+	@Override
+	public FSIClassHunter getFSIClassHunter() {
+		return getOrCreate(FSIClassHunter.class, () -> {
+			ObjectRetriever objectRetriever = getObjectRetriever();
+			return FSIClassHunter.create(
+				() -> getByteCodeHunter(),
+				() -> getClassHunter(),
+				getFileSystemHelper(), 
+				getPathHelper(),
+				getStreamHelper(),
+				getClassFactory(),
+				getClassHelper(),
+				getMemberFinder(),
+				objectRetriever,
+				objectRetriever.retrieveFromProperties(config,
+					FSIClassHunter.PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
+					FSIClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
+					FSIClassHunter.DEFAULT_CONFIG_VALUES,
+					ClassLoader.class,
+					this
+				)
+			);
+		});
+	}
 
 	@Override
 	public ClassPathHunter getClassPathHunter() {
