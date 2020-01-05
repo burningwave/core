@@ -297,11 +297,12 @@ public class ObjectRetriever implements Component {
 	
 	@Override
 	public void close() {
-		Component.super.close();
 		this.classLoadersClasses.clear();
 		this.classLoadersClasses = null;
 		this.classLoadersPackages.clear();
 		this.classLoadersPackages = null;
+		this.classLoadersMethods.clear();
+		this.classLoadersMethods = null;
 		this.iterableObjectHelper = null;
 		this.classHelperSupplier = null;
 		this.classHelper = null;
