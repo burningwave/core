@@ -456,18 +456,18 @@ public class ComponentContainer implements ComponentSupplier {
 		);
 	}
 	
-	private void closeComponents() {
+	public void clear() {
 		components.forEach((type, instance) -> { 
 			instance.close();
 			components.remove(type);
 		});
-		components = null;
 	}
 	
 	@Override
 	public void close() {
 		if (LazyHolder.getComponentContainerInstance() != this) {
-			closeComponents();
+			clear();
+			components = null;
 			config.clear();
 			config = null;			
 		} else {

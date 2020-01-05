@@ -96,6 +96,8 @@ public interface ComponentSupplier extends Component {
 	
 	public ObjectRetriever getObjectRetriever();
 	
+	public void clear();
+	
 	public static ComponentSupplier getInstance() {
 		return ComponentContainer.getInstance();
 	}
