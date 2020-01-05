@@ -174,8 +174,9 @@ public class FileSystemItem implements Component {
 				} else {
 					File file = new File(conventionedAbsolutePath);
 					if (file.exists()) {
-						children = Arrays.stream(file.listFiles()).map(fl -> FileSystemItem.ofPath(fl.getAbsolutePath())).collect(
-							Collectors.toCollection(() -> ConcurrentHashMap.newKeySet()));
+						children = 
+							Optional.ofNullable(file.listFiles()).map((childrenFiles) -> Arrays.stream(childrenFiles).map(fl -> FileSystemItem.ofPath(fl.getAbsolutePath())).collect(
+							Collectors.toCollection(() -> ConcurrentHashMap.newKeySet()))).orElseGet(ConcurrentHashMap::newKeySet);
 					}
 				}
 			}

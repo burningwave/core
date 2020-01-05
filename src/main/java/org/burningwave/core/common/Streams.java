@@ -8,7 +8,6 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.function.Function;
 
-import org.burningwave.Throwables;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.BufferSize;
 import org.burningwave.core.io.ByteBufferOutputStream;
@@ -22,7 +21,7 @@ public class Streams {
 		try (RandomAccessFile raf = new RandomAccessFile(file, "r")){
 	    	return isArchive(raf.readInt());
 	    } catch (IOException exc) {
-			throw Throwables.toRuntimeException(exc);
+	    	return false;
 		}
 	}
 	
