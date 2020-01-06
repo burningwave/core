@@ -203,7 +203,7 @@ public class FileSystemItem implements Component {
 							FileSystemItem.ofPath(fl.getAbsolutePath())
 						).collect(
 							Collectors.toCollection(
-								() -> ConcurrentHashMap.newKeySet()
+								ConcurrentHashMap::newKeySet
 							)
 						)).orElseGet(ConcurrentHashMap::newKeySet);
 					}
@@ -218,12 +218,16 @@ public class FileSystemItem implements Component {
 			return allChildren;
 		} else if (isContainer()) {
 			logDebug("Retrieving all children of " + absolutePath.getKey());
-			Set<FileSystemItem> allChildrenTemp = ConcurrentHashMap.newKeySet();
-			allChildrenTemp.addAll(getChildren());
-			children.forEach(
-				child -> Optional.ofNullable(child.getAllChildren()).map(allChildrenOfChild -> allChildrenTemp.addAll(allChildrenOfChild))
-			);
-			allChildren = allChildrenTemp;
+			Set<FileSystemItem> children = getChildren();
+			if (children != null) {
+				Set<FileSystemItem> allChildrenTemp = ConcurrentHashMap.newKeySet();
+				allChildrenTemp.addAll(children);
+				children.forEach(
+					child -> Optional.ofNullable(child.getAllChildren()).map(allChildrenOfChild -> allChildrenTemp.addAll(allChildrenOfChild))
+				);
+				allChildren = allChildrenTemp;
+			}
+			
 		}
 		return allChildren;
 	}
@@ -237,7 +241,7 @@ public class FileSystemItem implements Component {
 					true
 				);
 				if (zipEntryWrapper == null) {
-					return ConcurrentHashMap.newKeySet();
+					return null;
 				}
 				try (InputStream iss = zipEntryWrapper.toInputStream()) {
 					return getChildren(
@@ -246,7 +250,8 @@ public class FileSystemItem implements Component {
 						itemToSearch.replaceFirst(zipEntryNameOfNestedZipFile + ZIP_PATH_SEPARATOR, "")
 					);
 				} catch (IOException exc) {
-					throw Throwables.toRuntimeException(exc);
+					logError("Exception occurred while opening input stream from zipEntry " + zipEntryWrapper.getAbsolutePath() + ": " + exc.getMessage());
+					return null;
 				}
 			} else {
 				final String iTS = itemToSearch.replace("/", "\\/") + ".*?\\/";
