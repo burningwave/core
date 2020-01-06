@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.zip.ZipException;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
@@ -90,8 +91,17 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	}
 	
 	public Entry getNextEntry(boolean loadZipEntryData) {
-		ThrowingRunnable.run(() -> 
-			currentZipEntry = (Entry)super.getNextEntry()
+		ThrowingRunnable.run(() -> {
+				try {
+					currentZipEntry = (Entry)super.getNextEntry();
+				} catch (ZipException exc) {
+					if (exc.getMessage().contains("encrypted ZIP entry not supported")) {
+						logError("Could not open zipEntry", exc);
+					} else {
+						throw exc;
+					}
+				}
+			}
 		);
 		if (loadZipEntryData) {
 			currentZipEntry.loadContent();

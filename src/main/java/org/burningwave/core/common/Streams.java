@@ -1,5 +1,6 @@
 package org.burningwave.core.common;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,6 +9,7 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.function.Function;
 
+import org.burningwave.Throwables;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.BufferSize;
 import org.burningwave.core.io.ByteBufferOutputStream;
@@ -20,8 +22,11 @@ public class Streams {
 	public static boolean isArchive(File file) {
 		try (RandomAccessFile raf = new RandomAccessFile(file, "r")){
 	    	return isArchive(raf.readInt());
-	    } catch (IOException exc) {
+	    } catch (EOFException exc) {
+	    	LoggersRepository.logError(Streams.class, "Exception occurred while calling isArchive on file " + file.getName(), exc);
 	    	return false;
+		} catch (IOException e) {
+			throw Throwables.toRuntimeException(e);
 		}
 	}
 	
