@@ -23,7 +23,7 @@ public class Streams {
 		try (RandomAccessFile raf = new RandomAccessFile(file, "r")){
 	    	return isArchive(raf.readInt());
 	    } catch (EOFException exc) {
-	    	LoggersRepository.logError(Streams.class, "Exception occurred while calling isArchive on file " + file.getName(), exc);
+	    	//LoggersRepository.logError(Streams.class, "Exception occurred while calling isArchive on file " + file.getName(), exc);
 	    	return false;
 		}
 	}

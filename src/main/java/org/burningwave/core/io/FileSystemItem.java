@@ -9,7 +9,6 @@ import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -63,16 +62,36 @@ public class FileSystemItem implements Component {
 	private String retrieveConventionedAbsolutePath(String realAbsolutePath, String relativePath) {
 		File file = new File(realAbsolutePath);
 		if (file.exists()) {
+			exists = true;
 			if (relativePath.isEmpty()) {
-				return realAbsolutePath +
-					(file.isDirectory()? 
-						(realAbsolutePath.endsWith("/")? "" : "/") :
-						isArchive(file) ? ZIP_PATH_SEPARATOR : "");
+				if (file.isDirectory()) {
+					return realAbsolutePath + (realAbsolutePath.endsWith("/")? "" : "/");
+				} else {
+					try {
+						if (Streams.isArchive(file)) {
+							return realAbsolutePath + ZIP_PATH_SEPARATOR;
+						} else {
+							return realAbsolutePath;
+						}
+					} catch (FileNotFoundException exc) {
+						logError("Exception occurred while calling isArchive on file " + file.getAbsolutePath() + ": " + exc.getMessage());
+						return realAbsolutePath;
+					} catch (IOException exc) {
+						logError("Exception occurred while calling isArchive on file " + file.getAbsolutePath() + ": " + exc.getMessage());
+						return realAbsolutePath;
+					}
+				}
 			} else {
 				try (FileInputStream fileInputStream = FileInputStream.create(file)) {
+					exists = true;
 					return fileInputStream.getAbsolutePath() + ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
 						fileInputStream.toByteBuffer(), fileInputStream.getAbsolutePath(), relativePath
 					);
+				} catch (FileSystemItemNotFoundException exc) {
+					exists = false;
+					String fileName = realAbsolutePath + (realAbsolutePath.endsWith("/")? "" : "/") + relativePath;
+					logError("Exception occurred while calling isArchive on file " + fileName);
+					return fileName;
 				} 
 			}		
 		} else {
@@ -81,16 +100,7 @@ public class FileSystemItem implements Component {
 			return retrieveConventionedAbsolutePath(pathToTest, relativePath);
 		}
 	}
-	
-	private boolean isArchive(File file) {
-		try {
-			return Streams.isArchive(file);
-		} catch (IOException exc) {
-			logError("Exception occurred while calling isArcive on file " + file.getAbsolutePath(), exc);
-			return false;
-		}
-		
-	}
+
 
 	private String retrieveConventionedRelativePath(ByteBuffer zipInputStreamAsBytes, String zipInputStreamName, String relativePath1) {
 		try (ZipInputStream zIS = new ZipInputStream(zipInputStreamName, new ByteBufferInputStream(zipInputStreamAsBytes))){
@@ -185,9 +195,17 @@ public class FileSystemItem implements Component {
 				} else {
 					File file = new File(conventionedAbsolutePath);
 					if (file.exists()) {
-						children = 
-							Optional.ofNullable(file.listFiles()).map((childrenFiles) -> Arrays.stream(childrenFiles).map(fl -> FileSystemItem.ofPath(fl.getAbsolutePath())).collect(
-							Collectors.toCollection(() -> ConcurrentHashMap.newKeySet()))).orElseGet(ConcurrentHashMap::newKeySet);
+						children = Optional.ofNullable(
+							file.listFiles()
+						).map((childrenFiles) -> 
+							Arrays.stream(childrenFiles
+						).map(fl -> 
+							FileSystemItem.ofPath(fl.getAbsolutePath())
+						).collect(
+							Collectors.toCollection(
+								() -> ConcurrentHashMap.newKeySet()
+							)
+						)).orElseGet(ConcurrentHashMap::newKeySet);
 					}
 				}
 			}
@@ -218,6 +236,9 @@ public class FileSystemItem implements Component {
 					zEntry -> zEntry.getName().equals(zipEntryNameOfNestedZipFile),
 					true
 				);
+				if (zipEntryWrapper == null) {
+					return ConcurrentHashMap.newKeySet();
+				}
 				try (InputStream iss = zipEntryWrapper.toInputStream()) {
 					return getChildren(
 						zipEntryWrapper.getAbsolutePath(),
@@ -248,14 +269,7 @@ public class FileSystemItem implements Component {
 
 	private String getConventionedAbsolutePath() {
 		if (absolutePath.getValue() == null && exists == null) {
-			try {
-				absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
-				exists = true;
-			} catch (FileSystemItemNotFoundException exc) {
-				exists = false;
-				FILE_SYSTEM_ITEMS.remove(absolutePath.getKey());
-				throw exc;		
-			}
+			absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
 		}
 		return absolutePath.getValue();
 	}

@@ -69,7 +69,7 @@ public class FileSystemItemTest extends BaseTest {
 			"C:" : "/"
 		).getChildren());
 	}
-	
+		
 	@Test
 	public void readTestEight() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -95,5 +95,4 @@ public class FileSystemItemTest extends BaseTest {
 			componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/classes"))
 		).getAllChildren());
 	}
-	
 }

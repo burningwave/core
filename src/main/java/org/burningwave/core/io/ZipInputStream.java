@@ -96,12 +96,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 					currentZipEntry = (Entry)super.getNextEntry();
 				} catch (ZipException exc) {
 					String message = exc.getMessage();
-					if (message.contains("encrypted ZIP entry not supported") ||
-						message.contains("only DEFLATED entries can have EXT descriptor")) {
-						logError("Could not open zipEntry", exc);
-					} else {
-						throw exc;
-					}
+					logError("Could not open zipEntry of " + getName() + ": " + message);
 				}
 			}
 		);
