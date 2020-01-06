@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.common.Strings;
 import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.reflection.ObjectRetriever;
@@ -102,7 +103,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	} 
     
 	public boolean hasPackageBeenDefined(String packageName) {
-		if (packageName != null) {
+		if (Strings.isNotEmpty(packageName)) {
 			return objectRetriever.retrievePackage(this, packageName) != null;
 		} else {
 			return true;
@@ -115,7 +116,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		String implVersion, String implVendor, URL sealBase
 	) throws IllegalArgumentException {
     	Package pkg = null;
-    	if (packageName != null) {
+    	if (Strings.isNotEmpty(packageName)) {
     		pkg = objectRetriever.retrievePackage(this, packageName);
     		if (pkg == null) {
     			try {
@@ -256,7 +257,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		return getClassesForPackage(pkg.getName());
 	}
 	
-
+	//TODO gestire package di default (senza nome)
 	public Set<Class<?>> getClassesForPackage(String pkgName) {
 		Set<Class<?>> toRet = new LinkedHashSet<Class<?>>();
 		synchronized(definedClasses) {			
