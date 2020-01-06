@@ -1,6 +1,7 @@
 package org.burningwave.core.io;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -8,6 +9,7 @@ import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -65,13 +67,13 @@ public class FileSystemItem implements Component {
 				return realAbsolutePath +
 					(file.isDirectory()? 
 						(realAbsolutePath.endsWith("/")? "" : "/") :
-						Streams.isArchive(file) ? ZIP_PATH_SEPARATOR : "");
+						isArchive(file) ? ZIP_PATH_SEPARATOR : "");
 			} else {
 				try (FileInputStream fileInputStream = FileInputStream.create(file)) {
 					return fileInputStream.getAbsolutePath() + ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
 						fileInputStream.toByteBuffer(), fileInputStream.getAbsolutePath(), relativePath
 					);
-				}	
+				} 
 			}		
 		} else {
 			String pathToTest = realAbsolutePath.substring(0, realAbsolutePath.lastIndexOf("/"));
@@ -79,7 +81,16 @@ public class FileSystemItem implements Component {
 			return retrieveConventionedAbsolutePath(pathToTest, relativePath);
 		}
 	}
-
+	
+	private boolean isArchive(File file) {
+		try {
+			return Streams.isArchive(file);
+		} catch (IOException exc) {
+			logError("Exception occurred while calling isArcive on file " + file.getAbsolutePath(), exc);
+			return false;
+		}
+		
+	}
 
 	private String retrieveConventionedRelativePath(ByteBuffer zipInputStreamAsBytes, String zipInputStreamName, String relativePath1) {
 		try (ZipInputStream zIS = new ZipInputStream(zipInputStreamName, new ByteBufferInputStream(zipInputStreamAsBytes))){
@@ -215,7 +226,7 @@ public class FileSystemItem implements Component {
 					);
 				} catch (IOException exc) {
 					throw Throwables.toRuntimeException(exc);
-				}			
+				}
 			} else {
 				final String iTS = itemToSearch.replace("/", "\\/") + ".*?\\/";
 				Set<FileSystemItem> toRet = zipInputStream.findAllAndConvert(
@@ -243,9 +254,8 @@ public class FileSystemItem implements Component {
 			} catch (FileSystemItemNotFoundException exc) {
 				exists = false;
 				FILE_SYSTEM_ITEMS.remove(absolutePath.getKey());
-				throw exc;
-					
-			} 
+				throw exc;		
+			}
 		}
 		return absolutePath.getValue();
 	}
