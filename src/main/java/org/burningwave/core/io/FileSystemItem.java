@@ -74,10 +74,10 @@ public class FileSystemItem implements Component {
 							return realAbsolutePath;
 						}
 					} catch (FileNotFoundException exc) {
-						logError("Exception occurred while calling isArchive on file " + file.getAbsolutePath() + ": " + exc.getMessage());
+						logWarn("Exception occurred while calling isArchive on file {}: {}", file.getAbsolutePath(), exc.getMessage());
 						return realAbsolutePath;
 					} catch (IOException exc) {
-						logError("Exception occurred while calling isArchive on file " + file.getAbsolutePath() + ": " + exc.getMessage());
+						logWarn("Exception occurred while calling isArchive on file {}: {}", file.getAbsolutePath(), exc.getMessage());
 						return realAbsolutePath;
 					}
 				}
@@ -90,7 +90,7 @@ public class FileSystemItem implements Component {
 				} catch (FileSystemItemNotFoundException exc) {
 					exists = false;
 					String fileName = realAbsolutePath + (realAbsolutePath.endsWith("/")? "" : "/") + relativePath;
-					logError("Exception occurred while calling isArchive on file " + fileName);
+					logWarn("Exception occurred while calling isArchive on file {}", fileName);
 					return fileName;
 				} 
 			}		
@@ -250,7 +250,7 @@ public class FileSystemItem implements Component {
 						itemToSearch.replaceFirst(zipEntryNameOfNestedZipFile + ZIP_PATH_SEPARATOR, "")
 					);
 				} catch (IOException exc) {
-					logError("Exception occurred while opening input stream from zipEntry " + zipEntryWrapper.getAbsolutePath() + ": " + exc.getMessage());
+					logWarn("Exception occurred while opening input stream from zipEntry {}: {}", zipEntryWrapper.getAbsolutePath(), exc.getMessage());
 					return null;
 				}
 			} else {

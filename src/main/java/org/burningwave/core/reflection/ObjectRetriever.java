@@ -233,6 +233,7 @@ public class ObjectRetriever implements Component {
 		}
 	}
 	
+	//TODO: modificare con lambda
 	public Class<?> retrieveClass(ClassLoader classLoader, String className) {
 		Vector<Class<?>> definedClasses = retrieveClasses(classLoader);
 		synchronized(definedClasses) {
@@ -250,6 +251,7 @@ public class ObjectRetriever implements Component {
 		return null;
 	}	
 	
+	//TODO: modificare con lambda
 	public Package retrievePackage(ClassLoader classLoader, String packageName) {
 		Map<String, ?> packages = retrievePackages(classLoader);
 		Object packageToFind = packages.get(packageName);

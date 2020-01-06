@@ -3,9 +3,11 @@ package org.burningwave.core.io;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -96,7 +98,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 					currentZipEntry = (Entry)super.getNextEntry();
 				} catch (ZipException exc) {
 					String message = exc.getMessage();
-					logError("Could not open zipEntry of " + getName() + ": " + message);
+					logWarn("Could not open zipEntry of {}: {}", getName(), message);
 				}
 			}
 		);
@@ -207,7 +209,11 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	
 	@Override
 	public void closeEntry() {
-		ThrowingRunnable.run(() -> super.closeEntry());
+		try {
+			super.closeEntry();
+		} catch (IOException exc) {
+			logWarn("Exception occurred while closing zipEntry {}: {}", Optional.ofNullable(currentZipEntry).map((zipEntry) -> zipEntry.getAbsolutePath()).orElseGet(() -> "null"), exc.getMessage());
+		}
 		if (currentZipEntry != null) {
 			currentZipEntry.close();
 			currentZipEntry = null;
