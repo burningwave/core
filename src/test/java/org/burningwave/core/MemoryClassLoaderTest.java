@@ -10,7 +10,7 @@ public class MemoryClassLoaderTest extends BaseTest {
 	protected MemoryClassLoader getMemoryClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		return MemoryClassLoader.create(
-			null, componentSupplier.getClassHelper(), componentSupplier.getObjectRetriever()
+			null, componentSupplier.getClassHelper()
 		);
 	}
 	
