@@ -51,15 +51,15 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 	}
 	
 	//Cached search
-	public SearchResult<K, I> findBy(SearchConfigForPath criteria) {
-		criteria = criteria.createCopy();
+	public SearchResult<K, I> findBy(SearchConfigForPath searchConfig) {
+		searchConfig = searchConfig.createCopy();
 		C context = createContext(
-			ClassFileScanConfiguration.forPaths(criteria.getPaths()).maxParallelTasksForUnit(
-				criteria.maxParallelTasksForUnit
+			ClassFileScanConfiguration.forPaths(searchConfig.getPaths()).maxParallelTasksForUnit(
+				searchConfig.maxParallelTasksForUnit
 			), 
-			criteria
+			searchConfig
 		);
-		criteria.init(this.classHelper, context.pathMemoryClassLoader, this.memberFinder);
+		searchConfig.init(this.classHelper, context.pathMemoryClassLoader, this.memberFinder);
 		context.executeSearch(() ->
 			scan(context)
 		);
@@ -74,7 +74,7 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 	void scan(C context) {
 		Collection<String> pathsNotScanned = scanCache(context);
 		if (!pathsNotScanned.isEmpty()) {
-			if (context.getScanConfig().getClassCriteria().hasNoPredicate()) {
+			if (context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
 				synchronized (cache) {
 					pathsNotScanned = scanCache(context);
 					if (!pathsNotScanned.isEmpty()) {
@@ -100,9 +100,9 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 	
 	Collection<String> scanCache(C context) {
 		Collection<String> pathsNotScanned = new LinkedHashSet<>();
-		SearchConfigForPath criteria = context.getScanConfig();
-		if (!context.getScanConfig().getClassCriteria().hasNoPredicate()) {
-			for (String path : criteria.getPaths()) {
+		SearchConfigForPath searchConfig = context.getSearchConfig();
+		if (!context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
+			for (String path : searchConfig.getPaths()) {
 				Map<K, I> classesForPath = cache.get(path);
 				if (classesForPath != null) {
 					if (!classesForPath.isEmpty()) {	
@@ -113,7 +113,7 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 				}
 			}
 		} else {
-			for (String path : criteria.getPaths()) {
+			for (String path : searchConfig.getPaths()) {
 				Map<K, I> classesForPath = cache.get(path);
 				if (classesForPath != null) {
 					if (!classesForPath.isEmpty()) {

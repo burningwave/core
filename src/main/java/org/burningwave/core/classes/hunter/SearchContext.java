@@ -19,7 +19,7 @@ public class SearchContext<K, T> implements Component {
 
 	FileSystemHelper fileSystemHelper;
 	ClassFileScanConfiguration classFileScanConfiguration;
-	SearchConfigAbst<?> criteria;
+	SearchConfigAbst<?> searchConfig;
 	Map<K, T> itemsFoundFlatMap;
 	Map<String, Map<K, T>> itemsFoundMap;
 	PathMemoryClassLoader sharedPathMemoryClassLoader;
@@ -46,9 +46,9 @@ public class SearchContext<K, T> implements Component {
 		this.sharedPathMemoryClassLoader = initContext.getSharedPathMemoryClassLoader();
 		this.pathMemoryClassLoader = initContext.getPathMemoryClassLoader();
 		this.classFileScanConfiguration = initContext.getClassFileScanConfiguration();
-		this.criteria = initContext.getSearchCriteria();
+		this.searchConfig = initContext.getSearchCriteria();
 		this.classLoaderHaveBeenUploadedWithCriteriaPaths = pathMemoryClassLoader.checkPaths(
-			classFileScanConfiguration.getPaths(), criteria.considerURLClassLoaderPathsAsScanned
+			classFileScanConfiguration.getPaths(), searchConfig.considerURLClassLoaderPathsAsScanned
 		).getNotContainedPaths().isEmpty();
 	}
 	
@@ -61,7 +61,7 @@ public class SearchContext<K, T> implements Component {
 	}
 	
 	void executeSearch(Runnable searcher) {
-		if (criteria.waitForSearchEnding) {
+		if (searchConfig.waitForSearchEnding) {
 			searcher.run();
 			searchTaskFinished = true;
 		} else {
@@ -122,8 +122,8 @@ public class SearchContext<K, T> implements Component {
 	}
 	
 	@SuppressWarnings("unchecked")
-	<C extends SearchConfigAbst<C>> C getScanConfig() {
-		return (C)criteria;
+	<C extends SearchConfigAbst<C>> C getSearchConfig() {
+		return (C)searchConfig;
 	}
 	
 	Map<K, T> getItemsFoundFlatMap() {
@@ -154,7 +154,7 @@ public class SearchContext<K, T> implements Component {
 						synchronized(this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
 							if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
 								pathMemoryClassLoader.scanPathsAndLoadAllFoundClasses(
-									getPathsToBeScanned(), criteria.considerURLClassLoaderPathsAsScanned, classFileScanConfiguration.maxParallelTasksForUnit
+									getPathsToBeScanned(), searchConfig.considerURLClassLoaderPathsAsScanned, classFileScanConfiguration.maxParallelTasksForUnit
 								);
 								this.classLoaderHaveBeenUploadedWithCriteriaPaths = true;
 							}
@@ -184,8 +184,8 @@ public class SearchContext<K, T> implements Component {
 	
 	<C extends SearchConfigAbst<C>> ClassCriteria.TestContext testCriteria(Class<?> cls) {
 		return (ClassCriteria.TestContext) execute(
-			() -> criteria.classCriteria.testAndReturnFalseIfNullOrTrueByDefault(cls), 
-			() -> criteria.classCriteria.testAndReturnFalseIfNullOrFalseByDefault(null), 
+			() -> searchConfig.getClassCriteria().testAndReturnFalseIfNullOrTrueByDefault(cls), 
+			() -> searchConfig.getClassCriteria().testAndReturnFalseIfNullOrFalseByDefault(null), 
 			() -> cls.getName()
 		);
 	}
@@ -193,7 +193,7 @@ public class SearchContext<K, T> implements Component {
 	@Override
 	public void close() {
 		fileSystemHelper = null;
-		if (criteria.deleteFoundItemsOnClose) {
+		if (searchConfig.deleteFoundItemsOnClose) {
 			itemsFoundFlatMap.clear();
 			itemsFoundMap.entrySet().stream().forEach(entry -> {
 				entry.getValue().clear();
@@ -201,7 +201,7 @@ public class SearchContext<K, T> implements Component {
 		}
 		itemsFoundFlatMap = null;
 		itemsFoundMap = null;
-		criteria = null;
+		searchConfig = null;
 		if (pathMemoryClassLoader != sharedPathMemoryClassLoader) {
 			pathMemoryClassLoader.close();
 		}

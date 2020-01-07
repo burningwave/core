@@ -69,11 +69,11 @@ public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends Sear
 	}
 	
 	//Not cached search
-	public R findBy(ClassFileScanConfiguration scanConfig, SearchConfig criteria) {
+	public R findBy(ClassFileScanConfiguration scanConfig, SearchConfig searchConfig) {
 		final ClassFileScanConfiguration scanConfigCopy = scanConfig.createCopy();
-		criteria = criteria.createCopy();
-		C context = createContext(scanConfigCopy, criteria);
-		criteria.init(this.classHelper, context.pathMemoryClassLoader, this.memberFinder);		
+		searchConfig = searchConfig.createCopy();
+		C context = createContext(scanConfigCopy, searchConfig);
+		searchConfig.init(this.classHelper, context.pathMemoryClassLoader, this.memberFinder);		
 		scanConfigCopy.init();
 		context.executeSearch(() -> {
 				fileSystemHelper.scan(
@@ -88,22 +88,22 @@ public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends Sear
 		return resultSupplier.apply(context);
 	}
 	
-	C createContext(ClassFileScanConfiguration scanConfig, SearchConfigAbst<?> criteria) {
+	C createContext(ClassFileScanConfiguration scanConfig, SearchConfigAbst<?> searchConfig) {
 		PathMemoryClassLoader sharedClassLoader = getClassHunter().pathMemoryClassLoader;
-		if (criteria.useSharedClassLoaderAsParent) {
-			criteria.parentClassLoaderForMainClassLoader = sharedClassLoader;
+		if (searchConfig.useSharedClassLoaderAsParent) {
+			searchConfig.parentClassLoaderForMainClassLoader = sharedClassLoader;
 		}
 		C context = contextSupplier.apply(
 			InitContext.create(
 				sharedClassLoader,
-				criteria.useSharedClassLoaderAsMain ?
+				searchConfig.useSharedClassLoaderAsMain ?
 					sharedClassLoader :
 					PathMemoryClassLoader.create(
-						criteria.parentClassLoaderForMainClassLoader, 
+						searchConfig.parentClassLoaderForMainClassLoader, 
 						pathHelper, classHelper, byteCodeHunterSupplier
 					),
 				scanConfig,
-				criteria
+				searchConfig
 			)		
 		);
 		return context;

@@ -57,15 +57,15 @@ public abstract class ClassHunterAbst<K, R extends ClassHunterAbst.SearchResult<
 	}
 	
 	@Override
-	public R findBy(ClassFileScanConfiguration scanConfig, SearchConfig criteria) {
-		criteria.getClassCriteria().collectMembers(true);
-		return super.findBy(scanConfig, criteria);
+	public R findBy(ClassFileScanConfiguration scanConfig, SearchConfig searchConfig) {
+		searchConfig.getClassCriteria().collectMembers(true);
+		return super.findBy(scanConfig, searchConfig);
 	}
 	
 	@Override
-	public SearchResult<K> findBy(SearchConfigForPath criteria) {
-		criteria.getClassCriteria().collectMembers(true);
-		return (SearchResult<K>)super.findBy(criteria);
+	public SearchResult<K> findBy(SearchConfigForPath searchConfig) {
+		searchConfig.getClassCriteria().collectMembers(true);
+		return (SearchResult<K>)super.findBy(searchConfig);
 	}
 	
 	@Override
@@ -190,8 +190,8 @@ public abstract class ClassHunterAbst<K, R extends ClassHunterAbst.SearchResult<
 				return membersFoundByCriteria;
 			} else {
 				C criteriaCopy = criteria.createCopy();
-				criteriaCopy.init(context.getScanConfig().getClassCriteria().getClassSupplier(), context.getScanConfig().getClassCriteria().getByteCodeSupplier());
-				criteriaCopy.useClasses(context.getScanConfig().getClassCriteria().getClassesToBeUploaded());
+				criteriaCopy.init(context.getSearchConfig().getClassCriteria().getClassSupplier(), context.getSearchConfig().getClassCriteria().getByteCodeSupplier());
+				criteriaCopy.useClasses(context.getSearchConfig().getClassCriteria().getClassesToBeUploaded());
 				final Collection<Member> membersFoundByCriteriaFinal = new CopyOnWriteArrayList<>();
 				((SearchContext<K>)this.context).getMembersFoundFlatMap().values().forEach((membersCollection) -> {
 					membersCollection.stream().filter(

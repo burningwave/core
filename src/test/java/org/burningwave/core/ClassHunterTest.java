@@ -436,14 +436,14 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void cacheTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchConfigForPath criteria = SearchConfig.forPaths(
+		SearchConfigForPath searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(criteria),
+			() -> componentSupplier.getClassHunter().findBy(searchConfig),
 			(result) -> result.getItemsFound()
 		);
-		criteria.by(
+		searchConfig.by(
 			ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> 
 				uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
 			).useClasses(
@@ -451,7 +451,7 @@ public class ClassHunterTest extends BaseTest {
 			)
 		);
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(criteria),
+			() -> componentSupplier.getClassHunter().findBy(searchConfig),
 			(result) -> result.getItemsFound()
 		);
 	}
@@ -459,17 +459,17 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void cacheTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchConfigForPath criteria = SearchConfig.forPaths(
+		SearchConfigForPath searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		componentSupplier.getClassHunter().loadCache(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(criteria),
+			() -> componentSupplier.getClassHunter().findBy(searchConfig),
 			(result) -> result.getItemsFound()
 		);
-		criteria.by(
+		searchConfig.by(
 			ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> 
 				uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
 			).useClasses(
@@ -477,7 +477,7 @@ public class ClassHunterTest extends BaseTest {
 			)
 		);
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(criteria),
+			() -> componentSupplier.getClassHunter().findBy(searchConfig),
 			(result) -> result.getItemsFound()
 		);
 	}

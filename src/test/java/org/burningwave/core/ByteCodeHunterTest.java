@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.hunter.ClassFileScanConfiguration;
 import org.burningwave.core.classes.hunter.SearchConfig;
 import org.burningwave.core.classes.hunter.SearchConfigForPath;
@@ -23,13 +24,15 @@ public class ByteCodeHunterTest extends BaseTest {
 			() -> componentSupplier.getByteCodeHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePath("libs-for-test.zip")
-				).byClasses((uploadedClasses, targetClass) ->
-					uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
+				).by(
+					ClassCriteria.create().byClasses((uploadedClasses, targetClass) ->
+						uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
+					).useClasses(
+						Closeable.class
+					)
 				).deleteFoundItemsOnClose(
 					false
-				).useClasses(
-					Closeable.class
-				)
+				)					
 			),
 			(result) -> result.getItemsFound()
 		);
@@ -43,7 +46,11 @@ public class ByteCodeHunterTest extends BaseTest {
 			() -> componentSupplier.getByteCodeHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePath("libs-for-test.zip")
-				).className((iteratedClassName) -> iteratedClassName.startsWith("com"))
+				).by(
+					ClassCriteria.create().className((iteratedClassName) ->
+						iteratedClassName.startsWith("com")
+					)
+				)
 			),
 			(result) -> result.getItemsFound()
 		);
@@ -52,19 +59,21 @@ public class ByteCodeHunterTest extends BaseTest {
 	@Test
 	public void cacheTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchConfigForPath criteria = SearchConfig.forPaths(
+		SearchConfigForPath searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePath("libs-for-test.zip")
-		).byClasses((uploadedClasses, targetClass) -> 
-			uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
-		).useClasses(
-			Closeable.class
+		).by(
+			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 
+				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
+			).useClasses(
+				Closeable.class
+			)
 		);
 		testNotEmpty(
-			() -> componentSupplier.getByteCodeHunter().findBy(criteria),
+			() -> componentSupplier.getByteCodeHunter().findBy(searchConfig),
 			(result) -> result.getItemsFound()
 		);
 		testNotEmpty(
-			() -> componentSupplier.getByteCodeHunter().findBy(criteria),
+			() -> componentSupplier.getByteCodeHunter().findBy(searchConfig),
 			(result) -> result.getItemsFound()
 		);
 	}
@@ -73,16 +82,18 @@ public class ByteCodeHunterTest extends BaseTest {
 	@Test
 	public void uncachedTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchConfig criteria = SearchConfig.create().byClasses((uploadedClasses, targetClass) -> 
-			uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
-		).useClasses(
-			Closeable.class
+		SearchConfig searchConfig = SearchConfig.create().by(
+			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 
+				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
+			).useClasses(
+				Closeable.class
+			)
 		);
 		ClassFileScanConfiguration scanConfig = ClassFileScanConfiguration.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePath("libs-for-test.zip")
 		);
 		testNotEmpty(
-			() -> componentSupplier.getByteCodeHunter().findBy(scanConfig, criteria),
+			() -> componentSupplier.getByteCodeHunter().findBy(scanConfig, searchConfig),
 			(result) -> result.getItemsFound()
 		);
 	}
@@ -91,22 +102,23 @@ public class ByteCodeHunterTest extends BaseTest {
 	@Test
 	public void parallelTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchConfigForPath criteria = SearchConfig.forPaths(
+		SearchConfigForPath searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePath("libs-for-test.zip")
-		).byClasses((uploadedClasses, targetClass) -> 
-			uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
-		).useClasses(
-			Closeable.class
-		)
-		.deleteFoundItemsOnClose(
+		).by(
+			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 
+				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
+			).useClasses(
+				Closeable.class
+			)
+		).deleteFoundItemsOnClose(
 			false
 		);
 		Stream.of(
 			CompletableFuture.runAsync(() -> componentSupplier.getByteCodeHunter().findBy(
-				criteria
+				searchConfig
 			)),
 			CompletableFuture.runAsync(() -> componentSupplier.getByteCodeHunter().findBy(
-				criteria
+				searchConfig
 			))
 		).forEach(cF -> cF.join());
 	}
@@ -119,11 +131,12 @@ public class ByteCodeHunterTest extends BaseTest {
 			() -> componentSupplier.getByteCodeHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAllClassPaths()
-				).byBytecode(
-					(byteCodeMap, byteCode) ->
+				).by(
+					ClassCriteria.create().byBytecode((byteCodeMap, byteCode) ->
 						Arrays.equals(byteCodeMap.get(Service.class), byteCode)
-				).useClasses(
-					Service.class
+					).useClasses(
+						Service.class
+					)
 				)
 			),
 			(result) -> result.getItemsFound()
@@ -145,8 +158,10 @@ public class ByteCodeHunterTest extends BaseTest {
 			() -> componentSupplier.getByteCodeHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/classes"))
-				).allThat((targetClass) -> 
-					Object.class.isAssignableFrom(targetClass)
+				).by(
+					ClassCriteria.create().allThat((targetClass) -> 
+						Object.class.isAssignableFrom(targetClass)
+					)
 				)
 			),
 			(result) -> {

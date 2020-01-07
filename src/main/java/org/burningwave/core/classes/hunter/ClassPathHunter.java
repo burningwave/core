@@ -115,7 +115,7 @@ public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunte
 			if (!fsObject.exists()) {
 				fsObject = extractLibrary(context, zipEntry);
 			}
-			if (!context.getScanConfig().getClassCriteria().hasNoPredicate()) {
+			if (!context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
 				scanItemContext.getParent().setDirective(Scan.Directive.STOP_ITERATION);
 			}
 		} else {
@@ -209,7 +209,7 @@ public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunte
 			this.temporaryFiles = ConcurrentHashMap.newKeySet();
 			ClassFileScanConfiguration scanConfig = initContext.getClassFileScanConfiguration();
 			this.tasksManager = ParallelTasksManager.create(scanConfig.maxParallelTasksForUnit);
-			deleteTemporaryFilesOnClose = getScanConfig().deleteFoundItemsOnClose;
+			deleteTemporaryFilesOnClose = getSearchConfig().deleteFoundItemsOnClose;
 		}		
 
 		public void deleteTemporaryFiles(boolean value) {

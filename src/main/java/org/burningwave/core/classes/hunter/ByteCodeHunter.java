@@ -48,8 +48,8 @@ public class ByteCodeHunter extends CacherHunter<String, JavaClass, SearchContex
 	
 	@Override
 	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCriteria(SearchContext<String, JavaClass> context, JavaClass javaClass) {
-		return context.getScanConfig().getClassCriteria().hasNoPredicate() ?
-			context.getScanConfig().getClassCriteria().testAndReturnTrueIfNullOrTrueByDefault(null) :
+		return context.getSearchConfig().getClassCriteria().hasNoPredicate() ?
+			context.getSearchConfig().getClassCriteria().testAndReturnTrueIfNullOrTrueByDefault(null) :
 			super.testCriteria(context, javaClass);
 	}
 	
