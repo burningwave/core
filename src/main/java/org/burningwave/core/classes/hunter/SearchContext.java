@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Context;
-import org.burningwave.core.classes.hunter.SearchCriteriaAbst.TestContext;
+import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.StreamHelper;
@@ -19,7 +19,7 @@ public class SearchContext<K, T> implements Component {
 
 	FileSystemHelper fileSystemHelper;
 	ClassFileScanConfiguration classFileScanConfiguration;
-	SearchCriteriaAbst<?> criteria;
+	SearchConfigAbst<?> criteria;
 	Map<K, T> itemsFoundFlatMap;
 	Map<String, Map<K, T>> itemsFoundMap;
 	PathMemoryClassLoader sharedPathMemoryClassLoader;
@@ -122,7 +122,7 @@ public class SearchContext<K, T> implements Component {
 	}
 	
 	@SuppressWarnings("unchecked")
-	<C extends SearchCriteriaAbst<C>> C getCriteria() {
+	<C extends SearchConfigAbst<C>> C getScanConfig() {
 		return (C)criteria;
 	}
 	
@@ -182,11 +182,10 @@ public class SearchContext<K, T> implements Component {
 	}
 	
 	
-	@SuppressWarnings("unchecked")
-	<C extends SearchCriteriaAbst<C>> TestContext<C> testCriteria(Class<?> cls) {
-		return (TestContext<C>) execute(
-			() -> criteria.testAndReturnFalseIfNullOrTrueByDefault(cls), 
-			() -> criteria.testAndReturnFalseIfNullOrFalseByDefault(null), 
+	<C extends SearchConfigAbst<C>> ClassCriteria.TestContext testCriteria(Class<?> cls) {
+		return (ClassCriteria.TestContext) execute(
+			() -> criteria.classCriteria.testAndReturnFalseIfNullOrTrueByDefault(cls), 
+			() -> criteria.classCriteria.testAndReturnFalseIfNullOrFalseByDefault(null), 
 			() -> cls.getName()
 		);
 	}
@@ -225,7 +224,7 @@ public class SearchContext<K, T> implements Component {
 			PathMemoryClassLoader sharedPathMemoryClassLoader, 
 			PathMemoryClassLoader pathMemoryClassLoader,
 			ClassFileScanConfiguration classFileScanConfiguration,
-			SearchCriteriaAbst<?> criteria
+			SearchConfigAbst<?> criteria
 		) {
 			super();
 			put(Elements.SHARED_PATH_MEMORY_CLASS_LOADER, sharedPathMemoryClassLoader);
@@ -238,7 +237,7 @@ public class SearchContext<K, T> implements Component {
 			PathMemoryClassLoader sharedPathMemoryClassLoader, 
 			PathMemoryClassLoader pathMemoryClassLoader,
 			ClassFileScanConfiguration classFileScanConfiguration,
-			SearchCriteriaAbst<?> criteria
+			SearchConfigAbst<?> criteria
 		) {
 			return new InitContext(sharedPathMemoryClassLoader, pathMemoryClassLoader, classFileScanConfiguration, criteria);
 		}
@@ -255,7 +254,7 @@ public class SearchContext<K, T> implements Component {
 			return get(Elements.CLASS_FILE_SCAN_CONFIGURATION);
 		}
 		
-		<C extends SearchCriteriaAbst<C>> C getSearchCriteria() {
+		<C extends SearchConfigAbst<C>> C getSearchCriteria() {
 			return get(Elements.SEARCH_CRITERIA);
 		}
 	}

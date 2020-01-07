@@ -28,7 +28,7 @@ import javax.tools.JavaFileObject.Kind;
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.hunter.ClassPathHunter;
-import org.burningwave.core.classes.hunter.SearchCriteria;
+import org.burningwave.core.classes.hunter.SearchConfig;
 import org.burningwave.core.classes.hunter.SearchResult;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingRunnable;
@@ -353,8 +353,10 @@ public class JavaMemoryCompiler implements Component {
 			
 			public Collection<File> findForPackageName(String packageName) throws Exception {
 				SearchResult<Class<?>, File> result = classPathHunter.findBy(
-					SearchCriteria.forPaths(classRepositoriesPaths).packageName(
-						(iteratedClassPackageName) -> iteratedClassPackageName.equals(packageName)
+					SearchConfig.forPaths(classRepositoriesPaths).by(
+						ClassCriteria.create().packageName((iteratedClassPackageName) ->
+							iteratedClassPackageName.equals(packageName)
+						)
 					)
 				);
 				classPathsSearchResults.add(result);
@@ -363,8 +365,9 @@ public class JavaMemoryCompiler implements Component {
 			
 			public Collection<File> findForClassName(String className) throws Exception {
 				SearchResult<Class<?>, File> result = classPathHunter.findBy(
-					SearchCriteria.forPaths(classRepositoriesPaths).className(
-						(iteratedClassName) -> iteratedClassName.equals(className)
+					SearchConfig.forPaths(classRepositoriesPaths).by(
+						ClassCriteria.create().className((iteratedClassName) -> 
+							iteratedClassName.equals(className))
 					)
 				);
 				classPathsSearchResults.add(result);

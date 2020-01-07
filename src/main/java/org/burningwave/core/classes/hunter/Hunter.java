@@ -6,11 +6,11 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.hunter.SearchContext.InitContext;
-import org.burningwave.core.classes.hunter.SearchCriteriaAbst.TestContext;
 import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemHelper.Scan;
@@ -69,7 +69,7 @@ public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends Sear
 	}
 	
 	//Not cached search
-	public R findBy(ClassFileScanConfiguration scanConfig, SearchCriteria criteria) {
+	public R findBy(ClassFileScanConfiguration scanConfig, SearchConfig criteria) {
 		final ClassFileScanConfiguration scanConfigCopy = scanConfig.createCopy();
 		criteria = criteria.createCopy();
 		C context = createContext(scanConfigCopy, criteria);
@@ -88,7 +88,7 @@ public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends Sear
 		return resultSupplier.apply(context);
 	}
 	
-	C createContext(ClassFileScanConfiguration scanConfig, SearchCriteriaAbst<?> criteria) {
+	C createContext(ClassFileScanConfiguration scanConfig, SearchConfigAbst<?> criteria) {
 		PathMemoryClassLoader sharedClassLoader = getClassHunter().pathMemoryClassLoader;
 		if (criteria.useSharedClassLoaderAsParent) {
 			criteria.parentClassLoaderForMainClassLoader = sharedClassLoader;
@@ -115,7 +115,7 @@ public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends Sear
 	) {
 		return (scannedItemContext) -> {
 			JavaClass javaClass = JavaClass.create(scannedItemContext.getInput().toByteBuffer());
-			TestContext<SearchCriteria> criteriaTestContext = testCriteria(context, javaClass);
+			ClassCriteria.TestContext criteriaTestContext = testCriteria(context, javaClass);
 			if (criteriaTestContext.getResult()) {
 				retrieveItemFromFileInputStream(
 					context, criteriaTestContext, scannedItemContext, javaClass
@@ -130,7 +130,7 @@ public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends Sear
 	) {
 		return (scannedItemContext) -> {
 			JavaClass javaClass = JavaClass.create(scannedItemContext.getInput().toByteBuffer());
-			TestContext<SearchCriteria> criteriaTestContext = testCriteria(context, javaClass);
+			ClassCriteria.TestContext criteriaTestContext = testCriteria(context, javaClass);
 			if (criteriaTestContext.getResult()) {
 				retrieveItemFromZipEntry(
 					context, criteriaTestContext, scannedItemContext, javaClass
@@ -139,14 +139,14 @@ public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends Sear
 		};
 	}
 	
-	<S extends SearchCriteriaAbst<S>> TestContext<S> testCriteria(C context, JavaClass javaClass) {
+	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCriteria(C context, JavaClass javaClass) {
 		return context.testCriteria(context.loadClass(javaClass.getName()));
 	}
 		
-	abstract void retrieveItemFromFileInputStream(C Context, TestContext<SearchCriteria> criteriaTestContext, Scan.ItemContext<FileInputStream> scannedItem, JavaClass javaClass);
+	abstract void retrieveItemFromFileInputStream(C Context,ClassCriteria.TestContext criteriaTestContext, Scan.ItemContext<FileInputStream> scannedItem, JavaClass javaClass);
 	
 	
-	abstract void retrieveItemFromZipEntry(C Context, TestContext<SearchCriteria> criteriaTestContext, Scan.ItemContext<ZipInputStream.Entry> zipEntry, JavaClass javaClass);
+	abstract void retrieveItemFromZipEntry(C Context, ClassCriteria.TestContext criteriaTestContext, Scan.ItemContext<ZipInputStream.Entry> zipEntry, JavaClass javaClass);
 	
 	
 	@Override

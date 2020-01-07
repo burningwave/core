@@ -50,7 +50,7 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 				checkPathsResult = checkPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
 				if (!checkPathsResult.getNotContainedPaths().isEmpty()) {
 					try(SearchResult<String, JavaClass> result = getByteCodeHunter().findBy(
-						SearchCriteria.forPaths(
+						SearchConfig.forPaths(
 							checkPathsResult.getNotContainedPaths()
 						).useSharedClassLoaderAsMain(
 							true

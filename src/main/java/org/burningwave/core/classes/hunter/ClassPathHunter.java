@@ -9,10 +9,10 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberFinder;
-import org.burningwave.core.classes.hunter.SearchCriteriaAbst.TestContext;
 import org.burningwave.core.common.Streams;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.concurrent.ParallelTasksManager;
@@ -65,9 +65,9 @@ public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunte
 	}
 	
 	@Override
-	<S extends SearchCriteriaAbst<S>> void iterateAndTestItemsForPath(SearchContext context, String path, Map<Class<?>, File> itemsForPath) {
+	<S extends SearchConfigAbst<S>> void iterateAndTestItemsForPath(SearchContext context, String path, Map<Class<?>, File> itemsForPath) {
 		for (Entry<Class<?>, File> cachedItemAsEntry : itemsForPath.entrySet()) {
-			TestContext<S> testContext = testCachedItem(context, path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
+			ClassCriteria.TestContext testContext = testCachedItem(context, path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 			if(testContext.getResult()) {
 				addCachedItemToContext(context, testContext, path, cachedItemAsEntry);
 				break;
@@ -76,14 +76,14 @@ public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunte
 	}
 	
 	@Override
-	<S extends SearchCriteriaAbst<S>> TestContext<S> testCachedItem(SearchContext context, String path, Class<?> cls, File file) {
+	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext context, String path, Class<?> cls, File file) {
 		return context.testCriteria(cls);
 	}
 	
 	@Override
 	void retrieveItemFromFileInputStream(
 		SearchContext context, 
-		TestContext<SearchCriteria> criteriaTestContext,
+		ClassCriteria.TestContext criteriaTestContext,
 		Scan.ItemContext<FileInputStream> scanItemContext,
 		JavaClass javaClass
 	) {
@@ -104,7 +104,7 @@ public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunte
 	@Override
 	void retrieveItemFromZipEntry(
 		SearchContext context,
-		TestContext<SearchCriteria> criteriaTestContext,
+		ClassCriteria.TestContext criteriaTestContext,
 		Scan.ItemContext<ZipInputStream.Entry> scanItemContext,
 		JavaClass javaClass
 	) {
@@ -115,7 +115,7 @@ public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunte
 			if (!fsObject.exists()) {
 				fsObject = extractLibrary(context, zipEntry);
 			}
-			if (!context.getCriteria().hasNoPredicate()) {
+			if (!context.getScanConfig().getClassCriteria().hasNoPredicate()) {
 				scanItemContext.getParent().setDirective(Scan.Directive.STOP_ITERATION);
 			}
 		} else {
@@ -209,7 +209,7 @@ public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunte
 			this.temporaryFiles = ConcurrentHashMap.newKeySet();
 			ClassFileScanConfiguration scanConfig = initContext.getClassFileScanConfiguration();
 			this.tasksManager = ParallelTasksManager.create(scanConfig.maxParallelTasksForUnit);
-			deleteTemporaryFilesOnClose = getCriteria().deleteFoundItemsOnClose;
+			deleteTemporaryFilesOnClose = getScanConfig().deleteFoundItemsOnClose;
 		}		
 
 		public void deleteTemporaryFiles(boolean value) {

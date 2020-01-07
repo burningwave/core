@@ -11,11 +11,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Criteria;
+import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberCriteria;
 import org.burningwave.core.classes.MemberFinder;
-import org.burningwave.core.classes.hunter.SearchCriteriaAbst.TestContext;
 import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemHelper.Scan;
@@ -57,25 +57,25 @@ public abstract class ClassHunterAbst<K, R extends ClassHunterAbst.SearchResult<
 	}
 	
 	@Override
-	public R findBy(ClassFileScanConfiguration scanConfig, SearchCriteria criteria) {
-		criteria.collectMembers = true;
+	public R findBy(ClassFileScanConfiguration scanConfig, SearchConfig criteria) {
+		criteria.getClassCriteria().collectMembers(true);
 		return super.findBy(scanConfig, criteria);
 	}
 	
 	@Override
-	public SearchResult<K> findBy(SearchForPathCriteria criteria) {
-		criteria.collectMembers = true;
+	public SearchResult<K> findBy(SearchConfigForPath criteria) {
+		criteria.getClassCriteria().collectMembers(true);
 		return (SearchResult<K>)super.findBy(criteria);
 	}
 	
 	@Override
-	<S extends SearchCriteriaAbst<S>> TestContext<S> testCachedItem(ClassHunterAbst.SearchContext<K> context, String path, K key, Class<?> cls) {
+	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(ClassHunterAbst.SearchContext<K> context, String path, K key, Class<?> cls) {
 		return context.testCriteria(cls);
 	}
 	
 	@Override
-	<S extends SearchCriteriaAbst<S>> void addCachedItemToContext(
-		ClassHunterAbst.SearchContext<K> context, TestContext<S> testContext, String path, Entry<K, Class<?>> cachedItemAsEntry
+	<S extends SearchConfigAbst<S>> void addCachedItemToContext(
+		ClassHunterAbst.SearchContext<K> context, ClassCriteria.TestContext testContext, String path, Entry<K, Class<?>> cachedItemAsEntry
 	) {
 		context.addItemFound(path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue(), testContext.getMembersFound());
 	}
@@ -83,7 +83,7 @@ public abstract class ClassHunterAbst<K, R extends ClassHunterAbst.SearchResult<
 	@Override
 	void retrieveItemFromFileInputStream(
 		ClassHunterAbst.SearchContext<K> context, 
-		TestContext<SearchCriteria> criteriaTestContext,
+		ClassCriteria.TestContext criteriaTestContext,
 		Scan.ItemContext<FileInputStream> scanItemContext, 
 		JavaClass javaClass
 	) {
@@ -98,7 +98,7 @@ public abstract class ClassHunterAbst<K, R extends ClassHunterAbst.SearchResult<
 	abstract K buildKey(String absolutePath) ;
 	
 	@Override
-	void retrieveItemFromZipEntry(ClassHunterAbst.SearchContext<K> context, TestContext<SearchCriteria> criteriaTestContext, Scan.ItemContext<ZipInputStream.Entry> scanItemContext, JavaClass javaClass) {
+	void retrieveItemFromZipEntry(ClassHunterAbst.SearchContext<K> context, ClassCriteria.TestContext criteriaTestContext, Scan.ItemContext<ZipInputStream.Entry> scanItemContext, JavaClass javaClass) {
 		context.addItemFound(
 			scanItemContext.getBasePathAsString(),
 			buildKey(scanItemContext.getInput().getAbsolutePath()),
@@ -131,7 +131,12 @@ public abstract class ClassHunterAbst<K, R extends ClassHunterAbst.SearchResult<
 		
 		void addItemFound(String path, K key, Class<?> item, Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersForCriteria) {
 			super.addItemFound(path, key, item);
-			this.membersFound.put(item, membersForCriteria);
+			try {
+				this.membersFound.put(item, membersForCriteria);
+			} catch (NullPointerException exc) {
+				// TODO Auto-generated catch block
+				exc.printStackTrace();
+			}
 			membersForCriteria.forEach((criteria, memberList) -> {
 				Collection<Member> coll = membersFoundFlatMap.get(criteria);
 				if (coll == null) {								
@@ -185,8 +190,8 @@ public abstract class ClassHunterAbst<K, R extends ClassHunterAbst.SearchResult<
 				return membersFoundByCriteria;
 			} else {
 				C criteriaCopy = criteria.createCopy();
-				criteriaCopy.init(context.criteria.getClassSupplier(), context.criteria.getByteCodeSupplier());
-				criteriaCopy.useClasses(context.criteria.getClassesToBeUploaded());
+				criteriaCopy.init(context.getScanConfig().getClassCriteria().getClassSupplier(), context.getScanConfig().getClassCriteria().getByteCodeSupplier());
+				criteriaCopy.useClasses(context.getScanConfig().getClassCriteria().getClassesToBeUploaded());
 				final Collection<Member> membersFoundByCriteriaFinal = new CopyOnWriteArrayList<>();
 				((SearchContext<K>)this.context).getMembersFoundFlatMap().values().forEach((membersCollection) -> {
 					membersCollection.stream().filter(

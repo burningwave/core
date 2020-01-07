@@ -2,10 +2,10 @@ package org.burningwave.core.classes.hunter;
 
 import java.util.function.Supplier;
 
+import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberFinder;
-import org.burningwave.core.classes.hunter.SearchCriteriaAbst.TestContext;
 import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemHelper.Scan;
@@ -46,23 +46,22 @@ public class ByteCodeHunter extends CacherHunter<String, JavaClass, SearchContex
 		return new ByteCodeHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classHelper, memberFinder);
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
-	<S extends SearchCriteriaAbst<S>> TestContext<S> testCriteria(SearchContext<String, JavaClass> context, JavaClass javaClass) {
-		return context.getCriteria().hasNoPredicate() ?
-			(TestContext<S>)context.getCriteria().testAndReturnTrueIfNullOrTrueByDefault(null) :
+	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCriteria(SearchContext<String, JavaClass> context, JavaClass javaClass) {
+		return context.getScanConfig().getClassCriteria().hasNoPredicate() ?
+			context.getScanConfig().getClassCriteria().testAndReturnTrueIfNullOrTrueByDefault(null) :
 			super.testCriteria(context, javaClass);
 	}
 	
 	@Override
-	<S extends SearchCriteriaAbst<S>> TestContext<S> testCachedItem(SearchContext<String, JavaClass> context, String path, String key, JavaClass javaClass) {
+	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext<String, JavaClass> context, String path, String key, JavaClass javaClass) {
 		return super.testCriteria(context, javaClass);
 	}
 	
 	@Override
 	void retrieveItemFromFileInputStream(
 		SearchContext<String, JavaClass> context, 
-		TestContext<SearchCriteria> criteriaTestContext,
+		ClassCriteria.TestContext criteriaTestContext,
 		Scan.ItemContext<FileInputStream> scanItemContext,
 		JavaClass javaClass
 	) {
@@ -73,7 +72,7 @@ public class ByteCodeHunter extends CacherHunter<String, JavaClass, SearchContex
 	@Override
 	void retrieveItemFromZipEntry(
 		SearchContext<String, JavaClass> context,
-		TestContext<SearchCriteria> criteriaTestContext,
+		ClassCriteria.TestContext criteriaTestContext,
 		Scan.ItemContext<ZipInputStream.Entry> scanItemContext,
 		JavaClass javaClass) {
 		context.addItemFound(scanItemContext.getBasePathAsString(), scanItemContext.getInput().getAbsolutePath(), javaClass);

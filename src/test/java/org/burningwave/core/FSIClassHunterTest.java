@@ -10,8 +10,8 @@ import org.burningwave.core.Item;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.classes.MethodCriteria;
-import org.burningwave.core.classes.hunter.SearchCriteria;
-import org.burningwave.core.classes.hunter.SearchForPathCriteria;
+import org.burningwave.core.classes.hunter.SearchConfig;
+import org.burningwave.core.classes.hunter.SearchConfigForPath;
 import org.junit.jupiter.api.Test;
 
 public class FSIClassHunterTest extends BaseTest {
@@ -21,7 +21,7 @@ public class FSIClassHunterTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePath("libs-for-test.zip")
 				)
 			),
@@ -35,7 +35,7 @@ public class FSIClassHunterTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 					//Search in the runtime Classpaths. Here you can add all absolute path you want:
 					//both folders, zip and jar will be scanned recursively
 					componentSupplier.getPathHelper().getMainClassPaths()
@@ -59,7 +59,7 @@ public class FSIClassHunterTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
 					uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
@@ -77,7 +77,7 @@ public class FSIClassHunterTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
 					//[1]here you recall the uploaded class by "useClasses" method.
@@ -102,7 +102,7 @@ public class FSIClassHunterTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 					//Search in the runtime Classpaths. Here you can add all absolute path you want:
 					//both folders, zip and jar will be scanned recursively
 					componentSupplier.getPathHelper().getMainClassPaths()
@@ -126,7 +126,7 @@ public class FSIClassHunterTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
 					uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass) ||
@@ -154,7 +154,7 @@ public class FSIClassHunterTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
 					uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass) ||
@@ -182,7 +182,7 @@ public class FSIClassHunterTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
 					uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
@@ -222,7 +222,7 @@ public class FSIClassHunterTest extends BaseTest {
 		
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAllClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
 					uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
@@ -255,7 +255,7 @@ public class FSIClassHunterTest extends BaseTest {
 		
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAllClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
 					uploadedClasses.get(Object.class).isAssignableFrom(currentScannedClass)
@@ -286,7 +286,7 @@ public class FSIClassHunterTest extends BaseTest {
 		
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).byMembers(
 					methodCriteria
@@ -324,7 +324,7 @@ public class FSIClassHunterTest extends BaseTest {
 		
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAllClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
 					uploadedClasses.get(Object.class).isAssignableFrom(currentScannedClass)
@@ -352,7 +352,7 @@ public class FSIClassHunterTest extends BaseTest {
 		
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).byMembers(
 					constructorCriteria
@@ -382,7 +382,7 @@ public class FSIClassHunterTest extends BaseTest {
 		
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAllClassPaths()
 				).byMembers(
 					methodCriteria
@@ -407,7 +407,7 @@ public class FSIClassHunterTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).byClasses((uploadedClasses, currentScannedClass) ->
 					uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
@@ -427,7 +427,7 @@ public class FSIClassHunterTest extends BaseTest {
 				).useSharedClassLoaderAsParent(
 					true
 				).or(
-					SearchCriteria.forPaths(
+					SearchConfig.forPaths(
 						componentSupplier.getPathHelper().getMainClassPaths()
 					).byClasses((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Comparable.class).isAssignableFrom(currentScannedClass)
@@ -457,7 +457,7 @@ public class FSIClassHunterTest extends BaseTest {
 	@Test
 	public void cacheTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchForPathCriteria criteria = SearchCriteria.forPaths(
+		SearchConfigForPath criteria = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		testNotEmpty(
@@ -478,7 +478,7 @@ public class FSIClassHunterTest extends BaseTest {
 	@Test
 	public void cacheTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchForPathCriteria criteria = SearchCriteria.forPaths(
+		SearchConfigForPath criteria = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		componentSupplier.getFSIClassHunter().loadCache(
@@ -504,7 +504,7 @@ public class FSIClassHunterTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/classes"))
 				).allThat((currentScannedClass) -> 
 					Object.class.isAssignableFrom(currentScannedClass)
@@ -519,7 +519,7 @@ public class FSIClassHunterTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(
-				SearchCriteria.forPaths(
+				SearchConfig.forPaths(
 						componentSupplier.getPathHelper().getMainClassPaths()
 				).allThat((cls) -> {
 					return cls.getAnnotations() != null && cls.getAnnotations().length > 0;
