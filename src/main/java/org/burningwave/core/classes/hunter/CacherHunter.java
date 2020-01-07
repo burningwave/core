@@ -19,9 +19,8 @@ import org.burningwave.core.classes.hunter.SearchCriteriaAbst.TestContext;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.PathHelper.CheckResult;
-import org.burningwave.core.reflection.ObjectRetriever;
+import org.burningwave.core.io.StreamHelper;
 
 
 public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>> extends Hunter<K, I, C, R> implements org.burningwave.core.Component {
@@ -36,7 +35,6 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 		StreamHelper streamHelper,
 		ClassHelper classHelper,
 		MemberFinder memberFinder,
-		ObjectRetriever objectRetriever,
 		Function<InitContext, C> contextSupplier,
 		Function<C, R> resultSupplier) {
 		super(
@@ -47,7 +45,6 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 			streamHelper,
 			classHelper,
 			memberFinder,
-			objectRetriever,
 			contextSupplier,
 			resultSupplier
 		);
@@ -225,7 +222,6 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 		cache = null;
 		byteCodeHunterSupplier = null;
 		classHelper = null;
-		objectRetriever = null;
 		fileSystemHelper = null;
 		streamHelper = null;
 		pathHelper = null;

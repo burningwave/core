@@ -7,7 +7,6 @@ import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
@@ -233,37 +232,9 @@ public class ObjectRetriever implements Component {
 		}
 	}
 	
-	//TODO: modificare con lambda
-	public Class<?> retrieveClass(ClassLoader classLoader, String className) {
-		Vector<Class<?>> definedClasses = retrieveClasses(classLoader);
-		synchronized(definedClasses) {
-			Iterator<?> itr = definedClasses.iterator();
-			while(itr.hasNext()) {
-				Class<?> cls = (Class<?>)itr.next();
-				if (cls.getName().equals(className)) {
-					return cls;
-				}
-			}
-		}
-		if (classLoader.getParent() != null) {
-			return retrieveClass(classLoader.getParent(), className);
-		}
-		return null;
-	}	
-	
-	//TODO: modificare con lambda
-	public Package retrievePackage(ClassLoader classLoader, String packageName) {
-		Map<String, ?> packages = retrievePackages(classLoader);
-		Object packageToFind = packages.get(packageName);
-		if (packageToFind != null) {
-			return packageRetriever.apply(classLoader, packageToFind, packageName);
-		} else if (classLoader.getParent() != null) {
-			return retrievePackage(classLoader.getParent(), packageName);
-		} else {
-			return null;
-		}
-	}	
-
+	public TriFunction<ClassLoader, Object, String, Package> getPackageRetriever() {
+		return packageRetriever;
+	}
 	
 	public <T> T retrieveFromProperties(
 		Properties config, 
@@ -293,8 +264,18 @@ public class ObjectRetriever implements Component {
 	}
 	
 	public void unregister(ClassLoader classLoader) {
-		classLoadersClasses.remove(classLoader);
-		classLoadersPackages.remove(classLoader);
+		Vector<Class<?>> classes = classLoadersClasses.remove(classLoader);
+		if (classes != null) {
+			synchronized(classes) {
+				classes.clear();
+			}
+		}
+		Map<String, ?> packages = classLoadersPackages.remove(classLoader);
+		if (packages != null) {
+			synchronized(packages) {
+				packages.clear();
+			}
+		}
 	}
 	
 	@Override

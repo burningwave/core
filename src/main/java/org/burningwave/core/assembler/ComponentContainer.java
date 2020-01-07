@@ -134,9 +134,8 @@ public class ComponentContainer implements ComponentSupplier {
 	@Override
 	public MemoryClassLoader getMemoryClassLoader() {
 		return getOrCreate(MemoryClassLoader.class, () -> {
-			ObjectRetriever objectRetriever = getObjectRetriever();
 			return MemoryClassLoader.create(
-				objectRetriever.retrieveFromProperties(
+				getObjectRetriever().retrieveFromProperties(
 					config,
 					MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_CONFIG_KEY,
 					MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY,
@@ -144,8 +143,7 @@ public class ComponentContainer implements ComponentSupplier {
 					ClassLoader.class,
 					this
 				),
-				getClassHelper(),
-				objectRetriever
+				getClassHelper()
 			);
 		});
 	}
@@ -232,7 +230,6 @@ public class ComponentContainer implements ComponentSupplier {
 	@Override
 	public ClassHunter getClassHunter() {
 		return getOrCreate(ClassHunter.class, () -> {
-			ObjectRetriever objectRetriever = getObjectRetriever();
 			return ClassHunter.create(
 				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
@@ -242,8 +239,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getClassFactory(),
 				getClassHelper(),
 				getMemberFinder(),
-				objectRetriever,
-				objectRetriever.retrieveFromProperties(config,
+				getObjectRetriever().retrieveFromProperties(config,
 					ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
 					ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
 					ClassHunter.DEFAULT_CONFIG_VALUES,
@@ -257,7 +253,6 @@ public class ComponentContainer implements ComponentSupplier {
 	@Override
 	public FSIClassHunter getFSIClassHunter() {
 		return getOrCreate(FSIClassHunter.class, () -> {
-			ObjectRetriever objectRetriever = getObjectRetriever();
 			return FSIClassHunter.create(
 				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
@@ -267,8 +262,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getClassFactory(),
 				getClassHelper(),
 				getMemberFinder(),
-				objectRetriever,
-				objectRetriever.retrieveFromProperties(config,
+				getObjectRetriever().retrieveFromProperties(config,
 					FSIClassHunter.PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
 					FSIClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
 					FSIClassHunter.DEFAULT_CONFIG_VALUES,
@@ -289,8 +283,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getPathHelper(),
 				getStreamHelper(),
 				getClassHelper(),
-				getMemberFinder(),
-				getObjectRetriever()
+				getMemberFinder()
 			)
 		);
 	}
@@ -305,8 +298,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getPathHelper(),
 				getStreamHelper(),
 				getClassHelper(),
-				getMemberFinder(),
-				getObjectRetriever()
+				getMemberFinder()
 			)
 		);
 	}

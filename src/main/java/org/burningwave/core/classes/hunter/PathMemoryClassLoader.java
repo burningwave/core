@@ -13,7 +13,6 @@ import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.PathHelper.CheckResult;
-import org.burningwave.core.reflection.ObjectRetriever;
 
 
 public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryClassLoader {
@@ -26,17 +25,16 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 		ClassLoader parentClassLoader,
 		PathHelper pathHelper,
 		ClassHelper classHelper,
-		ObjectRetriever objectRetriever,
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier
 	) {
-		super(parentClassLoader, classHelper, objectRetriever);
+		super(parentClassLoader, classHelper);
 		this.pathHelper = pathHelper;
 		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
 		loadedPaths = ConcurrentHashMap.newKeySet();
 	}
 	
-	public static PathMemoryClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, ClassHelper classHelper, ObjectRetriever objectRetriever, Supplier<ByteCodeHunter> byteCodeHunterSupplier) {
-		return new PathMemoryClassLoader(parentClassLoader, pathHelper, classHelper, objectRetriever, byteCodeHunterSupplier);
+	public static PathMemoryClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, ClassHelper classHelper, Supplier<ByteCodeHunter> byteCodeHunterSupplier) {
+		return new PathMemoryClassLoader(parentClassLoader, pathHelper, classHelper, byteCodeHunterSupplier);
 	}
 	
 	ByteCodeHunter getByteCodeHunter() {

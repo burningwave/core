@@ -22,11 +22,10 @@ import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileOutputStream;
 import org.burningwave.core.io.FileSystemHelper;
+import org.burningwave.core.io.FileSystemHelper.Scan;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
-import org.burningwave.core.io.FileSystemHelper.Scan;
-import org.burningwave.core.reflection.ObjectRetriever;
 
 public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunter.SearchContext, SearchResult<Class<?>, File>> {
 	Collection<File> temporaryFiles;
@@ -37,8 +36,8 @@ public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunte
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
 		ClassHelper classHelper,
-		MemberFinder memberFinder,
-		ObjectRetriever objectRetriever) {
+		MemberFinder memberFinder
+	) {
 		super(
 			byteCodeHunterSupplier,
 			classHunterSupplier,
@@ -47,16 +46,16 @@ public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunte
 			streamHelper,
 			classHelper,
 			memberFinder,
-			objectRetriever,
-			(initContext) -> SearchContext._create(fileSystemHelper, streamHelper, initContext, objectRetriever),
+			(initContext) -> SearchContext._create(fileSystemHelper, streamHelper, initContext),
 			(context) -> new SearchResult<Class<?>, File>(context)
 		);
 		temporaryFiles = ConcurrentHashMap.newKeySet();
 	}
 	
 	public static ClassPathHunter create(Supplier<ByteCodeHunter> byteCodeHunterSupplier, Supplier<ClassHunter> classHunterSupplier, FileSystemHelper fileSystemHelper, PathHelper pathHelper, StreamHelper streamHelper,
-			ClassHelper classHelper, MemberFinder memberFinder, ObjectRetriever objectRetriever) {
-		return new ClassPathHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classHelper, memberFinder, objectRetriever);
+		ClassHelper classHelper, MemberFinder memberFinder
+	) {
+		return new ClassPathHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classHelper, memberFinder);
 	}
 	
 	@Override
@@ -205,9 +204,8 @@ public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunte
 		Collection<File> temporaryFiles;
 		boolean deleteTemporaryFilesOnClose;
 		
-		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext,
-				ObjectRetriever objectRetriever) {
-			super(fileSystemHelper, streamHelper, initContext, objectRetriever);
+		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
+			super(fileSystemHelper, streamHelper, initContext);
 			this.temporaryFiles = ConcurrentHashMap.newKeySet();
 			ClassFileScanConfiguration scanConfig = initContext.getClassFileScanConfiguration();
 			this.tasksManager = ParallelTasksManager.create(scanConfig.maxParallelTasksForUnit);
@@ -218,8 +216,8 @@ public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunte
 			deleteTemporaryFilesOnClose = value;			
 		}
 
-		static SearchContext _create(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext, ObjectRetriever objectRetriever) {
-			return new SearchContext(fileSystemHelper, streamHelper,  initContext, objectRetriever);
+		static SearchContext _create(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
+			return new SearchContext(fileSystemHelper, streamHelper,  initContext);
 		}
 		
 		@Override

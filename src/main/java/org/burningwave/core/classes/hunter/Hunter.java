@@ -13,11 +13,10 @@ import org.burningwave.core.classes.hunter.SearchContext.InitContext;
 import org.burningwave.core.classes.hunter.SearchCriteriaAbst.TestContext;
 import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileSystemHelper;
+import org.burningwave.core.io.FileSystemHelper.Scan;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
-import org.burningwave.core.io.FileSystemHelper.Scan;
-import org.burningwave.core.reflection.ObjectRetriever;
 
 
 public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>> implements org.burningwave.core.Component {
@@ -27,7 +26,6 @@ public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends Sear
 	ClassHunter classHunter;
 	ClassHelper classHelper;
 	MemberFinder memberFinder;
-	ObjectRetriever objectRetriever;
 	FileSystemHelper fileSystemHelper;
 	StreamHelper streamHelper;
 	PathHelper pathHelper;
@@ -43,14 +41,12 @@ public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends Sear
 		StreamHelper streamHelper,
 		ClassHelper classHelper,
 		MemberFinder memberFinder,
-		ObjectRetriever objectRetriever,
 		Function<InitContext, C> contextSupplier,
 		Function<C, R> resultSupplier
 	) {
 		this.fileSystemHelper = fileSystemHelper;
 		this.pathHelper = pathHelper;
 		this.streamHelper = streamHelper;
-		this.objectRetriever = objectRetriever;
 		this.classHelper = classHelper;
 		this.memberFinder = memberFinder;
 		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
@@ -104,7 +100,7 @@ public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends Sear
 					sharedClassLoader :
 					PathMemoryClassLoader.create(
 						criteria.parentClassLoaderForMainClassLoader, 
-						pathHelper, classHelper, objectRetriever, byteCodeHunterSupplier
+						pathHelper, classHelper, byteCodeHunterSupplier
 					),
 				scanConfig,
 				criteria
@@ -157,7 +153,6 @@ public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends Sear
 	public void close() {
 		byteCodeHunterSupplier = null;
 		classHelper = null;
-		objectRetriever = null;
 		fileSystemHelper = null;
 		streamHelper = null;
 		pathHelper = null;

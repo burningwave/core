@@ -12,15 +12,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.ByteBufferOutputStream;
-import org.burningwave.core.reflection.ObjectRetriever;
 
 
 public class MemoryClassLoader extends ClassLoader implements Component {
@@ -29,21 +28,16 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	public final static Map<String, String> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
 		
 	private ClassHelper classHelper;
-	private ObjectRetriever objectRetriever;
 	private Map<String, ByteBuffer> notLoadedCompiledClasses;
 	private Map<String, ByteBuffer> loadedCompiledClasses;
-	private Vector<Class<?>> definedClasses;
-	private Map<String, ?> definedPackages;
+
 	
 	protected MemoryClassLoader(
 		ClassLoader parentClassLoader,
-		ClassHelper classHelper,
-		ObjectRetriever objectRetriever) {
+		ClassHelper classHelper
+	) {
 		super(parentClassLoader);
 		this.classHelper = classHelper;
-		this.objectRetriever = objectRetriever;
-		definedClasses = this.objectRetriever.retrieveClasses(this);
-		definedPackages = this.objectRetriever.retrievePackages(this);
 		notLoadedCompiledClasses = new ConcurrentHashMap<>();
 		loadedCompiledClasses = new ConcurrentHashMap<>();
 	}
@@ -53,17 +47,12 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		DEFAULT_CONFIG_VALUES.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_CONFIG_KEY, "");
 	}
 	
-	public static MemoryClassLoader create(ClassLoader parentClassLoader, ClassHelper classHelper, ObjectRetriever objectRetriever) {
-		return new MemoryClassLoader(parentClassLoader, classHelper, objectRetriever);
-	}
-
-
-	public boolean isEmpty() {
-		return definedClasses.isEmpty() && notLoadedCompiledClasses.isEmpty();
+	public static MemoryClassLoader create(ClassLoader parentClassLoader, ClassHelper classHelper) {
+		return new MemoryClassLoader(parentClassLoader, classHelper);
 	}
 
 	public void addCompiledClass(String name, ByteBuffer byteCode) {
-    	if (objectRetriever.retrieveClass(this, name) == null) {
+    	if (classHelper.retrieveClass(this, name) == null) {
     		notLoadedCompiledClasses.put(name, byteCode);
 		} else {
 			logWarn("Could not add compiled class {} cause it's already defined", name);
@@ -104,7 +93,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
 	public boolean hasPackageBeenDefined(String packageName) {
 		if (Strings.isNotEmpty(packageName)) {
-			return objectRetriever.retrievePackage(this, packageName) != null;
+			return classHelper.retrievePackage(this, packageName) != null;
 		} else {
 			return true;
 		}
@@ -117,14 +106,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	) throws IllegalArgumentException {
     	Package pkg = null;
     	if (Strings.isNotEmpty(packageName)) {
-    		pkg = objectRetriever.retrievePackage(this, packageName);
+    		pkg = classHelper.retrievePackage(this, packageName);
     		if (pkg == null) {
     			try {
     				pkg = super.definePackage(packageName, specTitle, specVersion, specVendor, implTitle,
     		    			implVersion, implVendor, sealBase);
     			} catch (IllegalArgumentException exc) {
     				logWarn("Package " + packageName + " already defined");
-    				pkg = objectRetriever.retrievePackage(this, packageName);
+    				pkg = classHelper.retrievePackage(this, packageName);
     			}
     		}
     	}
@@ -136,7 +125,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			String pckgName = cls.getName().substring(
 		    	0, cls.getName().lastIndexOf(".")
 		    );
-		    if (objectRetriever.retrievePackage(this, pckgName) == null) {
+		    if (classHelper.retrievePackage(this, pckgName) == null) {
 		    	definePackage(pckgName, null, null, null, null, null, null, null);
 			}	
 		}
@@ -189,7 +178,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		if (byteCode != null) {
 			synchronized (byteCode) {
 				if ((byteCode = notLoadedCompiledClasses.get(className)) != null) {
-					cls = objectRetriever.retrieveClass(this, className);
+					cls = classHelper.retrieveClass(this, className);
 					if (cls == null) {
 						try {
 	                		cls = _defineClass(className, byteCode, null);
@@ -253,25 +242,10 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	
-	public Set<Class<?>> getClassesForPackage(Package pkg) {
-		return getClassesForPackage(pkg.getName());
+	public Set<Class<?>> getClassesForPackage(Predicate<Package> packagePredicate	) {
+		return classHelper.retrieveClassesForPackage(this, packagePredicate);
 	}
-	
-	//TODO gestire package di default (senza nome)
-	public Set<Class<?>> getClassesForPackage(String pkgName) {
-		Set<Class<?>> toRet = new LinkedHashSet<Class<?>>();
-		synchronized(definedClasses) {			
-			Iterator<?> itr = definedClasses.iterator();
-			while (itr.hasNext()) {
-				Class<?> cls = (Class<?>)itr.next();
-				if (cls.getName().startsWith(pkgName + ".")) {
-					toRet.add(cls);
-				}
-			}
-		}
-		return toRet;
-	}
-	
+		
 	public void forceCompiledClassesLoading() {
 		Set<String> compiledClassesNotLoaded = new LinkedHashSet<>(loadCompiledClassesNotLoaded());
 		if (!compiledClassesNotLoaded.isEmpty()) {	
@@ -296,18 +270,13 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	public void clear () {
 		notLoadedCompiledClasses.clear();
 		loadedCompiledClasses.clear();
-		definedClasses.clear();
-		definedPackages.clear();
 	}
 	
 	@Override
 	public void close() {
 		clear();
-		objectRetriever.unregister(this);
+		classHelper.unregister(this);
 		notLoadedCompiledClasses = null;
 		loadedCompiledClasses = null;
-		definedClasses = null;
-		definedPackages = null;
-		objectRetriever = null;
 	}
 }

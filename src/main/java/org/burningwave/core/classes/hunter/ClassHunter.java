@@ -20,11 +20,10 @@ import org.burningwave.core.classes.hunter.SearchCriteriaAbst.TestContext;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileSystemHelper;
+import org.burningwave.core.io.FileSystemHelper.Scan;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
-import org.burningwave.core.io.FileSystemHelper.Scan;
-import org.burningwave.core.reflection.ObjectRetriever;
 
 
 public class ClassHunter extends CacherHunter<String, Class<?>, ClassHunter.SearchContext, ClassHunter.SearchResult> {
@@ -42,7 +41,6 @@ public class ClassHunter extends CacherHunter<String, Class<?>, ClassHunter.Sear
 		ClassFactory classFactory,
 		ClassHelper classHelper,
 		MemberFinder memberFinder,
-		ObjectRetriever objectRetriever,
 		ClassLoader parentClassLoader
 	) {
 		super(
@@ -53,14 +51,13 @@ public class ClassHunter extends CacherHunter<String, Class<?>, ClassHunter.Sear
 			streamHelper,
 			classHelper,
 			memberFinder,
-			objectRetriever, 
 			(variableInitObjects) -> ClassHunter.SearchContext._create(
-				fileSystemHelper, streamHelper, variableInitObjects, objectRetriever
+				fileSystemHelper, streamHelper, variableInitObjects
 			),
 			(context) -> new SearchResult(context)
 		);
 		this.pathMemoryClassLoader = PathMemoryClassLoader.create(
-			parentClassLoader, pathHelper, classHelper, objectRetriever, byteCodeHunterSupplier
+			parentClassLoader, pathHelper, classHelper, byteCodeHunterSupplier
 		);
 	}
 	
@@ -78,11 +75,10 @@ public class ClassHunter extends CacherHunter<String, Class<?>, ClassHunter.Sear
 		ClassFactory classFactory,
 		ClassHelper classHelper,
 		MemberFinder memberFinder,
-		ObjectRetriever objectRetriever,
 		ClassLoader parentClassLoader
 	) {
 		return new ClassHunter(
-			byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classFactory, classHelper, memberFinder, objectRetriever, parentClassLoader
+			byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classFactory, classHelper, memberFinder, parentClassLoader
 		);
 	}	
 	
@@ -147,13 +143,12 @@ public class ClassHunter extends CacherHunter<String, Class<?>, ClassHunter.Sear
 		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound;
 		private Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap;
 		
-		static SearchContext _create(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext, ObjectRetriever objectRetriever) {
-			return new SearchContext(fileSystemHelper, streamHelper,  initContext, objectRetriever);
+		static SearchContext _create(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
+			return new SearchContext(fileSystemHelper, streamHelper,  initContext);
 		}
 		
-		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext,
-				ObjectRetriever objectRetriever) {
-			super(fileSystemHelper, streamHelper, initContext, objectRetriever);
+		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
+			super(fileSystemHelper, streamHelper, initContext);
 			membersFound = new ConcurrentHashMap<>();
 			membersFoundFlatMap = new ConcurrentHashMap<>();
 		}

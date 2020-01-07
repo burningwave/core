@@ -24,7 +24,6 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
-import org.burningwave.core.reflection.ObjectRetriever;
 
 
 public class FSIClassHunter extends CacherHunter<FileSystemItem, Class<?>, FSIClassHunter.SearchContext, FSIClassHunter.SearchResult> {
@@ -42,7 +41,6 @@ public class FSIClassHunter extends CacherHunter<FileSystemItem, Class<?>, FSICl
 		ClassFactory classFactory,
 		ClassHelper classHelper,
 		MemberFinder memberFinder,
-		ObjectRetriever objectRetriever,
 		ClassLoader parentClassLoader
 	) {
 		super(
@@ -52,15 +50,14 @@ public class FSIClassHunter extends CacherHunter<FileSystemItem, Class<?>, FSICl
 			pathHelper,
 			streamHelper,
 			classHelper,
-			memberFinder,
-			objectRetriever, 
+			memberFinder, 
 			(variableInitObjects) -> FSIClassHunter.SearchContext._create(
-				fileSystemHelper, streamHelper, variableInitObjects, objectRetriever
+				fileSystemHelper, streamHelper, variableInitObjects
 			),
 			(context) -> new SearchResult(context)
 		);
 		this.pathMemoryClassLoader = PathMemoryClassLoader.create(
-			parentClassLoader, pathHelper, classHelper, objectRetriever, byteCodeHunterSupplier
+			parentClassLoader, pathHelper, classHelper, byteCodeHunterSupplier
 		);
 	}
 	
@@ -78,11 +75,10 @@ public class FSIClassHunter extends CacherHunter<FileSystemItem, Class<?>, FSICl
 		ClassFactory classFactory,
 		ClassHelper classHelper,
 		MemberFinder memberFinder,
-		ObjectRetriever objectRetriever,
 		ClassLoader parentClassLoader
 	) {
 		return new FSIClassHunter(
-			byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classFactory, classHelper, memberFinder, objectRetriever, parentClassLoader
+			byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classFactory, classHelper, memberFinder, parentClassLoader
 		);
 	}	
 	
@@ -148,13 +144,12 @@ public class FSIClassHunter extends CacherHunter<FileSystemItem, Class<?>, FSICl
 		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound;
 		private Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap;
 		
-		static SearchContext _create(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext, ObjectRetriever objectRetriever) {
-			return new SearchContext(fileSystemHelper, streamHelper,  initContext, objectRetriever);
+		static SearchContext _create(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
+			return new SearchContext(fileSystemHelper, streamHelper,  initContext);
 		}
 		
-		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext,
-				ObjectRetriever objectRetriever) {
-			super(fileSystemHelper, streamHelper, initContext, objectRetriever);
+		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
+			super(fileSystemHelper, streamHelper, initContext);
 			membersFound = new ConcurrentHashMap<>();
 			membersFoundFlatMap = new ConcurrentHashMap<>();
 		}

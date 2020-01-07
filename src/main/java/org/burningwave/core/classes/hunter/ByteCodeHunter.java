@@ -8,11 +8,10 @@ import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.hunter.SearchCriteriaAbst.TestContext;
 import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileSystemHelper;
+import org.burningwave.core.io.FileSystemHelper.Scan;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
-import org.burningwave.core.io.FileSystemHelper.Scan;
-import org.burningwave.core.reflection.ObjectRetriever;
 
 public class ByteCodeHunter extends CacherHunter<String, JavaClass, SearchContext<String, JavaClass>, SearchResult<String, JavaClass>> {
 	
@@ -23,8 +22,7 @@ public class ByteCodeHunter extends CacherHunter<String, JavaClass, SearchContex
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
 		ClassHelper classHelper,
-		MemberFinder memberFinder,
-		ObjectRetriever objectRetriever
+		MemberFinder memberFinder
 	) {
 		super(
 			byteCodeHunterSupplier,
@@ -34,18 +32,18 @@ public class ByteCodeHunter extends CacherHunter<String, JavaClass, SearchContex
 			streamHelper, 
 			classHelper,
 			memberFinder,
-			objectRetriever,
 			(initContext) -> SearchContext.<String, JavaClass>create(
-				fileSystemHelper, streamHelper, initContext, objectRetriever
+				fileSystemHelper, streamHelper, initContext
 			),
 			(context) -> new SearchResult<String, JavaClass>(context)
 		);
 	}
 	
 	public static ByteCodeHunter create(Supplier<ByteCodeHunter> byteCodeHunterSupplier, Supplier<ClassHunter> classHunterSupplier, 
-			FileSystemHelper fileSystemHelper, PathHelper pathHelper, StreamHelper streamHelper,
-			ClassHelper classHelper, MemberFinder memberFinder, ObjectRetriever objectRetriever) {
-		return new ByteCodeHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classHelper, memberFinder, objectRetriever);
+		FileSystemHelper fileSystemHelper, PathHelper pathHelper, StreamHelper streamHelper,
+		ClassHelper classHelper, MemberFinder memberFinder
+	) {
+		return new ByteCodeHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classHelper, memberFinder);
 	}
 	
 	@SuppressWarnings("unchecked")

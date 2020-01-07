@@ -14,7 +14,6 @@ import org.burningwave.core.classes.hunter.SearchCriteriaAbst.TestContext;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.StreamHelper;
-import org.burningwave.core.reflection.ObjectRetriever;
 
 public class SearchContext<K, T> implements Component {
 
@@ -38,8 +37,7 @@ public class SearchContext<K, T> implements Component {
 	SearchContext(
 		FileSystemHelper fileSystemHelper,
 		StreamHelper streamHelper,
-		InitContext initContext,
-		ObjectRetriever objectRetriever
+		InitContext initContext
 	) {
 		this.fileSystemHelper = fileSystemHelper;
 		this.itemsFoundFlatMap = new ConcurrentHashMap<>();
@@ -55,11 +53,11 @@ public class SearchContext<K, T> implements Component {
 	}
 	
 	public static <K, T> SearchContext<K, T> create(
-			FileSystemHelper fileSystemHelper,
-			StreamHelper streamHelper,
-			InitContext initContext,
-			ObjectRetriever objectRetriever) {
-		return new SearchContext<>(fileSystemHelper, streamHelper, initContext, objectRetriever);
+		FileSystemHelper fileSystemHelper,
+		StreamHelper streamHelper,
+		InitContext initContext
+	) {
+		return new SearchContext<>(fileSystemHelper, streamHelper, initContext);
 	}
 	
 	void executeSearch(Runnable searcher) {

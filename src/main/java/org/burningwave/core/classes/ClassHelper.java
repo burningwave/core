@@ -6,10 +6,14 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
@@ -219,7 +223,7 @@ public class ClassHelper implements Component {
     				implVersion, implVendor, sealBase);
     		} catch (IllegalArgumentException exc) {
     			logWarn("Package " + name + " already defined");
-    			return objectRetriever.retrievePackage(classLoader, name);
+    			return retrievePackage(classLoader, name);
     		}
 		});
     }
@@ -232,10 +236,58 @@ public class ClassHelper implements Component {
 			String pckgName = cls.getName().substring(
 		    	0, cls.getName().lastIndexOf(".")
 		    );
-		    Package pkg = objectRetriever.retrievePackage(classLoader, pckgName);
+		    Package pkg = retrievePackage(classLoader, pckgName);
 		    if (pkg == null) {
 		    	pkg = definePackage(pckgName, null, null, null, null, null, null, null, classLoader, definePackageMethod);
 			}	
+		}
+	}
+	
+	public Class<?> retrieveClass(ClassLoader classLoader, String className) {
+		Vector<Class<?>> definedClasses = objectRetriever.retrieveClasses(classLoader);
+		synchronized(definedClasses) {
+			Iterator<?> itr = definedClasses.iterator();
+			while(itr.hasNext()) {
+				Class<?> cls = (Class<?>)itr.next();
+				if (cls.getName().equals(className)) {
+					return cls;
+				}
+			}
+		}
+		if (classLoader.getParent() != null) {
+			return retrieveClass(classLoader.getParent(), className);
+		}
+		return null;
+	}	
+	
+	public Set<Class<?>> retrieveClassesForPackage(ClassLoader classLoader, Predicate<Package> packagePredicate) {
+		Set<Class<?>> classesFound = ConcurrentHashMap.newKeySet();
+		Vector<Class<?>> definedClasses = objectRetriever.retrieveClasses(classLoader);
+		synchronized(definedClasses) {
+			Iterator<?> itr = definedClasses.iterator();
+			while(itr.hasNext()) {
+				Class<?> cls = (Class<?>)itr.next();
+				Package classPackage = cls.getPackage();
+				if (packagePredicate.test(classPackage)) {
+					classesFound.add(cls);
+				}
+			}
+		}
+		if (classLoader.getParent() != null) {
+			classesFound.addAll(retrieveClassesForPackage(classLoader.getParent(), packagePredicate));
+		}
+		return classesFound;
+	}
+	
+	public Package retrievePackage(ClassLoader classLoader, String packageName) {
+		Map<String, ?> packages = objectRetriever.retrievePackages(classLoader);
+		Object packageToFind = packages.get(packageName);
+		if (packageToFind != null) {
+			return objectRetriever.getPackageRetriever().apply(classLoader, packageToFind, packageName);
+		} else if (classLoader.getParent() != null) {
+			return retrievePackage(classLoader.getParent(), packageName);
+		} else {
+			return null;
 		}
 	}
 	
@@ -262,8 +314,7 @@ public class ClassHelper implements Component {
 			try (MemoryClassLoader memoryClassLoader = 
 				MemoryClassLoader.create(
 					classLoader,
-					this, 
-					objectRetriever
+					this
 				)
 			) {
 				Class<?> virtualClass = getClassFactory().getOrBuildCodeExecutorSubType(
@@ -274,6 +325,10 @@ public class ClassHelper implements Component {
 				return retrievedElement;
 			}
 		});
+	}
+	
+	public void unregister(ClassLoader classLoader) {
+		objectRetriever.unregister(classLoader);
 	}
 	
 	@Override
