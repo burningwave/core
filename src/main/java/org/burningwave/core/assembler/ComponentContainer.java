@@ -450,7 +450,11 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public void clear() {
 		components.forEach((type, instance) -> { 
-			instance.close();
+			try {
+				instance.close();
+			} catch (Throwable exc) {
+				logError("Exception occurred while closing " + instance, exc);
+			}
 			components.remove(type);
 		});
 	}
