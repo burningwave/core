@@ -1,35 +1,20 @@
 package org.burningwave.core.classes.hunter;
 
-import java.lang.reflect.Member;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
-import org.burningwave.core.Criteria;
-import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHelper;
-import org.burningwave.core.classes.JavaClass;
-import org.burningwave.core.classes.MemberCriteria;
 import org.burningwave.core.classes.MemberFinder;
-import org.burningwave.core.classes.hunter.SearchCriteriaAbst.TestContext;
-import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileSystemHelper;
-import org.burningwave.core.io.FileSystemHelper.Scan;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
-import org.burningwave.core.io.ZipInputStream;
 
 
-public class FSIClassHunter extends CacherHunter<FileSystemItem, Class<?>, FSIClassHunter.SearchContext, FSIClassHunter.SearchResult> {
-	PathMemoryClassLoader pathMemoryClassLoader;
-	public final static String PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY = "fSIClassHunter.pathMemoryClassLoader.parent.supplier.imports";
-	public final static String PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY = "fSIClassHunter.pathMemoryClassLoader.parent";
+public class FSIClassHunter extends ClassHunterAbst<FileSystemItem, FSIClassHunter.SearchResult> {
+	public final static String PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY = "classHunter.pathMemoryClassLoader.parent.supplier.imports";
+	public final static String PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY = "classHunter.pathMemoryClassLoader.parent";
 	public final static Map<String, String> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
 	
 	private FSIClassHunter(
@@ -38,7 +23,6 @@ public class FSIClassHunter extends CacherHunter<FileSystemItem, Class<?>, FSICl
 		FileSystemHelper fileSystemHelper, 
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
-		ClassFactory classFactory,
 		ClassHelper classHelper,
 		MemberFinder memberFinder,
 		ClassLoader parentClassLoader
@@ -50,20 +34,15 @@ public class FSIClassHunter extends CacherHunter<FileSystemItem, Class<?>, FSICl
 			pathHelper,
 			streamHelper,
 			classHelper,
-			memberFinder, 
-			(variableInitObjects) -> FSIClassHunter.SearchContext._create(
-				fileSystemHelper, streamHelper, variableInitObjects
-			),
+			memberFinder,
+			parentClassLoader,
 			(context) -> new SearchResult(context)
-		);
-		this.pathMemoryClassLoader = PathMemoryClassLoader.create(
-			parentClassLoader, pathHelper, classHelper, byteCodeHunterSupplier
 		);
 	}
 	
 	static {
-		DEFAULT_CONFIG_VALUES.put(FSIClassHunter.PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "");
-		DEFAULT_CONFIG_VALUES.put(FSIClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "null");
+		DEFAULT_CONFIG_VALUES.put(ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "");
+		DEFAULT_CONFIG_VALUES.put(ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "null");
 	}
 	
 	public static FSIClassHunter create(
@@ -72,156 +51,25 @@ public class FSIClassHunter extends CacherHunter<FileSystemItem, Class<?>, FSICl
 		FileSystemHelper fileSystemHelper, 
 		PathHelper pathHelper, 
 		StreamHelper streamHelper,
-		ClassFactory classFactory,
 		ClassHelper classHelper,
 		MemberFinder memberFinder,
 		ClassLoader parentClassLoader
 	) {
 		return new FSIClassHunter(
-			byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classFactory, classHelper, memberFinder, parentClassLoader
+			byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classHelper, memberFinder, parentClassLoader
 		);
 	}	
 	
 	@Override
-	public SearchResult findBy(ClassFileScanConfiguration scanConfig, SearchCriteria criteria) {
-		criteria.collectMembers = true;
-		return super.findBy(scanConfig, criteria);
+	FileSystemItem buildKey(String absolutePath) {
+		return FileSystemItem.ofPath(absolutePath);
 	}
 	
-	@Override
-	public SearchResult findBy(SearchForPathCriteria criteria) {
-		criteria.collectMembers = true;
-		return (SearchResult)super.findBy(criteria);
-	}
-	
+	public static class SearchResult extends ClassHunterAbst.SearchResult<FileSystemItem> {
 
-	@Override
-	<S extends SearchCriteriaAbst<S>> TestContext<S> testCachedItem(SearchContext context, String path,
-			FileSystemItem key, Class<?> cls) {
-		return context.testCriteria(cls);
-	}
-	
-	@Override
-	<S extends SearchCriteriaAbst<S>> void addCachedItemToContext(SearchContext context, TestContext<S> testContext,
-			String path, Entry<FileSystemItem, Class<?>> cachedItemAsEntry) {
-		context.addItemFound(path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue(), testContext.getMembersFound());
-	}
-	
-	@Override
-	void retrieveItemFromFileInputStream(
-		FSIClassHunter.SearchContext context, 
-		TestContext<SearchCriteria> criteriaTestContext,
-		Scan.ItemContext<FileInputStream> scanItemContext, 
-		JavaClass javaClass
-	) {
-		context.addItemFound(
-			scanItemContext.getBasePathAsString(),
-			FileSystemItem.ofPath(scanItemContext.getInput().getAbsolutePath()),
-			criteriaTestContext.getEntity(),
-			criteriaTestContext.getMembersFound()
-		);
-	}
-
-	@Override
-	void retrieveItemFromZipEntry(FSIClassHunter.SearchContext context, TestContext<SearchCriteria> criteriaTestContext, Scan.ItemContext<ZipInputStream.Entry> scanItemContext, JavaClass javaClass) {
-		context.addItemFound(
-			scanItemContext.getBasePathAsString(),
-			FileSystemItem.ofPath(scanItemContext.getInput().getAbsolutePath()),
-			criteriaTestContext.getEntity(),
-			criteriaTestContext.getMembersFound()
-		);
-	}
-	
-	
-	@Override
-	public void close() {
-		pathMemoryClassLoader.close();
-		pathMemoryClassLoader = null;
-		super.close();
-	}
-	
-	public static class SearchContext extends org.burningwave.core.classes.hunter.SearchContext<FileSystemItem, Class<?>> {
-		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound;
-		private Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap;
-		
-		static SearchContext _create(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
-			return new SearchContext(fileSystemHelper, streamHelper,  initContext);
-		}
-		
-		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
-			super(fileSystemHelper, streamHelper, initContext);
-			membersFound = new ConcurrentHashMap<>();
-			membersFoundFlatMap = new ConcurrentHashMap<>();
-		}
-		
-		void addItemFound(String path, FileSystemItem key, Class<?> item, Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersForCriteria) {
-			super.addItemFound(path, key, item);
-			this.membersFound.put(item, membersForCriteria);
-			membersForCriteria.forEach((criteria, memberList) -> {
-				Collection<Member> coll = membersFoundFlatMap.get(criteria);
-				if (coll == null) {								
-					coll = new CopyOnWriteArrayList<>();
-					membersFoundFlatMap.put(criteria, coll);
-				}
-				coll.addAll(memberList);
-			});	
-		}
-		
-		void addAllMembersFound(Class<?> cls, Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFound) {
-			this.membersFound.put(cls, membersFound);
-			this.membersFoundFlatMap.putAll(membersFound);
-		}
-		
-		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> getMembersFound() {
-			return membersFound;
-		}
-		
-		public Map<MemberCriteria<?, ?, ?>, Collection<Member>> getMembersFoundFlatMap() {
-			return membersFoundFlatMap;
-		}
-		
-		@Override
-		public void close() {
-			membersFound.clear();
-			membersFound = null;
-			membersFoundFlatMap.clear();
-			membersFoundFlatMap = null;
-			super.close();
-		}
-	}
-
-	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<FileSystemItem, Class<?>> {
-		SearchResult(SearchContext context) {
+		SearchResult(SearchContext<FileSystemItem> context) {
 			super(context);
 		}
 		
-		public Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> getMembersFound() {
-			return ((SearchContext)this.context).getMembersFound();
-		}
-		
-		public Map<MemberCriteria<?, ?, ?>, Collection<Member>> getMembersFoundFlatMap() {
-			return ((SearchContext)this.context).getMembersFoundFlatMap();
-		}
-		
-		@SuppressWarnings("unchecked")
-		public <M extends Member, C extends MemberCriteria<M, C, T>, T extends Criteria.TestContext<M, C>> Collection<Member> getMembersFoundBy(C criteria) {
-			Collection<Member> membersFoundByCriteria = getMembersFoundFlatMap().get(criteria);
-			if (membersFoundByCriteria != null && membersFoundByCriteria.size() > 0) {
-				return membersFoundByCriteria;
-			} else {
-				C criteriaCopy = criteria.createCopy();
-				criteriaCopy.init(context.criteria.getClassSupplier(), context.criteria.getByteCodeSupplier());
-				criteriaCopy.useClasses(context.criteria.getClassesToBeUploaded());
-				final Collection<Member> membersFoundByCriteriaFinal = new CopyOnWriteArrayList<>();
-				((SearchContext)this.context).getMembersFoundFlatMap().values().forEach((membersCollection) -> {
-					membersCollection.stream().filter(
-						(member) -> criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault((M)member).getResult()
-					).collect(
-						Collectors.toCollection(() -> membersFoundByCriteriaFinal)
-					);
-				});
-				return membersFoundByCriteriaFinal;
-			}
-		}
 	}
 }

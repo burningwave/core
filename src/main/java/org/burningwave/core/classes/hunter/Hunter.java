@@ -70,14 +70,14 @@ public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends Sear
 	
 	//Not cached search
 	public R findBy(ClassFileScanConfiguration scanConfig, SearchCriteria criteria) {
-		final ClassFileScanConfiguration scanFonfigCopy = scanConfig.createCopy();
+		final ClassFileScanConfiguration scanConfigCopy = scanConfig.createCopy();
 		criteria = criteria.createCopy();
-		C context = createContext(scanFonfigCopy, criteria);
+		C context = createContext(scanConfigCopy, criteria);
 		criteria.init(this.classHelper, context.pathMemoryClassLoader, this.memberFinder);		
-		scanFonfigCopy.init();
+		scanConfigCopy.init();
 		context.executeSearch(() -> {
 				fileSystemHelper.scan(
-					scanFonfigCopy.toScanConfiguration(context, this)
+					scanConfigCopy.toScanConfiguration(context, this)
 				);
 			}
 		);

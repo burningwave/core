@@ -26,7 +26,6 @@ import org.burningwave.core.io.StreamHelper;
 public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>> extends Hunter<K, I, C, R> implements org.burningwave.core.Component {
 	Map<String, Map<K, I>> cache;
 
-
 	CacherHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
