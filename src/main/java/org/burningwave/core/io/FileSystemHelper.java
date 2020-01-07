@@ -654,19 +654,19 @@ public class FileSystemHelper implements Component {
 			}
 			
 			public Configuration scanRecursivelyAllZipEntryThatAndApply(
-					Predicate<ZipInputStream.Entry> predicate,
-					Consumer<ItemContext<ZipInputStream.Entry>> before,
-					Consumer<ItemContext<ZipInputStream.Entry>> after
-				) {
-					return putInFilterAndConsumerMap(
-						filterAndMapperForZipEntry, predicate,
-						before.andThen(
-							scanItemContext -> {
-								scanItemContext.fileSystemHelper.scanZipEntry(scanItemContext);
-							}
-						).andThen(after)
-					);
-				}
+				Predicate<ZipInputStream.Entry> predicate,
+				Consumer<ItemContext<ZipInputStream.Entry>> before,
+				Consumer<ItemContext<ZipInputStream.Entry>> after
+			) {
+				return putInFilterAndConsumerMap(
+					filterAndMapperForZipEntry, predicate,
+					before.andThen(
+						scanItemContext -> {
+							scanItemContext.fileSystemHelper.scanZipEntry(scanItemContext);
+						}
+					).andThen(after)
+				);
+			}
 		
 			@SafeVarargs
 			private final <O, P> Configuration putInFilterAndConsumerMap(
