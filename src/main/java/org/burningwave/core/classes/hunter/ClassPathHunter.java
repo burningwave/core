@@ -27,7 +27,7 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
 
-public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunter.SearchContext, SearchResult<Class<?>, File>> {
+public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
 	Collection<File> temporaryFiles;
 	private ClassPathHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
@@ -47,7 +47,7 @@ public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunte
 			classHelper,
 			memberFinder,
 			(initContext) -> SearchContext._create(fileSystemHelper, streamHelper, initContext),
-			(context) -> new SearchResult<Class<?>, File>(context)
+			(context) -> new ClassPathHunter.SearchResult(context)
 		);
 		temporaryFiles = ConcurrentHashMap.newKeySet();
 	}
@@ -230,5 +230,13 @@ public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunte
 			tasksManager.close();
 			super.close();
 		}
+	}
+	
+	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<Class<?>, File> {
+
+		public SearchResult(SearchContext context) {
+			super(context);
+		}
+		
 	}
 }

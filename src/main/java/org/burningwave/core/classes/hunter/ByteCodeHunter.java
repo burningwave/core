@@ -13,7 +13,7 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
 
-public class ByteCodeHunter extends CacherHunter<String, JavaClass, SearchContext<String, JavaClass>, SearchResult<String, JavaClass>> {
+public class ByteCodeHunter extends CacherHunter<String, JavaClass, SearchContext<String, JavaClass>, ByteCodeHunter.SearchResult> {
 	
 	private ByteCodeHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
@@ -35,7 +35,7 @@ public class ByteCodeHunter extends CacherHunter<String, JavaClass, SearchContex
 			(initContext) -> SearchContext.<String, JavaClass>create(
 				fileSystemHelper, streamHelper, initContext
 			),
-			(context) -> new SearchResult<String, JavaClass>(context)
+			(context) -> new ByteCodeHunter.SearchResult(context)
 		);
 	}
 	
@@ -77,5 +77,13 @@ public class ByteCodeHunter extends CacherHunter<String, JavaClass, SearchContex
 		Scan.ItemContext<ZipInputStream.Entry> scanItemContext,
 		JavaClass javaClass) {
 		context.addItemFound(scanItemContext.getBasePathAsString(), scanItemContext.getInput().getAbsolutePath(), javaClass);
+	}
+		
+	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<String, JavaClass> {
+
+		public SearchResult(SearchContext<String, JavaClass> context) {
+			super(context);
+		}
+		
 	}
 }

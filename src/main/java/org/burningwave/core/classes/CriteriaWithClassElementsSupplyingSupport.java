@@ -27,7 +27,9 @@ public abstract class CriteriaWithClassElementsSupplyingSupport<
 	protected Map<Class<?>, byte[]> loadedBytecode;
 	protected Function<Class<?>, ByteBuffer> byteCodeSupplier;
 	
-	protected CriteriaWithClassElementsSupplyingSupport() {}
+	protected CriteriaWithClassElementsSupplyingSupport() {
+		byteCodeForClasses = new ConcurrentHashMap<>();
+	}
 	
 	public C init(Function<Class<?>, Class<?>> classSupplier, Function<Class<?>, ByteBuffer> byteCodeSupplier) {
 		if (classSupplier != null) {
