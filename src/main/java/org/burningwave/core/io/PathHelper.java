@@ -38,7 +38,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -49,6 +48,8 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.iterable.IterableObjectHelper;
+import org.burningwave.core.iterable.Properties;
+import org.burningwave.core.iterable.Properties.Event;
 
 
 public class PathHelper implements Component {
@@ -67,6 +68,18 @@ public class PathHelper implements Component {
 		allClassPaths = ConcurrentHashMap.newKeySet();
 		loadMainClassPaths();
 		this.config = config;
+		listenTo(config);
+	}
+	
+	@Override
+	public void receiveNotification(Properties properties, Event event, Object key, Object value) {
+		if (event == Event.PUT) {
+			String propertyKey = (String)key;
+			if (propertyKey.startsWith("classPaths.")) {
+				loadClassPaths(((String)key).replaceFirst("classPaths.", ""));	
+			}
+		}
+		Component.super.receiveNotification(properties, event, key, value);
 	}
 	
 	public static PathHelper create(Supplier<FileSystemHelper> fileSystemHelperSupplier, IterableObjectHelper iterableObjectHelper, Properties config) {
@@ -115,8 +128,7 @@ public class PathHelper implements Component {
 		}
 	}
 	
-	@SuppressWarnings("unused")
-	private void loadClassPaths() {
+	public void loadClassPaths() {
 		config.forEach((key, value) -> {
 			if (((String)key).startsWith("classPaths.")) {
 				String classPathsName = ((String)key).substring("classPaths.".length());
@@ -136,9 +148,7 @@ public class PathHelper implements Component {
 					defaultValues.put("classPaths", mainClassPath);
 					classPaths = Strings.Paths.clean(iterableObjectHelper.get(config, classPathsNamePropertyName, defaultValues));
 					for (String classPath : classPaths.split(";")) {
-						if (new File(classPath).exists()) {
-							addClassPath(classPathsName, classPath);
-						}
+						addClassPath(classPathsName, classPath);
 					}
 				}	
 			} else {
@@ -195,8 +205,13 @@ public class PathHelper implements Component {
 	public Collection<String> addClassPaths(String name, Collection<String> classPaths) {
 		if (classPaths != null) {
 			Collection<String> classPathsFound = getOrCreateClassPaths(name);
-			classPathsFound.addAll(classPaths);
-			allClassPaths.addAll(classPaths);
+			classPaths.forEach((classPath) -> {
+				FileSystemItem fileSystemItem = FileSystemItem.ofPath(classPath);
+				if (fileSystemItem.exists()) {
+					classPathsFound.add(fileSystemItem.getAbsolutePath());
+					allClassPaths.add(fileSystemItem.getAbsolutePath());
+				}
+			});
 			return classPathsFound;
 		} else {
 			throw Throwables.toRuntimeException("classPaths parameter is null");

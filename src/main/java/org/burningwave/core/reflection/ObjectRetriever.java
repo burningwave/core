@@ -36,7 +36,6 @@ import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -53,6 +52,7 @@ import org.burningwave.core.common.JVMChecker;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.TriFunction;
 import org.burningwave.core.iterable.IterableObjectHelper;
+import org.burningwave.core.iterable.Properties;
 
 import sun.misc.Unsafe;
 

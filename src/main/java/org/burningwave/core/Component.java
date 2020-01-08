@@ -28,7 +28,9 @@
  */
 package org.burningwave.core;
 
-public interface Component extends AutoCloseable, Logger {
+import org.burningwave.core.iterable.Properties;
+
+public interface Component extends AutoCloseable, Logger, Properties.Listener {
 	
 	@Override
 	default public void close() {

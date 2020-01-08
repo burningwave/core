@@ -33,6 +33,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collections;
@@ -75,6 +76,11 @@ public class FileSystemItem implements Component {
 	}
 	
 	private static FileSystemItem ofPath(String realAbsolutePath, String conventionedAbsolutePath) {
+		realAbsolutePath = Strings.Paths.clean(
+			Paths.get(
+				realAbsolutePath
+			).normalize().toString()
+		);
 		FileSystemItem fileSystemItemReader = FILE_SYSTEM_ITEMS.get(realAbsolutePath);
 		if (fileSystemItemReader == null) {
 			synchronized(realAbsolutePath) {

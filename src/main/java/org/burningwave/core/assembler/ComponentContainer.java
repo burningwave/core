@@ -30,7 +30,6 @@ package org.burningwave.core.assembler;
 
 import java.io.InputStream;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -60,6 +59,7 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
+import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.reflection.CallerRetriever;
 import org.burningwave.core.reflection.ConsumerBinder;
 import org.burningwave.core.reflection.FunctionBinder;
