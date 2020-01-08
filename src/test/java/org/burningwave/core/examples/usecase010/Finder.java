@@ -26,7 +26,7 @@ public class Finder {
             return foundFields.size() >= 2;
         });
         
-        CacheableSearchConfig criteria = SearchConfig.forPaths(
+        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
     		//Here you can add all absolute path you want:
             //both folders, zip and jar will be recursively scanned.
             //For example you can add: "C:\\Users\\user\\.m2"
@@ -41,7 +41,7 @@ public class Finder {
 	        )
 	    );
 
-        SearchResult searchResult = classHunter.findBy(criteria);
+        SearchResult searchResult = classHunter.findBy(searchConfig);
 
         //If you need all found fields unconment this
         //searchResult.getMembersFoundFlatMap().values();
