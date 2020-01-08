@@ -76,11 +76,13 @@ public class FileSystemItem implements Component {
 	}
 	
 	private static FileSystemItem ofPath(String realAbsolutePath, String conventionedAbsolutePath) {
-		realAbsolutePath = Strings.Paths.clean(
-			Paths.get(
-				realAbsolutePath
-			).normalize().toString()
-		);
+		if (realAbsolutePath.contains("..") ||
+			realAbsolutePath.contains(".\\") ||
+			realAbsolutePath.contains(".//")
+		) {
+			realAbsolutePath = Paths.get(realAbsolutePath).normalize().toString();
+		}
+		realAbsolutePath = Strings.Paths.clean(realAbsolutePath);
 		FileSystemItem fileSystemItemReader = FILE_SYSTEM_ITEMS.get(realAbsolutePath);
 		if (fileSystemItemReader == null) {
 			synchronized(realAbsolutePath) {
