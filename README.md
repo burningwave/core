@@ -14,50 +14,50 @@ Below you will find how to include the library in your projects and a simple cod
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>2.1.6</version>
+    <version>3.0.0</version>
 </dependency>
 ```
 
 * **Gradle Groovy**:
 ```
-implementation 'org.burningwave:core:2.1.6'
+implementation 'org.burningwave:core:3.0.0'
 ```
 
 * **Gradle Kotlin**:
 ```
-implementation("org.burningwave:core:2.1.6")
+implementation("org.burningwave:core:3.0.0")
 ```
 
 * **Scala**:
 ```
-libraryDependencies += "org.burningwave" % "core" % "2.1.6"
+libraryDependencies += "org.burningwave" % "core" % "3.0.0"
 ```
 
 * **Apache Ivy**:
 ```
-<dependency org="org.burningwave" name="core" rev="2.1.6" />
+<dependency org="org.burningwave" name="core" rev="3.0.0" />
 ```
 
 * **Groovy Grape**:
 ```
 @Grapes(
-  @Grab(group='org.burningwave', module='core', version='2.1.6')
+  @Grab(group='org.burningwave', module='core', version='3.0.0')
 )
 ```
 
 * **Leiningen**:
 ```
-[org.burningwave/core "2.1.6"]
+[org.burningwave/core "3.0.0"]
 ```
 
 * **Apache Buildr**:
 ```
-'org.burningwave:core:jar:2.1.6'
+'org.burningwave:core:jar:3.0.0'
 ```
 
 * **PURL**:
 ```
-pkg:maven/org.burningwave/core@2.1.6
+pkg:maven/org.burningwave/core@3.0.0
 ```
 
 ## ... And now the code: let's retrieve all classes of the runtime classpath!
@@ -65,30 +65,35 @@ pkg:maven/org.burningwave/core@2.1.6
 import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.classes.ClassCriteria;
+import org.burningwave.core.classes.hunter.CacheableSearchConfig;
 import org.burningwave.core.classes.hunter.ClassHunter;
 import org.burningwave.core.classes.hunter.ClassHunter.SearchResult;
-import org.burningwave.core.classes.hunter.SearchCriteria;
-import org.burningwave.core.classes.hunter.SearchForPathCriteria;
+import org.burningwave.core.classes.hunter.SearchConfig;
 import org.burningwave.core.io.PathHelper;
-
+	
 public class Finder {
-
+	
     public Collection<Class<?>> find() {
         ComponentContainer componentConatiner = ComponentContainer.getInstance();
         PathHelper pathHelper = componentConatiner.getPathHelper();
         ClassHunter classHunter = componentConatiner.getClassHunter();
-
-        SearchForPathCriteria criteria = SearchCriteria.forPaths(
+        
+        CacheableSearchConfig criteria = SearchConfig.forPaths(
             //Here you can add all absolute path you want:
-            //both folders, zip and jar will be scanned recursively.
-            //For example you can add: "C:\\Users\\.m2"
+            //both folders, zip and jar will be recursively scanned.
+            //For example you can add: "C:\\Users\\user\\.m2"
             //With the row below the search will be executed on runtime Classpaths
             pathHelper.getMainClassPaths()
-	);
-
+		).by(ClassCriteria.create().allThat((cls) -> {
+			    return cls.getPackage().getName().matches(".*springframework.*");
+			})
+		);
+        
         SearchResult searchResult = classHunter.findBy(criteria);
+        
         return searchResult.getItemsFound();
     }
-
+    
 }
 ```

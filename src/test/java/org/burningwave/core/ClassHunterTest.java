@@ -400,7 +400,8 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllSubtypeOfWithMethodsByAsyncModeTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		 MethodCriteria methodCriteria = MethodCriteria.forName(
+		
+		MethodCriteria methodCriteria = MethodCriteria.forName(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
