@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Criteria;
-import org.burningwave.core.classes.hunter.PathMemoryClassLoader;
 import org.burningwave.core.common.Streams;
 import org.burningwave.core.function.PentaPredicate;
 
@@ -22,7 +21,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 	MemberFinder memberFinder;
 	Map<String, MemberCriteria<?, ?, ?>> memberCriterias;
 	PentaPredicate<ClassCriteria, TestContext, MemberCriteria<?, ?, ?>, String, Class<?>> membersPredicate;
-	public boolean collectMembers;
+	private boolean collectMembers;
 	
 	private ClassCriteria() {
 		super();
@@ -33,10 +32,10 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		return new ClassCriteria();
 	}
 	
-	public void init(ClassHelper classHelper, PathMemoryClassLoader classSupplier, MemberFinder memberFinder) {
-		this.classSupplier = t -> {
+	public void init(ClassHelper classHelper, ClassLoader classSupplier, MemberFinder memberFinder) {
+		this.classSupplier = cls -> {
 			try {
-				return classSupplier.loadOrUploadClass(t);
+				return classHelper.loadOrUploadClass(cls, classSupplier);
 			} catch (ClassNotFoundException exc) {
 				throw Throwables.toRuntimeException(exc);
 			}

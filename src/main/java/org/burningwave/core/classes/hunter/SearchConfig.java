@@ -15,14 +15,14 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 		return new SearchConfig();
 	}
 
-	public static SearchConfigForPath forPaths(Collection<String> paths) {
-		SearchConfigForPath criteria = new SearchConfigForPath();
+	public static CacheableSearchConfig forPaths(Collection<String> paths) {
+		CacheableSearchConfig criteria = new CacheableSearchConfig();
 		criteria.paths.addAll(paths);
 		criteria.useSharedClassLoaderAsMain = true;
 		return criteria;
 	}
 	
-	public static SearchConfigForPath forPaths(String... paths) {
+	public static CacheableSearchConfig forPaths(String... paths) {
 		return SearchConfig.forPaths(Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
 	}
 }

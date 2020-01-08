@@ -51,10 +51,10 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 	}
 	
 	//Cached search
-	public SearchResult<K, I> findBy(SearchConfigForPath searchConfig) {
+	public SearchResult<K, I> findBy(CacheableSearchConfig searchConfig) {
 		searchConfig = searchConfig.createCopy();
 		C context = createContext(
-			ClassFileScanConfiguration.forPaths(searchConfig.getPaths()).maxParallelTasksForUnit(
+			ClassFileScanConfig.forPaths(searchConfig.getPaths()).maxParallelTasksForUnit(
 				searchConfig.maxParallelTasksForUnit
 			), 
 			searchConfig
@@ -100,7 +100,7 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 	
 	Collection<String> scanCache(C context) {
 		Collection<String> pathsNotScanned = new LinkedHashSet<>();
-		SearchConfigForPath searchConfig = context.getSearchConfig();
+		CacheableSearchConfig searchConfig = context.getSearchConfig();
 		if (!context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
 			for (String path : searchConfig.getPaths()) {
 				Map<K, I> classesForPath = cache.get(path);
@@ -138,7 +138,7 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 
 	void loadCache(C context, Collection<String> paths) {
 		CheckResult checkPathsResult = pathHelper.check(cache.keySet(), paths);
-		ClassFileScanConfiguration classFileScanConfiguration = context.classFileScanConfiguration.createCopy().setPaths(checkPathsResult.getNotContainedPaths());
+		ClassFileScanConfig classFileScanConfiguration = context.classFileScanConfiguration.createCopy().setPaths(checkPathsResult.getNotContainedPaths());
 		Map<String, Map<K, I>> tempCache = new LinkedHashMap<>();
 		if (!checkPathsResult.getPartialContainedDirectories().isEmpty()) {
 			Predicate<File> directoryPredicate = null;

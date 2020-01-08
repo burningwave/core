@@ -18,7 +18,7 @@ import org.burningwave.core.io.StreamHelper;
 public class SearchContext<K, T> implements Component {
 
 	FileSystemHelper fileSystemHelper;
-	ClassFileScanConfiguration classFileScanConfiguration;
+	ClassFileScanConfig classFileScanConfiguration;
 	SearchConfigAbst<?> searchConfig;
 	Map<K, T> itemsFoundFlatMap;
 	Map<String, Map<K, T>> itemsFoundMap;
@@ -223,7 +223,7 @@ public class SearchContext<K, T> implements Component {
 		InitContext(
 			PathMemoryClassLoader sharedPathMemoryClassLoader, 
 			PathMemoryClassLoader pathMemoryClassLoader,
-			ClassFileScanConfiguration classFileScanConfiguration,
+			ClassFileScanConfig classFileScanConfiguration,
 			SearchConfigAbst<?> criteria
 		) {
 			super();
@@ -236,7 +236,7 @@ public class SearchContext<K, T> implements Component {
 		static InitContext create(
 			PathMemoryClassLoader sharedPathMemoryClassLoader, 
 			PathMemoryClassLoader pathMemoryClassLoader,
-			ClassFileScanConfiguration classFileScanConfiguration,
+			ClassFileScanConfig classFileScanConfiguration,
 			SearchConfigAbst<?> criteria
 		) {
 			return new InitContext(sharedPathMemoryClassLoader, pathMemoryClassLoader, classFileScanConfiguration, criteria);
@@ -250,7 +250,7 @@ public class SearchContext<K, T> implements Component {
 			return get(Elements.PATH_MEMORY_CLASS_LOADER);
 		}
 		
-		ClassFileScanConfiguration getClassFileScanConfiguration() {
+		ClassFileScanConfig getClassFileScanConfiguration() {
 			return get(Elements.CLASS_FILE_SCAN_CONFIGURATION);
 		}
 		

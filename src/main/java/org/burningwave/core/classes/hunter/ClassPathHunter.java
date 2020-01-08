@@ -207,7 +207,7 @@ public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunte
 		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
 			super(fileSystemHelper, streamHelper, initContext);
 			this.temporaryFiles = ConcurrentHashMap.newKeySet();
-			ClassFileScanConfiguration scanConfig = initContext.getClassFileScanConfiguration();
+			ClassFileScanConfig scanConfig = initContext.getClassFileScanConfiguration();
 			this.tasksManager = ParallelTasksManager.create(scanConfig.maxParallelTasksForUnit);
 			deleteTemporaryFilesOnClose = getSearchConfig().deleteFoundItemsOnClose;
 		}		

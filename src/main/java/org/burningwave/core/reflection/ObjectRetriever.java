@@ -232,8 +232,8 @@ public class ObjectRetriever implements Component {
 		}
 	}
 	
-	public TriFunction<ClassLoader, Object, String, Package> getPackageRetriever() {
-		return packageRetriever;
+	public Package retrievePackage(ClassLoader classLoader, Object packageToFind, String packageName) {
+		return packageRetriever.apply(classLoader, packageToFind, packageName);
 	}
 	
 	public <T> T retrieveFromProperties(

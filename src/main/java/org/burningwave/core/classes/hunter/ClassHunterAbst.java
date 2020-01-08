@@ -57,13 +57,13 @@ public abstract class ClassHunterAbst<K, R extends ClassHunterAbst.SearchResult<
 	}
 	
 	@Override
-	public R findBy(ClassFileScanConfiguration scanConfig, SearchConfig searchConfig) {
+	public R findBy(ClassFileScanConfig scanConfig, SearchConfig searchConfig) {
 		searchConfig.getClassCriteria().collectMembers(true);
 		return super.findBy(scanConfig, searchConfig);
 	}
 	
 	@Override
-	public SearchResult<K> findBy(SearchConfigForPath searchConfig) {
+	public SearchResult<K> findBy(CacheableSearchConfig searchConfig) {
 		searchConfig.getClassCriteria().collectMembers(true);
 		return (SearchResult<K>)super.findBy(searchConfig);
 	}

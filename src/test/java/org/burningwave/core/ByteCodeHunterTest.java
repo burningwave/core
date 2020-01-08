@@ -9,9 +9,9 @@ import java.util.stream.Stream;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria;
-import org.burningwave.core.classes.hunter.ClassFileScanConfiguration;
+import org.burningwave.core.classes.hunter.ClassFileScanConfig;
 import org.burningwave.core.classes.hunter.SearchConfig;
-import org.burningwave.core.classes.hunter.SearchConfigForPath;
+import org.burningwave.core.classes.hunter.CacheableSearchConfig;
 import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
 
@@ -59,7 +59,7 @@ public class ByteCodeHunterTest extends BaseTest {
 	@Test
 	public void cacheTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchConfigForPath searchConfig = SearchConfig.forPaths(
+		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePath("libs-for-test.zip")
 		).by(
 			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 
@@ -89,7 +89,7 @@ public class ByteCodeHunterTest extends BaseTest {
 				Closeable.class
 			)
 		);
-		ClassFileScanConfiguration scanConfig = ClassFileScanConfiguration.forPaths(
+		ClassFileScanConfig scanConfig = ClassFileScanConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePath("libs-for-test.zip")
 		);
 		testNotEmpty(
@@ -102,7 +102,7 @@ public class ByteCodeHunterTest extends BaseTest {
 	@Test
 	public void parallelTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchConfigForPath searchConfig = SearchConfig.forPaths(
+		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePath("libs-for-test.zip")
 		).by(
 			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 

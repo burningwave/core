@@ -69,8 +69,8 @@ public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends Sear
 	}
 	
 	//Not cached search
-	public R findBy(ClassFileScanConfiguration scanConfig, SearchConfig searchConfig) {
-		final ClassFileScanConfiguration scanConfigCopy = scanConfig.createCopy();
+	public R findBy(ClassFileScanConfig scanConfig, SearchConfig searchConfig) {
+		final ClassFileScanConfig scanConfigCopy = scanConfig.createCopy();
 		searchConfig = searchConfig.createCopy();
 		C context = createContext(scanConfigCopy, searchConfig);
 		searchConfig.init(this.classHelper, context.pathMemoryClassLoader, this.memberFinder);		
@@ -88,7 +88,7 @@ public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends Sear
 		return resultSupplier.apply(context);
 	}
 	
-	C createContext(ClassFileScanConfiguration scanConfig, SearchConfigAbst<?> searchConfig) {
+	C createContext(ClassFileScanConfig scanConfig, SearchConfigAbst<?> searchConfig) {
 		PathMemoryClassLoader sharedClassLoader = getClassHunter().pathMemoryClassLoader;
 		if (searchConfig.useSharedClassLoaderAsParent) {
 			searchConfig.parentClassLoaderForMainClassLoader = sharedClassLoader;

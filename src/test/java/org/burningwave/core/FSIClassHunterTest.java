@@ -12,7 +12,7 @@ import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.classes.hunter.SearchConfig;
-import org.burningwave.core.classes.hunter.SearchConfigForPath;
+import org.burningwave.core.classes.hunter.CacheableSearchConfig;
 import org.junit.jupiter.api.Test;
 
 public class FSIClassHunterTest extends BaseTest {
@@ -42,7 +42,7 @@ public class FSIClassHunterTest extends BaseTest {
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
 					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
-						//[1]here you recall the uploaded class by "useClasses" method. In this case we're looking for all classes that extend com.github.burningwave.core.Item
+						//[1]here you recall the uploaded class by "useClasses" method. In this case we're looking for all classes that extend org.burningwave.core.Item
 						uploadedClasses.get(Item.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
 						//With this directive we ask the library to load one or more classes to be used for comparisons:
@@ -436,7 +436,7 @@ public class FSIClassHunterTest extends BaseTest {
 	@Test
 	public void cacheTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchConfigForPath searchConfig = SearchConfig.forPaths(
+		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		testNotEmpty(
@@ -459,7 +459,7 @@ public class FSIClassHunterTest extends BaseTest {
 	@Test
 	public void cacheTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchConfigForPath searchConfig = SearchConfig.forPaths(
+		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		componentSupplier.getFSIClassHunter().loadCache(

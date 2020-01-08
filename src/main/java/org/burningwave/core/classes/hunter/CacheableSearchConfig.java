@@ -9,11 +9,11 @@ import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.common.Strings;
 
-public class SearchConfigForPath extends SearchConfigAbst<SearchConfigForPath> {
+public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfig> {
 	int maxParallelTasksForUnit;
 	Collection<String> paths;	
 	
-	SearchConfigForPath() {
+	CacheableSearchConfig() {
 		super();
 		paths = ConcurrentHashMap.newKeySet();
 		maxParallelTasksForUnit = Runtime.getRuntime().availableProcessors();
@@ -29,12 +29,12 @@ public class SearchConfigForPath extends SearchConfigAbst<SearchConfigForPath> {
 		temp.clear();
 	}
 	
-	public SearchConfigForPath maxParallelTasksForUnit(int value) {
+	public CacheableSearchConfig maxParallelTasksForUnit(int value) {
 		this.maxParallelTasksForUnit = value;
 		return this;
 	}
 	
-	public SearchConfigForPath addPaths(Collection<String> paths) {
+	public CacheableSearchConfig addPaths(Collection<String> paths) {
 		this.paths.addAll(paths);
 		return this;
 	}
@@ -45,8 +45,8 @@ public class SearchConfigForPath extends SearchConfigAbst<SearchConfigForPath> {
 	
 	
 	@Override
-	public SearchConfigForPath createCopy() {
-		SearchConfigForPath copy = super.createCopy();
+	public CacheableSearchConfig createCopy() {
+		CacheableSearchConfig copy = super.createCopy();
 		copy.paths.addAll(this.getPaths());
 		copy.maxParallelTasksForUnit = this.maxParallelTasksForUnit;
 		return copy;

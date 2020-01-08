@@ -12,7 +12,7 @@ import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.classes.hunter.SearchConfig;
-import org.burningwave.core.classes.hunter.SearchConfigForPath;
+import org.burningwave.core.classes.hunter.CacheableSearchConfig;
 import org.junit.jupiter.api.Test;
 
 public class ClassHunterTest extends BaseTest {
@@ -436,7 +436,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void cacheTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchConfigForPath searchConfig = SearchConfig.forPaths(
+		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		testNotEmpty(
@@ -459,7 +459,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void cacheTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchConfigForPath searchConfig = SearchConfig.forPaths(
+		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		componentSupplier.getClassHunter().loadCache(
