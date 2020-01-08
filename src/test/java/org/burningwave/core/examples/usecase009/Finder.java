@@ -13,39 +13,40 @@ import org.burningwave.core.classes.hunter.ClassHunter.SearchResult;
 import org.burningwave.core.classes.hunter.SearchConfig;
 import org.burningwave.core.io.PathHelper;
 
-public class Finder {       
+public class Finder {	   
 	
-    public Collection<Class<?>> find() {
-        ComponentContainer componentConatiner = ComponentContainer.getInstance();
-        PathHelper pathHelper = componentConatiner.getPathHelper();
-        ClassHunter classHunter = componentConatiner.getClassHunter();
+	public Collection<Class<?>> find() {
+		ComponentContainer componentConatiner = ComponentContainer.getInstance();
+		PathHelper pathHelper = componentConatiner.getPathHelper();
+		ClassHunter classHunter = componentConatiner.getClassHunter();
 
-        FieldCriteria fieldCriteria = FieldCriteria.create().allThat((field) -> {
-            return Modifier.isProtected(field.getModifiers());
-        }).result((foundFields) -> {
-            return foundFields.size() >= 2;
-        });
-        
-        CacheableSearchConfig criteria = SearchConfig.forPaths(
-    		//Here you can add all absolute path you want:
-            //both folders, zip and jar will be recursively scanned.
-            //For example you can add: "C:\\Users\\user\\.m2"
-            //With the row below the search will be executed on runtime Classpaths
-            pathHelper.getMainClassPaths()
-        ).by(ClassCriteria.create().byMembers(
-	            fieldCriteria
-	        ).useClasses(
-	            Date.class,
-	            Object.class
-	        )
-        );
+		FieldCriteria fieldCriteria = FieldCriteria.create().allThat((field) -> {
+			return Modifier.isProtected(field.getModifiers());
+		}).result((foundFields) -> {
+			return foundFields.size() >= 2;
+		});
+		
+		CacheableSearchConfig criteria = SearchConfig.forPaths(
+			//Here you can add all absolute path you want:
+			//both folders, zip and jar will be recursively scanned.
+			//For example you can add: "C:\\Users\\user\\.m2"
+			//With the row below the search will be executed on runtime Classpaths
+			pathHelper.getMainClassPaths()
+		).by(
+			ClassCriteria.create().byMembers(
+				fieldCriteria
+			).useClasses(
+				Date.class,
+				Object.class
+			)
+		);
 
-        SearchResult searchResult = classHunter.findBy(criteria);
+		SearchResult searchResult = classHunter.findBy(criteria);
 
-        //If you need all found fields unconment this
-        //searchResult.getMembersFoundFlatMap().values();
+		//If you need all found fields unconment this
+		//searchResult.getMembersFoundFlatMap().values();
 
-        return searchResult.getItemsFound();
-    }
+		return searchResult.getItemsFound();
+	}
 
 }

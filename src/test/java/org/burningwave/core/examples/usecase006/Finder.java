@@ -11,21 +11,21 @@ import org.burningwave.core.io.PathHelper;
 
 public class Finder {
 
-    public Collection<Class<?>> find() {
-        ComponentContainer componentConatiner = ComponentContainer.getInstance();
-        PathHelper pathHelper = componentConatiner.getPathHelper();
-        ClassHunter classHunter = componentConatiner.getClassHunter();
+	public Collection<Class<?>> find() {
+		ComponentContainer componentConatiner = ComponentContainer.getInstance();
+		PathHelper pathHelper = componentConatiner.getPathHelper();
+		ClassHunter classHunter = componentConatiner.getClassHunter();
 
-        CacheableSearchConfig criteria = SearchConfig.forPaths(
-    		//Here you can add all absolute path you want:
-            //both folders, zip and jar will be recursively scanned.
-            //For example you can add: "C:\\Users\\user\\.m2"
-            //With the row below the search will be executed on runtime Classpaths
-            pathHelper.getMainClassPaths()
-        );
+		CacheableSearchConfig criteria = SearchConfig.forPaths(
+			//Here you can add all absolute path you want:
+			//both folders, zip and jar will be recursively scanned.
+			//For example you can add: "C:\\Users\\user\\.m2"
+			//With the row below the search will be executed on runtime Classpaths
+			pathHelper.getMainClassPaths()
+		);
 
-        SearchResult searchResult = classHunter.findBy(criteria);
-        return searchResult.getItemsFound();
-    }
+		SearchResult searchResult = classHunter.findBy(criteria);
+		return searchResult.getItemsFound();
+	}
 
 }
