@@ -1,4 +1,4 @@
-package org.burningwave.core.examples.usecase5;
+package org.burningwave.core.examples.usecase005;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
