@@ -1,7 +1,7 @@
 /*
  * This file is part of Burningwave Core.
  *
- * Author: Roberto Gentli
+ * Author: Roberto Gentili
  *
  * Hosted at: https://github.com/burningwave/core
  *
@@ -193,7 +193,7 @@ public class ObjectRetriever implements Component {
 	}
 	
 	@SuppressWarnings({ "unchecked" })
-	public Vector<Class<?>> retrieveClasses(ClassLoader classLoader) {
+	public Vector<Class<?>> retrieveLoadedClasses(ClassLoader classLoader) {
 		Vector<Class<?>> classes = classLoadersClasses.get(classLoader);
 		if (classes != null) {
 			return classes;

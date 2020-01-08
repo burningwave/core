@@ -1,7 +1,7 @@
 /*
  * This file is part of Burningwave Core.
  *
- * Author: Roberto Gentli
+ * Author: Roberto Gentili
  *
  * Hosted at: https://github.com/burningwave/core
  *
@@ -162,7 +162,7 @@ public class ClassHelper implements Component {
 		return loadOrUploadClass(
 			toLoad, classLoader,
 			objectRetriever.getDefineClassMethod(classLoader), 
-			objectRetriever.retrieveClasses(classLoader),
+			objectRetriever.retrieveLoadedClasses(classLoader),
 			objectRetriever.getDefinePackageMethod(classLoader)
 		);
 	}
@@ -271,8 +271,8 @@ public class ClassHelper implements Component {
 		}
 	}
 	
-	public Class<?> retrieveClass(ClassLoader classLoader, String className) {
-		Vector<Class<?>> definedClasses = objectRetriever.retrieveClasses(classLoader);
+	public Class<?> retrieveLoadedClass(ClassLoader classLoader, String className) {
+		Vector<Class<?>> definedClasses = objectRetriever.retrieveLoadedClasses(classLoader);
 		synchronized(definedClasses) {
 			Iterator<?> itr = definedClasses.iterator();
 			while(itr.hasNext()) {
@@ -283,14 +283,14 @@ public class ClassHelper implements Component {
 			}
 		}
 		if (classLoader.getParent() != null) {
-			return retrieveClass(classLoader.getParent(), className);
+			return retrieveLoadedClass(classLoader.getParent(), className);
 		}
 		return null;
 	}	
 	
-	public Set<Class<?>> retrieveClassesForPackage(ClassLoader classLoader, Predicate<Package> packagePredicate) {
+	public Set<Class<?>> retrieveLoadedClassesForPackage(ClassLoader classLoader, Predicate<Package> packagePredicate) {
 		Set<Class<?>> classesFound = ConcurrentHashMap.newKeySet();
-		Vector<Class<?>> definedClasses = objectRetriever.retrieveClasses(classLoader);
+		Vector<Class<?>> definedClasses = objectRetriever.retrieveLoadedClasses(classLoader);
 		synchronized(definedClasses) {
 			Iterator<?> itr = definedClasses.iterator();
 			while(itr.hasNext()) {
@@ -302,7 +302,7 @@ public class ClassHelper implements Component {
 			}
 		}
 		if (classLoader.getParent() != null) {
-			classesFound.addAll(retrieveClassesForPackage(classLoader.getParent(), packagePredicate));
+			classesFound.addAll(retrieveLoadedClassesForPackage(classLoader.getParent(), packagePredicate));
 		}
 		return classesFound;
 	}

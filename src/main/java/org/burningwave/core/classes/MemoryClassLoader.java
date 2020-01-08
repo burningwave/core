@@ -1,7 +1,7 @@
 /*
  * This file is part of Burningwave Core.
  *
- * Author: Roberto Gentli
+ * Author: Roberto Gentili
  *
  * Hosted at: https://github.com/burningwave/core
  *
@@ -80,7 +80,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 
 	public void addCompiledClass(String name, ByteBuffer byteCode) {
-    	if (classHelper.retrieveClass(this, name) == null) {
+    	if (classHelper.retrieveLoadedClass(this, name) == null) {
     		notLoadedCompiledClasses.put(name, byteCode);
 		} else {
 			logWarn("Could not add compiled class {} cause it's already defined", name);
@@ -206,7 +206,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		if (byteCode != null) {
 			synchronized (byteCode) {
 				if ((byteCode = notLoadedCompiledClasses.get(className)) != null) {
-					cls = classHelper.retrieveClass(this, className);
+					cls = classHelper.retrieveLoadedClass(this, className);
 					if (cls == null) {
 						try {
 	                		cls = _defineClass(className, byteCode, null);
@@ -270,8 +270,8 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	
-	public Set<Class<?>> getClassesForPackage(Predicate<Package> packagePredicate	) {
-		return classHelper.retrieveClassesForPackage(this, packagePredicate);
+	public Set<Class<?>> getLoadedClassesForPackage(Predicate<Package> packagePredicate	) {
+		return classHelper.retrieveLoadedClassesForPackage(this, packagePredicate);
 	}
 		
 	public void forceCompiledClassesLoading() {

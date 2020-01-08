@@ -1,7 +1,7 @@
 /*
  * This file is part of Burningwave Core.
  *
- * Author: Roberto Gentli
+ * Author: Roberto Gentili
  *
  * Hosted at: https://github.com/burningwave/core
  *
