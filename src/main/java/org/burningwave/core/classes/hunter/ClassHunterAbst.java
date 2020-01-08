@@ -63,9 +63,9 @@ public abstract class ClassHunterAbst<K, R extends ClassHunterAbst.SearchResult<
 	}
 	
 	@Override
-	public SearchResult<K> findBy(CacheableSearchConfig searchConfig) {
+	public R findBy(CacheableSearchConfig searchConfig) {
 		searchConfig.getClassCriteria().collectMembers(true);
-		return (SearchResult<K>)super.findBy(searchConfig);
+		return super.findBy(searchConfig);
 	}
 	
 	@Override

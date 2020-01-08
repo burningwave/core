@@ -51,7 +51,7 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 	}
 	
 	//Cached search
-	public SearchResult<K, I> findBy(CacheableSearchConfig searchConfig) {
+	public R findBy(CacheableSearchConfig searchConfig) {
 		searchConfig = searchConfig.createCopy();
 		C context = createContext(
 			ClassFileScanConfig.forPaths(searchConfig.getPaths()).maxParallelTasksForUnit(
