@@ -13,7 +13,7 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
 
-public class ByteCodeHunter extends CacherHunter<String, JavaClass, SearchContext<String, JavaClass>, ByteCodeHunter.SearchResult> {
+public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<String, JavaClass, SearchContext<String, JavaClass>, ByteCodeHunter.SearchResult> {
 	
 	private ByteCodeHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,

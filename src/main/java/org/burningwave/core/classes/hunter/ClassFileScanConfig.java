@@ -137,7 +137,7 @@ public class ClassFileScanConfig {
 	}
 	
 
-	<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>>Configuration toScanConfiguration(C context, Hunter<K, I, C, R> hunter) {
+	<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>>Configuration toScanConfiguration(C context, ClassPathScanner<K, I, C, R> hunter) {
 		Configuration config = Configuration.forPaths(
 			getPaths()
 		).whenFindFileTestAndApply(

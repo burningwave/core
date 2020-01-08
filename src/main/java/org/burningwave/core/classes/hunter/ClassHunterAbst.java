@@ -24,7 +24,7 @@ import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
 
 
-public abstract class ClassHunterAbst<K, R extends ClassHunterAbst.SearchResult<K>> extends CacherHunter<K, Class<?>, ClassHunterAbst.SearchContext<K>, R> {
+public abstract class ClassHunterAbst<K, R extends ClassHunterAbst.SearchResult<K>> extends ClassPathScannerWithCachingSupport<K, Class<?>, ClassHunterAbst.SearchContext<K>, R> {
 	PathMemoryClassLoader pathMemoryClassLoader;
 	
 	ClassHunterAbst(

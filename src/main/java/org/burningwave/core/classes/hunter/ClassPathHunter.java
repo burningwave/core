@@ -27,7 +27,7 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
 
-public class ClassPathHunter extends CacherHunter<Class<?>, File, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
+public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>, File, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
 	Collection<File> temporaryFiles;
 	private ClassPathHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,

@@ -19,7 +19,7 @@ import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
 
 
-public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>> implements org.burningwave.core.Component {
+public abstract class ClassPathScanner<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>> implements org.burningwave.core.Component {
 	Supplier<ByteCodeHunter> byteCodeHunterSupplier;
 	ByteCodeHunter byteCodeHunter;
 	Supplier<ClassHunter> classHunterSupplier;
@@ -33,7 +33,7 @@ public abstract class Hunter<K, I, C extends SearchContext<K, I>, R extends Sear
 	Function<C, R> resultSupplier;
 
 
-	Hunter(
+	ClassPathScanner(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemHelper fileSystemHelper,

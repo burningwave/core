@@ -23,10 +23,10 @@ import org.burningwave.core.io.PathHelper.CheckResult;
 import org.burningwave.core.io.StreamHelper;
 
 
-public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>> extends Hunter<K, I, C, R> implements org.burningwave.core.Component {
+public abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>> extends ClassPathScanner<K, I, C, R> implements org.burningwave.core.Component {
 	Map<String, Map<K, I>> cache;
 
-	CacherHunter(
+	ClassPathScannerWithCachingSupport(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemHelper fileSystemHelper,
