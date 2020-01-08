@@ -88,7 +88,7 @@ public class Finder {
 		).by(ClassCriteria.create().allThat((cls) -> {
 			return cls.getPackage().getName().matches(".*springframework.*");
 		})
-		);
+	);
         
         SearchResult searchResult = classHunter.findBy(criteria);
         
