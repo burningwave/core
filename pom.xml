@@ -98,6 +98,7 @@
 		    <groupId>org.springframework</groupId>
 		    <artifactId>spring-web</artifactId>
 		    <version>5.2.2.RELEASE</version>
+		    <scope>test</scope>
 		</dependency>
 		
 	</dependencies>
@@ -250,7 +251,7 @@
 		<url>https://github.com/burningwave/core</url>
 		<connection>scm:git:git://github.com/burningwave/core.git</connection>
 		<developerConnection>scm:git:git@github.com:burningwave/core.git</developerConnection>
-		<tag>HEAD</tag>
+		<tag>core-3.0.1</tag>
 	</scm>
 
 	<profiles>
