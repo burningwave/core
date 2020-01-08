@@ -30,7 +30,6 @@ package org.burningwave.core.common;
 
 import java.util.AbstractMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.LoggerFactory;
@@ -38,57 +37,80 @@ import org.slf4j.LoggerFactory;
 public class LoggersRepository {
 	private final static Map<Class<?>, Map.Entry<org.slf4j.Logger, Boolean>> LOGGERS = new ConcurrentHashMap<>();
 	
-	public static Map.Entry<org.slf4j.Logger, Boolean> getLoggerEntry(Object object) {
-		Class<?> cls = Classes.retrieveFrom(object);
-		Map.Entry<org.slf4j.Logger, Boolean> loggerEntry = LOGGERS.get(cls);
+	public static Map.Entry<org.slf4j.Logger, Boolean> getLoggerEntry(Class<?> client) {
+		Map.Entry<org.slf4j.Logger, Boolean> loggerEntry = LOGGERS.get(client);
 		if (loggerEntry == null) {
-			LOGGERS.put(cls, loggerEntry = new AbstractMap.SimpleEntry<>(LoggerFactory.getLogger(cls), Boolean.TRUE));
+			LOGGERS.put(client, loggerEntry = new AbstractMap.SimpleEntry<>(LoggerFactory.getLogger(client), Boolean.TRUE));
 		}
 		return loggerEntry;
 	}
 	
-	public static org.slf4j.Logger getLogger(Object object) {
-		Map.Entry<org.slf4j.Logger, Boolean> loggerEntry = getLoggerEntry(object);
+	public static org.slf4j.Logger getLogger(Class<?> client) {
+		Map.Entry<org.slf4j.Logger, Boolean> loggerEntry = getLoggerEntry(client);
 		return loggerEntry.getValue()? loggerEntry.getKey() : null;
 	}
 	
-	public static void logError(Object client, String message, Throwable exc) {
-		Optional.ofNullable(getLogger(client)).ifPresent((logger) -> logger.error(message, exc));
+	public static void logError(Class<?> client, String message, Throwable exc) {
+		org.slf4j.Logger logger = getLogger(client);
+		if (logger != null) {
+			logger.error(message, exc);
+		}
 	}
 	
-	public static void logError(Object client, String message) {
-		Optional.ofNullable(getLogger(client)).ifPresent((logger) -> logger.error(message));
+	public static void logError(Class<?> client, String message) {
+		org.slf4j.Logger logger = getLogger(client);
+		if (logger != null) {
+			logger.error(message);
+		}
 	}
 	
-	public static void logDebug(Object client, String message) {
-		Optional.ofNullable(getLogger(client)).ifPresent((logger) -> logger.debug(message));
+	public static void logDebug(Class<?> client, String message) {
+		org.slf4j.Logger logger = getLogger(client);
+		if (logger != null) {
+			logger.debug(message);
+		}
 	}
 	
-	public static void logDebug(Object client, String message, Object... arguments) {
-		Optional.ofNullable(getLogger(client)).ifPresent((logger) -> logger.debug(message, arguments));
+	public static void logDebug(Class<?> client, String message, Object... arguments) {
+		org.slf4j.Logger logger = getLogger(client);
+		if (logger != null) {
+			logger.debug(message, arguments);
+		}
 	}
 	
-	public static void logInfo(Object client, String message) {
-		Optional.ofNullable(getLogger(client)).ifPresent((logger) -> logger.info(message));
+	public static void logInfo(Class<?> client, String message) {
+		org.slf4j.Logger logger = getLogger(client);
+		if (logger != null) {
+			logger.debug(message);
+		}
 	}
 	
-	public static void logInfo(Object client, String message, Object... arguments) {
-		Optional.ofNullable(getLogger(client)).ifPresent((logger) -> logger.info(message, arguments));
+	public static void logInfo(Class<?> client, String message, Object... arguments) {
+		org.slf4j.Logger logger = getLogger(client);
+		if (logger != null) {
+			logger.info(message, arguments);
+		}
 	}
 	
-	public static void logWarn(Object client, String message) {
-		Optional.ofNullable(getLogger(client)).ifPresent((logger) -> logger.warn(message));
+	public static void logWarn(Class<?> client, String message) {
+		org.slf4j.Logger logger = getLogger(client);
+		if (logger != null) {
+			logger.warn(message);
+		}
 	}
 	
-	public static void logWarn(Object client, String message, Object... arguments) {
-		Optional.ofNullable(getLogger(client)).ifPresent((logger) ->logger.warn(message, arguments));
+	public static void logWarn(Class<?> client, String message, Object... arguments) {
+		org.slf4j.Logger logger = getLogger(client);
+		if (logger != null) {
+			logger.warn(message, arguments);
+		}
 	}
 	
-	public static void disableLogging(Object object) {
-		getLoggerEntry(object).setValue(Boolean.FALSE);
+	public static void disableLogging(Class<?> client) {
+		getLoggerEntry(client).setValue(Boolean.FALSE);
 	}
 	
-	public static void enableLogging(Object object) {
-		getLoggerEntry(object).setValue(Boolean.TRUE);
+	public static void enableLogging(Class<?> client) {
+		getLoggerEntry(client).setValue(Boolean.TRUE);
 	}
 }

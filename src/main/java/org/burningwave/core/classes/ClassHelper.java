@@ -174,46 +174,29 @@ public class ClassHelper implements Component {
 		Collection<Class<?>> definedClasses,
 		Method definePackageMethod
 	) throws ClassNotFoundException {
-    	ByteBuffer byteCode = getByteCode(toLoad);
-    	String className = extractClassName(Streams.shareContent(byteCode));
-    	Class<?> cls = null;
     	try {
-    		cls = classLoader.loadClass(toLoad.getName());
+    		return classLoader.loadClass(toLoad.getName());
     	} catch (ClassNotFoundException | NoClassDefFoundError outerEx) {
-    		synchronized (definedClasses) {
-    			try {
-    				cls = classLoader.loadClass(toLoad.getName());
-    			} catch (ClassNotFoundException | NoClassDefFoundError outerExc) {
-		    		String notFoundClassName = outerExc.getMessage().replace("/", ".");
-		    		if (className.equals(notFoundClassName)) {
-		    			try {
-		            		cls = defineClass(classLoader, defineClassMethod, className, Streams.shareContent(byteCode));
-		            		definePackageFor(cls, classLoader, definePackageMethod);
-		            	} catch (NoClassDefFoundError innerExc) {
-		            		String newNotFoundClassName = innerExc.getMessage().replace("/", ".");
-		            		loadOrUploadClass(
-		            			Class.forName(
-		            				newNotFoundClassName, false, toLoad.getClassLoader()
-		            			),
-		            			classLoader, defineClassMethod, definedClasses, definePackageMethod
-		            		);
-		            		cls = defineClass(classLoader, defineClassMethod, className, Streams.shareContent(byteCode));
-		            		definePackageFor(cls, classLoader, definePackageMethod);
-		            	}
-		    		} else {
-		    			loadOrUploadClass(
-		    				Class.forName(
-		    					notFoundClassName, false, toLoad.getClassLoader()
-		    				),
-		    				classLoader, defineClassMethod, definedClasses, definePackageMethod
-		    			);
-		    			cls = defineClass(classLoader, defineClassMethod, className, byteCode);
-		        		definePackageFor(cls, classLoader, definePackageMethod);
-		    		}
-    			}
-    		}
-    	}	
-     	return cls;
+    		try {
+    			Class<?> cls = defineClass(classLoader, defineClassMethod, toLoad.getName(), Streams.shareContent(getByteCode(toLoad)));
+    			definePackageFor(cls, classLoader, definePackageMethod);
+    			return cls;
+			} catch (ClassNotFoundException | NoClassDefFoundError outerExc) {
+				String newNotFoundClassName = outerExc.getMessage().replace("/", ".");
+				loadOrUploadClass(
+        			Class.forName(
+        				newNotFoundClassName, false, toLoad.getClassLoader()
+        			),
+        			classLoader, defineClassMethod, definedClasses, definePackageMethod
+        		);
+				return loadOrUploadClass(
+        			Class.forName(
+        					toLoad.getName(), false, toLoad.getClassLoader()
+        			),
+        			classLoader, defineClassMethod, definedClasses, definePackageMethod
+        		);
+			}
+    	}
     }
 
 	private Class<?> defineClass(

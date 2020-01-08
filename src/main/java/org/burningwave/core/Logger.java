@@ -34,46 +34,46 @@ public interface Logger {
 		
 	@SuppressWarnings("unchecked")
 	public default <T extends Logger> T disableLogging() {
-		LoggersRepository.disableLogging(this);
+		LoggersRepository.disableLogging(this.getClass());
 		return (T) this;
 	}
 	
 	@SuppressWarnings("unchecked")
 	public default <T extends Logger> T enableLogging() {
-		LoggersRepository.enableLogging(this);
+		LoggersRepository.enableLogging(this.getClass());
 		return (T) this;
 	}
 	
 	default void logError(String message, Throwable exc) {
-		LoggersRepository.logError(this, message, exc);
+		LoggersRepository.logError(this.getClass(), message, exc);
 	}
 	
 	default void logError(String message) {
-		LoggersRepository.logError(this, message);
+		LoggersRepository.logError(this.getClass(), message);
 	}
 	
 	default void logDebug(String message) {
-		LoggersRepository.logDebug(this, message);
+		LoggersRepository.logDebug(this.getClass(), message);
 	}
 	
 	default void logDebug(String message, Object... arguments) {
-		LoggersRepository.logDebug(this, message, arguments);
+		LoggersRepository.logDebug(this.getClass(), message, arguments);
 	}
 	
 	default void logInfo(String message) {
-		LoggersRepository.logInfo(this, message);
+		LoggersRepository.logInfo(this.getClass(), message);
 	}
 	
 	default void logInfo(String message, Object... arguments) {
-		LoggersRepository.logInfo(this, message, arguments);
+		LoggersRepository.logInfo(this.getClass(), message, arguments);
 	}
 	
 	default void logWarn(String message) {
-		LoggersRepository.logWarn(this, message);
+		LoggersRepository.logWarn(this.getClass(), message);
 	}
 	
 	default void logWarn(String message, Object... arguments) {
-		LoggersRepository.logWarn(this, message, arguments);
+		LoggersRepository.logWarn(this.getClass(), message, arguments);
 	}
 	
 }
