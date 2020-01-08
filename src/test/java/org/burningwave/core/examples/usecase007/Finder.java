@@ -1,4 +1,5 @@
 package org.burningwave.core.examples.usecase007;
+
 import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentContainer;
@@ -8,7 +9,6 @@ import org.burningwave.core.classes.hunter.ClassHunter;
 import org.burningwave.core.classes.hunter.ClassHunter.SearchResult;
 import org.burningwave.core.classes.hunter.SearchConfig;
 import org.burningwave.core.io.PathHelper;
-    
 	
 public class Finder {
 	

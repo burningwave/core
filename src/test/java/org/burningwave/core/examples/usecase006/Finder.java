@@ -1,4 +1,5 @@
 package org.burningwave.core.examples.usecase006;
+
 import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentContainer;

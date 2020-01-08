@@ -1,4 +1,5 @@
 package org.burningwave.core.examples.usecase001;
+
 import java.io.Closeable;
 import java.io.Serializable;
 import java.util.Collection;

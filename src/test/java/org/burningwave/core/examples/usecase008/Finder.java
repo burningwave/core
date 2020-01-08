@@ -1,4 +1,5 @@
 package org.burningwave.core.examples.usecase008;
+
 import java.util.AbstractList;
 import java.util.Collection;
 
