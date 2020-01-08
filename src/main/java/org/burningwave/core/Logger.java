@@ -31,6 +31,18 @@ package org.burningwave.core;
 import org.burningwave.core.common.LoggersRepository;
 
 public interface Logger {
+		
+	@SuppressWarnings("unchecked")
+	public default <T extends Logger> T disableLogging() {
+		LoggersRepository.disableLogging(this);
+		return (T) this;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public default <T extends Logger> T enableLogging() {
+		LoggersRepository.enableLogging(this);
+		return (T) this;
+	}
 	
 	default void logError(String message, Throwable exc) {
 		LoggersRepository.logError(this, message, exc);

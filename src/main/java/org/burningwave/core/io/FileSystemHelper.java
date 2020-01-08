@@ -50,6 +50,7 @@ import java.util.zip.ZipFile;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
+import org.burningwave.core.common.LoggersRepository;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.concurrent.ParallelTasksManager;
 import org.burningwave.core.function.ThrowingRunnable;
@@ -96,10 +97,11 @@ public class FileSystemHelper implements Component {
 			PathHelper pathHelper = pathHelperSupplier.get();
 			for (String resourceRelativePath : resourcesRelativePaths) {
 				pathHelper.getAllClassPaths().stream().forEach((path) -> {
-					FileSystemItem fSI = FileSystemItem.ofPath(path + "/" + resourceRelativePath);
-					if (fSI.exists()) {
-						fileConsumer.accept(files, fSI);
+					FileSystemItem fileSystemItem = FileSystemItem.ofPath(path + "/" + resourceRelativePath).disableLogging();
+					if (fileSystemItem.exists()) {
+						fileConsumer.accept(files, fileSystemItem);
 					}
+					fileSystemItem.enableLogging();
 				});
 			}
 		}
