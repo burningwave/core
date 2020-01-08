@@ -86,8 +86,8 @@ public class Finder {
             //With the row below the search will be executed on runtime Classpaths
             pathHelper.getMainClassPaths()
 		).by(ClassCriteria.create().allThat((cls) -> {
-			    return cls.getPackage().getName().matches(".*springframework.*");
-			})
+			return cls.getPackage().getName().matches(".*springframework.*");
+		})
 		);
         
         SearchResult searchResult = classHunter.findBy(criteria);
