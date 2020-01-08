@@ -138,16 +138,6 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		return this;
 	}
 	
-	public ClassCriteria byClasses(Predicate<Class<?>> predicate) {
-		this.predicate = concat(
-			this.predicate,
-			(context, cls) -> {
-				return predicate.test(cls);
-			}
-		);
-		return this;
-	}
-	
 	public <M extends Member> ClassCriteria byMembers(MemberCriteria<?, ?, ?> memberCriteria) {
 		final String key = UUID.randomUUID().toString();
 		this.memberCriterias.put(key, memberCriteria);		
