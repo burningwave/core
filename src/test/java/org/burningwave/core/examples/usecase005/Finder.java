@@ -22,9 +22,9 @@ public class Finder {
         ClassHunter classHunter = componentConatiner.getClassHunter();
 
         CacheableSearchConfig criteria = SearchConfig.forPaths(
-            //Here you can add all absolute path you want:
+    		//Here you can add all absolute path you want:
             //both folders, zip and jar will be recursively scanned.
-            //For example you can add: "C:\\Users\\.m2"
+            //For example you can add: "C:\\Users\\user\\.m2"
             //With the row below the search will be executed on runtime Classpaths
             pathHelper.getMainClassPaths()
         ).by(ClassCriteria.create().allThat((cls) -> {
