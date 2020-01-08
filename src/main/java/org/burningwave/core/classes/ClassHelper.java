@@ -283,7 +283,7 @@ public class ClassHelper implements Component {
 		Map<String, ?> packages = objectRetriever.retrievePackages(classLoader);
 		Object packageToFind = packages.get(packageName);
 		if (packageToFind != null) {
-			return objectRetriever.getPackageRetriever().apply(classLoader, packageToFind, packageName);
+			return objectRetriever.retrievePackage(classLoader, packageToFind, packageName);
 		} else if (classLoader.getParent() != null) {
 			return retrievePackage(classLoader.getParent(), packageName);
 		} else {

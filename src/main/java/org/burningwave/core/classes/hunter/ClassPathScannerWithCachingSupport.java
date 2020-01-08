@@ -12,10 +12,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.hunter.SearchContext.InitContext;
-import org.burningwave.core.classes.hunter.SearchCriteriaAbst.TestContext;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.PathHelper;
@@ -23,10 +23,10 @@ import org.burningwave.core.io.PathHelper.CheckResult;
 import org.burningwave.core.io.StreamHelper;
 
 
-public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>> extends Hunter<K, I, C, R> implements org.burningwave.core.Component {
+public abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>> extends ClassPathScanner<K, I, C, R> implements org.burningwave.core.Component {
 	Map<String, Map<K, I>> cache;
 
-	CacherHunter(
+	ClassPathScannerWithCachingSupport(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemHelper fileSystemHelper,
@@ -51,15 +51,15 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 	}
 	
 	//Cached search
-	public SearchResult<K, I> findBy(SearchForPathCriteria criteria) {
-		criteria = criteria.createCopy();
+	public R findBy(CacheableSearchConfig searchConfig) {
+		searchConfig = searchConfig.createCopy();
 		C context = createContext(
-			ClassFileScanConfiguration.forPaths(criteria.getPaths()).maxParallelTasksForUnit(
-				criteria.maxParallelTasksForUnit
+			ClassFileScanConfig.forPaths(searchConfig.getPaths()).maxParallelTasksForUnit(
+				searchConfig.maxParallelTasksForUnit
 			), 
-			criteria
+			searchConfig
 		);
-		criteria.init(this.classHelper, context.pathMemoryClassLoader, this.memberFinder);
+		searchConfig.init(this.classHelper, context.pathMemoryClassLoader, this.memberFinder);
 		context.executeSearch(() ->
 			scan(context)
 		);
@@ -74,7 +74,7 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 	void scan(C context) {
 		Collection<String> pathsNotScanned = scanCache(context);
 		if (!pathsNotScanned.isEmpty()) {
-			if (context.getCriteria().hasNoPredicate()) {
+			if (context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
 				synchronized (cache) {
 					pathsNotScanned = scanCache(context);
 					if (!pathsNotScanned.isEmpty()) {
@@ -100,9 +100,9 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 	
 	Collection<String> scanCache(C context) {
 		Collection<String> pathsNotScanned = new LinkedHashSet<>();
-		SearchForPathCriteria criteria = context.getCriteria();
-		if (!context.getCriteria().hasNoPredicate()) {
-			for (String path : criteria.getPaths()) {
+		CacheableSearchConfig searchConfig = context.getSearchConfig();
+		if (!context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
+			for (String path : searchConfig.getPaths()) {
 				Map<K, I> classesForPath = cache.get(path);
 				if (classesForPath != null) {
 					if (!classesForPath.isEmpty()) {	
@@ -113,7 +113,7 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 				}
 			}
 		} else {
-			for (String path : criteria.getPaths()) {
+			for (String path : searchConfig.getPaths()) {
 				Map<K, I> classesForPath = cache.get(path);
 				if (classesForPath != null) {
 					if (!classesForPath.isEmpty()) {
@@ -130,7 +130,7 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 	public void loadCache(Collection<String> paths) {
 		try (SearchResult<K, I> result = 
 			findBy(
-				SearchCriteria.forPaths(paths)
+				SearchConfig.forPaths(paths)
 			)
 		) {}
 	}
@@ -138,7 +138,7 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 
 	void loadCache(C context, Collection<String> paths) {
 		CheckResult checkPathsResult = pathHelper.check(cache.keySet(), paths);
-		ClassFileScanConfiguration classFileScanConfiguration = context.classFileScanConfiguration.createCopy().setPaths(checkPathsResult.getNotContainedPaths());
+		ClassFileScanConfig classFileScanConfiguration = context.classFileScanConfiguration.createCopy().setPaths(checkPathsResult.getNotContainedPaths());
 		Map<String, Map<K, I>> tempCache = new LinkedHashMap<>();
 		if (!checkPathsResult.getPartialContainedDirectories().isEmpty()) {
 			Predicate<File> directoryPredicate = null;
@@ -193,9 +193,9 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 	}
 	
 
-	<S extends SearchCriteriaAbst<S>> void iterateAndTestItemsForPath(C context, String path, Map<K, I> itemsForPath) {
+	<S extends SearchConfigAbst<S>> void iterateAndTestItemsForPath(C context, String path, Map<K, I> itemsForPath) {
 		for (Entry<K, I> cachedItemAsEntry : itemsForPath.entrySet()) {
-			TestContext<S> testContext = testCachedItem(context, path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
+			ClassCriteria.TestContext testContext = testCachedItem(context, path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 			if(testContext.getResult()) {
 				addCachedItemToContext(context, testContext, path, cachedItemAsEntry);
 			}
@@ -203,13 +203,13 @@ public abstract class CacherHunter<K, I, C extends SearchContext<K, I>, R extend
 	}
 	
 	
-	<S extends SearchCriteriaAbst<S>> void addCachedItemToContext(
-		C context, TestContext<S> testContext, String path, Entry<K, I> cachedItemAsEntry
+	<S extends SearchConfigAbst<S>> void addCachedItemToContext(
+		C context, ClassCriteria.TestContext testContext, String path, Entry<K, I> cachedItemAsEntry
 	) {
 		context.addItemFound(path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 	}
 
-	abstract <S extends SearchCriteriaAbst<S>> TestContext<S> testCachedItem(C context, String path, K key, I value);
+	abstract <S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(C context, String path, K key, I value);
 	
 	
 	@Override
