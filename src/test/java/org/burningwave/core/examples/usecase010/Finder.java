@@ -32,7 +32,7 @@ public class Finder {
             //For example you can add: "C:\\Users\\user\\.m2"
             //With the row below the search will be executed on runtime Classpaths
             pathHelper.getMainClassPaths()
-	        ).by(ClassCriteria.create().byMembers(
+        ).by(ClassCriteria.create().byMembers(
 	            fieldCriteria
 	        ).useClasses(
 	            Date.class,
