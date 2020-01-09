@@ -24,6 +24,8 @@ public class ClassPathHunterTest extends BaseTest {
 					).useClasses(
 						Closeable.class
 					)
+				).deleteFoundItemsOnClose(
+					true
 				)
 			),
 			(result) -> result.getItemsFound()
@@ -43,6 +45,8 @@ public class ClassPathHunterTest extends BaseTest {
 					).useClasses(
 						Complex.Data.Item.class
 					)
+				).deleteFoundItemsOnClose(
+					true
 				)
 			),
 			(result) -> result.getItemsFound()
@@ -56,7 +60,8 @@ public class ClassPathHunterTest extends BaseTest {
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		testNotEmpty(
-			() -> componentSupplier.getClassPathHunter().findBy(searchConfig),
+			() ->
+				componentSupplier.getClassPathHunter().findBy(searchConfig),
 			(result) -> result.getItemsFound()
 		);
 		testNotEmpty(
@@ -67,6 +72,8 @@ public class ClassPathHunterTest extends BaseTest {
 					).useClasses(
 						Closeable.class
 					)
+				).deleteFoundItemsOnClose(
+					true
 				)
 			),
 			(result) -> result.getItemsFound()

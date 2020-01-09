@@ -94,15 +94,16 @@ public class FileSystemHelper implements Component {
 		Collection<T> files = new ArrayList<>();
 		if (resourcesRelativePaths != null && resourcesRelativePaths.length > 0) {
 			PathHelper pathHelper = pathHelperSupplier.get();
+			FileSystemItem.disableLog();
 			for (String resourceRelativePath : resourcesRelativePaths) {
 				pathHelper.getAllClassPaths().stream().forEach((path) -> {
-					FileSystemItem fileSystemItem = FileSystemItem.ofPath(path + "/" + resourceRelativePath).disableLogging();
+					FileSystemItem fileSystemItem = FileSystemItem.ofPath(path + "/" + resourceRelativePath);
 					if (fileSystemItem.exists()) {
 						fileConsumer.accept(files, fileSystemItem);
 					}
-					fileSystemItem.enableLogging();
 				});
 			}
+			FileSystemItem.enableLog();
 		}
 		return files;
 	}

@@ -205,13 +205,17 @@ public class PathHelper implements Component {
 	public Collection<String> addClassPaths(String name, Collection<String> classPaths) {
 		if (classPaths != null) {
 			Collection<String> classPathsFound = getOrCreateClassPaths(name);
+			FileSystemItem.disableLog();
 			classPaths.forEach((classPath) -> {
 				FileSystemItem fileSystemItem = FileSystemItem.ofPath(classPath);
 				if (fileSystemItem.exists()) {
 					classPathsFound.add(fileSystemItem.getAbsolutePath());
 					allClassPaths.add(fileSystemItem.getAbsolutePath());
+				} else {
+					
 				}
 			});
+			FileSystemItem.enableLog();
 			return classPathsFound;
 		} else {
 			throw Throwables.toRuntimeException("classPaths parameter is null");

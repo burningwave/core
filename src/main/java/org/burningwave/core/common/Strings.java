@@ -36,6 +36,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.burningwave.core.ManagedLogger;
+
 public class Strings {
 	
 	public static boolean isBlank(String str) {
@@ -157,7 +159,7 @@ public class Strings {
 					}					
 					foundString.add(matcher.group(i));
 				} catch (IndexOutOfBoundsException exc) {
-					LoggersRepository.logDebug(Strings.class, "group " + i + " not found on string \"" + target + "\" using pattern " + pattern.pattern());
+					ManagedLogger.Repository.logDebug(Strings.class, "group " + i + " not found on string \"" + target + "\" using pattern " + pattern.pattern());
 				}
 			}
 		}

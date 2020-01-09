@@ -88,7 +88,9 @@ public class FileSystemItem implements Component {
 			synchronized(realAbsolutePath) {
 				if ((fileSystemItemReader = FILE_SYSTEM_ITEMS.get(realAbsolutePath)) == null) {
 					fileSystemItemReader = new FileSystemItem(realAbsolutePath, conventionedAbsolutePath);
-					FILE_SYSTEM_ITEMS.put(realAbsolutePath, fileSystemItemReader);
+					if (Strings.isNotEmpty(realAbsolutePath)) {
+						FILE_SYSTEM_ITEMS.put(realAbsolutePath, fileSystemItemReader);
+					}
 				}
 			}
 		}
@@ -311,6 +313,9 @@ public class FileSystemItem implements Component {
 	private String getConventionedAbsolutePath() {
 		if (absolutePath.getValue() == null && exists == null) {
 			absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
+			if (!exists) {
+				FILE_SYSTEM_ITEMS.remove(absolutePath.getKey());
+			}
 		}
 		return absolutePath.getValue();
 	}
@@ -375,6 +380,14 @@ public class FileSystemItem implements Component {
 				return zipEntry.toByteBuffer();
 			}
 		}
+	}
+	
+	public static void enableLog() {
+		FileSystemItem.ofPath("/").enableLogging();
+	}
+	
+	public static void disableLog() {
+		FileSystemItem.ofPath("/").disableLogging();
 	}
 	
 	@Override
