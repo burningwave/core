@@ -116,7 +116,12 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 	public ClassCriteria packageName(final Predicate<String> predicate) {
 		this.predicate = concat(
 			this.predicate,
-			(testContext, cls) -> predicate.test(cls.getPackage().getName())
+			(testContext, cls) -> {
+				Package pckg = cls.getPackage();
+				return pckg != null?
+					predicate.test(pckg.getName()):
+					predicate.test(null);
+			}
 		);
 		return this;
 	}
