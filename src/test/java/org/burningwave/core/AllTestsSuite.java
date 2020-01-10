@@ -7,7 +7,6 @@ import org.junit.runner.RunWith;
 
 @RunWith(JUnitPlatform.class)
 @SelectPackages("org.burningwave.core")
-@ExcludeTags("Heavy")
 public class AllTestsSuite {
 
 }
