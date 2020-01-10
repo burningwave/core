@@ -44,6 +44,7 @@ import org.burningwave.core.classes.hunter.ByteCodeHunter;
 import org.burningwave.core.classes.hunter.ClassHunter;
 import org.burningwave.core.classes.hunter.ClassPathHunter;
 import org.burningwave.core.classes.hunter.FSIClassHunter;
+import org.burningwave.core.classes.hunter.FSIClassPathHunter;
 import org.burningwave.core.concurrent.ConcurrentHelper;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.PathHelper;
@@ -91,6 +92,8 @@ public interface ComponentSupplier extends Component {
 	public ByteCodeHunter getByteCodeHunter();
 	
 	public ClassPathHunter getClassPathHunter();
+	
+	public FSIClassPathHunter getFSIClassPathHunter();
 	
 	public ClassHunter getClassHunter();
 	
