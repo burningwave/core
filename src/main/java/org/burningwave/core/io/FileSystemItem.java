@@ -413,15 +413,15 @@ public class FileSystemItem implements Component {
 	
 	public FileSystemItem copyToFolder(String folder) throws IOException {
 		FileSystemItem destinationFolder = null;
+		File file = new File(folder);
+		if (!file.exists()) {
+			file.mkdirs();
+		} else if (!file.isDirectory()) {
+			file.setWritable(true);
+			file.delete();
+			file.mkdirs();
+		}
 		if (isFile()) {
-			File file = new File(folder);
-			if (!file.exists()) {
-				file.mkdir();
-			} else if (!file.isDirectory()) {
-				file.setWritable(true);
-				file.delete();
-				file.mkdir();
-			}
 			file = new File(folder, getName());
 			if (file.exists()) {
 				file.delete();
@@ -430,27 +430,17 @@ public class FileSystemItem implements Component {
 				Streams.copy(toInputStream(), fileOutputStream);
 			}
 			destinationFolder = FileSystemItem.ofPath(file.getAbsolutePath());
-		} else if (isCompressed()) {
-			
 		} else {
-			//Set<FileSystemItem> this.getChildren();	
-		}	
-
-		
-//			destinationFolder = FileSystemItem.ofPath(folder);
-//			Set<FileSystemItem> allChildren = this.getAllChildren();
-//			for (FileSystemItem child : allChildren) {
-//				if (child.isCompressed() || !child.isContainer()) {
-//					FileSystemItem parentChild = child.getParent();
-//					String destinationPath =
-//						destinationFolder.getAbsolutePath() + "/" + parentChild.getAbsolutePath().replace(this.getAbsolutePath(), "");
-//					new File(destinationPath, child.getName()).mkdirs();
-//				} else {
-//					String destinationPath = destinationFolder.getAbsolutePath() + child.getAbsolutePath().replace(this.getAbsolutePath(), "");
-//					new File(destinationPath).mkdirs();
-//				}
-//			}
-//		}
+			file = new File(folder + "/" + getName());
+			if (file.exists()) {
+				file.delete();
+			}
+			file.mkdirs();
+			for (FileSystemItem fileSystemItem : getChildren()) {
+				fileSystemItem.copyToFolder(file.getAbsolutePath());
+			}
+			destinationFolder = FileSystemItem.ofPath(file.getAbsolutePath());
+		}
 		return destinationFolder;
 	}
 	
