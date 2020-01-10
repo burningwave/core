@@ -411,7 +411,7 @@ public class FileSystemItem implements Component {
 		}
 	}
 	
-	public FileSystemItem copyToFolder(String folder) throws IOException {
+	public FileSystemItem copyTo(String folder) throws IOException {
 		FileSystemItem destinationFolder = null;
 		File file = new File(folder);
 		if (!file.exists()) {
@@ -438,7 +438,7 @@ public class FileSystemItem implements Component {
 			}
 			file.mkdirs();
 			for (FileSystemItem fileSystemItem : getChildren()) {
-				fileSystemItem.copyToFolder(file.getAbsolutePath());
+				fileSystemItem.copyTo(file.getAbsolutePath());
 			}
 			logDebug("Copied folder to " + file.getAbsolutePath());
 			destinationFolder = FileSystemItem.ofPath(file.getAbsolutePath());
