@@ -101,6 +101,7 @@ public class FileSystemItemTest extends BaseTest {
 	}
 	
 	@Test
+	@Tag("Heavy")
 	public void readTestEleven() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
