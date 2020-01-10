@@ -100,7 +100,7 @@ public class ClassHelper implements Component {
 							).toString()
 						);
 						byte[] byteCode = classLoaderDelegateByteCode.stream().findFirst().get().toByteArray();
-						Class<?> cls = objectRetriever.getUnsafe().defineAnonymousClass(ClassLoaderDelegate.class, byteCode, null);
+						Class<?> cls = ObjectRetriever.getUnsafe().defineAnonymousClass(ClassLoaderDelegate.class, byteCode, null);
 						classLoaderDelegate = (ClassLoaderDelegate) cls.getConstructor().newInstance();
 						classLoaderDelegates.put(name, classLoaderDelegate);
 					} catch (InstantiationException | IllegalAccessException | IllegalArgumentException

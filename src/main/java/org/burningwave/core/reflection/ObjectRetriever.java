@@ -66,8 +66,18 @@ public class ObjectRetriever implements Component {
 	private Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 	private Predicate<Object> packageMapTester;
 	private TriFunction<ClassLoader, Object, String, Package> packageRetriever;
-	private Unsafe unsafe;
+	private static Unsafe unsafe;
 	private Map<String, Method> classLoadersMethods;
+	
+	static {
+		try {
+			Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+			theUnsafeField.setAccessible(true);
+			unsafe = (Unsafe)theUnsafeField.get(null);
+		} catch (Throwable exc) {
+			Throwables.toRuntimeException(exc);
+		}
+	}
 	
 	private ObjectRetriever(
 		Supplier<ClassHelper> classHelperSupplier,
@@ -77,7 +87,7 @@ public class ObjectRetriever implements Component {
 		try {
 			Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
 			theUnsafeField.setAccessible(true);
-			this.unsafe = (Unsafe)theUnsafeField.get(null);
+			unsafe = (Unsafe)theUnsafeField.get(null);
 		} catch (Throwable exc) {
 			Throwables.toRuntimeException(exc);
 		}
@@ -114,8 +124,8 @@ public class ObjectRetriever implements Component {
 			(classHelper = classHelperSupplier.get());
 	}
 	
-	public Unsafe getUnsafe() {
-		return this.unsafe;
+	public static Unsafe getUnsafe() {
+		return unsafe;
 	}
 	
 	public Method getDefinePackageMethod(ClassLoader classLoader) {
