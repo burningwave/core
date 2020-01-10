@@ -32,13 +32,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
+import org.burningwave.core.common.Streams;
+
 public final class ByteBufferInputStream extends InputStream {
     private ByteBuffer buffer;
 
     public ByteBufferInputStream(ByteBuffer buffer) {
         this.buffer = buffer;
     }
-
+    
+    public ByteBuffer getBuffer() {
+		return Streams.shareContent(buffer);
+	}
+    
     public int read() {
         if (!buffer.hasRemaining()) {
             return -1;

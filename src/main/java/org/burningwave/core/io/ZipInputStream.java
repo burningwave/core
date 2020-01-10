@@ -31,9 +31,11 @@ package org.burningwave.core.io;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.Set;
@@ -56,19 +58,17 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	private Entry currentZipEntry;
 	private String name;
 	private String path;
-	private FileInputStream createdFileInputStream;
+	private ByteBuffer content;
 	
-
-	public ZipInputStream(String name, InputStream in) {
-		super(in);
+	public ZipInputStream(String name, InputStream inputStream) {
+		super(new ByteBufferInputStream(Streams.toByteBuffer(inputStream)));
 		this.name = name;
 		init();
 	}
 	
-	private ZipInputStream(String name, FileInputStream in) {
-		super(in);
+	private ZipInputStream(String name, FileInputStream inputStream) {
+		super(new ByteBufferInputStream(Streams.toByteBuffer(inputStream)));
 		this.name = name;
-		this.createdFileInputStream = in;
 		init();
 	}
 	
@@ -103,12 +103,29 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		return path;
 	}
 	
+	private ByteBuffer getContent() {
+		if (content == null) {
+			try {
+				for (Field field : FilterInputStream.class.getDeclaredFields()) {
+					if (field.getName().equals("in")) {
+						field.setAccessible(true);
+						content = ((ByteBufferInputStream)field.get(this.in)).getBuffer();
+						break;
+					}
+				}
+			} catch (SecurityException | IllegalArgumentException | IllegalAccessException exc) {
+				throw Throwables.toRuntimeException(exc);
+			}
+		}
+		return content;
+	}
+	
 	public ByteBuffer toByteBuffer() {
-		return Streams.toByteBuffer(this);
+		return Streams.shareContent(getContent());
 	}
 
 	public byte[] toByteArray() {
-		return Streams.toByteArray(this);
+		return Streams.toByteArray(getContent());
 	}
 
 	@Override
@@ -251,10 +268,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	@Override
 	public void close() {
 		closeEntry();
-		if (createdFileInputStream != null) {
-			createdFileInputStream.close();
-			createdFileInputStream = null;
-		}
 		parent = null;
 		name = null;
 		path = null;
