@@ -211,6 +211,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
         		String notFoundClassName = noClassDefFoundError.getMessage().replace("/", ".");
         		while (!notFoundClassName.equals(className)) {
         			try {
+        				//This search over all ClassLoader Parents
         				loadClass(notFoundClassName, false);
         				cls = loadClass(className, false);
         			} catch (ClassNotFoundException exc) {
