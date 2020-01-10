@@ -46,7 +46,7 @@
 	    </filter>
 	    <filter class="ch.qos.logback.classic.filter.LevelFilter">
 	        <level>WARN</level>
-	        <onMatch>ACCEPT</onMatch>
+	        <onMatch>DENY</onMatch>
 	    </filter>
 	    <filter class="ch.qos.logback.classic.filter.LevelFilter">
 	        <level>INFO</level>
