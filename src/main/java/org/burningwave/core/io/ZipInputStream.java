@@ -53,6 +53,7 @@ import org.burningwave.core.reflection.ObjectRetriever;
 
 import sun.misc.Unsafe;
 
+@SuppressWarnings("restriction")
 public class ZipInputStream extends java.util.zip.ZipInputStream implements Serializable, Component {
 
 	private static final long serialVersionUID = -33538562818485472L;
@@ -94,6 +95,13 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		init();
 	}
 	
+	private void setContent() {
+		if (content == null) {
+			ByteBufferInputStream byteBufferInputStream = (ByteBufferInputStream)ObjectRetriever.getUnsafe().getObject(this.in, FilterInputStream_in_fieldOffset);
+			content = byteBufferInputStream.getBuffer();
+		}
+	}
+	
 	public ZipInputStream(FileInputStream inputStream) {
 		this(inputStream.getFile().getAbsolutePath(), inputStream);
 	}
@@ -103,6 +111,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	}
 
 	private void init() {
+		setContent();
 		path = name.replace("\\", "/");
 		if (parent != null) {
 			path = parent.getAbsolutePath() + "/" + path;
@@ -118,10 +127,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	}
 	
 	private ByteBuffer getContent() {
-		if (content == null) {
-			ByteBufferInputStream byteBufferInputStream = (ByteBufferInputStream)ObjectRetriever.getUnsafe().getObject(this.in, FilterInputStream_in_fieldOffset);
-			content = byteBufferInputStream.getBuffer();
-		}
 		return content;
 	}
 	
