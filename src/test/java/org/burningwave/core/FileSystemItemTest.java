@@ -128,6 +128,15 @@ public class FileSystemItemTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
+			basePath + "/libs-for-test.zip/META-INF"
+		).copyToFolder(System.getProperty("user.home") + "/Desktop/bw-tests").getChildren());
+	}
+	
+	@Test
+	public void copyFolderTestTwo() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
 		).copyToFolder(System.getProperty("user.home") + "/Desktop/bw-tests").getChildren());
 	}
