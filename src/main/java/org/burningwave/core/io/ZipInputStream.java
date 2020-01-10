@@ -53,6 +53,7 @@ import org.burningwave.core.reflection.ObjectRetriever;
 
 import sun.misc.Unsafe;
 
+@SuppressWarnings("restriction")
 public class ZipInputStream extends java.util.zip.ZipInputStream implements Serializable, Component {
 
 	private static final long serialVersionUID = -33538562818485472L;
