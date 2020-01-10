@@ -35,6 +35,7 @@ import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -52,6 +53,8 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
+import javax.tools.SimpleJavaFileObject;
+import javax.tools.ToolProvider;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
@@ -62,9 +65,6 @@ import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.io.PathHelper;
-
-import javax.tools.SimpleJavaFileObject;
-import javax.tools.ToolProvider;
 
 
 public class JavaMemoryCompiler implements Component {
@@ -128,7 +128,7 @@ public class JavaMemoryCompiler implements Component {
 				
 			});
 		}
-		memoryFileManager.getCompilationUnits().addAll(context.sources);
+		memoryFileManager.addAllSources(context.sources);
 		Set<MemoryFileObject> alreadyCompiledClass = new LinkedHashSet<>(memoryFileManager.getCompiledFiles());		
 		CompilationTask task = compiler.getTask(null, memoryFileManager,
 				new MemoryDiagnosticListener(context), options, null, memoryFileManager.getCompilationUnits());
@@ -293,7 +293,7 @@ public class JavaMemoryCompiler implements Component {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	static class MemoryFileManager extends ForwardingJavaFileManager implements Component {
 		
-		private List<JavaMemoryCompiler.MemorySource> compilationUnits;
+		private List<MemorySource> compilationUnits;
 		private List<MemoryFileObject> compiledFiles;
 				
 		MemoryFileManager(JavaCompiler compiler) {
@@ -307,7 +307,23 @@ public class JavaMemoryCompiler implements Component {
 			compiledFiles.clear();
 			compilationUnits.clear();
 		}
-
+		
+		public void addAllSources(Collection<MemorySource> sources) {
+			sources = new ArrayList<>(sources);
+			Iterator<MemorySource> sourcesIterator = sources.iterator();
+			while (sourcesIterator.hasNext()) {
+				MemorySource source = sourcesIterator.next();
+				for (MemorySource src : compilationUnits) {
+					if (src.getName().equals(source.getName())) {
+						logWarn(source.getName() + " already added");
+						sourcesIterator.remove();
+						break;
+					}
+				}
+			}
+			compilationUnits.addAll(sources);
+		}
+		
 		@Override
 	    public MemoryFileObject getJavaFileForOutput
 	            (Location location, String name, Kind kind, FileObject source) {
@@ -321,7 +337,7 @@ public class JavaMemoryCompiler implements Component {
 		}
 		
 		
-		public List<JavaMemoryCompiler.MemorySource> getCompilationUnits() {
+		public List<MemorySource> getCompilationUnits() {
 			return compilationUnits;
 		}
 		
