@@ -429,6 +429,7 @@ public class FileSystemItem implements Component {
 			try(InputStream inputStream = toInputStream(); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
 				Streams.copy(toInputStream(), fileOutputStream);
 			}
+			logDebug("Copied file to " + file.getAbsolutePath());
 			destinationFolder = FileSystemItem.ofPath(file.getAbsolutePath());
 		} else {
 			file = new File(folder + "/" + getName());
@@ -439,6 +440,7 @@ public class FileSystemItem implements Component {
 			for (FileSystemItem fileSystemItem : getChildren()) {
 				fileSystemItem.copyToFolder(file.getAbsolutePath());
 			}
+			logDebug("Copied folder to " + file.getAbsolutePath());
 			destinationFolder = FileSystemItem.ofPath(file.getAbsolutePath());
 		}
 		return destinationFolder;

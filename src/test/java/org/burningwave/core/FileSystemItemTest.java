@@ -106,6 +106,15 @@ public class FileSystemItemTest extends BaseTest {
 	}
 	
 	@Test
+	public void readTestTwelve() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		testNotEmpty(() -> FileSystemItem.ofPath(
+			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib"
+		).getChildren());
+	}
+	
+	@Test
 	public void copyFileTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
