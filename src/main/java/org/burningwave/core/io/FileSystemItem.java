@@ -423,6 +423,9 @@ public class FileSystemItem implements Component {
 				file.mkdir();
 			}
 			file = new File(folder, getName());
+			if (file.exists()) {
+				file.delete();
+			}
 			try(InputStream inputStream = toInputStream(); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
 				Streams.copy(toInputStream(), fileOutputStream);
 			}

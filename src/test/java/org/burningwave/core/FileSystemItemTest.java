@@ -104,4 +104,31 @@ public class FileSystemItemTest extends BaseTest {
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0/"
 		).getAllChildren());
 	}
+	
+	@Test
+	public void copyFileTestOne() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		testNotEmpty(() -> FileSystemItem.ofPath(
+			basePath + "/libs-for-test.zip"
+		).copyToFolder(System.getProperty("user.home") + "/Desktop/bw-tests").getChildren());
+	}
+	
+	@Test
+	public void copyFileTestTwo() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		testNotEmpty(() -> FileSystemItem.ofPath(
+			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar"
+		).copyToFolder(System.getProperty("user.home") + "/Desktop/bw-tests").getChildren());
+	}
+	
+	@Test
+	public void copyFolderTestOne() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		testNotEmpty(() -> FileSystemItem.ofPath(
+			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
+		).copyToFolder(System.getProperty("user.home") + "/Desktop/bw-tests").getChildren());
+	}
 }
