@@ -28,7 +28,8 @@ public class ClassPathHunterTest extends BaseTest {
 					true
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) ->
+				result.getItemsFound()
 		);
 	}
 
@@ -49,7 +50,8 @@ public class ClassPathHunterTest extends BaseTest {
 					true
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) ->
+				result.getItemsFound()
 		);
 	}
 	
@@ -76,7 +78,8 @@ public class ClassPathHunterTest extends BaseTest {
 					true
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) ->
+				result.getItemsFound()
 		);
 	}
 
