@@ -49,6 +49,9 @@ import org.burningwave.core.Component;
 import org.burningwave.core.common.Streams;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ZipInputStream.Entry.Wrapper;
+import org.burningwave.core.reflection.ObjectRetriever;
+
+import sun.misc.Unsafe;
 
 public class ZipInputStream extends java.util.zip.ZipInputStream implements Serializable, Component {
 
@@ -59,6 +62,17 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	private String name;
 	private String path;
 	private ByteBuffer content;
+	private static long FilterInputStream_in_fieldOffset;
+	
+	static {
+		Unsafe unsafe = ObjectRetriever.getUnsafe();
+		for (Field field : FilterInputStream.class.getDeclaredFields()) {
+			if (field.getName().equals("in")) {
+				FilterInputStream_in_fieldOffset = unsafe.objectFieldOffset(field);
+				break;
+			}
+		}
+	}
 	
 	public ZipInputStream(String name, InputStream inputStream) {
 		super(new ByteBufferInputStream(Streams.toByteBuffer(inputStream)));
@@ -105,17 +119,8 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	
 	private ByteBuffer getContent() {
 		if (content == null) {
-			try {
-				for (Field field : FilterInputStream.class.getDeclaredFields()) {
-					if (field.getName().equals("in")) {
-						field.setAccessible(true);
-						content = ((ByteBufferInputStream)field.get(this.in)).getBuffer();
-						break;
-					}
-				}
-			} catch (SecurityException | IllegalArgumentException | IllegalAccessException exc) {
-				throw Throwables.toRuntimeException(exc);
-			}
+			ByteBufferInputStream byteBufferInputStream = (ByteBufferInputStream)ObjectRetriever.getUnsafe().getObject(this.in, FilterInputStream_in_fieldOffset);
+			content = byteBufferInputStream.getBuffer();
 		}
 		return content;
 	}

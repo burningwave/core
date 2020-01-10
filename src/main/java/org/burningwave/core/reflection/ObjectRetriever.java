@@ -84,13 +84,6 @@ public class ObjectRetriever implements Component {
 		MemberFinder memberFinder,
 		IterableObjectHelper iterableObjectHelper
 	) {	
-		try {
-			Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
-			theUnsafeField.setAccessible(true);
-			unsafe = (Unsafe)theUnsafeField.get(null);
-		} catch (Throwable exc) {
-			Throwables.toRuntimeException(exc);
-		}
 		this.classHelperSupplier = classHelperSupplier;
 		this.memberFinder = memberFinder;
 		this.iterableObjectHelper = iterableObjectHelper;
