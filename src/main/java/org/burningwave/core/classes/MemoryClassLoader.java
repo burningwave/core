@@ -204,44 +204,37 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		Class<?> cls = null;
 		ByteBuffer byteCode = notLoadedCompiledClasses.get(className);
 		if (byteCode != null) {
-			synchronized (byteCode) {
-				if ((byteCode = notLoadedCompiledClasses.get(className)) != null) {
-					cls = classHelper.retrieveLoadedClass(this, className);
-					if (cls == null) {
-						try {
-	                		cls = _defineClass(className, byteCode, null);
-	                		definePackageOf(cls);
-	                	} catch (NoClassDefFoundError noClassDefFoundError) {
-	                		String notFoundClassName = noClassDefFoundError.getMessage().replace("/", ".");
-	                		while (!notFoundClassName.equals(className)) {
-	                			try {
-	                				findClass(notFoundClassName);
-	                				cls = findClass(className);
-	                			} catch (ClassNotFoundException exc) {
-	                				String newNotFoundClass = noClassDefFoundError.getMessage().replace("/", ".");
-	                				if (newNotFoundClass.equals(notFoundClassName)) {
-	                					break;
-	                				} else {
-	                					notFoundClassName = newNotFoundClass;
-	                				}
-	                			}
-	                		}
-	                		if (cls == null) {
-	                			removeNotLoadedCompiledClass(className);
-                				logWarn("Could not load compiled class " + className + ", so it will be removed: " + noClassDefFoundError.toString());
-	                			throw noClassDefFoundError;
-	                		}
-	                	}
-						if (cls == null){
-	                		removeNotLoadedCompiledClass(className);
-            				logWarn("Could not load compiled class " + className + ", so it will be removed");
-	                	}
-					}
-				} else {
-                	logWarn("Compiled class {} already defined");
-                }
-			}
-		}
+			try {
+				cls = _defineClass(className, byteCode, null);
+        		definePackageOf(cls);
+        	} catch (NoClassDefFoundError noClassDefFoundError) {
+        		String notFoundClassName = noClassDefFoundError.getMessage().replace("/", ".");
+        		while (!notFoundClassName.equals(className)) {
+        			try {
+        				loadClass(notFoundClassName, false);
+        				cls = loadClass(className, false);
+        			} catch (ClassNotFoundException exc) {
+        				String newNotFoundClass = noClassDefFoundError.getMessage().replace("/", ".");
+        				if (newNotFoundClass.equals(notFoundClassName)) {
+        					break;
+        				} else {
+        					notFoundClassName = newNotFoundClass;
+        				}
+        			}
+        		}
+        		if (cls == null) {
+        			removeNotLoadedCompiledClass(className);
+    				logWarn("Could not load compiled class " + className + ", so it will be removed: " + noClassDefFoundError.toString());
+        			throw noClassDefFoundError;
+        		}
+        	}
+			if (cls == null){
+        		removeNotLoadedCompiledClass(className);
+				logWarn("Could not load compiled class " + className + ", so it will be removed");
+        	}
+		} else {
+			logWarn("Compiled class " + className + " not found");
+        }
 		if (cls != null) {
 			return cls;
 		} else {

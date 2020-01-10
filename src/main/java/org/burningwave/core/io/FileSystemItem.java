@@ -348,6 +348,10 @@ public class FileSystemItem implements Component {
 		;
 	}
 	
+	public boolean isFile() {
+		return !isContainer() || isArchive();
+	}
+	
 	public boolean isArchive() {
 		String conventionedAbsolutePath = getConventionedAbsolutePath();
 		return conventionedAbsolutePath.endsWith(ZIP_PATH_SEPARATOR);
@@ -409,7 +413,7 @@ public class FileSystemItem implements Component {
 	
 	public FileSystemItem copyToFolder(String folder) throws IOException {
 		FileSystemItem destinationFolder = null;
-		if (!isContainer() || isArchive()) {
+		if (isFile()) {
 			File file = new File(folder);
 			if (!file.exists()) {
 				file.mkdir();
