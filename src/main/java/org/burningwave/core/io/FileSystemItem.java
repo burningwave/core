@@ -186,6 +186,11 @@ public class FileSystemItem implements Component {
 		return absolutePath.getKey();
 	}
 	
+	public String getName() {
+		FileSystemItem parent = getParent();
+		return getAbsolutePath().replace(parent.getAbsolutePath() + "/", "");
+	}
+	
 	public InputStream toInputStream() {
 		return new ByteBufferInputStream(toByteBuffer());
 	}
@@ -222,7 +227,7 @@ public class FileSystemItem implements Component {
 		} else {
 			String conventionedAbsolutePath = getConventionedAbsolutePath();
 			if (isContainer()) {
-				if (isCompressed()) {
+				if (isCompressed() || isArchive()) {
 					String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(ZIP_PATH_SEPARATOR));
 					File file = new File(zipFilePath);
 					if (file.exists()) {
@@ -322,36 +327,52 @@ public class FileSystemItem implements Component {
 	
 	public boolean exists() {
 		if (exists == null) {
-			try {
-				getConventionedAbsolutePath();
-			} catch (FileSystemItemNotFoundException exc) {
-				
-			}
+			getConventionedAbsolutePath();
 		}
 		return exists;
 	}
 	
 	public boolean isContainer() {
-		return getConventionedAbsolutePath().endsWith("/");
+		String conventionedAbsolutePath = getConventionedAbsolutePath();
+		return conventionedAbsolutePath.endsWith("/");
 	}
 	
 	public boolean isCompressed() {
-		return getConventionedAbsolutePath().contains(ZIP_PATH_SEPARATOR);
+		String conventionedAbsolutePath = getConventionedAbsolutePath();
+		return 
+			(conventionedAbsolutePath.contains(ZIP_PATH_SEPARATOR) && 
+				!conventionedAbsolutePath.endsWith(ZIP_PATH_SEPARATOR)) ||
+			(conventionedAbsolutePath.contains(ZIP_PATH_SEPARATOR) && 
+				conventionedAbsolutePath.endsWith(ZIP_PATH_SEPARATOR) && 
+					conventionedAbsolutePath.indexOf(ZIP_PATH_SEPARATOR) != conventionedAbsolutePath.lastIndexOf(ZIP_PATH_SEPARATOR))
+		;
+	}
+	
+	public boolean isArchive() {
+		String conventionedAbsolutePath = getConventionedAbsolutePath();
+		return conventionedAbsolutePath.endsWith(ZIP_PATH_SEPARATOR);
+	}
+	
+	public boolean isFolder() {
+		String conventionedAbsolutePath = getConventionedAbsolutePath();
+		return conventionedAbsolutePath.endsWith("/") && !conventionedAbsolutePath.endsWith(ZIP_PATH_SEPARATOR);
 	}
 	
 	public ByteBuffer toByteBuffer() {
-		String conventionedAbsolutePath = getConventionedAbsolutePath();				
-		if (isCompressed()) {
-			String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(ZIP_PATH_SEPARATOR));
-			File file = new File(zipFilePath);
-			if (file.exists()) {
-				try (FileInputStream fIS = FileInputStream.create(file)) {
-					return retrieveBytes(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + ZIP_PATH_SEPARATOR, ""));
+		String conventionedAbsolutePath = getConventionedAbsolutePath();
+		if (!isFolder()) {
+			if (isCompressed()) {
+				String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(ZIP_PATH_SEPARATOR));
+				File file = new File(zipFilePath);
+				if (file.exists()) {
+					try (FileInputStream fIS = FileInputStream.create(file)) {
+						return retrieveBytes(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + ZIP_PATH_SEPARATOR, ""));
+					}
 				}
-			}
-		} else {
-			try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
-				return fIS.toByteBuffer();
+			} else {
+				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
+					return fIS.toByteBuffer();
+				}
 			}
 		}
 		return null;
@@ -366,20 +387,64 @@ public class FileSystemItem implements Component {
 					true
 				);
 				itemToSearch = itemToSearch.replaceFirst(zipEntryNameOfNestedZipFile + ZIP_PATH_SEPARATOR, "");
-				try (InputStream iss = zipEntry.toInputStream()) {
-					return retrieveBytes(zipEntry.getAbsolutePath(), zipEntry.toInputStream(), itemToSearch);
-				} catch (IOException exc) {
-					throw Throwables.toRuntimeException(exc);
-				}				
+				if (Strings.isNotEmpty(itemToSearch)) {
+					try (InputStream iss = zipEntry.toInputStream()) {
+						return retrieveBytes(zipEntry.getAbsolutePath(), zipEntry.toInputStream(), itemToSearch);
+					} catch (IOException exc) {
+						throw Throwables.toRuntimeException(exc);
+					}
+				} else {
+					return zipEntry.toByteBuffer();
+				}
 			} else {
 				final String iTS = itemToSearch;
 				ZipInputStream.Entry.Wrapper zipEntry = zipInputStream.findFirstAndConvert(
 					zEntry -> zEntry.getName().equals(iTS),
 					true
-				);	
+				);
 				return zipEntry.toByteBuffer();
 			}
 		}
+	}
+	
+	public FileSystemItem copyToFolder(String folder) throws IOException {
+		FileSystemItem destinationFolder = null;
+		if (!isContainer() || isArchive()) {
+			File file = new File(folder);
+			if (!file.exists()) {
+				file.mkdir();
+			} else if (!file.isDirectory()) {
+				file.setWritable(true);
+				file.delete();
+				file.mkdir();
+			}
+			file = new File(folder, getName());
+			try(InputStream inputStream = toInputStream(); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
+				Streams.copy(toInputStream(), fileOutputStream);
+			}
+			destinationFolder = FileSystemItem.ofPath(file.getAbsolutePath());
+		} else if (isCompressed()) {
+			
+		} else {
+			//Set<FileSystemItem> this.getChildren();	
+		}	
+
+		
+//			destinationFolder = FileSystemItem.ofPath(folder);
+//			Set<FileSystemItem> allChildren = this.getAllChildren();
+//			for (FileSystemItem child : allChildren) {
+//				if (child.isCompressed() || !child.isContainer()) {
+//					FileSystemItem parentChild = child.getParent();
+//					String destinationPath =
+//						destinationFolder.getAbsolutePath() + "/" + parentChild.getAbsolutePath().replace(this.getAbsolutePath(), "");
+//					new File(destinationPath, child.getName()).mkdirs();
+//				} else {
+//					String destinationPath = destinationFolder.getAbsolutePath() + child.getAbsolutePath().replace(this.getAbsolutePath(), "");
+//					new File(destinationPath).mkdirs();
+//				}
+//			}
+//		}
+		return destinationFolder;
 	}
 	
 	public static void enableLog() {
