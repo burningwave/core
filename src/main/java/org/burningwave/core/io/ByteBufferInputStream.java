@@ -43,11 +43,7 @@ public final class ByteBufferInputStream extends InputStream {
         this.bufferForExternalSharing = Streams.shareContent(buffer);
     }
     
-    public ByteBuffer getBuffer() {
-		return buffer;
-	}
-    
-    public ByteBuffer getSharedBuffer() {
+    public ByteBuffer toByteBuffer() {
 		return bufferForExternalSharing.duplicate();
 	}
     
