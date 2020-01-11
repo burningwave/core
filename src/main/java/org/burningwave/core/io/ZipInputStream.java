@@ -62,7 +62,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	private Entry currentZipEntry;
 	private String name;
 	private String path;
-	private ByteBuffer content;
 	private static long FilterInputStream_in_fieldOffset;
 	
 	static {
@@ -95,13 +94,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		init();
 	}
 	
-	private void setContent() {
-		if (content == null) {
-			ByteBufferInputStream byteBufferInputStream = (ByteBufferInputStream)ObjectRetriever.getUnsafe().getObject(this.in, FilterInputStream_in_fieldOffset);
-			content = byteBufferInputStream.getBuffer();
-		}
-	}
-	
 	public ZipInputStream(FileInputStream inputStream) {
 		this(inputStream.getFile().getAbsolutePath(), inputStream);
 	}
@@ -111,7 +103,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	}
 
 	private void init() {
-		setContent();
 		path = name.replace("\\", "/");
 		if (parent != null) {
 			path = parent.getAbsolutePath() + "/" + path;
@@ -126,16 +117,16 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		return path;
 	}
 	
-	private ByteBuffer getContent() {
-		return content;
+	private ByteBufferInputStream getByteBufferInputStream() {
+		return ((ByteBufferInputStream)ObjectRetriever.getUnsafe().getObject(this.in, FilterInputStream_in_fieldOffset));
 	}
 	
 	public ByteBuffer toByteBuffer() {
-		return Streams.shareContent(getContent());
+		return getByteBufferInputStream().toByteBuffer();
 	}
 
 	public byte[] toByteArray() {
-		return Streams.toByteArray(getContent());
+		return Streams.toByteArray(toByteBuffer());
 	}
 
 	@Override
