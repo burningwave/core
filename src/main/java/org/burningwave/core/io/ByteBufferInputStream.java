@@ -36,13 +36,19 @@ import org.burningwave.core.common.Streams;
 
 public final class ByteBufferInputStream extends InputStream {
     private ByteBuffer buffer;
+    private ByteBuffer bufferForExternalSharing;
 
     public ByteBufferInputStream(ByteBuffer buffer) {
         this.buffer = buffer;
+        this.bufferForExternalSharing = Streams.shareContent(buffer);
     }
     
     public ByteBuffer getBuffer() {
-		return Streams.shareContent(buffer);
+		return buffer;
+	}
+    
+    public ByteBuffer getSharedBuffer() {
+		return bufferForExternalSharing.duplicate();
 	}
     
     public int read() {
