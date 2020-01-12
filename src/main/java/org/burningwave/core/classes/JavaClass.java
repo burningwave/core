@@ -136,6 +136,9 @@ public class JavaClass {
 			packageFolder.mkdirs();
 		}
 		File fileClass = new File(packageFolder.getAbsolutePath(), getClassFileName());
+		if (fileClass.exists()) {
+			fileClass.delete();
+		}
 		ThrowingRunnable.run(() -> {					
 			try(ByteBufferInputStream inputStream = new ByteBufferInputStream(getByteCode()); FileOutputStream fileOutputStream = FileOutputStream.create(fileClass, true)) {
 				Streams.copy(inputStream, fileOutputStream);
