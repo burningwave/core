@@ -43,6 +43,10 @@ public final class ByteBufferInputStream extends InputStream {
         this.bufferCopy = Streams.shareContent(buffer);
     }
     
+    public ByteBuffer getBuffer() {
+    	return buffer;
+    }
+    
     public ByteBuffer toByteBuffer() {
 		return bufferCopy.duplicate();
 	}

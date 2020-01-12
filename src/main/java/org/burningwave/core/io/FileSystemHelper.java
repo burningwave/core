@@ -303,7 +303,7 @@ public class FileSystemHelper implements Component {
 	
 	<K, T> void scanZipFile(ItemContext<FileInputStream> scanItemContext){
 		File currentFile = scanItemContext.input.getFile();
-		try (ZipInputStream zipInputStream = new ZipInputStream(scanItemContext.input)) {
+		try (ZipInputStream zipInputStream = ZipInputStream.create(scanItemContext.input)) {
 			logDebug("scanning zip file " + zipInputStream.getAbsolutePath());      
 			scanZipInputStream(new ItemContext<ZipInputStream>(scanItemContext, zipInputStream));
 		} catch (Throwable exc) {
@@ -313,7 +313,7 @@ public class FileSystemHelper implements Component {
 	
 	<K, T> void scanZipEntry(ItemContext<ZipInputStream.Entry> scanItemContext){
 		ZipInputStream.Entry zipEntry = scanItemContext.input;
-		try (ZipInputStream zipInputStream = new ZipInputStream(zipEntry)) {
+		try (ZipInputStream zipInputStream = ZipInputStream.create(zipEntry)) {
 			scanZipInputStream(new ItemContext<ZipInputStream>(scanItemContext, zipInputStream));
 		}
 	}

@@ -31,11 +31,9 @@ package org.burningwave.core.io;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.Set;
@@ -49,11 +47,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.common.Streams;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ZipInputStream.Entry.Wrapper;
-import org.burningwave.core.reflection.ObjectRetriever;
 
-import sun.misc.Unsafe;
-
-@SuppressWarnings("restriction")
 public class ZipInputStream extends java.util.zip.ZipInputStream implements Serializable, Component {
 
 	private static final long serialVersionUID = -33538562818485472L;
@@ -62,46 +56,51 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	private Entry currentZipEntry;
 	private String name;
 	private String path;
-	private static long FilterInputStream_in_fieldOffset;
+	private ByteBufferInputStream byteBufferInputStream;
 	
-	static {
-		Unsafe unsafe = ObjectRetriever.getUnsafe();
-		for (Field field : FilterInputStream.class.getDeclaredFields()) {
-			if (field.getName().equals("in")) {
-				FilterInputStream_in_fieldOffset = unsafe.objectFieldOffset(field);
-				break;
-			}
-		}
-	}
-	
-	public ZipInputStream(String name, InputStream inputStream) {
-		super(new ByteBufferInputStream(Streams.toByteBuffer(inputStream)));
+	private ZipInputStream(String name, InputStream inputStream) {
+		super(inputStream);
 		this.name = name;
 		init();
 	}
 	
-	private ZipInputStream(String name, FileInputStream inputStream) {
-		super(new ByteBufferInputStream(Streams.toByteBuffer(inputStream)));
-		this.name = name;
-		init();
-	}
-	
-	
-	public ZipInputStream(ZipInputStream.Entry zipEntry) {
-		super(zipEntry.toInputStream());
-		this.parent = zipEntry.getZipInputStream();
-		this.name = zipEntry.getName();
-		init();
-	}
-	
-	public ZipInputStream(FileInputStream inputStream) {
-		this(inputStream.getFile().getAbsolutePath(), inputStream);
-	}
-	
-	public ZipInputStream(File file) {
+	private ZipInputStream(File file) {
 		this(file.getAbsolutePath(), FileInputStream.create(file));
 	}
-
+	
+	public static ZipInputStream create(String name, InputStream inputStream) {
+		ByteBufferInputStream iS = null;
+		if (inputStream instanceof ByteBufferInputStream) {
+			iS = new ByteBufferInputStream(((ByteBufferInputStream)inputStream).toByteBuffer());
+		} else {
+			iS = new ByteBufferInputStream(Streams.toByteBuffer(inputStream));
+		}
+		ZipInputStream zipInputStream = new ZipInputStream(name, iS);
+		zipInputStream.byteBufferInputStream = iS;
+		return zipInputStream;
+	}
+	
+	public static ZipInputStream create(FileInputStream file) {
+		return create(file.getAbsolutePath(), file);
+	}
+	
+	public static ZipInputStream create(File file) {
+		return create(file.getAbsolutePath(), FileInputStream.create(file));
+	}	
+	
+	public static ZipInputStream create(String name, ByteBuffer zipInputStreamAsBytes) {
+		ByteBufferInputStream iS = new ByteBufferInputStream(zipInputStreamAsBytes);
+		ZipInputStream zipInputStream = new ZipInputStream(name, iS);
+		zipInputStream.byteBufferInputStream = iS;
+		return zipInputStream;
+	}
+	
+	public static ZipInputStream create(ZipInputStream.Entry zipEntry) {
+		ZipInputStream zipInputStream = create(zipEntry.getName(), zipEntry.toInputStream());
+		zipInputStream.parent = zipEntry.getZipInputStream();
+		return zipInputStream;
+	}
+	
 	private void init() {
 		path = name.replace("\\", "/");
 		if (parent != null) {
@@ -117,12 +116,8 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		return path;
 	}
 	
-	private ByteBufferInputStream getByteBufferInputStream() {
-		return ((ByteBufferInputStream)ObjectRetriever.getUnsafe().getObject(this.in, FilterInputStream_in_fieldOffset));
-	}
-	
 	public ByteBuffer toByteBuffer() {
-		return getByteBufferInputStream().toByteBuffer();
+		return byteBufferInputStream.toByteBuffer();
 	}
 
 	public byte[] toByteArray() {
@@ -325,7 +320,13 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		private void loadContent() {
 			if (!contentHasBeenLoaded()) {
 				if (zipInputStream.currentZipEntry != this) {
-					throw Throwables.toRuntimeException("Entry and his ZipInputStream are not aligned");
+					try (ZipInputStream zipInputStreamParent = ZipInputStream.create(zipInputStream.getName(), zipInputStream.toByteBuffer())) {
+						Entry zipEntry = zipInputStreamParent.findFirstAndConvert((entry) -> 
+							entry.getName().equals(getName()), zEntry -> 
+							zEntry, false
+						);
+						this.content = zipEntry.toByteBuffer();
+					}
 				}
 				try (ByteBufferOutputStream bBOS = createDataBytesContainer()) {
 					Streams.copy(zipInputStream, bBOS);
@@ -431,6 +432,5 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 				isDirectory = null;
 			}
 		}
-	}
-	
+	}	
 }

@@ -141,7 +141,7 @@ public class FileSystemItem implements Component {
 
 
 	private String retrieveConventionedRelativePath(ByteBuffer zipInputStreamAsBytes, String zipInputStreamName, String relativePath1) {
-		try (ZipInputStream zIS = new ZipInputStream(zipInputStreamName, new ByteBufferInputStream(zipInputStreamAsBytes))){
+		try (ZipInputStream zIS = ZipInputStream.create(zipInputStreamName, zipInputStreamAsBytes)){
 			Predicate<Entry> zipEntryPredicate = zEntry -> zEntry.getName().equals(relativePath1) || zEntry.getName().equals(relativePath1 + "/");
 			String temp = relativePath1;
 			while (temp != null) {
@@ -276,7 +276,7 @@ public class FileSystemItem implements Component {
 	}
 	
 	private Set<FileSystemItem> getChildren(String zipFilePath, InputStream inputStream, String itemToSearch) {
-		try (ZipInputStream zipInputStream = new ZipInputStream(zipFilePath, inputStream)) {
+		try (ZipInputStream zipInputStream = ZipInputStream.create(zipFilePath, inputStream)) {
 			if (itemToSearch.contains(ZIP_PATH_SEPARATOR)) {
 				String zipEntryNameOfNestedZipFile = itemToSearch.substring(0, itemToSearch.indexOf(ZIP_PATH_SEPARATOR));
 				ZipInputStream.Entry.Wrapper zipEntryWrapper = zipInputStream.findFirstAndConvert(
@@ -383,7 +383,7 @@ public class FileSystemItem implements Component {
 	}
 
 	private ByteBuffer retrieveBytes(String zipFilePath, InputStream inputStream, String itemToSearch) {
-		try (ZipInputStream zipInputStream = new ZipInputStream(zipFilePath, inputStream)) {
+		try (ZipInputStream zipInputStream = ZipInputStream.create(zipFilePath, inputStream)) {
 			if (itemToSearch.contains(ZIP_PATH_SEPARATOR)) {
 				String zipEntryNameOfNestedZipFile = itemToSearch.substring(0, itemToSearch.indexOf(ZIP_PATH_SEPARATOR));
 				ZipInputStream.Entry.Wrapper zipEntry = zipInputStream.findFirstAndConvert(
