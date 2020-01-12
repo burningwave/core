@@ -35,6 +35,7 @@ import java.util.function.Supplier;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
+import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.CodeGenerator;
@@ -109,7 +110,12 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@SuppressWarnings("resource")
 	public final static ComponentContainer create(String fileName) {
-		return new ComponentContainer(fileName).init();
+		try {
+			return new ComponentContainer(fileName).init();
+		} catch (Throwable exc){
+			ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while creating ComponentContainer", exc);
+			throw Throwables.toRuntimeException(exc);
+		}
 	}
 	
 	@SuppressWarnings("unchecked")
