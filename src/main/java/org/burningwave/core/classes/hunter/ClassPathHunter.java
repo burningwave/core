@@ -45,7 +45,6 @@ import org.burningwave.core.common.Streams;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.concurrent.ParallelTasksManager;
 import org.burningwave.core.function.ThrowingRunnable;
-import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileOutputStream;
@@ -56,7 +55,7 @@ import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
 
 public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>, File, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
-	Collection<File> temporaryFiles;
+	
 	private ClassPathHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
@@ -77,7 +76,6 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>
 			(initContext) -> SearchContext._create(fileSystemHelper, streamHelper, initContext),
 			(context) -> new ClassPathHunter.SearchResult(context)
 		);
-		temporaryFiles = ConcurrentHashMap.newKeySet();
 	}
 	
 	public static ClassPathHunter create(Supplier<ByteCodeHunter> byteCodeHunterSupplier, Supplier<ClassHunter> classHunterSupplier, FileSystemHelper fileSystemHelper, PathHelper pathHelper, StreamHelper streamHelper,
@@ -157,7 +155,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>
 		libName = libName.substring(libName.lastIndexOf("/", libName.length()-2)+1, libName.lastIndexOf("/"));
 		return copyToTemporaryFolder(
 			context, zipEntry.toByteBuffer(),
-			"classes", libName, javaClass.getPackagePath(), javaClass.getClassName() + ".class"
+			getTemporaryFolderPrefix() + "_classes", libName, javaClass.getPackagePath(), javaClass.getClassName() + ".class"
 		);
 	}
 
@@ -167,31 +165,21 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>
 		libName = libName.substring(libName.lastIndexOf("/", libName.length()-2)+1, libName.lastIndexOf("/"));
 		return copyToTemporaryFolder(
 			context, zipEntry.getZipInputStream().toByteBuffer(), 
-			"lib", null, null, libName
+			getTemporaryFolderPrefix() + "_lib", null, null, libName
 		);
 	}
 	
 	
 	File getMainFolder(ClassPathHunter.SearchContext context, String folderName) {
-		File mainFolder = context.temporaryFiles.stream().filter((file) -> file.getName().contains(folderName)).findFirst().orElse(null);
+		File mainFolder = context.temporaryFiles.stream().filter((file) -> 
+			file.getName().contains(folderName)
+		).findFirst().orElse(null);
 		if (mainFolder == null) {
-			mainFolder = createTemporaryFolder(context, folderName);
+			mainFolder = fileSystemHelper.createTemporaryFolder(folderName);
+			context.temporaryFiles.add(mainFolder);
 		}
 		return mainFolder;
 	}
-	
-	
-	File createTemporaryFolder(ClassPathHunter.SearchContext context, String folderName) {
-		return ThrowingSupplier.get(() ->{
-			File tempFile = File.createTempFile("_BW_TEMP_", "_" + folderName);
-			tempFile.setWritable(true);
-			tempFile.delete();
-			tempFile.mkdir();
-			context.temporaryFiles.add(tempFile);
-			return tempFile;
-		});
-	}
-	
 	
 	File copyToTemporaryFolder(ClassPathHunter.SearchContext context, ByteBuffer buffer, String mainFolderName, String libName, String packageFolders, String fileName) {
 		File toRet = getMainFolder(context, mainFolderName);
@@ -221,8 +209,6 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>
 	
 	@Override
 	public void close() {
-		fileSystemHelper.deleteFiles(temporaryFiles);
-		temporaryFiles = null;
 		fileSystemHelper = null;
 		super.close();
 	}
@@ -240,7 +226,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>
 			deleteTemporaryFilesOnClose = getSearchConfig().deleteFoundItemsOnClose;
 		}		
 
-		public void deleteTemporaryFiles(boolean value) {
+		void deleteTemporaryFiles(boolean value) {
 			deleteTemporaryFilesOnClose = value;			
 		}
 
@@ -252,7 +238,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>
 		public void close() {
 			if (deleteTemporaryFilesOnClose) {
 				itemsFoundFlatMap.values().removeAll(temporaryFiles);
-				fileSystemHelper.deleteFiles(temporaryFiles);
+				fileSystemHelper.deleteTempraryFiles(temporaryFiles);
 			}
 			temporaryFiles = null;
 			tasksManager.close();

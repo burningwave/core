@@ -138,11 +138,11 @@ public class ByteBufferOutputStream extends OutputStream {
     	}
     }
 
-	public ByteBuffer getBuffer() {
+	public ByteBuffer toByteBuffer() {
 		return Streams.shareContent(buffer);
 	}
 
 	public byte[] toByteArray() {
-		return Streams.toByteArray(getBuffer());
+		return Streams.toByteArray(toByteBuffer());
 	}
 }

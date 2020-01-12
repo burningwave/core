@@ -53,6 +53,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.concurrent.ParallelTasksManager;
 import org.burningwave.core.function.ThrowingRunnable;
+import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemHelper.Scan.Configuration;
 import org.burningwave.core.io.FileSystemHelper.Scan.Directive;
 import org.burningwave.core.io.FileSystemHelper.Scan.ItemContext;
@@ -61,9 +62,21 @@ import org.burningwave.core.io.FileSystemHelper.Scan.ItemContext;
 public class FileSystemHelper implements Component {
 	private Supplier<PathHelper> pathHelperSupplier; 
 	private PathHelper pathHelper;
+	private Collection<File> temporaryFiles;
+	private File baseTempFolder;
 	
 	private FileSystemHelper(Supplier<PathHelper> pathHelperSupplier) {
+		ThrowingRunnable.run(() ->{
+			File toDelete = File.createTempFile("_BW_TEMP_", "_temp");
+			File tempFolder = toDelete.getParentFile();
+			baseTempFolder = new File(tempFolder.getAbsolutePath() + "/Burningwave");
+			if (!baseTempFolder.exists()) {
+				baseTempFolder.mkdirs();
+			}
+			toDelete.delete();
+		});
 		this.pathHelperSupplier = pathHelperSupplier;
+		this.temporaryFiles = new CopyOnWriteArrayList<File>();
 	}
 	
 	public static FileSystemHelper create(Supplier<PathHelper> pathHelperSupplier) {
@@ -115,6 +128,23 @@ public class FileSystemHelper implements Component {
 			throw Throwables.toRuntimeException("Found more than one resource under relative path " + resourceRelativePath);
 		}
 		return files.stream().findFirst().orElse(null);
+	}
+	
+	public File createTemporaryFolder(String folderName) {
+		return ThrowingSupplier.get(() -> {
+			File tempFolder = new File(baseTempFolder.getAbsolutePath() + "/" + folderName);
+			if (!tempFolder.exists()) {
+				tempFolder.mkdirs();
+			}
+			temporaryFiles.add(tempFolder);
+			return tempFolder;
+		});
+	}
+	
+
+	public void deleteTempraryFiles(Collection<File> temporaryFiles) {
+		deleteFiles(temporaryFiles);
+		temporaryFiles.removeAll(temporaryFiles);
 	}
 	
 	public void deleteFiles(Collection<File> files) {
@@ -759,4 +789,11 @@ public class FileSystemHelper implements Component {
 			}
 		}
 	}
+	
+	@Override
+	public void close() {
+		deleteFiles(temporaryFiles);
+		temporaryFiles.clear();
+	}
+
 }

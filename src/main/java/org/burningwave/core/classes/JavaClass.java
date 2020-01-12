@@ -28,13 +28,17 @@
  */
 package org.burningwave.core.classes;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.common.Streams;
+import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferInputStream;
+import org.burningwave.core.io.FileOutputStream;
+import org.burningwave.core.io.FileSystemItem;
 import org.objectweb.asm.ClassReader;
 
 public class JavaClass {
@@ -42,8 +46,8 @@ public class JavaClass {
 	private final String className;
 	
 	private JavaClass(ByteBuffer byteCode) throws IOException {
-		this.byteCode = byteCode;
-		this.className = new ClassReader(new ByteBufferInputStream(byteCode)).getClassName();
+		this.byteCode = Streams.shareContent(byteCode);
+		this.className = new ClassReader(new ByteBufferInputStream(Streams.shareContent(byteCode))).getClassName();
 	}
 	
 	public static JavaClass create(ByteBuffer byteCode) {
@@ -119,10 +123,24 @@ public class JavaClass {
 	}
 	
 	public ByteBuffer getByteCode() {
-		return Streams.shareContent(byteCode);
+		return byteCode.duplicate();
 	}
 	
-	public byte[] getByteCodeBytes() {
+	public byte[] toByteArray() {
 		return Streams.toByteArray(getByteCode());
+	}
+	
+	public FileSystemItem storeToClassPath(String classPathFolder) {
+		File packageFolder = new File(classPathFolder + "/" + getPackagePath());
+		if (!packageFolder.exists()) {
+			packageFolder.mkdirs();
+		}
+		File fileClass = new File(packageFolder.getAbsolutePath(), getClassFileName());
+		ThrowingRunnable.run(() -> {					
+			try(ByteBufferInputStream inputStream = new ByteBufferInputStream(getByteCode()); FileOutputStream fileOutputStream = FileOutputStream.create(fileClass, true)) {
+				Streams.copy(inputStream, fileOutputStream);
+			}
+		});
+		return FileSystemItem.ofPath(fileClass.getAbsolutePath());
 	}
 }

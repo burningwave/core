@@ -252,7 +252,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	 protected final Class<?> _defineClass(String className, byte[] byteCode, int off, int len, ProtectionDomain protectionDomain) {
 		 try (ByteBufferOutputStream bBOS = new ByteBufferOutputStream()) {
 			 bBOS.write(byteCode, 0, byteCode.length);
-			 ByteBuffer byteCodeAsByteBuffer = bBOS.getBuffer();
+			 ByteBuffer byteCodeAsByteBuffer = bBOS.toByteBuffer();
 			 return _defineClass(className, byteCodeAsByteBuffer, protectionDomain);
 		 }
 	 }

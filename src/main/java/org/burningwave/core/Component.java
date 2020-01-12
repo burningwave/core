@@ -32,6 +32,10 @@ import org.burningwave.core.iterable.Properties;
 
 public interface Component extends AutoCloseable, ManagedLogger, Properties.Listener {
 	
+	default public String getTemporaryFolderPrefix() {
+		return toString();
+	}
+	
 	@Override
 	default public void close() {
 			

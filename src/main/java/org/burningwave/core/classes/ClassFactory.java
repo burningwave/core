@@ -28,16 +28,14 @@
  */
 package org.burningwave.core.classes;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.JavaMemoryCompiler.MemoryFileObject;
-import org.burningwave.core.classes.hunter.ClassPathHunter;
 import org.burningwave.core.io.PathHelper;
 
 
@@ -45,7 +43,6 @@ public class ClassFactory implements Component {
 	public static String CLASS_REPOSITORIES = "classFactory.classRepositories";
 	
 	private ClassHelper classHelper;
-	private ClassPathHunter classPathHunter;
 	private PathHelper pathHelper;
 	private Supplier<MemoryClassLoader> memoryClassLoaderSupplier;
 	private MemoryClassLoader memoryClassLoader;
@@ -58,7 +55,6 @@ public class ClassFactory implements Component {
 	
 	private ClassFactory(
 		ClassHelper classHelper,
-		ClassPathHunter classPathHunter,
 		Supplier<MemoryClassLoader> memoryClassLoaderSupplier,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
@@ -69,7 +65,6 @@ public class ClassFactory implements Component {
 		CodeGenerator.ForCodeExecutor codeGeneratorForExecutor
 	) {	
 		this.classHelper = classHelper;
-		this.classPathHunter = classPathHunter;
 		this.memoryClassLoaderSupplier = memoryClassLoaderSupplier;
 		this.javaMemoryCompiler = javaMemoryCompiler;
 		this.pathHelper = pathHelper;
@@ -82,7 +77,6 @@ public class ClassFactory implements Component {
 	
 	public static ClassFactory create(
 		ClassHelper classHelper,
-		ClassPathHunter classPathHunter,
 		Supplier<MemoryClassLoader> memoryClassLoaderSupplier,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
@@ -93,7 +87,7 @@ public class ClassFactory implements Component {
 		CodeGenerator.ForCodeExecutor codeGeneratorForExecutor
 	) {
 		return new ClassFactory(
-			classHelper, classPathHunter, memoryClassLoaderSupplier, 
+			classHelper, memoryClassLoaderSupplier, 
 			javaMemoryCompiler, pathHelper, codeGeneratorForPojo, 
 			codeGeneratorForFunction, codeGeneratorForConsumer, codeGeneratorForPredicate, codeGeneratorForExecutor
 		);
@@ -116,7 +110,7 @@ public class ClassFactory implements Component {
 		return cls;
 	}	
 	
-	public Collection<MemoryFileObject> build(String classCode) {
+	public Map<String, ByteBuffer> build(String classCode) {
 		logInfo("Try to compile virtual class:\n\n" + classCode +"\n");
 		return javaMemoryCompiler.compile(
 			Arrays.asList(classCode), 
@@ -127,17 +121,14 @@ public class ClassFactory implements Component {
 	
 	private Class<?> buildAndUploadToMemoryClassLoader(String classCode) {
 		String className = classHelper.extractClassName(classCode);
-		Collection<MemoryFileObject> compiledFiles = build(classCode);
+		Map<String, ByteBuffer> compiledFiles = build(classCode);
 		logInfo("Virtual class " + className + " succesfully created");
 		if (!compiledFiles.isEmpty()) {
-			Iterator<MemoryFileObject> compiledFilesIterator = compiledFiles.iterator();
-			while (compiledFilesIterator.hasNext()) {
-				try (MemoryFileObject memoryFileObject = compiledFilesIterator.next()) {
-					memoryClassLoader.addCompiledClass(
-						memoryFileObject.getName(), memoryFileObject.toByteBuffer()
-					);
-				}
-			}
+			compiledFiles.forEach((clsName, byteCode) -> 
+				memoryClassLoader.addCompiledClass(
+					clsName, byteCode
+				)
+			);
 		}
 		try {
 			return getMemoryClassLoader().loadClass(className);
@@ -173,33 +164,31 @@ public class ClassFactory implements Component {
 	}
 	
 	public Class<?> getOrBuildCodeExecutorSubType(String imports, String className, String supplierCode,
-			Class<?> returnedClass, ComponentSupplier componentSupplier
+		Class<?> returnedClass, ComponentSupplier componentSupplier
 	) {
 		return getOrBuildCodeExecutorSubType(imports, className, supplierCode, returnedClass, componentSupplier, getMemoryClassLoader());
 	}
 	
 	
 	public Class<?> getOrBuildCodeExecutorSubType(String imports, String className, String supplierCode,
-			Class<?> returnedClass, ComponentSupplier componentSupplier, MemoryClassLoader memoryClassLoader
+		Class<?> returnedClass, ComponentSupplier componentSupplier, MemoryClassLoader memoryClassLoader
 	) {
 		String classCode = codeGeneratorForExecutor.generate(
 			imports, className, supplierCode, returnedClass
 		);
-		Collection<MemoryFileObject> compiledFiles = JavaMemoryCompiler.create(pathHelper, classHelper, classPathHunter).compile(
-			Arrays.asList(classCode), 
-			pathHelper.getMainClassPaths(),
-			pathHelper.getClassPaths(ClassFactory.CLASS_REPOSITORIES)
-		);
+		Map<String, ByteBuffer> compiledFiles = build(classCode);
 		if (!compiledFiles.isEmpty()) {
-			Iterator<MemoryFileObject> compiledFilesIterator = compiledFiles.iterator();
-			while(compiledFilesIterator.hasNext()) {
-				try(MemoryFileObject memoryFileObject = compiledFilesIterator.next()) {
+			logInfo("Virtual class " + className + " succesfully created");
+			if (!compiledFiles.isEmpty()) {
+				compiledFiles.forEach((clsName, byteCode) -> 
 					memoryClassLoader.addCompiledClass(
-						memoryFileObject.getName(), memoryFileObject.toByteBuffer()
-					);
-				}
+						clsName, byteCode
+					)
+				);
 			}
 		}
+
+		
 		try {
 			return memoryClassLoader.loadClass(classHelper.extractClassName(classCode));
 		} catch (ClassNotFoundException exc) {

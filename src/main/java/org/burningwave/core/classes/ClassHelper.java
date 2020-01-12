@@ -33,8 +33,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -49,7 +49,6 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.JavaMemoryCompiler.MemoryFileObject;
 import org.burningwave.core.common.Streams;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingSupplier;
@@ -94,14 +93,17 @@ public class ClassHelper implements Component {
 				classLoaderDelegate = classLoaderDelegates.get(name);
 				if (classLoaderDelegate == null) {
 					try {
-						Collection<MemoryFileObject> classLoaderDelegateByteCode = getClassFactory().build(
-							this.streamHelper.getResourceAsStringBuffer(
-								ClassLoaderDelegate.class.getPackage().getName().replaceAll("\\.", "/") + "/" + name + ".java"
-							).toString()
-						);
-						byte[] byteCode = classLoaderDelegateByteCode.stream().findFirst().get().toByteArray();
-						Class<?> cls = ObjectRetriever.getUnsafe().defineAnonymousClass(ClassLoaderDelegate.class, byteCode, null);
-						classLoaderDelegate = (ClassLoaderDelegate) cls.getConstructor().newInstance();
+						String sourceCode = this.streamHelper.getResourceAsStringBuffer(
+							ClassLoaderDelegate.class.getPackage().getName().replaceAll("\\.", "/") + "/" + name + ".java"
+						).toString();
+						// In case of inner classes we have more than 1 compiled source
+						Map<String, ByteBuffer> compiledSources = getClassFactory().build(sourceCode);
+						Map<String, Class<?>> injectedClasses = new LinkedHashMap<>();
+						compiledSources.forEach((className, byteCode) -> {
+							byte[] byteCodeArray = Streams.toByteArray(compiledSources.get(className));
+							injectedClasses.put(className, ObjectRetriever.getUnsafe().defineAnonymousClass(ClassLoaderDelegate.class, byteCodeArray, null));
+						});
+						classLoaderDelegate = (ClassLoaderDelegate)injectedClasses.get(extractClassName(sourceCode)).getConstructor().newInstance();
 						classLoaderDelegates.put(name, classLoaderDelegate);
 					} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 							| InvocationTargetException | NoSuchMethodException | SecurityException exc) {
@@ -161,8 +163,7 @@ public class ClassHelper implements Component {
 	) throws ClassNotFoundException {
 		return loadOrUploadClass(
 			toLoad, classLoader,
-			objectRetriever.getDefineClassMethod(classLoader), 
-			objectRetriever.retrieveLoadedClasses(classLoader),
+			objectRetriever.getDefineClassMethod(classLoader),
 			objectRetriever.getDefinePackageMethod(classLoader)
 		);
 	}
@@ -171,7 +172,6 @@ public class ClassHelper implements Component {
 		Class<?> toLoad, 
 		ClassLoader classLoader, 
 		Method defineClassMethod, 
-		Collection<Class<?>> definedClasses,
 		Method definePackageMethod
 	) throws ClassNotFoundException {
     	try {
@@ -187,13 +187,13 @@ public class ClassHelper implements Component {
         			Class.forName(
         				newNotFoundClassName, false, toLoad.getClassLoader()
         			),
-        			classLoader, defineClassMethod, definedClasses, definePackageMethod
+        			classLoader, defineClassMethod, definePackageMethod
         		);
 				return loadOrUploadClass(
         			Class.forName(
         					toLoad.getName(), false, toLoad.getClassLoader()
         			),
-        			classLoader, defineClassMethod, definedClasses, definePackageMethod
+        			classLoader, defineClassMethod, definePackageMethod
         		);
 			}
     	}

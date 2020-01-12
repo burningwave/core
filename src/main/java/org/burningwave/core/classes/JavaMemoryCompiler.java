@@ -33,17 +33,18 @@ import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -64,42 +65,59 @@ import org.burningwave.core.classes.hunter.SearchResult;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferOutputStream;
+import org.burningwave.core.io.FileSystemHelper;
+import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 
 
 public class JavaMemoryCompiler implements Component {
+	
+	private FileSystemHelper fileSystemHelper;
 	private ClassHelper classHelper;
 	private ClassPathHunter classPathHunter;
 	private JavaCompiler compiler;
-	private JavaMemoryCompiler.MemoryFileManager memoryFileManager;
+	private FileSystemItem compiledClassesClassPath;
 	
 	private JavaMemoryCompiler(
+		FileSystemHelper fileSystemHelper,
 		PathHelper pathHelper,
 		ClassHelper classHelper,
-		ClassPathHunter classPathHunter) {
+		ClassPathHunter classPathHunter
+	) {
+		this.fileSystemHelper = fileSystemHelper;
 		this.classPathHunter = classPathHunter;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
-		this.memoryFileManager = new MemoryFileManager(compiler);
 		this.classHelper = classHelper;
-	}
-	
+		compiledClassesClassPath = FileSystemItem.ofPath(
+			this.fileSystemHelper.createTemporaryFolder(getTemporaryFolderPrefix() + "_classPath").getAbsolutePath()
+		);
+	}	
 	
 	public static JavaMemoryCompiler create(
-			PathHelper pathHelper,
-			ClassHelper classHelper,
-			ClassPathHunter classPathHunter) {
-		return new JavaMemoryCompiler(pathHelper, classHelper, classPathHunter);
+		FileSystemHelper fileSystemHelper,
+		PathHelper pathHelper,
+		ClassHelper classHelper,
+		ClassPathHunter classPathHunter
+	) {
+		return new JavaMemoryCompiler(fileSystemHelper, pathHelper, classHelper, classPathHunter);
 	}
 	
 	
-	public Collection<MemoryFileObject> compile(
+	public Map<String, ByteBuffer> compile(
 		Collection<String> sources, 
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths) {
 		Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
 		sourcesToMemorySources(sources, memorySources);
-		try (Compilation.Context context = Compilation.Context.create(classPathHunter, memorySources, new ArrayList<>(classPaths), new ArrayList<>(classRepositoriesPaths))) {
-			return _compile(context);	
+		try (Compilation.Context context = Compilation.Context.create(this, classPathHunter, memorySources, new ArrayList<>(classPaths), new ArrayList<>(classRepositoriesPaths))) {
+			Map<String, ByteBuffer> compiledFiles = _compile(context);
+			if (!compiledFiles.isEmpty()) {
+				compiledFiles.forEach((className, byteCode) -> {
+					JavaClass javaClass = JavaClass.create(byteCode);
+					javaClass.storeToClassPath(compiledClassesClassPath.getAbsolutePath());
+				});
+			}			
+			return compiledFiles;
 		}
 	}
 
@@ -117,7 +135,7 @@ public class JavaMemoryCompiler implements Component {
 	}
 
 
-	private Collection<MemoryFileObject> _compile(Compilation.Context context) {
+	private Map<String, ByteBuffer> _compile(Compilation.Context context) {
 		List<String> options = new ArrayList<String>();
 		if (!context.options.isEmpty()) {
 			context.options.forEach((key, val) -> {
@@ -128,19 +146,23 @@ public class JavaMemoryCompiler implements Component {
 				
 			});
 		}
-		memoryFileManager.addAllSources(context.sources);
-		Set<MemoryFileObject> alreadyCompiledClass = new LinkedHashSet<>(memoryFileManager.getCompiledFiles());		
-		CompilationTask task = compiler.getTask(null, memoryFileManager,
-				new MemoryDiagnosticListener(context), options, null, memoryFileManager.getCompilationUnits());
-		boolean done = task.call();
-		if (!done) {
-			return _compile(context);
-		} else {
-			Set<MemoryFileObject> compiledFiles = new LinkedHashSet<>(memoryFileManager.getCompiledFiles());
-			for (MemoryFileObject memoryFileObject: alreadyCompiledClass) {
-				compiledFiles.removeIf((memFileObj) -> memFileObj.getName().equals(memoryFileObject.getName()));
+		try (JavaMemoryCompiler.MemoryFileManager memoryFileManager = new MemoryFileManager(compiler)) {
+			CompilationTask task = compiler.getTask(
+				null, memoryFileManager,
+				new MemoryDiagnosticListener(context), options, null,
+				new ArrayList<>(context.sources)
+			);
+			boolean done = task.call();
+			if (!done) {
+				return _compile(context);
+			} else {
+				return memoryFileManager.getCompiledFiles().stream().collect(
+					Collectors.toMap(compiledFile -> 
+						compiledFile.getName(), compiledFile ->
+						compiledFile.toByteBuffer()
+					)
+				);
 			}
-			return compiledFiles;
 		}
 	}
 	
@@ -162,16 +184,18 @@ public class JavaMemoryCompiler implements Component {
 				return;
 			}
 			Collection<File> fsObjects = null;
-			String classOrPackageName = getClassNameFromErrorMessage(message);
-			if (Strings.isNotEmpty(classOrPackageName)) {
+			
+			Map.Entry<String, Predicate<Class<?>>> classNameAndClassPredicate = getClassPredicateFromErrorMessage(message);
+			String packageName = null;
+			if (classNameAndClassPredicate != null) {
 				try {
-					fsObjects = context.findForClassName(classOrPackageName);
+					fsObjects = context.findForClassName(classNameAndClassPredicate.getValue());
 				} catch (Exception e) {
 					logError("Exception occurred", e);
 				}
-			} else if (Strings.isNotEmpty(classOrPackageName = getPackageNameFromErrorMessage(message))) {			
+			} else if (Strings.isNotEmpty(packageName = getPackageNameFromErrorMessage(message))) {			
 				try {
-					fsObjects = context.findForPackageName(classOrPackageName);
+					fsObjects = context.findForPackageName(packageName);
 				} catch (Exception e) {
 					logError("Exception occurred", e);
 				}
@@ -179,23 +203,29 @@ public class JavaMemoryCompiler implements Component {
 				throw new UnknownCompilerErrorMessageException("Can't retrieve class or package from message:\n" + message);
 			}
 			if (fsObjects == null || fsObjects.isEmpty()) {
-				throw Throwables.toRuntimeException("Class or package \"" + classOrPackageName + "\" not found");
+				throw Throwables.toRuntimeException("Class or package \"" + classNameAndClassPredicate.getKey() + "\" not found");
 			}
 			fsObjects.forEach((fsObject) -> context.addToClassPath(fsObject.getAbsolutePath()));		
 		}
 
-		private String getClassNameFromErrorMessage(String message) {
-			String objName = null;
+		private Map.Entry<String, Predicate<Class<?>>> getClassPredicateFromErrorMessage(String message) {
 			if (message.contains("class file for") && message.contains("not found")) {
-				objName = message.substring(message.indexOf("for ") + 4);
+				String objName = message.substring(message.indexOf("for ") + 4);
 				objName = objName.substring(0, objName.indexOf(" "));
+				final String className = objName;
+				return new AbstractMap.SimpleEntry<>(objName, (cls) -> cls.getName().equals(className));
 			} else if(message.contains("class") && message.contains("package")){
 				String className = message.substring(message.indexOf("class ")+6);
 				className = className.substring(0, className.indexOf("\n"));
 				String packageName = message.substring(message.indexOf("package") + 8);
-				objName = packageName+"."+className;
+				final String objName = packageName+"."+className;
+				return new AbstractMap.SimpleEntry<>(objName, (cls) -> cls.getName().equals(objName));
+			} else if(message.contains("symbol: class")) {
+				String className = message.substring(message.indexOf("class ")+6);
+				final String objName = className;
+				return new AbstractMap.SimpleEntry<>(objName, (cls) -> cls.getSimpleName().equals(objName));
 			}
-			return objName;
+			return null;
 		}
 		
 		private String getPackageNameFromErrorMessage(String message) {
@@ -266,7 +296,7 @@ public class JavaMemoryCompiler implements Component {
 	    }
 	    
 	    public ByteBuffer toByteBuffer() {
-	    	return baos.getBuffer();
+	    	return baos.toByteBuffer();
 	    }
 	    
 	    public byte[] toByteArray() {
@@ -293,36 +323,12 @@ public class JavaMemoryCompiler implements Component {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	static class MemoryFileManager extends ForwardingJavaFileManager implements Component {
 		
-		private List<MemorySource> compilationUnits;
 		private List<MemoryFileObject> compiledFiles;
 				
 		MemoryFileManager(JavaCompiler compiler) {
 	        super(compiler.getStandardFileManager(null, null, null));
-	        compilationUnits = new CopyOnWriteArrayList<>();
 	        compiledFiles = new CopyOnWriteArrayList<>();
 	    }
-
-		
-		void reset() {
-			compiledFiles.clear();
-			compilationUnits.clear();
-		}
-		
-		public void addAllSources(Collection<MemorySource> sources) {
-			sources = new ArrayList<>(sources);
-			Iterator<MemorySource> sourcesIterator = sources.iterator();
-			while (sourcesIterator.hasNext()) {
-				MemorySource source = sourcesIterator.next();
-				for (MemorySource src : compilationUnits) {
-					if (src.getName().equals(source.getName())) {
-						logWarn(source.getName() + " already added");
-						sourcesIterator.remove();
-						break;
-					}
-				}
-			}
-			compilationUnits.addAll(sources);
-		}
 		
 		@Override
 	    public MemoryFileObject getJavaFileForOutput
@@ -336,15 +342,11 @@ public class JavaMemoryCompiler implements Component {
 			return compiledFiles;
 		}
 		
-		
-		public List<MemorySource> getCompilationUnits() {
-			return compilationUnits;
-		}
-		
 		@Override
 		public void close() {
-			compilationUnits.clear();
-			compiledFiles.forEach(compiledFile -> compiledFile.close());
+			compiledFiles.forEach(compiledFile -> 
+				compiledFile.close()
+			);
 			compiledFiles.clear();
 			ThrowingRunnable.run(() -> {
 				super.close();
@@ -360,6 +362,7 @@ public class JavaMemoryCompiler implements Component {
 			private ClassPathHunter classPathHunter;
 			private Collection<SearchResult<Class<?>, File>> classPathsSearchResults;
 			private Collection<String> classRepositoriesPaths;
+			private JavaMemoryCompiler javaMemoryCompiler;
 			
 			
 			void addToClassPath(String path) {
@@ -369,11 +372,13 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			private Context(
+				JavaMemoryCompiler javaMemoryCompiler,
 				ClassPathHunter classPathHunter,
 				Collection<MemorySource> sources,
 				Collection<String> classPaths,
 				Collection<String> classRepositories
 			) {
+				this.javaMemoryCompiler = javaMemoryCompiler;
 				options =  new LinkedHashMap<>();
 				this.sources = sources;
 				this.classPathHunter = classPathHunter;
@@ -387,34 +392,52 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			private static Context create(
+				JavaMemoryCompiler javaMemoryCompiler,
 				ClassPathHunter classPathHunter,
 				Collection<MemorySource> sources,
 				Collection<String> classPaths,
 				Collection<String> classRepositories
 			) {
-				return new Context(classPathHunter, sources, classPaths, classRepositories);
+				return new Context(javaMemoryCompiler, classPathHunter, sources, classPaths, classRepositories);
 			}
 			
 			public Collection<File> findForPackageName(String packageName) throws Exception {
 				SearchResult<Class<?>, File> result = classPathHunter.findBy(
-					SearchConfig.forPaths(classRepositoriesPaths).by(
+					SearchConfig.forPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 						ClassCriteria.create().packageName((iteratedClassPackageName) ->
 							iteratedClassPackageName.equals(packageName)
 						)
 					)
 				);
 				classPathsSearchResults.add(result);
+				if (result.getItemsFound().isEmpty()) {
+					result = classPathHunter.findBy(
+						SearchConfig.forPaths(classRepositoriesPaths).by(
+							ClassCriteria.create().packageName((iteratedClassPackageName) ->
+								iteratedClassPackageName.equals(packageName)
+							)
+						)
+					);
+					classPathsSearchResults.add(result);
+				}
 				return result.getItemsFound();
 			}
 			
-			public Collection<File> findForClassName(String className) throws Exception {
+			public Collection<File> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
 				SearchResult<Class<?>, File> result = classPathHunter.findBy(
-					SearchConfig.forPaths(classRepositoriesPaths).by(
-						ClassCriteria.create().className((iteratedClassName) -> 
-							iteratedClassName.equals(className))
+					SearchConfig.forPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
+						ClassCriteria.create().allThat(classPredicate)
 					)
 				);
 				classPathsSearchResults.add(result);
+				if (result.getItemsFound().isEmpty()) {
+					result = classPathHunter.findBy(
+						SearchConfig.forPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
+							ClassCriteria.create().allThat(classPredicate)
+						)
+					);
+					classPathsSearchResults.add(result);
+				}
 				return result.getItemsFound();
 			}
 
@@ -437,10 +460,6 @@ public class JavaMemoryCompiler implements Component {
 	
 	@Override
 	public void close() {
-		ThrowingRunnable.run(() -> {
-			memoryFileManager.close();
-			memoryFileManager = null;
-		});
 		compiler = null;
 		classPathHunter = null;
 		classHelper = null;

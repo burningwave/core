@@ -34,6 +34,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.JavaClass;
@@ -47,7 +48,8 @@ import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
 
 
-public abstract class ClassPathScanner<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>> implements org.burningwave.core.Component {
+public abstract class ClassPathScanner<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>> implements Component {
+	
 	Supplier<ByteCodeHunter> byteCodeHunterSupplier;
 	ByteCodeHunter byteCodeHunter;
 	Supplier<ClassHunter> classHunterSupplier;
@@ -59,7 +61,6 @@ public abstract class ClassPathScanner<K, I, C extends SearchContext<K, I>, R ex
 	PathHelper pathHelper;
 	Function<InitContext, C> contextSupplier;
 	Function<C, R> resultSupplier;
-
 
 	ClassPathScanner(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,

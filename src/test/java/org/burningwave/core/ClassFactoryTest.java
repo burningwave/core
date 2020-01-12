@@ -45,9 +45,9 @@ public class ClassFactoryTest extends BaseTest {
 			Complex.Data.Item.class,
 			PojoInterface.class
 		);
-		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildPojoSubType(
-				cls.getPackage().getName() + ".ExtendedPojoImpl", 
-			cls
+		testNotNull(() -> 
+			componentSupplier.getClassFactory().getOrBuildPojoSubType(
+				cls.getPackage().getName() + ".ExtendedPojoImpl", cls
 			)			
 		);
 	}

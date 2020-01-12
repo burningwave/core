@@ -36,16 +36,21 @@ import org.burningwave.core.common.Streams;
 
 public final class ByteBufferInputStream extends InputStream {
     private ByteBuffer buffer;
-    private ByteBuffer bufferForExternalSharing;
+    private ByteBuffer bufferCopy;
 
     public ByteBufferInputStream(ByteBuffer buffer) {
-        this.buffer = buffer;
-        this.bufferForExternalSharing = Streams.shareContent(buffer);
+        this.buffer = Streams.shareContent(buffer);
+        this.bufferCopy = Streams.shareContent(buffer);
     }
     
     public ByteBuffer toByteBuffer() {
-		return bufferForExternalSharing.duplicate();
+		return bufferCopy.duplicate();
 	}
+    
+    @Override
+    public synchronized void reset() throws IOException {
+    	buffer = bufferCopy.duplicate();
+    }
     
     public int read() {
         if (!buffer.hasRemaining()) {

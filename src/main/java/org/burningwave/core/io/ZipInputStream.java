@@ -329,7 +329,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 				}
 				try (ByteBufferOutputStream bBOS = createDataBytesContainer()) {
 					Streams.copy(zipInputStream, bBOS);
-				    this.content = bBOS.getBuffer();
+				    this.content = bBOS.toByteBuffer();
 				}
 			}
 		}

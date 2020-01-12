@@ -75,7 +75,7 @@ public class Streams {
 	public static ByteBuffer toByteBuffer(InputStream inputStream) {
 		try (ByteBufferOutputStream output = new ByteBufferOutputStream()) {
 			copy(inputStream, output);
-			return output.getBuffer();
+			return output.toByteBuffer();
 		}
 	}
 

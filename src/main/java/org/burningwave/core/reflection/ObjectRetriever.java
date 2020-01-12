@@ -323,7 +323,6 @@ public class ObjectRetriever implements Component {
 		this.memberFinder = null;
 		this.packageMapTester = null;
 		this.packageRetriever = null;
-		this.unsafe = null;
 	}
 
 }
