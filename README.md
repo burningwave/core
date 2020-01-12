@@ -14,50 +14,50 @@ Below you will find how to include the library in your projects and a simple cod
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>3.0.2</version>
+    <version>3.0.3</version>
 </dependency>
 ```
 
 * **Gradle Groovy**:
 ```
-implementation 'org.burningwave:core:3.0.2'
+implementation 'org.burningwave:core:3.0.3'
 ```
 
 * **Gradle Kotlin**:
 ```
-implementation("org.burningwave:core:3.0.2")
+implementation("org.burningwave:core:3.0.3")
 ```
 
 * **Scala**:
 ```
-libraryDependencies += "org.burningwave" % "core" % "3.0.2"
+libraryDependencies += "org.burningwave" % "core" % "3.0.3"
 ```
 
 * **Apache Ivy**:
 ```
-<dependency org="org.burningwave" name="core" rev="3.0.2" />
+<dependency org="org.burningwave" name="core" rev="3.0.3" />
 ```
 
 * **Groovy Grape**:
 ```
 @Grapes(
-  @Grab(group='org.burningwave', module='core', version='3.0.2')
+  @Grab(group='org.burningwave', module='core', version='3.0.3')
 )
 ```
 
 * **Leiningen**:
 ```
-[org.burningwave/core "3.0.2"]
+[org.burningwave/core "3.0.3"]
 ```
 
 * **Apache Buildr**:
 ```
-'org.burningwave:core:jar:3.0.2'
+'org.burningwave:core:jar:3.0.3'
 ```
 
 * **PURL**:
 ```
-pkg:maven/org.burningwave/core@3.0.2
+pkg:maven/org.burningwave/core@3.0.3
 ```
 
 ## ... And now the code: let's retrieve all classes of the runtime classpath!
