@@ -55,7 +55,13 @@ public class ParallelTasksManager implements Component{
 		if (executorService == null) {
 			this.executorService = Executors.newFixedThreadPool(maxParallelTasks);
 		}
-		tasks.add(CompletableFuture.runAsync(task, executorService));
+		tasks.add(CompletableFuture.runAsync(() -> {
+			try {
+				task.run();
+			} catch (Throwable exc) {
+				logError("Exception occurred", exc);
+			}
+		}, executorService));
 	}
 
 	public void waitForTasksEnding() {

@@ -274,9 +274,7 @@ public class FileSystemHelper implements Component {
 	    							scannedItemContext, fileInputStream
 	    						)
 	    					);    		
-    					} catch (Throwable exc) {
-    						logError("Could not scan " + Strings.Paths.clean(currentPath.getAbsolutePath()), exc);
-    					}
+    					} 
 	    			}
 	    		}
 	    	});		
