@@ -496,7 +496,7 @@ public class ComponentContainer implements ComponentSupplier {
 		);
 	}
 	
-	public void clear() {
+	public ComponentSupplier clear() {
 		components.forEach((type, instance) -> { 
 			try {
 				instance.close();
@@ -505,6 +505,7 @@ public class ComponentContainer implements ComponentSupplier {
 			}
 			components.remove(type);
 		});
+		return this;
 	}
 	
 	@Override
