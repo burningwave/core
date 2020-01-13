@@ -43,6 +43,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.Throwables;
@@ -60,6 +61,7 @@ public class FileSystemItem implements Component {
 	private Set<FileSystemItem> children;
 	private Set<FileSystemItem> allChildren;
 	private Boolean exists;
+	private ZipInputStream.Entry.Detached zippedItem;
 	
 	private FileSystemItem(String realAbsolutePath) {
 		realAbsolutePath = Strings.Paths.clean(realAbsolutePath);
@@ -155,7 +157,7 @@ public class FileSystemItem implements Component {
 				}
 			}
 			Set<ZipInputStream.Entry.Detached> zipEntryWrappers = zIS.findAllAndConvert(
-				zipEntryPredicate, true
+				zipEntryPredicate, false
 			);
 			if (!zipEntryWrappers.isEmpty()) {
 				ZipInputStream.Entry.Detached zipEntryWrapper = Collections.max(
@@ -170,6 +172,7 @@ public class FileSystemItem implements Component {
 					relativePath2 = relativePath2.replaceFirst("\\/", "");
 				}
 				if (relativePath2.isEmpty()) {
+					this.zippedItem = zipEntryWrapper;
 					return zipEntryWrapper.getName() + (!zipEntryWrapper.isDirectory() && Streams.isArchive(zipEntryWrapper.toByteBuffer()) ? ZIP_PATH_SEPARATOR : "");
 				} else {
 					return zipEntryWrapper.getName() + ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
@@ -204,7 +207,7 @@ public class FileSystemItem implements Component {
 				if (conventionedPath.endsWith("/")) {
 					int offset = -1;
 					if (conventionedPath.endsWith("//")) {
-						offset = -2;
+						offset = -ZIP_PATH_SEPARATOR.length();
 					}
 					conventionedPath = conventionedPath.substring(0, conventionedPath.length() + offset);	
 				}
@@ -227,12 +230,32 @@ public class FileSystemItem implements Component {
 		} else {
 			String conventionedAbsolutePath = getConventionedAbsolutePath();
 			if (isContainer()) {
-				if (isCompressed() || isArchive()) {
+				if (zippedItem != null) {
+					if (isArchive()) {
+						Supplier<ZipInputStream> zipInputStreamSupplier = () -> 
+							ZipInputStream.create(
+								zippedItem
+							)
+						;
+						children = getChildren(zipInputStreamSupplier, "");
+					} else if (isFolder()) {
+						Supplier<ZipInputStream> zipInputStreamSupplier = () -> 
+							zippedItem.getZipInputStream()
+						;
+						children = getChildren(
+							zipInputStreamSupplier, 
+							conventionedAbsolutePath.substring(conventionedAbsolutePath.lastIndexOf(ZIP_PATH_SEPARATOR) + ZIP_PATH_SEPARATOR.length())
+						);
+					}
+				} else if (isCompressed() || isArchive()) {
 					String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(ZIP_PATH_SEPARATOR));
 					File file = new File(zipFilePath);
 					if (file.exists()) {
 						try (FileInputStream fIS = FileInputStream.create(file)) {
-							children = getChildren(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + ZIP_PATH_SEPARATOR, ""));
+							children = getChildren(() -> 
+								ZipInputStream.create(fIS), 
+								conventionedAbsolutePath.replaceFirst(zipFilePath + ZIP_PATH_SEPARATOR, "")
+							);
 						}
 					}
 				} else {
@@ -275,21 +298,20 @@ public class FileSystemItem implements Component {
 		return allChildren;
 	}
 	
-	private Set<FileSystemItem> getChildren(String zipFilePath, InputStream inputStream, String itemToSearch) {
-		try (ZipInputStream zipInputStream = ZipInputStream.create(zipFilePath, inputStream)) {
+	private Set<FileSystemItem> getChildren(Supplier<ZipInputStream> zipInputStreamSupplier, String itemToSearch) {
+		try (ZipInputStream zipInputStream = zipInputStreamSupplier.get()) {
 			if (itemToSearch.contains(ZIP_PATH_SEPARATOR)) {
 				String zipEntryNameOfNestedZipFile = itemToSearch.substring(0, itemToSearch.indexOf(ZIP_PATH_SEPARATOR));
 				ZipInputStream.Entry.Detached zipEntryWrapper = zipInputStream.findFirstAndConvert(
 					zEntry -> zEntry.getName().equals(zipEntryNameOfNestedZipFile),
-					true
+					false
 				);
 				if (zipEntryWrapper == null) {
 					return null;
 				}
 				try (InputStream iss = zipEntryWrapper.toInputStream()) {
 					return getChildren(
-						zipEntryWrapper.getAbsolutePath(),
-						zipEntryWrapper.toInputStream(), 
+						() -> ZipInputStream.create(zipEntryWrapper.getAbsolutePath(), zipEntryWrapper.toInputStream()), 
 						itemToSearch.replaceFirst(zipEntryNameOfNestedZipFile + ZIP_PATH_SEPARATOR, "")
 					);
 				} catch (IOException exc) {
@@ -317,7 +339,12 @@ public class FileSystemItem implements Component {
 
 	private String getConventionedAbsolutePath() {
 		if (absolutePath.getValue() == null && exists == null) {
-			absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
+			try {
+				absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
+			} catch (java.lang.StringIndexOutOfBoundsException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			if (!exists) {
 				FILE_SYSTEM_ITEMS.remove(absolutePath.getKey());
 			}
@@ -388,7 +415,7 @@ public class FileSystemItem implements Component {
 				String zipEntryNameOfNestedZipFile = itemToSearch.substring(0, itemToSearch.indexOf(ZIP_PATH_SEPARATOR));
 				ZipInputStream.Entry.Detached zipEntry = zipInputStream.findFirstAndConvert(
 					zEntry -> zEntry.getName().equals(zipEntryNameOfNestedZipFile),
-					true
+					false
 				);
 				itemToSearch = itemToSearch.replaceFirst(zipEntryNameOfNestedZipFile + ZIP_PATH_SEPARATOR, "");
 				if (Strings.isNotEmpty(itemToSearch)) {
@@ -404,7 +431,7 @@ public class FileSystemItem implements Component {
 				final String iTS = itemToSearch;
 				ZipInputStream.Entry.Detached zipEntry = zipInputStream.findFirstAndConvert(
 					zEntry -> zEntry.getName().equals(iTS),
-					true
+					false
 				);
 				return zipEntry.toByteBuffer();
 			}
