@@ -4,9 +4,7 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.io.FileSystemItem;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.suite.api.ExcludeTags;
 
-@ExcludeTags("Heavy")
 public class FileSystemItemTest extends BaseTest {
 	
 	@Test

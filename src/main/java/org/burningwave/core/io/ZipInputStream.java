@@ -388,7 +388,8 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 			private String name;
 			private String absolutePath;
 			private Boolean isDirectory;
-			private ZipInputStream zipInputStream;
+			private String zipInputStreamName;
+			private ByteBuffer zipInputStreamByteBuffer;
 			
 			Detached(Entry zipEntry) {
 				this.content = zipEntry.content;
@@ -396,11 +397,12 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 				this.absolutePath = zipEntry.getAbsolutePath();
 				this.isDirectory = zipEntry.isDirectory();
 				ZipInputStream temp = zipEntry.getZipInputStream();
-				this.zipInputStream = ZipInputStream.create(temp.getName(), temp.toByteBuffer());
+				zipInputStreamName = temp.getName();
+				zipInputStreamByteBuffer = temp.toByteBuffer();
 			}
 			
 			public ZipInputStream getZipInputStream() {
-				return zipInputStream;
+				return ZipInputStream.create(zipInputStreamName, zipInputStreamByteBuffer);
 			}
 			
 			public byte[] toByteArray() {
@@ -409,13 +411,15 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 
 			public ByteBuffer toByteBuffer() {
 				if (content == null) {
-					synchronized (zipInputStream) {
+					synchronized (zipInputStreamByteBuffer) {
 						if (content == null) {
-							ByteBuffer content = zipInputStream.findFirstAndConvert((entry) -> 
-								entry.getName().equals(getName()), zEntry -> 
-								zEntry.toByteBuffer(), true
-							);
-							this.content = Streams.shareContent(content);
+							try (ZipInputStream zipInputStream = getZipInputStream()) {
+								ByteBuffer content = zipInputStream.findFirstAndConvert((entry) -> 
+									entry.getName().equals(getName()), zEntry -> 
+									zEntry.toByteBuffer(), true
+								);
+								this.content = Streams.shareContent(content);
+							}
 						}
 					}
 				}
