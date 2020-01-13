@@ -46,6 +46,7 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.common.Streams;
 import org.burningwave.core.function.ThrowingRunnable;
+import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.ZipInputStream.Entry.Detached;
 
 public class ZipInputStream extends java.util.zip.ZipInputStream implements Serializable, Component {
@@ -153,19 +154,24 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	
 	public Entry getNextEntry(boolean loadZipEntryData) {
 		ThrowingRunnable.run(() -> {
-				try {
-					currentZipEntry = (Entry)super.getNextEntry();
-				} catch (ZipException exc) {
-					String message = exc.getMessage();
-					logWarn("Could not open zipEntry of {}: {}", getName(), message);
-				}
+			try {
+				currentZipEntry = (Entry)super.getNextEntry();
+			} catch (ZipException exc) {
+				String message = exc.getMessage();
+				logWarn("Could not open zipEntry of {}: {}", getName(), message);
 			}
-		);
-		if (loadZipEntryData) {
+		});
+		if (currentZipEntry != null && loadZipEntryData) {
 			currentZipEntry.loadContent();
 		}
 		return currentZipEntry;
 	}		
+	
+	public Detached getNextEntryAsDetached(boolean loadZipEntryData) {
+		return ThrowingSupplier.get(() ->
+			Optional.of(getNextEntry(loadZipEntryData)).map(zipEntry ->	zipEntry.convert()).orElseGet(() -> null)
+		);
+	}
 	
 	public <T> Set<T> findAllAndConvert(
 		Predicate<Entry> zipEntryPredicate, 
