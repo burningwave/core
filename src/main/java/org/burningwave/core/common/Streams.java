@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.function.Function;
 
@@ -95,7 +96,7 @@ public class Streams {
 	
 	public static byte[] toByteArray(ByteBuffer byteBuffer) {
     	byteBuffer = shareContent(byteBuffer);
-    	byte[] result = new byte[byteBuffer.limit()];
+    	byte[] result = new byte[((Buffer)byteBuffer).limit()];
     	byteBuffer.get(result, 0, result.length);
         return result;
     }
@@ -103,7 +104,7 @@ public class Streams {
 	public static ByteBuffer shareContent(ByteBuffer byteBuffer) {
 		ByteBuffer duplicated = byteBuffer.duplicate();
 		if (byteBuffer.position() > 0) {
-			duplicated.flip();
+			((Buffer)duplicated).flip();
 		}		
 		return duplicated;
 	}

@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.Set;
@@ -335,7 +336,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		public long getSize() {
 			long size = super.getSize();
 			if (size < 0) {
-				size = toByteBuffer().limit();
+				size = ((Buffer)toByteBuffer()).limit();
 			}
 			return size;
 		}		

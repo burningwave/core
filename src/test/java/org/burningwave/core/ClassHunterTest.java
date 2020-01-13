@@ -498,7 +498,8 @@ public class ClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getItemsFound(),
+			true
 		);
 	}
 	

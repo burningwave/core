@@ -30,6 +30,7 @@ package org.burningwave.core.io;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 import org.burningwave.core.common.Streams;
@@ -95,7 +96,7 @@ public class ByteBufferOutputStream extends OutputStream {
     }
 
     public int limit() {
-        return buffer.limit();
+        return ((Buffer)buffer).limit();
     }
 
     public void position(int position) {
@@ -113,12 +114,12 @@ public class ByteBufferOutputStream extends OutputStream {
     }
 
     private void expandBuffer(int remainingRequired) {
-        int expandSize = Math.max((int) (buffer.limit() * REALLOCATION_FACTOR), buffer.position() + remainingRequired);
+        int expandSize = Math.max((int) (((Buffer)buffer).limit() * REALLOCATION_FACTOR), buffer.position() + remainingRequired);
         ByteBuffer temp = Streams.DEFAULT_BYTE_BUFFER_ALLOCATION.apply(expandSize);
         int limit = limit();
-        buffer.flip();
+        ((Buffer)buffer).flip();
         temp.put(buffer);
-        buffer.limit(limit);
+        ((Buffer)buffer).limit(limit);
         buffer.position(initialPosition);
         buffer = temp;
     }
