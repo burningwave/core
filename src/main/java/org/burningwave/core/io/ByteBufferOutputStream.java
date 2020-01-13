@@ -55,7 +55,7 @@ public class ByteBufferOutputStream extends OutputStream {
 
     public ByteBufferOutputStream(ByteBuffer buffer, boolean closeable) {
         this.buffer = buffer;
-        this.initialPosition = buffer.position();
+        this.initialPosition = ((Buffer)buffer).position();
         this.initialCapacity = buffer.capacity();
         this.closeable = closeable;
     }
@@ -88,7 +88,7 @@ public class ByteBufferOutputStream extends OutputStream {
     }
 
     public int position() {
-        return buffer.position();
+        return ((Buffer)buffer).position();
     }
 
     public int remaining() {
@@ -100,8 +100,8 @@ public class ByteBufferOutputStream extends OutputStream {
     }
 
     public void position(int position) {
-        ensureRemaining(position - buffer.position());
-        buffer.position(position);
+        ensureRemaining(position - ((Buffer)buffer).position());
+        ((Buffer)buffer).position(position);
     }
 
     public int initialCapacity() {
@@ -114,13 +114,13 @@ public class ByteBufferOutputStream extends OutputStream {
     }
 
     private void expandBuffer(int remainingRequired) {
-        int expandSize = Math.max((int) (((Buffer)buffer).limit() * REALLOCATION_FACTOR), buffer.position() + remainingRequired);
+        int expandSize = Math.max((int) (((Buffer)buffer).limit() * REALLOCATION_FACTOR), ((Buffer)buffer).position() + remainingRequired);
         ByteBuffer temp = Streams.DEFAULT_BYTE_BUFFER_ALLOCATION.apply(expandSize);
         int limit = limit();
         ((Buffer)buffer).flip();
         temp.put(buffer);
         ((Buffer)buffer).limit(limit);
-        buffer.position(initialPosition);
+        ((Buffer)buffer).position(initialPosition);
         buffer = temp;
     }
     

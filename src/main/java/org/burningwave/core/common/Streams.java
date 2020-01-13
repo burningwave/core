@@ -103,7 +103,7 @@ public class Streams {
 
 	public static ByteBuffer shareContent(ByteBuffer byteBuffer) {
 		ByteBuffer duplicated = byteBuffer.duplicate();
-		if (byteBuffer.position() > 0) {
+		if (((Buffer)byteBuffer).position() > 0) {
 			((Buffer)duplicated).flip();
 		}		
 		return duplicated;
