@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -78,6 +79,10 @@ public class BaseTest implements Component {
 	}
 	
 	<T extends AutoCloseable> void testNotEmpty(Supplier<T> autoCloaseableSupplier, Function<T, Collection<?>> collSupplier) {
+		testNotEmpty(autoCloaseableSupplier, collSupplier, false);
+	}
+	
+	<T extends AutoCloseable> void testNotEmpty(Supplier<T> autoCloaseableSupplier, Function<T, Collection<?>> collSupplier, boolean printAllElements) {
 		long initialTime = System.currentTimeMillis();
 		Collection<?> coll = null;
 		boolean isNotEmpty = false;
@@ -85,6 +90,11 @@ public class BaseTest implements Component {
 			coll = collSupplier.apply(collectionSupplier);
 			logInfo("Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 			isNotEmpty = !coll.isEmpty();
+			if (isNotEmpty && printAllElements) {
+				coll.forEach(element -> logDebug(
+					Optional.ofNullable(element.toString()).orElseGet(() -> null)
+				));
+			}
 		} catch (Throwable exc) {
 			logError("Exception occurred", exc);
 		}
