@@ -159,12 +159,7 @@ public abstract class ClassHunterAbst<K, R extends ClassHunterAbst.SearchResult<
 		
 		void addItemFound(String path, K key, Class<?> item, Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersForCriteria) {
 			super.addItemFound(path, key, item);
-			try {
-				this.membersFound.put(item, membersForCriteria);
-			} catch (NullPointerException exc) {
-				// TODO Auto-generated catch block
-				exc.printStackTrace();
-			}
+			this.membersFound.put(item, membersForCriteria);
 			membersForCriteria.forEach((criteria, memberList) -> {
 				Collection<Member> coll = membersFoundFlatMap.get(criteria);
 				if (coll == null) {								
