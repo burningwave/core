@@ -224,6 +224,16 @@ public class FileSystemItem implements Component {
 		}
 	}
 	
+	public void refresh() {
+		children = null;
+		allChildren = null;
+		exists = null;
+		zippedItem = null;
+		absolutePath.setValue(null);
+		parent = null;
+		getConventionedAbsolutePath();		
+	}
+	
 	public Set<FileSystemItem> getChildren() {
 		if (children != null) {
 			return children;
@@ -247,6 +257,7 @@ public class FileSystemItem implements Component {
 							conventionedAbsolutePath.substring(conventionedAbsolutePath.lastIndexOf(ZIP_PATH_SEPARATOR) + ZIP_PATH_SEPARATOR.length())
 						);
 					}
+					zippedItem = null;
 				} else if (isCompressed() || isArchive()) {
 					String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(ZIP_PATH_SEPARATOR));
 					File file = new File(zipFilePath);
@@ -339,12 +350,7 @@ public class FileSystemItem implements Component {
 
 	private String getConventionedAbsolutePath() {
 		if (absolutePath.getValue() == null && exists == null) {
-			try {
-				absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
-			} catch (java.lang.StringIndexOutOfBoundsException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
 			if (!exists) {
 				FILE_SYSTEM_ITEMS.remove(absolutePath.getKey());
 			}
