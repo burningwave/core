@@ -120,7 +120,9 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	
 	public ZipInputStream duplicate() {
 		ZipInputStream zipInputStream = create(getName(), toByteBuffer());
-		zipInputStream.parent = parent;
+		if (parent != null) {
+			zipInputStream.parent = parent.duplicate();
+		}
 		return zipInputStream;
 	}
 	
