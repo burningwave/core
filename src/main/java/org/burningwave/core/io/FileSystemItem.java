@@ -154,11 +154,11 @@ public class FileSystemItem implements Component {
 					temp = temp2;
 				}
 			}
-			Set<ZipInputStream.Entry.Wrapper> zipEntryWrappers = zIS.findAllAndConvert(
+			Set<ZipInputStream.Entry.Detached> zipEntryWrappers = zIS.findAllAndConvert(
 				zipEntryPredicate, true
 			);
 			if (!zipEntryWrappers.isEmpty()) {
-				ZipInputStream.Entry.Wrapper zipEntryWrapper = Collections.max(
+				ZipInputStream.Entry.Detached zipEntryWrapper = Collections.max(
 					zipEntryWrappers, Comparator.comparing(zipEntryW -> zipEntryW.getName().split("/").length)
 				);
 				String relativePath2 = zipEntryWrapper.getName();
@@ -279,7 +279,7 @@ public class FileSystemItem implements Component {
 		try (ZipInputStream zipInputStream = ZipInputStream.create(zipFilePath, inputStream)) {
 			if (itemToSearch.contains(ZIP_PATH_SEPARATOR)) {
 				String zipEntryNameOfNestedZipFile = itemToSearch.substring(0, itemToSearch.indexOf(ZIP_PATH_SEPARATOR));
-				ZipInputStream.Entry.Wrapper zipEntryWrapper = zipInputStream.findFirstAndConvert(
+				ZipInputStream.Entry.Detached zipEntryWrapper = zipInputStream.findFirstAndConvert(
 					zEntry -> zEntry.getName().equals(zipEntryNameOfNestedZipFile),
 					true
 				);
@@ -386,7 +386,7 @@ public class FileSystemItem implements Component {
 		try (ZipInputStream zipInputStream = ZipInputStream.create(zipFilePath, inputStream)) {
 			if (itemToSearch.contains(ZIP_PATH_SEPARATOR)) {
 				String zipEntryNameOfNestedZipFile = itemToSearch.substring(0, itemToSearch.indexOf(ZIP_PATH_SEPARATOR));
-				ZipInputStream.Entry.Wrapper zipEntry = zipInputStream.findFirstAndConvert(
+				ZipInputStream.Entry.Detached zipEntry = zipInputStream.findFirstAndConvert(
 					zEntry -> zEntry.getName().equals(zipEntryNameOfNestedZipFile),
 					true
 				);
@@ -402,7 +402,7 @@ public class FileSystemItem implements Component {
 				}
 			} else {
 				final String iTS = itemToSearch;
-				ZipInputStream.Entry.Wrapper zipEntry = zipInputStream.findFirstAndConvert(
+				ZipInputStream.Entry.Detached zipEntry = zipInputStream.findFirstAndConvert(
 					zEntry -> zEntry.getName().equals(iTS),
 					true
 				);
