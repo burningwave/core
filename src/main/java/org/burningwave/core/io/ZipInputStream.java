@@ -46,7 +46,7 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.common.Streams;
 import org.burningwave.core.function.ThrowingRunnable;
-import org.burningwave.core.io.ZipInputStream.Entry.Wrapper;
+import org.burningwave.core.io.ZipInputStream.Entry.Detached;
 
 public class ZipInputStream extends java.util.zip.ZipInputStream implements Serializable, Component {
 
@@ -197,26 +197,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		return null;
 	}
 	
-	public Entry.Wrapper findFirstAndConvert(Predicate<Entry> zipEntryPredicate, boolean loadZipEntryData) {
-		return findFirstAndConvert(
-			zipEntryPredicate,
-			zEntry -> new Entry.Wrapper(
-				zEntry.content, zEntry.getName(), zEntry.getAbsolutePath(), zEntry.isDirectory()
-			),
-			loadZipEntryData		
-		);
-	}
-	
-	public Set<Entry.Wrapper> findAllAndConvert(Predicate<Entry> zipEntryPredicate, boolean loadZipEntryData) {
-		return findAllAndConvert(
-			zipEntryPredicate,
-			zEntry -> new Entry.Wrapper(
-				zEntry.content, zEntry.getName(), zEntry.getAbsolutePath(), zEntry.isDirectory()
-			),
-			loadZipEntryData		
-		);
-	}
-	
 	public <T> T findOneAndConvert(Predicate<Entry> zipEntryPredicate, Function<Entry, T> tSupplier, boolean loadZipEntryData) {
 		Set<T> entriesFound = findAllAndConvert(
 			zipEntryPredicate,
@@ -229,11 +209,31 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		return entriesFound.stream().findFirst().orElseGet(() -> null);
 	}
 	
-	public Entry.Wrapper findOneAndConvert(Predicate<Entry> zipEntryPredicate, boolean loadZipEntryData) {
+	public Entry.Detached findOneAndConvert(Predicate<Entry> zipEntryPredicate, boolean loadZipEntryData) {
 		return findOneAndConvert(
 			zipEntryPredicate,
-			zEntry -> new Entry.Wrapper(
-				zEntry.content, zEntry.getName(), zEntry.getAbsolutePath(), zEntry.isDirectory()
+			zEntry -> new Entry.Detached(
+				zEntry
+			),
+			loadZipEntryData		
+		);
+	}
+	
+	public Entry.Detached findFirstAndConvert(Predicate<Entry> zipEntryPredicate, boolean loadZipEntryData) {
+		return findFirstAndConvert(
+			zipEntryPredicate,
+			zEntry -> new Entry.Detached(
+				zEntry
+			),
+			loadZipEntryData		
+		);
+	}
+	
+	public Set<Entry.Detached> findAllAndConvert(Predicate<Entry> zipEntryPredicate, boolean loadZipEntryData) {
+		return findAllAndConvert(
+			zipEntryPredicate,
+			zEntry -> new Entry.Detached(
+				zEntry
 			),
 			loadZipEntryData		
 		);
@@ -243,7 +243,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		return currentZipEntry;
 	}
 	
-	public Wrapper convertCurrentZipEntry() {
+	public Detached convertCurrentZipEntry() {
 		return currentZipEntry.convert();
 	}
 	
@@ -320,13 +320,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		private void loadContent() {
 			if (!contentHasBeenLoaded()) {
 				if (zipInputStream.currentZipEntry != this) {
-					try (ZipInputStream zipInputStreamParent = ZipInputStream.create(zipInputStream.getName(), zipInputStream.toByteBuffer())) {
-						Entry zipEntry = zipInputStreamParent.findFirstAndConvert((entry) -> 
-							entry.getName().equals(getName()), zEntry -> 
-							zEntry, false
-						);
-						this.content = zipEntry.toByteBuffer();
-					}
+					throw Throwables.toRuntimeException("Entry and his ZipInputStream are not aligned");
 				}
 				try (ByteBufferOutputStream bBOS = createDataBytesContainer()) {
 					Streams.copy(zipInputStream, bBOS);
@@ -355,9 +349,9 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 			return new ByteBufferInputStream(toByteBuffer());
 		}
 		
-		public Wrapper convert() {
-			return new Entry.Wrapper(
-				toByteBuffer(), getName(), getAbsolutePath(), isDirectory()
+		public Detached convert() {
+			return new Entry.Detached(
+				this
 			);
 		}		
 		
@@ -389,24 +383,42 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 			zipInputStream = null;
 		}
 		
-		public static class Wrapper implements Component {
+		public static class Detached implements Component {
 			private ByteBuffer content;
 			private String name;
 			private String absolutePath;
 			private Boolean isDirectory;
+			private ZipInputStream zipInputStream;
 			
-			Wrapper(ByteBuffer content, String name, String absolutePath, boolean isDirectory) {
-				this.content = content;
-				this.name = name;
-				this.absolutePath = absolutePath;
-				this.isDirectory = isDirectory;
+			Detached(Entry zipEntry) {
+				this.content = zipEntry.content;
+				this.name = zipEntry.getName();
+				this.absolutePath = zipEntry.getAbsolutePath();
+				this.isDirectory = zipEntry.isDirectory();
+				ZipInputStream temp = zipEntry.getZipInputStream();
+				this.zipInputStream = ZipInputStream.create(temp.getName(), temp.toByteBuffer());
 			}
-
+			
+			public ZipInputStream getZipInputStream() {
+				return zipInputStream;
+			}
+			
 			public byte[] toByteArray() {
-				return Streams.toByteArray(content);
+				return Streams.toByteArray(toByteBuffer());
 			}
 
 			public ByteBuffer toByteBuffer() {
+				if (content == null) {
+					synchronized (zipInputStream) {
+						if (content == null) {
+							ByteBuffer content = zipInputStream.findFirstAndConvert((entry) -> 
+								entry.getName().equals(getName()), zEntry -> 
+								zEntry.toByteBuffer(), true
+							);
+							this.content = Streams.shareContent(content);
+						}
+					}
+				}
 				return Streams.shareContent(content);
 			}
 			
