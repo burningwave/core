@@ -26,21 +26,34 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.common;
+package org.burningwave.core.jvm;
 
 import java.lang.reflect.Method;
 
-public class JVMChecker {
+import org.burningwave.core.Component;
 
-    private static final String OS_ARCH = System.getProperty("os.arch");
-    private static final boolean JRE_IS_64BIT;
-    private static final boolean JRE_IS_64BIT_HOTSPOT;
-    private static final boolean JRE_IS_32BIT;
-    private final static boolean COMPRESSED_REFS_ENABLED;
-    private static final String MANAGEMENT_FACTORY_CLASS = "java.lang.management.ManagementFactory";
-    private static final String HOTSPOT_BEAN_CLASS = "com.sun.management.HotSpotDiagnosticMXBean";
+public class JVMChecker implements Component {
 
-    static {
+    private final String osArch;
+    private boolean is64Bit;
+    private boolean is64BitHotspot;
+    private boolean is32Bit;
+    private boolean compressedRefsEnabled;
+    private final String managementFactoryClass;
+    private final String hotSpotBeanClass;
+    
+    public JVMChecker() {
+    	osArch = System.getProperty("os.arch");
+    	managementFactoryClass = "java.lang.management.ManagementFactory";
+    	hotSpotBeanClass = "com.sun.management.HotSpotDiagnosticMXBean";
+    	init();
+    }
+    
+    public static JVMChecker create() {
+    	return new JVMChecker();
+    }
+    
+    private void init() {
         boolean is64Bit = false;
         boolean is32Bit = false;
         final String x = System.getProperty("sun.arch.data.model");
@@ -48,7 +61,7 @@ public class JVMChecker {
             is64Bit = x.contains("64");
             is32Bit = x.contains("32");
         } else {
-            if (OS_ARCH != null && OS_ARCH.contains("64")) {
+            if (osArch != null && osArch.contains("64")) {
                 is64Bit = true;
             } else {
                 is64Bit = false;
@@ -59,8 +72,8 @@ public class JVMChecker {
 
         if (is64Bit) {
             try {
-                final Class<?> beanClazz = Class.forName(HOTSPOT_BEAN_CLASS);
-                final Object hotSpotBean = Class.forName(MANAGEMENT_FACTORY_CLASS).getMethod("getPlatformMXBean", Class.class)
+                final Class<?> beanClazz = Class.forName(hotSpotBeanClass);
+                final Object hotSpotBean = Class.forName(managementFactoryClass).getMethod("getPlatformMXBean", Class.class)
                         .invoke(null, beanClazz);
                 if (hotSpotBean != null) {
                     is64BitHotspot = true;
@@ -76,29 +89,22 @@ public class JVMChecker {
                 is64BitHotspot = false;
             }
         }
-        JRE_IS_64BIT = is64Bit;
-        JRE_IS_64BIT_HOTSPOT = is64BitHotspot;
-        JRE_IS_32BIT = is32Bit;
-        COMPRESSED_REFS_ENABLED = compressedOops;
+        this.is64Bit = is64Bit;
+        this.is64BitHotspot = is64BitHotspot;
+        this.is32Bit = is32Bit;
+        this.compressedRefsEnabled = compressedOops;
     }
 
-    public static boolean isCompressedOopsOffOn64Bit() {
-        return JRE_IS_64BIT_HOTSPOT && !COMPRESSED_REFS_ENABLED;
+    public boolean isCompressedOopsOffOn64Bit() {
+        return is64BitHotspot && !compressedRefsEnabled;
     }
 
-    public static boolean is32Bit() {
-    	return JRE_IS_32BIT;
+    public boolean is32Bit() {
+    	return is32Bit;
     }
     
-    public static boolean is64Bit() {
-    	return JRE_IS_64BIT;
-    }
-    
-    public static void main(final String[] args) {
-        System.out.println("Is 64bit Hotspot JVM: " + JRE_IS_64BIT_HOTSPOT);
-        System.out.println("Compressed Oops enabled: " + COMPRESSED_REFS_ENABLED);
-        System.out.println("isCompressedOopsOffOn64Bit: " + isCompressedOopsOffOn64Bit());
-
+    public boolean is64Bit() {
+    	return is64Bit;
     }
 
 }

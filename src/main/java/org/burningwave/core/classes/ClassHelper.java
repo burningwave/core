@@ -48,11 +48,11 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.common.LowLevelObjectsHandler;
 import org.burningwave.core.common.Streams;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.ByteBufferInputStream;
+import org.burningwave.core.jvm.LowLevelObjectsHandler;
 import org.objectweb.asm.ClassReader;
 
 

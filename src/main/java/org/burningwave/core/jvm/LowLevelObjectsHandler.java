@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.common;
+package org.burningwave.core.jvm;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -52,6 +52,8 @@ import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodCriteria;
+import org.burningwave.core.common.Streams;
+import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.TriFunction;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
@@ -61,6 +63,7 @@ import sun.misc.Unsafe;
 
 @SuppressWarnings("restriction")
 public class LowLevelObjectsHandler implements Component {
+	private JVMChecker jVMChecker;
 	private IterableObjectHelper iterableObjectHelper;
 	private ClassFactory classFactory;
 	private Supplier<ClassFactory> classFactorySupplier;
@@ -87,12 +90,14 @@ public class LowLevelObjectsHandler implements Component {
 	}
 	
 	private LowLevelObjectsHandler(
+		JVMChecker jVMChecker,
 		StreamHelper streamHelper,
 		Supplier<ClassFactory> classFactorySupplier,
 		Supplier<ClassHelper> classHelperSupplier,
 		MemberFinder memberFinder,
 		IterableObjectHelper iterableObjectHelper
 	) {	
+		this.jVMChecker = jVMChecker;
 		this.streamHelper = streamHelper;
 		this.classFactorySupplier = classFactorySupplier;
 		this.classHelperSupplier = classHelperSupplier;
@@ -116,13 +121,14 @@ public class LowLevelObjectsHandler implements Component {
 	}
 	
 	public static LowLevelObjectsHandler create(
+		JVMChecker jVMChecker,
 		StreamHelper streamHelper,
 		Supplier<ClassFactory> classFactorySupplier,
 		Supplier<ClassHelper> classHelperSupplier,
 		MemberFinder memberFinder,
 		IterableObjectHelper iterableObjectHelper
 	) {
-		return new LowLevelObjectsHandler(streamHelper, classFactorySupplier, classHelperSupplier, memberFinder, iterableObjectHelper);
+		return new LowLevelObjectsHandler(jVMChecker, streamHelper, classFactorySupplier, classHelperSupplier, memberFinder, iterableObjectHelper);
 	}
 	
 	private ClassFactory getClassFactory() {
@@ -268,10 +274,10 @@ public class LowLevelObjectsHandler implements Component {
 	protected Object iterateClassLoaderFields(ClassLoader classLoader, Predicate<Object> predicate) {
 		long offset;
 		long step;
-		if (JVMChecker.is32Bit()) {
+		if (jVMChecker.is32Bit()) {
 			offset = 8;
 			step = 4;
-		} else if (!JVMChecker.isCompressedOopsOffOn64Bit()) {
+		} else if (!jVMChecker.isCompressedOopsOffOn64Bit()) {
 			offset = 12;
 			step = 4;
 		} else {

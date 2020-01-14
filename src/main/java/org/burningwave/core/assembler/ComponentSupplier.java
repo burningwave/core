@@ -45,12 +45,13 @@ import org.burningwave.core.classes.hunter.ClassHunter;
 import org.burningwave.core.classes.hunter.ClassPathHunter;
 import org.burningwave.core.classes.hunter.FSIClassHunter;
 import org.burningwave.core.classes.hunter.FSIClassPathHunter;
-import org.burningwave.core.common.LowLevelObjectsHandler;
 import org.burningwave.core.concurrent.ConcurrentHelper;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
+import org.burningwave.core.jvm.JVMChecker;
+import org.burningwave.core.jvm.LowLevelObjectsHandler;
 import org.burningwave.core.reflection.CallerRetriever;
 import org.burningwave.core.reflection.ConsumerBinder;
 import org.burningwave.core.reflection.FunctionBinder;
@@ -126,6 +127,8 @@ public interface ComponentSupplier extends Component {
 	public IterableObjectHelper getIterableObjectHelper();
 	
 	public LowLevelObjectsHandler getLowLevelObjectsHandler();
+	
+	public JVMChecker getJVMChecker();
 	
 	public ComponentSupplier clear();
 	

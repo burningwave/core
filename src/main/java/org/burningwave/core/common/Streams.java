@@ -35,13 +35,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.function.Function;
 
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.BufferSize;
 import org.burningwave.core.io.ByteBufferOutputStream;
+import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
 public class Streams {
 	//TODO: Dare la possibilià di configurare questi parametri
@@ -96,15 +96,15 @@ public class Streams {
 	
 	public static byte[] toByteArray(ByteBuffer byteBuffer) {
     	byteBuffer = shareContent(byteBuffer);
-    	byte[] result = new byte[((Buffer)byteBuffer).limit()];
+    	byte[] result = new byte[ByteBufferDelegate.limit(byteBuffer)];
     	byteBuffer.get(result, 0, result.length);
         return result;
     }
 
 	public static ByteBuffer shareContent(ByteBuffer byteBuffer) {
 		ByteBuffer duplicated = byteBuffer.duplicate();
-		if (((Buffer)byteBuffer).position() > 0) {
-			((Buffer)duplicated).flip();
+		if (ByteBufferDelegate.position(byteBuffer) > 0) {
+			ByteBufferDelegate.flip(duplicated);
 		}		
 		return duplicated;
 	}

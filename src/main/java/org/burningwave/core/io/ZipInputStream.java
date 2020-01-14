@@ -34,7 +34,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.Set;
@@ -49,6 +48,7 @@ import org.burningwave.core.common.Streams;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.ZipInputStream.Entry.Detached;
+import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
 public class ZipInputStream extends java.util.zip.ZipInputStream implements Serializable, Component {
 
@@ -336,7 +336,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		public long getSize() {
 			long size = super.getSize();
 			if (size < 0) {
-				size = ((Buffer)toByteBuffer()).limit();
+				size = ByteBufferDelegate.limit(toByteBuffer());
 			}
 			return size;
 		}		
