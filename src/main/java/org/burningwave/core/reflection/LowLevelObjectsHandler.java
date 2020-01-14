@@ -29,12 +29,15 @@
 package org.burningwave.core.reflection;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,22 +47,29 @@ import java.util.function.Supplier;
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodCriteria;
+import org.burningwave.core.classes.ClassHelper.ClassLoaderDelegate;
 import org.burningwave.core.common.JVMChecker;
+import org.burningwave.core.common.Streams;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.TriFunction;
+import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
 
 import sun.misc.Unsafe;
 
 @SuppressWarnings("restriction")
-public class LowLevelObjectHandler implements Component {
+public class LowLevelObjectsHandler implements Component {
 	private IterableObjectHelper iterableObjectHelper;
+	private ClassFactory classFactory;
+	private Supplier<ClassFactory> classFactorySupplier;
 	private Supplier<ClassHelper> classHelperSupplier;
+	private StreamHelper streamHelper;
 	private ClassHelper classHelper;
 	private MemberFinder memberFinder;
 	private Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
@@ -68,6 +78,7 @@ public class LowLevelObjectHandler implements Component {
 	private TriFunction<ClassLoader, Object, String, Package> packageRetriever;
 	private static Unsafe unsafe;
 	private Map<String, Method> classLoadersMethods;
+	private Map<String, ClassLoaderDelegate> classLoaderDelegates;
 	
 	static {
 		try {
@@ -79,17 +90,22 @@ public class LowLevelObjectHandler implements Component {
 		}
 	}
 	
-	private LowLevelObjectHandler(
+	private LowLevelObjectsHandler(
+		StreamHelper streamHelper,
+		Supplier<ClassFactory> classFactorySupplier,
 		Supplier<ClassHelper> classHelperSupplier,
 		MemberFinder memberFinder,
 		IterableObjectHelper iterableObjectHelper
 	) {	
+		this.streamHelper = streamHelper;
+		this.classFactorySupplier = classFactorySupplier;
 		this.classHelperSupplier = classHelperSupplier;
 		this.memberFinder = memberFinder;
 		this.iterableObjectHelper = iterableObjectHelper;
 		this.classLoadersClasses = new ConcurrentHashMap<>();
 		this.classLoadersPackages = new ConcurrentHashMap<>();
 		this.classLoadersMethods = new ConcurrentHashMap<>();
+		this.classLoaderDelegates = new ConcurrentHashMap<>();
 		try {
 			Class.forName("java.lang.NamedPackage");
 			packageMapTester = (object) -> object != null && object instanceof ConcurrentHashMap;
@@ -99,16 +115,25 @@ public class LowLevelObjectHandler implements Component {
 		if (findGetDefinedPackageMethod() == null) {
 			packageRetriever = (classLoader, object, packageName) -> (Package)object;
 		} else {
-			packageRetriever = (classLoader, object, packageName) -> getClassHelper().getClassLoaderDelegate("ForJDKVersionLaterThan8").getPackage(classLoader, packageName);
+			packageRetriever = (classLoader, object, packageName) -> getClassLoaderDelegate("ForJDKVersionLaterThan8").getPackage(classLoader, packageName);
 		}
 	}
 	
-	public static LowLevelObjectHandler create(
+	public static LowLevelObjectsHandler create(
+		StreamHelper streamHelper,
+		Supplier<ClassFactory> classFactorySupplier,
 		Supplier<ClassHelper> classHelperSupplier,
 		MemberFinder memberFinder,
 		IterableObjectHelper iterableObjectHelper
 	) {
-		return new LowLevelObjectHandler(classHelperSupplier, memberFinder, iterableObjectHelper);
+		return new LowLevelObjectsHandler(streamHelper, classFactorySupplier, classHelperSupplier, memberFinder, iterableObjectHelper);
+	}
+	
+	private ClassFactory getClassFactory() {
+		if (classFactory == null) {
+			classFactory = classFactorySupplier.get();
+		}
+		return classFactory;
 	}
 	
 	private ClassHelper getClassHelper() {
@@ -313,6 +338,35 @@ public class LowLevelObjectHandler implements Component {
 		}
 	}
 	
+	public ClassLoaderDelegate getClassLoaderDelegate(String name) {
+		ClassLoaderDelegate classLoaderDelegate = classLoaderDelegates.get(name);
+		if (classLoaderDelegate == null) {
+			synchronized(classLoaderDelegates) {
+				classLoaderDelegate = classLoaderDelegates.get(name);
+				if (classLoaderDelegate == null) {
+					try {
+						String sourceCode = this.streamHelper.getResourceAsStringBuffer(
+							ClassLoaderDelegate.class.getPackage().getName().replaceAll("\\.", "/") + "/" + name + ".java"
+						).toString();
+						// In case of inner classes we have more than 1 compiled source
+						Map<String, ByteBuffer> compiledSources = getClassFactory().build(sourceCode);
+						Map<String, Class<?>> injectedClasses = new LinkedHashMap<>();
+						compiledSources.forEach((className, byteCode) -> {
+							byte[] byteCodeArray = Streams.toByteArray(compiledSources.get(className));
+							injectedClasses.put(className, defineAnonymousClass(ClassLoaderDelegate.class, byteCodeArray, null));
+						});
+						classLoaderDelegate = (ClassLoaderDelegate)injectedClasses.get(getClassHelper().extractClassName(sourceCode)).getConstructor().newInstance();
+						classLoaderDelegates.put(name, classLoaderDelegate);
+					} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+							| InvocationTargetException | NoSuchMethodException | SecurityException exc) {
+						throw Throwables.toRuntimeException(exc);
+					}
+				}
+			}
+		}
+		return classLoaderDelegate;
+	}
+	
 	@Override
 	public void close() {
 		this.classLoadersClasses.clear();
@@ -320,13 +374,42 @@ public class LowLevelObjectHandler implements Component {
 		this.classLoadersPackages.clear();
 		this.classLoadersPackages = null;
 		this.classLoadersMethods.clear();
+		this.classLoaderDelegates.clear();
+		this.classLoaderDelegates = null;
 		this.classLoadersMethods = null;
 		this.iterableObjectHelper = null;
+		this.streamHelper = null;
+		this.classFactorySupplier = null;
+		this.classFactory = null;
 		this.classHelperSupplier = null;
 		this.classHelper = null;
 		this.memberFinder = null;
 		this.packageMapTester = null;
 		this.packageRetriever = null;
 	}
-
+	
+	@SuppressWarnings("unchecked")
+	public static class ByteBufferDelegate {
+		
+		public static int limit(ByteBuffer buffer) {
+			return ((Buffer)buffer).limit();
+		}
+		
+		public static int position(ByteBuffer buffer) {
+			return ((Buffer)buffer).position();
+		}
+		
+		public static <T extends Buffer> T limit(ByteBuffer buffer, int newLimit) {
+			return (T)((Buffer)buffer).limit(newLimit);
+		}
+		
+		public static <T extends Buffer> T position(ByteBuffer buffer, int newPosition) {
+			return (T)((Buffer)buffer).position(newPosition);
+		}
+		
+		public static <T extends Buffer> T flip(T buffer) {
+			return (T)((Buffer)buffer).flip();
+		}
+		
+	}	
 }

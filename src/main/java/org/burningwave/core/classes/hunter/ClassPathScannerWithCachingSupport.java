@@ -163,6 +163,12 @@ public abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchC
 		) {}
 	}
 	
+	protected void clearCache() {
+		cache.entrySet().stream().forEach(entry -> {
+			entry.getValue().clear();
+		});
+		cache.clear();
+	}
 
 	void loadCache(C context, Collection<String> paths) {
 		CheckResult checkPathsResult = pathHelper.check(cache.keySet(), paths);
@@ -245,10 +251,7 @@ public abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchC
 	
 	@Override
 	public void close() {
-		cache.clear();
-		cache.entrySet().stream().forEach(entry -> {
-			entry.getValue().clear();
-		});
+		clearCache();
 		cache = null;
 		byteCodeHunterSupplier = null;
 		classHelper = null;

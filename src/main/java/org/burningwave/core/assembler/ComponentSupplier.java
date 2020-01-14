@@ -54,7 +54,7 @@ import org.burningwave.core.reflection.CallerRetriever;
 import org.burningwave.core.reflection.ConsumerBinder;
 import org.burningwave.core.reflection.FunctionBinder;
 import org.burningwave.core.reflection.FunctionalInterfaceFactory;
-import org.burningwave.core.reflection.LowLevelObjectHandler;
+import org.burningwave.core.reflection.LowLevelObjectsHandler;
 import org.burningwave.core.reflection.PropertyAccessor;
 import org.burningwave.core.reflection.RunnableBinder;
 import org.burningwave.core.reflection.SupplierBinder;
@@ -125,7 +125,7 @@ public interface ComponentSupplier extends Component {
 	
 	public IterableObjectHelper getIterableObjectHelper();
 	
-	public LowLevelObjectHandler getLowLevelObjectsHandler();
+	public LowLevelObjectsHandler getLowLevelObjectsHandler();
 	
 	public ComponentSupplier clear();
 	

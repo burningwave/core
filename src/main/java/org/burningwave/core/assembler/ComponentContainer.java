@@ -66,7 +66,7 @@ import org.burningwave.core.reflection.CallerRetriever;
 import org.burningwave.core.reflection.ConsumerBinder;
 import org.burningwave.core.reflection.FunctionBinder;
 import org.burningwave.core.reflection.FunctionalInterfaceFactory;
-import org.burningwave.core.reflection.LowLevelObjectHandler;
+import org.burningwave.core.reflection.LowLevelObjectsHandler;
 import org.burningwave.core.reflection.PropertyAccessor;
 import org.burningwave.core.reflection.RunnableBinder;
 import org.burningwave.core.reflection.SupplierBinder;
@@ -474,9 +474,11 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 
 	@Override
-	public LowLevelObjectHandler getLowLevelObjectsHandler() {
-		return getOrCreate(LowLevelObjectHandler.class, () ->
-			LowLevelObjectHandler.create(
+	public LowLevelObjectsHandler getLowLevelObjectsHandler() {
+		return getOrCreate(LowLevelObjectsHandler.class, () ->
+			LowLevelObjectsHandler.create(
+				getStreamHelper(),
+				() -> getClassFactory(),
 				() -> getClassHelper(),
 				getMemberFinder(),
 				getIterableObjectHelper()
@@ -489,7 +491,6 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(ClassHelper.class, () ->
 			ClassHelper.create(
 				() -> getClassFactory(),
-				getStreamHelper(),
 				getLowLevelObjectsHandler()
 				
 			)

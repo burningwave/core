@@ -34,7 +34,6 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -53,30 +52,25 @@ import org.burningwave.core.common.Streams;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.ByteBufferInputStream;
-import org.burningwave.core.io.StreamHelper;
-import org.burningwave.core.reflection.LowLevelObjectHandler;
+import org.burningwave.core.reflection.LowLevelObjectsHandler;
 import org.objectweb.asm.ClassReader;
 
 
 public class ClassHelper implements Component {
-	private LowLevelObjectHandler lowLevelObjectsHandler;
+	private LowLevelObjectsHandler lowLevelObjectsHandler;
 	private ClassFactory classFactory;
 	private Supplier<ClassFactory> classFactorySupplier;
-	private StreamHelper streamHelper;
-	private Map<String, ClassLoaderDelegate> classLoaderDelegates;
+
 	private ClassHelper(
 		Supplier<ClassFactory> classFactorySupplier,
-		StreamHelper streamHelper,
-		LowLevelObjectHandler lowLevelObjectsHandler
+		LowLevelObjectsHandler lowLevelObjectsHandler
 	) {
 		this.classFactorySupplier = classFactorySupplier;
 		this.lowLevelObjectsHandler = lowLevelObjectsHandler;
-		this.streamHelper = streamHelper;
-		this.classLoaderDelegates = new ConcurrentHashMap<>();
 	}
 	
-	public static ClassHelper create(Supplier<ClassFactory> classFactorySupplier, StreamHelper streamHelper, LowLevelObjectHandler objectRetriever) {
-		return new ClassHelper(classFactorySupplier, streamHelper, objectRetriever);
+	public static ClassHelper create(Supplier<ClassFactory> classFactorySupplier, LowLevelObjectsHandler objectRetriever) {
+		return new ClassHelper(classFactorySupplier, objectRetriever);
 	}
 	
 	private ClassFactory getClassFactory() {
@@ -84,35 +78,6 @@ public class ClassHelper implements Component {
 			classFactory = classFactorySupplier.get();
 		}
 		return classFactory;
-	}
-	
-	public ClassLoaderDelegate getClassLoaderDelegate(String name) {
-		ClassLoaderDelegate classLoaderDelegate = classLoaderDelegates.get(name);
-		if (classLoaderDelegate == null) {
-			synchronized(classLoaderDelegates) {
-				classLoaderDelegate = classLoaderDelegates.get(name);
-				if (classLoaderDelegate == null) {
-					try {
-						String sourceCode = this.streamHelper.getResourceAsStringBuffer(
-							ClassLoaderDelegate.class.getPackage().getName().replaceAll("\\.", "/") + "/" + name + ".java"
-						).toString();
-						// In case of inner classes we have more than 1 compiled source
-						Map<String, ByteBuffer> compiledSources = getClassFactory().build(sourceCode);
-						Map<String, Class<?>> injectedClasses = new LinkedHashMap<>();
-						compiledSources.forEach((className, byteCode) -> {
-							byte[] byteCodeArray = Streams.toByteArray(compiledSources.get(className));
-							injectedClasses.put(className, lowLevelObjectsHandler.defineAnonymousClass(ClassLoaderDelegate.class, byteCodeArray, null));
-						});
-						classLoaderDelegate = (ClassLoaderDelegate)injectedClasses.get(extractClassName(sourceCode)).getConstructor().newInstance();
-						classLoaderDelegates.put(name, classLoaderDelegate);
-					} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-							| InvocationTargetException | NoSuchMethodException | SecurityException exc) {
-						throw Throwables.toRuntimeException(exc);
-					}
-				}
-			}
-		}
-		return classLoaderDelegate;
 	}
 	
 	public String extractClassName(String classCode) {
