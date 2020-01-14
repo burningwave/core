@@ -28,9 +28,8 @@
  */
 package org.burningwave.core.jvm;
 
-import org.burningwave.core.common.LowLevelObjectsHandler.ClassLoaderDelegate;
 
-public class ForJDKVersionLaterThan8 extends ClassLoaderDelegate {
+public class ForJDKVersionLaterThan8 extends LowLevelObjectsHandler.ClassLoaderDelegate {
 
 	@Override
 	public Package getPackage(ClassLoader classLoader, String packageName) {

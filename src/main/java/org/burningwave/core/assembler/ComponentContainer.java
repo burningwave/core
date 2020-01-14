@@ -30,7 +30,9 @@ package org.burningwave.core.assembler;
 
 import java.io.InputStream;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 import org.burningwave.Throwables;
@@ -75,9 +77,10 @@ import org.burningwave.core.reflection.SupplierBinder;
 public class ComponentContainer implements ComponentSupplier {
 	private static String DEFAULT_CONFIGURATION_FILE_RELATIVE_PATH =  ComponentContainer.class.getPackage().getName().substring(0, ComponentContainer.class.getPackage().getName().lastIndexOf(".")).replaceAll("\\.", "/") + "/config/burningwave.properties";
 	
-	private Map<Class<? extends Component>, Component> components;
+	protected Map<Class<? extends Component>, Component> components;
 	private String configFileName;
 	private Properties config;
+	private CompletableFuture<ComponentContainer> initializer;
 	
 	ComponentContainer(String fileName) {
 		configFileName = fileName;
@@ -86,35 +89,51 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 
 	protected ComponentContainer init() {
-		FileSystemItem defaultConfig = getFileSystemHelper().getResource(DEFAULT_CONFIGURATION_FILE_RELATIVE_PATH);
-		try(InputStream inputStream = defaultConfig.toInputStream()) {
-			config.load(inputStream);
-		} catch (Throwable exc) {
-			Throwables.toRuntimeException(exc);
-		}
-		FileSystemItem customConfig = getFileSystemHelper().getResource(configFileName);
-		if (customConfig != null) {
-			try(InputStream inputStream = customConfig.toInputStream()) {
+		try (Initializer initializer = new Initializer(configFileName)) {
+			FileSystemHelper fileSystemHelper = initializer.getFileSystemHelper();
+			FileSystemItem defaultConfig = fileSystemHelper.getResource(DEFAULT_CONFIGURATION_FILE_RELATIVE_PATH);
+			try(InputStream inputStream = defaultConfig.toInputStream()) {
 				config.load(inputStream);
 			} catch (Throwable exc) {
 				Throwables.toRuntimeException(exc);
 			}
-		} else {
-			logWarn("Custom configuration file " + configFileName + " not found. Default configuration file, located in path " + defaultConfig.getAbsolutePath()+ ", is assumed.");
+			FileSystemItem customConfig = fileSystemHelper.getResource(configFileName);
+			if (customConfig != null) {
+				try(InputStream inputStream = customConfig.toInputStream()) {
+					config.load(inputStream);
+				} catch (Throwable exc) {
+					Throwables.toRuntimeException(exc);
+				}
+			} else {
+				logWarn("Custom configuration file " + configFileName + " not found. Default configuration file, located in path " + defaultConfig.getAbsolutePath()+ ", is assumed.");
+			}
+			return this;
 		}
-		return this;
 	}
 
 	public static ComponentContainer getInstance() {
 		return LazyHolder.getComponentContainerInstance();
 	}
 	
-	@SuppressWarnings("resource")
 	public final static ComponentContainer create(String fileName) {
 		try {
-			return new ComponentContainer(fileName).init();
+			ComponentContainer componentContainer = new ComponentContainer(fileName);
+			componentContainer.initializer = CompletableFuture.supplyAsync(() ->
+				componentContainer.init()
+			);
+			new Thread(() -> 
+				{
+					try {
+						componentContainer.initializer.get();
+					} catch (InterruptedException | ExecutionException exc) {
+						ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while initializing  " + ComponentContainer.class.getSimpleName() , exc);
+						throw Throwables.toRuntimeException(exc);
+					}
+				}
+			).start();
+			return componentContainer;
 		} catch (Throwable exc){
-			ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while creating ComponentContainer", exc);
+			ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
 			throw Throwables.toRuntimeException(exc);
 		}
 	}
@@ -123,6 +142,15 @@ public class ComponentContainer implements ComponentSupplier {
 	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
 		T component = (T)components.get(componentType);
 		if (component == null) {
+			
+			while (!initializer.isDone()) {
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException exc) {
+					ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while waiting " + ComponentContainer.class.getSimpleName() + " initializaziont", exc);
+					throw Throwables.toRuntimeException(exc);
+				}
+			}
 			synchronized (components) {
 				if ((component = (T)components.get(componentType)) == null) {
 					component = componentSupplier.get();
@@ -536,5 +564,27 @@ public class ComponentContainer implements ComponentSupplier {
 		private static ComponentContainer getComponentContainerInstance() {
 			return COMPONENT_CONTAINER_INSTANCE;
 		}
+	}
+	
+	public static class Initializer extends ComponentContainer {
+
+			Initializer(String fileName) {
+				super(fileName);
+			}
+
+			@SuppressWarnings("unchecked")
+			public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
+				T component = (T)components.get(componentType);
+				if (component == null) {
+					synchronized (components) {
+						if ((component = (T)components.get(componentType)) == null) {
+							component = componentSupplier.get();
+							components.put(componentType, component);
+						}				
+					}
+				}
+				return component;
+			}
+
 	}
 }
