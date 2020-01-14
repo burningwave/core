@@ -66,7 +66,7 @@ import org.burningwave.core.reflection.CallerRetriever;
 import org.burningwave.core.reflection.ConsumerBinder;
 import org.burningwave.core.reflection.FunctionBinder;
 import org.burningwave.core.reflection.FunctionalInterfaceFactory;
-import org.burningwave.core.reflection.ObjectRetriever;
+import org.burningwave.core.reflection.LowLevelObjectHandler;
 import org.burningwave.core.reflection.PropertyAccessor;
 import org.burningwave.core.reflection.RunnableBinder;
 import org.burningwave.core.reflection.SupplierBinder;
@@ -170,7 +170,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public MemoryClassLoader getMemoryClassLoader() {
 		return getOrCreate(MemoryClassLoader.class, () -> {
 			return MemoryClassLoader.create(
-				getObjectRetriever().retrieveFromProperties(
+				getLowLevelObjectsHandler().retrieveFromProperties(
 					config,
 					MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_CONFIG_KEY,
 					MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY,
@@ -273,7 +273,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getStreamHelper(),
 				getClassHelper(),
 				getMemberFinder(),
-				getObjectRetriever().retrieveFromProperties(config,
+				getLowLevelObjectsHandler().retrieveFromProperties(config,
 					ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
 					ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
 					ClassHunter.DEFAULT_CONFIG_VALUES,
@@ -295,7 +295,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getStreamHelper(),
 				getClassHelper(),
 				getMemberFinder(),
-				getObjectRetriever().retrieveFromProperties(config,
+				getLowLevelObjectsHandler().retrieveFromProperties(config,
 					FSIClassHunter.PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
 					FSIClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
 					FSIClassHunter.DEFAULT_CONFIG_VALUES,
@@ -474,9 +474,9 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 
 	@Override
-	public ObjectRetriever getObjectRetriever() {
-		return getOrCreate(ObjectRetriever.class, () ->
-			ObjectRetriever.create(
+	public LowLevelObjectHandler getLowLevelObjectsHandler() {
+		return getOrCreate(LowLevelObjectHandler.class, () ->
+			LowLevelObjectHandler.create(
 				() -> getClassHelper(),
 				getMemberFinder(),
 				getIterableObjectHelper()
@@ -490,7 +490,7 @@ public class ComponentContainer implements ComponentSupplier {
 			ClassHelper.create(
 				() -> getClassFactory(),
 				getStreamHelper(),
-				getObjectRetriever()
+				getLowLevelObjectsHandler()
 				
 			)
 		);

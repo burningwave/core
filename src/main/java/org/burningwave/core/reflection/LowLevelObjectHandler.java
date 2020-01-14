@@ -57,7 +57,7 @@ import org.burningwave.core.iterable.Properties;
 import sun.misc.Unsafe;
 
 @SuppressWarnings("restriction")
-public class ObjectRetriever implements Component {
+public class LowLevelObjectHandler implements Component {
 	private IterableObjectHelper iterableObjectHelper;
 	private Supplier<ClassHelper> classHelperSupplier;
 	private ClassHelper classHelper;
@@ -79,7 +79,7 @@ public class ObjectRetriever implements Component {
 		}
 	}
 	
-	private ObjectRetriever(
+	private LowLevelObjectHandler(
 		Supplier<ClassHelper> classHelperSupplier,
 		MemberFinder memberFinder,
 		IterableObjectHelper iterableObjectHelper
@@ -103,12 +103,12 @@ public class ObjectRetriever implements Component {
 		}
 	}
 	
-	public static ObjectRetriever create(
+	public static LowLevelObjectHandler create(
 		Supplier<ClassHelper> classHelperSupplier,
 		MemberFinder memberFinder,
 		IterableObjectHelper iterableObjectHelper
 	) {
-		return new ObjectRetriever(classHelperSupplier, memberFinder, iterableObjectHelper);
+		return new LowLevelObjectHandler(classHelperSupplier, memberFinder, iterableObjectHelper);
 	}
 	
 	private ClassHelper getClassHelper() {
@@ -119,6 +119,10 @@ public class ObjectRetriever implements Component {
 	
 	public static Unsafe getUnsafe() {
 		return unsafe;
+	}
+	
+	public Class<?> defineAnonymousClass(Class<?> outerClass, byte[] byteCode, Object[] var3) {
+		return unsafe.defineAnonymousClass(outerClass, byteCode, var3);
 	}
 	
 	public Method getDefinePackageMethod(ClassLoader classLoader) {

@@ -83,7 +83,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     	if (classHelper.retrieveLoadedClass(this, name) == null) {
     		notLoadedCompiledClasses.put(name, byteCode);
 		} else {
-			logWarn("Could not add compiled class {} cause it's already defined", name);
+			logDebug("Could not add compiled class {} cause it's already defined", name);
 		} 
     }
     
@@ -231,10 +231,10 @@ public class MemoryClassLoader extends ClassLoader implements Component {
         	}
 			if (cls == null){
         		removeNotLoadedCompiledClass(className);
-				logWarn("Could not load compiled class " + className + ", so it will be removed");
+        		logDebug("Could not load compiled class " + className + ", so it will be removed");
         	}
 		} else {
-			logWarn("Compiled class " + className + " not found");
+			logDebug("Compiled class " + className + " not found");
         }
 		if (cls != null) {
 			return cls;

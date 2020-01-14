@@ -54,12 +54,12 @@ import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.StreamHelper;
-import org.burningwave.core.reflection.ObjectRetriever;
+import org.burningwave.core.reflection.LowLevelObjectHandler;
 import org.objectweb.asm.ClassReader;
 
-@SuppressWarnings("restriction")
+
 public class ClassHelper implements Component {
-	private ObjectRetriever objectRetriever;
+	private LowLevelObjectHandler lowLevelObjectsHandler;
 	private ClassFactory classFactory;
 	private Supplier<ClassFactory> classFactorySupplier;
 	private StreamHelper streamHelper;
@@ -67,15 +67,15 @@ public class ClassHelper implements Component {
 	private ClassHelper(
 		Supplier<ClassFactory> classFactorySupplier,
 		StreamHelper streamHelper,
-		ObjectRetriever objectRetriever
+		LowLevelObjectHandler lowLevelObjectsHandler
 	) {
 		this.classFactorySupplier = classFactorySupplier;
-		this.objectRetriever = objectRetriever;
+		this.lowLevelObjectsHandler = lowLevelObjectsHandler;
 		this.streamHelper = streamHelper;
 		this.classLoaderDelegates = new ConcurrentHashMap<>();
 	}
 	
-	public static ClassHelper create(Supplier<ClassFactory> classFactorySupplier, StreamHelper streamHelper, ObjectRetriever objectRetriever) {
+	public static ClassHelper create(Supplier<ClassFactory> classFactorySupplier, StreamHelper streamHelper, LowLevelObjectHandler objectRetriever) {
 		return new ClassHelper(classFactorySupplier, streamHelper, objectRetriever);
 	}
 	
@@ -101,7 +101,7 @@ public class ClassHelper implements Component {
 						Map<String, Class<?>> injectedClasses = new LinkedHashMap<>();
 						compiledSources.forEach((className, byteCode) -> {
 							byte[] byteCodeArray = Streams.toByteArray(compiledSources.get(className));
-							injectedClasses.put(className, ObjectRetriever.getUnsafe().defineAnonymousClass(ClassLoaderDelegate.class, byteCodeArray, null));
+							injectedClasses.put(className, lowLevelObjectsHandler.defineAnonymousClass(ClassLoaderDelegate.class, byteCodeArray, null));
 						});
 						classLoaderDelegate = (ClassLoaderDelegate)injectedClasses.get(extractClassName(sourceCode)).getConstructor().newInstance();
 						classLoaderDelegates.put(name, classLoaderDelegate);
@@ -163,8 +163,8 @@ public class ClassHelper implements Component {
 	) throws ClassNotFoundException {
 		return loadOrUploadClass(
 			toLoad, classLoader,
-			objectRetriever.getDefineClassMethod(classLoader),
-			objectRetriever.getDefinePackageMethod(classLoader)
+			lowLevelObjectsHandler.getDefineClassMethod(classLoader),
+			lowLevelObjectsHandler.getDefinePackageMethod(classLoader)
 		);
 	}
 	
@@ -255,7 +255,7 @@ public class ClassHelper implements Component {
 	}
 	
 	public Class<?> retrieveLoadedClass(ClassLoader classLoader, String className) {
-		Vector<Class<?>> definedClasses = objectRetriever.retrieveLoadedClasses(classLoader);
+		Vector<Class<?>> definedClasses = lowLevelObjectsHandler.retrieveLoadedClasses(classLoader);
 		synchronized(definedClasses) {
 			Iterator<?> itr = definedClasses.iterator();
 			while(itr.hasNext()) {
@@ -273,7 +273,7 @@ public class ClassHelper implements Component {
 	
 	public Set<Class<?>> retrieveLoadedClassesForPackage(ClassLoader classLoader, Predicate<Package> packagePredicate) {
 		Set<Class<?>> classesFound = ConcurrentHashMap.newKeySet();
-		Vector<Class<?>> definedClasses = objectRetriever.retrieveLoadedClasses(classLoader);
+		Vector<Class<?>> definedClasses = lowLevelObjectsHandler.retrieveLoadedClasses(classLoader);
 		synchronized(definedClasses) {
 			Iterator<?> itr = definedClasses.iterator();
 			while(itr.hasNext()) {
@@ -291,10 +291,10 @@ public class ClassHelper implements Component {
 	}
 	
 	public Package retrievePackage(ClassLoader classLoader, String packageName) {
-		Map<String, ?> packages = objectRetriever.retrievePackages(classLoader);
+		Map<String, ?> packages = lowLevelObjectsHandler.retrievePackages(classLoader);
 		Object packageToFind = packages.get(packageName);
 		if (packageToFind != null) {
-			return objectRetriever.retrievePackage(classLoader, packageToFind, packageName);
+			return lowLevelObjectsHandler.retrievePackage(classLoader, packageToFind, packageName);
 		} else if (classLoader.getParent() != null) {
 			return retrievePackage(classLoader.getParent(), packageName);
 		} else {
@@ -339,12 +339,12 @@ public class ClassHelper implements Component {
 	}
 	
 	public void unregister(ClassLoader classLoader) {
-		objectRetriever.unregister(classLoader);
+		lowLevelObjectsHandler.unregister(classLoader);
 	}
 	
 	@Override
 	public void close() {
-		objectRetriever = null;
+		lowLevelObjectsHandler = null;
 		classFactory = null;
 		classFactorySupplier = null;
 	}
