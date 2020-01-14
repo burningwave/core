@@ -11,7 +11,7 @@ public class StreamHelperTest extends BaseTest {
 	public void getResourceAsStreamTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() ->{ 
-			try(InputStream inputStream = componentSupplier.getStreamHelper().getResourceAsStream("org/burningwave/core/classes/CodeExecutor.javatemplate")) {
+			try(InputStream inputStream = componentSupplier.getStreamHelper().getResourceAsStream("org/burningwave/core/classes/CodeExecutor.jt")) {
 				return inputStream;
 			}
 		});

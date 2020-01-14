@@ -317,7 +317,7 @@ public abstract class CodeGenerator implements Component {
 				StreamHelper streamHelper) {
 			super(memberFinder, streamHelper);
 			PACKAGE_NAME = BASE_PACKAGE_NAME_FOR_TEMPLATE + ".function";
-			TEMPLATE = readTemplate(PACKAGE_NAME.replaceAll("\\.", "/") + "/MultiParameterFunction.javatemplate");
+			TEMPLATE = readTemplate(PACKAGE_NAME.replaceAll("\\.", "/") + "/MultiParameterFunction.jt");
 		}
 		
 		public static ForFunction create(
@@ -368,7 +368,7 @@ public abstract class CodeGenerator implements Component {
 				StreamHelper streamHelper) {
 			super(memberFinder, streamHelper);
 			PACKAGE_NAME = BASE_PACKAGE_NAME_FOR_TEMPLATE + ".function";
-			TEMPLATE = readTemplate(PACKAGE_NAME.replaceAll("\\.", "/") + "/MultiParameterConsumer.javatemplate");
+			TEMPLATE = readTemplate(PACKAGE_NAME.replaceAll("\\.", "/") + "/MultiParameterConsumer.jt");
 		}
 		
 		public static ForConsumer create(
@@ -418,7 +418,7 @@ public abstract class CodeGenerator implements Component {
 				StreamHelper streamHelper) {
 			super(memberFinder, streamHelper);
 			PACKAGE_NAME = BASE_PACKAGE_NAME_FOR_TEMPLATE + ".function";
-			TEMPLATE = readTemplate(PACKAGE_NAME.replaceAll("\\.", "/") + "/MultiParameterPredicate.javatemplate");
+			TEMPLATE = readTemplate(PACKAGE_NAME.replaceAll("\\.", "/") + "/MultiParameterPredicate.jt");
 		}
 		
 		public static ForPredicate create(
@@ -468,7 +468,7 @@ public abstract class CodeGenerator implements Component {
 				StreamHelper streamHelper) {
 			super(memberFinder, streamHelper);
 			PACKAGE_NAME = BASE_PACKAGE_NAME_FOR_TEMPLATE + ".classes";
-			TEMPLATE = readTemplate(PACKAGE_NAME.replaceAll("\\.", "/") + "/CodeExecutor.javatemplate");
+			TEMPLATE = readTemplate(PACKAGE_NAME.replaceAll("\\.", "/") + "/CodeExecutor.jt");
 		}
 		
 		public static ForCodeExecutor create(
