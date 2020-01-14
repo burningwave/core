@@ -208,7 +208,10 @@ public abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchC
 			).afterScanPath((mainScanContext, path) -> {
 				mainScanContext.waitForTasksEnding();
 				Map<K, I> itemsForPath = new ConcurrentHashMap<>();
-				itemsForPath.putAll(context.getItemsFound(path));
+				Map<K, I> itemsFound = context.getItemsFound(path);
+				if (itemsFound != null) {
+					itemsForPath.putAll(itemsFound);
+				}
 				this.cache.put(path, itemsForPath);
 			})
 		);

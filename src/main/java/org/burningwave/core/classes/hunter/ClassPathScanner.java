@@ -105,11 +105,10 @@ public abstract class ClassPathScanner<K, I, C extends SearchContext<K, I>, R ex
 		searchConfig.init(this.classHelper, context.pathMemoryClassLoader, this.memberFinder);		
 		scanConfigCopy.init();
 		context.executeSearch(() -> {
-				fileSystemHelper.scan(
-					scanConfigCopy.toScanConfiguration(context, this)
-				);
-			}
-		);
+			fileSystemHelper.scan(
+				scanConfigCopy.toScanConfiguration(context, this)
+			);
+		});
 		Collection<String> skippedClassesNames = context.getSkippedClassNames();
 		if (!skippedClassesNames.isEmpty()) {
 			logWarn("Skipped classes count: {}", skippedClassesNames.size());
