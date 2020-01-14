@@ -125,6 +125,7 @@ public class ComponentContainer implements ComponentSupplier {
 				{
 					try {
 						componentContainer.initializer.get();
+						componentContainer.initializer = null;
 					} catch (InterruptedException | ExecutionException exc) {
 						ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while initializing  " + ComponentContainer.class.getSimpleName() , exc);
 						throw Throwables.toRuntimeException(exc);
@@ -143,7 +144,7 @@ public class ComponentContainer implements ComponentSupplier {
 		T component = (T)components.get(componentType);
 		if (component == null) {
 			
-			while (!initializer.isDone()) {
+			while (initializer != null) {
 				try {
 					Thread.sleep(10);
 				} catch (InterruptedException exc) {
