@@ -349,7 +349,7 @@ public class LowLevelObjectsHandler implements Component {
 					try {
 						String sourceCode = this.streamHelper.getResourceAsStringBuffer(
 							ClassLoaderDelegate.class.getPackage().getName().replaceAll("\\.", "/") + "/" + name + ".java"
-						).toString();
+						).toString().replace("${packageName}", getClass().getPackage().getName());
 						// In case of inner classes we have more than 1 compiled source
 						Map<String, ByteBuffer> compiledSources = getClassFactory().build(sourceCode);
 						Map<String, Class<?>> injectedClasses = new LinkedHashMap<>();
