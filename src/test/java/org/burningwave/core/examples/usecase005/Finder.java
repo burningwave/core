@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.hunter.CacheableSearchConfig;
 import org.burningwave.core.classes.hunter.ClassHunter;
@@ -17,9 +18,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class Finder {
 
 	public List<String> find() {
-		ComponentContainer componentConatiner = ComponentContainer.getInstance();
-		PathHelper pathHelper = componentConatiner.getPathHelper();
-		ClassHunter classHunter = componentConatiner.getClassHunter();
+		ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
+		ClassHunter classHunter = componentSupplier.getClassHunter();
 
 		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			//Here you can add all absolute path you want:

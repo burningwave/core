@@ -34,6 +34,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
@@ -75,8 +76,6 @@ import org.burningwave.core.reflection.RunnableBinder;
 import org.burningwave.core.reflection.SupplierBinder;
 
 public class ComponentContainer implements ComponentSupplier {
-	private static String DEFAULT_CONFIGURATION_FILE_RELATIVE_PATH =  ComponentContainer.class.getPackage().getName().substring(0, ComponentContainer.class.getPackage().getName().lastIndexOf(".")).replaceAll("\\.", "/") + "/config/burningwave.properties";
-	
 	protected Map<Class<? extends Component>, Component> components;
 	private String configFileName;
 	private Properties config;
@@ -88,15 +87,13 @@ public class ComponentContainer implements ComponentSupplier {
 		config = new Properties();
 	}
 
-	protected ComponentContainer init() {
+	private ComponentContainer init() {
 		try (Initializer initializer = new Initializer(configFileName)) {
 			FileSystemHelper fileSystemHelper = initializer.getFileSystemHelper();
-			FileSystemItem defaultConfig = fileSystemHelper.getResource(DEFAULT_CONFIGURATION_FILE_RELATIVE_PATH);
-			try(InputStream inputStream = defaultConfig.toInputStream()) {
-				config.load(inputStream);
-			} catch (Throwable exc) {
-				Throwables.toRuntimeException(exc);
-			}
+			config.put(PathHelper.CLASSPATHS_PREFIX + ClassFactory.CLASS_REPOSITORIES, "${classPaths}");
+			config.put("classHunter.pathMemoryClassLoader.parent", "componentSupplier.getMemoryClassLoader()");
+			config.put("fSIClassHunter.pathMemoryClassLoader.parent", "componentSupplier.getMemoryClassLoader()");
+			config.put("memoryClassLoader.parent", "Thread.currentThread().getContextClassLoader()");
 			FileSystemItem customConfig = fileSystemHelper.getResource(configFileName);
 			if (customConfig != null) {
 				try(InputStream inputStream = customConfig.toInputStream()) {
@@ -105,33 +102,41 @@ public class ComponentContainer implements ComponentSupplier {
 					Throwables.toRuntimeException(exc);
 				}
 			} else {
-				logWarn("Custom configuration file " + configFileName + " not found. Default configuration file, located in path " + defaultConfig.getAbsolutePath()+ ", is assumed.");
+				logWarn("Custom configuration file burningwave.properties not found.");
 			}
+			logWarn(
+				"Configuration values:\n\n{}\n\n... Are assumed",
+				config.entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
+			);
 			return this;
 		}
 	}
+	
+	private static void launchInit(ComponentContainer componentContainer) {
+		componentContainer.initializer = CompletableFuture.supplyAsync(() ->
+			componentContainer.init()
+		);
+		new Thread(() -> 
+			{
+				try {
+					componentContainer.initializer.get();
+					componentContainer.initializer = null;
+				} catch (InterruptedException | ExecutionException exc) {
+					ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while initializing  " + ComponentContainer.class.getSimpleName() , exc);
+					throw Throwables.toRuntimeException(exc);
+				}
+			}
+		).start();
+	}
 
-	public static ComponentContainer getInstance() {
+	public static ComponentSupplier getInstance() {
 		return LazyHolder.getComponentContainerInstance();
 	}
 	
 	public final static ComponentContainer create(String fileName) {
 		try {
 			ComponentContainer componentContainer = new ComponentContainer(fileName);
-			componentContainer.initializer = CompletableFuture.supplyAsync(() ->
-				componentContainer.init()
-			);
-			new Thread(() -> 
-				{
-					try {
-						componentContainer.initializer.get();
-						componentContainer.initializer = null;
-					} catch (InterruptedException | ExecutionException exc) {
-						ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while initializing  " + ComponentContainer.class.getSimpleName() , exc);
-						throw Throwables.toRuntimeException(exc);
-					}
-				}
-			).start();
+			launchInit(componentContainer);
 			return componentContainer;
 		} catch (Throwable exc){
 			ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
@@ -142,8 +147,7 @@ public class ComponentContainer implements ComponentSupplier {
 	@SuppressWarnings("unchecked")
 	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
 		T component = (T)components.get(componentType);
-		if (component == null) {
-			
+		if (component == null) {			
 			while (initializer != null) {
 				try {
 					Thread.sleep(10);

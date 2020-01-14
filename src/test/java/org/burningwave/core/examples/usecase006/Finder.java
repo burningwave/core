@@ -3,6 +3,7 @@ package org.burningwave.core.examples.usecase006;
 import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.hunter.CacheableSearchConfig;
 import org.burningwave.core.classes.hunter.ClassHunter;
 import org.burningwave.core.classes.hunter.ClassHunter.SearchResult;
@@ -12,9 +13,9 @@ import org.burningwave.core.io.PathHelper;
 public class Finder {
 
 	public Collection<Class<?>> find() {
-		ComponentContainer componentConatiner = ComponentContainer.getInstance();
-		PathHelper pathHelper = componentConatiner.getPathHelper();
-		ClassHunter classHunter = componentConatiner.getClassHunter();
+		ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
+		ClassHunter classHunter = componentSupplier.getClassHunter();
 
 		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			//Here you can add all absolute path you want:

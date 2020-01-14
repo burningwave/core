@@ -53,6 +53,7 @@ import org.burningwave.core.iterable.Properties.Event;
 
 
 public class PathHelper implements Component {
+	public static String CLASSPATHS_PREFIX = "classPaths.";
 	public static String MAIN_CLASS_PATHS = "Main";
 	private IterableObjectHelper iterableObjectHelper;
 	private Supplier<FileSystemHelper> fileSystemHelperSupplier;
@@ -75,8 +76,8 @@ public class PathHelper implements Component {
 	public void receiveNotification(Properties properties, Event event, Object key, Object value) {
 		if (event == Event.PUT) {
 			String propertyKey = (String)key;
-			if (propertyKey.startsWith("classPaths.")) {
-				loadClassPaths(((String)key).replaceFirst("classPaths.", ""));	
+			if (propertyKey.startsWith(CLASSPATHS_PREFIX)) {
+				loadClassPaths(((String)key).replaceFirst(CLASSPATHS_PREFIX, ""));	
 			}
 		}
 		Component.super.receiveNotification(properties, event, key, value);
@@ -130,15 +131,15 @@ public class PathHelper implements Component {
 	
 	public void loadClassPaths() {
 		config.forEach((key, value) -> {
-			if (((String)key).startsWith("classPaths.")) {
-				String classPathsName = ((String)key).substring("classPaths.".length());
+			if (((String)key).startsWith(CLASSPATHS_PREFIX)) {
+				String classPathsName = ((String)key).substring(CLASSPATHS_PREFIX.length());
 				loadClassPaths(classPathsName);
 			}
 		});
 	}
 	
 	private void loadClassPaths(String classPathsName) {
-		String classPathsNamePropertyName = "classPaths." + classPathsName;
+		String classPathsNamePropertyName = CLASSPATHS_PREFIX + classPathsName;
 		String classPaths = config.getProperty(classPathsNamePropertyName);
 		if (classPaths != null) {
 			Collection<String> mainClassPaths = getClassPaths(MAIN_CLASS_PATHS);

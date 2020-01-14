@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.hunter.CacheableSearchConfig;
 import org.burningwave.core.classes.hunter.ClassPathHunter;
@@ -14,9 +15,9 @@ import org.burningwave.core.io.PathHelper;
 public class Finder {
 
 	public Collection<File> find() {
-		ComponentContainer componentConatiner = ComponentContainer.getInstance();
-		PathHelper pathHelper = componentConatiner.getPathHelper();
-		ClassPathHunter classPathHunter = componentConatiner.getClassPathHunter();
+		ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
+		ClassPathHunter classPathHunter = componentSupplier.getClassPathHunter();
 
 		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			//Here you can add all absolute path you want:

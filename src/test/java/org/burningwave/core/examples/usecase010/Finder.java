@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Date;
 
 import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.hunter.CacheableSearchConfig;
@@ -16,9 +17,9 @@ import org.burningwave.core.io.PathHelper;
 public class Finder {       
 	
     public Collection<Class<?>> find() {
-        ComponentContainer componentConatiner = ComponentContainer.getInstance();
-        PathHelper pathHelper = componentConatiner.getPathHelper();
-        ClassHunter classHunter = componentConatiner.getClassHunter();
+    	ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+        PathHelper pathHelper = componentSupplier.getPathHelper();
+        ClassHunter classHunter = componentSupplier.getClassHunter();
 
         FieldCriteria fieldCriteria = FieldCriteria.create().allThat((field) -> {
             return Modifier.isProtected(field.getModifiers());
