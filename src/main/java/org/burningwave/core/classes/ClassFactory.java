@@ -40,7 +40,7 @@ import org.burningwave.core.io.PathHelper;
 
 
 public class ClassFactory implements Component {
-	public static String CLASS_REPOSITORIES = "classFactory.classRepositories";
+	public static String CLASS_REPOSITORIES = "class-factory.class-repositories";
 	
 	private ClassHelper classHelper;
 	private PathHelper pathHelper;

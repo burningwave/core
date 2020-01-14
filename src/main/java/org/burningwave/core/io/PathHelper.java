@@ -53,8 +53,8 @@ import org.burningwave.core.iterable.Properties.Event;
 
 
 public class PathHelper implements Component {
-	public static String CLASSPATHS_PREFIX = "classPaths.";
-	public static String MAIN_CLASS_PATHS = "Main";
+	public static String CLASSPATHS_PREFIX = "class-paths.";
+	public static String MAIN_CLASS_PATHS = "main";
 	private IterableObjectHelper iterableObjectHelper;
 	private Supplier<FileSystemHelper> fileSystemHelperSupplier;
 	private FileSystemHelper fileSystemHelper;

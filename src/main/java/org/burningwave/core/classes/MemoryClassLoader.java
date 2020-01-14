@@ -51,8 +51,8 @@ import org.burningwave.core.io.ByteBufferOutputStream;
 
 
 public class MemoryClassLoader extends ClassLoader implements Component {
-	public final static String PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_CONFIG_KEY = "memoryClassLoader.parent.supplier.imports";
-	public final static String PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY = "memoryClassLoader.parent";
+	public final static String PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_CONFIG_KEY = "memory-class-loader.parent.supplier.imports";
+	public final static String PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY = "memory-class-loader.parent";
 	public final static Map<String, String> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
 		
 	private ClassHelper classHelper;

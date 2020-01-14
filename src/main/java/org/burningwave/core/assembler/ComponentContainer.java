@@ -91,9 +91,9 @@ public class ComponentContainer implements ComponentSupplier {
 		try (Initializer initializer = new Initializer(configFileName)) {
 			FileSystemHelper fileSystemHelper = initializer.getFileSystemHelper();
 			config.put(PathHelper.CLASSPATHS_PREFIX + ClassFactory.CLASS_REPOSITORIES, "${classPaths}");
+			config.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
 			config.put(ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "componentSupplier.getMemoryClassLoader()");
 			config.put(FSIClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "componentSupplier.getMemoryClassLoader()");
-			config.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
 			FileSystemItem customConfig = fileSystemHelper.getResource(configFileName);
 			if (customConfig != null) {
 				try(InputStream inputStream = customConfig.toInputStream()) {
