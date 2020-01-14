@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.reflection;
+package org.burningwave.core.common;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -49,13 +49,9 @@ import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHelper;
-import org.burningwave.core.classes.ClassHelper.ClassLoaderDelegate;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodCriteria;
-import org.burningwave.core.common.JVMChecker;
-import org.burningwave.core.common.Streams;
-import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.TriFunction;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
@@ -418,5 +414,11 @@ public class LowLevelObjectsHandler implements Component {
 		public static <T extends Buffer> int remaining(T buffer) {
 			return ((Buffer)buffer).remaining();
 		}
-	}	
+	}
+	
+	public static abstract class ClassLoaderDelegate {
+		
+		public abstract Package getPackage(ClassLoader classLoader, String packageName);
+		
+	}
 }

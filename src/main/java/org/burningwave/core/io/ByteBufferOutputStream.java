@@ -30,10 +30,10 @@ package org.burningwave.core.io;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 import org.burningwave.core.common.Streams;
+import org.burningwave.core.common.LowLevelObjectsHandler.ByteBufferDelegate;
 
 
 public class ByteBufferOutputStream extends OutputStream {
@@ -55,7 +55,7 @@ public class ByteBufferOutputStream extends OutputStream {
 
     public ByteBufferOutputStream(ByteBuffer buffer, boolean closeable) {
         this.buffer = buffer;
-        this.initialPosition = ((Buffer)buffer).position();
+        this.initialPosition = ByteBufferDelegate.position(buffer);
         this.initialCapacity = buffer.capacity();
         this.closeable = closeable;
     }
@@ -88,20 +88,20 @@ public class ByteBufferOutputStream extends OutputStream {
     }
 
     public int position() {
-        return ((Buffer)buffer).position();
+        return ByteBufferDelegate.position(buffer);
     }
 
     public int remaining() {
-        return buffer.remaining();
+        return ByteBufferDelegate.remaining(buffer);
     }
 
     public int limit() {
-        return ((Buffer)buffer).limit();
+        return ByteBufferDelegate.limit(buffer);
     }
 
     public void position(int position) {
-        ensureRemaining(position - ((Buffer)buffer).position());
-        ((Buffer)buffer).position(position);
+        ensureRemaining(position - ByteBufferDelegate.position(buffer));
+        ByteBufferDelegate.position(buffer, position);
     }
 
     public int initialCapacity() {
@@ -114,13 +114,13 @@ public class ByteBufferOutputStream extends OutputStream {
     }
 
     private void expandBuffer(int remainingRequired) {
-        int expandSize = Math.max((int) (((Buffer)buffer).limit() * REALLOCATION_FACTOR), ((Buffer)buffer).position() + remainingRequired);
+        int expandSize = Math.max((int) (ByteBufferDelegate.limit(buffer) * REALLOCATION_FACTOR), ByteBufferDelegate.position(buffer) + remainingRequired);
         ByteBuffer temp = Streams.DEFAULT_BYTE_BUFFER_ALLOCATION.apply(expandSize);
         int limit = limit();
-        ((Buffer)buffer).flip();
+        ByteBufferDelegate.flip(buffer);
         temp.put(buffer);
-        ((Buffer)buffer).limit(limit);
-        ((Buffer)buffer).position(initialPosition);
+        ByteBufferDelegate.limit(buffer, limit);
+        ByteBufferDelegate.position(buffer, initialPosition);
         buffer = temp;
     }
     
