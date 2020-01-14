@@ -49,10 +49,10 @@ import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHelper;
+import org.burningwave.core.classes.ClassHelper.ClassLoaderDelegate;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodCriteria;
-import org.burningwave.core.classes.ClassHelper.ClassLoaderDelegate;
 import org.burningwave.core.common.JVMChecker;
 import org.burningwave.core.common.Streams;
 import org.burningwave.core.common.Strings;
@@ -413,6 +413,10 @@ public class LowLevelObjectsHandler implements Component {
 		
 		public static <T extends Buffer> int capacity(T buffer) {
 			return ((Buffer)buffer).capacity();
+		}
+		
+		public static <T extends Buffer> int remaining(T buffer) {
+			return ((Buffer)buffer).remaining();
 		}
 	}	
 }
