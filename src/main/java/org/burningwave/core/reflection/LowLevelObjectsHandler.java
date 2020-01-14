@@ -391,19 +391,19 @@ public class LowLevelObjectsHandler implements Component {
 	@SuppressWarnings("unchecked")
 	public static class ByteBufferDelegate {
 		
-		public static int limit(ByteBuffer buffer) {
+		public static <T extends Buffer> int limit(T buffer) {
 			return ((Buffer)buffer).limit();
 		}
 		
-		public static int position(ByteBuffer buffer) {
+		public static <T extends Buffer> int position(T buffer) {
 			return ((Buffer)buffer).position();
 		}
 		
-		public static <T extends Buffer> T limit(ByteBuffer buffer, int newLimit) {
+		public static <T extends Buffer> T limit(T buffer, int newLimit) {
 			return (T)((Buffer)buffer).limit(newLimit);
 		}
 		
-		public static <T extends Buffer> T position(ByteBuffer buffer, int newPosition) {
+		public static <T extends Buffer> T position(T buffer, int newPosition) {
 			return (T)((Buffer)buffer).position(newPosition);
 		}
 		
@@ -411,5 +411,8 @@ public class LowLevelObjectsHandler implements Component {
 			return (T)((Buffer)buffer).flip();
 		}
 		
+		public static <T extends Buffer> int capacity(T buffer) {
+			return ((Buffer)buffer).capacity();
+		}
 	}	
 }
