@@ -120,7 +120,10 @@ public class ComponentContainer implements ComponentSupplier {
 			{
 				try {
 					componentContainer.initializer.get();
-					componentContainer.initializer = null;
+					synchronized (componentContainer) {
+						componentContainer.initializer = null;
+						componentContainer.notifyAll();
+					}
 				} catch (InterruptedException | ExecutionException exc) {
 					ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while initializing  " + ComponentContainer.class.getSimpleName() , exc);
 					throw Throwables.toRuntimeException(exc);
@@ -147,13 +150,17 @@ public class ComponentContainer implements ComponentSupplier {
 	@SuppressWarnings("unchecked")
 	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
 		T component = (T)components.get(componentType);
-		if (component == null) {			
-			while (initializer != null) {
-				try {
-					Thread.sleep(10);
-				} catch (InterruptedException exc) {
-					ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while waiting " + ComponentContainer.class.getSimpleName() + " initializaziont", exc);
-					throw Throwables.toRuntimeException(exc);
+		if (component == null) {	
+			if (initializer != null) {
+				synchronized (this) {
+					if (initializer != null) {
+						try {
+							wait();
+						} catch (InterruptedException exc) {
+							ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while waiting " + ComponentContainer.class.getSimpleName() + " initializaziont", exc);
+							throw Throwables.toRuntimeException(exc);
+						}
+					}
 				}
 			}
 			synchronized (components) {

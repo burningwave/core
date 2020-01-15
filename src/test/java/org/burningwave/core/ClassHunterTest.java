@@ -503,6 +503,26 @@ public class ClassHunterTest extends BaseTest {
 		);
 	}
 	
+//	@Test
+//	public void findAllWithModule() {
+//		ComponentSupplier componentSupplier = getComponentSupplier();
+//		testNotEmpty(
+//			() -> componentSupplier.getClassHunter().findBy(
+//				SearchConfig.forPaths(
+//					componentSupplier.getPathHelper().getMainClassPaths()
+//				).by(
+//					ClassCriteria.create().allThat((currentScannedClass) ->
+//						currentScannedClass.getModule().getName() != null && 
+//						currentScannedClass.getModule().getName().equals("jdk.xml.dom")
+//					)
+//				)
+//			),
+//			(result) ->
+//				result.getItemsFound(),
+//			true
+//		);
+//	}
+	
 	@Test
 	public void findAllAnnotatedMethods() {
 		ComponentSupplier componentSupplier = getComponentSupplier();

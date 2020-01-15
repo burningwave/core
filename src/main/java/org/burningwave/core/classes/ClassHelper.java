@@ -256,10 +256,10 @@ public class ClassHelper implements Component {
 	}
 	
 	public Package retrievePackage(ClassLoader classLoader, String packageName) {
-		Map<String, ?> packages = lowLevelObjectsHandler.retrievePackages(classLoader);
+		Map<String, ?> packages = lowLevelObjectsHandler.retrieveLoadedPackages(classLoader);
 		Object packageToFind = packages.get(packageName);
 		if (packageToFind != null) {
-			return lowLevelObjectsHandler.retrievePackage(classLoader, packageToFind, packageName);
+			return lowLevelObjectsHandler.retrieveLoadedPackage(classLoader, packageToFind, packageName);
 		} else if (classLoader.getParent() != null) {
 			return retrievePackage(classLoader.getParent(), packageName);
 		} else {

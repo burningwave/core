@@ -248,7 +248,7 @@ public class LowLevelObjectsHandler implements Component {
 	}
 	
 	@SuppressWarnings({ "unchecked" })
-	public Map<String, ?> retrievePackages(ClassLoader classLoader) {
+	public Map<String, ?> retrieveLoadedPackages(ClassLoader classLoader) {
 		Map<String, ?> packages = classLoadersPackages.get(classLoader);
 		if (packages != null) {
 			return packages;
@@ -294,7 +294,7 @@ public class LowLevelObjectsHandler implements Component {
 		}
 	}
 	
-	public Package retrievePackage(ClassLoader classLoader, Object packageToFind, String packageName) {
+	public Package retrieveLoadedPackage(ClassLoader classLoader, Object packageToFind, String packageName) {
 		return packageRetriever.apply(classLoader, packageToFind, packageName);
 	}
 	
