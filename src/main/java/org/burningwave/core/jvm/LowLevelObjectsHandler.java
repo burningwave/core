@@ -132,10 +132,9 @@ public class LowLevelObjectsHandler implements Component {
 	}
 	
 	private ClassFactory getClassFactory() {
-		if (classFactory == null) {
-			classFactory = classFactorySupplier.get();
-		}
-		return classFactory;
+		return classFactory != null ?
+			classFactory :
+			(classFactory = classFactorySupplier.get());
 	}
 	
 	private ClassHelper getClassHelper() {
