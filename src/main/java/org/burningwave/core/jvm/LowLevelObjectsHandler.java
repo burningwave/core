@@ -41,7 +41,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 import java.util.function.Supplier;
 
 import org.burningwave.Throwables;
@@ -73,7 +73,8 @@ public class LowLevelObjectsHandler implements Component {
 	private MemberFinder memberFinder;
 	private Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
 	private Map<ClassLoader, Map<String, ?>> classLoadersPackages;
-	private Predicate<Object> packageMapTester;
+	private BiPredicate<Object, Long> packageMapTester;
+	private Long loadedPackageMemoryOffset;
 	private TriFunction<ClassLoader, Object, String, Package> packageRetriever;
 	private static Unsafe unsafe;
 	private Map<String, Method> classLoadersMethods;
@@ -108,10 +109,28 @@ public class LowLevelObjectsHandler implements Component {
 		this.classLoadersMethods = new ConcurrentHashMap<>();
 		this.classLoaderDelegates = new ConcurrentHashMap<>();
 		try {
-			Class.forName("java.lang.NamedPackage");
-			packageMapTester = (object) -> object != null && object instanceof ConcurrentHashMap;
+			Class<?> namedPackageClass = Class.forName("java.lang.NamedPackage");
+			packageMapTester = (object, offset) -> { 
+				if (object != null && object instanceof ConcurrentHashMap) {
+					Map<?, ?> map = (ConcurrentHashMap<?,?>)object;
+					if (loadedPackageMemoryOffset == null && !map.isEmpty()) {
+						boolean resultTest = map.entrySet().stream().findFirst().map(entry -> 
+							namedPackageClass.isAssignableFrom(entry.getValue().getClass())
+						).orElseGet(() -> Boolean.FALSE);
+						if (resultTest) {
+							loadedPackageMemoryOffset = offset;
+						}
+						return resultTest;
+					}
+					return (loadedPackageMemoryOffset != null && loadedPackageMemoryOffset.compareTo(offset) == 0);
+				} else {
+					return false;
+				}
+			};
+			//With this we load "loadedPackageMemoryOffset" property
+			retrieveLoadedPackages(this.getClass().getClassLoader());
 		} catch (ClassNotFoundException e) {
-			packageMapTester = (object) -> object != null && object instanceof HashMap;
+			packageMapTester = (object, offset) -> object != null && object instanceof HashMap;
 		}
 		if (findGetDefinedPackageMethod() == null) {
 			packageRetriever = (classLoader, object, packageName) -> (Package)object;
@@ -236,7 +255,7 @@ public class LowLevelObjectsHandler implements Component {
 				synchronized (classLoadersClasses) {
 					classes = classLoadersClasses.get(classLoader);
 					if (classes == null) {
-						classes = (Vector<Class<?>>)iterateClassLoaderFields(classLoader, (object) -> object instanceof Vector);
+						classes = (Vector<Class<?>>)iterateClassLoaderFields(classLoader, (object, offset) -> object instanceof Vector);
 						classLoadersClasses.put(classLoader, classes);
 						return classes;
 					}
@@ -270,7 +289,7 @@ public class LowLevelObjectsHandler implements Component {
 	}
 	
 
-	protected Object iterateClassLoaderFields(ClassLoader classLoader, Predicate<Object> predicate) {
+	protected Object iterateClassLoaderFields(ClassLoader classLoader, BiPredicate<Object, Long> predicate) {
 		long offset;
 		long step;
 		if (jVMChecker.is32Bit()) {
@@ -291,7 +310,7 @@ public class LowLevelObjectsHandler implements Component {
 			logInfo("Processing offset {}", offset);
 			Object object = unsafe.getObject(classLoader, offset);
 			//logDebug(offset + " " + object);
-			if (predicate.test(object)) {
+			if (predicate.test(object, offset)) {
 				return object;
 			}
 			offset+=step;
