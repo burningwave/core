@@ -170,15 +170,15 @@ public class ClassFactory implements Component {
 	}
 	
 	
-	public Class<?> getOrBuildCodeExecutorSubType(String imports, String className, String supplierCode,
+	public Class<?> getOrBuildCodeExecutorSubType(String imports, String classSimpleName, String supplierCode,
 		Class<?> returnedClass, ComponentSupplier componentSupplier, MemoryClassLoader memoryClassLoader
 	) {
 		String classCode = codeGeneratorForExecutor.generate(
-			imports, className, supplierCode, returnedClass
+			imports, classSimpleName, supplierCode, returnedClass
 		);
 		Map<String, ByteBuffer> compiledFiles = build(classCode);
 		if (!compiledFiles.isEmpty()) {
-			logInfo("Virtual class " + className + " succesfully created");
+			logInfo("Virtual class " + classSimpleName + " succesfully created");
 			if (!compiledFiles.isEmpty()) {
 				compiledFiles.forEach((clsName, byteCode) -> 
 					memoryClassLoader.addCompiledClass(

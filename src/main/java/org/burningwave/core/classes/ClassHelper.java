@@ -272,9 +272,10 @@ public class ClassHelper implements Component {
 		String className, 
 		String supplierCode, 
 		Class<?> returnedClass,
-		ComponentSupplier componentSupplier
+		ComponentSupplier componentSupplier,
+		Object... parameters
 	) {	
-		return executeCode(imports, className, supplierCode, returnedClass, componentSupplier, Thread.currentThread().getContextClassLoader());
+		return executeCode(imports, className, supplierCode, returnedClass, componentSupplier, Thread.currentThread().getContextClassLoader(), parameters);
 	}
 	
 	
@@ -284,7 +285,8 @@ public class ClassHelper implements Component {
 		String supplierCode, 
 		Class<?> returnedClass,
 		ComponentSupplier componentSupplier,
-		ClassLoader classLoader
+		ClassLoader classLoader,
+		Object... parameters
 	) {	
 		return ThrowingSupplier.get(() -> {
 			try (MemoryClassLoader memoryClassLoader = 
@@ -297,7 +299,7 @@ public class ClassHelper implements Component {
 					imports, className, supplierCode, returnedClass, componentSupplier, memoryClassLoader
 				);
 				Virtual virtualObject = ((Virtual)virtualClass.getDeclaredConstructor().newInstance());
-				T retrievedElement = virtualObject.invokeWithoutCachingMethod("execute", componentSupplier);
+				T retrievedElement = virtualObject.invokeWithoutCachingMethod("execute", componentSupplier, parameters);
 				return retrievedElement;
 			}
 		});
