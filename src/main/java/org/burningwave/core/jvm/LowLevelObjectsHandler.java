@@ -268,26 +268,23 @@ public class LowLevelObjectsHandler implements Component {
 	@SuppressWarnings({ "unchecked" })
 	public Map<String, ?> retrieveLoadedPackages(ClassLoader classLoader) {
 		Map<String, ?> packages = classLoadersPackages.get(classLoader);
-		if (packages != null) {
-			return packages;
-		} else {
-			packages = classLoadersPackages.get(classLoader);
-			if (packages == null) {
-				synchronized (classLoadersPackages) {
-					packages = classLoadersPackages.get(classLoader);
-					if (packages == null) {
-						packages = (Map<String, Package>)iterateClassLoaderFields(
-							classLoader, packageMapTester
-						);
-						classLoadersPackages.put(classLoader, packages);
-						return packages;
-					}
+		if (packages == null) {
+			synchronized (classLoadersPackages) {
+				packages = classLoadersPackages.get(classLoader);
+				if (packages == null) {
+					packages = (Map<String, Package>)iterateClassLoaderFields(
+						classLoader, packageMapTester
+					);
+					classLoadersPackages.put(classLoader, packages);
 				}
-			} else {
-				return packages;
 			}
+		
 		}
-		throw Throwables.toRuntimeException("Could not find packages Map on " + classLoader);
+		if (packages == null) {
+			throw Throwables.toRuntimeException("Could not find packages Map on " + classLoader);
+		}
+		return packages;
+		
 	}
 	
 
