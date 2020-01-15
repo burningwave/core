@@ -283,6 +283,8 @@ public class LowLevelObjectsHandler implements Component {
 						return packages;
 					}
 				}
+			} else {
+				return packages;
 			}
 		}
 		throw Throwables.toRuntimeException("Could not find packages Map on " + classLoader);
