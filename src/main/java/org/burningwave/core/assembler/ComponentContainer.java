@@ -84,6 +84,17 @@ public class ComponentContainer implements ComponentSupplier {
 		components = new ConcurrentHashMap<>();
 		config = new Properties();
 	}
+	
+	public final static ComponentContainer create(String fileName) {
+		try {
+			ComponentContainer componentContainer = new ComponentContainer(fileName);
+			componentContainer.launchInit();
+			return componentContainer;
+		} catch (Throwable exc){
+			ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
+			throw Throwables.toRuntimeException(exc);
+		}
+	}
 
 	private ComponentContainer init() {
 		config.put(PathHelper.CLASSPATHS_PREFIX + ClassFactory.CLASS_REPOSITORIES, "${classPaths}");
@@ -111,11 +122,6 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
-	public void reInit() {
-		clear();
-		launchInit();
-	}
-	
 	private ComponentContainer launchInit() {
 		initializerTask = new Thread(() -> {
 			init();
@@ -126,6 +132,11 @@ public class ComponentContainer implements ComponentSupplier {
 		});
 		initializerTask.start();
 		return this;
+	}
+	
+	public void reInit() {
+		clear();
+		launchInit();
 	}
 	
 	protected void waitForInitializationEnding() {
@@ -145,17 +156,6 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public static ComponentSupplier getInstance() {
 		return LazyHolder.getComponentContainerInstance();
-	}
-	
-	public final static ComponentContainer create(String fileName) {
-		try {
-			ComponentContainer componentContainer = new ComponentContainer(fileName);
-			componentContainer.launchInit();
-			return componentContainer;
-		} catch (Throwable exc){
-			ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
-			throw Throwables.toRuntimeException(exc);
-		}
 	}
 	
 	@SuppressWarnings("unchecked")
