@@ -39,6 +39,7 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Context;
 import org.burningwave.core.classes.ClassCriteria;
+import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.StreamHelper;
@@ -209,6 +210,11 @@ public class SearchContext<K, T> implements Component {
 		);
 	}
 	
+	protected Class<?> retrieveClass(Class<?> cls) {
+		return ClassHelper.isLoadedBy(cls, pathMemoryClassLoader) ?
+			cls : 
+			loadClass(cls.getName());
+	}
 	
 	<C extends SearchConfigAbst<C>> ClassCriteria.TestContext testCriteria(Class<?> cls) {
 		return (ClassCriteria.TestContext) execute(
