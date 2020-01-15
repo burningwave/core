@@ -315,4 +315,14 @@ public class ClassHelper implements Component {
 		classFactory = null;
 		classFactorySupplier = null;
 	}
+
+	public static boolean isLoadedBy(Class<?> cls, ClassLoader classLoader) {
+		if (cls.getClassLoader() == classLoader) {
+			return true;
+ 		} else if (classLoader != null && classLoader.getParent() != null) {
+ 			return isLoadedBy(cls, classLoader.getParent());
+ 		} else {
+ 			return false;
+ 		}
+	}
 }
