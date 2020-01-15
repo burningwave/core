@@ -112,6 +112,11 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
+	public void reInit() {
+		clear();
+		launchInit(this);
+	}
+	
 	private static void launchInit(ComponentContainer componentContainer) {
 		componentContainer.initializer = CompletableFuture.supplyAsync(() ->
 			componentContainer.init()
@@ -120,9 +125,9 @@ public class ComponentContainer implements ComponentSupplier {
 			{
 				try {
 					componentContainer.initializer.get();
-					synchronized (componentContainer) {
+					synchronized (componentContainer.components) {
 						componentContainer.initializer = null;
-						componentContainer.notifyAll();
+						componentContainer.components.notifyAll();
 					}
 				} catch (InterruptedException | ExecutionException exc) {
 					ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while initializing  " + ComponentContainer.class.getSimpleName() , exc);
@@ -152,10 +157,10 @@ public class ComponentContainer implements ComponentSupplier {
 		T component = (T)components.get(componentType);
 		if (component == null) {	
 			if (initializer != null) {
-				synchronized (this) {
+				synchronized (components) {
 					if (initializer != null) {
 						try {
-							wait();
+							components.wait();
 						} catch (InterruptedException exc) {
 							ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while waiting " + ComponentContainer.class.getSimpleName() + " initializaziont", exc);
 							throw Throwables.toRuntimeException(exc);
