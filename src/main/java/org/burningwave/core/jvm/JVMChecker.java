@@ -95,8 +95,12 @@ public class JVMChecker implements Component {
         this.compressedRefsEnabled = compressedOops;
     }
 
-    public boolean isCompressedOopsOffOn64Bit() {
+    public boolean isCompressedOopsOffOn64BitHotspot() {
         return is64BitHotspot && !compressedRefsEnabled;
+    }
+    
+    public boolean isCompressedOopsOffOn64Bit() {
+        return is64Bit && !compressedRefsEnabled;
     }
 
     public boolean is32Bit() {

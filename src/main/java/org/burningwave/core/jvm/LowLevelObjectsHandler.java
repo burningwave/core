@@ -274,16 +274,21 @@ public class LowLevelObjectsHandler implements Component {
 		long offset;
 		long step;
 		if (jVMChecker.is32Bit()) {
+			logInfo("JVM is 32 bit");
 			offset = 8;
 			step = 4;
-		} else if (!jVMChecker.isCompressedOopsOffOn64Bit()) {
+		} else if (!jVMChecker.isCompressedOopsOffOn64BitHotspot()) {
+			logInfo("JVM is 64 bit Hotspot and Compressed Oops is enabled");
 			offset = 12;
 			step = 4;
 		} else {
+			logInfo("JVM is 64 bit but is not Hotspot or Compressed Oops is disabled");
 			offset = 16;
 			step = 8;
 		}
+		logInfo("Iterating by unsafe fields of classLoader {}", classLoader.getClass().getName());
 		while (true) {
+			logInfo("Processing offset {}", offset);
 			Object object = unsafe.getObject(classLoader, offset);
 			//logDebug(offset + " " + object);
 			if (predicate.test(object)) {
