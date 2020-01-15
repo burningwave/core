@@ -88,12 +88,13 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 
 	private ComponentContainer init() {
-		try (Initializer initializer = new Initializer(configFileName)) {
+		config.put(PathHelper.CLASSPATHS_PREFIX + ClassFactory.CLASS_REPOSITORIES, "${classPaths}");
+		config.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
+		config.put(ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "componentSupplier.getMemoryClassLoader()");
+		config.put(FSIClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "componentSupplier.getMemoryClassLoader()");
+		
+		try (Initializer initializer = new Initializer(configFileName)) {	
 			FileSystemHelper fileSystemHelper = initializer.getFileSystemHelper();
-			config.put(PathHelper.CLASSPATHS_PREFIX + ClassFactory.CLASS_REPOSITORIES, "${classPaths}");
-			config.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
-			config.put(ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "componentSupplier.getMemoryClassLoader()");
-			config.put(FSIClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "componentSupplier.getMemoryClassLoader()");
 			FileSystemItem customConfig = fileSystemHelper.getResource(configFileName);
 			if (customConfig != null) {
 				try(InputStream inputStream = customConfig.toInputStream()) {
@@ -114,29 +115,43 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public void reInit() {
 		clear();
-		launchInit(this);
+		launchInit();
 	}
 	
-	private static void launchInit(ComponentContainer componentContainer) {
-		componentContainer.initializer = CompletableFuture.supplyAsync(() ->
-			componentContainer.init()
+	private ComponentContainer launchInit() {
+		initializer = CompletableFuture.supplyAsync(() ->
+			init()
 		);
-		new Thread(() -> 
-			{
-				try {
-					componentContainer.initializer.get();
-					synchronized (componentContainer.components) {
-						componentContainer.initializer = null;
-						componentContainer.components.notifyAll();
+		new Thread(() -> {
+			try {
+				initializer.get();
+				synchronized (components) {
+					initializer = null;
+					components.notifyAll();
+				}
+			} catch (InterruptedException | ExecutionException exc) {
+				ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while initializing  " + ComponentContainer.class.getSimpleName() , exc);
+				throw Throwables.toRuntimeException(exc);
+			}
+		}).start();
+		return this;
+	}
+	
+	protected void waitForInitializationEnding() {
+		if (initializer != null) {
+			synchronized (components) {
+				if (initializer != null) {
+					try {
+						components.wait();
+					} catch (InterruptedException exc) {
+						ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while waiting " + ComponentContainer.class.getSimpleName() + " initializaziont", exc);
+						throw Throwables.toRuntimeException(exc);
 					}
-				} catch (InterruptedException | ExecutionException exc) {
-					ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while initializing  " + ComponentContainer.class.getSimpleName() , exc);
-					throw Throwables.toRuntimeException(exc);
 				}
 			}
-		).start();
+		}
 	}
-
+	
 	public static ComponentSupplier getInstance() {
 		return LazyHolder.getComponentContainerInstance();
 	}
@@ -144,7 +159,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public final static ComponentContainer create(String fileName) {
 		try {
 			ComponentContainer componentContainer = new ComponentContainer(fileName);
-			launchInit(componentContainer);
+			componentContainer.launchInit();
 			return componentContainer;
 		} catch (Throwable exc){
 			ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
@@ -156,18 +171,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
 		T component = (T)components.get(componentType);
 		if (component == null) {	
-			if (initializer != null) {
-				synchronized (components) {
-					if (initializer != null) {
-						try {
-							components.wait();
-						} catch (InterruptedException exc) {
-							ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while waiting " + ComponentContainer.class.getSimpleName() + " initializaziont", exc);
-							throw Throwables.toRuntimeException(exc);
-						}
-					}
-				}
-			}
+			waitForInitializationEnding();
 			synchronized (components) {
 				if ((component = (T)components.get(componentType)) == null) {
 					component = componentSupplier.get();
