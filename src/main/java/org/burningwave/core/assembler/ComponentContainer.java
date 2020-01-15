@@ -30,9 +30,7 @@ package org.burningwave.core.assembler;
 
 import java.io.InputStream;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -79,7 +77,7 @@ public class ComponentContainer implements ComponentSupplier {
 	protected Map<Class<? extends Component>, Component> components;
 	private String configFileName;
 	private Properties config;
-	private CompletableFuture<ComponentContainer> initializer;
+	private Thread initializerTask;
 	
 	ComponentContainer(String fileName) {
 		configFileName = fileName;
@@ -119,28 +117,21 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private ComponentContainer launchInit() {
-		initializer = CompletableFuture.supplyAsync(() ->
-			init()
-		);
-		new Thread(() -> {
-			try {
-				initializer.get();
-				synchronized (components) {
-					initializer = null;
-					components.notifyAll();
-				}
-			} catch (InterruptedException | ExecutionException exc) {
-				ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while initializing  " + ComponentContainer.class.getSimpleName() , exc);
-				throw Throwables.toRuntimeException(exc);
+		initializerTask = new Thread(() -> {
+			init();
+			synchronized (components) {
+				initializerTask = null;
+				components.notifyAll();
 			}
-		}).start();
+		});
+		initializerTask.start();
 		return this;
 	}
 	
 	protected void waitForInitializationEnding() {
-		if (initializer != null) {
+		if (initializerTask != null) {
 			synchronized (components) {
-				if (initializer != null) {
+				if (initializerTask != null) {
 					try {
 						components.wait();
 					} catch (InterruptedException exc) {
