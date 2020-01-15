@@ -58,7 +58,10 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	private ClassHelper classHelper;
 	private Map<String, ByteBuffer> notLoadedCompiledClasses;
 	private Map<String, ByteBuffer> loadedCompiledClasses;
-
+	
+	static {
+        ClassLoader.registerAsParallelCapable();
+    }
 	
 	protected MemoryClassLoader(
 		ClassLoader parentClassLoader,
