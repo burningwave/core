@@ -36,7 +36,6 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Vector;
@@ -54,6 +53,7 @@ import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.common.Streams;
 import org.burningwave.core.common.Strings;
+import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.function.TriFunction;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
@@ -74,7 +74,7 @@ public class LowLevelObjectsHandler implements Component {
 	private Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
 	private Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 	private BiPredicate<Object, Long> packageMapTester;
-	private Long loadedPackageMemoryOffset;
+	private Long loadedPackageMapMemoryOffset;
 	private TriFunction<ClassLoader, Object, String, Package> packageRetriever;
 	private static Unsafe unsafe;
 	private Map<String, Method> classLoadersMethods;
@@ -108,30 +108,9 @@ public class LowLevelObjectsHandler implements Component {
 		this.classLoadersPackages = new ConcurrentHashMap<>();
 		this.classLoadersMethods = new ConcurrentHashMap<>();
 		this.classLoaderDelegates = new ConcurrentHashMap<>();
-		try {
-			Class<?> namedPackageClass = Class.forName("java.lang.NamedPackage");
-			packageMapTester = (object, offset) -> { 
-				if (object != null && object instanceof ConcurrentHashMap) {
-					Map<?, ?> map = (ConcurrentHashMap<?,?>)object;
-					if (loadedPackageMemoryOffset == null && !map.isEmpty()) {
-						boolean resultTest = map.entrySet().stream().findFirst().map(entry -> 
-							namedPackageClass.isAssignableFrom(entry.getValue().getClass())
-						).orElseGet(() -> Boolean.FALSE);
-						if (resultTest) {
-							loadedPackageMemoryOffset = offset;
-						}
-						return resultTest;
-					}
-					return (loadedPackageMemoryOffset != null && loadedPackageMemoryOffset.compareTo(offset) == 0);
-				} else {
-					return false;
-				}
-			};
-			//With this we load "loadedPackageMemoryOffset" property
-			retrieveLoadedPackages(this.getClass().getClassLoader());
-		} catch (ClassNotFoundException e) {
-			packageMapTester = (object, offset) -> object != null && object instanceof HashMap;
-		}
+		this.packageMapTester = (object, offset) -> { 
+			return loadedPackageMapMemoryOffset.compareTo(offset) == 0;
+		};
 		if (findGetDefinedPackageMethod() == null) {
 			packageRetriever = (classLoader, object, packageName) -> (Package)object;
 		} else {
@@ -164,6 +143,47 @@ public class LowLevelObjectsHandler implements Component {
 	
 	public static Unsafe getUnsafe() {
 		return unsafe;
+	}
+	
+	private void initLoadedPackageMapOffsetInitializator() {
+		ClassLoader temp = new ClassLoader() {
+			@Override
+			public String toString() {
+				super.definePackage("lowlevelobjectshandler.initializator", 
+					null, null, null, null, null, null, null);
+				return "lowlevelobjectshandler.initializator";
+			}							
+		};
+		temp.toString();
+		iterateClassLoaderFields(
+			temp, 
+			getLoadedPackageMapOffsetInitializator()
+		);
+	}
+	
+	private BiPredicate<Object, Long> getLoadedPackageMapOffsetInitializator() {
+		return (object, offset) -> {
+			Class<?> namedPackageClassTemp = null;
+			try {
+				namedPackageClassTemp = Class.forName("java.lang.NamedPackage");
+			} catch (ClassNotFoundException e) {
+				namedPackageClassTemp = ThrowingSupplier.get(() -> 
+					Class.forName("java.lang.Package")
+				);
+			}
+			final Class<?> namedPackageClass = namedPackageClassTemp;
+			if (object != null && object instanceof Map) {
+				Map<?, ?> map = (Map<?, ?>)object;
+				boolean resultTest = map.entrySet().stream().findFirst().map(entry -> 
+					namedPackageClass.isAssignableFrom(entry.getValue().getClass())
+				).orElseGet(() -> Boolean.FALSE);
+				if (resultTest) {
+					loadedPackageMapMemoryOffset = offset;
+					return true;
+				}
+			}
+			return false;
+		};
 	}
 	
 	public Class<?> defineAnonymousClass(Class<?> outerClass, byte[] byteCode, Object[] var3) {
@@ -272,6 +292,9 @@ public class LowLevelObjectsHandler implements Component {
 			synchronized (classLoadersPackages) {
 				packages = classLoadersPackages.get(classLoader);
 				if (packages == null) {
+					if (loadedPackageMapMemoryOffset == null) {
+						initLoadedPackageMapOffsetInitializator();
+					}					
 					packages = (Map<String, Package>)iterateClassLoaderFields(
 						classLoader, packageMapTester
 					);
