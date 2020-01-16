@@ -450,6 +450,10 @@ public class LowLevelObjectsHandler implements Component {
 		this.classHelper = null;
 		this.memberFinder = null;
 		this.packageRetriever = null;
+		LOADED_PACKAGES_MAP_MEMORY_OFFSET = null;
+		LOADED_CLASSES_VECTOR_MEMORY_OFFSET = null;
+		DEFINED_CLASS_FOR_TESTING = null;
+		DEFINED_PACKAGE_FOR_TESTING = null;
 	}
 	
 	@SuppressWarnings("unchecked")
