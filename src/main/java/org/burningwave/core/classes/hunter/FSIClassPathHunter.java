@@ -89,7 +89,7 @@ public class FSIClassPathHunter extends ClassPathScannerWithCachingSupport<Class
 	
 	@Override
 	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext context, String path, Class<?> cls, FileSystemItem file) {
-		return context.testCriteria(cls);
+		return context.testCriteria(context.retrieveClass(cls));
 	}
 	
 	@Override

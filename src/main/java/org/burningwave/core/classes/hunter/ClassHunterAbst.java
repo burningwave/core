@@ -98,7 +98,7 @@ public abstract class ClassHunterAbst<K, R extends ClassHunterAbst.SearchResult<
 	
 	@Override
 	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(ClassHunterAbst.SearchContext<K> context, String path, K key, Class<?> cls) {
-		return context.testCriteria(cls);
+		return context.testCriteria(context.retrieveClass(cls));
 	}
 	
 	@Override

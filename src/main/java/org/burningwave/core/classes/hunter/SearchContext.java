@@ -56,6 +56,7 @@ public class SearchContext<K, T> implements Component {
 	Collection<String> skippedClassNames;
 	Boolean classLoaderHaveBeenUploadedWithCriteriaPaths;
 	CompletableFuture<Void> searchTask;
+	Collection<T> itemsFound;
 	boolean searchTaskFinished;
 	
 	Collection<String> getSkippedClassNames() {
@@ -160,7 +161,15 @@ public class SearchContext<K, T> implements Component {
 	}
 	
 	Collection<T> getItemsFound() {
-		return this.itemsFoundFlatMap.values();
+		if (itemsFound == null) {
+			synchronized(itemsFoundFlatMap) {
+				if (itemsFound == null) {
+					this.itemsFound = ConcurrentHashMap.newKeySet();
+					this.itemsFound.addAll(this.itemsFoundFlatMap.values());
+				}
+			}
+		}
+		return itemsFound;
 	}
 	
 	Map<K, T> getItemsFound(String path) {
