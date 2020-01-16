@@ -34,18 +34,19 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 
 import org.burningwave.Throwables;
-import org.burningwave.core.common.Streams;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.FileOutputStream;
 import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.io.Resources;
+import org.burningwave.core.io.Streams;
 import org.objectweb.asm.ClassReader;
 
 public class JavaClass {
 	private final ByteBuffer byteCode;
 	private final String className;
 	
-	private JavaClass(ByteBuffer byteCode) throws IOException {
+	JavaClass(ByteBuffer byteCode) throws IOException {
 		this.byteCode = Streams.shareContent(byteCode);
 		this.className = new ClassReader(new ByteBufferInputStream(Streams.shareContent(byteCode))).getClassName();
 	}
@@ -144,6 +145,10 @@ public class JavaClass {
 				Streams.copy(inputStream, fileOutputStream);
 			}
 		});
+		Resources.getOrDefault(
+			fileClass.getAbsolutePath(), () ->
+			getByteCode()
+		);
 		return FileSystemItem.ofPath(fileClass.getAbsolutePath());
 	}
 }

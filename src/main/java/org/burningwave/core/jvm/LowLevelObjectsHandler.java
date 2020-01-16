@@ -51,11 +51,11 @@ import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodCriteria;
-import org.burningwave.core.common.Streams;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.function.TriFunction;
 import org.burningwave.core.io.StreamHelper;
+import org.burningwave.core.io.Streams;
 import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
 
@@ -63,6 +63,8 @@ import sun.misc.Unsafe;
 
 @SuppressWarnings("restriction")
 public class LowLevelObjectsHandler implements Component {
+	private Long LOADED_PACKAGES_MAP_MEMORY_OFFSET;
+	
 	private JVMChecker jVMChecker;
 	private IterableObjectHelper iterableObjectHelper;
 	private ClassFactory classFactory;
@@ -74,7 +76,6 @@ public class LowLevelObjectsHandler implements Component {
 	private Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
 	private Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 	private BiPredicate<Object, Long> packageMapTester;
-	private Long loadedPackageMapMemoryOffset;
 	private TriFunction<ClassLoader, Object, String, Package> packageRetriever;
 	private static Unsafe unsafe;
 	private Map<String, Method> classLoadersMethods;
@@ -109,7 +110,7 @@ public class LowLevelObjectsHandler implements Component {
 		this.classLoadersMethods = new ConcurrentHashMap<>();
 		this.classLoaderDelegates = new ConcurrentHashMap<>();
 		this.packageMapTester = (object, offset) -> { 
-			return loadedPackageMapMemoryOffset.compareTo(offset) == 0;
+			return LOADED_PACKAGES_MAP_MEMORY_OFFSET.compareTo(offset) == 0;
 		};
 		if (findGetDefinedPackageMethod() == null) {
 			packageRetriever = (classLoader, object, packageName) -> (Package)object;
@@ -178,7 +179,7 @@ public class LowLevelObjectsHandler implements Component {
 					namedPackageClass.isAssignableFrom(entry.getValue().getClass())
 				).orElseGet(() -> Boolean.FALSE);
 				if (resultTest) {
-					loadedPackageMapMemoryOffset = offset;
+					LOADED_PACKAGES_MAP_MEMORY_OFFSET = offset;
 					return true;
 				}
 			}
@@ -292,7 +293,7 @@ public class LowLevelObjectsHandler implements Component {
 			synchronized (classLoadersPackages) {
 				packages = classLoadersPackages.get(classLoader);
 				if (packages == null) {
-					if (loadedPackageMapMemoryOffset == null) {
+					if (LOADED_PACKAGES_MAP_MEMORY_OFFSET == null) {
 						initLoadedPackageMapOffsetInitializator();
 					}					
 					packages = (Map<String, Package>)iterateClassLoaderFields(

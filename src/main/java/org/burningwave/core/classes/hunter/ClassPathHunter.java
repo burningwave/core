@@ -41,7 +41,6 @@ import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberFinder;
-import org.burningwave.core.common.Streams;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.concurrent.ParallelTasksManager;
 import org.burningwave.core.function.ThrowingRunnable;
@@ -52,6 +51,7 @@ import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemHelper.Scan;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
+import org.burningwave.core.io.Streams;
 import org.burningwave.core.io.ZipInputStream;
 
 public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>, File, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
@@ -137,7 +137,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>
 		File fsObject = null;
 		ZipInputStream.Entry zipEntry = scanItemContext.getInput();
 		if (zipEntry.getName().equals(javaClass.getPath())) {
-			fsObject = new File(zipEntry.getZipInputStream().getName());
+			fsObject = new File(zipEntry.getZipInputStream().getAbsolutePath());
 			if (!fsObject.exists()) {
 				fsObject = extractLibrary(context, zipEntry);
 			}
@@ -151,7 +151,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>
 	}
 	
 	File extractClass(ClassPathHunter.SearchContext context, ZipInputStream.Entry zipEntry, JavaClass javaClass) {
-		String libName = Strings.Paths.uniform(zipEntry.getZipInputStream().getName());
+		String libName = Strings.Paths.uniform(zipEntry.getZipInputStream().getAbsolutePath());
 		libName = libName.substring(libName.lastIndexOf("/", libName.length()-2)+1, libName.lastIndexOf("/"));
 		return copyToTemporaryFolder(
 			context, zipEntry.toByteBuffer(),
@@ -161,7 +161,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>
 
 	
 	File extractLibrary(ClassPathHunter.SearchContext context, ZipInputStream.Entry zipEntry) {
-		String libName = Strings.Paths.uniform(zipEntry.getZipInputStream().getName());
+		String libName = Strings.Paths.uniform(zipEntry.getZipInputStream().getAbsolutePath());
 		libName = libName.substring(libName.lastIndexOf("/", libName.length()-2)+1, libName.lastIndexOf("/"));
 		return copyToTemporaryFolder(
 			context, zipEntry.getZipInputStream().toByteBuffer(), 

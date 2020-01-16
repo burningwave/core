@@ -48,14 +48,13 @@ import java.util.stream.Collectors;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
-import org.burningwave.core.common.Streams;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.io.ZipInputStream.Entry;
 
 public class FileSystemItem implements Component {
 	private final static String ZIP_PATH_SEPARATOR = "//"; 
 	private final static Map<String, FileSystemItem> FILE_SYSTEM_ITEMS = new ConcurrentHashMap<>(); 
-	
+		
 	private Map.Entry<String, String> absolutePath;
 	private FileSystemItem parent;
 	private Set<FileSystemItem> children;
@@ -87,7 +86,7 @@ public class FileSystemItem implements Component {
 		realAbsolutePath = Strings.Paths.clean(realAbsolutePath);
 		FileSystemItem fileSystemItemReader = FILE_SYSTEM_ITEMS.get(realAbsolutePath);
 		if (fileSystemItemReader == null) {
-			synchronized(realAbsolutePath) {
+			synchronized(FileSystemItem.class.getName() + "_" + realAbsolutePath) {
 				if ((fileSystemItemReader = FILE_SYSTEM_ITEMS.get(realAbsolutePath)) == null) {
 					fileSystemItemReader = new FileSystemItem(realAbsolutePath, conventionedAbsolutePath);
 					if (Strings.isNotEmpty(realAbsolutePath)) {
@@ -396,6 +395,11 @@ public class FileSystemItem implements Component {
 	}
 	
 	public ByteBuffer toByteBuffer() {
+		String absolutePath = getAbsolutePath();
+		ByteBuffer resource = Resources.getOrDefault(absolutePath, null); 
+		if (resource != null) {
+			return resource;
+		}
 		String conventionedAbsolutePath = getConventionedAbsolutePath();
 		if (!isFolder()) {
 			if (isCompressed()) {
@@ -403,18 +407,26 @@ public class FileSystemItem implements Component {
 				File file = new File(zipFilePath);
 				if (file.exists()) {
 					try (FileInputStream fIS = FileInputStream.create(file)) {
-						return retrieveBytes(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + ZIP_PATH_SEPARATOR, ""));
+						return Resources.getOrDefault(
+							absolutePath,
+							() ->
+								retrieveBytes(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + ZIP_PATH_SEPARATOR, ""))
+						);
 					}
 				}
 			} else {
 				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
-					return fIS.toByteBuffer();
+					return Resources.getOrDefault(
+						absolutePath, () ->
+						fIS.toByteBuffer()
+					);
 				}
 			}
 		}
 		return null;
 	}
-
+	
+	
 	private ByteBuffer retrieveBytes(String zipFilePath, InputStream inputStream, String itemToSearch) {
 		try (ZipInputStream zipInputStream = ZipInputStream.create(zipFilePath, inputStream)) {
 			if (itemToSearch.contains(ZIP_PATH_SEPARATOR)) {

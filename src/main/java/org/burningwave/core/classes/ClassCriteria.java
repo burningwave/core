@@ -41,8 +41,8 @@ import java.util.stream.Collectors;
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Criteria;
-import org.burningwave.core.common.Streams;
 import org.burningwave.core.function.PentaPredicate;
+import org.burningwave.core.io.Streams;
 
 @SuppressWarnings("unchecked")
 public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Class<?>, ClassCriteria, ClassCriteria.TestContext> implements Component {

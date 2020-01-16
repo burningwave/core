@@ -102,7 +102,8 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<String, J
 		SearchContext<String, JavaClass> context,
 		ClassCriteria.TestContext criteriaTestContext,
 		Scan.ItemContext<ZipInputStream.Entry> scanItemContext,
-		JavaClass javaClass) {
+		JavaClass javaClass
+	) {
 		context.addItemFound(scanItemContext.getBasePathAsString(), scanItemContext.getInput().getAbsolutePath(), javaClass);
 	}
 		
