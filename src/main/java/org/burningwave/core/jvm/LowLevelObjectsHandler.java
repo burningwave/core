@@ -149,7 +149,7 @@ public class LowLevelObjectsHandler implements Component {
 		ClassLoader temp = new ClassLoader() {
 			@Override
 			public String toString() {
-				super.definePackage("lowlevelobjectshandler.initializator", 
+				super.definePackage("lowlevelobjectshandler.loadedpackagemapoffset.initializator", 
 					null, null, null, null, null, null, null);
 				return "lowlevelobjectshandler.initializator";
 			}							
