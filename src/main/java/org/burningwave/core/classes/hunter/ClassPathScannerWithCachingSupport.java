@@ -207,7 +207,10 @@ public abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchC
 				classFileScanConfiguration.scanAllClassFileThat(filePredicate);
 			}
 		}
-	
+		if (!checkPathsResult.getContainedPaths().isEmpty()) {
+			//TODO: to be implemented
+		}
+		
 		fileSystemHelper.scan(
 			classFileScanConfiguration.toScanConfiguration(
 				context, this
@@ -247,7 +250,6 @@ public abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchC
 	}
 
 	abstract <S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(C context, String path, K key, I value);
-	
 	
 	@Override
 	public void close() {
