@@ -36,21 +36,18 @@ import java.util.function.Supplier;
 import org.burningwave.core.common.Strings;
 
 public class Resources {
-	private final static String MUTEX_PREFIX_NAME = Resources.class.getName();
-	private final static Map<Long, Map<String, Map<String, ByteBuffer>>> LOADED_RESOURCES_PARTITIONED = new ConcurrentHashMap<>();
-	
-	private final static Long PARTITION_START_LEVEL = 7L;
-		
+	private final static Map<Long, Map<String, Map<String, ByteBuffer>>> LOADED_RESOURCES = new ConcurrentHashMap<>();
+	private final static String MUTEX_PREFIX_NAME = Resources.class.getName();	
+	private final static Long PARTITION_START_LEVEL = 1L;
 
 	public static ByteBuffer getOrDefault(String path, Supplier<ByteBuffer> resourceSupplier) {
 		path = Strings.Paths.clean(path);
 		Long occurences = path.chars().filter(ch -> ch == '/').count();
 		Long partitionIndex = occurences > PARTITION_START_LEVEL? occurences : PARTITION_START_LEVEL;
-		Map<String, Map<String, ByteBuffer>> partion = retrievePartition(LOADED_RESOURCES_PARTITIONED, partitionIndex);
+		Map<String, Map<String, ByteBuffer>> partion = retrievePartition(LOADED_RESOURCES, partitionIndex);
 		Map<String, ByteBuffer> nestedPartition = retrievePartition(partion, partitionIndex, path);
 		return getOrDefault(nestedPartition, path, resourceSupplier);
 	}
-
 
 	private static Map<String, ByteBuffer> retrievePartition(Map<String, Map<String, ByteBuffer>> partion, Long partitionIndex, String path) {
 		String partitionKey = path.substring(0, path.lastIndexOf("/"));
@@ -66,7 +63,6 @@ public class Resources {
 		}
 		return innerPartion;
 	}
-
 
 	public static ByteBuffer getOrDefault(Map<String, ByteBuffer> loadedResources, String path, Supplier<ByteBuffer> resourceSupplier) {
 		ByteBuffer resource = loadedResources.get(path);
@@ -97,6 +93,20 @@ public class Resources {
 			}
 		}
 		return resources;
+	}
+	
+	public static int getLoadedResourcesCount() {
+		return getLoadedResourcesCount(LOADED_RESOURCES);
+	}
+	
+	private static int getLoadedResourcesCount(Map<Long, Map<String, Map<String, ByteBuffer>>> resources) {
+		int count = 0;
+		for (Map.Entry<Long, Map<String, Map<String, ByteBuffer>>> partition : resources.entrySet()) {
+			for (Map.Entry<String, Map<String, ByteBuffer>> innerPartition : partition.getValue().entrySet()) {
+				count += innerPartition.getValue().size();
+			}
+		}
+		return count;
 	}
 	
 }

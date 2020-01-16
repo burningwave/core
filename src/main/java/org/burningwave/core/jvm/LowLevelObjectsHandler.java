@@ -52,8 +52,8 @@ import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.common.Strings;
-import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.function.TriFunction;
+import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.Streams;
 import org.burningwave.core.iterable.IterableObjectHelper;
@@ -64,6 +64,9 @@ import sun.misc.Unsafe;
 @SuppressWarnings("restriction")
 public class LowLevelObjectsHandler implements Component {
 	private Long LOADED_PACKAGES_MAP_MEMORY_OFFSET;
+	private Long LOADED_CLASSES_VECTOR_MEMORY_OFFSET;
+	private Object DEFINED_CLASS_FOR_TESTING;
+	private Object DEFINED_PACKAGE_FOR_TESTING;
 	
 	private JVMChecker jVMChecker;
 	private IterableObjectHelper iterableObjectHelper;
@@ -75,7 +78,6 @@ public class LowLevelObjectsHandler implements Component {
 	private MemberFinder memberFinder;
 	private Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
 	private Map<ClassLoader, Map<String, ?>> classLoadersPackages;
-	private BiPredicate<Object, Long> packageMapTester;
 	private TriFunction<ClassLoader, Object, String, Package> packageRetriever;
 	private static Unsafe unsafe;
 	private Map<String, Method> classLoadersMethods;
@@ -109,9 +111,7 @@ public class LowLevelObjectsHandler implements Component {
 		this.classLoadersPackages = new ConcurrentHashMap<>();
 		this.classLoadersMethods = new ConcurrentHashMap<>();
 		this.classLoaderDelegates = new ConcurrentHashMap<>();
-		this.packageMapTester = (object, offset) -> { 
-			return LOADED_PACKAGES_MAP_MEMORY_OFFSET.compareTo(offset) == 0;
-		};
+
 		if (findGetDefinedPackageMethod() == null) {
 			packageRetriever = (classLoader, object, packageName) -> (Package)object;
 		} else {
@@ -146,45 +146,90 @@ public class LowLevelObjectsHandler implements Component {
 		return unsafe;
 	}
 	
-	private void initLoadedPackageMapOffsetInitializator() {
-		ClassLoader temp = new ClassLoader() {
+	private void initLoadedPackageVectorOffset() {
+		ClassLoader temporaryClassLoader = new ClassLoader() {
 			@Override
 			public String toString() {
-				super.definePackage("lowlevelobjectshandler.loadedpackagemapoffset.initializator", 
+				ByteBufferInputStream inputStream = (ByteBufferInputStream)streamHelper.getResourceAsStream(LowLevelObjectsHandler.class.getName().replace(".", "/")+ ".class");
+				DEFINED_CLASS_FOR_TESTING = super.defineClass(LowLevelObjectsHandler.class.getName(), inputStream.toByteBuffer(), null);
+				return "lowlevelobjectshandler.initializator";
+			}							
+		};
+		temporaryClassLoader.toString();
+		iterateClassLoaderFields(
+			temporaryClassLoader, 
+			getLoadedClassesVectorOffsetInitializator()
+		);
+	}
+	
+	private void initLoadedPackageMapOffset() {
+		ClassLoader temporaryClassLoader = new ClassLoader() {
+			@Override
+			public String toString() {
+				DEFINED_PACKAGE_FOR_TESTING = super.definePackage("lowlevelobjectshandler.loadedpackagemapoffset.initializator.packagefortesting", 
 					null, null, null, null, null, null, null);
 				return "lowlevelobjectshandler.initializator";
 			}							
 		};
-		temp.toString();
+		temporaryClassLoader.toString();
 		iterateClassLoaderFields(
-			temp, 
+			temporaryClassLoader, 
 			getLoadedPackageMapOffsetInitializator()
 		);
 	}
 	
+	private BiPredicate<Object, Long> getLoadedClassesVectorOffsetInitializator() {
+		return (object, offset) -> {
+			if (object != null && object instanceof Vector) {
+				Vector<?> vector = (Vector<?>)object;
+				if (vector.contains(DEFINED_CLASS_FOR_TESTING)) {
+					LOADED_CLASSES_VECTOR_MEMORY_OFFSET = offset;
+					return true;
+				}
+			}
+			return false;
+		};
+	}
+	
 	private BiPredicate<Object, Long> getLoadedPackageMapOffsetInitializator() {
 		return (object, offset) -> {
-			Class<?> namedPackageClassTemp = null;
-			try {
-				namedPackageClassTemp = Class.forName("java.lang.NamedPackage");
-			} catch (ClassNotFoundException e) {
-				namedPackageClassTemp = ThrowingSupplier.get(() -> 
-					Class.forName("java.lang.Package")
-				);
-			}
-			final Class<?> namedPackageClass = namedPackageClassTemp;
 			if (object != null && object instanceof Map) {
 				Map<?, ?> map = (Map<?, ?>)object;
-				boolean resultTest = map.entrySet().stream().findFirst().map(entry -> 
-					namedPackageClass.isAssignableFrom(entry.getValue().getClass())
-				).orElseGet(() -> Boolean.FALSE);
-				if (resultTest) {
+				if (map.containsValue(DEFINED_PACKAGE_FOR_TESTING)) {
 					LOADED_PACKAGES_MAP_MEMORY_OFFSET = offset;
 					return true;
 				}
 			}
 			return false;
 		};
+	}
+	
+	protected Object iterateClassLoaderFields(ClassLoader classLoader, BiPredicate<Object, Long> predicate) {
+		long offset;
+		long step;
+		if (jVMChecker.is32Bit()) {
+			logInfo("JVM is 32 bit");
+			offset = 8;
+			step = 4;
+		} else if (!jVMChecker.isCompressedOopsOffOn64BitHotspot()) {
+			logInfo("JVM is 64 bit Hotspot and Compressed Oops is enabled");
+			offset = 12;
+			step = 4;
+		} else {
+			logInfo("JVM is 64 bit but is not Hotspot or Compressed Oops is disabled");
+			offset = 16;
+			step = 8;
+		}
+		logInfo("Iterating by unsafe fields of classLoader {}", classLoader.getClass().getName());
+		while (true) {
+			logInfo("Processing offset {}", offset);
+			Object object = unsafe.getObject(classLoader, offset);
+			//logDebug(offset + " " + object);
+			if (predicate.test(object, offset)) {
+				return object;
+			}
+			offset+=step;
+		}
 	}
 	
 	public Class<?> defineAnonymousClass(Class<?> outerClass, byte[] byteCode, Object[] var3) {
@@ -276,7 +321,10 @@ public class LowLevelObjectsHandler implements Component {
 				synchronized (classLoadersClasses) {
 					classes = classLoadersClasses.get(classLoader);
 					if (classes == null) {
-						classes = (Vector<Class<?>>)iterateClassLoaderFields(classLoader, (object, offset) -> object instanceof Vector);
+						if (LOADED_CLASSES_VECTOR_MEMORY_OFFSET == null) {
+							initLoadedPackageVectorOffset();
+						}					
+						classes = (Vector<Class<?>>)unsafe.getObject(classLoader, LOADED_CLASSES_VECTOR_MEMORY_OFFSET);
 						classLoadersClasses.put(classLoader, classes);
 						return classes;
 					}
@@ -294,11 +342,9 @@ public class LowLevelObjectsHandler implements Component {
 				packages = classLoadersPackages.get(classLoader);
 				if (packages == null) {
 					if (LOADED_PACKAGES_MAP_MEMORY_OFFSET == null) {
-						initLoadedPackageMapOffsetInitializator();
+						initLoadedPackageMapOffset();
 					}					
-					packages = (Map<String, Package>)iterateClassLoaderFields(
-						classLoader, packageMapTester
-					);
+					packages = (Map<String, ?>)unsafe.getObject(classLoader, LOADED_PACKAGES_MAP_MEMORY_OFFSET);
 					classLoadersPackages.put(classLoader, packages);
 				}
 			}
@@ -309,35 +355,6 @@ public class LowLevelObjectsHandler implements Component {
 		}
 		return packages;
 		
-	}
-	
-
-	protected Object iterateClassLoaderFields(ClassLoader classLoader, BiPredicate<Object, Long> predicate) {
-		long offset;
-		long step;
-		if (jVMChecker.is32Bit()) {
-			logInfo("JVM is 32 bit");
-			offset = 8;
-			step = 4;
-		} else if (!jVMChecker.isCompressedOopsOffOn64BitHotspot()) {
-			logInfo("JVM is 64 bit Hotspot and Compressed Oops is enabled");
-			offset = 12;
-			step = 4;
-		} else {
-			logInfo("JVM is 64 bit but is not Hotspot or Compressed Oops is disabled");
-			offset = 16;
-			step = 8;
-		}
-		logInfo("Iterating by unsafe fields of classLoader {}", classLoader.getClass().getName());
-		while (true) {
-			logInfo("Processing offset {}", offset);
-			Object object = unsafe.getObject(classLoader, offset);
-			//logDebug(offset + " " + object);
-			if (predicate.test(object, offset)) {
-				return object;
-			}
-			offset+=step;
-		}
 	}
 	
 	public Package retrieveLoadedPackage(ClassLoader classLoader, Object packageToFind, String packageName) {
@@ -432,7 +449,6 @@ public class LowLevelObjectsHandler implements Component {
 		this.classHelperSupplier = null;
 		this.classHelper = null;
 		this.memberFinder = null;
-		this.packageMapTester = null;
 		this.packageRetriever = null;
 	}
 	
