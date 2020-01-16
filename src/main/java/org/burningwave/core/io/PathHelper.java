@@ -253,23 +253,27 @@ public class PathHelper implements Component {
 			for (String path1 : pathCollection1) {
 				File pathAsFile1 = new File(path1);
 				String path1Normalized = Strings.Paths.clean(pathAsFile1.getAbsolutePath());
-				if (
+				if (//If path 1 and path 2 are the same file or path 2 is contained in path 1
 					(!pathAsFile1.isDirectory() && !path2AsFile.isDirectory() && 
 						path1Normalized.equals(path2Normalized)) ||
 					(pathAsFile1.isDirectory() && !path2AsFile.isDirectory() &&
 						path2Normalized.startsWith(path1Normalized + "/"))
 				) {	
-					checkPathsResult.addContainedPath(path1);
+					checkPathsResult.addContainedPath(path1, path2);
 					result = 0;
 				} else if (
+					//If path 1 is a file contained in path 2 that is a directory
 					!pathAsFile1.isDirectory() && path2AsFile.isDirectory() && 
 						path1Normalized.startsWith(path2Normalized + "/")) {
 					checkPathsResult.addPartialContainedFile(path2, path1);
 					result = 1;
+					//If path 1 and path 2 are directories
 				} else if (pathAsFile1.isDirectory() && path2AsFile.isDirectory()) {
+					//If path 2 is contained in path 1
 					if ((path2Normalized + "/").startsWith(path1Normalized + "/")) {
-						checkPathsResult.addContainedPath(path1);
+						checkPathsResult.addContainedPath(path1, path2);
 						result = 0;
+					//If path 1 is contained in path 2
 					} else if ((path1Normalized + "/").startsWith(path2Normalized + "/")) {
 						checkPathsResult.addPartialContainedDirectory(path2, path1);
 						result = 1;
@@ -357,11 +361,11 @@ public class PathHelper implements Component {
 		private final Collection<String> notContainedPaths;
 		private final Map<String, Collection<String>> partialContainedDirectories;
 		private final Map<String, Collection<String>> partialContainedFiles;
-		private final Collection<String> containedPaths;
+		private final Map<String, Collection<String>> containedPaths;
 
 		private CheckResult() {
 			notContainedPaths = new LinkedHashSet<>();
-			containedPaths = new LinkedHashSet<>();
+			containedPaths = new LinkedHashMap<>();
 			partialContainedDirectories = new LinkedHashMap<>();
 			partialContainedFiles = new LinkedHashMap<>();
 		}
@@ -389,8 +393,13 @@ public class PathHelper implements Component {
 			paths.add(path2);
 		}
 		
-		void addContainedPath(String path) {
-			containedPaths.add(path);
+		void addContainedPath(String path1, String path2) {
+			Collection<String> paths = containedPaths.get(path1);
+			if (paths == null) {
+				paths = new LinkedHashSet<>();
+				containedPaths.put(path1, paths);
+			}
+			paths.add(path2);
 		}
 		
 		public Collection<String> getNotContainedPaths() {
@@ -406,7 +415,7 @@ public class PathHelper implements Component {
 		}
 
 
-		public Collection<String> getContainedPaths() {
+		public Map<String, Collection<String>> getContainedPaths() {
 			return containedPaths;
 		}
 	}

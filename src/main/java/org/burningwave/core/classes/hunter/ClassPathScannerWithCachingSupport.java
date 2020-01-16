@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
@@ -208,7 +209,9 @@ public abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchC
 			}
 		}
 		if (!checkPathsResult.getContainedPaths().isEmpty()) {
-			//TODO: to be implemented
+			for (Entry<String, Collection<String>> entry : checkPathsResult.getContainedPaths().entrySet()) {
+				classFileScanConfiguration.addPaths(entry.getValue().stream().map(path -> Strings.Paths.clean(path)).collect(Collectors.toList()));
+			}
 		}
 		
 		fileSystemHelper.scan(
