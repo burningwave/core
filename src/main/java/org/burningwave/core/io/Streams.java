@@ -42,7 +42,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
 public class Streams {
-	//TODO: Dare la possibilià di configurare questi parametri
+	//TODO: this values should be configurable
 	public static int DEFAULT_BUFFER_SIZE = (int)BufferSize.KILO_BYTE.getValue();
 	public static Function<Integer, ByteBuffer> DEFAULT_BYTE_BUFFER_ALLOCATION = ByteBuffer::allocateDirect;
 	

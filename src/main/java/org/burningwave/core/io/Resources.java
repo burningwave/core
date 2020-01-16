@@ -36,18 +36,47 @@ import java.util.function.Supplier;
 import org.burningwave.core.common.Strings;
 
 public class Resources {
-	private final static Map<String, ByteBuffer> LOADED_RESOURCES = new ConcurrentHashMap<>();
+	private final static String MUTEX_PREFIX_NAME = Resources.class.getName();
+	private final static Map<Long, Map<String, Map<String, ByteBuffer>>> LOADED_RESOURCES_PARTITIONED = new ConcurrentHashMap<>();
 	
+	private final static Long PARTITION_START_LEVEL = 7L;
+		
+
 	public static ByteBuffer getOrDefault(String path, Supplier<ByteBuffer> resourceSupplier) {
 		path = Strings.Paths.clean(path);
-		ByteBuffer resource = LOADED_RESOURCES.get(path);
+		Long occurences = path.chars().filter(ch -> ch == '/').count();
+		Long partitionIndex = occurences > PARTITION_START_LEVEL? occurences : PARTITION_START_LEVEL;
+		Map<String, Map<String, ByteBuffer>> partion = retrievePartition(LOADED_RESOURCES_PARTITIONED, partitionIndex);
+		Map<String, ByteBuffer> nestedPartition = retrievePartition(partion, partitionIndex, path);
+		return getOrDefault(nestedPartition, path, resourceSupplier);
+	}
+
+
+	private static Map<String, ByteBuffer> retrievePartition(Map<String, Map<String, ByteBuffer>> partion, Long partitionIndex, String path) {
+		String partitionKey = path.substring(0, path.lastIndexOf("/"));
+		partitionKey = partitionKey.substring(partitionKey.lastIndexOf("/") + 1);
+		Map<String, ByteBuffer> innerPartion = partion.get(partitionKey);
+		if (innerPartion == null) {
+			synchronized (MUTEX_PREFIX_NAME + partitionIndex + "_" + partitionKey) {
+				innerPartion = partion.get(partitionKey);
+				if (innerPartion == null) {
+					partion.put(partitionKey, innerPartion = new ConcurrentHashMap<>());
+				}
+			}
+		}
+		return innerPartion;
+	}
+
+
+	public static ByteBuffer getOrDefault(Map<String, ByteBuffer> loadedResources, String path, Supplier<ByteBuffer> resourceSupplier) {
+		ByteBuffer resource = loadedResources.get(path);
 		if (resource == null) {
-			synchronized (path) {
-				resource = LOADED_RESOURCES.get(path);
+			synchronized (MUTEX_PREFIX_NAME + "_" + path) {
+				resource = loadedResources.get(path);
 				if (resource == null && resourceSupplier != null) {
 					resource = resourceSupplier.get();
 					if (resource != null) {
-						LOADED_RESOURCES.put(path, (resource = Streams.shareContent(resource)));
+						loadedResources.put(path, resource = Streams.shareContent(resource));
 					}
 				}
 			}
@@ -56,5 +85,18 @@ public class Resources {
 			Streams.shareContent(resource) :
 			resource;
 	}
-
+	
+	private static Map<String, Map<String, ByteBuffer>> retrievePartition(Map<Long, Map<String, Map<String, ByteBuffer>>> resourcesPartitioned, Long partitionIndex) {
+		Map<String, Map<String, ByteBuffer>> resources = resourcesPartitioned.get(partitionIndex);
+		if (resources == null) {
+			synchronized (MUTEX_PREFIX_NAME + "_" + partitionIndex) {
+				resources = resourcesPartitioned.get(partitionIndex);
+				if (resources == null) {
+					resourcesPartitioned.put(partitionIndex, resources = new ConcurrentHashMap<>());
+				}
+			}
+		}
+		return resources;
+	}
+	
 }
