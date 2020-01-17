@@ -54,7 +54,7 @@ import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.Streams;
 import org.burningwave.core.io.ZipInputStream;
 
-public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>, File, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
+public class ClassPathHunter extends ClassPathScannerWithCachingSupport<File, Collection<Class<?>>, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
 	
 	private ClassPathHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
@@ -91,7 +91,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>
 	}
 	
 	@Override
-	<S extends SearchConfigAbst<S>> void iterateAndTestItemsForPath(SearchContext context, String path, Map<Class<?>, File> itemsForPath) {
+	<S extends SearchConfigAbst<S>> void iterateAndTestItemsForPath(SearchContext context, String path, Map<File, Collection<Class<?>>> itemsForPath) {
 		for (Entry<Class<?>, File> cachedItemAsEntry : itemsForPath.entrySet()) {
 			ClassCriteria.TestContext testContext = testCachedItem(context, path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 			if(testContext.getResult()) {
@@ -102,7 +102,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>
 	}
 	
 	@Override
-	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext context, String path, Class<?> cls, File file) {
+	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext context, String path, File file, Collection<Class<?>> cls) {
 		return context.testCriteria(context.retrieveClass(cls));
 	}
 	
@@ -213,7 +213,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>
 		super.close();
 	}
 	
-	public static class SearchContext extends org.burningwave.core.classes.hunter.SearchContext<Class<?>, File> {
+	public static class SearchContext extends org.burningwave.core.classes.hunter.SearchContext<File, Collection<Class<?>>> {
 		ParallelTasksManager tasksManager;
 		Collection<File> temporaryFiles;
 		boolean deleteTemporaryFilesOnClose;
@@ -246,7 +246,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>
 		}
 	}
 	
-	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<Class<?>, File> {
+	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<File, Collection<Class<?>>> {
 
 		public SearchResult(SearchContext context) {
 			super(context);
