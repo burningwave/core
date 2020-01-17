@@ -29,8 +29,10 @@
 package org.burningwave.core.classes.hunter;
 
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.burningwave.core.classes.ClassCriteria;
@@ -47,7 +49,7 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
 
-public class FSIClassPathHunter extends ClassPathScannerWithCachingSupport<Class<?>, FileSystemItem, FSIClassPathHunter.SearchContext, FSIClassPathHunter.SearchResult> {
+public class FSIClassPathHunter extends ClassPathScannerWithCachingSupport<FileSystemItem, Collection<Class<?>>, FSIClassPathHunter.SearchContext, FSIClassPathHunter.SearchResult> {
 	private FSIClassPathHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
@@ -77,8 +79,8 @@ public class FSIClassPathHunter extends ClassPathScannerWithCachingSupport<Class
 	}
 	
 	@Override
-	<S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(SearchContext context, String path, Map<Class<?>, FileSystemItem> itemsForPath) {
-		for (Entry<Class<?>, FileSystemItem> cachedItemAsEntry : itemsForPath.entrySet()) {
+	<S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(SearchContext context, String path, Map<FileSystemItem, Collection<Class<?>>> itemsForPath) {
+		for (Entry<FileSystemItem, Collection<Class<?>>> cachedItemAsEntry : itemsForPath.entrySet()) {
 			ClassCriteria.TestContext testContext = testCachedItem(context, path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 			if(testContext.getResult()) {
 				addCachedItemToContext(context, testContext, path, cachedItemAsEntry);
@@ -88,8 +90,14 @@ public class FSIClassPathHunter extends ClassPathScannerWithCachingSupport<Class
 	}
 	
 	@Override
-	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext context, String path, Class<?> cls, FileSystemItem file) {
-		return context.testCriteria(context.retrieveClass(cls));
+	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext context, String path, FileSystemItem file, Collection<Class<?>> classes) {
+		ClassCriteria.TestContext testContext = context.testCriteria(null);
+		for (Class<?> cls : classes) {
+			if ((testContext = context.testCriteria(context.retrieveClass(cls))).getResult()) {
+				break;
+			}
+		}		
+		return testContext;
 	}
 	
 	@Override
@@ -108,8 +116,8 @@ public class FSIClassPathHunter extends ClassPathScannerWithCachingSupport<Class
 		FileSystemItem classPathAsFile = FileSystemItem.ofPath(classPath);
 		context.addItemFound(
 			scanItemContext.getBasePathAsString(),
-			context.loadClass(javaClass.getName()),
-			classPathAsFile
+			classPathAsFile,
+			context.loadClass(javaClass.getName())
 		);
 	}
 
@@ -132,7 +140,7 @@ public class FSIClassPathHunter extends ClassPathScannerWithCachingSupport<Class
 			zipEntryAbsolutePath = zipEntryAbsolutePath.substring(0, zipEntryAbsolutePath.lastIndexOf(javaClass.getPath()));
 			fsObject = FileSystemItem.ofPath(zipEntryAbsolutePath);
 		}
-		context.addItemFound(scanItemContext.getBasePathAsString(), context.loadClass(javaClass.getName()), fsObject);
+		context.addItemFound(scanItemContext.getBasePathAsString(), fsObject, context.loadClass(javaClass.getName()));
 	}
 	
 	
@@ -142,7 +150,7 @@ public class FSIClassPathHunter extends ClassPathScannerWithCachingSupport<Class
 		super.close();
 	}
 	
-	public static class SearchContext extends org.burningwave.core.classes.hunter.SearchContext<Class<?>, FileSystemItem> {
+	public static class SearchContext extends org.burningwave.core.classes.hunter.SearchContext<FileSystemItem, Collection<Class<?>>> {
 		ParallelTasksManager tasksManager;
 		
 		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
@@ -154,6 +162,26 @@ public class FSIClassPathHunter extends ClassPathScannerWithCachingSupport<Class
 		static SearchContext _create(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
 			return new SearchContext(fileSystemHelper, streamHelper,  initContext);
 		}
+
+		
+		void addItemFound(String basePathAsString, FileSystemItem classPathAsFile, Class<?> testedClass) {
+			Map<FileSystemItem, Collection<Class<?>>> testedClassesForClassPathMap = retrieveCollectionForPath(
+				itemsFoundMap,
+				ConcurrentHashMap::new,
+				basePathAsString
+			);
+			Collection<Class<?>> testedClassesForClassPath = testedClassesForClassPathMap.get(classPathAsFile);
+			if (testedClassesForClassPath == null) {
+				synchronized (testedClassesForClassPathMap) {
+					testedClassesForClassPath = testedClassesForClassPathMap.get(classPathAsFile);
+					if (testedClassesForClassPath == null) {
+						testedClassesForClassPathMap.put(classPathAsFile, testedClassesForClassPath = ConcurrentHashMap.newKeySet());
+					}
+				}
+			}
+			testedClassesForClassPath.add(testedClass);
+			itemsFoundFlatMap.putAll(testedClassesForClassPathMap);
+		}
 		
 		@Override
 		public void close() {
@@ -162,11 +190,14 @@ public class FSIClassPathHunter extends ClassPathScannerWithCachingSupport<Class
 		}
 	}
 	
-	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<Class<?>, FileSystemItem> {
+	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<FileSystemItem, Collection<Class<?>>> {
 
 		public SearchResult(SearchContext context) {
 			super(context);
 		}
 		
+		public Collection<FileSystemItem> getClassPaths() {
+			return context.getItemsFoundFlatMap().keySet();
+		}
 	}
 }

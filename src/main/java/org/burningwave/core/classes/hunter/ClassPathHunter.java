@@ -108,8 +108,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<File, Co
 			if ((testContext = context.testCriteria(context.retrieveClass(cls))).getResult()) {
 				break;
 			}
-		}
-		
+		}		
 		return testContext;
 	}
 	
@@ -277,8 +276,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<File, Co
 		public SearchResult(SearchContext context) {
 			super(context);
 		}
-		
-		
+				
 		public Collection<File> getClassPaths() {
 			return context.getItemsFoundFlatMap().keySet();
 		}
