@@ -245,7 +245,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getFileSystemHelper(),
 				getPathHelper(),
 				getClassHelper(),
-				getFSIClassPathHunter()
+				getClassPathHunter()
 			)
 		);
 	}
@@ -324,7 +324,7 @@ public class ComponentContainer implements ComponentSupplier {
 
 	
 	@Override
-	public ClassPathHunter getFSIClassPathHunter() {
+	public ClassPathHunter getClassPathHunter() {
 		return getOrCreate(ClassPathHunter.class, () -> 
 			ClassPathHunter.create(
 				() -> getByteCodeHunter(),

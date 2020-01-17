@@ -15,7 +15,7 @@ public class ClassPathHunterTest extends BaseTest {
 	public void findAllSubtypeOfTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> componentSupplier.getFSIClassPathHunter().findBy(
+			() -> componentSupplier.getClassPathHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
@@ -37,7 +37,7 @@ public class ClassPathHunterTest extends BaseTest {
 	public void findAllSubtypeOfTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> componentSupplier.getFSIClassPathHunter().findBy(
+			() -> componentSupplier.getClassPathHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
@@ -63,12 +63,12 @@ public class ClassPathHunterTest extends BaseTest {
 		);
 		testNotEmpty(
 			() ->
-				componentSupplier.getFSIClassPathHunter().findBy(searchConfig),
+				componentSupplier.getClassPathHunter().findBy(searchConfig),
 			(result) ->
 				result.getClassPaths()
 		);
 		testNotEmpty(
-			() -> componentSupplier.getFSIClassPathHunter().findBy(
+			() -> componentSupplier.getClassPathHunter().findBy(
 				searchConfig.by(
 					ClassCriteria.create().byClasses((uploadedClasses, targetClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)

@@ -90,7 +90,7 @@ public interface ComponentSupplier extends Component {
 	
 	public ByteCodeHunter getByteCodeHunter();
 
-	public ClassPathHunter getFSIClassPathHunter();
+	public ClassPathHunter getClassPathHunter();
 	
 	public ClassHunter getClassHunter();
 
