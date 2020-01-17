@@ -53,7 +53,6 @@ import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodHelper;
 import org.burningwave.core.classes.hunter.ByteCodeHunter;
 import org.burningwave.core.classes.hunter.ClassHunter;
-import org.burningwave.core.classes.hunter.ClassPathHunter;
 import org.burningwave.core.classes.hunter.FSIClassHunter;
 import org.burningwave.core.classes.hunter.FSIClassPathHunter;
 import org.burningwave.core.concurrent.ConcurrentHelper;
@@ -248,7 +247,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getFileSystemHelper(),
 				getPathHelper(),
 				getClassHelper(),
-				getClassPathHunter()
+				getFSIClassPathHunter()
 			)
 		);
 	}
@@ -345,21 +344,6 @@ public class ComponentContainer implements ComponentSupplier {
 				)
 			);
 		});
-	}
-
-	@Override
-	public ClassPathHunter getClassPathHunter() {
-		return getOrCreate(ClassPathHunter.class, () -> 
-			ClassPathHunter.create(
-				() -> getByteCodeHunter(),
-				() -> getClassHunter(),
-				getFileSystemHelper(), 
-				getPathHelper(),
-				getStreamHelper(),
-				getClassHelper(),
-				getMemberFinder()
-			)
-		);
 	}
 	
 	@Override

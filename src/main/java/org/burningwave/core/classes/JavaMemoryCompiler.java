@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.classes;
 
-import java.io.File;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -59,8 +58,8 @@ import javax.tools.ToolProvider;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
-import org.burningwave.core.classes.hunter.ClassPathHunter;
-import org.burningwave.core.classes.hunter.ClassPathHunter.SearchResult;
+import org.burningwave.core.classes.hunter.FSIClassPathHunter.SearchResult;
+import org.burningwave.core.classes.hunter.FSIClassPathHunter;
 import org.burningwave.core.classes.hunter.SearchConfig;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingRunnable;
@@ -74,30 +73,38 @@ public class JavaMemoryCompiler implements Component {
 	
 	private FileSystemHelper fileSystemHelper;
 	private ClassHelper classHelper;
-	private ClassPathHunter classPathHunter;
+	private FSIClassPathHunter classPathHunter;
 	private JavaCompiler compiler;
 	private FileSystemItem compiledClassesClassPath;
+	private FileSystemItem classPathHunterBasePathForCompressedLibs;
+	private FileSystemItem classPathHunterBasePathForCompressedClasses;
 	
 	private JavaMemoryCompiler(
 		FileSystemHelper fileSystemHelper,
 		PathHelper pathHelper,
 		ClassHelper classHelper,
-		ClassPathHunter classPathHunter
+		FSIClassPathHunter classPathHunter
 	) {
 		this.fileSystemHelper = fileSystemHelper;
 		this.classPathHunter = classPathHunter;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
 		this.classHelper = classHelper;
 		compiledClassesClassPath = FileSystemItem.ofPath(
-			this.fileSystemHelper.createTemporaryFolder(getTemporaryFolderPrefix() + "_classPath").getAbsolutePath()
+			this.fileSystemHelper.createTemporaryFolder(getTemporaryFolderPrefix() + "/compiled").getAbsolutePath()
 		);
+		classPathHunterBasePathForCompressedLibs = FileSystemItem.ofPath(
+			this.fileSystemHelper.createTemporaryFolder(getTemporaryFolderPrefix() + "/lib").getAbsolutePath()
+		);
+		classPathHunterBasePathForCompressedClasses = FileSystemItem.ofPath(
+			this.fileSystemHelper.createTemporaryFolder(getTemporaryFolderPrefix() + "/classes").getAbsolutePath()
+		);		
 	}	
 	
 	public static JavaMemoryCompiler create(
 		FileSystemHelper fileSystemHelper,
 		PathHelper pathHelper,
 		ClassHelper classHelper,
-		ClassPathHunter classPathHunter
+		FSIClassPathHunter classPathHunter
 	) {
 		return new JavaMemoryCompiler(fileSystemHelper, pathHelper, classHelper, classPathHunter);
 	}
@@ -183,7 +190,7 @@ public class JavaMemoryCompiler implements Component {
 				context.options.put("-Xlint:", "unchecked");
 				return;
 			}
-			Collection<File> fsObjects = null;
+			Collection<FileSystemItem> fsObjects = null;
 			
 			Map.Entry<String, Predicate<Class<?>>> classNameAndClassPredicate = getClassPredicateFromErrorMessage(message);
 			String packageName = null;
@@ -205,7 +212,24 @@ public class JavaMemoryCompiler implements Component {
 			if (fsObjects == null || fsObjects.isEmpty()) {
 				throw Throwables.toRuntimeException("Class or package \"" + classNameAndClassPredicate.getKey() + "\" not found");
 			}
-			fsObjects.forEach((fsObject) -> context.addToClassPath(fsObject.getAbsolutePath()));		
+			fsObjects.forEach((fsObject) -> {
+				if (fsObject.isCompressed()) {					
+					ThrowingRunnable.run(() -> {
+							if (fsObject.isArchive()) {
+								context.addToClassPath(
+									fsObject.copyTo(context.javaMemoryCompiler.classPathHunterBasePathForCompressedLibs.getAbsolutePath()).getAbsolutePath()
+								);
+							} else {
+								context.addToClassPath(
+									fsObject.copyTo(context.javaMemoryCompiler.classPathHunterBasePathForCompressedClasses.getAbsolutePath()).getAbsolutePath()
+								);
+							}
+						}
+					);
+				} else {
+					context.addToClassPath(fsObject.getAbsolutePath());
+				}
+			});		
 		}
 
 		private Map.Entry<String, Predicate<Class<?>>> getClassPredicateFromErrorMessage(String message) {
@@ -359,7 +383,7 @@ public class JavaMemoryCompiler implements Component {
 			
 			private Map<String, String> options;
 			private Collection<MemorySource> sources;
-			private ClassPathHunter classPathHunter;
+			private FSIClassPathHunter classPathHunter;
 			private Collection<SearchResult> classPathsSearchResults;
 			private Collection<String> classRepositoriesPaths;
 			private JavaMemoryCompiler javaMemoryCompiler;
@@ -373,7 +397,7 @@ public class JavaMemoryCompiler implements Component {
 			
 			private Context(
 				JavaMemoryCompiler javaMemoryCompiler,
-				ClassPathHunter classPathHunter,
+				FSIClassPathHunter classPathHunter,
 				Collection<MemorySource> sources,
 				Collection<String> classPaths,
 				Collection<String> classRepositories
@@ -393,7 +417,7 @@ public class JavaMemoryCompiler implements Component {
 			
 			private static Context create(
 				JavaMemoryCompiler javaMemoryCompiler,
-				ClassPathHunter classPathHunter,
+				FSIClassPathHunter classPathHunter,
 				Collection<MemorySource> sources,
 				Collection<String> classPaths,
 				Collection<String> classRepositories
@@ -401,7 +425,7 @@ public class JavaMemoryCompiler implements Component {
 				return new Context(javaMemoryCompiler, classPathHunter, sources, classPaths, classRepositories);
 			}
 			
-			public Collection<File> findForPackageName(String packageName) throws Exception {
+			public Collection<FileSystemItem> findForPackageName(String packageName) throws Exception {
 				SearchResult result = classPathHunter.findBy(
 					SearchConfig.forPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 						ClassCriteria.create().packageName((iteratedClassPackageName) ->
@@ -423,7 +447,7 @@ public class JavaMemoryCompiler implements Component {
 				return result.getClassPaths();
 			}
 			
-			public Collection<File> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
+			public Collection<FileSystemItem> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
 				SearchResult result = classPathHunter.findBy(
 					SearchConfig.forPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 						ClassCriteria.create().allThat(classPredicate)

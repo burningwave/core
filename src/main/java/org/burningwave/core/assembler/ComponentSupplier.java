@@ -42,7 +42,6 @@ import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodHelper;
 import org.burningwave.core.classes.hunter.ByteCodeHunter;
 import org.burningwave.core.classes.hunter.ClassHunter;
-import org.burningwave.core.classes.hunter.ClassPathHunter;
 import org.burningwave.core.classes.hunter.FSIClassHunter;
 import org.burningwave.core.classes.hunter.FSIClassPathHunter;
 import org.burningwave.core.concurrent.ConcurrentHelper;
@@ -91,9 +90,7 @@ public interface ComponentSupplier extends Component {
 	public CodeGenerator.ForCodeExecutor getCodeGeneratorForCodeExecutor();
 	
 	public ByteCodeHunter getByteCodeHunter();
-	
-	public ClassPathHunter getClassPathHunter();
-	
+
 	public FSIClassPathHunter getFSIClassPathHunter();
 	
 	public ClassHunter getClassHunter();
