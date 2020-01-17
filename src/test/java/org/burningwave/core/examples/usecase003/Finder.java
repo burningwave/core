@@ -17,7 +17,7 @@ public class Finder {
 	public Collection<FileSystemItem> find() {
 		ComponentSupplier componentSupplier = ComponentContainer.getInstance();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
-		ClassPathHunter classPathHunter = componentSupplier.getFSIClassPathHunter();
+		ClassPathHunter classPathHunter = componentSupplier.getClassPathHunter();
 
 		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			//Here you can add all absolute path you want:
