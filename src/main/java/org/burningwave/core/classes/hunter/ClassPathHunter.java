@@ -122,8 +122,8 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<File, Co
 		File classPathAsFile = new File(classPath);
 		context.addItemFound(
 			scanItemContext.getBasePathAsString(),
-			context.loadClass(javaClass.getName()),
-			classPathAsFile
+			classPathAsFile,
+			context.loadClass(javaClass.getName())
 		);
 	}
 
@@ -147,7 +147,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<File, Co
 		} else {
 			fsObject = extractClass(context, zipEntry, javaClass);
 		}
-		context.addItemFound(scanItemContext.getBasePathAsString(), context.loadClass(javaClass.getName()), fsObject);
+		context.addItemFound(scanItemContext.getBasePathAsString(), fsObject, context.loadClass(javaClass.getName()));
 	}
 	
 	File extractClass(ClassPathHunter.SearchContext context, ZipInputStream.Entry zipEntry, JavaClass javaClass) {
@@ -225,6 +225,23 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<File, Co
 			this.tasksManager = ParallelTasksManager.create(scanConfig.maxParallelTasksForUnit);
 			deleteTemporaryFilesOnClose = getSearchConfig().deleteFoundItemsOnClose;
 		}		
+		
+		public void addItemFound(String basePathAsString, File classPathAsFile, Class<?> testedClass) {
+			Map<File, Collection<Class<?>>> testedClassesForClassPathMap = retrieveCollectionForPath(
+				itemsFoundMap,
+				ConcurrentHashMap::new, basePathAsString
+			);
+			Collection<Class<?>> testedClassesForClassPath = testedClassesForClassPathMap.get(classPathAsFile);
+			if (testedClassesForClassPath == null) {
+				synchronized (testedClassesForClassPathMap) {
+					testedClassesForClassPath = testedClassesForClassPathMap.get(classPathAsFile);
+					if (testedClassesForClassPath == null) {
+						testedClassesForClassPathMap.put(classPathAsFile, testedClassesForClassPath = ConcurrentHashMap.newKeySet());
+					}
+				}
+			}
+			testedClassesForClassPath.add(testedClass);
+		}
 
 		void deleteTemporaryFiles(boolean value) {
 			deleteTemporaryFilesOnClose = value;			
