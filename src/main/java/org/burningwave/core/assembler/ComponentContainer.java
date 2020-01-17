@@ -53,8 +53,7 @@ import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodHelper;
 import org.burningwave.core.classes.hunter.ByteCodeHunter;
 import org.burningwave.core.classes.hunter.ClassHunter;
-import org.burningwave.core.classes.hunter.FSIClassHunter;
-import org.burningwave.core.classes.hunter.FSIClassPathHunter;
+import org.burningwave.core.classes.hunter.ClassPathHunter;
 import org.burningwave.core.concurrent.ConcurrentHelper;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemItem;
@@ -99,7 +98,6 @@ public class ComponentContainer implements ComponentSupplier {
 		config.put(PathHelper.CLASSPATHS_PREFIX + ClassFactory.CLASS_REPOSITORIES, "${classPaths}");
 		config.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
 		config.put(ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "componentSupplier.getMemoryClassLoader()");
-		config.put(FSIClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "componentSupplier.getMemoryClassLoader()");
 		
 		try (Initializer initializer = new Initializer(configFileName)) {	
 			FileSystemHelper fileSystemHelper = initializer.getFileSystemHelper();
@@ -323,33 +321,12 @@ public class ComponentContainer implements ComponentSupplier {
 			);
 		});
 	}
+
 	
 	@Override
-	public FSIClassHunter getFSIClassHunter() {
-		return getOrCreate(FSIClassHunter.class, () -> {
-			return FSIClassHunter.create(
-				() -> getByteCodeHunter(),
-				() -> getClassHunter(),
-				getFileSystemHelper(), 
-				getPathHelper(),
-				getStreamHelper(),
-				getClassHelper(),
-				getMemberFinder(),
-				getLowLevelObjectsHandler().retrieveFromProperties(config,
-					FSIClassHunter.PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
-					FSIClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
-					FSIClassHunter.DEFAULT_CONFIG_VALUES,
-					ClassLoader.class,
-					this
-				)
-			);
-		});
-	}
-	
-	@Override
-	public FSIClassPathHunter getFSIClassPathHunter() {
-		return getOrCreate(FSIClassPathHunter.class, () -> 
-			FSIClassPathHunter.create(
+	public ClassPathHunter getFSIClassPathHunter() {
+		return getOrCreate(ClassPathHunter.class, () -> 
+			ClassPathHunter.create(
 				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
 				getFileSystemHelper(), 

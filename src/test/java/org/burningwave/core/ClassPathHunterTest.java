@@ -9,7 +9,7 @@ import org.burningwave.core.classes.hunter.SearchConfig;
 import org.burningwave.core.classes.hunter.CacheableSearchConfig;
 import org.junit.jupiter.api.Test;
 
-public class FSIClassPathHunterTest extends BaseTest {
+public class ClassPathHunterTest extends BaseTest {
 	
 	@Test
 	public void findAllSubtypeOfTestOne() {

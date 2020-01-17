@@ -49,8 +49,8 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
 
-public class FSIClassPathHunter extends ClassPathScannerWithCachingSupport<FileSystemItem, Collection<Class<?>>, FSIClassPathHunter.SearchContext, FSIClassPathHunter.SearchResult> {
-	private FSIClassPathHunter(
+public class ClassPathHunter extends ClassPathScannerWithCachingSupport<FileSystemItem, Collection<Class<?>>, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
+	private ClassPathHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemHelper fileSystemHelper, 
@@ -68,14 +68,14 @@ public class FSIClassPathHunter extends ClassPathScannerWithCachingSupport<FileS
 			classHelper,
 			memberFinder,
 			(initContext) -> SearchContext._create(fileSystemHelper, streamHelper, initContext),
-			(context) -> new FSIClassPathHunter.SearchResult(context)
+			(context) -> new ClassPathHunter.SearchResult(context)
 		);
 	}
 	
-	public static FSIClassPathHunter create(Supplier<ByteCodeHunter> byteCodeHunterSupplier, Supplier<ClassHunter> classHunterSupplier, FileSystemHelper fileSystemHelper, PathHelper pathHelper, StreamHelper streamHelper,
+	public static ClassPathHunter create(Supplier<ByteCodeHunter> byteCodeHunterSupplier, Supplier<ClassHunter> classHunterSupplier, FileSystemHelper fileSystemHelper, PathHelper pathHelper, StreamHelper streamHelper,
 		ClassHelper classHelper, MemberFinder memberFinder
 	) {
-		return new FSIClassPathHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classHelper, memberFinder);
+		return new ClassPathHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classHelper, memberFinder);
 	}
 	
 	@Override

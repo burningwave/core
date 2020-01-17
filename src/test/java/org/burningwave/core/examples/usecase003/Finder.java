@@ -6,8 +6,8 @@ import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.hunter.CacheableSearchConfig;
-import org.burningwave.core.classes.hunter.FSIClassPathHunter;
-import org.burningwave.core.classes.hunter.FSIClassPathHunter.SearchResult;
+import org.burningwave.core.classes.hunter.ClassPathHunter;
+import org.burningwave.core.classes.hunter.ClassPathHunter.SearchResult;
 import org.burningwave.core.classes.hunter.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
@@ -17,7 +17,7 @@ public class Finder {
 	public Collection<FileSystemItem> find() {
 		ComponentSupplier componentSupplier = ComponentContainer.getInstance();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
-		FSIClassPathHunter classPathHunter = componentSupplier.getFSIClassPathHunter();
+		ClassPathHunter classPathHunter = componentSupplier.getFSIClassPathHunter();
 
 		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			//Here you can add all absolute path you want:

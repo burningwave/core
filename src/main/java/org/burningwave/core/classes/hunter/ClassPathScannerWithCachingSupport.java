@@ -52,7 +52,7 @@ import org.burningwave.core.io.PathHelper.CheckResult;
 import org.burningwave.core.io.StreamHelper;
 
 
-public abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>> extends ClassPathScanner<K, I, C, R> implements org.burningwave.core.Component {
+abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>> extends ClassPathScannerAbst<K, I, C, R> implements org.burningwave.core.Component {
 	Map<String, Map<K, I>> cache;
 
 	ClassPathScannerWithCachingSupport(

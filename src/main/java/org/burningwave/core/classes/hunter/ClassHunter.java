@@ -34,13 +34,13 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.MemberFinder;
-import org.burningwave.core.common.Strings;
 import org.burningwave.core.io.FileSystemHelper;
+import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 
 
-public class ClassHunter extends ClassHunterAbst<String, ClassHunter.SearchResult> {
+public class ClassHunter extends ClassHunterAbst<FileSystemItem, ClassHunter.SearchResult> {
 	public final static String PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY = "class-hunter.path-memory-class-loader.parent.supplier.imports";
 	public final static String PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY = "class-hunter.path-memory-class-loader.parent";
 	public final static Map<String, String> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
@@ -89,13 +89,13 @@ public class ClassHunter extends ClassHunterAbst<String, ClassHunter.SearchResul
 	}	
 	
 	@Override
-	String buildKey(String absolutePath) {
-		return Strings.Paths.clean(absolutePath);
+	FileSystemItem buildKey(String absolutePath) {
+		return FileSystemItem.ofPath(absolutePath);
 	}
 	
-	public static class SearchResult extends ClassHunterAbst.SearchResult<String> {
+	public static class SearchResult extends ClassHunterAbst.SearchResult<FileSystemItem> {
 
-		SearchResult(SearchContext<String> context) {
+		SearchResult(SearchContext<FileSystemItem> context) {
 			super(context);
 		}
 		

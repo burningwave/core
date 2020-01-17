@@ -58,8 +58,8 @@ import javax.tools.ToolProvider;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
-import org.burningwave.core.classes.hunter.FSIClassPathHunter.SearchResult;
-import org.burningwave.core.classes.hunter.FSIClassPathHunter;
+import org.burningwave.core.classes.hunter.ClassPathHunter.SearchResult;
+import org.burningwave.core.classes.hunter.ClassPathHunter;
 import org.burningwave.core.classes.hunter.SearchConfig;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingRunnable;
@@ -73,7 +73,7 @@ public class JavaMemoryCompiler implements Component {
 	
 	private FileSystemHelper fileSystemHelper;
 	private ClassHelper classHelper;
-	private FSIClassPathHunter classPathHunter;
+	private ClassPathHunter classPathHunter;
 	private JavaCompiler compiler;
 	private FileSystemItem compiledClassesClassPath;
 	private FileSystemItem classPathHunterBasePathForCompressedLibs;
@@ -83,7 +83,7 @@ public class JavaMemoryCompiler implements Component {
 		FileSystemHelper fileSystemHelper,
 		PathHelper pathHelper,
 		ClassHelper classHelper,
-		FSIClassPathHunter classPathHunter
+		ClassPathHunter classPathHunter
 	) {
 		this.fileSystemHelper = fileSystemHelper;
 		this.classPathHunter = classPathHunter;
@@ -104,7 +104,7 @@ public class JavaMemoryCompiler implements Component {
 		FileSystemHelper fileSystemHelper,
 		PathHelper pathHelper,
 		ClassHelper classHelper,
-		FSIClassPathHunter classPathHunter
+		ClassPathHunter classPathHunter
 	) {
 		return new JavaMemoryCompiler(fileSystemHelper, pathHelper, classHelper, classPathHunter);
 	}
@@ -383,7 +383,7 @@ public class JavaMemoryCompiler implements Component {
 			
 			private Map<String, String> options;
 			private Collection<MemorySource> sources;
-			private FSIClassPathHunter classPathHunter;
+			private ClassPathHunter classPathHunter;
 			private Collection<SearchResult> classPathsSearchResults;
 			private Collection<String> classRepositoriesPaths;
 			private JavaMemoryCompiler javaMemoryCompiler;
@@ -397,7 +397,7 @@ public class JavaMemoryCompiler implements Component {
 			
 			private Context(
 				JavaMemoryCompiler javaMemoryCompiler,
-				FSIClassPathHunter classPathHunter,
+				ClassPathHunter classPathHunter,
 				Collection<MemorySource> sources,
 				Collection<String> classPaths,
 				Collection<String> classRepositories
@@ -417,7 +417,7 @@ public class JavaMemoryCompiler implements Component {
 			
 			private static Context create(
 				JavaMemoryCompiler javaMemoryCompiler,
-				FSIClassPathHunter classPathHunter,
+				ClassPathHunter classPathHunter,
 				Collection<MemorySource> sources,
 				Collection<String> classPaths,
 				Collection<String> classRepositories
