@@ -254,7 +254,7 @@ public class JavaMemoryCompiler implements Component {
 		
 		private String getPackageNameFromErrorMessage(String message) {
 			String objName = null;
-			if (!message.contains("package exists in another module")) {
+			if (!message.contains("package exists in another module") && !message.contains("cannot be accessed from outside package")) {
 				if (message.contains("package")){
 					objName = message.substring(message.indexOf("package") + 8);
 					int firstOccOfSpaceIdx = objName.indexOf(" ");
