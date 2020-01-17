@@ -77,7 +77,7 @@ public class FSIClassPathHunter extends ClassPathScannerWithCachingSupport<Class
 	}
 	
 	@Override
-	<S extends SearchConfigAbst<S>> void iterateAndTestItemsForPath(SearchContext context, String path, Map<Class<?>, FileSystemItem> itemsForPath) {
+	<S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(SearchContext context, String path, Map<Class<?>, FileSystemItem> itemsForPath) {
 		for (Entry<Class<?>, FileSystemItem> cachedItemAsEntry : itemsForPath.entrySet()) {
 			ClassCriteria.TestContext testContext = testCachedItem(context, path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 			if(testContext.getResult()) {

@@ -91,7 +91,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<File, Co
 	}
 	
 	@Override
-	<S extends SearchConfigAbst<S>> void iterateAndTestItemsForPath(SearchContext context, String path, Map<File, Collection<Class<?>>> itemsForPath) {
+	<S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(SearchContext context, String path, Map<File, Collection<Class<?>>> itemsForPath) {
 		for (Entry<Class<?>, File> cachedItemAsEntry : itemsForPath.entrySet()) {
 			ClassCriteria.TestContext testContext = testCachedItem(context, path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 			if(testContext.getResult()) {
