@@ -121,7 +121,7 @@ public class FileSystemItemTest extends BaseTest {
 	}
 	
 	
-	@Test
+	//@Test
 	public void readTestTestThirteen() {
 		testNotNull(() -> FileSystemItem.ofPath(
 			"F:/Burningwave.docx"
