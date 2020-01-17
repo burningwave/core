@@ -63,7 +63,7 @@ public class Finder {
         //If you need all Method founds  unconment this
         //searchResult.getMembersFoundBy(methodCriteria);
 
-        return searchResult.getItemsFound();
+        return searchResult.getClasses();
     }
 
 }

@@ -29,7 +29,7 @@ public class ClassPathHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getItemsFound()
+				result.getClassPaths()
 		);
 	}
 
@@ -51,7 +51,7 @@ public class ClassPathHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getItemsFound()
+			result.getClassPaths()
 		);
 	}
 	
@@ -64,7 +64,8 @@ public class ClassPathHunterTest extends BaseTest {
 		testNotEmpty(
 			() ->
 				componentSupplier.getClassPathHunter().findBy(searchConfig),
-			(result) -> result.getItemsFound()
+			(result) ->
+				result.getClassPaths()
 		);
 		testNotEmpty(
 			() -> componentSupplier.getClassPathHunter().findBy(
@@ -79,7 +80,7 @@ public class ClassPathHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getItemsFound()
+				result.getClassPaths()
 		);
 	}
 

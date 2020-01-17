@@ -34,7 +34,7 @@ public class ByteCodeHunterTest extends BaseTest {
 					false
 				)					
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -52,7 +52,7 @@ public class ByteCodeHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -70,11 +70,11 @@ public class ByteCodeHunterTest extends BaseTest {
 		);
 		testNotEmpty(
 			() -> componentSupplier.getByteCodeHunter().findBy(searchConfig),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 		testNotEmpty(
 			() -> componentSupplier.getByteCodeHunter().findBy(searchConfig),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -94,7 +94,7 @@ public class ByteCodeHunterTest extends BaseTest {
 		);
 		testNotEmpty(
 			() -> componentSupplier.getByteCodeHunter().findBy(scanConfig, searchConfig),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -139,7 +139,7 @@ public class ByteCodeHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -165,8 +165,8 @@ public class ByteCodeHunterTest extends BaseTest {
 				)
 			),
 			(result) -> {
-				result.getItemsFound().forEach(javaClass -> bytesWrapper.set(bytesWrapper.get() + javaClass.getByteCode().capacity()));
-				return result.getItemsFound();
+				result.getClasses().forEach(javaClass -> bytesWrapper.set(bytesWrapper.get() + javaClass.getByteCode().capacity()));
+				return result.getClasses();
 			}
 		);
 		logDebug("Items total size: " + bytesWrapper.get() + " bytes");

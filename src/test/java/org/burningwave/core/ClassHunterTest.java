@@ -27,7 +27,7 @@ public class ClassHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getItemsFound()
+				result.getClasses()
 		);
 	}
 
@@ -53,7 +53,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -72,7 +72,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 
@@ -100,7 +100,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -126,7 +126,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -156,7 +156,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -189,7 +189,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -223,7 +223,7 @@ public class ClassHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getItemsFound()
+				result.getClasses()
 		);
 	}
 	
@@ -258,7 +258,7 @@ public class ClassHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getMembersFoundBy(methodCriteria)
+				result.getMembersBy(methodCriteria)
 		);
 	}
 	
@@ -291,7 +291,7 @@ public class ClassHunterTest extends BaseTest {
 					Thread.currentThread().getContextClassLoader()
 				)
 			),
-			(result) -> result.getMembersFoundBy(methodCriteria)
+			(result) -> result.getMembersBy(methodCriteria)
 		);
 	}
 	
@@ -322,7 +322,7 @@ public class ClassHunterTest extends BaseTest {
 					Thread.currentThread().getContextClassLoader()
 				)
 			),
-			(result) -> result.getMembersFoundBy(methodCriteria)
+			(result) -> result.getMembersBy(methodCriteria)
 		);
 	}
 	
@@ -363,7 +363,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getMembersFoundBy(methodCriteria_01)
+			(result) -> result.getMembersBy(methodCriteria_01)
 		);
 	}
 	
@@ -393,7 +393,7 @@ public class ClassHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getMembersFoundBy(constructorCriteria)
+				result.getMembersBy(constructorCriteria)
 		);
 	}
 	
@@ -429,7 +429,7 @@ public class ClassHunterTest extends BaseTest {
 			),
 			(result) -> {
 				result.waitForSearchEnding();
-				return result.getMembersFoundBy(methodCriteria);
+				return result.getMembersBy(methodCriteria);
 			}
 		);
 	}
@@ -442,7 +442,7 @@ public class ClassHunterTest extends BaseTest {
 		);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(searchConfig),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 		searchConfig.by(
 			ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> 
@@ -453,7 +453,7 @@ public class ClassHunterTest extends BaseTest {
 		);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(searchConfig),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -468,7 +468,7 @@ public class ClassHunterTest extends BaseTest {
 		);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(searchConfig),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 		searchConfig.by(
 			ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> 
@@ -479,7 +479,7 @@ public class ClassHunterTest extends BaseTest {
 		);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(searchConfig),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -498,7 +498,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound(),
+			(result) -> result.getClasses(),
 			true
 		);
 	}
@@ -522,7 +522,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -536,7 +536,7 @@ public class ClassHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getItemsFound()
+				result.getClasses()
 		);
 	}
 
@@ -563,7 +563,7 @@ public class ClassHunterTest extends BaseTest {
 				).isolateClassLoader()
 			),
 			(result) ->
-				result.getItemsFound()
+				result.getClasses()
 		);
 	}
 	
@@ -583,7 +583,7 @@ public class ClassHunterTest extends BaseTest {
 				).isolateClassLoader()
 			),
 			(result) ->
-				result.getItemsFound()
+				result.getClasses()
 		);
 	}
 
@@ -612,7 +612,7 @@ public class ClassHunterTest extends BaseTest {
 				).isolateClassLoader()
 			),
 			(result) ->
-				result.getItemsFound()
+				result.getClasses()
 		);
 	}
 	
@@ -638,7 +638,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				).isolateClassLoader()
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -669,7 +669,7 @@ public class ClassHunterTest extends BaseTest {
 				).isolateClassLoader()
 			),
 			(result) ->
-				result.getItemsFound()
+				result.getClasses()
 		);
 	}
 	
@@ -703,7 +703,7 @@ public class ClassHunterTest extends BaseTest {
 				).isolateClassLoader()
 			),
 			(result) ->
-				result.getItemsFound()
+				result.getClasses()
 		);
 	}
 	
@@ -738,7 +738,7 @@ public class ClassHunterTest extends BaseTest {
 				).isolateClassLoader()
 			),
 			(result) ->
-				result.getItemsFound(),
+				result.getClasses(),
 			true
 		);
 	}
@@ -774,7 +774,7 @@ public class ClassHunterTest extends BaseTest {
 				).isolateClassLoader()
 			),
 			(result) ->
-				result.getMembersFoundBy(methodCriteria)
+				result.getMembersBy(methodCriteria)
 		);
 	}
 	
@@ -808,7 +808,7 @@ public class ClassHunterTest extends BaseTest {
 				).isolateClassLoader()
 			),
 			(result) ->
-				result.getMembersFoundBy(methodCriteria)
+				result.getMembersBy(methodCriteria)
 		);
 	}
 	
@@ -840,7 +840,7 @@ public class ClassHunterTest extends BaseTest {
 				).isolateClassLoader()
 			),
 			(result) ->
-				result.getMembersFoundBy(methodCriteria)
+				result.getMembersBy(methodCriteria)
 		);
 	}
 	
@@ -881,7 +881,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getMembersFoundBy(methodCriteria_01)
+			(result) -> result.getMembersBy(methodCriteria_01)
 		);
 	}
 	
@@ -911,7 +911,7 @@ public class ClassHunterTest extends BaseTest {
 				).isolateClassLoader()
 			),
 			(result) ->
-				result.getMembersFoundBy(constructorCriteria)
+				result.getMembersBy(constructorCriteria)
 		);
 	}
 	
@@ -947,7 +947,7 @@ public class ClassHunterTest extends BaseTest {
 			),
 			(result) -> {
 				result.waitForSearchEnding();
-				return result.getMembersFoundBy(methodCriteria);
+				return result.getMembersBy(methodCriteria);
 			}
 		);
 	}
@@ -960,7 +960,7 @@ public class ClassHunterTest extends BaseTest {
 		);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(searchConfig),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 		searchConfig.by(
 			ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> 
@@ -973,7 +973,7 @@ public class ClassHunterTest extends BaseTest {
 			() ->
 				componentSupplier.getClassHunter().findBy(searchConfig),
 			(result) ->
-				result.getItemsFound()
+				result.getClasses()
 		);
 	}
 	
@@ -988,7 +988,7 @@ public class ClassHunterTest extends BaseTest {
 		);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(searchConfig),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 		searchConfig.by(
 			ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> 
@@ -1000,7 +1000,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(searchConfig),
 			(result) ->
-				result.getItemsFound()
+				result.getClasses()
 		);
 	}
 	
@@ -1019,7 +1019,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				).isolateClassLoader()
 			),
-			(result) -> result.getItemsFound(),
+			(result) -> result.getClasses(),
 			true
 		);
 	}
@@ -1064,7 +1064,7 @@ public class ClassHunterTest extends BaseTest {
 				).isolateClassLoader()
 			),
 			(result) ->
-				result.getItemsFound()
+				result.getClasses()
 		);
 	}
 }

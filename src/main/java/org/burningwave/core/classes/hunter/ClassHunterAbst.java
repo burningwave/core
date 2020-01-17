@@ -198,17 +198,25 @@ public abstract class ClassHunterAbst<K, R extends ClassHunterAbst.SearchResult<
 			super(context);
 		}
 		
-		public Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> getMembersFound() {
+		public Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> getMembers() {
 			return ((SearchContext<K>)this.context).getMembersFound();
 		}
 		
-		public Map<MemberCriteria<?, ?, ?>, Collection<Member>> getMembersFoundFlatMap() {
+		public Map<MemberCriteria<?, ?, ?>, Collection<Member>> getMembersFlatMap() {
 			return ((SearchContext<K>)this.context).getMembersFoundFlatMap();
 		}
 		
+		public Collection<Class<?>> getClasses() {
+			return context.getItemsFound();
+		}
+		
+		public Map<K, Class<?>> getClassesFlatMap() {
+			return context.getItemsFoundFlatMap();
+		}
+		
 		@SuppressWarnings("unchecked")
-		public <M extends Member, C extends MemberCriteria<M, C, T>, T extends Criteria.TestContext<M, C>> Collection<Member> getMembersFoundBy(C criteria) {
-			Collection<Member> membersFoundByCriteria = getMembersFoundFlatMap().get(criteria);
+		public <M extends Member, C extends MemberCriteria<M, C, T>, T extends Criteria.TestContext<M, C>> Collection<Member> getMembersBy(C criteria) {
+			Collection<Member> membersFoundByCriteria = getMembersFlatMap().get(criteria);
 			if (membersFoundByCriteria != null && membersFoundByCriteria.size() > 0) {
 				return membersFoundByCriteria;
 			} else {

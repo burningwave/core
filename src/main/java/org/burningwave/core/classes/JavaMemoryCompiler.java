@@ -60,8 +60,8 @@ import javax.tools.ToolProvider;
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.hunter.ClassPathHunter;
+import org.burningwave.core.classes.hunter.ClassPathHunter.SearchResult;
 import org.burningwave.core.classes.hunter.SearchConfig;
-import org.burningwave.core.classes.hunter.SearchResult;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferOutputStream;
@@ -360,7 +360,7 @@ public class JavaMemoryCompiler implements Component {
 			private Map<String, String> options;
 			private Collection<MemorySource> sources;
 			private ClassPathHunter classPathHunter;
-			private Collection<SearchResult<Class<?>, File>> classPathsSearchResults;
+			private Collection<SearchResult> classPathsSearchResults;
 			private Collection<String> classRepositoriesPaths;
 			private JavaMemoryCompiler javaMemoryCompiler;
 			
@@ -402,7 +402,7 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<File> findForPackageName(String packageName) throws Exception {
-				SearchResult<Class<?>, File> result = classPathHunter.findBy(
+				SearchResult result = classPathHunter.findBy(
 					SearchConfig.forPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 						ClassCriteria.create().packageName((iteratedClassPackageName) ->
 							iteratedClassPackageName.equals(packageName)
@@ -410,7 +410,7 @@ public class JavaMemoryCompiler implements Component {
 					)
 				);
 				classPathsSearchResults.add(result);
-				if (result.getItemsFound().isEmpty()) {
+				if (result.getClassPaths().isEmpty()) {
 					result = classPathHunter.findBy(
 						SearchConfig.forPaths(classRepositoriesPaths).by(
 							ClassCriteria.create().packageName((iteratedClassPackageName) ->
@@ -420,17 +420,17 @@ public class JavaMemoryCompiler implements Component {
 					);
 					classPathsSearchResults.add(result);
 				}
-				return result.getItemsFound();
+				return result.getClassPaths();
 			}
 			
 			public Collection<File> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
-				SearchResult<Class<?>, File> result = classPathHunter.findBy(
+				SearchResult result = classPathHunter.findBy(
 					SearchConfig.forPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 						ClassCriteria.create().allThat(classPredicate)
 					)
 				);
 				classPathsSearchResults.add(result);
-				if (result.getItemsFound().isEmpty()) {
+				if (result.getClassPaths().isEmpty()) {
 					result = classPathHunter.findBy(
 						SearchConfig.forPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 							ClassCriteria.create().allThat(classPredicate)
@@ -438,7 +438,7 @@ public class JavaMemoryCompiler implements Component {
 					);
 					classPathsSearchResults.add(result);
 				}
-				return result.getItemsFound();
+				return result.getClassPaths();
 			}
 
 			@Override

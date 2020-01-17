@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes.hunter;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import org.burningwave.core.classes.ClassCriteria;
@@ -113,5 +115,12 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<String, J
 			super(context);
 		}
 		
+		public Collection<JavaClass> getClasses() {
+			return context.getItemsFound();
+		}
+		
+		public Map<String, JavaClass> getClassesFlatMap() {
+			return context.getItemsFoundFlatMap();
+		}
 	}
 }

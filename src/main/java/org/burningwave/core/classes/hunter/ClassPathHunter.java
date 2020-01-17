@@ -92,7 +92,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<File, Co
 	
 	@Override
 	<S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(SearchContext context, String path, Map<File, Collection<Class<?>>> itemsForPath) {
-		for (Entry<Class<?>, File> cachedItemAsEntry : itemsForPath.entrySet()) {
+		for (Entry<File, Collection<Class<?>>> cachedItemAsEntry : itemsForPath.entrySet()) {
 			ClassCriteria.TestContext testContext = testCachedItem(context, path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 			if(testContext.getResult()) {
 				addCachedItemToContext(context, testContext, path, cachedItemAsEntry);
@@ -102,8 +102,15 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<File, Co
 	}
 	
 	@Override
-	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext context, String path, File file, Collection<Class<?>> cls) {
-		return context.testCriteria(context.retrieveClass(cls));
+	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext context, String path, File file, Collection<Class<?>> classes) {
+		ClassCriteria.TestContext testContext = context.testCriteria(null);
+		for (Class<?> cls : classes) {
+			if ((testContext = context.testCriteria(context.retrieveClass(cls))).getResult()) {
+				break;
+			}
+		}
+		
+		return testContext;
 	}
 	
 	@Override
@@ -141,9 +148,9 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<File, Co
 			if (!fsObject.exists()) {
 				fsObject = extractLibrary(context, zipEntry);
 			}
-			if (!context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
+			/*if (!context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
 				scanItemContext.getParent().setDirective(Scan.Directive.STOP_ITERATION);
-			}
+			}*/
 		} else {
 			fsObject = extractClass(context, zipEntry, javaClass);
 		}
@@ -229,7 +236,8 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<File, Co
 		public void addItemFound(String basePathAsString, File classPathAsFile, Class<?> testedClass) {
 			Map<File, Collection<Class<?>>> testedClassesForClassPathMap = retrieveCollectionForPath(
 				itemsFoundMap,
-				ConcurrentHashMap::new, basePathAsString
+				ConcurrentHashMap::new,
+				basePathAsString
 			);
 			Collection<Class<?>> testedClassesForClassPath = testedClassesForClassPathMap.get(classPathAsFile);
 			if (testedClassesForClassPath == null) {
@@ -241,6 +249,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<File, Co
 				}
 			}
 			testedClassesForClassPath.add(testedClass);
+			itemsFoundFlatMap.putAll(testedClassesForClassPathMap);
 		}
 
 		void deleteTemporaryFiles(boolean value) {
@@ -254,7 +263,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<File, Co
 		@Override
 		public void close() {
 			if (deleteTemporaryFilesOnClose) {
-				itemsFoundFlatMap.values().removeAll(temporaryFiles);
+				itemsFoundFlatMap.keySet().removeAll(temporaryFiles);
 				fileSystemHelper.deleteTempraryFiles(temporaryFiles);
 			}
 			temporaryFiles = null;
@@ -269,5 +278,9 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<File, Co
 			super(context);
 		}
 		
+		
+		public Collection<File> getClassPaths() {
+			return context.getItemsFoundFlatMap().keySet();
+		}
 	}
 }

@@ -47,7 +47,7 @@ public class Finder {
 		//If you need all found fields unconment this
 		//searchResult.getMembersFoundFlatMap().values();
 
-		return searchResult.getItemsFound();
+		return searchResult.getClasses();
 	}
 
 }

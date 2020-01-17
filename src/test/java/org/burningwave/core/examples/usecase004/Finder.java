@@ -42,6 +42,6 @@ public class Finder {
 		//If you need all annotaded methods unconment this
 		//searchResult.getMembersFoundFlatMap().values();
 
-		return searchResult.getItemsFound();
+		return searchResult.getClasses();
 	}
 }

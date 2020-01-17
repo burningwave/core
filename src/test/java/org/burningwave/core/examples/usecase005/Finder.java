@@ -40,7 +40,7 @@ public class Finder {
 			})
 		);
 
-		List<String> pathsList = classHunter.findBy(searchConfig).getItemsFound().stream().map(
+		List<String> pathsList = classHunter.findBy(searchConfig).getClasses().stream().map(
 			cls -> Arrays.asList(cls.getAnnotation(RequestMapping.class).value())
 		).flatMap(List::stream).distinct().collect(Collectors.toList());
 

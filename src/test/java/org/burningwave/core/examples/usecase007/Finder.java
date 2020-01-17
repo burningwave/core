@@ -32,7 +32,7 @@ public class Finder {
 		
 		SearchResult searchResult = classHunter.findBy(searchConfig);
 		
-		return searchResult.getItemsFound();
+		return searchResult.getClasses();
 	}
 	
 }

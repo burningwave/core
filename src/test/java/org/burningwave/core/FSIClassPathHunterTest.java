@@ -29,7 +29,7 @@ public class FSIClassPathHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getItemsFound()
+				result.getClasses()
 		);
 	}
 
@@ -51,7 +51,7 @@ public class FSIClassPathHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getItemsFound()
+				result.getClasses()
 		);
 	}
 	
@@ -64,7 +64,7 @@ public class FSIClassPathHunterTest extends BaseTest {
 		testNotEmpty(
 			() ->
 				componentSupplier.getFSIClassPathHunter().findBy(searchConfig),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassPathHunter().findBy(
@@ -79,7 +79,7 @@ public class FSIClassPathHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getItemsFound()
+				result.getClasses()
 		);
 	}
 

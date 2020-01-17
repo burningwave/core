@@ -8,8 +8,8 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.hunter.CacheableSearchConfig;
 import org.burningwave.core.classes.hunter.ClassPathHunter;
+import org.burningwave.core.classes.hunter.ClassPathHunter.SearchResult;
 import org.burningwave.core.classes.hunter.SearchConfig;
-import org.burningwave.core.classes.hunter.SearchResult;
 import org.burningwave.core.io.PathHelper;
 
 public class Finder {
@@ -31,8 +31,8 @@ public class Finder {
 			)
 		);		
 
-		SearchResult<Class<?>, File> searchResult = classPathHunter.findBy(searchConfig);
-		return searchResult.getItemsFound();
+		SearchResult searchResult = classPathHunter.findBy(searchConfig);
+		return searchResult.getClassPaths();
 	}
 
 }

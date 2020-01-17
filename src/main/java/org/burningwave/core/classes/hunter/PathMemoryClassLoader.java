@@ -81,7 +81,7 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 			synchronized (loadedPaths) {
 				checkPathsResult = checkPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
 				if (!checkPathsResult.getNotContainedPaths().isEmpty()) {
-					try(SearchResult<String, JavaClass> result = getByteCodeHunter().findBy(
+					try(ByteCodeHunter.SearchResult result = getByteCodeHunter().findBy(
 						SearchConfig.forPaths(
 							checkPathsResult.getNotContainedPaths()
 						).useSharedClassLoaderAsMain(
@@ -91,12 +91,12 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 						).maxParallelTasksForUnit(maxParallelTasksForUnit)
 					)) {
 						if (checkPathsResult.getPartialContainedDirectories().isEmpty() && checkPathsResult.getPartialContainedFiles().isEmpty()) {
-							for (Entry<String, JavaClass> entry : result.getItemsFoundFlatMap().entrySet()) {
+							for (Entry<String, JavaClass> entry : result.getClassesFlatMap().entrySet()) {
 								JavaClass javaClass = entry.getValue();
 								addCompiledClass(javaClass.getName(), javaClass.getByteCode());
 							}
 						} else {
-							for (Entry<String, JavaClass> entry : result.getItemsFoundFlatMap().entrySet()) {
+							for (Entry<String, JavaClass> entry : result.getClassesFlatMap().entrySet()) {
 								if (check(checkPathsResult, entry.getKey())) {
 									JavaClass javaClass = entry.getValue();
 									addCompiledClass(javaClass.getName(), javaClass.getByteCode());

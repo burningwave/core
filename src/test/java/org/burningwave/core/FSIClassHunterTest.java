@@ -27,7 +27,7 @@ public class FSIClassHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getItemsFound()
+				result.getClasses()
 		);
 	}
 
@@ -53,7 +53,7 @@ public class FSIClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -72,7 +72,7 @@ public class FSIClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 
@@ -100,7 +100,7 @@ public class FSIClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -126,7 +126,7 @@ public class FSIClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -156,7 +156,7 @@ public class FSIClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -189,7 +189,7 @@ public class FSIClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -223,7 +223,7 @@ public class FSIClassHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getItemsFound()
+				result.getClasses()
 		);
 	}
 	
@@ -258,7 +258,7 @@ public class FSIClassHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getMembersFoundBy(methodCriteria)
+				result.getMembersBy(methodCriteria)
 		);
 	}
 	
@@ -291,7 +291,7 @@ public class FSIClassHunterTest extends BaseTest {
 					Thread.currentThread().getContextClassLoader()
 				)
 			),
-			(result) -> result.getMembersFoundBy(methodCriteria)
+			(result) -> result.getMembersBy(methodCriteria)
 		);
 	}
 	
@@ -322,7 +322,7 @@ public class FSIClassHunterTest extends BaseTest {
 					Thread.currentThread().getContextClassLoader()
 				)
 			),
-			(result) -> result.getMembersFoundBy(methodCriteria)
+			(result) -> result.getMembersBy(methodCriteria)
 		);
 	}
 	
@@ -363,7 +363,7 @@ public class FSIClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getMembersFoundBy(methodCriteria_01)
+			(result) -> result.getMembersBy(methodCriteria_01)
 		);
 	}
 	
@@ -393,7 +393,7 @@ public class FSIClassHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getMembersFoundBy(constructorCriteria)
+				result.getMembersBy(constructorCriteria)
 		);
 	}
 	
@@ -428,7 +428,7 @@ public class FSIClassHunterTest extends BaseTest {
 			),
 			(result) -> {
 				result.waitForSearchEnding();
-				return result.getMembersFoundBy(methodCriteria);
+				return result.getMembersBy(methodCriteria);
 			}
 		);
 	}
@@ -441,7 +441,7 @@ public class FSIClassHunterTest extends BaseTest {
 		);
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(searchConfig),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 		searchConfig.by(
 			ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> 
@@ -452,7 +452,7 @@ public class FSIClassHunterTest extends BaseTest {
 		);
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(searchConfig),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -467,7 +467,7 @@ public class FSIClassHunterTest extends BaseTest {
 		);
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(searchConfig),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 		searchConfig.by(
 			ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> 
@@ -478,7 +478,7 @@ public class FSIClassHunterTest extends BaseTest {
 		);
 		testNotEmpty(
 			() -> componentSupplier.getFSIClassHunter().findBy(searchConfig),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -497,7 +497,7 @@ public class FSIClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 	
@@ -520,7 +520,7 @@ public class FSIClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getItemsFound()
+			(result) -> result.getClasses()
 		);
 	}
 		

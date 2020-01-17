@@ -28,9 +28,6 @@
  */
 package org.burningwave.core.classes.hunter;
 
-import java.util.Collection;
-import java.util.Map;
-
 import org.burningwave.core.Component;
 
 public class SearchResult<K, T> implements Component {
@@ -38,14 +35,6 @@ public class SearchResult<K, T> implements Component {
 	
 	SearchResult(SearchContext<K, T> context) {
 		this.context = context;
-	}
-	
-	public Collection<T> getItemsFound() {
-		return context.getItemsFound();
-	}
-	
-	public Map<K, T> getItemsFoundFlatMap() {
-		return context.getItemsFoundFlatMap();
 	}
 	
 	@SuppressWarnings("unchecked")
