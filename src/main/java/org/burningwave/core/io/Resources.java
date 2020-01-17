@@ -50,8 +50,11 @@ public class Resources {
 	}
 
 	private static Map<String, ByteBuffer> retrievePartition(Map<String, Map<String, ByteBuffer>> partion, Long partitionIndex, String path) {
-		String partitionKey = path.substring(0, path.lastIndexOf("/"));
-		partitionKey = partitionKey.substring(partitionKey.lastIndexOf("/") + 1);
+		String partitionKey = "/";
+		if (partitionIndex > 1) {
+			partitionKey = path.substring(0, path.lastIndexOf("/"));
+			partitionKey = partitionKey.substring(partitionKey.lastIndexOf("/") + 1);
+		}
 		Map<String, ByteBuffer> innerPartion = partion.get(partitionKey);
 		if (innerPartion == null) {
 			synchronized (MUTEX_PREFIX_NAME + partitionIndex + "_" + partitionKey) {

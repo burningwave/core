@@ -133,10 +133,13 @@ public class FileSystemItem implements Component {
 					return fileName;
 				} 
 			}		
-		} else {
+		} else if (realAbsolutePath.chars().filter(ch -> ch == '/').count() > 1) {
 			String pathToTest = realAbsolutePath.substring(0, realAbsolutePath.lastIndexOf("/"));
 			relativePath = realAbsolutePath.replace(pathToTest + "/", "") + (relativePath.isEmpty()? "" : "/") + relativePath;
 			return retrieveConventionedAbsolutePath(pathToTest, relativePath);
+		} else {
+			exists = false;
+			return null;
 		}
 	}
 
@@ -401,7 +404,7 @@ public class FileSystemItem implements Component {
 			return resource;
 		}
 		String conventionedAbsolutePath = getConventionedAbsolutePath();
-		if (!isFolder()) {
+		if (exists && !isFolder()) {
 			if (isCompressed()) {
 				String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(ZIP_PATH_SEPARATOR));
 				File file = new File(zipFilePath);

@@ -65,10 +65,13 @@ public class FileSystemItemTest extends BaseTest {
 	
 	@Test
 	public void readTestSeven() {
-		testNotEmpty(() -> FileSystemItem.ofPath(
-			System.getProperty("os.name").toLowerCase().contains("windows")?
-			"C:" : "/"
-		).getChildren());
+		testNotEmpty(() -> 
+			FileSystemItem.ofPath(
+				System.getProperty("os.name").toLowerCase().contains("windows")?
+					"C:" : "/"
+			).getChildren(), 
+			true
+		);
 	}
 		
 	@Test
@@ -115,6 +118,14 @@ public class FileSystemItemTest extends BaseTest {
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib"
 		).getChildren());
+	}
+	
+	
+	@Test
+	public void readTestTestThirteen() {
+		testNotNull(() -> FileSystemItem.ofPath(
+			"F:/Burningwave.docx"
+		).toByteBuffer());
 	}
 	
 	@Test

@@ -67,11 +67,22 @@ public class BaseTest implements Component {
 	}
 	
 	void testNotEmpty(ThrowingSupplier<Collection<?>> supplier) {
+		testNotEmpty(supplier, false);
+	}
+	
+	void testNotEmpty(ThrowingSupplier<Collection<?>> supplier, boolean printAllElements) {
 		long initialTime = System.currentTimeMillis();
 		Collection<?> coll = null;
+		boolean isNotEmpty = false;
 		try {
 			coll = supplier.get();
 			logInfo("Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			isNotEmpty = !coll.isEmpty();
+			if (isNotEmpty && printAllElements) {
+				coll.forEach(element -> logDebug(
+					Optional.ofNullable(element.toString()).orElseGet(() -> null)
+				));
+			}
 		} catch (Throwable exc) {
 			logError("Exception occurred", exc);
 		}
