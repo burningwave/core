@@ -44,13 +44,13 @@ import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.StreamHelper;
 
-public class SearchContext<K, T> implements Component {
+public class SearchContext<T> implements Component {
 
 	FileSystemHelper fileSystemHelper;
 	ClassFileScanConfig classFileScanConfiguration;
 	SearchConfigAbst<?> searchConfig;
-	Map<K, T> itemsFoundFlatMap;
-	Map<String, Map<K, T>> itemsFoundMap;
+	Map<String, T> itemsFoundFlatMap;
+	Map<String, Map<String, T>> itemsFoundMap;
 	PathMemoryClassLoader sharedPathMemoryClassLoader;
 	PathMemoryClassLoader pathMemoryClassLoader;
 	Collection<String> skippedClassNames;
@@ -82,7 +82,7 @@ public class SearchContext<K, T> implements Component {
 		).getNotContainedPaths().isEmpty();
 	}
 	
-	public static <K, T> SearchContext<K, T> create(
+	public static <T> SearchContext<T> create(
 		FileSystemHelper fileSystemHelper,
 		StreamHelper streamHelper,
 		InitContext initContext
@@ -110,7 +110,7 @@ public class SearchContext<K, T> implements Component {
 		}
 	}
 	
-	void addItemFound(String path, K key, T item) {
+	void addItemFound(String path, String key, T item) {
 		retrieveCollectionForPath(
 			itemsFoundMap,
 			ConcurrentHashMap::new, path
@@ -118,7 +118,7 @@ public class SearchContext<K, T> implements Component {
 		itemsFoundFlatMap.put(key, item);
 	}
 	
-	void addAllItemsFound(String path, Map<K, T> items) {
+	void addAllItemsFound(String path, Map<String, T> items) {
 		retrieveCollectionForPath(
 			itemsFoundMap,
 			ConcurrentHashMap::new, path
@@ -126,8 +126,8 @@ public class SearchContext<K, T> implements Component {
 		itemsFoundFlatMap.putAll(items);
 	}
 	
-	 Map<K, T> retrieveCollectionForPath(Map<String, Map<K, T>> allItems, Supplier<Map<K, T>> mapForPathSupplier, String path) {
-		Map<K, T> items = null;
+	 Map<String, T> retrieveCollectionForPath(Map<String, Map<String, T>> allItems, Supplier<Map<String, T>> mapForPathSupplier, String path) {
+		Map<String, T> items = null;
 		if (mapForPathSupplier != null) {
 			if (allItems != null) {
 				items = allItems.get(path);
@@ -156,7 +156,7 @@ public class SearchContext<K, T> implements Component {
 		return (C)searchConfig;
 	}
 	
-	Map<K, T> getItemsFoundFlatMap() {
+	Map<String, T> getItemsFoundFlatMap() {
 		return this.itemsFoundFlatMap;
 	}
 	
@@ -172,7 +172,7 @@ public class SearchContext<K, T> implements Component {
 		return itemsFound;
 	}
 	
-	Map<K, T> getItemsFound(String path) {
+	Map<String, T> getItemsFound(String path) {
 		return this.itemsFoundMap.get(path);
 	}
 			

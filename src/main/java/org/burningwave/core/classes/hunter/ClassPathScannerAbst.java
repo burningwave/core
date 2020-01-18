@@ -48,7 +48,7 @@ import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
 
 
-abstract class ClassPathScannerAbst<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>> implements Component {
+abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends SearchResult<I>> implements Component {
 	
 	Supplier<ByteCodeHunter> byteCodeHunterSupplier;
 	ByteCodeHunter byteCodeHunter;

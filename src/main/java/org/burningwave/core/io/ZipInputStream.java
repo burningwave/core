@@ -55,7 +55,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		
 	private ZipInputStream parent;
 	private Entry currentZipEntry;
-	//private String name;
 	private String absolutePath;
 	private ByteBufferInputStream byteBufferInputStream;
 	
@@ -169,14 +168,14 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	) {
 		Set<T> collection = ConcurrentHashMap.newKeySet();
 		if (currentZipEntry != null && zipEntryPredicate.test(currentZipEntry)) {
-			if (loadZipEntryData && !currentZipEntry.contentHasBeenLoaded()) {
+			if (loadZipEntryData) {
 				currentZipEntry.loadContent();
 			}
 			collection.add(tSupplier.apply(currentZipEntry));
 		}
 		while(getNextEntry(false) != null) {
 			if (zipEntryPredicate.test(currentZipEntry)) {
-				if (loadZipEntryData && !currentZipEntry.contentHasBeenLoaded()) {
+				if (loadZipEntryData) {
 					currentZipEntry.loadContent();
 				}
 				collection.add(tSupplier.apply(currentZipEntry));
@@ -191,14 +190,14 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		boolean loadZipEntryData
 	) {
 		if (currentZipEntry != null && zipEntryPredicate.test(currentZipEntry)) {
-			if (loadZipEntryData && !currentZipEntry.contentHasBeenLoaded()) {
+			if (loadZipEntryData) {
 				currentZipEntry.loadContent();
 			}
 			return tSupplier.apply(currentZipEntry);
 		}
 		while(getNextEntry(false) != null) {
 			if (zipEntryPredicate.test(currentZipEntry)) {
-				if (loadZipEntryData && !currentZipEntry.contentHasBeenLoaded()) {
+				if (loadZipEntryData) {
 					currentZipEntry.loadContent();
 				}
 				
@@ -278,16 +277,15 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	public void close() {
 		closeEntry();
 		parent = null;
+		absolutePath = null;
 		ThrowingRunnable.run(() -> super.close());
+		this.byteBufferInputStream = null;
 	}
 	
 	public static class Entry extends java.util.zip.ZipEntry implements Serializable, Component {
 
 		private static final long serialVersionUID = -3679843114872023810L;
-		
 		private ZipInputStream zipInputStream;
-		private ByteBuffer content;
-				
 
 		public Entry(Entry e, ZipInputStream zIS) {
 			super(e);
@@ -328,38 +326,27 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		}		
 		
 		
-		private void loadContent() {
-			if (!contentHasBeenLoaded()) {
-				if (zipInputStream.currentZipEntry != this) {
-					throw Throwables.toRuntimeException("Entry and his ZipInputStream are not aligned");
+		private ByteBuffer loadContent() {
+			return Resources.getOrDefault(
+				getAbsolutePath(), () -> {
+					if (zipInputStream.currentZipEntry != this) {
+						throw Throwables.toRuntimeException("Entry and his ZipInputStream are not aligned");
+					}
+					try (ByteBufferOutputStream bBOS = createDataBytesContainer()) {
+						Streams.copy(zipInputStream, bBOS);
+					    return bBOS.toByteBuffer();
+					}
 				}
-				try (ByteBufferOutputStream bBOS = createDataBytesContainer()) {
-					Streams.copy(zipInputStream, bBOS);
-				    this.content = bBOS.toByteBuffer();
-				}
-			}
-		}
-		
-		
-		public boolean contentHasBeenLoaded() {
-			return content != null;
-		}
-		
+			);
+			
+		}		
+	
 		public byte[] toByteArray() {
 			return Streams.toByteArray(toByteBuffer());
 		}
 
 		public ByteBuffer toByteBuffer() {
-			content = Resources.getOrDefault(getAbsolutePath(), null);
-			if (content == null) {
-				Resources.getOrDefault(
-					getAbsolutePath(), () -> {
-						loadContent();
-						return content;
-					}
-				);
-			}
-			return Streams.shareContent(content);
+			return loadContent();
 		}
 		
 		public InputStream toInputStream() {
@@ -396,19 +383,16 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		
 		@Override
 		public void close() {
-			content = null;
 			zipInputStream = null;
 		}
 		
 		public static class Detached implements Component {
-			private ByteBuffer content;
 			private String name;
 			private String absolutePath;
 			private Boolean isDirectory;
 			private ZipInputStream zipInputStream;
 			
 			Detached(Entry zipEntry) {
-				this.content = zipEntry.content;
 				this.name = zipEntry.getName();
 				this.absolutePath = zipEntry.getAbsolutePath();
 				this.isDirectory = zipEntry.isDirectory();
@@ -425,20 +409,15 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 			}
 
 			public ByteBuffer toByteBuffer() {
-				content = Resources.getOrDefault(absolutePath, null);
-				if (content != null) {
-					return content;
-				} else {
-					return Resources.getOrDefault(absolutePath, () -> {
-						try (ZipInputStream zipInputStream = getZipInputStream()) {
-							ByteBuffer content = zipInputStream.findFirstAndConvert((entry) -> 
-								entry.getName().equals(getName()), zEntry -> 
-								zEntry.toByteBuffer(), true
-							);
-							return Streams.shareContent(content);
-						}
-					});
-				}				
+				return Resources.getOrDefault(absolutePath, () -> {
+					try (ZipInputStream zipInputStream = getZipInputStream()) {
+						ByteBuffer content = zipInputStream.findFirstAndConvert((entry) -> 
+							entry.getName().equals(getName()), zEntry -> 
+							zEntry.toByteBuffer(), true
+						);
+						return Streams.shareContent(content);
+					}
+				});			
 			}
 			
 			public String getName() {
@@ -457,7 +436,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 			
 			@Override
 			public void close() {
-				content = null;
 				name = null;
 				absolutePath = null;
 				isDirectory = null;

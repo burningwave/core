@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
@@ -49,7 +50,7 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
 
-public class ClassPathHunter extends ClassPathScannerWithCachingSupport<FileSystemItem, Collection<Class<?>>, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
+public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collection<Class<?>>, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
 	private ClassPathHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
@@ -79,8 +80,8 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<FileSyst
 	}
 	
 	@Override
-	<S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(SearchContext context, String path, Map<FileSystemItem, Collection<Class<?>>> itemsForPath) {
-		for (Entry<FileSystemItem, Collection<Class<?>>> cachedItemAsEntry : itemsForPath.entrySet()) {
+	<S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(SearchContext context, String path, Map<String, Collection<Class<?>>> itemsForPath) {
+		for (Entry<String, Collection<Class<?>>> cachedItemAsEntry : itemsForPath.entrySet()) {
 			ClassCriteria.TestContext testContext = testCachedItem(context, path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 			if(testContext.getResult()) {
 				addCachedItemToContext(context, testContext, path, cachedItemAsEntry);
@@ -90,7 +91,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<FileSyst
 	}
 	
 	@Override
-	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext context, String path, FileSystemItem file, Collection<Class<?>> classes) {
+	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext context, String baseAbsolutePath, String currentScannedItemAbsolutePath, Collection<Class<?>> classes) {
 		ClassCriteria.TestContext testContext = context.testCriteria(null);
 		for (Class<?> cls : classes) {
 			if ((testContext = context.testCriteria(context.retrieveClass(cls))).getResult()) {
@@ -113,10 +114,9 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<FileSyst
 				javaClass.getPath(), classPath.length() -1
 			)
 		-1);	
-		FileSystemItem classPathAsFile = FileSystemItem.ofPath(classPath);
 		context.addItemFound(
 			scanItemContext.getBasePathAsString(),
-			classPathAsFile,
+			classPath,
 			context.loadClass(javaClass.getName())
 		);
 	}
@@ -128,17 +128,17 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<FileSyst
 		Scan.ItemContext<ZipInputStream.Entry> scanItemContext,
 		JavaClass javaClass
 	) {
-		FileSystemItem fsObject = null;
+		String fsObject = null;
 		ZipInputStream.Entry zipEntry = scanItemContext.getInput();
 		if (zipEntry.getName().equals(javaClass.getPath())) {
-			fsObject = FileSystemItem.ofPath(zipEntry.getZipInputStream().getAbsolutePath());
+			fsObject = zipEntry.getZipInputStream().getAbsolutePath();
 			if (!context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
 				scanItemContext.getParent().setDirective(Scan.Directive.STOP_ITERATION);
 			}
 		} else {
 			String zipEntryAbsolutePath = zipEntry.getAbsolutePath();
 			zipEntryAbsolutePath = zipEntryAbsolutePath.substring(0, zipEntryAbsolutePath.lastIndexOf(javaClass.getPath()));
-			fsObject = FileSystemItem.ofPath(zipEntryAbsolutePath);
+			fsObject = zipEntryAbsolutePath;
 		}
 		context.addItemFound(scanItemContext.getBasePathAsString(), fsObject, context.loadClass(javaClass.getName()));
 	}
@@ -150,7 +150,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<FileSyst
 		super.close();
 	}
 	
-	public static class SearchContext extends org.burningwave.core.classes.hunter.SearchContext<FileSystemItem, Collection<Class<?>>> {
+	public static class SearchContext extends org.burningwave.core.classes.hunter.SearchContext<Collection<Class<?>>> {
 		ParallelTasksManager tasksManager;
 		
 		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
@@ -164,8 +164,8 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<FileSyst
 		}
 
 		
-		void addItemFound(String basePathAsString, FileSystemItem classPathAsFile, Class<?> testedClass) {
-			Map<FileSystemItem, Collection<Class<?>>> testedClassesForClassPathMap = retrieveCollectionForPath(
+		void addItemFound(String basePathAsString, String classPathAsFile, Class<?> testedClass) {
+			Map<String, Collection<Class<?>>> testedClassesForClassPathMap = retrieveCollectionForPath(
 				itemsFoundMap,
 				ConcurrentHashMap::new,
 				basePathAsString
@@ -190,14 +190,27 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<FileSyst
 		}
 	}
 	
-	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<FileSystemItem, Collection<Class<?>>> {
-
+	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<Collection<Class<?>>> {
+		Collection<FileSystemItem> classPaths;
+		
 		public SearchResult(SearchContext context) {
 			super(context);
 		}
 		
 		public Collection<FileSystemItem> getClassPaths() {
-			return context.getItemsFoundFlatMap().keySet();
+			if (classPaths == null) {
+				Map<String, Collection<Class<?>>> itemsFoundFlatMaps = context.getItemsFoundFlatMap();
+				synchronized (itemsFoundFlatMaps) {
+					if (classPaths == null) {
+						classPaths = itemsFoundFlatMaps.keySet().stream().map(path -> 
+							FileSystemItem.ofPath(path)
+						).collect(Collectors.toCollection(() ->
+							ConcurrentHashMap.newKeySet())
+						);
+					}
+				}
+			}
+			return classPaths;
 		}
 	}
 }

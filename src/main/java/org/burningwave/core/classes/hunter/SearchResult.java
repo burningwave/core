@@ -33,10 +33,10 @@ import java.util.Map;
 
 import org.burningwave.core.Component;
 
-public class SearchResult<K, T> implements Component {
-	protected SearchContext<K, T> context;
+public class SearchResult<T> implements Component {
+	protected SearchContext<T> context;
 	
-	SearchResult(SearchContext<K, T> context) {
+	SearchResult(SearchContext<T> context) {
 		this.context = context;
 	}
 	
@@ -44,7 +44,7 @@ public class SearchResult<K, T> implements Component {
 		return context.getItemsFound();
 	}
 	
-	protected Map<K, T> getItemsFoundFlatMap() {
+	protected Map<String, T> getItemsFoundFlatMap() {
 		return context.getItemsFoundFlatMap();
 	}
 	

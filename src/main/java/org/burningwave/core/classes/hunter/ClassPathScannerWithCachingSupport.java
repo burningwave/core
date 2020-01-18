@@ -41,6 +41,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.MemberFinder;
@@ -52,8 +53,8 @@ import org.burningwave.core.io.PathHelper.CheckResult;
 import org.burningwave.core.io.StreamHelper;
 
 
-abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchContext<K, I>, R extends SearchResult<K, I>> extends ClassPathScannerAbst<K, I, C, R> implements org.burningwave.core.Component {
-	Map<String, Map<K, I>> cache;
+abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>, R extends SearchResult<I>> extends ClassPathScannerAbst<I, C, R> implements Component {
+	Map<String, Map<String, I>> cache;
 
 	ClassPathScannerWithCachingSupport(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
@@ -108,7 +109,7 @@ abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchContext<
 					pathsNotScanned = scanCache(context);
 					if (!pathsNotScanned.isEmpty()) {
 						for (String path : pathsNotScanned) {
-							Map<K, I> classesForPath = cache.get(path);
+							Map<String, I> classesForPath = cache.get(path);
 							if (classesForPath != null && !classesForPath.isEmpty()) {
 								context.addAllItemsFound(path,classesForPath);
 								pathsNotScanned.remove(path);
@@ -132,7 +133,7 @@ abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchContext<
 		CacheableSearchConfig searchConfig = context.getSearchConfig();
 		if (!context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
 			for (String path : searchConfig.getPaths()) {
-				Map<K, I> classesForPath = cache.get(path);
+				Map<String, I> classesForPath = cache.get(path);
 				if (classesForPath != null) {
 					if (!classesForPath.isEmpty()) {	
 						iterateAndTestCachedItemsForPath(context, path, classesForPath);
@@ -143,7 +144,7 @@ abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchContext<
 			}
 		} else {
 			for (String path : searchConfig.getPaths()) {
-				Map<K, I> classesForPath = cache.get(path);
+				Map<String, I> classesForPath = cache.get(path);
 				if (classesForPath != null) {
 					if (!classesForPath.isEmpty()) {
 						context.addAllItemsFound(path, classesForPath);
@@ -157,7 +158,7 @@ abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchContext<
 	}
 	
 	public void loadCache(Collection<String> paths) {
-		try (SearchResult<K, I> result = 
+		try (SearchResult<I> result = 
 			findBy(
 				SearchConfig.forPaths(paths)
 			)
@@ -174,7 +175,7 @@ abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchContext<
 	void loadCache(C context, Collection<String> paths) {
 		CheckResult checkPathsResult = pathHelper.check(cache.keySet(), paths);
 		ClassFileScanConfig classFileScanConfiguration = context.classFileScanConfiguration.createCopy().setPaths(checkPathsResult.getNotContainedPaths());
-		Map<String, Map<K, I>> tempCache = new LinkedHashMap<>();
+		Map<String, Map<String, I>> tempCache = new LinkedHashMap<>();
 		if (!checkPathsResult.getPartialContainedDirectories().isEmpty()) {
 			Predicate<File> directoryPredicate = null;
 			for (Entry<String, Collection<String>> entry : checkPathsResult.getPartialContainedDirectories().entrySet()) {
@@ -219,8 +220,8 @@ abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchContext<
 				context, this
 			).afterScanPath((mainScanContext, path) -> {
 				mainScanContext.waitForTasksEnding();
-				Map<K, I> itemsForPath = new ConcurrentHashMap<>();
-				Map<K, I> itemsFound = context.getItemsFound(path);
+				Map<String, I> itemsForPath = new ConcurrentHashMap<>();
+				Map<String, I> itemsFound = context.getItemsFound(path);
 				if (itemsFound != null) {
 					itemsForPath.putAll(itemsFound);
 				}
@@ -228,7 +229,7 @@ abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchContext<
 			})
 		);
 		if (!tempCache.isEmpty()) {
-			for (Entry<String, Map<K, I>> entry : tempCache.entrySet()) {
+			for (Entry<String, Map<String, I>> entry : tempCache.entrySet()) {
 				cache.get(entry.getKey()).putAll(entry.getValue());
 				context.addAllItemsFound(entry.getKey(), entry.getValue());
 			}
@@ -236,8 +237,8 @@ abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchContext<
 	}
 	
 
-	<S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(C context, String path, Map<K, I> itemsForPath) {
-		for (Entry<K, I> cachedItemAsEntry : itemsForPath.entrySet()) {
+	<S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(C context, String path, Map<String, I> itemsForPath) {
+		for (Entry<String, I> cachedItemAsEntry : itemsForPath.entrySet()) {
 			ClassCriteria.TestContext testContext = testCachedItem(context, path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 			if(testContext.getResult()) {
 				addCachedItemToContext(context, testContext, path, cachedItemAsEntry);
@@ -247,12 +248,12 @@ abstract class ClassPathScannerWithCachingSupport<K, I, C extends SearchContext<
 	
 	
 	<S extends SearchConfigAbst<S>> void addCachedItemToContext(
-		C context, ClassCriteria.TestContext testContext, String path, Entry<K, I> cachedItemAsEntry
+		C context, ClassCriteria.TestContext testContext, String path, Entry<String, I> cachedItemAsEntry
 	) {
 		context.addItemFound(path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 	}
 
-	abstract <S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(C context, String path, K key, I value);
+	abstract <S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(C context, String path, String key, I value);
 	
 	@Override
 	public void close() {

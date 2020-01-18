@@ -43,7 +43,7 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.ZipInputStream;
 
-public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<String, JavaClass, SearchContext<String, JavaClass>, ByteCodeHunter.SearchResult> {
+public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass, SearchContext<JavaClass>, ByteCodeHunter.SearchResult> {
 	
 	private ByteCodeHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
@@ -62,7 +62,7 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<String, J
 			streamHelper, 
 			classHelper,
 			memberFinder,
-			(initContext) -> SearchContext.<String, JavaClass>create(
+			(initContext) -> SearchContext.<JavaClass>create(
 				fileSystemHelper, streamHelper, initContext
 			),
 			(context) -> new ByteCodeHunter.SearchResult(context)
@@ -77,20 +77,20 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<String, J
 	}
 	
 	@Override
-	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCriteria(SearchContext<String, JavaClass> context, JavaClass javaClass) {
+	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCriteria(SearchContext<JavaClass> context, JavaClass javaClass) {
 		return context.getSearchConfig().getClassCriteria().hasNoPredicate() ?
 			context.getSearchConfig().getClassCriteria().testAndReturnTrueIfNullOrTrueByDefault(null) :
 			super.testCriteria(context, javaClass);
 	}
 	
 	@Override
-	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext<String, JavaClass> context, String path, String key, JavaClass javaClass) {
+	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext<JavaClass> context, String path, String key, JavaClass javaClass) {
 		return super.testCriteria(context, javaClass);
 	}
 	
 	@Override
 	void retrieveItemFromFileInputStream(
-		SearchContext<String, JavaClass> context, 
+		SearchContext<JavaClass> context, 
 		ClassCriteria.TestContext criteriaTestContext,
 		Scan.ItemContext<FileInputStream> scanItemContext,
 		JavaClass javaClass
@@ -101,7 +101,7 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<String, J
 	
 	@Override
 	void retrieveItemFromZipEntry(
-		SearchContext<String, JavaClass> context,
+		SearchContext<JavaClass> context,
 		ClassCriteria.TestContext criteriaTestContext,
 		Scan.ItemContext<ZipInputStream.Entry> scanItemContext,
 		JavaClass javaClass
@@ -109,9 +109,9 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<String, J
 		context.addItemFound(scanItemContext.getBasePathAsString(), scanItemContext.getInput().getAbsolutePath(), javaClass);
 	}
 		
-	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<String, JavaClass> {
+	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<JavaClass> {
 
-		public SearchResult(SearchContext<String, JavaClass> context) {
+		public SearchResult(SearchContext<JavaClass> context) {
 			super(context);
 		}
 		

@@ -57,10 +57,10 @@ public class FileSystemItem implements Component {
 		
 	private Map.Entry<String, String> absolutePath;
 	private FileSystemItem parent;
+	private FileSystemItem parentContainer;
 	private Set<FileSystemItem> children;
 	private Set<FileSystemItem> allChildren;
 	private Boolean exists;
-	private ZipInputStream.Entry.Detached zippedItem;
 	
 	private FileSystemItem(String realAbsolutePath) {
 		realAbsolutePath = Strings.Paths.clean(realAbsolutePath);
@@ -86,7 +86,7 @@ public class FileSystemItem implements Component {
 		realAbsolutePath = Strings.Paths.clean(realAbsolutePath);
 		FileSystemItem fileSystemItemReader = FILE_SYSTEM_ITEMS.get(realAbsolutePath);
 		if (fileSystemItemReader == null) {
-			synchronized(FileSystemItem.class.getName() + "_" + realAbsolutePath) {
+			synchronized(FILE_SYSTEM_ITEMS.toString() + "_" + realAbsolutePath) {
 				if ((fileSystemItemReader = FILE_SYSTEM_ITEMS.get(realAbsolutePath)) == null) {
 					fileSystemItemReader = new FileSystemItem(realAbsolutePath, conventionedAbsolutePath);
 					if (Strings.isNotEmpty(realAbsolutePath)) {
@@ -174,7 +174,7 @@ public class FileSystemItem implements Component {
 					relativePath2 = relativePath2.replaceFirst("\\/", "");
 				}
 				if (relativePath2.isEmpty()) {
-					this.zippedItem = zipEntryWrapper;
+					this.parentContainer = FileSystemItem.ofPath(zipEntryWrapper.getZipInputStream().getAbsolutePath());
 					return zipEntryWrapper.getName() + (!zipEntryWrapper.isDirectory() && Streams.isArchive(zipEntryWrapper.toByteBuffer()) ? ZIP_PATH_SEPARATOR : "");
 				} else {
 					return zipEntryWrapper.getName() + ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
@@ -200,10 +200,17 @@ public class FileSystemItem implements Component {
 		return new ByteBufferInputStream(toByteBuffer());
 	}
 	
+	public boolean isRoot() {
+		String absolutePathStr = getAbsolutePath();
+		return absolutePathStr.chars().filter(ch -> ch == '/').count() == 0 || absolutePathStr.equals("/");
+	}
+	
 	public FileSystemItem getParent() {
 		if (parent != null) {
 			return parent;
-		} else {
+		} else if (isRoot()) {
+			return null;
+		} else {			
 			String conventionedPath = absolutePath.getValue();
 			if (conventionedPath != null) {
 				if (conventionedPath.endsWith("/")) {
@@ -226,11 +233,23 @@ public class FileSystemItem implements Component {
 		}
 	}
 	
+	public FileSystemItem getParentContainer() {
+		if (parentContainer != null) {
+			return parentContainer;
+		} else {
+			getConventionedAbsolutePath();
+			if (parentContainer == null) {
+				parentContainer = getParent();
+			}
+		}
+		return parentContainer;
+	}
+	
 	public void refresh() {
 		children = null;
 		allChildren = null;
 		exists = null;
-		zippedItem = null;
+		parentContainer = null;
 		absolutePath.setValue(null);
 		parent = null;
 		getConventionedAbsolutePath();		
@@ -242,24 +261,25 @@ public class FileSystemItem implements Component {
 		} else {
 			String conventionedAbsolutePath = getConventionedAbsolutePath();
 			if (isContainer()) {
-				if (zippedItem != null) {
+				if (parentContainer != null) {
 					if (isArchive()) {
 						Supplier<ZipInputStream> zipInputStreamSupplier = () -> 
 							ZipInputStream.create(
-								zippedItem
+								getAbsolutePath(), toByteBuffer()
 							)
 						;
 						children = getChildren(zipInputStreamSupplier, "");
 					} else if (isFolder()) {
 						Supplier<ZipInputStream> zipInputStreamSupplier = () -> 
-							zippedItem.getZipInputStream()
+							ZipInputStream.create(
+								parentContainer.getAbsolutePath(), parentContainer.toByteBuffer()
+							)
 						;
 						children = getChildren(
 							zipInputStreamSupplier, 
 							conventionedAbsolutePath.substring(conventionedAbsolutePath.lastIndexOf(ZIP_PATH_SEPARATOR) + ZIP_PATH_SEPARATOR.length())
 						);
 					}
-					zippedItem = null;
 				} else if (isCompressed() || isArchive()) {
 					String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(ZIP_PATH_SEPARATOR));
 					File file = new File(zipFilePath);
