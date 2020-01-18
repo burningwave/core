@@ -74,5 +74,6 @@ public final class ByteBufferInputStream extends InputStream {
     @Override
     public void close() throws IOException {
     	buffer = null;
+    	bufferCopy = null;
     }
 }
