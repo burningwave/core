@@ -108,7 +108,7 @@ public class FileSystemItemTest extends BaseTest {
 		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0/"
-		).getAllChildren(), true);
+		).getAllChildren());
 	}
 	
 	@Test
@@ -121,11 +121,14 @@ public class FileSystemItemTest extends BaseTest {
 	}
 	
 	
-	//@Test
+	@Test
+	@Tag("Heavy")
 	public void readTestTestThirteen() {
-		testNotNull(() -> FileSystemItem.ofPath(
-			"F:/Burningwave.docx"
-		).toByteBuffer());
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		testNotEmpty(() -> FileSystemItem.ofPath(
+			basePath + "/libs-for-test.zip"
+		).getAllChildren());
 	}
 	
 	@Test
