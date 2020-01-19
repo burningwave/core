@@ -55,7 +55,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	private static final long serialVersionUID = -33538562818485472L;
 		
 	private ZipInputStream parent;
-	private Entry currentZipEntry;
+	private Entry.Attached currentZipEntry;
 	private String absolutePath;
 	private ByteBufferInputStream byteBufferInputStream;
 	
@@ -133,18 +133,18 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	}
 
 	@Override
-    protected Entry createZipEntry(String name) {
-    	return new Entry(name, this);
+    protected Entry.Attached createZipEntry(String name) {
+    	return new Entry.Attached(name, this);
     }
 	
-	public Entry getNextEntry() {
+	public Entry.Attached getNextEntry() {
 		return getNextEntry(false);
 	}
 	
-	public Entry getNextEntry(boolean loadZipEntryData) {
+	public Entry.Attached getNextEntry(boolean loadZipEntryData) {
 		ThrowingRunnable.run(() -> {
 			try {
-				currentZipEntry = (Entry)super.getNextEntry();
+				currentZipEntry = (Entry.Attached)super.getNextEntry();
 			} catch (ZipException exc) {
 				String message = exc.getMessage();
 				logWarn("Could not open zipEntry of {}: {}", absolutePath, message);
@@ -163,8 +163,8 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	}
 	
 	public <T> Set<T> findAllAndConvert(
-		Predicate<Entry> zipEntryPredicate, 
-		Function<Entry, T> tSupplier,
+		Predicate<Entry.Attached> zipEntryPredicate, 
+		Function<Entry.Attached, T> tSupplier,
 		boolean loadZipEntryData
 	) {
 		return findAllAndConvert(ConcurrentHashMap::newKeySet, zipEntryPredicate, tSupplier, loadZipEntryData);
@@ -172,8 +172,8 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	
 	public <T> Set<T> findAllAndConvert(
 		Supplier<Set<T>> supplier, 
-		Predicate<Entry> zipEntryPredicate, 
-		Function<Entry, T> tSupplier,
+		Predicate<Entry.Attached> zipEntryPredicate, 
+		Function<Entry.Attached, T> tSupplier,
 		boolean loadZipEntryData
 	) {
 		Set<T> collection = supplier.get();
@@ -195,8 +195,8 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	}
 	
 	public <T> T findFirstAndConvert(
-		Predicate<Entry> zipEntryPredicate, 
-		Function<Entry, T> tSupplier,
+		Predicate<Entry.Attached> zipEntryPredicate, 
+		Function<Entry.Attached, T> tSupplier,
 		boolean loadZipEntryData
 	) {
 		if (currentZipEntry != null && zipEntryPredicate.test(currentZipEntry)) {
@@ -219,7 +219,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		return null;
 	}
 	
-	public <T> T findOneAndConvert(Predicate<Entry> zipEntryPredicate, Function<Entry, T> tSupplier, boolean loadZipEntryData) {
+	public <T> T findOneAndConvert(Predicate<Entry.Attached> zipEntryPredicate, Function<Entry.Attached, T> tSupplier, boolean loadZipEntryData) {
 		Set<T> entriesFound = findAllAndConvert(
 			zipEntryPredicate,
 			tSupplier, 
@@ -231,7 +231,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		return entriesFound.stream().findFirst().orElseGet(() -> null);
 	}
 	
-	public Entry.Detached findOneAndConvert(Predicate<Entry> zipEntryPredicate, boolean loadZipEntryData) {
+	public Entry.Detached findOneAndConvert(Predicate<Entry.Attached> zipEntryPredicate, boolean loadZipEntryData) {
 		return findOneAndConvert(
 			zipEntryPredicate,
 			zEntry -> new Entry.Detached(
@@ -241,7 +241,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		);
 	}
 	
-	public Entry.Detached findFirstAndConvert(Predicate<Entry> zipEntryPredicate, boolean loadZipEntryData) {
+	public Entry.Detached findFirstAndConvert(Predicate<Entry.Attached> zipEntryPredicate, boolean loadZipEntryData) {
 		return findFirstAndConvert(
 			zipEntryPredicate,
 			zEntry -> new Entry.Detached(
@@ -251,22 +251,22 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		);
 	}
 	
-	public Set<Entry.Detached> findAllAndConvert(Predicate<Entry> zipEntryPredicate, boolean loadZipEntryData) {
+	public Set<Entry.Detached> findAllAndConvert(Predicate<Entry.Attached> zipEntryPredicate, boolean loadZipEntryData) {
 		return findAllAndConvert(ConcurrentHashMap::newKeySet, zipEntryPredicate, loadZipEntryData);
 	}
 	
-	public Set<Entry.Detached> findAllAndConvert(Supplier<Set<Entry.Detached>> setSupplier, Predicate<Entry> zipEntryPredicate, boolean loadZipEntryData) {
+	public Set<Entry.Detached> findAllAndConvert(Supplier<Set<Entry.Detached>> setSupplier, Predicate<Entry.Attached> zipEntryPredicate, boolean loadZipEntryData) {
 		return findAllAndConvert(
 			setSupplier,
 			zipEntryPredicate,
-			zEntry -> new Entry.Detached(
+			zEntry -> new Entry.Attached.Detached(
 				zEntry
 			),
 			loadZipEntryData		
 		);
 	}
 	
-	public Entry getCurrentZipEntry() {
+	public Entry.Attached getCurrentZipEntry() {
 		return currentZipEntry;
 	}
 	
@@ -296,122 +296,134 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		ThrowingRunnable.run(() -> super.close());
 		this.byteBufferInputStream = null;
 	}
-	
-	public static class Entry extends java.util.zip.ZipEntry implements Serializable, Component {
-
-		private static final long serialVersionUID = -3679843114872023810L;
-		private ZipInputStream zipInputStream;
-
-		public Entry(Entry e, ZipInputStream zIS) {
-			super(e);
-			this.zipInputStream = zIS;
+		
+	public static interface Entry {
+		
+		public ZipInputStream getZipInputStream();
+				
+		public String getName();
+		
+		public String getAbsolutePath();
+		
+		public boolean isDirectory();
+		
+		public ByteBuffer toByteBuffer();
+		
+		default public byte[] toByteArray() {
+			return Streams.toByteArray(toByteBuffer());
 		}
 		
-		public Entry(String name, ZipInputStream zIS) {
-			super(name);
-			this.zipInputStream = zIS;
-		}
-		
-		public ZipInputStream getZipInputStream() {
-			return zipInputStream;
-		}
-		
-		public String getAbsolutePath() {
-			String name = getName();
-			return zipInputStream.getAbsolutePath() + "/" + (name.endsWith("/") ? name.substring(0, name.length() -1) : name);
-		}
-		
-		private ByteBufferOutputStream createDataBytesContainer() {
-			int currEntrySize = (int)super.getSize();
-			if (currEntrySize != -1) {
-				return new ByteBufferOutputStream(currEntrySize);
-			} else {
-				return new ByteBufferOutputStream();
-			}
-		}
-		
-		public boolean isArchive() {
+		default public boolean isArchive() {
 			return Streams.isArchive(toByteBuffer());
 		}
 		
-		
-		@Override
-		public long getSize() {
-			long size = super.getSize();
-			if (size < 0) {
-				size = ByteBufferDelegate.limit(toByteBuffer());
-			}
-			return size;
-		}		
-		
-		
-		private ByteBuffer loadContent() {
-			return Resources.getOrDefault(
-				getAbsolutePath(), () -> {
-					if (zipInputStream.currentZipEntry != this) {
-						throw Throwables.toRuntimeException("Entry and his ZipInputStream are not aligned");
-					}
-					try (ByteBufferOutputStream bBOS = createDataBytesContainer()) {
-						Streams.copy(zipInputStream, bBOS);
-					    return bBOS.toByteBuffer();
-					}
-				}
-			);
-			
+		default public InputStream toInputStream() {
+			return new ByteBufferInputStream(toByteBuffer());
 		}		
 	
-		public byte[] toByteArray() {
-			return Streams.toByteArray(toByteBuffer());
-		}
-
-		public ByteBuffer toByteBuffer() {
-			return loadContent();
-		}
-		
-		public InputStream toInputStream() {
-			return new ByteBufferInputStream(toByteBuffer());
-		}
-		
-		public Detached convert() {
-			return new Entry.Detached(
-				this
-			);
-		}		
-		
-		public void unzipToFolder(File folder) {
-			File destinationFilePath = new File(folder.getAbsolutePath(), this.getName());
-			destinationFilePath.getParentFile().mkdirs();
-			if (!this.isDirectory()) {
-				ThrowingRunnable.run(() -> {
-					try (BufferedInputStream bis = new BufferedInputStream(this.toInputStream())) {
-						int byteTransferred = 0;
-						byte buffer[] = new byte[Streams.DEFAULT_BUFFER_SIZE];
-						try (
-							FileOutputStream fos = FileOutputStream.create(destinationFilePath);
-							BufferedOutputStream bos = new BufferedOutputStream(fos, Streams.DEFAULT_BUFFER_SIZE)
-						) {
-							while ((byteTransferred = bis.read(buffer, 0, Streams.DEFAULT_BUFFER_SIZE)) != -1) {
-								bos.write(buffer, 0, byteTransferred);
-							}
-							bos.flush();
+		static class Attached extends java.util.zip.ZipEntry implements Serializable, Component, Entry {
+			
+			private static final long serialVersionUID = -3679843114872023810L;
+			private ZipInputStream zipInputStream;
+	
+			public Attached(Entry.Attached e, ZipInputStream zIS) {
+				super(e);
+				this.zipInputStream = zIS;
+			}
+			
+			public Attached(String name, ZipInputStream zIS) {
+				super(name);
+				this.zipInputStream = zIS;
+			}
+			
+			public ZipInputStream getZipInputStream() {
+				return zipInputStream;
+			}
+			
+			public String getAbsolutePath() {
+				String name = getName();
+				return zipInputStream.getAbsolutePath() + "/" + (name.endsWith("/") ? name.substring(0, name.length() -1) : name);
+			}
+			
+			private ByteBufferOutputStream createDataBytesContainer() {
+				int currEntrySize = (int)super.getSize();
+				if (currEntrySize != -1) {
+					return new ByteBufferOutputStream(currEntrySize);
+				} else {
+					return new ByteBufferOutputStream();
+				}
+			}
+			
+			@Override
+			public long getSize() {
+				long size = super.getSize();
+				if (size < 0) {
+					size = ByteBufferDelegate.limit(toByteBuffer());
+				}
+				return size;
+			}		
+			
+			
+			private ByteBuffer loadContent() {
+				return Resources.getOrDefault(
+					getAbsolutePath(), () -> {
+						if (zipInputStream.currentZipEntry != this) {
+							throw Throwables.toRuntimeException("Entry.Impl and his ZipInputStream are not aligned");
+						}
+						try (ByteBufferOutputStream bBOS = createDataBytesContainer()) {
+							Streams.copy(zipInputStream, bBOS);
+						    return bBOS.toByteBuffer();
 						}
 					}
-				});
+				);
+				
+			}		
+	
+			public ByteBuffer toByteBuffer() {
+				return loadContent();
+			}
+			
+			public Detached convert() {
+				return new Entry.Detached(
+					this
+				);
+			}		
+			
+			public void unzipToFolder(File folder) {
+				File destinationFilePath = new File(folder.getAbsolutePath(), this.getName());
+				destinationFilePath.getParentFile().mkdirs();
+				if (!this.isDirectory()) {
+					ThrowingRunnable.run(() -> {
+						try (BufferedInputStream bis = new BufferedInputStream(this.toInputStream())) {
+							int byteTransferred = 0;
+							byte buffer[] = new byte[Streams.DEFAULT_BUFFER_SIZE];
+							try (
+								FileOutputStream fos = FileOutputStream.create(destinationFilePath);
+								BufferedOutputStream bos = new BufferedOutputStream(fos, Streams.DEFAULT_BUFFER_SIZE)
+							) {
+								while ((byteTransferred = bis.read(buffer, 0, Streams.DEFAULT_BUFFER_SIZE)) != -1) {
+									bos.write(buffer, 0, byteTransferred);
+								}
+								bos.flush();
+							}
+						}
+					});
+				}
+			}
+			
+			@Override
+			public void close() {
+				zipInputStream = null;
 			}
 		}
-		
-		@Override
-		public void close() {
-			zipInputStream = null;
-		}
-		
-		public static class Detached implements Component {
+	
+		public static class Detached implements Component, Entry {
 			private String name;
 			private String absolutePath;
 			private Boolean isDirectory;
 			private ZipInputStream zipInputStream;
 			
-			Detached(Entry zipEntry) {
+			Detached(Entry.Attached zipEntry) {
 				this.name = zipEntry.getName();
 				this.absolutePath = zipEntry.getAbsolutePath();
 				this.isDirectory = zipEntry.isDirectory();
@@ -422,11 +434,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 			public ZipInputStream getZipInputStream() {
 				return zipInputStream.duplicate();
 			}
-			
-			public byte[] toByteArray() {
-				return Streams.toByteArray(toByteBuffer());
-			}
-
+	
 			public ByteBuffer toByteBuffer() {
 				return Resources.getOrDefault(absolutePath, () -> {
 					try (ZipInputStream zipInputStream = getZipInputStream()) {
@@ -448,14 +456,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 			
 			public boolean isDirectory() {
 				return isDirectory;
-			}
-			
-			public boolean isArchive() {
-				return Streams.isArchive(toByteBuffer());
-			}
-			
-			public InputStream toInputStream() {
-				return new ByteBufferInputStream(toByteBuffer());
 			}
 			
 			@Override

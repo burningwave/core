@@ -164,7 +164,7 @@ public class FileSystemItem implements Component {
 
 	private String retrieveConventionedRelativePath(ByteBuffer zipInputStreamAsBytes, String zipInputStreamName, String relativePath1) {
 		try (ZipInputStream zIS = ZipInputStream.create(zipInputStreamName, zipInputStreamAsBytes)){
-			Predicate<Entry> zipEntryPredicate = zEntry -> zEntry.getName().equals(relativePath1) || zEntry.getName().equals(relativePath1 + "/");
+			Predicate<Entry.Attached> zipEntryPredicate = zEntry -> zEntry.getName().equals(relativePath1) || zEntry.getName().equals(relativePath1 + "/");
 			String temp = relativePath1;
 			while (temp != null) {
 				int lastIndexOfSlash = temp.lastIndexOf("/");
@@ -176,8 +176,8 @@ public class FileSystemItem implements Component {
 					temp = temp2;
 				}
 			}
-			Set<ZipInputStream.Entry> zipEntryWrappers = zIS.findAllAndConvert(
-				zipEntryPredicate, zEntry -> zEntry, false
+			Set<ZipInputStream.Entry.Detached> zipEntryWrappers = zIS.findAllAndConvert(
+				zipEntryPredicate, false
 			);
 			if (!zipEntryWrappers.isEmpty()) {
 				ZipInputStream.Entry zipEntryWrapper = Collections.max(
@@ -362,7 +362,7 @@ public class FileSystemItem implements Component {
 			return allChildren;
 		} else if (isContainer()) {
 			if (isCompressed() || isArchive()) {
-				Predicate<Entry> zipEntryPredicate = null;
+				Predicate<Entry.Attached> zipEntryPredicate = null;
 				@SuppressWarnings("resource")
 				FileSystemItem parentContainerTemp = this;
 				if (isArchive()) {

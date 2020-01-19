@@ -189,7 +189,7 @@ public class FileSystemHelper implements Component {
 		}
 		Enumeration<?> e = zipFile.entries();
 		while (e.hasMoreElements()) {
-			ZipInputStream.Entry entry = (ZipInputStream.Entry) e.nextElement();
+			ZipInputStream.Entry.Attached entry = (ZipInputStream.Entry.Attached) e.nextElement();
 			unzipToFolder(zipFile, entry, dir, bufferSize);
 		}	
 	}
