@@ -175,7 +175,7 @@ public class FileSystemItem implements Component {
 				}
 				if (relativePath2.isEmpty()) {
 					this.parentContainer = FileSystemItem.ofPath(zipEntryWrapper.getZipInputStream().getAbsolutePath());
-					return zipEntryWrapper.getName() + (!zipEntryWrapper.isDirectory() && Streams.isArchive(zipEntryWrapper.toByteBuffer()) ? ZIP_PATH_SEPARATOR : "");
+					return zipEntryWrapper.getName() + (!zipEntryWrapper.isDirectory() && zipEntryWrapper.isArchive() ? ZIP_PATH_SEPARATOR : "");
 				} else {
 					return zipEntryWrapper.getName() + ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
 						zipEntryWrapper.toByteBuffer(), zipEntryWrapper.getAbsolutePath(), relativePath2
@@ -336,25 +336,25 @@ public class FileSystemItem implements Component {
 			return allChildren;
 		} else if (isContainer()) {
 			if (isCompressed()) {
-				try (ZipInputStream zipInputStream = ZipInputStream.create(parentContainer.getAbsolutePath(), parentContainer.toByteBuffer())) {
-					Predicate<Entry> zipEntryPredicate = null;
-					Supplier<FileSystemItem> parentContainerSupplierTemp = null;
-					if (isArchive()) {
-						parentContainerSupplierTemp = () -> this;
-						zipEntryPredicate = zEntry -> true;
-					} else if (isFolder()) {
-						parentContainerSupplierTemp = () -> parentContainer;
-						zipEntryPredicate = zEntry ->
-							zEntry.getAbsolutePath().startsWith(getAbsolutePath() + "/");
-					}
-					final Supplier<FileSystemItem> parentContainerSupplier = parentContainerSupplierTemp;
+				Predicate<Entry> zipEntryPredicate = null;
+				@SuppressWarnings("resource")
+				FileSystemItem parentContainerTemp = this;
+				if (isArchive()) {
+					zipEntryPredicate = zEntry -> true;
+				} else if (isFolder()) {
+					parentContainerTemp = parentContainer;
+					zipEntryPredicate = zEntry ->
+						zEntry.getAbsolutePath().startsWith(getAbsolutePath() + "/");
+				}
+				final FileSystemItem parentContainer = parentContainerTemp;
+				try (ZipInputStream zipInputStream = ZipInputStream.create(parentContainer.getAbsolutePath(), parentContainer.toByteBuffer())) {					
 					Set<FileSystemItem> allChildrenTemp = ConcurrentHashMap.newKeySet();
 					zipInputStream.findAllAndConvert(
 						() -> allChildrenTemp,
 						zipEntryPredicate,
 						zEntry -> {
 							FileSystemItem fileSystemItem = FileSystemItem.ofPath(parentContainer.getAbsolutePath() + "/" +zEntry.getName());
-							fileSystemItem.parentContainer = parentContainerSupplier.get();
+							fileSystemItem.parentContainer = parentContainer;
 							Optional.ofNullable(
 								fileSystemItem.getAllChildren()
 							).ifPresent(allChildren ->
@@ -425,14 +425,14 @@ public class FileSystemItem implements Component {
 
 	private String getConventionedAbsolutePath() {
 		if (absolutePath.getValue() == null && exists == null) {
-			if (parentContainer == null) {
-				absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
-			} else if (parentContainer != getParent()) {
+			if (parentContainer != null && parentContainer.isArchive()) {
 				ByteBuffer par = parentContainer.toByteBuffer();
 				String relativePath = absolutePath.getKey().replace(parentContainer.getAbsolutePath() + "/", "");
 				String conventionedAbsolutePath = parentContainer.getConventionedAbsolutePath() + retrieveConventionedRelativePath(par, parentContainer.getAbsolutePath(), relativePath);
 				absolutePath.setValue(conventionedAbsolutePath);
 				exists = true;
+			} else {
+				absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
 			}
 			if (!exists) {
 				FILE_SYSTEM_ITEMS.remove(absolutePath.getKey());

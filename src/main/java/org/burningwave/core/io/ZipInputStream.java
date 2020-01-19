@@ -325,6 +325,10 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 			}
 		}
 		
+		public boolean isArchive() {
+			return Streams.isArchive(toByteBuffer());
+		}
+		
 		
 		@Override
 		public long getSize() {
@@ -436,8 +440,13 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 			public String getAbsolutePath() {
 				return absolutePath;
 			}
+			
 			public boolean isDirectory() {
 				return isDirectory;
+			}
+			
+			public boolean isArchive() {
+				return Streams.isArchive(toByteBuffer());
 			}
 			
 			public InputStream toInputStream() {

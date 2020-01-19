@@ -108,7 +108,7 @@ public class FileSystemItemTest extends BaseTest {
 		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0/"
-		).getAllChildren());
+		).getAllChildren(), true);
 	}
 	
 	@Test
