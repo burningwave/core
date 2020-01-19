@@ -261,7 +261,7 @@ public class FileSystemItem implements Component {
 		} else {
 			String conventionedAbsolutePath = getConventionedAbsolutePath();
 			if (isContainer()) {
-				if (parentContainer != null) {
+				if (isCompressed()) {
 					if (isArchive()) {
 						Supplier<ZipInputStream> zipInputStreamSupplier = () -> 
 							ZipInputStream.create(
@@ -280,7 +280,7 @@ public class FileSystemItem implements Component {
 							conventionedAbsolutePath.substring(conventionedAbsolutePath.lastIndexOf(ZIP_PATH_SEPARATOR) + ZIP_PATH_SEPARATOR.length())
 						);
 					}
-				} else if (isCompressed() || isArchive()) {
+				} else if (isArchive()) {
 					String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(ZIP_PATH_SEPARATOR));
 					File file = new File(zipFilePath);
 					if (file.exists()) {
