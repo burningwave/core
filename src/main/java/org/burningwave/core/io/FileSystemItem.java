@@ -98,6 +98,24 @@ public class FileSystemItem implements Component {
 		return fileSystemItemReader;
 	}
 	
+	private String getConventionedAbsolutePath() {
+		if (absolutePath.getValue() == null && exists == null) {
+			if (parentContainer != null && parentContainer.isArchive()) {
+				ByteBuffer par = parentContainer.toByteBuffer();
+				String relativePath = absolutePath.getKey().replace(parentContainer.getAbsolutePath() + "/", "");
+				String conventionedAbsolutePath = parentContainer.getConventionedAbsolutePath() + retrieveConventionedRelativePath(par, parentContainer.getAbsolutePath(), relativePath);
+				absolutePath.setValue(conventionedAbsolutePath);
+				exists = true;
+			} else {
+				absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
+			}
+			if (!exists) {
+				FILE_SYSTEM_ITEMS.remove(absolutePath.getKey());
+			}
+		}
+		return absolutePath.getValue();
+	}
+	
 	private String retrieveConventionedAbsolutePath(String realAbsolutePath, String relativePath) {
 		File file = new File(realAbsolutePath);
 		if (file.exists()) {
@@ -158,32 +176,40 @@ public class FileSystemItem implements Component {
 					temp = temp2;
 				}
 			}
-			Set<ZipInputStream.Entry.Detached> zipEntryWrappers = zIS.findAllAndConvert(
-				zipEntryPredicate, false
+			Set<ZipInputStream.Entry> zipEntryWrappers = zIS.findAllAndConvert(
+				zipEntryPredicate, zEntry -> zEntry, false
 			);
 			if (!zipEntryWrappers.isEmpty()) {
-				ZipInputStream.Entry.Detached zipEntryWrapper = Collections.max(
+				ZipInputStream.Entry zipEntryWrapper = Collections.max(
 					zipEntryWrappers, Comparator.comparing(zipEntryW -> zipEntryW.getName().split("/").length)
 				);
-				String relativePath2 = zipEntryWrapper.getName();
-				if (relativePath2.endsWith("/")) {
-					relativePath2 = relativePath2.substring(0, relativePath2.length() - 1);
-				}
-				relativePath2 = relativePath1.substring(relativePath2.length());
-				if (relativePath2.startsWith("/")) {
-					relativePath2 = relativePath2.replaceFirst("\\/", "");
-				}
-				if (relativePath2.isEmpty()) {
-					this.parentContainer = FileSystemItem.ofPath(zipEntryWrapper.getZipInputStream().getAbsolutePath());
-					return zipEntryWrapper.getName() + (!zipEntryWrapper.isDirectory() && zipEntryWrapper.isArchive() ? ZIP_PATH_SEPARATOR : "");
-				} else {
-					return zipEntryWrapper.getName() + ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
-						zipEntryWrapper.toByteBuffer(), zipEntryWrapper.getAbsolutePath(), relativePath2
-					);
-				}			
+				return retrieveConventionedRelativePath(this, zipEntryWrapper, relativePath1);			
 			} else {
 				throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
 			}
+		}
+	}
+
+	protected String retrieveConventionedRelativePath(
+		FileSystemItem fileSystemItem,
+		ZipInputStream.Entry zipEntry,
+		String relativePath1
+	) {
+		String relativePath2 = zipEntry.getName();
+		if (relativePath2.endsWith("/")) {
+			relativePath2 = relativePath2.substring(0, relativePath2.length() - 1);
+		}
+		relativePath2 = relativePath1.substring(relativePath2.length());
+		if (relativePath2.startsWith("/")) {
+			relativePath2 = relativePath2.replaceFirst("\\/", "");
+		}
+		if (relativePath2.isEmpty()) {
+			fileSystemItem.parentContainer = FileSystemItem.ofPath(zipEntry.getZipInputStream().getAbsolutePath());
+			return zipEntry.getName() + (!zipEntry.isDirectory() && zipEntry.isArchive() ? ZIP_PATH_SEPARATOR : "");
+		} else {
+			return zipEntry.getName() + ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
+				zipEntry.toByteBuffer(), zipEntry.getAbsolutePath(), relativePath2
+			);
 		}
 	}
 	
@@ -335,7 +361,7 @@ public class FileSystemItem implements Component {
 		if (allChildren != null) {
 			return allChildren;
 		} else if (isContainer()) {
-			if (isCompressed()) {
+			if (isCompressed() || isArchive()) {
 				Predicate<Entry> zipEntryPredicate = null;
 				@SuppressWarnings("resource")
 				FileSystemItem parentContainerTemp = this;
@@ -353,13 +379,22 @@ public class FileSystemItem implements Component {
 						() -> allChildrenTemp,
 						zipEntryPredicate,
 						zEntry -> {
-							FileSystemItem fileSystemItem = FileSystemItem.ofPath(parentContainer.getAbsolutePath() + "/" +zEntry.getName());
-							fileSystemItem.parentContainer = parentContainer;
-							Optional.ofNullable(
-								fileSystemItem.getAllChildren()
-							).ifPresent(allChildren ->
-								allChildrenTemp.addAll(allChildren)
+							FileSystemItem fileSystemItem = FileSystemItem.ofPath(
+								parentContainer.getAbsolutePath() + "/" +zEntry.getName()
 							);
+							fileSystemItem.absolutePath.setValue(
+								parentContainer.getConventionedAbsolutePath() + retrieveConventionedRelativePath(
+									fileSystemItem, zEntry, zEntry.getName()
+								)
+							);
+							logDebug(fileSystemItem.getAbsolutePath());
+							if (fileSystemItem.isArchive()) {
+								Optional.ofNullable(
+									fileSystemItem.getAllChildren()
+								).ifPresent(allChildren ->
+									allChildrenTemp.addAll(allChildren)
+								);
+							}
 							return fileSystemItem;
 						},
 						true
@@ -421,24 +456,6 @@ public class FileSystemItem implements Component {
 				return toRet;
 			}
 		}
-	}
-
-	private String getConventionedAbsolutePath() {
-		if (absolutePath.getValue() == null && exists == null) {
-			if (parentContainer != null && parentContainer.isArchive()) {
-				ByteBuffer par = parentContainer.toByteBuffer();
-				String relativePath = absolutePath.getKey().replace(parentContainer.getAbsolutePath() + "/", "");
-				String conventionedAbsolutePath = parentContainer.getConventionedAbsolutePath() + retrieveConventionedRelativePath(par, parentContainer.getAbsolutePath(), relativePath);
-				absolutePath.setValue(conventionedAbsolutePath);
-				exists = true;
-			} else {
-				absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
-			}
-			if (!exists) {
-				FILE_SYSTEM_ITEMS.remove(absolutePath.getKey());
-			}
-		}
-		return absolutePath.getValue();
 	}
 	
 	public boolean exists() {

@@ -252,7 +252,12 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	}
 	
 	public Set<Entry.Detached> findAllAndConvert(Predicate<Entry> zipEntryPredicate, boolean loadZipEntryData) {
+		return findAllAndConvert(ConcurrentHashMap::newKeySet, zipEntryPredicate, loadZipEntryData);
+	}
+	
+	public Set<Entry.Detached> findAllAndConvert(Supplier<Set<Entry.Detached>> setSupplier, Predicate<Entry> zipEntryPredicate, boolean loadZipEntryData) {
 		return findAllAndConvert(
+			setSupplier,
 			zipEntryPredicate,
 			zEntry -> new Entry.Detached(
 				zEntry
