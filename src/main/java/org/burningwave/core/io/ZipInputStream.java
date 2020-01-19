@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.zip.ZipException;
 
 import org.burningwave.Throwables;
@@ -166,7 +167,16 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		Function<Entry, T> tSupplier,
 		boolean loadZipEntryData
 	) {
-		Set<T> collection = ConcurrentHashMap.newKeySet();
+		return findAllAndConvert(ConcurrentHashMap::newKeySet, zipEntryPredicate, tSupplier, loadZipEntryData);
+	}
+	
+	public <T> Set<T> findAllAndConvert(
+		Supplier<Set<T>> supplier, 
+		Predicate<Entry> zipEntryPredicate, 
+		Function<Entry, T> tSupplier,
+		boolean loadZipEntryData
+	) {
+		Set<T> collection = supplier.get();
 		if (currentZipEntry != null && zipEntryPredicate.test(currentZipEntry)) {
 			if (loadZipEntryData) {
 				currentZipEntry.loadContent();

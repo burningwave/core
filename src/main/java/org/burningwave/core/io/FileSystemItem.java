@@ -316,17 +316,37 @@ public class FileSystemItem implements Component {
 		if (allChildren != null) {
 			return allChildren;
 		} else if (isContainer()) {
-			logDebug("Retrieving all children of " + absolutePath.getKey());
-			Set<FileSystemItem> children = getChildren();
-			if (children != null) {
-				Set<FileSystemItem> allChildrenTemp = ConcurrentHashMap.newKeySet();
-				allChildrenTemp.addAll(children);
-				children.forEach(
-					child -> Optional.ofNullable(child.getAllChildren()).map(allChildrenOfChild -> allChildrenTemp.addAll(allChildrenOfChild))
-				);
-				allChildren = allChildrenTemp;
+			if (isCompressed()) {
+				try (ZipInputStream zipInputStream = ZipInputStream.create(parentContainer.getAbsolutePath(), parentContainer.toByteBuffer())) {
+					if (isArchive()) {
+						Set<FileSystemItem> allChildrenTemp = ConcurrentHashMap.newKeySet();
+						zipInputStream.findAllAndConvert(
+							() -> allChildrenTemp,
+							zEntry -> true,
+							zEntry -> {
+								FileSystemItem fileSystemItem = FileSystemItem.ofPath(parentContainer.getAbsolutePath());
+								allChildrenTemp.addAll(fileSystemItem.getAllChildren());
+								return fileSystemItem;
+							},
+							true
+						);
+						allChildren = allChildrenTemp;
+					} else if (isFolder()) {
+						
+					}
+				};
+			} else if (isFolder()) {
+				logDebug("Retrieving all children of " + absolutePath.getKey());
+				Set<FileSystemItem> children = getChildren();
+				if (children != null) {
+					Set<FileSystemItem> allChildrenTemp = ConcurrentHashMap.newKeySet();
+					allChildrenTemp.addAll(children);
+					children.forEach(
+						child -> Optional.ofNullable(child.getAllChildren()).map(allChildrenOfChild -> allChildrenTemp.addAll(allChildrenOfChild))
+					);
+					allChildren = allChildrenTemp;
+				}
 			}
-			
 		}
 		return allChildren;
 	}
