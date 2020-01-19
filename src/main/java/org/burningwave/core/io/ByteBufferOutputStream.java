@@ -55,7 +55,7 @@ public class ByteBufferOutputStream extends OutputStream {
     public ByteBufferOutputStream(ByteBuffer buffer, boolean closeable) {
         this.buffer = buffer;
         this.initialPosition = ByteBufferDelegate.position(buffer);
-        this.initialCapacity = buffer.capacity();
+        this.initialCapacity = ByteBufferDelegate.capacity(buffer);
         this.closeable = closeable;
     }
     
