@@ -226,7 +226,7 @@ public class FileSystemItem implements Component {
 					conventionedPath
 				);
 			} else {
-				return FileSystemItem.ofPath(
+				return parent = FileSystemItem.ofPath(
 					absolutePath.getKey().substring(0, absolutePath.getKey().lastIndexOf("/"))
 				);
 			}
@@ -312,28 +312,59 @@ public class FileSystemItem implements Component {
 		return children;
 	}
 	
+	public Set<FileSystemItem> _getAllChildren() {
+		if (allChildren != null) {
+			return allChildren;
+		} else if (isContainer()) {
+			logDebug("Retrieving all children of " + absolutePath.getKey());
+			Set<FileSystemItem> children = getChildren();
+			if (children != null) {
+				Set<FileSystemItem> allChildrenTemp = ConcurrentHashMap.newKeySet();
+				allChildrenTemp.addAll(children);
+				children.forEach(
+					child -> Optional.ofNullable(child.getAllChildren()).map(allChildrenOfChild -> allChildrenTemp.addAll(allChildrenOfChild))
+				);
+				allChildren = allChildrenTemp;
+			}
+			
+		}
+		return allChildren;
+	}
+	
 	public Set<FileSystemItem> getAllChildren() {
 		if (allChildren != null) {
 			return allChildren;
 		} else if (isContainer()) {
 			if (isCompressed()) {
 				try (ZipInputStream zipInputStream = ZipInputStream.create(parentContainer.getAbsolutePath(), parentContainer.toByteBuffer())) {
+					Predicate<Entry> zipEntryPredicate = null;
+					Supplier<FileSystemItem> parentContainerSupplierTemp = null;
 					if (isArchive()) {
-						Set<FileSystemItem> allChildrenTemp = ConcurrentHashMap.newKeySet();
-						zipInputStream.findAllAndConvert(
-							() -> allChildrenTemp,
-							zEntry -> true,
-							zEntry -> {
-								FileSystemItem fileSystemItem = FileSystemItem.ofPath(parentContainer.getAbsolutePath());
-								allChildrenTemp.addAll(fileSystemItem.getAllChildren());
-								return fileSystemItem;
-							},
-							true
-						);
-						allChildren = allChildrenTemp;
+						parentContainerSupplierTemp = () -> this;
+						zipEntryPredicate = zEntry -> true;
 					} else if (isFolder()) {
-						
+						parentContainerSupplierTemp = () -> parentContainer;
+						zipEntryPredicate = zEntry ->
+							zEntry.getAbsolutePath().startsWith(getAbsolutePath() + "/");
 					}
+					final Supplier<FileSystemItem> parentContainerSupplier = parentContainerSupplierTemp;
+					Set<FileSystemItem> allChildrenTemp = ConcurrentHashMap.newKeySet();
+					zipInputStream.findAllAndConvert(
+						() -> allChildrenTemp,
+						zipEntryPredicate,
+						zEntry -> {
+							FileSystemItem fileSystemItem = FileSystemItem.ofPath(parentContainer.getAbsolutePath() + "/" +zEntry.getName());
+							fileSystemItem.parentContainer = parentContainerSupplier.get();
+							Optional.ofNullable(
+								fileSystemItem.getAllChildren()
+							).ifPresent(allChildren ->
+								allChildrenTemp.addAll(allChildren)
+							);
+							return fileSystemItem;
+						},
+						true
+					);
+					allChildren = allChildrenTemp;
 				};
 			} else if (isFolder()) {
 				logDebug("Retrieving all children of " + absolutePath.getKey());
@@ -342,7 +373,9 @@ public class FileSystemItem implements Component {
 					Set<FileSystemItem> allChildrenTemp = ConcurrentHashMap.newKeySet();
 					allChildrenTemp.addAll(children);
 					children.forEach(
-						child -> Optional.ofNullable(child.getAllChildren()).map(allChildrenOfChild -> allChildrenTemp.addAll(allChildrenOfChild))
+						child -> {
+							Optional.ofNullable(child.getAllChildren()).map(allChildrenOfChild -> allChildrenTemp.addAll(allChildrenOfChild));
+						}
 					);
 					allChildren = allChildrenTemp;
 				}
@@ -392,7 +425,15 @@ public class FileSystemItem implements Component {
 
 	private String getConventionedAbsolutePath() {
 		if (absolutePath.getValue() == null && exists == null) {
-			absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
+			if (parentContainer == null) {
+				absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
+			} else if (parentContainer != getParent()) {
+				ByteBuffer par = parentContainer.toByteBuffer();
+				String relativePath = absolutePath.getKey().replace(parentContainer.getAbsolutePath() + "/", "");
+				String conventionedAbsolutePath = parentContainer.getConventionedAbsolutePath() + retrieveConventionedRelativePath(par, parentContainer.getAbsolutePath(), relativePath);
+				absolutePath.setValue(conventionedAbsolutePath);
+				exists = true;
+			}
 			if (!exists) {
 				FILE_SYSTEM_ITEMS.remove(absolutePath.getKey());
 			}
