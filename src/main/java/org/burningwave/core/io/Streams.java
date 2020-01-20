@@ -35,9 +35,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.function.Function;
 
+import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
@@ -50,14 +52,19 @@ public class Streams {
 		try (RandomAccessFile raf = new RandomAccessFile(file, "r")){
 	    	return isArchive(raf.readInt());
 	    } catch (EOFException exc) {
-	    	//LoggersRepository.logError(Streams.class, "Exception occurred while calling isArchive on file " + file.getName(), exc);
+	    	//ManagedLogger.Repository.logError(Streams.class, "Exception occurred while calling isArchive on file " + file.getName(), exc);
 	    	return false;
 		}
 	}
 	
 	public static boolean isArchive(ByteBuffer bytes) {
 		bytes = bytes.duplicate();
-		return isArchive(bytes.getInt());
+		try {
+			return isArchive(bytes.getInt());
+		} catch (BufferUnderflowException exc) {
+			ManagedLogger.Repository.logError(Streams.class, "Exception occurred while calling isArchive", exc);
+			return false;
+		}
 	}
 	
 	private static boolean isArchive(int fileSignature) {
