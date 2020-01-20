@@ -177,7 +177,7 @@ public class FileSystemItem implements Component {
 				}
 			}
 			Set<ZipInputStream.Entry.Detached> zipEntryWrappers = zIS.findAllAndConvert(
-				zipEntryPredicate, false
+				zipEntryPredicate, zEntry -> false
 			);
 			if (!zipEntryWrappers.isEmpty()) {
 				ZipInputStream.Entry zipEntryWrapper = Collections.max(
@@ -281,6 +281,14 @@ public class FileSystemItem implements Component {
 		getConventionedAbsolutePath();		
 	}
 	
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getChildren(Predicate<FileSystemItem> filter) {
+		return getChildren(filter, ConcurrentHashMap::newKeySet);
+	}
+	
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getChildren(Predicate<FileSystemItem> filter, Supplier<C> setSupplier) {
+		return getChildren().stream().filter(filter).collect(Collectors.toCollection(setSupplier));
+	}
+	
 	public Set<FileSystemItem> getChildren() {
 		if (children != null) {
 			return children;
@@ -338,23 +346,12 @@ public class FileSystemItem implements Component {
 		return children;
 	}
 	
-	public Set<FileSystemItem> _getAllChildren() {
-		if (allChildren != null) {
-			return allChildren;
-		} else if (isContainer()) {
-			logDebug("Retrieving all children of " + absolutePath.getKey());
-			Set<FileSystemItem> children = getChildren();
-			if (children != null) {
-				Set<FileSystemItem> allChildrenTemp = ConcurrentHashMap.newKeySet();
-				allChildrenTemp.addAll(children);
-				children.forEach(
-					child -> Optional.ofNullable(child.getAllChildren()).map(allChildrenOfChild -> allChildrenTemp.addAll(allChildrenOfChild))
-				);
-				allChildren = allChildrenTemp;
-			}
-			
-		}
-		return allChildren;
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(Predicate<FileSystemItem> filter, Supplier<C> setSupplier) {
+		return getAllChildren().stream().filter(filter).collect(Collectors.toCollection(setSupplier));
+	}
+	
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(Predicate<FileSystemItem> filter) {
+		return getAllChildren(filter, ConcurrentHashMap::newKeySet);
 	}
 	
 	public Set<FileSystemItem> getAllChildren() {
@@ -387,7 +384,7 @@ public class FileSystemItem implements Component {
 									fileSystemItem, zEntry, zEntry.getName()
 								)
 							);
-							logDebug(fileSystemItem.getAbsolutePath());
+							//logDebug(fileSystemItem.getAbsolutePath());
 							if (fileSystemItem.isArchive()) {
 								Optional.ofNullable(
 									fileSystemItem.getAllChildren()
@@ -397,7 +394,7 @@ public class FileSystemItem implements Component {
 							}
 							return fileSystemItem;
 						},
-						true
+						zEntry -> true
 					);
 					allChildren = allChildrenTemp;
 				};
@@ -425,7 +422,7 @@ public class FileSystemItem implements Component {
 				String zipEntryNameOfNestedZipFile = itemToSearch.substring(0, itemToSearch.indexOf(ZIP_PATH_SEPARATOR));
 				ZipInputStream.Entry.Detached zipEntryWrapper = zipInputStream.findFirstAndConvert(
 					zEntry -> zEntry.getName().equals(zipEntryNameOfNestedZipFile),
-					false
+					zEntry -> false
 				);
 				if (zipEntryWrapper == null) {
 					return null;
@@ -451,7 +448,7 @@ public class FileSystemItem implements Component {
 					(zEntry) -> {
 						return FileSystemItem.ofPath(zEntry.getAbsolutePath());
 					},
-					false
+					zEntry -> false
 				);
 				return toRet;
 			}
@@ -534,7 +531,7 @@ public class FileSystemItem implements Component {
 				String zipEntryNameOfNestedZipFile = itemToSearch.substring(0, itemToSearch.indexOf(ZIP_PATH_SEPARATOR));
 				ZipInputStream.Entry.Detached zipEntry = zipInputStream.findFirstAndConvert(
 					zEntry -> zEntry.getName().equals(zipEntryNameOfNestedZipFile),
-					false
+					zEntry -> false
 				);
 				itemToSearch = itemToSearch.replaceFirst(zipEntryNameOfNestedZipFile + ZIP_PATH_SEPARATOR, "");
 				if (Strings.isNotEmpty(itemToSearch)) {
@@ -550,7 +547,7 @@ public class FileSystemItem implements Component {
 				final String iTS = itemToSearch;
 				ZipInputStream.Entry.Detached zipEntry = zipInputStream.findFirstAndConvert(
 					zEntry -> zEntry.getName().equals(iTS),
-					false
+					zEntry -> false
 				);
 				return zipEntry.toByteBuffer();
 			}

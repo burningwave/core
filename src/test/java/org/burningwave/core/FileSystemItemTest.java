@@ -128,7 +128,8 @@ public class FileSystemItemTest extends BaseTest {
 		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip"
-		).getAllChildren());
+		).getAllChildren((fileSystemItem) -> fileSystemItem.getName().endsWith(".class")),
+		true);
 	}
 	
 	@Test

@@ -138,10 +138,10 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
     }
 	
 	public Entry.Attached getNextEntry() {
-		return getNextEntry(false);
+		return getNextEntry((zEntry) -> false);
 	}
 	
-	public Entry.Attached getNextEntry(boolean loadZipEntryData) {
+	public Entry.Attached getNextEntry(Predicate<Entry.Attached> loadZipEntryData) {
 		ThrowingRunnable.run(() -> {
 			try {
 				currentZipEntry = (Entry.Attached)super.getNextEntry();
@@ -150,13 +150,13 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 				logWarn("Could not open zipEntry of {}: {}", absolutePath, message);
 			}
 		});
-		if (currentZipEntry != null && loadZipEntryData) {
+		if (currentZipEntry != null && loadZipEntryData.test(currentZipEntry)) {
 			currentZipEntry.loadContent();
 		}
 		return currentZipEntry;
 	}		
 	
-	public Detached getNextEntryAsDetached(boolean loadZipEntryData) {
+	public Detached getNextEntryAsDetached(Predicate<Entry.Attached> loadZipEntryData) {
 		return ThrowingSupplier.get(() ->
 			Optional.of(getNextEntry(loadZipEntryData)).map(zipEntry ->	zipEntry.convert()).orElseGet(() -> null)
 		);
@@ -165,7 +165,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	public <T> Set<T> findAllAndConvert(
 		Predicate<Entry.Attached> zipEntryPredicate, 
 		Function<Entry.Attached, T> tSupplier,
-		boolean loadZipEntryData
+		Predicate<Entry.Attached> loadZipEntryData
 	) {
 		return findAllAndConvert(ConcurrentHashMap::newKeySet, zipEntryPredicate, tSupplier, loadZipEntryData);
 	}
@@ -174,18 +174,18 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		Supplier<Set<T>> supplier, 
 		Predicate<Entry.Attached> zipEntryPredicate, 
 		Function<Entry.Attached, T> tSupplier,
-		boolean loadZipEntryData
+		Predicate<Entry.Attached> loadZipEntryData
 	) {
 		Set<T> collection = supplier.get();
 		if (currentZipEntry != null && zipEntryPredicate.test(currentZipEntry)) {
-			if (loadZipEntryData) {
+			if (loadZipEntryData.test(currentZipEntry)) {
 				currentZipEntry.loadContent();
 			}
 			collection.add(tSupplier.apply(currentZipEntry));
 		}
-		while(getNextEntry(false) != null) {
+		while(getNextEntry((zEntry) -> false) != null) {
 			if (zipEntryPredicate.test(currentZipEntry)) {
-				if (loadZipEntryData) {
+				if (loadZipEntryData.test(currentZipEntry)) {
 					currentZipEntry.loadContent();
 				}
 				collection.add(tSupplier.apply(currentZipEntry));
@@ -197,17 +197,17 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 	public <T> T findFirstAndConvert(
 		Predicate<Entry.Attached> zipEntryPredicate, 
 		Function<Entry.Attached, T> tSupplier,
-		boolean loadZipEntryData
+		Predicate<Entry.Attached> loadZipEntryData
 	) {
 		if (currentZipEntry != null && zipEntryPredicate.test(currentZipEntry)) {
-			if (loadZipEntryData) {
+			if (loadZipEntryData.test(currentZipEntry)) {
 				currentZipEntry.loadContent();
 			}
 			return tSupplier.apply(currentZipEntry);
 		}
-		while(getNextEntry(false) != null) {
+		while(getNextEntry(zEntry -> false) != null) {
 			if (zipEntryPredicate.test(currentZipEntry)) {
-				if (loadZipEntryData) {
+				if (loadZipEntryData.test(currentZipEntry)) {
 					currentZipEntry.loadContent();
 				}
 				
@@ -219,7 +219,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		return null;
 	}
 	
-	public <T> T findOneAndConvert(Predicate<Entry.Attached> zipEntryPredicate, Function<Entry.Attached, T> tSupplier, boolean loadZipEntryData) {
+	public <T> T findOneAndConvert(Predicate<Entry.Attached> zipEntryPredicate, Function<Entry.Attached, T> tSupplier, Predicate<Entry.Attached> loadZipEntryData) {
 		Set<T> entriesFound = findAllAndConvert(
 			zipEntryPredicate,
 			tSupplier, 
@@ -231,7 +231,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		return entriesFound.stream().findFirst().orElseGet(() -> null);
 	}
 	
-	public Entry.Detached findOneAndConvert(Predicate<Entry.Attached> zipEntryPredicate, boolean loadZipEntryData) {
+	public Entry.Detached findOneAndConvert(Predicate<Entry.Attached> zipEntryPredicate, Predicate<Entry.Attached> loadZipEntryData) {
 		return findOneAndConvert(
 			zipEntryPredicate,
 			zEntry -> new Entry.Detached(
@@ -241,7 +241,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		);
 	}
 	
-	public Entry.Detached findFirstAndConvert(Predicate<Entry.Attached> zipEntryPredicate, boolean loadZipEntryData) {
+	public Entry.Detached findFirstAndConvert(Predicate<Entry.Attached> zipEntryPredicate, Predicate<Entry.Attached> loadZipEntryData) {
 		return findFirstAndConvert(
 			zipEntryPredicate,
 			zEntry -> new Entry.Detached(
@@ -251,11 +251,11 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		);
 	}
 	
-	public Set<Entry.Detached> findAllAndConvert(Predicate<Entry.Attached> zipEntryPredicate, boolean loadZipEntryData) {
+	public Set<Entry.Detached> findAllAndConvert(Predicate<Entry.Attached> zipEntryPredicate, Predicate<Entry.Attached> loadZipEntryData) {
 		return findAllAndConvert(ConcurrentHashMap::newKeySet, zipEntryPredicate, loadZipEntryData);
 	}
 	
-	public Set<Entry.Detached> findAllAndConvert(Supplier<Set<Entry.Detached>> setSupplier, Predicate<Entry.Attached> zipEntryPredicate, boolean loadZipEntryData) {
+	public Set<Entry.Detached> findAllAndConvert(Supplier<Set<Entry.Detached>> setSupplier, Predicate<Entry.Attached> zipEntryPredicate, Predicate<Entry.Attached> loadZipEntryData) {
 		return findAllAndConvert(
 			setSupplier,
 			zipEntryPredicate,
@@ -440,7 +440,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 					try (ZipInputStream zipInputStream = getZipInputStream()) {
 						ByteBuffer content = zipInputStream.findFirstAndConvert((entry) -> 
 							entry.getName().equals(getName()), zEntry -> 
-							zEntry.toByteBuffer(), true
+							zEntry.toByteBuffer(), zEntry -> true
 						);
 						return Streams.shareContent(content);
 					}

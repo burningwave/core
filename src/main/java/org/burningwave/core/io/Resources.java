@@ -39,7 +39,16 @@ public class Resources {
 	private final static Map<Long, Map<String, Map<String, ByteBuffer>>> LOADED_RESOURCES = new ConcurrentHashMap<>();
 	private final static String MUTEX_PREFIX_NAME = Resources.class.getName();	
 	private final static Long PARTITION_START_LEVEL = 1L;
-
+	
+	public static ByteBuffer upload(String path, Supplier<ByteBuffer> resourceSupplier) {
+		path = Strings.Paths.clean(path);
+		Long occurences = path.chars().filter(ch -> ch == '/').count();
+		Long partitionIndex = occurences > PARTITION_START_LEVEL? occurences : PARTITION_START_LEVEL;
+		Map<String, Map<String, ByteBuffer>> partion = retrievePartition(LOADED_RESOURCES, partitionIndex);
+		Map<String, ByteBuffer> nestedPartition = retrievePartition(partion, partitionIndex, path);
+		return upload(nestedPartition, path, resourceSupplier);
+	}
+	
 	public static ByteBuffer getOrDefault(String path, Supplier<ByteBuffer> resourceSupplier) {
 		path = Strings.Paths.clean(path);
 		Long occurences = path.chars().filter(ch -> ch == '/').count();
@@ -66,7 +75,7 @@ public class Resources {
 		}
 		return innerPartion;
 	}
-
+	
 	public static ByteBuffer getOrDefault(Map<String, ByteBuffer> loadedResources, String path, Supplier<ByteBuffer> resourceSupplier) {
 		ByteBuffer resource = loadedResources.get(path);
 		if (resource == null) {
@@ -83,6 +92,21 @@ public class Resources {
 		return resource != null? 
 			Streams.shareContent(resource) :
 			resource;
+	}
+	
+	public static ByteBuffer upload(Map<String, ByteBuffer> loadedResources, String path, Supplier<ByteBuffer> resourceSupplier) {
+		ByteBuffer resource = null;
+		synchronized (MUTEX_PREFIX_NAME + "_" + path) {
+			if (resourceSupplier != null) {
+				resource = resourceSupplier.get();
+				if (resource != null) {
+					loadedResources.put(path, resource = Streams.shareContent(resource));
+				}
+			}
+		}
+		return resource != null? 
+				Streams.shareContent(resource) :
+				resource;
 	}
 	
 	private static Map<String, Map<String, ByteBuffer>> retrievePartition(Map<Long, Map<String, Map<String, ByteBuffer>>> resourcesPartitioned, Long partitionIndex) {
