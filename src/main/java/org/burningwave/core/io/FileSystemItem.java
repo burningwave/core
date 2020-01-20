@@ -388,7 +388,7 @@ public class FileSystemItem implements Component {
 								)
 							);
 							logDebug(fileSystemItem.getAbsolutePath());
-							if (fileSystemItem.isArchive() && fileSystemItem.isRoot()) {
+							if (fileSystemItem.isArchive()) {
 								Optional.ofNullable(
 									fileSystemItem.getAllChildren()
 								).ifPresent(allChildren ->
