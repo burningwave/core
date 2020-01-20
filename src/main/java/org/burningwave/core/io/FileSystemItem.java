@@ -366,7 +366,7 @@ public class FileSystemItem implements Component {
 				@SuppressWarnings("resource")
 				FileSystemItem parentContainerTemp = this;
 				if (isArchive()) {
-					zipEntryPredicate = zEntry -> true;
+					zipEntryPredicate = zEntry -> !zEntry.getName().equals("/");
 				} else if (isFolder()) {
 					parentContainerTemp = parentContainer;
 					zipEntryPredicate = zEntry ->
@@ -388,7 +388,7 @@ public class FileSystemItem implements Component {
 								)
 							);
 							logDebug(fileSystemItem.getAbsolutePath());
-							if (fileSystemItem.isArchive()) {
+							if (fileSystemItem.isArchive() && fileSystemItem.isRoot()) {
 								Optional.ofNullable(
 									fileSystemItem.getAllChildren()
 								).ifPresent(allChildren ->
