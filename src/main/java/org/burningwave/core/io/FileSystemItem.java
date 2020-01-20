@@ -99,7 +99,7 @@ public class FileSystemItem implements Component {
 	}
 	
 	private String getConventionedAbsolutePath() {
-		if (absolutePath.getValue() == null && exists == null) {
+		if ((absolutePath.getValue() == null && exists == null) || parentContainer == null) {
 			if (parentContainer != null && parentContainer.isArchive()) {
 				ByteBuffer par = parentContainer.toByteBuffer();
 				String relativePath = absolutePath.getKey().replace(parentContainer.getAbsolutePath() + "/", "");
@@ -204,7 +204,9 @@ public class FileSystemItem implements Component {
 			relativePath2 = relativePath2.replaceFirst("\\/", "");
 		}
 		if (relativePath2.isEmpty()) {
-			fileSystemItem.parentContainer = FileSystemItem.ofPath(zipEntry.getZipInputStream().getAbsolutePath());
+			if (fileSystemItem.parentContainer == null) {
+				fileSystemItem.parentContainer = FileSystemItem.ofPath(zipEntry.getZipInputStream().getAbsolutePath());
+			}
 			return zipEntry.getName() + (!zipEntry.isDirectory() && zipEntry.isArchive() ? ZIP_PATH_SEPARATOR : "");
 		} else {
 			return zipEntry.getName() + ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
@@ -446,7 +448,11 @@ public class FileSystemItem implements Component {
 						return nameToTest.matches(iTS) && nameToTest.replaceFirst(iTS, "").length() == 0;
 					},
 					(zEntry) -> {
-						return FileSystemItem.ofPath(zEntry.getAbsolutePath());
+						FileSystemItem fileSystemItem = FileSystemItem.ofPath(zEntry.getAbsolutePath());
+						if (fileSystemItem.parentContainer == null) {
+							fileSystemItem.parentContainer = FileSystemItem.ofPath(zEntry.getZipInputStream().getAbsolutePath());
+						}
+						return fileSystemItem;
 					},
 					zEntry -> false
 				);
