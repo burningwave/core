@@ -46,7 +46,6 @@ import java.util.zip.ZipException;
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingRunnable;
-import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.ZipInputStream.Entry.Detached;
 import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
@@ -156,9 +155,15 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		return currentZipEntry;
 	}		
 	
+	public Detached getNextEntryAsDetached() {
+		return getNextEntryAsDetached(zEntry -> false);
+	}
+	
 	public Detached getNextEntryAsDetached(Predicate<Entry.Attached> loadZipEntryData) {
-		return ThrowingSupplier.get(() ->
-			Optional.of(getNextEntry(loadZipEntryData)).map(zipEntry ->	zipEntry.convert()).orElseGet(() -> null)
+		return Optional.ofNullable(
+			getNextEntry(loadZipEntryData)).map(zipEntry ->	zipEntry.convert()
+		).orElseGet(
+			() -> null
 		);
 	}
 	
