@@ -270,6 +270,10 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	public Set<Class<?>> getLoadedClassesForPackage(Predicate<Package> packagePredicate	) {
 		return classHelper.retrieveLoadedClassesForPackage(this, packagePredicate);
 	}
+	
+	Map<String, ByteBuffer> getLoadedCompiledClasses() {
+		return loadedCompiledClasses;
+	}
 		
 	public void forceCompiledClassesLoading() {
 		Set<String> compiledClassesNotLoaded = new LinkedHashSet<>(loadCompiledClassesNotLoaded());

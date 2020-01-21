@@ -43,6 +43,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -345,8 +346,35 @@ public class ClassHelper implements Component {
  			return false;
  		}
 	}
-
-	public Map<String, JavaClass> findDependencies(Class<?> simulatorClass) {
+	
+	public Map<String, JavaClass> findDependenciesFastMode(Class<?> simulatorClass) {
+		SearchResult searchResult = getByteCodeHunter().findBy(
+			SearchConfig.forPaths(
+				pathHelper.getMainClassPaths()
+			)
+		);
+		try (MemoryClassLoader memoryClassLoader = MemoryClassLoader.create(null, this)) {
+			for (Entry<String, JavaClass> entry : searchResult.getClassesFlatMap().entrySet()) {
+				JavaClass javaClass = entry.getValue();
+				memoryClassLoader.addCompiledClass(javaClass.getName(), javaClass.getByteCode());
+			}
+			Class<?> cls;
+			try {
+				cls = loadOrUploadClass(simulatorClass, memoryClassLoader);
+				cls.getMethod("main", String[].class).invoke(null, (Object)null);
+				Collection<String> loadedCompiledClasses = memoryClassLoader.getLoadedCompiledClasses().keySet();
+				return searchResult.getClasses(
+					JavaClass.Criteria.create().allThat(javaClass -> 
+						loadedCompiledClasses.contains(javaClass.getName()) && !javaClass.getName().equals(simulatorClass.getName())
+					)
+				);
+			} catch (ClassNotFoundException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException exc) {
+				throw Throwables.toRuntimeException(exc);
+			}
+		}
+	}
+	
+	public Map<String, JavaClass> findDependenciesSlowMode(Class<?> simulatorClass) {
 		Map<String, JavaClass> dependencies = new LinkedHashMap<>();
 		SearchResult searchResult = getByteCodeHunter().findBy(
 			SearchConfig.forPaths(
@@ -398,7 +426,7 @@ public class ClassHelper implements Component {
 	}
 	
 	public FileSystemItem storeDependencies(Class<?> classSimulator, String destinationPath) {
-		for (JavaClass javaClass : findDependencies(classSimulator).values()) {
+		for (JavaClass javaClass : findDependenciesFastMode(classSimulator).values()) {
 			javaClass.storeToClassPath(destinationPath);
 		}
 		return FileSystemItem.ofPath(destinationPath);
