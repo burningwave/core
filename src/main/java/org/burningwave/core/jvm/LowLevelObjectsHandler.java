@@ -63,6 +63,7 @@ import sun.misc.Unsafe;
 
 @SuppressWarnings("restriction")
 public class LowLevelObjectsHandler implements Component {
+	public final static String SUPPLIER_IMPORTS_KEY_SUFFIX = ".supplier.imports";
 	private Long LOADED_PACKAGES_MAP_MEMORY_OFFSET;
 	private Long LOADED_CLASSES_VECTOR_MEMORY_OFFSET;
 	private Object DEFINED_CLASS_FOR_TESTING;
@@ -363,7 +364,6 @@ public class LowLevelObjectsHandler implements Component {
 	
 	public <T> T retrieveFromProperties(
 		Properties config, 
-		String supplierImportsKey, 
 		String supplierCodeKey,
 		Map<String, String> defaultValues,
 		Class<?> returnedClass, 
@@ -373,7 +373,7 @@ public class LowLevelObjectsHandler implements Component {
 		supplierCode = supplierCode.contains("return")?
 			supplierCode:
 			"return " + supplierCode + ";";
-		String importFromConfig = iterableObjectHelper.get(config, supplierImportsKey, defaultValues);
+		String importFromConfig = iterableObjectHelper.get(config, supplierCodeKey + SUPPLIER_IMPORTS_KEY_SUFFIX, defaultValues);
 		if (Strings.isNotEmpty(importFromConfig)) {
 			final StringBuffer stringBufferImports = new StringBuffer();
 			Arrays.stream(importFromConfig.split(";")).forEach(imp -> {

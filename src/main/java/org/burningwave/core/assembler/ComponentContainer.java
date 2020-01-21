@@ -210,7 +210,6 @@ public class ComponentContainer implements ComponentSupplier {
 			return MemoryClassLoader.create(
 				getLowLevelObjectsHandler().retrieveFromProperties(
 					config,
-					MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_CONFIG_KEY,
 					MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY,
 					MemoryClassLoader.DEFAULT_CONFIG_VALUES,
 					ClassLoader.class,
@@ -312,7 +311,6 @@ public class ComponentContainer implements ComponentSupplier {
 				getClassHelper(),
 				getMemberFinder(),
 				getLowLevelObjectsHandler().retrieveFromProperties(config,
-					ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
 					ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
 					ClassHunter.DEFAULT_CONFIG_VALUES,
 					ClassLoader.class,

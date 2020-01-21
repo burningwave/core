@@ -48,10 +48,10 @@ import org.burningwave.core.Component;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.ByteBufferOutputStream;
+import org.burningwave.core.jvm.LowLevelObjectsHandler;
 
 
 public class MemoryClassLoader extends ClassLoader implements Component {
-	public final static String PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_CONFIG_KEY = "memory-class-loader.parent.supplier.imports";
 	public final static String PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY = "memory-class-loader.parent";
 	public final static Map<String, String> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
 		
@@ -75,7 +75,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	static {
 		DEFAULT_CONFIG_VALUES.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY, "null");
-		DEFAULT_CONFIG_VALUES.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_IMPORTS_CONFIG_KEY, "");
+		DEFAULT_CONFIG_VALUES.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY + LowLevelObjectsHandler.SUPPLIER_IMPORTS_KEY_SUFFIX, "");
 	}
 	
 	public static MemoryClassLoader create(ClassLoader parentClassLoader, ClassHelper classHelper) {
