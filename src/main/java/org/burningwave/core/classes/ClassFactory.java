@@ -163,18 +163,16 @@ public class ClassFactory implements Component {
 		return getOrBuild(codeGeneratorForPredicate.generate(parametersLength));
 	}
 	
-	public Class<?> getOrBuildCodeExecutorSubType(String imports, String className, String supplierCode,
-		Class<?> returnedClass, ComponentSupplier componentSupplier
+	public Class<?> getOrBuildCodeExecutorSubType(String imports, String className, String supplierCode, ComponentSupplier componentSupplier
 	) {
-		return getOrBuildCodeExecutorSubType(imports, className, supplierCode, returnedClass, componentSupplier, getMemoryClassLoader());
+		return getOrBuildCodeExecutorSubType(imports, className, supplierCode, componentSupplier, getMemoryClassLoader());
 	}
 	
 	
-	public Class<?> getOrBuildCodeExecutorSubType(String imports, String classSimpleName, String supplierCode,
-		Class<?> returnedClass, ComponentSupplier componentSupplier, MemoryClassLoader memoryClassLoader
+	public Class<?> getOrBuildCodeExecutorSubType(String imports, String classSimpleName, String supplierCode, ComponentSupplier componentSupplier, MemoryClassLoader memoryClassLoader
 	) {
 		String classCode = codeGeneratorForExecutor.generate(
-			imports, classSimpleName, supplierCode, returnedClass
+			imports, classSimpleName, supplierCode
 		);
 		Map<String, ByteBuffer> compiledFiles = build(classCode);
 		if (!compiledFiles.isEmpty()) {

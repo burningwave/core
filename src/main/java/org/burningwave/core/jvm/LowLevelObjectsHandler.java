@@ -366,13 +366,12 @@ public class LowLevelObjectsHandler implements Component {
 		Properties config, 
 		String supplierCodeKey,
 		Map<String, String> defaultValues,
-		Class<?> returnedClass, 
 		ComponentSupplier componentSupplier
 	) {	
 		String supplierCode = iterableObjectHelper.get(config, supplierCodeKey, defaultValues);
 		supplierCode = supplierCode.contains("return")?
 			supplierCode:
-			"return " + supplierCode + ";";
+			"return (T)" + supplierCode + ";";
 		String importFromConfig = iterableObjectHelper.get(config, supplierCodeKey + SUPPLIER_IMPORTS_KEY_SUFFIX, defaultValues);
 		if (Strings.isNotEmpty(importFromConfig)) {
 			final StringBuffer stringBufferImports = new StringBuffer();
@@ -384,8 +383,8 @@ public class LowLevelObjectsHandler implements Component {
 		String imports =
 			"import " + ComponentSupplier.class.getName() + ";\n" +
 			"import " + componentSupplier.getClass().getName() + ";\n" + importFromConfig;
-		String className = returnedClass.getSimpleName() + "Supplier";
-		return getClassHelper().executeCode(imports, className, supplierCode, returnedClass, componentSupplier);
+		String className = "Supplier";
+		return getClassHelper().executeCode(imports, className, supplierCode, componentSupplier);
 	}
 	
 	public void unregister(ClassLoader classLoader) {

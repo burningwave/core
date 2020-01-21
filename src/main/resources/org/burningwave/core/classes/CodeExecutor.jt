@@ -34,7 +34,7 @@ ${imports}
 
 public class ${className} implements Virtual {
 
-    public ${returnType} execute(ComponentSupplier componentSupplier, Object... parameters) throws Throwable {
+    public <T> T execute(ComponentSupplier componentSupplier, Object... parameters) throws Throwable {
     	${code}
     }
     

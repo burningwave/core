@@ -270,12 +270,11 @@ public class ClassHelper implements Component {
 	public <T> T executeCode(
 		String imports, 
 		String className, 
-		String supplierCode, 
-		Class<?> returnedClass,
+		String supplierCode,
 		ComponentSupplier componentSupplier,
 		Object... parameters
 	) {	
-		return executeCode(imports, className, supplierCode, returnedClass, componentSupplier, Thread.currentThread().getContextClassLoader(), parameters);
+		return executeCode(imports, className, supplierCode, componentSupplier, Thread.currentThread().getContextClassLoader(), parameters);
 	}
 	
 	
@@ -283,7 +282,6 @@ public class ClassHelper implements Component {
 		String imports, 
 		String className, 
 		String supplierCode, 
-		Class<?> returnedClass,
 		ComponentSupplier componentSupplier,
 		ClassLoader classLoader,
 		Object... parameters
@@ -296,7 +294,7 @@ public class ClassHelper implements Component {
 				)
 			) {
 				Class<?> virtualClass = getClassFactory().getOrBuildCodeExecutorSubType(
-					imports, className, supplierCode, returnedClass, componentSupplier, memoryClassLoader
+					imports, className, supplierCode, componentSupplier, memoryClassLoader
 				);
 				Virtual virtualObject = ((Virtual)virtualClass.getDeclaredConstructor().newInstance());
 				T retrievedElement = virtualObject.invokeWithoutCachingMethod("execute", componentSupplier, parameters);

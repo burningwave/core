@@ -480,10 +480,10 @@ public abstract class CodeGenerator implements Component {
 		public String generate(Object... objs) {
 			Map<String, String> map = new LinkedHashMap<>();
 			map.put("${packageName}", PACKAGE_NAME);
-			map.put("${imports}", (String)objs[0] + getImports() + "\n" + generateCommonImports((Class<?>)objs[3]));
+			map.put("${imports}", (String)objs[0] + getImports() + "\n");
 			map.put("${className}", (String)objs[1]);
 			map.put("${code}", (String)objs[2]);
-			map.put("${returnType}",((Class<?>)objs[3]).getSimpleName());
+			//map.put("${returnType}",((Class<?>)objs[3]).getSimpleName());
 			return Strings.replace(TEMPLATE, map);
 		}
 	}
