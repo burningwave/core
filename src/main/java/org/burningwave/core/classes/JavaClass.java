@@ -151,4 +151,16 @@ public class JavaClass {
 		);
 		return FileSystemItem.ofPath(fileClass.getAbsolutePath());
 	}
+	
+	@Override
+	public String toString() {
+		return getName();
+	}
+	
+	public static class Criteria extends org.burningwave.core.Criteria<JavaClass, Criteria, org.burningwave.core.Criteria.TestContext<JavaClass, Criteria>>{
+		
+		public static Criteria create() {
+			return new Criteria();
+		}
+	}
 }

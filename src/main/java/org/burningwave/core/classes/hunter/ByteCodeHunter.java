@@ -30,6 +30,7 @@ package org.burningwave.core.classes.hunter;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.burningwave.core.classes.ClassCriteria;
@@ -121,6 +122,18 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 		
 		public Map<String, JavaClass> getClassesFlatMap() {
 			return context.getItemsFoundFlatMap();
+		}
+		
+		public Map<String, JavaClass> getClasses(JavaClass.Criteria criteria) {
+			Map<String, JavaClass> itemsFound = new ConcurrentHashMap<>();
+			final JavaClass.Criteria criteriaCopy = criteria.createCopy();
+			getClassesFlatMap().forEach((path, javaClass) -> {
+				if (criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault(javaClass).getResult()) {
+					itemsFound.put(path, javaClass);
+				}
+			});
+			return itemsFound;
+
 		}
 	}
 }

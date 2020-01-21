@@ -33,7 +33,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.util.AbstractMap;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -48,9 +52,14 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.hunter.ByteCodeHunter;
+import org.burningwave.core.classes.hunter.ByteCodeHunter.SearchResult;
+import org.burningwave.core.classes.hunter.SearchConfig;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.ByteBufferInputStream;
+import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.Streams;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
 import org.objectweb.asm.ClassReader;
@@ -60,24 +69,37 @@ public class ClassHelper implements Component {
 	private LowLevelObjectsHandler lowLevelObjectsHandler;
 	private ClassFactory classFactory;
 	private Supplier<ClassFactory> classFactorySupplier;
+	private ByteCodeHunter byteCodeHunter;
+	private Supplier<ByteCodeHunter> byteCodeHunterSupplier;
+	private PathHelper pathHelper;
 
 	private ClassHelper(
 		Supplier<ClassFactory> classFactorySupplier,
-		LowLevelObjectsHandler lowLevelObjectsHandler
+		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
+		LowLevelObjectsHandler lowLevelObjectsHandler,
+		PathHelper pathHelper
 	) {
 		this.classFactorySupplier = classFactorySupplier;
+		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
 		this.lowLevelObjectsHandler = lowLevelObjectsHandler;
+		this.pathHelper = pathHelper;
 	}
 	
-	public static ClassHelper create(Supplier<ClassFactory> classFactorySupplier, LowLevelObjectsHandler objectRetriever) {
-		return new ClassHelper(classFactorySupplier, objectRetriever);
+	public static ClassHelper create(
+		Supplier<ClassFactory> classFactorySupplier,
+		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
+		LowLevelObjectsHandler objectRetriever,
+		PathHelper pathHelper
+	) {
+		return new ClassHelper(classFactorySupplier, byteCodeHunterSupplier, objectRetriever, pathHelper);
 	}
 	
 	private ClassFactory getClassFactory() {
-		if (classFactory == null) {
-			classFactory = classFactorySupplier.get();
-		}
-		return classFactory;
+		return classFactory != null? classFactory : (classFactory = classFactorySupplier.get());
+	}
+	
+	private ByteCodeHunter getByteCodeHunter() {
+		return byteCodeHunter != null? byteCodeHunter : (byteCodeHunter = byteCodeHunterSupplier.get());
 	}
 	
 	public String extractClassName(String classCode) {
@@ -322,5 +344,63 @@ public class ClassHelper implements Component {
  		} else {
  			return false;
  		}
+	}
+
+	public Map<String, JavaClass> findDependencies(Class<?> simulatorClass) {
+		Map<String, JavaClass> dependencies = new LinkedHashMap<>();
+		SearchResult searchResult = getByteCodeHunter().findBy(
+			SearchConfig.forPaths(
+				pathHelper.getMainClassPaths()
+			)
+		);
+		boolean end = false;
+		Collection<Map.Entry<String, ByteBuffer>> dependenciesMapForClassLoader = new LinkedHashSet<>();
+		while (!end) {
+			try (MemoryClassLoader memoryClassLoader = MemoryClassLoader.create(null, this)) {
+				memoryClassLoader.addCompiledClasses(dependenciesMapForClassLoader);
+				Class<?> cls = loadOrUploadClass(simulatorClass, memoryClassLoader);
+				cls.getMethod("main", String[].class).invoke(null, (Object)null);
+				end = true;
+			} catch (ClassNotFoundException | NoClassDefFoundError | NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException outerExc) {
+				String newNotFoundClassName = outerExc.getMessage().replace("/", ".");
+				Map.Entry<String, JavaClass> foundClass = searchResult.getClasses(
+					JavaClass.Criteria.create().allThat(javaClass -> 
+						javaClass.getName().equals(newNotFoundClassName)
+					)
+				).entrySet().stream().findFirst().orElseGet(() -> null);
+				logDebug("Found dependency: " + Optional.ofNullable(foundClass).map(fndCls -> fndCls.getValue().getName()).orElseGet(() -> null));
+				dependencies.put(foundClass.getKey(), foundClass.getValue());
+				dependenciesMapForClassLoader.add(
+					new AbstractMap.SimpleEntry<>(foundClass.getValue().getName(), foundClass.getValue().getByteCode())
+				);
+			} catch (InvocationTargetException iTE) {
+				Throwable targetException = iTE.getTargetException();
+				if (targetException instanceof NoClassDefFoundError ||
+					targetException instanceof ClassNotFoundException
+				) {
+					String newNotFoundClassName = iTE.getTargetException().getMessage().replace("/", ".");
+					Map.Entry<String, JavaClass> foundClass = searchResult.getClasses(
+						JavaClass.Criteria.create().allThat(javaClass -> 
+							javaClass.getName().equals(newNotFoundClassName)
+						)
+					).entrySet().stream().findFirst().orElseGet(() -> null);
+					logDebug("Found dependency: " + Optional.ofNullable(foundClass).map(fndCls -> fndCls.getValue().getName()).orElseGet(() -> null));
+					dependencies.put(foundClass.getKey(), foundClass.getValue());
+					dependenciesMapForClassLoader.add(
+						new AbstractMap.SimpleEntry<>(foundClass.getValue().getName(), foundClass.getValue().getByteCode())
+					);
+				} else {
+					throw Throwables.toRuntimeException(iTE);
+				}
+			}
+		}
+		return dependencies;
+	}
+	
+	public FileSystemItem storeDependencies(Class<?> classSimulator, String destinationPath) {
+		for (JavaClass javaClass : findDependencies(classSimulator).values()) {
+			javaClass.storeToClassPath(destinationPath);
+		}
+		return FileSystemItem.ofPath(destinationPath);
 	}
 }
