@@ -34,8 +34,6 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 
 import org.burningwave.Throwables;
-import org.burningwave.core.ManagedLogger;
-import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.FileOutputStream;
@@ -140,13 +138,13 @@ public class JavaClass {
 		}
 		File fileClass = new File(packageFolder.getAbsolutePath(), getClassFileName());
 		if (fileClass.exists()) {
-			ManagedLogger.Repository.logDebug(this.getClass(), "Replacing file "+ Strings.Paths.clean(fileClass.getAbsolutePath()));
+			//ManagedLogger.Repository.logDebug(this.getClass(), "Replacing file "+ Strings.Paths.clean(fileClass.getAbsolutePath()));
 			fileClass.delete();
 		}
 		ThrowingRunnable.run(() -> {					
 			try(ByteBufferInputStream inputStream = new ByteBufferInputStream(getByteCode()); FileOutputStream fileOutputStream = FileOutputStream.create(fileClass, true)) {
 				Streams.copy(inputStream, fileOutputStream);
-				ManagedLogger.Repository.logDebug(this.getClass(), "Class " + getName() + " WRITTEN to "+ Strings.Paths.clean(fileClass.getAbsolutePath()));
+				//ManagedLogger.Repository.logDebug(this.getClass(), "Class " + getName() + " WRITTEN to "+ Strings.Paths.clean(fileClass.getAbsolutePath()));
 			}
 		});
 		Resources.getOrDefault(

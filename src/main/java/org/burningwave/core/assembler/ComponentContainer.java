@@ -497,10 +497,7 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(ClassHelper.class, () ->
 			ClassHelper.create(
 				() -> getClassFactory(),
-				() -> getByteCodeHunter(),
-				getLowLevelObjectsHandler(),
-				getPathHelper()
-				
+				getLowLevelObjectsHandler()				
 			)
 		);
 	}

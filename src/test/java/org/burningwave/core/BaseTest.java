@@ -66,11 +66,11 @@ public class BaseTest implements Component {
 		assertNotNull(object);
 	}
 	
-	void testNotEmpty(ThrowingSupplier<Collection<?>> supplier) {
+	protected void testNotEmpty(ThrowingSupplier<Collection<?>> supplier) {
 		testNotEmpty(supplier, false);
 	}
 	
-	void testNotEmpty(ThrowingSupplier<Collection<?>> supplier, boolean printAllElements) {
+	protected void testNotEmpty(ThrowingSupplier<Collection<?>> supplier, boolean printAllElements) {
 		long initialTime = System.currentTimeMillis();
 		Collection<?> coll = null;
 		boolean isNotEmpty = false;

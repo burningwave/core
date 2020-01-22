@@ -190,7 +190,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     }
     
     
-    void addLoadedCompiledClass(String className, ByteBuffer byteCode) {
+    protected void addLoadedCompiledClass(String className, ByteBuffer byteCode) {
     	ByteBuffer compiledCode = loadedCompiledClasses.get(className);
     	if (compiledCode == null) {
     		synchronized (loadedCompiledClasses) {
