@@ -270,26 +270,15 @@ public class ClassHelper implements Component {
 	public <T> T executeCode(
 		String imports, 
 		String className, 
-		String supplierCode,
-		ComponentSupplier componentSupplier,
-		Object... parameters
-	) {	
-		return executeCode(imports, className, supplierCode, componentSupplier, Thread.currentThread().getContextClassLoader(), parameters);
-	}
-	
-	
-	public <T> T executeCode(
-		String imports, 
-		String className, 
 		String supplierCode, 
 		ComponentSupplier componentSupplier,
-		ClassLoader classLoader,
+		ClassLoader classLoaderParentOfOneShotClassLoader,
 		Object... parameters
 	) {	
 		return ThrowingSupplier.get(() -> {
 			try (MemoryClassLoader memoryClassLoader = 
 				MemoryClassLoader.create(
-					classLoader,
+					classLoaderParentOfOneShotClassLoader,
 					this
 				)
 			) {

@@ -395,7 +395,10 @@ public class LowLevelObjectsHandler implements Component {
 			"import " + ComponentSupplier.class.getName() + ";\n" +
 			"import " + componentSupplier.getClass().getName() + ";\n" + importFromConfig;
 		String className = "Supplier";
-		return getClassHelper().executeCode(imports, className, supplierCode, componentSupplier);
+		return getClassHelper().executeCode(
+			imports, className, supplierCode, 
+			componentSupplier, Thread.currentThread().getContextClassLoader()
+		);
 	}
 	
 	public void unregister(ClassLoader classLoader) {
