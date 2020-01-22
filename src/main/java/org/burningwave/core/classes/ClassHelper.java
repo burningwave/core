@@ -33,18 +33,17 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
-import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -347,88 +346,108 @@ public class ClassHelper implements Component {
  		}
 	}
 	
-	public Map<String, JavaClass> findDependenciesFastMode(Class<?> simulatorClass) {
-		SearchResult searchResult = getByteCodeHunter().findBy(
-			SearchConfig.forPaths(
-				pathHelper.getMainClassPaths()
-			)
-		);
-		try (MemoryClassLoader memoryClassLoader = MemoryClassLoader.create(null, this)) {
-			for (Entry<String, JavaClass> entry : searchResult.getClassesFlatMap().entrySet()) {
-				JavaClass javaClass = entry.getValue();
-				memoryClassLoader.addCompiledClass(javaClass.getName(), javaClass.getByteCode());
-			}
-			Class<?> cls;
-			try {
-				cls = loadOrUploadClass(simulatorClass, memoryClassLoader);
-				cls.getMethod("main", String[].class).invoke(null, (Object)null);
-				Collection<String> loadedCompiledClasses = memoryClassLoader.getLoadedCompiledClasses().keySet();
-				return searchResult.getClasses(
-					JavaClass.Criteria.create().allThat(javaClass -> 
-						loadedCompiledClasses.contains(javaClass.getName()) && !javaClass.getName().equals(simulatorClass.getName())
-					)
-				);
-			} catch (ClassNotFoundException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException exc) {
-				throw Throwables.toRuntimeException(exc);
-			}
-		}
+	public Dependencies findDependencies(
+		Class<?> simulatorClass,
+		Consumer<JavaClass> javaClassConsumer
+	) {
+		return findDependencies(simulatorClass, pathHelper.getMainClassPaths(), javaClassConsumer);
 	}
 	
-	public Map<String, JavaClass> findDependenciesSlowMode(Class<?> simulatorClass) {
-		Map<String, JavaClass> dependencies = new LinkedHashMap<>();
-		SearchResult searchResult = getByteCodeHunter().findBy(
+	public Dependencies findDependencies(
+		Class<?> simulatorClass,
+		Collection<String> baseClassPaths,
+		Consumer<JavaClass> javaClassConsumer
+	) {
+		final Dependencies result;
+		try (SearchResult searchResult = getByteCodeHunter().findBy(
 			SearchConfig.forPaths(
-				pathHelper.getMainClassPaths()
+				baseClassPaths
 			)
-		);
-		boolean end = false;
-		Collection<Map.Entry<String, ByteBuffer>> dependenciesMapForClassLoader = new LinkedHashSet<>();
-		while (!end) {
-			try (MemoryClassLoader memoryClassLoader = MemoryClassLoader.create(null, this)) {
-				memoryClassLoader.addCompiledClasses(dependenciesMapForClassLoader);
-				Class<?> cls = loadOrUploadClass(simulatorClass, memoryClassLoader);
-				cls.getMethod("main", String[].class).invoke(null, (Object)null);
-				end = true;
-			} catch (ClassNotFoundException | NoClassDefFoundError | NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException outerExc) {
-				String newNotFoundClassName = outerExc.getMessage().replace("/", ".");
-				Map.Entry<String, JavaClass> foundClass = searchResult.getClasses(
-					JavaClass.Criteria.create().allThat(javaClass -> 
-						javaClass.getName().equals(newNotFoundClassName)
-					)
-				).entrySet().stream().findFirst().orElseGet(() -> null);
-				logDebug("Found dependency: " + Optional.ofNullable(foundClass).map(fndCls -> fndCls.getValue().getName()).orElseGet(() -> null));
-				dependencies.put(foundClass.getKey(), foundClass.getValue());
-				dependenciesMapForClassLoader.add(
-					new AbstractMap.SimpleEntry<>(foundClass.getValue().getName(), foundClass.getValue().getByteCode())
-				);
-			} catch (InvocationTargetException iTE) {
-				Throwable targetException = iTE.getTargetException();
-				if (targetException instanceof NoClassDefFoundError ||
-					targetException instanceof ClassNotFoundException
-				) {
-					String newNotFoundClassName = iTE.getTargetException().getMessage().replace("/", ".");
-					Map.Entry<String, JavaClass> foundClass = searchResult.getClasses(
-						JavaClass.Criteria.create().allThat(javaClass -> 
-							javaClass.getName().equals(newNotFoundClassName)
-						)
-					).entrySet().stream().findFirst().orElseGet(() -> null);
-					logDebug("Found dependency: " + Optional.ofNullable(foundClass).map(fndCls -> fndCls.getValue().getName()).orElseGet(() -> null));
-					dependencies.put(foundClass.getKey(), foundClass.getValue());
-					dependenciesMapForClassLoader.add(
-						new AbstractMap.SimpleEntry<>(foundClass.getValue().getName(), foundClass.getValue().getByteCode())
-					);
-				} else {
-					throw Throwables.toRuntimeException(iTE);
+		)) {
+			result = new Dependencies(searchResult.getClassesFlatMap());
+		}
+		result.findingTask = CompletableFuture.runAsync(() -> {
+			Class<?> cls;
+			try (MemoryClassLoader memoryClassLoader = new MemoryClassLoader(null, this) {
+				public void addLoadedCompiledClass(String name, ByteBuffer byteCode) {
+					super.addLoadedCompiledClass(name, byteCode);
+					if (!name.equals(simulatorClass.getName())) {
+						JavaClass dependency = result.put(name, byteCode);
+						if (javaClassConsumer != null) {
+							javaClassConsumer.accept(dependency);
+						}
+					}
+				};
+				
+			}) {
+				for (Entry<String, JavaClass> entry : result.classPathClasses.entrySet()) {
+					JavaClass javaClass = entry.getValue();
+					memoryClassLoader.addCompiledClass(javaClass.getName(), javaClass.getByteCode());
+				}
+				try {
+					cls = loadOrUploadClass(simulatorClass, memoryClassLoader);
+					cls.getMethod("main", String[].class).invoke(null, (Object)null);
+				} catch (ClassNotFoundException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException exc) {
+					throw Throwables.toRuntimeException(exc);
 				}
 			}
-		}
+		});
+		return result;
+	}
+	
+	public Dependencies storeDependencies(
+		Class<?> simulatorClass,
+		String destinationPath
+	) {
+		return storeDependencies(simulatorClass, pathHelper.getMainClassPaths(), destinationPath);
+	}
+	
+	public Dependencies storeDependencies(
+		Class<?> simulatorClass,
+		Collection<String> baseClassPaths,
+		String destinationPath
+	) {
+		Dependencies dependencies = findDependencies(simulatorClass, baseClassPaths, (javaClass) -> javaClass.storeToClassPath(destinationPath));
+		dependencies.store = FileSystemItem.ofPath(destinationPath);
 		return dependencies;
 	}
 	
-	public FileSystemItem storeDependencies(Class<?> classSimulator, String destinationPath) {
-		for (JavaClass javaClass : findDependenciesFastMode(classSimulator).values()) {
-			javaClass.storeToClassPath(destinationPath);
+	public static class Dependencies {
+		private CompletableFuture<Void> findingTask;
+		private final Map<String, JavaClass> classPathClasses;
+		private Map<String, JavaClass> result;
+		private FileSystemItem store;
+		
+		private Dependencies(Map<String, JavaClass> classPathClasses) {
+			this.result = new ConcurrentHashMap<>();
+			this.classPathClasses = new ConcurrentHashMap<>();
+			this.classPathClasses.putAll(classPathClasses);
 		}
-		return FileSystemItem.ofPath(destinationPath);
+		
+		private JavaClass put(String className, ByteBuffer value) {
+			for (Map.Entry<String, JavaClass> entry : classPathClasses.entrySet()) {
+				if (entry.getValue().getName().equals(className)) {
+					result.put(entry.getKey(), entry.getValue());
+					return entry.getValue();
+				}
+			}
+			return null;
+		}
+		
+		public Map<String, JavaClass> get() {
+			return result;
+		}
+		
+		public CompletableFuture<Void> getFindingTask() {
+			return this.findingTask;
+		}
+		
+		public void waitForTaskEnding() {
+			findingTask.join();
+		}
+		
+		public FileSystemItem getStore() {
+			return store;
+		}
 	}
 }
