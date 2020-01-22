@@ -309,7 +309,8 @@ public class ComponentContainer implements ComponentSupplier {
 				getStreamHelper(),
 				getClassHelper(),
 				getMemberFinder(),
-				getLowLevelObjectsHandler().retrieveFromProperties(config,
+				getLowLevelObjectsHandler().retrieveFromProperties(
+					config,
 					ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
 					ClassHunter.DEFAULT_CONFIG_VALUES,
 					this
