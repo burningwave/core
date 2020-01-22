@@ -36,7 +36,9 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -333,6 +335,15 @@ public class LowLevelObjectsHandler implements Component {
 			}
 		}
 		throw Throwables.toRuntimeException("Could not find classes Vector on " + classLoader);
+	}
+	
+	public Collection<Class<?>> retrieveAllLoadedClasses(ClassLoader classLoader) {
+		Collection<Class<?>> allLoadedClasses = new LinkedHashSet<>();
+		allLoadedClasses.addAll(retrieveLoadedClasses(classLoader));
+		if (classLoader.getParent() != null) {
+			allLoadedClasses.addAll(retrieveAllLoadedClasses(classLoader.getParent()));
+		}
+		return allLoadedClasses;
 	}
 	
 	@SuppressWarnings({ "unchecked" })

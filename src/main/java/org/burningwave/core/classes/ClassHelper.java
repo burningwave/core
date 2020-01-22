@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -35,6 +37,7 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -43,10 +46,12 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
@@ -58,6 +63,8 @@ import org.burningwave.core.classes.hunter.SearchConfig;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.ByteBufferInputStream;
+import org.burningwave.core.io.ByteBufferOutputStream;
+import org.burningwave.core.io.FileOutputStream;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.Streams;
@@ -348,15 +355,17 @@ public class ClassHelper implements Component {
 	
 	public Dependencies findDependencies(
 		Class<?> simulatorClass,
-		Consumer<JavaClass> javaClassConsumer
+		Consumer<JavaClass> javaClassConsumer,
+		BiConsumer<String, ByteBuffer> resourceConsumer
 	) {
-		return findDependencies(simulatorClass, pathHelper.getMainClassPaths(), javaClassConsumer);
+		return findDependencies(simulatorClass, pathHelper.getMainClassPaths(), javaClassConsumer, resourceConsumer);
 	}
 	
 	public Dependencies findDependencies(
 		Class<?> simulatorClass,
 		Collection<String> baseClassPaths,
-		Consumer<JavaClass> javaClassConsumer
+		Consumer<JavaClass> javaClassConsumer,
+		BiConsumer<String, ByteBuffer> resourceConsumer
 	) {
 		final Dependencies result;
 		try (SearchResult searchResult = getByteCodeHunter().findBy(
@@ -364,20 +373,43 @@ public class ClassHelper implements Component {
 				baseClassPaths
 			)
 		)) {
-			result = new Dependencies(searchResult.getClassesFlatMap());
+			result = new Dependencies(searchResult.getClassesFlatMap(), javaClassConsumer, resourceConsumer);
 		}
+		Set<String> classesNameToBeExcluded = lowLevelObjectsHandler.retrieveAllLoadedClasses(
+			this.getClass().getClassLoader()
+		).stream().map(clsss -> 
+			clsss.getName()).collect((Collectors.toSet())
+		);
 		result.findingTask = CompletableFuture.runAsync(() -> {
 			Class<?> cls;
 			try (MemoryClassLoader memoryClassLoader = new MemoryClassLoader(null, this) {
+				@Override
 				public void addLoadedCompiledClass(String name, ByteBuffer byteCode) {
 					super.addLoadedCompiledClass(name, byteCode);
 					if (!name.equals(simulatorClass.getName())) {
-						JavaClass dependency = result.put(name, byteCode);
-						if (javaClassConsumer != null) {
-							javaClassConsumer.accept(dependency);
-						}
+						result.put(name);
 					}
+					classesNameToBeExcluded.remove(name);
 				};
+				
+				@Override
+			    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+			    	Class<?> cls = super.loadClass(name, resolve);
+			    	if (!name.equals(simulatorClass.getName())) {
+						result.load(name);	
+					}
+			    	classesNameToBeExcluded.remove(name);
+			    	return cls;
+			    }
+				
+				@Override
+			    public InputStream getResourceAsStream(String name) {
+			    	InputStream inputStream = super.getResourceAsStream(name);
+			    	ByteBufferOutputStream bBOS = new ByteBufferOutputStream();
+			    	Streams.copy(inputStream, bBOS);
+			    	result.putResource(name, bBOS.toByteBuffer());			    	
+			    	return super.getResourceAsStream(name);
+			    }
 				
 			}) {
 				for (Entry<String, JavaClass> entry : result.classPathClasses.entrySet()) {
@@ -386,9 +418,29 @@ public class ClassHelper implements Component {
 				}
 				try {
 					cls = loadOrUploadClass(simulatorClass, memoryClassLoader);
-					cls.getMethod("main", String[].class).invoke(null, (Object)null);
-				} catch (ClassNotFoundException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException exc) {
-					throw Throwables.toRuntimeException(exc);
+					cls.getMethod("main", String[].class).invoke(null, (Object)new String[]{});
+				} catch (Throwable exc) {					
+					Set<String> allLoadedClasses = lowLevelObjectsHandler.retrieveAllLoadedClasses(
+						this.getClass().getClassLoader()
+					).stream().map(clsss -> 
+						clsss.getName()).collect((Collectors.toSet())
+					);
+					allLoadedClasses.removeAll(classesNameToBeExcluded);
+					result.loadAll(allLoadedClasses);
+					try {
+						classesNameToBeExcluded.addAll(allLoadedClasses);
+						simulatorClass.getMethod("main", String[].class).invoke(null, (Object)new String[]{});
+						allLoadedClasses = lowLevelObjectsHandler.retrieveAllLoadedClasses(
+							this.getClass().getClassLoader()
+						).stream().map(clsss -> 
+							clsss.getName()).collect((Collectors.toSet())
+						);
+						allLoadedClasses.removeAll(classesNameToBeExcluded);
+						result.loadAll(allLoadedClasses);
+					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
+							| NoSuchMethodException | SecurityException e) {
+						throw Throwables.toRuntimeException(exc);
+					}					
 				}
 			}
 		});
@@ -407,27 +459,85 @@ public class ClassHelper implements Component {
 		Collection<String> baseClassPaths,
 		String destinationPath
 	) {
-		Dependencies dependencies = findDependencies(simulatorClass, baseClassPaths, (javaClass) -> javaClass.storeToClassPath(destinationPath));
+		Dependencies dependencies = findDependencies(
+			simulatorClass,
+			baseClassPaths, (javaClass) -> 
+				javaClass.storeToClassPath(destinationPath),
+			(resourceName, resourceContent) -> {
+				try (
+					ByteBufferInputStream inputStream = new ByteBufferInputStream(resourceContent);
+					FileOutputStream outputStream = FileOutputStream.create(new File(destinationPath + "/" + resourceName))
+				) {
+					Streams.copy(inputStream, outputStream);
+				} catch (IOException exc) {
+					logError("Could not persist resource resourceName", exc);
+				}
+			}					
+		);
 		dependencies.store = FileSystemItem.ofPath(destinationPath);
 		return dependencies;
 	}
 	
-	public static class Dependencies {
+	public static class Dependencies implements Component{
 		private CompletableFuture<Void> findingTask;
 		private final Map<String, JavaClass> classPathClasses;
+		private Map<String, ByteBuffer> resources;
 		private Map<String, JavaClass> result;
 		private FileSystemItem store;
+		private Consumer<JavaClass> javaClassConsumer;
+		private BiConsumer<String, ByteBuffer> resourceConsumer;
 		
-		private Dependencies(Map<String, JavaClass> classPathClasses) {
+		private Dependencies(Map<String, JavaClass> classPathClasses, Consumer<JavaClass> javaClassConsumer, BiConsumer<String, ByteBuffer> resourceConsumer) {
 			this.result = new ConcurrentHashMap<>();
+			this.resources = new ConcurrentHashMap<>();
 			this.classPathClasses = new ConcurrentHashMap<>();
 			this.classPathClasses.putAll(classPathClasses);
+			this.javaClassConsumer = javaClassConsumer;
+			this.resourceConsumer = resourceConsumer;
 		}
 		
-		private JavaClass put(String className, ByteBuffer value) {
+		public JavaClass load(String className) {
 			for (Map.Entry<String, JavaClass> entry : classPathClasses.entrySet()) {
 				if (entry.getValue().getName().equals(className)) {
 					result.put(entry.getKey(), entry.getValue());
+					if (javaClassConsumer != null) {
+						javaClassConsumer.accept(entry.getValue());
+					}
+					return entry.getValue();
+				}
+			}
+			return null;
+		}
+		
+		public Collection<JavaClass> loadAll(Collection<String> classesName) {
+			Collection<JavaClass> javaClassAdded = new LinkedHashSet<>();
+			for (Map.Entry<String, JavaClass> entry : classPathClasses.entrySet()) {
+				if (classesName.contains(entry.getValue().getName())) {
+					result.put(entry.getKey(), entry.getValue());
+					javaClassAdded.add(entry.getValue());
+					classesName.remove(entry.getValue().getName());
+					if (javaClassConsumer != null) {
+						javaClassConsumer.accept(entry.getValue());
+					}
+				}
+			}
+			return javaClassAdded;
+		}
+
+		public void putResource(String name, ByteBuffer bytes) {
+			resources.put(name, bytes);
+			if (resourceConsumer != null) {
+	    		resourceConsumer.accept(name, Streams.shareContent(bytes));
+	    	}
+		}
+
+		private JavaClass put(String className) {
+			for (Map.Entry<String, JavaClass> entry : classPathClasses.entrySet()) {
+				if (entry.getValue().getName().equals(className)) {
+					result.put(entry.getKey(), entry.getValue());
+					if (javaClassConsumer != null) {
+						javaClassConsumer.accept(entry.getValue());
+					}
 					return entry.getValue();
 				}
 			}
@@ -448,6 +558,18 @@ public class ClassHelper implements Component {
 		
 		public FileSystemItem getStore() {
 			return store;
+		}
+		
+		@Override
+		public void close() {
+			findingTask.cancel(true);
+			findingTask = null;
+			classPathClasses.clear();
+			resources.clear();
+			resources = null;
+			result.clear();
+			result = null;
+			store = null;
 		}
 	}
 }
