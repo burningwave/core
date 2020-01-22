@@ -2,7 +2,7 @@
 <!DOCTYPE xml>
 <configuration>
 
-	<property name="LOGS_HOME" value="${user.home}/BurningWave-logs" />
+	<property name="LOGS_HOME" value="${user.home}/Burningwave/logs" />
 
 	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
@@ -58,7 +58,7 @@
 	        <onMatch>DENY</onMatch>
 	    </filter>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>${LOGS_HOME}/archived/core-error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+			<fileNamePattern>${LOGS_HOME}/archived/core/error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
 			<timeBasedFileNamingAndTriggeringPolicy
 				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
 				<maxFileSize>25MB</maxFileSize>
