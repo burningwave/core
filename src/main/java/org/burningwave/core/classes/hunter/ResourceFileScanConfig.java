@@ -47,31 +47,31 @@ import org.burningwave.core.io.ZipInputStream;
 import org.burningwave.core.io.FileSystemHelper.Scan;
 import org.burningwave.core.io.FileSystemHelper.Scan.Configuration;
 
-public class ClassFileScanConfig {
-	private final static Predicate<String> CLASS_PREDICATE = name -> name.endsWith(".class");
+public class ResourceFileScanConfig {
 	private final static Predicate<String> ARCHIVE_PREDICATE = name -> 
 		name.endsWith(".jar") ||
 		name.endsWith(".war") ||
 		name.endsWith(".ear") ||
 		name.endsWith(".zip");
-	
+	private final static Predicate<String> RESOURCE_PREDICATE = ARCHIVE_PREDICATE.negate().and(name -> !name.endsWith(".class"));
+	private final static Predicate<String> RESOURCE_PREDICATE_FOR_ZIP_ENTRY = RESOURCE_PREDICATE.and(name -> !name.endsWith("/"));
 	PathHelper pathHelper;
 	Collection<String> paths;
 	FileCriteria directoryCriteriaForFileSystem;
-	FileCriteria classCriteriaForFileSystem;
+	FileCriteria resourceCriteriaForFileSystem;
 	FileCriteria libraryCriteriaForFileSystem;
-	ZipEntryCriteria classCriteriaForZipEntry;
+	ZipEntryCriteria resourceCriteriaForZipEntry;
 	ZipEntryCriteria libraryCriteriaForZipEntry;
 	int maxParallelTasksForUnit;
 	boolean recursiveOnDirectoryOfFileSystem;
 	boolean recursiveOnLibraryOfZipEntry;
 	
-	private ClassFileScanConfig() {
+	private ResourceFileScanConfig() {
 		paths = ConcurrentHashMap.newKeySet();
 		maxParallelTasksForUnit = Runtime.getRuntime().availableProcessors();
-		classCriteriaForFileSystem = FileCriteria.create().name(CLASS_PREDICATE);
+		resourceCriteriaForFileSystem = FileCriteria.create().name(RESOURCE_PREDICATE);
 		libraryCriteriaForFileSystem = FileCriteria.create().name(ARCHIVE_PREDICATE);
-		classCriteriaForZipEntry = ZipEntryCriteria.create().name(CLASS_PREDICATE);
+		resourceCriteriaForZipEntry = ZipEntryCriteria.create().name(RESOURCE_PREDICATE_FOR_ZIP_ENTRY);
 		libraryCriteriaForZipEntry = ZipEntryCriteria.create().name(ARCHIVE_PREDICATE);
 		recursiveOnDirectoryOfFileSystem = true;
 		recursiveOnLibraryOfZipEntry = true;
@@ -87,43 +87,43 @@ public class ClassFileScanConfig {
 	}
 	
 
-	static ClassFileScanConfig create() {
-		return new ClassFileScanConfig();
+	static ResourceFileScanConfig create() {
+		return new ResourceFileScanConfig();
 	}
 	
-	public static ClassFileScanConfig forPaths(Collection<String> paths) {
-		ClassFileScanConfig criteria = create();
+	public static ResourceFileScanConfig forPaths(Collection<String> paths) {
+		ResourceFileScanConfig criteria = create();
 		criteria.paths.addAll(paths);
 		return criteria;
 	}			
 	
-	public static ClassFileScanConfig forPaths(String... paths) {
+	public static ResourceFileScanConfig forPaths(String... paths) {
 		return forPaths(Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
 	}
 	
 
-	ClassFileScanConfig setPaths(Collection<String> newPaths) {
+	ResourceFileScanConfig setPaths(Collection<String> newPaths) {
 		this.paths.clear();
 		this.paths.addAll(newPaths);
 		return this;
 	}
 	
-	public ClassFileScanConfig maxParallelTasksForUnit(int value) {
+	public ResourceFileScanConfig maxParallelTasksForUnit(int value) {
 		this.maxParallelTasksForUnit = value;
 		return this;
 	}
 	
-	public ClassFileScanConfig recursiveOnDirectoryOfFileSystem(boolean recursiveOnDirectoryOfFileSystem) {
+	public ResourceFileScanConfig recursiveOnDirectoryOfFileSystem(boolean recursiveOnDirectoryOfFileSystem) {
 		this.recursiveOnDirectoryOfFileSystem = recursiveOnDirectoryOfFileSystem;
 		return this;
 	}
 
-	public ClassFileScanConfig recursiveOnLibraryOfZipEntry(boolean recursiveOnLibraryOfZipEntry) {
+	public ResourceFileScanConfig recursiveOnLibraryOfZipEntry(boolean recursiveOnLibraryOfZipEntry) {
 		this.recursiveOnLibraryOfZipEntry = recursiveOnLibraryOfZipEntry;
 		return this;
 	}
 	
-	public ClassFileScanConfig addPaths(Collection<String> paths) {
+	public ResourceFileScanConfig addPaths(Collection<String> paths) {
 		this.paths.addAll(paths);
 		return this;
 	}
@@ -132,13 +132,13 @@ public class ClassFileScanConfig {
 		return paths;
 	}
 	
-	public ClassFileScanConfig scanStrictlyDirectory() {
+	public ResourceFileScanConfig scanStrictlyDirectory() {
 		recursiveOnDirectoryOfFileSystem = false;
 		directoryCriteriaForFileSystem = null;
 		return this;
 	}
 	
-	public ClassFileScanConfig scanRecursivelyAllDirectoryThat(Predicate<File> predicate) {
+	public ResourceFileScanConfig scanRecursivelyAllDirectoryThat(Predicate<File> predicate) {
 		if (this.directoryCriteriaForFileSystem == null) {
 			directoryCriteriaForFileSystem = FileCriteria.create();
 		}
@@ -146,41 +146,41 @@ public class ClassFileScanConfig {
 		return this;
 	}
 	
-	public ClassFileScanConfig scanAllClassFileThat(Predicate<File> predicate) {
-		this.classCriteriaForFileSystem.and().allThat(predicate);
+	public ResourceFileScanConfig scanAllClassFileThat(Predicate<File> predicate) {
+		this.resourceCriteriaForFileSystem.and().allThat(predicate);
 		return this;
 	}
 	
-	public ClassFileScanConfig scanAllLibraryFileThat(Predicate<File> predicate) {
+	public ResourceFileScanConfig scanAllLibraryFileThat(Predicate<File> predicate) {
 		this.libraryCriteriaForFileSystem.and().allThat(predicate);
 		return this;
 	}
 	
 	
-	public ClassFileScanConfig loadAllClassFileThat(Predicate<File> predicate) {
-		this.classCriteriaForFileSystem.and().allThat(predicate);
+	public ResourceFileScanConfig loadAllClassFileThat(Predicate<File> predicate) {
+		this.resourceCriteriaForFileSystem.and().allThat(predicate);
 		return this;
 	}
 	
-	public ClassFileScanConfig loadAllClassZipEntryThat(Predicate<ZipInputStream.Entry> predicate) {
-		this.classCriteriaForZipEntry.and().allThat(predicate);
+	public ResourceFileScanConfig loadAllClassZipEntryThat(Predicate<ZipInputStream.Entry> predicate) {
+		this.resourceCriteriaForZipEntry.and().allThat(predicate);
 		return this;
 	}
 	
 
-	Configuration toScanConfiguration(
+	public Configuration toScanConfiguration(
 		Consumer<Scan.ItemContext<FileInputStream>> fileConsumer,
 		Consumer<Scan.ItemContext<ZipInputStream.Entry>> zipEntryConsumer
 	) {
 		Configuration config = Configuration.forPaths(
 			getPaths()
 		).whenFindFileTestAndApply(
-			classCriteriaForFileSystem.getPredicateOrTruePredicateIfNull(), 
+			resourceCriteriaForFileSystem.getPredicateOrTruePredicateIfNull(), 
 			fileConsumer
 		).scanAllZipFileThat(
 			libraryCriteriaForFileSystem.getPredicateOrTruePredicateIfNull()
 		).whenFindZipEntryTestAndApply(
-			classCriteriaForZipEntry.getPredicateOrTruePredicateIfNull(),
+			resourceCriteriaForZipEntry.getPredicateOrTruePredicateIfNull(),
 			zipEntryConsumer
 		).setMaxParallelTasks(
 			maxParallelTasksForUnit
@@ -202,14 +202,14 @@ public class ClassFileScanConfig {
 		return config;
 	}
 	
-	public ClassFileScanConfig createCopy() {
-		ClassFileScanConfig copy = new ClassFileScanConfig();
+	public ResourceFileScanConfig createCopy() {
+		ResourceFileScanConfig copy = new ResourceFileScanConfig();
 		copy.directoryCriteriaForFileSystem = 
 			this.directoryCriteriaForFileSystem != null?	
 				this.directoryCriteriaForFileSystem.createCopy()
 				:null;
-		copy.classCriteriaForFileSystem = this.classCriteriaForFileSystem.createCopy();
-		copy.classCriteriaForZipEntry = this.classCriteriaForZipEntry.createCopy();
+		copy.resourceCriteriaForFileSystem = this.resourceCriteriaForFileSystem.createCopy();
+		copy.resourceCriteriaForZipEntry = this.resourceCriteriaForZipEntry.createCopy();
 		copy.libraryCriteriaForFileSystem = this.libraryCriteriaForFileSystem.createCopy();
 		copy.libraryCriteriaForZipEntry = this.libraryCriteriaForZipEntry.createCopy();
 		copy.paths.addAll(this.getPaths());

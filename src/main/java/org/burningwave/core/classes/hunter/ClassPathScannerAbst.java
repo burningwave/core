@@ -106,7 +106,10 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		scanConfigCopy.init();
 		context.executeSearch(() -> {
 			fileSystemHelper.scan(
-				scanConfigCopy.toScanConfiguration(context, this)
+				scanConfigCopy.toScanConfiguration(
+					getFileSystemEntryTransformer(context),
+					getZipEntryTransformer(context)
+				)
 			);
 		});
 		Collection<String> skippedClassesNames = context.getSkippedClassNames();

@@ -220,6 +220,14 @@ public class SearchContext<T> implements Component {
 		);
 	}
 	
+	protected Class<?> loadClass(Class<?> cls) {
+		return execute(
+			() -> pathMemoryClassLoader.loadOrUploadClass(cls), 
+			() -> null, 
+			() -> cls.getName()
+		);
+	}
+	
 	protected Class<?> loadClass(JavaClass cls) {
 		return execute(
 			() -> pathMemoryClassLoader.loadOrUploadClass(cls), 

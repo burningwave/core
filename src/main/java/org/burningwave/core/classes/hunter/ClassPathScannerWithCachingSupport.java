@@ -122,7 +122,10 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 				}
 			} else {
 				fileSystemHelper.scan(
-					context.classFileScanConfiguration.createCopy().setPaths(pathsNotScanned).toScanConfiguration(context, this)				
+					context.classFileScanConfiguration.createCopy().setPaths(pathsNotScanned).toScanConfiguration(
+						getFileSystemEntryTransformer(context),
+						getZipEntryTransformer(context)
+					)				
 				);
 			}
 		}
@@ -217,7 +220,8 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		
 		fileSystemHelper.scan(
 			classFileScanConfiguration.toScanConfiguration(
-				context, this
+				getFileSystemEntryTransformer(context),
+				getZipEntryTransformer(context)
 			).afterScanPath((mainScanContext, path) -> {
 				mainScanContext.waitForTasksEnding();
 				Map<String, I> itemsForPath = new ConcurrentHashMap<>();

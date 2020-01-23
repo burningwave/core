@@ -564,6 +564,28 @@ public class FileSystemItem implements Component {
 		return copyTo(folder, null);
 	}
 	
+	public FileSystemItem copyAllChildrenTo(String folder, Predicate<FileSystemItem> filter) throws IOException {
+		Set<FileSystemItem> allChildren = getAllChildren(filter);
+		for (FileSystemItem child : allChildren) {
+			FileSystemItem destFile = FileSystemItem.ofPath(folder + child.getAbsolutePath().replaceFirst(this.getAbsolutePath(), ""));
+			if (child.isFolder()) {
+				File file = new File(destFile.getAbsolutePath());
+				if (file.exists()) {
+					file.delete();
+				}
+				file.mkdirs();
+			} else {
+				File file = new File(destFile.getParent().getAbsolutePath(), child.getName());
+				file.mkdirs();
+				file.delete();
+				try(InputStream inputStream = child.toInputStream(); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
+					Streams.copy(inputStream, fileOutputStream);
+				}
+			}
+		}
+		return FileSystemItem.ofPath(folder);
+	}
+	
 	public FileSystemItem copyTo(String folder, Predicate<FileSystemItem> filter) throws IOException {
 		FileSystemItem destination = null;
 		File file = new File(folder);
@@ -581,7 +603,7 @@ public class FileSystemItem implements Component {
 					file.delete();
 				}
 				try(InputStream inputStream = toInputStream(); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
-					Streams.copy(toInputStream(), fileOutputStream);
+					Streams.copy(inputStream, fileOutputStream);
 				}
 				logDebug("Copied file to " + file.getAbsolutePath());
 				destination = FileSystemItem.ofPath(file.getAbsolutePath());
