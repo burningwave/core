@@ -30,22 +30,50 @@ package org.burningwave.core.classes.hunter;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.burningwave.Throwables;
 import org.burningwave.core.Component;
+import org.burningwave.core.Criteria;
 
-public class SearchResult<T> implements Component {
-	protected SearchContext<T> context;
+public class SearchResult<E> implements Component {
+	protected SearchContext<E> context;
 	
-	SearchResult(SearchContext<T> context) {
+	SearchResult(SearchContext<E> context) {
 		this.context = context;
 	}
 	
-	protected Collection<T> getItemsFound() {
+	protected Collection<E> getItemsFound() {
 		return context.getItemsFound();
 	}
 	
-	protected Map<String, T> getItemsFoundFlatMap() {
+	protected Map<String, E> getItemsFoundFlatMap() {
 		return context.getItemsFoundFlatMap();
+	}
+	
+	public <C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> Map<String, E> getClasses(C criteria) {
+		Map<String, E> itemsFound = new ConcurrentHashMap<>();
+		final C criteriaCopy = criteria.createCopy();
+		getItemsFoundFlatMap().forEach((path, javaClass) -> {
+			if (criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault(javaClass).getResult()) {
+				itemsFound.put(path, javaClass);
+			}
+		});
+		return itemsFound;
+	}
+	
+	public <C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> Map.Entry<String, E> getUnique(C criteria) {
+		Map<String, E> itemsFound = new ConcurrentHashMap<>();
+		final C criteriaCopy = criteria.createCopy();
+		getItemsFoundFlatMap().forEach((path, javaClass) -> {
+			if (criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault(javaClass).getResult()) {
+				itemsFound.put(path, javaClass);
+			}
+		});
+		if (itemsFound.size() > 1) {
+			throw Throwables.toRuntimeException("Found more than one element");
+		}
+		return itemsFound.entrySet().stream().findFirst().orElseGet(() -> null);
 	}
 	
 	@SuppressWarnings("unchecked")
