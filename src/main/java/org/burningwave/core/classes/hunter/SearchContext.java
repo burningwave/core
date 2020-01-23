@@ -40,6 +40,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.Context;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
+import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.StreamHelper;
@@ -216,6 +217,14 @@ public class SearchContext<T> implements Component {
 			() -> pathMemoryClassLoader.loadClass(className), 
 			() -> null, 
 			() -> className
+		);
+	}
+	
+	protected Class<?> loadClass(JavaClass cls) {
+		return execute(
+			() -> pathMemoryClassLoader.loadOrUploadClass(cls), 
+			() -> null, 
+			() -> cls.getName()
 		);
 	}
 	
