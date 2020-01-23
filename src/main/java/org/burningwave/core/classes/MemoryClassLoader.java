@@ -174,6 +174,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     	return classHelper.loadOrUploadClass(toLoad, this);
     }
     
+    public Class<?> loadOrUploadClass(JavaClass toLoad) throws ClassNotFoundException {
+    	return classHelper.loadOrUploadClass(toLoad, this);
+    }
+    
+    public Class<?> loadOrUploadClass(ByteBuffer byteCode) throws ClassNotFoundException {
+    	return classHelper.loadOrUploadClass(byteCode, this);
+    }
+    
     
     @Override
     public InputStream getResourceAsStream(String name) {

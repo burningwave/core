@@ -133,6 +133,56 @@ public class ClassHelper implements Component {
 		);
 	}
 	
+	public Class<?> loadOrUploadClass(
+		JavaClass javaClass,
+		ClassLoader classLoader
+	) throws ClassNotFoundException {
+		return loadOrUploadClass(
+			javaClass, classLoader,
+			lowLevelObjectsHandler.getDefineClassMethod(classLoader),
+			lowLevelObjectsHandler.getDefinePackageMethod(classLoader)
+		);
+	}
+	
+	public Class<?> loadOrUploadClass(
+		ByteBuffer byteCode,
+		ClassLoader classLoader
+	) throws ClassNotFoundException {
+		return loadOrUploadClass(
+			JavaClass.create(byteCode), classLoader,
+			lowLevelObjectsHandler.getDefineClassMethod(classLoader),
+			lowLevelObjectsHandler.getDefinePackageMethod(classLoader)
+		);
+	}
+	
+	private Class<?> loadOrUploadClass(
+		JavaClass javaClass, 
+		ClassLoader classLoader, 
+		Method defineClassMethod, 
+		Method definePackageMethod
+	) throws ClassNotFoundException {
+    	try {
+    		return classLoader.loadClass(javaClass.getName());
+    	} catch (ClassNotFoundException | NoClassDefFoundError outerEx) {
+    		try {
+    			Class<?> cls = defineClass(classLoader, defineClassMethod, javaClass.getName(), javaClass.getByteCode());
+    			definePackageFor(cls, classLoader, definePackageMethod);
+    			return cls;
+			} catch (ClassNotFoundException | NoClassDefFoundError outerExc) {
+				String newNotFoundClassName = outerExc.getMessage().replace("/", ".");
+				loadOrUploadClass(
+        			Class.forName(
+        				newNotFoundClassName, false, classLoader
+        			),
+        			classLoader, defineClassMethod, definePackageMethod
+        		);
+				return loadOrUploadClass(javaClass, classLoader,
+					defineClassMethod, definePackageMethod
+        		);
+			}
+    	}
+    }
+	
 	private Class<?> loadOrUploadClass(
 		Class<?> toLoad, 
 		ClassLoader classLoader, 
