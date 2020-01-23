@@ -561,7 +561,11 @@ public class FileSystemItem implements Component {
 	}
 	
 	public FileSystemItem copyTo(String folder) throws IOException {
-		FileSystemItem destinationFolder = null;
+		return copyTo(folder, null);
+	}
+	
+	public FileSystemItem copyTo(String folder, Predicate<FileSystemItem> filter) throws IOException {
+		FileSystemItem destination = null;
 		File file = new File(folder);
 		if (!file.exists()) {
 			file.mkdirs();
@@ -571,28 +575,30 @@ public class FileSystemItem implements Component {
 			file.mkdirs();
 		}
 		if (isFile()) {
-			file = new File(folder, getName());
-			if (file.exists()) {
-				file.delete();
+			if (filter == null || filter.test(this)) {
+				file = new File(folder, getName());
+				if (file.exists()) {
+					file.delete();
+				}
+				try(InputStream inputStream = toInputStream(); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
+					Streams.copy(toInputStream(), fileOutputStream);
+				}
+				logDebug("Copied file to " + file.getAbsolutePath());
+				destination = FileSystemItem.ofPath(file.getAbsolutePath());
 			}
-			try(InputStream inputStream = toInputStream(); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
-				Streams.copy(toInputStream(), fileOutputStream);
-			}
-			logDebug("Copied file to " + file.getAbsolutePath());
-			destinationFolder = FileSystemItem.ofPath(file.getAbsolutePath());
 		} else {
 			file = new File(folder + "/" + getName());
 			if (file.exists()) {
 				file.delete();
 			}
 			file.mkdirs();
-			for (FileSystemItem fileSystemItem : getChildren()) {
-				fileSystemItem.copyTo(file.getAbsolutePath());
+			for (FileSystemItem fileSystemItem : (filter == null ? getChildren() : getChildren(filter))) {
+				fileSystemItem.copyTo(file.getAbsolutePath(), filter);
 			}
 			logDebug("Copied folder to " + file.getAbsolutePath());
-			destinationFolder = FileSystemItem.ofPath(file.getAbsolutePath());
+			destination = FileSystemItem.ofPath(file.getAbsolutePath());
 		}
-		return destinationFolder;
+		return destination;
 	}
 	
 	public static void enableLog() {
