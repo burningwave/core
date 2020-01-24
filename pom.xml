@@ -61,9 +61,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.ow2.asm</groupId>
-			<artifactId>asm</artifactId>
-			<version>7.2</version>
+		    <groupId>org.ow2.asm</groupId>
+		    <artifactId>asm</artifactId>
+		    <version>7.3.1</version>
 		</dependency>
 
 		<dependency>
