@@ -69,7 +69,7 @@ public class ParallelTasksManager implements Component{
 		Iterator<CompletableFuture<Void>> iterator = tasks.iterator();
 		while (iterator.hasNext()) {
 			iterator.next().join();
-			iterator.remove();
+			//iterator.remove();
 		}
 	}
 	
