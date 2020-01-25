@@ -28,13 +28,10 @@
  */
 package org.burningwave.core.io;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -46,7 +43,6 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.zip.ZipFile;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
@@ -182,49 +178,6 @@ public class FileSystemHelper implements Component {
 	    return folder.delete();
 	}
 	
-
-	public void unzip(ZipFile zipFile, File dir, int bufferSize) {
-		if (!dir.isDirectory()) {
-			throw Throwables.toRuntimeException(dir + "is not a valid directory");
-		}
-		Enumeration<?> e = zipFile.entries();
-		while (e.hasMoreElements()) {
-			ZipInputStream.Entry.Attached entry = (ZipInputStream.Entry.Attached) e.nextElement();
-			unzipToFolder(zipFile, entry, dir, bufferSize);
-		}	
-	}
-
-	public void unzipToFolder(
-		ZipFile zipFile, java.util.zip.ZipEntry entry, 
-		File dir, int bufferSize
-	) {
-		File destinationFilePath = new File(dir.getAbsolutePath(), entry.getName());
-		destinationFilePath.getParentFile().mkdirs();
-		if (entry.isDirectory()) {
-			return;
-		} else {
-			ThrowingRunnable.run(() -> {
-				try (BufferedInputStream bis = new BufferedInputStream(zipFile.getInputStream(entry))) {
-					int b;
-					byte buffer[] = new byte[bufferSize];
-					try (
-						FileOutputStream fos = FileOutputStream.create(
-							destinationFilePath
-						);
-						BufferedOutputStream bos = new BufferedOutputStream(
-							fos, bufferSize
-						)
-					) {
-						while ((b = bis.read(buffer, 0, bufferSize)) != -1) {
-							bos.write(buffer, 0, b);
-						}
-						bos.flush();
-					}
-				}
-			});
-		}
-	}
-
 	
 	public void scan(Configuration configuration) {
 		try (Scan.MainContext context = Scan.MainContext.create(this, configuration.createCopy())) {
