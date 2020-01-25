@@ -108,7 +108,8 @@ public class Classes {
 			) {
 				cpInfoSize = 5;
 			} else if (toBeAnalized == Symbol.Tag.LONG ||
-				toBeAnalized == Symbol.Tag.DOUBLE) {
+				toBeAnalized == Symbol.Tag.DOUBLE
+			) {
 				cpInfoSize = 9;
 				currentCpInfoIndex++;
 			} else if (toBeAnalized == Symbol.Tag.UTF8) {
@@ -122,7 +123,8 @@ public class Classes {
 				toBeAnalized == Symbol.Tag.STRING ||
 				toBeAnalized == Symbol.Tag.METHOD_TYPE ||
 				toBeAnalized == Symbol.Tag.PACKAGE ||
-				toBeAnalized == Symbol.Tag.MODULE) {
+				toBeAnalized == Symbol.Tag.MODULE
+			) {
 				cpInfoSize = 3;
 			} else {
 				throw new IllegalArgumentException();
