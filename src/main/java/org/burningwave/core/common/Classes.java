@@ -29,6 +29,7 @@
 package org.burningwave.core.common;
 
 import java.nio.ByteBuffer;
+import java.util.function.Function;
 
 public class Classes {
 	public static class Symbol{
@@ -78,16 +79,34 @@ public class Classes {
 		return retrieveClassName(classFileBuffer, true);
 	}
 	
+	public static String retrieveClassName(byte[] classFileBuffer) {
+		return retrieveClassName(classFileBuffer, true);
+	}
+	
+	public static String retrieveClassName(
+		final byte[] classFileBuffer,
+		final boolean checkClassVersion
+	) {
+		return retrieveClassName((index) -> classFileBuffer[index], checkClassVersion);
+	}
+	
 	public static String retrieveClassName(
 		final ByteBuffer classFileBuffer,
 		final boolean checkClassVersion
 	) {
+		return retrieveClassName(classFileBuffer::get, checkClassVersion);
+	}
+	
+	private static String retrieveClassName(
+		final Function<Integer, Byte> byteSupplier,
+		final boolean checkClassVersion
+	) {
 		int classFileOffset = 0;
-		if (checkClassVersion && readShort(classFileBuffer, classFileOffset + 6) > V15) {
+		if (checkClassVersion && readShort(byteSupplier, classFileOffset + 6) > V15) {
 			throw new IllegalArgumentException(
-					"Unsupported class file major version " + readShort(classFileBuffer, classFileOffset + 6));
+					"Unsupported class file major version " + readShort(byteSupplier, classFileOffset + 6));
 		}
-		int constantPoolCount = readUnsignedShort(classFileBuffer, classFileOffset + 8);
+		int constantPoolCount = readUnsignedShort(byteSupplier, classFileOffset + 8);
 		int[] cpInfoOffsets = new int[constantPoolCount];
 		String[] constantUtf8Values = new String[constantPoolCount];
 		int currentCpInfoIndex = 1;
@@ -96,12 +115,12 @@ public class Classes {
 		while (currentCpInfoIndex < constantPoolCount) {
 			cpInfoOffsets[currentCpInfoIndex++] = currentCpInfoOffset + 1;
 			int cpInfoSize;
-			byte currentCpInfoValue = classFileBuffer.get(currentCpInfoOffset);
-			if (currentCpInfoValue == Symbol.Tag.FIELD_REF ||
-				currentCpInfoValue == Symbol.Tag.METHOD_REF ||
-				currentCpInfoValue == Symbol.Tag.INTERFACE_METHOD_REF ||		
-				currentCpInfoValue == Symbol.Tag.INTEGER ||
+			byte currentCpInfoValue = byteSupplier.apply(currentCpInfoOffset);
+			if (currentCpInfoValue == Symbol.Tag.INTEGER ||
 				currentCpInfoValue == Symbol.Tag.FLOAT ||
+				currentCpInfoValue == Symbol.Tag.FIELD_REF ||
+				currentCpInfoValue == Symbol.Tag.METHOD_REF ||
+				currentCpInfoValue == Symbol.Tag.INTERFACE_METHOD_REF ||
 				currentCpInfoValue == Symbol.Tag.NAME_AND_TYPE ||
 				currentCpInfoValue == Symbol.Tag.DYNAMIC ||
 				currentCpInfoValue == Symbol.Tag.INVOKE_DYNAMIC
@@ -113,7 +132,7 @@ public class Classes {
 				cpInfoSize = 9;
 				currentCpInfoIndex++;
 			} else if (currentCpInfoValue == Symbol.Tag.UTF8) {
-				cpInfoSize = 3 + readUnsignedShort(classFileBuffer, currentCpInfoOffset + 1);
+				cpInfoSize = 3 + readUnsignedShort(byteSupplier, currentCpInfoOffset + 1);
 				if (cpInfoSize > currentMaxStringLength) {
 					currentMaxStringLength = cpInfoSize;
 				}
@@ -122,8 +141,8 @@ public class Classes {
 			} else if (currentCpInfoValue == Symbol.Tag.CLASS ||
 				currentCpInfoValue == Symbol.Tag.STRING ||
 				currentCpInfoValue == Symbol.Tag.METHOD_TYPE ||
-				currentCpInfoValue == Symbol.Tag.PACKAGE ||
-				currentCpInfoValue == Symbol.Tag.MODULE
+				currentCpInfoValue == Symbol.Tag.MODULE ||
+				currentCpInfoValue == Symbol.Tag.PACKAGE			
 			) {
 				cpInfoSize = 3;
 			} else {
@@ -133,40 +152,40 @@ public class Classes {
 		}
 		int maxStringLength = currentMaxStringLength;
 		int header = currentCpInfoOffset;
-		return getClassName(classFileBuffer, constantUtf8Values, header, maxStringLength, cpInfoOffsets);
+		return getClassName(byteSupplier, constantUtf8Values, header, maxStringLength, cpInfoOffsets);
 		
 	}
 
 	private static String getClassName(
-		ByteBuffer classFileBuffer,
+		Function<Integer, Byte> byteSupplier,
 		String[] constantUtf8Values,
 		int header,
 		int maxStringLength,
 		int[] cpInfoOffsets
 	) {
 		return readUTF8(
-			classFileBuffer, 
-			cpInfoOffsets[readUnsignedShort(classFileBuffer, header + 2)], new char[maxStringLength], constantUtf8Values, cpInfoOffsets
+			byteSupplier, 
+			cpInfoOffsets[readUnsignedShort(byteSupplier, header + 2)], new char[maxStringLength], constantUtf8Values, cpInfoOffsets
 		);
 
 	}
 
 	private static String readUTF8(
-		ByteBuffer classFileBuffer,
+		Function<Integer, Byte> byteSupplier,
 		final int offset,
 		final char[] charBuffer,
 		String[] constantUtf8Values,
 		int[] cpInfoOffsets
 	) {
-		int constantPoolEntryIndex = readUnsignedShort(classFileBuffer, offset);
+		int constantPoolEntryIndex = readUnsignedShort(byteSupplier, offset);
 		if (offset == 0 || constantPoolEntryIndex == 0) {
 			return null;
 		}
-		return readUtf(classFileBuffer, constantPoolEntryIndex, charBuffer, constantUtf8Values, cpInfoOffsets);
+		return readUtf(byteSupplier, constantPoolEntryIndex, charBuffer, constantUtf8Values, cpInfoOffsets);
 	}
 
 	private static String readUtf(
-		ByteBuffer classFileBuffer,
+		Function<Integer, Byte> byteSupplier,
 		final int constantPoolEntryIndex,
 		final char[] charBuffer,
 		String[] constantUtf8Values,
@@ -177,37 +196,37 @@ public class Classes {
 			return value;
 		}
 		int cpInfoOffset = cpInfoOffsets[constantPoolEntryIndex];
-		return constantUtf8Values[constantPoolEntryIndex] = readUtf(classFileBuffer, cpInfoOffset + 2, readUnsignedShort(classFileBuffer, cpInfoOffset),
+		return constantUtf8Values[constantPoolEntryIndex] = readUtf(byteSupplier, cpInfoOffset + 2, readUnsignedShort(byteSupplier, cpInfoOffset),
 				charBuffer);
 	}
 
 	private static int readUnsignedShort(
-		ByteBuffer classFileBuffer,
+		Function<Integer, Byte> byteSupplier,
 		final int offset
 	) {
-		return ((classFileBuffer.get(offset) & 0xFF) << 8) | (classFileBuffer.get(offset + 1) & 0xFF);
+		return ((byteSupplier.apply(offset) & 0xFF) << 8) | (byteSupplier.apply(offset + 1) & 0xFF);
 	}
 
-	private static String readUtf(ByteBuffer classFileBuffer, final int utfOffset, final int utfLength, final char[] charBuffer) {
+	private static String readUtf(Function<Integer, Byte> byteSupplier, final int utfOffset, final int utfLength, final char[] charBuffer) {
 		int currentOffset = utfOffset;
 		int endOffset = currentOffset + utfLength;
 		int strLength = 0;
 		while (currentOffset < endOffset) {
-			int currentByte = classFileBuffer.get(currentOffset++);
+			int currentByte = byteSupplier.apply(currentOffset++);
 			if ((currentByte & 0x80) == 0) {
 				charBuffer[strLength++] = (char) (currentByte & 0x7F);
 			} else if ((currentByte & 0xE0) == 0xC0) {
-				charBuffer[strLength++] = (char) (((currentByte & 0x1F) << 6) + (classFileBuffer.get(currentOffset++) & 0x3F));
+				charBuffer[strLength++] = (char) (((currentByte & 0x1F) << 6) + (byteSupplier.apply(currentOffset++) & 0x3F));
 			} else {
 				charBuffer[strLength++] = (char) (((currentByte & 0xF) << 12)
-						+ ((classFileBuffer.get(currentOffset++) & 0x3F) << 6) + (classFileBuffer.get(currentOffset++) & 0x3F));
+						+ ((byteSupplier.apply(currentOffset++) & 0x3F) << 6) + (byteSupplier.apply(currentOffset++) & 0x3F));
 			}
 		}
 		return new String(charBuffer, 0, strLength);
 	}
 
-	private static short readShort(ByteBuffer classFileBuffer, final int offset) {
-		return (short) (((classFileBuffer.get(offset) & 0xFF) << 8) | (classFileBuffer.get(offset + 1) & 0xFF));
+	private static short readShort(Function<Integer, Byte> byteSupplier, final int offset) {
+		return (short) (((byteSupplier.apply(offset) & 0xFF) << 8) | (byteSupplier.apply(offset + 1) & 0xFF));
 	}
 	
 }
