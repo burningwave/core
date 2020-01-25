@@ -96,34 +96,34 @@ public class Classes {
 		while (currentCpInfoIndex < constantPoolCount) {
 			cpInfoOffsets[currentCpInfoIndex++] = currentCpInfoOffset + 1;
 			int cpInfoSize;
-			byte toBeAnalized = classFileBuffer.get(currentCpInfoOffset);
-			if (toBeAnalized == Symbol.Tag.FIELD_REF ||
-				toBeAnalized == Symbol.Tag.METHOD_REF ||
-				toBeAnalized == Symbol.Tag.INTERFACE_METHOD_REF ||		
-				toBeAnalized == Symbol.Tag.INTEGER ||
-				toBeAnalized == Symbol.Tag.FLOAT ||
-				toBeAnalized == Symbol.Tag.NAME_AND_TYPE ||
-				toBeAnalized == Symbol.Tag.DYNAMIC ||
-				toBeAnalized == Symbol.Tag.INVOKE_DYNAMIC
+			byte currentCpInfoValue = classFileBuffer.get(currentCpInfoOffset);
+			if (currentCpInfoValue == Symbol.Tag.FIELD_REF ||
+				currentCpInfoValue == Symbol.Tag.METHOD_REF ||
+				currentCpInfoValue == Symbol.Tag.INTERFACE_METHOD_REF ||		
+				currentCpInfoValue == Symbol.Tag.INTEGER ||
+				currentCpInfoValue == Symbol.Tag.FLOAT ||
+				currentCpInfoValue == Symbol.Tag.NAME_AND_TYPE ||
+				currentCpInfoValue == Symbol.Tag.DYNAMIC ||
+				currentCpInfoValue == Symbol.Tag.INVOKE_DYNAMIC
 			) {
 				cpInfoSize = 5;
-			} else if (toBeAnalized == Symbol.Tag.LONG ||
-				toBeAnalized == Symbol.Tag.DOUBLE
+			} else if (currentCpInfoValue == Symbol.Tag.LONG ||
+				currentCpInfoValue == Symbol.Tag.DOUBLE
 			) {
 				cpInfoSize = 9;
 				currentCpInfoIndex++;
-			} else if (toBeAnalized == Symbol.Tag.UTF8) {
+			} else if (currentCpInfoValue == Symbol.Tag.UTF8) {
 				cpInfoSize = 3 + readUnsignedShort(classFileBuffer, currentCpInfoOffset + 1);
 				if (cpInfoSize > currentMaxStringLength) {
 					currentMaxStringLength = cpInfoSize;
 				}
-			} else if (toBeAnalized == Symbol.Tag.METHOD_HANDLE) {
+			} else if (currentCpInfoValue == Symbol.Tag.METHOD_HANDLE) {
 				cpInfoSize = 4;
-			} else if (toBeAnalized == Symbol.Tag.CLASS ||
-				toBeAnalized == Symbol.Tag.STRING ||
-				toBeAnalized == Symbol.Tag.METHOD_TYPE ||
-				toBeAnalized == Symbol.Tag.PACKAGE ||
-				toBeAnalized == Symbol.Tag.MODULE
+			} else if (currentCpInfoValue == Symbol.Tag.CLASS ||
+				currentCpInfoValue == Symbol.Tag.STRING ||
+				currentCpInfoValue == Symbol.Tag.METHOD_TYPE ||
+				currentCpInfoValue == Symbol.Tag.PACKAGE ||
+				currentCpInfoValue == Symbol.Tag.MODULE
 			) {
 				cpInfoSize = 3;
 			} else {
