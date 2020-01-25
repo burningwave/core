@@ -50,10 +50,8 @@ import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingSupplier;
-import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.Streams;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
-import org.objectweb.asm.ClassReader;
 
 
 public class ClassHelper implements Component {
@@ -94,14 +92,6 @@ public class ClassHelper implements Component {
 			).get(2).get(0);
 	}
 	
-	public String extractClassName(ByteBuffer byteCode) {
-		return ThrowingSupplier.get(() -> {
-			try (ByteBufferInputStream inputStream = new ByteBufferInputStream(byteCode)){
-				return new ClassReader(inputStream).getClassName().replace("/", ".");
-			}
-		});
-	}
-	
 	public ByteBuffer getByteCode(Class<?> cls) {
 		ClassLoader clsLoader = cls.getClassLoader();
 		if (clsLoader == null) {
@@ -114,13 +104,6 @@ public class ClassHelper implements Component {
 			Objects.requireNonNull(inputStream, "Could not acquire bytecode for class " + cls.getName())
 		);
 	}
-	
-	public String extractClassName(InputStream inputStream) {
-		return ThrowingSupplier.get(() -> 
-			new ClassReader(inputStream).getClassName().replace("/", ".")
-		);
-	}
-
 	
 	public Class<?> loadOrUploadClass(
 		Class<?> toLoad, 

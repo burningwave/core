@@ -3,6 +3,7 @@ package org.burningwave.core;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.bean.Complex;
 import org.burningwave.core.bean.PojoInterface;
+import org.burningwave.core.io.FileSystemItem;
 import org.junit.jupiter.api.Test;
 
 public class ClassFactoryTest extends BaseTest {
@@ -74,7 +75,7 @@ public class ClassFactoryTest extends BaseTest {
 		testNotNull(() -> 
 			componentSupplier.getClassFactory().getOrBuildPojoSubType(
 				this.getClass().getPackage().getName() + ".PojoImpl", 
-				org.objectweb.asm.ClassReader.class,
+				FileSystemItem.class,
 				PojoInterface.class
 			)
 		);

@@ -62,12 +62,6 @@
 		</dependency>
 
 		<dependency>
-		    <groupId>org.ow2.asm</groupId>
-		    <artifactId>asm</artifactId>
-		    <version>7.3.1</version>
-		</dependency>
-
-		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-engine</artifactId>
 			<version>5.5.2</version>
@@ -93,8 +87,7 @@
 		    <artifactId>junit-platform-runner</artifactId>
 		    <version>1.6.0-RC1</version>
 		    <scope>test</scope>
-		</dependency>
-		
+		</dependency>		
 
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
@@ -107,21 +100,7 @@
 			<artifactId>logback-classic</artifactId>
 			<version>1.2.3</version>
 		</dependency>
-		
-		<dependency>
-		    <groupId>org.springframework</groupId>
-		    <artifactId>spring-context</artifactId>
-		    <version>5.2.2.RELEASE</version>
-		    <scope>test</scope>
-		</dependency>
-		
-		<dependency>
-		    <groupId>org.springframework</groupId>
-		    <artifactId>spring-web</artifactId>
-		    <version>5.2.2.RELEASE</version>
-		    <scope>test</scope>
-		</dependency>
-		
+
 	</dependencies>
 	<build>
 		<finalName>${project.generated.artifacts.prefix}-${project.artifactId}-${project.version}</finalName>
