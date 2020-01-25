@@ -386,7 +386,7 @@ public class FileSystemItem implements Component {
 									fileSystemItem, zEntry, zEntry.getName()
 								)
 							);
-							//logDebug(fileSystemItem.getAbsolutePath());
+							logDebug(fileSystemItem.getAbsolutePath());
 							if (fileSystemItem.isArchive()) {
 								Optional.ofNullable(
 									fileSystemItem.getAllChildren()
@@ -564,20 +564,29 @@ public class FileSystemItem implements Component {
 		return copyTo(folder, null);
 	}
 	
+	public FileSystemItem copyAllChildrenTo(String folder) throws IOException {
+		return copyAllChildrenTo(folder, null);
+	}
+	
 	public FileSystemItem copyAllChildrenTo(String folder, Predicate<FileSystemItem> filter) throws IOException {
-		Set<FileSystemItem> allChildren = getAllChildren(filter);
+		Predicate<FileSystemItem> finalFilter = fileSystemItem -> !fileSystemItem.isArchive();
+		finalFilter = filter != null ? finalFilter.and(filter) : finalFilter;
+		Set<FileSystemItem> allChildren = getAllChildren(finalFilter);
 		for (FileSystemItem child : allChildren) {
 			FileSystemItem destFile = FileSystemItem.ofPath(folder + child.getAbsolutePath().replaceFirst(this.getAbsolutePath(), ""));
+			logDebug("Copying " + child.getAbsolutePath());
 			if (child.isFolder()) {
 				File file = new File(destFile.getAbsolutePath());
+				if (!file.exists()) {
+					file.mkdirs();
+				}
+			} else {
+				File file = new File(destFile.getParent().getAbsolutePath());
+				file.mkdirs();
+				file = new File(file.getAbsolutePath(), child.getName());
 				if (file.exists()) {
 					file.delete();
 				}
-				file.mkdirs();
-			} else {
-				File file = new File(destFile.getParent().getAbsolutePath(), child.getName());
-				file.mkdirs();
-				file.delete();
 				try(InputStream inputStream = child.toInputStream(); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
 					Streams.copy(inputStream, fileOutputStream);
 				}
@@ -588,17 +597,11 @@ public class FileSystemItem implements Component {
 	
 	public FileSystemItem copyTo(String folder, Predicate<FileSystemItem> filter) throws IOException {
 		FileSystemItem destination = null;
-		File file = new File(folder);
-		if (!file.exists()) {
-			file.mkdirs();
-		} else if (!file.isDirectory()) {
-			file.setWritable(true);
-			file.delete();
-			file.mkdirs();
-		}
 		if (isFile()) {
 			if (filter == null || filter.test(this)) {
-				file = new File(folder, getName());
+				File file = new File(folder);
+				file.mkdirs();
+				file = new File(file.getAbsolutePath(), getName());
 				if (file.exists()) {
 					file.delete();
 				}
@@ -609,10 +612,7 @@ public class FileSystemItem implements Component {
 				destination = FileSystemItem.ofPath(file.getAbsolutePath());
 			}
 		} else {
-			file = new File(folder + "/" + getName());
-			if (file.exists()) {
-				file.delete();
-			}
+			File file = new File(folder + "/" + getName());
 			file.mkdirs();
 			for (FileSystemItem fileSystemItem : (filter == null ? getChildren() : getChildren(filter))) {
 				fileSystemItem.copyTo(file.getAbsolutePath(), filter);

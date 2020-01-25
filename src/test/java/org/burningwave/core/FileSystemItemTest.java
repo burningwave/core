@@ -167,4 +167,14 @@ public class FileSystemItemTest extends BaseTest {
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
 		).copyTo(System.getProperty("user.home") + "/Desktop/bw-tests").getChildren());
 	}
+	
+	@Test
+	@Tag("Heavy")
+	public void copyAllChildrenTestOne() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		testNotEmpty(() -> FileSystemItem.ofPath(
+			basePath + "/libs-for-test.zip"
+		).copyAllChildrenTo(System.getProperty("user.home") + "/Desktop/bw-tests").getAllChildren());
+	}
 }
