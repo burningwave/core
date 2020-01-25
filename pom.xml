@@ -46,7 +46,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.jdk.version>13</project.jdk.version>
+		<project.jdk.version>8</project.jdk.version>
 		<skipTests>true</skipTests>
 		<project.test.includes />
 		<project.test.excludes>**/*Test.java</project.test.excludes>
