@@ -34,10 +34,10 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 
 import org.burningwave.Throwables;
-import org.burningwave.core.Cache;
 import org.burningwave.core.common.Classes;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferInputStream;
+import org.burningwave.core.io.Cache;
 import org.burningwave.core.io.FileOutputStream;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.Streams;

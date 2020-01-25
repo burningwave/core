@@ -32,7 +32,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
 
-import org.burningwave.core.Cache;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingRunnable;
 

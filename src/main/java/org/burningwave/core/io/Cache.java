@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core;
+package org.burningwave.core.io;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -35,8 +35,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.core.common.Strings;
-import org.burningwave.core.io.FileSystemItem;
-import org.burningwave.core.io.Streams;
 
 public class Cache {
 	public final static PathForResources<ByteBuffer> PATH_FOR_CONTENTS = new PathForResources<>(1L, Streams::shareContent);

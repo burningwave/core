@@ -44,7 +44,6 @@ import java.util.function.Supplier;
 import java.util.zip.ZipException;
 
 import org.burningwave.Throwables;
-import org.burningwave.core.Cache;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ZipInputStream.Entry.Detached;
