@@ -46,9 +46,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.jdk.version>8</project.jdk.version>
-		<core.skip.tests>true</core.skip.tests>
-		<skipTests>${core.skip.tests}</skipTests>
+		<project.jdk.version>13</project.jdk.version>
+		<skipTests>true</skipTests>
 		<project.test.includes />
 		<project.test.excludes>**/*Test.java</project.test.excludes>
 		<project.generated.artifacts.prefix>bw</project.generated.artifacts.prefix>
