@@ -160,7 +160,7 @@ public class ComponentContainer implements ComponentSupplier {
 		T component = (T)components.get(componentType);
 		if (component == null) {	
 			waitForInitializationEnding();
-			synchronized (components) {
+			synchronized (components.toString() + "_" + componentType.getName()) {
 				if ((component = (T)components.get(componentType)) == null) {
 					component = componentSupplier.get();
 					components.put(componentType, component);
