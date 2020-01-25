@@ -29,6 +29,7 @@
 package org.burningwave.core.concurrent;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -38,7 +39,7 @@ import org.burningwave.core.Component;
 
 public class ParallelTasksManager implements Component{
 
-	protected Collection<CompletableFuture<?>> tasks;
+	protected Collection<CompletableFuture<Void>> tasks;
 	protected ExecutorService executorService;
 	private int maxParallelTasks;
 
@@ -65,10 +66,11 @@ public class ParallelTasksManager implements Component{
 	}
 
 	public void waitForTasksEnding() {
-		tasks.forEach(task -> {
-			task.join();
-			//tasks.remove(task);
-		});
+		Iterator<CompletableFuture<Void>> iterator = tasks.iterator();
+		while (iterator.hasNext()) {
+			iterator.next().join();
+			iterator.remove();
+		}
 	}
 	
 	@Override
