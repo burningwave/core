@@ -44,6 +44,7 @@ import java.util.function.Supplier;
 import java.util.zip.ZipException;
 
 import org.burningwave.Throwables;
+import org.burningwave.core.Cache;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ZipInputStream.Entry.Detached;
@@ -370,7 +371,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 			
 			
 			private ByteBuffer loadContent() {
-				return Resources.getOrDefault(
+				return Cache.PATH_FOR_CONTENTS.getOrDefault(
 					getAbsolutePath(), () -> {
 						if (zipInputStream.currentZipEntry != this) {
 							throw Throwables.toRuntimeException("Entry.Impl and his ZipInputStream are not aligned");
@@ -441,7 +442,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 			}
 	
 			public ByteBuffer toByteBuffer() {
-				return Resources.getOrDefault(absolutePath, () -> {
+				return Cache.PATH_FOR_CONTENTS.getOrDefault(absolutePath, () -> {
 					try (ZipInputStream zipInputStream = getZipInputStream()) {
 						ByteBuffer content = zipInputStream.findFirstAndConvert((entry) -> 
 							entry.getName().equals(getName()), zEntry -> 

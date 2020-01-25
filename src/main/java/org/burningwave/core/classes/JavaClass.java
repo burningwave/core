@@ -34,12 +34,12 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 
 import org.burningwave.Throwables;
+import org.burningwave.core.Cache;
 import org.burningwave.core.common.Classes;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.FileOutputStream;
 import org.burningwave.core.io.FileSystemItem;
-import org.burningwave.core.io.Resources;
 import org.burningwave.core.io.Streams;
 
 public class JavaClass {
@@ -147,7 +147,7 @@ public class JavaClass {
 				//ManagedLogger.Repository.logDebug(this.getClass(), "Class " + getName() + " WRITTEN to "+ Strings.Paths.clean(fileClass.getAbsolutePath()));
 			}
 		});
-		Resources.getOrDefault(
+		Cache.PATH_FOR_CONTENTS.getOrDefault(
 			fileClass.getAbsolutePath(), () ->
 			getByteCode()
 		);		

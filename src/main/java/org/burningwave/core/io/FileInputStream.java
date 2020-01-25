@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
 
+import org.burningwave.core.Cache;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingRunnable;
 
@@ -83,7 +84,7 @@ public class FileInputStream extends java.io.FileInputStream implements Componen
 	}
 
 	public ByteBuffer toByteBuffer() {
-		return Resources.getOrDefault(
+		return Cache.PATH_FOR_CONTENTS.getOrDefault(
 			file.getAbsolutePath(), () -> 
 			Streams.toByteBuffer(this)
 		);

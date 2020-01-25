@@ -101,7 +101,7 @@ public class FileSystemItemTest extends BaseTest {
 		).getAllChildren());
 	}
 	
-	@Test
+	//@Test
 	@Tag("Heavy")
 	public void readTestEleven() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -121,7 +121,7 @@ public class FileSystemItemTest extends BaseTest {
 	}
 	
 	
-	@Test
+	//@Test
 	@Tag("Heavy")
 	public void readTestTestThirteen() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -168,7 +168,7 @@ public class FileSystemItemTest extends BaseTest {
 		).copyTo(System.getProperty("user.home") + "/Desktop/bw-tests").getChildren());
 	}
 	
-	@Test
+	//@Test
 	@Tag("Heavy")
 	public void copyAllChildrenTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();

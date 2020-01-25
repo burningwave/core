@@ -47,13 +47,13 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.Throwables;
+import org.burningwave.core.Cache;
 import org.burningwave.core.Component;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.io.ZipInputStream.Entry;
 
 public class FileSystemItem implements Component {
 	private final static String ZIP_PATH_SEPARATOR = "//"; 
-	private final static Map<String, FileSystemItem> FILE_SYSTEM_ITEMS = new ConcurrentHashMap<>(); 
 		
 	private Map.Entry<String, String> absolutePath;
 	private FileSystemItem parent;
@@ -83,19 +83,16 @@ public class FileSystemItem implements Component {
 		) {
 			realAbsolutePath = Paths.get(realAbsolutePath).normalize().toString();
 		}
-		realAbsolutePath = Strings.Paths.clean(realAbsolutePath);
-		FileSystemItem fileSystemItemReader = FILE_SYSTEM_ITEMS.get(realAbsolutePath);
-		if (fileSystemItemReader == null) {
-			synchronized(FILE_SYSTEM_ITEMS.toString() + "_" + realAbsolutePath) {
-				if ((fileSystemItemReader = FILE_SYSTEM_ITEMS.get(realAbsolutePath)) == null) {
-					fileSystemItemReader = new FileSystemItem(realAbsolutePath, conventionedAbsolutePath);
-					if (Strings.isNotEmpty(realAbsolutePath)) {
-						FILE_SYSTEM_ITEMS.put(realAbsolutePath, fileSystemItemReader);
-					}
+		final String realAbsolutePathCleaned = Strings.Paths.clean(realAbsolutePath);
+		FileSystemItem fileSystemItem = Cache.PATH_FOR_FILE_SYSTEM_ITEMS.getOrDefault(
+			realAbsolutePath, () -> {
+				if (Strings.isNotEmpty(realAbsolutePathCleaned)) {
+					return new FileSystemItem(realAbsolutePathCleaned, conventionedAbsolutePath);
 				}
+				return null;
 			}
-		}
-		return fileSystemItemReader;
+		);
+		return fileSystemItem;
 	}
 	
 	private String getConventionedAbsolutePath() {
@@ -110,7 +107,7 @@ public class FileSystemItem implements Component {
 				absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
 			}
 			if (!exists) {
-				FILE_SYSTEM_ITEMS.remove(absolutePath.getKey());
+				Cache.PATH_FOR_FILE_SYSTEM_ITEMS.remove(absolutePath.getKey());
 			}
 		}
 		return absolutePath.getValue();
@@ -356,13 +353,13 @@ public class FileSystemItem implements Component {
 		return getAllChildren(filter, ConcurrentHashMap::newKeySet);
 	}
 	
+	@SuppressWarnings("resource")
 	public Set<FileSystemItem> getAllChildren() {
 		if (allChildren != null) {
 			return allChildren;
 		} else if (isContainer()) {
 			if (isCompressed() || isArchive()) {
 				Predicate<Entry.Attached> zipEntryPredicate = null;
-				@SuppressWarnings("resource")
 				FileSystemItem parentContainerTemp = this;
 				if (isArchive()) {
 					zipEntryPredicate = zEntry -> !zEntry.getName().equals("/");
@@ -500,7 +497,7 @@ public class FileSystemItem implements Component {
 	
 	public ByteBuffer toByteBuffer() {
 		String absolutePath = getAbsolutePath();
-		ByteBuffer resource = Resources.getOrDefault(absolutePath, null); 
+		ByteBuffer resource = Cache.PATH_FOR_CONTENTS.getOrDefault(absolutePath, null); 
 		if (resource != null) {
 			return resource;
 		}
@@ -511,7 +508,7 @@ public class FileSystemItem implements Component {
 				File file = new File(zipFilePath);
 				if (file.exists()) {
 					try (FileInputStream fIS = FileInputStream.create(file)) {
-						return Resources.getOrDefault(
+						return Cache.PATH_FOR_CONTENTS.getOrDefault(
 							absolutePath,
 							() ->
 								retrieveBytes(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + ZIP_PATH_SEPARATOR, ""))
@@ -520,7 +517,7 @@ public class FileSystemItem implements Component {
 				}
 			} else {
 				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
-					return Resources.getOrDefault(
+					return Cache.PATH_FOR_CONTENTS.getOrDefault(
 						absolutePath, () ->
 						fIS.toByteBuffer()
 					);
@@ -624,11 +621,11 @@ public class FileSystemItem implements Component {
 	}
 	
 	public static void enableLog() {
-		FileSystemItem.ofPath("/").enableLogging();
+		Repository.enableLogging(FileSystemItem.class);
 	}
 	
 	public static void disableLog() {
-		FileSystemItem.ofPath("/").disableLogging();
+		Repository.disableLogging(FileSystemItem.class);
 	}
 	
 	@Override
