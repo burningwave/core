@@ -31,7 +31,6 @@ package org.burningwave.core.classes.hunter;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -77,16 +76,6 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		ClassHelper classHelper, MemberFinder memberFinder
 	) {
 		return new ClassPathHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classHelper, memberFinder);
-	}
-	
-	@Override
-	<S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(SearchContext context, String path, Map<String, Collection<Class<?>>> itemsForPath) {
-		for (Entry<String, Collection<Class<?>>> cachedItemAsEntry : itemsForPath.entrySet()) {
-			ClassCriteria.TestContext testContext = testCachedItem(context, path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
-			if(testContext.getResult()) {
-				addCachedItemToContext(context, testContext, path, cachedItemAsEntry);
-			}
-		}
 	}
 	
 	@Override
