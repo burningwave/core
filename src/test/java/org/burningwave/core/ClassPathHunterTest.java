@@ -29,7 +29,8 @@ public class ClassPathHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getClassPaths()
+				result.getClassPaths(),
+			true
 		);
 	}
 
@@ -80,7 +81,8 @@ public class ClassPathHunterTest extends BaseTest {
 				)
 			),
 			(result) ->
-				result.getClassPaths()
+				result.getClassPaths(),
+			true
 		);
 	}
 

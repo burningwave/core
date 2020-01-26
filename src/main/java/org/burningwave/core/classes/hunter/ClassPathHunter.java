@@ -85,7 +85,6 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 			ClassCriteria.TestContext testContext = testCachedItem(context, path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 			if(testContext.getResult()) {
 				addCachedItemToContext(context, testContext, path, cachedItemAsEntry);
-				break;
 			}
 		}
 	}
@@ -132,9 +131,6 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		ZipInputStream.Entry zipEntry = scanItemContext.getInput();
 		if (zipEntry.getName().equals(javaClass.getPath())) {
 			fsObject = zipEntry.getZipInputStream().getAbsolutePath();
-			if (!context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
-				scanItemContext.getParent().setDirective(Scan.Directive.STOP_ITERATION);
-			}
 		} else {
 			String zipEntryAbsolutePath = zipEntry.getAbsolutePath();
 			zipEntryAbsolutePath = zipEntryAbsolutePath.substring(0, zipEntryAbsolutePath.lastIndexOf(javaClass.getPath()));
