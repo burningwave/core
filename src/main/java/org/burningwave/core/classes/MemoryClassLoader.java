@@ -220,14 +220,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 				cls = _defineClass(className, byteCode, null);
         		definePackageOf(cls);
         	} catch (NoClassDefFoundError noClassDefFoundError) {
-        		String notFoundClassName = Classes.retrieveClassName(noClassDefFoundError);
+        		String notFoundClassName = Classes.retrieveName(noClassDefFoundError);
         		while (!notFoundClassName.equals(className)) {
         			try {
         				//This search over all ClassLoader Parents
         				loadClass(notFoundClassName, false);
         				cls = loadClass(className, false);
         			} catch (ClassNotFoundException exc) {
-        				String newNotFoundClass = Classes.retrieveClassName(noClassDefFoundError);
+        				String newNotFoundClass = Classes.retrieveName(noClassDefFoundError);
         				if (newNotFoundClass.equals(notFoundClassName)) {
         					break;
         				} else {

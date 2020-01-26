@@ -153,7 +153,7 @@ public class ClassHelper implements Component {
     			definePackageFor(cls, classLoader, definePackageMethod);
     			return cls;
 			} catch (ClassNotFoundException | NoClassDefFoundError outerExc) {
-				String newNotFoundClassName = Classes.retrieveClassName(outerExc);
+				String newNotFoundClassName = Classes.retrieveName(outerExc);
 				loadOrUploadClass(
         			Class.forName(
         				newNotFoundClassName, false, classLoader
@@ -181,7 +181,7 @@ public class ClassHelper implements Component {
     			definePackageFor(cls, classLoader, definePackageMethod);
     			return cls;
 			} catch (ClassNotFoundException | NoClassDefFoundError outerExc) {
-				String newNotFoundClassName = Classes.retrieveClassName(outerExc);
+				String newNotFoundClassName = Classes.retrieveName(outerExc);
 				loadOrUploadClass(
         			Class.forName(
         				newNotFoundClassName, false, toLoad.getClassLoader()

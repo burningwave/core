@@ -75,33 +75,33 @@ public class Classes {
 		return classes;
 	}
 	
-	public static String retrieveClassName(Throwable exc) {
+	public static String retrieveName(Throwable exc) {
 		return exc.getMessage().replace("/", ".");
 	}
 	
-	public static String retrieveClassName(ByteBuffer classFileBuffer) {
-		return retrieveClassName(classFileBuffer, true);
+	public static String retrieveName(ByteBuffer classFileBuffer) {
+		return retrieveName(classFileBuffer, true);
 	}
 	
-	public static String retrieveClassName(byte[] classFileBuffer) {
-		return retrieveClassName(classFileBuffer, true);
+	public static String retrieveName(byte[] classFileBuffer) {
+		return retrieveName(classFileBuffer, true);
 	}
 	
-	public static String retrieveClassName(
+	public static String retrieveName(
 		final byte[] classFileBuffer,
 		final boolean checkClassVersion
 	) {
-		return retrieveClassName((index) -> classFileBuffer[index], checkClassVersion);
+		return retrieveName((index) -> classFileBuffer[index], checkClassVersion);
 	}
 	
-	public static String retrieveClassName(
+	public static String retrieveName(
 		final ByteBuffer classFileBuffer,
 		final boolean checkClassVersion
 	) {
-		return retrieveClassName(classFileBuffer::get, checkClassVersion);
+		return retrieveName(classFileBuffer::get, checkClassVersion);
 	}
 	
-	private static String retrieveClassName(
+	private static String retrieveName(
 		final Function<Integer, Byte> byteSupplier,
 		final boolean checkClassVersion
 	) {
@@ -156,11 +156,11 @@ public class Classes {
 		}
 		int maxStringLength = currentMaxStringLength;
 		int header = currentCpInfoOffset;
-		return getClassName(byteSupplier, constantUtf8Values, header, maxStringLength, cpInfoOffsets);
+		return getName(byteSupplier, constantUtf8Values, header, maxStringLength, cpInfoOffsets);
 		
 	}
 
-	private static String getClassName(
+	private static String getName(
 		Function<Integer, Byte> byteSupplier,
 		String[] constantUtf8Values,
 		int header,

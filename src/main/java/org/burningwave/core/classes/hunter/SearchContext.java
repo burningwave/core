@@ -188,7 +188,7 @@ public class SearchContext<T> implements Component {
 			try {
 				return supplier.get();
 			} catch (ClassNotFoundException | NoClassDefFoundError exc) {
-				String notFoundClassName = Classes.retrieveClassName(exc);
+				String notFoundClassName = Classes.retrieveName(exc);
 				if (!skippedClassNames.contains(notFoundClassName)) {
 					if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
 						synchronized(this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
