@@ -39,6 +39,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Criteria;
+import org.burningwave.core.Criteria.TestContext;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.JavaClass;
@@ -235,6 +236,20 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			return context.getItemsFoundFlatMap();
 		}
 		
+		@Override
+		@SuppressWarnings("unchecked")
+		protected <C extends Criteria<Class<?>, C, T>, T extends TestContext<Class<?>, C>> C createCriteriaCopy(C criteria) {
+			if (criteria instanceof ClassCriteria) {
+				ClassCriteria criteriaCopy = ((ClassCriteria)criteria).createCopy();
+				criteriaCopy.init(
+					context.getSearchConfig().getClassCriteria().getClassSupplier(),
+					context.getSearchConfig().getClassCriteria().getByteCodeSupplier()
+				);
+				return (C)criteriaCopy;
+			} else {
+				return super.createCriteriaCopy(criteria);
+			}
+		}		
 		@SuppressWarnings("unchecked")
 		public <M extends Member, C extends MemberCriteria<M, C, T>, T extends Criteria.TestContext<M, C>> Collection<Member> getMembersBy(C criteria) {
 			Collection<Member> membersFoundByCriteria = getMembersFlatMap().get(criteria);

@@ -53,7 +53,7 @@ public class SearchResult<E> implements Component {
 	
 	public <C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> Map<String, E> getClasses(C criteria) {
 		Map<String, E> itemsFound = new ConcurrentHashMap<>();
-		final C criteriaCopy = criteria.createCopy();
+		final C criteriaCopy = createCriteriaCopy(criteria);
 		getItemsFoundFlatMap().forEach((path, javaClass) -> {
 			if (criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault(javaClass).getResult()) {
 				itemsFound.put(path, javaClass);
@@ -64,7 +64,7 @@ public class SearchResult<E> implements Component {
 	
 	public <C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> Map.Entry<String, E> getUnique(C criteria) {
 		Map<String, E> itemsFound = new ConcurrentHashMap<>();
-		final C criteriaCopy = criteria.createCopy();
+		final C criteriaCopy = createCriteriaCopy(criteria);
 		getItemsFoundFlatMap().forEach((path, javaClass) -> {
 			if (criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault(javaClass).getResult()) {
 				itemsFound.put(path, javaClass);
@@ -74,6 +74,10 @@ public class SearchResult<E> implements Component {
 			throw Throwables.toRuntimeException("Found more than one element");
 		}
 		return itemsFound.entrySet().stream().findFirst().orElseGet(() -> null);
+	}
+	
+	protected <C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> C createCriteriaCopy(C criteria) {
+		return criteria.createCopy();
 	}
 	
 	@SuppressWarnings("unchecked")
