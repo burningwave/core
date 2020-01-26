@@ -45,6 +45,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.common.Classes;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.ByteBufferOutputStream;
@@ -219,14 +220,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 				cls = _defineClass(className, byteCode, null);
         		definePackageOf(cls);
         	} catch (NoClassDefFoundError noClassDefFoundError) {
-        		String notFoundClassName = noClassDefFoundError.getMessage().replace("/", ".");
+        		String notFoundClassName = Classes.retrieveClassName(noClassDefFoundError);
         		while (!notFoundClassName.equals(className)) {
         			try {
         				//This search over all ClassLoader Parents
         				loadClass(notFoundClassName, false);
         				cls = loadClass(className, false);
         			} catch (ClassNotFoundException exc) {
-        				String newNotFoundClass = noClassDefFoundError.getMessage().replace("/", ".");
+        				String newNotFoundClass = Classes.retrieveClassName(noClassDefFoundError);
         				if (newNotFoundClass.equals(notFoundClassName)) {
         					break;
         				} else {

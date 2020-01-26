@@ -48,6 +48,7 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.common.Classes;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.Streams;
@@ -152,7 +153,7 @@ public class ClassHelper implements Component {
     			definePackageFor(cls, classLoader, definePackageMethod);
     			return cls;
 			} catch (ClassNotFoundException | NoClassDefFoundError outerExc) {
-				String newNotFoundClassName = outerExc.getMessage().replace("/", ".");
+				String newNotFoundClassName = Classes.retrieveClassName(outerExc);
 				loadOrUploadClass(
         			Class.forName(
         				newNotFoundClassName, false, classLoader
@@ -180,7 +181,7 @@ public class ClassHelper implements Component {
     			definePackageFor(cls, classLoader, definePackageMethod);
     			return cls;
 			} catch (ClassNotFoundException | NoClassDefFoundError outerExc) {
-				String newNotFoundClassName = outerExc.getMessage().replace("/", ".");
+				String newNotFoundClassName = Classes.retrieveClassName(outerExc);
 				loadOrUploadClass(
         			Class.forName(
         				newNotFoundClassName, false, toLoad.getClassLoader()

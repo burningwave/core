@@ -75,6 +75,10 @@ public class Classes {
 		return classes;
 	}
 	
+	public static String retrieveClassName(Throwable exc) {
+		return exc.getMessage().replace("/", ".");
+	}
+	
 	public static String retrieveClassName(ByteBuffer classFileBuffer) {
 		return retrieveClassName(classFileBuffer, true);
 	}

@@ -41,6 +41,7 @@ import org.burningwave.core.Context;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.JavaClass;
+import org.burningwave.core.common.Classes;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.StreamHelper;
@@ -187,7 +188,7 @@ public class SearchContext<T> implements Component {
 			try {
 				return supplier.get();
 			} catch (ClassNotFoundException | NoClassDefFoundError exc) {
-				String notFoundClassName = exc.getMessage().replace("/", ".");
+				String notFoundClassName = Classes.retrieveClassName(exc);
 				if (!skippedClassNames.contains(notFoundClassName)) {
 					if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
 						synchronized(this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
