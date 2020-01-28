@@ -220,5 +220,15 @@ public class Classes {
 	private static short readShort(Function<Integer, Byte> byteSupplier, final int offset) {
 		return (short) (((byteSupplier.apply(offset) & 0xFF) << 8) | (byteSupplier.apply(offset + 1) & 0xFF));
 	}
+
+	public static boolean isLoadedBy(Class<?> cls, ClassLoader classLoader) {
+		if (cls.getClassLoader() == classLoader) {
+			return true;
+		} else if (classLoader != null && classLoader.getParent() != null) {
+			return isLoadedBy(cls, classLoader.getParent());
+		} else {
+			return false;
+		}
+	}
 	
 }

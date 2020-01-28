@@ -40,6 +40,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.UUID;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiPredicate;
@@ -394,7 +395,7 @@ public class LowLevelObjectsHandler implements Component {
 		String imports =
 			"import " + ComponentSupplier.class.getName() + ";\n" +
 			"import " + componentSupplier.getClass().getName() + ";\n" + importFromConfig;
-		String className = "ObjectSupplier";
+		String className = "ObjectSupplier_" + UUID.randomUUID().toString().replaceAll("-", "");
 		return getClassHelper().executeCode(
 			imports, className, supplierCode, 
 			componentSupplier, Thread.currentThread().getContextClassLoader()
