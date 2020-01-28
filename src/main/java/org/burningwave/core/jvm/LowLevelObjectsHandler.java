@@ -403,18 +403,8 @@ public class LowLevelObjectsHandler implements Component {
 	}
 	
 	public void unregister(ClassLoader classLoader) {
-		Vector<Class<?>> classes = classLoadersClasses.remove(classLoader);
-		if (classes != null) {
-			synchronized(classes) {
-				classes.clear();
-			}
-		}
-		Map<String, ?> packages = classLoadersPackages.remove(classLoader);
-		if (packages != null) {
-			synchronized(packages) {
-				packages.clear();
-			}
-		}
+		classLoadersClasses.remove(classLoader);
+		classLoadersPackages.remove(classLoader);
 	}
 	
 	public ClassLoaderDelegate getClassLoaderDelegate(String name) {
