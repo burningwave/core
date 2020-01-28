@@ -156,22 +156,10 @@ public class Classes {
 		}
 		int maxStringLength = currentMaxStringLength;
 		int header = currentCpInfoOffset;
-		return getName(byteSupplier, constantUtf8Values, header, maxStringLength, cpInfoOffsets);
-		
-	}
-
-	private static String getName(
-		Function<Integer, Byte> byteSupplier,
-		String[] constantUtf8Values,
-		int header,
-		int maxStringLength,
-		int[] cpInfoOffsets
-	) {
 		return readUTF8(
 			byteSupplier, 
 			cpInfoOffsets[readUnsignedShort(byteSupplier, header + 2)], new char[maxStringLength], constantUtf8Values, cpInfoOffsets
 		);
-
 	}
 
 	private static String readUTF8(
