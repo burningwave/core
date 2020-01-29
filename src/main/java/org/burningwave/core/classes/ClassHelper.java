@@ -117,6 +117,15 @@ public class ClassHelper implements Component {
 		);
 	}
 	
+	public Class<?> uploadClass(
+		JavaClass javaClass,
+		ClassLoader classLoader
+	) throws ClassNotFoundException {
+		Class<?> cls = defineClass(classLoader, lowLevelObjectsHandler.getDefineClassMethod(classLoader), javaClass.getName(), javaClass.getByteCode());
+		definePackageFor(cls, classLoader, lowLevelObjectsHandler.getDefinePackageMethod(classLoader));
+		return cls;
+	}
+	
 	public Class<?> loadOrUploadClass(
 		JavaClass javaClass,
 		ClassLoader classLoader

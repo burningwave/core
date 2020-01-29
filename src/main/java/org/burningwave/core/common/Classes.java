@@ -76,7 +76,11 @@ public class Classes {
 	}
 	
 	public static String retrieveName(Throwable exc) {
-		return exc.getMessage().replace("/", ".");
+		String className = exc.getMessage();
+		if (className.contains("Could not initialize class ")) {
+			className = className.replace("Could not initialize class ", "");
+		}		
+		return className.replace("/", ".");
 	}
 	
 	public static String retrieveName(ByteBuffer classFileBuffer) {

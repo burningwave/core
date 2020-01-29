@@ -56,9 +56,9 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	public final static String PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY = "memory-class-loader.parent";
 	public final static Map<String, String> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
 		
-	private ClassHelper classHelper;
-	private Map<String, ByteBuffer> notLoadedCompiledClasses;
-	private Map<String, ByteBuffer> loadedCompiledClasses;
+	protected ClassHelper classHelper;
+	protected Map<String, ByteBuffer> notLoadedCompiledClasses;
+	protected Map<String, ByteBuffer> loadedCompiledClasses;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
