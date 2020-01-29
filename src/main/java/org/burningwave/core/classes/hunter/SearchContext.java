@@ -39,7 +39,6 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Context;
 import org.burningwave.core.classes.ClassCriteria;
-import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.common.Classes;
 import org.burningwave.core.function.ThrowingSupplier;
@@ -238,7 +237,7 @@ public class SearchContext<T> implements Component {
 	}
 	
 	protected Class<?> retrieveClass(Class<?> cls) {
-		return ClassHelper.isLoadedBy(cls, pathMemoryClassLoader) ?
+		return Classes.isLoadedBy(cls, pathMemoryClassLoader) ?
 			cls : 
 			loadClass(cls.getName());
 	}
