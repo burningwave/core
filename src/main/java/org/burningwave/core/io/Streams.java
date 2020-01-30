@@ -40,6 +40,7 @@ import java.nio.ByteBuffer;
 import java.util.function.Function;
 
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
@@ -112,5 +113,26 @@ public class Streams {
 			ByteBufferDelegate.flip(duplicated);
 		}		
 		return duplicated;
+	}
+	
+	public static FileSystemItem store(String fileAbsolutePath, ByteBuffer bytes) {
+		ByteBuffer content = shareContent(bytes);
+		File file = new File(fileAbsolutePath);
+		if (!file.exists()) {
+			new File(file.getParent()).mkdirs();
+		} else {
+			file.delete();
+		}
+		ThrowingRunnable.run(() -> {					
+			try(ByteBufferInputStream inputStream = new ByteBufferInputStream(content); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
+				Streams.copy(inputStream, fileOutputStream);
+				//ManagedLogger.Repository.logDebug(this.getClass(), "Class " + getName() + " WRITTEN to "+ Strings.Paths.clean(fileClass.getAbsolutePath()));
+			}
+		});
+		Cache.PATH_FOR_CONTENTS.getOrDefault(
+			file.getAbsolutePath(), () ->
+			content
+		);		
+		return FileSystemItem.ofPath(file.getAbsolutePath());
 	}
 }

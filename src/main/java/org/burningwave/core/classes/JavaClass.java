@@ -28,17 +28,12 @@
  */
 package org.burningwave.core.classes;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.common.Classes;
-import org.burningwave.core.function.ThrowingRunnable;
-import org.burningwave.core.io.ByteBufferInputStream;
-import org.burningwave.core.io.Cache;
-import org.burningwave.core.io.FileOutputStream;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.Streams;
 
@@ -132,26 +127,7 @@ public class JavaClass {
 	}
 	
 	public FileSystemItem storeToClassPath(String classPathFolder) {
-		File packageFolder = new File(classPathFolder + "/" + getPackagePath());
-		if (!packageFolder.exists()) {
-			packageFolder.mkdirs();
-		}
-		File fileClass = new File(packageFolder.getAbsolutePath(), getClassFileName());
-		if (fileClass.exists()) {
-			//ManagedLogger.Repository.logDebug(this.getClass(), "Replacing file "+ Strings.Paths.clean(fileClass.getAbsolutePath()));
-			fileClass.delete();
-		}
-		ThrowingRunnable.run(() -> {					
-			try(ByteBufferInputStream inputStream = new ByteBufferInputStream(getByteCode()); FileOutputStream fileOutputStream = FileOutputStream.create(fileClass, true)) {
-				Streams.copy(inputStream, fileOutputStream);
-				//ManagedLogger.Repository.logDebug(this.getClass(), "Class " + getName() + " WRITTEN to "+ Strings.Paths.clean(fileClass.getAbsolutePath()));
-			}
-		});
-		Cache.PATH_FOR_CONTENTS.getOrDefault(
-			fileClass.getAbsolutePath(), () ->
-			getByteCode()
-		);		
-		return FileSystemItem.ofPath(fileClass.getAbsolutePath());
+		return Streams.store(classPathFolder + "/" + getPath(), getByteCode());
 	}
 	
 	@Override

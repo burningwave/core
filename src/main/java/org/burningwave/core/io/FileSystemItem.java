@@ -582,15 +582,7 @@ public class FileSystemItem implements Component {
 					file.mkdirs();
 				}
 			} else {
-				File file = new File(destFile.getParent().getAbsolutePath());
-				file.mkdirs();
-				file = new File(file.getAbsolutePath(), child.getName());
-				if (file.exists()) {
-					file.delete();
-				}
-				try(InputStream inputStream = child.toInputStream(); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
-					Streams.copy(inputStream, fileOutputStream);
-				}
+				Streams.store(destFile.getParent().getAbsolutePath() + "/" + child.getName(), child.toByteBuffer());
 			}
 		}
 		return FileSystemItem.ofPath(folder);
@@ -600,17 +592,7 @@ public class FileSystemItem implements Component {
 		FileSystemItem destination = null;
 		if (isFile()) {
 			if (filter == null || filter.test(this)) {
-				File file = new File(folder);
-				file.mkdirs();
-				file = new File(file.getAbsolutePath(), getName());
-				if (file.exists()) {
-					file.delete();
-				}
-				try(InputStream inputStream = toInputStream(); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
-					Streams.copy(inputStream, fileOutputStream);
-				}
-				logDebug("Copied file to " + file.getAbsolutePath());
-				destination = FileSystemItem.ofPath(file.getAbsolutePath());
+				destination = Streams.store(folder + "/" + getName(), toByteBuffer());
 			}
 		} else {
 			File file = new File(folder + "/" + getName());
