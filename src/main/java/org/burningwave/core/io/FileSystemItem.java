@@ -148,7 +148,7 @@ public class FileSystemItem implements Component {
 				} catch (FileSystemItemNotFoundException exc) {
 					exists = false;
 					String fileName = realAbsolutePath + (realAbsolutePath.endsWith("/")? "" : "/") + relativePath;
-					logWarn("Exception occurred while calling isArchive on file {}", fileName);
+					logWarn("File {}/{} does not exists", realAbsolutePath, relativePath);
 					return fileName;
 				} 
 			}		
