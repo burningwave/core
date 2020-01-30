@@ -201,6 +201,9 @@ public class Strings {
 			if (path.contains("%20")) {
 				path = path.replace("%20", " ");
 			}
+			if (path.contains(".jar!/")) {
+				path = path.replace(".jar!/", ".jar/");
+			}
 			return path;
 		}
 		

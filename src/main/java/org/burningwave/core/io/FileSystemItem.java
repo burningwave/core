@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.util.AbstractMap;
@@ -69,6 +70,10 @@ public class FileSystemItem implements Component {
 	private FileSystemItem(String realAbsolutePath, String conventionedAbsolutePath) {
 		realAbsolutePath = Strings.Paths.clean(realAbsolutePath);
 		this.absolutePath = new AbstractMap.SimpleEntry<>(realAbsolutePath, conventionedAbsolutePath);
+	}
+	
+	public static FileSystemItem ofPath(URL realAbsolutePath) {
+		return ofPath(Strings.Paths.uniform(realAbsolutePath.getPath()), null);
 	}
 	
 	public static FileSystemItem ofPath(String realAbsolutePath) {
