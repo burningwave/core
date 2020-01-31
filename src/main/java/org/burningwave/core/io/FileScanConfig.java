@@ -65,7 +65,7 @@ public abstract class FileScanConfig<F extends FileScanConfig<F>> {
 		recursiveOnLibraryOfZipEntry = true;
 	}
 	
-	public void init() {
+	void init() {
 		Set<String> temp = new LinkedHashSet<String>(paths);
 		paths.clear();
 		for(String path : temp) {
@@ -157,6 +157,7 @@ public abstract class FileScanConfig<F extends FileScanConfig<F>> {
 		Consumer<Scan.ItemContext<FileInputStream>> fileConsumer,
 		Consumer<Scan.ItemContext<ZipInputStream.Entry>> zipEntryConsumer
 	) {
+		init();
 		Configuration config = Configuration.forPaths(
 			getPaths()
 		).whenFindFileTestAndApply(

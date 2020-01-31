@@ -103,8 +103,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		final ClassFileScanConfig scanConfigCopy = scanConfig.createCopy();
 		searchConfig = searchConfig.createCopy();
 		C context = createContext(scanConfigCopy, searchConfig);
-		searchConfig.init(this.classHelper, context.pathMemoryClassLoader, this.memberFinder);		
-		scanConfigCopy.init();
+		searchConfig.init(this.classHelper, context.pathMemoryClassLoader, this.memberFinder);
 		context.executeSearch(() -> {
 			fileSystemHelper.scan(
 				scanConfigCopy.toScanConfiguration(
