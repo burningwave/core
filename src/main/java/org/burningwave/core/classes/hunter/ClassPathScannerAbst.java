@@ -40,6 +40,7 @@ import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.hunter.SearchContext.InitContext;
+import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemHelper.Scan;

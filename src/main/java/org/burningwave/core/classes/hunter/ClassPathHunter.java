@@ -41,6 +41,7 @@ import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.concurrent.ParallelTasksManager;
+import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemHelper.Scan;
@@ -141,7 +142,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
 			super(fileSystemHelper, streamHelper, initContext);
 			ClassFileScanConfig scanConfig = initContext.getClassFileScanConfiguration();
-			this.tasksManager = ParallelTasksManager.create(scanConfig.maxParallelTasksForUnit);
+			this.tasksManager = ParallelTasksManager.create(scanConfig.getMaxParallelTasksForUnit());
 		}		
 
 		static SearchContext _create(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {

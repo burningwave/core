@@ -42,6 +42,7 @@ import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.common.Classes;
 import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.StreamHelper;
 
@@ -193,7 +194,7 @@ public class SearchContext<T> implements Component {
 						synchronized(this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
 							if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
 								pathMemoryClassLoader.scanPathsAndLoadAllFoundClasses(
-									getPathsToBeScanned(), searchConfig.considerURLClassLoaderPathsAsScanned, classFileScanConfiguration.maxParallelTasksForUnit
+									getPathsToBeScanned(), searchConfig.considerURLClassLoaderPathsAsScanned, classFileScanConfiguration.getMaxParallelTasksForUnit()
 								);
 								this.classLoaderHaveBeenUploadedWithCriteriaPaths = true;
 							}

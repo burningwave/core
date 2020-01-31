@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes.hunter;
+package org.burningwave.core.io;
 
 import java.io.File;
 import java.util.Collection;
@@ -37,13 +37,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.burningwave.core.common.Strings;
-import org.burningwave.core.io.FileCriteria;
-import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileSystemHelper.Scan;
 import org.burningwave.core.io.FileSystemHelper.Scan.Configuration;
-import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.io.ZipEntryCriteria;
-import org.burningwave.core.io.ZipInputStream;
 
 @SuppressWarnings({"unchecked"})
 public abstract class FileScanConfig<F extends FileScanConfig<F>> {
@@ -70,7 +65,7 @@ public abstract class FileScanConfig<F extends FileScanConfig<F>> {
 		recursiveOnLibraryOfZipEntry = true;
 	}
 	
-	void init() {
+	public void init() {
 		Set<String> temp = new LinkedHashSet<String>(paths);
 		paths.clear();
 		for(String path : temp) {
@@ -88,7 +83,7 @@ public abstract class FileScanConfig<F extends FileScanConfig<F>> {
 	abstract Predicate<String> getArchivePredicateForZipEntry();
 	
 
-	F setPaths(Collection<String> newPaths) {
+	public F setPaths(Collection<String> newPaths) {
 		this.paths.clear();
 		this.paths.addAll(newPaths);
 		return (F)this;
@@ -114,8 +109,12 @@ public abstract class FileScanConfig<F extends FileScanConfig<F>> {
 		return (F)this;
 	}
 	
-	Collection<String> getPaths() {
+	public Collection<String> getPaths() {
 		return paths;
+	}
+	
+	public int getMaxParallelTasksForUnit() {
+		return this.maxParallelTasksForUnit;
 	}
 	
 	public F scanStrictlyDirectory() {
@@ -154,7 +153,7 @@ public abstract class FileScanConfig<F extends FileScanConfig<F>> {
 	}
 	
 
-	Configuration toScanConfiguration(
+	public Configuration toScanConfiguration(
 		Consumer<Scan.ItemContext<FileInputStream>> fileConsumer,
 		Consumer<Scan.ItemContext<ZipInputStream.Entry>> zipEntryConsumer
 	) {
