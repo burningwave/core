@@ -34,7 +34,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ResourceFileScanConfig extends FileScanConfig<ResourceFileScanConfig> {
+public class ResourceFileScanConfig extends FileScanConfigAbst<ResourceFileScanConfig> {
 	private final static Predicate<String> ARCHIVE_PREDICATE = name -> 
 		name.endsWith(".jar") ||
 		name.endsWith(".war") ||

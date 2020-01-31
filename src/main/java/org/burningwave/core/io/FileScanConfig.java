@@ -28,182 +28,56 @@
  */
 package org.burningwave.core.io;
 
-import java.io.File;
 import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.burningwave.core.common.Strings;
-import org.burningwave.core.io.FileSystemHelper.Scan;
-import org.burningwave.core.io.FileSystemHelper.Scan.Configuration;
+public class FileScanConfig extends FileScanConfigAbst<FileScanConfig> {
+	private final static Predicate<String> ARCHIVE_PREDICATE = name -> 
+		name.endsWith(".jar") ||
+		name.endsWith(".war") ||
+		name.endsWith(".ear") ||
+		name.endsWith(".zip");
+	private final static Predicate<String> FILE_PREDICATE = ARCHIVE_PREDICATE.negate();
+	private final static Predicate<String> FILE_PREDICATE_FOR_ZIP_ENTRY = FILE_PREDICATE.and(name -> !name.endsWith("/"));
+	
+	private static FileScanConfig create() {
+		return new FileScanConfig();
+	}	
 
-@SuppressWarnings({"unchecked"})
-public abstract class FileScanConfig<F extends FileScanConfig<F>> {
-	
-	PathHelper pathHelper;
-	Collection<String> paths;
-	FileCriteria directoryCriteriaForFileSystem;
-	FileCriteria classCriteriaForFileSystem;
-	FileCriteria libraryCriteriaForFileSystem;
-	ZipEntryCriteria classCriteriaForZipEntry;
-	ZipEntryCriteria libraryCriteriaForZipEntry;
-	int maxParallelTasksForUnit;
-	boolean recursiveOnDirectoryOfFileSystem;
-	boolean recursiveOnLibraryOfZipEntry;
-	
-	FileScanConfig() {
-		paths = ConcurrentHashMap.newKeySet();
-		maxParallelTasksForUnit = Runtime.getRuntime().availableProcessors();
-		classCriteriaForFileSystem = FileCriteria.create().name(getClassPredicateForFileSystem());
-		libraryCriteriaForFileSystem = FileCriteria.create().name(getArchivePredicateForFileSystem());
-		classCriteriaForZipEntry = ZipEntryCriteria.create().name(getClassPredicateForZipEntry());
-		libraryCriteriaForZipEntry = ZipEntryCriteria.create().name(getArchivePredicateForZipEntry());
-		recursiveOnDirectoryOfFileSystem = true;
-		recursiveOnLibraryOfZipEntry = true;
+	@Override
+	FileScanConfig _create() {
+		return create();
 	}
 	
-	void init() {
-		Set<String> temp = new LinkedHashSet<String>(paths);
-		paths.clear();
-		for(String path : temp) {
-			paths.add(Strings.Paths.clean(path));
-		}
-		temp.clear();
+	public static FileScanConfig forPaths(Collection<String> paths) {
+		FileScanConfig criteria = create();
+		criteria.paths.addAll(paths);
+		return criteria;
+	}			
+	
+	public static FileScanConfig forPaths(String... paths) {
+		return forPaths(Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
 	}
-	
-	abstract Predicate<String> getClassPredicateForFileSystem();
-	
-	abstract Predicate<String> getArchivePredicateForFileSystem();
-	
-	abstract Predicate<String> getClassPredicateForZipEntry();
-	
-	abstract Predicate<String> getArchivePredicateForZipEntry();
-	
-
-	public F setPaths(Collection<String> newPaths) {
-		this.paths.clear();
-		this.paths.addAll(newPaths);
-		return (F)this;
-	}
-	
-	public F maxParallelTasksForUnit(int value) {
-		this.maxParallelTasksForUnit = value;
-		return (F)this;
-	}
-	
-	public F recursiveOnDirectoryOfFileSystem(boolean recursiveOnDirectoryOfFileSystem) {
-		this.recursiveOnDirectoryOfFileSystem = recursiveOnDirectoryOfFileSystem;
-		return (F)this;
+	@Override
+	Predicate<String> getClassPredicateForFileSystem() {
+		return FILE_PREDICATE;
 	}
 
-	public F recursiveOnLibraryOfZipEntry(boolean recursiveOnLibraryOfZipEntry) {
-		this.recursiveOnLibraryOfZipEntry = recursiveOnLibraryOfZipEntry;
-		return (F)this;
+	@Override
+	Predicate<String> getArchivePredicateForFileSystem() {
+		return ARCHIVE_PREDICATE;
 	}
-	
-	public F addPaths(Collection<String> paths) {
-		this.paths.addAll(paths);
-		return (F)this;
-	}
-	
-	public Collection<String> getPaths() {
-		return paths;
-	}
-	
-	public int getMaxParallelTasksForUnit() {
-		return this.maxParallelTasksForUnit;
-	}
-	
-	public F scanStrictlyDirectory() {
-		recursiveOnDirectoryOfFileSystem = false;
-		directoryCriteriaForFileSystem = null;
-		return (F)this;
-	}
-	
-	public F scanRecursivelyAllDirectoryThat(Predicate<File> predicate) {
-		if (this.directoryCriteriaForFileSystem == null) {
-			directoryCriteriaForFileSystem = FileCriteria.create();
-		}
-		this.directoryCriteriaForFileSystem.and().allThat(predicate);
-		return (F)this;
-	}
-	
-	public F scanAllClassFileThat(Predicate<File> predicate) {
-		this.classCriteriaForFileSystem.and().allThat(predicate);
-		return (F)this;
-	}
-	
-	public F scanAllLibraryFileThat(Predicate<File> predicate) {
-		this.libraryCriteriaForFileSystem.and().allThat(predicate);
-		return (F)this;
-	}
-	
-	
-	public F loadAllClassFileThat(Predicate<File> predicate) {
-		this.classCriteriaForFileSystem.and().allThat(predicate);
-		return (F)this;
-	}
-	
-	public F loadAllClassZipEntryThat(Predicate<ZipInputStream.Entry> predicate) {
-		this.classCriteriaForZipEntry.and().allThat(predicate);
-		return (F)this;
-	}
-	
 
-	public Configuration toScanConfiguration(
-		Consumer<Scan.ItemContext<FileInputStream>> fileConsumer,
-		Consumer<Scan.ItemContext<ZipInputStream.Entry>> zipEntryConsumer
-	) {
-		init();
-		Configuration config = Configuration.forPaths(
-			getPaths()
-		).whenFindFileTestAndApply(
-			classCriteriaForFileSystem.getPredicateOrTruePredicateIfNull(), 
-			fileConsumer
-		).scanAllZipFileThat(
-			libraryCriteriaForFileSystem.getPredicateOrTruePredicateIfNull()
-		).whenFindZipEntryTestAndApply(
-			classCriteriaForZipEntry.getPredicateOrTruePredicateIfNull(),
-			zipEntryConsumer
-		).setMaxParallelTasks(
-			maxParallelTasksForUnit
-		);
-		if (recursiveOnDirectoryOfFileSystem && directoryCriteriaForFileSystem == null) {
-			config.scanRecursivelyAllDirectory();
-		} else if (recursiveOnDirectoryOfFileSystem && directoryCriteriaForFileSystem != null) {
-			config.scanRecursivelyAllDirectoryThat((basePath, currentPath) -> directoryCriteriaForFileSystem.getPredicateOrTruePredicateIfNull().test(currentPath));
-		} else if (!recursiveOnDirectoryOfFileSystem && directoryCriteriaForFileSystem != null) {
-			config.scanRecursivelyAllDirectoryThat((basePath, currentPath) -> basePath.equals(currentPath) && directoryCriteriaForFileSystem.getPredicateOrTruePredicateIfNull().test(currentPath));
-		} else {
-			config.scanStrictlyDirectory();
-		}
-		if (recursiveOnLibraryOfZipEntry) {
-			config.scanRecursivelyAllZipEntryThat(
-				libraryCriteriaForZipEntry.getPredicateOrTruePredicateIfNull()
-			);
-		}
-		return config;
+	@Override
+	Predicate<String> getClassPredicateForZipEntry() {
+		return FILE_PREDICATE_FOR_ZIP_ENTRY;
 	}
-	
-	abstract F _create();
-	
-	public  F createCopy() {
-		F copy = _create();
-		copy.directoryCriteriaForFileSystem = 
-			this.directoryCriteriaForFileSystem != null?	
-				this.directoryCriteriaForFileSystem.createCopy()
-				:null;
-		copy.classCriteriaForFileSystem = this.classCriteriaForFileSystem.createCopy();
-		copy.classCriteriaForZipEntry = this.classCriteriaForZipEntry.createCopy();
-		copy.libraryCriteriaForFileSystem = this.libraryCriteriaForFileSystem.createCopy();
-		copy.libraryCriteriaForZipEntry = this.libraryCriteriaForZipEntry.createCopy();
-		copy.paths.addAll(this.getPaths());
-		copy.recursiveOnDirectoryOfFileSystem = this.recursiveOnDirectoryOfFileSystem;
-		copy.recursiveOnLibraryOfZipEntry = this.recursiveOnLibraryOfZipEntry;
-		copy.maxParallelTasksForUnit = this.maxParallelTasksForUnit;
-		return copy;
+
+	@Override
+	Predicate<String> getArchivePredicateForZipEntry() {
+		return ARCHIVE_PREDICATE;
 	}
 }
