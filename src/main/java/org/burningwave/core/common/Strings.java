@@ -204,6 +204,12 @@ public class Strings {
 			if (path.contains(".jar!/")) {
 				path = path.replace(".jar!/", ".jar/");
 			}
+			if (path.contains("%5b")) {
+				path = path.replace("%5b", "[");
+			}
+			if (path.contains("%5d")) {
+				path = path.replace("%5d", "]");
+			}
 			return path;
 		}
 		
