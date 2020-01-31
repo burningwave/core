@@ -45,7 +45,7 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.ZipEntryCriteria;
 import org.burningwave.core.io.ZipInputStream;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({"unchecked"})
 public abstract class FileScanConfig<F extends FileScanConfig<F>> {
 	
 	PathHelper pathHelper;
@@ -109,7 +109,7 @@ public abstract class FileScanConfig<F extends FileScanConfig<F>> {
 		return (F)this;
 	}
 	
-	public FileScanConfig addPaths(Collection<String> paths) {
+	public F addPaths(Collection<String> paths) {
 		this.paths.addAll(paths);
 		return (F)this;
 	}
