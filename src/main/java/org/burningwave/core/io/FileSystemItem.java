@@ -74,7 +74,7 @@ public class FileSystemItem implements Component {
 	}
 	
 	public static FileSystemItem ofPath(URL realAbsolutePath) {
-		return ofPath(Strings.Paths.uniform(realAbsolutePath.getPath()), null);
+		return ofPath(realAbsolutePath.getPath());
 	}
 	
 	public static FileSystemItem ofPath(String realAbsolutePath) {
@@ -82,6 +82,7 @@ public class FileSystemItem implements Component {
 	}
 	
 	private static FileSystemItem ofPath(String realAbsolutePath, String conventionedAbsolutePath) {
+		realAbsolutePath = Strings.Paths.uniform(realAbsolutePath);
 		if (realAbsolutePath.contains("..") ||
 			realAbsolutePath.contains(".\\") ||
 			realAbsolutePath.contains(".//")
