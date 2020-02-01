@@ -212,8 +212,6 @@ public class PathHelper implements Component {
 				if (fileSystemItem.exists()) {
 					classPathsFound.add(fileSystemItem.getAbsolutePath());
 					allClassPaths.add(fileSystemItem.getAbsolutePath());
-				} else {
-					
 				}
 			});
 			FileSystemItem.enableLog();
