@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
@@ -216,8 +217,44 @@ public class FileSystemItem implements Component {
 		}
 	}
 	
+	public URL getURL() {
+		try {
+			return new URL(toURL());
+		} catch (MalformedURLException exc) {
+			throw Throwables.toRuntimeException(exc);
+		}
+	}
+	
+	private String toURL() {
+		String url = getConventionedAbsolutePath();
+		String prefix = "file:";
+		if (!url.startsWith("/")) {
+			prefix = prefix + "/";
+		}
+		if (isCompressed()) {
+			prefix = getParentContainer().getExtension() + ":" + prefix;
+		}
+		url = prefix + url.replace(ZIP_PATH_SEPARATOR, "!/");
+		if (url.contains(" ")) {
+			url = url.replace(" ", "%20");
+		}
+		if (url.contains("[")) {
+			url = url.replace("[", "%5b");
+		}
+		if (url.contains("]")) {
+			url = url.replace("]", "%5d");
+		}
+		return url;
+	}
+	
 	public String getAbsolutePath() {
 		return absolutePath.getKey();
+	}
+	
+	public String getExtension() {
+		String extension = getName();
+		extension = extension.substring(extension.lastIndexOf(".") + 1);
+		return extension;
 	}
 	
 	public String getName() {

@@ -83,7 +83,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		return new MemoryClassLoader(parentClassLoader, classHelper);
 	}
 
-	public void addCompiledClass(String name, ByteBuffer byteCode) {
+	public synchronized void addCompiledClass(String name, ByteBuffer byteCode) {
     	if (classHelper.retrieveLoadedClass(this, name) == null) {
     		notLoadedCompiledClasses.put(name, byteCode);
 		} else {
@@ -188,6 +188,13 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     public InputStream getResourceAsStream(String name) {
     	InputStream inputStream = super.getResourceAsStream(name);
     	if (inputStream == null && name.endsWith(".class")) {
+    		inputStream = getLoadedCompiledClassesAsInputStream(name);
+    	}
+    	return inputStream;
+    }
+
+	protected InputStream getLoadedCompiledClassesAsInputStream(String name) {
+		if (name.endsWith(".class")) {
     		ByteBuffer byteCode = loadedCompiledClasses.get(name.substring(0, name.lastIndexOf(".class")).replace("/", "."));
     		if (byteCode != null) {
 	    		return new ByteBufferInputStream(
@@ -195,8 +202,8 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	    		);
     		}
     	}
-    	return inputStream;
-    }
+		return null;
+	}
     
     
     protected void addLoadedCompiledClass(String className, ByteBuffer byteCode) {
@@ -247,7 +254,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
         	}
 		} else {
 			logDebug("Compiled class " + className + " not found");
-        }
+		}
 		if (cls != null) {
 			return cls;
 		} else {
@@ -314,7 +321,9 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	public void close() {
 		clear();
 		classHelper.unregister(this);
+		notLoadedCompiledClasses.clear();
 		notLoadedCompiledClasses = null;
+		loadedCompiledClasses.clear();
 		loadedCompiledClasses = null;
 	}
 }

@@ -198,6 +198,7 @@ public class FileSystemHelper implements Component {
 	        	}
 			}
 			Optional.ofNullable(configuration.afterScan).ifPresent(consumer -> consumer.accept(context));
+			context.waitForTasksEnding();
 		}
 	}
 	
