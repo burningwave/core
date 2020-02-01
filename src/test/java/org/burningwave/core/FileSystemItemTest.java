@@ -1,5 +1,7 @@
 package org.burningwave.core;
 
+import java.net.URL;
+
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.io.FileSystemItem;
 import org.junit.jupiter.api.Tag;
@@ -176,5 +178,18 @@ public class FileSystemItemTest extends BaseTest {
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip"
 		).copyAllChildrenTo(System.getProperty("user.home") + "/Desktop/bw-tests").getAllChildren());
+	}
+	
+	@Test
+	public void toUrlTestOne() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		testNotNull(() -> {
+			URL url = FileSystemItem.ofPath(
+				basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
+			).getURL();
+			logDebug(url.toString());
+			return url;
+		});
 	}
 }
