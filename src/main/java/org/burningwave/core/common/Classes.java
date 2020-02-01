@@ -79,7 +79,10 @@ public class Classes {
 		String className = exc.getMessage();
 		if (className.contains("Could not initialize class ")) {
 			className = className.replace("Could not initialize class ", "");
-		}		
+		}
+		if (className.contains("NoClassDefFoundError: ")) {
+			className = className.substring(className.lastIndexOf("NoClassDefFoundError: ") + "NoClassDefFoundError: ".length());
+		}
 		return className.replace("/", ".");
 	}
 	
