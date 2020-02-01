@@ -184,33 +184,33 @@ public class Strings {
 		}
 		
 		
-		public static String uniform(String path) {
-			path = removeInitialPathElements(path, 
+		public static String convertFromURLPath(String uRLPath) {
+			uRLPath = removeInitialPathElements(uRLPath, 
 					"file:", 
 					//Patch for tomcat 7
 					"!");
-			if (path.contains("\\")) {
-				path = path.replace("\\", "/");
+			if (uRLPath.contains("\\")) {
+				uRLPath = uRLPath.replace("\\", "/");
 			}		
-			if (!path.startsWith("/")) {
-				path = "/" + path;
+			if (!uRLPath.startsWith("/")) {
+				uRLPath = "/" + uRLPath;
 			}
-			if (!path.endsWith("/")) {
-				path = path + "/";
+			if (!uRLPath.endsWith("/")) {
+				uRLPath = uRLPath + "/";
 			}
-			if (path.contains("%20")) {
-				path = path.replace("%20", " ");
+			if (uRLPath.contains("%20")) {
+				uRLPath = uRLPath.replace("%20", " ");
 			}
-			if (path.contains(".jar!/")) {
-				path = path.replace(".jar!/", ".jar/");
+			if (uRLPath.contains(".jar!/")) {
+				uRLPath = uRLPath.replace(".jar!/", ".jar/");
 			}
-			if (path.contains("%5b")) {
-				path = path.replace("%5b", "[");
+			if (uRLPath.contains("%5b")) {
+				uRLPath = uRLPath.replace("%5b", "[");
 			}
-			if (path.contains("%5d")) {
-				path = path.replace("%5d", "]");
+			if (uRLPath.contains("%5d")) {
+				uRLPath = uRLPath.replace("%5d", "]");
 			}
-			return path;
+			return uRLPath;
 		}
 		
 		public static String removeInitialPathElements(String path, String... toRemove) {

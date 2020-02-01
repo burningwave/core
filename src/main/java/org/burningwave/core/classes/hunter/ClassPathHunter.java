@@ -96,13 +96,13 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		ClassCriteria.TestContext criteriaTestContext,
 		Scan.ItemContext<FileInputStream> scanItemContext,
 		JavaClass javaClass
-	) {
-		String classPath = Strings.Paths.uniform(scanItemContext.getInput().getFile().getAbsolutePath());
+	) {	
+		String classPath = Strings.Paths.clean(scanItemContext.getInput().getFile().getAbsolutePath());
 		classPath = classPath.substring(
 			0, classPath.lastIndexOf(
-				javaClass.getPath(), classPath.length() -1
+				javaClass.getPath(), classPath.length()
 			)
-		-1);	
+		);	
 		context.addItemFound(
 			scanItemContext.getBasePathAsString(),
 			classPath,
