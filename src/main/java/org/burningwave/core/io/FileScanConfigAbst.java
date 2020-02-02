@@ -45,23 +45,23 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	
 	PathHelper pathHelper;
 	Collection<String> paths;
-	FileCriteria directoryCriteriaForFileSystem;
-	FileCriteria classCriteriaForFileSystem;
-	FileCriteria libraryCriteriaForFileSystem;
-	ZipEntryCriteria classCriteriaForZipEntry;
+	FileCriteria directoryCriteriaForFileSystemEntry;
+	FileCriteria fileCriteriaForFileSystemEntry;
+	FileCriteria libraryCriteriaForFileSystemEntry;
+	ZipEntryCriteria fileCriteriaForZipEntry;
 	ZipEntryCriteria libraryCriteriaForZipEntry;
 	int maxParallelTasksForUnit;
-	boolean recursiveOnDirectoryOfFileSystem;
+	boolean recursiveOnDirectoryOfFileSystemEntry;
 	boolean recursiveOnLibraryOfZipEntry;
 	
 	FileScanConfigAbst() {
 		paths = ConcurrentHashMap.newKeySet();
 		maxParallelTasksForUnit = Runtime.getRuntime().availableProcessors();
-		classCriteriaForFileSystem = FileCriteria.create().name(getClassPredicateForFileSystem());
-		libraryCriteriaForFileSystem = FileCriteria.create().name(getArchivePredicateForFileSystem());
-		classCriteriaForZipEntry = ZipEntryCriteria.create().name(getClassPredicateForZipEntry());
+		fileCriteriaForFileSystemEntry = FileCriteria.create().name(getFilePredicateForFileSystemEntry());
+		libraryCriteriaForFileSystemEntry = FileCriteria.create().name(getArchivePredicateForFileSystemEntry());
+		fileCriteriaForZipEntry = ZipEntryCriteria.create().name(getFilePredicateForZipEntry());
 		libraryCriteriaForZipEntry = ZipEntryCriteria.create().name(getArchivePredicateForZipEntry());
-		recursiveOnDirectoryOfFileSystem = true;
+		recursiveOnDirectoryOfFileSystemEntry = true;
 		recursiveOnLibraryOfZipEntry = true;
 	}
 	
@@ -74,11 +74,11 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		temp.clear();
 	}
 	
-	abstract Predicate<String> getClassPredicateForFileSystem();
+	abstract Predicate<String> getFilePredicateForFileSystemEntry();
 	
-	abstract Predicate<String> getArchivePredicateForFileSystem();
+	abstract Predicate<String> getArchivePredicateForFileSystemEntry();
 	
-	abstract Predicate<String> getClassPredicateForZipEntry();
+	abstract Predicate<String> getFilePredicateForZipEntry();
 	
 	abstract Predicate<String> getArchivePredicateForZipEntry();
 	
@@ -94,8 +94,8 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return (F)this;
 	}
 	
-	public F recursiveOnDirectoryOfFileSystem(boolean recursiveOnDirectoryOfFileSystem) {
-		this.recursiveOnDirectoryOfFileSystem = recursiveOnDirectoryOfFileSystem;
+	public F recursiveOnDirectoryOfFileSystemEntry(boolean recursiveOnDirectoryOfFileSystem) {
+		this.recursiveOnDirectoryOfFileSystemEntry = recursiveOnDirectoryOfFileSystem;
 		return (F)this;
 	}
 
@@ -118,37 +118,37 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	}
 	
 	public F scanStrictlyDirectory() {
-		recursiveOnDirectoryOfFileSystem = false;
-		directoryCriteriaForFileSystem = null;
+		recursiveOnDirectoryOfFileSystemEntry = false;
+		directoryCriteriaForFileSystemEntry = null;
 		return (F)this;
 	}
 	
 	public F scanRecursivelyAllDirectoryThat(Predicate<File> predicate) {
-		if (this.directoryCriteriaForFileSystem == null) {
-			directoryCriteriaForFileSystem = FileCriteria.create();
+		if (this.directoryCriteriaForFileSystemEntry == null) {
+			directoryCriteriaForFileSystemEntry = FileCriteria.create();
 		}
-		this.directoryCriteriaForFileSystem.and().allThat(predicate);
+		this.directoryCriteriaForFileSystemEntry.and().allThat(predicate);
 		return (F)this;
 	}
 	
-	public F scanAllClassFileThat(Predicate<File> predicate) {
-		this.classCriteriaForFileSystem.and().allThat(predicate);
+	public F scanAllFileThat(Predicate<File> predicate) {
+		this.fileCriteriaForFileSystemEntry.and().allThat(predicate);
 		return (F)this;
 	}
 	
 	public F scanAllLibraryFileThat(Predicate<File> predicate) {
-		this.libraryCriteriaForFileSystem.and().allThat(predicate);
+		this.libraryCriteriaForFileSystemEntry.and().allThat(predicate);
 		return (F)this;
 	}
 	
 	
-	public F loadAllClassFileThat(Predicate<File> predicate) {
-		this.classCriteriaForFileSystem.and().allThat(predicate);
+	public F loadAllFileThat(Predicate<File> predicate) {
+		this.fileCriteriaForFileSystemEntry.and().allThat(predicate);
 		return (F)this;
 	}
 	
-	public F loadAllClassZipEntryThat(Predicate<ZipInputStream.Entry> predicate) {
-		this.classCriteriaForZipEntry.and().allThat(predicate);
+	public F loadAllZipEntryThat(Predicate<ZipInputStream.Entry> predicate) {
+		this.fileCriteriaForZipEntry.and().allThat(predicate);
 		return (F)this;
 	}
 	
@@ -161,22 +161,22 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		Configuration config = Configuration.forPaths(
 			getPaths()
 		).whenFindFileTestAndApply(
-			classCriteriaForFileSystem.getPredicateOrTruePredicateIfNull(), 
+			fileCriteriaForFileSystemEntry.getPredicateOrTruePredicateIfNull(), 
 			fileConsumer
 		).scanAllZipFileThat(
-			libraryCriteriaForFileSystem.getPredicateOrTruePredicateIfNull()
+			libraryCriteriaForFileSystemEntry.getPredicateOrTruePredicateIfNull()
 		).whenFindZipEntryTestAndApply(
-			classCriteriaForZipEntry.getPredicateOrTruePredicateIfNull(),
+			fileCriteriaForZipEntry.getPredicateOrTruePredicateIfNull(),
 			zipEntryConsumer
 		).setMaxParallelTasks(
 			maxParallelTasksForUnit
 		);
-		if (recursiveOnDirectoryOfFileSystem && directoryCriteriaForFileSystem == null) {
+		if (recursiveOnDirectoryOfFileSystemEntry && directoryCriteriaForFileSystemEntry == null) {
 			config.scanRecursivelyAllDirectory();
-		} else if (recursiveOnDirectoryOfFileSystem && directoryCriteriaForFileSystem != null) {
-			config.scanRecursivelyAllDirectoryThat((basePath, currentPath) -> directoryCriteriaForFileSystem.getPredicateOrTruePredicateIfNull().test(currentPath));
-		} else if (!recursiveOnDirectoryOfFileSystem && directoryCriteriaForFileSystem != null) {
-			config.scanRecursivelyAllDirectoryThat((basePath, currentPath) -> basePath.equals(currentPath) && directoryCriteriaForFileSystem.getPredicateOrTruePredicateIfNull().test(currentPath));
+		} else if (recursiveOnDirectoryOfFileSystemEntry && directoryCriteriaForFileSystemEntry != null) {
+			config.scanRecursivelyAllDirectoryThat((basePath, currentPath) -> directoryCriteriaForFileSystemEntry.getPredicateOrTruePredicateIfNull().test(currentPath));
+		} else if (!recursiveOnDirectoryOfFileSystemEntry && directoryCriteriaForFileSystemEntry != null) {
+			config.scanRecursivelyAllDirectoryThat((basePath, currentPath) -> basePath.equals(currentPath) && directoryCriteriaForFileSystemEntry.getPredicateOrTruePredicateIfNull().test(currentPath));
 		} else {
 			config.scanStrictlyDirectory();
 		}
@@ -192,16 +192,16 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	
 	public  F createCopy() {
 		F copy = _create();
-		copy.directoryCriteriaForFileSystem = 
-			this.directoryCriteriaForFileSystem != null?	
-				this.directoryCriteriaForFileSystem.createCopy()
+		copy.directoryCriteriaForFileSystemEntry = 
+			this.directoryCriteriaForFileSystemEntry != null?	
+				this.directoryCriteriaForFileSystemEntry.createCopy()
 				:null;
-		copy.classCriteriaForFileSystem = this.classCriteriaForFileSystem.createCopy();
-		copy.classCriteriaForZipEntry = this.classCriteriaForZipEntry.createCopy();
-		copy.libraryCriteriaForFileSystem = this.libraryCriteriaForFileSystem.createCopy();
+		copy.fileCriteriaForFileSystemEntry = this.fileCriteriaForFileSystemEntry.createCopy();
+		copy.fileCriteriaForZipEntry = this.fileCriteriaForZipEntry.createCopy();
+		copy.libraryCriteriaForFileSystemEntry = this.libraryCriteriaForFileSystemEntry.createCopy();
 		copy.libraryCriteriaForZipEntry = this.libraryCriteriaForZipEntry.createCopy();
 		copy.paths.addAll(this.getPaths());
-		copy.recursiveOnDirectoryOfFileSystem = this.recursiveOnDirectoryOfFileSystem;
+		copy.recursiveOnDirectoryOfFileSystemEntry = this.recursiveOnDirectoryOfFileSystemEntry;
 		copy.recursiveOnLibraryOfZipEntry = this.recursiveOnLibraryOfZipEntry;
 		copy.maxParallelTasksForUnit = this.maxParallelTasksForUnit;
 		return copy;

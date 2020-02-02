@@ -61,17 +61,17 @@ public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig>
 		return forPaths(Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
 	}
 	@Override
-	Predicate<String> getClassPredicateForFileSystem() {
+	Predicate<String> getFilePredicateForFileSystemEntry() {
 		return CLASS_PREDICATE;
 	}
 
 	@Override
-	Predicate<String> getArchivePredicateForFileSystem() {
+	Predicate<String> getArchivePredicateForFileSystemEntry() {
 		return ARCHIVE_PREDICATE;
 	}
 
 	@Override
-	Predicate<String> getClassPredicateForZipEntry() {
+	Predicate<String> getFilePredicateForZipEntry() {
 		return CLASS_PREDICATE;
 	}
 

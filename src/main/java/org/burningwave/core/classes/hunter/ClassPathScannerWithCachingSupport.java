@@ -210,7 +210,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 			}
 			if (filePredicate != null) {
 				classFileScanConfiguration.scanAllLibraryFileThat(filePredicate);
-				classFileScanConfiguration.scanAllClassFileThat(filePredicate);
+				classFileScanConfiguration.scanAllFileThat(filePredicate);
 			}
 		}
 		if (!checkPathsResult.getContainedPaths().isEmpty()) {
