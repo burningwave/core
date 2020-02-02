@@ -209,7 +209,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 				}
 			}
 			if (filePredicate != null) {
-				classFileScanConfiguration.scanAllLibraryFileThat(filePredicate);
+				classFileScanConfiguration.scanAllArchiveFileThat(filePredicate);
 				classFileScanConfiguration.scanAllFileThat(filePredicate);
 			}
 		}

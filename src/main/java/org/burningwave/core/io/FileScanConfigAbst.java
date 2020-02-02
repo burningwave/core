@@ -47,22 +47,22 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	Collection<String> paths;
 	FileCriteria directoryCriteriaForFileSystemEntry;
 	FileCriteria fileCriteriaForFileSystemEntry;
-	FileCriteria libraryCriteriaForFileSystemEntry;
+	FileCriteria archiveCriteriaForFileSystemEntry;
 	ZipEntryCriteria fileCriteriaForZipEntry;
-	ZipEntryCriteria libraryCriteriaForZipEntry;
+	ZipEntryCriteria archiveCriteriaForZipEntry;
 	int maxParallelTasksForUnit;
 	boolean recursiveOnDirectoryOfFileSystemEntry;
-	boolean recursiveOnLibraryOfZipEntry;
+	boolean recursiveOnArchiveOfZipEntry;
 	
 	FileScanConfigAbst() {
 		paths = ConcurrentHashMap.newKeySet();
 		maxParallelTasksForUnit = Runtime.getRuntime().availableProcessors();
 		fileCriteriaForFileSystemEntry = FileCriteria.create().name(getFilePredicateForFileSystemEntry());
-		libraryCriteriaForFileSystemEntry = FileCriteria.create().name(getArchivePredicateForFileSystemEntry());
+		archiveCriteriaForFileSystemEntry = FileCriteria.create().name(getArchivePredicateForFileSystemEntry());
 		fileCriteriaForZipEntry = ZipEntryCriteria.create().name(getFilePredicateForZipEntry());
-		libraryCriteriaForZipEntry = ZipEntryCriteria.create().name(getArchivePredicateForZipEntry());
+		archiveCriteriaForZipEntry = ZipEntryCriteria.create().name(getArchivePredicateForZipEntry());
 		recursiveOnDirectoryOfFileSystemEntry = true;
-		recursiveOnLibraryOfZipEntry = true;
+		recursiveOnArchiveOfZipEntry = true;
 	}
 	
 	void init() {
@@ -99,8 +99,8 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return (F)this;
 	}
 
-	public F recursiveOnLibraryOfZipEntry(boolean recursiveOnLibraryOfZipEntry) {
-		this.recursiveOnLibraryOfZipEntry = recursiveOnLibraryOfZipEntry;
+	public F recursiveOnArchiveOfZipEntry(boolean recursiveOnArchiveOfZipEntry) {
+		this.recursiveOnArchiveOfZipEntry = recursiveOnArchiveOfZipEntry;
 		return (F)this;
 	}
 	
@@ -136,8 +136,8 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return (F)this;
 	}
 	
-	public F scanAllLibraryFileThat(Predicate<File> predicate) {
-		this.libraryCriteriaForFileSystemEntry.and().allThat(predicate);
+	public F scanAllArchiveFileThat(Predicate<File> predicate) {
+		this.archiveCriteriaForFileSystemEntry.and().allThat(predicate);
 		return (F)this;
 	}
 	
@@ -164,7 +164,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 			fileCriteriaForFileSystemEntry.getPredicateOrTruePredicateIfNull(), 
 			fileConsumer
 		).scanAllZipFileThat(
-			libraryCriteriaForFileSystemEntry.getPredicateOrTruePredicateIfNull()
+			archiveCriteriaForFileSystemEntry.getPredicateOrTruePredicateIfNull()
 		).whenFindZipEntryTestAndApply(
 			fileCriteriaForZipEntry.getPredicateOrTruePredicateIfNull(),
 			zipEntryConsumer
@@ -180,9 +180,9 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		} else {
 			config.scanStrictlyDirectory();
 		}
-		if (recursiveOnLibraryOfZipEntry) {
+		if (recursiveOnArchiveOfZipEntry) {
 			config.scanRecursivelyAllZipEntryThat(
-				libraryCriteriaForZipEntry.getPredicateOrTruePredicateIfNull()
+				archiveCriteriaForZipEntry.getPredicateOrTruePredicateIfNull()
 			);
 		}
 		return config;
@@ -198,11 +198,11 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 				:null;
 		copy.fileCriteriaForFileSystemEntry = this.fileCriteriaForFileSystemEntry.createCopy();
 		copy.fileCriteriaForZipEntry = this.fileCriteriaForZipEntry.createCopy();
-		copy.libraryCriteriaForFileSystemEntry = this.libraryCriteriaForFileSystemEntry.createCopy();
-		copy.libraryCriteriaForZipEntry = this.libraryCriteriaForZipEntry.createCopy();
+		copy.archiveCriteriaForFileSystemEntry = this.archiveCriteriaForFileSystemEntry.createCopy();
+		copy.archiveCriteriaForZipEntry = this.archiveCriteriaForZipEntry.createCopy();
 		copy.paths.addAll(this.getPaths());
 		copy.recursiveOnDirectoryOfFileSystemEntry = this.recursiveOnDirectoryOfFileSystemEntry;
-		copy.recursiveOnLibraryOfZipEntry = this.recursiveOnLibraryOfZipEntry;
+		copy.recursiveOnArchiveOfZipEntry = this.recursiveOnArchiveOfZipEntry;
 		copy.maxParallelTasksForUnit = this.maxParallelTasksForUnit;
 		return copy;
 	}
