@@ -49,11 +49,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.Throwables;
-import org.burningwave.core.Component;
+import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.common.Strings;
 import org.burningwave.core.io.ZipInputStream.Entry;
 
-public class FileSystemItem implements Component {
+public class FileSystemItem implements ManagedLogger {
 	private final static String ZIP_PATH_SEPARATOR = "//"; 
 		
 	private Map.Entry<String, String> absolutePath;

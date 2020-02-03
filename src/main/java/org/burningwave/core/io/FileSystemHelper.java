@@ -163,6 +163,10 @@ public class FileSystemHelper implements Component {
 			return file.delete();
 		}
 	}
+	
+	public void delete(String absolutePath) {
+		delete(new File(absolutePath));	
+	}
 
 	public boolean deleteFolder(File folder) {
 	    File[] files = folder.listFiles();
