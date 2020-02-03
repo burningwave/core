@@ -644,11 +644,11 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public static void enableLog() {
-		Repository.enableLogging(FileSystemItem.class);
+		ManagedLogger.Repository.getInstance().enableLogging(FileSystemItem.class);
 	}
 	
 	public static void disableLog() {
-		Repository.disableLogging(FileSystemItem.class);
+		ManagedLogger.Repository.getInstance().disableLogging(FileSystemItem.class);
 	}
 	
 	@Override

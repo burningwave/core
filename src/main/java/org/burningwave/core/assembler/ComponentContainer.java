@@ -89,7 +89,7 @@ public class ComponentContainer implements ComponentSupplier {
 			componentContainer.launchInit();
 			return componentContainer;
 		} catch (Throwable exc){
-			ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
+			ManagedLogger.Repository.getInstance().logError(ComponentContainer.class, "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
 			throw Throwables.toRuntimeException(exc);
 		}
 	}
@@ -143,7 +143,7 @@ public class ComponentContainer implements ComponentSupplier {
 					try {
 						components.wait();
 					} catch (InterruptedException exc) {
-						ManagedLogger.Repository.logError(ComponentContainer.class, "Exception while waiting " + ComponentContainer.class.getSimpleName() + " initializaziont", exc);
+						ManagedLogger.Repository.getInstance().logError(ComponentContainer.class, "Exception while waiting " + ComponentContainer.class.getSimpleName() + " initializaziont", exc);
 						throw Throwables.toRuntimeException(exc);
 					}
 				}

@@ -63,7 +63,7 @@ public class Streams {
 		try {
 			return isArchive(bytes.getInt());
 		} catch (BufferUnderflowException exc) {
-			ManagedLogger.Repository.logError(Streams.class, "Exception occurred while calling isArchive", exc);
+			ManagedLogger.Repository.getInstance().logError(Streams.class, "Exception occurred while calling isArchive", exc);
 			return false;
 		}
 	}

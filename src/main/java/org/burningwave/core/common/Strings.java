@@ -159,7 +159,7 @@ public class Strings {
 					}					
 					foundString.add(matcher.group(i));
 				} catch (IndexOutOfBoundsException exc) {
-					ManagedLogger.Repository.logDebug(Strings.class, "group " + i + " not found on string \"" + target + "\" using pattern " + pattern.pattern());
+					ManagedLogger.Repository.getInstance().logDebug(Strings.class, "group " + i + " not found on string \"" + target + "\" using pattern " + pattern.pattern());
 				}
 			}
 		}
