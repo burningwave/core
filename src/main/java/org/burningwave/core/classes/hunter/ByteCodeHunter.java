@@ -36,12 +36,10 @@ import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberFinder;
-import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemHelper.Scan;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
-import org.burningwave.core.io.ZipInputStream;
 
 public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass, SearchContext<JavaClass>, ByteCodeHunter.SearchResult> {
 	
@@ -94,7 +92,7 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 	void retrieveItemFromFileInputStream(
 		SearchContext<JavaClass> context, 
 		ClassCriteria.TestContext criteriaTestContext,
-		Scan.ItemContext<FileInputStream> scanItemContext,
+		Scan.ItemContext scanItemContext,
 		JavaClass javaClass
 	) {
 		context.addItemFound(scanItemContext.getBasePathAsString(), scanItemContext.getInput().getAbsolutePath(), javaClass);
@@ -105,7 +103,7 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 	void retrieveItemFromZipEntry(
 		SearchContext<JavaClass> context,
 		ClassCriteria.TestContext criteriaTestContext,
-		Scan.ItemContext<ZipInputStream.Entry> scanItemContext,
+		Scan.ItemContext scanItemContext,
 		JavaClass javaClass
 	) {
 		context.addItemFound(scanItemContext.getBasePathAsString(), scanItemContext.getInput().getAbsolutePath(), javaClass);

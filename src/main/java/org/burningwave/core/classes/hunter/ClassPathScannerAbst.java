@@ -41,12 +41,10 @@ import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.hunter.SearchContext.InitContext;
 import org.burningwave.core.io.ClassFileScanConfig;
-import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemHelper.Scan;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
-import org.burningwave.core.io.ZipInputStream;
 
 
 abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends SearchResult<I>> implements Component {
@@ -141,7 +139,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	}
 
 	
-	Consumer<Scan.ItemContext<FileInputStream>> getFileSystemEntryTransformer(
+	Consumer<Scan.ItemContext> getFileSystemEntryTransformer(
 		C context
 	) {
 		return (scannedItemContext) -> {
@@ -156,7 +154,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	}
 	
 	
-	Consumer<Scan.ItemContext<ZipInputStream.Entry>> getZipEntryTransformer(
+	Consumer<Scan.ItemContext> getZipEntryTransformer(
 		C context
 	) {
 		return (scannedItemContext) -> {
@@ -174,10 +172,10 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		return context.testCriteria(context.loadClass(javaClass.getName()));
 	}
 		
-	abstract void retrieveItemFromFileInputStream(C Context,ClassCriteria.TestContext criteriaTestContext, Scan.ItemContext<FileInputStream> scannedItem, JavaClass javaClass);
+	abstract void retrieveItemFromFileInputStream(C Context,ClassCriteria.TestContext criteriaTestContext, Scan.ItemContext scannedItem, JavaClass javaClass);
 	
 	
-	abstract void retrieveItemFromZipEntry(C Context, ClassCriteria.TestContext criteriaTestContext, Scan.ItemContext<ZipInputStream.Entry> zipEntry, JavaClass javaClass);
+	abstract void retrieveItemFromZipEntry(C Context, ClassCriteria.TestContext criteriaTestContext, Scan.ItemContext zipEntry, JavaClass javaClass);
 	
 	
 	@Override

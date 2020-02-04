@@ -46,12 +46,10 @@ import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberCriteria;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.io.ClassFileScanConfig;
-import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemHelper.Scan;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
-import org.burningwave.core.io.ZipInputStream;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
 
 
@@ -137,7 +135,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	void retrieveItemFromFileInputStream(
 		ClassHunter.SearchContext context, 
 		ClassCriteria.TestContext criteriaTestContext,
-		Scan.ItemContext<FileInputStream> scanItemContext, 
+		Scan.ItemContext scanItemContext, 
 		JavaClass javaClass
 	) {
 		context.addItemFound(
@@ -149,7 +147,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	}
 	
 	@Override
-	void retrieveItemFromZipEntry(ClassHunter.SearchContext context, ClassCriteria.TestContext criteriaTestContext, Scan.ItemContext<ZipInputStream.Entry> scanItemContext, JavaClass javaClass) {
+	void retrieveItemFromZipEntry(ClassHunter.SearchContext context, ClassCriteria.TestContext criteriaTestContext, Scan.ItemContext scanItemContext, JavaClass javaClass) {
 		context.addItemFound(
 			scanItemContext.getBasePathAsString(),
 			scanItemContext.getInput().getAbsolutePath(),

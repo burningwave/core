@@ -90,9 +90,9 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 		return create(file.getAbsolutePath(), FileInputStream.create(file));
 	}	
 	
-	public static ZipInputStream create(String name, ByteBuffer zipInputStreamAsBytes) {
+	public static ZipInputStream create(String absolutePath, ByteBuffer zipInputStreamAsBytes) {
 		ByteBufferInputStream iS = new ByteBufferInputStream(zipInputStreamAsBytes);
-		ZipInputStream zipInputStream = new ZipInputStream(name, iS);
+		ZipInputStream zipInputStream = new ZipInputStream(absolutePath, iS);
 		zipInputStream.byteBufferInputStream = iS;
 		return zipInputStream;
 	}

@@ -152,10 +152,15 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return (F)this;
 	}
 	
-
 	public Configuration toScanConfiguration(
-		Consumer<Scan.ItemContext<FileInputStream>> fileConsumer,
-		Consumer<Scan.ItemContext<ZipInputStream.Entry>> zipEntryConsumer
+		Consumer<Scan.ItemContext> itemConsumer
+	) {
+		return toScanConfiguration(itemConsumer, itemConsumer);
+	}
+	
+	public Configuration toScanConfiguration(
+		Consumer<Scan.ItemContext> fileConsumer,
+		Consumer<Scan.ItemContext> zipEntryConsumer
 	) {
 		init();
 		Configuration config = Configuration.forPaths(
