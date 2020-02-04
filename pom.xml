@@ -256,7 +256,7 @@
 		<url>https://github.com/burningwave/core</url>
 		<connection>scm:git:git://github.com/burningwave/core.git</connection>
 		<developerConnection>scm:git:git@github.com:burningwave/core.git</developerConnection>
-		<tag>core-4.0.8.1</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<profiles>
