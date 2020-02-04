@@ -36,7 +36,7 @@ public class FileSystemHelperTest extends BaseTest {
 		).whenFindFileTestAndApply(
 			file -> file.getName().endsWith(".class"), 
 			scanItemContext -> {
-				String fileName = scanItemContext.getInput().getAbsolutePath();
+				String fileName = scanItemContext.getScannedItem().getAbsolutePath();
 				classFileFounds.add(fileName);
 				allClassesByteCodeFounds.add(fileName);
 			}
@@ -53,7 +53,7 @@ public class FileSystemHelperTest extends BaseTest {
 		).whenFindZipEntryTestAndApply(
 			zipEntry -> zipEntry.getName().endsWith(".class"),  
 			scanItemContext -> {
-				String fileName = scanItemContext.getInput().getAbsolutePath();
+				String fileName = scanItemContext.getScannedItem().getAbsolutePath();
 				classZipEntryFounds.add(fileName);
 				allClassesByteCodeFounds.add(fileName);
 			}
@@ -78,7 +78,7 @@ public class FileSystemHelperTest extends BaseTest {
 			componentSupplier.getPathHelper().getAllClassPaths()
 		).scanRecursivelyAllDirectoryAndApplyBefore(
 			scanItemContext -> {
-				String fileName = scanItemContext.getInput().getAbsolutePath();
+				String fileName = scanItemContext.getScannedItem().getAbsolutePath();
 				allFilesFound.add(fileName);
 			}
 		).setMaxParallelTasks(8);
@@ -99,7 +99,7 @@ public class FileSystemHelperTest extends BaseTest {
 			componentSupplier.getPathHelper().getAllClassPaths()
 		).scanStrictlyDirectoryAndApplyBefore(
 			scanItemContext -> {
-				String fileName = scanItemContext.getInput().getAbsolutePath();
+				String fileName = scanItemContext.getScannedItem().getAbsolutePath();
 				allFilesFound.add(fileName);
 			}
 		).setMaxParallelTasks(8);
@@ -119,7 +119,7 @@ public class FileSystemHelperTest extends BaseTest {
 			componentSupplier.getPathHelper().getAllClassPaths()
 		).scanStrictlyDirectoryAndApplyBefore(
 			scanItemContext -> {
-				String fileName = scanItemContext.getInput().getAbsolutePath();
+				String fileName = scanItemContext.getScannedItem().getAbsolutePath();
 				allFilesFound.add(fileName);
 			}
 		).optimizePaths(
@@ -143,7 +143,7 @@ public class FileSystemHelperTest extends BaseTest {
 			file.getName().endsWith(".zip")
 		).whenFindZipEntryApply(  
 			scanItemContext -> {
-				String fileName = scanItemContext.getInput().getAbsolutePath();
+				String fileName = scanItemContext.getScannedItem().getAbsolutePath();
 				allFilesFound.add(fileName);
 			}
 		).setMaxParallelTasks(8);
@@ -165,7 +165,7 @@ public class FileSystemHelperTest extends BaseTest {
 			file.getName().endsWith(".zip")
 		).whenFindZipEntryApply(  
 			scanItemContext -> {
-				String fileName = scanItemContext.getInput().getAbsolutePath();
+				String fileName = scanItemContext.getScannedItem().getAbsolutePath();
 				allFilesFound.add(fileName);
 			}
 		).scanRecursivelyAllZipEntryThat(zipEntry -> 

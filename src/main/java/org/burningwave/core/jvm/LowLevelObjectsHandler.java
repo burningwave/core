@@ -64,7 +64,6 @@ import org.burningwave.core.iterable.Properties;
 
 import sun.misc.Unsafe;
 
-@SuppressWarnings("restriction")
 public class LowLevelObjectsHandler implements Component {
 	public final static String SUPPLIER_IMPORTS_KEY_SUFFIX = ".supplier.imports";
 	private Long LOADED_PACKAGES_MAP_MEMORY_OFFSET;

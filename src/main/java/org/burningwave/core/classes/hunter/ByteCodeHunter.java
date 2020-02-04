@@ -95,7 +95,7 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 		Scan.ItemContext scanItemContext,
 		JavaClass javaClass
 	) {
-		context.addItemFound(scanItemContext.getBasePathAsString(), scanItemContext.getInput().getAbsolutePath(), javaClass);
+		context.addItemFound(scanItemContext.getBasePathAsString(), scanItemContext.getScannedItem().getAbsolutePath(), javaClass);
 	}
 
 	
@@ -106,7 +106,7 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 		Scan.ItemContext scanItemContext,
 		JavaClass javaClass
 	) {
-		context.addItemFound(scanItemContext.getBasePathAsString(), scanItemContext.getInput().getAbsolutePath(), javaClass);
+		context.addItemFound(scanItemContext.getBasePathAsString(), scanItemContext.getScannedItem().getAbsolutePath(), javaClass);
 	}
 		
 	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<JavaClass> {

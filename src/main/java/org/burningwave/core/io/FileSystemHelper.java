@@ -447,7 +447,7 @@ public class FileSystemHelper implements Component {
 				return basePath;
 			}
 			
-			public ItemWrapper getInput() {
+			public ItemWrapper getScannedItem() {
 				return item;
 			}
 			

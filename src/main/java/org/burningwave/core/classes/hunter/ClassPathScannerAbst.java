@@ -143,7 +143,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		C context
 	) {
 		return (scannedItemContext) -> {
-			JavaClass javaClass = JavaClass.create(scannedItemContext.getInput().toByteBuffer());
+			JavaClass javaClass = JavaClass.create(scannedItemContext.getScannedItem().toByteBuffer());
 			ClassCriteria.TestContext criteriaTestContext = testCriteria(context, javaClass);
 			if (criteriaTestContext.getResult()) {
 				retrieveItemFromFileInputStream(
@@ -158,7 +158,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		C context
 	) {
 		return (scannedItemContext) -> {
-			JavaClass javaClass = JavaClass.create(scannedItemContext.getInput().toByteBuffer());
+			JavaClass javaClass = JavaClass.create(scannedItemContext.getScannedItem().toByteBuffer());
 			ClassCriteria.TestContext criteriaTestContext = testCriteria(context, javaClass);
 			if (criteriaTestContext.getResult()) {
 				retrieveItemFromZipEntry(

@@ -140,7 +140,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	) {
 		context.addItemFound(
 			scanItemContext.getBasePathAsString(),
-			scanItemContext.getInput().getAbsolutePath(),
+			scanItemContext.getScannedItem().getAbsolutePath(),
 			criteriaTestContext.getEntity(),
 			criteriaTestContext.getMembersFound()
 		);
@@ -150,7 +150,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	void retrieveItemFromZipEntry(ClassHunter.SearchContext context, ClassCriteria.TestContext criteriaTestContext, Scan.ItemContext scanItemContext, JavaClass javaClass) {
 		context.addItemFound(
 			scanItemContext.getBasePathAsString(),
-			scanItemContext.getInput().getAbsolutePath(),
+			scanItemContext.getScannedItem().getAbsolutePath(),
 			criteriaTestContext.getEntity(),
 			criteriaTestContext.getMembersFound()
 		);
