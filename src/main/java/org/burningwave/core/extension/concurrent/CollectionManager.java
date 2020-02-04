@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.concurrent;
+package org.burningwave.core.extension.concurrent;
 
 import java.util.Collection;
 import java.util.List;
@@ -37,7 +37,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.concurrent.Cycler.Runnable;
+import org.burningwave.core.concurrent.ConcurrentHelper;
+import org.burningwave.core.extension.concurrent.Cycler.Runnable;
 
 public class CollectionManager<T> implements Component {
 	
@@ -56,6 +57,11 @@ public class CollectionManager<T> implements Component {
 		this.threadNumber = threadsNumber;
 		this.threadPriority = threadPriority;
 		this.waitInterval = waitInterval;
+	}
+	
+	
+	public static <T> CollectionManager<T> create(ConcurrentHelper concurrentHelper, String threadsGroupName, int threadsNumber, int threadPriority, long waitInterval) {
+		return new CollectionManager<T>(concurrentHelper, threadsGroupName, threadsNumber, threadPriority, waitInterval);
 	}
 
 	public void start() {
@@ -98,10 +104,6 @@ public class CollectionManager<T> implements Component {
 	
 	private String getThreadNewName(int idx) {
 		return threadsGroupName + "[" + idx + "]";
-	}
-	
-	public static <T> CollectionManager<T> create(ConcurrentHelper concurrentHelper, String threadsGroupName, int threadsNumber, int threadPriority, long waitInterval) {
-		return new CollectionManager<T>(concurrentHelper, threadsGroupName, threadsNumber, threadPriority, waitInterval);
 	}
 	
 	public void add(Collection<T> coll) {
@@ -173,12 +175,12 @@ public class CollectionManager<T> implements Component {
 	
 	public static class Cycler {
 		
-		public static class Thread extends org.burningwave.core.concurrent.Cycler.Thread {
+		public static class Thread extends org.burningwave.core.extension.concurrent.Cycler.Thread {
 			private Collection<Thread> threadCollection;
 			
 			public Thread(
 				Collection<Thread> threadCollection, 
-				org.burningwave.core.concurrent.Cycler.Runnable function,
+				org.burningwave.core.extension.concurrent.Cycler.Runnable function,
 				String name, int priority) {
 				super(function, name, priority);
 				this.threadCollection = threadCollection;

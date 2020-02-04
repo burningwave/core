@@ -26,52 +26,43 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.concurrent;
+package org.burningwave.core.extension;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.function.Predicate;
 
-import org.burningwave.core.Component;
-
-public class Cycler implements Component {
+public class Group<T> extends Item {
+	protected Collection<T> elements = new LinkedHashSet<>();
 	
-	public abstract static class Runnable implements java.lang.Runnable, Component{
-		Cycler.Thread thread;
-		
-		void setThread(Cycler.Thread thread) {
-			this.thread = thread;
+
+	public Group<T> add(T element) {
+		elements.add(element);
+		if (element instanceof Item) {
+			((Item)element).setParent(this);
 		}
-		
-		public Cycler.Thread getThread() {
-			return this.thread;
-		}
+		return this;
 	}
 	
-	public static class Thread extends java.lang.Thread {
-		protected final AtomicBoolean continueLoop = new AtomicBoolean();			
-		protected Runnable function;
+	public <I extends Item> I get(String name) {
+		return get((item) -> (item instanceof Item && ((Item)item).getName().matches(name)));
 		
-		public Thread(Runnable function, String name, int priority) {
-			this.function = function;
-			function.setThread(this);
-			setName(name);
-			setPriority(priority);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <I> I get(Predicate<I> predicate) {
+		return (I)elements.stream().filter(item -> 
+			(predicate.test((I)item))
+		).findFirst().orElse(null);
+	}
+	
+
+	@Override
+	public void close() {
+		if (elements != null) {
+			elements.clear();
+			elements = null;
 		}
-		
-		public void terminate() {
-			continueLoop.set(false);
-		}
-		
-		@Override
-		public synchronized void start() {
-			continueLoop.set(true);
-			super.start();
-		}
-		
-		@Override
-		public void run() {
-			while (continueLoop.get()) {
-				function.run();
-			}
-		}
+		super.close();
 	}
 }

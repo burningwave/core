@@ -33,7 +33,6 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 
 import org.burningwave.Throwables;
-import org.burningwave.core.common.Classes;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.Streams;
 

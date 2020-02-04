@@ -37,7 +37,6 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.common.Classes;
 
 public abstract class MemberHelper<M extends Member> implements Component {
 	MemberFinder memberFinder;

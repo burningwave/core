@@ -41,7 +41,6 @@ import java.util.stream.Stream;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
-import org.burningwave.core.common.Classes;
 
 public class MemberFinder implements Component {
 	

@@ -26,7 +26,9 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core;
+package org.burningwave.core.extension;
+
+import org.burningwave.core.Component;
 
 public abstract class CommandWrapper<T, I, O>  implements Component {
 	T command;

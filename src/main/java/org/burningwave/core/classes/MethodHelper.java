@@ -35,7 +35,6 @@ import java.util.Collection;
 import java.util.function.Predicate;
 
 import org.burningwave.Throwables;
-import org.burningwave.core.common.Classes;
 import org.burningwave.core.function.ThrowingSupplier;
 
 

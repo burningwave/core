@@ -36,7 +36,6 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 import org.burningwave.core.Criteria;
-import org.burningwave.core.common.Classes;
 import org.burningwave.core.function.TriPredicate;
 
 public abstract class ExecutableMemberCriteria<

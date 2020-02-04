@@ -26,43 +26,37 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core;
+package org.burningwave.core.extension;
 
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.function.Predicate;
+import org.burningwave.core.Component;
 
-public class Group<T> extends Item {
-	protected Collection<T> elements = new LinkedHashSet<>();
+public abstract class Item implements Component {
+	protected String name;
+	protected Item parent;
 	
-
-	public Group<T> add(T element) {
-		elements.add(element);
-		if (element instanceof Item) {
-			((Item)element).setParent(this);
-		}
-		return this;
+	
+	public String getName() {
+		return name;
 	}
-	
-	public <I extends Item> I get(String name) {
-		return get((item) -> (item instanceof Item && ((Item)item).getName().matches(name)));
-		
+
+	public void setName(String name) {
+		this.name = name;
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	public <I> I get(Predicate<I> predicate) {
-		return (I)elements.stream().filter(item -> 
-			(predicate.test((I)item))
-		).findFirst().orElse(null);
+	public <T extends Item> T getParent() {
+		return (T)this.parent;
 	}
 	
+	void setParent(Item parent) {
+		this.parent = parent;
+	}
 
 	@Override
 	public void close() {
-		if (elements != null) {
-			elements.clear();
-			elements = null;
-		}
-		super.close();
+		parent = null;
+		logDebug(name != null ? name : this + " finalized");
+		name = null;
 	}
+	
 }

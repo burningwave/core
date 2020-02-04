@@ -26,35 +26,52 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core;
+package org.burningwave.core.extension.concurrent;
 
-public abstract class Item implements Component {
-	protected String name;
-	protected Item parent;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.burningwave.core.Component;
+
+public class Cycler implements Component {
 	
-	
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	@SuppressWarnings("unchecked")
-	public <T extends Item> T getParent() {
-		return (T)this.parent;
-	}
-	
-	void setParent(Item parent) {
-		this.parent = parent;
-	}
-
-	@Override
-	public void close() {
-		parent = null;
-		logDebug(name != null ? name : this + " finalized");
-		name = null;
+	public abstract static class Runnable implements java.lang.Runnable, Component{
+		Cycler.Thread thread;
+		
+		void setThread(Cycler.Thread thread) {
+			this.thread = thread;
+		}
+		
+		public Cycler.Thread getThread() {
+			return this.thread;
+		}
 	}
 	
+	public static class Thread extends java.lang.Thread {
+		protected final AtomicBoolean continueLoop = new AtomicBoolean();			
+		protected Runnable function;
+		
+		public Thread(Runnable function, String name, int priority) {
+			this.function = function;
+			function.setThread(this);
+			setName(name);
+			setPriority(priority);
+		}
+		
+		public void terminate() {
+			continueLoop.set(false);
+		}
+		
+		@Override
+		public synchronized void start() {
+			continueLoop.set(true);
+			super.start();
+		}
+		
+		@Override
+		public void run() {
+			while (continueLoop.get()) {
+				function.run();
+			}
+		}
+	}
 }

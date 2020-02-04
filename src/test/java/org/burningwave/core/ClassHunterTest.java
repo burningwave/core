@@ -6,12 +6,12 @@ import java.math.BigDecimal;
 import java.util.AbstractList;
 import java.util.Date;
 
-import org.burningwave.core.Item;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.classes.hunter.SearchConfig;
+import org.burningwave.core.extension.Item;
 import org.burningwave.core.classes.hunter.CacheableSearchConfig;
 import org.junit.jupiter.api.Test;
 

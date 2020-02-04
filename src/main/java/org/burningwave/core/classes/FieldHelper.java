@@ -33,7 +33,6 @@ import java.util.Collection;
 import java.util.Optional;
 
 import org.burningwave.Throwables;
-import org.burningwave.core.common.Classes;
 
 
 public class FieldHelper extends MemberHelper<Field> {
