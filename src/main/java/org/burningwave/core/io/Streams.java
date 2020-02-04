@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.math.BigDecimal;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.function.Function;
@@ -44,10 +45,40 @@ import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
-public class Streams {
-	//TODO: this values should be configurable
+public class Streams implements ManagedLogger {
 	public static int DEFAULT_BUFFER_SIZE = (int)BufferSize.KILO_BYTE.getValue();
-	public static Function<Integer, ByteBuffer> DEFAULT_BYTE_BUFFER_ALLOCATION = ByteBuffer::allocateDirect;
+	public static Function<Integer, ByteBuffer> DEFAULT_BYTE_BUFFER_ALLOCATION_MODE = ByteBuffer::allocateDirect;
+	
+	static {
+		try {
+			String defaultBufferSize = (String)org.burningwave.core.iterable.Properties.getGlobalProperty("streams.default-buffer-size");
+			String unit = defaultBufferSize.substring(defaultBufferSize.length()-2);
+			String value = defaultBufferSize.substring(0, defaultBufferSize.length()-2);
+			if (unit.equalsIgnoreCase("KB")) {
+				DEFAULT_BUFFER_SIZE = new BigDecimal(value).multiply(new BigDecimal(BufferSize.KILO_BYTE.getValue())).intValue();
+			} else if (unit.equalsIgnoreCase("MB")) {
+				DEFAULT_BUFFER_SIZE = new BigDecimal(value).multiply(new BigDecimal(BufferSize.MEGA_BYTE.getValue())).intValue();
+			} else {
+				DEFAULT_BUFFER_SIZE = Integer.valueOf(value);
+			}
+		} catch (Throwable e) {
+			DEFAULT_BUFFER_SIZE = (int)BufferSize.KILO_BYTE.getValue();
+		}
+		ManagedLogger.Repository.getInstance().logInfo(Streams.class, "default buffer size: {} bytes", DEFAULT_BUFFER_SIZE);
+		try {
+			String defaultByteBufferAllocationMode = (String)org.burningwave.core.iterable.Properties.getGlobalProperty("streams.default-byte-buffer-allocation-mode");
+			if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
+				DEFAULT_BYTE_BUFFER_ALLOCATION_MODE = ByteBuffer::allocate;
+				ManagedLogger.Repository.getInstance().logInfo(Streams.class, "default allocation mode: ByteBuffer::allocate");
+			} else {
+				DEFAULT_BYTE_BUFFER_ALLOCATION_MODE = ByteBuffer::allocateDirect;
+				ManagedLogger.Repository.getInstance().logInfo(Streams.class, "default allocation mode: ByteBuffer::allocateDirect");
+			}
+		} catch (Throwable exc) {
+			DEFAULT_BYTE_BUFFER_ALLOCATION_MODE = ByteBuffer::allocateDirect;
+			ManagedLogger.Repository.getInstance().logInfo(Streams.class, "default allocation mode: ByteBuffer::allocateDirect");
+		}
+	}
 	
 	public static boolean isArchive(File file) throws FileNotFoundException, IOException {
 		try (RandomAccessFile raf = new RandomAccessFile(file, "r")){

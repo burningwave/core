@@ -80,12 +80,16 @@ public interface ManagedLogger {
 		
 		static Repository newInstance() {
 			try {
-				Class.forName("org.slf4j.Logger");
-				return new SLF4JManagedLoggerRepository();
-			} catch (Throwable e) {
-				return new SimpleManagedLoggerRepository();
-			}
-			
+				String className = (String)org.burningwave.core.iterable.Properties.getGlobalProperty("managed-logger.repository");
+				return (Repository)Class.forName(className).getConstructor().newInstance();
+			} catch (Throwable exc) {
+				try {
+					Class.forName("org.slf4j.Logger");
+					return new SLF4JManagedLoggerRepository();
+				} catch (Throwable exc2) {
+					return new SimpleManagedLoggerRepository();
+				}
+			}			
 		}
 		
 		public static Repository getInstance() {

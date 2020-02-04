@@ -109,9 +109,9 @@ public class ComponentContainer implements ComponentSupplier {
 					Throwables.toRuntimeException(exc);
 				}
 			} else {
-				logWarn("Custom configuration file burningwave.properties not found.");
+				logInfo("Custom configuration file burningwave.properties not found.");
 			}
-			logWarn(
+			logInfo(
 				"Configuration values:\n\n{}\n\n... Are assumed",
 				config.entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
 			);

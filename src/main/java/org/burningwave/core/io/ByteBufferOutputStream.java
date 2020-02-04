@@ -64,7 +64,7 @@ public class ByteBufferOutputStream extends OutputStream {
     }
 
     public ByteBufferOutputStream(int initialCapacity, boolean closeable) {
-        this(Streams.DEFAULT_BYTE_BUFFER_ALLOCATION.apply(initialCapacity), closeable);
+        this(Streams.DEFAULT_BYTE_BUFFER_ALLOCATION_MODE.apply(initialCapacity), closeable);
     }
     
     public void markAsCloseable(boolean closeable) {
@@ -114,7 +114,7 @@ public class ByteBufferOutputStream extends OutputStream {
 
     private void expandBuffer(int remainingRequired) {
         int expandSize = Math.max((int) (ByteBufferDelegate.limit(buffer) * REALLOCATION_FACTOR), ByteBufferDelegate.position(buffer) + remainingRequired);
-        ByteBuffer temp = Streams.DEFAULT_BYTE_BUFFER_ALLOCATION.apply(expandSize);
+        ByteBuffer temp = Streams.DEFAULT_BYTE_BUFFER_ALLOCATION_MODE.apply(expandSize);
         int limit = limit();
         ByteBufferDelegate.flip(buffer);
         temp.put(buffer);
