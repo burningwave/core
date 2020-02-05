@@ -47,7 +47,7 @@ import java.util.function.Supplier;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
-import org.burningwave.core.common.Strings;
+import org.burningwave.core.Strings;
 import org.burningwave.core.concurrent.ParallelTasksManager;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;

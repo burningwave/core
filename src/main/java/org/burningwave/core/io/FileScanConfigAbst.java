@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.burningwave.core.common.Strings;
+import org.burningwave.core.Strings;
 import org.burningwave.core.io.FileSystemHelper.Scan;
 import org.burningwave.core.io.FileSystemHelper.Scan.Configuration;
 

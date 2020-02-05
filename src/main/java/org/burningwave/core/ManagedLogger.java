@@ -76,11 +76,13 @@ public interface ManagedLogger {
 	
 	
 	public static interface Repository {
+		public static final String REPOSITORY_TYPE_CONFIG_KEY = "managed-logger.repository";
+		
 		final static Repository INSTANCE = newInstance();
 		
 		static Repository newInstance() {
 			try {
-				String className = (String)org.burningwave.core.iterable.Properties.getGlobalProperty("managed-logger.repository");
+				String className = (String)org.burningwave.core.iterable.Properties.getGlobalProperty(REPOSITORY_TYPE_CONFIG_KEY);
 				return (Repository)Class.forName(className).getConstructor().newInstance();
 			} catch (Throwable exc) {
 				try {

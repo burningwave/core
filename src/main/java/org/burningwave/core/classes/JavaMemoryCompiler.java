@@ -58,10 +58,10 @@ import javax.tools.ToolProvider;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
+import org.burningwave.core.Strings;
 import org.burningwave.core.classes.hunter.ClassPathHunter.SearchResult;
 import org.burningwave.core.classes.hunter.ClassPathHunter;
 import org.burningwave.core.classes.hunter.SearchConfig;
-import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.io.FileSystemHelper;

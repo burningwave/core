@@ -2,7 +2,6 @@ package org.burningwave.core;
 
 import java.util.regex.Pattern;
 
-import org.burningwave.core.common.Strings;
 import org.junit.jupiter.api.Test;
 
 public class StringsTest extends BaseTest {

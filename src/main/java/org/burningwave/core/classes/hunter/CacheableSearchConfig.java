@@ -33,9 +33,9 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.burningwave.core.Strings;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.MemberFinder;
-import org.burningwave.core.common.Strings;
 
 public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfig> {
 	int maxParallelTasksForUnit;

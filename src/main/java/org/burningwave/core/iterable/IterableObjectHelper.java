@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.common.Strings;
+import org.burningwave.core.Strings;
 import org.burningwave.core.reflection.PropertyAccessor;
 
 public class IterableObjectHelper implements Component {

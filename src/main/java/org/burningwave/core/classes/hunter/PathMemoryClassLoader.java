@@ -36,9 +36,9 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import org.burningwave.core.Strings;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.JavaClass;
-import org.burningwave.core.common.Strings;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.PathHelper.CheckResult;
 

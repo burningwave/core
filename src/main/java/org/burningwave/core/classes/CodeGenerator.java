@@ -41,8 +41,8 @@ import java.util.stream.Stream;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
+import org.burningwave.core.Strings;
 import org.burningwave.core.Virtual;
-import org.burningwave.core.common.Strings;
 import org.burningwave.core.io.StreamHelper;
 
 public abstract class CodeGenerator implements Component {

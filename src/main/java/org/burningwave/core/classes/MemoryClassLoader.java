@@ -45,7 +45,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.common.Strings;
+import org.burningwave.core.Strings;
 import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;

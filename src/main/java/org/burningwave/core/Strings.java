@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.common;
+package org.burningwave.core;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -35,8 +35,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.burningwave.core.ManagedLogger;
 
 public class Strings {
 	

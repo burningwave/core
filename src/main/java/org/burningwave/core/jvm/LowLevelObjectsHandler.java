@@ -48,13 +48,13 @@ import java.util.function.Supplier;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
+import org.burningwave.core.Strings;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodCriteria;
-import org.burningwave.core.common.Strings;
 import org.burningwave.core.function.TriFunction;
 import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.StreamHelper;

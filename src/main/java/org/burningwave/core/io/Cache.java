@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.burningwave.core.common.Strings;
+import org.burningwave.core.Strings;
 
 public class Cache {
 	public final static PathForResources<ByteBuffer> PATH_FOR_CONTENTS = new PathForResources<>(1L, Streams::shareContent);
