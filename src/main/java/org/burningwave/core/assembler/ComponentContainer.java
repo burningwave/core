@@ -93,7 +93,7 @@ public class ComponentContainer implements ComponentSupplier {
 			throw Throwables.toRuntimeException(exc);
 		}
 	}
-
+	
 	private ComponentContainer init() {
 		config.put(PathHelper.CLASSPATHS_PREFIX + ClassFactory.CLASS_REPOSITORIES, "${classPaths}");
 		config.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
@@ -151,8 +151,16 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
-	public static ComponentSupplier getInstance() {
+	public static ComponentContainer getInstance() {
 		return LazyHolder.getComponentContainerInstance();
+	}
+	
+	public String getConfigProperty(String propertyName) {
+		return getIterableObjectHelper().get(config, propertyName);
+	}
+	
+	public String getConfigProperty(String propertyName, Map<String, String> defaultValues) {
+		return getIterableObjectHelper().get(config, propertyName, defaultValues);
 	}
 	
 	@SuppressWarnings("unchecked")

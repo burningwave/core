@@ -43,7 +43,7 @@ import org.burningwave.core.reflection.PropertyAccessor;
 public class IterableObjectHelper implements Component {
 	private PropertyAccessor propertyAccessor;
 	
-	private Pattern PLACE_HOLDER_FOR_PROPERTIES_PATTERN = Pattern.compile("\\$\\{([\\w\\d\\.]*)\\}");
+	private Pattern PLACE_HOLDER_FOR_PROPERTIES_PATTERN = Pattern.compile("\\$\\{([\\w\\d\\.\\:]*)\\}");
 	
 	
 	private IterableObjectHelper(PropertyAccessor propertyAccessor) {
@@ -77,6 +77,9 @@ public class IterableObjectHelper implements Component {
 		return retrieveStream(object).count();
 	}
 	
+	public String get(Properties properties, String propertyName) {
+		return get(properties, propertyName, null);
+	}
 	
 	public String get(Properties properties, String propertyName, Map<String, String> defaultValues) {
 		String propertyValue = (String)properties.get(propertyName);
@@ -89,7 +92,11 @@ public class IterableObjectHelper implements Component {
 				AtomicReference<String> propertyValueWrapper = new AtomicReference<String>(propertyValue);
 				subProperties.forEach((group, propertiesNames) -> {
 					propertiesNames.forEach((propName) -> {
-						propertyValueWrapper.set(propertyValueWrapper.get().replace("${" + propName + "}", get(properties, propName, defaultValues)));
+						if (!propName.startsWith("system.properties:")) {
+							propertyValueWrapper.set(propertyValueWrapper.get().replace("${" + propName + "}", get(properties, propName, defaultValues)));
+						} else {
+							propertyValueWrapper.set(propertyValueWrapper.get().replace("${" + propName + "}", System.getProperty(propName.split(":")[1])));
+						}
 					});				
 				});
 				propertyValue = propertyValueWrapper.get();
