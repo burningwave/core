@@ -82,14 +82,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		return new MemoryClassLoader(parentClassLoader, classHelper);
 	}
 
-	public synchronized void addCompiledClass(String className, ByteBuffer byteCode) {
-		//synchronized (this.toString() + "_" + className) {
+	public void addCompiledClass(String className, ByteBuffer byteCode) {
+		synchronized (this.toString() + "_" + className) {
 	    	if (classHelper.retrieveLoadedClass(this, className) == null) {
 	    		notLoadedCompiledClasses.put(className, byteCode);
 			} else {
 				logDebug("Could not add compiled class {} cause it's already defined", className);
 			}
-		//}
+		}
     }
     
     public Map.Entry<String, ByteBuffer> getNotLoadedCompiledClass(String name) {
@@ -220,8 +220,8 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
     
 	@Override
-    protected synchronized Class<?> findClass(String className) throws ClassNotFoundException {
-		//synchronized (this.toString() + "_" + className) {
+    protected Class<?> findClass(String className) throws ClassNotFoundException {
+		synchronized (this.toString() + "_" + className) {
 			Class<?> cls = null;
 			ByteBuffer byteCode = notLoadedCompiledClasses.get(className);
 			if (byteCode != null) {
@@ -262,7 +262,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			} else {
 				throw new ClassNotFoundException(className);
 			}
-		//}
+		}
 	}
 
 	 protected Class<?> _defineClass(String className, java.nio.ByteBuffer byteCode, ProtectionDomain protectionDomain) {
@@ -279,8 +279,10 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		 }
 	 }
 
-	public void removeNotLoadedCompiledClass(String name) {
-		notLoadedCompiledClasses.remove(name);	
+	public void removeNotLoadedCompiledClass(String className) {
+		synchronized (this.toString() + "_" + className) {
+			notLoadedCompiledClasses.remove(className);
+		}
 	}
 	
 	
