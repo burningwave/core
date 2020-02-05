@@ -69,6 +69,7 @@ public class PathHelper implements Component {
 		allClassPaths = ConcurrentHashMap.newKeySet();
 		loadMainClassPaths();
 		this.config = config;
+		loadClassPaths();	
 		listenTo(config);
 	}
 	
@@ -153,8 +154,8 @@ public class PathHelper implements Component {
 					}
 				}	
 			} else {
-				for (String classPath : classPaths.split(";")) {
-					addClassPath(classPathsName, iterableObjectHelper.get(config, (String)classPath, null));
+				for (String classPath : iterableObjectHelper.get(config, classPathsNamePropertyName, null).split(";")) {
+					addClassPath(classPathsName, classPath);
 				}
 			}
 		}
