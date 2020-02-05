@@ -90,7 +90,7 @@ public class Classes {
 			if (className.contains("class: ")) {
 				className = className.substring(className.lastIndexOf("class: ") + "class: ".length());
 			}
-			className = className.replace("/", ".");
+			return className.contains(" ")? null : className.replace("/", ".");
 		}
 		return className;
 	}

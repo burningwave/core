@@ -324,7 +324,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	public void close() {
 		clear();
 		classHelper.unregister(this);
-		//notLoadedCompiledClasses = null;
-		//loadedCompiledClasses = null;
+		notLoadedCompiledClasses = null;
+		loadedCompiledClasses = null;
 	}
 }
