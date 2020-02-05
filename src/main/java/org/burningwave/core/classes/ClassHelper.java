@@ -196,7 +196,7 @@ public class ClassHelper implements Component {
 			}
     	}
     }
-
+	
 	private Class<?> defineClass(
 		ClassLoader classLoader, 
 		Method method, 
@@ -298,6 +298,17 @@ public class ClassHelper implements Component {
 		} else {
 			return null;
 		}
+	}
+	
+	public void setParentClassLoader(ClassLoader child, ClassLoader parent) {
+		lowLevelObjectsHandler.setParentClassLoader(child, parent);
+	}
+	
+	public void setMasterClassLoader(ClassLoader child, ClassLoader parent) {
+		while (child.getParent() != null) {
+			child = child.getParent();
+		}
+		setParentClassLoader(child, parent);
 	}
 	
 	public <T> T executeCode(

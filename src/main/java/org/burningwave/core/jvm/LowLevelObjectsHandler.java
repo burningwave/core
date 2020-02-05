@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 import java.util.function.Supplier;
 
@@ -69,10 +70,10 @@ public class LowLevelObjectsHandler implements Component {
 	public final static String SUPPLIER_IMPORTS_KEY_SUFFIX = ".supplier.imports";
 	private Long LOADED_PACKAGES_MAP_MEMORY_OFFSET;
 	private Long LOADED_CLASSES_VECTOR_MEMORY_OFFSET;
-	private Object DEFINED_CLASS_FOR_TESTING;
-	private Object DEFINED_PACKAGE_FOR_TESTING;
+	private Long PARENT_CLASS_LOADER_MEMORY_OFFSET;
 	
 	private JVMChecker jVMChecker;
+	
 	private IterableObjectHelper iterableObjectHelper;
 	private ClassFactory classFactory;
 	private Supplier<ClassFactory> classFactorySupplier;
@@ -150,43 +151,68 @@ public class LowLevelObjectsHandler implements Component {
 		return unsafe;
 	}
 	
-	private void initLoadedPackageVectorOffset() {
+	private void initLoadedClassesVectorMemoryOffset() {
+		AtomicReference<Class<?>> definedClass = new AtomicReference<>();
 		ClassLoader temporaryClassLoader = new ClassLoader() {
 			@Override
 			public String toString() {
 				ByteBufferInputStream inputStream = (ByteBufferInputStream)streamHelper.getResourceAsStream(LowLevelObjectsHandler.class.getName().replace(".", "/")+ ".class");
-				DEFINED_CLASS_FOR_TESTING = super.defineClass(LowLevelObjectsHandler.class.getName(), inputStream.toByteBuffer(), null);
+				definedClass.set(super.defineClass(LowLevelObjectsHandler.class.getName(), inputStream.toByteBuffer(), null));
 				return "lowlevelobjectshandler.initializator";
 			}							
 		};
 		temporaryClassLoader.toString();
 		iterateClassLoaderFields(
 			temporaryClassLoader, 
-			getLoadedClassesVectorOffsetInitializator()
+			getLoadedClassesVectorMemoryOffsetInitializator(definedClass.get())
 		);
 	}
 	
+	private void initParentClassLoaderMemoryOffset() {
+		ClassLoader temporaryClassLoaderParent = new ClassLoader() {};
+		ClassLoader temporaryClassLoader = new ClassLoader(temporaryClassLoaderParent) {};
+		iterateClassLoaderFields(
+			temporaryClassLoader, 
+			getClassLoaderParentMemoryOffsetInitializator(temporaryClassLoaderParent)
+		);
+	}
+	
+	private BiPredicate<Object, Long> getClassLoaderParentMemoryOffsetInitializator(
+			ClassLoader temporaryClassLoaderParent) {
+		return (object, offset) -> {
+			if (object != null && object instanceof ClassLoader) {
+				ClassLoader parentClassLoader = (ClassLoader)object;
+				if (parentClassLoader == temporaryClassLoaderParent) {
+					PARENT_CLASS_LOADER_MEMORY_OFFSET = offset;
+					return true;
+				}
+			}
+			return false;
+		};
+	}
+
 	private void initLoadedPackageMapOffset() {
+		AtomicReference<Object> definedPackage = new AtomicReference<>();
 		ClassLoader temporaryClassLoader = new ClassLoader() {
 			@Override
 			public String toString() {
-				DEFINED_PACKAGE_FOR_TESTING = super.definePackage("lowlevelobjectshandler.loadedpackagemapoffset.initializator.packagefortesting", 
-					null, null, null, null, null, null, null);
+				definedPackage.set(super.definePackage("lowlevelobjectshandler.loadedpackagemapoffset.initializator.packagefortesting", 
+					null, null, null, null, null, null, null));
 				return "lowlevelobjectshandler.initializator";
 			}							
 		};
 		temporaryClassLoader.toString();
 		iterateClassLoaderFields(
 			temporaryClassLoader, 
-			getLoadedPackageMapOffsetInitializator()
+			getLoadedPackageMapMemoryOffsetInitializator(definedPackage.get())
 		);
 	}
 	
-	private BiPredicate<Object, Long> getLoadedClassesVectorOffsetInitializator() {
+	private BiPredicate<Object, Long> getLoadedClassesVectorMemoryOffsetInitializator(Class<?> definedClass) {
 		return (object, offset) -> {
 			if (object != null && object instanceof Vector) {
 				Vector<?> vector = (Vector<?>)object;
-				if (vector.contains(DEFINED_CLASS_FOR_TESTING)) {
+				if (vector.contains(definedClass)) {
 					LOADED_CLASSES_VECTOR_MEMORY_OFFSET = offset;
 					return true;
 				}
@@ -195,11 +221,11 @@ public class LowLevelObjectsHandler implements Component {
 		};
 	}
 	
-	private BiPredicate<Object, Long> getLoadedPackageMapOffsetInitializator() {
+	private BiPredicate<Object, Long> getLoadedPackageMapMemoryOffsetInitializator(Object pckg) {
 		return (object, offset) -> {
 			if (object != null && object instanceof Map) {
 				Map<?, ?> map = (Map<?, ?>)object;
-				if (map.containsValue(DEFINED_PACKAGE_FOR_TESTING)) {
+				if (map.containsValue(pckg)) {
 					LOADED_PACKAGES_MAP_MEMORY_OFFSET = offset;
 					return true;
 				}
@@ -326,7 +352,7 @@ public class LowLevelObjectsHandler implements Component {
 					classes = classLoadersClasses.get(classLoader);
 					if (classes == null) {
 						if (LOADED_CLASSES_VECTOR_MEMORY_OFFSET == null) {
-							initLoadedPackageVectorOffset();
+							initLoadedClassesVectorMemoryOffset();
 						}					
 						classes = (Vector<Class<?>>)unsafe.getObject(classLoader, LOADED_CLASSES_VECTOR_MEMORY_OFFSET);
 						classLoadersClasses.put(classLoader, classes);
@@ -436,6 +462,17 @@ public class LowLevelObjectsHandler implements Component {
 		return classLoaderDelegate;
 	}
 	
+	public void setParentClassLoader(ClassLoader child, ClassLoader parent) {
+		if (PARENT_CLASS_LOADER_MEMORY_OFFSET == null) {
+			synchronized (this.toString() + "_" + PARENT_CLASS_LOADER_MEMORY_OFFSET) {
+				if (PARENT_CLASS_LOADER_MEMORY_OFFSET == null) {
+					initParentClassLoaderMemoryOffset();
+				}
+			}
+		}
+		unsafe.putObject(child, PARENT_CLASS_LOADER_MEMORY_OFFSET, parent);
+	}
+	
 	@Override
 	public void close() {
 		this.classLoadersClasses.clear();
@@ -456,8 +493,6 @@ public class LowLevelObjectsHandler implements Component {
 		this.packageRetriever = null;
 		LOADED_PACKAGES_MAP_MEMORY_OFFSET = null;
 		LOADED_CLASSES_VECTOR_MEMORY_OFFSET = null;
-		DEFINED_CLASS_FOR_TESTING = null;
-		DEFINED_PACKAGE_FOR_TESTING = null;
 	}
 	
 	@SuppressWarnings("unchecked")
