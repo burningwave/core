@@ -29,6 +29,9 @@
 package org.burningwave.core.classes;
 
 import java.nio.ByteBuffer;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.function.Function;
 
 public class Classes {
@@ -77,13 +80,28 @@ public class Classes {
 	
 	public static String retrieveName(Throwable exc) {
 		String className = exc.getMessage();
-		if (className.contains("Could not initialize class ")) {
-			className = className.replace("Could not initialize class ", "");
+		if (className != null) {
+			if (className.contains("Could not initialize class ")) {
+				className = className.replace("Could not initialize class ", "");
+			}
+			if (className.contains("NoClassDefFoundError: ")) {
+				className = className.substring(className.lastIndexOf("NoClassDefFoundError: ") + "NoClassDefFoundError: ".length());
+			}
+			if (className.contains("class: ")) {
+				className = className.substring(className.lastIndexOf("class: ") + "class: ".length());
+			}
+			className = className.replace("/", ".");
 		}
-		if (className.contains("NoClassDefFoundError: ")) {
-			className = className.substring(className.lastIndexOf("NoClassDefFoundError: ") + "NoClassDefFoundError: ".length());
+		return className;
+	}
+	
+	public static Collection<String> retrieveNames(Throwable exc) {
+		Collection<String> classesName = new LinkedHashSet<>();
+		Optional.ofNullable(retrieveName(exc)).map(classesName::add);
+		if (exc.getCause() != null) {
+			classesName.addAll(retrieveNames(exc.getCause()));
 		}
-		return className.replace("/", ".");
+		return classesName;
 	}
 	
 	public static String retrieveName(ByteBuffer classFileBuffer) {

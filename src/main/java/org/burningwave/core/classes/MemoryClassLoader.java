@@ -82,12 +82,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		return new MemoryClassLoader(parentClassLoader, classHelper);
 	}
 
-	public synchronized void addCompiledClass(String name, ByteBuffer byteCode) {
-    	if (classHelper.retrieveLoadedClass(this, name) == null) {
-    		notLoadedCompiledClasses.put(name, byteCode);
-		} else {
-			logDebug("Could not add compiled class {} cause it's already defined", name);
-		} 
+	public void addCompiledClass(String className, ByteBuffer byteCode) {
+		synchronized (this.toString() + "_" + className) {
+	    	if (classHelper.retrieveLoadedClass(this, className) == null) {
+	    		notLoadedCompiledClasses.put(className, byteCode);
+			} else {
+				logDebug("Could not add compiled class {} cause it's already defined", className);
+			}
+		}
     }
     
     public Map.Entry<String, ByteBuffer> getNotLoadedCompiledClass(String name) {
@@ -219,45 +221,47 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
 	@Override
     protected Class<?> findClass(String className) throws ClassNotFoundException {
-		Class<?> cls = null;
-		ByteBuffer byteCode = notLoadedCompiledClasses.get(className);
-		if (byteCode != null) {
-			try {
-				cls = _defineClass(className, byteCode, null);
-        		definePackageOf(cls);
-        	} catch (NoClassDefFoundError noClassDefFoundError) {
-        		String notFoundClassName = Classes.retrieveName(noClassDefFoundError);
-        		while (!notFoundClassName.equals(className)) {
-        			try {
-        				//This search over all ClassLoader Parents
-        				loadClass(notFoundClassName, false);
-        				cls = loadClass(className, false);
-        			} catch (ClassNotFoundException exc) {
-        				String newNotFoundClass = Classes.retrieveName(noClassDefFoundError);
-        				if (newNotFoundClass.equals(notFoundClassName)) {
-        					break;
-        				} else {
-        					notFoundClassName = newNotFoundClass;
-        				}
-        			}
-        		}
-        		if (cls == null) {
-        			removeNotLoadedCompiledClass(className);
-    				logWarn("Could not load compiled class " + className + ", so it will be removed: " + noClassDefFoundError.toString());
-        			throw noClassDefFoundError;
-        		}
-        	}
-			if (cls == null){
-        		removeNotLoadedCompiledClass(className);
-        		logDebug("Could not load compiled class " + className + ", so it will be removed");
-        	}
-		} else {
-			logDebug("Compiled class " + className + " not found");
-		}
-		if (cls != null) {
-			return cls;
-		} else {
-			throw new ClassNotFoundException(className);
+		synchronized (this.toString() + "_" + className) {
+			Class<?> cls = null;
+			ByteBuffer byteCode = notLoadedCompiledClasses.get(className);
+			if (byteCode != null) {
+				try {
+					cls = _defineClass(className, byteCode, null);
+	        		definePackageOf(cls);
+	        	} catch (NoClassDefFoundError noClassDefFoundError) {
+	        		String notFoundClassName = Classes.retrieveName(noClassDefFoundError);
+	        		while (!notFoundClassName.equals(className)) {
+	        			try {
+	        				//This search over all ClassLoader Parents
+	        				loadClass(notFoundClassName, false);
+	        				cls = loadClass(className, false);
+	        			} catch (ClassNotFoundException exc) {
+	        				String newNotFoundClass = Classes.retrieveName(noClassDefFoundError);
+	        				if (newNotFoundClass.equals(notFoundClassName)) {
+	        					break;
+	        				} else {
+	        					notFoundClassName = newNotFoundClass;
+	        				}
+	        			}
+	        		}
+	        		if (cls == null) {
+	        			removeNotLoadedCompiledClass(className);
+	    				logWarn("Could not load compiled class " + className + ", so it will be removed: " + noClassDefFoundError.toString());
+	        			throw noClassDefFoundError;
+	        		}
+	        	}
+				if (cls == null){
+	        		removeNotLoadedCompiledClass(className);
+	        		logDebug("Could not load compiled class " + className + ", so it will be removed");
+	        	}
+			} else {
+				logDebug("Compiled class " + className + " not found");
+			}
+			if (cls != null) {
+				return cls;
+			} else {
+				throw new ClassNotFoundException(className);
+			}
 		}
 	}
 
@@ -276,9 +280,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	 }
 
 	public void removeNotLoadedCompiledClass(String name) {
-		synchronized (notLoadedCompiledClasses) {
-			notLoadedCompiledClasses.remove(name);
-		}		
+		notLoadedCompiledClasses.remove(name);	
 	}
 	
 	
@@ -320,7 +322,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	public void close() {
 		clear();
 		classHelper.unregister(this);
-		notLoadedCompiledClasses = null;
-		loadedCompiledClasses = null;
+		//notLoadedCompiledClasses = null;
+		//loadedCompiledClasses = null;
 	}
 }
