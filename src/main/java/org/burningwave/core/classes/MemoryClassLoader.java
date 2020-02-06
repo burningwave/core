@@ -83,7 +83,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 
 	public void addCompiledClass(String className, ByteBuffer byteCode) {
-		synchronized (notLoadedCompiledClasses.toString() + "_" + className) {
+		synchronized (notLoadedCompiledClasses) {
 	    	if (classHelper.retrieveLoadedClass(this, className) == null) {
 	    		notLoadedCompiledClasses.put(className, byteCode);
 			} else {
@@ -221,7 +221,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
 	@Override
     protected Class<?> findClass(String className) throws ClassNotFoundException {
-		synchronized (notLoadedCompiledClasses.toString() + "_" + className) {
+		synchronized (notLoadedCompiledClasses) {
 			Class<?> cls = null;
 			ByteBuffer byteCode = notLoadedCompiledClasses.get(className);
 			if (byteCode != null) {
@@ -280,7 +280,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	 }
 
 	public void removeNotLoadedCompiledClass(String className) {
-		synchronized (notLoadedCompiledClasses.toString() + "_" + className) {
+		synchronized (notLoadedCompiledClasses) {
 			notLoadedCompiledClasses.remove(className);
 		}
 	}
