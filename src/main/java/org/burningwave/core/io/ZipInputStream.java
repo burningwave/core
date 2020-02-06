@@ -33,7 +33,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.Set;
@@ -49,9 +48,7 @@ import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ZipInputStream.Entry.Detached;
 import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
-public class ZipInputStream extends java.util.zip.ZipInputStream implements Serializable, Component {
-
-	private static final long serialVersionUID = -33538562818485472L;
+public class ZipInputStream extends java.util.zip.ZipInputStream implements Component {
 		
 	private ZipInputStream parent;
 	private Entry.Attached currentZipEntry;
@@ -326,9 +323,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Seri
 			return new ByteBufferInputStream(toByteBuffer());
 		}		
 	
-		static class Attached extends java.util.zip.ZipEntry implements Serializable, Component, Entry {
-			
-			private static final long serialVersionUID = -3679843114872023810L;
+		static class Attached extends java.util.zip.ZipEntry implements Component, Entry {
 			private ZipInputStream zipInputStream;
 	
 			public Attached(Entry.Attached e, ZipInputStream zIS) {

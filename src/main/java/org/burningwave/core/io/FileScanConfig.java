@@ -40,7 +40,12 @@ public class FileScanConfig extends FileScanConfigAbst<FileScanConfig> {
 		name.endsWith(".war") ||
 		name.endsWith(".ear") ||
 		name.endsWith(".zip") ||
-		name.endsWith(".jmod");
+		name.endsWith(".jmod");	
+	private final static Predicate<String> ARCHIVE_PREDICATE_FOR_ZIP_ENTRY = name -> 
+		name.endsWith(".jar") ||
+		name.endsWith(".war") ||
+		name.endsWith(".ear") ||
+		name.endsWith(".zip");
 	private final static Predicate<String> FILE_PREDICATE = ARCHIVE_PREDICATE.negate();
 	private final static Predicate<String> FILE_PREDICATE_FOR_ZIP_ENTRY = FILE_PREDICATE.and(name -> !name.endsWith("/"));
 	
@@ -79,6 +84,6 @@ public class FileScanConfig extends FileScanConfigAbst<FileScanConfig> {
 
 	@Override
 	Predicate<String> getArchivePredicateForZipEntry() {
-		return ARCHIVE_PREDICATE;
+		return ARCHIVE_PREDICATE_FOR_ZIP_ENTRY;
 	}
 }
