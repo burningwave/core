@@ -40,7 +40,8 @@ public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig>
 		name.endsWith(".jar") ||
 		name.endsWith(".war") ||
 		name.endsWith(".ear") ||
-		name.endsWith(".zip");
+		name.endsWith(".zip") ||
+		name.endsWith(".jmod");
 
 	private static ClassFileScanConfig create() {
 		return new ClassFileScanConfig();
