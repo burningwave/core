@@ -35,7 +35,8 @@ public class Throwables {
 			return (RuntimeException)obj;
 		} else if (obj instanceof String) {
 			throw new RuntimeException((String)obj);
-		} else {	
+		} else {
+			ManagedLogger.Repository.logError(Throwables.class, "", (Throwable)obj);
 			return new RuntimeException((Throwable)obj);
 		}
 	}
