@@ -32,7 +32,7 @@ import java.util.function.Predicate;
 
 import org.burningwave.core.Criteria;
 
-public class ZipContainerEntryCriteria extends Criteria<ZipContainer.Entry, ZipContainerEntryCriteria, Criteria.TestContext<ZipContainer.Entry, ZipContainerEntryCriteria>>{
+public class ZipContainerEntryCriteria extends Criteria<IterableZipContainer.Entry, ZipContainerEntryCriteria, Criteria.TestContext<IterableZipContainer.Entry, ZipContainerEntryCriteria>>{
 	
 	private ZipContainerEntryCriteria() {}
 	

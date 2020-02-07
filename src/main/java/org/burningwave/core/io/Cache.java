@@ -39,6 +39,7 @@ import org.burningwave.core.Strings;
 public class Cache {
 	public final static PathForResources<ByteBuffer> PATH_FOR_CONTENTS = new PathForResources<>(1L, Streams::shareContent);
 	public final static PathForResources<FileSystemItem> PATH_FOR_FILE_SYSTEM_ITEMS = new PathForResources<>(1L, fileSystemItem -> fileSystemItem);
+	public final static PathForResources<ZipFileContainer> PATH_FOR_ZIP_FILE_CONTAINERS = new PathForResources<>(1L, zipFileContainer -> zipFileContainer);	
 	
 	public static class PathForResources<R> {
 		private Map<Long, Map<String, Map<String, R>>> loadedResources = new ConcurrentHashMap<>();
@@ -67,6 +68,10 @@ public class Cache {
 			Map<String, Map<String, R>> partion = retrievePartition(loadedResources, partitionIndex);
 			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
 			return getOrDefault(nestedPartition, path, resourceSupplier);
+		}
+		
+		public R get(String path) {
+			return getOrDefault(path, null);
 		}
 		
 		public R remove(String path) {

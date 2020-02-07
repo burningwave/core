@@ -46,7 +46,7 @@ import org.burningwave.core.io.FileSystemHelper.Scan;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
-import org.burningwave.core.io.ZipContainer;
+import org.burningwave.core.io.IterableZipContainer;
 
 public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collection<Class<?>>, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
 	private ClassPathHunter(
@@ -116,7 +116,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		JavaClass javaClass
 	) {
 		String fsObject = null;
-		ZipContainer.Entry zipEntry = scanItemContext.getScannedItem().getWrappedItem();
+		IterableZipContainer.Entry zipEntry = scanItemContext.getScannedItem().getWrappedItem();
 		if (zipEntry.getName().equals(javaClass.getPath())) {
 			fsObject = zipEntry.getParentContainer().getAbsolutePath();
 		} else {

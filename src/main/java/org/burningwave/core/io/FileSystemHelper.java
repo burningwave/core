@@ -49,7 +49,6 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Strings;
 import org.burningwave.core.concurrent.ParallelTasksManager;
-import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemHelper.Scan.Configuration;
 import org.burningwave.core.io.FileSystemHelper.Scan.Directive;
@@ -59,21 +58,40 @@ import org.burningwave.core.io.FileSystemHelper.Scan.ItemContext;
 public class FileSystemHelper implements Component {
 	private Supplier<PathHelper> pathHelperSupplier; 
 	private PathHelper pathHelper;
-	private Collection<File> temporaryFiles;
-	private File baseTempFolder;
+	private static File baseTempFolder;
 	
 	private FileSystemHelper(Supplier<PathHelper> pathHelperSupplier) {
-		ThrowingRunnable.run(() ->{
+		this.pathHelperSupplier = pathHelperSupplier;
+	}
+	
+	public static void clearMainTemporaryFolder() {
+		delete(Arrays.asList(getOrCreateMainTemporaryFolder().listFiles()));
+	}
+	
+	private static File getOrCreateMainTemporaryFolder() {
+		if (baseTempFolder != null) {
+			return baseTempFolder;
+		}
+		return ThrowingSupplier.get(() -> {
 			File toDelete = File.createTempFile("_BW_TEMP_", "_temp");
 			File tempFolder = toDelete.getParentFile();
-			baseTempFolder = new File(tempFolder.getAbsolutePath() + "/Burningwave");
-			if (!baseTempFolder.exists()) {
-				baseTempFolder.mkdirs();
+			File folder = new File(tempFolder.getAbsolutePath() + "/" + "Burningwave");
+			if (!folder.exists()) {
+				folder.mkdirs();
 			}
 			toDelete.delete();
+			return folder;
 		});
-		this.pathHelperSupplier = pathHelperSupplier;
-		this.temporaryFiles = new CopyOnWriteArrayList<File>();
+	}
+	
+	public static File getOrCreateTemporaryFolder(String folderName) {
+		return ThrowingSupplier.get(() -> {
+			File tempFolder = new File(getOrCreateMainTemporaryFolder().getAbsolutePath() + "/" + folderName);
+			if (!tempFolder.exists()) {
+				tempFolder.mkdirs();
+			}
+			return tempFolder;
+		});
 	}
 	
 	public static FileSystemHelper create(Supplier<PathHelper> pathHelperSupplier) {
@@ -127,37 +145,25 @@ public class FileSystemHelper implements Component {
 		return files.stream().findFirst().orElse(null);
 	}
 	
-	public File createTemporaryFolder(String folderName) {
-		return ThrowingSupplier.get(() -> {
-			File tempFolder = new File(baseTempFolder.getAbsolutePath() + "/" + folderName);
-			if (!tempFolder.exists()) {
-				tempFolder.mkdirs();
-			}
-			temporaryFiles.add(tempFolder);
-			return tempFolder;
-		});
-	}
-	
 
-	public void deleteTempraryFiles(Collection<File> temporaryFiles) {
-		deleteFiles(temporaryFiles);
+	public static void deleteTempraryFiles(Collection<File> temporaryFiles) {
+		delete(temporaryFiles);
 		temporaryFiles.removeAll(temporaryFiles);
 	}
 	
-	public void deleteFiles(Collection<File> files) {
+	public static void delete(Collection<File> files) {
 		if (files != null) {
 			Iterator<File> itr = files.iterator();
 			while(itr.hasNext()) {
 				File tempFile = (File)itr.next();
 				if (tempFile.exists()) {
 					delete(tempFile);
-					itr.remove();
 				}
 			}
 		}
 	}
 	
-	public boolean delete(File file) {
+	public static boolean delete(File file) {
 		if (file.isDirectory()) {
 			return deleteFolder(file);
 		} else {
@@ -165,11 +171,11 @@ public class FileSystemHelper implements Component {
 		}
 	}
 	
-	public void delete(String absolutePath) {
+	public static void delete(String absolutePath) {
 		delete(new File(absolutePath));	
 	}
 
-	public boolean deleteFolder(File folder) {
+	public static boolean deleteFolder(File folder) {
 	    File[] files = folder.listFiles();
 	    if(files!=null) { //some JVMs return null for empty dirs
 	        for(File f: files) {
@@ -261,9 +267,7 @@ public class FileSystemHelper implements Component {
 	void scanZipFile(ItemContext scanItemContext){
 		FileInputStream fileInputStream = scanItemContext.item.getWrappedItem();
 		File currentFile = fileInputStream.getFile();
-		try //(ZipInputStream zipContainer = ZipInputStream.create(fileInputStream)) 
-		{
-			ZipFile zipContainer = new ZipFile(currentFile);
+		try (IterableZipContainer zipContainer = IterableZipContainer.create(fileInputStream)) {
 			logDebug("scanning zip file " + zipContainer.getAbsolutePath());      
 			scanZipContainer(new ItemContext(scanItemContext, new Scan.ZipContainerWrapper(zipContainer)));
 		} catch (Throwable exc) {
@@ -272,19 +276,19 @@ public class FileSystemHelper implements Component {
 	}
 	
 	void scanZipContainerEntry(ItemContext scanItemContext){
-		ZipContainer.Entry zipEntry = scanItemContext.item.getWrappedItem();
-		try (ZipInputStream zipInputStream = ZipInputStream.create(zipEntry)) {
+		IterableZipContainer.Entry zipEntry = scanItemContext.item.getWrappedItem();
+		try (IterableZipContainer zipInputStream = IterableZipContainer.create(zipEntry)) {
 			scanZipContainer(new ItemContext(scanItemContext, new Scan.ZipContainerWrapper(zipInputStream)));
 		}
 	}
 	
 	void scanZipContainer(ItemContext currentScannedItemContext){
-		ZipContainer currentZip = currentScannedItemContext.item.getWrappedItem();
+		IterableZipContainer currentZip = currentScannedItemContext.item.getWrappedItem();
 		Scan.MainContext mainContext = currentScannedItemContext.mainContext;
 		Configuration configuration = mainContext.configuration;
-		ZipContainer.Entry zipEntry = null;
+		IterableZipContainer.Entry zipEntry = null;
 		while((zipEntry = currentZip.getNextEntry()) != null) {
-			for (Entry<Predicate<ZipContainer.Entry>, Consumer<ItemContext>> entry : configuration.filterAndMapperForZipEntry.entrySet()) {
+			for (Entry<Predicate<IterableZipContainer.Entry>, Consumer<ItemContext>> entry : configuration.filterAndMapperForZipEntry.entrySet()) {
 				if (entry.getKey().test(zipEntry)) {
 					try {
 						logDebug("scanning zip entry " + zipEntry.getAbsolutePath());
@@ -365,9 +369,9 @@ public class FileSystemHelper implements Component {
 		}
 		
 		private static class ZipEntryWrapper implements ItemWrapper {
-			private ZipContainer.Entry zipEntry;
+			private IterableZipContainer.Entry zipEntry;
 			
-			private ZipEntryWrapper(ZipContainer.Entry zipEntry) {
+			private ZipEntryWrapper(IterableZipContainer.Entry zipEntry) {
 				this.zipEntry = zipEntry;
 			}
 
@@ -389,9 +393,9 @@ public class FileSystemHelper implements Component {
 		}
 		
 		private static class ZipContainerWrapper implements ItemWrapper {
-			private ZipContainer zipContainer;
+			private IterableZipContainer zipContainer;
 			
-			private ZipContainerWrapper(ZipContainer zipContainer) {
+			private ZipContainerWrapper(IterableZipContainer zipContainer) {
 				this.zipContainer = zipContainer;
 			}
 
@@ -521,7 +525,7 @@ public class FileSystemHelper implements Component {
 			private BiConsumer<MainContext, String> afterScanPath;
 			private Map<BiPredicate<File, File>, Consumer<ItemContext>> filterAndMapperForDirectory;
 			private Map<Predicate<File>, Consumer<ItemContext>> filterAndMapperForFile;
-			private Map<Predicate<ZipContainer.Entry>, Consumer<ItemContext>> filterAndMapperForZipEntry;
+			private Map<Predicate<IterableZipContainer.Entry>, Consumer<ItemContext>> filterAndMapperForZipEntry;
 			private boolean optimizePaths;
 			private int maxParallelTasks;
 
@@ -742,7 +746,7 @@ public class FileSystemHelper implements Component {
 			
 			
 			public final Configuration whenFindZipEntryTestAndApply(
-				Predicate<ZipContainer.Entry> predicate,
+				Predicate<IterableZipContainer.Entry> predicate,
 				Consumer<ItemContext> zipEntryAnalyzers
 			) {
 				return putInFilterAndConsumerMap(filterAndMapperForZipEntry, predicate, zipEntryAnalyzers);
@@ -754,7 +758,7 @@ public class FileSystemHelper implements Component {
 				return putInFilterAndConsumerMap(filterAndMapperForZipEntry, file -> true, zipEntryAnalyzers);
 			}
 			
-			public Configuration scanRecursivelyAllZipEntryThat(Predicate<ZipContainer.Entry> predicate) {
+			public Configuration scanRecursivelyAllZipEntryThat(Predicate<IterableZipContainer.Entry> predicate) {
 				return putInFilterAndConsumerMap(
 					filterAndMapperForZipEntry, predicate, 
 					scanItemContext -> {
@@ -764,7 +768,7 @@ public class FileSystemHelper implements Component {
 			}
 			
 			public Configuration scanRecursivelyAllZipEntryThatAndApplyBefore(
-				Predicate<ZipContainer.Entry> predicate,
+				Predicate<IterableZipContainer.Entry> predicate,
 				Consumer<ItemContext> before
 			) {
 				return putInFilterAndConsumerMap(
@@ -778,7 +782,7 @@ public class FileSystemHelper implements Component {
 			}
 			
 			public Configuration scanRecursivelyAllZipEntryThatAndApply(
-				Predicate<ZipContainer.Entry> predicate,
+				Predicate<IterableZipContainer.Entry> predicate,
 				Consumer<ItemContext> before,
 				Consumer<ItemContext> after
 			) {
@@ -856,8 +860,7 @@ public class FileSystemHelper implements Component {
 	
 	@Override
 	public void close() {
-		deleteFiles(temporaryFiles);
-		temporaryFiles.clear();
+		
 	}
 
 }

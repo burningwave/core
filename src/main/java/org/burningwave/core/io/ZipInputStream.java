@@ -35,83 +35,46 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.zip.ZipException;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingRunnable;
-import org.burningwave.core.io.ZipInputStream.Entry.Detached;
+import org.burningwave.core.io.ZipInputStream.Entry.Attached;
 import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
-public class ZipInputStream extends java.util.zip.ZipInputStream implements ZipContainer, Component {
-		
-	private ZipInputStream parent;
-	private Entry.Attached currentZipEntry;
+public class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZipContainer, Component {
+	IterableZipContainer parent;
+	private IterableZipContainer.Entry currentZipEntry;
 	private String absolutePath;
-	private ByteBufferInputStream byteBufferInputStream;
+	ByteBufferInputStream byteBufferInputStream;
 	
-	private ZipInputStream(String absolutePath, InputStream inputStream) {
+	ZipInputStream(String absolutePath, InputStream inputStream) {
 		super(inputStream);
 		this.absolutePath = absolutePath;
 	}
 	
-	private ZipInputStream(File file) {
-		this(file.getAbsolutePath(), FileInputStream.create(file));
+	ZipInputStream(String absolutePath, ByteBufferInputStream inputStream) {
+		super(inputStream);
+		this.absolutePath = absolutePath;
+		this.byteBufferInputStream = inputStream;
 	}
 	
-	public static ZipInputStream create(String absolutePath, InputStream inputStream) {
-		ByteBufferInputStream iS = null;
-		if (inputStream instanceof ByteBufferInputStream) {
-			iS = new ByteBufferInputStream(((ByteBufferInputStream)inputStream).toByteBuffer());
-		} else if (inputStream instanceof FileInputStream) {
-			FileInputStream fileInputStream = (FileInputStream)inputStream;
-			iS = new ByteBufferInputStream(fileInputStream.toByteBuffer());
-		} else {
-			iS = new ByteBufferInputStream(Streams.toByteBuffer(inputStream));
-		}
-		ZipInputStream zipInputStream = new ZipInputStream(absolutePath, iS);
-		zipInputStream.byteBufferInputStream = iS;
-		return zipInputStream;
-	}
-	
-	public static ZipInputStream create(FileInputStream file) {
-		return create(file.getAbsolutePath(), file);
-	}
-	
-	public static ZipInputStream create(File file) {
-		return create(file.getAbsolutePath(), FileInputStream.create(file));
+	@Override
+	public Function<IterableZipContainer.Entry, org.burningwave.core.io.IterableZipContainer.Entry> getEntrySupplier() {
+		return Entry.Detached::new;
 	}	
 	
-	public static ZipInputStream create(String absolutePath, ByteBuffer zipInputStreamAsBytes) {
-		ByteBufferInputStream iS = new ByteBufferInputStream(zipInputStreamAsBytes);
-		ZipInputStream zipInputStream = new ZipInputStream(absolutePath, iS);
-		zipInputStream.byteBufferInputStream = iS;
-		return zipInputStream;
+	@Override
+	public IterableZipContainer getParent() {
+		return parent;
 	}
-	
-	public static ZipInputStream create(ZipContainer.Entry zipEntry) {
-		ZipInputStream zipInputStream = create(zipEntry.getAbsolutePath(), zipEntry.toByteBuffer());
-		ZipContainer parentContainer = zipEntry.getParentContainer();
-		if (parentContainer instanceof ZipInputStream) {
-			zipInputStream.parent = zipEntry.getParentContainer();
-		} else {
-			ZipContainer parent = zipEntry.getParentContainer();
-			zipInputStream.parent = new ZipInputStream(parent.getAbsolutePath(), new ByteBufferInputStream(parent.toByteBuffer()));
-		}
-		return zipInputStream;
-	}
-	
-	public ZipInputStream duplicate() {
-		ZipInputStream zipInputStream = create(absolutePath, toByteBuffer());
-		if (parent != null) {
-			zipInputStream.parent = parent.duplicate();
-		}
-		return zipInputStream;
+
+	@Override
+	public void setParent(IterableZipContainer parent) {
+		this.parent = parent;		
 	}
 	
 	public String getAbsolutePath() {
@@ -123,7 +86,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements ZipC
 	}
 
 	public byte[] toByteArray() {
-		
 		return Streams.toByteArray(toByteBuffer());
 	}
 
@@ -136,10 +98,10 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements ZipC
 	@Override
 	@SuppressWarnings("unchecked")
 	public Entry.Attached getNextEntry() {
-		return getNextEntry((zEntry) -> false);
+		return (Attached)getNextEntry((zEntry) -> false);
 	}
 	
-	public Entry.Attached getNextEntry(Predicate<Entry.Attached> loadZipEntryData) {
+	public IterableZipContainer.Entry getNextEntry(Predicate<IterableZipContainer.Entry> loadZipEntryData) {
 		ThrowingRunnable.run(() -> {
 			try {
 				currentZipEntry = (Entry.Attached)super.getNextEntry();
@@ -149,133 +111,29 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements ZipC
 			}
 		});
 		if (currentZipEntry != null && loadZipEntryData.test(currentZipEntry)) {
-			currentZipEntry.loadContent();
+			currentZipEntry.toByteBuffer();
 		}
 		return currentZipEntry;
 	}		
 	
-	public Detached getNextEntryAsDetached() {
+	public IterableZipContainer.Entry getNextEntryAsDetached() {
 		return getNextEntryAsDetached(zEntry -> false);
 	}
 	
-	public Detached getNextEntryAsDetached(Predicate<Entry.Attached> loadZipEntryData) {
+	public IterableZipContainer.Entry getNextEntryAsDetached(Predicate<IterableZipContainer.Entry> loadZipEntryData) {
 		return Optional.ofNullable(
-			getNextEntry(loadZipEntryData)).map(zipEntry ->	zipEntry.convert()
+			getNextEntry(loadZipEntryData)).map(zipEntry ->	((Attached) zipEntry).convert()
 		).orElseGet(
 			() -> null
 		);
 	}
 	
-	public <T> Set<T> findAllAndConvert(
-		Predicate<Entry.Attached> zipEntryPredicate, 
-		Function<Entry.Attached, T> tSupplier,
-		Predicate<Entry.Attached> loadZipEntryData
-	) {
-		return findAllAndConvert(ConcurrentHashMap::newKeySet, zipEntryPredicate, tSupplier, loadZipEntryData);
-	}
-	
-	public <T> Set<T> findAllAndConvert(
-		Supplier<Set<T>> supplier, 
-		Predicate<Entry.Attached> zipEntryPredicate, 
-		Function<Entry.Attached, T> tSupplier,
-		Predicate<Entry.Attached> loadZipEntryData
-	) {
-		Set<T> collection = supplier.get();
-		if (currentZipEntry != null && zipEntryPredicate.test(currentZipEntry)) {
-			if (loadZipEntryData.test(currentZipEntry)) {
-				currentZipEntry.loadContent();
-			}
-			collection.add(tSupplier.apply(currentZipEntry));
-		}
-		while(getNextEntry((zEntry) -> false) != null) {
-			if (zipEntryPredicate.test(currentZipEntry)) {
-				if (loadZipEntryData.test(currentZipEntry)) {
-					currentZipEntry.loadContent();
-				}
-				collection.add(tSupplier.apply(currentZipEntry));
-			}
-		}
-		return collection;
-	}
-	
-	public <T> T findFirstAndConvert(
-		Predicate<Entry.Attached> zipEntryPredicate, 
-		Function<Entry.Attached, T> tSupplier,
-		Predicate<Entry.Attached> loadZipEntryData
-	) {
-		if (currentZipEntry != null && zipEntryPredicate.test(currentZipEntry)) {
-			if (loadZipEntryData.test(currentZipEntry)) {
-				currentZipEntry.loadContent();
-			}
-			return tSupplier.apply(currentZipEntry);
-		}
-		while(getNextEntry(zEntry -> false) != null) {
-			if (zipEntryPredicate.test(currentZipEntry)) {
-				if (loadZipEntryData.test(currentZipEntry)) {
-					currentZipEntry.loadContent();
-				}
-				
-				T toRet = tSupplier.apply(currentZipEntry);
-				closeEntry();
-				return toRet;
-			}
-		}
-		return null;
-	}
-	
-	public <T> T findOneAndConvert(Predicate<Entry.Attached> zipEntryPredicate, Function<Entry.Attached, T> tSupplier, Predicate<Entry.Attached> loadZipEntryData) {
-		Set<T> entriesFound = findAllAndConvert(
-			zipEntryPredicate,
-			tSupplier, 
-			loadZipEntryData
-		);
-		if (entriesFound.size() > 1) {
-			throw Throwables.toRuntimeException("Found more than one zip entry for predicate " + zipEntryPredicate);
-		}
-		return entriesFound.stream().findFirst().orElseGet(() -> null);
-	}
-	
-	public Entry.Detached findOneAndConvert(Predicate<Entry.Attached> zipEntryPredicate, Predicate<Entry.Attached> loadZipEntryData) {
-		return findOneAndConvert(
-			zipEntryPredicate,
-			zEntry -> new Entry.Detached(
-				zEntry
-			),
-			loadZipEntryData		
-		);
-	}
-	
-	public Entry.Detached findFirstAndConvert(Predicate<Entry.Attached> zipEntryPredicate, Predicate<Entry.Attached> loadZipEntryData) {
-		return findFirstAndConvert(
-			zipEntryPredicate,
-			zEntry -> new Entry.Detached(
-				zEntry
-			),
-			loadZipEntryData		
-		);
-	}
-	
-	public Set<Entry.Detached> findAllAndConvert(Predicate<Entry.Attached> zipEntryPredicate, Predicate<Entry.Attached> loadZipEntryData) {
-		return findAllAndConvert(ConcurrentHashMap::newKeySet, zipEntryPredicate, loadZipEntryData);
-	}
-	
-	public Set<Entry.Detached> findAllAndConvert(Supplier<Set<Entry.Detached>> setSupplier, Predicate<Entry.Attached> zipEntryPredicate, Predicate<Entry.Attached> loadZipEntryData) {
-		return findAllAndConvert(
-			setSupplier,
-			zipEntryPredicate,
-			zEntry -> new Entry.Attached.Detached(
-				zEntry
-			),
-			loadZipEntryData		
-		);
-	}
-	
-	public Entry.Attached getCurrentZipEntry() {
+	public IterableZipContainer.Entry getCurrentZipEntry() {
 		return currentZipEntry;
 	}
 	
-	public Detached convertCurrentZipEntry() {
-		return currentZipEntry.convert();
+	public IterableZipContainer.Entry convertCurrentZipEntry() {
+		return ((Attached)getCurrentZipEntry()).convert();
 	}
 	
 	
@@ -284,7 +142,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements ZipC
 		try {
 			super.closeEntry();
 		} catch (IOException exc) {
-			logWarn("Exception occurred while closing zipEntry {}: {}", Optional.ofNullable(currentZipEntry).map((zipEntry) -> zipEntry.getAbsolutePath()).orElseGet(() -> "null"), exc.getMessage());
+			logWarn("Exception occurred while closing zipEntry {}: {}", Optional.ofNullable(getCurrentZipEntry()).map((zipEntry) -> zipEntry.getAbsolutePath()).orElseGet(() -> "null"), exc.getMessage());
 		}
 		if (currentZipEntry != null) {
 			currentZipEntry.close();
@@ -301,9 +159,9 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements ZipC
 		this.byteBufferInputStream = null;
 	}
 		
-	public static interface Entry extends ZipContainer.Entry {		
+	public static interface Entry extends IterableZipContainer.Entry {		
 	
-		static class Attached extends java.util.zip.ZipEntry implements Component, Entry {
+		static class Attached extends java.util.zip.ZipEntry implements Entry {
 			private ZipInputStream zipInputStream;
 	
 			public Attached(Entry.Attached e, ZipInputStream zIS) {
@@ -348,8 +206,8 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements ZipC
 			private ByteBuffer loadContent() {
 				return Cache.PATH_FOR_CONTENTS.getOrDefault(
 					getAbsolutePath(), () -> {
-						if (zipInputStream.currentZipEntry != this) {
-							throw Throwables.toRuntimeException("Entry.Impl and his ZipInputStream are not aligned");
+						if (zipInputStream.getCurrentZipEntry() != this) {
+							throw Throwables.toRuntimeException(Attached.class.getSimpleName() + " and his ZipInputStream are not aligned");
 						}
 						try (ByteBufferOutputStream bBOS = createDataBytesContainer()) {
 							Streams.copy(zipInputStream, bBOS);
@@ -364,7 +222,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements ZipC
 				return loadContent();
 			}
 			
-			public Detached convert() {
+			public IterableZipContainer.Entry convert() {
 				return new Entry.Detached(
 					this
 				);
@@ -398,13 +256,13 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements ZipC
 			}
 		}
 	
-		public static class Detached implements Component, Entry {
+		public static class Detached implements Entry {
 			private String name;
 			private String absolutePath;
 			private Boolean isDirectory;
-			private ZipInputStream zipInputStream;
+			private IterableZipContainer zipInputStream;
 			
-			Detached(Entry.Attached zipEntry) {
+			Detached(IterableZipContainer.Entry zipEntry) {
 				this.name = zipEntry.getName();
 				this.absolutePath = zipEntry.getAbsolutePath();
 				this.isDirectory = zipEntry.isDirectory();
@@ -413,13 +271,13 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements ZipC
 			}
 			
 			@SuppressWarnings("unchecked")
-			public ZipInputStream getParentContainer() {
+			public IterableZipContainer getParentContainer() {
 				return zipInputStream.duplicate();
 			}
 	
 			public ByteBuffer toByteBuffer() {
 				return Cache.PATH_FOR_CONTENTS.getOrDefault(absolutePath, () -> {
-					try (ZipInputStream zipInputStream = getParentContainer()) {
+					try (IterableZipContainer zipInputStream = getParentContainer()) {
 						ByteBuffer content = zipInputStream.findFirstAndConvert((entry) -> 
 							entry.getName().equals(getName()), zEntry -> 
 							zEntry.toByteBuffer(), zEntry -> true
@@ -449,5 +307,5 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements ZipC
 				zipInputStream = null;
 			}
 		}
-	}	
+	}
 }

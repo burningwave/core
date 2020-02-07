@@ -147,7 +147,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return (F)this;
 	}
 	
-	public F loadAllZipEntryThat(Predicate<ZipContainer.Entry> predicate) {
+	public F loadAllZipEntryThat(Predicate<IterableZipContainer.Entry> predicate) {
 		this.fileCriteriaForZipEntry.and().allThat(predicate);
 		return (F)this;
 	}
