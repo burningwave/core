@@ -123,7 +123,7 @@ public class FileSystemItemTest extends BaseTest {
 	}
 	
 	
-	//@Test
+	@Test
 	@Tag("Heavy")
 	public void readTestTestThirteen() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
