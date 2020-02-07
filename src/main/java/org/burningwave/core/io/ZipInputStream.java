@@ -62,10 +62,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 		this.byteBufferInputStream = inputStream;
 	}
 	
-	ZipInputStream(File file) {
-		this(file.getAbsolutePath(), FileInputStream.create(file));
-	}
-	
 	@Override
 	public IterableZipContainer duplicate() {
 		IterableZipContainer zipInputStream = IterableZipContainer.create(absolutePath, toByteBuffer());
