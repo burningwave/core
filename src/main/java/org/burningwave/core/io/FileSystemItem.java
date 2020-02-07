@@ -145,7 +145,7 @@ public class FileSystemItem implements ManagedLogger {
 					return fileInputStream.getAbsolutePath() + ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
 						fileInputStream.toByteBuffer(), fileInputStream.getAbsolutePath(), relativePath
 					);
-				} catch (FileSystemItemNotFoundException exc) {
+				} catch (Exception exc) {
 					exists = false;
 					String fileName = realAbsolutePath + (realAbsolutePath.endsWith("/")? "" : "/") + relativePath;
 					logWarn("File {}/{} does not exists", realAbsolutePath, relativePath);

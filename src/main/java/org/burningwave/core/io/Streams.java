@@ -102,6 +102,9 @@ public class Streams implements ManagedLogger {
 	}
 	
 	private static boolean isArchive(ByteBuffer bytes, Predicate<Integer> predicate) {
+		if (bytes.capacity() < 4) {
+			return false;
+		}
 		bytes = bytes.duplicate();
 		try {
 			return predicate.test(bytes.getInt());
