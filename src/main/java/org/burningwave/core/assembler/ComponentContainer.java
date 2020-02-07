@@ -248,7 +248,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public JavaMemoryCompiler getJavaMemoryCompiler() {
 		return getOrCreate(JavaMemoryCompiler.class, () ->
 			JavaMemoryCompiler.create(
-				getFileSystemHelper(),
 				getPathHelper(),
 				getClassHelper(),
 				getClassPathHunter()

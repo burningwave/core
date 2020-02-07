@@ -71,7 +71,6 @@ import org.burningwave.core.io.PathHelper;
 
 public class JavaMemoryCompiler implements Component {
 	
-	private FileSystemHelper fileSystemHelper;
 	private ClassHelper classHelper;
 	private ClassPathHunter classPathHunter;
 	private JavaCompiler compiler;
@@ -80,33 +79,30 @@ public class JavaMemoryCompiler implements Component {
 	private FileSystemItem classPathHunterBasePathForCompressedClasses;
 	
 	private JavaMemoryCompiler(
-		FileSystemHelper fileSystemHelper,
 		PathHelper pathHelper,
 		ClassHelper classHelper,
 		ClassPathHunter classPathHunter
 	) {
-		this.fileSystemHelper = fileSystemHelper;
 		this.classPathHunter = classPathHunter;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
 		this.classHelper = classHelper;
 		compiledClassesClassPath = FileSystemItem.ofPath(
-			this.fileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix() + "/compiled").getAbsolutePath()
+			FileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix() + "/compiled").getAbsolutePath()
 		);
 		classPathHunterBasePathForCompressedLibs = FileSystemItem.ofPath(
-			this.fileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix() + "/lib").getAbsolutePath()
+			FileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix() + "/lib").getAbsolutePath()
 		);
 		classPathHunterBasePathForCompressedClasses = FileSystemItem.ofPath(
-			this.fileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix() + "/classes").getAbsolutePath()
+			FileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix() + "/classes").getAbsolutePath()
 		);		
 	}	
 	
 	public static JavaMemoryCompiler create(
-		FileSystemHelper fileSystemHelper,
 		PathHelper pathHelper,
 		ClassHelper classHelper,
 		ClassPathHunter classPathHunter
 	) {
-		return new JavaMemoryCompiler(fileSystemHelper, pathHelper, classHelper, classPathHunter);
+		return new JavaMemoryCompiler(pathHelper, classHelper, classPathHunter);
 	}
 	
 	
