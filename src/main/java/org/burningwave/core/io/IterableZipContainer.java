@@ -22,6 +22,17 @@ public interface IterableZipContainer extends Component {
 		return create(file.getAbsolutePath(), FileInputStream.create(file));
 	}
 	
+	public static IterableZipContainer create(Entry zipEntry) {
+		IterableZipContainer zipInputStream = create(zipEntry.getAbsolutePath(), zipEntry.toByteBuffer());
+		IterableZipContainer parentContainer = zipEntry.getParentContainer();
+		zipInputStream.setParent(parentContainer);
+		return zipInputStream;
+	}
+
+	public static IterableZipContainer create(String absolutePath, ByteBuffer zipInputStreamAsBytes) {
+		return new ZipInputStream(absolutePath, new ByteBufferInputStream(zipInputStreamAsBytes));
+	}
+	
 	public static IterableZipContainer create(String absolutePath, InputStream inputStream) {
 		ByteBufferInputStream iS = null;
 		if (inputStream instanceof ByteBufferInputStream) {
@@ -33,18 +44,6 @@ public interface IterableZipContainer extends Component {
 			iS = new ByteBufferInputStream(Streams.toByteBuffer(inputStream));
 		}
 		return new ZipInputStream(absolutePath, iS);
-	}
-	
-
-	public static IterableZipContainer create(Entry zipEntry) {
-		IterableZipContainer zipInputStream = create(zipEntry.getAbsolutePath(), zipEntry.toByteBuffer());
-		IterableZipContainer parentContainer = zipEntry.getParentContainer();
-		zipInputStream.setParent(parentContainer);
-		return zipInputStream;
-	}
-
-	public static IterableZipContainer create(String absolutePath, ByteBuffer zipInputStreamAsBytes) {
-		return new ZipInputStream(absolutePath, new ByteBufferInputStream(zipInputStreamAsBytes));
 	}
 	
 	public default <T> Set<T> findAllAndConvert(
