@@ -37,7 +37,7 @@ public class SLF4JManagedLoggerRepository implements ManagedLogger.Repository{
 	}
 	
 	public void logError(Class<?> client, String message, Throwable exc) {
-		log(client, (logger) -> logger.debug(message, exc));
+		log(client, (logger) -> logger.error(message, exc));
 	}
 	
 	public void logError(Class<?> client, String message) {
