@@ -256,7 +256,7 @@ public class FileSystemHelperTest extends BaseTest {
 		Collection<String> classZipEntryFounds = ConcurrentHashMap.newKeySet();
 		Collection<String> allClassesByteCodeFounds = ConcurrentHashMap.newKeySet();
 		Configuration config = Configuration.forPaths(
-			"F:/Shared/Programmi/Java/jdk/13.0.2/jmods"
+			componentSupplier.getPathHelper().getAllClassPaths()
 		).scanRecursivelyAllDirectory(
 		).whenFindFileTestAndApply(
 			file -> file.getName().endsWith(".class"), 
