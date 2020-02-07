@@ -267,9 +267,7 @@ public class FileSystemHelper implements Component {
 	void scanZipFile(ItemContext scanItemContext){
 		FileInputStream fileInputStream = scanItemContext.item.getWrappedItem();
 		File currentFile = fileInputStream.getFile();
-		try (IterableZipContainer zipContainer = IterableZipContainer.create(fileInputStream)) 
-		{
-			//ZipFile zipContainer = new ZipFile(currentFile);
+		try (IterableZipContainer zipContainer = IterableZipContainer.create(fileInputStream)) {
 			logDebug("scanning zip file " + zipContainer.getAbsolutePath());      
 			scanZipContainer(new ItemContext(scanItemContext, new Scan.ZipContainerWrapper(zipContainer)));
 		} catch (Throwable exc) {

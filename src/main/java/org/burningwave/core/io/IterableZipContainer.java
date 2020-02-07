@@ -24,17 +24,23 @@ public interface IterableZipContainer extends Component {
 	
 	public static IterableZipContainer create(Entry zipEntry) {
 		IterableZipContainer zipInputStream = create(zipEntry.getAbsolutePath(), zipEntry.toByteBuffer());
-		IterableZipContainer parentContainer = zipEntry.getParentContainer();
+		IterableZipContainer parentContainer = zipEntry.getParentContainer().duplicate();
 		zipInputStream.setParent(parentContainer);
 		return zipInputStream;
 	}
 
-	public static IterableZipContainer create(String absolutePath, ByteBuffer zipInputStreamAsBytes) {
-		return new ZipInputStream(absolutePath, new ByteBufferInputStream(zipInputStreamAsBytes));
+	public static IterableZipContainer create(String absolutePath, ByteBuffer bytes) {
+		if (Streams.isJModArchive(bytes)) {
+			return Cache.PATH_FOR_ZIP_FILE_CONTAINERS.getOrDefault(
+				absolutePath, () -> new ZipFileContainer(absolutePath, bytes)
+			).duplicate();
+		}
+		return new ZipInputStream(absolutePath, new ByteBufferInputStream(bytes));
 	}
 	
+	@SuppressWarnings("resource")
 	public static IterableZipContainer create(String absolutePath, InputStream inputStream) {
-		ByteBufferInputStream iS = null;
+		ByteBufferInputStream iS;
 		if (inputStream instanceof ByteBufferInputStream) {
 			iS = new ByteBufferInputStream(((ByteBufferInputStream)inputStream).toByteBuffer());
 		} else if (inputStream instanceof FileInputStream) {
@@ -42,6 +48,11 @@ public interface IterableZipContainer extends Component {
 			iS = new ByteBufferInputStream(fileInputStream.toByteBuffer());
 		} else {
 			iS = new ByteBufferInputStream(Streams.toByteBuffer(inputStream));
+		}
+		if (Streams.isJModArchive(iS.toByteBuffer())) {
+			return Cache.PATH_FOR_ZIP_FILE_CONTAINERS.getOrDefault(
+				absolutePath, () -> new ZipFileContainer(absolutePath, iS.toByteBuffer())
+			).duplicate();
 		}
 		return new ZipInputStream(absolutePath, iS);
 	}
@@ -61,19 +72,22 @@ public interface IterableZipContainer extends Component {
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
 		Set<T> collection = supplier.get();
-		if (getCurrentZipEntry() != null && zipEntryPredicate.test(getCurrentZipEntry())) {
-			if (loadZipEntryData.test(getCurrentZipEntry())) {
-				getCurrentZipEntry().toByteBuffer();
+		Entry zipEntry = getCurrentZipEntry();
+		if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
+			if (loadZipEntryData.test(zipEntry)) {
+				zipEntry.toByteBuffer();
 			}
-			collection.add(tSupplier.apply(getCurrentZipEntry()));
+			collection.add(tSupplier.apply(zipEntry));
+			closeEntry();
 		}
-		while(getNextEntry((zEntry) -> false) != null) {
-			if (zipEntryPredicate.test(getCurrentZipEntry())) {
-				if (loadZipEntryData.test(getCurrentZipEntry())) {
-					getCurrentZipEntry().toByteBuffer();
+		while((zipEntry = getNextEntry((zEntry) -> false)) != null) {
+			if (zipEntryPredicate.test(zipEntry)) {
+				if (loadZipEntryData.test(zipEntry)) {
+					zipEntry.toByteBuffer();
 				}
-				collection.add(tSupplier.apply(getCurrentZipEntry()));
+				collection.add(tSupplier.apply(zipEntry));
 			}
+			closeEntry();
 		}
 		return collection;
 	}
@@ -109,19 +123,21 @@ public interface IterableZipContainer extends Component {
 		Function<IterableZipContainer.Entry, T> tSupplier,
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
-		if (getCurrentZipEntry() != null && zipEntryPredicate.test(getCurrentZipEntry())) {
-			if (loadZipEntryData.test(getCurrentZipEntry())) {
-				getCurrentZipEntry().toByteBuffer();
+		Entry zipEntry = getCurrentZipEntry();
+		if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
+			if (loadZipEntryData.test(zipEntry)) {
+				zipEntry.toByteBuffer();
 			}
-			return tSupplier.apply(getCurrentZipEntry());
+			closeEntry();
+			return tSupplier.apply(zipEntry);
 		}
-		while(getNextEntry(zEntry -> false) != null) {
-			if (zipEntryPredicate.test(getCurrentZipEntry())) {
-				if (loadZipEntryData.test(getCurrentZipEntry())) {
-					getCurrentZipEntry().toByteBuffer();
+		while((zipEntry = getNextEntry(zEntry -> false)) != null) {
+			if (zipEntryPredicate.test(zipEntry)) {
+				if (loadZipEntryData.test(zipEntry)) {
+					zipEntry.toByteBuffer();
 				}
 				
-				T toRet = tSupplier.apply(getCurrentZipEntry());
+				T toRet = tSupplier.apply(zipEntry);
 				closeEntry();
 				return toRet;
 			}

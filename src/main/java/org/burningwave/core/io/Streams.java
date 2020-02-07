@@ -39,6 +39,7 @@ import java.math.BigDecimal;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingRunnable;
@@ -93,9 +94,17 @@ public class Streams implements ManagedLogger {
 	}
 	
 	public static boolean isArchive(ByteBuffer bytes) {
+		return isArchive(bytes, Streams::isArchive);
+	}
+	
+	public static boolean isJModArchive(ByteBuffer bytes) {
+		return isArchive(bytes, Streams::isJModArchive);
+	}
+	
+	private static boolean isArchive(ByteBuffer bytes, Predicate<Integer> predicate) {
 		bytes = bytes.duplicate();
 		try {
-			return isArchive(bytes.getInt());
+			return predicate.test(bytes.getInt());
 		} catch (BufferUnderflowException exc) {
 			ManagedLogger.Repository.getInstance().logError(Streams.class, "Exception occurred while calling isArchive", exc);
 			return false;
@@ -103,7 +112,11 @@ public class Streams implements ManagedLogger {
 	}
 	
 	private static boolean isArchive(int fileSignature) {
-		return fileSignature == 0x504B0304 || fileSignature == 0x504B0506 || fileSignature == 0x504B0708;
+		return fileSignature == 0x504B0304 || fileSignature == 0x504B0506 || fileSignature == 0x504B0708 || isJModArchive(fileSignature);
+	}
+	
+	private static boolean isJModArchive(int fileSignature) {
+		return fileSignature == 0x4A4D0100 || fileSignature == 0x4A4D0000;
 	}
 
 	public static byte[] toByteArray(InputStream inputStream) {

@@ -86,7 +86,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 	}
 
 	public byte[] toByteArray() {
-		
 		return Streams.toByteArray(toByteBuffer());
 	}
 
@@ -112,7 +111,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 			}
 		});
 		if (currentZipEntry != null && loadZipEntryData.test(currentZipEntry)) {
-			getCurrentZipEntry().toByteBuffer();
+			currentZipEntry.toByteBuffer();
 		}
 		return currentZipEntry;
 	}		
@@ -145,8 +144,8 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 		} catch (IOException exc) {
 			logWarn("Exception occurred while closing zipEntry {}: {}", Optional.ofNullable(getCurrentZipEntry()).map((zipEntry) -> zipEntry.getAbsolutePath()).orElseGet(() -> "null"), exc.getMessage());
 		}
-		if (getCurrentZipEntry() != null) {
-			getCurrentZipEntry().close();
+		if (currentZipEntry != null) {
+			currentZipEntry.close();
 			currentZipEntry = null;
 		}
 	}
@@ -208,7 +207,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 				return Cache.PATH_FOR_CONTENTS.getOrDefault(
 					getAbsolutePath(), () -> {
 						if (zipInputStream.getCurrentZipEntry() != this) {
-							throw Throwables.toRuntimeException("Entry.Impl and his ZipInputStream are not aligned");
+							throw Throwables.toRuntimeException(Attached.class.getSimpleName() + " and his ZipInputStream are not aligned");
 						}
 						try (ByteBufferOutputStream bBOS = createDataBytesContainer()) {
 							Streams.copy(zipInputStream, bBOS);
