@@ -48,7 +48,7 @@ import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ZipInputStream.Entry.Detached;
 import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
-public class ZipInputStream extends java.util.zip.ZipInputStream implements Component {
+public class ZipInputStream extends java.util.zip.ZipInputStream implements ZipContainer, Component {
 		
 	private ZipInputStream parent;
 	private Entry.Attached currentZipEntry;
@@ -94,16 +94,15 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Comp
 		return zipInputStream;
 	}
 	
-	public static ZipInputStream create(ZipInputStream.Entry.Detached zipEntry) {
+	public static ZipInputStream create(ZipContainer.Entry zipEntry) {
 		ZipInputStream zipInputStream = create(zipEntry.getAbsolutePath(), zipEntry.toByteBuffer());
-		zipInputStream.parent = zipEntry.getZipInputStream();
-		return zipInputStream;
-	}
-	
-	
-	public static ZipInputStream create(ZipInputStream.Entry zipEntry) {
-		ZipInputStream zipInputStream = create(zipEntry.getAbsolutePath(), zipEntry.toByteBuffer());
-		zipInputStream.parent = zipEntry.getZipInputStream();
+		ZipContainer parentContainer = zipEntry.getParentContainer();
+		if (parentContainer instanceof ZipInputStream) {
+			zipInputStream.parent = zipEntry.getParentContainer();
+		} else {
+			ZipContainer parent = zipEntry.getParentContainer();
+			zipInputStream.parent = new ZipInputStream(parent.getAbsolutePath(), new ByteBufferInputStream(parent.toByteBuffer()));
+		}
 		return zipInputStream;
 	}
 	
@@ -133,6 +132,9 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Comp
     	return new Entry.Attached(name, this);
     }
 	
+	
+	@Override
+	@SuppressWarnings("unchecked")
 	public Entry.Attached getNextEntry() {
 		return getNextEntry((zEntry) -> false);
 	}
@@ -299,29 +301,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Comp
 		this.byteBufferInputStream = null;
 	}
 		
-	public static interface Entry {
-		
-		public ZipInputStream getZipInputStream();
-				
-		public String getName();
-		
-		public String getAbsolutePath();
-		
-		public boolean isDirectory();
-		
-		public ByteBuffer toByteBuffer();
-		
-		default public byte[] toByteArray() {
-			return Streams.toByteArray(toByteBuffer());
-		}
-		
-		default public boolean isArchive() {
-			return Streams.isArchive(toByteBuffer());
-		}
-		
-		default public InputStream toInputStream() {
-			return new ByteBufferInputStream(toByteBuffer());
-		}		
+	public static interface Entry extends ZipContainer.Entry {		
 	
 		static class Attached extends java.util.zip.ZipEntry implements Component, Entry {
 			private ZipInputStream zipInputStream;
@@ -336,7 +316,8 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Comp
 				this.zipInputStream = zIS;
 			}
 			
-			public ZipInputStream getZipInputStream() {
+			@SuppressWarnings("unchecked")
+			public ZipInputStream getParentContainer() {
 				return zipInputStream;
 			}
 			
@@ -427,17 +408,18 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Comp
 				this.name = zipEntry.getName();
 				this.absolutePath = zipEntry.getAbsolutePath();
 				this.isDirectory = zipEntry.isDirectory();
-				this.zipInputStream = zipEntry.getZipInputStream().duplicate();
+				this.zipInputStream = zipEntry.getParentContainer().duplicate();
 				
 			}
 			
-			public ZipInputStream getZipInputStream() {
+			@SuppressWarnings("unchecked")
+			public ZipInputStream getParentContainer() {
 				return zipInputStream.duplicate();
 			}
 	
 			public ByteBuffer toByteBuffer() {
 				return Cache.PATH_FOR_CONTENTS.getOrDefault(absolutePath, () -> {
-					try (ZipInputStream zipInputStream = getZipInputStream()) {
+					try (ZipInputStream zipInputStream = getParentContainer()) {
 						ByteBuffer content = zipInputStream.findFirstAndConvert((entry) -> 
 							entry.getName().equals(getName()), zEntry -> 
 							zEntry.toByteBuffer(), zEntry -> true

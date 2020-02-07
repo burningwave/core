@@ -118,7 +118,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		String fsObject = null;
 		ZipInputStream.Entry zipEntry = scanItemContext.getScannedItem().getWrappedItem();
 		if (zipEntry.getName().equals(javaClass.getPath())) {
-			fsObject = zipEntry.getZipInputStream().getAbsolutePath();
+			fsObject = zipEntry.getParentContainer().getAbsolutePath();
 		} else {
 			String zipEntryAbsolutePath = zipEntry.getAbsolutePath();
 			zipEntryAbsolutePath = zipEntryAbsolutePath.substring(0, zipEntryAbsolutePath.lastIndexOf(javaClass.getPath()));

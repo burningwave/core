@@ -32,15 +32,15 @@ import java.util.function.Predicate;
 
 import org.burningwave.core.Criteria;
 
-public class ZipEntryCriteria extends Criteria<ZipInputStream.Entry, ZipEntryCriteria, Criteria.TestContext<ZipInputStream.Entry, ZipEntryCriteria>>{
+public class ZipContainerEntryCriteria extends Criteria<ZipContainer.Entry, ZipContainerEntryCriteria, Criteria.TestContext<ZipContainer.Entry, ZipContainerEntryCriteria>>{
 	
-	private ZipEntryCriteria() {}
+	private ZipContainerEntryCriteria() {}
 	
-	public static ZipEntryCriteria create() {
-		return new ZipEntryCriteria();
+	public static ZipContainerEntryCriteria create() {
+		return new ZipContainerEntryCriteria();
 	}
 	
-	public ZipEntryCriteria absolutePath(final Predicate<String> predicate) {
+	public ZipContainerEntryCriteria absolutePath(final Predicate<String> predicate) {
 		this.predicate = concat(
 			this.predicate,
 			(context, zipEntry) -> predicate.test(zipEntry.getAbsolutePath())
@@ -49,7 +49,7 @@ public class ZipEntryCriteria extends Criteria<ZipInputStream.Entry, ZipEntryCri
 	}
 	
 	
-	public ZipEntryCriteria name(final Predicate<String> predicate) {
+	public ZipContainerEntryCriteria name(final Predicate<String> predicate) {
 		this.predicate = concat(
 			this.predicate,
 			(context, zipEntry) -> predicate.test(zipEntry.getName())

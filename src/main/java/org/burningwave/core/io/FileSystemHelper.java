@@ -261,28 +261,30 @@ public class FileSystemHelper implements Component {
 	void scanZipFile(ItemContext scanItemContext){
 		FileInputStream fileInputStream = scanItemContext.item.getWrappedItem();
 		File currentFile = fileInputStream.getFile();
-		try (ZipInputStream zipInputStream = ZipInputStream.create(fileInputStream)) {
-			logDebug("scanning zip file " + zipInputStream.getAbsolutePath());      
-			scanZipInputStream(new ItemContext(scanItemContext, new Scan.ZipInputStreamWrapper(zipInputStream)));
+		try //(ZipInputStream zipContainer = ZipInputStream.create(fileInputStream)) 
+		{
+			ZipFile zipContainer = new ZipFile(currentFile);
+			logDebug("scanning zip file " + zipContainer.getAbsolutePath());      
+			scanZipContainer(new ItemContext(scanItemContext, new Scan.ZipContainerWrapper(zipContainer)));
 		} catch (Throwable exc) {
 			logError("Could not scan zip file " + Strings.Paths.clean(currentFile.getAbsolutePath()), exc);
 		}
 	}
 	
-	void scanZipEntry(ItemContext scanItemContext){
-		ZipInputStream.Entry zipEntry = scanItemContext.item.getWrappedItem();
+	void scanZipContainerEntry(ItemContext scanItemContext){
+		ZipContainer.Entry zipEntry = scanItemContext.item.getWrappedItem();
 		try (ZipInputStream zipInputStream = ZipInputStream.create(zipEntry)) {
-			scanZipInputStream(new ItemContext(scanItemContext, new Scan.ZipInputStreamWrapper(zipInputStream)));
+			scanZipContainer(new ItemContext(scanItemContext, new Scan.ZipContainerWrapper(zipInputStream)));
 		}
 	}
 	
-	void scanZipInputStream(ItemContext currentScannedItemContext){
-		ZipInputStream currentZip = currentScannedItemContext.item.getWrappedItem();
+	void scanZipContainer(ItemContext currentScannedItemContext){
+		ZipContainer currentZip = currentScannedItemContext.item.getWrappedItem();
 		Scan.MainContext mainContext = currentScannedItemContext.mainContext;
 		Configuration configuration = mainContext.configuration;
-		while(currentZip.getNextEntry() != null) {
-			ZipInputStream.Entry zipEntry = currentZip.getCurrentZipEntry();
-			for (Entry<Predicate<org.burningwave.core.io.ZipInputStream.Entry>, Consumer<ItemContext>> entry : configuration.filterAndMapperForZipEntry.entrySet()) {
+		ZipContainer.Entry zipEntry = null;
+		while((zipEntry = currentZip.getNextEntry()) != null) {
+			for (Entry<Predicate<ZipContainer.Entry>, Consumer<ItemContext>> entry : configuration.filterAndMapperForZipEntry.entrySet()) {
 				if (entry.getKey().test(zipEntry)) {
 					try {
 						logDebug("scanning zip entry " + zipEntry.getAbsolutePath());
@@ -363,9 +365,9 @@ public class FileSystemHelper implements Component {
 		}
 		
 		private static class ZipEntryWrapper implements ItemWrapper {
-			private ZipInputStream.Entry zipEntry;
+			private ZipContainer.Entry zipEntry;
 			
-			private ZipEntryWrapper(ZipInputStream.Entry zipEntry) {
+			private ZipEntryWrapper(ZipContainer.Entry zipEntry) {
 				this.zipEntry = zipEntry;
 			}
 
@@ -386,27 +388,27 @@ public class FileSystemHelper implements Component {
 			}
 		}
 		
-		private static class ZipInputStreamWrapper implements ItemWrapper {
-			private ZipInputStream zipInputStream;
+		private static class ZipContainerWrapper implements ItemWrapper {
+			private ZipContainer zipContainer;
 			
-			private ZipInputStreamWrapper(ZipInputStream zipInputStream) {
-				this.zipInputStream = zipInputStream;
+			private ZipContainerWrapper(ZipContainer zipContainer) {
+				this.zipContainer = zipContainer;
 			}
 
 			@Override
 			public ByteBuffer toByteBuffer() {
-				return zipInputStream.toByteBuffer();
+				return zipContainer.toByteBuffer();
 			}
 
 			@Override
 			public String getAbsolutePath() {
-				return zipInputStream.getAbsolutePath();
+				return zipContainer.getAbsolutePath();
 			}
 
 			@Override
 			@SuppressWarnings("unchecked")
 			public <W> W getWrappedItem() {
-				return (W)zipInputStream;
+				return (W)zipContainer;
 			}
 		}
 		
@@ -519,7 +521,7 @@ public class FileSystemHelper implements Component {
 			private BiConsumer<MainContext, String> afterScanPath;
 			private Map<BiPredicate<File, File>, Consumer<ItemContext>> filterAndMapperForDirectory;
 			private Map<Predicate<File>, Consumer<ItemContext>> filterAndMapperForFile;
-			private Map<Predicate<ZipInputStream.Entry>, Consumer<ItemContext>> filterAndMapperForZipEntry;
+			private Map<Predicate<ZipContainer.Entry>, Consumer<ItemContext>> filterAndMapperForZipEntry;
 			private boolean optimizePaths;
 			private int maxParallelTasks;
 
@@ -740,7 +742,7 @@ public class FileSystemHelper implements Component {
 			
 			
 			public final Configuration whenFindZipEntryTestAndApply(
-				Predicate<ZipInputStream.Entry> predicate,
+				Predicate<ZipContainer.Entry> predicate,
 				Consumer<ItemContext> zipEntryAnalyzers
 			) {
 				return putInFilterAndConsumerMap(filterAndMapperForZipEntry, predicate, zipEntryAnalyzers);
@@ -752,31 +754,31 @@ public class FileSystemHelper implements Component {
 				return putInFilterAndConsumerMap(filterAndMapperForZipEntry, file -> true, zipEntryAnalyzers);
 			}
 			
-			public Configuration scanRecursivelyAllZipEntryThat(Predicate<ZipInputStream.Entry> predicate) {
+			public Configuration scanRecursivelyAllZipEntryThat(Predicate<ZipContainer.Entry> predicate) {
 				return putInFilterAndConsumerMap(
 					filterAndMapperForZipEntry, predicate, 
 					scanItemContext -> {
-						scanItemContext.fileSystemHelper.scanZipEntry(scanItemContext);
+						scanItemContext.fileSystemHelper.scanZipContainerEntry(scanItemContext);
 					}
 				);
 			}
 			
 			public Configuration scanRecursivelyAllZipEntryThatAndApplyBefore(
-				Predicate<ZipInputStream.Entry> predicate,
+				Predicate<ZipContainer.Entry> predicate,
 				Consumer<ItemContext> before
 			) {
 				return putInFilterAndConsumerMap(
 					filterAndMapperForZipEntry, predicate,
 					before.andThen(
 						scanItemContext -> {
-							scanItemContext.fileSystemHelper.scanZipEntry(scanItemContext);
+							scanItemContext.fileSystemHelper.scanZipContainerEntry(scanItemContext);
 						}
 					)
 				);
 			}
 			
 			public Configuration scanRecursivelyAllZipEntryThatAndApply(
-				Predicate<ZipInputStream.Entry> predicate,
+				Predicate<ZipContainer.Entry> predicate,
 				Consumer<ItemContext> before,
 				Consumer<ItemContext> after
 			) {
@@ -784,7 +786,7 @@ public class FileSystemHelper implements Component {
 					filterAndMapperForZipEntry, predicate,
 					before.andThen(
 						scanItemContext -> {
-							scanItemContext.fileSystemHelper.scanZipEntry(scanItemContext);
+							scanItemContext.fileSystemHelper.scanZipContainerEntry(scanItemContext);
 						}
 					).andThen(after)
 				);

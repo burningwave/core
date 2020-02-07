@@ -207,7 +207,7 @@ public class FileSystemItem implements ManagedLogger {
 		}
 		if (relativePath2.isEmpty()) {
 			if (fileSystemItem.parentContainer == null) {
-				fileSystemItem.parentContainer = FileSystemItem.ofPath(zipEntry.getZipInputStream().getAbsolutePath());
+				fileSystemItem.parentContainer = FileSystemItem.ofPath(zipEntry.getParentContainer().getAbsolutePath());
 			}
 			return zipEntry.getName() + (!zipEntry.isDirectory() && zipEntry.isArchive() ? ZIP_PATH_SEPARATOR : "");
 		} else {
@@ -488,7 +488,7 @@ public class FileSystemItem implements ManagedLogger {
 					(zEntry) -> {
 						FileSystemItem fileSystemItem = FileSystemItem.ofPath(zEntry.getAbsolutePath());
 						if (fileSystemItem.parentContainer == null) {
-							fileSystemItem.parentContainer = FileSystemItem.ofPath(zEntry.getZipInputStream().getAbsolutePath());
+							fileSystemItem.parentContainer = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath());
 						}
 						return fileSystemItem;
 					},

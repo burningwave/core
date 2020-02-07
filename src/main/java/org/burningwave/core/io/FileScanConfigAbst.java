@@ -48,8 +48,8 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	FileCriteria directoryCriteriaForFileSystemEntry;
 	FileCriteria fileCriteriaForFileSystemEntry;
 	FileCriteria archiveCriteriaForFileSystemEntry;
-	ZipEntryCriteria fileCriteriaForZipEntry;
-	ZipEntryCriteria archiveCriteriaForZipEntry;
+	ZipContainerEntryCriteria fileCriteriaForZipEntry;
+	ZipContainerEntryCriteria archiveCriteriaForZipEntry;
 	int maxParallelTasksForUnit;
 	boolean recursiveOnDirectoryOfFileSystemEntry;
 	boolean recursiveOnArchiveOfZipEntry;
@@ -59,8 +59,8 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		maxParallelTasksForUnit = Runtime.getRuntime().availableProcessors();
 		fileCriteriaForFileSystemEntry = FileCriteria.create().name(getFilePredicateForFileSystemEntry());
 		archiveCriteriaForFileSystemEntry = FileCriteria.create().name(getArchivePredicateForFileSystemEntry());
-		fileCriteriaForZipEntry = ZipEntryCriteria.create().name(getFilePredicateForZipEntry());
-		archiveCriteriaForZipEntry = ZipEntryCriteria.create().name(getArchivePredicateForZipEntry());
+		fileCriteriaForZipEntry = ZipContainerEntryCriteria.create().name(getFilePredicateForZipEntry());
+		archiveCriteriaForZipEntry = ZipContainerEntryCriteria.create().name(getArchivePredicateForZipEntry());
 		recursiveOnDirectoryOfFileSystemEntry = true;
 		recursiveOnArchiveOfZipEntry = true;
 	}
@@ -147,7 +147,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return (F)this;
 	}
 	
-	public F loadAllZipEntryThat(Predicate<ZipInputStream.Entry> predicate) {
+	public F loadAllZipEntryThat(Predicate<ZipContainer.Entry> predicate) {
 		this.fileCriteriaForZipEntry.and().allThat(predicate);
 		return (F)this;
 	}
