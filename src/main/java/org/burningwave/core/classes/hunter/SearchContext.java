@@ -189,21 +189,25 @@ public class SearchContext<T> implements Component {
 				return supplier.get();
 			} catch (ClassNotFoundException | NoClassDefFoundError exc) {
 				String notFoundClassName = Classes.retrieveName(exc);
-				if (notFoundClassName != null && !skippedClassNames.contains(notFoundClassName)) {
-					if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
-						synchronized(this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
-							if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
-								pathMemoryClassLoader.scanPathsAndLoadAllFoundClasses(
-									getPathsToBeScanned(), searchConfig.considerURLClassLoaderPathsAsScanned, classFileScanConfiguration.getMaxParallelTasksForUnit()
-								);
-								this.classLoaderHaveBeenUploadedWithCriteriaPaths = true;
+				if (notFoundClassName != null) {
+					if (!skippedClassNames.contains(notFoundClassName)) {
+						if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
+							synchronized(this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
+								if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
+									pathMemoryClassLoader.scanPathsAndLoadAllFoundClasses(
+										getPathsToBeScanned(), searchConfig.considerURLClassLoaderPathsAsScanned, classFileScanConfiguration.getMaxParallelTasksForUnit()
+									);
+									this.classLoaderHaveBeenUploadedWithCriteriaPaths = true;
+								}
 							}
+							return execute(supplier, defaultValueSupplier, classNameSupplier);
+						} else {
+							skippedClassNames.add(classNameSupplier.get());
+							skippedClassNames.add(notFoundClassName);
 						}
-						return execute(supplier, defaultValueSupplier, classNameSupplier);
-					} else {
-						skippedClassNames.add(classNameSupplier.get());
-						skippedClassNames.add(notFoundClassName);
-					}
+					} 
+				} else {
+					logError("Could not retrieve className from exception", exc);
 				}
 				return defaultValueSupplier.get();
 			} catch (ClassFormatError | ClassCircularityError | IncompatibleClassChangeError | VerifyError exc) {
