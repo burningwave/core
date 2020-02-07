@@ -90,7 +90,13 @@ public interface IterableZipContainer extends Component {
 	
 	public IterableZipContainer.Entry getNextEntry(Predicate<IterableZipContainer.Entry> loadZipEntryData);
 	
-	public IterableZipContainer duplicate();
+	public default IterableZipContainer duplicate() {
+		IterableZipContainer zipContainer = IterableZipContainer.create(getAbsolutePath(), toByteBuffer());
+		if (getParent() != null) {
+			zipContainer.setParent(getParent().duplicate());
+		}
+		return zipContainer;
+	}
 	
 	public Entry getCurrentZipEntry();
 	

@@ -90,13 +90,13 @@ public class JavaMemoryCompiler implements Component {
 		this.compiler = ToolProvider.getSystemJavaCompiler();
 		this.classHelper = classHelper;
 		compiledClassesClassPath = FileSystemItem.ofPath(
-			this.fileSystemHelper.createTemporaryFolder(getTemporaryFolderPrefix() + "/compiled").getAbsolutePath()
+			this.fileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix() + "/compiled").getAbsolutePath()
 		);
 		classPathHunterBasePathForCompressedLibs = FileSystemItem.ofPath(
-			this.fileSystemHelper.createTemporaryFolder(getTemporaryFolderPrefix() + "/lib").getAbsolutePath()
+			this.fileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix() + "/lib").getAbsolutePath()
 		);
 		classPathHunterBasePathForCompressedClasses = FileSystemItem.ofPath(
-			this.fileSystemHelper.createTemporaryFolder(getTemporaryFolderPrefix() + "/classes").getAbsolutePath()
+			this.fileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix() + "/classes").getAbsolutePath()
 		);		
 	}	
 	

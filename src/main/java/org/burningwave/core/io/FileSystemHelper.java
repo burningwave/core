@@ -49,7 +49,6 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Strings;
 import org.burningwave.core.concurrent.ParallelTasksManager;
-import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemHelper.Scan.Configuration;
 import org.burningwave.core.io.FileSystemHelper.Scan.Directive;
@@ -59,21 +58,40 @@ import org.burningwave.core.io.FileSystemHelper.Scan.ItemContext;
 public class FileSystemHelper implements Component {
 	private Supplier<PathHelper> pathHelperSupplier; 
 	private PathHelper pathHelper;
-	private Collection<File> temporaryFiles;
-	private File baseTempFolder;
+	private static File baseTempFolder;
 	
 	private FileSystemHelper(Supplier<PathHelper> pathHelperSupplier) {
-		ThrowingRunnable.run(() ->{
+		this.pathHelperSupplier = pathHelperSupplier;
+	}
+	
+	public static void clearMainTemporaryFolder() {
+		delete(Arrays.asList(getOrCreateMainTemporaryFolder().listFiles()));
+	}
+	
+	private static File getOrCreateMainTemporaryFolder() {
+		if (baseTempFolder != null) {
+			return baseTempFolder;
+		}
+		return ThrowingSupplier.get(() -> {
 			File toDelete = File.createTempFile("_BW_TEMP_", "_temp");
 			File tempFolder = toDelete.getParentFile();
-			baseTempFolder = new File(tempFolder.getAbsolutePath() + "/Burningwave");
-			if (!baseTempFolder.exists()) {
-				baseTempFolder.mkdirs();
+			File folder = new File(tempFolder.getAbsolutePath() + "/" + "Burningwave");
+			if (!folder.exists()) {
+				folder.mkdirs();
 			}
 			toDelete.delete();
+			return folder;
 		});
-		this.pathHelperSupplier = pathHelperSupplier;
-		this.temporaryFiles = new CopyOnWriteArrayList<File>();
+	}
+	
+	public static File getOrCreateTemporaryFolder(String folderName) {
+		return ThrowingSupplier.get(() -> {
+			File tempFolder = new File(getOrCreateMainTemporaryFolder().getAbsolutePath() + "/" + folderName);
+			if (!tempFolder.exists()) {
+				tempFolder.mkdirs();
+			}
+			return tempFolder;
+		});
 	}
 	
 	public static FileSystemHelper create(Supplier<PathHelper> pathHelperSupplier) {
@@ -127,37 +145,25 @@ public class FileSystemHelper implements Component {
 		return files.stream().findFirst().orElse(null);
 	}
 	
-	public File createTemporaryFolder(String folderName) {
-		return ThrowingSupplier.get(() -> {
-			File tempFolder = new File(baseTempFolder.getAbsolutePath() + "/" + folderName);
-			if (!tempFolder.exists()) {
-				tempFolder.mkdirs();
-			}
-			temporaryFiles.add(tempFolder);
-			return tempFolder;
-		});
-	}
-	
 
-	public void deleteTempraryFiles(Collection<File> temporaryFiles) {
-		deleteFiles(temporaryFiles);
+	public static void deleteTempraryFiles(Collection<File> temporaryFiles) {
+		delete(temporaryFiles);
 		temporaryFiles.removeAll(temporaryFiles);
 	}
 	
-	public void deleteFiles(Collection<File> files) {
+	public static void delete(Collection<File> files) {
 		if (files != null) {
 			Iterator<File> itr = files.iterator();
 			while(itr.hasNext()) {
 				File tempFile = (File)itr.next();
 				if (tempFile.exists()) {
 					delete(tempFile);
-					itr.remove();
 				}
 			}
 		}
 	}
 	
-	public boolean delete(File file) {
+	public static boolean delete(File file) {
 		if (file.isDirectory()) {
 			return deleteFolder(file);
 		} else {
@@ -165,11 +171,11 @@ public class FileSystemHelper implements Component {
 		}
 	}
 	
-	public void delete(String absolutePath) {
+	public static void delete(String absolutePath) {
 		delete(new File(absolutePath));	
 	}
 
-	public boolean deleteFolder(File folder) {
+	public static boolean deleteFolder(File folder) {
 	    File[] files = folder.listFiles();
 	    if(files!=null) { //some JVMs return null for empty dirs
 	        for(File f: files) {
@@ -856,8 +862,7 @@ public class FileSystemHelper implements Component {
 	
 	@Override
 	public void close() {
-		deleteFiles(temporaryFiles);
-		temporaryFiles.clear();
+		
 	}
 
 }

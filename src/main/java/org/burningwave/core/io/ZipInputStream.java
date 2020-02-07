@@ -63,15 +63,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 	}
 	
 	@Override
-	public IterableZipContainer duplicate() {
-		IterableZipContainer zipInputStream = IterableZipContainer.create(absolutePath, toByteBuffer());
-		if (parent != null) {
-			zipInputStream.setParent(parent.duplicate());
-		}
-		return zipInputStream;
-	}
-	
-	@Override
 	public Function<IterableZipContainer.Entry, org.burningwave.core.io.IterableZipContainer.Entry> getEntrySupplier() {
 		return Entry.Detached::new;
 	}	
