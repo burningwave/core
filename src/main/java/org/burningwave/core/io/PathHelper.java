@@ -36,11 +36,15 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -53,8 +57,10 @@ import org.burningwave.core.iterable.Properties.Event;
 
 
 public class PathHelper implements Component {
-	public static String CLASSPATHS_PREFIX = "class-paths.";
-	public static String MAIN_CLASS_PATHS = "main";
+	public static String PATHS_PREFIX = "paths.";
+	public static String MAIN_CLASS_PATHS = "main-class-paths";
+	public static String MAIN_CLASS_PATHS_EXTENSION = "main-class-paths.extension";
+	private static Pattern PATH_REGEX = Pattern.compile("\\/\\/(.*)\\/\\/(children|allChildren)(.*)");
 	private IterableObjectHelper iterableObjectHelper;
 	private Supplier<FileSystemHelper> fileSystemHelperSupplier;
 	private FileSystemHelper fileSystemHelper;
@@ -69,7 +75,7 @@ public class PathHelper implements Component {
 		allClassPaths = ConcurrentHashMap.newKeySet();
 		loadMainClassPaths();
 		this.config = config;
-		loadClassPaths();	
+		loadAllPaths();	
 		listenTo(config);
 	}
 	
@@ -77,8 +83,8 @@ public class PathHelper implements Component {
 	public void receiveNotification(Properties properties, Event event, Object key, Object value) {
 		if (event == Event.PUT) {
 			String propertyKey = (String)key;
-			if (propertyKey.startsWith(CLASSPATHS_PREFIX)) {
-				loadClassPaths(((String)key).replaceFirst(CLASSPATHS_PREFIX, ""));	
+			if (propertyKey.startsWith(PATHS_PREFIX)) {
+				loadPaths(((String)key).replaceFirst(PATHS_PREFIX, ""));	
 			}
 		}
 		Component.super.receiveNotification(properties, event, key, value);
@@ -97,7 +103,7 @@ public class PathHelper implements Component {
 	private void loadMainClassPaths() {
 		String classPaths = System.getProperty("java.class.path");
 		if (Strings.isNotEmpty(classPaths)) {
-			addClassPaths(
+			addPaths(
 				MAIN_CLASS_PATHS,
 				Stream.of(
 					classPaths.split(System.getProperty("path.separator"))
@@ -113,7 +119,7 @@ public class PathHelper implements Component {
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		while (classLoader != null) {
 			if (classLoader instanceof URLClassLoader) {
-				addClassPaths(
+				addPaths(
 					MAIN_CLASS_PATHS,
 					Stream.of(
 						((URLClassLoader)classLoader).getURLs()
@@ -130,46 +136,46 @@ public class PathHelper implements Component {
 		}
 	}
 	
-	public void loadClassPaths() {
+	public void loadAllPaths() {
 		config.forEach((key, value) -> {
-			if (((String)key).startsWith(CLASSPATHS_PREFIX)) {
-				String classPathsName = ((String)key).substring(CLASSPATHS_PREFIX.length());
-				loadClassPaths(classPathsName);
+			if (((String)key).startsWith(PATHS_PREFIX)) {
+				String classPathsName = ((String)key).substring(PATHS_PREFIX.length());
+				loadPaths(classPathsName);
 			}
 		});
 	}
 	
-	private void loadClassPaths(String classPathsName) {
-		String classPathsNamePropertyName = CLASSPATHS_PREFIX + classPathsName;
-		String classPaths = config.getProperty(classPathsNamePropertyName);
-		if (classPaths != null) {
-			Collection<String> mainClassPaths = getClassPaths(MAIN_CLASS_PATHS);
-			if (classPaths.contains("${classPaths}")) {
+	private void loadPaths(String pathGroupName) {
+		String classPathsNamePropertyName = PATHS_PREFIX + pathGroupName;
+		String paths = config.getProperty(classPathsNamePropertyName);
+		if (paths != null) {
+			Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
+			if (paths.contains("${classPaths}")) {
 				for (String mainClassPath : mainClassPaths) {
 					Map<String, String> defaultValues = new LinkedHashMap<>();
 					defaultValues.put("classPaths", mainClassPath);
-					classPaths = Strings.Paths.clean(iterableObjectHelper.get(config, classPathsNamePropertyName, defaultValues));
-					for (String classPath : classPaths.split(";")) {
-						addClassPath(classPathsName, classPath);
+					paths = Strings.Paths.clean(iterableObjectHelper.get(config, classPathsNamePropertyName, defaultValues));
+					for (String path : paths.split(";")) {
+						addPath(pathGroupName, path);
 					}
 				}	
 			} else {
 				for (String classPath : iterableObjectHelper.get(config, classPathsNamePropertyName, null).split(";")) {
-					addClassPath(classPathsName, classPath);
+					addPath(pathGroupName, classPath);
 				}
 			}
 		}
 	}
 	
 	public Collection<String> getMainClassPaths() {
-		return getClassPaths(MAIN_CLASS_PATHS);
+		return getPaths(MAIN_CLASS_PATHS);
 	}
 	
 	public Collection<String> getAllClassPaths() {
 		return allClassPaths;
 	}
 	
-	public Collection<String> getClassPaths(String... names) {
+	public Collection<String> getPaths(String... names) {
 		Collection<String> classPaths = new LinkedHashSet<>();
 		if (names != null && names.length > 0) {
 			for (String name : names) {
@@ -177,7 +183,7 @@ public class PathHelper implements Component {
 				if (classPathsFound != null) {
 					classPaths.addAll(classPathsFound);
 				} else {
-					loadClassPaths(name);
+					loadPaths(name);
 					classPathsFound = this.classPaths.get(name);
 					if (classPathsFound != null) {
 						classPaths.addAll(classPathsFound);
@@ -191,7 +197,7 @@ public class PathHelper implements Component {
 		return classPaths;
 	}
 	
-	public Collection<String> getOrCreateClassPaths(String name) {
+	public Collection<String> getOrCreatePathGroup(String name) {
 		Collection<String> classPathsGroup = null;
 		if ((classPathsGroup = this.classPaths.get(name)) == null) {
 			synchronized (this.classPaths) {
@@ -204,26 +210,47 @@ public class PathHelper implements Component {
 		return classPathsGroup;
 	}
 	
-	public Collection<String> addClassPaths(String name, Collection<String> classPaths) {
-		if (classPaths != null) {
-			Collection<String> classPathsFound = getOrCreateClassPaths(name);
+	public Collection<String> addPaths(String groupName, Collection<String> paths) {
+		if (paths != null) {
+			Collection<String> pathGroup = getOrCreatePathGroup(groupName);
 			FileSystemItem.disableLog();
-			classPaths.forEach((classPath) -> {
-				FileSystemItem fileSystemItem = FileSystemItem.ofPath(classPath);
-				if (fileSystemItem.exists()) {
-					classPathsFound.add(fileSystemItem.getAbsolutePath());
-					allClassPaths.add(fileSystemItem.getAbsolutePath());
+			paths.forEach((path) -> {
+				if (path.matches(PATH_REGEX.pattern())) {
+					Map<Integer, List<String>> groupMap = Strings.extractAllGroups(PATH_REGEX, path);
+					FileSystemItem fileSystemItemParent = FileSystemItem.ofPath(groupMap.get(1).get(0));
+					if (fileSystemItemParent.exists()) {
+						String childrenSet = groupMap.get(2).get(0);
+						String childrenSetRegEx = groupMap.get(3).get(0);
+						Function<Predicate<FileSystemItem>, Set<FileSystemItem>> childrenSupplier =
+							childrenSet.equalsIgnoreCase("children") ?
+								fileSystemItemParent::getChildren :
+								childrenSet.equalsIgnoreCase("allChildren") ?
+									fileSystemItemParent::getAllChildren : null;
+						if (childrenSupplier != null) {
+							Set<FileSystemItem> childrenFound = childrenSupplier.apply(fileSystemItem -> fileSystemItem.getAbsolutePath().matches(childrenSetRegEx));
+							for (FileSystemItem fileSystemItem : childrenFound) {
+								pathGroup.add(fileSystemItem.getAbsolutePath());
+								allClassPaths.add(fileSystemItem.getAbsolutePath());
+							}
+						}
+					}
+				} else {
+					FileSystemItem fileSystemItem = FileSystemItem.ofPath(path);
+					if (fileSystemItem.exists()) {
+						pathGroup.add(fileSystemItem.getAbsolutePath());
+						allClassPaths.add(fileSystemItem.getAbsolutePath());
+					}
 				}
 			});
 			FileSystemItem.enableLog();
-			return classPathsFound;
+			return pathGroup;
 		} else {
 			throw Throwables.toRuntimeException("classPaths parameter is null");
 		}
 	}
 	
-	public void addClassPath(String name, String classPaths) {
-		addClassPaths(name, Arrays.asList(classPaths));
+	public void addPath(String name, String classPaths) {
+		addPaths(name, Arrays.asList(classPaths));
 	}
 	
 	

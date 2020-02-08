@@ -12,19 +12,19 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Strings;
 
-public class ZipFileContainer implements IterableZipContainer {
-	private String absolutePath;
-	private IterableZipContainer parent;
-	private IterableZipContainer.Entry currentZipEntry;
-	private Iterator<Entry> entriesIterator;
-	private Collection<Entry> entries;
+class ZipFile implements IterableZipContainer {
+	String absolutePath;
+	IterableZipContainer parent;
+	IterableZipContainer.Entry currentZipEntry;
+	Iterator<Entry> entriesIterator;
+	Collection<Entry> entries;
 	
-	ZipFileContainer(String absolutePath, ByteBuffer content) {
+	ZipFile(String absolutePath, ByteBuffer content) {
 		this.absolutePath = Strings.Paths.clean(absolutePath);
 		File file = new File(absolutePath);
 		if (!file.exists()) {
@@ -34,7 +34,7 @@ public class ZipFileContainer implements IterableZipContainer {
 			file = new File(fileSystemItem.getAbsolutePath());
 		}
 		entries = ConcurrentHashMap.newKeySet();
-		try (ZipFile zipFile = new ZipFile(file)){
+		try (java.util.zip.ZipFile zipFile = new java.util.zip.ZipFile(file)){
 			Enumeration<? extends ZipEntry> entriesIterator = zipFile.entries();
 			while (entriesIterator.hasMoreElements()) {
 				ZipEntry zipEntry = entriesIterator.nextElement();
@@ -58,7 +58,7 @@ public class ZipFileContainer implements IterableZipContainer {
 		entriesIterator = entries.iterator();
 	}
 	
-	private ZipFileContainer(String absolutePath, Collection<Entry> entries) {
+	private ZipFile(String absolutePath, Collection<Entry> entries) {
 		this.absolutePath = absolutePath;
 		this.entries = entries;
 		this.entriesIterator = entries.iterator();
@@ -66,7 +66,7 @@ public class ZipFileContainer implements IterableZipContainer {
 	
 	@Override
 	public IterableZipContainer duplicate() {
-		IterableZipContainer zipContainer = new ZipFileContainer(absolutePath, entries);
+		IterableZipContainer zipContainer = new ZipFile(absolutePath, entries);
 		if (getParent() != null) {
 			zipContainer.setParent(getParent().duplicate());
 		}
@@ -128,11 +128,11 @@ public class ZipFileContainer implements IterableZipContainer {
 	}
 	
 	public static class Entry implements IterableZipContainer.Entry {
-		private ZipFileContainer zipMemoryContainer;
+		private ZipFile zipMemoryContainer;
 		private String name;
 		private String absolutePath;
 
-		public Entry(ZipFileContainer zipMemoryContainer, String entryName, Supplier<ByteBuffer> zipEntryContentSupplier) {
+		public Entry(ZipFile zipMemoryContainer, String entryName, Supplier<ByteBuffer> zipEntryContentSupplier) {
 			this.zipMemoryContainer = zipMemoryContainer;
 			this.name = entryName;
 			this.absolutePath = Strings.Paths.clean(zipMemoryContainer.getAbsolutePath() + "/" + entryName);

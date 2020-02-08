@@ -23,16 +23,16 @@ public interface IterableZipContainer extends Component {
 	}
 	
 	public static IterableZipContainer create(Entry zipEntry) {
-		IterableZipContainer zipInputStream = create(zipEntry.getAbsolutePath(), zipEntry.toByteBuffer());
+		IterableZipContainer zipContainer = create(zipEntry.getAbsolutePath(), zipEntry.toByteBuffer());
 		IterableZipContainer parentContainer = zipEntry.getParentContainer().duplicate();
-		zipInputStream.setParent(parentContainer);
-		return zipInputStream;
+		zipContainer.setParent(parentContainer);
+		return zipContainer;
 	}
 
 	public static IterableZipContainer create(String absolutePath, ByteBuffer bytes) {
 		if (Streams.isJModArchive(bytes)) {
-			return Cache.PATH_FOR_ZIP_FILE_CONTAINERS.getOrDefault(
-				absolutePath, () -> new ZipFileContainer(absolutePath, bytes)
+			return Cache.PATH_FOR_ZIP_FILES.getOrDefault(
+				absolutePath, () -> new ZipFile(absolutePath, bytes)
 			).duplicate();
 		}
 		return new ZipInputStream(absolutePath, new ByteBufferInputStream(bytes));
@@ -50,8 +50,8 @@ public interface IterableZipContainer extends Component {
 			iS = new ByteBufferInputStream(Streams.toByteBuffer(inputStream));
 		}
 		if (Streams.isJModArchive(iS.toByteBuffer())) {
-			return Cache.PATH_FOR_ZIP_FILE_CONTAINERS.getOrDefault(
-				absolutePath, () -> new ZipFileContainer(absolutePath, iS.toByteBuffer())
+			return Cache.PATH_FOR_ZIP_FILES.getOrDefault(
+				absolutePath, () -> new ZipFile(absolutePath, iS.toByteBuffer())
 			).duplicate();
 		}
 		return new ZipInputStream(absolutePath, iS);

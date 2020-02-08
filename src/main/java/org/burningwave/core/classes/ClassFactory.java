@@ -115,7 +115,7 @@ public class ClassFactory implements Component {
 		return javaMemoryCompiler.compile(
 			Arrays.asList(classCode), 
 			pathHelper.getMainClassPaths(),
-			pathHelper.getClassPaths(CLASS_REPOSITORIES)
+			pathHelper.getPaths(CLASS_REPOSITORIES)
 		);
 	}
 	

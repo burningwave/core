@@ -45,10 +45,10 @@ import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ZipInputStream.Entry.Attached;
 import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
-public class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZipContainer, Component {
+class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZipContainer, Component {
 	IterableZipContainer parent;
-	private IterableZipContainer.Entry currentZipEntry;
-	private String absolutePath;
+	IterableZipContainer.Entry currentZipEntry;
+	String absolutePath;
 	ByteBufferInputStream byteBufferInputStream;
 	
 	ZipInputStream(String absolutePath, InputStream inputStream) {

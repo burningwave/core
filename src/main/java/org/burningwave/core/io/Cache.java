@@ -39,7 +39,7 @@ import org.burningwave.core.Strings;
 public class Cache {
 	public final static PathForResources<ByteBuffer> PATH_FOR_CONTENTS = new PathForResources<>(1L, Streams::shareContent);
 	public final static PathForResources<FileSystemItem> PATH_FOR_FILE_SYSTEM_ITEMS = new PathForResources<>(1L, fileSystemItem -> fileSystemItem);
-	public final static PathForResources<ZipFileContainer> PATH_FOR_ZIP_FILE_CONTAINERS = new PathForResources<>(1L, zipFileContainer -> zipFileContainer);	
+	public final static PathForResources<ZipFile> PATH_FOR_ZIP_FILES = new PathForResources<>(1L, zipFileContainer -> zipFileContainer);	
 	
 	public static class PathForResources<R> {
 		private Map<Long, Map<String, Map<String, R>>> loadedResources = new ConcurrentHashMap<>();
