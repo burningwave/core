@@ -95,8 +95,8 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private ComponentContainer init() {
-		config.put(PathHelper.PATHS_PREFIX + ClassFactory.CLASS_REPOSITORIES, "${classPaths}");
-		config.put(PathHelper.PATHS_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION, "//${system.properties:java.home}/lib//children.*\\.jar|.*\\.jmod;//${system.properties:java.home}/jmods//children.*\\.jar|.*\\.jmod;");
+		config.put(PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES, "${classPaths}");
+		config.put(PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION, PathHelper.MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE);
 		config.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
 		config.put(ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "componentSupplier.getMemoryClassLoader()");
 		

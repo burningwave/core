@@ -57,9 +57,10 @@ import org.burningwave.core.iterable.Properties.Event;
 
 
 public class PathHelper implements Component {
-	public static String PATHS_PREFIX = "paths.";
+	public static final Object MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE = "//${system.properties:java.home}/lib//children.*\\.jar|.*\\.jmod;//${system.properties:java.home}/jmods//children.*\\.jar|.*\\.jmod;";
+	public static String PATHS_KEY_PREFIX = "paths.";
 	public static String MAIN_CLASS_PATHS = "main-class-paths";
-	public static String MAIN_CLASS_PATHS_EXTENSION = "main-class-paths.extension";
+	public static String MAIN_CLASS_PATHS_EXTENSION = MAIN_CLASS_PATHS + ".extension";
 	private static Pattern PATH_REGEX = Pattern.compile("\\/\\/(.*)\\/\\/(children|allChildren)(.*)");
 	private IterableObjectHelper iterableObjectHelper;
 	private Supplier<FileSystemHelper> fileSystemHelperSupplier;
@@ -83,8 +84,8 @@ public class PathHelper implements Component {
 	public void receiveNotification(Properties properties, Event event, Object key, Object value) {
 		if (event == Event.PUT) {
 			String propertyKey = (String)key;
-			if (propertyKey.startsWith(PATHS_PREFIX)) {
-				loadPaths(((String)key).replaceFirst(PATHS_PREFIX, ""));	
+			if (propertyKey.startsWith(PATHS_KEY_PREFIX)) {
+				loadPaths(((String)key).replaceFirst(PATHS_KEY_PREFIX, ""));	
 			}
 		}
 		Component.super.receiveNotification(properties, event, key, value);
@@ -138,15 +139,15 @@ public class PathHelper implements Component {
 	
 	public void loadAllPaths() {
 		config.forEach((key, value) -> {
-			if (((String)key).startsWith(PATHS_PREFIX)) {
-				String classPathsName = ((String)key).substring(PATHS_PREFIX.length());
+			if (((String)key).startsWith(PATHS_KEY_PREFIX)) {
+				String classPathsName = ((String)key).substring(PATHS_KEY_PREFIX.length());
 				loadPaths(classPathsName);
 			}
 		});
 	}
 	
 	private void loadPaths(String pathGroupName) {
-		String classPathsNamePropertyName = PATHS_PREFIX + pathGroupName;
+		String classPathsNamePropertyName = PATHS_KEY_PREFIX + pathGroupName;
 		String paths = config.getProperty(classPathsNamePropertyName);
 		if (paths != null) {
 			Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
