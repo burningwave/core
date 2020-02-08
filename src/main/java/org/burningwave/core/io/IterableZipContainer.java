@@ -34,8 +34,10 @@ public interface IterableZipContainer extends Component {
 			return Cache.PATH_FOR_ZIP_FILES.getOrDefault(
 				absolutePath, () -> new ZipFile(absolutePath, bytes)
 			).duplicate();
+		} else if (Streams.isArchive(bytes)) {
+			return new ZipInputStream(absolutePath, new ByteBufferInputStream(bytes));
 		}
-		return new ZipInputStream(absolutePath, new ByteBufferInputStream(bytes));
+		return null;
 	}
 	
 	@SuppressWarnings("resource")
@@ -53,8 +55,10 @@ public interface IterableZipContainer extends Component {
 			return Cache.PATH_FOR_ZIP_FILES.getOrDefault(
 				absolutePath, () -> new ZipFile(absolutePath, iS.toByteBuffer())
 			).duplicate();
+		} else if (Streams.isArchive(iS.toByteBuffer())) {
+			return new ZipInputStream(absolutePath, new ByteBufferInputStream(iS.toByteBuffer()));
 		}
-		return new ZipInputStream(absolutePath, iS);
+		return null;
 	}
 	
 	public default <T> Set<T> findAllAndConvert(
