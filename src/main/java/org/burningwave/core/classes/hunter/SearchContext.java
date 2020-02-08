@@ -210,7 +210,7 @@ public class SearchContext<T> implements Component {
 					logError("Could not retrieve className from exception", exc);
 				}
 				return defaultValueSupplier.get();
-			} catch (ClassFormatError | ClassCircularityError | IncompatibleClassChangeError | VerifyError exc) {
+			} catch (ClassFormatError | ClassCircularityError | IncompatibleClassChangeError | VerifyError | SecurityException exc) {
 				logWarn("Could not load class {}: {}", classNameSupplier.get(), exc.toString());
 			}
 			return defaultValueSupplier.get();
