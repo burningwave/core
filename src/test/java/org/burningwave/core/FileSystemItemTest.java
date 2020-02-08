@@ -12,7 +12,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Test
 	public void readTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotNull(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar/org/apache/bcel/generic/MethodGen$BranchTarget.class"
 		).toByteBuffer());
@@ -21,7 +21,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Test
 	public void readTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotNull(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar/org/apache/bcel/generic/MethodGen$BranchTarget.class"
 		).toInputStream());
@@ -31,7 +31,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Test
 	public void readTestThree() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotNull(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar/org/apache/bcel/generic/MethodGen$BranchTarget.class"
 		).getParent());
@@ -40,7 +40,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Test
 	public void readTestFour() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar/org/apache/bcel/generic/MethodGen$BranchTarget.class"
 		).getParent().getParent().getChildren());
@@ -49,7 +49,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Test
 	public void readTestFive() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip"
 		).getChildren());
@@ -59,7 +59,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Test
 	public void readTestSix() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar"
 		).getChildren());
@@ -79,7 +79,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Test
 	public void readTestEight() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar/org/apache/bcel/verifier"
 		).getAllChildren());
@@ -89,7 +89,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Tag("Heavy")
 	public void readTestNine() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar"
 		).getAllChildren());
@@ -99,7 +99,7 @@ public class FileSystemItemTest extends BaseTest {
 	public void readTestTen() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(() -> FileSystemItem.ofPath(
-			componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/classes"))
+			componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/classes"))
 		).getAllChildren());
 	}
 	
@@ -107,7 +107,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Tag("Heavy")
 	public void readTestEleven() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
 		).getAllChildren());
@@ -116,7 +116,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Test
 	public void readTestTwelve() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib"
 		).getChildren());
@@ -127,7 +127,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Tag("Heavy")
 	public void readTestTestThirteen() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip"
 		).getAllChildren((fileSystemItem) -> fileSystemItem.getName().endsWith(".class")),
@@ -137,7 +137,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Test
 	public void copyFileTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip"
 		).copyTo(System.getProperty("user.home") + "/Desktop/bw-tests").getChildren());
@@ -146,7 +146,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Test
 	public void copyFileTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar"
 		).copyTo(System.getProperty("user.home") + "/Desktop/bw-tests").getChildren());
@@ -155,7 +155,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Test
 	public void copyFolderTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip/META-INF"
 		).copyTo(System.getProperty("user.home") + "/Desktop/bw-tests").getChildren());
@@ -164,7 +164,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Test
 	public void copyFolderTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
 		).copyTo(System.getProperty("user.home") + "/Desktop/bw-tests").getChildren());
@@ -174,7 +174,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Tag("Heavy")
 	public void copyAllChildrenTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/libs-for-test.zip"
 		).copyAllChildrenTo(System.getProperty("user.home") + "/Desktop/bw-tests").getAllChildren());
@@ -183,7 +183,7 @@ public class FileSystemItemTest extends BaseTest {
 	@Test
 	public void toUrlTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getClassPath((path) -> path.endsWith("target/test-classes"));
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotNull(() -> {
 			URL url = FileSystemItem.ofPath(
 				basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"

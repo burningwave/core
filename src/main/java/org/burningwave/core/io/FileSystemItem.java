@@ -165,6 +165,9 @@ public class FileSystemItem implements ManagedLogger {
 
 	private String retrieveConventionedRelativePath(ByteBuffer zipInputStreamAsBytes, String zipInputStreamName, String relativePath1) {
 		try (IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes)){
+			if (zIS == null) {
+				throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
+			}
 			Predicate<IterableZipContainer.Entry> zipEntryPredicate = zEntry -> zEntry.getName().equals(relativePath1) || zEntry.getName().equals(relativePath1 + "/");
 			String temp = relativePath1;
 			while (temp != null) {

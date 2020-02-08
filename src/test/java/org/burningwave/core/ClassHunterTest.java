@@ -12,6 +12,7 @@ import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.classes.hunter.SearchConfig;
 import org.burningwave.core.extension.Item;
+import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.classes.hunter.CacheableSearchConfig;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +40,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					//Search in the runtime Classpaths. Here you can add all absolute path you want:
 					//both folders, zip and jar will be scanned recursively
-					componentSupplier.getPathHelper().getMainClassPaths()
+					componentSupplier.getPathHelper().getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION)
 				).by(
 					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
 						//[1]here you recall the uploaded class by "useClasses" method. In this case we're looking for all classes that extend com.github.burningwave.core.Item
@@ -489,7 +490,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getClassPath((path) ->
+					componentSupplier.getPathHelper().getPath((path) ->
 					path.endsWith("target/classes"))
 				).by(
 					ClassCriteria.create().allThat((currentScannedClass) -> 
@@ -1010,7 +1011,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getClassPath((path) ->
+					componentSupplier.getPathHelper().getPath((path) ->
 					path.endsWith("target/classes"))
 				).by(
 					ClassCriteria.create().allThat((currentScannedClass) -> 

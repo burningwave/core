@@ -361,7 +361,7 @@ public class PathHelper implements Component {
 		return getAllPaths().stream().filter(pathPredicate).collect(Collectors.toSet());
 	}
 	
-	public String getClassPath(Predicate<String> pathPredicate) {
+	public String getPath(Predicate<String> pathPredicate) {
 		Collection<String> classPathsFound = getAllClassPathThat(pathPredicate);
 		if (classPathsFound.size() > 1) {
 			throw Throwables.toRuntimeException("Found more than one class path for predicate " + pathPredicate);
