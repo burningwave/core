@@ -31,7 +31,7 @@ public class FileSystemHelperTest extends BaseTest {
 		Collection<String> classZipEntryFounds = ConcurrentHashMap.newKeySet();
 		Collection<String> allClassesByteCodeFounds = ConcurrentHashMap.newKeySet();
 		Configuration config = Configuration.forPaths(
-			componentSupplier.getPathHelper().getAllClassPaths()
+			componentSupplier.getPathHelper().getAllPaths()
 		).scanRecursivelyAllDirectory(
 		).whenFindFileTestAndApply(
 			file -> file.getName().endsWith(".class"), 
@@ -76,7 +76,7 @@ public class FileSystemHelperTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		Collection<String> allFilesFound = ConcurrentHashMap.newKeySet();
 		Configuration config = Configuration.forPaths(
-			componentSupplier.getPathHelper().getAllClassPaths()
+			componentSupplier.getPathHelper().getAllPaths()
 		).scanRecursivelyAllDirectoryAndApplyBefore(
 			scanItemContext -> {
 				String fileName = scanItemContext.getScannedItem().getAbsolutePath();
@@ -97,7 +97,7 @@ public class FileSystemHelperTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		Collection<String> allFilesFound = ConcurrentHashMap.newKeySet();
 		Configuration config = Configuration.forPaths(
-			componentSupplier.getPathHelper().getAllClassPaths()
+			componentSupplier.getPathHelper().getAllPaths()
 		).scanStrictlyDirectoryAndApplyBefore(
 			scanItemContext -> {
 				String fileName = scanItemContext.getScannedItem().getAbsolutePath();
@@ -117,7 +117,7 @@ public class FileSystemHelperTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		Collection<String> allFilesFound = ConcurrentHashMap.newKeySet();
 		Configuration config = Configuration.forPaths(
-			componentSupplier.getPathHelper().getAllClassPaths()
+			componentSupplier.getPathHelper().getAllPaths()
 		).scanStrictlyDirectoryAndApplyBefore(
 			scanItemContext -> {
 				String fileName = scanItemContext.getScannedItem().getAbsolutePath();

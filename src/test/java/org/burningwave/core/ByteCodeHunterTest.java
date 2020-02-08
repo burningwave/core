@@ -130,7 +130,7 @@ public class ByteCodeHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getByteCodeHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAllClassPaths()
+					componentSupplier.getPathHelper().getAllPaths()
 				).by(
 					ClassCriteria.create().byBytecode((byteCodeMap, byteCode) ->
 						Arrays.equals(byteCodeMap.get(Service.class), byteCode)

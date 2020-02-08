@@ -242,7 +242,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAllClassPaths()
+					componentSupplier.getPathHelper().getAllPaths()
 				).by(
 					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
@@ -277,7 +277,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAllClassPaths()
+					componentSupplier.getPathHelper().getAllPaths()
 				).by(
 					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Object.class).isAssignableFrom(currentScannedClass)
@@ -350,7 +350,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAllClassPaths()
+					componentSupplier.getPathHelper().getAllPaths()
 				).by(
 					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Object.class).isAssignableFrom(currentScannedClass)
@@ -413,7 +413,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAllClassPaths()
+					componentSupplier.getPathHelper().getAllPaths()
 				).by(
 					ClassCriteria.create().byMembers(
 						methodCriteria
@@ -758,7 +758,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAllClassPaths()
+					componentSupplier.getPathHelper().getAllPaths()
 				).by(
 					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
@@ -793,7 +793,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAllClassPaths()
+					componentSupplier.getPathHelper().getAllPaths()
 				).by(
 					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Object.class).isAssignableFrom(currentScannedClass)
@@ -868,7 +868,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAllClassPaths()
+					componentSupplier.getPathHelper().getAllPaths()
 				).by(
 					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Object.class).isAssignableFrom(currentScannedClass)
@@ -931,7 +931,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAllClassPaths()
+					componentSupplier.getPathHelper().getAllPaths()
 				).by(
 					ClassCriteria.create().byMembers(
 						methodCriteria

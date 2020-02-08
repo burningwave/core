@@ -124,7 +124,7 @@ public class FileSystemHelper implements Component {
 			PathHelper pathHelper = pathHelperSupplier.get();
 			FileSystemItem.disableLog();
 			for (String resourceRelativePath : resourcesRelativePaths) {
-				pathHelper.getAllClassPaths().stream().forEach((path) -> {
+				pathHelper.getAllPaths().stream().forEach((path) -> {
 					FileSystemItem fileSystemItem = FileSystemItem.ofPath(path + "/" + resourceRelativePath);
 					if (fileSystemItem.exists()) {
 						fileConsumer.accept(files, fileSystemItem);

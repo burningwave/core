@@ -65,15 +65,15 @@ public class PathHelper implements Component {
 	private IterableObjectHelper iterableObjectHelper;
 	private Supplier<FileSystemHelper> fileSystemHelperSupplier;
 	private FileSystemHelper fileSystemHelper;
-	private Map<String, Collection<String>> classPaths;
-	private Collection<String> allClassPaths;
+	private Map<String, Collection<String>> pathGroups;
+	private Collection<String> allPaths;
 	private Properties config;
 		
 	private PathHelper(Supplier<FileSystemHelper> fileSystemHelperSupplier, IterableObjectHelper iterableObjectHelper, Properties config) {
 		this.iterableObjectHelper = iterableObjectHelper;
 		this.fileSystemHelperSupplier = fileSystemHelperSupplier;
-		classPaths = new ConcurrentHashMap<>();
-		allClassPaths = ConcurrentHashMap.newKeySet();
+		pathGroups = new ConcurrentHashMap<>();
+		allPaths = ConcurrentHashMap.newKeySet();
 		loadMainClassPaths();
 		this.config = config;
 		loadAllPaths();	
@@ -140,28 +140,28 @@ public class PathHelper implements Component {
 	public void loadAllPaths() {
 		config.forEach((key, value) -> {
 			if (((String)key).startsWith(PATHS_KEY_PREFIX)) {
-				String classPathsName = ((String)key).substring(PATHS_KEY_PREFIX.length());
-				loadPaths(classPathsName);
+				String pathGroupName = ((String)key).substring(PATHS_KEY_PREFIX.length());
+				loadPaths(pathGroupName);
 			}
 		});
 	}
 	
 	private void loadPaths(String pathGroupName) {
-		String classPathsNamePropertyName = PATHS_KEY_PREFIX + pathGroupName;
-		String paths = config.getProperty(classPathsNamePropertyName);
+		String pathGroupPropertyName = PATHS_KEY_PREFIX + pathGroupName;
+		String paths = config.getProperty(pathGroupPropertyName);
 		if (paths != null) {
 			Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
 			if (paths.contains("${classPaths}")) {
 				for (String mainClassPath : mainClassPaths) {
 					Map<String, String> defaultValues = new LinkedHashMap<>();
 					defaultValues.put("classPaths", mainClassPath);
-					paths = Strings.Paths.clean(iterableObjectHelper.get(config, classPathsNamePropertyName, defaultValues));
+					paths = Strings.Paths.clean(iterableObjectHelper.get(config, pathGroupPropertyName, defaultValues));
 					for (String path : paths.split(";")) {
 						addPath(pathGroupName, path);
 					}
 				}	
 			} else {
-				for (String classPath : iterableObjectHelper.get(config, classPathsNamePropertyName, null).split(";")) {
+				for (String classPath : iterableObjectHelper.get(config, pathGroupPropertyName, null).split(";")) {
 					addPath(pathGroupName, classPath);
 				}
 			}
@@ -172,39 +172,39 @@ public class PathHelper implements Component {
 		return getPaths(MAIN_CLASS_PATHS);
 	}
 	
-	public Collection<String> getAllClassPaths() {
-		return allClassPaths;
+	public Collection<String> getAllPaths() {
+		return allPaths;
 	}
 	
 	public Collection<String> getPaths(String... names) {
-		Collection<String> classPaths = new LinkedHashSet<>();
+		Collection<String> pathGroup = ConcurrentHashMap.newKeySet();
 		if (names != null && names.length > 0) {
 			for (String name : names) {
-				Collection<String> classPathsFound = this.classPaths.get(name);
-				if (classPathsFound != null) {
-					classPaths.addAll(classPathsFound);
+				Collection<String> pathsFound = this.pathGroups.get(name);
+				if (pathsFound != null) {
+					pathGroup.addAll(pathsFound);
 				} else {
 					loadPaths(name);
-					classPathsFound = this.classPaths.get(name);
-					if (classPathsFound != null) {
-						classPaths.addAll(classPathsFound);
+					pathsFound = this.pathGroups.get(name);
+					if (pathsFound != null) {
+						pathGroup.addAll(pathsFound);
 					} else {
-						logWarn("classPaths named " + name + " is not defined");
+						logWarn("path group named " + name + " is not defined");
 					}
 				}
 				
 			}
 		}
-		return classPaths;
+		return pathGroup;
 	}
 	
 	public Collection<String> getOrCreatePathGroup(String name) {
 		Collection<String> classPathsGroup = null;
-		if ((classPathsGroup = this.classPaths.get(name)) == null) {
-			synchronized (this.classPaths) {
-				if ((classPathsGroup = this.classPaths.get(name)) == null) {
+		if ((classPathsGroup = this.pathGroups.get(name)) == null) {
+			synchronized (this.pathGroups) {
+				if ((classPathsGroup = this.pathGroups.get(name)) == null) {
 					classPathsGroup = ConcurrentHashMap.newKeySet();
-					this.classPaths.put(name, classPathsGroup);
+					this.pathGroups.put(name, classPathsGroup);
 				}
 			}
 		}
@@ -231,7 +231,7 @@ public class PathHelper implements Component {
 							Set<FileSystemItem> childrenFound = childrenSupplier.apply(fileSystemItem -> fileSystemItem.getAbsolutePath().matches(childrenSetRegEx));
 							for (FileSystemItem fileSystemItem : childrenFound) {
 								pathGroup.add(fileSystemItem.getAbsolutePath());
-								allClassPaths.add(fileSystemItem.getAbsolutePath());
+								allPaths.add(fileSystemItem.getAbsolutePath());
 							}
 						}
 					}
@@ -239,7 +239,7 @@ public class PathHelper implements Component {
 					FileSystemItem fileSystemItem = FileSystemItem.ofPath(path);
 					if (fileSystemItem.exists()) {
 						pathGroup.add(fileSystemItem.getAbsolutePath());
-						allClassPaths.add(fileSystemItem.getAbsolutePath());
+						allPaths.add(fileSystemItem.getAbsolutePath());
 					}
 				}
 			});
@@ -358,7 +358,7 @@ public class PathHelper implements Component {
 	
 	
 	public Collection<String> getAllClassPathThat(Predicate<String> pathPredicate) {
-		return getAllClassPaths().stream().filter(pathPredicate).collect(Collectors.toSet());
+		return getAllPaths().stream().filter(pathPredicate).collect(Collectors.toSet());
 	}
 	
 	public String getClassPath(Predicate<String> pathPredicate) {
@@ -372,14 +372,14 @@ public class PathHelper implements Component {
 	@Override
 	public void close() {
 		iterableObjectHelper = null;
-		classPaths.forEach((key, value) -> {
+		pathGroups.forEach((key, value) -> {
 			value.clear();
-			classPaths.remove(key);
+			pathGroups.remove(key);
 		});
-		classPaths.clear();
-		classPaths = null;
-		allClassPaths.clear();
-		allClassPaths = null;
+		pathGroups.clear();
+		pathGroups = null;
+		allPaths.clear();
+		allPaths = null;
 		config = null;
 	}
 	
