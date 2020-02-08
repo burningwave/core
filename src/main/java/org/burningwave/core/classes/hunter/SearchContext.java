@@ -212,8 +212,6 @@ public class SearchContext<T> implements Component {
 				return defaultValueSupplier.get();
 			} catch (ClassFormatError | ClassCircularityError | IncompatibleClassChangeError | VerifyError exc) {
 				logWarn("Could not load class {}: {}", classNameSupplier.get(), exc.toString());
-			} catch (SecurityException exc) {
-				logWarn("");
 			}
 			return defaultValueSupplier.get();
 		});
