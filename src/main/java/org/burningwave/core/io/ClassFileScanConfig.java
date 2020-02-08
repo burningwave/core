@@ -38,7 +38,8 @@ public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig>
 	private final static Predicate<String> CLASS_PREDICATE = name ->
 		name.endsWith(".class") && 
 		!name.endsWith("module-info.class") &&
-		!name.endsWith("package-info.class");
+		!name.endsWith("package-info.class") &&
+		!name.endsWith("/");
 	private final static Predicate<String> ARCHIVE_PREDICATE = name -> 
 		name.endsWith(".jar") ||
 		name.endsWith(".war") ||
