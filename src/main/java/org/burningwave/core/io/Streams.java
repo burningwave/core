@@ -50,7 +50,7 @@ public class Streams implements ManagedLogger {
 	private static final String DEFAULT_BUFFER_SIZE_CONFIG_KEY = "streams.default-buffer-size";
 	private static final String DEFAULT_BYTE_BUFFER_ALLOCATION_MODE_CONFIG_KEY = "streams.default-byte-buffer-allocation-mode";
 	
-	public static int DEFAULT_BUFFER_SIZE = (int)BufferSize.KILO_BYTE.getValue();
+	public static int DEFAULT_BUFFER_SIZE = (int)BufferSize.KILO_BYTE.getValue() / 2;
 	public static Function<Integer, ByteBuffer> DEFAULT_BYTE_BUFFER_ALLOCATION_MODE = ByteBuffer::allocateDirect;
 	
 	static {
