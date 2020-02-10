@@ -78,12 +78,17 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		DEFAULT_CONFIG_VALUES.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY + LowLevelObjectsHandler.SUPPLIER_IMPORTS_KEY_SUFFIX, "");
 	}
 	
+	protected ClassHelper getClassHelper() {
+		return classHelper;
+	}
+
+	
 	public static MemoryClassLoader create(ClassLoader parentClassLoader, ClassHelper classHelper) {
 		return new MemoryClassLoader(parentClassLoader, classHelper);
 	}
 
 	public void addCompiledClass(String className, ByteBuffer byteCode) {
-    	if (classHelper.retrieveLoadedClass(this, className) == null) {
+    	if (getClassHelper().retrieveLoadedClass(this, className) == null) {
     		notLoadedCompiledClasses.put(className, byteCode);
 		} else {
 			logDebug("Could not add compiled class {} cause it's already defined", className);
@@ -124,7 +129,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
 	public boolean hasPackageBeenDefined(String packageName) {
 		if (Strings.isNotEmpty(packageName)) {
-			return classHelper.retrievePackage(this, packageName) != null;
+			return getClassHelper().retrievePackage(this, packageName) != null;
 		} else {
 			return true;
 		}
@@ -137,14 +142,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	) throws IllegalArgumentException {
     	Package pkg = null;
     	if (Strings.isNotEmpty(packageName)) {
-    		pkg = classHelper.retrievePackage(this, packageName);
+    		pkg = getClassHelper().retrievePackage(this, packageName);
     		if (pkg == null) {
     			try {
     				pkg = super.definePackage(packageName, specTitle, specVersion, specVendor, implTitle,
     		    			implVersion, implVendor, sealBase);
     			} catch (IllegalArgumentException exc) {
     				logWarn("Package " + packageName + " already defined");
-    				pkg = classHelper.retrievePackage(this, packageName);
+    				pkg = getClassHelper().retrievePackage(this, packageName);
     			}
     		}
     	}
@@ -156,7 +161,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			String pckgName = cls.getName().substring(
 		    	0, cls.getName().lastIndexOf(".")
 		    );
-		    if (classHelper.retrievePackage(this, pckgName) == null) {
+		    if (getClassHelper().retrievePackage(this, pckgName) == null) {
 		    	definePackage(pckgName, null, null, null, null, null, null, null);
 			}	
 		}
@@ -176,15 +181,15 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
     
     public Class<?> loadOrUploadClass(Class<?> toLoad) throws ClassNotFoundException {
-    	return classHelper.loadOrUploadClass(toLoad, this);
+    	return getClassHelper().loadOrUploadClass(toLoad, this);
     }
     
     public Class<?> loadOrUploadClass(JavaClass toLoad) throws ClassNotFoundException {
-    	return classHelper.loadOrUploadClass(toLoad, this);
+    	return getClassHelper().loadOrUploadClass(toLoad, this);
     }
     
     public Class<?> loadOrUploadClass(ByteBuffer byteCode) throws ClassNotFoundException {
-    	return classHelper.loadOrUploadClass(byteCode, this);
+    	return getClassHelper().loadOrUploadClass(byteCode, this);
     }
     
     
@@ -286,7 +291,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	
 	public Set<Class<?>> getLoadedClassesForPackage(Predicate<Package> packagePredicate	) {
-		return classHelper.retrieveLoadedClassesForPackage(this, packagePredicate);
+		return getClassHelper().retrieveLoadedClassesForPackage(this, packagePredicate);
 	}
 	
 	Map<String, ByteBuffer> getLoadedCompiledClasses() {
