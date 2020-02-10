@@ -44,6 +44,7 @@ import java.util.function.Predicate;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
 public class Streams implements ManagedLogger {
@@ -55,7 +56,7 @@ public class Streams implements ManagedLogger {
 	
 	static {
 		try {
-			String defaultBufferSize = (String)org.burningwave.core.iterable.Properties.getGlobalProperty(DEFAULT_BUFFER_SIZE_CONFIG_KEY);
+			String defaultBufferSize = (String)Properties.getGlobalProperty(DEFAULT_BUFFER_SIZE_CONFIG_KEY);
 			String unit = defaultBufferSize.substring(defaultBufferSize.length()-2);
 			String value = defaultBufferSize.substring(0, defaultBufferSize.length()-2);
 			if (unit.equalsIgnoreCase("KB")) {
@@ -70,7 +71,7 @@ public class Streams implements ManagedLogger {
 		}
 		ManagedLogger.Repository.getInstance().logInfo(Streams.class, "default buffer size: {} bytes", DEFAULT_BUFFER_SIZE);
 		try {
-			String defaultByteBufferAllocationMode = (String)org.burningwave.core.iterable.Properties.getGlobalProperty(DEFAULT_BYTE_BUFFER_ALLOCATION_MODE_CONFIG_KEY);
+			String defaultByteBufferAllocationMode = (String)Properties.getGlobalProperty(DEFAULT_BYTE_BUFFER_ALLOCATION_MODE_CONFIG_KEY);
 			if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
 				DEFAULT_BYTE_BUFFER_ALLOCATION_MODE = ByteBuffer::allocate;
 				ManagedLogger.Repository.getInstance().logInfo(Streams.class, "default allocation mode: ByteBuffer::allocate");

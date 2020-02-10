@@ -36,23 +36,24 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Strings;
-import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
+import org.burningwave.core.iterable.Properties;
 
 public class Cache {
+	private static final String TYPE_CONFIG_KEY = "cache.type";
 	public final static PathForResources<ByteBuffer> PATH_FOR_CONTENTS ;
 	public final static PathForResources<FileSystemItem> PATH_FOR_FILE_SYSTEM_ITEMS;
 	public final static PathForResources<ZipFile> PATH_FOR_ZIP_FILES;
 	
 	static {
-		PATH_FOR_CONTENTS = new AsyncPathForResources<>(1L, byteBuffer -> {
-			ByteBuffer duplicated = byteBuffer.duplicate();
-			if (ByteBufferDelegate.position(byteBuffer) > 0) {
-				ByteBufferDelegate.flip(duplicated);
-			}		
-			return duplicated;
-		});
-		PATH_FOR_FILE_SYSTEM_ITEMS = new AsyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
-		PATH_FOR_ZIP_FILES = new AsyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);	
+		if ("sync".equalsIgnoreCase((String)Properties.getGlobalProperty(TYPE_CONFIG_KEY))) {
+			PATH_FOR_CONTENTS = new SyncPathForResources<>(1L, Streams::shareContent);
+			PATH_FOR_FILE_SYSTEM_ITEMS = new SyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
+			PATH_FOR_ZIP_FILES = new SyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);	
+		} else {
+			PATH_FOR_CONTENTS = new AsyncPathForResources<>(1L, Streams::shareContent);
+			PATH_FOR_FILE_SYSTEM_ITEMS = new AsyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
+			PATH_FOR_ZIP_FILES = new AsyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);	
+		}	
 	}
 	
 	public static interface PathForResources<R> {
