@@ -37,53 +37,117 @@ import java.util.function.Supplier;
 import org.burningwave.core.Strings;
 
 public class Cache {
-	public final static PathForResources<ByteBuffer> PATH_FOR_CONTENTS = new PathForResources<>(1L, Streams::shareContent);
-	public final static PathForResources<FileSystemItem> PATH_FOR_FILE_SYSTEM_ITEMS = new PathForResources<>(1L, fileSystemItem -> fileSystemItem);
-	public final static PathForResources<ZipFile> PATH_FOR_ZIP_FILES = new PathForResources<>(1L, zipFileContainer -> zipFileContainer);	
+	public final static PathForResources<ByteBuffer> PATH_FOR_CONTENTS ;
+	public final static PathForResources<FileSystemItem> PATH_FOR_FILE_SYSTEM_ITEMS;
+	public final static PathForResources<ZipFile> PATH_FOR_ZIP_FILES;
 	
-	public static class PathForResources<R> {
-		private Map<Long, Map<String, Map<String, R>>> loadedResources = new ConcurrentHashMap<>();
-		private String mutexPrefixName = loadedResources.toString();	
-		private Long partitionStartLevel;
-		private Function<R, R> sharer;
+	static {
+		PATH_FOR_CONTENTS = new AsyncPathForResources<>(1L, Streams::shareContent);
+		PATH_FOR_FILE_SYSTEM_ITEMS = new AsyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
+		PATH_FOR_ZIP_FILES = new AsyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);	
+	}
+	
+	public static interface PathForResources<R> {
+
+		R upload(String path, Supplier<R> resourceSupplier);
+
+		R getOrDefault(String path, Supplier<R> resourceSupplier);
+
+		R get(String path);
+
+		R remove(String path);
+
+		R upload(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier);
+
+		int getLoadedResourcesCount();
 		
-		private PathForResources(Long partitionStartLevel, Function<R, R> sharer) {
-			this.partitionStartLevel = partitionStartLevel;
-			this.sharer = sharer;
+		public static abstract class Abst<R> implements PathForResources<R> {
+			Map<Long, Map<String, Map<String, R>>> loadedResources = new ConcurrentHashMap<>();
+			String mutexPrefixName = loadedResources.toString();	
+			Long partitionStartLevel;
+			Function<R, R> sharer;
+			
+			private Abst(Long partitionStartLevel, Function<R, R> sharer) {
+				this.partitionStartLevel = partitionStartLevel;
+				this.sharer = sharer;
+			}
+			
+			@Override
+			public R upload(String path, Supplier<R> resourceSupplier) {
+				path = Strings.Paths.clean(path);
+				Long occurences = path.chars().filter(ch -> ch == '/').count();
+				Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
+				Map<String, Map<String, R>> partion = retrievePartition(loadedResources, partitionIndex);
+				Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
+				return upload(nestedPartition, path, resourceSupplier);
+			}
+			
+			@Override
+			public R getOrDefault(String path, Supplier<R> resourceSupplier) {
+				path = Strings.Paths.clean(path);
+				Long occurences = path.chars().filter(ch -> ch == '/').count();
+				Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
+				Map<String, Map<String, R>> partion = retrievePartition(loadedResources, partitionIndex);
+				Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
+				return getOrDefault(nestedPartition, path, resourceSupplier);
+			}
+			
+			@Override
+			public R get(String path) {
+				return getOrDefault(path, null);
+			}
+			
+			@Override
+			public R remove(String path) {
+				path = Strings.Paths.clean(path);
+				Long occurences = path.chars().filter(ch -> ch == '/').count();
+				Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
+				Map<String, Map<String, R>> partion = retrievePartition(loadedResources, partitionIndex);
+				Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
+				return nestedPartition.remove(path);
+			}
+			
+			@Override
+			public int getLoadedResourcesCount() {
+				return getLoadedResourcesCount(loadedResources);
+			}
+			
+			private int getLoadedResourcesCount(Map<Long, Map<String, Map<String, R>>> resources) {
+				int count = 0;
+				for (Map.Entry<Long, Map<String, Map<String, R>>> partition : resources.entrySet()) {
+					for (Map.Entry<String, Map<String, R>> innerPartition : partition.getValue().entrySet()) {
+						count += innerPartition.getValue().size();
+					}
+				}
+				return count;
+			}
+			
+			abstract R getOrDefault(
+				Map<String, R> nestedPartition,
+				String path,
+				Supplier<R> resourceSupplier
+			);
+
+			abstract Map<String, R> retrievePartition(
+				Map<String, Map<String, R>> partion,
+				Long partitionIndex, String path
+			);
+
+			abstract Map<String, Map<String, R>> retrievePartition(
+				Map<Long, Map<String, Map<String, R>>>
+				loadedResources2, Long partitionIndex
+			);
+		}
+	}
+	
+	public static class AsyncPathForResources<R> extends PathForResources.Abst <R> {
+		private AsyncPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
+			super(partitionStartLevel, sharer);
 		}
 		
-		public R upload(String path, Supplier<R> resourceSupplier) {
-			path = Strings.Paths.clean(path);
-			Long occurences = path.chars().filter(ch -> ch == '/').count();
-			Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
-			Map<String, Map<String, R>> partion = retrievePartition(loadedResources, partitionIndex);
-			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
-			return upload(nestedPartition, path, resourceSupplier);
-		}
 		
-		public R getOrDefault(String path, Supplier<R> resourceSupplier) {
-			path = Strings.Paths.clean(path);
-			Long occurences = path.chars().filter(ch -> ch == '/').count();
-			Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
-			Map<String, Map<String, R>> partion = retrievePartition(loadedResources, partitionIndex);
-			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
-			return getOrDefault(nestedPartition, path, resourceSupplier);
-		}
-		
-		public R get(String path) {
-			return getOrDefault(path, null);
-		}
-		
-		public R remove(String path) {
-			path = Strings.Paths.clean(path);
-			Long occurences = path.chars().filter(ch -> ch == '/').count();
-			Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
-			Map<String, Map<String, R>> partion = retrievePartition(loadedResources, partitionIndex);
-			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
-			return nestedPartition.remove(path);
-		}
-		
-		private Map<String, R> retrievePartition(Map<String, Map<String, R>> partion, Long partitionIndex, String path) {
+		@Override
+		Map<String, R> retrievePartition(Map<String, Map<String, R>> partion, Long partitionIndex, String path) {
 			String partitionKey = "/";
 			if (partitionIndex > 1) {
 				partitionKey = path.substring(0, path.lastIndexOf("/"));
@@ -101,7 +165,8 @@ public class Cache {
 			return innerPartion;
 		}
 		
-		private R getOrDefault(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
+		@Override
+		R getOrDefault(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
 			R resource = loadedResources.get(path);
 			if (resource == null) {
 				synchronized (mutexPrefixName + "_" + path) {
@@ -119,6 +184,7 @@ public class Cache {
 				resource;
 		}
 		
+		@Override
 		public R upload(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
 			R resource = null;
 			synchronized (mutexPrefixName + "_" + path) {
@@ -134,7 +200,8 @@ public class Cache {
 				resource;
 		}
 		
-		private Map<String, Map<String, R>> retrievePartition(Map<Long, Map<String, Map<String, R>>> resourcesPartitioned, Long partitionIndex) {
+		@Override
+		Map<String, Map<String, R>> retrievePartition(Map<Long, Map<String, Map<String, R>>> resourcesPartitioned, Long partitionIndex) {
 			Map<String, Map<String, R>> resources = resourcesPartitioned.get(partitionIndex);
 			if (resources == null) {
 				synchronized (mutexPrefixName + "_" + partitionIndex) {
@@ -145,22 +212,6 @@ public class Cache {
 				}
 			}
 			return resources;
-		}
-		
-		public int getLoadedResourcesCount() {
-			return getLoadedResourcesCount(loadedResources);
-		}
-		
-		private int getLoadedResourcesCount(Map<Long, Map<String, Map<String, R>>> resources) {
-			int count = 0;
-			for (Map.Entry<Long, Map<String, Map<String, R>>> partition : resources.entrySet()) {
-				for (Map.Entry<String, Map<String, R>> innerPartition : partition.getValue().entrySet()) {
-					count += innerPartition.getValue().size();
-				}
-			}
-			return count;
-		}
-		
+		}		
 	}
-
 }
