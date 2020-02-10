@@ -32,7 +32,8 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.burningwave.core.ManagedLogger.Repository;
+import org.burningwave.core.io.ByteBufferInputStream;
+import org.burningwave.core.io.FileSystemItem;
 
 public class Properties extends java.util.Properties {
 	private static final long serialVersionUID = -350748766178421942L;
@@ -40,7 +41,14 @@ public class Properties extends java.util.Properties {
 	
 	static {
 		try {
-			InputStream propertiesFileIS = Repository.class.getClassLoader().getResourceAsStream("burningwave.static.properties");
+			InputStream propertiesFileIS = null;
+			for (String classPath : System.getProperty("java.class.path").split(";")) {
+				FileSystemItem fileSystemItem = FileSystemItem.ofPath(classPath + "/burningwave.static.properties");
+				if (fileSystemItem.exists()) {
+					propertiesFileIS = new ByteBufferInputStream(fileSystemItem.toByteBuffer());
+					break;
+				}
+			}
 			if (propertiesFileIS != null) {
 				FOR_STATIC_CLASSES = new Properties();
 				FOR_STATIC_CLASSES.load(propertiesFileIS);

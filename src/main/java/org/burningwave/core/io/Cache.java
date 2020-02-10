@@ -29,12 +29,14 @@
 package org.burningwave.core.io;
 
 import java.nio.ByteBuffer;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Strings;
+import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
 public class Cache {
 	public final static PathForResources<ByteBuffer> PATH_FOR_CONTENTS ;
@@ -42,7 +44,13 @@ public class Cache {
 	public final static PathForResources<ZipFile> PATH_FOR_ZIP_FILES;
 	
 	static {
-		PATH_FOR_CONTENTS = new AsyncPathForResources<>(1L, Streams::shareContent);
+		PATH_FOR_CONTENTS = new AsyncPathForResources<>(1L, byteBuffer -> {
+			ByteBuffer duplicated = byteBuffer.duplicate();
+			if (ByteBufferDelegate.position(byteBuffer) > 0) {
+				ByteBufferDelegate.flip(duplicated);
+			}		
+			return duplicated;
+		});
 		PATH_FOR_FILE_SYSTEM_ITEMS = new AsyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
 		PATH_FOR_ZIP_FILES = new AsyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);	
 	}
@@ -62,8 +70,7 @@ public class Cache {
 		int getLoadedResourcesCount();
 		
 		public static abstract class Abst<R> implements PathForResources<R> {
-			Map<Long, Map<String, Map<String, R>>> loadedResources = new ConcurrentHashMap<>();
-			String mutexPrefixName = loadedResources.toString();	
+			Map<Long, Map<String, Map<String, R>>> loadedResources;	
 			Long partitionStartLevel;
 			Function<R, R> sharer;
 			
@@ -140,9 +147,88 @@ public class Cache {
 		}
 	}
 	
-	public static class AsyncPathForResources<R> extends PathForResources.Abst <R> {
-		private AsyncPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
+	public static class SyncPathForResources<R> extends PathForResources.Abst <R> {
+		private SyncPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
 			super(partitionStartLevel, sharer);
+			loadedResources = new LinkedHashMap<>();
+		}		
+		
+		@Override
+		Map<String, R> retrievePartition(Map<String, Map<String, R>> partion, Long partitionIndex, String path) {
+			String partitionKey = "/";
+			if (partitionIndex > 1) {
+				partitionKey = path.substring(0, path.lastIndexOf("/"));
+				partitionKey = partitionKey.substring(partitionKey.lastIndexOf("/") + 1);
+			}
+			Map<String, R> innerPartion = partion.get(partitionKey);
+			if (innerPartion == null) {
+				synchronized (partion) {
+					innerPartion = partion.get(partitionKey);
+					if (innerPartion == null) {
+						partion.put(partitionKey, innerPartion = new ConcurrentHashMap<>());
+					}
+				}
+			}
+			return innerPartion;
+		}
+		
+		@Override
+		R getOrDefault(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
+			R resource = loadedResources.get(path);
+			if (resource == null) {
+				synchronized (loadedResources) {
+					resource = loadedResources.get(path);
+					if (resource == null && resourceSupplier != null) {
+						resource = resourceSupplier.get();
+						if (resource != null) {
+							loadedResources.put(path, resource = sharer.apply(resource));
+						}
+					}
+				}
+			}
+			return resource != null? 
+				sharer.apply(resource) :
+				resource;
+		}
+		
+		@Override
+		public R upload(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
+			R resource = null;
+			synchronized (loadedResources) {
+				if (resourceSupplier != null) {
+					resource = resourceSupplier.get();
+					if (resource != null) {
+						loadedResources.put(path, resource = sharer.apply(resource));
+					}
+				}
+			}
+			return resource != null? 
+				sharer.apply(resource) :
+				resource;
+		}
+		
+		@Override
+		Map<String, Map<String, R>> retrievePartition(Map<Long, Map<String, Map<String, R>>> resourcesPartitioned, Long partitionIndex) {
+			Map<String, Map<String, R>> resources = resourcesPartitioned.get(partitionIndex);
+			if (resources == null) {
+				synchronized (resourcesPartitioned) {
+					resources = resourcesPartitioned.get(partitionIndex);
+					if (resources == null) {
+						resourcesPartitioned.put(partitionIndex, resources = new ConcurrentHashMap<>());
+					}
+				}
+			}
+			return resources;
+		}
+	}
+	
+	public static class AsyncPathForResources<R> extends PathForResources.Abst <R> {
+		 String mutexPrefixName;
+		
+		 private AsyncPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
+			super(partitionStartLevel, sharer);
+			loadedResources = new ConcurrentHashMap<>();
+			mutexPrefixName = loadedResources.toString();
 		}
 		
 		
