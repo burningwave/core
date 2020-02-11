@@ -28,8 +28,6 @@
  */
 package org.burningwave;
 
-import org.burningwave.core.ManagedLogger;
-
 public class Throwables {
 	
 	public static RuntimeException toRuntimeException(Object obj) {

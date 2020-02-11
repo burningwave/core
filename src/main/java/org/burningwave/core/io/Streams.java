@@ -41,7 +41,7 @@ import java.nio.ByteBuffer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.burningwave.core.ManagedLogger;
+import org.burningwave.ManagedLogger;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.Properties;

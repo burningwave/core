@@ -34,9 +34,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.burningwave.ManagedLogger;
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.CodeGenerator;

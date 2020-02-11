@@ -1,4 +1,4 @@
-package org.burningwave.core;
+package org.burningwave;
 
 import java.util.AbstractMap;
 import java.util.Map;

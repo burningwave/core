@@ -48,8 +48,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.burningwave.ManagedLogger;
 import org.burningwave.Throwables;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.Strings;
 
 public class FileSystemItem implements ManagedLogger {

@@ -28,6 +28,7 @@
  */
 package org.burningwave.core;
 
+import org.burningwave.ManagedLogger;
 import org.burningwave.core.iterable.Properties;
 
 public interface Component extends AutoCloseable, ManagedLogger, Properties.Listener {
