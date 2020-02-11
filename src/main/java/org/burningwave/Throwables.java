@@ -28,6 +28,8 @@
  */
 package org.burningwave;
 
+import org.burningwave.core.ManagedLogger;
+
 public class Throwables {
 	
 	public static RuntimeException toRuntimeException(Object obj) {
@@ -36,7 +38,7 @@ public class Throwables {
 		} else if (obj instanceof String) {
 			throw new RuntimeException((String)obj);
 		} else {
-			ManagedLogger.Repository.logError(Throwables.class, "", (Throwable)obj);
+			ManagedLogger.Repository.getInstance().logError(Throwables.class, "", (Throwable)obj);
 			return new RuntimeException((Throwable)obj);
 		}
 	}

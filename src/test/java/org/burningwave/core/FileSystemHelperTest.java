@@ -31,10 +31,10 @@ public class FileSystemHelperTest extends BaseTest {
 		Collection<String> classZipEntryFounds = ConcurrentHashMap.newKeySet();
 		Collection<String> allClassesByteCodeFounds = ConcurrentHashMap.newKeySet();
 		Configuration config = Configuration.forPaths(
-			componentSupplier.getPathHelper().getAllPaths()
+			"F:\\Shared\\Programmi\\Java\\jdk\\10.0.1"
 		).scanRecursivelyAllDirectory(
 		).whenFindFileTestAndApply(
-			file -> file.getName().endsWith(".class"), 
+			file -> file.getName().contains("BuiltinClassLoader.class"), 
 			scanItemContext -> {
 				String fileName = scanItemContext.getScannedItem().getAbsolutePath();
 				classFileFounds.add(fileName);
@@ -50,9 +50,10 @@ public class FileSystemHelperTest extends BaseTest {
 			zipEntry.getName().endsWith(".jar") ||
 			zipEntry.getName().endsWith(".war") ||
 			zipEntry.getName().endsWith(".ear") ||
-			zipEntry.getName().endsWith(".zip")
+			zipEntry.getName().endsWith(".zip") ||
+			zipEntry.getName().endsWith(".jmod")
 		).whenFindZipEntryTestAndApply(
-			zipEntry -> zipEntry.getName().endsWith(".class"),  
+			zipEntry -> zipEntry.getName().contains("BuiltinClassLoader.class"),  
 			scanItemContext -> {
 				String fileName = scanItemContext.getScannedItem().getAbsolutePath();
 				classZipEntryFounds.add(fileName);
@@ -63,7 +64,7 @@ public class FileSystemHelperTest extends BaseTest {
 		testNotEmpty(() -> {
 			componentSupplier.getFileSystemHelper().scan(config);
 			return allClassesByteCodeFounds;
-		});
+		}, true);
 		logInfo("class file founds: " + classFileFounds.size());
 		logInfo("class zip entry founds: " + classZipEntryFounds.size());
 		

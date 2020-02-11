@@ -300,17 +300,6 @@ public class ClassHelper implements Component {
 		}
 	}
 	
-	public void setParentClassLoader(ClassLoader child, ClassLoader parent) {
-		lowLevelObjectsHandler.setParentClassLoader(child, parent);
-	}
-	
-	public void setMasterClassLoader(ClassLoader child, ClassLoader parent) {
-		while (child.getParent() != null) {
-			child = child.getParent();
-		}
-		setParentClassLoader(child, parent);
-	}
-	
 	public <T> T executeCode(
 		String imports, 
 		String className, 

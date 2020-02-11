@@ -70,7 +70,6 @@ public class LowLevelObjectsHandler implements Component {
 	public final static String SUPPLIER_IMPORTS_KEY_SUFFIX = ".supplier.imports";
 	private Long LOADED_PACKAGES_MAP_MEMORY_OFFSET;
 	private Long LOADED_CLASSES_VECTOR_MEMORY_OFFSET;
-	private Long PARENT_CLASS_LOADER_MEMORY_OFFSET;
 	
 	private JVMChecker jVMChecker;
 	
@@ -166,29 +165,6 @@ public class LowLevelObjectsHandler implements Component {
 			temporaryClassLoader, 
 			getLoadedClassesVectorMemoryOffsetInitializator(definedClass.get())
 		);
-	}
-	
-	private void initParentClassLoaderMemoryOffset() {
-		ClassLoader temporaryClassLoaderParent = new ClassLoader() {};
-		ClassLoader temporaryClassLoader = new ClassLoader(temporaryClassLoaderParent) {};
-		iterateClassLoaderFields(
-			temporaryClassLoader, 
-			getClassLoaderParentMemoryOffsetInitializator(temporaryClassLoaderParent)
-		);
-	}
-	
-	private BiPredicate<Object, Long> getClassLoaderParentMemoryOffsetInitializator(
-			ClassLoader temporaryClassLoaderParent) {
-		return (object, offset) -> {
-			if (object != null && object instanceof ClassLoader) {
-				ClassLoader parentClassLoader = (ClassLoader)object;
-				if (parentClassLoader == temporaryClassLoaderParent) {
-					PARENT_CLASS_LOADER_MEMORY_OFFSET = offset;
-					return true;
-				}
-			}
-			return false;
-		};
 	}
 
 	private void initLoadedPackageMapOffset() {
@@ -460,17 +436,6 @@ public class LowLevelObjectsHandler implements Component {
 			}
 		}
 		return classLoaderDelegate;
-	}
-	
-	public void setParentClassLoader(ClassLoader child, ClassLoader parent) {
-		if (PARENT_CLASS_LOADER_MEMORY_OFFSET == null) {
-			synchronized (this.toString() + "_" + PARENT_CLASS_LOADER_MEMORY_OFFSET) {
-				if (PARENT_CLASS_LOADER_MEMORY_OFFSET == null) {
-					initParentClassLoaderMemoryOffset();
-				}
-			}
-		}
-		unsafe.putObject(child, PARENT_CLASS_LOADER_MEMORY_OFFSET, parent);
 	}
 	
 	@Override
