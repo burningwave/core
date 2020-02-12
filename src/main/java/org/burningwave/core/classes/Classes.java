@@ -37,6 +37,7 @@ import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.function.Function;
 
+import org.burningwave.ManagedLogger;
 import org.burningwave.Throwables;
 
 public class Classes {
@@ -67,6 +68,9 @@ public class Classes {
 	private static final Method GET_DECLARED_FIELDS_METHOD;
 	private static final Method GET_DECLARED_METHODS_METHOD;
 	private static final Method GET_DECLARED_CONSTRUCTORS_METHOD;
+	private static final Field[] EMPTY_FIELDS_ARRAY = new Field[]{};
+	private static final Method[] EMPTY_METHODS_ARRAY = new Method[]{};
+	private static final Constructor<?>[] EMPTY_CONSTRUCTORS_ARRAY = new Constructor<?>[]{};
 	
 	static {
 		try {
@@ -281,7 +285,8 @@ public class Classes {
 		try {
 			return (Field[])GET_DECLARED_FIELDS_METHOD.invoke(cls, false);
 		} catch (Throwable exc) {
-			throw Throwables.toRuntimeException(exc);
+			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve fields of class {}. Cause: {}", cls.getName(), exc.getMessage());
+			return EMPTY_FIELDS_ARRAY;
 		}
 	}
 	
@@ -289,16 +294,17 @@ public class Classes {
 		try {
 			return (Method[])GET_DECLARED_METHODS_METHOD.invoke(cls, false);
 		} catch (Throwable exc) {
-			throw Throwables.toRuntimeException(exc);
+			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
+			return EMPTY_METHODS_ARRAY;
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
-	public static <T> Constructor<T>[] getDeclaredConstructors(Class<T> cls)  {
+	public static Constructor<?>[] getDeclaredConstructors(Class<?> cls)  {
 		try {
-			return (Constructor<T>[])GET_DECLARED_CONSTRUCTORS_METHOD.invoke(cls, false);
+			return (Constructor<?>[])GET_DECLARED_CONSTRUCTORS_METHOD.invoke(cls, false);
 		} catch (Throwable exc) {
-			throw Throwables.toRuntimeException(exc);
+			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
+			return EMPTY_CONSTRUCTORS_ARRAY;
 		}
 	}
 }
