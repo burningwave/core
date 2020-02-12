@@ -38,7 +38,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.burningwave.ManagedLogger;
-import org.burningwave.Throwables;
+import org.burningwave.core.jvm.LowLevelObjectsHandler;
 
 public class Classes {
 	public static class Symbol{
@@ -65,25 +65,10 @@ public class Classes {
 	}
 	
 	private static final int V15 = 0 << 16 | 59;
-	private static final Method GET_DECLARED_FIELDS_METHOD;
-	private static final Field[] EMPTY_FIELDS_ARRAY = new Field[]{};
-	private static final Method GET_DECLARED_METHODS_METHOD;
-	private static final Method[] EMPTY_METHODS_ARRAY = new Method[]{};
-	private static final Method GET_DECLARED_CONSTRUCTORS_METHOD;
-	private static final Constructor<?>[] EMPTY_CONSTRUCTORS_ARRAY = new Constructor<?>[]{};
 	
-	static {
-		try {
-			GET_DECLARED_FIELDS_METHOD = Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
-			GET_DECLARED_FIELDS_METHOD.setAccessible(true);
-			GET_DECLARED_METHODS_METHOD = Class.class.getDeclaredMethod("getDeclaredMethods0", boolean.class);
-			GET_DECLARED_METHODS_METHOD.setAccessible(true);
-			GET_DECLARED_CONSTRUCTORS_METHOD = Class.class.getDeclaredMethod("getDeclaredConstructors0", boolean.class);
-			GET_DECLARED_CONSTRUCTORS_METHOD.setAccessible(true);
-		} catch (NoSuchMethodException | SecurityException exc) {
-			throw Throwables.toRuntimeException(exc);
-		}
-	}
+	private static final Field[] EMPTY_FIELDS_ARRAY = new Field[]{};
+	private static final Method[] EMPTY_METHODS_ARRAY = new Method[]{};
+	private static final Constructor<?>[] EMPTY_CONSTRUCTORS_ARRAY = new Constructor<?>[]{};
 	
 	@SuppressWarnings({ "unchecked"})
 	public static <T> Class<T> retrieveFrom(Object object) {
@@ -283,7 +268,7 @@ public class Classes {
 	
 	public static Field[] getDeclaredFields(Class<?> cls)  {
 		try {
-			return (Field[])GET_DECLARED_FIELDS_METHOD.invoke(cls, false);
+			return LowLevelObjectsHandler.GET_DECLARED_FIELDS_RETRIEVER.apply(cls);
 		} catch (Throwable exc) {
 			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve fields of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return EMPTY_FIELDS_ARRAY;
@@ -292,7 +277,7 @@ public class Classes {
 	
 	public static Method[] getDeclaredMethods(Class<?> cls)  {
 		try {
-			return (Method[])GET_DECLARED_METHODS_METHOD.invoke(cls, false);
+			return LowLevelObjectsHandler.GET_DECLARED_METHODS_RETRIEVER.apply(cls);
 		} catch (Throwable exc) {
 			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return EMPTY_METHODS_ARRAY;
@@ -301,7 +286,7 @@ public class Classes {
 	
 	public static Constructor<?>[] getDeclaredConstructors(Class<?> cls)  {
 		try {
-			return (Constructor<?>[])GET_DECLARED_CONSTRUCTORS_METHOD.invoke(cls, false);
+			return LowLevelObjectsHandler.GET_DECLARED_CONSTRUCTORS_RETRIEVER.apply(cls);
 		} catch (Throwable exc) {
 			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return EMPTY_CONSTRUCTORS_ARRAY;
