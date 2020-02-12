@@ -28,11 +28,16 @@
  */
 package org.burningwave.core.classes;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.function.Function;
+
+import org.burningwave.Throwables;
 
 public class Classes {
 	public static class Symbol{
@@ -58,7 +63,23 @@ public class Classes {
 	    }		
 	}
 	
-	static final int V15 = 0 << 16 | 59;
+	private static final int V15 = 0 << 16 | 59;
+	private static final Method GET_DECLARED_FIELDS_METHOD;
+	private static final Method GET_DECLARED_METHODS_METHOD;
+	private static final Method GET_DECLARED_CONSTRUCTORS_METHOD;
+	
+	static {
+		try {
+			GET_DECLARED_FIELDS_METHOD = Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
+			GET_DECLARED_FIELDS_METHOD.setAccessible(true);
+			GET_DECLARED_METHODS_METHOD = Class.class.getDeclaredMethod("getDeclaredMethods0", boolean.class);
+			GET_DECLARED_METHODS_METHOD.setAccessible(true);
+			GET_DECLARED_CONSTRUCTORS_METHOD = Class.class.getDeclaredMethod("getDeclaredConstructors0", boolean.class);
+			GET_DECLARED_CONSTRUCTORS_METHOD.setAccessible(true);
+		} catch (NoSuchMethodException | SecurityException exc) {
+			throw Throwables.toRuntimeException(exc);
+		}
+	}
 	
 	@SuppressWarnings({ "unchecked"})
 	public static <T> Class<T> retrieveFrom(Object object) {
@@ -256,4 +277,28 @@ public class Classes {
 		}
 	}
 	
+	public static Field[] getDeclaredFields(Class<?> cls)  {
+		try {
+			return (Field[])GET_DECLARED_FIELDS_METHOD.invoke(cls, false);
+		} catch (Throwable exc) {
+			throw Throwables.toRuntimeException(exc);
+		}
+	}
+	
+	public static Method[] getDeclaredMethods(Class<?> cls)  {
+		try {
+			return (Method[])GET_DECLARED_METHODS_METHOD.invoke(cls, false);
+		} catch (Throwable exc) {
+			throw Throwables.toRuntimeException(exc);
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <T> Constructor<T>[] getDeclaredConstructors(Class<T> cls)  {
+		try {
+			return (Constructor<T>[])GET_DECLARED_CONSTRUCTORS_METHOD.invoke(cls, false);
+		} catch (Throwable exc) {
+			throw Throwables.toRuntimeException(exc);
+		}
+	}
 }

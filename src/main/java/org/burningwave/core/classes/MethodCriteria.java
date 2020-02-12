@@ -51,7 +51,7 @@ public class MethodCriteria extends ExecutableMemberCriteria<
 	
 	@Override
 	public Function<Class<?>, Method[]> getMembersSupplierFunction() {
-		return (currentClass) -> currentClass.getDeclaredMethods();
+		return (currentClass) -> Classes.getDeclaredMethods(currentClass);
 	}
 	
 	public static MethodCriteria forName(Predicate<String> predicate) {

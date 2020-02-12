@@ -52,7 +52,7 @@ public class FieldCriteria extends MemberCriteria<
 	
 	@Override
 	public Function<Class<?>, Field[]> getMembersSupplierFunction() {
-		return (currentClass) -> currentClass.getDeclaredFields();
+		return (currentClass) -> Classes.getDeclaredFields(currentClass);
 	}
 	
 	public static FieldCriteria forName(Predicate<String> predicate) {
