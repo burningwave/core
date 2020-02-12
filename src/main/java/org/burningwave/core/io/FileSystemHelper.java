@@ -46,6 +46,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.burningwave.Throwables;
+import org.burningwave.core.Cache;
 import org.burningwave.core.Component;
 import org.burningwave.core.Strings;
 import org.burningwave.core.concurrent.ParallelTasksManager;

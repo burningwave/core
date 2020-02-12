@@ -43,9 +43,10 @@ import java.util.zip.ZipEntry;
 
 
 import org.burningwave.Throwables;
+import org.burningwave.core.Cache;
 import org.burningwave.core.Strings;
 
-class ZipFile implements IterableZipContainer {
+public class ZipFile implements IterableZipContainer {
 	String absolutePath;
 	IterableZipContainer parent;
 	IterableZipContainer.Entry currentZipEntry;

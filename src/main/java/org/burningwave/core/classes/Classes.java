@@ -39,6 +39,7 @@ import java.util.function.Function;
 
 import org.burningwave.ManagedLogger;
 import org.burningwave.Throwables;
+import org.burningwave.core.Cache;
 
 public class Classes {
 	public static class Symbol{
@@ -282,29 +283,35 @@ public class Classes {
 	}
 	
 	public static Field[] getDeclaredFields(Class<?> cls)  {
-		try {
-			return (Field[])GET_DECLARED_FIELDS_METHOD.invoke(cls, false);
-		} catch (Throwable exc) {
-			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve fields of class {}. Cause: {}", cls.getName(), exc.getMessage());
-			return EMPTY_FIELDS_ARRAY;
-		}
+		return Cache.CLASS_RELATIVE_PATH_FOR_FIELDS.getOrDefault(cls.getName().replace(".", "/"), () -> {
+			try {
+				return (Field[])GET_DECLARED_FIELDS_METHOD.invoke(cls, false);
+			} catch (Throwable exc) {
+				ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve fields of class {}. Cause: {}", cls.getName(), exc.getMessage());
+				return EMPTY_FIELDS_ARRAY;
+			}
+		});
 	}
 	
 	public static Method[] getDeclaredMethods(Class<?> cls)  {
-		try {
-			return (Method[])GET_DECLARED_METHODS_METHOD.invoke(cls, false);
-		} catch (Throwable exc) {
-			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
-			return EMPTY_METHODS_ARRAY;
-		}
+		return Cache.CLASS_RELATIVE_PATH_FOR_METHODS.getOrDefault(cls.getName().replace(".", "/"), () -> {
+			try {
+				return (Method[])GET_DECLARED_METHODS_METHOD.invoke(cls, false);
+			} catch (Throwable exc) {
+				ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
+				return EMPTY_METHODS_ARRAY;
+			}
+		});
 	}
 	
 	public static Constructor<?>[] getDeclaredConstructors(Class<?> cls)  {
-		try {
-			return (Constructor<?>[])GET_DECLARED_CONSTRUCTORS_METHOD.invoke(cls, false);
-		} catch (Throwable exc) {
-			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
-			return EMPTY_CONSTRUCTORS_ARRAY;
-		}
+		return Cache.CLASS_RELATIVE_PATH_FOR_CONSTRUCTORS.getOrDefault(cls.getName().replace(".", "/"), () -> {
+			try {
+				return (Constructor<?>[])GET_DECLARED_CONSTRUCTORS_METHOD.invoke(cls, false);
+			} catch (Throwable exc) {
+				ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
+				return EMPTY_CONSTRUCTORS_ARRAY;
+			}
+		});
 	}
 }

@@ -42,7 +42,8 @@ import org.burningwave.core.function.TriPredicate;
 public class ConstructorCriteria extends ExecutableMemberCriteria<
 	Constructor<?>, ConstructorCriteria, Criteria.TestContext<Constructor<?>, ConstructorCriteria>
 > {
-	
+	private static Function<Class<?>, Constructor<?>[]> GET_MEMBERS_FUNCTION = (currentClass) -> Classes.getDeclaredConstructors(currentClass);
+
 	private ConstructorCriteria() {
 		super();
 	}
@@ -53,7 +54,7 @@ public class ConstructorCriteria extends ExecutableMemberCriteria<
 	
 	@Override
 	public Function<Class<?>, Constructor<?>[]> getMembersSupplierFunction() {
-		return (currentClass) -> Classes.getDeclaredConstructors(currentClass);
+		return GET_MEMBERS_FUNCTION;
 	}
 	
 	public static ConstructorCriteria forName(Predicate<String> predicate) {

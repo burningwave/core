@@ -41,7 +41,7 @@ import org.burningwave.core.function.TriPredicate;
 public class FieldCriteria extends MemberCriteria<
 	Field, FieldCriteria, Criteria.TestContext<Field, FieldCriteria>
 > {
-	
+	private static Function<Class<?>, Field[]> GET_MEMBERS_FUNCTION = (currentClass) -> Classes.getDeclaredFields(currentClass);
 	private FieldCriteria() {
 		super();
 	}
@@ -52,7 +52,7 @@ public class FieldCriteria extends MemberCriteria<
 	
 	@Override
 	public Function<Class<?>, Field[]> getMembersSupplierFunction() {
-		return (currentClass) -> Classes.getDeclaredFields(currentClass);
+		return GET_MEMBERS_FUNCTION;
 	}
 	
 	public static FieldCriteria forName(Predicate<String> predicate) {

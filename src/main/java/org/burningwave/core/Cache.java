@@ -26,8 +26,11 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.io;
+package org.burningwave.core;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -35,7 +38,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.burningwave.core.Strings;
+import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.io.Streams;
+import org.burningwave.core.io.ZipFile;
 import org.burningwave.core.iterable.Properties;
 
 public class Cache {
@@ -43,16 +48,25 @@ public class Cache {
 	public final static PathForResources<ByteBuffer> PATH_FOR_CONTENTS ;
 	public final static PathForResources<FileSystemItem> PATH_FOR_FILE_SYSTEM_ITEMS;
 	public final static PathForResources<ZipFile> PATH_FOR_ZIP_FILES;
+	public final static PathForResources<Field[]> CLASS_RELATIVE_PATH_FOR_FIELDS;
+	public final static PathForResources<Method[]> CLASS_RELATIVE_PATH_FOR_METHODS;
+	public final static PathForResources<Constructor<?>[]> CLASS_RELATIVE_PATH_FOR_CONSTRUCTORS;
 	
 	static {
 		if ("sync".equalsIgnoreCase((String)Properties.getGlobalProperty(TYPE_CONFIG_KEY))) {
 			PATH_FOR_CONTENTS = new SyncPathForResources<>(1L, Streams::shareContent);
 			PATH_FOR_FILE_SYSTEM_ITEMS = new SyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
-			PATH_FOR_ZIP_FILES = new SyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);	
+			PATH_FOR_ZIP_FILES = new SyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);
+			CLASS_RELATIVE_PATH_FOR_FIELDS = new SyncPathForResources<>(1L, fields -> fields);
+			CLASS_RELATIVE_PATH_FOR_METHODS = new SyncPathForResources<>(1L, fields -> fields);
+			CLASS_RELATIVE_PATH_FOR_CONSTRUCTORS = new SyncPathForResources<>(1L, fields -> fields);
 		} else {
 			PATH_FOR_CONTENTS = new AsyncPathForResources<>(1L, Streams::shareContent);
 			PATH_FOR_FILE_SYSTEM_ITEMS = new AsyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
 			PATH_FOR_ZIP_FILES = new AsyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);	
+			CLASS_RELATIVE_PATH_FOR_FIELDS = new AsyncPathForResources<>(1L, fields -> fields);
+			CLASS_RELATIVE_PATH_FOR_METHODS = new AsyncPathForResources<>(1L, methods -> methods);
+			CLASS_RELATIVE_PATH_FOR_CONSTRUCTORS = new AsyncPathForResources<>(1L, constructors -> constructors);
 		}	
 	}
 	
