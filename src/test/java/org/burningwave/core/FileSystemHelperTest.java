@@ -31,10 +31,10 @@ public class FileSystemHelperTest extends BaseTest {
 		Collection<String> classZipEntryFounds = ConcurrentHashMap.newKeySet();
 		Collection<String> allClassesByteCodeFounds = ConcurrentHashMap.newKeySet();
 		Configuration config = Configuration.forPaths(
-			"F:\\Shared\\Programmi\\Java\\jdk\\10.0.1"
+			componentSupplier.getPathHelper().getAllPaths()
 		).scanRecursivelyAllDirectory(
 		).whenFindFileTestAndApply(
-			file -> file.getName().contains("BuiltinClassLoader.class"), 
+			file -> file.getName().endsWith(".class"), 
 			scanItemContext -> {
 				String fileName = scanItemContext.getScannedItem().getAbsolutePath();
 				classFileFounds.add(fileName);
@@ -53,7 +53,7 @@ public class FileSystemHelperTest extends BaseTest {
 			zipEntry.getName().endsWith(".zip") ||
 			zipEntry.getName().endsWith(".jmod")
 		).whenFindZipEntryTestAndApply(
-			zipEntry -> zipEntry.getName().contains("BuiltinClassLoader.class"),  
+			zipEntry -> zipEntry.getName().endsWith(".class"),  
 			scanItemContext -> {
 				String fileName = scanItemContext.getScannedItem().getAbsolutePath();
 				classZipEntryFounds.add(fileName);
