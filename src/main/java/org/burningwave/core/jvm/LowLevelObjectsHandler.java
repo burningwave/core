@@ -68,24 +68,23 @@ import sun.misc.Unsafe;
 @SuppressWarnings("restriction")
 public class LowLevelObjectsHandler implements Component {
 	public final static String SUPPLIER_IMPORTS_KEY_SUFFIX = ".supplier.imports";
-	private Long LOADED_PACKAGES_MAP_MEMORY_OFFSET;
-	private Long LOADED_CLASSES_VECTOR_MEMORY_OFFSET;
+	protected Long LOADED_PACKAGES_MAP_MEMORY_OFFSET;
+	protected Long LOADED_CLASSES_VECTOR_MEMORY_OFFSET;
 	
-	private JVMChecker jVMChecker;
-	
-	private IterableObjectHelper iterableObjectHelper;
-	private ClassFactory classFactory;
-	private Supplier<ClassFactory> classFactorySupplier;
-	private Supplier<ClassHelper> classHelperSupplier;
-	private StreamHelper streamHelper;
-	private ClassHelper classHelper;
-	private MemberFinder memberFinder;
-	private Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
-	private Map<ClassLoader, Map<String, ?>> classLoadersPackages;
-	private TriFunction<ClassLoader, Object, String, Package> packageRetriever;
-	private static Unsafe unsafe;
-	private Map<String, Method> classLoadersMethods;
-	private Map<String, ClassLoaderDelegate> classLoaderDelegates;
+	protected JVMChecker jVMChecker;
+	protected IterableObjectHelper iterableObjectHelper;
+	protected ClassFactory classFactory;
+	protected Supplier<ClassFactory> classFactorySupplier;
+	protected Supplier<ClassHelper> classHelperSupplier;
+	protected StreamHelper streamHelper;
+	protected ClassHelper classHelper;
+	protected MemberFinder memberFinder;
+	protected Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
+	protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
+	protected TriFunction<ClassLoader, Object, String, Package> packageRetriever;
+	protected static Unsafe unsafe;
+	protected Map<String, Method> classLoadersMethods;
+	protected Map<String, ClassLoaderDelegate> classLoaderDelegates;
 	
 	static {
 		try {
@@ -97,7 +96,7 @@ public class LowLevelObjectsHandler implements Component {
 		}
 	}
 	
-	private LowLevelObjectsHandler(
+	protected LowLevelObjectsHandler(
 		JVMChecker jVMChecker,
 		StreamHelper streamHelper,
 		Supplier<ClassFactory> classFactorySupplier,
@@ -140,7 +139,7 @@ public class LowLevelObjectsHandler implements Component {
 			(classFactory = classFactorySupplier.get());
 	}
 	
-	private ClassHelper getClassHelper() {
+	protected ClassHelper getClassHelper() {
 		return classHelper != null ?
 			classHelper :
 			(classHelper = classHelperSupplier.get());
