@@ -42,8 +42,9 @@ import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.concurrent.ParallelTasksManager;
 import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemHelper;
-import org.burningwave.core.io.FileSystemHelper.Scan;
+import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.IterableZipContainer;
@@ -52,7 +53,8 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 	private ClassPathHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		FileSystemHelper fileSystemHelper, 
+		FileSystemHelper fileSystemHelper,
+		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
 		ClassHelper classHelper,
@@ -62,6 +64,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 			byteCodeHunterSupplier,
 			classHunterSupplier,
 			fileSystemHelper,
+			fileSystemScanner,
 			pathHelper,
 			streamHelper,
 			classHelper,
@@ -71,10 +74,17 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		);
 	}
 	
-	public static ClassPathHunter create(Supplier<ByteCodeHunter> byteCodeHunterSupplier, Supplier<ClassHunter> classHunterSupplier, FileSystemHelper fileSystemHelper, PathHelper pathHelper, StreamHelper streamHelper,
-		ClassHelper classHelper, MemberFinder memberFinder
+	public static ClassPathHunter create(
+		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
+		Supplier<ClassHunter> classHunterSupplier,
+		FileSystemHelper fileSystemHelper,
+		FileSystemScanner fileSystemScanner,
+		PathHelper pathHelper,
+		StreamHelper streamHelper,
+		ClassHelper classHelper,
+		MemberFinder memberFinder
 	) {
-		return new ClassPathHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classHelper, memberFinder);
+		return new ClassPathHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, fileSystemScanner, pathHelper, streamHelper, classHelper, memberFinder);
 	}
 	
 	@Override

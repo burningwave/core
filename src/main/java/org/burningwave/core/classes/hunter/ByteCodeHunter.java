@@ -37,7 +37,8 @@ import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.io.FileSystemHelper;
-import org.burningwave.core.io.FileSystemHelper.Scan;
+import org.burningwave.core.io.FileSystemScanner;
+import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 
@@ -47,6 +48,7 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemHelper fileSystemHelper,
+		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
 		ClassHelper classHelper,
@@ -56,6 +58,7 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 			byteCodeHunterSupplier,
 			classHunterSupplier,
 			fileSystemHelper,
+			fileSystemScanner,
 			pathHelper,
 			streamHelper, 
 			classHelper,
@@ -67,11 +70,17 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 		);
 	}
 	
-	public static ByteCodeHunter create(Supplier<ByteCodeHunter> byteCodeHunterSupplier, Supplier<ClassHunter> classHunterSupplier, 
-		FileSystemHelper fileSystemHelper, PathHelper pathHelper, StreamHelper streamHelper,
-		ClassHelper classHelper, MemberFinder memberFinder
+	public static ByteCodeHunter create(
+		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
+		Supplier<ClassHunter> classHunterSupplier, 
+		FileSystemHelper fileSystemHelper,
+		FileSystemScanner fileSystemScanner,
+		PathHelper pathHelper,
+		StreamHelper streamHelper,
+		ClassHelper classHelper,
+		MemberFinder memberFinder
 	) {
-		return new ByteCodeHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classHelper, memberFinder);
+		return new ByteCodeHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, fileSystemScanner,pathHelper, streamHelper, classHelper, memberFinder);
 	}
 	
 	@Override

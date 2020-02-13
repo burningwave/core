@@ -37,8 +37,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.burningwave.core.Strings;
-import org.burningwave.core.io.FileSystemHelper.Scan;
-import org.burningwave.core.io.FileSystemHelper.Scan.Configuration;
+import org.burningwave.core.io.FileSystemScanner.Scan;
+import org.burningwave.core.io.FileSystemScanner.Scan.Configuration;
 
 @SuppressWarnings({"unchecked"})
 public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {

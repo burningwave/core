@@ -6,10 +6,10 @@ import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.io.FileSystemHelper.Scan.Configuration;
+import org.burningwave.core.io.FileSystemScanner.Scan.Configuration;
 import org.junit.jupiter.api.Test;
 
-public class FileSystemHelperTest extends BaseTest {
+public class FileSystemScannerTest extends BaseTest {
 	
 	@Test
 	public void findAllClassesTestMultipleCallTestOne() {
@@ -62,7 +62,7 @@ public class FileSystemHelperTest extends BaseTest {
 		).setMaxParallelTasks(8);
 		
 		testNotEmpty(() -> {
-			componentSupplier.getFileSystemHelper().scan(config);
+			componentSupplier.getFileSystemScanner().scan(config);
 			return allClassesByteCodeFounds;
 		}, true);
 		logInfo("class file founds: " + classFileFounds.size());
@@ -86,7 +86,7 @@ public class FileSystemHelperTest extends BaseTest {
 		).setMaxParallelTasks(8);
 		
 		testNotEmpty(() -> {
-			componentSupplier.getFileSystemHelper().scan(config);
+			componentSupplier.getFileSystemScanner().scan(config);
 			return allFilesFound;
 		});
 		
@@ -107,7 +107,7 @@ public class FileSystemHelperTest extends BaseTest {
 		).setMaxParallelTasks(8);
 		
 		testNotEmpty(() -> {
-			componentSupplier.getFileSystemHelper().scan(config);
+			componentSupplier.getFileSystemScanner().scan(config);
 			return allFilesFound;
 		});
 	}
@@ -129,7 +129,7 @@ public class FileSystemHelperTest extends BaseTest {
 		).setMaxParallelTasks(8);
 		
 		testNotEmpty(() -> {
-			componentSupplier.getFileSystemHelper().scan(config);
+			componentSupplier.getFileSystemScanner().scan(config);
 			return allFilesFound;
 		});
 	}
@@ -151,7 +151,7 @@ public class FileSystemHelperTest extends BaseTest {
 		).setMaxParallelTasks(8);
 		
 		testNotEmpty(() -> {
-			componentSupplier.getFileSystemHelper().scan(config);
+			componentSupplier.getFileSystemScanner().scan(config);
 			return allFilesFound;
 		});
 		
@@ -178,7 +178,7 @@ public class FileSystemHelperTest extends BaseTest {
 		).setMaxParallelTasks(8);
 		
 		testNotEmpty(() -> {
-			componentSupplier.getFileSystemHelper().scan(config);
+			componentSupplier.getFileSystemScanner().scan(config);
 			return allFilesFound;
 		});
 		

@@ -42,7 +42,8 @@ import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.hunter.SearchContext.InitContext;
 import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemHelper;
-import org.burningwave.core.io.FileSystemHelper.Scan;
+import org.burningwave.core.io.FileSystemScanner;
+import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 
@@ -56,6 +57,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	ClassHelper classHelper;
 	MemberFinder memberFinder;
 	FileSystemHelper fileSystemHelper;
+	FileSystemScanner fileSystemScanner;
 	StreamHelper streamHelper;
 	PathHelper pathHelper;
 	Function<InitContext, C> contextSupplier;
@@ -65,6 +67,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemHelper fileSystemHelper,
+		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
 		ClassHelper classHelper,
@@ -73,6 +76,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		Function<C, R> resultSupplier
 	) {
 		this.fileSystemHelper = fileSystemHelper;
+		this.fileSystemScanner = fileSystemScanner;
 		this.pathHelper = pathHelper;
 		this.streamHelper = streamHelper;
 		this.classHelper = classHelper;
@@ -103,7 +107,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		C context = createContext(scanConfigCopy, searchConfig);
 		searchConfig.init(this.classHelper, context.pathMemoryClassLoader, this.memberFinder);
 		context.executeSearch(() -> {
-			fileSystemHelper.scan(
+			fileSystemScanner.scan(
 				scanConfigCopy.toScanConfiguration(
 					getFileSystemEntryTransformer(context),
 					getZipEntryTransformer(context)

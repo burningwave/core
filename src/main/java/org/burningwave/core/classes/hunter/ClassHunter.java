@@ -47,7 +47,8 @@ import org.burningwave.core.classes.MemberCriteria;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemHelper;
-import org.burningwave.core.io.FileSystemHelper.Scan;
+import org.burningwave.core.io.FileSystemScanner;
+import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
@@ -62,7 +63,8 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	ClassHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		FileSystemHelper fileSystemHelper, 
+		FileSystemHelper fileSystemHelper,
+		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
 		ClassHelper classHelper,
@@ -73,6 +75,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			byteCodeHunterSupplier,
 			classHunterSupplier,
 			fileSystemHelper,
+			fileSystemScanner,
 			pathHelper,
 			streamHelper,
 			classHelper,
@@ -95,7 +98,8 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	public static ClassHunter create(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier, 
 		Supplier<ClassHunter> classHunterSupplier, 
-		FileSystemHelper fileSystemHelper, 
+		FileSystemHelper fileSystemHelper,
+		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper, 
 		StreamHelper streamHelper,
 		ClassHelper classHelper,
@@ -103,7 +107,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		ClassLoader parentClassLoader
 	) {
 		return new ClassHunter(
-			byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, pathHelper, streamHelper, classHelper, memberFinder, parentClassLoader
+			byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, fileSystemScanner, pathHelper, streamHelper, classHelper, memberFinder, parentClassLoader
 		);
 	}
 	

@@ -55,7 +55,7 @@ import org.burningwave.ManagedLogger;
 import org.burningwave.Throwables;
 import org.burningwave.core.Cache;
 import org.burningwave.core.Strings;
-import org.burningwave.core.io.FileSystemHelper.Scan;
+import org.burningwave.core.io.FileSystemScanner.Scan;
 
 public class FileSystemItem implements ManagedLogger {
 	private Map.Entry<String, String> absolutePath;

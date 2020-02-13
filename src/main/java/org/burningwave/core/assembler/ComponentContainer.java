@@ -57,6 +57,7 @@ import org.burningwave.core.classes.hunter.ClassPathHunter;
 import org.burningwave.core.concurrent.ConcurrentHelper;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
@@ -312,7 +313,8 @@ public class ComponentContainer implements ComponentSupplier {
 			return ClassHunter.create(
 				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
-				getFileSystemHelper(), 
+				getFileSystemHelper(),
+				getFileSystemScanner(),
 				getPathHelper(),
 				getStreamHelper(),
 				getClassHelper(),
@@ -334,7 +336,8 @@ public class ComponentContainer implements ComponentSupplier {
 			ClassPathHunter.create(
 				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
-				getFileSystemHelper(), 
+				getFileSystemHelper(),
+				getFileSystemScanner(),
 				getPathHelper(),
 				getStreamHelper(),
 				getClassHelper(),
@@ -349,7 +352,8 @@ public class ComponentContainer implements ComponentSupplier {
 			ByteCodeHunter.create(
 				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
-				getFileSystemHelper(), 
+				getFileSystemHelper(),
+				getFileSystemScanner(),
 				getPathHelper(),
 				getStreamHelper(),
 				getClassHelper(),
@@ -465,7 +469,16 @@ public class ComponentContainer implements ComponentSupplier {
 			)
 		);
 	}
-
+	
+	@Override
+	public FileSystemScanner getFileSystemScanner() {
+		return getOrCreate(FileSystemScanner.class, () -> 
+			FileSystemScanner.create(
+				getPathHelper()::optimize
+			)
+		);
+	}
+	
 	@Override
 	public ConcurrentHelper getConcurrentHelper() {
 		return getOrCreate(ConcurrentHelper.class, ConcurrentHelper::create);

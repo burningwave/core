@@ -49,6 +49,7 @@ import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.hunter.SearchContext.InitContext;
 import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemHelper;
+import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.PathHelper.CheckResult;
 import org.burningwave.core.io.StreamHelper;
@@ -61,6 +62,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemHelper fileSystemHelper,
+		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
 		ClassHelper classHelper,
@@ -71,6 +73,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 			byteCodeHunterSupplier,
 			classHunterSupplier,
 			fileSystemHelper,
+			fileSystemScanner,
 			pathHelper,
 			streamHelper,
 			classHelper,
@@ -122,7 +125,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 					}
 				}
 			} else {
-				fileSystemHelper.scan(
+				fileSystemScanner.scan(
 					context.classFileScanConfiguration.createCopy().setPaths(pathsNotScanned).toScanConfiguration(
 						getFileSystemEntryTransformer(context),
 						getZipEntryTransformer(context)
@@ -219,7 +222,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 			}
 		}
 		
-		fileSystemHelper.scan(
+		fileSystemScanner.scan(
 			classFileScanConfiguration.toScanConfiguration(
 				getFileSystemEntryTransformer(context),
 				getZipEntryTransformer(context)

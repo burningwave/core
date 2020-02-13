@@ -45,6 +45,7 @@ import org.burningwave.core.classes.hunter.ClassHunter;
 import org.burningwave.core.classes.hunter.ClassPathHunter;
 import org.burningwave.core.concurrent.ConcurrentHelper;
 import org.burningwave.core.io.FileSystemHelper;
+import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
@@ -60,73 +61,75 @@ import org.burningwave.core.reflection.SupplierBinder;
 
 public interface ComponentSupplier extends Component {
 	
-	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier);
+	public static ComponentSupplier getInstance() {
+		return ComponentContainer.getInstance();
+	}
+
+	public ComponentSupplier clear();
+
+	public PropertyAccessor.ByFieldOrByMethod getByFieldOrByMethodPropertyAccessor();
+
+	public PropertyAccessor.ByMethodOrByField getByMethodOrByFieldPropertyAccessor();
+
+	public ByteCodeHunter getByteCodeHunter();
+
+	public ClassFactory getClassFactory();
+
+	public ClassHelper getClassHelper();
+	
+	public ClassHunter getClassHunter();
+
+	public ClassPathHunter getClassPathHunter();
+
+	public CodeGenerator.ForCodeExecutor getCodeGeneratorForCodeExecutor();
+
+	public CodeGenerator.ForConsumer getCodeGeneratorForConsumer();
+	
+	public CodeGenerator.ForFunction getCodeGeneratorForFunction();
+	
+	public CodeGenerator.ForPojo getCodeGeneratorForPojo();
+	
+	public CodeGenerator.ForPredicate getCodeGeneratorForPredicate();
+	
+	public ConcurrentHelper getConcurrentHelper();
 
 	public ConstructorHelper getConstructorHelper();
-
-	public MethodHelper getMethodHelper();
+	
+	public ConsumerBinder getConsumerBinder();
 
 	public FieldHelper getFieldHelper();
+	
+	public FileSystemHelper getFileSystemHelper();
+	
+	public FileSystemScanner getFileSystemScanner();
+
+	public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
+
+	public FunctionBinder getFunctionBinder();
+
+	public IterableObjectHelper getIterableObjectHelper();
+
+	public JavaMemoryCompiler getJavaMemoryCompiler();
+
+	public JVMChecker getJVMChecker();
+
+	public CallerRetriever getLambdaCallerRetriever();
+
+	public LowLevelObjectsHandler getLowLevelObjectsHandler();
 
 	public MemberFinder getMemberFinder();
 
 	public MemoryClassLoader getMemoryClassLoader();
-
-	public ClassFactory getClassFactory();
 	
-	public ClassHelper getClassHelper();
-
-	public JavaMemoryCompiler getJavaMemoryCompiler();
-
-	public CodeGenerator.ForConsumer getCodeGeneratorForConsumer();
-
-	public CodeGenerator.ForFunction getCodeGeneratorForFunction();
+	public MethodHelper getMethodHelper();
 	
-	public CodeGenerator.ForPredicate getCodeGeneratorForPredicate();
+	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier);
 	
-	public CodeGenerator.ForPojo getCodeGeneratorForPojo();
-	
-	public CodeGenerator.ForCodeExecutor getCodeGeneratorForCodeExecutor();
-	
-	public ByteCodeHunter getByteCodeHunter();
-
-	public ClassPathHunter getClassPathHunter();
-	
-	public ClassHunter getClassHunter();
-
-	public PropertyAccessor.ByFieldOrByMethod getByFieldOrByMethodPropertyAccessor();
-	
-	public PropertyAccessor.ByMethodOrByField getByMethodOrByFieldPropertyAccessor();
-
-	public RunnableBinder getRunnableBinder();
-
-	public SupplierBinder getSupplierBinder();
-
-	public ConsumerBinder getConsumerBinder();
-
-	public FunctionBinder getFunctionBinder();
-
-	public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
-
-	public CallerRetriever getLambdaCallerRetriever();
-
 	public PathHelper getPathHelper();
-
+	
+	public RunnableBinder getRunnableBinder();
+	
 	public StreamHelper getStreamHelper();
-
-	public FileSystemHelper getFileSystemHelper();
 	
-	public ConcurrentHelper getConcurrentHelper();
-	
-	public IterableObjectHelper getIterableObjectHelper();
-	
-	public LowLevelObjectsHandler getLowLevelObjectsHandler();
-	
-	public JVMChecker getJVMChecker();
-	
-	public ComponentSupplier clear();
-	
-	public static ComponentSupplier getInstance() {
-		return ComponentContainer.getInstance();
-	}
+	public SupplierBinder getSupplierBinder();
 }
