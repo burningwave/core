@@ -41,13 +41,13 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 
-
 import org.burningwave.Throwables;
 import org.burningwave.core.Cache;
 import org.burningwave.core.Strings;
 
 class ZipFile implements IterableZipContainer {
 	String absolutePath;
+	String conventionedAbsolutePath;
 	IterableZipContainer parent;
 	IterableZipContainer.Entry currentZipEntry;
 	Iterator<Entry> entriesIterator;
@@ -106,7 +106,24 @@ class ZipFile implements IterableZipContainer {
 	public String getAbsolutePath() {
 		return absolutePath;
 	}
+	
 
+	@Override
+	public String getConventionedAbsolutePath() {
+		if (conventionedAbsolutePath == null) {
+			if (parent != null) {
+				conventionedAbsolutePath = parent.getConventionedAbsolutePath() + absolutePath.replace(parent.getAbsolutePath() + "/", "");
+			} else {
+				conventionedAbsolutePath = absolutePath;
+			}
+			conventionedAbsolutePath += IterableZipContainer.ZIP_PATH_SEPARATOR;
+		}
+		if (conventionedAbsolutePath == null) {
+			conventionedAbsolutePath = null;
+		}
+		return conventionedAbsolutePath;
+	}
+	
 	@Override
 	public IterableZipContainer getParent() {
 		return parent;
@@ -194,5 +211,4 @@ class ZipFile implements IterableZipContainer {
 			return Cache.PATH_FOR_CONTENTS.get(getAbsolutePath());
 		}	
 	}
-	
 }

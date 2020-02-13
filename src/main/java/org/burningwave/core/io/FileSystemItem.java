@@ -38,12 +38,15 @@ import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -52,10 +55,9 @@ import org.burningwave.ManagedLogger;
 import org.burningwave.Throwables;
 import org.burningwave.core.Cache;
 import org.burningwave.core.Strings;
+import org.burningwave.core.io.FileSystemHelper.Scan;
 
 public class FileSystemItem implements ManagedLogger {
-	private final static String ZIP_PATH_SEPARATOR = "//"; 
-		
 	private Map.Entry<String, String> absolutePath;
 	private FileSystemItem parent;
 	private FileSystemItem parentContainer;
@@ -81,7 +83,7 @@ public class FileSystemItem implements ManagedLogger {
 		return ofPath(realAbsolutePath, null);
 	}
 	
-	private static FileSystemItem ofPath(String realAbsolutePath, String conventionedAbsolutePath) {
+	static FileSystemItem ofPath(String realAbsolutePath, String conventionedAbsolutePath) {
 		if (realAbsolutePath.contains("..") ||
 			realAbsolutePath.contains(".\\") ||
 			realAbsolutePath.contains(".//")
@@ -97,6 +99,10 @@ public class FileSystemItem implements ManagedLogger {
 				return null;
 			}
 		);
+		if (fileSystemItem.absolutePath.getValue() == null && conventionedAbsolutePath != null) {
+			fileSystemItem.absolutePath.setValue(conventionedAbsolutePath);
+			fileSystemItem.exists = true;
+		}
 		return fileSystemItem;
 	}
 	
@@ -128,7 +134,7 @@ public class FileSystemItem implements ManagedLogger {
 				} else {
 					try {
 						if (Streams.isArchive(file)) {
-							return realAbsolutePath + ZIP_PATH_SEPARATOR;
+							return realAbsolutePath + IterableZipContainer.ZIP_PATH_SEPARATOR;
 						} else {
 							return realAbsolutePath;
 						}
@@ -143,7 +149,7 @@ public class FileSystemItem implements ManagedLogger {
 			} else {
 				try (FileInputStream fileInputStream = FileInputStream.create(file)) {
 					exists = true;
-					return fileInputStream.getAbsolutePath() + ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
+					return fileInputStream.getAbsolutePath() + IterableZipContainer.ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
 						fileInputStream.toByteBuffer(), fileInputStream.getAbsolutePath(), relativePath
 					);
 				} catch (Exception exc) {
@@ -212,9 +218,9 @@ public class FileSystemItem implements ManagedLogger {
 			if (fileSystemItem.parentContainer == null) {
 				fileSystemItem.parentContainer = FileSystemItem.ofPath(zipEntry.getParentContainer().getAbsolutePath());
 			}
-			return zipEntry.getName() + (!zipEntry.isDirectory() && zipEntry.isArchive() ? ZIP_PATH_SEPARATOR : "");
+			return zipEntry.getName() + (!zipEntry.isDirectory() && zipEntry.isArchive() ? IterableZipContainer.ZIP_PATH_SEPARATOR : "");
 		} else {
-			return zipEntry.getName() + ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
+			return zipEntry.getName() + IterableZipContainer.ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
 				zipEntry.toByteBuffer(), zipEntry.getAbsolutePath(), relativePath2
 			);
 		}
@@ -237,7 +243,7 @@ public class FileSystemItem implements ManagedLogger {
 		if (isCompressed()) {
 			prefix = getParentContainer().getExtension() + ":" + prefix;
 		}
-		url = prefix + url.replace(ZIP_PATH_SEPARATOR, "!/");
+		url = prefix + url.replace(IterableZipContainer.ZIP_PATH_SEPARATOR, "!/");
 		if (url.contains(" ")) {
 			url = url.replace(" ", "%20");
 		}
@@ -285,7 +291,7 @@ public class FileSystemItem implements ManagedLogger {
 				if (conventionedPath.endsWith("/")) {
 					int offset = -1;
 					if (conventionedPath.endsWith("//")) {
-						offset = -ZIP_PATH_SEPARATOR.length();
+						offset = -IterableZipContainer.ZIP_PATH_SEPARATOR.length();
 					}
 					conventionedPath = conventionedPath.substring(0, conventionedPath.length() + offset);	
 				}
@@ -354,17 +360,17 @@ public class FileSystemItem implements ManagedLogger {
 						;
 						children = getChildren(
 							zipInputStreamSupplier, 
-							conventionedAbsolutePath.substring(conventionedAbsolutePath.lastIndexOf(ZIP_PATH_SEPARATOR) + ZIP_PATH_SEPARATOR.length())
+							conventionedAbsolutePath.substring(conventionedAbsolutePath.lastIndexOf(IterableZipContainer.ZIP_PATH_SEPARATOR) + IterableZipContainer.ZIP_PATH_SEPARATOR.length())
 						);
 					}
 				} else if (isArchive()) {
-					String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(ZIP_PATH_SEPARATOR));
+					String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR));
 					File file = new File(zipFilePath);
 					if (file.exists()) {
 						try (FileInputStream fIS = FileInputStream.create(file)) {
 							children = getChildren(() -> 
 								IterableZipContainer.create(fIS), 
-								conventionedAbsolutePath.replaceFirst(zipFilePath + ZIP_PATH_SEPARATOR, "")
+								conventionedAbsolutePath.replaceFirst(zipFilePath + IterableZipContainer.ZIP_PATH_SEPARATOR, "")
 							);
 						}
 					}
@@ -461,8 +467,8 @@ public class FileSystemItem implements ManagedLogger {
 	
 	private Set<FileSystemItem> getChildren(Supplier<IterableZipContainer> zipInputStreamSupplier, String itemToSearch) {
 		try (IterableZipContainer zipInputStream = zipInputStreamSupplier.get()) {
-			if (itemToSearch.contains(ZIP_PATH_SEPARATOR)) {
-				String zipEntryNameOfNestedZipFile = itemToSearch.substring(0, itemToSearch.indexOf(ZIP_PATH_SEPARATOR));
+			if (itemToSearch.contains(IterableZipContainer.ZIP_PATH_SEPARATOR)) {
+				String zipEntryNameOfNestedZipFile = itemToSearch.substring(0, itemToSearch.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR));
 				IterableZipContainer.Entry zipEntryWrapper = zipInputStream.findFirst(
 					zEntry -> zEntry.getName().equals(zipEntryNameOfNestedZipFile),
 					zEntry -> false
@@ -473,7 +479,7 @@ public class FileSystemItem implements ManagedLogger {
 				try (InputStream iss = zipEntryWrapper.toInputStream()) {
 					return getChildren(
 						() -> IterableZipContainer.create(zipEntryWrapper.getAbsolutePath(), zipEntryWrapper.toInputStream()), 
-						itemToSearch.replaceFirst(zipEntryNameOfNestedZipFile + ZIP_PATH_SEPARATOR, "")
+						itemToSearch.replaceFirst(zipEntryNameOfNestedZipFile + IterableZipContainer.ZIP_PATH_SEPARATOR, "")
 					);
 				} catch (IOException exc) {
 					logWarn("Exception occurred while opening input stream from zipEntry {}: {}", zipEntryWrapper.getAbsolutePath(), exc.getMessage());
@@ -517,11 +523,11 @@ public class FileSystemItem implements ManagedLogger {
 	public boolean isCompressed() {
 		String conventionedAbsolutePath = getConventionedAbsolutePath();
 		return 
-			(conventionedAbsolutePath.contains(ZIP_PATH_SEPARATOR) && 
-				!conventionedAbsolutePath.endsWith(ZIP_PATH_SEPARATOR)) ||
-			(conventionedAbsolutePath.contains(ZIP_PATH_SEPARATOR) && 
-				conventionedAbsolutePath.endsWith(ZIP_PATH_SEPARATOR) && 
-					conventionedAbsolutePath.indexOf(ZIP_PATH_SEPARATOR) != conventionedAbsolutePath.lastIndexOf(ZIP_PATH_SEPARATOR))
+			(conventionedAbsolutePath.contains(IterableZipContainer.ZIP_PATH_SEPARATOR) && 
+				!conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR)) ||
+			(conventionedAbsolutePath.contains(IterableZipContainer.ZIP_PATH_SEPARATOR) && 
+				conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR) && 
+					conventionedAbsolutePath.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR) != conventionedAbsolutePath.lastIndexOf(IterableZipContainer.ZIP_PATH_SEPARATOR))
 		;
 	}
 	
@@ -531,12 +537,12 @@ public class FileSystemItem implements ManagedLogger {
 	
 	public boolean isArchive() {
 		String conventionedAbsolutePath = getConventionedAbsolutePath();
-		return conventionedAbsolutePath.endsWith(ZIP_PATH_SEPARATOR);
+		return conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR);
 	}
 	
 	public boolean isFolder() {
 		String conventionedAbsolutePath = getConventionedAbsolutePath();
-		return conventionedAbsolutePath.endsWith("/") && !conventionedAbsolutePath.endsWith(ZIP_PATH_SEPARATOR);
+		return conventionedAbsolutePath.endsWith("/") && !conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR);
 	}
 	
 	public ByteBuffer toByteBuffer() {
@@ -548,14 +554,14 @@ public class FileSystemItem implements ManagedLogger {
 		String conventionedAbsolutePath = getConventionedAbsolutePath();
 		if (exists && !isFolder()) {
 			if (isCompressed()) {
-				String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(ZIP_PATH_SEPARATOR));
+				String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR));
 				File file = new File(zipFilePath);
 				if (file.exists()) {
 					try (FileInputStream fIS = FileInputStream.create(file)) {
 						return Cache.PATH_FOR_CONTENTS.getOrDefault(
 							absolutePath,
 							() ->
-								retrieveBytes(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + ZIP_PATH_SEPARATOR, ""))
+								retrieveBytes(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + IterableZipContainer.ZIP_PATH_SEPARATOR, ""))
 						);
 					}
 				}
@@ -574,13 +580,13 @@ public class FileSystemItem implements ManagedLogger {
 	
 	private ByteBuffer retrieveBytes(String zipFilePath, InputStream inputStream, String itemToSearch) {
 		try (IterableZipContainer zipInputStream = IterableZipContainer.create(zipFilePath, inputStream)) {
-			if (itemToSearch.contains(ZIP_PATH_SEPARATOR)) {
-				String zipEntryNameOfNestedZipFile = itemToSearch.substring(0, itemToSearch.indexOf(ZIP_PATH_SEPARATOR));
+			if (itemToSearch.contains(IterableZipContainer.ZIP_PATH_SEPARATOR)) {
+				String zipEntryNameOfNestedZipFile = itemToSearch.substring(0, itemToSearch.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR));
 				IterableZipContainer.Entry zipEntry = zipInputStream.findFirst(
 					zEntry -> zEntry.getName().equals(zipEntryNameOfNestedZipFile),
 					zEntry -> false
 				);
-				itemToSearch = itemToSearch.replaceFirst(zipEntryNameOfNestedZipFile + ZIP_PATH_SEPARATOR, "");
+				itemToSearch = itemToSearch.replaceFirst(zipEntryNameOfNestedZipFile + IterableZipContainer.ZIP_PATH_SEPARATOR, "");
 				if (Strings.isNotEmpty(itemToSearch)) {
 					try (InputStream iss = zipEntry.toInputStream()) {
 						return retrieveBytes(zipEntry.getAbsolutePath(), zipEntry.toInputStream(), itemToSearch);
@@ -626,6 +632,43 @@ public class FileSystemItem implements ManagedLogger {
 			}
 		}
 		return FileSystemItem.ofPath(folder);
+	}
+	
+	public static Consumer<Scan.ItemContext> getResourceCollector(Collection<FileSystemItem> resources, Function<FileSystemItem, Boolean> resourceFilter) {
+		return (scannedItemContext) -> {
+			FileSystemItem fileSystemItem = null;
+			Scan.ItemWrapper itemWrapper = scannedItemContext.getScannedItem();
+			if (!(itemWrapper.getWrappedItem() instanceof FileInputStream || 
+				itemWrapper.getWrappedItem() instanceof File)) {
+				if (itemWrapper.getWrappedItem() instanceof IterableZipContainer.Entry) {
+					IterableZipContainer.Entry zipEntry = (IterableZipContainer.Entry)itemWrapper.getWrappedItem();
+					fileSystemItem = FileSystemItem.ofPath(
+						zipEntry.getAbsolutePath(),
+						zipEntry.getConventionedAbsolutePath()
+					);
+				} else {
+					IterableZipContainer zipContainer = (IterableZipContainer)itemWrapper.getWrappedItem();
+					fileSystemItem = FileSystemItem.ofPath(
+						zipContainer.getAbsolutePath(),
+						zipContainer.getConventionedAbsolutePath()
+					);					
+				}
+			} else {
+				File file = null;
+				if (itemWrapper.getWrappedItem() instanceof FileInputStream) {
+					file = ((FileInputStream)itemWrapper.getWrappedItem()).getFile();
+				} else {
+					file = ((File)itemWrapper.getWrappedItem());
+				}
+				String conventionedAbsolutePath = Strings.Paths.clean(file.getAbsolutePath());
+				conventionedAbsolutePath +=	file.isDirectory()? "/" : "";
+				fileSystemItem = FileSystemItem.ofPath(scannedItemContext.getScannedItem().getAbsolutePath(), conventionedAbsolutePath);
+			}
+			Cache.PATH_FOR_CONTENTS.getOrDefault(fileSystemItem.getAbsolutePath(), () -> itemWrapper.toByteBuffer());
+			if (resourceFilter.apply(fileSystemItem)) {
+				resources.add(fileSystemItem);
+			}
+		};
 	}
 	
 	public FileSystemItem copyTo(String folder, Predicate<FileSystemItem> filter) throws IOException {

@@ -47,9 +47,10 @@ import org.burningwave.core.io.ZipInputStream.Entry.Attached;
 import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
 class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZipContainer, Component {
+	String absolutePath;
+	String conventionedAbsolutePath;
 	IterableZipContainer parent;
 	IterableZipContainer.Entry currentZipEntry;
-	String absolutePath;
 	ByteBufferInputStream byteBufferInputStream;
 	
 	ZipInputStream(String absolutePath, InputStream inputStream) {
@@ -80,6 +81,23 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 	
 	public String getAbsolutePath() {
 		return absolutePath;
+	}
+	
+
+	@Override
+	public String getConventionedAbsolutePath() {
+		if (conventionedAbsolutePath == null) {
+			if (parent != null) {
+				conventionedAbsolutePath = parent.getConventionedAbsolutePath() + absolutePath.replace(parent.getAbsolutePath() + "/", "");
+			} else {
+				conventionedAbsolutePath = absolutePath;
+			}
+			conventionedAbsolutePath += IterableZipContainer.ZIP_PATH_SEPARATOR;
+		}
+		if (conventionedAbsolutePath == null) {
+			conventionedAbsolutePath = null;
+		}
+		return conventionedAbsolutePath;
 	}
 	
 	public ByteBuffer toByteBuffer() {

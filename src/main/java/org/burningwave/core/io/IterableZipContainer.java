@@ -61,6 +61,8 @@ public interface IterableZipContainer extends Component {
 		}
 		return null;
 	}
+
+	String ZIP_PATH_SEPARATOR = "//";
 	
 	public default <T> Set<T> findAllAndConvert(
 		Predicate<IterableZipContainer.Entry> zipEntryPredicate, 
@@ -96,6 +98,8 @@ public interface IterableZipContainer extends Component {
 		}
 		return collection;
 	}
+	
+	public String getConventionedAbsolutePath();
 	
 	public String getAbsolutePath();
 	
@@ -197,6 +201,10 @@ public interface IterableZipContainer extends Component {
 	public static interface Entry extends Component{
 		
 		public <C extends IterableZipContainer> C getParentContainer();
+		
+		public default String getConventionedAbsolutePath() {
+			return getParentContainer().getConventionedAbsolutePath() + getName();
+		}
 		
 		public String getName();
 		
