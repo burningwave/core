@@ -168,6 +168,6 @@ public abstract class MemberCriteria<M extends Member, C extends MemberCriteria<
 		return (initialClassFrom, currentClass) -> 
 			!(skipClassPredicate != null && skipClassPredicate.test((C)this, initialClassFrom, currentClass)) ?
 				getMembersSupplierFunction().apply(currentClass) : 
-				null;
+				(M[]) new Member[]{};
 	}
 }
