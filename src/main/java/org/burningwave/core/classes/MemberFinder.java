@@ -31,7 +31,6 @@ package org.burningwave.core.classes;
 import java.lang.reflect.Member;
 import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
@@ -91,9 +90,7 @@ public class MemberFinder implements Component {
 		Predicate<M> predicate
 	) {
 		return Stream.of(
-			Optional.ofNullable(
-				memberSupplier.apply(initialClsFrom, clsFrom)
-			).orElseGet(() -> (M[])new Member[0])
+			memberSupplier.apply(initialClsFrom, clsFrom)
 		).filter(
 			predicate
 		).collect(

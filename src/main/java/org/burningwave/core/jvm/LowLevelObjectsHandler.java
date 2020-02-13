@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.jvm;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -57,7 +56,6 @@ import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodCriteria;
-import org.burningwave.core.function.ThrowingFunction;
 import org.burningwave.core.function.TriFunction;
 import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.StreamHelper;
@@ -71,9 +69,9 @@ import sun.misc.Unsafe;
 public class LowLevelObjectsHandler implements Component {
 	public final static String SUPPLIER_IMPORTS_KEY_SUFFIX = ".supplier.imports";
 	
-	public static final ThrowingFunction<Class<?>, Field[]> GET_DECLARED_FIELDS_RETRIEVER;
-	public static final ThrowingFunction<Class<?>, Method[]> GET_DECLARED_METHODS_RETRIEVER;
-	public static final ThrowingFunction<Class<?>, Constructor<?>[]> GET_DECLARED_CONSTRUCTORS_RETRIEVER;
+	public static final Method GET_DECLARED_FIELDS_RETRIEVER;
+	public static final Method GET_DECLARED_METHODS_RETRIEVER;
+	public static final Method GET_DECLARED_CONSTRUCTORS_RETRIEVER;
 	
 	protected Long LOADED_PACKAGES_MAP_MEMORY_OFFSET;
 	protected Long LOADED_CLASSES_VECTOR_MEMORY_OFFSET;
@@ -98,15 +96,12 @@ public class LowLevelObjectsHandler implements Component {
 			Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
 			theUnsafeField.setAccessible(true);
 			unsafe = (Unsafe)theUnsafeField.get(null);
-			final Method getDeclaredFieldsMethod = Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
-			getDeclaredFieldsMethod.setAccessible(true);
-			GET_DECLARED_FIELDS_RETRIEVER = (cls) -> (Field[])getDeclaredFieldsMethod.invoke(cls, false);
-			final Method getDeclaredMethodsMethod = Class.class.getDeclaredMethod("getDeclaredMethods0", boolean.class);
-			getDeclaredMethodsMethod.setAccessible(true);
-			GET_DECLARED_METHODS_RETRIEVER = (cls) -> (Method[])getDeclaredMethodsMethod.invoke(cls, false);
-			final Method getDeclaredConstructorsMethod = Class.class.getDeclaredMethod("getDeclaredConstructors0", boolean.class);
-			getDeclaredConstructorsMethod.setAccessible(true);
-			GET_DECLARED_CONSTRUCTORS_RETRIEVER = (cls) -> (Constructor<?>[])getDeclaredConstructorsMethod.invoke(cls, false);
+			GET_DECLARED_FIELDS_RETRIEVER = Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
+			GET_DECLARED_FIELDS_RETRIEVER.setAccessible(true);
+			GET_DECLARED_METHODS_RETRIEVER = Class.class.getDeclaredMethod("getDeclaredMethods0", boolean.class);
+			GET_DECLARED_METHODS_RETRIEVER.setAccessible(true);
+			GET_DECLARED_CONSTRUCTORS_RETRIEVER = Class.class.getDeclaredMethod("getDeclaredConstructors0", boolean.class);
+			GET_DECLARED_CONSTRUCTORS_RETRIEVER.setAccessible(true);
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
 		}

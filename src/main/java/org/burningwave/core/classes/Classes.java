@@ -268,7 +268,7 @@ public class Classes {
 	
 	public static Field[] getDeclaredFields(Class<?> cls)  {
 		try {
-			return LowLevelObjectsHandler.GET_DECLARED_FIELDS_RETRIEVER.apply(cls);
+			return (Field[])LowLevelObjectsHandler.GET_DECLARED_FIELDS_RETRIEVER.invoke(cls, false);
 		} catch (Throwable exc) {
 			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve fields of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return EMPTY_FIELDS_ARRAY;
@@ -277,7 +277,7 @@ public class Classes {
 	
 	public static Method[] getDeclaredMethods(Class<?> cls)  {
 		try {
-			return LowLevelObjectsHandler.GET_DECLARED_METHODS_RETRIEVER.apply(cls);
+			return (Method[]) LowLevelObjectsHandler.GET_DECLARED_METHODS_RETRIEVER.invoke(cls, false);
 		} catch (Throwable exc) {
 			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return EMPTY_METHODS_ARRAY;
@@ -286,7 +286,7 @@ public class Classes {
 	
 	public static Constructor<?>[] getDeclaredConstructors(Class<?> cls)  {
 		try {
-			return LowLevelObjectsHandler.GET_DECLARED_CONSTRUCTORS_RETRIEVER.apply(cls);
+			return (Constructor<?>[])LowLevelObjectsHandler.GET_DECLARED_CONSTRUCTORS_RETRIEVER.invoke(cls, false);
 		} catch (Throwable exc) {
 			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return EMPTY_CONSTRUCTORS_ARRAY;
