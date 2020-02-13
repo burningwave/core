@@ -46,7 +46,7 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Cache;
 import org.burningwave.core.Strings;
 
-public class ZipFile implements IterableZipContainer {
+class ZipFile implements IterableZipContainer {
 	String absolutePath;
 	IterableZipContainer parent;
 	IterableZipContainer.Entry currentZipEntry;

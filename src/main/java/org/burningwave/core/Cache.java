@@ -36,15 +36,15 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.io.IterableZipContainer;
 import org.burningwave.core.io.Streams;
-import org.burningwave.core.io.ZipFile;
 import org.burningwave.core.iterable.Properties;
 
 public class Cache {
 	private static final String TYPE_CONFIG_KEY = "cache.type";
 	public final static PathForResources<ByteBuffer> PATH_FOR_CONTENTS ;
 	public final static PathForResources<FileSystemItem> PATH_FOR_FILE_SYSTEM_ITEMS;
-	public final static PathForResources<ZipFile> PATH_FOR_ZIP_FILES;
+	public final static PathForResources<IterableZipContainer> PATH_FOR_ZIP_FILES;
 	
 	static {
 		if ("sync".equalsIgnoreCase((String)Properties.getGlobalProperty(TYPE_CONFIG_KEY))) {

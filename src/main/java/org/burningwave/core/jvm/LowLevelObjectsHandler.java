@@ -453,6 +453,16 @@ public class LowLevelObjectsHandler implements Component {
 		return classLoaderDelegate;
 	}
 	
+	public Class<?> retrieveBuiltinClassLoaderClass() {
+		Class<?> builtinClassLoaderClass = null;
+		try {
+			builtinClassLoaderClass = Class.forName("jdk.internal.loader.BuiltinClassLoader");
+		} catch (ClassNotFoundException e) {
+			logDebug("jdk.internal.loader.BuiltinClassLoader class not detected");
+		}
+		return builtinClassLoaderClass;
+	}
+	
 	@Override
 	public void close() {
 		this.classLoadersClasses.clear();
