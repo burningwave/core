@@ -38,7 +38,6 @@ import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
@@ -46,7 +45,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -634,7 +632,10 @@ public class FileSystemItem implements ManagedLogger {
 		return FileSystemItem.ofPath(folder);
 	}
 	
-	public static Consumer<Scan.ItemContext> getResourceCollector(Collection<FileSystemItem> resources, Function<FileSystemItem, Boolean> resourceFilter) {
+	public static Consumer<Scan.ItemContext> getFilteredConsumerForFileSystemScanner(
+		Predicate<FileSystemItem> fileSystemItemFilter,
+		Consumer<FileSystemItem> fileSystemItemConsumer
+	) {
 		return (scannedItemContext) -> {
 			FileSystemItem fileSystemItem = null;
 			Scan.ItemWrapper itemWrapper = scannedItemContext.getScannedItem();
@@ -665,8 +666,8 @@ public class FileSystemItem implements ManagedLogger {
 				fileSystemItem = FileSystemItem.ofPath(scannedItemContext.getScannedItem().getAbsolutePath(), conventionedAbsolutePath);
 			}
 			Cache.PATH_FOR_CONTENTS.getOrDefault(fileSystemItem.getAbsolutePath(), () -> itemWrapper.toByteBuffer());
-			if (resourceFilter.apply(fileSystemItem)) {
-				resources.add(fileSystemItem);
+			if (fileSystemItemFilter.test(fileSystemItem)) {
+				fileSystemItemConsumer.accept(fileSystemItem);
 			}
 		};
 	}
