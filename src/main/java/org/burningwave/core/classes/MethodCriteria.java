@@ -40,8 +40,6 @@ import org.burningwave.core.function.TriPredicate;
 public class MethodCriteria extends ExecutableMemberCriteria<
 	Method, MethodCriteria, Criteria.TestContext<Method, MethodCriteria>
 > {
-	private static Function<Class<?>, Method[]> GET_MEMBERS_FUNCTION = (currentClass) -> Classes.getDeclaredMethods(currentClass);
-	
 	private MethodCriteria() {
 		super();
 	}
@@ -52,7 +50,7 @@ public class MethodCriteria extends ExecutableMemberCriteria<
 	
 	@Override
 	public Function<Class<?>, Method[]> getMembersSupplierFunction() {
-		return GET_MEMBERS_FUNCTION;
+		return  Classes::getDeclaredMethods;
 	}
 	
 	public static MethodCriteria forName(Predicate<String> predicate) {
