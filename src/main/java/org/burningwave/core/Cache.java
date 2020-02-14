@@ -312,7 +312,7 @@ public class Cache {
 		 private AsyncPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
 			super(partitionStartLevel, sharer);
 			resources = new ConcurrentHashMap<>();
-			mutexPrefixName = Classes.getId(resources.toString());
+			mutexPrefixName = Classes.getId(resources);
 		}
 		
 		
