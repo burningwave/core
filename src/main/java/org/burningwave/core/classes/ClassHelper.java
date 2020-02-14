@@ -93,10 +93,7 @@ public class ClassHelper implements Component {
 	}
 	
 	public ByteBuffer getByteCode(Class<?> cls) {
-		ClassLoader clsLoader = cls.getClassLoader();
-		if (clsLoader == null) {
-			clsLoader = ClassLoader.getSystemClassLoader();
-		}
+		ClassLoader clsLoader = Classes.getClassLoader(cls);
 		InputStream inputStream = clsLoader.getResourceAsStream(
 			cls.getName().replace(".", "/") + ".class"
 		);

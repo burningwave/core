@@ -277,7 +277,7 @@ public class Classes {
 	
 	public static Field[] getDeclaredFields(Class<?> cls)  {
 		return Cache.CLASS_LOADER_FOR_FIELDS.getOrDefault(
-			cls.getClassLoader(), cls.getName().replace(".", "/"),
+			getClassLoader(cls), cls.getName().replace(".", "/"),
 			() -> {
 				try {
 					return (Field[])LowLevelObjectsHandler.GET_DECLARED_FIELDS_RETRIEVER.invoke(cls, false);
@@ -292,7 +292,7 @@ public class Classes {
 	
 	public static Method[] getDeclaredMethods(Class<?> cls)  {
 		return Cache.CLASS_LOADER_FOR_METHODS.getOrDefault(
-			cls.getClassLoader(), cls.getName().replace(".", "/"),
+			getClassLoader(cls), cls.getName().replace(".", "/"),
 			() -> {
 				try {
 					return (Method[]) LowLevelObjectsHandler.GET_DECLARED_METHODS_RETRIEVER.invoke(cls, false);
@@ -306,7 +306,7 @@ public class Classes {
 	
 	public static Constructor<?>[] getDeclaredConstructors(Class<?> cls)  {
 		return Cache.CLASS_LOADER_FOR_CONSTRUCTORS.getOrDefault(
-			cls.getClassLoader(), cls.getName().replace(".", "/"),
+			getClassLoader(cls), cls.getName().replace(".", "/"),
 			() -> {
 				try {
 					return (Constructor<?>[])LowLevelObjectsHandler.GET_DECLARED_CONSTRUCTORS_RETRIEVER.invoke(cls, false);
@@ -335,6 +335,13 @@ public class Classes {
 			classLoaders.add(classLoader);
 		}
 		return classLoaders;
+	}
+	public static ClassLoader getClassLoader(Class<?> cls) {
+		ClassLoader clsLoader = cls.getClassLoader();
+		if (clsLoader == null) {
+			clsLoader = ClassLoader.getSystemClassLoader();
+		}
+		return clsLoader;
 	}
 	
 	public static Function<Boolean, ClassLoader> setAsParent(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
