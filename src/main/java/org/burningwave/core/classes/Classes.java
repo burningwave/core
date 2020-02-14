@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -35,9 +36,11 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.burningwave.ManagedLogger;
+import org.burningwave.Throwables;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
 
 public class Classes {
@@ -64,11 +67,28 @@ public class Classes {
 	    }		
 	}
 	
-	private static final int V15 = 0 << 16 | 59;
+	private final static Collection<ClassLoader> CLASS_LOADERS;
+
+	private static final int V15;
 	
-	private static final Field[] EMPTY_FIELDS_ARRAY = new Field[]{};
-	private static final Method[] EMPTY_METHODS_ARRAY = new Method[]{};
-	private static final Constructor<?>[] EMPTY_CONSTRUCTORS_ARRAY = new Constructor<?>[]{};
+	private static final Field[] EMPTY_FIELDS_ARRAY;
+	private static final Method[] EMPTY_METHODS_ARRAY;
+	private static final Constructor<?>[] EMPTY_CONSTRUCTORS_ARRAY;
+	
+	static {
+		V15 = 0 << 16 | 59;
+		EMPTY_FIELDS_ARRAY = new Field[]{};
+		EMPTY_METHODS_ARRAY = new Method[]{};
+		EMPTY_CONSTRUCTORS_ARRAY = new Constructor<?>[]{};
+		CLASS_LOADERS = ConcurrentHashMap.newKeySet();
+		loadClassLoaders();
+		
+	}
+	
+	private static void loadClassLoaders() {
+		CLASS_LOADERS.addAll(getClassLoaderHierarchy(Thread.currentThread().getContextClassLoader()));
+		CLASS_LOADERS.addAll(getClassLoaderHierarchy(ClassLoader.getSystemClassLoader()));
+	}
 	
 	@SuppressWarnings({ "unchecked"})
 	public static <T> Class<T> retrieveFrom(Object object) {
@@ -291,5 +311,42 @@ public class Classes {
 			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return EMPTY_CONSTRUCTORS_ARRAY;
 		}
+	}
+	
+	public static Collection<ClassLoader> getAllParents(ClassLoader classLoader) {
+		return getClassLoaderHierarchy(classLoader, false);
+	}
+	
+	public static Collection<ClassLoader> getClassLoaderHierarchy(ClassLoader classLoader) {
+		return getClassLoaderHierarchy(classLoader, true);
+	}
+	
+	private static Collection<ClassLoader> getClassLoaderHierarchy(ClassLoader classLoader, boolean includeClassLoader) {
+		Collection<ClassLoader> classLoaders = new LinkedHashSet<>();
+		if (includeClassLoader) {
+			classLoaders.add(classLoader);
+		}
+		while ((classLoader = getParent(classLoader)) != null) {
+			classLoaders.add(classLoader);
+		}
+		return classLoaders;
+	}
+	
+	public static ClassLoader getParent(ClassLoader classLoader) {
+		Class<?> builtinClassLoaderClass = LowLevelObjectsHandler.retrieveBuiltinClassLoaderClass();
+		if (builtinClassLoaderClass != null && builtinClassLoaderClass.isAssignableFrom(builtinClassLoaderClass)) {
+			Field builtinClassLoaderClassParentField = LowLevelObjectsHandler.getParentClassLoaderField(builtinClassLoaderClass);
+			try {
+				return (ClassLoader) builtinClassLoaderClassParentField.get(classLoader);
+			} catch (IllegalArgumentException | IllegalAccessException exc) {
+				throw Throwables.toRuntimeException(exc);
+			}
+		} else {
+			return classLoader.getParent();
+		}
+	}
+	
+	public static void setAccessible(AccessibleObject object, boolean flag) {
+		LowLevelObjectsHandler.setAccessible(object, flag);
 	}
 }

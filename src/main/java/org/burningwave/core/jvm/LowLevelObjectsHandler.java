@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.jvm;
 
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -47,12 +48,14 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 import java.util.function.Supplier;
 
+import org.burningwave.ManagedLogger;
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Strings;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHelper;
+import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodCriteria;
@@ -72,6 +75,9 @@ public class LowLevelObjectsHandler implements Component {
 	public static final Method GET_DECLARED_FIELDS_RETRIEVER;
 	public static final Method GET_DECLARED_METHODS_RETRIEVER;
 	public static final Method GET_DECLARED_CONSTRUCTORS_RETRIEVER;
+	private static Method METHOD_INVOKER;
+	private static Method ACCESSIBLE_SETTER;
+	private static final Map<Class<?>, Field> PARENT_CLASS_LOADER_FIELDS;
 	
 	protected Long LOADED_PACKAGES_MAP_MEMORY_OFFSET;
 	protected Long LOADED_CLASSES_VECTOR_MEMORY_OFFSET;
@@ -84,14 +90,29 @@ public class LowLevelObjectsHandler implements Component {
 	protected StreamHelper streamHelper;
 	protected ClassHelper classHelper;
 	protected MemberFinder memberFinder;
-	protected Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
-	protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 	protected TriFunction<ClassLoader, Object, String, Package> packageRetriever;
 	protected static Unsafe unsafe;
+	
+	protected Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
+	protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 	protected Map<String, Method> classLoadersMethods;
 	protected Map<String, ClassLoaderDelegate> classLoaderDelegates;
 	
 	static {
+		try {
+			ACCESSIBLE_SETTER = AccessibleObject.class.getDeclaredMethod("setAccessible0", boolean.class);
+			ACCESSIBLE_SETTER.setAccessible(true);
+		} catch (NoSuchMethodException | SecurityException e) {
+			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "method setAccessible0 class not detected on " + AccessibleObject.class.getName());
+			ACCESSIBLE_SETTER = null;
+		}
+		try {
+			METHOD_INVOKER = Class.forName("jdk.internal.reflect.NativeMethodAccessorImpl").getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
+			setAccessible(METHOD_INVOKER, true);
+		} catch (NoSuchMethodException | SecurityException | ClassNotFoundException e) {
+			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
+			METHOD_INVOKER = null;
+		}
 		try {
 			Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
 			theUnsafeField.setAccessible(true);
@@ -102,6 +123,7 @@ public class LowLevelObjectsHandler implements Component {
 			GET_DECLARED_METHODS_RETRIEVER.setAccessible(true);
 			GET_DECLARED_CONSTRUCTORS_RETRIEVER = Class.class.getDeclaredMethod("getDeclaredConstructors0", boolean.class);
 			GET_DECLARED_CONSTRUCTORS_RETRIEVER.setAccessible(true);
+			PARENT_CLASS_LOADER_FIELDS = new ConcurrentHashMap<>();
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
@@ -448,14 +470,55 @@ public class LowLevelObjectsHandler implements Component {
 		return classLoaderDelegate;
 	}
 	
-	public Class<?> retrieveBuiltinClassLoaderClass() {
+	public static Field getParentClassLoaderField(Class<?> classLoaderClass) {
+		Field field = PARENT_CLASS_LOADER_FIELDS.get(classLoaderClass);
+		if (field == null) {
+			synchronized (PARENT_CLASS_LOADER_FIELDS) {
+				field = PARENT_CLASS_LOADER_FIELDS.get(classLoaderClass);
+				if (field == null) {
+					field = MemberFinder.create().findOne(
+						FieldCriteria.byScanUpTo(classLoaderClass).name("parent"::equals), classLoaderClass
+					);
+					setAccessible(field, true);
+					PARENT_CLASS_LOADER_FIELDS.put(classLoaderClass, field);
+				}
+			}
+		}
+		return field;
+	}
+
+	public static void setAccessible(AccessibleObject object, boolean flag) {
+		if (ACCESSIBLE_SETTER != null) {
+			try {
+				ACCESSIBLE_SETTER.invoke(object, flag);
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException exc) {
+				throw Throwables.toRuntimeException(exc);
+			}
+		} else {
+			object.setAccessible(flag);
+		}
+	}
+	
+	public static Class<?> retrieveBuiltinClassLoaderClass() {
 		Class<?> builtinClassLoaderClass = null;
 		try {
 			builtinClassLoaderClass = Class.forName("jdk.internal.loader.BuiltinClassLoader");
 		} catch (ClassNotFoundException e) {
-			logDebug("jdk.internal.loader.BuiltinClassLoader class not detected");
+			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "jdk.internal.loader.BuiltinClassLoader class not detected");
 		}
 		return builtinClassLoaderClass;
+	}
+	
+	public Object invoke(Object target, Method method, Object... params) {
+		try {			
+			if (METHOD_INVOKER != null) {
+				return METHOD_INVOKER.invoke(null, method, target, params);
+			} else {
+				return method.invoke(target, params);
+			}
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException exc) {
+			throw Throwables.toRuntimeException(exc);
+		}
 	}
 	
 	@Override
