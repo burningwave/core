@@ -28,6 +28,9 @@
  */
 package org.burningwave.core;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -45,17 +48,94 @@ public class Cache {
 	public final static PathForResources<ByteBuffer> PATH_FOR_CONTENTS ;
 	public final static PathForResources<FileSystemItem> PATH_FOR_FILE_SYSTEM_ITEMS;
 	public final static PathForResources<IterableZipContainer> PATH_FOR_ZIP_FILES;
+	public final static ObjectAndPathForResources<ClassLoader, Field[]> CLASS_LOADER_FOR_FIELDS;
+	public final static ObjectAndPathForResources<ClassLoader, Method[]> CLASS_LOADER_FOR_METHODS;
+	public final static ObjectAndPathForResources<ClassLoader, Constructor<?>[]> CLASS_LOADER_FOR_CONSTRUCTORS;
+	
 	
 	static {
 		if ("sync".equalsIgnoreCase((String)Properties.getGlobalProperty(TYPE_CONFIG_KEY))) {
 			PATH_FOR_CONTENTS = new SyncPathForResources<>(1L, Streams::shareContent);
 			PATH_FOR_FILE_SYSTEM_ITEMS = new SyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
 			PATH_FOR_ZIP_FILES = new SyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);
+			CLASS_LOADER_FOR_FIELDS = new AsyncObjectAndPathForResources<>(1L, fields -> fields);
+			CLASS_LOADER_FOR_METHODS = new AsyncObjectAndPathForResources<>(1L, methods -> methods);
+			CLASS_LOADER_FOR_CONSTRUCTORS = new AsyncObjectAndPathForResources<>(1L, constructors -> constructors);
 		} else {
 			PATH_FOR_CONTENTS = new AsyncPathForResources<>(1L, Streams::shareContent);
 			PATH_FOR_FILE_SYSTEM_ITEMS = new AsyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
-			PATH_FOR_ZIP_FILES = new AsyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);	
+			PATH_FOR_ZIP_FILES = new AsyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);
+			CLASS_LOADER_FOR_FIELDS = new SyncObjectAndPathForResources<>(1L, fields -> fields);
+			CLASS_LOADER_FOR_METHODS = new SyncObjectAndPathForResources<>(1L, methods -> methods);
+			CLASS_LOADER_FOR_CONSTRUCTORS = new SyncObjectAndPathForResources<>(1L, constructors -> constructors);
 		}	
+	}
+	
+	public static interface ObjectAndPathForResources<T, R> {
+		
+		R getOrDefault(T object, String path, Supplier<R> resourceSupplier);
+		
+		PathForResources<R> remove(T object);
+		
+		R removePath(T object, String path);
+		
+		public abstract static class Abst<T, R> implements ObjectAndPathForResources<T, R> {
+			private Map<T, PathForResources<R>> resources;
+			private Supplier<PathForResources<R>> pathForResourcesSupplier;
+			
+			Abst(
+				Supplier<Map<T, PathForResources<R>>> resourcesSupplier,
+				Supplier<PathForResources<R>> pathForResourcesSupplier
+			) {
+				this.resources = resourcesSupplier.get();
+				this.pathForResourcesSupplier = pathForResourcesSupplier;
+			}
+
+			@Override
+			public R getOrDefault(T object, String path, Supplier<R> resourceSupplier) {
+				PathForResources<R> pathForResources = resources.get(object);
+				if (pathForResources == null) {
+					synchronized (resources.toString() + "_" + object.toString()) {
+						pathForResources = resources.get(object);
+						if (pathForResources == null) {
+							pathForResources = pathForResourcesSupplier.get();
+							resources.put(object, pathForResources);
+						}					
+					}
+				}
+				return pathForResources.getOrDefault(path, resourceSupplier);
+			}
+			
+			@Override
+			public PathForResources<R> remove(T object) {
+				return resources.remove(object);
+			}
+			
+			@Override
+			public R removePath(T object, String path) {
+				PathForResources<R> pathForResources = resources.get(object);
+				if (pathForResources != null) {
+					return pathForResources.remove(path);
+				}
+				return null;
+			}
+		}		
+	}
+	
+	public static class AsyncObjectAndPathForResources<T, R> extends ObjectAndPathForResources.Abst<T, R> {
+
+		public AsyncObjectAndPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
+			super(ConcurrentHashMap::new, () -> new AsyncPathForResources<>(partitionStartLevel, sharer));
+		}
+		
+	}
+	
+	public static class SyncObjectAndPathForResources<T, R> extends ObjectAndPathForResources.Abst<T, R> {
+
+		public SyncObjectAndPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
+			super(LinkedHashMap::new, () -> new SyncPathForResources<>(partitionStartLevel, sharer));
+		}
+		
 	}
 	
 	public static interface PathForResources<R> {
@@ -73,7 +153,7 @@ public class Cache {
 		int getLoadedResourcesCount();
 		
 		public static abstract class Abst<R> implements PathForResources<R> {
-			Map<Long, Map<String, Map<String, R>>> loadedResources;	
+			Map<Long, Map<String, Map<String, R>>> resources;	
 			Long partitionStartLevel;
 			Function<R, R> sharer;
 			
@@ -87,7 +167,7 @@ public class Cache {
 				path = Strings.Paths.clean(path);
 				Long occurences = path.chars().filter(ch -> ch == '/').count();
 				Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
-				Map<String, Map<String, R>> partion = retrievePartition(loadedResources, partitionIndex);
+				Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
 				Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
 				return upload(nestedPartition, path, resourceSupplier);
 			}
@@ -97,7 +177,7 @@ public class Cache {
 				path = Strings.Paths.clean(path);
 				Long occurences = path.chars().filter(ch -> ch == '/').count();
 				Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
-				Map<String, Map<String, R>> partion = retrievePartition(loadedResources, partitionIndex);
+				Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
 				Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
 				return getOrDefault(nestedPartition, path, resourceSupplier);
 			}
@@ -112,14 +192,14 @@ public class Cache {
 				path = Strings.Paths.clean(path);
 				Long occurences = path.chars().filter(ch -> ch == '/').count();
 				Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
-				Map<String, Map<String, R>> partion = retrievePartition(loadedResources, partitionIndex);
+				Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
 				Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
 				return nestedPartition.remove(path);
 			}
 			
 			@Override
 			public int getLoadedResourcesCount() {
-				return getLoadedResourcesCount(loadedResources);
+				return getLoadedResourcesCount(resources);
 			}
 			
 			private int getLoadedResourcesCount(Map<Long, Map<String, Map<String, R>>> resources) {
@@ -153,7 +233,7 @@ public class Cache {
 	public static class SyncPathForResources<R> extends PathForResources.Abst <R> {
 		private SyncPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
 			super(partitionStartLevel, sharer);
-			loadedResources = new LinkedHashMap<>();
+			resources = new LinkedHashMap<>();
 		}		
 		
 		@Override
@@ -230,8 +310,8 @@ public class Cache {
 		
 		 private AsyncPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
 			super(partitionStartLevel, sharer);
-			loadedResources = new ConcurrentHashMap<>();
-			mutexPrefixName = loadedResources.toString();
+			resources = new ConcurrentHashMap<>();
+			mutexPrefixName = resources.toString();
 		}
 		
 		
