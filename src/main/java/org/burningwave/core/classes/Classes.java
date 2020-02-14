@@ -331,6 +331,10 @@ public class Classes {
 		return classLoaders;
 	}
 	
+	public static Function<Boolean, ClassLoader> setAsParent(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
+		return LowLevelObjectsHandler.setParent(classLoader, futureParent, mantainHierarchy);
+	}
+	
 	public static ClassLoader getParent(ClassLoader classLoader) {
 		return LowLevelObjectsHandler.getParent(classLoader);
 	}

@@ -520,8 +520,9 @@ public class LowLevelObjectsHandler implements Component {
 		}
 	}
 	
-	public Function<Boolean, ClassLoader> setAsParentClassLoader(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
+	public static Function<Boolean, ClassLoader> setParent(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
 		Class<?> classLoaderBaseClass = BUILTIN_CLASS_LOADER_CLASS;
+		MemberFinder memberFinder = MemberFinder.create();
 		if (BUILTIN_CLASS_LOADER_CLASS != null && BUILTIN_CLASS_LOADER_CLASS.isAssignableFrom(classLoader.getClass())) {
 			try {
 				Object classLoaderDelegate = unsafe.allocateInstance(CLASS_LOADER_DELEGATE_CLASS);
