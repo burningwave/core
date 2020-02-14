@@ -543,7 +543,7 @@ public class LowLevelObjectsHandler implements Component {
 		Long offset = LowLevelObjectsHandler.getUnsafe().objectFieldOffset(parentClassLoaderField);
 		final ClassLoader exParent = (ClassLoader)LowLevelObjectsHandler.getUnsafe().getObject(classLoader, offset);
 		unsafe.putObject(classLoader, offset, futureParent);
-		if (mantainHierarchy) {
+		if (mantainHierarchy && exParent != null) {
 			unsafe.putObject(futureParent, offset, exParent);
 		}
 		return (reset) -> {
