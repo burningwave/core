@@ -41,7 +41,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.burningwave.core.Component;
 import org.burningwave.core.Strings;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
@@ -55,7 +54,7 @@ import org.burningwave.core.io.PathHelper.CheckResult;
 import org.burningwave.core.io.StreamHelper;
 
 
-abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>, R extends SearchResult<I>> extends ClassPathScannerAbst<I, C, R> implements Component {
+abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>, R extends SearchResult<I>> extends ClassPathScannerAbst<I, C, R> {
 	Map<String, Map<String, I>> cache;
 
 	ClassPathScannerWithCachingSupport(

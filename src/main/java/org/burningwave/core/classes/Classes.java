@@ -40,6 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.burningwave.ManagedLogger;
+import org.burningwave.core.classes.hunter.PathMemoryClassLoader;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
 
 public class Classes {
@@ -337,6 +338,18 @@ public class Classes {
 	
 	public static ClassLoader getParent(ClassLoader classLoader) {
 		return LowLevelObjectsHandler.getParent(classLoader);
+	}
+	
+	public static void register(ClassLoader classLoader) {
+		CLASS_LOADERS.add(classLoader);
+	}
+	
+	public Collection<ClassLoader> getRegisteredClassLoaders() {
+		return CLASS_LOADERS;
+	}
+
+	public static void unregister(PathMemoryClassLoader classLoader) {
+		CLASS_LOADERS.remove(classLoader);
 	}
 	
 	public static void setAccessible(AccessibleObject object, boolean flag) {
