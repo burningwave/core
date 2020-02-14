@@ -44,6 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import org.burningwave.core.Cache;
 import org.burningwave.core.Component;
 import org.burningwave.core.Strings;
 import org.burningwave.core.io.ByteBufferInputStream;
@@ -324,10 +325,16 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		loadedCompiledClasses.clear();
 	}
 	
+	protected void unregister() {
+		classHelper.unregister(this);
+		Cache.CLASS_LOADER_FOR_CONSTRUCTORS.remove(this);
+		Cache.CLASS_LOADER_FOR_FIELDS.remove(this);
+		Cache.CLASS_LOADER_FOR_METHODS.remove(this);
+	}
+	
 	@Override
 	public void close() {
 		clear();
-		classHelper.unregister(this);
 		notLoadedCompiledClasses = null;
 		loadedCompiledClasses = null;
 	}

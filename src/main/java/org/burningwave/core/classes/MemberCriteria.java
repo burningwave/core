@@ -42,6 +42,7 @@ import org.burningwave.core.function.TriPredicate;
 
 
 public abstract class MemberCriteria<M extends Member, C extends MemberCriteria<M, C, T>, T extends Criteria.TestContext<M, C>> extends CriteriaWithClassElementsSupplyingSupport<M, C, T> {
+	private static Member[] EMPTY_MEMBERS_ARRAY = new Member[]{};
 	TriPredicate<C, Class<?>, Class<?>> scanUpToPredicate;	
 	TriPredicate<C, Class<?>, Class<?>> skipClassPredicate;
 	Predicate<Collection<M>> resultPredicate;	
@@ -168,6 +169,6 @@ public abstract class MemberCriteria<M extends Member, C extends MemberCriteria<
 		return (initialClassFrom, currentClass) -> 
 			!(skipClassPredicate != null && skipClassPredicate.test((C)this, initialClassFrom, currentClass)) ?
 				getMembersSupplierFunction().apply(currentClass) : 
-				(M[]) new Member[]{};
+				(M[]) EMPTY_MEMBERS_ARRAY;
 	}
 }

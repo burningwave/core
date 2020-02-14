@@ -36,11 +36,10 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.burningwave.ManagedLogger;
-import org.burningwave.core.classes.hunter.PathMemoryClassLoader;
+import org.burningwave.core.Cache;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
 
 public class Classes {
@@ -66,8 +65,6 @@ public class Classes {
 
 	    }		
 	}
-	
-	private final static Collection<ClassLoader> CLASS_LOADERS;
 
 	private static final int V15;
 	
@@ -80,16 +77,8 @@ public class Classes {
 		EMPTY_FIELDS_ARRAY = new Field[]{};
 		EMPTY_METHODS_ARRAY = new Method[]{};
 		EMPTY_CONSTRUCTORS_ARRAY = new Constructor<?>[]{};
-		CLASS_LOADERS = ConcurrentHashMap.newKeySet();
-		loadClassLoaders();
-		
 	}
-	
-	private static void loadClassLoaders() {
-		CLASS_LOADERS.addAll(getClassLoaderHierarchy(Thread.currentThread().getContextClassLoader()));
-		CLASS_LOADERS.addAll(getClassLoaderHierarchy(ClassLoader.getSystemClassLoader()));
-	}
-	
+
 	@SuppressWarnings({ "unchecked"})
 	public static <T> Class<T> retrieveFrom(Object object) {
 		return (Class<T>)(object instanceof Class? object : object.getClass());
@@ -287,30 +276,46 @@ public class Classes {
 	}
 	
 	public static Field[] getDeclaredFields(Class<?> cls)  {
-		try {
-			return (Field[])LowLevelObjectsHandler.GET_DECLARED_FIELDS_RETRIEVER.invoke(cls, false);
-		} catch (Throwable exc) {
-			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve fields of class {}. Cause: {}", cls.getName(), exc.getMessage());
-			return EMPTY_FIELDS_ARRAY;
-		}
+		return Cache.CLASS_LOADER_FOR_FIELDS.getOrDefault(
+			cls.getClassLoader(), cls.getName().replace(".", "/"),
+			() -> {
+				try {
+					return (Field[])LowLevelObjectsHandler.GET_DECLARED_FIELDS_RETRIEVER.invoke(cls, false);
+				} catch (Throwable exc) {
+					ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve fields of class {}. Cause: {}", cls.getName(), exc.getMessage());
+					return EMPTY_FIELDS_ARRAY;
+				}
+			}
+		);
+		
 	}
 	
 	public static Method[] getDeclaredMethods(Class<?> cls)  {
-		try {
-			return (Method[]) LowLevelObjectsHandler.GET_DECLARED_METHODS_RETRIEVER.invoke(cls, false);
-		} catch (Throwable exc) {
-			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
-			return EMPTY_METHODS_ARRAY;
-		}
+		return Cache.CLASS_LOADER_FOR_METHODS.getOrDefault(
+			cls.getClassLoader(), cls.getName().replace(".", "/"),
+			() -> {
+				try {
+					return (Method[]) LowLevelObjectsHandler.GET_DECLARED_METHODS_RETRIEVER.invoke(cls, false);
+				} catch (Throwable exc) {
+					ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
+					return EMPTY_METHODS_ARRAY;
+				}
+			}
+		);
 	}
 	
 	public static Constructor<?>[] getDeclaredConstructors(Class<?> cls)  {
-		try {
-			return (Constructor<?>[])LowLevelObjectsHandler.GET_DECLARED_CONSTRUCTORS_RETRIEVER.invoke(cls, false);
-		} catch (Throwable exc) {
-			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
-			return EMPTY_CONSTRUCTORS_ARRAY;
-		}
+		return Cache.CLASS_LOADER_FOR_CONSTRUCTORS.getOrDefault(
+			cls.getClassLoader(), cls.getName().replace(".", "/"),
+			() -> {
+				try {
+					return (Constructor<?>[])LowLevelObjectsHandler.GET_DECLARED_CONSTRUCTORS_RETRIEVER.invoke(cls, false);
+				} catch (Throwable exc) {
+					ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
+					return EMPTY_CONSTRUCTORS_ARRAY;
+				}
+			}
+		);
 	}
 	
 	public static Collection<ClassLoader> getAllParents(ClassLoader classLoader) {
@@ -339,20 +344,20 @@ public class Classes {
 	public static ClassLoader getParent(ClassLoader classLoader) {
 		return LowLevelObjectsHandler.getParent(classLoader);
 	}
-	
-	public static void register(ClassLoader classLoader) {
-		CLASS_LOADERS.add(classLoader);
-	}
-	
-	public Collection<ClassLoader> getRegisteredClassLoaders() {
-		return CLASS_LOADERS;
-	}
 
-	public static void unregister(PathMemoryClassLoader classLoader) {
-		CLASS_LOADERS.remove(classLoader);
-	}
-	
 	public static void setAccessible(AccessibleObject object, boolean flag) {
 		LowLevelObjectsHandler.setAccessible(object, flag);
+	}
+	
+	public static String getId(Object object) {
+        return object.getClass().getName() + "@" + object.hashCode();
+    }
+	 
+	public static String getStringForSync(Object... objects) {
+		String id = "_";
+		for (Object object : objects) {
+			id += getId(object) + "_";
+		}
+		return id;
 	}
 }

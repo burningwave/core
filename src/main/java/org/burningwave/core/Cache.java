@@ -38,6 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.burningwave.core.classes.Classes;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.IterableZipContainer;
 import org.burningwave.core.io.Streams;
@@ -73,11 +74,11 @@ public class Cache {
 	
 	public static interface ObjectAndPathForResources<T, R> {
 		
-		R getOrDefault(T object, String path, Supplier<R> resourceSupplier);
+		public R getOrDefault(T object, String path, Supplier<R> resourceSupplier);
+
+		public PathForResources<R> remove(T object);
 		
-		PathForResources<R> remove(T object);
-		
-		R removePath(T object, String path);
+		public R removePath(T object, String path);
 		
 		public abstract static class Abst<T, R> implements ObjectAndPathForResources<T, R> {
 			private Map<T, PathForResources<R>> resources;
@@ -95,7 +96,7 @@ public class Cache {
 			public R getOrDefault(T object, String path, Supplier<R> resourceSupplier) {
 				PathForResources<R> pathForResources = resources.get(object);
 				if (pathForResources == null) {
-					synchronized (resources.toString() + "_" + object.toString()) {
+					synchronized (Classes.getStringForSync(resources, object)) {
 						pathForResources = resources.get(object);
 						if (pathForResources == null) {
 							pathForResources = pathForResourcesSupplier.get();
@@ -311,7 +312,7 @@ public class Cache {
 		 private AsyncPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
 			super(partitionStartLevel, sharer);
 			resources = new ConcurrentHashMap<>();
-			mutexPrefixName = resources.toString();
+			mutexPrefixName = Classes.getId(resources.toString());
 		}
 		
 		

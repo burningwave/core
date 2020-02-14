@@ -39,6 +39,7 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHelper;
+import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.CodeGenerator;
 import org.burningwave.core.classes.CodeGenerator.ForCodeExecutor;
 import org.burningwave.core.classes.CodeGenerator.ForConsumer;
@@ -170,7 +171,7 @@ public class ComponentContainer implements ComponentSupplier {
 		T component = (T)components.get(componentType);
 		if (component == null) {	
 			waitForInitializationEnding();
-			synchronized (components.toString() + "_" + componentType.getName()) {
+			synchronized (Classes.getId(components) + "_" + componentType.getName()) {
 				if ((component = (T)components.get(componentType)) == null) {
 					component = componentSupplier.get();
 					components.put(componentType, component);

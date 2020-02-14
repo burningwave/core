@@ -42,7 +42,6 @@ import org.burningwave.core.Criteria;
 import org.burningwave.core.Criteria.TestContext;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
-import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberCriteria;
 import org.burningwave.core.classes.MemberFinder;
@@ -89,7 +88,6 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		this.pathMemoryClassLoader = PathMemoryClassLoader.create(
 			parentClassLoader, pathHelper, classHelper, byteCodeHunterSupplier
 		);
-		Classes.register(this.pathMemoryClassLoader);
 	}
 	
 	static {
@@ -272,7 +270,6 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	@Override
 	public void close() {
 		pathMemoryClassLoader.close();
-		Classes.unregister(pathMemoryClassLoader);
 		pathMemoryClassLoader = null;
 		super.close();
 	}
