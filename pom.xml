@@ -121,6 +121,12 @@
 				<includes>
 					<include>**</include>
 				</includes>
+				<excludes>
+					<exclude>compileClassLoaderDelegate.cmd</exclude>
+					<exclude>jdk/internal/loader/ClassLoaderDelegate.java</exclude>
+					<exclude>jdk/internal/loader/BuiltinClassLoader.class</exclude>
+					<exclude>jdk/internal/loader/URLClassPath.class</exclude>
+				</excludes>
 			</resource>
 		</resources>
 		<testResources>

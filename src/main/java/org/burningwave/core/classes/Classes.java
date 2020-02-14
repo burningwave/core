@@ -40,7 +40,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.burningwave.ManagedLogger;
-import org.burningwave.Throwables;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
 
 public class Classes {
@@ -333,17 +332,7 @@ public class Classes {
 	}
 	
 	public static ClassLoader getParent(ClassLoader classLoader) {
-		Class<?> builtinClassLoaderClass = LowLevelObjectsHandler.retrieveBuiltinClassLoaderClass();
-		if (builtinClassLoaderClass != null && builtinClassLoaderClass.isAssignableFrom(builtinClassLoaderClass)) {
-			Field builtinClassLoaderClassParentField = LowLevelObjectsHandler.getParentClassLoaderField(builtinClassLoaderClass);
-			try {
-				return (ClassLoader) builtinClassLoaderClassParentField.get(classLoader);
-			} catch (IllegalArgumentException | IllegalAccessException exc) {
-				throw Throwables.toRuntimeException(exc);
-			}
-		} else {
-			return classLoader.getParent();
-		}
+		return LowLevelObjectsHandler.getParent(classLoader);
 	}
 	
 	public static void setAccessible(AccessibleObject object, boolean flag) {

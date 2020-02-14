@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.jvm;
 
+import java.io.InputStream;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -46,6 +47,7 @@ import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.ManagedLogger;
@@ -61,6 +63,7 @@ import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.TriFunction;
 import org.burningwave.core.io.ByteBufferInputStream;
+import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.io.Streams;
 import org.burningwave.core.iterable.IterableObjectHelper;
@@ -78,6 +81,8 @@ public class LowLevelObjectsHandler implements Component {
 	private static Method METHOD_INVOKER;
 	private static Method ACCESSIBLE_SETTER;
 	private static final Map<Class<?>, Field> PARENT_CLASS_LOADER_FIELDS;
+	private static Class<?> CLASS_LOADER_DELEGATE_CLASS;
+	private static Class<?> BUILTIN_CLASS_LOADER_CLASS;
 	
 	protected Long LOADED_PACKAGES_MAP_MEMORY_OFFSET;
 	protected Long LOADED_CLASSES_VECTOR_MEMORY_OFFSET;
@@ -100,20 +105,6 @@ public class LowLevelObjectsHandler implements Component {
 	
 	static {
 		try {
-			ACCESSIBLE_SETTER = AccessibleObject.class.getDeclaredMethod("setAccessible0", boolean.class);
-			ACCESSIBLE_SETTER.setAccessible(true);
-		} catch (NoSuchMethodException | SecurityException e) {
-			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "method setAccessible0 class not detected on " + AccessibleObject.class.getName());
-			ACCESSIBLE_SETTER = null;
-		}
-		try {
-			METHOD_INVOKER = Class.forName("jdk.internal.reflect.NativeMethodAccessorImpl").getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
-			setAccessible(METHOD_INVOKER, true);
-		} catch (NoSuchMethodException | SecurityException | ClassNotFoundException e) {
-			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
-			METHOD_INVOKER = null;
-		}
-		try {
 			Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
 			theUnsafeField.setAccessible(true);
 			unsafe = (Unsafe)theUnsafeField.get(null);
@@ -126,6 +117,35 @@ public class LowLevelObjectsHandler implements Component {
 			PARENT_CLASS_LOADER_FIELDS = new ConcurrentHashMap<>();
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
+		}
+		try {
+			BUILTIN_CLASS_LOADER_CLASS = Class.forName("jdk.internal.loader.BuiltinClassLoader");
+			try {
+				ACCESSIBLE_SETTER = AccessibleObject.class.getDeclaredMethod("setAccessible0", boolean.class);
+				ACCESSIBLE_SETTER.setAccessible(true);
+			} catch (Throwable exc) {
+				ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "method setAccessible0 class not detected on " + AccessibleObject.class.getName());
+				throw Throwables.toRuntimeException(exc);
+			}
+			try {
+				METHOD_INVOKER = Class.forName("jdk.internal.reflect.NativeMethodAccessorImpl").getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
+				setAccessible(METHOD_INVOKER, true);
+			} catch (Throwable exc) {
+				ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
+				throw Throwables.toRuntimeException(exc);
+			}
+			try (
+				InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("jdk/internal/loader/ClassLoaderDelegate.bwclass");
+				ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
+			) {
+				Streams.copy(inputStream, bBOS);
+				CLASS_LOADER_DELEGATE_CLASS = unsafe.defineAnonymousClass(BUILTIN_CLASS_LOADER_CLASS, bBOS.toByteArray(), null);
+			} catch (Throwable exc) {
+				throw Throwables.toRuntimeException(exc);
+			}
+		} catch (Throwable exc) {
+			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "jdk.internal.loader.BuiltinClassLoader class not detected");
+			BUILTIN_CLASS_LOADER_CLASS = null;
 		}
 	}
 	
@@ -470,7 +490,7 @@ public class LowLevelObjectsHandler implements Component {
 		return classLoaderDelegate;
 	}
 	
-	public static Field getParentClassLoaderField(Class<?> classLoaderClass) {
+	private static Field getParentClassLoaderField(Class<?> classLoaderClass) {
 		Field field = PARENT_CLASS_LOADER_FIELDS.get(classLoaderClass);
 		if (field == null) {
 			synchronized (PARENT_CLASS_LOADER_FIELDS) {
@@ -486,7 +506,53 @@ public class LowLevelObjectsHandler implements Component {
 		}
 		return field;
 	}
-
+	
+	public static ClassLoader getParent(ClassLoader classLoader) {
+		if (BUILTIN_CLASS_LOADER_CLASS != null && BUILTIN_CLASS_LOADER_CLASS.isAssignableFrom(classLoader.getClass())) {
+			Field builtinClassLoaderClassParentField = LowLevelObjectsHandler.getParentClassLoaderField(BUILTIN_CLASS_LOADER_CLASS);
+			try {
+				return (ClassLoader) builtinClassLoaderClassParentField.get(classLoader);
+			} catch (IllegalArgumentException | IllegalAccessException exc) {
+				throw Throwables.toRuntimeException(exc);
+			}
+		} else {
+			return classLoader.getParent();
+		}
+	}
+	
+	public Function<Boolean, ClassLoader> setAsParentClassLoader(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
+		Class<?> classLoaderBaseClass = BUILTIN_CLASS_LOADER_CLASS;
+		if (BUILTIN_CLASS_LOADER_CLASS != null && BUILTIN_CLASS_LOADER_CLASS.isAssignableFrom(classLoader.getClass())) {
+			try {
+				Object classLoaderDelegate = unsafe.allocateInstance(CLASS_LOADER_DELEGATE_CLASS);
+				Method initMethod = memberFinder.findOne(
+					MethodCriteria.on(CLASS_LOADER_DELEGATE_CLASS).name("init"::equals), CLASS_LOADER_DELEGATE_CLASS
+				);
+				invoke(classLoaderDelegate, initMethod, futureParent);
+				futureParent = (ClassLoader)classLoaderDelegate;
+			} catch (Throwable exc) {
+				throw Throwables.toRuntimeException(exc);
+			}
+		} else {
+			classLoaderBaseClass = ClassLoader.class;
+		}
+		Field parentClassLoaderField = memberFinder.findOne(
+			FieldCriteria.byScanUpTo(classLoaderBaseClass).name("parent"::equals), classLoaderBaseClass
+		);
+		Long offset = LowLevelObjectsHandler.getUnsafe().objectFieldOffset(parentClassLoaderField);
+		final ClassLoader exParent = (ClassLoader)LowLevelObjectsHandler.getUnsafe().getObject(classLoader, offset);
+		unsafe.putObject(classLoader, offset, futureParent);
+		if (mantainHierarchy) {
+			unsafe.putObject(futureParent, offset, exParent);
+		}
+		return (reset) -> {
+			if (reset) {
+				unsafe.putObject(classLoader, offset, exParent);
+			}
+			return exParent;
+		};
+	}
+	
 	public static void setAccessible(AccessibleObject object, boolean flag) {
 		if (ACCESSIBLE_SETTER != null) {
 			try {
@@ -499,17 +565,7 @@ public class LowLevelObjectsHandler implements Component {
 		}
 	}
 	
-	public static Class<?> retrieveBuiltinClassLoaderClass() {
-		Class<?> builtinClassLoaderClass = null;
-		try {
-			builtinClassLoaderClass = Class.forName("jdk.internal.loader.BuiltinClassLoader");
-		} catch (ClassNotFoundException e) {
-			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "jdk.internal.loader.BuiltinClassLoader class not detected");
-		}
-		return builtinClassLoaderClass;
-	}
-	
-	public Object invoke(Object target, Method method, Object... params) {
+	public static Object invoke(Object target, Method method, Object... params) {
 		try {			
 			if (METHOD_INVOKER != null) {
 				return METHOD_INVOKER.invoke(null, method, target, params);
@@ -542,7 +598,7 @@ public class LowLevelObjectsHandler implements Component {
 		LOADED_PACKAGES_MAP_MEMORY_OFFSET = null;
 		LOADED_CLASSES_VECTOR_MEMORY_OFFSET = null;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public static class ByteBufferDelegate {
 		
