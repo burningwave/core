@@ -319,14 +319,13 @@ public class Classes {
 	}
 	
 	public static Collection<ClassLoader> getAllParents(ClassLoader classLoader) {
-		return getClassLoaderHierarchy(classLoader, false);
+		return getHierarchy(classLoader, false);
 	}
 	
-	public static Collection<ClassLoader> getClassLoaderHierarchy(ClassLoader classLoader) {
-		return getClassLoaderHierarchy(classLoader, true);
-	}
-	
-	private static Collection<ClassLoader> getClassLoaderHierarchy(ClassLoader classLoader, boolean includeClassLoader) {
+	public static Collection<ClassLoader> getHierarchy(ClassLoader classLoader) {
+		return getHierarchy(classLoader, true);
+	}	
+	private static Collection<ClassLoader> getHierarchy(ClassLoader classLoader, boolean includeClassLoader) {
 		Collection<ClassLoader> classLoaders = new LinkedHashSet<>();
 		if (includeClassLoader) {
 			classLoaders.add(classLoader);
@@ -336,6 +335,7 @@ public class Classes {
 		}
 		return classLoaders;
 	}
+	
 	public static ClassLoader getClassLoader(Class<?> cls) {
 		ClassLoader clsLoader = cls.getClassLoader();
 		if (clsLoader == null) {
@@ -344,12 +344,23 @@ public class Classes {
 		return clsLoader;
 	}
 	
+	public static Function<Boolean, ClassLoader> setAsMaster(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
+		return LowLevelObjectsHandler.setAsParent(getMaster(classLoader), futureParent, mantainHierarchy);
+	}
+	
 	public static Function<Boolean, ClassLoader> setAsParent(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
-		return LowLevelObjectsHandler.setParent(classLoader, futureParent, mantainHierarchy);
+		return LowLevelObjectsHandler.setAsParent(classLoader, futureParent, mantainHierarchy);
 	}
 	
 	public static ClassLoader getParent(ClassLoader classLoader) {
 		return LowLevelObjectsHandler.getParent(classLoader);
+	}
+	
+	private static ClassLoader getMaster(ClassLoader classLoader) {
+		while (getParent(classLoader) != null) {
+			classLoader = getParent(classLoader); 
+		}
+		return classLoader;
 	}
 
 	public static void setAccessible(AccessibleObject object, boolean flag) {
