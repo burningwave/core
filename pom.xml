@@ -123,7 +123,6 @@
 				</includes>
 				<excludes>
 					<exclude>compileClassLoaderDelegate.cmd</exclude>
-					<exclude>jdk/internal/loader/ClassLoaderDelegate.java</exclude>
 					<exclude>jdk/internal/loader/BuiltinClassLoader.class</exclude>
 					<exclude>jdk/internal/loader/URLClassPath.class</exclude>
 				</excludes>
@@ -217,7 +216,12 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.0.1</version>
+				<version>3.2.0</version>
+				<configuration>
+					<excludes>
+						<exclude>jdk/internal/loader/ClassLoaderDelegate.bwclass</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
