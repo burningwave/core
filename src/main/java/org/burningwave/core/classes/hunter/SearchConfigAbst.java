@@ -34,6 +34,7 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
+import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.function.ThrowingSupplier;
 
@@ -119,7 +120,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Compon
 	protected S newInstance() {
 		return ThrowingSupplier.get(() -> {
 			Constructor<?> constructor = getClass().getDeclaredConstructor();
-			constructor.setAccessible(true);
+			Classes.setAccessible(constructor, true);
 			return (S)constructor.newInstance();
 		});
 	}

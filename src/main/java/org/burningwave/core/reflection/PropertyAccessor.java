@@ -40,6 +40,7 @@ import java.util.regex.Pattern;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
+import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.FieldHelper;
 import org.burningwave.core.classes.MemberFinder;
@@ -156,7 +157,7 @@ public abstract class PropertyAccessor implements Component {
 			obj
 		);
 		for (Field field : fields) {
-			field.setAccessible(true);
+			Classes.setAccessible(field, true);
 			propertyValues.put(field.getName(), (T)field.get(obj));
 		}
 		return propertyValues;

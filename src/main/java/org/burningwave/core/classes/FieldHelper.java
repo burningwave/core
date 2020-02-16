@@ -64,12 +64,12 @@ public class FieldHelper extends MemberHelper<Field> {
 				),
 				target
 			);
-			Optional.ofNullable(members.stream().findFirst().get()).orElseThrow(() ->
+			Classes.setAccessible(Optional.ofNullable(members.stream().findFirst().get()).orElseThrow(() ->
 				Throwables.toRuntimeException("Field \"" + fieldName
 					+ "\" not found in any class of " + Classes.retrieveFrom(target).getName()
 					+ " hierarchy"
 				)
-			).setAccessible(true);
+			), true);
 			if (cacheField) {
 				cache.put(cacheKey, members);
 			}

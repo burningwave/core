@@ -62,7 +62,7 @@ public class ConstructorHelper extends MemberHelper<Constructor<?>>  {
 			arguments
 		);
 		Constructor<?> member = findOneAndApply(
-			criteria, object, (mmb) ->	mmb.setAccessible(true)
+			criteria, object, (mmb) ->	Classes.setAccessible(mmb, true)
 		);
 		Optional.ofNullable(member).orElseThrow(() ->
 			Throwables.toRuntimeException("Constructor not found for class " + Classes.retrieveFrom(object))

@@ -36,6 +36,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.burningwave.Throwables;
+import org.burningwave.core.classes.Classes;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.function.TriPredicate;
 
@@ -97,7 +98,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 	protected C newInstance() {
 		return ThrowingSupplier.get(() -> {
 			Constructor<?> constructor = getClass().getDeclaredConstructor();
-			constructor.setAccessible(true);
+			Classes.setAccessible(constructor, true);
 			return (C)constructor.newInstance();
 		});
 	}
