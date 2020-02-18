@@ -48,7 +48,6 @@ import java.util.function.Supplier;
 import org.burningwave.Throwables;
 import org.burningwave.core.Cache;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
-import org.burningwave.core.jvm.LowLevelObjectsHandler.ClassLoaderDelegate;
 
 public class Classes {
 	private static Classes INSTANCE;
@@ -56,9 +55,7 @@ public class Classes {
 	private MemberFinder memberFinder;
 	protected Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
 	protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
-	protected Map<String, Method> classLoadersMethods;
-	protected Map<String, ClassLoaderDelegate> classLoaderDelegates;
-	
+	protected Map<String, Method> classLoadersMethods;	
 	
 	public static class Symbol{
 		public static class Tag {
@@ -95,7 +92,6 @@ public class Classes {
 		this.classLoadersClasses = new ConcurrentHashMap<>();
 		this.classLoadersPackages = new ConcurrentHashMap<>();
 		this.classLoadersMethods = new ConcurrentHashMap<>();
-		this.classLoaderDelegates = new ConcurrentHashMap<>();
 	}
 	
 	public static Classes getInstance() {

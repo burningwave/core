@@ -470,10 +470,4 @@ public class LowLevelObjectsHandler implements Component {
 			return ((Buffer)buffer).remaining();
 		}
 	}
-	
-	public static abstract class ClassLoaderDelegate {
-		
-		public abstract Package getPackage(ClassLoader classLoader, String packageName);
-		
-	}
 }
