@@ -17,7 +17,7 @@ public class ClassFactoryTest extends BaseTest {
 	@Test
 	public void getOrBuildConsumerClassTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildConsumerSubType(3));
+		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildConsumerSubType(2));
 	}
 	
 	@Test

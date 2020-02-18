@@ -26,24 +26,18 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core;
+package org.burningwave.core.function;
 
+import java.util.Objects;
+import java.util.function.Function;
 
-import org.burningwave.core.classes.Classes;
-import org.burningwave.core.classes.MemberFinder;
-import org.burningwave.core.classes.MethodHelper;
+@FunctionalInterface
+public interface ThrowingTriFunction<P0, P1, P2, R> {
 
+    R apply(P0 p0, P1 p1, P2 p2) throws Throwable;
 
-public interface Virtual extends Component {
-	public final static MethodHelper methodHelper = MethodHelper.create(Classes.getInstance(), MemberFinder.create());
-
-	
-	default <T> T invoke(String methodName, Object... parameters) {
-		return methodHelper.invoke(this, methodName, parameters);
-	}
-	
-	default <T> T invokeWithoutCachingMethod(String methodName, Object... parameters) {
-		return methodHelper.invoke(this, methodName, false, parameters);
-	}
-
+    default <V> ThrowingTriFunction<P0, P1, P2, V> andThen(Function<? super R, ? extends V> after) {
+    	Objects.requireNonNull(after);
+    	return (P0 p0, P1 p1, P2 p2) -> after.apply(apply(p0, p1, p2));
+    }
 }

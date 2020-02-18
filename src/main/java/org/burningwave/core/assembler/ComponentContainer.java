@@ -64,7 +64,6 @@ import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.jvm.JVMChecker;
-import org.burningwave.core.jvm.LowLevelObjectsHandler;
 import org.burningwave.core.reflection.CallerRetriever;
 import org.burningwave.core.reflection.ConsumerBinder;
 import org.burningwave.core.reflection.FunctionBinder;
@@ -185,6 +184,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public ConstructorHelper getConstructorHelper() {
 		return getOrCreate(ConstructorHelper.class, () -> 
 			ConstructorHelper.create(
+				getClasses(),
 				getMemberFinder()
 			)
 		);
@@ -194,6 +194,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public MethodHelper getMethodHelper() {
 		return getOrCreate(MethodHelper.class, () ->
 			MethodHelper.create(
+				getClasses(),
 				getMemberFinder()
 			)
 		);
@@ -203,6 +204,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public FieldHelper getFieldHelper() {
 		return getOrCreate(FieldHelper.class, () ->
 			FieldHelper.create(
+				getClasses(),
 				getMemberFinder()
 			)
 		);
@@ -219,12 +221,13 @@ public class ComponentContainer implements ComponentSupplier {
 	public MemoryClassLoader getMemoryClassLoader() {
 		return getOrCreate(MemoryClassLoader.class, () -> {
 			return MemoryClassLoader.create(
-				getLowLevelObjectsHandler().retrieveFromProperties(
+				getByFieldOrByMethodPropertyAccessor().retrieveFromProperties(
 					config,
 					MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY,
 					MemoryClassLoader.DEFAULT_CONFIG_VALUES,
 					this
 				),
+				getClasses(),
 				getClassHelper()
 			);
 		});
@@ -318,9 +321,10 @@ public class ComponentContainer implements ComponentSupplier {
 				getFileSystemScanner(),
 				getPathHelper(),
 				getStreamHelper(),
+				getClasses(),
 				getClassHelper(),
 				getMemberFinder(),
-				getLowLevelObjectsHandler().retrieveFromProperties(
+				getByFieldOrByMethodPropertyAccessor().retrieveFromProperties(
 					config,
 					ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
 					ClassHunter.DEFAULT_CONFIG_VALUES,
@@ -341,6 +345,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getFileSystemScanner(),
 				getPathHelper(),
 				getStreamHelper(),
+				getClasses(),
 				getClassHelper(),
 				getMemberFinder()
 			)
@@ -357,6 +362,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getFileSystemScanner(),
 				getPathHelper(),
 				getStreamHelper(),
+				getClasses(),
 				getClassHelper(),
 				getMemberFinder()
 			)
@@ -367,9 +373,12 @@ public class ComponentContainer implements ComponentSupplier {
 	public PropertyAccessor.ByFieldOrByMethod getByFieldOrByMethodPropertyAccessor() {
 		return getOrCreate(PropertyAccessor.ByFieldOrByMethod.class, () ->  
 			PropertyAccessor.ByFieldOrByMethod.create(
+				getClasses(),
 				getMemberFinder(),
 				getMethodHelper(),
-				getFieldHelper()
+				getFieldHelper(),
+				() -> getClassHelper(),
+				() -> getIterableObjectHelper()
 			)
 		);
 	}
@@ -378,9 +387,12 @@ public class ComponentContainer implements ComponentSupplier {
 	public PropertyAccessor.ByMethodOrByField getByMethodOrByFieldPropertyAccessor() {
 		return getOrCreate(PropertyAccessor.ByMethodOrByField.class, () ->  
 			PropertyAccessor.ByMethodOrByField.create(
+				getClasses(),
 				getMemberFinder(),
 				getMethodHelper(),
-				getFieldHelper()
+				getFieldHelper(),
+				() -> getClassHelper(),
+				() -> getIterableObjectHelper()
 			)
 		);
 	}
@@ -500,27 +512,13 @@ public class ComponentContainer implements ComponentSupplier {
 			JVMChecker.create()
 		);
 	}
-	
-	@Override
-	public LowLevelObjectsHandler getLowLevelObjectsHandler() {
-		return getOrCreate(LowLevelObjectsHandler.class, () ->
-			LowLevelObjectsHandler.create(
-				getJVMChecker(),
-				getStreamHelper(),
-				() -> getClassFactory(),
-				() -> getClassHelper(),
-				getMemberFinder(),
-				getIterableObjectHelper()
-			)
-		);
-	}
 
 	@Override
 	public ClassHelper getClassHelper() {
 		return getOrCreate(ClassHelper.class, () ->
 			ClassHelper.create(
 				() -> getClassFactory(),
-				getLowLevelObjectsHandler()				
+				getClasses()								
 			)
 		);
 	}
@@ -577,5 +575,10 @@ public class ComponentContainer implements ComponentSupplier {
 				return component;
 			}
 
+	}
+
+	@Override
+	public Classes getClasses() {
+		return Classes.getInstance();
 	}
 }

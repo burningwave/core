@@ -38,7 +38,7 @@ public class Properties extends java.util.Properties {
 	
 	static {
 		try {
-			InputStream propertiesFileIS = Properties.class.getClassLoader().getResourceAsStream("burningwave.static.properties");
+			InputStream propertiesFileIS = ClassLoader.getSystemClassLoader().getResourceAsStream("burningwave.static.properties");
 			if (propertiesFileIS != null) {
 				FOR_STATIC_CLASSES = new Properties();
 				FOR_STATIC_CLASSES.load(propertiesFileIS);

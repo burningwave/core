@@ -49,7 +49,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.Strings;
 import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.ByteBufferOutputStream;
-import org.burningwave.core.jvm.LowLevelObjectsHandler;
+import org.burningwave.core.reflection.PropertyAccessor;
 
 
 public class MemoryClassLoader extends ClassLoader implements Component {
@@ -57,6 +57,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	public final static Map<String, String> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
 		
 	protected ClassHelper classHelper;
+	protected Classes classes;
 	protected Map<String, ByteBuffer> notLoadedCompiledClasses;
 	protected Map<String, ByteBuffer> loadedCompiledClasses;
 	
@@ -66,9 +67,11 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	protected MemoryClassLoader(
 		ClassLoader parentClassLoader,
+		Classes classes,
 		ClassHelper classHelper
 	) {
 		super(parentClassLoader);
+		this.classes = classes;
 		this.classHelper = classHelper;
 		notLoadedCompiledClasses = new ConcurrentHashMap<>();
 		loadedCompiledClasses = new ConcurrentHashMap<>();
@@ -76,7 +79,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	static {
 		DEFAULT_CONFIG_VALUES.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY, "null");
-		DEFAULT_CONFIG_VALUES.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY + LowLevelObjectsHandler.SUPPLIER_IMPORTS_KEY_SUFFIX, "");
+		DEFAULT_CONFIG_VALUES.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY + PropertyAccessor.SUPPLIER_IMPORTS_KEY_SUFFIX, "");
 	}
 	
 	protected ClassHelper getClassHelper() {
@@ -84,8 +87,8 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 
 	
-	public static MemoryClassLoader create(ClassLoader parentClassLoader, ClassHelper classHelper) {
-		return new MemoryClassLoader(parentClassLoader, classHelper);
+	public static MemoryClassLoader create(ClassLoader parentClassLoader, Classes classes, ClassHelper classHelper) {
+		return new MemoryClassLoader(parentClassLoader, classes, classHelper);
 	}
 
 	public void addCompiledClass(String className, ByteBuffer byteCode) {
@@ -326,7 +329,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	protected void unregister() {
-		classHelper.unregister(this);
+		classes.unregister(this);
 		Cache.CLASS_LOADER_FOR_CONSTRUCTORS.remove(this);
 		Cache.CLASS_LOADER_FOR_FIELDS.remove(this);
 		Cache.CLASS_LOADER_FOR_METHODS.remove(this);

@@ -37,12 +37,12 @@ import org.burningwave.Throwables;
 
 public class FieldHelper extends MemberHelper<Field> {
 
-	private FieldHelper(MemberFinder memberFinder) {
-		super(memberFinder);
+	private FieldHelper(Classes classes, MemberFinder memberFinder) {
+		super(classes, memberFinder);
 	}
 	
-	public static FieldHelper create(MemberFinder memberFinder) {
-		return new FieldHelper(memberFinder);
+	public static FieldHelper create(Classes classes, MemberFinder memberFinder) {
+		return new FieldHelper(classes, memberFinder);
 	}
 	
 	public Field findOneAndMakeItAccessible(Object target, String fieldName) {
@@ -64,7 +64,7 @@ public class FieldHelper extends MemberHelper<Field> {
 				),
 				target
 			);
-			Classes.setAccessible(Optional.ofNullable(members.stream().findFirst().get()).orElseThrow(() ->
+			classes.setAccessible(Optional.ofNullable(members.stream().findFirst().get()).orElseThrow(() ->
 				Throwables.toRuntimeException("Field \"" + fieldName
 					+ "\" not found in any class of " + Classes.retrieveFrom(target).getName()
 					+ " hierarchy"

@@ -98,7 +98,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 	protected C newInstance() {
 		return ThrowingSupplier.get(() -> {
 			Constructor<?> constructor = getClass().getDeclaredConstructor();
-			Classes.setAccessible(constructor, true);
+			Classes.getInstance().setAccessible(constructor, true);
 			return (C)constructor.newInstance();
 		});
 	}

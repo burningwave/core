@@ -51,7 +51,7 @@ public class FieldCriteria extends MemberCriteria<
 	
 	@Override
 	public Function<Class<?>, Field[]> getMembersSupplierFunction() {
-		return Classes::getDeclaredFields;
+		return Classes.getInstance()::getDeclaredFields;
 	}
 	
 	public static FieldCriteria forName(Predicate<String> predicate) {

@@ -51,27 +51,26 @@ import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.Streams;
-import org.burningwave.core.jvm.LowLevelObjectsHandler;
 
 
 public class ClassHelper implements Component {
-	private LowLevelObjectsHandler lowLevelObjectsHandler;
 	private ClassFactory classFactory;
 	private Supplier<ClassFactory> classFactorySupplier;
+	private Classes classes;
 
 	private ClassHelper(
 		Supplier<ClassFactory> classFactorySupplier,
-		LowLevelObjectsHandler lowLevelObjectsHandler
+		Classes classes
 	) {
 		this.classFactorySupplier = classFactorySupplier;
-		this.lowLevelObjectsHandler = lowLevelObjectsHandler;
+		this.classes = classes;
 	}
 	
 	public static ClassHelper create(
 		Supplier<ClassFactory> classFactorySupplier,
-		LowLevelObjectsHandler objectRetriever
+		Classes classes
 	) {
-		return new ClassHelper(classFactorySupplier, objectRetriever);
+		return new ClassHelper(classFactorySupplier, classes);
 	}
 	
 	private ClassFactory getClassFactory() {
@@ -93,7 +92,7 @@ public class ClassHelper implements Component {
 	}
 	
 	public ByteBuffer getByteCode(Class<?> cls) {
-		ClassLoader clsLoader = Classes.getClassLoader(cls);
+		ClassLoader clsLoader = classes.getClassLoader(cls);
 		InputStream inputStream = clsLoader.getResourceAsStream(
 			cls.getName().replace(".", "/") + ".class"
 		);
@@ -108,8 +107,8 @@ public class ClassHelper implements Component {
 	) throws ClassNotFoundException {
 		return loadOrUploadClass(
 			toLoad, classLoader,
-			lowLevelObjectsHandler.getDefineClassMethod(classLoader),
-			lowLevelObjectsHandler.getDefinePackageMethod(classLoader)
+			classes.getDefineClassMethod(classLoader),
+			classes.getDefinePackageMethod(classLoader)
 		);
 	}
 	
@@ -119,8 +118,8 @@ public class ClassHelper implements Component {
 	) throws ClassNotFoundException {
 		return loadOrUploadClass(
 			javaClass, classLoader,
-			lowLevelObjectsHandler.getDefineClassMethod(classLoader),
-			lowLevelObjectsHandler.getDefinePackageMethod(classLoader)
+			classes.getDefineClassMethod(classLoader),
+			classes.getDefinePackageMethod(classLoader)
 		);
 	}
 	
@@ -130,8 +129,8 @@ public class ClassHelper implements Component {
 	) throws ClassNotFoundException {
 		return loadOrUploadClass(
 			JavaClass.create(byteCode), classLoader,
-			lowLevelObjectsHandler.getDefineClassMethod(classLoader),
-			lowLevelObjectsHandler.getDefinePackageMethod(classLoader)
+			classes.getDefineClassMethod(classLoader),
+			classes.getDefinePackageMethod(classLoader)
 		);
 	}
 	
@@ -250,7 +249,7 @@ public class ClassHelper implements Component {
 	}
 	
 	public Class<?> retrieveLoadedClass(ClassLoader classLoader, String className) {
-		Vector<Class<?>> definedClasses = lowLevelObjectsHandler.retrieveLoadedClasses(classLoader);
+		Vector<Class<?>> definedClasses = classes.retrieveLoadedClasses(classLoader);
 		synchronized(definedClasses) {
 			Iterator<?> itr = definedClasses.iterator();
 			while(itr.hasNext()) {
@@ -268,7 +267,7 @@ public class ClassHelper implements Component {
 	
 	public Set<Class<?>> retrieveLoadedClassesForPackage(ClassLoader classLoader, Predicate<Package> packagePredicate) {
 		Set<Class<?>> classesFound = ConcurrentHashMap.newKeySet();
-		Vector<Class<?>> definedClasses = lowLevelObjectsHandler.retrieveLoadedClasses(classLoader);
+		Vector<Class<?>> definedClasses = classes.retrieveLoadedClasses(classLoader);
 		synchronized(definedClasses) {
 			Iterator<?> itr = definedClasses.iterator();
 			while(itr.hasNext()) {
@@ -286,10 +285,10 @@ public class ClassHelper implements Component {
 	}
 	
 	public Package retrievePackage(ClassLoader classLoader, String packageName) {
-		Map<String, ?> packages = lowLevelObjectsHandler.retrieveLoadedPackages(classLoader);
+		Map<String, ?> packages = classes.retrieveLoadedPackages(classLoader);
 		Object packageToFind = packages.get(packageName);
 		if (packageToFind != null) {
-			return lowLevelObjectsHandler.retrieveLoadedPackage(classLoader, packageToFind, packageName);
+			return classes.retrieveLoadedPackage(classLoader, packageToFind, packageName);
 		} else if (classLoader.getParent() != null) {
 			return retrievePackage(classLoader.getParent(), packageName);
 		} else {
@@ -309,6 +308,7 @@ public class ClassHelper implements Component {
 			try (MemoryClassLoader memoryClassLoader = 
 				MemoryClassLoader.create(
 					classLoaderParentOfOneShotClassLoader,
+					classes,
 					this
 				)
 			) {
@@ -322,13 +322,9 @@ public class ClassHelper implements Component {
 		});
 	}
 	
-	public void unregister(ClassLoader classLoader) {
-		lowLevelObjectsHandler.unregister(classLoader);
-	}
-	
 	@Override
 	public void close() {
-		lowLevelObjectsHandler = null;
+		classes = null;
 		classFactory = null;
 		classFactorySupplier = null;
 	}

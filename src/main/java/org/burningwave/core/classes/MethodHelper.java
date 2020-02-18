@@ -40,12 +40,12 @@ import org.burningwave.core.function.ThrowingSupplier;
 
 public class MethodHelper extends MemberHelper<Method> {
 	
-	private MethodHelper(MemberFinder memberFinder) {
-		super(memberFinder);
+	private MethodHelper(Classes classes, MemberFinder memberFinder) {
+		super(classes, memberFinder);
 	}
 	
-	public static MethodHelper create(MemberFinder memberFinder) {
-		return new MethodHelper(memberFinder);
+	public static MethodHelper create(Classes classes, MemberFinder memberFinder) {
+		return new MethodHelper(classes, memberFinder);
 	}
 
 	public String createGetterMethodNameByPropertyName(String property) {
@@ -95,7 +95,7 @@ public class MethodHelper extends MemberHelper<Method> {
 		}
 		criteria.parameterTypesAreAssignableFrom(arguments);
 		Collection<Method> members = findAllAndApply(
-			criteria, target, (member) -> Classes.setAccessible(member,true)
+			criteria, target, (member) -> classes.setAccessible(member,true)
 		);
 		if (members.isEmpty()) {
 			Throwables.toRuntimeException("Method not found in any class of " + Classes.retrieveFrom(target).getName()

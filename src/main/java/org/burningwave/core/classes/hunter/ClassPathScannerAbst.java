@@ -37,6 +37,7 @@ import java.util.function.Supplier;
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
+import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.hunter.SearchContext.InitContext;
@@ -54,6 +55,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	ByteCodeHunter byteCodeHunter;
 	Supplier<ClassHunter> classHunterSupplier;
 	ClassHunter classHunter;
+	Classes classes;
 	ClassHelper classHelper;
 	MemberFinder memberFinder;
 	FileSystemHelper fileSystemHelper;
@@ -70,6 +72,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
+		Classes classes,
 		ClassHelper classHelper,
 		MemberFinder memberFinder,
 		Function<InitContext, C> contextSupplier,
@@ -79,6 +82,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		this.fileSystemScanner = fileSystemScanner;
 		this.pathHelper = pathHelper;
 		this.streamHelper = streamHelper;
+		this.classes = classes;
 		this.classHelper = classHelper;
 		this.memberFinder = memberFinder;
 		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
@@ -133,7 +137,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 					sharedClassLoader :
 					PathMemoryClassLoader.create(
 						searchConfig.parentClassLoaderForMainClassLoader, 
-						pathHelper, classHelper, byteCodeHunterSupplier
+						pathHelper, classes, classHelper, byteCodeHunterSupplier
 					),
 				scanConfig,
 				searchConfig

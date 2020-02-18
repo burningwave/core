@@ -44,6 +44,7 @@ import java.util.stream.Collectors;
 import org.burningwave.core.Strings;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
+import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.hunter.SearchContext.InitContext;
 import org.burningwave.core.io.ClassFileScanConfig;
@@ -64,6 +65,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
+		Classes classes,
 		ClassHelper classHelper,
 		MemberFinder memberFinder,
 		Function<InitContext, C> contextSupplier,
@@ -75,6 +77,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 			fileSystemScanner,
 			pathHelper,
 			streamHelper,
+			classes,
 			classHelper,
 			memberFinder,
 			contextSupplier,

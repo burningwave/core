@@ -38,12 +38,12 @@ import org.burningwave.core.function.ThrowingSupplier;
 
 public class ConstructorHelper extends MemberHelper<Constructor<?>>  {
 
-	private ConstructorHelper(MemberFinder memberFinder) {
-		super(memberFinder);
+	private ConstructorHelper(Classes classes, MemberFinder memberFinder) {
+		super(classes, memberFinder);
 	}
 	
-	public static ConstructorHelper create(MemberFinder memberFinder) {
-		return new ConstructorHelper(memberFinder);
+	public static ConstructorHelper create(Classes classes, MemberFinder memberFinder) {
+		return new ConstructorHelper(classes, memberFinder);
 	}
 	
 	
@@ -62,7 +62,7 @@ public class ConstructorHelper extends MemberHelper<Constructor<?>>  {
 			arguments
 		);
 		Constructor<?> member = findOneAndApply(
-			criteria, object, (mmb) ->	Classes.setAccessible(mmb, true)
+			criteria, object, (mmb) ->	classes.setAccessible(mmb, true)
 		);
 		Optional.ofNullable(member).orElseThrow(() ->
 			Throwables.toRuntimeException("Constructor not found for class " + Classes.retrieveFrom(object))

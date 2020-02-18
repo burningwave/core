@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
+import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.concurrent.ParallelTasksManager;
@@ -57,6 +58,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
+		Classes classes,
 		ClassHelper classHelper,
 		MemberFinder memberFinder
 	) {
@@ -67,6 +69,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 			fileSystemScanner,
 			pathHelper,
 			streamHelper,
+			classes,
 			classHelper,
 			memberFinder,
 			(initContext) -> SearchContext._create(fileSystemHelper, streamHelper, initContext),
@@ -81,10 +84,11 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
+		Classes classes,
 		ClassHelper classHelper,
 		MemberFinder memberFinder
 	) {
-		return new ClassPathHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, fileSystemScanner, pathHelper, streamHelper, classHelper, memberFinder);
+		return new ClassPathHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, fileSystemScanner, pathHelper, streamHelper, classes, classHelper, memberFinder);
 	}
 	
 	@Override

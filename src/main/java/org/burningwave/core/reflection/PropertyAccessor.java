@@ -31,15 +31,21 @@ package org.burningwave.core.reflection;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
+import org.burningwave.core.Strings;
+import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.FieldHelper;
@@ -47,27 +53,53 @@ import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MethodHelper;
 import org.burningwave.core.function.ThrowingBiFunction;
 import org.burningwave.core.function.ThrowingFunction;
+import org.burningwave.core.iterable.IterableObjectHelper;
+import org.burningwave.core.iterable.Properties;
 
 public abstract class PropertyAccessor implements Component {
+	public final static String SUPPLIER_IMPORTS_KEY_SUFFIX = ".supplier.imports";
 	public final static String REG_EXP_FOR_JAVA_PROPERTIES = "([a-zA-Z\\$\\_\\-0-9]*)(\\[*.*)";
 	public final static String REG_EXP_FOR_INDEXES_OF_JAVA_INDEXED_PROPERTIES = "\\[([a-zA-Z0-9]*)\\]";
 	
+	private Classes classes;
 	private MemberFinder memberFinder;
 	private MethodHelper methodHelper;
 	private FieldHelper fieldHelper;
+	private ClassHelper classHelper;
 	private List<ThrowingBiFunction<Object, String, Object>> propertyRetrievers;
 	private List<ThrowingFunction<Object[], Boolean>> propertySetters;
-
+	private Supplier<ClassHelper> classHelperSupplier;
+	private IterableObjectHelper iterableObjectHelper;	
+	private Supplier<IterableObjectHelper> iterableObjectHelperSupplier;
 	
 	PropertyAccessor(
-			MemberFinder memberFinder,
-			MethodHelper methodHelper,
-			FieldHelper fieldHelper) {
+		Classes classes,
+		MemberFinder memberFinder,
+		MethodHelper methodHelper,
+		FieldHelper fieldHelper,
+		Supplier<ClassHelper> classHelperSupplier,
+		Supplier<IterableObjectHelper> iterableObjectHelperSupplier
+	) {
+		this.classes = classes;
 		this.memberFinder = memberFinder;
 		this.methodHelper = methodHelper;
 		this.fieldHelper = fieldHelper;
+		this.iterableObjectHelperSupplier = iterableObjectHelperSupplier;
+		this.classHelperSupplier = classHelperSupplier;
 		this.propertyRetrievers = getPropertyRetrievers();
 		this.propertySetters= getPropertySetters();
+	}
+	
+	protected IterableObjectHelper getIterableObjectHelper() {
+		return iterableObjectHelper != null ?
+			iterableObjectHelper :
+			(iterableObjectHelper = iterableObjectHelperSupplier.get());
+	}
+	
+	protected ClassHelper getClassHelper() {
+		return classHelper != null ?
+			classHelper :
+			(classHelper = classHelperSupplier.get());
 	}
 	
 	abstract List<ThrowingFunction<Object[], Boolean>> getPropertySetters();
@@ -157,7 +189,7 @@ public abstract class PropertyAccessor implements Component {
 			obj
 		);
 		for (Field field : fields) {
-			Classes.setAccessible(field, true);
+			classes.setAccessible(field, true);
 			propertyValues.put(field.getName(), (T)field.get(obj));
 		}
 		return propertyValues;
@@ -252,6 +284,34 @@ public abstract class PropertyAccessor implements Component {
 		return Boolean.TRUE;
 	}
 	
+	public <T> T retrieveFromProperties(
+		Properties config, 
+		String supplierCodeKey,
+		Map<String, String> defaultValues,
+		ComponentSupplier componentSupplier
+	) {	
+		String supplierCode = getIterableObjectHelper().get(config, supplierCodeKey, defaultValues);
+		supplierCode = supplierCode.contains("return")?
+			supplierCode:
+			"return (T)" + supplierCode + ";";
+		String importFromConfig = getIterableObjectHelper().get(config, supplierCodeKey + SUPPLIER_IMPORTS_KEY_SUFFIX, defaultValues);
+		if (Strings.isNotEmpty(importFromConfig)) {
+			final StringBuffer stringBufferImports = new StringBuffer();
+			Arrays.stream(importFromConfig.split(";")).forEach(imp -> {
+				stringBufferImports.append("import ").append(imp).append(";\n");
+			});
+			importFromConfig = stringBufferImports.toString();
+		}
+		String imports =
+			"import " + ComponentSupplier.class.getName() + ";\n" +
+			"import " + componentSupplier.getClass().getName() + ";\n" + importFromConfig;
+		String className = "ObjectSupplier_" + UUID.randomUUID().toString().replaceAll("-", "");
+		return getClassHelper().executeCode(
+			imports, className, supplierCode, 
+			componentSupplier, Thread.currentThread().getContextClassLoader()
+		);
+	}
+	
 	/*
 	 * Attenzione: se si utilizza qualche framework che usa la libreria
 	 * CGLIB.jar ci potrebbero essere problemi poiche' questa libreria rigenera
@@ -259,12 +319,12 @@ public abstract class PropertyAccessor implements Component {
 	 */
 	public static class ByFieldOrByMethod extends PropertyAccessor {
 
-		private ByFieldOrByMethod(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper) {
-			super(memberFinder, methodHelper, fieldHelper);
+		private ByFieldOrByMethod(Classes classes, MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<ClassHelper> classHelperSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+			super(classes, memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
 		}
 		
-		public static ByFieldOrByMethod create(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper) {
-			return new ByFieldOrByMethod(memberFinder, methodHelper, fieldHelper);
+		public static ByFieldOrByMethod create(Classes classes, MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<ClassHelper> classHelperSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+			return new ByFieldOrByMethod(classes, memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
 		}
 
 		List<ThrowingBiFunction<Object, String, Object>> getPropertyRetrievers() {
@@ -285,12 +345,12 @@ public abstract class PropertyAccessor implements Component {
 	
 	public static class ByMethodOrByField extends PropertyAccessor {
 
-		private ByMethodOrByField(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper) {
-			super(memberFinder, methodHelper, fieldHelper);
+		private ByMethodOrByField(Classes classes, MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<ClassHelper> classHelperSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+			super(classes, memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
 		}
 		
-		public static ByMethodOrByField create(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper) {
-			return new ByMethodOrByField(memberFinder, methodHelper, fieldHelper);
+		public static ByMethodOrByField create(Classes classes, MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<ClassHelper> classHelperSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+			return new ByMethodOrByField(classes, memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
 		}
 
 		List<ThrowingBiFunction<Object, String, Object>> getPropertyRetrievers() {

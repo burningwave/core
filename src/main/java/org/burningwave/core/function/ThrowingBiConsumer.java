@@ -26,24 +26,20 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core;
+package org.burningwave.core.function;
 
+import java.util.Objects;
 
-import org.burningwave.core.classes.Classes;
-import org.burningwave.core.classes.MemberFinder;
-import org.burningwave.core.classes.MethodHelper;
+@FunctionalInterface
+public interface ThrowingBiConsumer<P0, P1> {
 
+	void accept(P0 p0, P1 p1)  throws Throwable;;
 
-public interface Virtual extends Component {
-	public final static MethodHelper methodHelper = MethodHelper.create(Classes.getInstance(), MemberFinder.create());
-
-	
-	default <T> T invoke(String methodName, Object... parameters) {
-		return methodHelper.invoke(this, methodName, parameters);
-	}
-	
-	default <T> T invokeWithoutCachingMethod(String methodName, Object... parameters) {
-		return methodHelper.invoke(this, methodName, false, parameters);
-	}
-
+    default ThrowingBiConsumer<P0, P1> andThen(ThrowingBiConsumer<? super P0, ? super P1> after) {
+        Objects.requireNonNull(after);
+        return (p0, p1) -> {
+            accept(p0, p1);
+            after.accept(p0, p1);
+        };
+    }
 }

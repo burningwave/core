@@ -38,6 +38,7 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Strings;
 import org.burningwave.core.classes.ClassHelper;
+import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.PathHelper.CheckResult;
@@ -56,17 +57,18 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 	protected PathMemoryClassLoader(
 		ClassLoader parentClassLoader,
 		PathHelper pathHelper,
+		Classes classes,
 		ClassHelper classHelper,
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier
 	) {
-		super(parentClassLoader, classHelper);
+		super(parentClassLoader, classes, classHelper);
 		this.pathHelper = pathHelper;
 		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
 		loadedPaths = ConcurrentHashMap.newKeySet();
 	}
 	
-	public static PathMemoryClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, ClassHelper classHelper, Supplier<ByteCodeHunter> byteCodeHunterSupplier) {
-		return new PathMemoryClassLoader(parentClassLoader, pathHelper, classHelper, byteCodeHunterSupplier);
+	public static PathMemoryClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, Classes classes, ClassHelper classHelper, Supplier<ByteCodeHunter> byteCodeHunterSupplier) {
+		return new PathMemoryClassLoader(parentClassLoader, pathHelper, classes, classHelper, byteCodeHunterSupplier);
 	}
 	
 	ByteCodeHunter getByteCodeHunter() {

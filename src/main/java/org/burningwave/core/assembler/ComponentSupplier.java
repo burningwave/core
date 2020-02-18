@@ -33,6 +33,7 @@ import java.util.function.Supplier;
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHelper;
+import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.CodeGenerator;
 import org.burningwave.core.classes.ConstructorHelper;
 import org.burningwave.core.classes.FieldHelper;
@@ -50,7 +51,6 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.jvm.JVMChecker;
-import org.burningwave.core.jvm.LowLevelObjectsHandler;
 import org.burningwave.core.reflection.CallerRetriever;
 import org.burningwave.core.reflection.ConsumerBinder;
 import org.burningwave.core.reflection.FunctionBinder;
@@ -76,6 +76,8 @@ public interface ComponentSupplier extends Component {
 	public ClassFactory getClassFactory();
 
 	public ClassHelper getClassHelper();
+	
+	public Classes getClasses();
 	
 	public ClassHunter getClassHunter();
 
@@ -114,8 +116,6 @@ public interface ComponentSupplier extends Component {
 	public JVMChecker getJVMChecker();
 
 	public CallerRetriever getLambdaCallerRetriever();
-
-	public LowLevelObjectsHandler getLowLevelObjectsHandler();
 
 	public MemberFinder getMemberFinder();
 

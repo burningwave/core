@@ -39,10 +39,12 @@ import java.util.stream.Stream;
 import org.burningwave.core.Component;
 
 public abstract class MemberHelper<M extends Member> implements Component {
+	Classes classes;
 	MemberFinder memberFinder;
 	Map<String, Collection<M>> cache;
 	
-	public MemberHelper(MemberFinder memberFinder) {
+	public MemberHelper(Classes classes, MemberFinder memberFinder) {
+		this.classes = classes; 
 		this.memberFinder = memberFinder;
 		cache = new ConcurrentHashMap<>();
 	}

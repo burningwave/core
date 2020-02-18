@@ -120,7 +120,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Compon
 	protected S newInstance() {
 		return ThrowingSupplier.get(() -> {
 			Constructor<?> constructor = getClass().getDeclaredConstructor();
-			Classes.setAccessible(constructor, true);
+			Classes.getInstance().setAccessible(constructor, true);
 			return (S)constructor.newInstance();
 		});
 	}

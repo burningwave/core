@@ -42,6 +42,7 @@ import org.burningwave.core.Criteria;
 import org.burningwave.core.Criteria.TestContext;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHelper;
+import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberCriteria;
 import org.burningwave.core.classes.MemberFinder;
@@ -51,7 +52,7 @@ import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
-import org.burningwave.core.jvm.LowLevelObjectsHandler;
+import org.burningwave.core.reflection.PropertyAccessor;
 
 
 public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, ClassHunter.SearchContext, ClassHunter.SearchResult> {
@@ -67,6 +68,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
+		Classes classes,
 		ClassHelper classHelper,
 		MemberFinder memberFinder,
 		ClassLoader parentClassLoader
@@ -78,6 +80,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			fileSystemScanner,
 			pathHelper,
 			streamHelper,
+			classes,
 			classHelper,
 			memberFinder,
 			(variableInitObjects) -> ClassHunter.SearchContext._create(
@@ -86,12 +89,12 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			(context) -> new ClassHunter.SearchResult(context)
 		);
 		this.pathMemoryClassLoader = PathMemoryClassLoader.create(
-			parentClassLoader, pathHelper, classHelper, byteCodeHunterSupplier
+			parentClassLoader, pathHelper, classes, classHelper, byteCodeHunterSupplier
 		);
 	}
 	
 	static {
-		DEFAULT_CONFIG_VALUES.put(PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY + LowLevelObjectsHandler.SUPPLIER_IMPORTS_KEY_SUFFIX, "");
+		DEFAULT_CONFIG_VALUES.put(PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY + PropertyAccessor.SUPPLIER_IMPORTS_KEY_SUFFIX, "");
 		DEFAULT_CONFIG_VALUES.put(PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "null");
 	}
 	
@@ -102,12 +105,13 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper, 
 		StreamHelper streamHelper,
+		Classes classes,
 		ClassHelper classHelper,
 		MemberFinder memberFinder,
 		ClassLoader parentClassLoader
 	) {
 		return new ClassHunter(
-			byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, fileSystemScanner, pathHelper, streamHelper, classHelper, memberFinder, parentClassLoader
+			byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, fileSystemScanner, pathHelper, streamHelper, classes, classHelper, memberFinder, parentClassLoader
 		);
 	}
 	

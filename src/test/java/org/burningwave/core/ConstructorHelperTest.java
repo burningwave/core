@@ -2,6 +2,7 @@ package org.burningwave.core;
 
 
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.ConstructorHelper;
 import org.burningwave.core.reflection.ConsumerBinder;
 import org.burningwave.core.service.ExtendedService;
@@ -20,7 +21,8 @@ public class ConstructorHelperTest extends BaseTest {
 	public void newInstanceOfTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> componentSupplier.getConstructorHelper().newInstanceOf(
-			ConstructorHelper.class, 
+			ConstructorHelper.class,
+			Classes.getInstance(),
 			componentSupplier.getMemberFinder()
 		));
 	}
