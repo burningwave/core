@@ -46,7 +46,6 @@ import org.burningwave.core.Component;
 import org.burningwave.core.Strings;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassHelper;
-import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.FieldHelper;
 import org.burningwave.core.classes.MemberFinder;
@@ -61,7 +60,6 @@ public abstract class PropertyAccessor implements Component {
 	public final static String REG_EXP_FOR_JAVA_PROPERTIES = "([a-zA-Z\\$\\_\\-0-9]*)(\\[*.*)";
 	public final static String REG_EXP_FOR_INDEXES_OF_JAVA_INDEXED_PROPERTIES = "\\[([a-zA-Z0-9]*)\\]";
 	
-	private Classes classes;
 	private MemberFinder memberFinder;
 	private MethodHelper methodHelper;
 	private FieldHelper fieldHelper;
@@ -73,14 +71,12 @@ public abstract class PropertyAccessor implements Component {
 	private Supplier<IterableObjectHelper> iterableObjectHelperSupplier;
 	
 	PropertyAccessor(
-		Classes classes,
 		MemberFinder memberFinder,
 		MethodHelper methodHelper,
 		FieldHelper fieldHelper,
 		Supplier<ClassHelper> classHelperSupplier,
 		Supplier<IterableObjectHelper> iterableObjectHelperSupplier
 	) {
-		this.classes = classes;
 		this.memberFinder = memberFinder;
 		this.methodHelper = methodHelper;
 		this.fieldHelper = fieldHelper;
@@ -189,7 +185,7 @@ public abstract class PropertyAccessor implements Component {
 			obj
 		);
 		for (Field field : fields) {
-			classes.setAccessible(field, true);
+			field.setAccessible(true);
 			propertyValues.put(field.getName(), (T)field.get(obj));
 		}
 		return propertyValues;
@@ -319,12 +315,12 @@ public abstract class PropertyAccessor implements Component {
 	 */
 	public static class ByFieldOrByMethod extends PropertyAccessor {
 
-		private ByFieldOrByMethod(Classes classes, MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<ClassHelper> classHelperSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
-			super(classes, memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
+		private ByFieldOrByMethod(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<ClassHelper> classHelperSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+			super(memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
 		}
 		
-		public static ByFieldOrByMethod create(Classes classes, MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<ClassHelper> classHelperSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
-			return new ByFieldOrByMethod(classes, memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
+		public static ByFieldOrByMethod create(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<ClassHelper> classHelperSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+			return new ByFieldOrByMethod(memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
 		}
 
 		List<ThrowingBiFunction<Object, String, Object>> getPropertyRetrievers() {
@@ -345,12 +341,12 @@ public abstract class PropertyAccessor implements Component {
 	
 	public static class ByMethodOrByField extends PropertyAccessor {
 
-		private ByMethodOrByField(Classes classes, MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<ClassHelper> classHelperSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
-			super(classes, memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
+		private ByMethodOrByField(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<ClassHelper> classHelperSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+			super(memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
 		}
 		
-		public static ByMethodOrByField create(Classes classes, MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<ClassHelper> classHelperSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
-			return new ByMethodOrByField(classes, memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
+		public static ByMethodOrByField create(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<ClassHelper> classHelperSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+			return new ByMethodOrByField(memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
 		}
 
 		List<ThrowingBiFunction<Object, String, Object>> getPropertyRetrievers() {

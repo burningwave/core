@@ -95,7 +95,7 @@ public class MethodHelper extends MemberHelper<Method> {
 		}
 		criteria.parameterTypesAreAssignableFrom(arguments);
 		Collection<Method> members = findAllAndApply(
-			criteria, target, (member) -> classes.setAccessible(member,true)
+			criteria, target, (member) -> member.setAccessible(true)
 		);
 		if (members.isEmpty()) {
 			Throwables.toRuntimeException("Method not found in any class of " + Classes.retrieveFrom(target).getName()

@@ -373,7 +373,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public PropertyAccessor.ByFieldOrByMethod getByFieldOrByMethodPropertyAccessor() {
 		return getOrCreate(PropertyAccessor.ByFieldOrByMethod.class, () ->  
 			PropertyAccessor.ByFieldOrByMethod.create(
-				getClasses(),
 				getMemberFinder(),
 				getMethodHelper(),
 				getFieldHelper(),
@@ -387,7 +386,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public PropertyAccessor.ByMethodOrByField getByMethodOrByFieldPropertyAccessor() {
 		return getOrCreate(PropertyAccessor.ByMethodOrByField.class, () ->  
 			PropertyAccessor.ByMethodOrByField.create(
-				getClasses(),
 				getMemberFinder(),
 				getMethodHelper(),
 				getFieldHelper(),

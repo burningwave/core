@@ -407,7 +407,7 @@ public class Classes {
 			),
 			classLoader
 		).stream().findFirst().orElse(null);
-		setAccessible(method, true);
+		method.setAccessible(true);
 		return method;
 	}
 	
@@ -430,7 +430,7 @@ public class Classes {
 			).and().returnType((cls) -> cls.getName().equals(Class.class.getName())),
 			classLoader
 		).stream().findFirst().orElse(null);
-		setAccessible(method, true);
+		method.setAccessible(true);
 		return method;
 	}
 	
