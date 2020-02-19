@@ -43,6 +43,7 @@ import java.util.Optional;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.burningwave.Throwables;
@@ -301,6 +302,16 @@ public class Classes {
 		}
 	}
 	
+	public Collection<Field> getDeclaredFields(Class<?> cls, Predicate<Field> fieldPredicate) {
+		Collection<Field> members = new LinkedHashSet<>();
+		for (Field member : getDeclaredFields(cls)) {
+			if (fieldPredicate.test(member)) {
+				members.add(member);
+			}
+		}
+		return members;
+	}
+	
 	public Field[] getDeclaredFields(Class<?> cls)  {
 		return Cache.CLASS_LOADER_FOR_FIELDS.getOrDefault(
 			getClassLoader(cls), cls.getName().replace(".", "/"),
@@ -309,11 +320,31 @@ public class Classes {
 		
 	}
 	
+	public Collection<Method> getDeclaredMethods(Class<?> cls, Predicate<Method> fieldPredicate) {
+		Collection<Method> members = new LinkedHashSet<>();
+		for (Method member : getDeclaredMethods(cls)) {
+			if (fieldPredicate.test(member)) {
+				members.add(member);
+			}
+		}
+		return members;
+	}
+	
 	public Method[] getDeclaredMethods(Class<?> cls)  {
 		return Cache.CLASS_LOADER_FOR_METHODS.getOrDefault(
 			getClassLoader(cls), cls.getName().replace(".", "/"),
 			() -> lowLevelObjectsHandler.getDeclaredMethods(cls)
 		);
+	}
+	
+	public Collection<Constructor<?>> getDeclaredConstructors(Class<?> cls, Predicate<Constructor<?>> fieldPredicate) {
+		Collection<Constructor<?>> members = new LinkedHashSet<>();
+		for (Constructor<?> member : getDeclaredConstructors(cls)) {
+			if (fieldPredicate.test(member)) {
+				members.add(member);
+			}
+		}
+		return members;
 	}
 	
 	public Constructor<?>[] getDeclaredConstructors(Class<?> cls)  {
