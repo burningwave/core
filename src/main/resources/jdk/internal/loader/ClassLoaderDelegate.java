@@ -22,6 +22,7 @@ public class ClassLoaderDelegate extends BuiltinClassLoader {
 			try {
 				loadClassMethod = cls.getDeclaredMethod("loadClass", String.class, boolean.class);
 				loadClassMethod.setAccessible(true);
+				break;
 			} catch (NoSuchMethodException | SecurityException e) {
 				
 			}
