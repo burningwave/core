@@ -123,7 +123,7 @@
 				</includes>
 				<excludes>
 					<exclude>compileClassLoaderDelegate.cmd</exclude>
-					<exclude>jdk/internal/loader/BuiltinClassLoader.class</exclude>
+					<exclude>org/burningwave/core/classes/BuiltinClassLoader.class</exclude>
 					<exclude>jdk/internal/loader/URLClassPath.class</exclude>
 				</excludes>
 			</resource>
@@ -222,7 +222,7 @@
 				<version>3.0.1</version>
 				<configuration>
 					<excludes>
-						<exclude>jdk/internal/loader/ClassLoaderDelegate.bwclass</exclude>
+						<exclude>org/burningwave/core/classes/ClassLoaderDelegate.bwclass</exclude>
 					</excludes>
 				</configuration>
 				<executions>
