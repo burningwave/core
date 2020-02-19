@@ -66,21 +66,35 @@ abstract class LowLevelObjectsHandlerSpecificElementsInitializer implements Comp
 			MethodType methodType = MethodType.methodType(Field[].class, boolean.class);
 			MethodHandle methodHandle = consulter.findSpecial(Class.class, "getDeclaredFields0", methodType, Class.class);
 			lowLevelObjectsHandler.getDeclaredFieldsRetriever = (BiFunction<Class<?>, Boolean, Field[]>)LambdaMetafactory.metafactory(
-					consulter, "apply", MethodType.methodType(BiFunction.class), methodHandle.type().generic(),
-					methodHandle, methodHandle.type().changeParameterType(1, Boolean.class))
-				    .getTarget().invokeExact();
+				consulter, 
+				"apply",
+				MethodType.methodType(BiFunction.class),
+				methodHandle.type().generic(),
+				methodHandle,
+				methodHandle.type().changeParameterType(1, Boolean.class)
+			).getTarget().invokeExact();
+			
 			methodType = MethodType.methodType(Method[].class, boolean.class);
 			methodHandle = consulter.findSpecial(Class.class, "getDeclaredMethods0", methodType, Class.class);
 			lowLevelObjectsHandler.getDeclaredMethodsRetriever = (BiFunction<Class<?>, Boolean, Method[]>)LambdaMetafactory.metafactory(
-					consulter, "apply", MethodType.methodType(BiFunction.class), methodHandle.type().generic(),
-					methodHandle, methodHandle.type().changeParameterType(1, Boolean.class))
-				    .getTarget().invokeExact();
+				consulter,
+				"apply",
+				MethodType.methodType(BiFunction.class),
+				methodHandle.type().generic(),
+				methodHandle,
+				methodHandle.type().changeParameterType(1, Boolean.class)
+			).getTarget().invokeExact();
+			
 			methodType = MethodType.methodType(Constructor[].class, boolean.class);
 			methodHandle = consulter.findSpecial(Class.class, "getDeclaredConstructors0", methodType, Class.class);
 			lowLevelObjectsHandler.getDeclaredConstructorsRetriever = (BiFunction<Class<?>, Boolean, Constructor<?>[]>)LambdaMetafactory.metafactory(
-					consulter, "apply", MethodType.methodType(BiFunction.class), methodHandle.type().generic(),
-					methodHandle, methodHandle.type().changeParameterType(1, Boolean.class))
-				    .getTarget().invokeExact();
+				consulter,
+				"apply",
+				MethodType.methodType(BiFunction.class),
+				methodHandle.type().generic(),
+				methodHandle,
+				methodHandle.type().changeParameterType(1, Boolean.class)
+			).getTarget().invokeExact();
 			lowLevelObjectsHandler.parentClassLoaderFields = new ConcurrentHashMap<>();
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
