@@ -137,7 +137,7 @@ public class PathHelper implements Component {
 		}
 	}
 	
-	public void loadAllPaths() {
+	private void loadAllPaths() {
 		config.forEach((key, value) -> {
 			if (((String)key).startsWith(PATHS_KEY_PREFIX)) {
 				String pathGroupName = ((String)key).substring(PATHS_KEY_PREFIX.length());
