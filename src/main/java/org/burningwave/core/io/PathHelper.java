@@ -146,28 +146,6 @@ public class PathHelper implements Component {
 		});
 	}
 	
-	private void loadPaths(String pathGroupName) {
-		String pathGroupPropertyName = PATHS_KEY_PREFIX + pathGroupName;
-		String paths = config.getProperty(pathGroupPropertyName);
-		if (paths != null) {
-			Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
-			if (paths.contains("${classPaths}")) {
-				for (String mainClassPath : mainClassPaths) {
-					Map<String, String> defaultValues = new LinkedHashMap<>();
-					defaultValues.put("classPaths", mainClassPath);
-					paths = Strings.Paths.clean(iterableObjectHelper.get(config, pathGroupPropertyName, defaultValues));
-					for (String path : paths.split(";")) {
-						addPath(pathGroupName, path);
-					}
-				}	
-			} else {
-				for (String classPath : iterableObjectHelper.get(config, pathGroupPropertyName, null).split(";")) {
-					addPath(pathGroupName, classPath);
-				}
-			}
-		}
-	}
-	
 	public Collection<String> getMainClassPaths() {
 		return getPaths(MAIN_CLASS_PATHS);
 	}
@@ -198,7 +176,7 @@ public class PathHelper implements Component {
 		return pathGroup;
 	}
 	
-	public Collection<String> getOrCreatePathGroup(String name) {
+	private Collection<String> getOrCreatePathGroup(String name) {
 		Collection<String> classPathsGroup = null;
 		if ((classPathsGroup = this.pathGroups.get(name)) == null) {
 			synchronized (this.pathGroups) {
@@ -211,7 +189,36 @@ public class PathHelper implements Component {
 		return classPathsGroup;
 	}
 	
-	public Collection<String> addPaths(String groupName, Collection<String> paths) {
+	private void loadPaths(String pathGroupName) {
+		loadPaths(pathGroupName, config.getProperty(PATHS_KEY_PREFIX + pathGroupName));
+	}
+	
+	public void loadPaths(String pathGroupName, String paths) {
+		String pathGroupPropertyName = PATHS_KEY_PREFIX + pathGroupName;
+		if (paths != null) {
+			Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
+			if (paths.contains("${classPaths}")) {
+				for (String mainClassPath : mainClassPaths) {
+					Map<String, String> defaultValues = new LinkedHashMap<>();
+					defaultValues.put("classPaths", mainClassPath);
+					paths = Strings.Paths.clean(iterableObjectHelper.get(config, pathGroupPropertyName, defaultValues));
+					for (String path : paths.split(";")) {
+						addPath(pathGroupName, path);
+					}
+				}	
+			} else {
+				for (String classPath : iterableObjectHelper.get(config, pathGroupPropertyName, null).split(";")) {
+					addPath(pathGroupName, classPath);
+				}
+			}
+		}
+	}	
+	
+	private void addPath(String name, String classPaths) {
+		addPaths(name, Arrays.asList(classPaths));
+	}
+	
+	private Collection<String> addPaths(String groupName, Collection<String> paths) {
 		if (paths != null) {
 			Collection<String> pathGroup = getOrCreatePathGroup(groupName);
 			FileSystemItem.disableLog();
@@ -249,11 +256,6 @@ public class PathHelper implements Component {
 			throw Throwables.toRuntimeException("classPaths parameter is null");
 		}
 	}
-	
-	public void addPath(String name, String classPaths) {
-		addPaths(name, Arrays.asList(classPaths));
-	}
-	
 	
 	public String getAbsolutePath(String resourceRelativePath) {
 		String path = Objects.requireNonNull(
