@@ -7,13 +7,14 @@ import java.util.AbstractList;
 import java.util.Date;
 
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.bean.Complex;
+import org.burningwave.core.bean.Complex.Data.Item;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.classes.MethodCriteria;
-import org.burningwave.core.classes.hunter.SearchConfig;
-import org.burningwave.core.extension.Item;
-import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.classes.hunter.CacheableSearchConfig;
+import org.burningwave.core.classes.hunter.SearchConfig;
+import org.burningwave.core.io.PathHelper;
 import org.junit.jupiter.api.Test;
 
 public class ClassHunterTest extends BaseTest {
@@ -44,13 +45,13 @@ public class ClassHunterTest extends BaseTest {
 				).by(
 					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
 						//[1]here you recall the uploaded class by "useClasses" method. In this case we're looking for all classes that extend com.github.burningwave.core.Item
-						uploadedClasses.get(Item.class).isAssignableFrom(currentScannedClass)
+						uploadedClasses.get(Complex.Data.Item.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
 						//With this directive we ask the library to load one or more classes to be used for comparisons:
 						//it serves to eliminate the problem that a class, loaded by different class loaders, 
 						//turns out to be different for the comparison operators (eg. The isAssignableFrom method).
 						//If you call this method, you must retrieve the uploaded class in all methods that support this feature like in the point[1]
-						Item.class
+						Complex.Data.Item.class
 					)
 				)
 			),
@@ -553,13 +554,13 @@ public class ClassHunterTest extends BaseTest {
 				).by(
 					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
 						//[1]here you recall the uploaded class by "useClasses" method. In this case we're looking for all classes that extend com.github.burningwave.core.Item
-						uploadedClasses.get(Item.class).isAssignableFrom(currentScannedClass)
+						uploadedClasses.get(Complex.Data.Item.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
 						//With this directive we ask the library to load one or more classes to be used for comparisons:
 						//it serves to eliminate the problem that a class, loaded by different class loaders, 
 						//turns out to be different for the comparison operators (eg. The isAssignableFrom method).
 						//If you call this method, you must retrieve the uploaded class in all methods that support this feature like in the point[1]
-						Item.class
+						Complex.Data.Item.class
 					)
 				).isolateClassLoader()
 			),
