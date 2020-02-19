@@ -221,7 +221,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public MemoryClassLoader getMemoryClassLoader() {
 		return getOrCreate(MemoryClassLoader.class, () -> {
 			return MemoryClassLoader.create(
-				getByFieldOrByMethodPropertyAccessor().retrieveFromProperties(
+				getByFieldOrByMethodPropertyAccessor().retrieveFromFile(
 					config,
 					MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY,
 					MemoryClassLoader.DEFAULT_CONFIG_VALUES,
@@ -324,7 +324,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getClasses(),
 				getClassHelper(),
 				getMemberFinder(),
-				getByFieldOrByMethodPropertyAccessor().retrieveFromProperties(
+				getByFieldOrByMethodPropertyAccessor().retrieveFromFile(
 					config,
 					ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
 					ClassHunter.DEFAULT_CONFIG_VALUES,

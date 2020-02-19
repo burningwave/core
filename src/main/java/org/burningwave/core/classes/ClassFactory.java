@@ -184,9 +184,7 @@ public class ClassFactory implements Component {
 					)
 				);
 			}
-		}
-
-		
+		}		
 		try {
 			return memoryClassLoader.loadClass(classHelper.extractClassName(classCode));
 		} catch (ClassNotFoundException exc) {

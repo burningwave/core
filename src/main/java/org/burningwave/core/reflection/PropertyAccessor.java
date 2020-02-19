@@ -280,7 +280,7 @@ public abstract class PropertyAccessor implements Component {
 		return Boolean.TRUE;
 	}
 	
-	public <T> T retrieveFromProperties(
+	public <T> T retrieveFromFile(
 		Properties config, 
 		String supplierCodeKey,
 		Map<String, String> defaultValues,
