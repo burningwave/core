@@ -18,11 +18,11 @@ import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.io.Streams;
 
 @SuppressWarnings("restriction")
-class LowLevelObjectsHandler4Java9Initializer extends LowLevelObjectsHandlerInitializer {
+class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelObjectsHandlerSpecificElementsInitializer {
 	
 	private Object illegalAccessLogger;
 	
-	LowLevelObjectsHandler4Java9Initializer(LowLevelObjectsHandler lowLevelObjectsHandler) {
+	LowLevelObjectsHandlerSpecificElementsInitializer4Java9(LowLevelObjectsHandler lowLevelObjectsHandler) {
 		super(lowLevelObjectsHandler);
 		disableWarning();
 	}

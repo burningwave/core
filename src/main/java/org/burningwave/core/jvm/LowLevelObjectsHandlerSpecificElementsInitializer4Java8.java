@@ -9,9 +9,9 @@ import java.lang.reflect.Method;
 import org.burningwave.ManagedLogger;
 import org.burningwave.Throwables;
 
-class LowLevelObjectsHandler4Java8Initializer extends LowLevelObjectsHandlerInitializer{
+class LowLevelObjectsHandlerSpecificElementsInitializer4Java8 extends LowLevelObjectsHandlerSpecificElementsInitializer{
 
-	LowLevelObjectsHandler4Java8Initializer(LowLevelObjectsHandler lowLevelObjectsHandler) {
+	LowLevelObjectsHandlerSpecificElementsInitializer4Java8(LowLevelObjectsHandler lowLevelObjectsHandler) {
 		super(lowLevelObjectsHandler);
 	}
 

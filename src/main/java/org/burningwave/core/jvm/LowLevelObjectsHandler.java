@@ -80,7 +80,7 @@ public class LowLevelObjectsHandler implements Component {
 
 	public LowLevelObjectsHandler(JVMChecker jvmChecker) {
 		this.jvmChecker = jvmChecker;
-		LowLevelObjectsHandlerInitializer.build(this);
+		LowLevelObjectsHandlerSpecificElementsInitializer.build(this);
 	}
 
 

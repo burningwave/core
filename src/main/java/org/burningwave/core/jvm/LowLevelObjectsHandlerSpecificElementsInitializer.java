@@ -17,10 +17,10 @@ import org.burningwave.core.Component;
 import sun.misc.Unsafe;
 
 @SuppressWarnings("restriction")
-abstract class LowLevelObjectsHandlerInitializer implements Component {
+abstract class LowLevelObjectsHandlerSpecificElementsInitializer implements Component {
 	LowLevelObjectsHandler lowLevelObjectsHandler;
 	
-	LowLevelObjectsHandlerInitializer(LowLevelObjectsHandler lowLevelObjectsHandler) {
+	LowLevelObjectsHandlerSpecificElementsInitializer(LowLevelObjectsHandler lowLevelObjectsHandler) {
 		this.lowLevelObjectsHandler = lowLevelObjectsHandler;
 		try {
 			Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
@@ -49,12 +49,12 @@ abstract class LowLevelObjectsHandlerInitializer implements Component {
 	public static void build(LowLevelObjectsHandler lowLevelObjectsHandler) {
 		try {
 			Class.forName("jdk.internal.loader.BuiltinClassLoader");
-			try (LowLevelObjectsHandlerInitializer initializer = new LowLevelObjectsHandler4Java9Initializer(lowLevelObjectsHandler)) {
+			try (LowLevelObjectsHandlerSpecificElementsInitializer initializer = new LowLevelObjectsHandlerSpecificElementsInitializer4Java9(lowLevelObjectsHandler)) {
 				initializer.init();
 			}
 		} catch (ClassNotFoundException exc) {
 			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "jdk.internal.loader.BuiltinClassLoader class not detected");
-			try (LowLevelObjectsHandlerInitializer initializer = new LowLevelObjectsHandler4Java8Initializer(lowLevelObjectsHandler)) {
+			try (LowLevelObjectsHandlerSpecificElementsInitializer initializer = new LowLevelObjectsHandlerSpecificElementsInitializer4Java8(lowLevelObjectsHandler)) {
 				initializer.init();
 			}
 		}
