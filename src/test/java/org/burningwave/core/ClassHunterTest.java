@@ -8,7 +8,6 @@ import java.util.Date;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.bean.Complex;
-import org.burningwave.core.bean.Complex.Data.Item;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.classes.MethodCriteria;
