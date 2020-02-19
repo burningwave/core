@@ -123,7 +123,7 @@
 				</includes>
 				<excludes>
 					<exclude>compileClassLoaderDelegate.cmd</exclude>
-					<exclude>org/burningwave/core/classes/BuiltinClassLoader.class</exclude>
+					<exclude>jdk/internal/loader/BuiltinClassLoader.class</exclude>
 					<exclude>jdk/internal/loader/URLClassPath.class</exclude>
 				</excludes>
 			</resource>
@@ -167,7 +167,7 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
 					<excludes>
-						<exclude>jdk/internal/loader/ClassLoaderDelegate.java</exclude>
+						<exclude>jdk/</exclude>
 					</excludes>
 					<archive>
 						<addMavenDescriptor>false</addMavenDescriptor>
@@ -222,7 +222,7 @@
 				<version>3.0.1</version>
 				<configuration>
 					<excludes>
-						<exclude>org/burningwave/core/classes/ClassLoaderDelegate.bwclass</exclude>
+						<exclude>org/burningwave/core/classes/ClassLoaderDelegate.bwc</exclude>
 					</excludes>
 				</configuration>
 				<executions>

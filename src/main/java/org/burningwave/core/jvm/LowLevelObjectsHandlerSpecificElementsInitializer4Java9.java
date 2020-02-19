@@ -64,7 +64,7 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelOb
 				throw Throwables.toRuntimeException(exc);
 			}
 			try (
-				InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("org/burningwave/core/classes/ClassLoaderDelegate.bwclass");
+				InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("org/burningwave/core/classes/ClassLoaderDelegate.bwc");
 				ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 			) {
 				Streams.copy(inputStream, bBOS);
