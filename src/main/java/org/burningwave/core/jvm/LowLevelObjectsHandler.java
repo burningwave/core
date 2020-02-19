@@ -29,6 +29,11 @@
 package org.burningwave.core.jvm;
 
 import java.io.InputStream;
+import java.lang.invoke.LambdaMetafactory;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -39,6 +44,7 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
@@ -59,14 +65,17 @@ import sun.misc.Unsafe;
 @SuppressWarnings("restriction")
 public class LowLevelObjectsHandler implements Component {
 	private static LowLevelObjectsHandler INSTANCE;
+	private JVMChecker jvmChecker;
+	
+	private Object illegalAccessLogger;
 	
 	private Field[] emtpyFieldsArray;
 	private Method[] emptyMethodsArray;
 	private Constructor<?>[] emptyConstructorsArray;
 	
-	private Method getDeclaredFieldsRetriever;
-	private Method getDeclaredMethodsRetriever;
-	private Method getDeclaredConstructorsRetriever;
+	private BiFunction<Class<?>,Boolean, Field[]> getDeclaredFieldsRetriever;
+	private BiFunction<Class<?>,Boolean, Method[]> getDeclaredMethodsRetriever;
+	private BiFunction<Class<?>,Boolean, Constructor<?>[]> getDeclaredConstructorsRetriever;
 	private Method methodInvoker;
 	private ThrowingBiConsumer<AccessibleObject, Boolean> accessibleSetter;
 	
@@ -77,7 +86,6 @@ public class LowLevelObjectsHandler implements Component {
 	private Unsafe unsafe;	
 	private Long loadedPackagesMapMemoryOffset;
 	private Long loadedClassesVectorMemoryOffset;	
-	private JVMChecker jvmChecker;
 	private ThrowingTriFunction<ClassLoader, Object, String, Package> packageRetriever;	
 
 	public LowLevelObjectsHandler(JVMChecker jvmChecker) {
@@ -99,11 +107,75 @@ public class LowLevelObjectsHandler implements Component {
 			init0();
 		}
 	}
-
-	protected void initEmptyMembersArrays() {
+	
+	public void disableWarning() {
+	    try {
+	        Class<?> cls = Class.forName("jdk.internal.module.IllegalAccessLogger");
+	        Field logger = cls.getDeclaredField("logger");
+	        if (illegalAccessLogger == null) {
+	        	illegalAccessLogger = unsafe.getObjectVolatile(cls, unsafe.staticFieldOffset(logger));
+	        }
+	        unsafe.putObjectVolatile(cls, unsafe.staticFieldOffset(logger), null);
+	    } catch (Throwable e) {
+	        // ignore
+	    }
+	}
+	
+	public void enableWarning() {
+	    try {
+	    	if (illegalAccessLogger != null) {
+		        Class<?> cls = Class.forName("jdk.internal.module.IllegalAccessLogger");
+		        Field logger = cls.getDeclaredField("logger");
+		        unsafe.putObjectVolatile(cls, unsafe.staticFieldOffset(logger), illegalAccessLogger);
+	    	}
+	    } catch (Throwable e) {
+	        // ignore
+	    }
+	}
+	
+	private void initEmptyMembersArrays() {
 		emtpyFieldsArray = new Field[]{};
 		emptyMethodsArray = new Method[]{};
 		emptyConstructorsArray = new Constructor<?>[]{};
+	}
+	
+	private Lookup getConsuler0(Class<?> cls) {
+		try {
+			Lookup consulter = MethodHandles.lookup().in(cls);
+			Field modes = Lookup.class.getDeclaredField("allowedModes");
+			modes.setAccessible(true);
+			modes.setInt(consulter, -1);
+			return consulter;
+		} catch (Throwable exc) {
+			logError("Could not initialize consulter", exc);
+			throw Throwables.toRuntimeException(exc);
+		}
+	}
+	
+	private void initMembersRetrievers(Lookup consulter) {
+		try {			
+			MethodType methodType = MethodType.methodType(Field[].class, boolean.class);
+			MethodHandle methodHandle = consulter.findSpecial(Class.class, "getDeclaredFields0", methodType, Class.class);
+			getDeclaredFieldsRetriever = (BiFunction<Class<?>, Boolean, Field[]>)LambdaMetafactory.metafactory(
+					consulter, "apply", MethodType.methodType(BiFunction.class), methodHandle.type().generic(),
+					methodHandle, methodHandle.type().changeParameterType(1, Boolean.class))
+				    .getTarget().invokeExact();
+			methodType = MethodType.methodType(Method[].class, boolean.class);
+			methodHandle = consulter.findSpecial(Class.class, "getDeclaredMethods0", methodType, Class.class);
+			getDeclaredMethodsRetriever = (BiFunction<Class<?>, Boolean, Method[]>)LambdaMetafactory.metafactory(
+					consulter, "apply", MethodType.methodType(BiFunction.class), methodHandle.type().generic(),
+					methodHandle, methodHandle.type().changeParameterType(1, Boolean.class))
+				    .getTarget().invokeExact();
+			methodType = MethodType.methodType(Constructor[].class, boolean.class);
+			methodHandle = consulter.findSpecial(Class.class, "getDeclaredConstructors0", methodType, Class.class);
+			getDeclaredConstructorsRetriever = (BiFunction<Class<?>, Boolean, Constructor<?>[]>)LambdaMetafactory.metafactory(
+					consulter, "apply", MethodType.methodType(BiFunction.class), methodHandle.type().generic(),
+					methodHandle, methodHandle.type().changeParameterType(1, Boolean.class))
+				    .getTarget().invokeExact();
+			parentClassLoaderFields = new ConcurrentHashMap<>();
+		} catch (Throwable exc) {
+			throw Throwables.toRuntimeException(exc);
+		}
 	}
 	
 	//For Java 8
@@ -118,33 +190,20 @@ public class LowLevelObjectsHandler implements Component {
 			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "method setAccessible0 class not detected on " + AccessibleObject.class.getName());
 			throw Throwables.toRuntimeException(exc);
 		}
-		initMembersRetrievers();
+		initMembersRetrievers(getConsuler0(Class.class));
 		packageRetriever = (classLoader, object, packageName) -> (Package)object;
 		try {
 			methodInvoker = Class.forName("sun.reflect.NativeMethodAccessorImpl").getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
 			setAccessible(methodInvoker, true);
 		} catch (Throwable exc2) {
-			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
+			logError("method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
 			throw Throwables.toRuntimeException(exc2);
-		}
-	}
-
-	protected void initMembersRetrievers() {
-		try {
-			getDeclaredFieldsRetriever = Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
-			setAccessible(getDeclaredFieldsRetriever, true);
-			getDeclaredMethodsRetriever = Class.class.getDeclaredMethod("getDeclaredMethods0", boolean.class);
-			setAccessible(getDeclaredMethodsRetriever, true);
-			getDeclaredConstructorsRetriever = Class.class.getDeclaredMethod("getDeclaredConstructors0", boolean.class);
-			setAccessible(getDeclaredConstructorsRetriever, true);
-			parentClassLoaderFields = new ConcurrentHashMap<>();
-		} catch (Throwable exc) {
-			throw Throwables.toRuntimeException(exc);
 		}
 	}
 	
 	//For Java 9 and later
 	private void init1() {
+		disableWarning();
 		initEmptyMembersArrays();
 		try {
 			final Method accessibleSetterMethod = AccessibleObject.class.getDeclaredMethod("setAccessible0", boolean.class);
@@ -155,12 +214,21 @@ public class LowLevelObjectsHandler implements Component {
 			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "method setAccessible0 class not detected on " + AccessibleObject.class.getName());
 			throw Throwables.toRuntimeException(exc);
 		}
-		initMembersRetrievers();
+		initMembersRetrievers(getConsulter1(Class.class));
 		try {
-			final Method getDefinePackageMethod = ClassLoader.class.getDeclaredMethod("getDefinedPackage", String.class);
-			packageRetriever = (classLoader, object, packageName) -> 
-				(Package)getDefinePackageMethod.invoke(classLoader, packageName);
-		} catch (NoSuchMethodException | SecurityException exc) {
+			Lookup classLoaderConsulter = getConsulter1(ClassLoader.class);
+			MethodType methodType = MethodType.methodType(Package.class, String.class);
+			MethodHandle methodHandle = classLoaderConsulter.findSpecial(ClassLoader.class, "getDefinedPackage", methodType, ClassLoader.class);
+			BiFunction<ClassLoader, String, Package> packageRetriever = (BiFunction<ClassLoader, String, Package>)LambdaMetafactory.metafactory(
+				classLoaderConsulter, "apply",
+				MethodType.methodType(BiFunction.class),
+				methodHandle.type().generic(),
+				methodHandle,
+				methodHandle.type()
+			).getTarget().invokeExact();
+			this.packageRetriever = (classLoader, object, packageName) ->
+				packageRetriever.apply(classLoader, packageName);
+		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
 		try {
@@ -185,8 +253,19 @@ public class LowLevelObjectsHandler implements Component {
 			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "jdk.internal.loader.BuiltinClassLoader class not detected");
 			throw Throwables.toRuntimeException(exc);
 		}
+		enableWarning();
 	}
 	
+	private Lookup getConsulter1(Class<?> cls) {
+		try {
+			return (Lookup)MethodHandles.class.getDeclaredMethod("privateLookupIn", Class.class, Lookup.class).invoke(null, cls, MethodHandles.lookup());
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+				| SecurityException exc) {
+			logError("Could not initialize consulter", exc);
+			throw Throwables.toRuntimeException(exc);
+		}
+	}
+
 	public static LowLevelObjectsHandler getInstance() {
 		if (INSTANCE == null) {
 			synchronized(LowLevelObjectsHandler.class) {
@@ -408,7 +487,7 @@ public class LowLevelObjectsHandler implements Component {
 	
 	public Field[] getDeclaredFields(Class<?> cls)  {
 		try {
-			return (Field[])getDeclaredFieldsRetriever.invoke(cls, false);
+			return getDeclaredFieldsRetriever.apply(cls, false);
 		} catch (Throwable exc) {
 			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve fields of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return emtpyFieldsArray;
@@ -417,7 +496,7 @@ public class LowLevelObjectsHandler implements Component {
 	
 	public Method[] getDeclaredMethods(Class<?> cls)  {
 		try {
-			return (Method[]) getDeclaredMethodsRetriever.invoke(cls, false);
+			return (Method[]) getDeclaredMethodsRetriever.apply(cls, false);
 		} catch (Throwable exc) {
 			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return emptyMethodsArray;
@@ -426,7 +505,7 @@ public class LowLevelObjectsHandler implements Component {
 	
 	public Constructor<?>[] getDeclaredConstructors(Class<?> cls)  {
 		try {
-			return (Constructor<?>[])getDeclaredConstructorsRetriever.invoke(cls, false);
+			return (Constructor<?>[])getDeclaredConstructorsRetriever.apply(cls, false);
 		} catch (Throwable exc) {
 			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return emptyConstructorsArray;

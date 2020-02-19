@@ -52,7 +52,7 @@ public class ConstructorCriteria extends ExecutableMemberCriteria<
 	
 	@Override
 	public Function<Class<?>, Constructor<?>[]> getMembersSupplierFunction() {
-		return Classes.getInstance()::getDeclaredConstructors;
+		return classes::getDeclaredConstructors;
 	}
 	
 	public static ConstructorCriteria forName(Predicate<String> predicate) {
