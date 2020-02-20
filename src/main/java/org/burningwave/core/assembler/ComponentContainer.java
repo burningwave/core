@@ -63,7 +63,7 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
-import org.burningwave.core.jvm.JVMChecker;
+import org.burningwave.core.jvm.JVMInfo;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
 import org.burningwave.core.reflection.CallerRetriever;
 import org.burningwave.core.reflection.ConsumerBinder;
@@ -516,9 +516,9 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	@Override
-	public JVMChecker getJVMChecker() {
-		return getOrCreate(JVMChecker.class, () ->
-			JVMChecker.create()
+	public JVMInfo getJVMInfo() {
+		return getOrCreate(JVMInfo.class, () ->
+			JVMInfo.create()
 		);
 	}
 

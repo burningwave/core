@@ -32,7 +32,7 @@ import java.lang.reflect.Method;
 
 import org.burningwave.core.Component;
 
-public class JVMChecker implements Component {
+public class JVMInfo implements Component {
 
     private final String osArch;
     private boolean is64Bit;
@@ -41,19 +41,28 @@ public class JVMChecker implements Component {
     private boolean compressedRefsEnabled;
     private final String managementFactoryClass;
     private final String hotSpotBeanClass;
+    private int version;
     
-    public JVMChecker() {
+    public JVMInfo() {
     	osArch = System.getProperty("os.arch");
     	managementFactoryClass = "java.lang.management.ManagementFactory";
     	hotSpotBeanClass = "com.sun.management.HotSpotDiagnosticMXBean";
     	init();
     }
     
-    public static JVMChecker create() {
-    	return new JVMChecker();
+    public static JVMInfo create() {
+    	return new JVMInfo();
     }
     
     private void init() {
+    	String version = System.getProperty("java.version");
+        if(version.startsWith("1.")) {
+        	version = version.substring(2, 3);
+        } else {
+        	int dot = version.indexOf(".");
+        	if(dot != -1) { version = version.substring(0, dot); }
+        }
+        this.version = Integer.parseInt(version);
         boolean is64Bit = false;
         boolean is32Bit = false;
         final String x = System.getProperty("sun.arch.data.model");
@@ -109,6 +118,10 @@ public class JVMChecker implements Component {
     
     public boolean is64Bit() {
     	return is64Bit;
+    }
+    
+    public int getVersion() {
+    	return version;
     }
 
 }

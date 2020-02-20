@@ -57,7 +57,7 @@ import sun.misc.Unsafe;
 @SuppressWarnings("restriction")
 public class LowLevelObjectsHandler implements Component {
 	static LowLevelObjectsHandler INSTANCE;
-	JVMChecker jvmChecker;
+	JVMInfo jVMInfo;
 	Unsafe unsafe;
 	Runnable illegalAccessLoggerEnabler;
 	Runnable illegalAccessLoggerDisabler;
@@ -80,8 +80,8 @@ public class LowLevelObjectsHandler implements Component {
 	Long loadedPackagesMapMemoryOffset;
 	Long loadedClassesVectorMemoryOffset;	
 
-	private LowLevelObjectsHandler(JVMChecker jvmChecker) {
-		this.jvmChecker = jvmChecker;
+	private LowLevelObjectsHandler(JVMInfo jVMInfo) {
+		this.jVMInfo = jVMInfo;
 		LowLevelObjectsHandlerSpecificElementsInitializer.build(this);
 	}
 
@@ -90,14 +90,14 @@ public class LowLevelObjectsHandler implements Component {
 		if (INSTANCE == null) {
 			synchronized(LowLevelObjectsHandler.class) {
 				if (INSTANCE == null) {
-					INSTANCE = new LowLevelObjectsHandler(JVMChecker.create());
+					INSTANCE = new LowLevelObjectsHandler(JVMInfo.create());
 				}
 			}
 		}
 		return INSTANCE;
 	}
 	
-	public static LowLevelObjectsHandler create(JVMChecker jvmChecker) {
+	public static LowLevelObjectsHandler create(JVMInfo jvmChecker) {
 		return new LowLevelObjectsHandler(jvmChecker);
 	}
 	
@@ -182,11 +182,11 @@ public class LowLevelObjectsHandler implements Component {
 	protected Object iterateClassLoaderFields(ClassLoader classLoader, BiPredicate<Object, Long> predicate) {
 		long offset;
 		long step;
-		if (jvmChecker.is32Bit()) {
+		if (jVMInfo.is32Bit()) {
 			logInfo("JVM is 32 bit");
 			offset = 8;
 			step = 4;
-		} else if (!jvmChecker.isCompressedOopsOffOn64BitHotspot()) {
+		} else if (!jVMInfo.isCompressedOopsOffOn64BitHotspot()) {
 			logInfo("JVM is 64 bit Hotspot and Compressed Oops is enabled");
 			offset = 12;
 			step = 4;
