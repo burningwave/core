@@ -103,7 +103,7 @@ public class FunctionBinder  extends Binder.Multi.Abst {
 		MethodHandle _targetClass = caller.unreflect(method);
 		CallSite site = LambdaMetafactory.metafactory(
 			caller,
-		    "apply", // include types of the values to bind:
+		    "apply",
 		    MethodType.methodType(cls),
 		    methodParameters.generic(), 
 		    _targetClass, 
@@ -119,7 +119,7 @@ public class FunctionBinder  extends Binder.Multi.Abst {
 		MethodHandle targetClass = 	caller.unreflect(method);
 		CallSite site = LambdaMetafactory.metafactory(
 			caller,
-		    "apply", // include types of the values to bind:
+		    "apply",
 		    MethodType.methodType(cls, targetObject.getClass()),
 		    methodParameters.generic(), 
 		    targetClass, 
