@@ -48,7 +48,6 @@ import org.burningwave.core.Cache;
 import org.burningwave.core.Component;
 import org.burningwave.core.Strings;
 import org.burningwave.core.io.ByteBufferInputStream;
-import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.reflection.PropertyAccessor;
 
 
@@ -271,19 +270,11 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		}
 	}
 
-	 protected Class<?> _defineClass(String className, java.nio.ByteBuffer byteCode, ProtectionDomain protectionDomain) {
-		 Class<?> cls = super.defineClass(className, byteCode, protectionDomain);
-		 addLoadedCompiledClass(className, byteCode);
-		 return cls;
-	 }
-	 
-	 protected final Class<?> _defineClass(String className, byte[] byteCode, int off, int len, ProtectionDomain protectionDomain) {
-		 try (ByteBufferOutputStream bBOS = new ByteBufferOutputStream()) {
-			 bBOS.write(byteCode, 0, byteCode.length);
-			 ByteBuffer byteCodeAsByteBuffer = bBOS.toByteBuffer();
-			 return _defineClass(className, byteCodeAsByteBuffer, protectionDomain);
-		 }
-	 }
+	protected Class<?> _defineClass(String className, java.nio.ByteBuffer byteCode, ProtectionDomain protectionDomain) {
+		Class<?> cls = super.defineClass(className, byteCode, protectionDomain);
+		addLoadedCompiledClass(className, byteCode);
+		return cls;
+	}
 
 	public void removeNotLoadedCompiledClass(String className) {
 		notLoadedCompiledClasses.remove(className);
