@@ -48,9 +48,10 @@ import java.util.function.Supplier;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Cache;
+import org.burningwave.core.Component;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
 
-public class Classes {
+public class Classes implements Component {
 	private static Classes INSTANCE;
 	private LowLevelObjectsHandler lowLevelObjectsHandler;
 	private MemberFinder memberFinder;
@@ -87,7 +88,7 @@ public class Classes {
 		V15 = 0 << 16 | 59;
 	}
 	
-	public Classes(LowLevelObjectsHandler lowLevelObjectsHandler, MemberFinder memebrFinder) {
+	private Classes(LowLevelObjectsHandler lowLevelObjectsHandler, MemberFinder memebrFinder) {
 		this.lowLevelObjectsHandler = lowLevelObjectsHandler;
 		this.memberFinder = memebrFinder;
 		this.classLoadersClasses = new ConcurrentHashMap<>();
@@ -104,6 +105,10 @@ public class Classes {
 			}
 		}
 		return INSTANCE;
+	}
+	
+	public static Classes create(LowLevelObjectsHandler lowLevelObjectsHandler, MemberFinder memebrFinder) {
+		return new Classes(lowLevelObjectsHandler, memebrFinder);
 	}
 	
 	@SuppressWarnings({ "unchecked"})

@@ -20,12 +20,23 @@ import org.burningwave.core.io.Streams;
 @SuppressWarnings("restriction")
 class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelObjectsHandlerSpecificElementsInitializer {
 	
-	private Object illegalAccessLogger;
-	
 	LowLevelObjectsHandlerSpecificElementsInitializer4Java9(LowLevelObjectsHandler lowLevelObjectsHandler) {
 		super(lowLevelObjectsHandler);
-		disableWarning();
+		try {
+	        Class<?> cls = Class.forName("jdk.internal.module.IllegalAccessLogger");
+	        Field logger = cls.getDeclaredField("logger");
+	        final long loggerFieldOffset = lowLevelObjectsHandler.unsafe.staticFieldOffset(logger);
+	        final Object illegalAccessLogger = lowLevelObjectsHandler.unsafe.getObjectVolatile(cls, loggerFieldOffset);
+	        lowLevelObjectsHandler.illegalAccessLoggerDisabler = () ->
+	        	lowLevelObjectsHandler.unsafe.putObjectVolatile(cls, loggerFieldOffset, null);
+	        lowLevelObjectsHandler.illegalAccessLoggerEnabler = () ->
+	        	lowLevelObjectsHandler.unsafe.putObjectVolatile(cls, loggerFieldOffset, illegalAccessLogger);
+	    } catch (Throwable e) {
+	    	
+	    }
+		lowLevelObjectsHandler.disableWarning();
 	}
+
 	
 	@Override
 	void initSpecificElements() {
@@ -89,34 +100,9 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelOb
 		}
 	}
 	
-	void disableWarning() {
-	    try {
-	        Class<?> cls = Class.forName("jdk.internal.module.IllegalAccessLogger");
-	        Field logger = cls.getDeclaredField("logger");
-	        if (illegalAccessLogger == null) {
-	        	illegalAccessLogger = lowLevelObjectsHandler.unsafe.getObjectVolatile(cls, lowLevelObjectsHandler.unsafe.staticFieldOffset(logger));
-	        }
-	        lowLevelObjectsHandler.unsafe.putObjectVolatile(cls, lowLevelObjectsHandler.unsafe.staticFieldOffset(logger), null);
-	    } catch (Throwable e) {
-	    	
-	    }
-	}
-	
-	void enableWarning() {
-	    try {
-	    	if (illegalAccessLogger != null) {
-	    		Class<?> cls = Class.forName("jdk.internal.module.IllegalAccessLogger");
-	    		Field logger = cls.getDeclaredField("logger");
-	    		lowLevelObjectsHandler.unsafe.putObjectVolatile(cls, lowLevelObjectsHandler.unsafe.staticFieldOffset(logger), illegalAccessLogger);
-	    	}
-	    } catch (Throwable e) {
-	    	
-	    }
-	}
-	
 	@Override
 	public void close() {
-		enableWarning();
+		lowLevelObjectsHandler.enableWarning();
 		super.close();
 	}
 }

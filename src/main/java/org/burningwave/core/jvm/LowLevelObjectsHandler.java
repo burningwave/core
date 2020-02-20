@@ -59,6 +59,8 @@ public class LowLevelObjectsHandler implements Component {
 	static LowLevelObjectsHandler INSTANCE;
 	JVMChecker jvmChecker;
 	Unsafe unsafe;
+	Runnable illegalAccessLoggerEnabler;
+	Runnable illegalAccessLoggerDisabler;
 	
 	Field[] emtpyFieldsArray;
 	Method[] emptyMethodsArray;
@@ -78,7 +80,7 @@ public class LowLevelObjectsHandler implements Component {
 	Long loadedPackagesMapMemoryOffset;
 	Long loadedClassesVectorMemoryOffset;	
 
-	public LowLevelObjectsHandler(JVMChecker jvmChecker) {
+	private LowLevelObjectsHandler(JVMChecker jvmChecker) {
 		this.jvmChecker = jvmChecker;
 		LowLevelObjectsHandlerSpecificElementsInitializer.build(this);
 	}
@@ -95,10 +97,25 @@ public class LowLevelObjectsHandler implements Component {
 		return INSTANCE;
 	}
 	
+	public static LowLevelObjectsHandler create(JVMChecker jvmChecker) {
+		return new LowLevelObjectsHandler(jvmChecker);
+	}
+	
 	public Unsafe getUnsafe() {
 		return unsafe;
 	}
 	
+	void disableWarning() {
+	    if (illegalAccessLoggerDisabler != null) {
+	    	illegalAccessLoggerDisabler.run();
+	    }
+	}
+	
+	void enableWarning() {
+	    if (illegalAccessLoggerEnabler != null) {
+	    	illegalAccessLoggerEnabler.run();
+	    }
+	}
 	private void initLoadedClassesVectorMemoryOffset() {
 		AtomicReference<Class<?>> definedClass = new AtomicReference<>();
 		ClassLoader temporaryClassLoader = new ClassLoader() {

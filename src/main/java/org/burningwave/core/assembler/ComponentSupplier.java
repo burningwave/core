@@ -51,6 +51,7 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.jvm.JVMChecker;
+import org.burningwave.core.jvm.LowLevelObjectsHandler;
 import org.burningwave.core.reflection.CallerRetriever;
 import org.burningwave.core.reflection.ConsumerBinder;
 import org.burningwave.core.reflection.FunctionBinder;
@@ -116,6 +117,8 @@ public interface ComponentSupplier extends Component {
 	public JVMChecker getJVMChecker();
 
 	public CallerRetriever getLambdaCallerRetriever();
+	
+	public LowLevelObjectsHandler getLowLevelObjectsHandler();
 
 	public MemberFinder getMemberFinder();
 

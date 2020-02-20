@@ -64,6 +64,7 @@ import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.jvm.JVMChecker;
+import org.burningwave.core.jvm.LowLevelObjectsHandler;
 import org.burningwave.core.reflection.CallerRetriever;
 import org.burningwave.core.reflection.ConsumerBinder;
 import org.burningwave.core.reflection.FunctionBinder;
@@ -232,7 +233,17 @@ public class ComponentContainer implements ComponentSupplier {
 			);
 		});
 	}
-
+	
+	@Override
+	public Classes getClasses() {
+		return Classes.getInstance();			
+	}
+	
+	@Override
+	public LowLevelObjectsHandler getLowLevelObjectsHandler() {
+		return LowLevelObjectsHandler.getInstance();
+	}
+	
 	@Override
 	public ClassFactory getClassFactory() {
 		return getOrCreate(ClassFactory.class, () -> 
@@ -573,10 +584,5 @@ public class ComponentContainer implements ComponentSupplier {
 				return component;
 			}
 
-	}
-
-	@Override
-	public Classes getClasses() {
-		return Classes.getInstance();
 	}
 }
