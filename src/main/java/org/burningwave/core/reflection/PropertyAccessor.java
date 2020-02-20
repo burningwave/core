@@ -64,7 +64,7 @@ public abstract class PropertyAccessor implements Component {
 	private MethodHelper methodHelper;
 	private FieldHelper fieldHelper;
 	private ClassHelper classHelper;
-	private List<ThrowingBiFunction<Object, String, Object>> propertyRetrievers;
+	private List<ThrowingBiFunction<Object, String, Object, Throwable>> propertyRetrievers;
 	private List<ThrowingFunction<Object[], Boolean>> propertySetters;
 	private Supplier<ClassHelper> classHelperSupplier;
 	private IterableObjectHelper iterableObjectHelper;	
@@ -100,7 +100,7 @@ public abstract class PropertyAccessor implements Component {
 	
 	abstract List<ThrowingFunction<Object[], Boolean>> getPropertySetters();
 
-	abstract List<ThrowingBiFunction<Object, String, Object>> getPropertyRetrievers();
+	abstract List<ThrowingBiFunction<Object, String, Object, Throwable>> getPropertyRetrievers();
 	
 	@SuppressWarnings("unchecked")
 	public <T> T get(Object obj, String propertyPath) {
@@ -118,7 +118,7 @@ public abstract class PropertyAccessor implements Component {
 		Matcher matcher = Pattern.compile(REG_EXP_FOR_JAVA_PROPERTIES).matcher(property);
 		matcher.find();
 		List<Throwable> exceptions = new ArrayList<>();
-		for (ThrowingBiFunction<Object, String, Object> retriever : propertyRetrievers) {
+		for (ThrowingBiFunction<Object, String, Object, Throwable> retriever : propertyRetrievers) {
 			try {
 				if ((objToReturn = retriever.apply(obj, matcher.group(1))) != null) {
 					break;
@@ -323,8 +323,8 @@ public abstract class PropertyAccessor implements Component {
 			return new ByFieldOrByMethod(memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
 		}
 
-		List<ThrowingBiFunction<Object, String, Object>> getPropertyRetrievers() {
-			List<ThrowingBiFunction<Object, String, Object>> propertyRetrievers = new ArrayList<>();
+		List<ThrowingBiFunction<Object, String, Object, Throwable>> getPropertyRetrievers() {
+			List<ThrowingBiFunction<Object, String, Object, Throwable>> propertyRetrievers = new ArrayList<>();
 			propertyRetrievers.add((object, propertyName) -> retrievePropertyByField(object, propertyName));
 			propertyRetrievers.add((object, propertyName) -> retrievePropertyByGetterMethod(object, propertyName));
 			return propertyRetrievers;
@@ -349,8 +349,8 @@ public abstract class PropertyAccessor implements Component {
 			return new ByMethodOrByField(memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
 		}
 
-		List<ThrowingBiFunction<Object, String, Object>> getPropertyRetrievers() {
-			List<ThrowingBiFunction<Object, String, Object>> propertyRetrievers = new ArrayList<>();
+		List<ThrowingBiFunction<Object, String, Object, Throwable>> getPropertyRetrievers() {
+			List<ThrowingBiFunction<Object, String, Object, Throwable>> propertyRetrievers = new ArrayList<>();
 			propertyRetrievers.add((object, propertyName) -> retrievePropertyByGetterMethod(object, propertyName));
 			propertyRetrievers.add((object, propertyName) -> retrievePropertyByField(object, propertyName));
 			return propertyRetrievers;
