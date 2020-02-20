@@ -151,7 +151,9 @@ public class PathHelper implements Component {
 	}
 	
 	public Collection<String> getAllPaths() {
-		return new LinkedHashSet<>(allPaths);
+		Collection<String> allPaths = ConcurrentHashMap.newKeySet();
+		allPaths.addAll(this.allPaths);
+		return allPaths;
 	}
 	
 	public Collection<String> getPaths(String... names) {
@@ -207,7 +209,7 @@ public class PathHelper implements Component {
 			config.put(pathGroupPropertyName, currentPropertyPaths);
 		}
 		paths = currentPropertyPaths;
-		Collection<String> groupPaths = new LinkedHashSet<>();
+		Collection<String> groupPaths = ConcurrentHashMap.newKeySet();
 		if (paths != null) {
 			if (paths.contains("${classPaths}")) {
 				Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
