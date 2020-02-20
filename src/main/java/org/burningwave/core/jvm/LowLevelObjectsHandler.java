@@ -105,13 +105,13 @@ public class LowLevelObjectsHandler implements Component {
 		return unsafe;
 	}
 	
-	void disableWarning() {
+	public void disableIllegalAccessLogger() {
 	    if (illegalAccessLoggerDisabler != null) {
 	    	illegalAccessLoggerDisabler.run();
 	    }
 	}
 	
-	void enableWarning() {
+	public void enableIllegalAccessLogger() {
 	    if (illegalAccessLoggerEnabler != null) {
 	    	illegalAccessLoggerEnabler.run();
 	    }

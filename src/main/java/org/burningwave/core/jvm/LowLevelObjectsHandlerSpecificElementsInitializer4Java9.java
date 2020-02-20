@@ -34,7 +34,7 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelOb
 	    } catch (Throwable e) {
 	    	
 	    }
-		lowLevelObjectsHandler.disableWarning();
+		lowLevelObjectsHandler.disableIllegalAccessLogger();
 	}
 
 	
@@ -102,7 +102,7 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelOb
 	
 	@Override
 	public void close() {
-		lowLevelObjectsHandler.enableWarning();
+		lowLevelObjectsHandler.enableIllegalAccessLogger();
 		super.close();
 	}
 }
