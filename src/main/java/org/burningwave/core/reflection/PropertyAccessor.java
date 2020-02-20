@@ -45,7 +45,7 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Strings;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.ClassHelper;
+import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.FieldHelper;
 import org.burningwave.core.classes.MemberFinder;
@@ -63,10 +63,10 @@ public abstract class PropertyAccessor implements Component {
 	private MemberFinder memberFinder;
 	private MethodHelper methodHelper;
 	private FieldHelper fieldHelper;
-	private ClassHelper classHelper;
+	private SourceCodeHandler sourceCodeHandler;
 	private List<ThrowingBiFunction<Object, String, Object, Throwable>> propertyRetrievers;
 	private List<ThrowingFunction<Object[], Boolean, Throwable>> propertySetters;
-	private Supplier<ClassHelper> classHelperSupplier;
+	private Supplier<SourceCodeHandler> sourceCodeHandlerSupplier;
 	private IterableObjectHelper iterableObjectHelper;	
 	private Supplier<IterableObjectHelper> iterableObjectHelperSupplier;
 	
@@ -74,14 +74,14 @@ public abstract class PropertyAccessor implements Component {
 		MemberFinder memberFinder,
 		MethodHelper methodHelper,
 		FieldHelper fieldHelper,
-		Supplier<ClassHelper> classHelperSupplier,
+		Supplier<SourceCodeHandler> sourceCodeHandlerSupplier,
 		Supplier<IterableObjectHelper> iterableObjectHelperSupplier
 	) {
 		this.memberFinder = memberFinder;
 		this.methodHelper = methodHelper;
 		this.fieldHelper = fieldHelper;
 		this.iterableObjectHelperSupplier = iterableObjectHelperSupplier;
-		this.classHelperSupplier = classHelperSupplier;
+		this.sourceCodeHandlerSupplier = sourceCodeHandlerSupplier;
 		this.propertyRetrievers = getPropertyRetrievers();
 		this.propertySetters= getPropertySetters();
 	}
@@ -92,10 +92,10 @@ public abstract class PropertyAccessor implements Component {
 			(iterableObjectHelper = iterableObjectHelperSupplier.get());
 	}
 	
-	protected ClassHelper getClassHelper() {
-		return classHelper != null ?
-			classHelper :
-			(classHelper = classHelperSupplier.get());
+	protected SourceCodeHandler getClassHelper() {
+		return sourceCodeHandler != null ?
+			sourceCodeHandler :
+			(sourceCodeHandler = sourceCodeHandlerSupplier.get());
 	}
 	
 	abstract List<ThrowingFunction<Object[], Boolean, Throwable>> getPropertySetters();
@@ -302,7 +302,7 @@ public abstract class PropertyAccessor implements Component {
 			"import " + ComponentSupplier.class.getName() + ";\n" +
 			"import " + componentSupplier.getClass().getName() + ";\n" + importFromConfig;
 		String className = "ObjectSupplier_" + UUID.randomUUID().toString().replaceAll("-", "");
-		return getClassHelper().executeCode(
+		return getClassHelper().execute(
 			imports, className, supplierCode, 
 			componentSupplier, Thread.currentThread().getContextClassLoader()
 		);
@@ -315,12 +315,12 @@ public abstract class PropertyAccessor implements Component {
 	 */
 	public static class ByFieldOrByMethod extends PropertyAccessor {
 
-		private ByFieldOrByMethod(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<ClassHelper> classHelperSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
-			super(memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
+		private ByFieldOrByMethod(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+			super(memberFinder, methodHelper, fieldHelper, sourceCodeHandlerSupplier, iterableObjectHelperSupplier);
 		}
 		
-		public static ByFieldOrByMethod create(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<ClassHelper> classHelperSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
-			return new ByFieldOrByMethod(memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
+		public static ByFieldOrByMethod create(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+			return new ByFieldOrByMethod(memberFinder, methodHelper, fieldHelper, sourceCodeHandlerSupplier, iterableObjectHelperSupplier);
 		}
 
 		List<ThrowingBiFunction<Object, String, Object, Throwable>> getPropertyRetrievers() {
@@ -341,12 +341,12 @@ public abstract class PropertyAccessor implements Component {
 	
 	public static class ByMethodOrByField extends PropertyAccessor {
 
-		private ByMethodOrByField(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<ClassHelper> classHelperSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
-			super(memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
+		private ByMethodOrByField(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+			super(memberFinder, methodHelper, fieldHelper, sourceCodeHandlerSupplier, iterableObjectHelperSupplier);
 		}
 		
-		public static ByMethodOrByField create(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<ClassHelper> classHelperSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
-			return new ByMethodOrByField(memberFinder, methodHelper, fieldHelper, classHelperSupplier, iterableObjectHelperSupplier);
+		public static ByMethodOrByField create(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+			return new ByMethodOrByField(memberFinder, methodHelper, fieldHelper, sourceCodeHandlerSupplier, iterableObjectHelperSupplier);
 		}
 
 		List<ThrowingBiFunction<Object, String, Object, Throwable>> getPropertyRetrievers() {

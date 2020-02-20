@@ -38,7 +38,6 @@ import org.burningwave.ManagedLogger;
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassFactory;
-import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.CodeGenerator;
 import org.burningwave.core.classes.CodeGenerator.ForCodeExecutor;
@@ -52,6 +51,7 @@ import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodHelper;
+import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.classes.hunter.ByteCodeHunter;
 import org.burningwave.core.classes.hunter.ClassHunter;
 import org.burningwave.core.classes.hunter.ClassPathHunter;
@@ -171,7 +171,7 @@ public class ComponentContainer implements ComponentSupplier {
 		T component = (T)components.get(componentType);
 		if (component == null) {	
 			waitForInitializationEnding();
-			synchronized (Classes.getStringForSync(components, componentType.getName())) {
+			synchronized (Classes.getId(components, componentType.getName())) {
 				if ((component = (T)components.get(componentType)) == null) {
 					component = componentSupplier.get();
 					components.put(componentType, component);
@@ -213,9 +213,7 @@ public class ComponentContainer implements ComponentSupplier {
 
 	@Override
 	public MemberFinder getMemberFinder() {
-		return getOrCreate(MemberFinder.class, ()->
-			MemberFinder.create()
-		);
+		return MemberFinder.getInstance();
 	}
 
 	@Override
@@ -229,7 +227,7 @@ public class ComponentContainer implements ComponentSupplier {
 					this
 				),
 				getClasses(),
-				getClassHelper()
+				getClassesLoaders()
 			);
 		});
 	}
@@ -237,6 +235,17 @@ public class ComponentContainer implements ComponentSupplier {
 	@Override
 	public Classes getClasses() {
 		return Classes.getInstance();			
+	}
+	
+	@Override
+	public Classes.Loaders getClassesLoaders() {
+		return getOrCreate(Classes.Loaders.class, () -> 
+			Classes.Loaders.create(
+				getLowLevelObjectsHandler(),
+				getClasses(),
+				getMemberFinder()
+			)
+		);	
 	}
 	
 	@Override
@@ -248,7 +257,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public ClassFactory getClassFactory() {
 		return getOrCreate(ClassFactory.class, () -> 
 			ClassFactory.create(
-				getClassHelper(),
+				getSourceCodeHandler(),
 				() -> getMemoryClassLoader(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
@@ -266,7 +275,7 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(JavaMemoryCompiler.class, () ->
 			JavaMemoryCompiler.create(
 				getPathHelper(),
-				getClassHelper(),
+				getSourceCodeHandler(),
 				getClassPathHunter()
 			)
 		);
@@ -333,7 +342,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getPathHelper(),
 				getStreamHelper(),
 				getClasses(),
-				getClassHelper(),
+				getClassesLoaders(),
 				getMemberFinder(),
 				getByFieldOrByMethodPropertyAccessor().retrieveFromFile(
 					config,
@@ -357,7 +366,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getPathHelper(),
 				getStreamHelper(),
 				getClasses(),
-				getClassHelper(),
+				getClassesLoaders(),
 				getMemberFinder()
 			)
 		);
@@ -374,7 +383,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getPathHelper(),
 				getStreamHelper(),
 				getClasses(),
-				getClassHelper(),
+				getClassesLoaders(),
 				getMemberFinder()
 			)
 		);
@@ -387,7 +396,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getMemberFinder(),
 				getMethodHelper(),
 				getFieldHelper(),
-				() -> getClassHelper(),
+				() -> getSourceCodeHandler(),
 				() -> getIterableObjectHelper()
 			)
 		);
@@ -400,7 +409,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getMemberFinder(),
 				getMethodHelper(),
 				getFieldHelper(),
-				() -> getClassHelper(),
+				() -> getSourceCodeHandler(),
 				() -> getIterableObjectHelper()
 			)
 		);
@@ -523,11 +532,12 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 
 	@Override
-	public ClassHelper getClassHelper() {
-		return getOrCreate(ClassHelper.class, () ->
-			ClassHelper.create(
+	public SourceCodeHandler getSourceCodeHandler() {
+		return getOrCreate(SourceCodeHandler.class, () ->
+			SourceCodeHandler.create(
 				() -> getClassFactory(),
-				getClasses()								
+				getClasses(),
+				getClassesLoaders()
 			)
 		);
 	}

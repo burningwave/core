@@ -36,19 +36,18 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.classes.ClassCriteria;
-import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.concurrent.ParallelTasksManager;
 import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemHelper;
-import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.FileSystemScanner;
+import org.burningwave.core.io.FileSystemScanner.Scan;
+import org.burningwave.core.io.IterableZipContainer;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
-import org.burningwave.core.io.IterableZipContainer;
 
 public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collection<Class<?>>, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
 	private ClassPathHunter(
@@ -59,7 +58,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
 		Classes classes,
-		ClassHelper classHelper,
+		Classes.Loaders classesLoaders,
 		MemberFinder memberFinder
 	) {
 		super(
@@ -70,9 +69,9 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 			pathHelper,
 			streamHelper,
 			classes,
-			classHelper,
+			classesLoaders,
 			memberFinder,
-			(initContext) -> SearchContext._create(fileSystemHelper, streamHelper, initContext),
+			(initContext) -> SearchContext._create(fileSystemHelper, streamHelper, classes, initContext),
 			(context) -> new ClassPathHunter.SearchResult(context)
 		);
 	}
@@ -85,10 +84,20 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
 		Classes classes,
-		ClassHelper classHelper,
+		Classes.Loaders classesLoaders,
 		MemberFinder memberFinder
 	) {
-		return new ClassPathHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, fileSystemScanner, pathHelper, streamHelper, classes, classHelper, memberFinder);
+		return new ClassPathHunter(
+			byteCodeHunterSupplier,
+			classHunterSupplier,
+			fileSystemHelper,
+			fileSystemScanner,
+			pathHelper,
+			streamHelper,
+			classes,
+			classesLoaders,
+			memberFinder
+		);
 	}
 	
 	@Override
@@ -151,14 +160,14 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 	public static class SearchContext extends org.burningwave.core.classes.hunter.SearchContext<Collection<Class<?>>> {
 		ParallelTasksManager tasksManager;
 		
-		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
-			super(fileSystemHelper, streamHelper, initContext);
+		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, Classes classes, InitContext initContext) {
+			super(fileSystemHelper, streamHelper, classes, initContext);
 			ClassFileScanConfig scanConfig = initContext.getClassFileScanConfiguration();
 			this.tasksManager = ParallelTasksManager.create(scanConfig.getMaxParallelTasksForUnit());
 		}		
 
-		static SearchContext _create(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
-			return new SearchContext(fileSystemHelper, streamHelper,  initContext);
+		static SearchContext _create(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, Classes classes, InitContext initContext) {
+			return new SearchContext(fileSystemHelper, streamHelper,  classes, initContext);
 		}
 
 		

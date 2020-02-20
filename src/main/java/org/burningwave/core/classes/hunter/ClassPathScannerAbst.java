@@ -36,7 +36,6 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassCriteria;
-import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemberFinder;
@@ -56,7 +55,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	Supplier<ClassHunter> classHunterSupplier;
 	ClassHunter classHunter;
 	Classes classes;
-	ClassHelper classHelper;
+	Classes.Loaders classesLoaders;
 	MemberFinder memberFinder;
 	FileSystemHelper fileSystemHelper;
 	FileSystemScanner fileSystemScanner;
@@ -73,7 +72,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
 		Classes classes,
-		ClassHelper classHelper,
+		Classes.Loaders classesLoaders,
 		MemberFinder memberFinder,
 		Function<InitContext, C> contextSupplier,
 		Function<C, R> resultSupplier
@@ -83,7 +82,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		this.pathHelper = pathHelper;
 		this.streamHelper = streamHelper;
 		this.classes = classes;
-		this.classHelper = classHelper;
+		this.classesLoaders = classesLoaders;
 		this.memberFinder = memberFinder;
 		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
 		this.classHunterSupplier = classHunterSupplier;
@@ -109,7 +108,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		final ClassFileScanConfig scanConfigCopy = scanConfig.createCopy();
 		searchConfig = searchConfig.createCopy();
 		C context = createContext(scanConfigCopy, searchConfig);
-		searchConfig.init(this.classHelper, context.pathMemoryClassLoader, this.memberFinder);
+		searchConfig.init(this.classes, this.classesLoaders, context.pathMemoryClassLoader, this.memberFinder);
 		context.executeSearch(() -> {
 			fileSystemScanner.scan(
 				scanConfigCopy.toScanConfiguration(
@@ -137,7 +136,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 					sharedClassLoader :
 					PathMemoryClassLoader.create(
 						searchConfig.parentClassLoaderForMainClassLoader, 
-						pathHelper, classes, classHelper, byteCodeHunterSupplier
+						pathHelper, classes, classesLoaders, byteCodeHunterSupplier
 					),
 				scanConfig,
 				searchConfig
@@ -189,7 +188,8 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	@Override
 	public void close() {
 		byteCodeHunterSupplier = null;
-		classHelper = null;
+		classes = null;
+		classesLoaders = null;
 		fileSystemHelper = null;
 		streamHelper = null;
 		pathHelper = null;

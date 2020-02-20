@@ -56,8 +56,8 @@ import sun.misc.Unsafe;
 
 @SuppressWarnings("restriction")
 public class LowLevelObjectsHandler implements Component {
-	static LowLevelObjectsHandler INSTANCE;
 	JVMInfo jVMInfo;
+	MemberFinder memberFinder;
 	Unsafe unsafe;
 	Runnable illegalAccessLoggerEnabler;
 	Runnable illegalAccessLoggerDisabler;
@@ -80,25 +80,19 @@ public class LowLevelObjectsHandler implements Component {
 	Long loadedPackagesMapMemoryOffset;
 	Long loadedClassesVectorMemoryOffset;	
 
-	private LowLevelObjectsHandler(JVMInfo jVMInfo) {
+	private LowLevelObjectsHandler(JVMInfo jVMInfo, MemberFinder memberFinder) {
 		this.jVMInfo = jVMInfo;
+		this.memberFinder = memberFinder;
 		LowLevelObjectsHandlerSpecificElementsInitializer.build(this);
 	}
 
 
 	public static LowLevelObjectsHandler getInstance() {
-		if (INSTANCE == null) {
-			synchronized(LowLevelObjectsHandler.class) {
-				if (INSTANCE == null) {
-					INSTANCE = new LowLevelObjectsHandler(JVMInfo.create());
-				}
-			}
-		}
-		return INSTANCE;
+		return LazyHolder.getLowLevelObjectsHandlerInstance();
 	}
 	
-	public static LowLevelObjectsHandler create(JVMInfo jvmChecker) {
-		return new LowLevelObjectsHandler(jvmChecker);
+	public static LowLevelObjectsHandler create(JVMInfo jvmChecker, MemberFinder memberFinder) {
+		return new LowLevelObjectsHandler(jvmChecker, memberFinder);
 	}
 	
 	public Unsafe getUnsafe() {
@@ -250,7 +244,7 @@ public class LowLevelObjectsHandler implements Component {
 			synchronized (parentClassLoaderFields) {
 				field = parentClassLoaderFields.get(classLoaderClass);
 				if (field == null) {
-					field = MemberFinder.create().findOne(
+					field = memberFinder.findOne(
 						FieldCriteria.byScanUpTo(classLoaderClass).name("parent"::equals), classLoaderClass
 					);
 					setAccessible(field, true);
@@ -276,7 +270,6 @@ public class LowLevelObjectsHandler implements Component {
 	
 	public Function<Boolean, ClassLoader> setAsParent(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
 		Class<?> classLoaderBaseClass = builtinClassLoaderClass;
-		MemberFinder memberFinder = MemberFinder.create();
 		if (builtinClassLoaderClass != null && builtinClassLoaderClass.isAssignableFrom(classLoader.getClass())) {
 			try {
 				Object classLoaderDelegate = unsafe.allocateInstance(classLoaderDelegateClass);
@@ -349,8 +342,27 @@ public class LowLevelObjectsHandler implements Component {
 	
 	@Override
 	public void close() {
-		loadedPackagesMapMemoryOffset = null;
-		loadedClassesVectorMemoryOffset = null;
+		if (this != LowLevelObjectsHandler.getInstance()) {
+			loadedPackagesMapMemoryOffset = null;
+			loadedClassesVectorMemoryOffset = null;
+			jVMInfo = null;
+			memberFinder = null;
+			unsafe = null;
+			illegalAccessLoggerEnabler = null;
+			illegalAccessLoggerDisabler = null;
+			emtpyFieldsArray = null;
+			emptyMethodsArray = null;
+			emptyConstructorsArray = null;
+			getDeclaredFieldsRetriever = null;
+			getDeclaredMethodsRetriever = null;
+			getDeclaredConstructorsRetriever = null;
+			packageRetriever = null;	
+			methodInvoker = null;
+			accessibleSetter = null;	
+			parentClassLoaderFields = null;
+			classLoaderDelegateClass = null;
+			builtinClassLoaderClass = null;
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -382,6 +394,14 @@ public class LowLevelObjectsHandler implements Component {
 		
 		public static <T extends Buffer> int remaining(T buffer) {
 			return ((Buffer)buffer).remaining();
+		}
+	}
+	
+	private static class LazyHolder {
+		private static final LowLevelObjectsHandler LOW_LEVEL_OBJECTS_HANDLER_INSTANCE = LowLevelObjectsHandler.create(JVMInfo.create(), MemberFinder.getInstance());
+		
+		private static LowLevelObjectsHandler getLowLevelObjectsHandlerInstance() {
+			return LOW_LEVEL_OBJECTS_HANDLER_INSTANCE;
 		}
 	}
 }

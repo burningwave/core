@@ -42,7 +42,7 @@ import org.burningwave.core.io.PathHelper;
 public class ClassFactory implements Component {
 	public static String CLASS_REPOSITORIES = "class-factory.class-repositories";
 	
-	private ClassHelper classHelper;
+	private SourceCodeHandler sourceCodeHandler;
 	private PathHelper pathHelper;
 	private Supplier<MemoryClassLoader> memoryClassLoaderSupplier;
 	private MemoryClassLoader memoryClassLoader;
@@ -54,7 +54,7 @@ public class ClassFactory implements Component {
 	private CodeGenerator codeGeneratorForExecutor;
 	
 	private ClassFactory(
-		ClassHelper classHelper,
+		SourceCodeHandler sourceCodeHandler,
 		Supplier<MemoryClassLoader> memoryClassLoaderSupplier,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
@@ -64,7 +64,7 @@ public class ClassFactory implements Component {
 		CodeGenerator.ForPredicate codeGeneratorForPredicate,
 		CodeGenerator.ForCodeExecutor codeGeneratorForExecutor
 	) {	
-		this.classHelper = classHelper;
+		this.sourceCodeHandler = sourceCodeHandler;
 		this.memoryClassLoaderSupplier = memoryClassLoaderSupplier;
 		this.javaMemoryCompiler = javaMemoryCompiler;
 		this.pathHelper = pathHelper;
@@ -76,7 +76,7 @@ public class ClassFactory implements Component {
 	}
 	
 	public static ClassFactory create(
-		ClassHelper classHelper,
+		SourceCodeHandler sourceCodeHandler,
 		Supplier<MemoryClassLoader> memoryClassLoaderSupplier,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
@@ -87,7 +87,7 @@ public class ClassFactory implements Component {
 		CodeGenerator.ForCodeExecutor codeGeneratorForExecutor
 	) {
 		return new ClassFactory(
-			classHelper, memoryClassLoaderSupplier, 
+			sourceCodeHandler, memoryClassLoaderSupplier, 
 			javaMemoryCompiler, pathHelper, codeGeneratorForPojo, 
 			codeGeneratorForFunction, codeGeneratorForConsumer, codeGeneratorForPredicate, codeGeneratorForExecutor
 		);
@@ -120,7 +120,7 @@ public class ClassFactory implements Component {
 	}
 	
 	private Class<?> buildAndUploadToMemoryClassLoader(String classCode) {
-		String className = classHelper.extractClassName(classCode);
+		String className = sourceCodeHandler.extractClassName(classCode);
 		Map<String, ByteBuffer> compiledFiles = build(classCode);
 		logInfo("Virtual class " + className + " succesfully created");
 		if (!compiledFiles.isEmpty()) {
@@ -139,7 +139,7 @@ public class ClassFactory implements Component {
 	
 	
 	public Class<?> getOrBuild(String classCode) {
-		String className = classHelper.extractClassName(classCode);
+		String className = sourceCodeHandler.extractClassName(classCode);
 		Class<?> toRet = getFromMemoryClassLoader(className);
 		if (toRet == null) {
 			toRet = buildAndUploadToMemoryClassLoader(classCode);
@@ -186,7 +186,7 @@ public class ClassFactory implements Component {
 			}
 		}		
 		try {
-			return memoryClassLoader.loadClass(classHelper.extractClassName(classCode));
+			return memoryClassLoader.loadClass(sourceCodeHandler.extractClassName(classCode));
 		} catch (ClassNotFoundException exc) {
 			throw Throwables.toRuntimeException(exc);
 		}

@@ -199,7 +199,7 @@ public class PathHelper implements Component {
 	public Collection<String> loadPaths(String pathGroupName, String paths) {
 		String pathGroupPropertyName = PATHS_KEY_PREFIX + pathGroupName;
 		Collection<String> groupPaths = ConcurrentHashMap.newKeySet();
-			synchronized(Classes.getStringForSync(pathGroups, pathGroupName)) {
+			synchronized(Classes.getId(pathGroups, pathGroupName)) {
 				String currentPropertyPaths = config.getProperty(pathGroupPropertyName);
 				if (Strings.isNotEmpty(currentPropertyPaths) && Strings.isNotEmpty(paths)) {
 					if (!currentPropertyPaths.endsWith(";")) {

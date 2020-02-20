@@ -59,16 +59,16 @@ public class Cache {
 			PATH_FOR_CONTENTS = new SyncPathForResources<>(1L, Streams::shareContent);
 			PATH_FOR_FILE_SYSTEM_ITEMS = new SyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
 			PATH_FOR_ZIP_FILES = new SyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);
-			CLASS_LOADER_FOR_FIELDS = new AsyncObjectAndPathForResources<>(1L, fields -> fields);
-			CLASS_LOADER_FOR_METHODS = new AsyncObjectAndPathForResources<>(1L, methods -> methods);
-			CLASS_LOADER_FOR_CONSTRUCTORS = new AsyncObjectAndPathForResources<>(1L, constructors -> constructors);
+			CLASS_LOADER_FOR_FIELDS = new SyncObjectAndPathForResources<>(1L, fields -> fields);
+			CLASS_LOADER_FOR_METHODS = new SyncObjectAndPathForResources<>(1L, methods -> methods);
+			CLASS_LOADER_FOR_CONSTRUCTORS = new SyncObjectAndPathForResources<>(1L, constructors -> constructors);
 		} else {
 			PATH_FOR_CONTENTS = new AsyncPathForResources<>(1L, Streams::shareContent);
 			PATH_FOR_FILE_SYSTEM_ITEMS = new AsyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
 			PATH_FOR_ZIP_FILES = new AsyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);
-			CLASS_LOADER_FOR_FIELDS = new SyncObjectAndPathForResources<>(1L, fields -> fields);
-			CLASS_LOADER_FOR_METHODS = new SyncObjectAndPathForResources<>(1L, methods -> methods);
-			CLASS_LOADER_FOR_CONSTRUCTORS = new SyncObjectAndPathForResources<>(1L, constructors -> constructors);
+			CLASS_LOADER_FOR_FIELDS = new AsyncObjectAndPathForResources<>(1L, fields -> fields);
+			CLASS_LOADER_FOR_METHODS = new AsyncObjectAndPathForResources<>(1L, methods -> methods);
+			CLASS_LOADER_FOR_CONSTRUCTORS = new AsyncObjectAndPathForResources<>(1L, constructors -> constructors);
 		}	
 	}
 	
@@ -96,7 +96,7 @@ public class Cache {
 			public R getOrDefault(T object, String path, Supplier<R> resourceSupplier) {
 				PathForResources<R> pathForResources = resources.get(object);
 				if (pathForResources == null) {
-					synchronized (Classes.getStringForSync(resources, object)) {
+					synchronized (Classes.getId(resources, object)) {
 						pathForResources = resources.get(object);
 						if (pathForResources == null) {
 							pathForResources = pathForResourcesSupplier.get();
@@ -325,7 +325,7 @@ public class Cache {
 			}
 			Map<String, R> innerPartion = partion.get(partitionKey);
 			if (innerPartion == null) {
-				synchronized (Classes.getStringForSync(mutexPrefixName, partitionIndex, partitionKey)) {
+				synchronized (Classes.getId(mutexPrefixName, partitionIndex, partitionKey)) {
 					innerPartion = partion.get(partitionKey);
 					if (innerPartion == null) {
 						partion.put(partitionKey, innerPartion = new ConcurrentHashMap<>());

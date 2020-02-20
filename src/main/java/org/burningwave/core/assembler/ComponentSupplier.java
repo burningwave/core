@@ -32,7 +32,7 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassFactory;
-import org.burningwave.core.classes.ClassHelper;
+import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.CodeGenerator;
 import org.burningwave.core.classes.ConstructorHelper;
@@ -76,9 +76,11 @@ public interface ComponentSupplier extends Component {
 
 	public ClassFactory getClassFactory();
 
-	public ClassHelper getClassHelper();
+	public SourceCodeHandler getSourceCodeHandler();
 	
 	public Classes getClasses();
+	
+	public Classes.Loaders getClassesLoaders();
 	
 	public ClassHunter getClassHunter();
 

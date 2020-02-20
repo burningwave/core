@@ -35,7 +35,7 @@ import org.burningwave.core.classes.MethodHelper;
 
 
 public interface Virtual extends Component {
-	public final static MethodHelper methodHelper = MethodHelper.create(Classes.getInstance(), MemberFinder.create());
+	public final static MethodHelper methodHelper = MethodHelper.create(Classes.getInstance(), MemberFinder.getInstance());
 
 	
 	default <T> T invoke(String methodName, Object... parameters) {

@@ -43,7 +43,6 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.Strings;
 import org.burningwave.core.classes.ClassCriteria;
-import org.burningwave.core.classes.ClassHelper;
 import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.hunter.SearchContext.InitContext;
@@ -66,7 +65,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
 		Classes classes,
-		ClassHelper classHelper,
+		Classes.Loaders classesLoaders,
 		MemberFinder memberFinder,
 		Function<InitContext, C> contextSupplier,
 		Function<C, R> resultSupplier) {
@@ -78,7 +77,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 			pathHelper,
 			streamHelper,
 			classes,
-			classHelper,
+			classesLoaders,
 			memberFinder,
 			contextSupplier,
 			resultSupplier
@@ -95,7 +94,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 			), 
 			searchConfig
 		);
-		searchConfig.init(this.classHelper, context.pathMemoryClassLoader, this.memberFinder);
+		searchConfig.init(this.classes, this.classesLoaders, context.pathMemoryClassLoader, this.memberFinder);
 		context.executeSearch(() ->
 			scan(context)
 		);
@@ -270,7 +269,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		clearCache();
 		cache = null;
 		byteCodeHunterSupplier = null;
-		classHelper = null;
+		classesLoaders = null;
 		fileSystemHelper = null;
 		streamHelper = null;
 		pathHelper = null;

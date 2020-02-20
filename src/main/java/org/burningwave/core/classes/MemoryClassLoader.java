@@ -56,8 +56,8 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	public final static String PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY = "memory-class-loader.parent";
 	public final static Map<String, String> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
 		
-	protected ClassHelper classHelper;
 	protected Classes classes;
+	protected Classes.Loaders classesLoaders;
 	protected Map<String, ByteBuffer> notLoadedCompiledClasses;
 	protected Map<String, ByteBuffer> loadedCompiledClasses;
 	
@@ -68,31 +68,27 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	protected MemoryClassLoader(
 		ClassLoader parentClassLoader,
 		Classes classes,
-		ClassHelper classHelper
+		Classes.Loaders classesLoaders
 	) {
 		super(parentClassLoader);
 		this.classes = classes;
-		this.classHelper = classHelper;
-		notLoadedCompiledClasses = new ConcurrentHashMap<>();
-		loadedCompiledClasses = new ConcurrentHashMap<>();
+		this.classesLoaders = classesLoaders;
+		this.notLoadedCompiledClasses = new ConcurrentHashMap<>();
+		this.loadedCompiledClasses = new ConcurrentHashMap<>();
 	}
 	
 	static {
 		DEFAULT_CONFIG_VALUES.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY, "null");
 		DEFAULT_CONFIG_VALUES.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY + PropertyAccessor.SUPPLIER_IMPORTS_KEY_SUFFIX, "");
 	}
-	
-	protected ClassHelper getClassHelper() {
-		return classHelper;
-	}
 
 	
-	public static MemoryClassLoader create(ClassLoader parentClassLoader, Classes classes, ClassHelper classHelper) {
-		return new MemoryClassLoader(parentClassLoader, classes, classHelper);
+	public static MemoryClassLoader create(ClassLoader parentClassLoader, Classes classes, Classes.Loaders classesLoaders) {
+		return new MemoryClassLoader(parentClassLoader, classes, classesLoaders);
 	}
 
 	public void addCompiledClass(String className, ByteBuffer byteCode) {
-    	if (getClassHelper().retrieveLoadedClass(this, className) == null) {
+    	if (classesLoaders.retrieveLoadedClass(this, className) == null) {
     		notLoadedCompiledClasses.put(className, byteCode);
 		} else {
 			logDebug("Could not add compiled class {} cause it's already defined", className);
@@ -133,7 +129,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
 	public boolean hasPackageBeenDefined(String packageName) {
 		if (Strings.isNotEmpty(packageName)) {
-			return getClassHelper().retrievePackage(this, packageName) != null;
+			return classesLoaders.retrievePackage(this, packageName) != null;
 		} else {
 			return true;
 		}
@@ -146,14 +142,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	) throws IllegalArgumentException {
     	Package pkg = null;
     	if (Strings.isNotEmpty(packageName)) {
-    		pkg = getClassHelper().retrievePackage(this, packageName);
+    		pkg = classesLoaders.retrievePackage(this, packageName);
     		if (pkg == null) {
     			try {
     				pkg = super.definePackage(packageName, specTitle, specVersion, specVendor, implTitle,
     		    			implVersion, implVendor, sealBase);
     			} catch (IllegalArgumentException exc) {
     				logWarn("Package " + packageName + " already defined");
-    				pkg = getClassHelper().retrievePackage(this, packageName);
+    				pkg = classesLoaders.retrievePackage(this, packageName);
     			}
     		}
     	}
@@ -165,7 +161,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			String pckgName = cls.getName().substring(
 		    	0, cls.getName().lastIndexOf(".")
 		    );
-		    if (getClassHelper().retrievePackage(this, pckgName) == null) {
+		    if (classesLoaders.retrievePackage(this, pckgName) == null) {
 		    	definePackage(pckgName, null, null, null, null, null, null, null);
 			}	
 		}
@@ -185,15 +181,15 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
     
     public Class<?> loadOrUploadClass(Class<?> toLoad) throws ClassNotFoundException {
-    	return getClassHelper().loadOrUploadClass(toLoad, this);
+    	return classesLoaders.loadOrUploadClass(toLoad, this);
     }
     
     public Class<?> loadOrUploadClass(JavaClass toLoad) throws ClassNotFoundException {
-    	return getClassHelper().loadOrUploadClass(toLoad, this);
+    	return classesLoaders.loadOrUploadClass(toLoad, this);
     }
     
     public Class<?> loadOrUploadClass(ByteBuffer byteCode) throws ClassNotFoundException {
-    	return getClassHelper().loadOrUploadClass(byteCode, this);
+    	return classesLoaders.loadOrUploadClass(byteCode, this);
     }
     
     
@@ -295,7 +291,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	
 	public Set<Class<?>> getLoadedClassesForPackage(Predicate<Package> packagePredicate	) {
-		return getClassHelper().retrieveLoadedClassesForPackage(this, packagePredicate);
+		return classesLoaders.retrieveLoadedClassesForPackage(this, packagePredicate);
 	}
 	
 	Map<String, ByteBuffer> getLoadedCompiledClasses() {
@@ -329,7 +325,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	protected void unregister() {
-		classes.unregister(this);
+		classesLoaders.unregister(this);
 		Cache.CLASS_LOADER_FOR_CONSTRUCTORS.remove(this);
 		Cache.CLASS_LOADER_FOR_FIELDS.remove(this);
 		Cache.CLASS_LOADER_FOR_METHODS.remove(this);

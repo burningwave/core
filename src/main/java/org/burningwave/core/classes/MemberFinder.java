@@ -49,6 +49,10 @@ public class MemberFinder implements Component {
 		return new MemberFinder();
 	}
 	
+	public static MemberFinder getInstance() {
+		return LazyHolder.getMemberFinderInstance();
+	}
+	
 	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
 		return findOne(criteria, Classes.retrieveFrom(objectOrClass));
 	}
@@ -145,4 +149,11 @@ public class MemberFinder implements Component {
 				match(initialClsFrom, clsFrom.getSuperclass(), clsPredicate, memberSupplier, predicate);
 	}
 	
+	private static class LazyHolder {
+		private static final MemberFinder MEMBER_FINDER_INSTANCE = MemberFinder.create();
+		
+		private static MemberFinder getMemberFinderInstance() {
+			return MEMBER_FINDER_INSTANCE;
+		}
+	}
 }

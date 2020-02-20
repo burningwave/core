@@ -49,6 +49,7 @@ import org.burningwave.core.io.StreamHelper;
 public class SearchContext<T> implements Component {
 
 	FileSystemHelper fileSystemHelper;
+	Classes classes;
 	ClassFileScanConfig classFileScanConfiguration;
 	SearchConfigAbst<?> searchConfig;
 	Map<String, T> itemsFoundFlatMap;
@@ -69,9 +70,11 @@ public class SearchContext<T> implements Component {
 	SearchContext(
 		FileSystemHelper fileSystemHelper,
 		StreamHelper streamHelper,
+		Classes classes,
 		InitContext initContext
 	) {
 		this.fileSystemHelper = fileSystemHelper;
+		this.classes = classes;
 		this.itemsFoundFlatMap = new ConcurrentHashMap<>();
 		this.itemsFoundMap = new ConcurrentHashMap<>();
 		this.skippedClassNames = ConcurrentHashMap.newKeySet();
@@ -87,9 +90,10 @@ public class SearchContext<T> implements Component {
 	public static <T> SearchContext<T> create(
 		FileSystemHelper fileSystemHelper,
 		StreamHelper streamHelper,
+		Classes classes,
 		InitContext initContext
 	) {
-		return new SearchContext<>(fileSystemHelper, streamHelper, initContext);
+		return new SearchContext<>(fileSystemHelper, streamHelper, classes, initContext);
 	}
 	
 	void executeSearch(Runnable searcher) {
@@ -242,7 +246,7 @@ public class SearchContext<T> implements Component {
 	}
 	
 	protected Class<?> retrieveClass(Class<?> cls) {
-		return Classes.isLoadedBy(cls, pathMemoryClassLoader) ?
+		return classes.isLoadedBy(cls, pathMemoryClassLoader) ?
 			cls : 
 			loadClass(cls.getName());
 	}

@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import java.io.InputStream;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -37,9 +38,12 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -49,15 +53,12 @@ import java.util.function.Supplier;
 import org.burningwave.Throwables;
 import org.burningwave.core.Cache;
 import org.burningwave.core.Component;
+import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.io.Streams;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
 
 public class Classes implements Component {
-	private static Classes INSTANCE;
 	private LowLevelObjectsHandler lowLevelObjectsHandler;
-	private MemberFinder memberFinder;
-	protected Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
-	protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
-	protected Map<String, Method> classLoadersMethods;	
 	
 	public static class Symbol{
 		public static class Tag {
@@ -88,27 +89,16 @@ public class Classes implements Component {
 		V15 = 0 << 16 | 59;
 	}
 	
-	private Classes(LowLevelObjectsHandler lowLevelObjectsHandler, MemberFinder memebrFinder) {
+	private Classes(LowLevelObjectsHandler lowLevelObjectsHandler) {
 		this.lowLevelObjectsHandler = lowLevelObjectsHandler;
-		this.memberFinder = memebrFinder;
-		this.classLoadersClasses = new ConcurrentHashMap<>();
-		this.classLoadersPackages = new ConcurrentHashMap<>();
-		this.classLoadersMethods = new ConcurrentHashMap<>();
 	}
 	
 	public static Classes getInstance() {
-		if (INSTANCE == null) {
-			synchronized(Classes.class) {
-				if (INSTANCE == null) {
-					INSTANCE = new Classes(LowLevelObjectsHandler.getInstance(), MemberFinder.create());
-				}
-			}
-		}
-		return INSTANCE;
+		return LazyHolder.getClassesInstance();
 	}
 	
-	public static Classes create(LowLevelObjectsHandler lowLevelObjectsHandler, MemberFinder memebrFinder) {
-		return new Classes(lowLevelObjectsHandler, memebrFinder);
+	public static Classes create(LowLevelObjectsHandler lowLevelObjectsHandler) {
+		return new Classes(lowLevelObjectsHandler);
 	}
 	
 	@SuppressWarnings({ "unchecked"})
@@ -296,16 +286,6 @@ public class Classes implements Component {
 	private static short readShort(Function<Integer, Byte> byteSupplier, final int offset) {
 		return (short) (((byteSupplier.apply(offset) & 0xFF) << 8) | (byteSupplier.apply(offset + 1) & 0xFF));
 	}
-
-	public static boolean isLoadedBy(Class<?> cls, ClassLoader classLoader) {
-		if (cls.getClassLoader() == classLoader) {
-			return true;
-		} else if (classLoader != null && classLoader.getParent() != null) {
-			return isLoadedBy(cls, classLoader.getParent());
-		} else {
-			return false;
-		}
-	}
 	
 	public Collection<Field> getDeclaredFields(Class<?> cls, Predicate<Field> fieldPredicate) {
 		Collection<Field> members = new LinkedHashSet<>();
@@ -317,12 +297,29 @@ public class Classes implements Component {
 		return members;
 	}
 	
+	public ClassLoader getClassLoader(Class<?> cls) {
+		ClassLoader clsLoader = cls.getClassLoader();
+		if (clsLoader == null) {
+			clsLoader = ClassLoader.getSystemClassLoader();
+		}
+		return clsLoader;
+	}
+	
+	public ByteBuffer getByteCode(Class<?> cls) {
+		ClassLoader clsLoader = getClassLoader(cls);
+		InputStream inputStream = clsLoader.getResourceAsStream(
+			cls.getName().replace(".", "/") + ".class"
+		);
+		return Streams.toByteBuffer(
+			Objects.requireNonNull(inputStream, "Could not acquire bytecode for class " + cls.getName())
+		);
+	}
+	
 	public Field[] getDeclaredFields(Class<?> cls)  {
 		return Cache.CLASS_LOADER_FOR_FIELDS.getOrDefault(
 			getClassLoader(cls), cls.getName().replace(".", "/"),
 			() -> lowLevelObjectsHandler.getDeclaredFields(cls)
 		);
-		
 	}
 	
 	public Collection<Method> getDeclaredMethods(Class<?> cls, Predicate<Method> fieldPredicate) {
@@ -357,53 +354,7 @@ public class Classes implements Component {
 			getClassLoader(cls), cls.getName().replace(".", "/"),
 			() -> lowLevelObjectsHandler.getDeclaredConstructors(cls)
 		);
-	}
-	
-	public Collection<ClassLoader> getAllParents(ClassLoader classLoader) {
-		return getHierarchy(classLoader, false);
-	}
-	
-	public Collection<ClassLoader> getHierarchy(ClassLoader classLoader) {
-		return getHierarchy(classLoader, true);
-	}
-	
-	private  Collection<ClassLoader> getHierarchy(ClassLoader classLoader, boolean includeClassLoader) {
-		Collection<ClassLoader> classLoaders = new LinkedHashSet<>();
-		if (includeClassLoader) {
-			classLoaders.add(classLoader);
-		}
-		while ((classLoader = getParent(classLoader)) != null) {
-			classLoaders.add(classLoader);
-		}
-		return classLoaders;
-	}
-	
-	public ClassLoader getClassLoader(Class<?> cls) {
-		ClassLoader clsLoader = cls.getClassLoader();
-		if (clsLoader == null) {
-			clsLoader = ClassLoader.getSystemClassLoader();
-		}
-		return clsLoader;
-	}
-	
-	public Function<Boolean, ClassLoader> setAsMaster(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
-		return lowLevelObjectsHandler.setAsParent(getMaster(classLoader), futureParent, mantainHierarchy);
-	}
-	
-	public Function<Boolean, ClassLoader> setAsParent(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
-		return lowLevelObjectsHandler.setAsParent(classLoader, futureParent, mantainHierarchy);
-	}
-	
-	public ClassLoader getParent(ClassLoader classLoader) {
-		return lowLevelObjectsHandler.getParent(classLoader);
-	}
-	
-	private  ClassLoader getMaster(ClassLoader classLoader) {
-		while (getParent(classLoader) != null) {
-			classLoader = getParent(classLoader); 
-		}
-		return classLoader;
-	}
+	}	
 
 	public void setAccessible(AccessibleObject object, boolean flag) {
 		lowLevelObjectsHandler.setAccessible(object, flag);
@@ -418,7 +369,7 @@ public class Classes implements Component {
         return object.getClass().getName() + "@" + object.hashCode();
     }
 	 
-	public static String getStringForSync(Object... objects) {
+	public static String getId(Object... objects) {
 		String id = "_";
 		for (Object object : objects) {
 			id += getId(object) + "_";
@@ -426,128 +377,411 @@ public class Classes implements Component {
 		return id;
 	}
 	
-	public Method getDefinePackageMethod(ClassLoader classLoader) {
-		return getMethod(
-			classLoader,
-			classLoader.getClass().getName() + "_" + "definePackage",
-			() -> findDefinePackageMethodAndMakeItAccesible(classLoader)
-		);
-	}
-	
-	
-	
-	private Method findDefinePackageMethodAndMakeItAccesible(ClassLoader classLoader) {
-		Method method = memberFinder.findAll(
-			MethodCriteria.byScanUpTo((cls) -> 
-				cls.getName().equals(ClassLoader.class.getName())
-			).name(
-				"definePackage"::equals
-			).and().parameterTypesAreAssignableFrom(
-				String.class, String.class, String.class, String.class,
-				String.class, String.class, String.class, URL.class
-			),
-			classLoader
-		).stream().findFirst().orElse(null);
-		method.setAccessible(true);
-		return method;
-	}
-	
-	public Method getDefineClassMethod(ClassLoader classLoader) {
-		return getMethod(
-			classLoader,
-			classLoader.getClass().getName() + "_" + "defineClass",
-			() -> findDefineClassMethodAndMakeItAccesible(classLoader)
-		);
-	}
-	
-	private Method findDefineClassMethodAndMakeItAccesible(ClassLoader classLoader) {
-		Method method = memberFinder.findAll(
-			MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
-				(classLoader instanceof MemoryClassLoader? "_defineClass" : "defineClass")::equals
-			).and().parameterTypes(params -> 
-				params.length == 3
-			).and().parameterTypesAreAssignableFrom(
-				String.class, ByteBuffer.class, ProtectionDomain.class
-			).and().returnType((cls) -> cls.getName().equals(Class.class.getName())),
-			classLoader
-		).stream().findFirst().orElse(null);
-		method.setAccessible(true);
-		return method;
-	}
-	
-	private Method getMethod(ClassLoader classLoader, String key, Supplier<Method> methodSupplier) {
-		Method method = classLoadersMethods.get(key);
-		if (method == null) {
-			synchronized (classLoadersMethods) {
-				method = classLoadersMethods.get(key);
-				if (method == null) {
-					classLoadersMethods.put(key, method = methodSupplier.get());
-				}
-			}
-		}
-		return method;
-	}
-	
-	public Vector<Class<?>> retrieveLoadedClasses(ClassLoader classLoader) {
-		Vector<Class<?>> classes = classLoadersClasses.get(classLoader);
-		if (classes != null) {
-			return classes;
+	public boolean isLoadedBy(Class<?> cls, ClassLoader classLoader) {
+		if (cls.getClassLoader() == classLoader) {
+			return true;
+		} else if (classLoader != null && classLoader.getParent() != null) {
+			return isLoadedBy(cls, classLoader.getParent());
 		} else {
-			classes = classLoadersClasses.get(classLoader);
-			if (classes == null) {
-				synchronized (classLoadersClasses) {
-					classes = classLoadersClasses.get(classLoader);
-					if (classes == null) {
-						classLoadersClasses.put(classLoader, (classes = lowLevelObjectsHandler.retrieveLoadedClasses(classLoader)));
-						return classes;
+			return false;
+		}
+	}
+	
+	private static class LazyHolder {
+		private static final Classes CLASSES_INSTANCE = Classes.create(LowLevelObjectsHandler.getInstance());
+		
+		private static Classes getClassesInstance() {
+			return CLASSES_INSTANCE;
+		}
+	}
+	
+	public static class Loaders implements Component {
+		private LowLevelObjectsHandler lowLevelObjectsHandler;
+		private MemberFinder memberFinder;
+		protected Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
+		protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
+		protected Map<String, Method> classLoadersMethods;
+		private Classes classes;
+		
+		private Loaders(LowLevelObjectsHandler lowLevelObjectsHandler, Classes classes, MemberFinder memberFinder) {
+			this.lowLevelObjectsHandler = lowLevelObjectsHandler;
+			this.classes = classes;
+			this.memberFinder = memberFinder;
+			this.classLoadersClasses = new ConcurrentHashMap<>();
+			this.classLoadersPackages = new ConcurrentHashMap<>();
+			this.classLoadersMethods = new ConcurrentHashMap<>();
+		}
+		
+		public static Loaders create(LowLevelObjectsHandler lowLevelObjectsHandler, Classes classes, MemberFinder memberFinder) {
+			return new Loaders(lowLevelObjectsHandler, classes, memberFinder);
+		}
+		
+		public Collection<ClassLoader> getAllParents(ClassLoader classLoader) {
+			return getHierarchy(classLoader, false);
+		}
+		
+		public Collection<ClassLoader> getHierarchy(ClassLoader classLoader) {
+			return getHierarchy(classLoader, true);
+		}
+		
+		private  Collection<ClassLoader> getHierarchy(ClassLoader classLoader, boolean includeClassLoader) {
+			Collection<ClassLoader> classLoaders = new LinkedHashSet<>();
+			if (includeClassLoader) {
+				classLoaders.add(classLoader);
+			}
+			while ((classLoader = getParent(classLoader)) != null) {
+				classLoaders.add(classLoader);
+			}
+			return classLoaders;
+		}
+		
+		public Function<Boolean, ClassLoader> setAsMaster(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
+			return lowLevelObjectsHandler.setAsParent(getMaster(classLoader), futureParent, mantainHierarchy);
+		}
+		
+		public Function<Boolean, ClassLoader> setAsParent(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
+			return lowLevelObjectsHandler.setAsParent(classLoader, futureParent, mantainHierarchy);
+		}
+		
+		public ClassLoader getParent(ClassLoader classLoader) {
+			return lowLevelObjectsHandler.getParent(classLoader);
+		}
+		
+		private  ClassLoader getMaster(ClassLoader classLoader) {
+			while (getParent(classLoader) != null) {
+				classLoader = getParent(classLoader); 
+			}
+			return classLoader;
+		}
+		
+		public Method getDefinePackageMethod(ClassLoader classLoader) {
+			return getMethod(
+				classLoader,
+				classLoader.getClass().getName() + "_" + "definePackage",
+				() -> findDefinePackageMethodAndMakeItAccesible(classLoader)
+			);
+		}	
+		
+		private Method findDefinePackageMethodAndMakeItAccesible(ClassLoader classLoader) {
+			Method method = memberFinder.findAll(
+				MethodCriteria.byScanUpTo((cls) -> 
+					cls.getName().equals(ClassLoader.class.getName())
+				).name(
+					"definePackage"::equals
+				).and().parameterTypesAreAssignableFrom(
+					String.class, String.class, String.class, String.class,
+					String.class, String.class, String.class, URL.class
+				),
+				classLoader
+			).stream().findFirst().orElse(null);
+			method.setAccessible(true);
+			return method;
+		}
+		
+		public Method getDefineClassMethod(ClassLoader classLoader) {
+			return getMethod(
+				classLoader,
+				classLoader.getClass().getName() + "_" + "defineClass",
+				() -> findDefineClassMethodAndMakeItAccesible(classLoader)
+			);
+		}
+		
+		private Method findDefineClassMethodAndMakeItAccesible(ClassLoader classLoader) {
+			Method method = memberFinder.findAll(
+				MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
+					(classLoader instanceof MemoryClassLoader? "_defineClass" : "defineClass")::equals
+				).and().parameterTypes(params -> 
+					params.length == 3
+				).and().parameterTypesAreAssignableFrom(
+					String.class, ByteBuffer.class, ProtectionDomain.class
+				).and().returnType((cls) -> cls.getName().equals(Class.class.getName())),
+				classLoader
+			).stream().findFirst().orElse(null);
+			method.setAccessible(true);
+			return method;
+		}
+		
+		private Method getMethod(ClassLoader classLoader, String key, Supplier<Method> methodSupplier) {
+			Method method = classLoadersMethods.get(key);
+			if (method == null) {
+				synchronized (classLoadersMethods) {
+					method = classLoadersMethods.get(key);
+					if (method == null) {
+						classLoadersMethods.put(key, method = methodSupplier.get());
 					}
 				}
 			}
+			return method;
 		}
-		throw Throwables.toRuntimeException("Could not find classes Vector on " + classLoader);
-	}
-	
-	public Collection<Class<?>> retrieveAllLoadedClasses(ClassLoader classLoader) {
-		Collection<Class<?>> allLoadedClasses = new LinkedHashSet<>();
-		allLoadedClasses.addAll(retrieveLoadedClasses(classLoader));
-		if (classLoader.getParent() != null) {
-			allLoadedClasses.addAll(retrieveAllLoadedClasses(classLoader.getParent()));
-		}
-		return allLoadedClasses;
-	}
-	
-	public Map<String, ?> retrieveLoadedPackages(ClassLoader classLoader) {
-		Map<String, ?> packages = classLoadersPackages.get(classLoader);
-		if (packages == null) {
-			synchronized (classLoadersPackages) {
-				packages = classLoadersPackages.get(classLoader);
-				if (packages == null) {
-					classLoadersPackages.put(classLoader, (packages = (Map<String, ?>)lowLevelObjectsHandler.retrieveLoadedPackages(classLoader)));
+		
+		public Vector<Class<?>> retrieveLoadedClasses(ClassLoader classLoader) {
+			Vector<Class<?>> classes = classLoadersClasses.get(classLoader);
+			if (classes != null) {
+				return classes;
+			} else {
+				classes = classLoadersClasses.get(classLoader);
+				if (classes == null) {
+					synchronized (classLoadersClasses) {
+						classes = classLoadersClasses.get(classLoader);
+						if (classes == null) {
+							classLoadersClasses.put(classLoader, (classes = lowLevelObjectsHandler.retrieveLoadedClasses(classLoader)));
+							return classes;
+						}
+					}
 				}
 			}
+			throw Throwables.toRuntimeException("Could not find classes Vector on " + classLoader);
+		}
 		
+		public Collection<Class<?>> retrieveAllLoadedClasses(ClassLoader classLoader) {
+			Collection<Class<?>> allLoadedClasses = new LinkedHashSet<>();
+			allLoadedClasses.addAll(retrieveLoadedClasses(classLoader));
+			if (classLoader.getParent() != null) {
+				allLoadedClasses.addAll(retrieveAllLoadedClasses(classLoader.getParent()));
+			}
+			return allLoadedClasses;
 		}
-		if (packages == null) {
-			throw Throwables.toRuntimeException("Could not find packages Map on " + classLoader);
-		}
-		return packages;
 		
-	}
-	
-	public Package retrieveLoadedPackage(ClassLoader classLoader, Object packageToFind, String packageName) {
-		try {
-			return lowLevelObjectsHandler.retrieveLoadedPackage(classLoader, packageToFind, packageName);
-		} catch (Throwable exc) {
-			throw Throwables.toRuntimeException(exc);
+		public Map<String, ?> retrieveLoadedPackages(ClassLoader classLoader) {
+			Map<String, ?> packages = classLoadersPackages.get(classLoader);
+			if (packages == null) {
+				synchronized (classLoadersPackages) {
+					packages = classLoadersPackages.get(classLoader);
+					if (packages == null) {
+						classLoadersPackages.put(classLoader, (packages = (Map<String, ?>)lowLevelObjectsHandler.retrieveLoadedPackages(classLoader)));
+					}
+				}
+			
+			}
+			if (packages == null) {
+				throw Throwables.toRuntimeException("Could not find packages Map on " + classLoader);
+			}
+			return packages;
+			
 		}
-	}
-	
-	public Object invoke(Object target, Method method, Object... params) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		return lowLevelObjectsHandler.invoke(target, method, params);
-	}
-	
-	public void unregister(ClassLoader classLoader) {
-		classLoadersClasses.remove(classLoader);
-		classLoadersPackages.remove(classLoader);
+		
+		public Package retrieveLoadedPackage(ClassLoader classLoader, Object packageToFind, String packageName) {
+			try {
+				return lowLevelObjectsHandler.retrieveLoadedPackage(classLoader, packageToFind, packageName);
+			} catch (Throwable exc) {
+				throw Throwables.toRuntimeException(exc);
+			}
+		}
+		
+		public Object invoke(Object target, Method method, Object... params) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+			return lowLevelObjectsHandler.invoke(target, method, params);
+		}
+		
+		public Class<?> loadOrUploadClass(
+			Class<?> toLoad, 
+			ClassLoader classLoader
+		) throws ClassNotFoundException {
+			return loadOrUploadClass(
+				toLoad, classLoader,
+				getDefineClassMethod(classLoader),
+				getDefinePackageMethod(classLoader)
+			);
+		}
+		
+		public Class<?> loadOrUploadClass(
+			JavaClass javaClass,
+			ClassLoader classLoader
+		) throws ClassNotFoundException {
+			return loadOrUploadClass(
+				javaClass, classLoader,
+				getDefineClassMethod(classLoader),
+				getDefinePackageMethod(classLoader)
+			);
+		}
+		
+		public Class<?> loadOrUploadClass(
+			ByteBuffer byteCode,
+			ClassLoader classLoader
+		) throws ClassNotFoundException {
+			return loadOrUploadClass(
+				JavaClass.create(byteCode), classLoader,
+				getDefineClassMethod(classLoader),
+				getDefinePackageMethod(classLoader)
+			);
+		}
+		
+		private Class<?> loadOrUploadClass(
+			JavaClass javaClass, 
+			ClassLoader classLoader, 
+			Method defineClassMethod, 
+			Method definePackageMethod
+		) throws ClassNotFoundException {
+	    	try {
+	    		return classLoader.loadClass(javaClass.getName());
+	    	} catch (ClassNotFoundException | NoClassDefFoundError outerEx) {
+	    		try {
+	    			Class<?> cls = defineClass(classLoader, defineClassMethod, javaClass.getName(), javaClass.getByteCode());
+	    			definePackageFor(cls, classLoader, definePackageMethod);
+	    			return cls;
+				} catch (ClassNotFoundException | NoClassDefFoundError outerExc) {
+					String newNotFoundClassName = Classes.retrieveName(outerExc);
+					loadOrUploadClass(
+	        			Class.forName(
+	        				newNotFoundClassName, false, classLoader
+	        			),
+	        			classLoader, defineClassMethod, definePackageMethod
+	        		);
+					return loadOrUploadClass(javaClass, classLoader,
+						defineClassMethod, definePackageMethod
+	        		);
+				}
+	    	}
+	    }
+		
+		private Class<?> loadOrUploadClass(
+			Class<?> toLoad, 
+			ClassLoader classLoader, 
+			Method defineClassMethod, 
+			Method definePackageMethod
+		) throws ClassNotFoundException {
+	    	try {
+	    		return classLoader.loadClass(toLoad.getName());
+	    	} catch (ClassNotFoundException | NoClassDefFoundError outerEx) {
+	    		try {
+	    			Class<?> cls = defineClass(classLoader, defineClassMethod, toLoad.getName(), Streams.shareContent(classes.getByteCode(toLoad)));
+	    			definePackageFor(cls, classLoader, definePackageMethod);
+	    			return cls;
+				} catch (ClassNotFoundException | NoClassDefFoundError outerExc) {
+					String newNotFoundClassName = Classes.retrieveName(outerExc);
+					loadOrUploadClass(
+	        			Class.forName(
+	        				newNotFoundClassName, false, toLoad.getClassLoader()
+	        			),
+	        			classLoader, defineClassMethod, definePackageMethod
+	        		);
+					return loadOrUploadClass(
+	        			Class.forName(
+	        					toLoad.getName(), false, toLoad.getClassLoader()
+	        			),
+	        			classLoader, defineClassMethod, definePackageMethod
+	        		);
+				}
+	    	}
+	    }
+		
+		private Class<?> defineClass(
+			ClassLoader classLoader, 
+			Method method, 
+			String className,
+			ByteBuffer byteCode
+		) throws ClassNotFoundException {
+			try {
+				return (Class<?>)method.invoke(classLoader, className, byteCode, null);
+			} catch (InvocationTargetException iTE) {
+				Throwable targetExcption = iTE.getTargetException();
+				if (targetExcption instanceof ClassNotFoundException) {
+					throw (ClassNotFoundException)iTE.getTargetException();
+				} else if (targetExcption instanceof NoClassDefFoundError) {
+					throw (NoClassDefFoundError)iTE.getTargetException();
+				}
+				throw Throwables.toRuntimeException(iTE);
+			} catch (Throwable exc) {
+				throw Throwables.toRuntimeException(exc);
+			}
+		}
+		
+		
+	    private Package definePackage(
+			String name, String specTitle,
+			String specVersion, String specVendor, String implTitle,
+			String implVersion, String implVendor, URL sealBase,
+			ClassLoader classLoader,
+			Method definePackageMethod
+		) throws IllegalArgumentException {
+	    	return ThrowingSupplier.get(() -> {
+	    		try {
+	    			return (Package) definePackageMethod.invoke(classLoader, name, specTitle, specVersion, specVendor, implTitle,
+	    				implVersion, implVendor, sealBase);
+	    		} catch (IllegalArgumentException exc) {
+	    			logWarn("Package " + name + " already defined");
+	    			return retrievePackage(classLoader, name);
+	    		}
+			});
+	    }
+	    
+		private void definePackageFor(Class<?> cls, 
+			ClassLoader classLoader,
+			Method definePackageMethod
+		) {
+			if (cls.getName().contains(".")) {
+				String pckgName = cls.getName().substring(
+			    	0, cls.getName().lastIndexOf(".")
+			    );
+			    Package pkg = retrievePackage(classLoader, pckgName);
+			    if (pkg == null) {
+			    	pkg = definePackage(pckgName, null, null, null, null, null, null, null, classLoader, definePackageMethod);
+				}	
+			}
+		}
+		
+		public Class<?> retrieveLoadedClass(ClassLoader classLoader, String className) {
+			Vector<Class<?>> definedClasses = retrieveLoadedClasses(classLoader);
+			synchronized(definedClasses) {
+				Iterator<?> itr = definedClasses.iterator();
+				while(itr.hasNext()) {
+					Class<?> cls = (Class<?>)itr.next();
+					if (cls.getName().equals(className)) {
+						return cls;
+					}
+				}
+			}
+			if (classLoader.getParent() != null) {
+				return retrieveLoadedClass(classLoader.getParent(), className);
+			}
+			return null;
+		}	
+		
+		public Set<Class<?>> retrieveLoadedClassesForPackage(ClassLoader classLoader, Predicate<Package> packagePredicate) {
+			Set<Class<?>> classesFound = ConcurrentHashMap.newKeySet();
+			Vector<Class<?>> definedClasses = retrieveLoadedClasses(classLoader);
+			synchronized(definedClasses) {
+				Iterator<?> itr = definedClasses.iterator();
+				while(itr.hasNext()) {
+					Class<?> cls = (Class<?>)itr.next();
+					Package classPackage = cls.getPackage();
+					if (packagePredicate.test(classPackage)) {
+						classesFound.add(cls);
+					}
+				}
+			}
+			if (classLoader.getParent() != null) {
+				classesFound.addAll(retrieveLoadedClassesForPackage(classLoader.getParent(), packagePredicate));
+			}
+			return classesFound;
+		}
+		
+		public Package retrievePackage(ClassLoader classLoader, String packageName) {
+			Map<String, ?> packages = retrieveLoadedPackages(classLoader);
+			Object packageToFind = packages.get(packageName);
+			if (packageToFind != null) {
+				return retrieveLoadedPackage(classLoader, packageToFind, packageName);
+			} else if (classLoader.getParent() != null) {
+				return retrievePackage(classLoader.getParent(), packageName);
+			} else {
+				return null;
+			}
+		}
+		
+		public void unregister(ClassLoader classLoader) {
+			classLoadersClasses.remove(classLoader);
+			classLoadersPackages.remove(classLoader);
+		}
+		
+		@Override
+		public void close() {
+			this.classLoadersClasses.clear();
+			this.classLoadersClasses = null;
+			this.classLoadersMethods.clear();
+			this.classLoadersMethods = null;
+			this.classLoadersPackages.clear();
+			this.classLoadersPackages = null;
+			this.memberFinder = null;
+			this.lowLevelObjectsHandler = null;
+		}
 	}
 }

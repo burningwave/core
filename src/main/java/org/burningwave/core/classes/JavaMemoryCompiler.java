@@ -71,7 +71,7 @@ import org.burningwave.core.io.PathHelper;
 
 public class JavaMemoryCompiler implements Component {
 	
-	private ClassHelper classHelper;
+	private SourceCodeHandler sourceCodeExecutor;
 	private ClassPathHunter classPathHunter;
 	private JavaCompiler compiler;
 	private FileSystemItem compiledClassesClassPath;
@@ -80,12 +80,12 @@ public class JavaMemoryCompiler implements Component {
 	
 	private JavaMemoryCompiler(
 		PathHelper pathHelper,
-		ClassHelper classHelper,
+		SourceCodeHandler sourceCodeExecutor,
 		ClassPathHunter classPathHunter
 	) {
 		this.classPathHunter = classPathHunter;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
-		this.classHelper = classHelper;
+		this.sourceCodeExecutor = sourceCodeExecutor;
 		compiledClassesClassPath = FileSystemItem.ofPath(
 			FileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix() + "/compiled").getAbsolutePath()
 		);
@@ -99,10 +99,10 @@ public class JavaMemoryCompiler implements Component {
 	
 	public static JavaMemoryCompiler create(
 		PathHelper pathHelper,
-		ClassHelper classHelper,
+		SourceCodeHandler sourceCodeExecutor,
 		ClassPathHunter classPathHunter
 	) {
-		return new JavaMemoryCompiler(pathHelper, classHelper, classPathHunter);
+		return new JavaMemoryCompiler(pathHelper, sourceCodeExecutor, classPathHunter);
 	}
 	
 	
@@ -127,7 +127,7 @@ public class JavaMemoryCompiler implements Component {
 	
 	private void sourcesToMemorySources(Collection<String> sources, Collection<MemorySource> memorySources) {
 		for (String source : sources) {
-			String className = classHelper.extractClassName(source);
+			String className = sourceCodeExecutor.extractClassName(source);
 			try {
 				memorySources.add(new MemorySource(Kind.SOURCE, className, source));
 			} catch (URISyntaxException eXC) {
@@ -482,6 +482,6 @@ public class JavaMemoryCompiler implements Component {
 	public void close() {
 		compiler = null;
 		classPathHunter = null;
-		classHelper = null;
+		sourceCodeExecutor = null;
 	}
 }

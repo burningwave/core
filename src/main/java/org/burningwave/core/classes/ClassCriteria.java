@@ -60,16 +60,16 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		return new ClassCriteria();
 	}
 	
-	public void init(ClassHelper classHelper, ClassLoader classSupplier, MemberFinder memberFinder) {
+	public void init(Classes classes, Classes.Loaders classesLoaders, ClassLoader classSupplier, MemberFinder memberFinder) {
 		this.classSupplier = cls -> {
 			try {
-				return classHelper.loadOrUploadClass(cls, classSupplier);
+				return classesLoaders.loadOrUploadClass(cls, classSupplier);
 			} catch (ClassNotFoundException exc) {
 				throw Throwables.toRuntimeException(exc);
 			}
 		};
 		this.memberFinder = memberFinder;
-		this.byteCodeSupplier = classHelper::getByteCode;
+		this.byteCodeSupplier = classes::getByteCode;
 		for (MemberCriteria<?, ?, ?> memberCriteria : memberCriterias.values()) {
 			memberCriteria.init(this.classSupplier, this.byteCodeSupplier);
 			if (this.classesToBeUploaded != null) {
