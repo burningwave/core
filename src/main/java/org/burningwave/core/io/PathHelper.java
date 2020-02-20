@@ -151,7 +151,7 @@ public class PathHelper implements Component {
 	}
 	
 	public Collection<String> getAllPaths() {
-		return allPaths;
+		return new LinkedHashSet<>(allPaths);
 	}
 	
 	public Collection<String> getPaths(String... names) {
@@ -190,32 +190,46 @@ public class PathHelper implements Component {
 	}
 	
 	private void loadPaths(String pathGroupName) {
-		loadPaths(pathGroupName, config.getProperty(PATHS_KEY_PREFIX + pathGroupName));
+		loadPaths(pathGroupName, null);
 	}
 	
-	public void loadPaths(String pathGroupName, String paths) {
+	public Collection<String> loadPaths(String pathGroupName, String paths) {
 		String pathGroupPropertyName = PATHS_KEY_PREFIX + pathGroupName;
+		String currentPropertyPaths = config.getProperty(pathGroupPropertyName);
+		if (Strings.isNotEmpty(currentPropertyPaths) && Strings.isNotEmpty(paths)) {
+			if (!currentPropertyPaths.endsWith(";")) {
+				currentPropertyPaths += ";";
+			}
+			currentPropertyPaths += paths;
+			config.put(pathGroupPropertyName, currentPropertyPaths);
+		} else if (Strings.isNotEmpty(paths)) {
+			currentPropertyPaths = paths;
+			config.put(pathGroupPropertyName, currentPropertyPaths);
+		}
+		paths = currentPropertyPaths;
+		Collection<String> groupPaths = new LinkedHashSet<>();
 		if (paths != null) {
-			Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
 			if (paths.contains("${classPaths}")) {
+				Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
 				for (String mainClassPath : mainClassPaths) {
 					Map<String, String> defaultValues = new LinkedHashMap<>();
 					defaultValues.put("classPaths", mainClassPath);
 					paths = Strings.Paths.clean(iterableObjectHelper.get(config, pathGroupPropertyName, defaultValues));
 					for (String path : paths.split(";")) {
-						addPath(pathGroupName, path);
+						groupPaths.addAll(addPath(pathGroupName, path));
 					}
 				}	
 			} else {
-				for (String classPath : iterableObjectHelper.get(config, pathGroupPropertyName, null).split(";")) {
-					addPath(pathGroupName, classPath);
+				for (String path : iterableObjectHelper.get(config, pathGroupPropertyName, null).split(";")) {
+					groupPaths.addAll(addPath(pathGroupName, path));
 				}
 			}
 		}
+		return groupPaths;
 	}	
 	
-	private void addPath(String name, String classPaths) {
-		addPaths(name, Arrays.asList(classPaths));
+	private Collection<String> addPath(String name, String classPaths) {
+		return addPaths(name, Arrays.asList(classPaths));
 	}
 	
 	private Collection<String> addPaths(String groupName, Collection<String> paths) {
