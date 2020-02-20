@@ -114,7 +114,7 @@ public class ClassFactory implements Component {
 		logInfo("Try to compile virtual class:\n\n" + classCode +"\n");
 		return javaMemoryCompiler.compile(
 			Arrays.asList(classCode), 
-			pathHelper.getMainClassPaths(),
+			pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
 			pathHelper.getPaths(CLASS_REPOSITORIES)
 		);
 	}
