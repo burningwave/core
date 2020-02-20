@@ -51,6 +51,7 @@ import java.util.stream.Stream;
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Strings;
+import org.burningwave.core.classes.Classes;
 import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
@@ -197,35 +198,38 @@ public class PathHelper implements Component {
 	
 	public Collection<String> loadPaths(String pathGroupName, String paths) {
 		String pathGroupPropertyName = PATHS_KEY_PREFIX + pathGroupName;
-		String currentPropertyPaths = config.getProperty(pathGroupPropertyName);
-		if (Strings.isNotEmpty(currentPropertyPaths) && Strings.isNotEmpty(paths)) {
-			if (!currentPropertyPaths.endsWith(";")) {
-				currentPropertyPaths += ";";
-			}
-			currentPropertyPaths += paths;
-			config.put(pathGroupPropertyName, currentPropertyPaths);
-		} else if (Strings.isNotEmpty(paths)) {
-			currentPropertyPaths = paths;
-			config.put(pathGroupPropertyName, currentPropertyPaths);
-		}
-		paths = currentPropertyPaths;
 		Collection<String> groupPaths = ConcurrentHashMap.newKeySet();
-		if (paths != null) {
-			if (paths.contains("${classPaths}")) {
-				Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
-				for (String mainClassPath : mainClassPaths) {
-					Map<String, String> defaultValues = new LinkedHashMap<>();
-					defaultValues.put("classPaths", mainClassPath);
-					paths = Strings.Paths.clean(iterableObjectHelper.get(config, pathGroupPropertyName, defaultValues));
-					for (String path : paths.split(";")) {
-						groupPaths.addAll(addPath(pathGroupName, path));
+			synchronized(Classes.getStringForSync(pathGroups, pathGroupName)) {
+				String currentPropertyPaths = config.getProperty(pathGroupPropertyName);
+				if (Strings.isNotEmpty(currentPropertyPaths) && Strings.isNotEmpty(paths)) {
+					if (!currentPropertyPaths.endsWith(";")) {
+						currentPropertyPaths += ";";
 					}
-				}	
-			} else {
-				for (String path : iterableObjectHelper.get(config, pathGroupPropertyName, null).split(";")) {
-					groupPaths.addAll(addPath(pathGroupName, path));
+					currentPropertyPaths += paths;
+					config.put(pathGroupPropertyName, currentPropertyPaths);
+				} else if (Strings.isNotEmpty(paths)) {
+					currentPropertyPaths = paths;
+					config.put(pathGroupPropertyName, currentPropertyPaths);
 				}
-			}
+				paths = currentPropertyPaths;
+				
+				if (paths != null) {
+					if (paths.contains("${classPaths}")) {
+						Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
+						for (String mainClassPath : mainClassPaths) {
+							Map<String, String> defaultValues = new LinkedHashMap<>();
+							defaultValues.put("classPaths", mainClassPath);
+							paths = Strings.Paths.clean(iterableObjectHelper.get(config, pathGroupPropertyName, defaultValues));
+							for (String path : paths.split(";")) {
+								groupPaths.addAll(addPath(pathGroupName, path));
+							}
+						}	
+					} else {
+						for (String path : iterableObjectHelper.get(config, pathGroupPropertyName, null).split(";")) {
+							groupPaths.addAll(addPath(pathGroupName, path));
+						}
+					}
+				}
 		}
 		return groupPaths;
 	}	

@@ -325,7 +325,7 @@ public class Cache {
 			}
 			Map<String, R> innerPartion = partion.get(partitionKey);
 			if (innerPartion == null) {
-				synchronized (mutexPrefixName + partitionIndex + "_" + partitionKey) {
+				synchronized (Classes.getStringForSync(mutexPrefixName, partitionIndex, partitionKey)) {
 					innerPartion = partion.get(partitionKey);
 					if (innerPartion == null) {
 						partion.put(partitionKey, innerPartion = new ConcurrentHashMap<>());

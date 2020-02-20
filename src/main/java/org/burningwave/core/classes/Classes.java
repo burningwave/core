@@ -405,6 +405,11 @@ public class Classes {
 	}
 	
 	public static String getId(Object object) {
+		if (object instanceof String) {
+			return (String)object;
+		} else if (object.getClass().isPrimitive()) {
+			return ((Integer)object).toString();
+		}
         return object.getClass().getName() + "@" + object.hashCode();
     }
 	 
