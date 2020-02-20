@@ -31,11 +31,11 @@ package org.burningwave.core.function;
 import org.burningwave.Throwables;
 
 @FunctionalInterface
-public interface ThrowingSupplier<T> {
+public interface ThrowingSupplier<T, E extends Throwable> {
 
-	T get() throws Throwable;
+	T get() throws E;
 	
-	static <T> T get(ThrowingSupplier<T> supplier) {
+	static <T, E extends Throwable> T get(ThrowingSupplier<T, E> supplier) {
 		try {
 			return supplier.get();
 		} catch (Throwable exc) {

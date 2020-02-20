@@ -31,25 +31,25 @@ package org.burningwave.core.function;
 import java.util.Objects;
 
 @FunctionalInterface
-public interface ThrowingPredicate<T> {
+public interface ThrowingPredicate<T, E extends Throwable> {
 
-    boolean test(T t) throws Throwable;
+    boolean test(T t) throws E;
 
-    default ThrowingPredicate<T> and(ThrowingPredicate<? super T> other) {
+    default ThrowingPredicate<T, E> and(ThrowingPredicate<? super T, E> other) {
         Objects.requireNonNull(other);
         return (t) -> test(t) && other.test(t);
     }
 
-    default ThrowingPredicate<T> negate() {
+    default ThrowingPredicate<T, E> negate() {
         return (t) -> !test(t);
     }
 
-    default ThrowingPredicate<T> or(ThrowingPredicate<? super T> other) {
+    default ThrowingPredicate<T, E> or(ThrowingPredicate<? super T, E> other) {
         Objects.requireNonNull(other);
         return (t) -> test(t) || other.test(t);
     }
 
-    static <T> ThrowingPredicate<T> isEqual(Object targetRef) {
+    static <T, E extends Throwable> ThrowingPredicate<T, E> isEqual(Object targetRef) {
         return (null == targetRef)
                 ? Objects::isNull
                 : object -> targetRef.equals(object);

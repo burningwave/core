@@ -69,9 +69,9 @@ public class LowLevelObjectsHandler implements Component {
 	BiFunction<Class<?>,Boolean, Field[]> getDeclaredFieldsRetriever;
 	BiFunction<Class<?>,Boolean, Method[]> getDeclaredMethodsRetriever;
 	BiFunction<Class<?>,Boolean, Constructor<?>[]> getDeclaredConstructorsRetriever;
-	ThrowingTriFunction<ClassLoader, Object, String, Package> packageRetriever;	
+	ThrowingTriFunction<ClassLoader, Object, String, Package, Throwable> packageRetriever;	
 	Method methodInvoker;
-	ThrowingBiConsumer<AccessibleObject, Boolean> accessibleSetter;
+	ThrowingBiConsumer<AccessibleObject, Boolean, Throwable> accessibleSetter;
 		
 	Map<Class<?>, Field> parentClassLoaderFields;
 	Class<?> classLoaderDelegateClass;

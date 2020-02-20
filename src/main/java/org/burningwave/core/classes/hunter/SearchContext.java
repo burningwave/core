@@ -183,7 +183,7 @@ public class SearchContext<T> implements Component {
 		pathMemoryClassLoader.addCompiledClass(className, byteCode);			
 	}
 	
-	protected <O> O execute(ThrowingSupplier<O> supplier, Supplier<O> defaultValueSupplier, Supplier<String> classNameSupplier) {
+	protected <O> O execute(ThrowingSupplier<O, Throwable> supplier, Supplier<O> defaultValueSupplier, Supplier<String> classNameSupplier) {
 		return ThrowingSupplier.get(() -> {
 			try {
 				return supplier.get();

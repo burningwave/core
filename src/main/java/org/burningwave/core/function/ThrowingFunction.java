@@ -33,25 +33,25 @@ import java.util.Objects;
 
 
 @FunctionalInterface
-public interface ThrowingFunction<T, R> {
+public interface ThrowingFunction<T, R, E extends Throwable> {
 
 
-    R apply(T t) throws Throwable;
+    R apply(T t) throws E;
 
     
-    default <V> ThrowingFunction<V, R> compose(ThrowingFunction<? super V, ? extends T> before) {
+    default <V> ThrowingFunction<V, R, E> compose(ThrowingFunction<? super V, ? extends T, E> before) {
         Objects.requireNonNull(before);
         return (V v) -> apply(before.apply(v));
     }
 
     
-    default <V> ThrowingFunction<T, V> andThen(ThrowingFunction<? super R, ? extends V> after) {
+    default <V> ThrowingFunction<T, V, E> andThen(ThrowingFunction<? super R, ? extends V, E> after) {
         Objects.requireNonNull(after);
         return (T t) -> after.apply(apply(t));
     }
 
     
-    static <T> ThrowingFunction<T, T> identity() {
+    static <T, E extends Throwable> ThrowingFunction<T, T, E> identity() {
         return t -> t;
     }
 }

@@ -31,21 +31,21 @@ package org.burningwave.core.function;
 import java.util.Objects;
 
 @FunctionalInterface
-public interface ThrowingBiPredicate<T, U> {
+public interface ThrowingBiPredicate<T, U, E extends Throwable> {
 
     
-    boolean test(T t, U u) throws Throwable;
+    boolean test(T t, U u) throws E;
 
-    default ThrowingBiPredicate<T, U> and(ThrowingBiPredicate<? super T, ? super U> other) {
+    default ThrowingBiPredicate<T, U, E> and(ThrowingBiPredicate<? super T, ? super U, E> other) {
         Objects.requireNonNull(other);
         return (T t, U u) -> test(t, u) && other.test(t, u);
     }
 
-    default ThrowingBiPredicate<T, U> negate() {
+    default ThrowingBiPredicate<T, U, E> negate() {
         return (T t, U u) -> !test(t, u);
     }
 
-    default ThrowingBiPredicate<T, U> or(ThrowingBiPredicate<? super T, ? super U> other) {
+    default ThrowingBiPredicate<T, U, E> or(ThrowingBiPredicate<? super T, ? super U, E> other) {
         Objects.requireNonNull(other);
         return (T t, U u) -> test(t, u) || other.test(t, u);
     }

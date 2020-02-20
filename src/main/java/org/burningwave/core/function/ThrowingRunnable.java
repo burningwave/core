@@ -31,11 +31,11 @@ package org.burningwave.core.function;
 import org.burningwave.Throwables;
 
 @FunctionalInterface
-public interface ThrowingRunnable {
+public interface ThrowingRunnable<E extends Throwable> {
 
-    public abstract void run() throws Throwable;
+    public abstract void run() throws E;
     
-    static void run(ThrowingRunnable runnable) {
+    static <E extends Throwable> void run(ThrowingRunnable<E> runnable) {
 		try {
 			runnable.run();
 		} catch (Throwable exc) {

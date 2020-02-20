@@ -31,11 +31,11 @@ package org.burningwave.core.function;
 import java.util.Objects;
 
 @FunctionalInterface
-public interface ThrowingBiConsumer<P0, P1> {
+public interface ThrowingBiConsumer<P0, P1, E extends Throwable> {
 
-	void accept(P0 p0, P1 p1)  throws Throwable;;
+	void accept(P0 p0, P1 p1)  throws E;;
 
-    default ThrowingBiConsumer<P0, P1> andThen(ThrowingBiConsumer<? super P0, ? super P1> after) {
+    default ThrowingBiConsumer<P0, P1, E> andThen(ThrowingBiConsumer<? super P0, ? super P1, E> after) {
         Objects.requireNonNull(after);
         return (p0, p1) -> {
             accept(p0, p1);

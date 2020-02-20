@@ -65,7 +65,7 @@ public abstract class PropertyAccessor implements Component {
 	private FieldHelper fieldHelper;
 	private ClassHelper classHelper;
 	private List<ThrowingBiFunction<Object, String, Object, Throwable>> propertyRetrievers;
-	private List<ThrowingFunction<Object[], Boolean>> propertySetters;
+	private List<ThrowingFunction<Object[], Boolean, Throwable>> propertySetters;
 	private Supplier<ClassHelper> classHelperSupplier;
 	private IterableObjectHelper iterableObjectHelper;	
 	private Supplier<IterableObjectHelper> iterableObjectHelperSupplier;
@@ -98,7 +98,7 @@ public abstract class PropertyAccessor implements Component {
 			(classHelper = classHelperSupplier.get());
 	}
 	
-	abstract List<ThrowingFunction<Object[], Boolean>> getPropertySetters();
+	abstract List<ThrowingFunction<Object[], Boolean, Throwable>> getPropertySetters();
 
 	abstract List<ThrowingBiFunction<Object, String, Object, Throwable>> getPropertyRetrievers();
 	
@@ -164,7 +164,7 @@ public abstract class PropertyAccessor implements Component {
 	private void setProperty(Object target, String property,
 			Object value) {
 		List<Throwable> exceptions = new ArrayList<>();
-		for (ThrowingFunction<Object[], Boolean> propertySetter : propertySetters) {
+		for (ThrowingFunction<Object[], Boolean, Throwable> propertySetter : propertySetters) {
 			try {
 				propertySetter.apply(new Object[] {target, property, value});
 				break;
@@ -330,8 +330,8 @@ public abstract class PropertyAccessor implements Component {
 			return propertyRetrievers;
 		}
 
-		List<ThrowingFunction<Object[], Boolean>> getPropertySetters() {
-			List<ThrowingFunction<Object[], Boolean>> propertySetters  = new ArrayList<>();
+		List<ThrowingFunction<Object[], Boolean, Throwable>> getPropertySetters() {
+			List<ThrowingFunction<Object[], Boolean, Throwable>> propertySetters  = new ArrayList<>();
 			propertySetters.add(objects -> setPropertyByField(objects[0], (String)objects[1], objects[2]));
 			propertySetters.add(objects -> setPropertyByMethod(objects[0], (String)objects[1], objects[2]));
 			return propertySetters;
@@ -356,8 +356,8 @@ public abstract class PropertyAccessor implements Component {
 			return propertyRetrievers;
 		}
 
-		List<ThrowingFunction<Object[], Boolean>> getPropertySetters() {
-			List<ThrowingFunction<Object[], Boolean>> propertySetters  = new ArrayList<>();
+		List<ThrowingFunction<Object[], Boolean, Throwable>> getPropertySetters() {
+			List<ThrowingFunction<Object[], Boolean, Throwable>> propertySetters  = new ArrayList<>();
 			propertySetters.add(objects -> setPropertyByMethod(objects[0], (String)objects[1], objects[2]));
 			propertySetters.add(objects -> setPropertyByField(objects[0], (String)objects[1], objects[2]));
 			return propertySetters;
