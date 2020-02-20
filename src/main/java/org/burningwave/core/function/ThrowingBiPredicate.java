@@ -36,7 +36,7 @@ public interface ThrowingBiPredicate<T, U, E extends Throwable> {
     
     boolean test(T t, U u) throws E;
 
-    default ThrowingBiPredicate<T, U, E> and(ThrowingBiPredicate<? super T, ? super U, E> other) {
+    default ThrowingBiPredicate<T, U, E> and(ThrowingBiPredicate<? super T, ? super U, ? extends E> other) {
         Objects.requireNonNull(other);
         return (T t, U u) -> test(t, u) && other.test(t, u);
     }
@@ -45,7 +45,7 @@ public interface ThrowingBiPredicate<T, U, E extends Throwable> {
         return (T t, U u) -> !test(t, u);
     }
 
-    default ThrowingBiPredicate<T, U, E> or(ThrowingBiPredicate<? super T, ? super U, E> other) {
+    default ThrowingBiPredicate<T, U, E> or(ThrowingBiPredicate<? super T, ? super U, ? extends E> other) {
         Objects.requireNonNull(other);
         return (T t, U u) -> test(t, u) || other.test(t, u);
     }

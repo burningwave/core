@@ -29,14 +29,13 @@
 package org.burningwave.core.function;
 
 import java.util.Objects;
-import java.util.function.Function;
 
 @FunctionalInterface
 public interface ThrowingBiFunction<P0, P1, R, E extends Throwable> {
 
     R apply(P0 p0, P1 p1) throws E;
 
-    default <V> ThrowingBiFunction<P0, P1, V, E> andThen(Function<? super R, ? extends V> after) {
+    default <V> ThrowingBiFunction<P0, P1, V, E> andThen(ThrowingFunction<? super R, ? extends V, ? extends E> after) {
     	Objects.requireNonNull(after);
     	return (P0 p0, P1 p1) -> after.apply(apply(p0, p1));
     }

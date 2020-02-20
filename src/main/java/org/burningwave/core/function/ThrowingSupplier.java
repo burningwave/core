@@ -35,7 +35,7 @@ public interface ThrowingSupplier<T, E extends Throwable> {
 
 	T get() throws E;
 	
-	static <T, E extends Throwable> T get(ThrowingSupplier<T, E> supplier) {
+	static <T, E extends Throwable> T get(ThrowingSupplier<T, ? extends E> supplier) {
 		try {
 			return supplier.get();
 		} catch (Throwable exc) {

@@ -35,7 +35,7 @@ public interface ThrowingPredicate<T, E extends Throwable> {
 
     boolean test(T t) throws E;
 
-    default ThrowingPredicate<T, E> and(ThrowingPredicate<? super T, E> other) {
+    default ThrowingPredicate<T, E> and(ThrowingPredicate<? super T, ? extends E> other) {
         Objects.requireNonNull(other);
         return (t) -> test(t) && other.test(t);
     }
@@ -44,7 +44,7 @@ public interface ThrowingPredicate<T, E extends Throwable> {
         return (t) -> !test(t);
     }
 
-    default ThrowingPredicate<T, E> or(ThrowingPredicate<? super T, E> other) {
+    default ThrowingPredicate<T, E> or(ThrowingPredicate<? super T, ? extends E> other) {
         Objects.requireNonNull(other);
         return (t) -> test(t) || other.test(t);
     }
