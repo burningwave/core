@@ -117,7 +117,7 @@ public class LowLevelObjectsHandler implements Component {
 			public String toString() {
 				definedClass.set(super.defineClass(
 					LowLevelObjectsHandler.class.getName(),
-					Streams.toByteBuffer(ClassLoader.getSystemClassLoader().getResourceAsStream(LowLevelObjectsHandler.class.getName().replace(".", "/")+ ".class")),	
+					Streams.toByteBuffer(Classes.getInstance().getClassLoader(this.getClass()).getResourceAsStream(LowLevelObjectsHandler.class.getName().replace(".", "/")+ ".class")),	
 					null)
 				);
 				return "lowlevelobjectshandler.initializator";

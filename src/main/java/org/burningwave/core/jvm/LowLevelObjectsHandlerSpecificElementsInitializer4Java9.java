@@ -14,6 +14,7 @@ import java.util.function.BiFunction;
 
 import org.burningwave.ManagedLogger;
 import org.burningwave.Throwables;
+import org.burningwave.core.classes.Classes;
 import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.io.Streams;
 
@@ -75,7 +76,7 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelOb
 				throw Throwables.toRuntimeException(exc);
 			}
 			try (
-				InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("org/burningwave/core/classes/ClassLoaderDelegate.bwc");
+				InputStream inputStream = Classes.getInstance().getClassLoader(this.getClass()).getResourceAsStream("org/burningwave/core/classes/ClassLoaderDelegate.bwc");
 				ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 			) {
 				Streams.copy(inputStream, bBOS);
