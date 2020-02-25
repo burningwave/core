@@ -1,14 +1,11 @@
 package org.burningwave.core.jvm;
 
-import java.lang.invoke.LambdaMetafactory;
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiFunction;
 
 import org.burningwave.ManagedLogger;
 import org.burningwave.Throwables;
@@ -58,38 +55,25 @@ abstract class LowLevelObjectsHandlerSpecificElementsInitializer implements Comp
 	private void initMembersRetrievers() {
 		try {
 			Lookup consulter = lowLevelObjectsHandler.consulterRetriever.retrieve(Class.class);
-			MethodType methodType = MethodType.methodType(Field[].class, boolean.class);
-			MethodHandle methodHandle = consulter.findSpecial(Class.class, "getDeclaredFields0", methodType, Class.class);
-			lowLevelObjectsHandler.getDeclaredFieldsRetriever = (BiFunction<Class<?>, Boolean, Field[]>)LambdaMetafactory.metafactory(
-				consulter, 
-				"apply",
-				MethodType.methodType(BiFunction.class),
-				methodHandle.type().generic(),
-				methodHandle,
-				methodHandle.type().changeParameterType(1, Boolean.class)
-			).getTarget().invokeExact();
+			lowLevelObjectsHandler.getDeclaredFieldsRetriever = consulter.findSpecial(
+				Class.class, "getDeclaredFields0",
+				MethodType.methodType(Field[].class, boolean.class),
+				Class.class
+			);
 			
-			methodType = MethodType.methodType(Method[].class, boolean.class);
-			methodHandle = consulter.findSpecial(Class.class, "getDeclaredMethods0", methodType, Class.class);
-			lowLevelObjectsHandler.getDeclaredMethodsRetriever = (BiFunction<Class<?>, Boolean, Method[]>)LambdaMetafactory.metafactory(
-				consulter,
-				"apply",
-				MethodType.methodType(BiFunction.class),
-				methodHandle.type().generic(),
-				methodHandle,
-				methodHandle.type().changeParameterType(1, Boolean.class)
-			).getTarget().invokeExact();
-			
-			methodType = MethodType.methodType(Constructor[].class, boolean.class);
-			methodHandle = consulter.findSpecial(Class.class, "getDeclaredConstructors0", methodType, Class.class);
-			lowLevelObjectsHandler.getDeclaredConstructorsRetriever = (BiFunction<Class<?>, Boolean, Constructor<?>[]>)LambdaMetafactory.metafactory(
-				consulter,
-				"apply",
-				MethodType.methodType(BiFunction.class),
-				methodHandle.type().generic(),
-				methodHandle,
-				methodHandle.type().changeParameterType(1, Boolean.class)
-			).getTarget().invokeExact();
+			lowLevelObjectsHandler.getDeclaredMethodsRetriever = consulter.findSpecial(
+				Class.class,
+				"getDeclaredMethods0",
+				MethodType.methodType(Method[].class, boolean.class),
+				Class.class
+			);
+
+			lowLevelObjectsHandler.getDeclaredConstructorsRetriever = consulter.findSpecial(
+				Class.class,
+				"getDeclaredConstructors0",
+				MethodType.methodType(Constructor[].class, boolean.class),
+				Class.class
+			);
 			lowLevelObjectsHandler.parentClassLoaderFields = new ConcurrentHashMap<>();
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);

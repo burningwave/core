@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.jvm;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -37,7 +38,6 @@ import java.nio.Buffer;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
@@ -68,9 +68,9 @@ public class LowLevelObjectsHandler implements Component {
 	Method[] emptyMethodsArray;
 	Constructor<?>[] emptyConstructorsArray;
 	
-	BiFunction<Class<?>,Boolean, Field[]> getDeclaredFieldsRetriever;
-	BiFunction<Class<?>,Boolean, Method[]> getDeclaredMethodsRetriever;
-	BiFunction<Class<?>,Boolean, Constructor<?>[]> getDeclaredConstructorsRetriever;
+	MethodHandle getDeclaredFieldsRetriever;
+	MethodHandle getDeclaredMethodsRetriever;
+	MethodHandle getDeclaredConstructorsRetriever;
 	ThrowingTriFunction<ClassLoader, Object, String, Package, Throwable> packageRetriever;	
 	Method methodInvoker;
 	ThrowingBiConsumer<AccessibleObject, Boolean, Throwable> accessibleSetter;
@@ -318,7 +318,7 @@ public class LowLevelObjectsHandler implements Component {
 	
 	public Field[] getDeclaredFields(Class<?> cls)  {
 		try {
-			return getDeclaredFieldsRetriever.apply(cls, false);
+			return (Field[])getDeclaredFieldsRetriever.invoke(cls, false);
 		} catch (Throwable exc) {
 			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve fields of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return emtpyFieldsArray;
@@ -327,7 +327,7 @@ public class LowLevelObjectsHandler implements Component {
 	
 	public Method[] getDeclaredMethods(Class<?> cls)  {
 		try {
-			return (Method[]) getDeclaredMethodsRetriever.apply(cls, false);
+			return (Method[]) getDeclaredMethodsRetriever.invoke(cls, false);
 		} catch (Throwable exc) {
 			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return emptyMethodsArray;
@@ -336,7 +336,7 @@ public class LowLevelObjectsHandler implements Component {
 	
 	public Constructor<?>[] getDeclaredConstructors(Class<?> cls)  {
 		try {
-			return (Constructor<?>[])getDeclaredConstructorsRetriever.apply(cls, false);
+			return (Constructor<?>[])getDeclaredConstructorsRetriever.invoke(cls, false);
 		} catch (Throwable exc) {
 			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return emptyConstructorsArray;
