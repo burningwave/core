@@ -9,8 +9,14 @@ public class Service implements Component {
 	private final static Logger LOGGER = LoggerFactory.getLogger(Service.class);
 	
 	public static Object retrieve() {
-		LOGGER.info("Runnable");
+		LOGGER.info("static retrieve");
 		return new Object();
+	}
+	
+	@SuppressWarnings("unused")
+	private Service supply() {
+		LOGGER.info("supply");
+		return new Service();
 	}
 	
 	public static void consume(Integer obj) {
@@ -32,7 +38,11 @@ public class Service implements Component {
 	}
 	
 	public void run() {
-		LOGGER.info("run");
+		LOGGER.info("static run");
+	}	
+	
+	public static void staticRun() {
+		LOGGER.info("static run");
 	}		
 	
 	public String apply(String value_01, String value_02) {
@@ -48,6 +58,20 @@ public class Service implements Component {
 	public String apply(Object value_01, String value_02, String value_03) {
 		LOGGER.info("TriFunction: " + value_01 + " " + value_02 + " " + value_03);
 		return "";
+	}
+	
+	public static String staticApply(Object value_01, String value_02, String value_03) {
+		LOGGER.info("TriFunction: " + value_01 + " " + value_02 + " " + value_03);
+		return "";
+	}
+	
+	public boolean test(Object value_01, String value_02, String value_03) {
+		LOGGER.info("TriPredicate: " + value_01 + " " + value_02 + " " + value_03);
+		return true;
+	}
+	
+	public void accept(String value_01) {
+		LOGGER.info("Consumer: " + value_01);
 	}
 	
 	public void accept(String value_01, String value_02) {
