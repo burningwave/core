@@ -28,10 +28,11 @@
  */
 package org.burningwave.core.reflection;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
@@ -44,10 +45,12 @@ public class ConsulterRetriever implements Component {
 	private ConsulterRetriever(JVMInfo jVMInfo) {
 		if (jVMInfo.getVersion() > 8) {
 			try {
-				Method consulterRetrieverMethod = MethodHandles.class.getDeclaredMethod("privateLookupIn", Class.class, Lookup.class);
-				function = cls -> (Lookup)consulterRetrieverMethod.invoke(null, cls, MethodHandles.lookup());
+				MethodHandles.Lookup consulter = MethodHandles.lookup();
+				MethodHandle consulterRetrieverMethod = consulter.findStatic(MethodHandles.class, "privateLookupIn", MethodType.methodType(Lookup.class, Class.class, Lookup.class));
+				function = cls ->
+					(Lookup)consulterRetrieverMethod.invoke(cls, MethodHandles.lookup());
 			} catch (IllegalArgumentException | NoSuchMethodException
-					| SecurityException exc) {
+					| SecurityException | IllegalAccessException exc) {
 				logError("Could not initialize consulter", exc);
 				throw Throwables.toRuntimeException(exc);
 			}
