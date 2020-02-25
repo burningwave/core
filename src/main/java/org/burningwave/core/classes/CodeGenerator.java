@@ -43,9 +43,6 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Strings;
 import org.burningwave.core.Virtual;
-import org.burningwave.core.function.MultiParamsConsumer;
-import org.burningwave.core.function.MultiParamsFunction;
-import org.burningwave.core.function.MultiParamsPredicate;
 import org.burningwave.core.io.StreamHelper;
 
 public abstract class CodeGenerator implements Component {
@@ -66,9 +63,14 @@ public abstract class CodeGenerator implements Component {
 		this.streamHelper = pathHelper;
 	}
 	
-	String getImports() {
+	String getImports(Class<?>... classesToBeImported) {
 		StringBuffer imports = new StringBuffer();
 		imports.append("import " + Virtual.class.getName() + ";");
+		if (classesToBeImported != null && classesToBeImported.length > 0) {
+			for (Class<?> classToBeImported : classesToBeImported) {
+				imports.append("\nimport " + classToBeImported.getName() + ";");
+			}
+		}
 		return imports.toString();
 	}
 	
@@ -349,7 +351,7 @@ public abstract class CodeGenerator implements Component {
 			
 			Map<String, String> map = new LinkedHashMap<>();
 			map.put("${packageName}", PACKAGE_NAME);
-			map.put("${imports}", "import " + MultiParamsFunction.class.getName() + ";");
+			//map.put("${imports}", getImports(MultiParamsFunction.class));
 			map.put("${className}", className);
 			map.put("${returnGenericType_01}", returnGenericType_01);
 			map.put("${generics_01}", genericsAsString_01);
@@ -396,7 +398,7 @@ public abstract class CodeGenerator implements Component {
 		
 			Map<String, String> map = new LinkedHashMap<>();
 			map.put("${packageName}", PACKAGE_NAME);
-			map.put("${imports}", "import " + MultiParamsConsumer.class.getName() + ";");
+			//map.put("${imports}", getImports(MultiParamsConsumer.class));
 			map.put("${className}", className);
 			map.put("${generics_01}", genericsAsString_01);
 			map.put("${genericParams_01}", genericParamsAsString_01);
@@ -443,7 +445,7 @@ public abstract class CodeGenerator implements Component {
 		
 			Map<String, String> map = new LinkedHashMap<>();
 			map.put("${packageName}", PACKAGE_NAME);
-			map.put("${imports}", "import " + MultiParamsPredicate.class.getName() + ";");
+			//map.put("${imports}", getImports(MultiParamsPredicate.class));
 			map.put("${className}", className);
 			map.put("${generics_01}", genericsAsString_01);
 			map.put("${genericParams_01}", genericParamsAsString_01);

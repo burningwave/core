@@ -47,6 +47,7 @@ import org.burningwave.core.classes.CodeGenerator.ForPojo;
 import org.burningwave.core.classes.CodeGenerator.ForPredicate;
 import org.burningwave.core.classes.ConstructorHelper;
 import org.burningwave.core.classes.FieldHelper;
+import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MemoryClassLoader;
@@ -66,13 +67,7 @@ import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.jvm.JVMInfo;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
 import org.burningwave.core.reflection.ConsulterRetriever;
-import org.burningwave.core.reflection.ConsumerBinder;
-import org.burningwave.core.reflection.FunctionBinder;
-import org.burningwave.core.reflection.FunctionalInterfaceFactory;
-import org.burningwave.core.reflection.PredicateBinder;
 import org.burningwave.core.reflection.PropertyAccessor;
-import org.burningwave.core.reflection.RunnableBinder;
-import org.burningwave.core.reflection.SupplierBinder;
 
 public class ComponentContainer implements ComponentSupplier {
 	protected Map<Class<? extends Component>, Component> components;
@@ -417,65 +412,10 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 
 	@Override
-	public RunnableBinder getRunnableBinder() {
-		return getOrCreate(RunnableBinder.class, () ->
-			RunnableBinder.create(
-				getMemberFinder(),
-				getConsulterRetriever()
-			)
-		);
-	}
-
-	@Override
-	public SupplierBinder getSupplierBinder() {
-		return getOrCreate(SupplierBinder.class, () -> 
-			SupplierBinder.create(
-				getMemberFinder(),
-				getConsulterRetriever()
-			)
-		);
-	}
-
-	@Override
-	public ConsumerBinder getConsumerBinder() {
-		return getOrCreate(ConsumerBinder.class, () -> 
-			ConsumerBinder.create(
-				getMemberFinder(),
-				getConsulterRetriever(),
-				getClassFactory()::getOrBuildConsumerSubType
-			)
-		);
-	}
-
-	@Override
-	public FunctionBinder getFunctionBinder() {
-		return getOrCreate(FunctionBinder.class, () ->
-			FunctionBinder.create(
-				getMemberFinder(),
-				getConsulterRetriever(),
-				getClassFactory()::getOrBuildFunctionSubType
-			)
-		);
-	}
-	
-	@Override
-	public PredicateBinder getPredicateBinder() {
-		return getOrCreate(PredicateBinder.class, () ->
-		PredicateBinder.create(
-				getMemberFinder(),
-				getConsulterRetriever(),
-				getClassFactory()::getOrBuildPredicateSubType
-			)
-		);
-	}
-
-	@Override
 	public FunctionalInterfaceFactory getFunctionalInterfaceFactory() {
 		return getOrCreate(FunctionalInterfaceFactory.class, () -> 
 			FunctionalInterfaceFactory.create(
-				getRunnableBinder(), getSupplierBinder(),
-				getConsumerBinder(), getFunctionBinder(),
-				getPredicateBinder()
+				getClasses(), getClassFactory()
 			)
 		);
 	}

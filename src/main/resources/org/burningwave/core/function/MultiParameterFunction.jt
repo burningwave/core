@@ -30,11 +30,12 @@ package ${packageName};
 
 
 import java.util.function.Function;
-${imports}
+import org.burningwave.core.Virtual;
+import org.burningwave.core.function.MultiParamsFunction;
 
 
 @FunctionalInterface
-public interface ${className}<${generics_01}> extends MultiParamsFunction<${returnGenericType_01}> {
+public interface ${className}<${generics_01}> extends Virtual, MultiParamsFunction<${returnGenericType_01}> {
 
     ${returnGenericType_01} apply(${genericParams_01});
 

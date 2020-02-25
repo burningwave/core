@@ -74,7 +74,7 @@ public class LowLevelObjectsHandler implements Component {
 	ThrowingTriFunction<ClassLoader, Object, String, Package, Throwable> packageRetriever;	
 	Method methodInvoker;
 	ThrowingBiConsumer<AccessibleObject, Boolean, Throwable> accessibleSetter;
-		
+	
 	Map<Class<?>, Field> parentClassLoaderFields;
 	Class<?> classLoaderDelegateClass;
 	Class<?> builtinClassLoaderClass;

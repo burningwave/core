@@ -82,4 +82,8 @@ public class Service implements Component {
 		LOGGER.info("TriConsumer: " + value_01 + " " + value_02 + " " + value_03);
 	}
 	
+	public static void staticAccept(Service service, String value_01, String value_02, String value_03) {
+		LOGGER.info("QuadConsumer: " + value_01 + " " + value_02 + " " + value_03);
+	}
+	
 }

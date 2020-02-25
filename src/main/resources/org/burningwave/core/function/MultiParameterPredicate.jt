@@ -30,11 +30,12 @@ package ${packageName};
 
 
 import java.util.Objects;
-${imports}
+import org.burningwave.core.Virtual;
+import org.burningwave.core.function.MultiParamsPredicate;
 
 
 @FunctionalInterface
-public interface ${className}<${generics_01}> extends MultiParamsPredicate {
+public interface ${className}<${generics_01}> extends Virtual, MultiParamsPredicate {
 
     boolean test(${genericParams_01});
 

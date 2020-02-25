@@ -32,15 +32,16 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassFactory;
-import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.CodeGenerator;
 import org.burningwave.core.classes.ConstructorHelper;
 import org.burningwave.core.classes.FieldHelper;
+import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodHelper;
+import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.classes.hunter.ByteCodeHunter;
 import org.burningwave.core.classes.hunter.ClassHunter;
 import org.burningwave.core.classes.hunter.ClassPathHunter;
@@ -53,13 +54,7 @@ import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.jvm.JVMInfo;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
 import org.burningwave.core.reflection.ConsulterRetriever;
-import org.burningwave.core.reflection.ConsumerBinder;
-import org.burningwave.core.reflection.FunctionBinder;
-import org.burningwave.core.reflection.FunctionalInterfaceFactory;
-import org.burningwave.core.reflection.PredicateBinder;
 import org.burningwave.core.reflection.PropertyAccessor;
-import org.burningwave.core.reflection.RunnableBinder;
-import org.burningwave.core.reflection.SupplierBinder;
 
 public interface ComponentSupplier extends Component {
 	
@@ -100,8 +95,6 @@ public interface ComponentSupplier extends Component {
 	public ConcurrentHelper getConcurrentHelper();
 
 	public ConstructorHelper getConstructorHelper();
-	
-	public ConsumerBinder getConsumerBinder();
 
 	public FieldHelper getFieldHelper();
 	
@@ -110,8 +103,6 @@ public interface ComponentSupplier extends Component {
 	public FileSystemScanner getFileSystemScanner();
 
 	public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
-
-	public FunctionBinder getFunctionBinder();
 
 	public IterableObjectHelper getIterableObjectHelper();
 
@@ -133,11 +124,6 @@ public interface ComponentSupplier extends Component {
 	
 	public PathHelper getPathHelper();
 	
-	public RunnableBinder getRunnableBinder();
-	
 	public StreamHelper getStreamHelper();
 	
-	public SupplierBinder getSupplierBinder();
-
-	PredicateBinder getPredicateBinder();
 }

@@ -147,6 +147,20 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	}
 	
 	@Test
+	public void getOrBuildConsumerClassTestThree() throws Throwable {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testDoesNotThrow(() -> {
+			Method mth = componentSupplier.getMemberFinder().findOne(
+				MethodCriteria.create()
+				.name((name) -> name.matches("staticAccept")).and().parameterTypes(params -> params.length == 4),
+				Service.class				
+			);
+			MultiParamsConsumer virtualObj = componentSupplier.getFunctionalInterfaceFactory().create(mth);
+			virtualObj.accept(new Service(), "Hello ", "world!", "How are you?");
+		});
+	}
+	
+	@Test
 	public void getOrBuildRunnableClassTestOne() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {

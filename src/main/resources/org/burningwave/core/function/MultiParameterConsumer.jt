@@ -31,11 +31,11 @@ package ${packageName};
 
 import java.lang.invoke.MethodHandles;
 import java.util.Objects;
-
-${imports}
+import org.burningwave.core.Virtual;
+import org.burningwave.core.function.MultiParamsConsumer;
 
 @FunctionalInterface
-public interface ${className}<${generics_01}> extends MultiParamsConsumer {
+public interface ${className}<${generics_01}> extends Virtual, MultiParamsConsumer {
 
     void accept(${genericParams_01});
 

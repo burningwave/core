@@ -4,7 +4,7 @@ package org.burningwave.core;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.ConstructorHelper;
-import org.burningwave.core.reflection.ConsumerBinder;
+import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.service.ExtendedService;
 import org.junit.jupiter.api.Test;
 
@@ -31,9 +31,9 @@ public class ConstructorHelperTest extends BaseTest {
 	public void newInstanceOfTestThree() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> componentSupplier.getConstructorHelper().newInstanceOf(
-			ConsumerBinder.class,
-			componentSupplier.getMemberFinder(), 
-			componentSupplier.getConsulterRetriever(), null)
+			FunctionalInterfaceFactory.class,
+			componentSupplier.getClasses(), 
+			componentSupplier.getClassFactory())
 		);
 	}
 }
