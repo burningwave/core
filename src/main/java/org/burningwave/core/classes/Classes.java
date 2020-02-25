@@ -29,6 +29,9 @@
 package org.burningwave.core.classes;
 
 import java.io.InputStream;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -56,9 +59,11 @@ import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.Streams;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
+import org.burningwave.core.reflection.ConsulterRetriever;
 
 public class Classes implements Component {
 	private LowLevelObjectsHandler lowLevelObjectsHandler;
+	private ConsulterRetriever consulterRetriever;
 	
 	public static class Symbol{
 		public static class Tag {
@@ -89,16 +94,17 @@ public class Classes implements Component {
 		V15 = 0 << 16 | 59;
 	}
 	
-	private Classes(LowLevelObjectsHandler lowLevelObjectsHandler) {
+	private Classes(LowLevelObjectsHandler lowLevelObjectsHandler, ConsulterRetriever consulterRetriever) {
 		this.lowLevelObjectsHandler = lowLevelObjectsHandler;
+		this.consulterRetriever = consulterRetriever;
 	}
 	
 	public static Classes getInstance() {
 		return LazyHolder.getClassesInstance();
 	}
 	
-	public static Classes create(LowLevelObjectsHandler lowLevelObjectsHandler) {
-		return new Classes(lowLevelObjectsHandler);
+	public static Classes create(LowLevelObjectsHandler lowLevelObjectsHandler, ConsulterRetriever consulterRetriever) {
+		return new Classes(lowLevelObjectsHandler, consulterRetriever);
 	}
 	
 	@SuppressWarnings({ "unchecked"})
@@ -287,6 +293,20 @@ public class Classes implements Component {
 		return (short) (((byteSupplier.apply(offset) & 0xFF) << 8) | (byteSupplier.apply(offset + 1) & 0xFF));
 	}
 	
+	public MethodHandle methodToMethodHandle(Method method) {
+		Class<?> methodDeclaringClass = method.getDeclaringClass();
+		MethodHandles.Lookup consulter = consulterRetriever.retrieve(methodDeclaringClass);
+		try {
+			return consulter.findSpecial(
+				methodDeclaringClass, method.getName(),
+				MethodType.methodType(method.getReturnType(), method.getParameterTypes()),
+				methodDeclaringClass
+			);
+		} catch (NoSuchMethodException | IllegalAccessException exc) {
+			throw Throwables.toRuntimeException(exc);
+		}
+	}
+	
 	public Collection<Field> getDeclaredFields(Class<?> cls, Predicate<Field> fieldPredicate) {
 		Collection<Field> members = new LinkedHashSet<>();
 		for (Field member : getDeclaredFields(cls)) {
@@ -388,7 +408,7 @@ public class Classes implements Component {
 	}
 	
 	private static class LazyHolder {
-		private static final Classes CLASSES_INSTANCE = Classes.create(LowLevelObjectsHandler.getInstance());
+		private static final Classes CLASSES_INSTANCE = Classes.create(LowLevelObjectsHandler.getInstance(), ConsulterRetriever.getInstance());
 		
 		private static Classes getClassesInstance() {
 			return CLASSES_INSTANCE;
@@ -400,7 +420,7 @@ public class Classes implements Component {
 		private MemberFinder memberFinder;
 		protected Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
 		protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
-		protected Map<String, Method> classLoadersMethods;
+		protected Map<String, MethodHandle> classLoadersMethods;
 		private Classes classes;
 		
 		private Loaders(LowLevelObjectsHandler lowLevelObjectsHandler, Classes classes, MemberFinder memberFinder) {
@@ -454,7 +474,7 @@ public class Classes implements Component {
 			return classLoader;
 		}
 		
-		public Method getDefinePackageMethod(ClassLoader classLoader) {
+		public MethodHandle getDefinePackageMethod(ClassLoader classLoader) {
 			return getMethod(
 				classLoader,
 				classLoader.getClass().getName() + "_" + "definePackage",
@@ -462,7 +482,7 @@ public class Classes implements Component {
 			);
 		}	
 		
-		private Method findDefinePackageMethodAndMakeItAccesible(ClassLoader classLoader) {
+		private MethodHandle findDefinePackageMethodAndMakeItAccesible(ClassLoader classLoader) {
 			Method method = memberFinder.findAll(
 				MethodCriteria.byScanUpTo((cls) -> 
 					cls.getName().equals(ClassLoader.class.getName())
@@ -474,11 +494,10 @@ public class Classes implements Component {
 				),
 				classLoader
 			).stream().findFirst().orElse(null);
-			method.setAccessible(true);
-			return method;
+			return classes.methodToMethodHandle(method);
 		}
 		
-		public Method getDefineClassMethod(ClassLoader classLoader) {
+		public MethodHandle getDefineClassMethod(ClassLoader classLoader) {
 			return getMethod(
 				classLoader,
 				classLoader.getClass().getName() + "_" + "defineClass",
@@ -486,7 +505,7 @@ public class Classes implements Component {
 			);
 		}
 		
-		private Method findDefineClassMethodAndMakeItAccesible(ClassLoader classLoader) {
+		private MethodHandle findDefineClassMethodAndMakeItAccesible(ClassLoader classLoader) {
 			Method method = memberFinder.findAll(
 				MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
 					(classLoader instanceof MemoryClassLoader? "_defineClass" : "defineClass")::equals
@@ -497,12 +516,11 @@ public class Classes implements Component {
 				).and().returnType((cls) -> cls.getName().equals(Class.class.getName())),
 				classLoader
 			).stream().findFirst().orElse(null);
-			method.setAccessible(true);
-			return method;
+			return classes.methodToMethodHandle(method);
 		}
 		
-		private Method getMethod(ClassLoader classLoader, String key, Supplier<Method> methodSupplier) {
-			Method method = classLoadersMethods.get(key);
+		private MethodHandle getMethod(ClassLoader classLoader, String key, Supplier<MethodHandle> methodSupplier) {
+			MethodHandle method = classLoadersMethods.get(key);
 			if (method == null) {
 				synchronized (classLoadersMethods) {
 					method = classLoadersMethods.get(key);
@@ -566,10 +584,6 @@ public class Classes implements Component {
 			} catch (Throwable exc) {
 				throw Throwables.toRuntimeException(exc);
 			}
-		}
-		
-		public Object invoke(Object target, Method method, Object... params) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-			return lowLevelObjectsHandler.invoke(target, method, params);
 		}
 		
 		public Class<?> loadOrUploadClass(
@@ -648,8 +662,8 @@ public class Classes implements Component {
 		private Class<?> loadOrUploadClass(
 			JavaClass javaClass, 
 			ClassLoader classLoader, 
-			Method defineClassMethod, 
-			Method definePackageMethod
+			MethodHandle defineClassMethod, 
+			MethodHandle definePackageMethod
 		) throws ClassNotFoundException {
 	    	try {
 	    		return classLoader.loadClass(javaClass.getName());
@@ -676,8 +690,8 @@ public class Classes implements Component {
 		private Class<?> loadOrUploadClass(
 			Class<?> toLoad, 
 			ClassLoader classLoader, 
-			Method defineClassMethod, 
-			Method definePackageMethod
+			MethodHandle defineClassMethod, 
+			MethodHandle definePackageMethod
 		) throws ClassNotFoundException {
 	    	try {
 	    		return classLoader.loadClass(toLoad.getName());
@@ -706,7 +720,7 @@ public class Classes implements Component {
 		
 		private Class<?> defineClass(
 			ClassLoader classLoader, 
-			Method method, 
+			MethodHandle method, 
 			String className,
 			ByteBuffer byteCode
 		) throws ClassNotFoundException {
@@ -727,11 +741,11 @@ public class Classes implements Component {
 		
 		
 	    private Package definePackage(
-			String name, String specTitle,
-			String specVersion, String specVendor, String implTitle,
-			String implVersion, String implVendor, URL sealBase,
-			ClassLoader classLoader,
-			Method definePackageMethod
+			ClassLoader classLoader, MethodHandle definePackageMethod,
+			String name, String specTitle, String specVersion,
+			String specVendor, String implTitle, String implVersion,
+			String implVendor,
+			URL sealBase
 		) throws IllegalArgumentException {
 	    	return ThrowingSupplier.get(() -> {
 	    		try {
@@ -746,7 +760,7 @@ public class Classes implements Component {
 	    
 		private void definePackageFor(Class<?> cls, 
 			ClassLoader classLoader,
-			Method definePackageMethod
+			MethodHandle definePackageMethod
 		) {
 			if (cls.getName().contains(".")) {
 				String pckgName = cls.getName().substring(
@@ -754,7 +768,7 @@ public class Classes implements Component {
 			    );
 			    Package pkg = retrievePackage(classLoader, pckgName);
 			    if (pkg == null) {
-			    	pkg = definePackage(pckgName, null, null, null, null, null, null, null, classLoader, definePackageMethod);
+			    	pkg = definePackage(classLoader, definePackageMethod, pckgName, null, null, null, null, null, null, null);
 				}	
 			}
 		}
