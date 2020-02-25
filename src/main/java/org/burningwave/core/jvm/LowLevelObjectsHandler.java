@@ -51,11 +51,13 @@ import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingTriFunction;
 import org.burningwave.core.io.Streams;
+import org.burningwave.core.reflection.ConsulterRetriever;
 
 import sun.misc.Unsafe;
 
 @SuppressWarnings("restriction")
 public class LowLevelObjectsHandler implements Component {
+	ConsulterRetriever consulterRetriever;
 	JVMInfo jVMInfo;
 	MemberFinder memberFinder;
 	Unsafe unsafe;
@@ -80,7 +82,8 @@ public class LowLevelObjectsHandler implements Component {
 	Long loadedPackagesMapMemoryOffset;
 	Long loadedClassesVectorMemoryOffset;	
 
-	private LowLevelObjectsHandler(JVMInfo jVMInfo, MemberFinder memberFinder) {
+	private LowLevelObjectsHandler(ConsulterRetriever consulterRetriever, JVMInfo jVMInfo, MemberFinder memberFinder) {
+		this.consulterRetriever = consulterRetriever;
 		this.jVMInfo = jVMInfo;
 		this.memberFinder = memberFinder;
 		LowLevelObjectsHandlerSpecificElementsInitializer.build(this);
@@ -91,8 +94,8 @@ public class LowLevelObjectsHandler implements Component {
 		return LazyHolder.getLowLevelObjectsHandlerInstance();
 	}
 	
-	public static LowLevelObjectsHandler create(JVMInfo jvmChecker, MemberFinder memberFinder) {
-		return new LowLevelObjectsHandler(jvmChecker, memberFinder);
+	public static LowLevelObjectsHandler create(ConsulterRetriever consulterRetriever, JVMInfo jvmChecker, MemberFinder memberFinder) {
+		return new LowLevelObjectsHandler(consulterRetriever, jvmChecker, memberFinder);
 	}
 	
 	public Unsafe getUnsafe() {
@@ -398,7 +401,9 @@ public class LowLevelObjectsHandler implements Component {
 	}
 	
 	private static class LazyHolder {
-		private static final LowLevelObjectsHandler LOW_LEVEL_OBJECTS_HANDLER_INSTANCE = LowLevelObjectsHandler.create(JVMInfo.create(), MemberFinder.getInstance());
+		private static final LowLevelObjectsHandler LOW_LEVEL_OBJECTS_HANDLER_INSTANCE = LowLevelObjectsHandler.create(
+			ConsulterRetriever.getInstance(), JVMInfo.getInstance(), MemberFinder.getInstance()
+		);
 		
 		private static LowLevelObjectsHandler getLowLevelObjectsHandlerInstance() {
 			return LOW_LEVEL_OBJECTS_HANDLER_INSTANCE;

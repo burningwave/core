@@ -47,22 +47,17 @@ abstract class LowLevelObjectsHandlerSpecificElementsInitializer implements Comp
 	}
 	
 	public static void build(LowLevelObjectsHandler lowLevelObjectsHandler) {
-		try {
-			Class.forName("jdk.internal.loader.BuiltinClassLoader");
-			try (LowLevelObjectsHandlerSpecificElementsInitializer initializer = new LowLevelObjectsHandlerSpecificElementsInitializer4Java9(lowLevelObjectsHandler)) {
-				initializer.init();
-			}
-		} catch (ClassNotFoundException exc) {
-			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "jdk.internal.loader.BuiltinClassLoader class not detected");
-			try (LowLevelObjectsHandlerSpecificElementsInitializer initializer = new LowLevelObjectsHandlerSpecificElementsInitializer4Java8(lowLevelObjectsHandler)) {
-				initializer.init();
-			}
+		try (LowLevelObjectsHandlerSpecificElementsInitializer initializer =
+				lowLevelObjectsHandler.jVMInfo.getVersion() > 8 ?
+				new LowLevelObjectsHandlerSpecificElementsInitializer4Java9(lowLevelObjectsHandler):
+				new LowLevelObjectsHandlerSpecificElementsInitializer4Java8(lowLevelObjectsHandler)) {
+			initializer.init();
 		}
 	}
 	
 	private void initMembersRetrievers() {
 		try {
-			Lookup consulter = getConsulter(Class.class);
+			Lookup consulter = lowLevelObjectsHandler.consulterRetriever.retrieve(Class.class);
 			MethodType methodType = MethodType.methodType(Field[].class, boolean.class);
 			MethodHandle methodHandle = consulter.findSpecial(Class.class, "getDeclaredFields0", methodType, Class.class);
 			lowLevelObjectsHandler.getDeclaredFieldsRetriever = (BiFunction<Class<?>, Boolean, Field[]>)LambdaMetafactory.metafactory(
@@ -100,8 +95,6 @@ abstract class LowLevelObjectsHandlerSpecificElementsInitializer implements Comp
 			throw Throwables.toRuntimeException(exc);
 		}
 	}
-	
-	abstract Lookup getConsulter(Class<?> cls);
 	
 	abstract void initSpecificElements();
 	

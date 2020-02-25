@@ -32,57 +32,56 @@ import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.MemberFinder;
 
 public interface Binder extends Component {
 	
-	public <F> F bindTo(Object targetObject, String methodName, Class<?>... types) throws Throwable;
+	public <F> F bindTo(Class<?> targetClass, String methodName, Class<?>... types) throws Throwable;
 	
-	public <F> F bindTo(Object targetObject, Method method) throws Throwable;
+	public <F> F bindTo(Method method) throws Throwable;
 	
 	static abstract class Abst implements Binder {
 		MemberFinder memberFinder;
+		ConsulterRetriever consulterRetriever;
 		
-		Abst(MemberFinder memberFinder) {
+		Abst(MemberFinder memberFinder, ConsulterRetriever consulterRetriever) {
 			this.memberFinder = memberFinder;
+			this.consulterRetriever = consulterRetriever;
 		}
 	}
 	
 	public interface Multi extends Binder {
 		
-		public <F, I> Map<I, F> bindToMany(Object targetObject, String methodName) throws Throwable;
+		public <F, I> Map<I, F> bindToMany(Class<?> targetClass, String methodName) throws Throwable;
 		
 		static abstract class Abst extends Binder.Abst implements Multi {
-			
-			Function<Integer, Class<?>> classRetriever;
+			BiFunction<ClassLoader, Integer, Class<?>> classRetriever;
 			MemberFinder memberFinder;
-			CallerRetriever lambdaCallerRetriever;
 
 			Abst(
 				MemberFinder memberFinder,
-				CallerRetriever lambdaCallerRetriever,
-				Function<Integer, Class<?>> classRetriever) {
-				super(memberFinder);
+				ConsulterRetriever consulterRetriever,
+				BiFunction<ClassLoader, Integer, Class<?>> classRetriever
+			) {
+				super(memberFinder, consulterRetriever);
 				this.classRetriever = classRetriever;
-				this.lambdaCallerRetriever = lambdaCallerRetriever;
 			}
 
-			Class<?> retrieveClass(Class<?> cls, int parametersCount) throws ClassNotFoundException {
+			Class<?> retrieveClass(Class<?> cls, ClassLoader classLoader, int parametersCount) throws ClassNotFoundException {
 				if (parametersCount < 3) {
 					return Class.forName(retrieveClassName(cls, parametersCount));	
 				} else {
-					return classRetriever.apply(parametersCount);
-	
+					return classRetriever.apply(classLoader, parametersCount);
 				}
 			}
-
+			
 			String retrieveClassName(Class<?>cls, int parametersCount) {
 				switch (parametersCount) {
 		        	case 2:
-		        		return Optional.ofNullable(cls.getPackage()).map(pkg -> pkg.getName()).orElse(null) + "Bi" + cls.getSimpleName();
+		        		return Optional.ofNullable(cls.getPackage()).map(pkg -> pkg.getName()).orElse(null) + ".Bi" + cls.getSimpleName();
 		        	default : 
 		        		return cls.getName();
 				}

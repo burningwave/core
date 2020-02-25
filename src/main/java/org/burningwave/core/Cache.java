@@ -52,7 +52,7 @@ public class Cache {
 	public final static ObjectAndPathForResources<ClassLoader, Field[]> CLASS_LOADER_FOR_FIELDS;
 	public final static ObjectAndPathForResources<ClassLoader, Method[]> CLASS_LOADER_FOR_METHODS;
 	public final static ObjectAndPathForResources<ClassLoader, Constructor<?>[]> CLASS_LOADER_FOR_CONSTRUCTORS;
-	
+	public final static ObjectForObject<Method, Object> BINDED_FUNCTIONAL_INTERFACES;
 	
 	static {
 		if ("sync".equalsIgnoreCase((String)Properties.getGlobalProperty(TYPE_CONFIG_KEY))) {
@@ -62,6 +62,7 @@ public class Cache {
 			CLASS_LOADER_FOR_FIELDS = new SyncObjectAndPathForResources<>(1L, fields -> fields);
 			CLASS_LOADER_FOR_METHODS = new SyncObjectAndPathForResources<>(1L, methods -> methods);
 			CLASS_LOADER_FOR_CONSTRUCTORS = new SyncObjectAndPathForResources<>(1L, constructors -> constructors);
+			BINDED_FUNCTIONAL_INTERFACES = new SyncObjectForObject<>();
 		} else {
 			PATH_FOR_CONTENTS = new AsyncPathForResources<>(1L, Streams::shareContent);
 			PATH_FOR_FILE_SYSTEM_ITEMS = new AsyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
@@ -69,7 +70,48 @@ public class Cache {
 			CLASS_LOADER_FOR_FIELDS = new AsyncObjectAndPathForResources<>(1L, fields -> fields);
 			CLASS_LOADER_FOR_METHODS = new AsyncObjectAndPathForResources<>(1L, methods -> methods);
 			CLASS_LOADER_FOR_CONSTRUCTORS = new AsyncObjectAndPathForResources<>(1L, constructors -> constructors);
+			BINDED_FUNCTIONAL_INTERFACES = new AsyncObjectForObject<>();
 		}	
+	}
+	
+	public static interface ObjectForObject<T, R> {
+		public R getOrDefault(T object, Supplier<R> resourceSupplier);
+		
+		public abstract class Abst<T, R> implements ObjectForObject<T, R> {
+			Map<T, R> resources;
+			
+			public Abst(Map<T, R> resources) {
+				this.resources = resources;
+			}
+			
+			@Override
+			public R getOrDefault(T object, Supplier<R> resourceSupplier) {
+				R resource = resources.get(object);
+				if (resource == null) {
+					synchronized(Classes.getId(resources,object)) {
+						resource = resources.get(object);
+						if (resource == null) {
+							resources.put(object, (resource = resourceSupplier.get()));
+						}
+					}
+				}
+				return resource;
+			}
+		}
+	}
+	
+	public static class AsyncObjectForObject<T, R> extends ObjectForObject.Abst<T, R> {
+
+		public AsyncObjectForObject() {
+			super(new ConcurrentHashMap<>());
+		}
+	}
+	
+	public static class SyncObjectForObject<T, R> extends ObjectForObject.Abst<T, R> {
+
+		public SyncObjectForObject() {
+			super(new LinkedHashMap<>());
+		}
 	}
 	
 	public static interface ObjectAndPathForResources<T, R> {

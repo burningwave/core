@@ -1,9 +1,6 @@
 package org.burningwave.core.jvm;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import org.burningwave.ManagedLogger;
@@ -13,20 +10,6 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java8 extends LowLevelOb
 
 	LowLevelObjectsHandlerSpecificElementsInitializer4Java8(LowLevelObjectsHandler lowLevelObjectsHandler) {
 		super(lowLevelObjectsHandler);
-	}
-
-	@Override
-	Lookup getConsulter(Class<?> cls) {
-		try {
-			Lookup consulter = MethodHandles.lookup().in(cls);
-			Field modes = Lookup.class.getDeclaredField("allowedModes");
-			modes.setAccessible(true);
-			modes.setInt(consulter, -1);
-			return consulter;
-		} catch (Throwable exc) {
-			logError("Could not initialize consulter", exc);
-			throw Throwables.toRuntimeException(exc);
-		}
 	}
 
 	@Override

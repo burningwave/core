@@ -44,41 +44,44 @@ import java.util.function.Predicate;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MethodCriteria;
 
-public class FunctionBinder extends Binder.Multi.Abst {
+public class PredicateBinder  extends Binder.Multi.Abst {
 		
 
-	private FunctionBinder(MemberFinder memberFinder, ConsulterRetriever lambdaCallerRetriever,
-		BiFunction<ClassLoader, Integer, Class<?>> classRetriever) {
+	private PredicateBinder(
+		MemberFinder memberFinder,
+		ConsulterRetriever lambdaCallerRetriever,
+		BiFunction<ClassLoader, Integer, Class<?>> classRetriever
+	) {
 		super(memberFinder, lambdaCallerRetriever, classRetriever);
 	}
 	
-	public static FunctionBinder create(MemberFinder memberFinder, ConsulterRetriever lambdaCallerRetriever, BiFunction<ClassLoader, Integer, Class<?>> classRetriever) {
-		return new FunctionBinder(memberFinder, lambdaCallerRetriever, classRetriever);
+	public static PredicateBinder create(MemberFinder memberFinder, ConsulterRetriever lambdaCallerRetriever, BiFunction<ClassLoader, Integer, Class<?>> classRetriever) {
+		return new PredicateBinder(memberFinder, lambdaCallerRetriever, classRetriever);
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public <F> F bindTo(Class<?> targetClass, String methodName, Class<?>... inputType) throws Throwable {
+	public <F> F bindTo(Class<?> targetObjectClass, String methodName, Class<?>... inputType) throws Throwable {
 		return (F)bindTo(memberFinder.findOne(
 			MethodCriteria.forName(
 				methodName::equals
 			).and().parameterTypes((parameterTypes) -> parameterTypes.length == inputType.length),
-			targetClass
+			targetObjectClass
 		));
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <F, I> Map<I, F> bindToMany(Class<?> targetClass, String methodName) throws Throwable {
+	public <F, I> Map<I, F> bindToMany(Class<?> targetObjectClass, String methodName) throws Throwable {
 		Collection<Method> methods = memberFinder.findAll(
 			MethodCriteria.forName((name) -> 
 				name.matches(methodName)
 			).and().returnType((returnType) ->
-				returnType != void.class
+				returnType == boolean.class || returnType == Boolean.class
 			).and().parameterTypes((parameterTypes) ->
 				parameterTypes.length > 0
 			),
-			targetClass
+			targetObjectClass
 		);
 		Map<I, F> functions = createResultMap();
 		for (Method method: methods) {
@@ -99,15 +102,15 @@ public class FunctionBinder extends Binder.Multi.Abst {
 	}
 	
 	private <F> F staticBindTo(Method targetMethod) throws Throwable {
-		Lookup consulter = consulterRetriever.retrieve(targetMethod.getDeclaringClass());
+		Lookup caller = consulterRetriever.retrieve(targetMethod.getDeclaringClass());
 		MethodType methodParameters = MethodType.methodType(targetMethod.getReturnType(), targetMethod.getParameterTypes());
 		Class<?> functionalInterfaceClass = retrieveClass(Predicate.class, targetMethod.getDeclaringClass().getClassLoader(), targetMethod.getParameterTypes().length);
 		CallSite site = LambdaMetafactory.metafactory(
-			consulter,
-		    "apply",
+			caller,
+		    "test",
 		    MethodType.methodType(functionalInterfaceClass),
-		    methodParameters.generic(), 
-		    consulter.unreflect(targetMethod), 
+		    methodParameters.generic().changeReturnType(boolean.class), 
+		    caller.unreflect(targetMethod), 
 		    methodParameters
 		);
 		return (F)site.getTarget().invoke();
@@ -115,14 +118,14 @@ public class FunctionBinder extends Binder.Multi.Abst {
 
 
 	private <F> F dynamicBindTo(Method targetMethod) throws Throwable {
-		Lookup consulter = consulterRetriever.retrieve(targetMethod.getDeclaringClass());
+		Lookup classLoaderConsulter = consulterRetriever.retrieve(targetMethod.getDeclaringClass());
 		MethodType methodParameters = MethodType.methodType(targetMethod.getReturnType(), targetMethod.getParameterTypes());
-		MethodHandle methodHandle = consulter.findSpecial(targetMethod.getDeclaringClass(), targetMethod.getName(), methodParameters, targetMethod.getDeclaringClass());
+		MethodHandle methodHandle = classLoaderConsulter.findSpecial(targetMethod.getDeclaringClass(), targetMethod.getName(), methodParameters, targetMethod.getDeclaringClass());
 		Class<?> functionalInterfaceClass = retrieveClass(Function.class, targetMethod.getDeclaringClass().getClassLoader(), targetMethod.getParameterTypes().length + 1);
 		return (F)LambdaMetafactory.metafactory(
-			consulter, "apply",
+			classLoaderConsulter, "test",
 			MethodType.methodType(functionalInterfaceClass),
-			methodHandle.type().generic(),
+			methodHandle.type().generic().changeReturnType(boolean.class),
 			methodHandle,
 			methodHandle.type()
 		).getTarget().invoke();

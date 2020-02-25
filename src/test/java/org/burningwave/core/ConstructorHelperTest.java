@@ -33,7 +33,7 @@ public class ConstructorHelperTest extends BaseTest {
 		testNotNull(() -> componentSupplier.getConstructorHelper().newInstanceOf(
 			ConsumerBinder.class,
 			componentSupplier.getMemberFinder(), 
-			componentSupplier.getLambdaCallerRetriever(), null)
+			componentSupplier.getConsulterRetriever(), null)
 		);
 	}
 }

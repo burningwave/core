@@ -43,10 +43,12 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Strings;
 import org.burningwave.core.Virtual;
+import org.burningwave.core.function.MultiParamsConsumer;
+import org.burningwave.core.function.MultiParamsFunction;
+import org.burningwave.core.function.MultiParamsPredicate;
 import org.burningwave.core.io.StreamHelper;
 
 public abstract class CodeGenerator implements Component {
-	public static String CALLER_RETRIEVER_METHOD_NAME = "retrieveCaller";
 	protected static Pattern METHOD_INPUTS_PATTERN = Pattern.compile("\\(([\\w\\d,\\.]*)");
 	protected static Pattern METHOD_NAME_PATTERN = Pattern.compile("([\\w\\.\\$]+)\\(");
 	protected static Pattern METHOD_RETURN_PATTERN = Pattern.compile("([\\w\\.\\$\\<\\>]+)\\s+[\\w\\.\\$]+\\(");
@@ -331,31 +333,28 @@ public abstract class CodeGenerator implements Component {
 			String[] generics = new String[paramsLength];
 			String[] params = new String[paramsLength];
 			String[] genericParams = new String[paramsLength];
+			String[] genericParamsCasted = new String[paramsLength];
 			for (int i = 0; i < generics.length; i++) {
 				generics[i] = "P" + i;
 				params[i] = "p" + i;
 				genericParams[i] = generics[i] + " " + params[i];
+				genericParamsCasted[i] = "(" + generics[i] + ")params[" + i + "]"; 
 			}
 						
 			String className = "FunctionFor" + paramsLength + "Parameters";
 			String returnGenericType_01 = "R";
-			String returnGenericType_02 = "V";
 			String genericsAsString_01 = String.join(", ", String.join(", ", generics),returnGenericType_01);
-			String genericsAsString_02 = String.join(", ", String.join(", ", generics), returnGenericType_02);		
 			String genericParamsAsString_01 = String.join(", ", genericParams);
-			String paramsAsString_01 = String.join(", ", params);
+			String genericParamsCastedAsString_01 = String.join(", ", genericParamsCasted);
 			
 			Map<String, String> map = new LinkedHashMap<>();
 			map.put("${packageName}", PACKAGE_NAME);
-			map.put("${imports}", getImports());
+			map.put("${imports}", "import " + MultiParamsFunction.class.getName() + ";");
 			map.put("${className}", className);
 			map.put("${returnGenericType_01}", returnGenericType_01);
-			map.put("${returnGenericType_02}", returnGenericType_02);
 			map.put("${generics_01}", genericsAsString_01);
-			map.put("${generics_02}", genericsAsString_02);
-			map.put("${genericParams_01}", genericParamsAsString_01);
-			map.put("${params_01}", paramsAsString_01);
-			map.put("${callerRetrieverMethodName}", CALLER_RETRIEVER_METHOD_NAME);
+			map.put("${genericParamsCasted_01}", genericParamsCastedAsString_01);
+			map.put("${genericParams_01}", genericParamsAsString_01);			
 			
 			return Strings.replace(TEMPLATE, map);
 		}
@@ -382,29 +381,26 @@ public abstract class CodeGenerator implements Component {
 			String[] generics = new String[paramsLength];
 			String[] params = new String[paramsLength];
 			String[] genericParams = new String[paramsLength];
-			String[] genericParams_02 = new String[paramsLength];
+			String[] genericParamsCasted = new String[paramsLength];
 			for (int i = 0; i < generics.length; i++) {
 				generics[i] = "P" + i;
 				params[i] = "p" + i;
 				genericParams[i] = generics[i] + " " + params[i];
-				genericParams_02[i] = "? super " + generics[i];
+				genericParamsCasted[i] = "(" + generics[i] + ")params[" + i + "]";
 			}
 						
-			String className = "ConsumerOf" + paramsLength + "Parameters";
-			String genericsAsString_01 = String.join(", ", generics);
-			String genericsAsString_02 = String.join(", ", genericParams_02);		
+			String className = "ConsumerFor" + paramsLength + "Parameters";
+			String genericsAsString_01 = String.join(", ", generics);		
 			String genericParamsAsString_01 = String.join(", ", genericParams);
-			String paramsAsString_01 = String.join(", ", params);
+			String genericParamsCastedAsString_01 = String.join(", ", genericParamsCasted);
 		
 			Map<String, String> map = new LinkedHashMap<>();
 			map.put("${packageName}", PACKAGE_NAME);
-			map.put("${imports}", getImports());
+			map.put("${imports}", "import " + MultiParamsConsumer.class.getName() + ";");
 			map.put("${className}", className);
 			map.put("${generics_01}", genericsAsString_01);
-			map.put("${generics_02}", genericsAsString_02);
 			map.put("${genericParams_01}", genericParamsAsString_01);
-			map.put("${params_01}", paramsAsString_01);
-			map.put("${callerRetrieverMethodName}", CALLER_RETRIEVER_METHOD_NAME);
+			map.put("${genericParamsCasted_01}", genericParamsCastedAsString_01);			
 			
 			return Strings.replace(TEMPLATE, map);
 		}
@@ -432,29 +428,26 @@ public abstract class CodeGenerator implements Component {
 			String[] generics = new String[paramsLength];
 			String[] params = new String[paramsLength];
 			String[] genericParams = new String[paramsLength];
-			String[] genericParams_02 = new String[paramsLength];
+			String[] genericParamsCasted = new String[paramsLength];
 			for (int i = 0; i < generics.length; i++) {
 				generics[i] = "P" + i;
 				params[i] = "p" + i;
 				genericParams[i] = generics[i] + " " + params[i];
-				genericParams_02[i] = "? super " + generics[i];
+				genericParamsCasted[i] = "(" + generics[i] + ")params[" + i + "]";
 			}
 						
 			String className = "PredicateFor" + paramsLength + "Parameters";
-			String genericsAsString_01 = String.join(", ", generics);
-			String genericsAsString_02 = String.join(", ", genericParams_02);		
+			String genericsAsString_01 = String.join(", ", generics);		
 			String genericParamsAsString_01 = String.join(", ", genericParams);
-			String paramsAsString_01 = String.join(", ", params);
+			String genericParamsCastedAsString_01 = String.join(", ", genericParamsCasted);
 		
 			Map<String, String> map = new LinkedHashMap<>();
 			map.put("${packageName}", PACKAGE_NAME);
-			map.put("${imports}", getImports());
+			map.put("${imports}", "import " + MultiParamsPredicate.class.getName() + ";");
 			map.put("${className}", className);
 			map.put("${generics_01}", genericsAsString_01);
-			map.put("${generics_02}", genericsAsString_02);
 			map.put("${genericParams_01}", genericParamsAsString_01);
-			map.put("${params_01}", paramsAsString_01);
-			map.put("${callerRetrieverMethodName}", CALLER_RETRIEVER_METHOD_NAME);
+			map.put("${genericParamsCasted_01}", genericParamsCastedAsString_01);			
 			
 			return Strings.replace(TEMPLATE, map);
 		}

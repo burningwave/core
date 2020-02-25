@@ -29,24 +29,18 @@
 package ${packageName};
 
 
-import java.lang.invoke.MethodHandles;
 import java.util.function.Function;
-import java.util.Objects;
 ${imports}
 
 
 @FunctionalInterface
-public interface ${className}<${generics_01}> extends Virtual {
+public interface ${className}<${generics_01}> extends MultiParamsFunction<${returnGenericType_01}> {
 
     ${returnGenericType_01} apply(${genericParams_01});
 
-    default <${returnGenericType_02}> ${className}<${generics_02}> andThen(Function<? super ${returnGenericType_01}, ? extends ${returnGenericType_02}> after) {
-    	Objects.requireNonNull(after);
-    	return (${genericParams_01}) -> after.apply(apply(${params_01}));
-    }
-
-    static MethodHandles.Lookup ${callerRetrieverMethodName}() {
-    	return MethodHandles.lookup();
-    }
+	@Override
+	default ${returnGenericType_01} apply(Object... params) {
+		return apply(${genericParamsCasted_01});
+	}
 
 }

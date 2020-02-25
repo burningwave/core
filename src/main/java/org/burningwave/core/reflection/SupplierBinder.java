@@ -28,38 +28,40 @@
  */
 package org.burningwave.core.reflection;
 
-import java.lang.invoke.CallSite;
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MethodCriteria;
 
 public class SupplierBinder extends Binder.Abst {
 	
-	private SupplierBinder(MemberFinder memberFinder) {
-		super(memberFinder);
+	private SupplierBinder(MemberFinder memberFinder, ConsulterRetriever consulterRetriever) {
+		super(memberFinder, consulterRetriever);
 	}
 	
-	public static SupplierBinder create(MemberFinder memberFinder) {
-		return new SupplierBinder(memberFinder);
+	public static SupplierBinder create(MemberFinder memberFinder, ConsulterRetriever consulterRetriever) {
+		return new SupplierBinder(memberFinder, consulterRetriever);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <O> O bindTo(Object targetObject, String methodName, Class<?>... outputType) throws Throwable {
+	public <O> O bindTo(Class<?> targetObjectClass, String methodName, Class<?>... outputType) throws Throwable {
 		return (O)bindTo(
-			targetObject, memberFinder.findOne(
+			memberFinder.findOne(
 				MethodCriteria.forName(
 					methodName::equals
 				).and().returnType(
 					(returnType) -> returnType == outputType[0]
 				),
-				targetObject
+				targetObjectClass
 			)
 		);
 	}
@@ -67,40 +69,38 @@ public class SupplierBinder extends Binder.Abst {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public <F> F bindTo(Object targetObject, Method method) throws Throwable {
+	public <F> F bindTo(Method method) throws Throwable {
 		if (Modifier.isStatic(method.getModifiers())) {
 			return (F)staticBindTo(method);
 		} else {
-			return (F)dynamicBindTo(targetObject, method);
+			return (F)dynamicBindTo(method);
 		}
 	}
 	
-	private <O> java.util.function.Supplier<O> staticBindTo(Method method) throws Throwable {
-		MethodHandles.Lookup caller = MethodHandles.lookup();
-		MethodType methodReturnType = MethodType.methodType(method.getReturnType());
-		MethodHandle targetClass = 	caller.unreflect(method);
-		CallSite site = LambdaMetafactory.metafactory(
+	private <F> F staticBindTo(Method targetMethod) throws Throwable {
+		MethodHandles.Lookup caller = consulterRetriever.retrieve(targetMethod.getDeclaringClass());
+		MethodType methodReturnType = MethodType.methodType(targetMethod.getReturnType());
+		MethodHandle targetClass = 	caller.unreflect(targetMethod);
+		return (F) LambdaMetafactory.metafactory(
 			caller,
-		    "get", // include types of the values to bind:
-		    MethodType.methodType(java.util.function.Supplier.class),
+		    "get",
+		    MethodType.methodType(Supplier.class),
 		    methodReturnType.generic(), 
 		    targetClass, 
-		    methodReturnType);
-		return (java.util.function.Supplier<O>) site.getTarget().invokeExact();
+		    methodReturnType).getTarget().invoke();
 	}
 	
-	private <O> java.util.function.Supplier<O> dynamicBindTo(Object targetObject, Method method) throws Throwable {
-		MethodHandles.Lookup caller = MethodHandles.lookup();
-		MethodType methodParameters = MethodType.methodType(method.getReturnType());
-		MethodHandle targetClass = 	caller.unreflect(method);
-		CallSite site = LambdaMetafactory.metafactory(
-			caller,
-		    "get", // include types of the values to bind:
-		    MethodType.methodType(java.util.function.Supplier.class, targetObject.getClass()),
-		    methodParameters.generic(), 
-		    targetClass, 
-		    methodParameters);
-		return (java.util.function.Supplier<O>) site.getTarget().bindTo(targetObject).invoke();
+	private <F> F dynamicBindTo(Method targetMethod) throws Throwable {
+		Lookup consulter = consulterRetriever.retrieve(targetMethod.getDeclaringClass());
+		MethodType methodParameters = MethodType.methodType(targetMethod.getReturnType(), targetMethod.getParameterTypes());
+		MethodHandle methodHandle = consulter.findSpecial(targetMethod.getDeclaringClass(), targetMethod.getName(), methodParameters, targetMethod.getDeclaringClass());
+		return (F)LambdaMetafactory.metafactory(
+			consulter, "apply",
+			MethodType.methodType(Function.class),
+			methodHandle.type().generic(),
+			methodHandle,
+			methodHandle.type()
+		).getTarget().invoke();
 	}
 
 }

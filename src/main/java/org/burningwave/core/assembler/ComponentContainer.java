@@ -65,10 +65,11 @@ import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.jvm.JVMInfo;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
-import org.burningwave.core.reflection.CallerRetriever;
+import org.burningwave.core.reflection.ConsulterRetriever;
 import org.burningwave.core.reflection.ConsumerBinder;
 import org.burningwave.core.reflection.FunctionBinder;
 import org.burningwave.core.reflection.FunctionalInterfaceFactory;
+import org.burningwave.core.reflection.PredicateBinder;
 import org.burningwave.core.reflection.PropertyAccessor;
 import org.burningwave.core.reflection.RunnableBinder;
 import org.burningwave.core.reflection.SupplierBinder;
@@ -258,7 +259,7 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(ClassFactory.class, () -> 
 			ClassFactory.create(
 				getSourceCodeHandler(),
-				() -> getMemoryClassLoader(),
+				getClassesLoaders(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
 				getCodeGeneratorForPojo(),
@@ -419,7 +420,8 @@ public class ComponentContainer implements ComponentSupplier {
 	public RunnableBinder getRunnableBinder() {
 		return getOrCreate(RunnableBinder.class, () ->
 			RunnableBinder.create(
-				getMemberFinder()
+				getMemberFinder(),
+				getConsulterRetriever()
 			)
 		);
 	}
@@ -428,7 +430,8 @@ public class ComponentContainer implements ComponentSupplier {
 	public SupplierBinder getSupplierBinder() {
 		return getOrCreate(SupplierBinder.class, () -> 
 			SupplierBinder.create(
-				getMemberFinder()
+				getMemberFinder(),
+				getConsulterRetriever()
 			)
 		);
 	}
@@ -438,7 +441,7 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(ConsumerBinder.class, () -> 
 			ConsumerBinder.create(
 				getMemberFinder(),
-				getLambdaCallerRetriever(),
+				getConsulterRetriever(),
 				getClassFactory()::getOrBuildConsumerSubType
 			)
 		);
@@ -449,8 +452,19 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(FunctionBinder.class, () ->
 			FunctionBinder.create(
 				getMemberFinder(),
-				getLambdaCallerRetriever(),
+				getConsulterRetriever(),
 				getClassFactory()::getOrBuildFunctionSubType
+			)
+		);
+	}
+	
+	@Override
+	public PredicateBinder getPredicateBinder() {
+		return getOrCreate(PredicateBinder.class, () ->
+		PredicateBinder.create(
+				getMemberFinder(),
+				getConsulterRetriever(),
+				getClassFactory()::getOrBuildPredicateSubType
 			)
 		);
 	}
@@ -460,18 +474,15 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(FunctionalInterfaceFactory.class, () -> 
 			FunctionalInterfaceFactory.create(
 				getRunnableBinder(), getSupplierBinder(),
-				getConsumerBinder(), getFunctionBinder()
+				getConsumerBinder(), getFunctionBinder(),
+				getPredicateBinder()
 			)
 		);
 	}
 
 	@Override
-	public CallerRetriever getLambdaCallerRetriever() {
-		return getOrCreate(CallerRetriever.class, () -> 
-			CallerRetriever.create(
-				getMemberFinder(), CodeGenerator.CALLER_RETRIEVER_METHOD_NAME
-			)
-		);
+	public ConsulterRetriever getConsulterRetriever() {
+		return ConsulterRetriever.getInstance();
 	}
 	
 	@Override
@@ -526,9 +537,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public JVMInfo getJVMInfo() {
-		return getOrCreate(JVMInfo.class, () ->
-			JVMInfo.create()
-		);
+		return JVMInfo.getInstance();
 	}
 
 	@Override

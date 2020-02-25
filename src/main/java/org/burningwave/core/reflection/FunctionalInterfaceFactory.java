@@ -30,41 +30,48 @@ package org.burningwave.core.reflection;
 
 import java.lang.reflect.Method;
 
+import org.burningwave.core.Cache;
 import org.burningwave.core.Component;
+import org.burningwave.core.function.ThrowingSupplier;
 
 public class FunctionalInterfaceFactory implements Component {
 	private RunnableBinder runnableBinder;
 	private SupplierBinder supplierBinder;
 	private ConsumerBinder consumerBinder;
 	private FunctionBinder functionBinder;
+	private PredicateBinder predicateBinder;
 	
 	private FunctionalInterfaceFactory(RunnableBinder runnableBinder, SupplierBinder supplierBinder,
-			ConsumerBinder consumerBinder, FunctionBinder functionBinder) {
+			ConsumerBinder consumerBinder, FunctionBinder functionBinder, PredicateBinder predicateBinder) {
 		this.runnableBinder = runnableBinder;
 		this.supplierBinder = supplierBinder;
 		this.consumerBinder = consumerBinder;
 		this.functionBinder = functionBinder;
+		this.predicateBinder = predicateBinder;
 	}
 
 	public static FunctionalInterfaceFactory create(
 			RunnableBinder runnableBinder, SupplierBinder supplierBinder,
-			ConsumerBinder consumerBinder, FunctionBinder functionBinder) {
-		return new FunctionalInterfaceFactory(runnableBinder, supplierBinder, consumerBinder, functionBinder);
+			ConsumerBinder consumerBinder, FunctionBinder functionBinder,
+			PredicateBinder predicateBinder) {
+		return new FunctionalInterfaceFactory(runnableBinder, supplierBinder, consumerBinder, functionBinder, predicateBinder);
 	}
 
 	@SuppressWarnings("unchecked")
-	public <F> F create(Object targetObject, Method mth) throws Throwable {
-		F function = null;
+	public <F> F create(Method mth) throws Throwable {
+		
 		if (mth.getParameterTypes().length == 0 && mth.getReturnType() == void.class) {
-			function = (F)runnableBinder.bindTo(targetObject, mth);
+			return (F) Cache.BINDED_FUNCTIONAL_INTERFACES.getOrDefault(mth, () -> ThrowingSupplier.get(() -> runnableBinder.bindTo(mth)));
 		} else if (mth.getParameterTypes().length == 0 && mth.getReturnType() != void.class) {
-			function = (F)supplierBinder.bindTo(targetObject, mth);
+			return (F) Cache.BINDED_FUNCTIONAL_INTERFACES.getOrDefault(mth, () -> ThrowingSupplier.get(() -> supplierBinder.bindTo(mth)));
 		} else if (mth.getParameterTypes().length > 0 && mth.getReturnType() == void.class) {
-			function = (F)consumerBinder.bindTo(targetObject, mth);
+			return (F) Cache.BINDED_FUNCTIONAL_INTERFACES.getOrDefault(mth, () -> ThrowingSupplier.get(() -> consumerBinder.bindTo(mth)));
+		} else if (mth.getParameterTypes().length > 0 && (mth.getReturnType() == boolean.class || mth.getReturnType() == Boolean.class)) {
+			return (F) Cache.BINDED_FUNCTIONAL_INTERFACES.getOrDefault(mth, () -> ThrowingSupplier.get(() -> predicateBinder.bindTo(mth)));
 		} else if (mth.getParameterTypes().length > 0 && mth.getReturnType() != void.class) {
-			function = (F)functionBinder.bindTo(targetObject, mth);
+			return (F) Cache.BINDED_FUNCTIONAL_INTERFACES.getOrDefault(mth, () -> ThrowingSupplier.get(() -> functionBinder.bindTo(mth)));
 		}
-		return function;
+		return null;
 	}
 	
 }

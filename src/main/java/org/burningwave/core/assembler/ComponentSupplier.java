@@ -52,10 +52,11 @@ import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.jvm.JVMInfo;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
-import org.burningwave.core.reflection.CallerRetriever;
+import org.burningwave.core.reflection.ConsulterRetriever;
 import org.burningwave.core.reflection.ConsumerBinder;
 import org.burningwave.core.reflection.FunctionBinder;
 import org.burningwave.core.reflection.FunctionalInterfaceFactory;
+import org.burningwave.core.reflection.PredicateBinder;
 import org.burningwave.core.reflection.PropertyAccessor;
 import org.burningwave.core.reflection.RunnableBinder;
 import org.burningwave.core.reflection.SupplierBinder;
@@ -118,7 +119,7 @@ public interface ComponentSupplier extends Component {
 
 	public JVMInfo getJVMInfo();
 
-	public CallerRetriever getLambdaCallerRetriever();
+	public ConsulterRetriever getConsulterRetriever();
 	
 	public LowLevelObjectsHandler getLowLevelObjectsHandler();
 
@@ -137,4 +138,6 @@ public interface ComponentSupplier extends Component {
 	public StreamHelper getStreamHelper();
 	
 	public SupplierBinder getSupplierBinder();
+
+	PredicateBinder getPredicateBinder();
 }

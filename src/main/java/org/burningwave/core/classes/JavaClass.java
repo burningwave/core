@@ -42,7 +42,7 @@ public class JavaClass {
 	
 	JavaClass(ByteBuffer byteCode) throws IOException {
 		this.byteCode = Streams.shareContent(byteCode);
-		this.className = Classes.retrieveName(byteCode);
+		this.className = Classes.getInstance().retrieveName(byteCode);
 	}
 	
 	public static JavaClass create(ByteBuffer byteCode) {

@@ -31,7 +31,6 @@ package org.burningwave.core.classes;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.burningwave.Throwables;
 import org.burningwave.core.Component;
@@ -44,8 +43,7 @@ public class ClassFactory implements Component {
 	
 	private SourceCodeHandler sourceCodeHandler;
 	private PathHelper pathHelper;
-	private Supplier<MemoryClassLoader> memoryClassLoaderSupplier;
-	private MemoryClassLoader memoryClassLoader;
+	private Classes.Loaders classesLoaders;
 	private JavaMemoryCompiler javaMemoryCompiler;
 	private CodeGenerator codeGeneratorForPojo;
 	private CodeGenerator codeGeneratorForConsumer;
@@ -55,7 +53,7 @@ public class ClassFactory implements Component {
 	
 	private ClassFactory(
 		SourceCodeHandler sourceCodeHandler,
-		Supplier<MemoryClassLoader> memoryClassLoaderSupplier,
+		Classes.Loaders classesLoaders,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		CodeGenerator.ForPojo codeGeneratorForPojo,
@@ -65,7 +63,7 @@ public class ClassFactory implements Component {
 		CodeGenerator.ForCodeExecutor codeGeneratorForExecutor
 	) {	
 		this.sourceCodeHandler = sourceCodeHandler;
-		this.memoryClassLoaderSupplier = memoryClassLoaderSupplier;
+		this.classesLoaders = classesLoaders;
 		this.javaMemoryCompiler = javaMemoryCompiler;
 		this.pathHelper = pathHelper;
 		this.codeGeneratorForPojo = codeGeneratorForPojo;
@@ -77,7 +75,7 @@ public class ClassFactory implements Component {
 	
 	public static ClassFactory create(
 		SourceCodeHandler sourceCodeHandler,
-		Supplier<MemoryClassLoader> memoryClassLoaderSupplier,
+		Classes.Loaders classesLoaders,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		CodeGenerator.ForPojo codeGeneratorForPojo,
@@ -87,28 +85,11 @@ public class ClassFactory implements Component {
 		CodeGenerator.ForCodeExecutor codeGeneratorForExecutor
 	) {
 		return new ClassFactory(
-			sourceCodeHandler, memoryClassLoaderSupplier, 
+			sourceCodeHandler, classesLoaders,
 			javaMemoryCompiler, pathHelper, codeGeneratorForPojo, 
 			codeGeneratorForFunction, codeGeneratorForConsumer, codeGeneratorForPredicate, codeGeneratorForExecutor
 		);
 	}
-	
-	private MemoryClassLoader getMemoryClassLoader() {
-		return memoryClassLoader != null ?
-			memoryClassLoader :
-			(memoryClassLoader = memoryClassLoaderSupplier.get());	
-
-	}
-	
-	private Class<?> getFromMemoryClassLoader(String className) {
-		Class<?> cls = null;
-		try {
-			cls = Class.forName(className, false, getMemoryClassLoader() );
-		} catch (ClassNotFoundException e) {
-			logInfo(className + " not found in " + getMemoryClassLoader() );
-		}
-		return cls;
-	}	
 	
 	public Map<String, ByteBuffer> build(String classCode) {
 		logInfo("Try to compile virtual class:\n\n" + classCode +"\n");
@@ -119,74 +100,49 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	private Class<?> buildAndUploadToMemoryClassLoader(String classCode) {
+	private Class<?> buildAndUploadTo(String classCode, ClassLoader classLoader) {
 		String className = sourceCodeHandler.extractClassName(classCode);
 		Map<String, ByteBuffer> compiledFiles = build(classCode);
 		logInfo("Virtual class " + className + " succesfully created");
-		if (!compiledFiles.isEmpty()) {
-			compiledFiles.forEach((clsName, byteCode) -> 
-				memoryClassLoader.addCompiledClass(
-					clsName, byteCode
-				)
-			);
-		}
 		try {
-			return getMemoryClassLoader().loadClass(className);
+			return classesLoaders.loadOrUploadClass(className, compiledFiles, classLoader);
 		} catch (ClassNotFoundException e) {
 			throw Throwables.toRuntimeException(e);
 		}
 	}
 	
 	
-	public Class<?> getOrBuild(String classCode) {
+	public Class<?> getOrBuild(String classCode, ClassLoader classLoader) {
 		String className = sourceCodeHandler.extractClassName(classCode);
-		Class<?> toRet = getFromMemoryClassLoader(className);
+		Class<?> toRet = classesLoaders.retrieveLoadedClass(classLoader, className);
 		if (toRet == null) {
-			toRet = buildAndUploadToMemoryClassLoader(classCode);
+			toRet = buildAndUploadTo(classCode, classLoader);
 		}
 		return toRet;
 	}	
 	
-	public Class<?> getOrBuildPojoSubType(String className, Class<?>... superClasses) {
-		return getOrBuild(codeGeneratorForPojo.generate(className, superClasses));
+	public Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, Class<?>... superClasses) {
+		return getOrBuild(codeGeneratorForPojo.generate(className, superClasses), classLoader);
 	}
 	
-	public Class<?> getOrBuildFunctionSubType(int parametersLength) {
-		return getOrBuild(codeGeneratorForFunction.generate(parametersLength));
+	public Class<?> getOrBuildFunctionSubType(ClassLoader classLoader, int parametersLength) {
+		return getOrBuild(codeGeneratorForFunction.generate(parametersLength), classLoader);
 	}
 	
-	public Class<?> getOrBuildConsumerSubType(int parametersLength) {
-		return getOrBuild(codeGeneratorForConsumer.generate(parametersLength));
+	public Class<?> getOrBuildConsumerSubType(ClassLoader classLoader, int parametersLength) {
+		return getOrBuild(codeGeneratorForConsumer.generate(parametersLength), classLoader);
 	}
 	
-	public Class<?> getOrBuildPredicateSubType(int parametersLength) {
-		return getOrBuild(codeGeneratorForPredicate.generate(parametersLength));
+	public Class<?> getOrBuildPredicateSubType(ClassLoader classLoader, int parametersLength) {
+		return getOrBuild(codeGeneratorForPredicate.generate(parametersLength),classLoader);
 	}
 	
-	public Class<?> getOrBuildCodeExecutorSubType(String imports, String className, String supplierCode, ComponentSupplier componentSupplier
-	) {
-		return getOrBuildCodeExecutorSubType(imports, className, supplierCode, componentSupplier, getMemoryClassLoader());
-	}
-	
-	
-	public Class<?> getOrBuildCodeExecutorSubType(String imports, String classSimpleName, String supplierCode, ComponentSupplier componentSupplier, MemoryClassLoader memoryClassLoader
-	) {
+	public Class<?> getOrBuildCodeExecutorSubType(String imports, String classSimpleName, String supplierCode, ComponentSupplier componentSupplier, ClassLoader classLoader) {
 		String classCode = codeGeneratorForExecutor.generate(
 			imports, classSimpleName, supplierCode
-		);
-		Map<String, ByteBuffer> compiledFiles = build(classCode);
-		if (!compiledFiles.isEmpty()) {
-			logInfo("Virtual class " + classSimpleName + " succesfully created");
-			if (!compiledFiles.isEmpty()) {
-				compiledFiles.forEach((clsName, byteCode) -> 
-					memoryClassLoader.addCompiledClass(
-						clsName, byteCode
-					)
-				);
-			}
-		}		
+		);	
 		try {
-			return memoryClassLoader.loadClass(sourceCodeHandler.extractClassName(classCode));
+			return classesLoaders.loadOrUploadClass(sourceCodeHandler.extractClassName(classCode), build(classCode), classLoader);
 		} catch (ClassNotFoundException exc) {
 			throw Throwables.toRuntimeException(exc);
 		}

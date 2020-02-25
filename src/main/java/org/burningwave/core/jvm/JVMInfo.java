@@ -54,6 +54,10 @@ public class JVMInfo implements Component {
     	return new JVMInfo();
     }
     
+    public static JVMInfo getInstance() {
+    	return LazyHolder.getJVMInfoInstance();
+    }
+    
     private void init() {
     	String version = System.getProperty("java.version");
         if(version.startsWith("1.")) {
@@ -123,5 +127,12 @@ public class JVMInfo implements Component {
     public int getVersion() {
     	return version;
     }
-
+    
+    private static class LazyHolder {
+		private static final JVMInfo JVM_INFO_INSTANCE = JVMInfo.create();
+		
+		private static JVMInfo getJVMInfoInstance() {
+			return JVM_INFO_INSTANCE;
+		}
+	}
 }

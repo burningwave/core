@@ -3,18 +3,16 @@ package org.burningwave.core.jvm;
 import java.io.InputStream;
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 import org.burningwave.ManagedLogger;
 import org.burningwave.Throwables;
-import org.burningwave.core.classes.Classes;
 import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.io.Streams;
 
@@ -51,7 +49,7 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelOb
 			throw Throwables.toRuntimeException(exc);
 		}
 		try {
-			Lookup classLoaderConsulter = getConsulter(ClassLoader.class);
+			Lookup classLoaderConsulter = lowLevelObjectsHandler.consulterRetriever.retrieve(ClassLoader.class);
 			MethodType methodType = MethodType.methodType(Package.class, String.class);
 			MethodHandle methodHandle = classLoaderConsulter.findSpecial(ClassLoader.class, "getDefinedPackage", methodType, ClassLoader.class);
 			BiFunction<ClassLoader, String, Package> packageRetriever = (BiFunction<ClassLoader, String, Package>)LambdaMetafactory.metafactory(
@@ -76,7 +74,11 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelOb
 				throw Throwables.toRuntimeException(exc);
 			}
 			try (
-				InputStream inputStream = Classes.getInstance().getClassLoader(this.getClass()).getResourceAsStream("org/burningwave/core/classes/ClassLoaderDelegate.bwc");
+				InputStream inputStream = Optional.ofNullable(
+					this.getClass().getClassLoader()
+				).orElseGet(() -> 
+					ClassLoader.getSystemClassLoader()
+				).getResourceAsStream("org/burningwave/core/classes/ClassLoaderDelegate.bwc");
 				ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 			) {
 				Streams.copy(inputStream, bBOS);
@@ -86,17 +88,6 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelOb
 			}
 		} catch (Throwable exc) {
 			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "jdk.internal.loader.BuiltinClassLoader class not detected");
-			throw Throwables.toRuntimeException(exc);
-		}
-	}
-	
-	@Override
-	Lookup getConsulter(Class<?> cls) {
-		try {
-			return (Lookup)MethodHandles.class.getDeclaredMethod("privateLookupIn", Class.class, Lookup.class).invoke(null, cls, MethodHandles.lookup());
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
-				| SecurityException exc) {
-			logError("Could not initialize consulter", exc);
 			throw Throwables.toRuntimeException(exc);
 		}
 	}

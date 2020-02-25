@@ -119,7 +119,7 @@ public class Classes implements Component {
 		return classes;
 	}
 	
-	public static String retrieveName(Throwable exc) {
+	public String retrieveName(Throwable exc) {
 		String className = exc.getMessage();
 		if (className != null) {
 			if (className.contains("Could not initialize class ")) {
@@ -136,7 +136,7 @@ public class Classes implements Component {
 		return className;
 	}
 	
-	public static Collection<String> retrieveNames(Throwable exc) {
+	public Collection<String> retrieveNames(Throwable exc) {
 		Collection<String> classesName = new LinkedHashSet<>();
 		Optional.ofNullable(retrieveName(exc)).map(classesName::add);
 		if (exc.getCause() != null) {
@@ -145,29 +145,29 @@ public class Classes implements Component {
 		return classesName;
 	}
 	
-	public static String retrieveName(ByteBuffer classFileBuffer) {
+	public String retrieveName(ByteBuffer classFileBuffer) {
 		return retrieveName(classFileBuffer, true);
 	}
 	
-	public static String retrieveName(byte[] classFileBuffer) {
+	public String retrieveName(byte[] classFileBuffer) {
 		return retrieveName(classFileBuffer, true);
 	}
 	
-	public static String retrieveName(
+	public String retrieveName(
 		final byte[] classFileBuffer,
 		final boolean checkClassVersion
 	) {
 		return retrieveName((index) -> classFileBuffer[index], checkClassVersion);
 	}
 	
-	public static String retrieveName(
+	public String retrieveName(
 		final ByteBuffer classFileBuffer,
 		final boolean checkClassVersion
 	) {
 		return retrieveName(classFileBuffer::get, checkClassVersion);
 	}
 	
-	private static String retrieveName(
+	private String retrieveName(
 		final Function<Integer, Byte> byteSupplier,
 		final boolean checkClassVersion
 	) {
@@ -228,7 +228,7 @@ public class Classes implements Component {
 		);
 	}
 
-	private static String readUTF8(
+	private String readUTF8(
 		Function<Integer, Byte> byteSupplier,
 		final int offset,
 		final char[] charBuffer,
@@ -242,7 +242,7 @@ public class Classes implements Component {
 		return readUtf(byteSupplier, constantPoolEntryIndex, charBuffer, constantUtf8Values, cpInfoOffsets);
 	}
 
-	private static String readUtf(
+	private String readUtf(
 		Function<Integer, Byte> byteSupplier,
 		final int constantPoolEntryIndex,
 		final char[] charBuffer,
@@ -258,14 +258,14 @@ public class Classes implements Component {
 				charBuffer);
 	}
 
-	private static int readUnsignedShort(
+	private int readUnsignedShort(
 		Function<Integer, Byte> byteSupplier,
 		final int offset
 	) {
 		return ((byteSupplier.apply(offset) & 0xFF) << 8) | (byteSupplier.apply(offset + 1) & 0xFF);
 	}
 
-	private static String readUtf(Function<Integer, Byte> byteSupplier, final int utfOffset, final int utfLength, final char[] charBuffer) {
+	private String readUtf(Function<Integer, Byte> byteSupplier, final int utfOffset, final int utfLength, final char[] charBuffer) {
 		int currentOffset = utfOffset;
 		int endOffset = currentOffset + utfLength;
 		int strLength = 0;
@@ -283,7 +283,7 @@ public class Classes implements Component {
 		return new String(charBuffer, 0, strLength);
 	}
 
-	private static short readShort(Function<Integer, Byte> byteSupplier, final int offset) {
+	private short readShort(Function<Integer, Byte> byteSupplier, final int offset) {
 		return (short) (((byteSupplier.apply(offset) & 0xFF) << 8) | (byteSupplier.apply(offset + 1) & 0xFF));
 	}
 	
@@ -594,6 +594,46 @@ public class Classes implements Component {
 			);
 		}
 		
+		public void loadOrUploadClasses(
+			Map<String, ByteBuffer> byteCodes,
+			ClassLoader classLoader
+		) throws ClassNotFoundException {
+			if (!(classLoader instanceof MemoryClassLoader)) {
+				for (Map.Entry<String, ByteBuffer> classNameForByteCode : byteCodes.entrySet()) {
+					loadOrUploadClass(classNameForByteCode.getKey(), byteCodes, classLoader);
+				}
+			} else {
+				for (Map.Entry<String, ByteBuffer> clazz : byteCodes.entrySet()) {
+					((MemoryClassLoader)classLoader).addCompiledClass(
+						clazz.getKey(), clazz.getValue()
+					);
+				}
+			}			
+		}
+		
+		public Class<?> loadOrUploadClass(
+			String className,
+			Map<String, ByteBuffer> byteCodes,
+			ClassLoader classLoader
+		) throws ClassNotFoundException {
+			if (!(classLoader instanceof MemoryClassLoader)) {
+				try {
+					return loadOrUploadClass(byteCodes.get(className), classLoader);
+				} catch (ClassNotFoundException exc) {
+					String newNotFoundClassName = classes.retrieveName(exc);
+					loadOrUploadClass(newNotFoundClassName, byteCodes, classLoader);
+					return loadOrUploadClass(byteCodes.get(className), classLoader);
+				}
+			} else {
+				for (Map.Entry<String, ByteBuffer> clazz : byteCodes.entrySet()) {
+					((MemoryClassLoader)classLoader).addCompiledClass(
+						clazz.getKey(), clazz.getValue()
+					);
+				}
+				return classLoader.loadClass(className);
+			}
+		}
+		
 		public Class<?> loadOrUploadClass(
 			ByteBuffer byteCode,
 			ClassLoader classLoader
@@ -619,7 +659,7 @@ public class Classes implements Component {
 	    			definePackageFor(cls, classLoader, definePackageMethod);
 	    			return cls;
 				} catch (ClassNotFoundException | NoClassDefFoundError outerExc) {
-					String newNotFoundClassName = Classes.retrieveName(outerExc);
+					String newNotFoundClassName = classes.retrieveName(outerExc);
 					loadOrUploadClass(
 	        			Class.forName(
 	        				newNotFoundClassName, false, classLoader
@@ -647,7 +687,7 @@ public class Classes implements Component {
 	    			definePackageFor(cls, classLoader, definePackageMethod);
 	    			return cls;
 				} catch (ClassNotFoundException | NoClassDefFoundError outerExc) {
-					String newNotFoundClassName = Classes.retrieveName(outerExc);
+					String newNotFoundClassName = classes.retrieveName(outerExc);
 					loadOrUploadClass(
 	        			Class.forName(
 	        				newNotFoundClassName, false, toLoad.getClassLoader()
