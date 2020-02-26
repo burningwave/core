@@ -76,7 +76,7 @@ public class Cache {
 	
 	public static interface ObjectForObject<T, R> {
 		public R getOrDefault(T object, Supplier<R> resourceSupplier);
-		
+		public static final Classes classes = Classes.getInstance();
 		public abstract class Abst<T, R> implements ObjectForObject<T, R> {
 			Map<T, R> resources;
 			
@@ -88,7 +88,7 @@ public class Cache {
 			public R getOrDefault(T object, Supplier<R> resourceSupplier) {
 				R resource = resources.get(object);
 				if (resource == null) {
-					synchronized(Classes.getId(resources,object)) {
+					synchronized(classes.getId(resources,object)) {
 						resource = resources.get(object);
 						if (resource == null) {
 							resources.put(object, (resource = resourceSupplier.get()));
@@ -115,6 +115,7 @@ public class Cache {
 	}
 	
 	public static interface ObjectAndPathForResources<T, R> {
+		public static final Classes classes = Classes.getInstance();
 		
 		public R getOrDefault(T object, String path, Supplier<R> resourceSupplier);
 
@@ -138,7 +139,7 @@ public class Cache {
 			public R getOrDefault(T object, String path, Supplier<R> resourceSupplier) {
 				PathForResources<R> pathForResources = resources.get(object);
 				if (pathForResources == null) {
-					synchronized (Classes.getId(resources, object)) {
+					synchronized (classes.getId(resources, object)) {
 						pathForResources = resources.get(object);
 						if (pathForResources == null) {
 							pathForResources = pathForResourcesSupplier.get();
@@ -349,12 +350,13 @@ public class Cache {
 	}
 	
 	public static class AsyncPathForResources<R> extends PathForResources.Abst <R> {
-		 String mutexPrefixName;
+		static final Classes classes = Classes.getInstance(); 
+		String mutexPrefixName;
 		
 		 private AsyncPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
 			super(partitionStartLevel, sharer);
 			resources = new ConcurrentHashMap<>();
-			mutexPrefixName = Classes.getId(resources);
+			mutexPrefixName = classes.getId(resources);
 		}
 		
 		
@@ -367,7 +369,7 @@ public class Cache {
 			}
 			Map<String, R> innerPartion = partion.get(partitionKey);
 			if (innerPartion == null) {
-				synchronized (Classes.getId(mutexPrefixName, partitionIndex, partitionKey)) {
+				synchronized (classes.getId(mutexPrefixName, partitionIndex, partitionKey)) {
 					innerPartion = partion.get(partitionKey);
 					if (innerPartion == null) {
 						partion.put(partitionKey, innerPartion = new ConcurrentHashMap<>());

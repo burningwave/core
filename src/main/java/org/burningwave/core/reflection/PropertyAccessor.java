@@ -306,11 +306,6 @@ public abstract class PropertyAccessor implements Component {
 		);
 	}
 	
-	/*
-	 * Attenzione: se si utilizza qualche framework che usa la libreria
-	 * CGLIB.jar ci potrebbero essere problemi poiche' questa libreria rigenera
-	 * il codice. Utilizzare quindi ByMethodOrByField per una maggiore efficenza
-	 */
 	public static class ByFieldOrByMethod extends PropertyAccessor {
 
 		private ByFieldOrByMethod(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {

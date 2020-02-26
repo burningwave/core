@@ -66,13 +66,15 @@ public class PathHelper implements Component {
 	private IterableObjectHelper iterableObjectHelper;
 	private Supplier<FileSystemHelper> fileSystemHelperSupplier;
 	private FileSystemHelper fileSystemHelper;
+	private Classes classes;
 	private Map<String, Collection<String>> pathGroups;
 	private Collection<String> allPaths;
 	private Properties config;
 		
-	private PathHelper(Supplier<FileSystemHelper> fileSystemHelperSupplier, IterableObjectHelper iterableObjectHelper, Properties config) {
+	private PathHelper(Supplier<FileSystemHelper> fileSystemHelperSupplier, Classes classes, IterableObjectHelper iterableObjectHelper, Properties config) {
 		this.iterableObjectHelper = iterableObjectHelper;
 		this.fileSystemHelperSupplier = fileSystemHelperSupplier;
+		this.classes = classes;
 		pathGroups = new ConcurrentHashMap<>();
 		allPaths = ConcurrentHashMap.newKeySet();
 		loadMainClassPaths();
@@ -92,8 +94,8 @@ public class PathHelper implements Component {
 		Component.super.receiveNotification(properties, event, key, value);
 	}
 	
-	public static PathHelper create(Supplier<FileSystemHelper> fileSystemHelperSupplier, IterableObjectHelper iterableObjectHelper, Properties config) {
-		return new PathHelper(fileSystemHelperSupplier, iterableObjectHelper, config);
+	public static PathHelper create(Supplier<FileSystemHelper> fileSystemHelperSupplier, Classes classes, IterableObjectHelper iterableObjectHelper, Properties config) {
+		return new PathHelper(fileSystemHelperSupplier, classes, iterableObjectHelper, config);
 	}
 	
 	private FileSystemHelper getFileSystemHelper() {
@@ -199,7 +201,7 @@ public class PathHelper implements Component {
 	public Collection<String> loadPaths(String pathGroupName, String paths) {
 		String pathGroupPropertyName = PATHS_KEY_PREFIX + pathGroupName;
 		Collection<String> groupPaths = ConcurrentHashMap.newKeySet();
-			synchronized(Classes.getId(pathGroups, pathGroupName)) {
+			synchronized(classes.getId(pathGroups, pathGroupName)) {
 				String currentPropertyPaths = config.getProperty(pathGroupPropertyName);
 				if (Strings.isNotEmpty(currentPropertyPaths) && Strings.isNotEmpty(paths)) {
 					if (!currentPropertyPaths.endsWith(";")) {

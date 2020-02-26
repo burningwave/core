@@ -69,7 +69,7 @@ public class FieldHelper extends MemberHelper<Field> {
 			);
 			Optional.ofNullable(members.stream().findFirst().get()).orElseThrow(() ->
 				Throwables.toRuntimeException("Field \"" + fieldName
-					+ "\" not found in any class of " + Classes.retrieveFrom(target).getName()
+					+ "\" not found in any class of " + classes.retrieveFrom(target).getName()
 					+ " hierarchy"
 				)
 			).setAccessible(true);

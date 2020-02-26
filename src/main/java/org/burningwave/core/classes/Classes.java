@@ -108,11 +108,11 @@ public class Classes implements Component {
 	}
 	
 	@SuppressWarnings({ "unchecked"})
-	public static <T> Class<T> retrieveFrom(Object object) {
+	public <T> Class<T> retrieveFrom(Object object) {
 		return (Class<T>)(object instanceof Class? object : object.getClass());
 	}
 
-	public static Class<?>[] retrieveFrom(Object... objects) {
+	public Class<?>[] retrieveFrom(Object... objects) {
 		Class<?>[] classes = null;
 		if (objects != null) {
 			classes = new Class[objects.length];
@@ -387,7 +387,7 @@ public class Classes implements Component {
 		lowLevelObjectsHandler.setAccessible(object, flag);
 	}
 	
-	public static String getId(Object object) {
+	public String getId(Object object) {
 		if (object instanceof String) {
 			return (String)object;
 		} else if (object.getClass().isPrimitive()) {
@@ -396,7 +396,7 @@ public class Classes implements Component {
         return object.getClass().getName() + "@" + object.hashCode();
     }
 	 
-	public static String getId(Object... objects) {
+	public String getId(Object... objects) {
 		String id = "_";
 		for (Object object : objects) {
 			id += getId(object) + "_";

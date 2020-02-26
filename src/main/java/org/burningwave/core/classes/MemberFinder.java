@@ -42,7 +42,6 @@ import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 
 public class MemberFinder implements Component {
-	
 	private MemberFinder() {}
 	
 	public static MemberFinder create() {
@@ -54,7 +53,7 @@ public class MemberFinder implements Component {
 	}
 	
 	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
-		return findOne(criteria, Classes.retrieveFrom(objectOrClass));
+		return findOne(criteria, Classes.getInstance().retrieveFrom(objectOrClass));
 	}
 	
 	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
@@ -66,7 +65,7 @@ public class MemberFinder implements Component {
 	}
 	
 	public <M extends Member> Collection<M> findAll(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
-		return findAll(criteria, Classes.retrieveFrom(objectOrClass));
+		return findAll(criteria, Classes.getInstance().retrieveFrom(objectOrClass));
 	}
 	
 	public <M extends Member> Collection<M> findAll(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
@@ -108,7 +107,7 @@ public class MemberFinder implements Component {
 	}
 	
 	public <M extends Member> boolean match(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
-		return match(criteria, Classes.retrieveFrom(objectOrClass));
+		return match(criteria, Classes.getInstance().retrieveFrom(objectOrClass));
 	}
 	
 	public <M extends Member> boolean match(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {

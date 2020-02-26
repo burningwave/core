@@ -49,7 +49,6 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.jvm.JVMInfo;
-import org.burningwave.core.jvm.LowLevelObjectsHandler;
 import org.burningwave.core.reflection.ConstructorHelper;
 import org.burningwave.core.reflection.FieldHelper;
 import org.burningwave.core.reflection.MethodHelper;
@@ -72,8 +71,6 @@ public interface ComponentSupplier extends Component {
 	public ClassFactory getClassFactory();
 
 	public SourceCodeHandler getSourceCodeHandler();
-	
-	public Classes getClasses();
 	
 	public Classes.Loaders getClassesLoaders();
 	
@@ -108,8 +105,6 @@ public interface ComponentSupplier extends Component {
 	public JavaMemoryCompiler getJavaMemoryCompiler();
 
 	public JVMInfo getJVMInfo();
-	
-	public LowLevelObjectsHandler getLowLevelObjectsHandler();
 
 	public MemberFinder getMemberFinder();
 

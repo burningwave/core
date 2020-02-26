@@ -166,7 +166,7 @@ public class ComponentContainer implements ComponentSupplier {
 		T component = (T)components.get(componentType);
 		if (component == null) {	
 			waitForInitializationEnding();
-			synchronized (Classes.getId(components, componentType.getName())) {
+			synchronized (Classes.getInstance().getId(components, componentType.getName())) {
 				if ((component = (T)components.get(componentType)) == null) {
 					component = componentSupplier.get();
 					components.put(componentType, component);
@@ -180,7 +180,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public ConstructorHelper getConstructorHelper() {
 		return getOrCreate(ConstructorHelper.class, () -> 
 			ConstructorHelper.create(
-				getClasses(),
+				Classes.getInstance(),
 				getMemberFinder()
 			)
 		);
@@ -190,7 +190,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public MethodHelper getMethodHelper() {
 		return getOrCreate(MethodHelper.class, () ->
 			MethodHelper.create(
-				getClasses(),
+				Classes.getInstance(),
 				getMemberFinder()
 			)
 		);
@@ -200,7 +200,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public FieldHelper getFieldHelper() {
 		return getOrCreate(FieldHelper.class, () ->
 			FieldHelper.create(
-				getClasses(),
+				Classes.getInstance(),
 				getMemberFinder()
 			)
 		);
@@ -221,31 +221,21 @@ public class ComponentContainer implements ComponentSupplier {
 					MemoryClassLoader.DEFAULT_CONFIG_VALUES,
 					this
 				),
-				getClasses(),
+				Classes.getInstance(),
 				getClassesLoaders()
 			);
 		});
 	}
 	
 	@Override
-	public Classes getClasses() {
-		return Classes.getInstance();			
-	}
-	
-	@Override
 	public Classes.Loaders getClassesLoaders() {
 		return getOrCreate(Classes.Loaders.class, () -> 
 			Classes.Loaders.create(
-				getLowLevelObjectsHandler(),
-				getClasses(),
+				LowLevelObjectsHandler.getInstance(),
+				Classes.getInstance(),
 				getMemberFinder()
 			)
 		);	
-	}
-	
-	@Override
-	public LowLevelObjectsHandler getLowLevelObjectsHandler() {
-		return LowLevelObjectsHandler.getInstance();
 	}
 	
 	@Override
@@ -336,7 +326,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getFileSystemScanner(),
 				getPathHelper(),
 				getStreamHelper(),
-				getClasses(),
+				Classes.getInstance(),
 				getClassesLoaders(),
 				getMemberFinder(),
 				getByFieldOrByMethodPropertyAccessor().retrieveFromFile(
@@ -360,7 +350,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getFileSystemScanner(),
 				getPathHelper(),
 				getStreamHelper(),
-				getClasses(),
+				Classes.getInstance(),
 				getClassesLoaders(),
 				getMemberFinder()
 			)
@@ -377,7 +367,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getFileSystemScanner(),
 				getPathHelper(),
 				getStreamHelper(),
-				getClasses(),
+				Classes.getInstance(),
 				getClassesLoaders(),
 				getMemberFinder()
 			)
@@ -414,7 +404,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public FunctionalInterfaceFactory getFunctionalInterfaceFactory() {
 		return getOrCreate(FunctionalInterfaceFactory.class, () -> 
 			FunctionalInterfaceFactory.create(
-				getClasses(), getClassFactory()
+				Classes.getInstance(), getClassFactory()
 			)
 		);
 	}
@@ -424,6 +414,7 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(PathHelper.class, () ->
 			PathHelper.create(
 				() -> getFileSystemHelper(),
+				Classes.getInstance(),
 				getIterableObjectHelper(),
 				config
 			)
@@ -479,7 +470,7 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(SourceCodeHandler.class, () ->
 			SourceCodeHandler.create(
 				() -> getClassFactory(),
-				getClasses(),
+				Classes.getInstance(),
 				getClassesLoaders()
 			)
 		);

@@ -32,7 +32,7 @@ public class ConstructorHelperTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> componentSupplier.getConstructorHelper().newInstanceOf(
 			FunctionalInterfaceFactory.class,
-			componentSupplier.getClasses(), 
+			Classes.getInstance(), 
 			componentSupplier.getClassFactory())
 		);
 	}

@@ -56,7 +56,7 @@ public abstract class ExecutableMemberCriteria<
 	
 	@SuppressWarnings("unchecked")
 	public C parameterTypesAreAssignableFrom(Object... arguments) {
-		Class<?>[] argumentsClasses = Classes.retrieveFrom(arguments);
+		Class<?>[] argumentsClasses = Classes.getInstance().retrieveFrom(arguments);
 		if (argumentsClasses != null && argumentsClasses.length > 0) {
 			List<Class<?>> argumentsClassesAsList = Arrays.asList(argumentsClasses);
 			for (int i = 0; i < argumentsClasses.length; i++) {

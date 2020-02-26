@@ -49,7 +49,7 @@ public abstract class MemberHelper<M extends Member> implements Component {
 	public MemberHelper(Classes classes, MemberFinder memberFinder) {
 		this.classes = classes; 
 		this.memberFinder = memberFinder;
-		cache = new ConcurrentHashMap<>();
+		this.cache = new ConcurrentHashMap<>();
 	}
 	
 
@@ -87,12 +87,12 @@ public abstract class MemberHelper<M extends Member> implements Component {
 		String argumentsKey = "";
 		if (arguments != null && arguments.length > 0) {
 			StringBuffer argumentsKeyStringBuffer = new StringBuffer();
-			Stream.of(Classes.retrieveFrom(arguments)).forEach(cls ->
+			Stream.of(classes.retrieveFrom(arguments)).forEach(cls ->
 				argumentsKeyStringBuffer.append("[" + cls + "]")
 			);
 			argumentsKey = "[" + argumentsKeyStringBuffer.toString() + "]";
 		}
-		Class<?> targetClass = Classes.retrieveFrom(target);
+		Class<?> targetClass = classes.retrieveFrom(target);
 		String cacheKey = "[" + targetClass.getClassLoader() + "_" + targetClass.getName() + "]" + 
 			"[" + memberName + "]" +
 			argumentsKey;

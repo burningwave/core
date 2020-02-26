@@ -79,7 +79,7 @@ public class MethodHelper extends MemberHelper<Method> {
 			 members = findAllAndMakeThemAccessible(target, methodName::equals, arguments);
 			 if (members.size() != 1) {
 					Throwables.toRuntimeException("Method " + methodName
-						+ " not found or found more than one methods in " + Classes.retrieveFrom(target).getName()
+						+ " not found or found more than one methods in " + classes.retrieveFrom(target).getName()
 						+ " hierarchy");
 			 }
 			 if (cacheMethod) {
@@ -101,7 +101,7 @@ public class MethodHelper extends MemberHelper<Method> {
 			criteria, target, (member) -> member.setAccessible(true)
 		);
 		if (members.isEmpty()) {
-			Throwables.toRuntimeException("Method not found in any class of " + Classes.retrieveFrom(target).getName()
+			Throwables.toRuntimeException("Method not found in any class of " + classes.retrieveFrom(target).getName()
 				+ " hierarchy");
 		}
 		return members;
