@@ -3,8 +3,8 @@ package org.burningwave.core;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.Classes;
-import org.burningwave.core.classes.ConstructorHelper;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
+import org.burningwave.core.reflection.ConstructorHelper;
 import org.burningwave.core.service.ExtendedService;
 import org.junit.jupiter.api.Test;
 

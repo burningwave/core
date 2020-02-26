@@ -29,6 +29,7 @@
 package org.burningwave.core.jvm;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -49,15 +50,15 @@ import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.ThrowingBiConsumer;
+import org.burningwave.core.function.ThrowingFunction;
+import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.function.ThrowingTriFunction;
 import org.burningwave.core.io.Streams;
-import org.burningwave.core.reflection.ConsulterRetriever;
 
 import sun.misc.Unsafe;
 
 @SuppressWarnings("restriction")
 public class LowLevelObjectsHandler implements Component {
-	ConsulterRetriever consulterRetriever;
 	JVMInfo jVMInfo;
 	MemberFinder memberFinder;
 	Unsafe unsafe;
@@ -74,6 +75,7 @@ public class LowLevelObjectsHandler implements Component {
 	ThrowingTriFunction<ClassLoader, Object, String, Package, Throwable> packageRetriever;	
 	Method methodInvoker;
 	ThrowingBiConsumer<AccessibleObject, Boolean, Throwable> accessibleSetter;
+	ThrowingFunction<Class<?>, Lookup, Throwable> consulterRetriever;
 	
 	Map<Class<?>, Field> parentClassLoaderFields;
 	Class<?> classLoaderDelegateClass;
@@ -82,8 +84,7 @@ public class LowLevelObjectsHandler implements Component {
 	Long loadedPackagesMapMemoryOffset;
 	Long loadedClassesVectorMemoryOffset;	
 
-	private LowLevelObjectsHandler(ConsulterRetriever consulterRetriever, JVMInfo jVMInfo, MemberFinder memberFinder) {
-		this.consulterRetriever = consulterRetriever;
+	private LowLevelObjectsHandler(JVMInfo jVMInfo, MemberFinder memberFinder) {
 		this.jVMInfo = jVMInfo;
 		this.memberFinder = memberFinder;
 		LowLevelObjectsHandlerSpecificElementsInitializer.build(this);
@@ -94,8 +95,8 @@ public class LowLevelObjectsHandler implements Component {
 		return LazyHolder.getLowLevelObjectsHandlerInstance();
 	}
 	
-	public static LowLevelObjectsHandler create(ConsulterRetriever consulterRetriever, JVMInfo jvmChecker, MemberFinder memberFinder) {
-		return new LowLevelObjectsHandler(consulterRetriever, jvmChecker, memberFinder);
+	public static LowLevelObjectsHandler create(JVMInfo jvmChecker, MemberFinder memberFinder) {
+		return new LowLevelObjectsHandler(jvmChecker, memberFinder);
 	}
 	
 	public Unsafe getUnsafe() {
@@ -334,13 +335,19 @@ public class LowLevelObjectsHandler implements Component {
 		}
 	}
 	
-	public Constructor<?>[] getDeclaredConstructors(Class<?> cls)  {
+	public Constructor<?>[] getDeclaredConstructors(Class<?> cls) {
 		try {
 			return (Constructor<?>[])getDeclaredConstructorsRetriever.invoke(cls, false);
 		} catch (Throwable exc) {
 			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return emptyConstructorsArray;
 		}
+	}
+	
+	public Lookup getConsulter(Class<?> cls) {
+		return ThrowingSupplier.get(() ->
+			consulterRetriever.apply(cls)
+		);
 	}
 	
 	@Override
@@ -362,6 +369,7 @@ public class LowLevelObjectsHandler implements Component {
 			packageRetriever = null;	
 			methodInvoker = null;
 			accessibleSetter = null;	
+			consulterRetriever = null;
 			parentClassLoaderFields = null;
 			classLoaderDelegateClass = null;
 			builtinClassLoaderClass = null;
@@ -402,7 +410,7 @@ public class LowLevelObjectsHandler implements Component {
 	
 	private static class LazyHolder {
 		private static final LowLevelObjectsHandler LOW_LEVEL_OBJECTS_HANDLER_INSTANCE = LowLevelObjectsHandler.create(
-			ConsulterRetriever.getInstance(), JVMInfo.getInstance(), MemberFinder.getInstance()
+			JVMInfo.getInstance(), MemberFinder.getInstance()
 		);
 		
 		private static LowLevelObjectsHandler getLowLevelObjectsHandlerInstance() {

@@ -10,6 +10,7 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java8 extends LowLevelOb
 
 	LowLevelObjectsHandlerSpecificElementsInitializer4Java8(LowLevelObjectsHandler lowLevelObjectsHandler) {
 		super(lowLevelObjectsHandler);
+		
 	}
 
 	@Override

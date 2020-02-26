@@ -62,11 +62,9 @@ import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.Streams;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
-import org.burningwave.core.reflection.ConsulterRetriever;
 
 public class Classes implements Component {
 	private LowLevelObjectsHandler lowLevelObjectsHandler;
-	private ConsulterRetriever consulterRetriever;
 	
 	public static class Symbol{
 		public static class Tag {
@@ -97,17 +95,16 @@ public class Classes implements Component {
 		V15 = 0 << 16 | 59;
 	}
 	
-	private Classes(LowLevelObjectsHandler lowLevelObjectsHandler, ConsulterRetriever consulterRetriever) {
+	private Classes(LowLevelObjectsHandler lowLevelObjectsHandler) {
 		this.lowLevelObjectsHandler = lowLevelObjectsHandler;
-		this.consulterRetriever = consulterRetriever;
 	}
 	
 	public static Classes getInstance() {
 		return LazyHolder.getClassesInstance();
 	}
 	
-	public static Classes create(LowLevelObjectsHandler lowLevelObjectsHandler, ConsulterRetriever consulterRetriever) {
-		return new Classes(lowLevelObjectsHandler, consulterRetriever);
+	public static Classes create(LowLevelObjectsHandler lowLevelObjectsHandler) {
+		return new Classes(lowLevelObjectsHandler);
 	}
 	
 	@SuppressWarnings({ "unchecked"})
@@ -299,7 +296,7 @@ public class Classes implements Component {
 	public Map.Entry<Lookup, MethodHandle> methodToMethodHandleBag(Method method) {
 		try {
 			Class<?> methodDeclaringClass = method.getDeclaringClass();
-			MethodHandles.Lookup consulter = consulterRetriever.retrieve(methodDeclaringClass);
+			MethodHandles.Lookup consulter = lowLevelObjectsHandler.getConsulter(methodDeclaringClass);
 			return new AbstractMap.SimpleEntry<>(consulter,
 				!Modifier.isStatic(method.getModifiers())?
 					consulter.findSpecial(
@@ -418,7 +415,7 @@ public class Classes implements Component {
 	}
 	
 	private static class LazyHolder {
-		private static final Classes CLASSES_INSTANCE = Classes.create(LowLevelObjectsHandler.getInstance(), ConsulterRetriever.getInstance());
+		private static final Classes CLASSES_INSTANCE = Classes.create(LowLevelObjectsHandler.getInstance());
 		
 		private static Classes getClassesInstance() {
 			return CLASSES_INSTANCE;

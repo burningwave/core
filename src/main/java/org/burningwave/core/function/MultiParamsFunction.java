@@ -31,7 +31,9 @@ package org.burningwave.core.function;
 import java.util.Objects;
 import java.util.function.Function;
 
-public interface MultiParamsFunction<R> {
+import org.burningwave.core.Virtual;
+
+public interface MultiParamsFunction<R> extends Virtual {
 	
 	public R apply(Object... objects); 
 	

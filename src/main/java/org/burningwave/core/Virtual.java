@@ -31,7 +31,7 @@ package org.burningwave.core;
 
 import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.MemberFinder;
-import org.burningwave.core.classes.MethodHelper;
+import org.burningwave.core.reflection.MethodHelper;
 
 
 public interface Virtual extends Component {

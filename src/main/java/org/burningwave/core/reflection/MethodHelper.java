@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes;
+package org.burningwave.core.reflection;
 
 
 import java.lang.reflect.Method;
@@ -35,6 +35,9 @@ import java.util.Collection;
 import java.util.function.Predicate;
 
 import org.burningwave.Throwables;
+import org.burningwave.core.classes.Classes;
+import org.burningwave.core.classes.MemberFinder;
+import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.ThrowingSupplier;
 
 

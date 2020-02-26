@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes;
+package org.burningwave.core.reflection;
 
 import java.lang.reflect.Member;
 import java.util.Collection;
@@ -37,6 +37,9 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.classes.Classes;
+import org.burningwave.core.classes.MemberCriteria;
+import org.burningwave.core.classes.MemberFinder;
 
 public abstract class MemberHelper<M extends Member> implements Component {
 	Classes classes;

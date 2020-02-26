@@ -1,6 +1,7 @@
 package org.burningwave.core.jvm;
 
 import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -27,6 +28,18 @@ abstract class LowLevelObjectsHandlerSpecificElementsInitializer implements Comp
 			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "Exception while retrieving unsafe");
 			throw Throwables.toRuntimeException(exc);
 		}
+		Field modes;
+		try {
+			modes = Lookup.class.getDeclaredField("allowedModes");
+		} catch (NoSuchFieldException | SecurityException exc) {
+			throw Throwables.toRuntimeException(exc);
+		}
+		modes.setAccessible(true);
+		lowLevelObjectsHandler.consulterRetriever = (cls) -> {
+			Lookup consulter = MethodHandles.lookup().in(cls);
+			modes.setInt(consulter, -1);
+			return consulter;
+		};
 	}
 	
 	
@@ -54,7 +67,7 @@ abstract class LowLevelObjectsHandlerSpecificElementsInitializer implements Comp
 	
 	private void initMembersRetrievers() {
 		try {
-			Lookup consulter = lowLevelObjectsHandler.consulterRetriever.retrieve(Class.class);
+			Lookup consulter = lowLevelObjectsHandler.consulterRetriever.apply(Class.class);
 			lowLevelObjectsHandler.getDeclaredFieldsRetriever = consulter.findSpecial(
 				Class.class, "getDeclaredFields0",
 				MethodType.methodType(Field[].class, boolean.class),

@@ -3,6 +3,7 @@ package org.burningwave.core.jvm;
 import java.io.InputStream;
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.AccessibleObject;
@@ -34,6 +35,16 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelOb
 	    	
 	    }
 		lowLevelObjectsHandler.disableIllegalAccessLogger();
+		try {
+			MethodHandles.Lookup consulter = MethodHandles.lookup();
+			MethodHandle consulterRetrieverMethod = consulter.findStatic(MethodHandles.class, "privateLookupIn", MethodType.methodType(Lookup.class, Class.class, Lookup.class));
+			lowLevelObjectsHandler.consulterRetriever = cls ->
+				(Lookup)consulterRetrieverMethod.invoke(cls, MethodHandles.lookup());
+		} catch (IllegalArgumentException | NoSuchMethodException
+				| SecurityException | IllegalAccessException exc) {
+			logError("Could not initialize consulter", exc);
+			throw Throwables.toRuntimeException(exc);
+		}
 	}
 
 	
@@ -49,7 +60,7 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelOb
 			throw Throwables.toRuntimeException(exc);
 		}
 		try {
-			Lookup classLoaderConsulter = lowLevelObjectsHandler.consulterRetriever.retrieve(ClassLoader.class);
+			Lookup classLoaderConsulter = lowLevelObjectsHandler.consulterRetriever.apply(ClassLoader.class);
 			MethodType methodType = MethodType.methodType(Package.class, String.class);
 			MethodHandle methodHandle = classLoaderConsulter.findSpecial(ClassLoader.class, "getDefinedPackage", methodType, ClassLoader.class);
 			BiFunction<ClassLoader, String, Package> packageRetriever = (BiFunction<ClassLoader, String, Package>)LambdaMetafactory.metafactory(

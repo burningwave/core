@@ -31,7 +31,9 @@ package org.burningwave.core.function;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public interface MultiParamsConsumer {
+import org.burningwave.core.Virtual;
+
+public interface MultiParamsConsumer extends Virtual {
 	
 	void accept(Object... objects);
 

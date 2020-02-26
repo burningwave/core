@@ -26,48 +26,58 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes;
+package org.burningwave.core.reflection;
 
-
-import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.Optional;
 
 import org.burningwave.Throwables;
-import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.classes.Classes;
+import org.burningwave.core.classes.FieldCriteria;
+import org.burningwave.core.classes.MemberFinder;
 
 
-public class ConstructorHelper extends MemberHelper<Constructor<?>>  {
+public class FieldHelper extends MemberHelper<Field> {
 
-	private ConstructorHelper(Classes classes, MemberFinder memberFinder) {
+	private FieldHelper(Classes classes, MemberFinder memberFinder) {
 		super(classes, memberFinder);
 	}
 	
-	public static ConstructorHelper create(Classes classes, MemberFinder memberFinder) {
-		return new ConstructorHelper(classes, memberFinder);
+	public static FieldHelper create(Classes classes, MemberFinder memberFinder) {
+		return new FieldHelper(classes, memberFinder);
+	}
+	
+	public Field findOneAndMakeItAccessible(Object target, String fieldName) {
+		return findOneAndMakeItAccessible(target, fieldName, true);
 	}
 	
 	
-	@SuppressWarnings("unchecked")
-	public <T> T newInstanceOf(
-			Object object,
-			Object... arguments) {
-		return ThrowingSupplier.get(() -> 
-			(T)findOneAndMakeItAccessible(object, arguments).newInstance(arguments)
-		);
-	}
-
-	@SuppressWarnings("unchecked")
-	public Constructor<?> findOneAndMakeItAccessible(Object object, Object... arguments) {
-		ConstructorCriteria criteria = ConstructorCriteria.byScanUpTo(object).parameterTypesAreAssignableFrom(
-			arguments
-		);
-		Constructor<?> member = findOneAndApply(
-			criteria, object, (mmb) ->	mmb.setAccessible(true)
-		);
-		Optional.ofNullable(member).orElseThrow(() ->
-			Throwables.toRuntimeException("Constructor not found for class " + Classes.retrieveFrom(object))
-		);
-		return member;
+	public Field findOneAndMakeItAccessible(
+		Object target,
+		String fieldName,
+		boolean cacheField
+	) {
+		String cacheKey = getCacheKey(target, "equals " + fieldName, (Object[])null);
+		Collection<Field> members = cache.get(cacheKey);
+		if (members == null) {
+			members = memberFinder.findAll(
+				FieldCriteria.forName(
+					fieldName::equals
+				),
+				target
+			);
+			Optional.ofNullable(members.stream().findFirst().get()).orElseThrow(() ->
+				Throwables.toRuntimeException("Field \"" + fieldName
+					+ "\" not found in any class of " + Classes.retrieveFrom(target).getName()
+					+ " hierarchy"
+				)
+			).setAccessible(true);
+			if (cacheField) {
+				cache.put(cacheKey, members);
+			}
+		}
+		return members.stream().findFirst().get();
 	}
 
 }
