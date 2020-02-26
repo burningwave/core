@@ -37,12 +37,17 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.Streams;
 
 public class JavaClass {
+	private final static Classes classes;
 	private final ByteBuffer byteCode;
 	private final String className;
 	
+	static {
+		classes = Classes.getInstance();
+	}
+	
 	JavaClass(ByteBuffer byteCode) throws IOException {
 		this.byteCode = Streams.shareContent(byteCode);
-		this.className = Classes.getInstance().retrieveName(byteCode);
+		this.className = classes.retrieveName(byteCode);
 	}
 	
 	public static JavaClass create(ByteBuffer byteCode) {

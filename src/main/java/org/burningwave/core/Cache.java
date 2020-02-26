@@ -45,6 +45,7 @@ import org.burningwave.core.io.Streams;
 import org.burningwave.core.iterable.Properties;
 
 public class Cache {
+	private final static Classes classes;
 	private static final String TYPE_CONFIG_KEY = "cache.type";
 	public final static PathForResources<ByteBuffer> PATH_FOR_CONTENTS ;
 	public final static PathForResources<FileSystemItem> PATH_FOR_FILE_SYSTEM_ITEMS;
@@ -55,6 +56,7 @@ public class Cache {
 	public final static ObjectForObject<Method, Object> BINDED_FUNCTIONAL_INTERFACES;
 	
 	static {
+		classes = Classes.getInstance();
 		if ("sync".equalsIgnoreCase((String)Properties.getGlobalProperty(TYPE_CONFIG_KEY))) {
 			PATH_FOR_CONTENTS = new SyncPathForResources<>(1L, Streams::shareContent);
 			PATH_FOR_FILE_SYSTEM_ITEMS = new SyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
@@ -76,7 +78,6 @@ public class Cache {
 	
 	public static interface ObjectForObject<T, R> {
 		public R getOrDefault(T object, Supplier<R> resourceSupplier);
-		public static final Classes classes = Classes.getInstance();
 		public abstract class Abst<T, R> implements ObjectForObject<T, R> {
 			Map<T, R> resources;
 			
@@ -115,7 +116,6 @@ public class Cache {
 	}
 	
 	public static interface ObjectAndPathForResources<T, R> {
-		public static final Classes classes = Classes.getInstance();
 		
 		public R getOrDefault(T object, String path, Supplier<R> resourceSupplier);
 
@@ -350,7 +350,7 @@ public class Cache {
 	}
 	
 	public static class AsyncPathForResources<R> extends PathForResources.Abst <R> {
-		static final Classes classes = Classes.getInstance(); 
+		
 		String mutexPrefixName;
 		
 		 private AsyncPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
