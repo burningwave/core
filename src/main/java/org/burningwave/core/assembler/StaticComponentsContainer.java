@@ -10,44 +10,30 @@ import org.burningwave.core.iterable.Properties;
 
 public class StaticComponentsContainer {
 	
-	public static org.burningwave.Throwables Throwables;
-	public static org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
-	public static org.burningwave.core.Cache Cache;
-	public static org.burningwave.ManagedLogger.Repository ManagedLoggersRepository;
-	public static org.burningwave.core.Strings Strings;
-	public static org.burningwave.core.Strings.Paths Paths;
-	public static org.burningwave.core.io.Streams Streams;
-	public static org.burningwave.core.iterable.Properties GlobalProperties;
-	public static org.burningwave.core.jvm.JVMInfo JVMInfo;
-	public static org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;
-	public static org.burningwave.core.classes.Classes Classes;
-	public static org.burningwave.core.classes.MemberFinder MemberFinder;
-	public static org.burningwave.core.reflection.ConstructorHelper ConstructorHelper;
-	public static org.burningwave.core.reflection.FieldHelper FieldHelper;
-	public static org.burningwave.core.reflection.MethodHelper MethodHelper;
+	public static final org.burningwave.ManagedLogger.Repository ManagedLoggersRepository;
+	public static final org.burningwave.Throwables Throwables;
+	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
+	public static final org.burningwave.core.Cache Cache;
+	public static final org.burningwave.core.Strings Strings;
+	public static final org.burningwave.core.Strings.Paths Paths;
+	public static final org.burningwave.core.io.Streams Streams;
+	public static final org.burningwave.core.iterable.Properties GlobalProperties;
+	public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
+	public static final org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;
+	public static final org.burningwave.core.classes.Classes Classes;
+	public static final org.burningwave.core.classes.MemberFinder MemberFinder;
+	public static final org.burningwave.core.reflection.ConstructorHelper ConstructorHelper;
+	public static final org.burningwave.core.reflection.FieldHelper FieldHelper;
+	public static final org.burningwave.core.reflection.MethodHelper MethodHelper;
 	
 	static {
-		try {
-			Throwables = org.burningwave.Throwables.create();
-			InputStream propertiesFileIS = Optional.ofNullable(StaticComponentsContainer.class.getClassLoader()).orElseGet(() -> ClassLoader.getSystemClassLoader()).getResourceAsStream("burningwave.static.properties");
-			GlobalProperties = new Properties();
-			if (propertiesFileIS != null) {				
-				GlobalProperties.load(propertiesFileIS);
-			}
+		Throwables = org.burningwave.Throwables.create();
+		GlobalProperties = loadGlobalProperties("burningwave.static.properties");
+		ManagedLoggersRepository = createManagedLoggersRepository(GlobalProperties);
+		try {			
 			Strings = org.burningwave.core.Strings.create();
 			Paths = org.burningwave.core.Strings.Paths.create();
 			ByteBufferDelegate = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate.create();
-			try {
-				String className = (String)GlobalProperties.getProperty(Repository.REPOSITORY_TYPE_CONFIG_KEY);
-				ManagedLoggersRepository = (Repository)Class.forName(className).getConstructor().newInstance();
-			} catch (Throwable exc) {
-				try {
-					Class.forName("org.slf4j.Logger");
-					ManagedLoggersRepository = new SLF4JManagedLoggerRepository();
-				} catch (Throwable exc2) {
-					ManagedLoggersRepository =  new SimpleManagedLoggerRepository();
-				}
-			}			
 			Streams = org.burningwave.core.io.Streams.create(GlobalProperties);
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
 			LowLevelObjectsHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.create();
@@ -60,6 +46,34 @@ public class StaticComponentsContainer {
 		} catch (Throwable exc){
 			ManagedLoggersRepository.logError(StaticComponentsContainer.class, "Exception occurred", exc);
 			throw Throwables.toRuntimeException(exc);
+		}
+	}
+	
+	private static org.burningwave.core.iterable.Properties loadGlobalProperties(String fileName) {
+		InputStream propertiesFileIS = Optional.ofNullable(StaticComponentsContainer.class.getClassLoader()).orElseGet(() -> ClassLoader.getSystemClassLoader()).getResourceAsStream(fileName);
+		org.burningwave.core.iterable.Properties properties = new Properties();
+		if (propertiesFileIS != null) {				
+			try {
+				properties.load(propertiesFileIS);
+			} catch (Throwable exc) {
+				exc.printStackTrace();
+				throw Throwables.toRuntimeException(exc);
+			}
+		}
+		return properties;
+	}
+	
+	private static org.burningwave.ManagedLogger.Repository createManagedLoggersRepository(Properties properties) {
+		try {
+			String className = (String)GlobalProperties.getProperty(Repository.REPOSITORY_TYPE_CONFIG_KEY);
+			return (Repository)Class.forName(className).getConstructor().newInstance();
+		} catch (Throwable exc) {
+			try {
+				Class.forName("org.slf4j.Logger");
+				return new SLF4JManagedLoggerRepository();
+			} catch (Throwable exc2) {
+				return new SimpleManagedLoggerRepository();
+			}
 		}
 	}
 	
