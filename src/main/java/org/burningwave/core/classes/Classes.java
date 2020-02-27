@@ -597,7 +597,7 @@ public class Classes implements Component {
 				try {
 					return loadOrUploadClass(byteCodes.get(className), classLoader);
 				} catch (ClassNotFoundException exc) {
-					String newNotFoundClassName = Classes.retrieveName(exc);
+					String newNotFoundClassName = Classes.retrieveNames(exc).stream().findFirst().orElseGet(() -> null);
 					loadOrUploadClass(newNotFoundClassName, byteCodes, classLoader);
 					return loadOrUploadClass(byteCodes.get(className), classLoader);
 				}
@@ -635,8 +635,8 @@ public class Classes implements Component {
 	    			Class<?> cls = defineClass(classLoader, defineClassMethod, javaClass.getName(), javaClass.getByteCode());
 	    			definePackageFor(cls, classLoader, definePackageMethod);
 	    			return cls;
-				} catch (ClassNotFoundException | NoClassDefFoundError outerExc) {
-					String newNotFoundClassName = Classes.retrieveName(outerExc);
+				} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException outerExc) {
+					String newNotFoundClassName = Classes.retrieveNames(outerExc).stream().findFirst().orElseGet(() -> null);
 					loadOrUploadClass(
 	        			Class.forName(
 	        				newNotFoundClassName, false, classLoader
@@ -663,8 +663,8 @@ public class Classes implements Component {
 	    			Class<?> cls = defineClass(classLoader, defineClassMethod, toLoad.getName(), Streams.shareContent(Classes.getByteCode(toLoad)));
 	    			definePackageFor(cls, classLoader, definePackageMethod);
 	    			return cls;
-				} catch (ClassNotFoundException | NoClassDefFoundError outerExc) {
-					String newNotFoundClassName = Classes.retrieveName(outerExc);
+				} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException outerExc) {
+					String newNotFoundClassName = Classes.retrieveNames(outerExc).stream().findFirst().orElseGet(() -> null);
 					loadOrUploadClass(
 	        			Class.forName(
 	        				newNotFoundClassName, false, toLoad.getClassLoader()
@@ -686,17 +686,11 @@ public class Classes implements Component {
 			MethodHandle method, 
 			String className,
 			ByteBuffer byteCode
-		) throws ClassNotFoundException {
+		) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
 			try {
 				return (Class<?>)method.invoke(classLoader, className, byteCode, null);
-			} catch (InvocationTargetException iTE) {
-				Throwable targetExcption = iTE.getTargetException();
-				if (targetExcption instanceof ClassNotFoundException) {
-					throw (ClassNotFoundException)iTE.getTargetException();
-				} else if (targetExcption instanceof NoClassDefFoundError) {
-					throw (NoClassDefFoundError)iTE.getTargetException();
-				}
-				throw Throwables.toRuntimeException(iTE);
+			} catch (InvocationTargetException | ClassNotFoundException | NoClassDefFoundError exc) {
+				throw exc;
 			} catch (Throwable exc) {
 				throw Throwables.toRuntimeException(exc);
 			}
