@@ -28,34 +28,26 @@
  */
 package org.burningwave.core.reflection;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentsContainer.MemberFinder;
+
 import java.lang.reflect.Member;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.MemberCriteria;
-import org.burningwave.core.classes.MemberFinder;
 
 public abstract class MemberHelper<M extends Member> implements Component {
-	Classes classes;
-	MemberFinder memberFinder;
-	Map<String, Collection<M>> cache;
 	
-	public MemberHelper(Classes classes, MemberFinder memberFinder) {
-		this.classes = classes; 
-		this.memberFinder = memberFinder;
-		this.cache = new ConcurrentHashMap<>();
-	}
+	public MemberHelper() {}
 	
 
 	@SuppressWarnings("unchecked")
 	<C extends MemberCriteria<M, C, ?>> Collection<M> findAllAndApply(C criteria, Object target, Consumer<M>... consumers) {
-		Collection<M> members = memberFinder.findAll(criteria, target);
+		Collection<M> members = MemberFinder.findAll(criteria, target);
 		Optional.ofNullable(consumers).ifPresent(cnsms -> 
 			members.stream().forEach(member -> 
 				Stream.of(cnsms).filter(consumer -> 
@@ -70,7 +62,7 @@ public abstract class MemberHelper<M extends Member> implements Component {
 	
 	@SuppressWarnings("unchecked")
 	<C extends MemberCriteria<M, C, ?>> M findOneAndApply(C criteria, Object target, Consumer<M>... consumers) {
-		M member = memberFinder.findOne(criteria, target);
+		M member = MemberFinder.findOne(criteria, target);
 		Optional.ofNullable(consumers).ifPresent(cnsms -> 
 			Optional.ofNullable(member).ifPresent(mmb -> 
 				Stream.of(cnsms).filter(consumer -> 
@@ -87,22 +79,21 @@ public abstract class MemberHelper<M extends Member> implements Component {
 		String argumentsKey = "";
 		if (arguments != null && arguments.length > 0) {
 			StringBuffer argumentsKeyStringBuffer = new StringBuffer();
-			Stream.of(classes.retrieveFrom(arguments)).forEach(cls ->
-				argumentsKeyStringBuffer.append("[" + cls + "]")
+			Stream.of(Classes.retrieveFrom(arguments)).forEach(cls ->
+				argumentsKeyStringBuffer.append("/" + cls.getName())
 			);
-			argumentsKey = "[" + argumentsKeyStringBuffer.toString() + "]";
+			argumentsKey = argumentsKeyStringBuffer.toString();
 		}
-		Class<?> targetClass = classes.retrieveFrom(target);
-		String cacheKey = "[" + targetClass.getClassLoader() + "_" + targetClass.getName() + "]" + 
-			"[" + memberName + "]" +
+		Class<?> targetClass = Classes.retrieveFrom(target);
+		String cacheKey = "/" + Classes.getId(targetClass.getClassLoader()) + "/" + targetClass.getName() + "@" + targetClass.hashCode() +
+			"/" + memberName +
 			argumentsKey;
 		return cacheKey;		
 	}
 	
 	@Override
 	public void close() {
-		cache.clear();
-		memberFinder = null;
+		
 	}
 
 }

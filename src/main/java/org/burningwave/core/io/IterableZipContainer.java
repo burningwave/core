@@ -1,5 +1,8 @@
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+
 import java.io.File;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -9,8 +12,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import org.burningwave.Throwables;
-import org.burningwave.core.Cache;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 import org.burningwave.core.Component;
 
 public interface IterableZipContainer extends Component {
@@ -32,7 +34,7 @@ public interface IterableZipContainer extends Component {
 
 	public static IterableZipContainer create(String absolutePath, ByteBuffer bytes) {
 		if (Streams.isJModArchive(bytes)) {
-			return Cache.PATH_FOR_ZIP_FILES.getOrDefault(
+			return Cache.pathForZipFiles.getOrDefault(
 				absolutePath, () -> new ZipFile(absolutePath, bytes)
 			).duplicate();
 		} else if (Streams.isArchive(bytes)) {
@@ -53,7 +55,7 @@ public interface IterableZipContainer extends Component {
 			iS = new ByteBufferInputStream(Streams.toByteBuffer(inputStream));
 		}
 		if (Streams.isJModArchive(iS.toByteBuffer())) {
-			return Cache.PATH_FOR_ZIP_FILES.getOrDefault(
+			return Cache.pathForZipFiles.getOrDefault(
 				absolutePath, () -> new ZipFile(absolutePath, iS.toByteBuffer())
 			).duplicate();
 		} else if (Streams.isArchive(iS.toByteBuffer())) {

@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Paths;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -36,7 +38,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.burningwave.core.Strings;
 import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.FileSystemScanner.Scan.Configuration;
 
@@ -69,7 +70,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		Set<String> temp = new LinkedHashSet<String>(paths);
 		paths.clear();
 		for(String path : temp) {
-			paths.add(Strings.Paths.clean(path));
+			paths.add(Paths.clean(path));
 		}
 		temp.clear();
 	}

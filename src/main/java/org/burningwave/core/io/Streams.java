@@ -28,6 +28,9 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.ByteBufferDelegate;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
+
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -41,52 +44,54 @@ import java.nio.ByteBuffer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.burningwave.ManagedLogger;
-import org.burningwave.core.Cache;
+import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.Properties;
-import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
-public class Streams implements ManagedLogger {
+public class Streams implements Component {
 	private static final String DEFAULT_BUFFER_SIZE_CONFIG_KEY = "streams.default-buffer-size";
 	private static final String DEFAULT_BYTE_BUFFER_ALLOCATION_MODE_CONFIG_KEY = "streams.default-byte-buffer-allocation-mode";
 	
-	public static int DEFAULT_BUFFER_SIZE = (int)BufferSize.KILO_BYTE.getValue() / 2;
-	public static Function<Integer, ByteBuffer> DEFAULT_BYTE_BUFFER_ALLOCATION_MODE = ByteBuffer::allocateDirect;
+	public int defaultBufferSize;
+	public Function<Integer, ByteBuffer> defaultByteBufferAllocationMode;
 	
-	static {
+	private Streams(Properties properties) {
 		try {
-			String defaultBufferSize = (String)Properties.getGlobalProperty(DEFAULT_BUFFER_SIZE_CONFIG_KEY);
+			String defaultBufferSize = (String)properties.getProperty(DEFAULT_BUFFER_SIZE_CONFIG_KEY);
 			String unit = defaultBufferSize.substring(defaultBufferSize.length()-2);
 			String value = defaultBufferSize.substring(0, defaultBufferSize.length()-2);
 			if (unit.equalsIgnoreCase("KB")) {
-				DEFAULT_BUFFER_SIZE = new BigDecimal(value).multiply(new BigDecimal(BufferSize.KILO_BYTE.getValue())).intValue();
+				this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(BufferSize.KILO_BYTE.getValue())).intValue();
 			} else if (unit.equalsIgnoreCase("MB")) {
-				DEFAULT_BUFFER_SIZE = new BigDecimal(value).multiply(new BigDecimal(BufferSize.MEGA_BYTE.getValue())).intValue();
+				this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(BufferSize.MEGA_BYTE.getValue())).intValue();
 			} else {
-				DEFAULT_BUFFER_SIZE = Integer.valueOf(value);
-			}
-		} catch (Throwable e) {
-			DEFAULT_BUFFER_SIZE = (int)BufferSize.KILO_BYTE.getValue();
-		}
-		ManagedLogger.Repository.getInstance().logInfo(Streams.class, "default buffer size: {} bytes", DEFAULT_BUFFER_SIZE);
-		try {
-			String defaultByteBufferAllocationMode = (String)Properties.getGlobalProperty(DEFAULT_BYTE_BUFFER_ALLOCATION_MODE_CONFIG_KEY);
-			if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
-				DEFAULT_BYTE_BUFFER_ALLOCATION_MODE = ByteBuffer::allocate;
-				ManagedLogger.Repository.getInstance().logInfo(Streams.class, "default allocation mode: ByteBuffer::allocate");
-			} else {
-				DEFAULT_BYTE_BUFFER_ALLOCATION_MODE = ByteBuffer::allocateDirect;
-				ManagedLogger.Repository.getInstance().logInfo(Streams.class, "default allocation mode: ByteBuffer::allocateDirect");
+				this.defaultBufferSize = Integer.valueOf(value);
 			}
 		} catch (Throwable exc) {
-			DEFAULT_BYTE_BUFFER_ALLOCATION_MODE = ByteBuffer::allocateDirect;
-			ManagedLogger.Repository.getInstance().logInfo(Streams.class, "default allocation mode: ByteBuffer::allocateDirect");
+			defaultBufferSize = (int)BufferSize.KILO_BYTE.getValue();
+		}
+		logInfo("default buffer size: {} bytes", defaultBufferSize);
+		try {
+			String defaultByteBufferAllocationMode = (String)properties.getProperty(DEFAULT_BYTE_BUFFER_ALLOCATION_MODE_CONFIG_KEY);
+			if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
+				this.defaultByteBufferAllocationMode = ByteBuffer::allocate;
+				logInfo("default allocation mode: ByteBuffer::allocate");
+			} else {
+				this.defaultByteBufferAllocationMode = ByteBuffer::allocateDirect;
+				logInfo("default allocation mode: ByteBuffer::allocateDirect");
+			}
+		} catch (Throwable exc) {
+			defaultByteBufferAllocationMode = ByteBuffer::allocateDirect;
+			logInfo("default allocation mode: ByteBuffer::allocateDirect");
 		}
 	}
 	
-	public static boolean isArchive(File file) throws FileNotFoundException, IOException {
+	public static Streams create(Properties properties) {
+		return new Streams(properties);
+	}
+	
+	public boolean isArchive(File file) throws FileNotFoundException, IOException {
 		try (RandomAccessFile raf = new RandomAccessFile(file, "r")){
 	    	return isArchive(raf.readInt());
 	    } catch (EOFException exc) {
@@ -95,15 +100,15 @@ public class Streams implements ManagedLogger {
 		}
 	}
 	
-	public static boolean isArchive(ByteBuffer bytes) {
-		return isArchive(bytes, Streams::isArchive);
+	public boolean isArchive(ByteBuffer bytes) {
+		return isArchive(bytes, this::isArchive);
 	}
 	
-	public static boolean isJModArchive(ByteBuffer bytes) {
-		return isArchive(bytes, Streams::isJModArchive);
+	public boolean isJModArchive(ByteBuffer bytes) {
+		return isArchive(bytes, this::isJModArchive);
 	}
 	
-	private static boolean isArchive(ByteBuffer bytes, Predicate<Integer> predicate) {
+	private boolean isArchive(ByteBuffer bytes, Predicate<Integer> predicate) {
 		if (bytes.capacity() < 4) {
 			return false;
 		}
@@ -111,37 +116,36 @@ public class Streams implements ManagedLogger {
 		try {
 			return predicate.test(bytes.getInt());
 		} catch (BufferUnderflowException exc) {
-			ManagedLogger.Repository.getInstance().logError(Streams.class, "Exception occurred while calling isArchive", exc);
+			logError("Exception occurred while calling isArchive", exc);
 			return false;
 		}
 	}
 	
-	private static boolean isArchive(int fileSignature) {
+	private boolean isArchive(int fileSignature) {
 		return fileSignature == 0x504B0304 || fileSignature == 0x504B0506 || fileSignature == 0x504B0708 || isJModArchive(fileSignature);
 	}
 	
-	private static boolean isJModArchive(int fileSignature) {
+	private boolean isJModArchive(int fileSignature) {
 		return fileSignature == 0x4A4D0100 || fileSignature == 0x4A4D0000;
 	}
 
-	public static byte[] toByteArray(InputStream inputStream) {
+	public byte[] toByteArray(InputStream inputStream) {
 		try (ByteBufferOutputStream output = new ByteBufferOutputStream()) {
 			copy(inputStream, output);
 			return output.toByteArray();
 		}
 	}
 
-	public static ByteBuffer toByteBuffer(InputStream inputStream) {
+	public ByteBuffer toByteBuffer(InputStream inputStream) {
 		try (ByteBufferOutputStream output = new ByteBufferOutputStream()) {
 			copy(inputStream, output);
 			return output.toByteBuffer();
 		}
 	}
-
 	
-	public static long copy(InputStream input, OutputStream output) {
+	public long copy(InputStream input, OutputStream output) {
 		return ThrowingSupplier.get(() -> {
-			byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+			byte[] buffer = new byte[defaultBufferSize];
 			long count = 0L;
 			int n = 0;
 			while (-1 != (n = input.read(buffer))) {
@@ -152,14 +156,14 @@ public class Streams implements ManagedLogger {
 		});
 	}
 	
-	public static byte[] toByteArray(ByteBuffer byteBuffer) {
+	public byte[] toByteArray(ByteBuffer byteBuffer) {
     	byteBuffer = shareContent(byteBuffer);
     	byte[] result = new byte[ByteBufferDelegate.limit(byteBuffer)];
     	byteBuffer.get(result, 0, result.length);
         return result;
     }
 
-	public static ByteBuffer shareContent(ByteBuffer byteBuffer) {
+	public ByteBuffer shareContent(ByteBuffer byteBuffer) {
 		ByteBuffer duplicated = byteBuffer.duplicate();
 		if (ByteBufferDelegate.position(byteBuffer) > 0) {
 			ByteBufferDelegate.flip(duplicated);
@@ -167,7 +171,7 @@ public class Streams implements ManagedLogger {
 		return duplicated;
 	}
 	
-	public static FileSystemItem store(String fileAbsolutePath, ByteBuffer bytes) {
+	public FileSystemItem store(String fileAbsolutePath, ByteBuffer bytes) {
 		ByteBuffer content = shareContent(bytes);
 		File file = new File(fileAbsolutePath);
 		if (!file.exists()) {
@@ -177,11 +181,11 @@ public class Streams implements ManagedLogger {
 		}
 		ThrowingRunnable.run(() -> {					
 			try(ByteBufferInputStream inputStream = new ByteBufferInputStream(content); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
-				Streams.copy(inputStream, fileOutputStream);
+				copy(inputStream, fileOutputStream);
 				//ManagedLogger.Repository.logDebug(this.getClass(), "Class " + getName() + " WRITTEN to "+ Strings.Paths.clean(fileClass.getAbsolutePath()));
 			}
 		});
-		Cache.PATH_FOR_CONTENTS.getOrDefault(
+		Cache.pathForContents.getOrDefault(
 			file.getAbsolutePath(), () ->
 			content
 		);		

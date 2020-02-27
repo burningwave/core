@@ -28,15 +28,23 @@
  */
 package org.burningwave;
 
-public class Throwables {
+import org.burningwave.core.Component;
+
+public class Throwables implements Component {
 	
-	public static RuntimeException toRuntimeException(Object obj) {
+	public Throwables() {}
+	
+	public static Throwables create() {
+		return new Throwables();
+	}
+	
+	public RuntimeException toRuntimeException(Object obj) {
 		if (obj instanceof RuntimeException) {
 			return (RuntimeException)obj;
 		} else if (obj instanceof String) {
 			throw new RuntimeException((String)obj);
 		} else {
-			ManagedLogger.Repository.getInstance().logError(Throwables.class, "", (Throwable)obj);
+			logError("", (Throwable)obj);
 			return new RuntimeException((Throwable)obj);
 		}
 	}

@@ -28,13 +28,13 @@
  */
 package org.burningwave.core.classes.hunter;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+
 import java.lang.reflect.Constructor;
 
-import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.Classes;
-import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("unchecked")
@@ -55,8 +55,8 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Compon
 		classCriteria = ClassCriteria.create();
 	}
 	
-	void init(Classes classes, Classes.Loaders classesLoaders, PathMemoryClassLoader classSupplier, MemberFinder memberFinder) {
-		classCriteria.init(classes, classesLoaders, classSupplier, memberFinder);
+	void init(Classes.Loaders classesLoaders, PathMemoryClassLoader classSupplier) {
+		classCriteria.init(classesLoaders, classSupplier);
 	}
 	
 	public S by(ClassCriteria classCriteria) {

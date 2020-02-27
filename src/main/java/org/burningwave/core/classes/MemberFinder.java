@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+
 import java.lang.reflect.Member;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -38,22 +40,19 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.burningwave.Throwables;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 import org.burningwave.core.Component;
 
 public class MemberFinder implements Component {
+
 	private MemberFinder() {}
 	
 	public static MemberFinder create() {
 		return new MemberFinder();
 	}
 	
-	public static MemberFinder getInstance() {
-		return LazyHolder.getMemberFinderInstance();
-	}
-	
 	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
-		return findOne(criteria, Classes.getInstance().retrieveFrom(objectOrClass));
+		return findOne(criteria, Classes.retrieveFrom(objectOrClass));
 	}
 	
 	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
@@ -65,7 +64,7 @@ public class MemberFinder implements Component {
 	}
 	
 	public <M extends Member> Collection<M> findAll(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
-		return findAll(criteria, Classes.getInstance().retrieveFrom(objectOrClass));
+		return findAll(criteria, Classes.retrieveFrom(objectOrClass));
 	}
 	
 	public <M extends Member> Collection<M> findAll(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
@@ -107,7 +106,7 @@ public class MemberFinder implements Component {
 	}
 	
 	public <M extends Member> boolean match(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
-		return match(criteria, Classes.getInstance().retrieveFrom(objectOrClass));
+		return match(criteria, Classes.retrieveFrom(objectOrClass));
 	}
 	
 	public <M extends Member> boolean match(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
@@ -146,13 +145,5 @@ public class MemberFinder implements Component {
 			(clsPredicate.test(initialClsFrom, clsFrom) || clsFrom.getSuperclass() == null) ?
 				false :
 				match(initialClsFrom, clsFrom.getSuperclass(), clsPredicate, memberSupplier, predicate);
-	}
-	
-	private static class LazyHolder {
-		private static final MemberFinder MEMBER_FINDER_INSTANCE = MemberFinder.create();
-		
-		private static MemberFinder getMemberFinderInstance() {
-			return MEMBER_FINDER_INSTANCE;
-		}
 	}
 }

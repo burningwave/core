@@ -28,11 +28,12 @@
  */
 package org.burningwave.core.classes.hunter;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Criteria;
 

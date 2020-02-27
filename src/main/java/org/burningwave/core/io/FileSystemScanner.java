@@ -1,12 +1,15 @@
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Paths;
+
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
@@ -14,9 +17,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.burningwave.core.Cache;
 import org.burningwave.core.Component;
-import org.burningwave.core.Strings;
 import org.burningwave.core.concurrent.ParallelTasksManager;
 
 
@@ -113,7 +114,7 @@ public class FileSystemScanner implements Component {
 			logDebug("scanning zip file " + zipContainer.getAbsolutePath());      
 			scanZipContainer(new Scan.ItemContext(scanItemContext, new Scan.ZipContainerWrapper(zipContainer)));
 		} catch (Throwable exc) {
-			logError("Could not scan zip file " + Strings.Paths.clean(currentFile.getAbsolutePath()), exc);
+			logError("Could not scan zip file " + Paths.clean(currentFile.getAbsolutePath()), exc);
 		}
 	}
 	
@@ -136,7 +137,7 @@ public class FileSystemScanner implements Component {
 						logDebug("scanning zip entry " + zipEntry.getAbsolutePath());
 						entry.getValue().accept(new Scan.ItemContext(currentScannedItemContext, new Scan.ZipEntryWrapper(zipEntry)));
 					} catch (Throwable exc) {
-						logError("Could not scan zip entry " + Strings.Paths.clean(zipEntry.getAbsolutePath()), exc);
+						logError("Could not scan zip entry " + Paths.clean(zipEntry.getAbsolutePath()), exc);
 					}
 				}				
 			}
@@ -191,8 +192,8 @@ public class FileSystemScanner implements Component {
 			
 			@Override
 			public ByteBuffer toByteBuffer() {
-				return Cache.PATH_FOR_CONTENTS.getOrDefault(
-					Strings.Paths.clean(file.getAbsolutePath()), () -> {
+				return Cache.pathForContents.getOrDefault(
+					Paths.clean(file.getAbsolutePath()), () -> {
 					try (FileInputStream fileInputStream = FileInputStream.create(file)) {
 						return fileInputStream.toByteBuffer();
 					}					
@@ -200,7 +201,7 @@ public class FileSystemScanner implements Component {
 			}
 			@Override
 			public String getAbsolutePath() {
-				return Strings.Paths.clean(file.getAbsolutePath());
+				return Paths.clean(file.getAbsolutePath());
 			}
 
 			@Override

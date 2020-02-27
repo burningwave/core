@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;

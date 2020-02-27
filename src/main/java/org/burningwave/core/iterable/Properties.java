@@ -28,34 +28,11 @@
  */
 package org.burningwave.core.iterable;
 
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.burningwave.core.classes.Classes;
-
 public class Properties extends java.util.Properties {
 	private static final long serialVersionUID = -350748766178421942L;
-	private static Properties FOR_STATIC_CLASSES;
-	
-	static {
-		try {
-			InputStream propertiesFileIS = Classes.getInstance().getClassLoader(Properties.class).getResourceAsStream("burningwave.static.properties");
-			if (propertiesFileIS != null) {
-				FOR_STATIC_CLASSES = new Properties();
-				FOR_STATIC_CLASSES.load(propertiesFileIS);
-			}
-		} catch (Throwable exc){
-			
-		}
-	}
-	
-	public static Object getGlobalProperty(Object propertyKey) {
-		if (FOR_STATIC_CLASSES != null) {
-			return FOR_STATIC_CLASSES.get(propertyKey);
-		}
-		return null;
-	}
 	
 	public static enum Event {
 		PUT, REMOVE

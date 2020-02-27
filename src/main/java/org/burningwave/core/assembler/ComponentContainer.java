@@ -28,14 +28,16 @@
  */
 package org.burningwave.core.assembler;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentsContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+
 import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.burningwave.ManagedLogger;
-import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.Classes;
@@ -47,7 +49,6 @@ import org.burningwave.core.classes.CodeGenerator.ForPojo;
 import org.burningwave.core.classes.CodeGenerator.ForPredicate;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
-import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.classes.hunter.ByteCodeHunter;
@@ -61,12 +62,9 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
-import org.burningwave.core.jvm.JVMInfo;
-import org.burningwave.core.jvm.LowLevelObjectsHandler;
-import org.burningwave.core.reflection.ConstructorHelper;
-import org.burningwave.core.reflection.FieldHelper;
-import org.burningwave.core.reflection.MethodHelper;
 import org.burningwave.core.reflection.PropertyAccessor;
+
+
 
 public class ComponentContainer implements ComponentSupplier {
 	protected Map<Class<? extends Component>, Component> components;
@@ -86,7 +84,7 @@ public class ComponentContainer implements ComponentSupplier {
 			componentContainer.launchInit();
 			return componentContainer;
 		} catch (Throwable exc){
-			ManagedLogger.Repository.getInstance().logError(ComponentContainer.class, "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
+			ManagedLoggersRepository.logError(ComponentContainer.class, "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
 			throw Throwables.toRuntimeException(exc);
 		}
 	}
@@ -141,7 +139,7 @@ public class ComponentContainer implements ComponentSupplier {
 					try {
 						components.wait();
 					} catch (InterruptedException exc) {
-						ManagedLogger.Repository.getInstance().logError(ComponentContainer.class, "Exception while waiting " + ComponentContainer.class.getSimpleName() + " initializaziont", exc);
+						logError("Exception while waiting " + ComponentContainer.class.getSimpleName() + " initializaziont", exc);
 						throw Throwables.toRuntimeException(exc);
 					}
 				}
@@ -166,7 +164,7 @@ public class ComponentContainer implements ComponentSupplier {
 		T component = (T)components.get(componentType);
 		if (component == null) {	
 			waitForInitializationEnding();
-			synchronized (Classes.getInstance().getId(components, componentType.getName())) {
+			synchronized (Classes.getId(components, componentType.getName())) {
 				if ((component = (T)components.get(componentType)) == null) {
 					component = componentSupplier.get();
 					components.put(componentType, component);
@@ -174,41 +172,6 @@ public class ComponentContainer implements ComponentSupplier {
 			}
 		}
 		return component;
-	}
-
-	@Override
-	public ConstructorHelper getConstructorHelper() {
-		return getOrCreate(ConstructorHelper.class, () -> 
-			ConstructorHelper.create(
-				Classes.getInstance(),
-				getMemberFinder()
-			)
-		);
-	}
-
-	@Override
-	public MethodHelper getMethodHelper() {
-		return getOrCreate(MethodHelper.class, () ->
-			MethodHelper.create(
-				Classes.getInstance(),
-				getMemberFinder()
-			)
-		);
-	}
-
-	@Override
-	public FieldHelper getFieldHelper() {
-		return getOrCreate(FieldHelper.class, () ->
-			FieldHelper.create(
-				Classes.getInstance(),
-				getMemberFinder()
-			)
-		);
-	}
-
-	@Override
-	public MemberFinder getMemberFinder() {
-		return MemberFinder.getInstance();
 	}
 
 	@Override
@@ -221,7 +184,6 @@ public class ComponentContainer implements ComponentSupplier {
 					MemoryClassLoader.DEFAULT_CONFIG_VALUES,
 					this
 				),
-				Classes.getInstance(),
 				getClassesLoaders()
 			);
 		});
@@ -230,11 +192,7 @@ public class ComponentContainer implements ComponentSupplier {
 	@Override
 	public Classes.Loaders getClassesLoaders() {
 		return getOrCreate(Classes.Loaders.class, () -> 
-			Classes.Loaders.create(
-				LowLevelObjectsHandler.getInstance(),
-				Classes.getInstance(),
-				getMemberFinder()
-			)
+			org.burningwave.core.classes.Classes.Loaders.create()
 		);	
 	}
 	
@@ -270,7 +228,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public ForCodeExecutor getCodeGeneratorForCodeExecutor() {
 		return getOrCreate(CodeGenerator.ForCodeExecutor.class, () ->
 			CodeGenerator.ForCodeExecutor.create(
-				getMemberFinder(),
 				getStreamHelper()
 			)
 		);
@@ -280,7 +237,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public ForConsumer getCodeGeneratorForConsumer() {
 		return getOrCreate(CodeGenerator.ForConsumer.class, () ->
 			CodeGenerator.ForConsumer.create(
-				getMemberFinder(),
 				getStreamHelper()
 			)
 		);
@@ -290,7 +246,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public ForFunction getCodeGeneratorForFunction() {
 		return getOrCreate(CodeGenerator.ForFunction.class, () ->
 			CodeGenerator.ForFunction.create(
-				getMemberFinder(),
 				getStreamHelper()
 			)
 		);
@@ -300,7 +255,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public ForPredicate getCodeGeneratorForPredicate() {
 		return getOrCreate(CodeGenerator.ForPredicate.class, () -> 
 			CodeGenerator.ForPredicate.create(
-				getMemberFinder(),
 				getStreamHelper()
 			)
 		);
@@ -310,7 +264,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public ForPojo getCodeGeneratorForPojo() {
 		return getOrCreate(CodeGenerator.ForPojo.class, () -> 
 			CodeGenerator.ForPojo.create(
-				getMemberFinder(),
 				getStreamHelper()
 			)
 		);
@@ -326,9 +279,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getFileSystemScanner(),
 				getPathHelper(),
 				getStreamHelper(),
-				Classes.getInstance(),
 				getClassesLoaders(),
-				getMemberFinder(),
 				getByFieldOrByMethodPropertyAccessor().retrieveFromFile(
 					config,
 					ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
@@ -350,9 +301,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getFileSystemScanner(),
 				getPathHelper(),
 				getStreamHelper(),
-				Classes.getInstance(),
-				getClassesLoaders(),
-				getMemberFinder()
+				getClassesLoaders()
 			)
 		);
 	}
@@ -367,9 +316,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getFileSystemScanner(),
 				getPathHelper(),
 				getStreamHelper(),
-				Classes.getInstance(),
-				getClassesLoaders(),
-				getMemberFinder()
+				getClassesLoaders()
 			)
 		);
 	}
@@ -378,9 +325,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public PropertyAccessor.ByFieldOrByMethod getByFieldOrByMethodPropertyAccessor() {
 		return getOrCreate(PropertyAccessor.ByFieldOrByMethod.class, () ->  
 			PropertyAccessor.ByFieldOrByMethod.create(
-				getMemberFinder(),
-				getMethodHelper(),
-				getFieldHelper(),
 				() -> getSourceCodeHandler(),
 				() -> getIterableObjectHelper()
 			)
@@ -391,9 +335,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public PropertyAccessor.ByMethodOrByField getByMethodOrByFieldPropertyAccessor() {
 		return getOrCreate(PropertyAccessor.ByMethodOrByField.class, () ->  
 			PropertyAccessor.ByMethodOrByField.create(
-				getMemberFinder(),
-				getMethodHelper(),
-				getFieldHelper(),
 				() -> getSourceCodeHandler(),
 				() -> getIterableObjectHelper()
 			)
@@ -404,7 +345,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public FunctionalInterfaceFactory getFunctionalInterfaceFactory() {
 		return getOrCreate(FunctionalInterfaceFactory.class, () -> 
 			FunctionalInterfaceFactory.create(
-				Classes.getInstance(), getClassFactory()
+				getClassFactory()
 			)
 		);
 	}
@@ -414,7 +355,6 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(PathHelper.class, () ->
 			PathHelper.create(
 				() -> getFileSystemHelper(),
-				Classes.getInstance(),
 				getIterableObjectHelper(),
 				config
 			)
@@ -459,18 +399,12 @@ public class ComponentContainer implements ComponentSupplier {
 			)
 		);
 	}
-	
-	@Override
-	public JVMInfo getJVMInfo() {
-		return JVMInfo.getInstance();
-	}
 
 	@Override
 	public SourceCodeHandler getSourceCodeHandler() {
 		return getOrCreate(SourceCodeHandler.class, () ->
 			SourceCodeHandler.create(
 				() -> getClassFactory(),
-				Classes.getInstance(),
 				getClassesLoaders()
 			)
 		);

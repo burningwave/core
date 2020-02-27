@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
@@ -38,7 +40,6 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 import org.burningwave.core.Criteria;
-import org.burningwave.core.io.Streams;
 
 @SuppressWarnings("unchecked")
 public abstract class CriteriaWithClassElementsSupplyingSupport<

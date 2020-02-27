@@ -28,6 +28,9 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Paths;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
+
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -56,18 +59,16 @@ import javax.tools.JavaFileObject.Kind;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 
-import org.burningwave.Throwables;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 import org.burningwave.core.Component;
-import org.burningwave.core.Strings;
-import org.burningwave.core.classes.hunter.ClassPathHunter.SearchResult;
 import org.burningwave.core.classes.hunter.ClassPathHunter;
+import org.burningwave.core.classes.hunter.ClassPathHunter.SearchResult;
 import org.burningwave.core.classes.hunter.SearchConfig;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-
 
 public class JavaMemoryCompiler implements Component {
 	
@@ -387,7 +388,7 @@ public class JavaMemoryCompiler implements Component {
 			
 			void addToClassPath(String path) {
 				if (Strings.isNotBlank(path)) {
-					options.put("-classpath", Optional.ofNullable(options.get("-classpath")).orElse("") + Strings.Paths.clean(path) + System.getProperty("path.separator"));
+					options.put("-classpath", Optional.ofNullable(options.get("-classpath")).orElse("") + Paths.clean(path) + System.getProperty("path.separator"));
 				}
 			}
 			

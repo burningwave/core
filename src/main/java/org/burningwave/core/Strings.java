@@ -28,6 +28,8 @@
  */
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,11 +38,15 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.burningwave.ManagedLogger;
-
-public class Strings {
+public class Strings implements Component {
 	
-	public static boolean isBlank(String str) {
+	private Strings() {}
+	
+	public static Strings create() {
+		return new Strings();
+	}
+	
+	public boolean isBlank(String str) {
 		int strLen;
 		if ((str == null) || ((strLen = str.length()) == 0)) {
 			return true;
@@ -54,22 +60,22 @@ public class Strings {
 	}
 	
 	
-	public static boolean isNotBlank(String str) {
+	public boolean isNotBlank(String str) {
 		return (!(isBlank(str)));
 	}
 	
 	
-	public static boolean isEmpty(String str) {
+	public boolean isEmpty(String str) {
 		return ((str == null) || (str.length() == 0));
 	}
 
 
-	public static boolean isNotEmpty(String str) {
+	public boolean isNotEmpty(String str) {
 		return (!(isEmpty(str)));
 	}	 
 	
 	
-	public static boolean contains(String str, char searchChar) {
+	public boolean contains(String str, char searchChar) {
 		if (isEmpty(str)) {
 			return false;
 		}
@@ -77,7 +83,7 @@ public class Strings {
 	}
 	
 	
-	public static String strip(String str, String stripChars) {
+	public String strip(String str, String stripChars) {
 		if (isEmpty(str)) {
 			return str;
 		}
@@ -86,7 +92,7 @@ public class Strings {
 	}
 
 	
-	public static String stripStart(String str, String stripChars) {
+	public String stripStart(String str, String stripChars) {
 		int strLen;
 		if (str == null || (strLen = str.length()) == 0) {
 			return str;
@@ -107,7 +113,7 @@ public class Strings {
 		return str.substring(start);
 	}
 
-	public static String stripEnd(String str, String stripChars) {
+	public String stripEnd(String str, String stripChars) {
 		int end;
 		if (str == null || (end = str.length()) == 0) {
 			return str;
@@ -126,11 +132,11 @@ public class Strings {
 		}
 		return str.substring(0, end);
 	}
-	public static String lowerCaseFirstCharacter(String string) {
+	public String lowerCaseFirstCharacter(String string) {
 		return Character.toLowerCase(string.charAt(0)) + string.substring(1);
 	}	
 	
-	public static String replace(String text, Map<String, String> params) {
+	public String replace(String text, Map<String, String> params) {
 		AtomicReference<String> template = new AtomicReference<String>(text);
 		params.forEach((key, value) -> 
 			template.set(
@@ -146,7 +152,7 @@ public class Strings {
 	}
 	
 	
-	public static Map<Integer, List<String>> extractAllGroups(Pattern pattern, String target) {
+	public Map<Integer, List<String>> extractAllGroups(Pattern pattern, String target) {
 		Matcher matcher = pattern.matcher(target);
 		Map<Integer, List<String>> found = new LinkedHashMap<>();
 		while (matcher.find()) {
@@ -159,7 +165,7 @@ public class Strings {
 					}					
 					foundString.add(matcher.group(i));
 				} catch (IndexOutOfBoundsException exc) {
-					ManagedLogger.Repository.getInstance().logDebug(Strings.class, "group " + i + " not found on string \"" + target + "\" using pattern " + pattern.pattern());
+					logDebug("group " + i + " not found on string \"" + target + "\" using pattern " + pattern.pattern());
 				}
 			}
 		}
@@ -169,7 +175,13 @@ public class Strings {
 	
 	public static class Paths {
 		
-		public static String clean(String path) {
+		private Paths() {}
+		
+		public static Paths create() {
+			return new Paths();
+		}
+		
+		public String clean(String path) {
 			path = Strings.strip(path, " ");
 			path = path.replace("\\", "/");
 			// ON LINUX UNIX FIRST SLASH CHARACTER MUST NOT BE REMOVED.
@@ -184,7 +196,7 @@ public class Strings {
 		}
 		
 		
-		public static String convertFromURLPath(String uRLPath) {
+		public String convertFromURLPath(String uRLPath) {
 			uRLPath = removeInitialPathElements(uRLPath, 
 					"file:", 
 					//Patch for tomcat 7
@@ -213,7 +225,7 @@ public class Strings {
 			return uRLPath;
 		}
 		
-		public static String removeInitialPathElements(String path, String... toRemove) {
+		public String removeInitialPathElements(String path, String... toRemove) {
 			if (toRemove != null && toRemove.length > 0) {
 				for (int i = 0; i < toRemove.length; i++) {
 					if (path.startsWith(toRemove[i])) {

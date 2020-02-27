@@ -28,75 +28,57 @@
  */
 package org.burningwave;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.ManagedLoggersRepository;;
+
 public interface ManagedLogger {
 		
 	@SuppressWarnings("unchecked")
 	public default <T extends ManagedLogger> T disableLogging() {
-		Repository.INSTANCE.disableLogging(this.getClass());
+		ManagedLoggersRepository.disableLogging(this.getClass());
 		return (T) this;
 	}
 	
 	@SuppressWarnings("unchecked")
 	public default <T extends ManagedLogger> T enableLogging() {
-		Repository.INSTANCE.enableLogging(this.getClass());
+		ManagedLoggersRepository.enableLogging(this.getClass());
 		return (T) this;
 	}
 	
 	default void logError(String message, Throwable exc) {
-		Repository.INSTANCE.logError(this.getClass(), message, exc);
+		ManagedLoggersRepository.logError(this.getClass(), message, exc);
 	}
 	
 	default void logError(String message) {
-		Repository.INSTANCE.logError(this.getClass(), message);
+		ManagedLoggersRepository.logError(this.getClass(), message);
 	}
 	
 	default void logDebug(String message) {
-		Repository.INSTANCE.logDebug(this.getClass(), message);
+		ManagedLoggersRepository.logDebug(this.getClass(), message);
 	}
 	
 	default void logDebug(String message, Object... arguments) {
-		Repository.INSTANCE.logDebug(this.getClass(), message, arguments);
+		ManagedLoggersRepository.logDebug(this.getClass(), message, arguments);
 	}
 	
 	default void logInfo(String message) {
-		Repository.INSTANCE.logInfo(this.getClass(), message);
+		ManagedLoggersRepository.logInfo(this.getClass(), message);
 	}
 	
 	default void logInfo(String message, Object... arguments) {
-		Repository.INSTANCE.logInfo(this.getClass(), message, arguments);
+		ManagedLoggersRepository.logInfo(this.getClass(), message, arguments);
 	}
 	
 	default void logWarn(String message) {
-		Repository.INSTANCE.logWarn(this.getClass(), message);
+		ManagedLoggersRepository.logWarn(this.getClass(), message);
 	}
 	
 	default void logWarn(String message, Object... arguments) {
-		Repository.INSTANCE.logWarn(this.getClass(), message, arguments);
+		ManagedLoggersRepository.logWarn(this.getClass(), message, arguments);
 	}
 	
 	
 	public static interface Repository {
 		public static final String REPOSITORY_TYPE_CONFIG_KEY = "managed-logger.repository";
-		
-		final static Repository INSTANCE = newInstance();
-		
-		static Repository newInstance() {
-			try {
-				String className = (String)org.burningwave.core.iterable.Properties.getGlobalProperty(REPOSITORY_TYPE_CONFIG_KEY);
-				return (Repository)Class.forName(className).getConstructor().newInstance();
-			} catch (Throwable exc) {
-				try {
-					Class.forName("org.slf4j.Logger");
-					return new SLF4JManagedLoggerRepository();
-				} catch (Throwable exc2) {
-					return new SimpleManagedLoggerRepository();
-				}
-			}			
-		}
-		
-		public static Repository getInstance() {
-			return INSTANCE;
-		}
 		
 		public void disableLogging(Class<?> client);
 		

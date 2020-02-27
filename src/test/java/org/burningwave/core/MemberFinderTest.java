@@ -1,7 +1,7 @@
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.MemberFinder;
 
-import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.service.ExtendedService;
 import org.burningwave.core.service.Service;
@@ -12,9 +12,8 @@ public class MemberFinderTest extends BaseTest {
 	
 	@Test
 	public void findOneTestOne() {
-		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() ->
-			componentSupplier.getMemberFinder().findOne(
+			MemberFinder.findOne(
 				MethodCriteria.forName((name) ->
 					name.matches("apply")
 				).and().parameterType((params, idx) -> 
@@ -32,9 +31,8 @@ public class MemberFinderTest extends BaseTest {
 	
 	@Test
 	public void findOneTestTwo() {
-		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() ->
-			componentSupplier.getMemberFinder().findOne(
+			MemberFinder.findOne(
 				MethodCriteria.create()
 				.name((name) -> name.matches("apply"))
 				.and().parameterType((params, idx) -> 

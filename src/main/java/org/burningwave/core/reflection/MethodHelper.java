@@ -28,27 +28,35 @@
  */
 package org.burningwave.core.reflection;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentsContainer.LowLevelObjectsHandler;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 import java.util.function.Predicate;
 
-import org.burningwave.Throwables;
-import org.burningwave.core.classes.Classes;
-import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.ThrowingSupplier;
 
 
 public class MethodHelper extends MemberHelper<Method> {
 	
-	private MethodHelper(Classes classes, MemberFinder memberFinder) {
-		super(classes, memberFinder);
+	private MethodHelper() {
+		super();
 	}
 	
-	public static MethodHelper create(Classes classes, MemberFinder memberFinder) {
-		return new MethodHelper(classes, memberFinder);
+	public static MethodHelper create() {
+		return new MethodHelper();
 	}
 
 	public String createGetterMethodNameByPropertyName(String property) {
@@ -74,16 +82,17 @@ public class MethodHelper extends MemberHelper<Method> {
 	
 	public Method findOneAndMakeItAccessible(Object target, String methodName, boolean cacheMethod, Object... arguments) {
 		String cacheKey = getCacheKey(target, "equals " + methodName, arguments);
-		Collection<Method> members = cache.get(cacheKey);
+		Collection<Method> members = Cache.uniqueKeyForMethods.get(cacheKey);
 		if (members == null) {	
 			 members = findAllAndMakeThemAccessible(target, methodName::equals, arguments);
 			 if (members.size() != 1) {
 					Throwables.toRuntimeException("Method " + methodName
-						+ " not found or found more than one methods in " + classes.retrieveFrom(target).getName()
+						+ " not found or found more than one methods in " + Classes.retrieveFrom(target).getName()
 						+ " hierarchy");
 			 }
 			 if (cacheMethod) {
-				 cache.put(cacheKey, members);
+				final Collection<Method> toUpload = members;
+				Cache.uniqueKeyForMethods.upload(cacheKey, () -> toUpload);
 			 }
 		}		
 		return members.stream().findFirst().get();
@@ -101,7 +110,7 @@ public class MethodHelper extends MemberHelper<Method> {
 			criteria, target, (member) -> member.setAccessible(true)
 		);
 		if (members.isEmpty()) {
-			Throwables.toRuntimeException("Method not found in any class of " + classes.retrieveFrom(target).getName()
+			Throwables.toRuntimeException("Method not found in any class of " + Classes.retrieveFrom(target).getName()
 				+ " hierarchy");
 		}
 		return members;
@@ -126,11 +135,12 @@ public class MethodHelper extends MemberHelper<Method> {
 	public <T> Collection<T> invokeAll(Object target, String methodNameRegEx, boolean cacheMember, Object... arguments) {
 		return ThrowingSupplier.get(() -> {
 			String cacheKey = getCacheKey(target, "matches " + methodNameRegEx, arguments);
-			Collection<Method> members = cache.get(cacheKey);
+			Collection<Method> members = Cache.uniqueKeyForMethods.get(cacheKey);
 			if (members == null) {	
 				members = findAllAndMakeThemAccessible(target, (name) -> name.matches(methodNameRegEx), arguments);
 				if (cacheMember) {
-					 cache.put(cacheKey, members);
+					final Collection<Method> toUpload = members;
+					Cache.uniqueKeyForMethods.upload(cacheKey, () -> toUpload);
 				}
 			}			
 			Collection<T> results = new ArrayList<>();
@@ -139,5 +149,30 @@ public class MethodHelper extends MemberHelper<Method> {
 			}			
 			return results;
 		});
+	}
+	
+	public MethodHandle convertoToMethodHandle(Method method) {
+		return convertoToMethodHandleBag(method).getValue();
+	}
+	
+	public Map.Entry<Lookup, MethodHandle> convertoToMethodHandleBag(Method method) {
+		try {
+			Class<?> methodDeclaringClass = method.getDeclaringClass();
+			MethodHandles.Lookup consulter = LowLevelObjectsHandler.getConsulter(methodDeclaringClass);
+			return new AbstractMap.SimpleEntry<>(consulter,
+				!Modifier.isStatic(method.getModifiers())?
+					consulter.findSpecial(
+						methodDeclaringClass, method.getName(),
+						MethodType.methodType(method.getReturnType(), method.getParameterTypes()),
+						methodDeclaringClass
+					):
+					consulter.findStatic(
+						methodDeclaringClass, method.getName(),
+						MethodType.methodType(method.getReturnType(), method.getParameterTypes())
+					)
+			);
+		} catch (NoSuchMethodException | IllegalAccessException exc) {
+			throw Throwables.toRuntimeException(exc);
+		}
 	}
 }

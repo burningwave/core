@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.JavaClass;
-import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.concurrent.ParallelTasksManager;
 import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemHelper;
@@ -57,9 +56,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
-		Classes classes,
-		Classes.Loaders classesLoaders,
-		MemberFinder memberFinder
+		Classes.Loaders classesLoaders
 	) {
 		super(
 			byteCodeHunterSupplier,
@@ -68,10 +65,8 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 			fileSystemScanner,
 			pathHelper,
 			streamHelper,
-			classes,
 			classesLoaders,
-			memberFinder,
-			(initContext) -> SearchContext._create(fileSystemHelper, streamHelper, classes, initContext),
+			(initContext) -> SearchContext._create(fileSystemHelper, streamHelper, initContext),
 			(context) -> new ClassPathHunter.SearchResult(context)
 		);
 	}
@@ -83,9 +78,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
-		Classes classes,
-		Classes.Loaders classesLoaders,
-		MemberFinder memberFinder
+		Classes.Loaders classesLoaders
 	) {
 		return new ClassPathHunter(
 			byteCodeHunterSupplier,
@@ -94,9 +87,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 			fileSystemScanner,
 			pathHelper,
 			streamHelper,
-			classes,
-			classesLoaders,
-			memberFinder
+			classesLoaders
 		);
 	}
 	
@@ -160,14 +151,14 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 	public static class SearchContext extends org.burningwave.core.classes.hunter.SearchContext<Collection<Class<?>>> {
 		ParallelTasksManager tasksManager;
 		
-		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, Classes classes, InitContext initContext) {
-			super(fileSystemHelper, streamHelper, classes, initContext);
+		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
+			super(fileSystemHelper, streamHelper, initContext);
 			ClassFileScanConfig scanConfig = initContext.getClassFileScanConfiguration();
 			this.tasksManager = ParallelTasksManager.create(scanConfig.getMaxParallelTasksForUnit());
 		}		
 
-		static SearchContext _create(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, Classes classes, InitContext initContext) {
-			return new SearchContext(fileSystemHelper, streamHelper,  classes, initContext);
+		static SearchContext _create(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
+			return new SearchContext(fileSystemHelper, streamHelper,  initContext);
 		}
 
 		

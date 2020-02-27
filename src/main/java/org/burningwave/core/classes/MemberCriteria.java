@@ -43,11 +43,11 @@ import org.burningwave.core.function.TriPredicate;
 
 public abstract class MemberCriteria<M extends Member, C extends MemberCriteria<M, C, T>, T extends Criteria.TestContext<M, C>> extends CriteriaWithClassElementsSupplyingSupport<M, C, T> {
 	private static Member[] EMPTY_MEMBERS_ARRAY = new Member[]{};
-	protected Classes classes = Classes.getInstance();
 	TriPredicate<C, Class<?>, Class<?>> scanUpToPredicate;	
 	TriPredicate<C, Class<?>, Class<?>> skipClassPredicate;
 	Predicate<Collection<M>> resultPredicate;	
-		
+
+	
 	@SuppressWarnings("unchecked")
 	public BiPredicate<Class<?>, Class<?>> getScanUpToPredicate() {
 		return scanUpToPredicate != null?

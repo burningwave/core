@@ -28,6 +28,10 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Paths;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 
 import java.io.File;
 import java.net.URLClassLoader;
@@ -48,10 +52,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.burningwave.Throwables;
 import org.burningwave.core.Component;
-import org.burningwave.core.Strings;
-import org.burningwave.core.classes.Classes;
 import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
@@ -66,15 +67,13 @@ public class PathHelper implements Component {
 	private IterableObjectHelper iterableObjectHelper;
 	private Supplier<FileSystemHelper> fileSystemHelperSupplier;
 	private FileSystemHelper fileSystemHelper;
-	private Classes classes;
 	private Map<String, Collection<String>> pathGroups;
 	private Collection<String> allPaths;
 	private Properties config;
 		
-	private PathHelper(Supplier<FileSystemHelper> fileSystemHelperSupplier, Classes classes, IterableObjectHelper iterableObjectHelper, Properties config) {
+	private PathHelper(Supplier<FileSystemHelper> fileSystemHelperSupplier, IterableObjectHelper iterableObjectHelper, Properties config) {
 		this.iterableObjectHelper = iterableObjectHelper;
 		this.fileSystemHelperSupplier = fileSystemHelperSupplier;
-		this.classes = classes;
 		pathGroups = new ConcurrentHashMap<>();
 		allPaths = ConcurrentHashMap.newKeySet();
 		loadMainClassPaths();
@@ -94,8 +93,8 @@ public class PathHelper implements Component {
 		Component.super.receiveNotification(properties, event, key, value);
 	}
 	
-	public static PathHelper create(Supplier<FileSystemHelper> fileSystemHelperSupplier, Classes classes, IterableObjectHelper iterableObjectHelper, Properties config) {
-		return new PathHelper(fileSystemHelperSupplier, classes, iterableObjectHelper, config);
+	public static PathHelper create(Supplier<FileSystemHelper> fileSystemHelperSupplier, IterableObjectHelper iterableObjectHelper, Properties config) {
+		return new PathHelper(fileSystemHelperSupplier, iterableObjectHelper, config);
 	}
 	
 	private FileSystemHelper getFileSystemHelper() {
@@ -112,7 +111,7 @@ public class PathHelper implements Component {
 				Stream.of(
 					classPaths.split(System.getProperty("path.separator"))
 				).map(path ->
-					Strings.Paths.clean(path)
+					Paths.clean(path)
 				).collect(
 					Collectors.toCollection(
 						LinkedHashSet::new
@@ -128,7 +127,7 @@ public class PathHelper implements Component {
 					Stream.of(
 						((URLClassLoader)classLoader).getURLs()
 					).map(uRL -> 
-						Strings.Paths.clean(uRL.getFile())
+						Paths.clean(uRL.getFile())
 					).collect(
 						Collectors.toCollection(
 							LinkedHashSet::new
@@ -201,7 +200,7 @@ public class PathHelper implements Component {
 	public Collection<String> loadPaths(String pathGroupName, String paths) {
 		String pathGroupPropertyName = PATHS_KEY_PREFIX + pathGroupName;
 		Collection<String> groupPaths = ConcurrentHashMap.newKeySet();
-			synchronized(classes.getId(pathGroups, pathGroupName)) {
+			synchronized(Classes.getId(pathGroups, pathGroupName)) {
 				String currentPropertyPaths = config.getProperty(pathGroupPropertyName);
 				if (Strings.isNotEmpty(currentPropertyPaths) && Strings.isNotEmpty(paths)) {
 					if (!currentPropertyPaths.endsWith(";")) {
@@ -221,7 +220,7 @@ public class PathHelper implements Component {
 						for (String mainClassPath : mainClassPaths) {
 							Map<String, String> defaultValues = new LinkedHashMap<>();
 							defaultValues.put("classPaths", mainClassPath);
-							paths = Strings.Paths.clean(iterableObjectHelper.get(config, pathGroupPropertyName, defaultValues));
+							paths = Paths.clean(iterableObjectHelper.get(config, pathGroupPropertyName, defaultValues));
 							for (String path : paths.split(";")) {
 								groupPaths.addAll(addPath(pathGroupName, path));
 							}
@@ -299,11 +298,11 @@ public class PathHelper implements Component {
 		CheckResult checkPathsResult = new CheckResult();
 		for (String path2 : pathCollection2) {
 			File path2AsFile = new File(path2);
-			String path2Normalized = Strings.Paths.clean(path2AsFile.getAbsolutePath());
+			String path2Normalized = Paths.clean(path2AsFile.getAbsolutePath());
 			int result = -1;
 			for (String path1 : pathCollection1) {
 				File pathAsFile1 = new File(path1);
-				String path1Normalized = Strings.Paths.clean(pathAsFile1.getAbsolutePath());
+				String path1Normalized = Paths.clean(pathAsFile1.getAbsolutePath());
 				if (//If path 1 and path 2 are the same file or path 2 is contained in path 1
 					(!pathAsFile1.isDirectory() && !path2AsFile.isDirectory() && 
 						path1Normalized.equals(path2Normalized)) ||
@@ -356,15 +355,15 @@ public class PathHelper implements Component {
 				if (i != j) {					
 					File nestedPathAsFile = new File(nestedPath);
 					if (!nestedPathAsFile.isDirectory() && !pathAsFile.isDirectory()) {
-						if (Strings.Paths.clean(nestedPathAsFile.getAbsolutePath()).equals(Strings.Paths.clean(pathAsFile.getAbsolutePath()))) {
+						if (Paths.clean(nestedPathAsFile.getAbsolutePath()).equals(Paths.clean(pathAsFile.getAbsolutePath()))) {
 							toBeRemoved.add(path);
 						}
 					} else if (nestedPathAsFile.isDirectory() && !pathAsFile.isDirectory()) {
-						if (Strings.Paths.clean(pathAsFile.getAbsolutePath()).startsWith(Strings.Paths.clean(nestedPathAsFile.getAbsolutePath()) + "/")) {
+						if (Paths.clean(pathAsFile.getAbsolutePath()).startsWith(Paths.clean(nestedPathAsFile.getAbsolutePath()) + "/")) {
 							toBeRemoved.add(path);
 						}
 					} else {
-						if ((Strings.Paths.clean(pathAsFile.getAbsolutePath()) + "/").startsWith(Strings.Paths.clean(nestedPathAsFile.getAbsolutePath()) + "/")) {
+						if ((Paths.clean(pathAsFile.getAbsolutePath()) + "/").startsWith(Paths.clean(nestedPathAsFile.getAbsolutePath()) + "/")) {
 							toBeRemoved.add(path);
 						}
 					}

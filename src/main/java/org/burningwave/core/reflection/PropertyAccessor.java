@@ -28,6 +28,12 @@
  */
 package org.burningwave.core.reflection;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.FieldHelper;
+import static org.burningwave.core.assembler.StaticComponentsContainer.MemberFinder;
+import static org.burningwave.core.assembler.StaticComponentsContainer.MethodHelper;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -41,13 +47,10 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.burningwave.Throwables;
 import org.burningwave.core.Component;
-import org.burningwave.core.Strings;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.classes.FieldCriteria;
-import org.burningwave.core.classes.MemberFinder;
+import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.function.ThrowingBiFunction;
 import org.burningwave.core.function.ThrowingFunction;
 import org.burningwave.core.iterable.IterableObjectHelper;
@@ -57,10 +60,7 @@ public abstract class PropertyAccessor implements Component {
 	public final static String SUPPLIER_IMPORTS_KEY_SUFFIX = ".supplier.imports";
 	public final static String REG_EXP_FOR_JAVA_PROPERTIES = "([a-zA-Z\\$\\_\\-0-9]*)(\\[*.*)";
 	public final static String REG_EXP_FOR_INDEXES_OF_JAVA_INDEXED_PROPERTIES = "\\[([a-zA-Z0-9]*)\\]";
-	
-	private MemberFinder memberFinder;
-	private MethodHelper methodHelper;
-	private FieldHelper fieldHelper;
+
 	private SourceCodeHandler sourceCodeHandler;
 	private List<ThrowingBiFunction<Object, String, Object, Throwable>> propertyRetrievers;
 	private List<ThrowingFunction<Object[], Boolean, Throwable>> propertySetters;
@@ -69,15 +69,9 @@ public abstract class PropertyAccessor implements Component {
 	private Supplier<IterableObjectHelper> iterableObjectHelperSupplier;
 	
 	PropertyAccessor(
-		MemberFinder memberFinder,
-		MethodHelper methodHelper,
-		FieldHelper fieldHelper,
 		Supplier<SourceCodeHandler> sourceCodeHandlerSupplier,
 		Supplier<IterableObjectHelper> iterableObjectHelperSupplier
 	) {
-		this.memberFinder = memberFinder;
-		this.methodHelper = methodHelper;
-		this.fieldHelper = fieldHelper;
 		this.iterableObjectHelperSupplier = iterableObjectHelperSupplier;
 		this.sourceCodeHandlerSupplier = sourceCodeHandlerSupplier;
 		this.propertyRetrievers = getPropertyRetrievers();
@@ -178,7 +172,7 @@ public abstract class PropertyAccessor implements Component {
 	public <T> Map<String, T> getAll(Object obj)
 			throws IllegalArgumentException, IllegalAccessException {
 		Map<String, T> propertyValues = new LinkedHashMap<>();
-		Collection<Field> fields = memberFinder.findAll(
+		Collection<Field> fields = MemberFinder.findAll(
 			FieldCriteria.create(),
 			obj
 		);
@@ -214,7 +208,7 @@ public abstract class PropertyAccessor implements Component {
 
 	Object retrievePropertyByField(Object obj, String propertyName) throws IllegalAccessException {
 		Object objToReturn;
-		Field field = fieldHelper.findOneAndMakeItAccessible(obj,
+		Field field = FieldHelper.findOneAndMakeItAccessible(obj,
 				propertyName);
 		objToReturn = field.get(obj);
 		return objToReturn;
@@ -222,9 +216,9 @@ public abstract class PropertyAccessor implements Component {
 
 	Object retrievePropertyByGetterMethod(Object obj, String propertyName) {
 		Object objToReturn;
-		objToReturn = methodHelper.invoke(
+		objToReturn = MethodHelper.invoke(
 				obj, 
-				methodHelper.createGetterMethodNameByPropertyName(propertyName), 
+				MethodHelper.createGetterMethodNameByPropertyName(propertyName), 
 				(Object[])null);
 		return objToReturn;
 	}
@@ -253,7 +247,7 @@ public abstract class PropertyAccessor implements Component {
 	Boolean setPropertyByField(Object target, String propertyPath, Object value) throws IllegalAccessException {
 		Matcher matcher = Pattern.compile(REG_EXP_FOR_JAVA_PROPERTIES).matcher(propertyPath);
 		matcher.find();
-		Field field = fieldHelper.findOneAndMakeItAccessible(target.getClass(),
+		Field field = FieldHelper.findOneAndMakeItAccessible(target.getClass(),
 				matcher.group(1));
 		if (matcher.group(2).isEmpty()) {
 			field.set(target, value);
@@ -267,12 +261,12 @@ public abstract class PropertyAccessor implements Component {
 		Matcher matcher = Pattern.compile(REG_EXP_FOR_JAVA_PROPERTIES).matcher(propertyPath);
 		matcher.find();
 		if (matcher.group(2).isEmpty()) {
-			methodHelper.invoke(
-				target, methodHelper.createSetterMethodNameByPropertyName(matcher.group(1)), value
+			MethodHelper.invoke(
+				target, MethodHelper.createSetterMethodNameByPropertyName(matcher.group(1)), value
 			);
 		} else {
-			setInIndexedProperty(methodHelper.invoke(
-				target, methodHelper.createGetterMethodNameByPropertyName(matcher.group(1))
+			setInIndexedProperty(MethodHelper.invoke(
+				target, MethodHelper.createGetterMethodNameByPropertyName(matcher.group(1))
 			), matcher.group(2), value);
 		}
 		return Boolean.TRUE;
@@ -308,12 +302,12 @@ public abstract class PropertyAccessor implements Component {
 	
 	public static class ByFieldOrByMethod extends PropertyAccessor {
 
-		private ByFieldOrByMethod(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
-			super(memberFinder, methodHelper, fieldHelper, sourceCodeHandlerSupplier, iterableObjectHelperSupplier);
+		private ByFieldOrByMethod(Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+			super(sourceCodeHandlerSupplier, iterableObjectHelperSupplier);
 		}
 		
-		public static ByFieldOrByMethod create(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
-			return new ByFieldOrByMethod(memberFinder, methodHelper, fieldHelper, sourceCodeHandlerSupplier, iterableObjectHelperSupplier);
+		public static ByFieldOrByMethod create(Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+			return new ByFieldOrByMethod(sourceCodeHandlerSupplier, iterableObjectHelperSupplier);
 		}
 
 		List<ThrowingBiFunction<Object, String, Object, Throwable>> getPropertyRetrievers() {
@@ -334,12 +328,12 @@ public abstract class PropertyAccessor implements Component {
 	
 	public static class ByMethodOrByField extends PropertyAccessor {
 
-		private ByMethodOrByField(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
-			super(memberFinder, methodHelper, fieldHelper, sourceCodeHandlerSupplier, iterableObjectHelperSupplier);
+		private ByMethodOrByField(Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+			super(sourceCodeHandlerSupplier, iterableObjectHelperSupplier);
 		}
 		
-		public static ByMethodOrByField create(MemberFinder memberFinder, MethodHelper methodHelper, FieldHelper fieldHelper, Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
-			return new ByMethodOrByField(memberFinder, methodHelper, fieldHelper, sourceCodeHandlerSupplier, iterableObjectHelperSupplier);
+		public static ByMethodOrByField create(Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+			return new ByMethodOrByField(sourceCodeHandlerSupplier, iterableObjectHelperSupplier);
 		}
 
 		List<ThrowingBiFunction<Object, String, Object, Throwable>> getPropertyRetrievers() {

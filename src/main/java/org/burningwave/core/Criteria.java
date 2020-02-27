@@ -35,7 +35,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.burningwave.Throwables;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.function.TriPredicate;
 

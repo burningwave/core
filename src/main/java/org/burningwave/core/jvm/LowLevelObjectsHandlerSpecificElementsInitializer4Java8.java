@@ -3,8 +3,7 @@ package org.burningwave.core.jvm;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Method;
 
-import org.burningwave.ManagedLogger;
-import org.burningwave.Throwables;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 
 class LowLevelObjectsHandlerSpecificElementsInitializer4Java8 extends LowLevelObjectsHandlerSpecificElementsInitializer{
 
@@ -22,7 +21,7 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java8 extends LowLevelOb
 			lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) ->
 				accessibleSetterMethod.invoke(null, accessibleObject, flag);
 		} catch (Throwable exc) {
-			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "method setAccessible0 class not detected on " + AccessibleObject.class.getName());
+			logInfo("method setAccessible0 class not detected on " + AccessibleObject.class.getName());
 			throw Throwables.toRuntimeException(exc);
 		}
 		try {

@@ -28,56 +28,74 @@
  */
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Paths;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.burningwave.core.classes.Classes;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.IterableZipContainer;
-import org.burningwave.core.io.Streams;
 import org.burningwave.core.iterable.Properties;
 
 public class Cache {
-	private final static Classes classes;
 	private static final String TYPE_CONFIG_KEY = "cache.type";
-	public final static PathForResources<ByteBuffer> PATH_FOR_CONTENTS ;
-	public final static PathForResources<FileSystemItem> PATH_FOR_FILE_SYSTEM_ITEMS;
-	public final static PathForResources<IterableZipContainer> PATH_FOR_ZIP_FILES;
-	public final static ObjectAndPathForResources<ClassLoader, Field[]> CLASS_LOADER_FOR_FIELDS;
-	public final static ObjectAndPathForResources<ClassLoader, Method[]> CLASS_LOADER_FOR_METHODS;
-	public final static ObjectAndPathForResources<ClassLoader, Constructor<?>[]> CLASS_LOADER_FOR_CONSTRUCTORS;
-	public final static ObjectForObject<Method, Object> BINDED_FUNCTIONAL_INTERFACES;
 	
-	static {
-		classes = Classes.getInstance();
-		if ("sync".equalsIgnoreCase((String)Properties.getGlobalProperty(TYPE_CONFIG_KEY))) {
-			PATH_FOR_CONTENTS = new SyncPathForResources<>(1L, Streams::shareContent);
-			PATH_FOR_FILE_SYSTEM_ITEMS = new SyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
-			PATH_FOR_ZIP_FILES = new SyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);
-			CLASS_LOADER_FOR_FIELDS = new SyncObjectAndPathForResources<>(1L, fields -> fields);
-			CLASS_LOADER_FOR_METHODS = new SyncObjectAndPathForResources<>(1L, methods -> methods);
-			CLASS_LOADER_FOR_CONSTRUCTORS = new SyncObjectAndPathForResources<>(1L, constructors -> constructors);
-			BINDED_FUNCTIONAL_INTERFACES = new SyncObjectForObject<>();
+	public final PathForResources<ByteBuffer> pathForContents;
+	public final PathForResources<FileSystemItem> pathForFileSystemItems;
+	public final PathForResources<IterableZipContainer> pathForZipFiles;
+	public final ObjectAndPathForResources<ClassLoader, Field[]> classLoaderForFields;
+	public final ObjectAndPathForResources<ClassLoader, Method[]> classLoaderForMethods;
+	public final ObjectAndPathForResources<ClassLoader, Constructor<?>[]> classLoaderForConstructors;
+	public final ObjectForObject<Method, Object> bindedFunctionalInterfaces;
+	public final PathForResources<Collection<Field>> uniqueKeyForFields;
+	public final PathForResources<Collection<Method>> uniqueKeyForMethods;
+	
+	private Cache(Properties properties) {
+		if ("sync".equalsIgnoreCase((String)properties.getProperty(TYPE_CONFIG_KEY))) {
+			pathForContents = new SyncPathForResources<>(1L, Streams::shareContent);
+			pathForFileSystemItems = new SyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
+			pathForZipFiles = new SyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);
+			classLoaderForFields = new SyncObjectAndPathForResources<>(1L, fields -> fields);
+			classLoaderForMethods = new SyncObjectAndPathForResources<>(1L, methods -> methods);
+			classLoaderForConstructors = new SyncObjectAndPathForResources<>(1L, constructors -> constructors);
+			bindedFunctionalInterfaces = new SyncObjectForObject<>();
+			uniqueKeyForFields = new SyncPathForResources<>(1L, fields -> fields);
+			uniqueKeyForMethods = new SyncPathForResources<>(1L, fields -> fields);
 		} else {
-			PATH_FOR_CONTENTS = new AsyncPathForResources<>(1L, Streams::shareContent);
-			PATH_FOR_FILE_SYSTEM_ITEMS = new AsyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
-			PATH_FOR_ZIP_FILES = new AsyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);
-			CLASS_LOADER_FOR_FIELDS = new AsyncObjectAndPathForResources<>(1L, fields -> fields);
-			CLASS_LOADER_FOR_METHODS = new AsyncObjectAndPathForResources<>(1L, methods -> methods);
-			CLASS_LOADER_FOR_CONSTRUCTORS = new AsyncObjectAndPathForResources<>(1L, constructors -> constructors);
-			BINDED_FUNCTIONAL_INTERFACES = new AsyncObjectForObject<>();
+			pathForContents = new AsyncPathForResources<>(1L, Streams::shareContent);
+			pathForFileSystemItems = new AsyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
+			pathForZipFiles = new AsyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);
+			classLoaderForFields = new AsyncObjectAndPathForResources<>(1L, fields -> fields);
+			classLoaderForMethods = new AsyncObjectAndPathForResources<>(1L, methods -> methods);
+			classLoaderForConstructors = new AsyncObjectAndPathForResources<>(1L, constructors -> constructors);
+			bindedFunctionalInterfaces = new AsyncObjectForObject<>();
+			uniqueKeyForFields = new AsyncPathForResources<>(1L, fields -> fields);
+			uniqueKeyForMethods = new AsyncPathForResources<>(1L, fields -> fields);
 		}	
 	}
 	
+	public static Cache create(Properties properties) {
+		return new Cache(properties);
+	}
+	
 	public static interface ObjectForObject<T, R> {
+		
 		public R getOrDefault(T object, Supplier<R> resourceSupplier);
+		
+		public R get(T object);
+		
+		public R upload(T object, R resource);
+		
 		public abstract class Abst<T, R> implements ObjectForObject<T, R> {
 			Map<T, R> resources;
 			
@@ -86,10 +104,15 @@ public class Cache {
 			}
 			
 			@Override
+			public R get(T object) {
+				return resources.get(object);
+			}
+			
+			@Override
 			public R getOrDefault(T object, Supplier<R> resourceSupplier) {
 				R resource = resources.get(object);
 				if (resource == null) {
-					synchronized(classes.getId(resources,object)) {
+					synchronized(Classes.getId(resources,object)) {
 						resource = resources.get(object);
 						if (resource == null) {
 							resources.put(object, (resource = resourceSupplier.get()));
@@ -97,6 +120,13 @@ public class Cache {
 					}
 				}
 				return resource;
+			}
+			
+			@Override
+			public R upload(T object, R resource) {
+				synchronized(Classes.getId(resources, object)) {
+					return resources.put(object, resource);
+				}				
 			}
 		}
 	}
@@ -139,7 +169,7 @@ public class Cache {
 			public R getOrDefault(T object, String path, Supplier<R> resourceSupplier) {
 				PathForResources<R> pathForResources = resources.get(object);
 				if (pathForResources == null) {
-					synchronized (classes.getId(resources, object)) {
+					synchronized (Classes.getId(resources, object)) {
 						pathForResources = resources.get(object);
 						if (pathForResources == null) {
 							pathForResources = pathForResourcesSupplier.get();
@@ -208,7 +238,7 @@ public class Cache {
 			
 			@Override
 			public R upload(String path, Supplier<R> resourceSupplier) {
-				path = Strings.Paths.clean(path);
+				path = Paths.clean(path);
 				Long occurences = path.chars().filter(ch -> ch == '/').count();
 				Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
 				Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
@@ -218,7 +248,7 @@ public class Cache {
 			
 			@Override
 			public R getOrDefault(String path, Supplier<R> resourceSupplier) {
-				path = Strings.Paths.clean(path);
+				path = Paths.clean(path);
 				Long occurences = path.chars().filter(ch -> ch == '/').count();
 				Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
 				Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
@@ -233,7 +263,7 @@ public class Cache {
 			
 			@Override
 			public R remove(String path) {
-				path = Strings.Paths.clean(path);
+				path = Paths.clean(path);
 				Long occurences = path.chars().filter(ch -> ch == '/').count();
 				Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
 				Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
@@ -303,7 +333,7 @@ public class Cache {
 		R getOrDefault(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
 			R resource = loadedResources.get(path);
 			if (resource == null) {
-				synchronized (loadedResources) {
+				synchronized (Classes.getId(loadedResources, path)) {
 					resource = loadedResources.get(path);
 					if (resource == null && resourceSupplier != null) {
 						resource = resourceSupplier.get();
@@ -321,7 +351,7 @@ public class Cache {
 		@Override
 		public R upload(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
 			R resource = null;
-			synchronized (loadedResources) {
+			synchronized (Classes.getId(loadedResources,path)) {
 				if (resourceSupplier != null) {
 					resource = resourceSupplier.get();
 					if (resource != null) {
@@ -356,7 +386,7 @@ public class Cache {
 		 private AsyncPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
 			super(partitionStartLevel, sharer);
 			resources = new ConcurrentHashMap<>();
-			mutexPrefixName = classes.getId(resources);
+			mutexPrefixName = Classes.getId(resources);
 		}
 		
 		
@@ -369,7 +399,7 @@ public class Cache {
 			}
 			Map<String, R> innerPartion = partion.get(partitionKey);
 			if (innerPartion == null) {
-				synchronized (classes.getId(mutexPrefixName, partitionIndex, partitionKey)) {
+				synchronized (Classes.getId(mutexPrefixName, partitionIndex, partitionKey)) {
 					innerPartion = partion.get(partitionKey);
 					if (innerPartion == null) {
 						partion.put(partitionKey, innerPartion = new ConcurrentHashMap<>());

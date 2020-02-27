@@ -28,6 +28,11 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentsContainer.MemberFinder;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+
 import java.lang.reflect.Member;
 import java.util.Collection;
 import java.util.Map;
@@ -38,15 +43,12 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Criteria;
 import org.burningwave.core.function.PentaPredicate;
-import org.burningwave.core.io.Streams;
 
 @SuppressWarnings("unchecked")
 public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Class<?>, ClassCriteria, ClassCriteria.TestContext> implements Component {
-	MemberFinder memberFinder;
 	Map<String, MemberCriteria<?, ?, ?>> memberCriterias;
 	PentaPredicate<ClassCriteria, TestContext, MemberCriteria<?, ?, ?>, String, Class<?>> membersPredicate;
 	private boolean collectMembers;
@@ -60,7 +62,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		return new ClassCriteria();
 	}
 	
-	public void init(Classes classes, Classes.Loaders classesLoaders, ClassLoader classSupplier, MemberFinder memberFinder) {
+	public void init(Classes.Loaders classesLoaders, ClassLoader classSupplier) {
 		this.classSupplier = cls -> {
 			try {
 				return classesLoaders.loadOrUploadClass(cls, classSupplier);
@@ -68,8 +70,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 				throw Throwables.toRuntimeException(exc);
 			}
 		};
-		this.memberFinder = memberFinder;
-		this.byteCodeSupplier = classes::getByteCode;
+		this.byteCodeSupplier = Classes::getByteCode;
 		for (MemberCriteria<?, ?, ?> memberCriteria : memberCriterias.values()) {
 			memberCriteria.init(this.classSupplier, this.byteCodeSupplier);
 			if (this.classesToBeUploaded != null) {
@@ -196,7 +197,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		String key, 
 		Class<?> cls
 	) {
-		return criteria.memberFinder.match(criteria.memberCriterias.get(key), cls);
+		return MemberFinder.match(criteria.memberCriterias.get(key), cls);
 	}
 	
 	private boolean testAndCollectMembers( 
@@ -206,7 +207,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		String key, 
 		Class<?> cls
 	) {
-		Collection<Member> members = (Collection<Member>)criteria.memberFinder.findAll(criteria.memberCriterias.get(key), cls);
+		Collection<Member> members = (Collection<Member>)MemberFinder.findAll(criteria.memberCriterias.get(key), cls);
 		context.addMembersFound(memberCriteria, members);
 		return !members.isEmpty();
 	}
@@ -232,7 +233,6 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 	
 	@Override
 	public void close() {
-		memberFinder = null;
 		super.close();
 	}
 

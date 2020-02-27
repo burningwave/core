@@ -28,21 +28,24 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentsContainer.LowLevelObjectsHandler;
+import static org.burningwave.core.assembler.StaticComponentsContainer.MemberFinder;
+import static org.burningwave.core.assembler.StaticComponentsContainer.MethodHelper;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+
 import java.io.InputStream;
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodHandles.Lookup;
-import java.lang.invoke.MethodType;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
-import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -56,16 +59,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import org.burningwave.Throwables;
-import org.burningwave.core.Cache;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingSupplier;
-import org.burningwave.core.io.Streams;
-import org.burningwave.core.jvm.LowLevelObjectsHandler;
 
 public class Classes implements Component {
-	private LowLevelObjectsHandler lowLevelObjectsHandler;
-	
 	public static class Symbol{
 		public static class Tag {
 			static final byte UTF8 = 1;
@@ -95,16 +92,10 @@ public class Classes implements Component {
 		V15 = 0 << 16 | 59;
 	}
 	
-	private Classes(LowLevelObjectsHandler lowLevelObjectsHandler) {
-		this.lowLevelObjectsHandler = lowLevelObjectsHandler;
-	}
+	private Classes() {}
 	
-	public static Classes getInstance() {
-		return LazyHolder.getClassesInstance();
-	}
-	
-	public static Classes create(LowLevelObjectsHandler lowLevelObjectsHandler) {
-		return new Classes(lowLevelObjectsHandler);
+	public static Classes create() {
+		return new Classes();
 	}
 	
 	@SuppressWarnings({ "unchecked"})
@@ -293,27 +284,6 @@ public class Classes implements Component {
 		return (short) (((byteSupplier.apply(offset) & 0xFF) << 8) | (byteSupplier.apply(offset + 1) & 0xFF));
 	}
 	
-	public Map.Entry<Lookup, MethodHandle> methodToMethodHandleBag(Method method) {
-		try {
-			Class<?> methodDeclaringClass = method.getDeclaringClass();
-			MethodHandles.Lookup consulter = lowLevelObjectsHandler.getConsulter(methodDeclaringClass);
-			return new AbstractMap.SimpleEntry<>(consulter,
-				!Modifier.isStatic(method.getModifiers())?
-					consulter.findSpecial(
-						methodDeclaringClass, method.getName(),
-						MethodType.methodType(method.getReturnType(), method.getParameterTypes()),
-						methodDeclaringClass
-					):
-					consulter.findStatic(
-						methodDeclaringClass, method.getName(),
-						MethodType.methodType(method.getReturnType(), method.getParameterTypes())
-					)
-			);
-		} catch (NoSuchMethodException | IllegalAccessException exc) {
-			throw Throwables.toRuntimeException(exc);
-		}
-	}
-	
 	public Collection<Field> getDeclaredFields(Class<?> cls, Predicate<Field> fieldPredicate) {
 		Collection<Field> members = new LinkedHashSet<>();
 		for (Field member : getDeclaredFields(cls)) {
@@ -343,9 +313,9 @@ public class Classes implements Component {
 	}
 	
 	public Field[] getDeclaredFields(Class<?> cls)  {
-		return Cache.CLASS_LOADER_FOR_FIELDS.getOrDefault(
+		return Cache.classLoaderForFields.getOrDefault(
 			getClassLoader(cls), cls.getName().replace(".", "/"),
-			() -> lowLevelObjectsHandler.getDeclaredFields(cls)
+			() -> LowLevelObjectsHandler.getDeclaredFields(cls)
 		);
 	}
 	
@@ -360,9 +330,9 @@ public class Classes implements Component {
 	}
 	
 	public Method[] getDeclaredMethods(Class<?> cls)  {
-		return Cache.CLASS_LOADER_FOR_METHODS.getOrDefault(
+		return Cache.classLoaderForMethods.getOrDefault(
 			getClassLoader(cls), cls.getName().replace(".", "/"),
-			() -> lowLevelObjectsHandler.getDeclaredMethods(cls)
+			() -> LowLevelObjectsHandler.getDeclaredMethods(cls)
 		);
 	}
 	
@@ -377,14 +347,14 @@ public class Classes implements Component {
 	}
 	
 	public Constructor<?>[] getDeclaredConstructors(Class<?> cls)  {
-		return Cache.CLASS_LOADER_FOR_CONSTRUCTORS.getOrDefault(
+		return Cache.classLoaderForConstructors.getOrDefault(
 			getClassLoader(cls), cls.getName().replace(".", "/"),
-			() -> lowLevelObjectsHandler.getDeclaredConstructors(cls)
+			() -> LowLevelObjectsHandler.getDeclaredConstructors(cls)
 		);
 	}	
 
 	public void setAccessible(AccessibleObject object, boolean flag) {
-		lowLevelObjectsHandler.setAccessible(object, flag);
+		LowLevelObjectsHandler.setAccessible(object, flag);
 	}
 	
 	public String getId(Object object) {
@@ -414,33 +384,19 @@ public class Classes implements Component {
 		}
 	}
 	
-	private static class LazyHolder {
-		private static final Classes CLASSES_INSTANCE = Classes.create(LowLevelObjectsHandler.getInstance());
-		
-		private static Classes getClassesInstance() {
-			return CLASSES_INSTANCE;
-		}
-	}
-	
 	public static class Loaders implements Component {
-		private LowLevelObjectsHandler lowLevelObjectsHandler;
-		private MemberFinder memberFinder;
 		protected Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
 		protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 		protected Map<String, MethodHandle> classLoadersMethods;
-		private Classes classes;
 		
-		private Loaders(LowLevelObjectsHandler lowLevelObjectsHandler, Classes classes, MemberFinder memberFinder) {
-			this.lowLevelObjectsHandler = lowLevelObjectsHandler;
-			this.classes = classes;
-			this.memberFinder = memberFinder;
+		private Loaders() {
 			this.classLoadersClasses = new ConcurrentHashMap<>();
 			this.classLoadersPackages = new ConcurrentHashMap<>();
 			this.classLoadersMethods = new ConcurrentHashMap<>();
 		}
 		
-		public static Loaders create(LowLevelObjectsHandler lowLevelObjectsHandler, Classes classes, MemberFinder memberFinder) {
-			return new Loaders(lowLevelObjectsHandler, classes, memberFinder);
+		public static Loaders create() {
+			return new Loaders();
 		}
 		
 		public Collection<ClassLoader> getAllParents(ClassLoader classLoader) {
@@ -463,15 +419,15 @@ public class Classes implements Component {
 		}
 		
 		public Function<Boolean, ClassLoader> setAsMaster(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
-			return lowLevelObjectsHandler.setAsParent(getMaster(classLoader), futureParent, mantainHierarchy);
+			return LowLevelObjectsHandler.setAsParent(getMaster(classLoader), futureParent, mantainHierarchy);
 		}
 		
 		public Function<Boolean, ClassLoader> setAsParent(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
-			return lowLevelObjectsHandler.setAsParent(classLoader, futureParent, mantainHierarchy);
+			return LowLevelObjectsHandler.setAsParent(classLoader, futureParent, mantainHierarchy);
 		}
 		
 		public ClassLoader getParent(ClassLoader classLoader) {
-			return lowLevelObjectsHandler.getParent(classLoader);
+			return LowLevelObjectsHandler.getParent(classLoader);
 		}
 		
 		private  ClassLoader getMaster(ClassLoader classLoader) {
@@ -490,7 +446,7 @@ public class Classes implements Component {
 		}	
 		
 		private MethodHandle findDefinePackageMethodAndMakeItAccesible(ClassLoader classLoader) {
-			Method method = memberFinder.findAll(
+			Method method = MemberFinder.findAll(
 				MethodCriteria.byScanUpTo((cls) -> 
 					cls.getName().equals(ClassLoader.class.getName())
 				).name(
@@ -501,7 +457,7 @@ public class Classes implements Component {
 				),
 				classLoader
 			).stream().findFirst().orElse(null);
-			return classes.methodToMethodHandleBag(method).getValue();
+			return MethodHelper.convertoToMethodHandleBag(method).getValue();
 		}
 		
 		public MethodHandle getDefineClassMethod(ClassLoader classLoader) {
@@ -513,7 +469,7 @@ public class Classes implements Component {
 		}
 		
 		private MethodHandle findDefineClassMethodAndMakeItAccesible(ClassLoader classLoader) {
-			Method method = memberFinder.findAll(
+			Method method = MemberFinder.findAll(
 				MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
 					(classLoader instanceof MemoryClassLoader? "_defineClass" : "defineClass")::equals
 				).and().parameterTypes(params -> 
@@ -523,7 +479,7 @@ public class Classes implements Component {
 				).and().returnType((cls) -> cls.getName().equals(Class.class.getName())),
 				classLoader
 			).stream().findFirst().orElse(null);
-			return classes.methodToMethodHandleBag(method).getValue();
+			return MethodHelper.convertoToMethodHandleBag(method).getValue();
 		}
 		
 		private MethodHandle getMethod(ClassLoader classLoader, String key, Supplier<MethodHandle> methodSupplier) {
@@ -549,7 +505,7 @@ public class Classes implements Component {
 					synchronized (classLoadersClasses) {
 						classes = classLoadersClasses.get(classLoader);
 						if (classes == null) {
-							classLoadersClasses.put(classLoader, (classes = lowLevelObjectsHandler.retrieveLoadedClasses(classLoader)));
+							classLoadersClasses.put(classLoader, (classes = LowLevelObjectsHandler.retrieveLoadedClasses(classLoader)));
 							return classes;
 						}
 					}
@@ -573,7 +529,7 @@ public class Classes implements Component {
 				synchronized (classLoadersPackages) {
 					packages = classLoadersPackages.get(classLoader);
 					if (packages == null) {
-						classLoadersPackages.put(classLoader, (packages = (Map<String, ?>)lowLevelObjectsHandler.retrieveLoadedPackages(classLoader)));
+						classLoadersPackages.put(classLoader, (packages = (Map<String, ?>)LowLevelObjectsHandler.retrieveLoadedPackages(classLoader)));
 					}
 				}
 			
@@ -587,7 +543,7 @@ public class Classes implements Component {
 		
 		public Package retrieveLoadedPackage(ClassLoader classLoader, Object packageToFind, String packageName) {
 			try {
-				return lowLevelObjectsHandler.retrieveLoadedPackage(classLoader, packageToFind, packageName);
+				return LowLevelObjectsHandler.retrieveLoadedPackage(classLoader, packageToFind, packageName);
 			} catch (Throwable exc) {
 				throw Throwables.toRuntimeException(exc);
 			}
@@ -641,7 +597,7 @@ public class Classes implements Component {
 				try {
 					return loadOrUploadClass(byteCodes.get(className), classLoader);
 				} catch (ClassNotFoundException exc) {
-					String newNotFoundClassName = classes.retrieveName(exc);
+					String newNotFoundClassName = Classes.retrieveName(exc);
 					loadOrUploadClass(newNotFoundClassName, byteCodes, classLoader);
 					return loadOrUploadClass(byteCodes.get(className), classLoader);
 				}
@@ -680,7 +636,7 @@ public class Classes implements Component {
 	    			definePackageFor(cls, classLoader, definePackageMethod);
 	    			return cls;
 				} catch (ClassNotFoundException | NoClassDefFoundError outerExc) {
-					String newNotFoundClassName = classes.retrieveName(outerExc);
+					String newNotFoundClassName = Classes.retrieveName(outerExc);
 					loadOrUploadClass(
 	        			Class.forName(
 	        				newNotFoundClassName, false, classLoader
@@ -704,11 +660,11 @@ public class Classes implements Component {
 	    		return classLoader.loadClass(toLoad.getName());
 	    	} catch (ClassNotFoundException | NoClassDefFoundError outerEx) {
 	    		try {
-	    			Class<?> cls = defineClass(classLoader, defineClassMethod, toLoad.getName(), Streams.shareContent(classes.getByteCode(toLoad)));
+	    			Class<?> cls = defineClass(classLoader, defineClassMethod, toLoad.getName(), Streams.shareContent(Classes.getByteCode(toLoad)));
 	    			definePackageFor(cls, classLoader, definePackageMethod);
 	    			return cls;
 				} catch (ClassNotFoundException | NoClassDefFoundError outerExc) {
-					String newNotFoundClassName = classes.retrieveName(outerExc);
+					String newNotFoundClassName = Classes.retrieveName(outerExc);
 					loadOrUploadClass(
 	        			Class.forName(
 	        				newNotFoundClassName, false, toLoad.getClassLoader()
@@ -841,8 +797,6 @@ public class Classes implements Component {
 			this.classLoadersMethods = null;
 			this.classLoadersPackages.clear();
 			this.classLoadersPackages = null;
-			this.memberFinder = null;
-			this.lowLevelObjectsHandler = null;
 		}
 	}
 }

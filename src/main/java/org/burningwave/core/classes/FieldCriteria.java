@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.function.BiPredicate;
@@ -51,7 +53,7 @@ public class FieldCriteria extends MemberCriteria<
 	
 	@Override
 	public Function<Class<?>, Field[]> getMembersSupplierFunction() {
-		return classes::getDeclaredFields;
+		return Classes::getDeclaredFields;
 	}
 	
 	public static FieldCriteria forName(Predicate<String> predicate) {

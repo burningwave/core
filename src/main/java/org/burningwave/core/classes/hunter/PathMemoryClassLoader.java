@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes.hunter;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Paths;
+
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collection;
@@ -36,7 +38,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import org.burningwave.core.Strings;
 import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.io.PathHelper;
@@ -56,18 +57,17 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 	protected PathMemoryClassLoader(
 		ClassLoader parentClassLoader,
 		PathHelper pathHelper,
-		Classes classes,
 		Classes.Loaders classesLoaders,
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier
 	) {
-		super(parentClassLoader, classes, classesLoaders);
+		super(parentClassLoader, classesLoaders);
 		this.pathHelper = pathHelper;
 		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
 		loadedPaths = ConcurrentHashMap.newKeySet();
 	}
 	
-	public static PathMemoryClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, Classes classes, Classes.Loaders classesLoaders, Supplier<ByteCodeHunter> byteCodeHunterSupplier) {
-		return new PathMemoryClassLoader(parentClassLoader, pathHelper, classes, classesLoaders, byteCodeHunterSupplier);
+	public static PathMemoryClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, Classes.Loaders classesLoaders, Supplier<ByteCodeHunter> byteCodeHunterSupplier) {
+		return new PathMemoryClassLoader(parentClassLoader, pathHelper, classesLoaders, byteCodeHunterSupplier);
 	}
 	
 	ByteCodeHunter getByteCodeHunter() {
@@ -114,14 +114,14 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 	private boolean check(CheckResult checkPathsResult, String key) {
 		for (Collection<String> filePaths : checkPathsResult.getPartialContainedFiles().values()) {
 			for (String filePath : filePaths) {
-				if (key.startsWith(Strings.Paths.clean(filePath))) {
+				if (key.startsWith(Paths.clean(filePath))) {
 					return false;
 				}
 			}
 		}
 		for (Collection<String> filePaths : checkPathsResult.getPartialContainedDirectories().values()) {
 			for (String diretctoyPath : filePaths) {
-				if (key.startsWith(Strings.Paths.clean(diretctoyPath) + "/")) {
+				if (key.startsWith(Paths.clean(diretctoyPath) + "/")) {
 					return false;
 				}
 			}
@@ -143,7 +143,7 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 			} else if (considerURLClassLoaderPathsAsLoadedPaths && classLoader instanceof URLClassLoader) {
 				URL[] resUrl = ((URLClassLoader)classLoader).getURLs();
 				for (int i = 0; i < resUrl.length; i++) {
-					allLoadedPaths.add(Strings.Paths.clean(resUrl[i].getFile()));
+					allLoadedPaths.add(Paths.clean(resUrl[i].getFile()));
 				}
 			}
 		}

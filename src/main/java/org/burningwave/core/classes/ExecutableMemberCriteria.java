@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+
 import java.lang.reflect.Executable;
 import java.util.Arrays;
 import java.util.List;
@@ -44,7 +46,6 @@ public abstract class ExecutableMemberCriteria<
 	T extends Criteria.TestContext<E, C>
 > extends MemberCriteria<E, C, T> {
 	
-
 	@SuppressWarnings("unchecked")
 	public C parameterTypes(final Predicate<Class<?>[]> predicate) {
 		this.predicate = concat(
@@ -56,7 +57,7 @@ public abstract class ExecutableMemberCriteria<
 	
 	@SuppressWarnings("unchecked")
 	public C parameterTypesAreAssignableFrom(Object... arguments) {
-		Class<?>[] argumentsClasses = Classes.getInstance().retrieveFrom(arguments);
+		Class<?>[] argumentsClasses = Classes.retrieveFrom(arguments);
 		if (argumentsClasses != null && argumentsClasses.length > 0) {
 			List<Class<?>> argumentsClassesAsList = Arrays.asList(argumentsClasses);
 			for (int i = 0; i < argumentsClasses.length; i++) {

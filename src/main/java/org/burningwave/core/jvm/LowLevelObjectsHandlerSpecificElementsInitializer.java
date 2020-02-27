@@ -1,15 +1,16 @@
 package org.burningwave.core.jvm;
 
-import java.lang.invoke.MethodHandles.Lookup;
+import static org.burningwave.core.assembler.StaticComponentsContainer.JVMInfo;
+
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.burningwave.ManagedLogger;
-import org.burningwave.Throwables;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 import org.burningwave.core.Component;
 
 import sun.misc.Unsafe;
@@ -25,7 +26,7 @@ abstract class LowLevelObjectsHandlerSpecificElementsInitializer implements Comp
 			theUnsafeField.setAccessible(true);
 			this.lowLevelObjectsHandler.unsafe = (Unsafe)theUnsafeField.get(null);
 		} catch (Throwable exc) {
-			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "Exception while retrieving unsafe");
+			logInfo("Exception while retrieving unsafe");
 			throw Throwables.toRuntimeException(exc);
 		}
 		Field modes;
@@ -58,7 +59,7 @@ abstract class LowLevelObjectsHandlerSpecificElementsInitializer implements Comp
 	
 	public static void build(LowLevelObjectsHandler lowLevelObjectsHandler) {
 		try (LowLevelObjectsHandlerSpecificElementsInitializer initializer =
-				lowLevelObjectsHandler.jVMInfo.getVersion() > 8 ?
+				JVMInfo.getVersion() > 8 ?
 				new LowLevelObjectsHandlerSpecificElementsInitializer4Java9(lowLevelObjectsHandler):
 				new LowLevelObjectsHandlerSpecificElementsInitializer4Java8(lowLevelObjectsHandler)) {
 			initializer.init();

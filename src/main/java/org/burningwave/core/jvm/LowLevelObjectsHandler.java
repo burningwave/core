@@ -28,39 +28,40 @@
  */
 package org.burningwave.core.jvm;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.JVMInfo;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.nio.Buffer;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
-import org.burningwave.ManagedLogger;
-import org.burningwave.Throwables;
 import org.burningwave.core.Component;
-import org.burningwave.core.classes.Classes;
-import org.burningwave.core.classes.FieldCriteria;
-import org.burningwave.core.classes.MemberFinder;
-import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingFunction;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.function.ThrowingTriFunction;
-import org.burningwave.core.io.Streams;
 
 import sun.misc.Unsafe;
 
 @SuppressWarnings("restriction")
 public class LowLevelObjectsHandler implements Component {
-	JVMInfo jVMInfo;
-	MemberFinder memberFinder;
+
 	Unsafe unsafe;
 	Runnable illegalAccessLoggerEnabler;
 	Runnable illegalAccessLoggerDisabler;
@@ -84,19 +85,12 @@ public class LowLevelObjectsHandler implements Component {
 	Long loadedPackagesMapMemoryOffset;
 	Long loadedClassesVectorMemoryOffset;	
 
-	private LowLevelObjectsHandler(JVMInfo jVMInfo, MemberFinder memberFinder) {
-		this.jVMInfo = jVMInfo;
-		this.memberFinder = memberFinder;
+	private LowLevelObjectsHandler() {
 		LowLevelObjectsHandlerSpecificElementsInitializer.build(this);
 	}
-
-
-	public static LowLevelObjectsHandler getInstance() {
-		return LazyHolder.getLowLevelObjectsHandlerInstance();
-	}
 	
-	public static LowLevelObjectsHandler create(JVMInfo jvmChecker, MemberFinder memberFinder) {
-		return new LowLevelObjectsHandler(jvmChecker, memberFinder);
+	public static LowLevelObjectsHandler create() {
+		return new LowLevelObjectsHandler();
 	}
 	
 	public Unsafe getUnsafe() {
@@ -121,7 +115,7 @@ public class LowLevelObjectsHandler implements Component {
 			public String toString() {
 				definedClass.set(super.defineClass(
 					LowLevelObjectsHandler.class.getName(),
-					Streams.toByteBuffer(Classes.getInstance().getClassLoader(this.getClass()).getResourceAsStream(LowLevelObjectsHandler.class.getName().replace(".", "/")+ ".class")),	
+					Streams.toByteBuffer(Optional.ofNullable(this.getClass().getClassLoader()).orElseGet(() -> ClassLoader.getSystemClassLoader()).getResourceAsStream(LowLevelObjectsHandler.class.getName().replace(".", "/")+ ".class")),	
 					null)
 				);
 				return "lowlevelobjectshandler.initializator";
@@ -133,7 +127,7 @@ public class LowLevelObjectsHandler implements Component {
 			getLoadedClassesVectorMemoryOffsetInitializator(definedClass.get())
 		);
 	}
-
+	
 	private void initLoadedPackageMapOffset() {
 		AtomicReference<Object> definedPackage = new AtomicReference<>();
 		ClassLoader temporaryClassLoader = new ClassLoader() {
@@ -180,11 +174,11 @@ public class LowLevelObjectsHandler implements Component {
 	protected Object iterateClassLoaderFields(ClassLoader classLoader, BiPredicate<Object, Long> predicate) {
 		long offset;
 		long step;
-		if (jVMInfo.is32Bit()) {
+		if (JVMInfo.is32Bit()) {
 			logInfo("JVM is 32 bit");
 			offset = 8;
 			step = 4;
-		} else if (!jVMInfo.isCompressedOopsOffOn64BitHotspot()) {
+		} else if (!JVMInfo.isCompressedOopsOffOn64BitHotspot()) {
 			logInfo("JVM is 64 bit Hotspot and Compressed Oops is enabled");
 			offset = 12;
 			step = 4;
@@ -238,9 +232,7 @@ public class LowLevelObjectsHandler implements Component {
 			}
 		}
 		return (Map<String, ?>)unsafe.getObject(classLoader, loadedPackagesMapMemoryOffset);
-	}
-	
-	
+	}	
 	
 	private Field getParentClassLoaderField(Class<?> classLoaderClass) {
 		Field field = parentClassLoaderFields.get(classLoaderClass);
@@ -248,9 +240,7 @@ public class LowLevelObjectsHandler implements Component {
 			synchronized (parentClassLoaderFields) {
 				field = parentClassLoaderFields.get(classLoaderClass);
 				if (field == null) {
-					field = memberFinder.findOne(
-						FieldCriteria.byScanUpTo(classLoaderClass).name("parent"::equals), classLoaderClass
-					);
+					field = getDeclaredField(classLoaderClass, fld -> fld.getName().equals("parent"));
 					setAccessible(field, true);
 					parentClassLoaderFields.put(classLoaderClass, field);
 				}
@@ -277,9 +267,7 @@ public class LowLevelObjectsHandler implements Component {
 		if (builtinClassLoaderClass != null && builtinClassLoaderClass.isAssignableFrom(classLoader.getClass())) {
 			try {
 				Object classLoaderDelegate = unsafe.allocateInstance(classLoaderDelegateClass);
-				Method initMethod = memberFinder.findOne(
-					MethodCriteria.on(classLoaderDelegateClass).name("init"::equals), classLoaderDelegateClass
-				);
+				Method initMethod = getDeclaredMethod(classLoaderBaseClass, mth -> mth.getName().equals("init"));
 				invoke(classLoaderDelegate, initMethod, futureParent);
 				futureParent = (ClassLoader)classLoaderDelegate;
 			} catch (Throwable exc) {
@@ -288,9 +276,7 @@ public class LowLevelObjectsHandler implements Component {
 		} else {
 			classLoaderBaseClass = ClassLoader.class;
 		}
-		Field parentClassLoaderField = memberFinder.findOne(
-			FieldCriteria.byScanUpTo(classLoaderBaseClass).name("parent"::equals), classLoaderBaseClass
-		);
+		Field parentClassLoaderField = getDeclaredField(classLoaderBaseClass, fld -> fld.getName().equals("parent"));
 		Long offset = unsafe.objectFieldOffset(parentClassLoaderField);
 		final ClassLoader exParent = (ClassLoader)unsafe.getObject(classLoader, offset);
 		unsafe.putObject(classLoader, offset, futureParent);
@@ -317,11 +303,45 @@ public class LowLevelObjectsHandler implements Component {
 		return methodInvoker.invoke(null, method, target, params);
 	}
 	
+	public Constructor<?> getDeclaredConstructor(Class<?> cls, Predicate<Constructor<?>> memberPredicate) {
+		return getDeclaredMember(cls, this::getDeclaredConstructors, memberPredicate);
+	}
+	
+	public Method getDeclaredMethod(Class<?> cls, Predicate<Method> memberPredicate) {
+		return getDeclaredMember(cls, this::getDeclaredMethods, memberPredicate);
+	}
+	
+	public Field getDeclaredField(Class<?> cls, Predicate<Field> memberPredicate) {
+		return getDeclaredMember(cls, this::getDeclaredFields, memberPredicate);
+	}
+	
+	public <M extends Member> M getDeclaredMember(
+		Class<?> cls,
+		Function<Class<?>, M[]> memberSupplier,
+		Predicate<M> fieldPredicate
+	) {
+		Collection<M> fields = getDeclaredMembers(cls, memberSupplier, fieldPredicate);
+		if (fields.size() > 1) {
+			throw Throwables.toRuntimeException("More than one member found for class " + cls.getName());
+		}
+		return null;
+	}
+	
+	public <M extends Member> Collection<M> getDeclaredMembers(Class<?> cls, Function<Class<?>, M[]> memberSupplier, Predicate<M> fieldPredicate) {
+		Collection<M> fields = ConcurrentHashMap.newKeySet();
+		for (M field : memberSupplier.apply(cls)) {
+			if (fieldPredicate.test(field)) {
+				fields.add(field);
+			}
+		}
+		return fields;
+	}
+	
 	public Field[] getDeclaredFields(Class<?> cls)  {
 		try {
 			return (Field[])getDeclaredFieldsRetriever.invoke(cls, false);
 		} catch (Throwable exc) {
-			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve fields of class {}. Cause: {}", cls.getName(), exc.getMessage());
+			logWarn("Could not retrieve fields of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return emtpyFieldsArray;
 		}		
 	}
@@ -330,7 +350,7 @@ public class LowLevelObjectsHandler implements Component {
 		try {
 			return (Method[]) getDeclaredMethodsRetriever.invoke(cls, false);
 		} catch (Throwable exc) {
-			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
+			logWarn("Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return emptyMethodsArray;
 		}
 	}
@@ -339,7 +359,7 @@ public class LowLevelObjectsHandler implements Component {
 		try {
 			return (Constructor<?>[])getDeclaredConstructorsRetriever.invoke(cls, false);
 		} catch (Throwable exc) {
-			ManagedLogger.Repository.getInstance().logWarn(Classes.class, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
+			logWarn("Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return emptyConstructorsArray;
 		}
 	}
@@ -352,69 +372,63 @@ public class LowLevelObjectsHandler implements Component {
 	
 	@Override
 	public void close() {
-		if (this != LowLevelObjectsHandler.getInstance()) {
-			loadedPackagesMapMemoryOffset = null;
-			loadedClassesVectorMemoryOffset = null;
-			jVMInfo = null;
-			memberFinder = null;
-			unsafe = null;
-			illegalAccessLoggerEnabler = null;
-			illegalAccessLoggerDisabler = null;
-			emtpyFieldsArray = null;
-			emptyMethodsArray = null;
-			emptyConstructorsArray = null;
-			getDeclaredFieldsRetriever = null;
-			getDeclaredMethodsRetriever = null;
-			getDeclaredConstructorsRetriever = null;
-			packageRetriever = null;	
-			methodInvoker = null;
-			accessibleSetter = null;	
-			consulterRetriever = null;
-			parentClassLoaderFields = null;
-			classLoaderDelegateClass = null;
-			builtinClassLoaderClass = null;
-		}
+		loadedPackagesMapMemoryOffset = null;
+		loadedClassesVectorMemoryOffset = null;
+		unsafe = null;
+		illegalAccessLoggerEnabler = null;
+		illegalAccessLoggerDisabler = null;
+		emtpyFieldsArray = null;
+		emptyMethodsArray = null;
+		emptyConstructorsArray = null;
+		getDeclaredFieldsRetriever = null;
+		getDeclaredMethodsRetriever = null;
+		getDeclaredConstructorsRetriever = null;
+		packageRetriever = null;	
+		methodInvoker = null;
+		accessibleSetter = null;	
+		consulterRetriever = null;
+		parentClassLoaderFields = null;
+		classLoaderDelegateClass = null;
+		builtinClassLoaderClass = null;
 	}
 
 	@SuppressWarnings("unchecked")
 	public static class ByteBufferDelegate {
 		
-		public static <T extends Buffer> int limit(T buffer) {
+		private ByteBufferDelegate() {}
+		
+		public static ByteBufferDelegate create() {
+			return new ByteBufferDelegate();
+		}
+		
+		public <T extends Buffer> int limit(T buffer) {
 			return ((Buffer)buffer).limit();
 		}
 		
-		public static <T extends Buffer> int position(T buffer) {
+		public <T extends Buffer> int position(T buffer) {
 			return ((Buffer)buffer).position();
 		}
 		
-		public static <T extends Buffer> T limit(T buffer, int newLimit) {
+		public <T extends Buffer> T limit(T buffer, int newLimit) {
 			return (T)((Buffer)buffer).limit(newLimit);
 		}
 		
-		public static <T extends Buffer> T position(T buffer, int newPosition) {
+		public <T extends Buffer> T position(T buffer, int newPosition) {
 			return (T)((Buffer)buffer).position(newPosition);
 		}
 		
-		public static <T extends Buffer> T flip(T buffer) {
+		public <T extends Buffer> T flip(T buffer) {
 			return (T)((Buffer)buffer).flip();
 		}
 		
-		public static <T extends Buffer> int capacity(T buffer) {
+		public <T extends Buffer> int capacity(T buffer) {
 			return ((Buffer)buffer).capacity();
 		}
 		
-		public static <T extends Buffer> int remaining(T buffer) {
+		public <T extends Buffer> int remaining(T buffer) {
 			return ((Buffer)buffer).remaining();
 		}
-	}
-	
-	private static class LazyHolder {
-		private static final LowLevelObjectsHandler LOW_LEVEL_OBJECTS_HANDLER_INSTANCE = LowLevelObjectsHandler.create(
-			JVMInfo.getInstance(), MemberFinder.getInstance()
-		);
 		
-		private static LowLevelObjectsHandler getLowLevelObjectsHandlerInstance() {
-			return LOW_LEVEL_OBJECTS_HANDLER_INSTANCE;
-		}
 	}
+
 }

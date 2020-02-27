@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.function.BiPredicate;
@@ -50,7 +52,7 @@ public class MethodCriteria extends ExecutableMemberCriteria<
 	
 	@Override
 	public Function<Class<?>, Method[]> getMembersSupplierFunction() {
-		return  classes::getDeclaredMethods;
+		return  Classes::getDeclaredMethods;
 	}
 	
 	public static MethodCriteria forName(Predicate<String> predicate) {

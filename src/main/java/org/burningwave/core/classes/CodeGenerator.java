@@ -28,6 +28,11 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.MemberFinder;
+
+import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -39,9 +44,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.burningwave.Throwables;
 import org.burningwave.core.Component;
-import org.burningwave.core.Strings;
 import org.burningwave.core.Virtual;
 import org.burningwave.core.io.StreamHelper;
 
@@ -50,16 +53,13 @@ public abstract class CodeGenerator implements Component {
 	protected static Pattern METHOD_NAME_PATTERN = Pattern.compile("([\\w\\.\\$]+)\\(");
 	protected static Pattern METHOD_RETURN_PATTERN = Pattern.compile("([\\w\\.\\$\\<\\>]+)\\s+[\\w\\.\\$]+\\(");
 	protected static Pattern METHOD_MODIFIERS_PATTERN = Pattern.compile("([\\w\\s]+)\\s+[\\w\\.\\$\\<\\>]+\\s+[\\w\\.\\$]+\\(");
-
-	protected MemberFinder memberFinder;
 	protected StreamHelper streamHelper;
 	protected String BASE_PACKAGE_NAME_FOR_TEMPLATE = this.getClass().getPackage().getName().substring(0, this.getClass().getPackage().getName().lastIndexOf("."));
 	protected String TEMPLATE;
 	protected String PACKAGE_NAME;	
 
 	
-	protected CodeGenerator(MemberFinder memberFinder, StreamHelper pathHelper) {
-		this.memberFinder = memberFinder;
+	protected CodeGenerator(StreamHelper pathHelper) {
 		this.streamHelper = pathHelper;
 	}
 	
@@ -77,7 +77,6 @@ public abstract class CodeGenerator implements Component {
 	String readTemplate(String fileRelPath) {
 		return streamHelper.getResourceAsStringBuffer(fileRelPath).toString();
 	}
-
 	
 	protected String generateCommonImports(Class<?>... classes) {
 		StringBuffer imports = new StringBuffer();
@@ -89,7 +88,7 @@ public abstract class CodeGenerator implements Component {
 	
 	protected String generateConstructors(String packageName, String classSimpleName, Class<?> superClass) {
 		StringBuffer constructorsAsString = new StringBuffer();
-		Collection<Constructor<?>> ctors = memberFinder.findAll(
+		Collection<Constructor<?>> ctors = MemberFinder.findAll(
 			ConstructorCriteria.byScanUpTo(superClass).member(member ->
 				Modifier.isPublic(member.getModifiers()) || 
 				Modifier.isProtected(member.getModifiers()) ||
@@ -154,13 +153,13 @@ public abstract class CodeGenerator implements Component {
 
 		
 		protected ForPojo(
-				MemberFinder memberFinder,
-				StreamHelper streamHelper) {
-			super(memberFinder, streamHelper);
+			StreamHelper streamHelper
+		) {
+			super(streamHelper);
 		}
 		
-		public static ForPojo create(MemberFinder memberFinder, StreamHelper streamHelper) {
-			return new ForPojo(memberFinder, streamHelper);
+		public static ForPojo create(StreamHelper streamHelper) {
+			return new ForPojo(streamHelper);
 		}
 		
 		private Map<Class<?>, ?> retrieveParameters(Object... objs) {
@@ -256,7 +255,7 @@ public abstract class CodeGenerator implements Component {
 			StringBuffer methodsAsString = new StringBuffer();
 			StringBuffer fieldsAsString = new StringBuffer();
 			Map<String, String> fields = new LinkedHashMap<>();
-			memberFinder.findAll(
+			MemberFinder.findAll(
 				MethodCriteria.forName(name ->
 					name.startsWith("set") || name.startsWith("get") || name.startsWith("is")
 				),
@@ -317,17 +316,17 @@ public abstract class CodeGenerator implements Component {
 	public static class ForFunction extends CodeGenerator {
 			
 		private ForFunction(
-				MemberFinder memberFinder,
-				StreamHelper streamHelper) {
-			super(memberFinder, streamHelper);
+			StreamHelper streamHelper
+		) {
+			super(streamHelper);
 			PACKAGE_NAME = BASE_PACKAGE_NAME_FOR_TEMPLATE + ".function";
 			TEMPLATE = readTemplate(PACKAGE_NAME.replaceAll("\\.", "/") + "/MultiParameterFunction.jt");
 		}
 		
 		public static ForFunction create(
-				MemberFinder memberFinder,
-				StreamHelper streamHelper) {
-			return new ForFunction(memberFinder, streamHelper);
+			StreamHelper streamHelper
+		) {
+			return new ForFunction(streamHelper);
 		}
 		
 		public String generate(Object... objs) {
@@ -365,17 +364,17 @@ public abstract class CodeGenerator implements Component {
 	public static class ForConsumer extends CodeGenerator {
 	
 		private ForConsumer(
-				MemberFinder memberFinder,
-				StreamHelper streamHelper) {
-			super(memberFinder, streamHelper);
+			StreamHelper streamHelper
+		) {
+			super(streamHelper);
 			PACKAGE_NAME = BASE_PACKAGE_NAME_FOR_TEMPLATE + ".function";
 			TEMPLATE = readTemplate(PACKAGE_NAME.replaceAll("\\.", "/") + "/MultiParameterConsumer.jt");
 		}
 		
 		public static ForConsumer create(
-				MemberFinder memberFinder,
-				StreamHelper streamHelper) {
-			return new ForConsumer(memberFinder, streamHelper);
+			StreamHelper streamHelper
+		) {
+			return new ForConsumer(streamHelper);
 		}
 		
 		public String generate(Object... objs) {
@@ -412,17 +411,17 @@ public abstract class CodeGenerator implements Component {
 	public static class ForPredicate extends CodeGenerator {
 				
 		private ForPredicate(
-				MemberFinder memberFinder,
-				StreamHelper streamHelper) {
-			super(memberFinder, streamHelper);
+			StreamHelper streamHelper
+		) {
+			super(streamHelper);
 			PACKAGE_NAME = BASE_PACKAGE_NAME_FOR_TEMPLATE + ".function";
 			TEMPLATE = readTemplate(PACKAGE_NAME.replaceAll("\\.", "/") + "/MultiParameterPredicate.jt");
 		}
 		
 		public static ForPredicate create(
-				MemberFinder memberFinder,
-				StreamHelper streamHelper) {
-			return new ForPredicate(memberFinder, streamHelper);
+			StreamHelper streamHelper
+		) {
+			return new ForPredicate(streamHelper);
 		}
 		
 		public String generate(Object... objs) {
@@ -459,17 +458,17 @@ public abstract class CodeGenerator implements Component {
 	public static class ForCodeExecutor extends CodeGenerator {
 		
 		private ForCodeExecutor(
-				MemberFinder memberFinder,
-				StreamHelper streamHelper) {
-			super(memberFinder, streamHelper);
+			StreamHelper streamHelper
+		) {
+			super(streamHelper);
 			PACKAGE_NAME = BASE_PACKAGE_NAME_FOR_TEMPLATE + ".classes";
 			TEMPLATE = readTemplate(PACKAGE_NAME.replaceAll("\\.", "/") + "/CodeExecutor.jt");
 		}
 		
 		public static ForCodeExecutor create(
-				MemberFinder memberFinder,
-				StreamHelper streamHelper) {
-			return new ForCodeExecutor(memberFinder, streamHelper);
+			StreamHelper streamHelper
+		) {
+			return new ForCodeExecutor(streamHelper);
 		}
 		
 		public String generate(Object... objs) {

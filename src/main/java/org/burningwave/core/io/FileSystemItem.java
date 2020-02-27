@@ -28,6 +28,13 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentsContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Paths;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -35,7 +42,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,9 +56,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.ManagedLogger;
-import org.burningwave.Throwables;
-import org.burningwave.core.Cache;
-import org.burningwave.core.Strings;
 import org.burningwave.core.io.FileSystemScanner.Scan;
 
 public class FileSystemItem implements ManagedLogger {
@@ -64,17 +67,17 @@ public class FileSystemItem implements ManagedLogger {
 	private Boolean exists;
 	
 	private FileSystemItem(String realAbsolutePath) {
-		realAbsolutePath = Strings.Paths.clean(realAbsolutePath);
+		realAbsolutePath = Paths.clean(realAbsolutePath);
 		this.absolutePath = new AbstractMap.SimpleEntry<>(realAbsolutePath, null);
 	}
 	
 	private FileSystemItem(String realAbsolutePath, String conventionedAbsolutePath) {
-		realAbsolutePath = Strings.Paths.clean(realAbsolutePath);
+		realAbsolutePath = Paths.clean(realAbsolutePath);
 		this.absolutePath = new AbstractMap.SimpleEntry<>(realAbsolutePath, conventionedAbsolutePath);
 	}
 	
 	public static FileSystemItem ofPath(URL realAbsolutePath) {
-		return ofPath(Strings.Paths.convertFromURLPath(realAbsolutePath.getPath()));
+		return ofPath(Paths.convertFromURLPath(realAbsolutePath.getPath()));
 	}
 	
 	public static FileSystemItem ofPath(String realAbsolutePath) {
@@ -86,10 +89,10 @@ public class FileSystemItem implements ManagedLogger {
 			realAbsolutePath.contains(".\\") ||
 			realAbsolutePath.contains(".//")
 		) {
-			realAbsolutePath = Paths.get(realAbsolutePath).normalize().toString();
+			realAbsolutePath = java.nio.file.Paths.get(realAbsolutePath).normalize().toString();
 		}
-		final String realAbsolutePathCleaned = Strings.Paths.clean(realAbsolutePath);
-		FileSystemItem fileSystemItem = Cache.PATH_FOR_FILE_SYSTEM_ITEMS.getOrDefault(
+		final String realAbsolutePathCleaned = Paths.clean(realAbsolutePath);
+		FileSystemItem fileSystemItem = Cache.pathForFileSystemItems.getOrDefault(
 			realAbsolutePath, () -> {
 				if (Strings.isNotEmpty(realAbsolutePathCleaned)) {
 					return new FileSystemItem(realAbsolutePathCleaned, conventionedAbsolutePath);
@@ -116,7 +119,7 @@ public class FileSystemItem implements ManagedLogger {
 				absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
 			}
 			if (!exists) {
-				Cache.PATH_FOR_FILE_SYSTEM_ITEMS.remove(absolutePath.getKey());
+				Cache.pathForFileSystemItems.remove(absolutePath.getKey());
 			}
 		}
 		return absolutePath.getValue();
@@ -545,7 +548,7 @@ public class FileSystemItem implements ManagedLogger {
 	
 	public ByteBuffer toByteBuffer() {
 		String absolutePath = getAbsolutePath();
-		ByteBuffer resource = Cache.PATH_FOR_CONTENTS.getOrDefault(absolutePath, null); 
+		ByteBuffer resource = Cache.pathForContents.getOrDefault(absolutePath, null); 
 		if (resource != null) {
 			return resource;
 		}
@@ -556,7 +559,7 @@ public class FileSystemItem implements ManagedLogger {
 				File file = new File(zipFilePath);
 				if (file.exists()) {
 					try (FileInputStream fIS = FileInputStream.create(file)) {
-						return Cache.PATH_FOR_CONTENTS.getOrDefault(
+						return Cache.pathForContents.getOrDefault(
 							absolutePath,
 							() ->
 								retrieveBytes(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + IterableZipContainer.ZIP_PATH_SEPARATOR, ""))
@@ -565,7 +568,7 @@ public class FileSystemItem implements ManagedLogger {
 				}
 			} else {
 				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
-					return Cache.PATH_FOR_CONTENTS.getOrDefault(
+					return Cache.pathForContents.getOrDefault(
 						absolutePath, () ->
 						fIS.toByteBuffer()
 					);
@@ -661,11 +664,11 @@ public class FileSystemItem implements ManagedLogger {
 				} else {
 					file = ((File)itemWrapper.getWrappedItem());
 				}
-				String conventionedAbsolutePath = Strings.Paths.clean(file.getAbsolutePath());
+				String conventionedAbsolutePath = Paths.clean(file.getAbsolutePath());
 				conventionedAbsolutePath +=	file.isDirectory()? "/" : "";
 				fileSystemItem = FileSystemItem.ofPath(scannedItemContext.getScannedItem().getAbsolutePath(), conventionedAbsolutePath);
 			}
-			Cache.PATH_FOR_CONTENTS.getOrDefault(fileSystemItem.getAbsolutePath(), () -> itemWrapper.toByteBuffer());
+			Cache.pathForContents.getOrDefault(fileSystemItem.getAbsolutePath(), () -> itemWrapper.toByteBuffer());
 			if (fileSystemItemFilter.test(fileSystemItem)) {
 				fileSystemItemConsumer.accept(fileSystemItem);
 			}
@@ -691,11 +694,11 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public static void enableLog() {
-		ManagedLogger.Repository.getInstance().enableLogging(FileSystemItem.class);
+		ManagedLoggersRepository.enableLogging(FileSystemItem.class);
 	}
 	
 	public static void disableLog() {
-		ManagedLogger.Repository.getInstance().disableLogging(FileSystemItem.class);
+		ManagedLoggersRepository.disableLogging(FileSystemItem.class);
 	}
 	
 	@Override

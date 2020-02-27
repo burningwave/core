@@ -28,26 +28,21 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 
-import org.burningwave.Throwables;
-import org.burningwave.core.io.FileSystemItem;
-import org.burningwave.core.io.Streams;
-
-public class JavaClass {
-	private final static Classes classes;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+import org.burningwave.core.io.FileSystemItem;public class JavaClass {
 	private final ByteBuffer byteCode;
 	private final String className;
 	
-	static {
-		classes = Classes.getInstance();
-	}
-	
 	JavaClass(ByteBuffer byteCode) throws IOException {
 		this.byteCode = Streams.shareContent(byteCode);
-		this.className = classes.retrieveName(byteCode);
+		this.className = Classes.retrieveName(byteCode);
 	}
 	
 	public static JavaClass create(ByteBuffer byteCode) {

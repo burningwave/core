@@ -28,12 +28,13 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
+
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.Strings;
 import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.function.ThrowingSupplier;
@@ -42,25 +43,21 @@ import org.burningwave.core.function.ThrowingSupplier;
 public class SourceCodeHandler implements Component {
 	private ClassFactory classFactory;
 	private Supplier<ClassFactory> classFactorySupplier;
-	private Classes classes;
 	private Classes.Loaders classesLoaders;
 
 	private SourceCodeHandler(
 		Supplier<ClassFactory> classFactorySupplier,
-		Classes classes,
 		Classes.Loaders classesLoaders
 	) {
 		this.classFactorySupplier = classFactorySupplier;
-		this.classes = classes;
 		this.classesLoaders = classesLoaders;
 	}
 	
 	public static SourceCodeHandler create(
 		Supplier<ClassFactory> classFactorySupplier,
-		Classes classes,
 		Classes.Loaders classesLoaders
 	) {
-		return new SourceCodeHandler(classFactorySupplier, classes, classesLoaders);
+		return new SourceCodeHandler(classFactorySupplier, classesLoaders);
 	}
 	
 	private ClassFactory getClassFactory() {
@@ -94,7 +91,6 @@ public class SourceCodeHandler implements Component {
 			try (MemoryClassLoader memoryClassLoader = 
 				MemoryClassLoader.create(
 					classLoaderParentOfOneShotClassLoader,
-					classes,
 					classesLoaders
 				)
 			) {
@@ -110,7 +106,6 @@ public class SourceCodeHandler implements Component {
 	
 	@Override
 	public void close() {
-		classes = null;
 		classFactory = null;
 		classFactorySupplier = null;
 	}

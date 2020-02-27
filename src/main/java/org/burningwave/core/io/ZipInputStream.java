@@ -28,6 +28,10 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.ByteBufferDelegate;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -39,12 +43,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.zip.ZipException;
 
-import org.burningwave.Throwables;
-import org.burningwave.core.Cache;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ZipInputStream.Entry.Attached;
-import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
 class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZipContainer, Component {
 	String absolutePath;
@@ -223,7 +225,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			
 			
 			private ByteBuffer loadContent() {
-				return Cache.PATH_FOR_CONTENTS.getOrDefault(
+				return Cache.pathForContents.getOrDefault(
 					getAbsolutePath(), () -> {
 						if (zipInputStream.getCurrentZipEntry() != this) {
 							throw Throwables.toRuntimeException(Attached.class.getSimpleName() + " and his ZipInputStream are not aligned");
@@ -254,12 +256,12 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 					ThrowingRunnable.run(() -> {
 						try (BufferedInputStream bis = new BufferedInputStream(this.toInputStream())) {
 							int byteTransferred = 0;
-							byte buffer[] = new byte[Streams.DEFAULT_BUFFER_SIZE];
+							byte buffer[] = new byte[Streams.defaultBufferSize];
 							try (
 								FileOutputStream fos = FileOutputStream.create(destinationFilePath);
-								BufferedOutputStream bos = new BufferedOutputStream(fos, Streams.DEFAULT_BUFFER_SIZE)
+								BufferedOutputStream bos = new BufferedOutputStream(fos, Streams.defaultBufferSize)
 							) {
-								while ((byteTransferred = bis.read(buffer, 0, Streams.DEFAULT_BUFFER_SIZE)) != -1) {
+								while ((byteTransferred = bis.read(buffer, 0, Streams.defaultBufferSize)) != -1) {
 									bos.write(buffer, 0, byteTransferred);
 								}
 								bos.flush();
@@ -295,7 +297,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			}
 	
 			public ByteBuffer toByteBuffer() {
-				return Cache.PATH_FOR_CONTENTS.getOrDefault(absolutePath, () -> {
+				return Cache.pathForContents.getOrDefault(absolutePath, () -> {
 					try (IterableZipContainer zipInputStream = getParentContainer()) {
 						ByteBuffer content = zipInputStream.findFirstAndConvert((entry) -> 
 							entry.getName().equals(getName()), zEntry -> 

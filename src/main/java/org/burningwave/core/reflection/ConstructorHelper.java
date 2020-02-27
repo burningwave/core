@@ -28,25 +28,24 @@
  */
 package org.burningwave.core.reflection;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 
 import java.lang.reflect.Constructor;
 import java.util.Optional;
 
-import org.burningwave.Throwables;
-import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.ConstructorCriteria;
-import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.function.ThrowingSupplier;
 
 
 public class ConstructorHelper extends MemberHelper<Constructor<?>>  {
 
-	private ConstructorHelper(Classes classes, MemberFinder memberFinder) {
-		super(classes, memberFinder);
+	private ConstructorHelper() {
+		super();
 	}
 	
-	public static ConstructorHelper create(Classes classes, MemberFinder memberFinder) {
-		return new ConstructorHelper(classes, memberFinder);
+	public static ConstructorHelper create() {
+		return new ConstructorHelper();
 	}
 	
 	
@@ -68,7 +67,7 @@ public class ConstructorHelper extends MemberHelper<Constructor<?>>  {
 			criteria, object, (mmb) ->	mmb.setAccessible(true)
 		);
 		Optional.ofNullable(member).orElseThrow(() ->
-			Throwables.toRuntimeException("Constructor not found for class " + classes.retrieveFrom(object))
+			Throwables.toRuntimeException("Constructor not found for class " + Classes.retrieveFrom(object))
 		);
 		return member;
 	}

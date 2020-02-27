@@ -36,7 +36,6 @@ import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.CodeGenerator;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
-import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.classes.hunter.ByteCodeHunter;
@@ -48,10 +47,6 @@ import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
-import org.burningwave.core.jvm.JVMInfo;
-import org.burningwave.core.reflection.ConstructorHelper;
-import org.burningwave.core.reflection.FieldHelper;
-import org.burningwave.core.reflection.MethodHelper;
 import org.burningwave.core.reflection.PropertyAccessor;
 
 public interface ComponentSupplier extends Component {
@@ -89,10 +84,6 @@ public interface ComponentSupplier extends Component {
 	public CodeGenerator.ForPredicate getCodeGeneratorForPredicate();
 	
 	public ConcurrentHelper getConcurrentHelper();
-
-	public ConstructorHelper getConstructorHelper();
-
-	public FieldHelper getFieldHelper();
 	
 	public FileSystemHelper getFileSystemHelper();
 	
@@ -104,13 +95,7 @@ public interface ComponentSupplier extends Component {
 
 	public JavaMemoryCompiler getJavaMemoryCompiler();
 
-	public JVMInfo getJVMInfo();
-
-	public MemberFinder getMemberFinder();
-
 	public MemoryClassLoader getMemoryClassLoader();
-	
-	public MethodHelper getMethodHelper();
 	
 	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier);
 	

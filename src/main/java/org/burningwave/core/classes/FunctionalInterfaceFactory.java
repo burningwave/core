@@ -28,6 +28,9 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentsContainer.MethodHelper;
+
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles.Lookup;
@@ -42,21 +45,18 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import org.burningwave.core.Cache;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingSupplier;
 
 public class FunctionalInterfaceFactory implements Component {
-	private Classes classes;
 	private ClassFactory classFactory;
 	
-	private FunctionalInterfaceFactory(Classes classes, ClassFactory classFactory) {
-		this.classes = classes;
+	private FunctionalInterfaceFactory(ClassFactory classFactory) {
 		this.classFactory = classFactory;
 	}
 
-	public static FunctionalInterfaceFactory create(Classes classes, ClassFactory classFactory) {
-		return new FunctionalInterfaceFactory(classes, classFactory);
+	public static FunctionalInterfaceFactory create(ClassFactory classFactory) {
+		return new FunctionalInterfaceFactory(classFactory);
 	}
 
 	public <F> F create(Method targetMethod) throws Throwable {
@@ -77,7 +77,7 @@ public class FunctionalInterfaceFactory implements Component {
 
 	@SuppressWarnings("unchecked")
 	protected <F> F getBindedRunnable(Method targetMethod) {
-		return (F) Cache.BINDED_FUNCTIONAL_INTERFACES.getOrDefault(targetMethod, () -> 
+		return (F) Cache.bindedFunctionalInterfaces.getOrDefault(targetMethod, () -> 
 			ThrowingSupplier.get(() ->
 				bindTo(
 					targetMethod, () -> 
@@ -93,7 +93,7 @@ public class FunctionalInterfaceFactory implements Component {
 
 	@SuppressWarnings("unchecked")
 	protected <F> F getBindedSupplier(Method targetMethod) {
-		return (F) Cache.BINDED_FUNCTIONAL_INTERFACES.getOrDefault(targetMethod, () -> 
+		return (F) Cache.bindedFunctionalInterfaces.getOrDefault(targetMethod, () -> 
 			ThrowingSupplier.get(() -> 
 				bindTo(
 					targetMethod, () -> 
@@ -109,7 +109,7 @@ public class FunctionalInterfaceFactory implements Component {
 
 	@SuppressWarnings("unchecked")
 	protected <F> F getBindedFunction(Method targetMethod) {
-		return (F) Cache.BINDED_FUNCTIONAL_INTERFACES.getOrDefault(targetMethod, () -> 
+		return (F) Cache.bindedFunctionalInterfaces.getOrDefault(targetMethod, () -> 
 			ThrowingSupplier.get(() -> bindTo(
 				targetMethod, () -> 
 					new AbstractMap.SimpleEntry<>(
@@ -131,7 +131,7 @@ public class FunctionalInterfaceFactory implements Component {
 
 	@SuppressWarnings("unchecked")
 	protected <F> F getBindedConsumer(Method targetMethod) {
-		return (F) Cache.BINDED_FUNCTIONAL_INTERFACES.getOrDefault(targetMethod, () -> 
+		return (F) Cache.bindedFunctionalInterfaces.getOrDefault(targetMethod, () -> 
 			ThrowingSupplier.get(() ->
 				bindTo(
 					targetMethod, () -> 
@@ -155,7 +155,7 @@ public class FunctionalInterfaceFactory implements Component {
 
 	@SuppressWarnings("unchecked")
 	protected <F> F getBindedPredicate(Method targetMethod) {
-		return (F) Cache.BINDED_FUNCTIONAL_INTERFACES.getOrDefault(targetMethod, () -> 
+		return (F) Cache.bindedFunctionalInterfaces.getOrDefault(targetMethod, () -> 
 			ThrowingSupplier.get(() -> bindTo(
 					targetMethod, () -> 
 					new AbstractMap.SimpleEntry<>(
@@ -181,7 +181,7 @@ public class FunctionalInterfaceFactory implements Component {
 		ThrowingSupplier<Map.Entry<Class<?>, String>, Throwable> functionalInterfaceBagSupplier,
 		Function<MethodHandle, MethodType> functionalInterfaceSignatureSupplier
 	) throws Throwable {
-		Map.Entry<Lookup, MethodHandle> methodHandleBag = classes.methodToMethodHandleBag(targetMethod);
+		Map.Entry<Lookup, MethodHandle> methodHandleBag = MethodHelper.convertoToMethodHandleBag(targetMethod);
 		MethodHandle methodHandle = methodHandleBag.getValue();
 		Map.Entry<Class<?>, String> functionalInterfaceBag = functionalInterfaceBagSupplier.get();
 		return (F)LambdaMetafactory.metafactory(

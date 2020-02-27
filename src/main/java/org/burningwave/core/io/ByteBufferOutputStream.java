@@ -28,11 +28,13 @@
  */
 package org.burningwave.core.io;
 
+
+import static org.burningwave.core.assembler.StaticComponentsContainer.ByteBufferDelegate;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-
-import org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate;
 
 
 public class ByteBufferOutputStream extends OutputStream {
@@ -45,11 +47,11 @@ public class ByteBufferOutputStream extends OutputStream {
     private Boolean closeable;
     
     public ByteBufferOutputStream() {
-    	this(Streams.DEFAULT_BUFFER_SIZE);
+    	this(Streams.defaultBufferSize);
     }
     
     public ByteBufferOutputStream(boolean closeable) {
-    	this(Streams.DEFAULT_BUFFER_SIZE, closeable);
+    	this(Streams.defaultBufferSize, closeable);
     }
 
     public ByteBufferOutputStream(ByteBuffer buffer, boolean closeable) {
@@ -64,7 +66,7 @@ public class ByteBufferOutputStream extends OutputStream {
     }
 
     public ByteBufferOutputStream(int initialCapacity, boolean closeable) {
-        this(Streams.DEFAULT_BYTE_BUFFER_ALLOCATION_MODE.apply(initialCapacity), closeable);
+        this(Streams.defaultByteBufferAllocationMode.apply(initialCapacity), closeable);
     }
     
     public void markAsCloseable(boolean closeable) {
@@ -114,7 +116,7 @@ public class ByteBufferOutputStream extends OutputStream {
 
     private void expandBuffer(int remainingRequired) {
         int expandSize = Math.max((int) (ByteBufferDelegate.limit(buffer) * REALLOCATION_FACTOR), ByteBufferDelegate.position(buffer) + remainingRequired);
-        ByteBuffer temp = Streams.DEFAULT_BYTE_BUFFER_ALLOCATION_MODE.apply(expandSize);
+        ByteBuffer temp = Streams.defaultByteBufferAllocationMode.apply(expandSize);
         int limit = limit();
         ByteBufferDelegate.flip(buffer);
         temp.put(buffer);

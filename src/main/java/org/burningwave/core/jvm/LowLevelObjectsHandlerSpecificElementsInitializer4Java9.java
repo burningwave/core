@@ -1,5 +1,7 @@
 package org.burningwave.core.jvm;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+
 import java.io.InputStream;
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
@@ -12,10 +14,8 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
-import org.burningwave.ManagedLogger;
-import org.burningwave.Throwables;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 import org.burningwave.core.io.ByteBufferOutputStream;
-import org.burningwave.core.io.Streams;
 
 @SuppressWarnings("restriction")
 class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelObjectsHandlerSpecificElementsInitializer {
@@ -56,7 +56,7 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelOb
 			lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) ->
 				accessibleSetterMethod.invoke(accessibleObject, flag);
 		} catch (Throwable exc) {
-			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "method setAccessible0 class not detected on " + AccessibleObject.class.getName());
+			logInfo("method setAccessible0 class not detected on " + AccessibleObject.class.getName());
 			throw Throwables.toRuntimeException(exc);
 		}
 		try {
@@ -81,7 +81,7 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelOb
 				lowLevelObjectsHandler.methodInvoker = Class.forName("jdk.internal.reflect.NativeMethodAccessorImpl").getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
 				lowLevelObjectsHandler.setAccessible(lowLevelObjectsHandler.methodInvoker, true);
 			} catch (Throwable exc) {
-				ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
+				logInfo("method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
 				throw Throwables.toRuntimeException(exc);
 			}
 			try (
@@ -98,7 +98,7 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelOb
 				throw Throwables.toRuntimeException(exc);
 			}
 		} catch (Throwable exc) {
-			ManagedLogger.Repository.getInstance().logInfo(LowLevelObjectsHandler.class, "jdk.internal.loader.BuiltinClassLoader class not detected");
+			logInfo("jdk.internal.loader.BuiltinClassLoader class not detected");
 			throw Throwables.toRuntimeException(exc);
 		}
 	}

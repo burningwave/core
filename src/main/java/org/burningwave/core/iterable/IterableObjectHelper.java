@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.iterable;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +39,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.Strings;
 import org.burningwave.core.reflection.PropertyAccessor;
 
 public class IterableObjectHelper implements Component {

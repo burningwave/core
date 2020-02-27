@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes.hunter;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Paths;
 
 import java.io.File;
 import java.util.Collection;
@@ -41,10 +42,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.burningwave.core.Strings;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.Classes;
-import org.burningwave.core.classes.MemberFinder;
 import org.burningwave.core.classes.hunter.SearchContext.InitContext;
 import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemHelper;
@@ -64,9 +63,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
-		Classes classes,
 		Classes.Loaders classesLoaders,
-		MemberFinder memberFinder,
 		Function<InitContext, C> contextSupplier,
 		Function<C, R> resultSupplier) {
 		super(
@@ -76,9 +73,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 			fileSystemScanner,
 			pathHelper,
 			streamHelper,
-			classes,
 			classesLoaders,
-			memberFinder,
 			contextSupplier,
 			resultSupplier
 		);
@@ -94,7 +89,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 			), 
 			searchConfig
 		);
-		searchConfig.init(this.classes, this.classesLoaders, context.pathMemoryClassLoader, this.memberFinder);
+		searchConfig.init(this.classesLoaders, context.pathMemoryClassLoader);
 		context.executeSearch(() ->
 			scan(context)
 		);
@@ -190,9 +185,9 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 				for (String path : entry.getValue()) {
 					tempCache.put(entry.getKey(), cache.get(path));
 					if (directoryPredicate != null) {
-						directoryPredicate.and(file -> !(Strings.Paths.clean(file.getAbsolutePath()) + "/").startsWith(Strings.Paths.clean(path) + "/"));
+						directoryPredicate.and(file -> !(Paths.clean(file.getAbsolutePath()) + "/").startsWith(Paths.clean(path) + "/"));
 					} else {
-						directoryPredicate = file -> !(Strings.Paths.clean(file.getAbsolutePath()) + "/").startsWith(Strings.Paths.clean(path) + "/");
+						directoryPredicate = file -> !(Paths.clean(file.getAbsolutePath()) + "/").startsWith(Paths.clean(path) + "/");
 					}
 				}
 			}
@@ -204,11 +199,11 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 			Predicate<File> filePredicate = null;
 			for (Entry<String, Collection<String>> entry : checkPathsResult.getPartialContainedFiles().entrySet()) {
 				for (String path : entry.getValue()) {
-					tempCache.put(Strings.Paths.clean(entry.getKey()), cache.get(path));
+					tempCache.put(Paths.clean(entry.getKey()), cache.get(path));
 					if (filePredicate != null) {
-						filePredicate.and(file -> !(Strings.Paths.clean(file.getAbsolutePath())).equals(Strings.Paths.clean(path)));
+						filePredicate.and(file -> !(Paths.clean(file.getAbsolutePath())).equals(Paths.clean(path)));
 					} else {
-						filePredicate = file -> !(Strings.Paths.clean(file.getAbsolutePath())).equals(Strings.Paths.clean(path));
+						filePredicate = file -> !(Paths.clean(file.getAbsolutePath())).equals(Paths.clean(path));
 					}
 				}
 			}
@@ -219,7 +214,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		}
 		if (!checkPathsResult.getContainedPaths().isEmpty()) {
 			for (Entry<String, Collection<String>> entry : checkPathsResult.getContainedPaths().entrySet()) {
-				classFileScanConfiguration.addPaths(entry.getValue().stream().map(path -> Strings.Paths.clean(path)).collect(Collectors.toList()));
+				classFileScanConfiguration.addPaths(entry.getValue().stream().map(path -> Paths.clean(path)).collect(Collectors.toList()));
 			}
 		}
 		

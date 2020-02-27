@@ -28,11 +28,13 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
 
-import org.burningwave.core.Cache;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingRunnable;
 
@@ -84,7 +86,7 @@ public class FileInputStream extends java.io.FileInputStream implements Componen
 	}
 
 	public ByteBuffer toByteBuffer() {
-		return Cache.PATH_FOR_CONTENTS.getOrDefault(
+		return Cache.pathForContents.getOrDefault(
 			file.getAbsolutePath(), () -> 
 			Streams.toByteBuffer(this)
 		);

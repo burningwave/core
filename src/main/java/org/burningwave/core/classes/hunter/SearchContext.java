@@ -28,6 +28,9 @@
  */
 package org.burningwave.core.classes.hunter;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Map;
@@ -35,11 +38,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import org.burningwave.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.Context;
 import org.burningwave.core.classes.ClassCriteria;
-import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.ClassFileScanConfig;
@@ -49,7 +50,6 @@ import org.burningwave.core.io.StreamHelper;
 public class SearchContext<T> implements Component {
 
 	FileSystemHelper fileSystemHelper;
-	Classes classes;
 	ClassFileScanConfig classFileScanConfiguration;
 	SearchConfigAbst<?> searchConfig;
 	Map<String, T> itemsFoundFlatMap;
@@ -70,11 +70,9 @@ public class SearchContext<T> implements Component {
 	SearchContext(
 		FileSystemHelper fileSystemHelper,
 		StreamHelper streamHelper,
-		Classes classes,
 		InitContext initContext
 	) {
 		this.fileSystemHelper = fileSystemHelper;
-		this.classes = classes;
 		this.itemsFoundFlatMap = new ConcurrentHashMap<>();
 		this.itemsFoundMap = new ConcurrentHashMap<>();
 		this.skippedClassNames = ConcurrentHashMap.newKeySet();
@@ -90,10 +88,9 @@ public class SearchContext<T> implements Component {
 	public static <T> SearchContext<T> create(
 		FileSystemHelper fileSystemHelper,
 		StreamHelper streamHelper,
-		Classes classes,
 		InitContext initContext
 	) {
-		return new SearchContext<>(fileSystemHelper, streamHelper, classes, initContext);
+		return new SearchContext<>(fileSystemHelper, streamHelper, initContext);
 	}
 	
 	void executeSearch(Runnable searcher) {
@@ -192,7 +189,7 @@ public class SearchContext<T> implements Component {
 			try {
 				return supplier.get();
 			} catch (ClassNotFoundException | NoClassDefFoundError exc) {
-				String notFoundClassName = classes.retrieveName(exc);
+				String notFoundClassName = Classes.retrieveName(exc);
 				if (notFoundClassName != null) {
 					if (!skippedClassNames.contains(notFoundClassName)) {
 						if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
@@ -246,7 +243,7 @@ public class SearchContext<T> implements Component {
 	}
 	
 	protected Class<?> retrieveClass(Class<?> cls) {
-		return classes.isLoadedBy(cls, pathMemoryClassLoader) ?
+		return Classes.isLoadedBy(cls, pathMemoryClassLoader) ?
 			cls : 
 			loadClass(cls.getName());
 	}

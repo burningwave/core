@@ -1,5 +1,7 @@
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
+
 import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;

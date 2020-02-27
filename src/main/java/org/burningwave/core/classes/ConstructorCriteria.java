@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.classes;
 
-
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
 import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.function.BiPredicate;
@@ -37,7 +37,6 @@ import java.util.function.Predicate;
 
 import org.burningwave.core.Criteria;
 import org.burningwave.core.function.TriPredicate;
-
 
 public class ConstructorCriteria extends ExecutableMemberCriteria<
 	Constructor<?>, ConstructorCriteria, Criteria.TestContext<Constructor<?>, ConstructorCriteria>
@@ -52,7 +51,7 @@ public class ConstructorCriteria extends ExecutableMemberCriteria<
 	
 	@Override
 	public Function<Class<?>, Constructor<?>[]> getMembersSupplierFunction() {
-		return classes::getDeclaredConstructors;
+		return Classes::getDeclaredConstructors;
 	}
 	
 	public static ConstructorCriteria forName(Predicate<String> predicate) {

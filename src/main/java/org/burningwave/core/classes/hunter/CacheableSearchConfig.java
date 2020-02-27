@@ -35,11 +35,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.Strings;
 import org.burningwave.core.classes.Classes;
-import org.burningwave.core.classes.MemberFinder;
+import org.burningwave.core.io.Streams;
 
 public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfig> {
+	Strings.Paths stringsPaths;
 	int maxParallelTasksForUnit;
-	Collection<String> paths;	
+	Collection<String> paths;
+	
 	
 	CacheableSearchConfig() {
 		super();
@@ -47,12 +49,12 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 		maxParallelTasksForUnit = Runtime.getRuntime().availableProcessors();
 	}
 	
-	void init(Classes classes, Classes.Loaders classesLoaders, PathMemoryClassLoader classSupplier, MemberFinder memberFinder) {
-		super.init(classes, classesLoaders, classSupplier, memberFinder);
+	void init(Strings.Paths stringsPaths, Streams streams, Classes classes, Classes.Loaders classesLoaders, PathMemoryClassLoader classSupplier) {
+		super.init(classesLoaders, classSupplier);
 		Set<String> temp = new LinkedHashSet<String>(paths);
 		paths.clear();
 		for(String path : temp) {
-			paths.add(Strings.Paths.clean(path));
+			paths.add(stringsPaths.clean(path));
 		}
 		temp.clear();
 	}

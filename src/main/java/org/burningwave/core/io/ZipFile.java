@@ -28,6 +28,10 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Paths;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,9 +45,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 
-import org.burningwave.Throwables;
-import org.burningwave.core.Cache;
-import org.burningwave.core.Strings;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 
 class ZipFile implements IterableZipContainer {
 	String absolutePath;
@@ -54,12 +56,12 @@ class ZipFile implements IterableZipContainer {
 	Collection<Entry> entries;
 	
 	ZipFile(String absolutePath, ByteBuffer content) {
-		this.absolutePath = Strings.Paths.clean(absolutePath);
+		this.absolutePath = Paths.clean(absolutePath);
 		File file = new File(absolutePath);
 		if (!file.exists()) {
 			File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(toString());
 			FileSystemItem fileSystemItem = Streams.store(temporaryFolder.getAbsolutePath() + "/" + file.getName(), content);
-			Cache.PATH_FOR_CONTENTS.getOrDefault(absolutePath, () -> fileSystemItem.toByteBuffer());
+			Cache.pathForContents.getOrDefault(absolutePath, () -> fileSystemItem.toByteBuffer());
 			file = new File(fileSystemItem.getAbsolutePath());
 		}
 		entries = ConcurrentHashMap.newKeySet();
@@ -136,7 +138,7 @@ class ZipFile implements IterableZipContainer {
 
 	@Override
 	public ByteBuffer toByteBuffer() {
-		return Cache.PATH_FOR_CONTENTS.get(absolutePath);
+		return Cache.pathForContents.get(absolutePath);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -181,8 +183,8 @@ class ZipFile implements IterableZipContainer {
 		public Entry(ZipFile zipMemoryContainer, String entryName, Supplier<ByteBuffer> zipEntryContentSupplier) {
 			this.zipMemoryContainer = zipMemoryContainer;
 			this.name = entryName;
-			this.absolutePath = Strings.Paths.clean(zipMemoryContainer.getAbsolutePath() + "/" + entryName);
-			Cache.PATH_FOR_CONTENTS.getOrDefault(getAbsolutePath(), zipEntryContentSupplier);
+			this.absolutePath = Paths.clean(zipMemoryContainer.getAbsolutePath() + "/" + entryName);
+			Cache.pathForContents.getOrDefault(getAbsolutePath(), zipEntryContentSupplier);
 		}
 
 		@Override
@@ -208,7 +210,7 @@ class ZipFile implements IterableZipContainer {
 
 		@Override
 		public ByteBuffer toByteBuffer() {
-			return Cache.PATH_FOR_CONTENTS.get(getAbsolutePath());
+			return Cache.pathForContents.get(getAbsolutePath());
 		}	
 	}
 }

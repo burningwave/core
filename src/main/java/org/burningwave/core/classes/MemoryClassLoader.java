@@ -28,6 +28,10 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
+
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -44,9 +48,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import org.burningwave.core.Cache;
 import org.burningwave.core.Component;
-import org.burningwave.core.Strings;
 import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.reflection.PropertyAccessor;
 
@@ -55,7 +57,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	public final static String PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY = "memory-class-loader.parent";
 	public final static Map<String, String> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
 		
-	protected Classes classes;
 	protected Classes.Loaders classesLoaders;
 	protected Map<String, ByteBuffer> notLoadedCompiledClasses;
 	protected Map<String, ByteBuffer> loadedCompiledClasses;
@@ -66,11 +67,9 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	protected MemoryClassLoader(
 		ClassLoader parentClassLoader,
-		Classes classes,
 		Classes.Loaders classesLoaders
 	) {
 		super(parentClassLoader);
-		this.classes = classes;
 		this.classesLoaders = classesLoaders;
 		this.notLoadedCompiledClasses = new ConcurrentHashMap<>();
 		this.loadedCompiledClasses = new ConcurrentHashMap<>();
@@ -82,8 +81,8 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 
 	
-	public static MemoryClassLoader create(ClassLoader parentClassLoader, Classes classes, Classes.Loaders classesLoaders) {
-		return new MemoryClassLoader(parentClassLoader, classes, classesLoaders);
+	public static MemoryClassLoader create(ClassLoader parentClassLoader, Classes.Loaders classesLoaders) {
+		return new MemoryClassLoader(parentClassLoader, classesLoaders);
 	}
 
 	public void addCompiledClass(String className, ByteBuffer byteCode) {
@@ -235,14 +234,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 				cls = _defineClass(className, byteCode, null);
         		definePackageOf(cls);
         	} catch (NoClassDefFoundError noClassDefFoundError) {
-        		String notFoundClassName = classes.retrieveName(noClassDefFoundError);
+        		String notFoundClassName = Classes.retrieveName(noClassDefFoundError);
         		while (!notFoundClassName.equals(className)) {
         			try {
         				//This search over all ClassLoader Parents
         				loadClass(notFoundClassName, false);
         				cls = loadClass(className, false);
         			} catch (ClassNotFoundException exc) {
-        				String newNotFoundClass = classes.retrieveName(noClassDefFoundError);
+        				String newNotFoundClass = Classes.retrieveName(noClassDefFoundError);
         				if (newNotFoundClass.equals(notFoundClassName)) {
         					break;
         				} else {
@@ -317,9 +316,9 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	protected void unregister() {
 		classesLoaders.unregister(this);
-		Cache.CLASS_LOADER_FOR_CONSTRUCTORS.remove(this);
-		Cache.CLASS_LOADER_FOR_FIELDS.remove(this);
-		Cache.CLASS_LOADER_FOR_METHODS.remove(this);
+		Cache.classLoaderForConstructors.remove(this);
+		Cache.classLoaderForFields.remove(this);
+		Cache.classLoaderForMethods.remove(this);
 	}
 	
 	@Override
