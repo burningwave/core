@@ -681,6 +681,12 @@ public class Classes implements Component {
 	    	}
 	    }
 		
+		public Class<?> defineClass(ClassLoader classLoader, JavaClass javaClass) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
+			Class<?> definedClass = defineClass(classLoader, getDefineClassMethod(classLoader), javaClass.getName(), javaClass.getByteCode());
+			definePackageFor(definedClass, classLoader, getDefinePackageMethod(classLoader));
+			return definedClass;
+		}
+		
 		private Class<?> defineClass(
 			ClassLoader classLoader, 
 			MethodHandle method, 
