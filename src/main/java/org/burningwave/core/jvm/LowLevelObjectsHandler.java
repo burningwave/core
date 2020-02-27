@@ -290,9 +290,7 @@ public class LowLevelObjectsHandler implements Component {
 		} else {
 			classLoaderBaseClass = ClassLoader.class;
 		}
-		Field parentClassLoaderField = MemberFinder.findOne(
-			FieldCriteria.on(classLoaderBaseClass).name("parent"::equals), classLoaderBaseClass
-		);
+		Field parentClassLoaderField = getParentClassLoaderField(classLoaderBaseClass);
 		Long offset = unsafe.objectFieldOffset(parentClassLoaderField);
 		final ClassLoader exParent = (ClassLoader)unsafe.getObject(classLoader, offset);
 		unsafe.putObject(classLoader, offset, futureParent);
