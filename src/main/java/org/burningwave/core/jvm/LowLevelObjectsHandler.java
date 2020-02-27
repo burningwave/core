@@ -320,11 +320,11 @@ public class LowLevelObjectsHandler implements Component {
 		Function<Class<?>, M[]> memberSupplier,
 		Predicate<M> fieldPredicate
 	) {
-		Collection<M> fields = getDeclaredMembers(cls, memberSupplier, fieldPredicate);
-		if (fields.size() > 1) {
+		Collection<M> members = getDeclaredMembers(cls, memberSupplier, fieldPredicate);
+		if (members.size() > 1) {
 			throw Throwables.toRuntimeException("More than one member found for class " + cls.getName());
 		}
-		return null;
+		return members.stream().findFirst().orElseGet(() -> null);
 	}
 	
 	public <M extends Member> Collection<M> getDeclaredMembers(Class<?> cls, Function<Class<?>, M[]> memberSupplier, Predicate<M> fieldPredicate) {
