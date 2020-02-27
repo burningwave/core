@@ -32,29 +32,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
-import java.lang.reflect.Method;
+import java.lang.invoke.MethodHandle;
 
 
 public class ClassLoaderDelegate extends BuiltinClassLoader {
 	private ClassLoader classLoader;
-	private Method loadClassMethod;
+	private MethodHandle loadClassMethod;
 	
 	ClassLoaderDelegate(String name, BuiltinClassLoader parent, URLClassPath ucp) {
 		super(name, parent, ucp);
 	}
 	
-	public void init(ClassLoader classLoader) {
+	public void init(ClassLoader classLoader, MethodHandle loadClassMethodHandle) {
 		this.classLoader = classLoader;
-		Class<?> cls = classLoader.getClass();
-		while (loadClassMethod == null && cls != ClassLoader.class.getSuperclass()) {
-			try {
-				loadClassMethod = cls.getDeclaredMethod("loadClass", String.class, boolean.class);
-				loadClassMethod.setAccessible(true);
-			} catch (NoSuchMethodException | SecurityException e) {
-				
-			}
-			cls = cls.getSuperclass();
-		}
+		this.loadClassMethod = loadClassMethodHandle;
 	}
 	
 	@Override

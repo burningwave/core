@@ -29,6 +29,8 @@
 package org.burningwave.core.jvm;
 
 import static org.burningwave.core.assembler.StaticComponentsContainer.JVMInfo;
+import static org.burningwave.core.assembler.StaticComponentsContainer.MemberFinder;
+import static org.burningwave.core.assembler.StaticComponentsContainer.MethodHelper;
 import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 
@@ -38,20 +40,19 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.nio.Buffer;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.classes.FieldCriteria;
+import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingFunction;
 import org.burningwave.core.function.ThrowingSupplier;
@@ -240,7 +241,9 @@ public class LowLevelObjectsHandler implements Component {
 			synchronized (parentClassLoaderFields) {
 				field = parentClassLoaderFields.get(classLoaderClass);
 				if (field == null) {
-					field = getDeclaredField(classLoaderClass, fld -> fld.getName().equals("parent"));
+					field = MemberFinder.findOne(
+						FieldCriteria.on(classLoaderClass).name("parent"::equals), classLoaderClass
+					);
 					setAccessible(field, true);
 					parentClassLoaderFields.put(classLoaderClass, field);
 				}
@@ -266,11 +269,20 @@ public class LowLevelObjectsHandler implements Component {
 		Class<?> classLoaderBaseClass = builtinClassLoaderClass;
 		if (builtinClassLoaderClass != null && builtinClassLoaderClass.isAssignableFrom(classLoader.getClass())) {
 			try {
-				Object classLoaderDelegate = unsafe.allocateInstance(classLoaderDelegateClass);
-				Method initMethod = getDeclaredMethod(classLoaderDelegateClass, mth ->
-					mth.getName().equals("init")
+				Method initMethod = MemberFinder.findOne(MethodCriteria.on(classLoaderDelegateClass).name("init"::equals), classLoaderDelegateClass);
+				Collection<Method> methods = MemberFinder.findAll(
+					MethodCriteria.byScanUpTo(
+						cls -> cls.getName().equals(ClassLoader.class.getName())
+					).name(
+						"loadClass"::equals
+					).and().parameterTypesAreAssignableFrom(
+						String.class, boolean.class
+					), futureParent.getClass()
 				);
-				invoke(classLoaderDelegate, initMethod, futureParent);
+				Method loadClassMethod = methods.stream().skip(methods.size() - 1).findFirst().get();
+				MethodHandle methodHandle = MethodHelper.convertToMethodHandle(loadClassMethod);
+				Object classLoaderDelegate = unsafe.allocateInstance(classLoaderDelegateClass);
+				invoke(classLoaderDelegate, initMethod, futureParent, methodHandle);
 				futureParent = (ClassLoader)classLoaderDelegate;
 			} catch (Throwable exc) {
 				throw Throwables.toRuntimeException(exc);
@@ -278,7 +290,9 @@ public class LowLevelObjectsHandler implements Component {
 		} else {
 			classLoaderBaseClass = ClassLoader.class;
 		}
-		Field parentClassLoaderField = getDeclaredField(classLoaderBaseClass, fld -> fld.getName().equals("parent"));
+		Field parentClassLoaderField = MemberFinder.findOne(
+			FieldCriteria.on(classLoaderBaseClass).name("parent"::equals), classLoaderBaseClass
+		);
 		Long offset = unsafe.objectFieldOffset(parentClassLoaderField);
 		final ClassLoader exParent = (ClassLoader)unsafe.getObject(classLoader, offset);
 		unsafe.putObject(classLoader, offset, futureParent);
@@ -303,40 +317,6 @@ public class LowLevelObjectsHandler implements Component {
 	
 	public Object invoke(Object target, Method method, Object... params) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		return methodInvoker.invoke(null, method, target, params);
-	}
-	
-	public Constructor<?> getDeclaredConstructor(Class<?> cls, Predicate<Constructor<?>> memberPredicate) {
-		return getDeclaredMember(cls, this::getDeclaredConstructors, memberPredicate);
-	}
-	
-	public Method getDeclaredMethod(Class<?> cls, Predicate<Method> memberPredicate) {
-		return getDeclaredMember(cls, this::getDeclaredMethods, memberPredicate);
-	}
-	
-	public Field getDeclaredField(Class<?> cls, Predicate<Field> memberPredicate) {
-		return getDeclaredMember(cls, this::getDeclaredFields, memberPredicate);
-	}
-	
-	public <M extends Member> M getDeclaredMember(
-		Class<?> cls,
-		Function<Class<?>, M[]> memberSupplier,
-		Predicate<M> fieldPredicate
-	) {
-		Collection<M> members = getDeclaredMembers(cls, memberSupplier, fieldPredicate);
-		if (members.size() > 1) {
-			throw Throwables.toRuntimeException("More than one member found for class " + cls.getName());
-		}
-		return members.stream().findFirst().orElseGet(() -> null);
-	}
-	
-	public <M extends Member> Collection<M> getDeclaredMembers(Class<?> cls, Function<Class<?>, M[]> memberSupplier, Predicate<M> fieldPredicate) {
-		Collection<M> members = ConcurrentHashMap.newKeySet();
-		for (M member : memberSupplier.apply(cls)) {
-			if (fieldPredicate.test(member)) {
-				members.add(member);
-			}
-		}
-		return members;
 	}
 	
 	public Field[] getDeclaredFields(Class<?> cls)  {

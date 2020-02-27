@@ -70,7 +70,7 @@ public class FieldCriteria extends MemberCriteria<
 		return FieldCriteria.create().scanUpTo(predicate);
 	}
 	
-	public static FieldCriteria byScanUpTo(Object obj) {
+	public static FieldCriteria on(Object obj) {
 		FieldCriteria criteria = FieldCriteria.create();
 		criteria.scanUpToPredicate = (crit, initialClassFrom, currentClass) -> crit.retrieveClass(currentClass).equals(crit.retrieveClass(initialClassFrom));
 		return criteria;

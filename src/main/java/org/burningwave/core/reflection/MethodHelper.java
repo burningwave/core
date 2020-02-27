@@ -151,7 +151,7 @@ public class MethodHelper extends MemberHelper<Method> {
 		});
 	}
 	
-	public MethodHandle convertoToMethodHandle(Method method) {
+	public MethodHandle convertToMethodHandle(Method method) {
 		return convertoToMethodHandleBag(method).getValue();
 	}
 	
