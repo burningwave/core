@@ -267,7 +267,9 @@ public class LowLevelObjectsHandler implements Component {
 		if (builtinClassLoaderClass != null && builtinClassLoaderClass.isAssignableFrom(classLoader.getClass())) {
 			try {
 				Object classLoaderDelegate = unsafe.allocateInstance(classLoaderDelegateClass);
-				Method initMethod = getDeclaredMethod(classLoaderBaseClass, mth -> mth.getName().equals("init"));
+				Method initMethod = getDeclaredMethod(classLoaderDelegateClass, mth ->
+					mth.getName().equals("init")
+				);
 				invoke(classLoaderDelegate, initMethod, futureParent);
 				futureParent = (ClassLoader)classLoaderDelegate;
 			} catch (Throwable exc) {
@@ -328,13 +330,13 @@ public class LowLevelObjectsHandler implements Component {
 	}
 	
 	public <M extends Member> Collection<M> getDeclaredMembers(Class<?> cls, Function<Class<?>, M[]> memberSupplier, Predicate<M> fieldPredicate) {
-		Collection<M> fields = ConcurrentHashMap.newKeySet();
-		for (M field : memberSupplier.apply(cls)) {
-			if (fieldPredicate.test(field)) {
-				fields.add(field);
+		Collection<M> members = ConcurrentHashMap.newKeySet();
+		for (M member : memberSupplier.apply(cls)) {
+			if (fieldPredicate.test(member)) {
+				members.add(member);
 			}
 		}
-		return fields;
+		return members;
 	}
 	
 	public Field[] getDeclaredFields(Class<?> cls)  {
