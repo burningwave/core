@@ -1,8 +1,8 @@
 package org.burningwave.core.jvm;
 
 import static org.burningwave.core.assembler.StaticComponentsContainer.JVMInfo;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 
-import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
@@ -10,7 +10,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 import org.burningwave.core.Component;
 
 import sun.misc.Unsafe;
@@ -29,18 +28,6 @@ abstract class LowLevelObjectsHandlerSpecificElementsInitializer implements Comp
 			logInfo("Exception while retrieving unsafe");
 			throw Throwables.toRuntimeException(exc);
 		}
-		Field modes;
-		try {
-			modes = Lookup.class.getDeclaredField("allowedModes");
-		} catch (NoSuchFieldException | SecurityException exc) {
-			throw Throwables.toRuntimeException(exc);
-		}
-		modes.setAccessible(true);
-		lowLevelObjectsHandler.consulterRetriever = (cls) -> {
-			Lookup consulter = MethodHandles.lookup().in(cls);
-			modes.setInt(consulter, -1);
-			return consulter;
-		};
 	}
 	
 	

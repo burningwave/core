@@ -1,6 +1,9 @@
 package org.burningwave.core.jvm;
 
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
@@ -9,7 +12,18 @@ class LowLevelObjectsHandlerSpecificElementsInitializer4Java8 extends LowLevelOb
 
 	LowLevelObjectsHandlerSpecificElementsInitializer4Java8(LowLevelObjectsHandler lowLevelObjectsHandler) {
 		super(lowLevelObjectsHandler);
-		
+		Field modes;
+		try {
+			modes = Lookup.class.getDeclaredField("allowedModes");
+		} catch (NoSuchFieldException | SecurityException exc) {
+			throw Throwables.toRuntimeException(exc);
+		}
+		modes.setAccessible(true);
+		lowLevelObjectsHandler.consulterRetriever = (cls) -> {
+			Lookup consulter = MethodHandles.lookup().in(cls);
+			modes.setInt(consulter, -1);
+			return consulter;
+		};
 	}
 
 	@Override
