@@ -16,50 +16,50 @@ Below you will find how to include the library in your projects and a simple cod
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>4.14.2</version>
+    <version>4.14.3</version>
 </dependency>
 ```
 
 * **Gradle Groovy**:
 ```
-implementation 'org.burningwave:core:4.14.2'
+implementation 'org.burningwave:core:4.14.3'
 ```
 
 * **Gradle Kotlin**:
 ```
-implementation("org.burningwave:core:4.14.2")
+implementation("org.burningwave:core:4.14.3")
 ```
 
 * **Scala**:
 ```
-libraryDependencies += "org.burningwave" % "core" % "4.14.2"
+libraryDependencies += "org.burningwave" % "core" % "4.14.3"
 ```
 
 * **Apache Ivy**:
 ```
-<dependency org="org.burningwave" name="core" rev="4.14.2" />
+<dependency org="org.burningwave" name="core" rev="4.14.3" />
 ```
 
 * **Groovy Grape**:
 ```
 @Grapes(
-  @Grab(group='org.burningwave', module='core', version='4.14.2')
+  @Grab(group='org.burningwave', module='core', version='4.14.3')
 )
 ```
 
 * **Leiningen**:
 ```
-[org.burningwave/core "4.14.2"]
+[org.burningwave/core "4.14.3"]
 ```
 
 * **Apache Buildr**:
 ```
-'org.burningwave:core:jar:4.14.2'
+'org.burningwave:core:jar:4.14.3'
 ```
 
 * **PURL**:
 ```
-pkg:maven/org.burningwave/core@4.14.2
+pkg:maven/org.burningwave/core@4.14.3
 ```
 
 ## ... And now the code: let's retrieve all classes of the runtime classpath!
