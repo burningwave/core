@@ -1,10 +1,10 @@
-package org.burningwave;
+package org.burningwave.core;
 
 import java.io.PrintStream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.burningwave.ManagedLogger.Repository;
+import org.burningwave.core.ManagedLogger.Repository;
 
 public class SimpleManagedLoggerRepository implements Repository {
 	private static Map<Class<?>, Boolean> loggers = new ConcurrentHashMap<>();

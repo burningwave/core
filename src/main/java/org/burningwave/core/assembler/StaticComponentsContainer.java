@@ -3,15 +3,15 @@ package org.burningwave.core.assembler;
 import java.io.InputStream;
 import java.util.Optional;
 
-import org.burningwave.ManagedLogger.Repository;
-import org.burningwave.SLF4JManagedLoggerRepository;
-import org.burningwave.SimpleManagedLoggerRepository;
+import org.burningwave.core.SLF4JManagedLoggerRepository;
+import org.burningwave.core.SimpleManagedLoggerRepository;
+import org.burningwave.core.ManagedLogger.Repository;
 import org.burningwave.core.iterable.Properties;
 
 public class StaticComponentsContainer {
 	
-	public static final org.burningwave.ManagedLogger.Repository ManagedLoggersRepository;
-	public static final org.burningwave.Throwables Throwables;
+	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
+	public static final org.burningwave.core.Throwables Throwables;
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
 	public static final org.burningwave.core.Cache Cache;
 	public static final org.burningwave.core.Strings Strings;
@@ -27,7 +27,7 @@ public class StaticComponentsContainer {
 	public static final org.burningwave.core.reflection.MethodHelper MethodHelper;
 	
 	static {
-		Throwables = org.burningwave.Throwables.create();
+		Throwables = org.burningwave.core.Throwables.create();
 		GlobalProperties = loadGlobalProperties("burningwave.static.properties");
 		ManagedLoggersRepository = createManagedLoggersRepository(GlobalProperties);
 		try {			
@@ -63,7 +63,7 @@ public class StaticComponentsContainer {
 		return properties;
 	}
 	
-	private static org.burningwave.ManagedLogger.Repository createManagedLoggersRepository(Properties properties) {
+	private static org.burningwave.core.ManagedLogger.Repository createManagedLoggersRepository(Properties properties) {
 		try {
 			String className = (String)GlobalProperties.getProperty(Repository.REPOSITORY_TYPE_CONFIG_KEY);
 			return (Repository)Class.forName(className).getConstructor().newInstance();

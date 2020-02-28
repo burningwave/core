@@ -60,7 +60,7 @@ public abstract class CriteriaWithClassElementsSupplyingSupport<
 		byteCodeForClasses = new ConcurrentHashMap<>();
 	}
 	
-	public C init(Function<Class<?>, Class<?>> classSupplier, Function<Class<?>, ByteBuffer> byteCodeSupplier) {
+	C init(Function<Class<?>, Class<?>> classSupplier, Function<Class<?>, ByteBuffer> byteCodeSupplier) {
 		if (classSupplier != null) {
 			this.classSupplier = classSupplier;
 			this.uploadedClassesMap = new ConcurrentHashMap<>();

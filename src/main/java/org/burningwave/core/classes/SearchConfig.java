@@ -26,27 +26,31 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave;
+package org.burningwave.core.classes;
 
-import org.burningwave.core.Component;
+import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class Throwables implements Component {
+public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 	
-	public Throwables() {}
-	
-	public static Throwables create() {
-		return new Throwables();
+	private SearchConfig() {
+		super();
 	}
 	
-	public RuntimeException toRuntimeException(Object obj) {
-		if (obj instanceof RuntimeException) {
-			return (RuntimeException)obj;
-		} else if (obj instanceof String) {
-			throw new RuntimeException((String)obj);
-		} else {
-			logError("", (Throwable)obj);
-			return new RuntimeException((Throwable)obj);
-		}
+	public static SearchConfig create() {
+		return new SearchConfig();
+	}
+
+	public static CacheableSearchConfig forPaths(Collection<String> paths) {
+		CacheableSearchConfig criteria = new CacheableSearchConfig();
+		criteria.paths.addAll(paths);
+		criteria.useSharedClassLoaderAsMain = true;
+		return criteria;
 	}
 	
+	public static CacheableSearchConfig forPaths(String... paths) {
+		return SearchConfig.forPaths(Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
+	}
 }

@@ -8,10 +8,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
-import org.burningwave.core.classes.hunter.SearchConfig;
+import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.ClassFileScanConfig;
-import org.burningwave.core.classes.hunter.CacheableSearchConfig;
 import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
 

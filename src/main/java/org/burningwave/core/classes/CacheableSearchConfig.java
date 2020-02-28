@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes.hunter;
+package org.burningwave.core.classes;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -34,7 +34,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.Strings;
-import org.burningwave.core.classes.Classes;
 import org.burningwave.core.io.Streams;
 
 public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfig> {

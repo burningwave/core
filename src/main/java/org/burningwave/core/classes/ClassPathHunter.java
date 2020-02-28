@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes.hunter;
+package org.burningwave.core.classes;
 
 
 import java.util.Collection;
@@ -35,9 +35,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.burningwave.core.classes.ClassCriteria;
-import org.burningwave.core.classes.Classes;
-import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.concurrent.ParallelTasksManager;
 import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemHelper;
@@ -148,7 +145,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		super.close();
 	}
 	
-	public static class SearchContext extends org.burningwave.core.classes.hunter.SearchContext<Collection<Class<?>>> {
+	public static class SearchContext extends org.burningwave.core.classes.SearchContext<Collection<Class<?>>> {
 		ParallelTasksManager tasksManager;
 		
 		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
@@ -188,7 +185,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		}
 	}
 	
-	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<Collection<Class<?>>> {
+	public static class SearchResult extends org.burningwave.core.classes.SearchResult<Collection<Class<?>>> {
 		Collection<FileSystemItem> classPaths;
 		
 		public SearchResult(SearchContext context) {

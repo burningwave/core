@@ -8,11 +8,11 @@ import java.util.Date;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.bean.Complex;
+import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.classes.MethodCriteria;
-import org.burningwave.core.classes.hunter.CacheableSearchConfig;
-import org.burningwave.core.classes.hunter.SearchConfig;
+import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.PathHelper;
 import org.junit.jupiter.api.Test;
 

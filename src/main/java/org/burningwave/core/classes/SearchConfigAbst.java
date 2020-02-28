@@ -26,15 +26,13 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes.hunter;
+package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 
 import java.lang.reflect.Constructor;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.classes.ClassCriteria;
-import org.burningwave.core.classes.Classes;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("unchecked")

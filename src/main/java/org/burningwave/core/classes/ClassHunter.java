@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes.hunter;
+package org.burningwave.core.classes;
 
 import java.lang.reflect.Member;
 import java.util.Collection;
@@ -40,10 +40,6 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.Criteria;
 import org.burningwave.core.Criteria.TestContext;
-import org.burningwave.core.classes.ClassCriteria;
-import org.burningwave.core.classes.Classes;
-import org.burningwave.core.classes.JavaClass;
-import org.burningwave.core.classes.MemberCriteria;
 import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemScanner;
@@ -156,7 +152,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		);
 	}
 	
-	public static class SearchContext extends org.burningwave.core.classes.hunter.SearchContext<Class<?>> {
+	public static class SearchContext extends org.burningwave.core.classes.SearchContext<Class<?>> {
 		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound;
 		private Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap;
 		
@@ -206,7 +202,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		}
 	}
 
-	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<Class<?>> {
+	public static class SearchResult extends org.burningwave.core.classes.SearchResult<Class<?>> {
 		SearchResult(SearchContext context) {
 			super(context);
 		}

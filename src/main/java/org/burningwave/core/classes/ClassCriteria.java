@@ -62,7 +62,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		return new ClassCriteria();
 	}
 	
-	public void init(Classes.Loaders classesLoaders, ClassLoader classSupplier) {
+	void init(Classes.Loaders classesLoaders, ClassLoader classSupplier) {
 		this.classSupplier = cls -> {
 			try {
 				return classesLoaders.loadOrUploadClass(cls, classSupplier);

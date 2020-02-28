@@ -26,15 +26,12 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes.hunter;
+package org.burningwave.core.classes;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.burningwave.core.classes.ClassCriteria;
-import org.burningwave.core.classes.Classes;
-import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.FileSystemScanner.Scan;
@@ -114,7 +111,7 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 		context.addItemFound(scanItemContext.getBasePathAsString(), scanItemContext.getScannedItem().getAbsolutePath(), javaClass);
 	}
 		
-	public static class SearchResult extends org.burningwave.core.classes.hunter.SearchResult<JavaClass> {
+	public static class SearchResult extends org.burningwave.core.classes.SearchResult<JavaClass> {
 
 		public SearchResult(SearchContext<JavaClass> context) {
 			super(context);

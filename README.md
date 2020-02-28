@@ -16,50 +16,50 @@ Below you will find how to include the library in your projects and a simple cod
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>4.14.5</version>
+    <version>5.0.0</version>
 </dependency>
 ```
 
 * **Gradle Groovy**:
 ```
-implementation 'org.burningwave:core:4.14.5'
+implementation 'org.burningwave:core:5.0.0'
 ```
 
 * **Gradle Kotlin**:
 ```
-implementation("org.burningwave:core:4.14.5")
+implementation("org.burningwave:core:5.0.0")
 ```
 
 * **Scala**:
 ```
-libraryDependencies += "org.burningwave" % "core" % "4.14.5"
+libraryDependencies += "org.burningwave" % "core" % "5.0.0"
 ```
 
 * **Apache Ivy**:
 ```
-<dependency org="org.burningwave" name="core" rev="4.14.5" />
+<dependency org="org.burningwave" name="core" rev="5.0.0" />
 ```
 
 * **Groovy Grape**:
 ```
 @Grapes(
-  @Grab(group='org.burningwave', module='core', version='4.14.5')
+  @Grab(group='org.burningwave', module='core', version='5.0.0')
 )
 ```
 
 * **Leiningen**:
 ```
-[org.burningwave/core "4.14.5"]
+[org.burningwave/core "5.0.0"]
 ```
 
 * **Apache Buildr**:
 ```
-'org.burningwave:core:jar:4.14.5'
+'org.burningwave:core:jar:5.0.0'
 ```
 
 * **PURL**:
 ```
-pkg:maven/org.burningwave/core@4.14.5
+pkg:maven/org.burningwave/core@5.0.0
 ```
 
 ## ... And now the code: let's retrieve all classes of the runtime classpath!
@@ -68,10 +68,10 @@ import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.hunter.CacheableSearchConfig;
-import org.burningwave.core.classes.hunter.ClassHunter;
-import org.burningwave.core.classes.hunter.ClassHunter.SearchResult;
-import org.burningwave.core.classes.hunter.SearchConfig;
+import org.burningwave.core.classes.CacheableSearchConfig;
+import org.burningwave.core.classes.ClassHunter;
+import org.burningwave.core.classes.ClassHunter.SearchResult;
+import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.PathHelper;
 
 public class Finder {
