@@ -181,7 +181,7 @@ public class FunctionalInterfaceFactory implements Component {
 		ThrowingSupplier<Map.Entry<Class<?>, String>, Throwable> functionalInterfaceBagSupplier,
 		Function<MethodHandle, MethodType> functionalInterfaceSignatureSupplier
 	) throws Throwable {
-		Map.Entry<Lookup, MethodHandle> methodHandleBag = MethodHelper.convertoToMethodHandleBag(targetMethod);
+		Map.Entry<Lookup, MethodHandle> methodHandleBag = MethodHelper.convertToMethodHandleBag(targetMethod);
 		MethodHandle methodHandle = methodHandleBag.getValue();
 		Map.Entry<Class<?>, String> functionalInterfaceBag = functionalInterfaceBagSupplier.get();
 		return (F)LambdaMetafactory.metafactory(

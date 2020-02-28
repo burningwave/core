@@ -152,10 +152,10 @@ public class MethodHelper extends MemberHelper<Method> {
 	}
 	
 	public MethodHandle convertToMethodHandle(Method method) {
-		return convertoToMethodHandleBag(method).getValue();
+		return convertToMethodHandleBag(method).getValue();
 	}
 	
-	public Map.Entry<Lookup, MethodHandle> convertoToMethodHandleBag(Method method) {
+	public Map.Entry<Lookup, MethodHandle> convertToMethodHandleBag(Method method) {
 		try {
 			Class<?> methodDeclaringClass = method.getDeclaringClass();
 			MethodHandles.Lookup consulter = LowLevelObjectsHandler.getConsulter(methodDeclaringClass);

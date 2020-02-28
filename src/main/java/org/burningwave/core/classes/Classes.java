@@ -457,7 +457,7 @@ public class Classes implements Component {
 				),
 				classLoader
 			).stream().findFirst().orElse(null);
-			return MethodHelper.convertoToMethodHandleBag(method).getValue();
+			return MethodHelper.convertToMethodHandleBag(method).getValue();
 		}
 		
 		public MethodHandle getDefineClassMethod(ClassLoader classLoader) {
@@ -479,7 +479,7 @@ public class Classes implements Component {
 				).and().returnType((cls) -> cls.getName().equals(Class.class.getName())),
 				classLoader
 			).stream().findFirst().orElse(null);
-			return MethodHelper.convertoToMethodHandleBag(method).getValue();
+			return MethodHelper.convertToMethodHandleBag(method).getValue();
 		}
 		
 		private MethodHandle getMethod(ClassLoader classLoader, String key, Supplier<MethodHandle> methodSupplier) {
