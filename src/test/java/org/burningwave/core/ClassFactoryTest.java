@@ -1,9 +1,11 @@
 package org.burningwave.core;
 
+import java.util.ArrayList;
+
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.bean.Complex;
 import org.burningwave.core.bean.PojoInterface;
-import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
 
 public class ClassFactoryTest extends BaseTest {
@@ -42,7 +44,7 @@ public class ClassFactoryTest extends BaseTest {
 	public void getOrBuildPojoClassTestTwo() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		Class<?> cls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
-			getComponentSupplier().getMemoryClassLoader(), this.getClass().getPackage().getName() + ".PojoImpl",
+			getComponentSupplier().getMemoryClassLoader(), this.getClass().getPackage().getName() + ".TestTwoPojoImpl",
 			Complex.Data.Item.class,
 			PojoInterface.class
 		);
@@ -72,12 +74,20 @@ public class ClassFactoryTest extends BaseTest {
 	@Test
 	public void getOrBuildPojoClassTestThree() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> 
-			componentSupplier.getClassFactory().getOrBuildPojoSubType(
-				getComponentSupplier().getMemoryClassLoader(), this.getClass().getPackage().getName() + ".PojoImpl", 
-				FileSystemItem.class,
+		testNotNull(() -> {
+			Class<?> virtualClass = componentSupplier.getClassFactory().getOrBuildPojoSubType(
+				getComponentSupplier().getMemoryClassLoader(), this.getClass().getPackage().getName() + ".TestThreePojoImpl", 
+				Service.class,
 				PojoInterface.class
-			)
+			);
+			Virtual virtual = (Virtual)virtualClass.newInstance();
+			virtual.invokeDirect("setList", new ArrayList<>());
+			virtual.invoke("setList", new ArrayList<>());
+			virtual.invokeDirect("setList", new ArrayList<>());
+			virtual.invoke("consume", new Integer(1));
+			virtual.invokeDirect("consume", new Integer(1));
+			return virtual;
+			}
 		);
 	}
 }

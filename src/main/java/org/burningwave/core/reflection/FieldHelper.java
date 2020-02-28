@@ -29,16 +29,10 @@
 package org.burningwave.core.reflection;
 
 import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentsContainer.MemberFinder;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 
 import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.Optional;
-
 import org.burningwave.core.classes.FieldCriteria;
-
 
 public class FieldHelper extends MemberHelper<Field> {
 
@@ -61,26 +55,21 @@ public class FieldHelper extends MemberHelper<Field> {
 		boolean cacheField
 	) {
 		String cacheKey = getCacheKey(target, "equals " + fieldName, (Object[])null);
-		Collection<Field> members = Cache.uniqueKeyForFields.get(cacheKey);
-		if (members == null) {
-			members = MemberFinder.findAll(
+		Field member = Cache.uniqueKeyForField.get(cacheKey);
+		if (member == null) {
+			member = MemberFinder.findOne(
 				FieldCriteria.forName(
 					fieldName::equals
 				),
-				target
+				target				
 			);
-			Optional.ofNullable(members.stream().findFirst().get()).orElseThrow(() ->
-				Throwables.toRuntimeException("Field \"" + fieldName
-					+ "\" not found in any class of " + Classes.retrieveFrom(target).getName()
-					+ " hierarchy"
-				)
-			).setAccessible(true);
+			member.setAccessible(true);
 			if (cacheField) {
-				final Collection<Field> toUpload = members;
-				Cache.uniqueKeyForFields.upload(cacheKey, () -> toUpload);
+				final Field toUpload = member;
+				Cache.uniqueKeyForField.upload(cacheKey, () -> toUpload);
 			}
 		}
-		return members.stream().findFirst().get();
+		return member;
 	}
 
 }

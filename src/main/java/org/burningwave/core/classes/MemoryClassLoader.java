@@ -127,7 +127,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
 	public boolean hasPackageBeenDefined(String packageName) {
 		if (Strings.isNotEmpty(packageName)) {
-			return classesLoaders.retrievePackage(this, packageName) != null;
+			return classesLoaders.retrieveLoadedPackage(this, packageName) != null;
 		} else {
 			return true;
 		}
@@ -140,14 +140,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	) throws IllegalArgumentException {
     	Package pkg = null;
     	if (Strings.isNotEmpty(packageName)) {
-    		pkg = classesLoaders.retrievePackage(this, packageName);
+    		pkg = classesLoaders.retrieveLoadedPackage(this, packageName);
     		if (pkg == null) {
     			try {
     				pkg = super.definePackage(packageName, specTitle, specVersion, specVendor, implTitle,
     		    			implVersion, implVendor, sealBase);
     			} catch (IllegalArgumentException exc) {
     				logWarn("Package " + packageName + " already defined");
-    				pkg = classesLoaders.retrievePackage(this, packageName);
+    				pkg = classesLoaders.retrieveLoadedPackage(this, packageName);
     			}
     		}
     	}
@@ -159,7 +159,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			String pckgName = cls.getName().substring(
 		    	0, cls.getName().lastIndexOf(".")
 		    );
-		    if (classesLoaders.retrievePackage(this, pckgName) == null) {
+		    if (classesLoaders.retrieveLoadedPackage(this, pckgName) == null) {
 		    	definePackage(pckgName, null, null, null, null, null, null, null);
 			}	
 		}

@@ -37,8 +37,16 @@ public interface Virtual extends Component {
 		return MethodHelper.invoke(this, methodName, parameters);
 	}
 	
+	default <T> T invokeDirect(String methodName, Object... parameters) {
+		return MethodHelper.invokeDirect(this, methodName, parameters);
+	}
+	
 	default <T> T invokeWithoutCachingMethod(String methodName, Object... parameters) {
 		return MethodHelper.invoke(this, methodName, false, parameters);
+	}
+	
+	default <T> T invokeDirectWithoutCachingMethod(String methodName, Object... parameters) {
+		return MethodHelper.invokeDirect(this, methodName, false, parameters);
 	}
 
 }

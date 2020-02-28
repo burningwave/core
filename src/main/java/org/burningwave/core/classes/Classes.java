@@ -681,7 +681,7 @@ public class Classes implements Component {
 	    	}
 	    }
 		
-		public Class<?> defineClass(ClassLoader classLoader, JavaClass javaClass) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
+		public Class<?> upload(ClassLoader classLoader, JavaClass javaClass) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
 			Class<?> definedClass = defineClass(classLoader, getDefineClassMethod(classLoader), javaClass.getName(), javaClass.getByteCode());
 			definePackageFor(definedClass, classLoader, getDefinePackageMethod(classLoader));
 			return definedClass;
@@ -716,7 +716,7 @@ public class Classes implements Component {
 	    				implVersion, implVendor, sealBase);
 	    		} catch (IllegalArgumentException exc) {
 	    			logWarn("Package " + name + " already defined");
-	    			return retrievePackage(classLoader, name);
+	    			return retrieveLoadedPackage(classLoader, name);
 	    		}
 			});
 	    }
@@ -729,7 +729,7 @@ public class Classes implements Component {
 				String pckgName = cls.getName().substring(
 			    	0, cls.getName().lastIndexOf(".")
 			    );
-			    Package pkg = retrievePackage(classLoader, pckgName);
+			    Package pkg = retrieveLoadedPackage(classLoader, pckgName);
 			    if (pkg == null) {
 			    	pkg = definePackage(classLoader, definePackageMethod, pckgName, null, null, null, null, null, null, null);
 				}	
@@ -772,13 +772,13 @@ public class Classes implements Component {
 			return classesFound;
 		}
 		
-		public Package retrievePackage(ClassLoader classLoader, String packageName) {
+		public Package retrieveLoadedPackage(ClassLoader classLoader, String packageName) {
 			Map<String, ?> packages = retrieveLoadedPackages(classLoader);
 			Object packageToFind = packages.get(packageName);
 			if (packageToFind != null) {
 				return retrieveLoadedPackage(classLoader, packageToFind, packageName);
 			} else if (classLoader.getParent() != null) {
-				return retrievePackage(classLoader.getParent(), packageName);
+				return retrieveLoadedPackage(classLoader.getParent(), packageName);
 			} else {
 				return null;
 			}

@@ -43,6 +43,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
 import org.burningwave.core.classes.MethodCriteria;
@@ -122,8 +123,37 @@ public class MethodHelper extends MemberHelper<Method> {
 
 	@SuppressWarnings("unchecked")
 	public <T> T invoke(Object target, String methodName, boolean cacheMethod, Object... arguments) {
-		return ThrowingSupplier.get(() -> 
-			(T)findOneAndMakeItAccessible(target, methodName, cacheMethod, arguments).invoke(target, arguments)
+		return ThrowingSupplier.get(() -> {
+			Method method = findOneAndMakeItAccessible(target, methodName, cacheMethod, arguments);
+			return (T)method.invoke(Modifier.isStatic(method.getModifiers()) ? null : target, arguments);
+		});
+	}
+	
+	public <T> T invokeDirect(Object target, String methodName, Object... arguments) {
+		return invokeDirect(target, methodName, true, arguments);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T> T invokeDirect(Object target, String methodName, boolean cacheMethod, Object... arguments) {
+		Method method = findOneAndMakeItAccessible(target, methodName, arguments);
+		final AtomicReference<MethodHandle> methodHandleWrapper = new AtomicReference<>(Cache.uniqueKeyForMethodHandle.get(method));
+		if (methodHandleWrapper.get() == null) {
+			methodHandleWrapper.set(
+				convertToMethodHandle(
+						method
+				)
+			);
+			if (cacheMethod) {
+				Cache.uniqueKeyForMethodHandle.upload(method, methodHandleWrapper.get());
+			}
+		}
+		return ThrowingSupplier.get(() -> {
+				if (Modifier.isStatic(method.getModifiers())) {
+					return (T)methodHandleWrapper.get().invokeWithArguments(arguments);
+				} else {
+					return (T)methodHandleWrapper.get().bindTo(target).invokeWithArguments(arguments);
+				}
+			}
 		);
 	}
 	
@@ -145,7 +175,10 @@ public class MethodHelper extends MemberHelper<Method> {
 			}			
 			Collection<T> results = new ArrayList<>();
 			for (Method member : members) {
-				results.add((T)member.invoke(target, arguments));
+				results.add((T)member.invoke(
+					Modifier.isStatic(member.getModifiers()) ? null : target,
+					arguments
+				));
 			}			
 			return results;
 		});

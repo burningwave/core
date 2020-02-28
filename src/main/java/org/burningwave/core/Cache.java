@@ -32,6 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentsContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -57,8 +58,9 @@ public class Cache {
 	public final ObjectAndPathForResources<ClassLoader, Method[]> classLoaderForMethods;
 	public final ObjectAndPathForResources<ClassLoader, Constructor<?>[]> classLoaderForConstructors;
 	public final ObjectForObject<Method, Object> bindedFunctionalInterfaces;
-	public final PathForResources<Collection<Field>> uniqueKeyForFields;
+	public final PathForResources<Field> uniqueKeyForField;
 	public final PathForResources<Collection<Method>> uniqueKeyForMethods;
+	public final ObjectForObject<Method, MethodHandle> uniqueKeyForMethodHandle;
 	
 	private Cache(Properties properties) {
 		if ("sync".equalsIgnoreCase((String)properties.getProperty(TYPE_CONFIG_KEY))) {
@@ -69,8 +71,9 @@ public class Cache {
 			classLoaderForMethods = new SyncObjectAndPathForResources<>(1L, methods -> methods);
 			classLoaderForConstructors = new SyncObjectAndPathForResources<>(1L, constructors -> constructors);
 			bindedFunctionalInterfaces = new SyncObjectForObject<>();
-			uniqueKeyForFields = new SyncPathForResources<>(1L, fields -> fields);
-			uniqueKeyForMethods = new SyncPathForResources<>(1L, fields -> fields);
+			uniqueKeyForField = new SyncPathForResources<>(1L, field -> field);
+			uniqueKeyForMethods = new SyncPathForResources<>(1L, methods -> methods);
+			uniqueKeyForMethodHandle = new SyncObjectForObject<>();
 		} else {
 			pathForContents = new AsyncPathForResources<>(1L, Streams::shareContent);
 			pathForFileSystemItems = new AsyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
@@ -79,8 +82,9 @@ public class Cache {
 			classLoaderForMethods = new AsyncObjectAndPathForResources<>(1L, methods -> methods);
 			classLoaderForConstructors = new AsyncObjectAndPathForResources<>(1L, constructors -> constructors);
 			bindedFunctionalInterfaces = new AsyncObjectForObject<>();
-			uniqueKeyForFields = new AsyncPathForResources<>(1L, fields -> fields);
-			uniqueKeyForMethods = new AsyncPathForResources<>(1L, fields -> fields);
+			uniqueKeyForField = new AsyncPathForResources<>(1L, fields -> fields);
+			uniqueKeyForMethods = new AsyncPathForResources<>(1L, methods -> methods);
+			uniqueKeyForMethodHandle = new AsyncObjectForObject<>();
 		}	
 	}
 	
