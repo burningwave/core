@@ -119,8 +119,7 @@ public class FileSystemItem implements ManagedLogger {
 				absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
 			}
 			if (!exists) {
-				Cache.pathForContents.remove(absolutePath.getKey());
-				Cache.pathForFileSystemItems.remove(absolutePath.getKey());
+				removeFromCache(this);
 			}
 		}
 		return absolutePath.getValue();
@@ -325,8 +324,7 @@ public class FileSystemItem implements ManagedLogger {
 	public synchronized void refresh() {
 		if (allChildren != null) {
 			for (FileSystemItem child : allChildren) {
-				Cache.pathForContents.remove(child.getAbsolutePath());
-				Cache.pathForFileSystemItems.remove(child.getAbsolutePath());
+				removeFromCache(child);
 			}
 			allChildren.clear();
 			allChildren = null;
@@ -336,8 +334,7 @@ public class FileSystemItem implements ManagedLogger {
 			}			
 		} else if (children != null) {
 			for (FileSystemItem child : children) {
-				Cache.pathForContents.remove(child.getAbsolutePath());
-				Cache.pathForFileSystemItems.remove(child.getAbsolutePath());
+				removeFromCache(child);
 			}
 			children.clear();
 			children = null;
@@ -347,6 +344,12 @@ public class FileSystemItem implements ManagedLogger {
 		absolutePath.setValue(null);
 		parent = null;
 		getConventionedAbsolutePath();		
+	}
+
+	private void removeFromCache(FileSystemItem fileSystemItem) {
+		Cache.pathForContents.remove(fileSystemItem.getAbsolutePath());
+		Cache.pathForFileSystemItems.remove(fileSystemItem.getAbsolutePath());
+		Cache.pathForZipFiles.remove(fileSystemItem.getAbsolutePath());
 	}
 	
 	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getChildren(Predicate<FileSystemItem> filter) {
@@ -453,9 +456,9 @@ public class FileSystemItem implements ManagedLogger {
 			}
 			final FileSystemItem parentContainer = parentContainerTemp;
 			try (IterableZipContainer zipInputStream = IterableZipContainer.create(parentContainer.getAbsolutePath(), parentContainer.toByteBuffer())) {					
-				Set<FileSystemItem> allChildrenTemp = ConcurrentHashMap.newKeySet();
+				Set<FileSystemItem> allChildren = ConcurrentHashMap.newKeySet();
 				zipInputStream.findAllAndConvert(
-					() -> allChildrenTemp,
+					() -> allChildren,
 					zipEntryPredicate,
 					zEntry -> {
 						FileSystemItem fileSystemItem = FileSystemItem.ofPath(
@@ -470,28 +473,28 @@ public class FileSystemItem implements ManagedLogger {
 						if (fileSystemItem.isArchive()) {
 							Optional.ofNullable(
 								fileSystemItem.getAllChildren()
-							).ifPresent(allChildren ->
-								allChildrenTemp.addAll(allChildren)
+							).ifPresent(fileSystemItemChildrens ->
+								allChildren.addAll(fileSystemItemChildrens)
 							);
 						}
 						return fileSystemItem;
 					},
 					zEntry -> true
 				);
-				return allChildrenTemp;
+				return allChildren;
 			}
 		} else if (isFolder()) {
 			logDebug("Retrieving all children of " + absolutePath.getKey());
 			Set<FileSystemItem> children = getChildren();
 			if (children != null) {
-				Set<FileSystemItem> allChildrenTemp = ConcurrentHashMap.newKeySet();
-				allChildrenTemp.addAll(children);
+				Set<FileSystemItem> allChildren = ConcurrentHashMap.newKeySet();
+				allChildren.addAll(children);
 				children.forEach(
 					child -> {
-						Optional.ofNullable(child.getAllChildren()).map(allChildrenOfChild -> allChildrenTemp.addAll(allChildrenOfChild));
+						Optional.ofNullable(child.getAllChildren()).map(allChildrenOfChild -> allChildren.addAll(allChildrenOfChild));
 					}
 				);
-				return allChildrenTemp;
+				return allChildren;
 			}
 		}
 		return null;
