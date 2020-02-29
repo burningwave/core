@@ -313,7 +313,7 @@ public class Classes implements Component {
 	}
 	
 	public Field[] getDeclaredFields(Class<?> cls)  {
-		return Cache.classLoaderForFields.getOrDefault(
+		return Cache.classLoaderForFields.getOrUploadIfAbsent(
 			getClassLoader(cls), cls.getName().replace(".", "/"),
 			() -> LowLevelObjectsHandler.getDeclaredFields(cls)
 		);
@@ -330,7 +330,7 @@ public class Classes implements Component {
 	}
 	
 	public Method[] getDeclaredMethods(Class<?> cls)  {
-		return Cache.classLoaderForMethods.getOrDefault(
+		return Cache.classLoaderForMethods.getOrUploadIfAbsent(
 			getClassLoader(cls), cls.getName().replace(".", "/"),
 			() -> LowLevelObjectsHandler.getDeclaredMethods(cls)
 		);
@@ -347,7 +347,7 @@ public class Classes implements Component {
 	}
 	
 	public Constructor<?>[] getDeclaredConstructors(Class<?> cls)  {
-		return Cache.classLoaderForConstructors.getOrDefault(
+		return Cache.classLoaderForConstructors.getOrUploadIfAbsent(
 			getClassLoader(cls), cls.getName().replace(".", "/"),
 			() -> LowLevelObjectsHandler.getDeclaredConstructors(cls)
 		);

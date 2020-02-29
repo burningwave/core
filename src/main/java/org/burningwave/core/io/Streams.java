@@ -185,7 +185,7 @@ public class Streams implements Component {
 				//ManagedLogger.Repository.logDebug(this.getClass(), "Class " + getName() + " WRITTEN to "+ Strings.Paths.clean(fileClass.getAbsolutePath()));
 			}
 		});
-		Cache.pathForContents.getOrDefault(
+		Cache.pathForContents.getOrUploadIfAbsent(
 			file.getAbsolutePath(), () ->
 			content
 		);		

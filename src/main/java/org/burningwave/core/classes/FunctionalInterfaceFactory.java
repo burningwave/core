@@ -77,7 +77,7 @@ public class FunctionalInterfaceFactory implements Component {
 
 	@SuppressWarnings("unchecked")
 	protected <F> F getBindedRunnable(Method targetMethod) {
-		return (F) Cache.bindedFunctionalInterfaces.getOrDefault(targetMethod, () -> 
+		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(targetMethod, () -> 
 			ThrowingSupplier.get(() ->
 				bindTo(
 					targetMethod, () -> 
@@ -93,7 +93,7 @@ public class FunctionalInterfaceFactory implements Component {
 
 	@SuppressWarnings("unchecked")
 	protected <F> F getBindedSupplier(Method targetMethod) {
-		return (F) Cache.bindedFunctionalInterfaces.getOrDefault(targetMethod, () -> 
+		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(targetMethod, () -> 
 			ThrowingSupplier.get(() -> 
 				bindTo(
 					targetMethod, () -> 
@@ -109,7 +109,7 @@ public class FunctionalInterfaceFactory implements Component {
 
 	@SuppressWarnings("unchecked")
 	protected <F> F getBindedFunction(Method targetMethod) {
-		return (F) Cache.bindedFunctionalInterfaces.getOrDefault(targetMethod, () -> 
+		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(targetMethod, () -> 
 			ThrowingSupplier.get(() -> bindTo(
 				targetMethod, () -> 
 					new AbstractMap.SimpleEntry<>(
@@ -131,7 +131,7 @@ public class FunctionalInterfaceFactory implements Component {
 
 	@SuppressWarnings("unchecked")
 	protected <F> F getBindedConsumer(Method targetMethod) {
-		return (F) Cache.bindedFunctionalInterfaces.getOrDefault(targetMethod, () -> 
+		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(targetMethod, () -> 
 			ThrowingSupplier.get(() ->
 				bindTo(
 					targetMethod, () -> 
@@ -155,7 +155,7 @@ public class FunctionalInterfaceFactory implements Component {
 
 	@SuppressWarnings("unchecked")
 	protected <F> F getBindedPredicate(Method targetMethod) {
-		return (F) Cache.bindedFunctionalInterfaces.getOrDefault(targetMethod, () -> 
+		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(targetMethod, () -> 
 			ThrowingSupplier.get(() -> bindTo(
 					targetMethod, () -> 
 					new AbstractMap.SimpleEntry<>(

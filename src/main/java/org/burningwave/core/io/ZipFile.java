@@ -61,7 +61,7 @@ class ZipFile implements IterableZipContainer {
 		if (!file.exists()) {
 			File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(toString());
 			FileSystemItem fileSystemItem = Streams.store(temporaryFolder.getAbsolutePath() + "/" + file.getName(), content);
-			Cache.pathForContents.getOrDefault(absolutePath, () -> fileSystemItem.toByteBuffer());
+			Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> fileSystemItem.toByteBuffer());
 			file = new File(fileSystemItem.getAbsolutePath());
 		}
 		entries = ConcurrentHashMap.newKeySet();
@@ -184,7 +184,7 @@ class ZipFile implements IterableZipContainer {
 			this.zipMemoryContainer = zipMemoryContainer;
 			this.name = entryName;
 			this.absolutePath = Paths.clean(zipMemoryContainer.getAbsolutePath() + "/" + entryName);
-			Cache.pathForContents.getOrDefault(getAbsolutePath(), zipEntryContentSupplier);
+			Cache.pathForContents.getOrUploadIfAbsent(getAbsolutePath(), zipEntryContentSupplier);
 		}
 
 		@Override

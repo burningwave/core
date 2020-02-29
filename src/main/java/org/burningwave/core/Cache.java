@@ -94,7 +94,7 @@ public class Cache {
 	
 	public static interface ObjectForObject<T, R> {
 		
-		public R getOrDefault(T object, Supplier<R> resourceSupplier);
+		public R getOrUploadIfAbsent(T object, Supplier<R> resourceSupplier);
 		
 		public R get(T object);
 		
@@ -113,7 +113,7 @@ public class Cache {
 			}
 			
 			@Override
-			public R getOrDefault(T object, Supplier<R> resourceSupplier) {
+			public R getOrUploadIfAbsent(T object, Supplier<R> resourceSupplier) {
 				R resource = resources.get(object);
 				if (resource == null) {
 					synchronized(Classes.getId(resources,object)) {
@@ -151,7 +151,7 @@ public class Cache {
 	
 	public static interface ObjectAndPathForResources<T, R> {
 		
-		public R getOrDefault(T object, String path, Supplier<R> resourceSupplier);
+		public R getOrUploadIfAbsent(T object, String path, Supplier<R> resourceSupplier);
 
 		public PathForResources<R> remove(T object);
 		
@@ -170,7 +170,7 @@ public class Cache {
 			}
 
 			@Override
-			public R getOrDefault(T object, String path, Supplier<R> resourceSupplier) {
+			public R getOrUploadIfAbsent(T object, String path, Supplier<R> resourceSupplier) {
 				PathForResources<R> pathForResources = resources.get(object);
 				if (pathForResources == null) {
 					synchronized (Classes.getId(resources, object)) {
@@ -181,7 +181,7 @@ public class Cache {
 						}					
 					}
 				}
-				return pathForResources.getOrDefault(path, resourceSupplier);
+				return pathForResources.getOrUploadIfAbsent(path, resourceSupplier);
 			}
 			
 			@Override
@@ -220,7 +220,7 @@ public class Cache {
 
 		R upload(String path, Supplier<R> resourceSupplier);
 
-		R getOrDefault(String path, Supplier<R> resourceSupplier);
+		R getOrUploadIfAbsent(String path, Supplier<R> resourceSupplier);
 
 		R get(String path);
 
@@ -251,18 +251,18 @@ public class Cache {
 			}
 			
 			@Override
-			public R getOrDefault(String path, Supplier<R> resourceSupplier) {
+			public R getOrUploadIfAbsent(String path, Supplier<R> resourceSupplier) {
 				path = Paths.clean(path);
 				Long occurences = path.chars().filter(ch -> ch == '/').count();
 				Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
 				Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
 				Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
-				return getOrDefault(nestedPartition, path, resourceSupplier);
+				return getOrUploadIfAbsent(nestedPartition, path, resourceSupplier);
 			}
 			
 			@Override
 			public R get(String path) {
-				return getOrDefault(path, null);
+				return getOrUploadIfAbsent(path, null);
 			}
 			
 			@Override
@@ -290,7 +290,7 @@ public class Cache {
 				return count;
 			}
 			
-			abstract R getOrDefault(
+			abstract R getOrUploadIfAbsent(
 				Map<String, R> nestedPartition,
 				String path,
 				Supplier<R> resourceSupplier
@@ -334,7 +334,7 @@ public class Cache {
 		}
 		
 		@Override
-		R getOrDefault(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
+		R getOrUploadIfAbsent(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
 			R resource = loadedResources.get(path);
 			if (resource == null) {
 				synchronized (Classes.getId(loadedResources, path)) {
@@ -414,7 +414,7 @@ public class Cache {
 		}
 		
 		@Override
-		R getOrDefault(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
+		R getOrUploadIfAbsent(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
 			R resource = loadedResources.get(path);
 			if (resource == null) {
 				synchronized (mutexPrefixName + "_" + path) {

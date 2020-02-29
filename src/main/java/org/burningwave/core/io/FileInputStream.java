@@ -86,7 +86,7 @@ public class FileInputStream extends java.io.FileInputStream implements Componen
 	}
 
 	public ByteBuffer toByteBuffer() {
-		return Cache.pathForContents.getOrDefault(
+		return Cache.pathForContents.getOrUploadIfAbsent(
 			file.getAbsolutePath(), () -> 
 			Streams.toByteBuffer(this)
 		);

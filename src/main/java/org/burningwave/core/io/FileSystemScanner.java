@@ -192,7 +192,7 @@ public class FileSystemScanner implements Component {
 			
 			@Override
 			public ByteBuffer toByteBuffer() {
-				return Cache.pathForContents.getOrDefault(
+				return Cache.pathForContents.getOrUploadIfAbsent(
 					Paths.clean(file.getAbsolutePath()), () -> {
 					try (FileInputStream fileInputStream = FileInputStream.create(file)) {
 						return fileInputStream.toByteBuffer();
