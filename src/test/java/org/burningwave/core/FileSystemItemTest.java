@@ -103,8 +103,7 @@ public class FileSystemItemTest extends BaseTest {
 		).getAllChildren());
 	}
 	
-	//@Test
-	@Tag("Heavy")
+	@Test
 	public void readTestEleven() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
@@ -132,6 +131,20 @@ public class FileSystemItemTest extends BaseTest {
 			basePath + "/libs-for-test.zip"
 		).getAllChildren((fileSystemItem) -> fileSystemItem.getName().endsWith(".class")),
 		true);
+	}
+	
+	@Test
+	public void refreshTestOne() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
+		testNotEmpty(() -> {
+			FileSystemItem fileSysteItem = FileSystemItem.ofPath(
+				basePath + "/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
+			);
+			fileSysteItem.getAllChildren();
+			fileSysteItem.refresh();
+			return fileSysteItem.getAllChildren();
+		});
 	}
 	
 	@Test
