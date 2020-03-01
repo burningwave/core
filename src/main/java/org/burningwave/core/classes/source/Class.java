@@ -55,9 +55,32 @@ public class Class extends Generator.Abst {
 		return this;		
 	}
 	
+	public Class addField(Variable field) {
+		this.members = Optional.ofNullable(this.members).orElseGet(ArrayList::new);
+		this.members.add(field.setIndentationElement("\n\t").setSeparator(";"));
+		return this;
+	}
+	
+	public Class addInnerClass(Class cls) {
+		this.members = Optional.ofNullable(this.members).orElseGet(ArrayList::new);
+		this.members.add(cls);
+		return this;
+	}
+	
 	@Override
 	public String make() {
-		return getOrEmpty(Modifier.toString(this.modifier), classType, type, expands, expandedType, concretize, concretizedTypes, "{\n" + "}");
+		return getOrEmpty(
+			Modifier.toString(this.modifier),
+			classType,
+			type,
+			expands,
+			expandedType,
+			concretize,
+			concretizedTypes, 
+			"{\n",
+			getOrEmpty(members),
+			"\n\n}"
+		);
 	}
 	
 	public Collection<Type> getAllTypes() {
@@ -82,7 +105,27 @@ public class Class extends Generator.Abst {
 			).addGeneric(
 				Generic.create("?").parentOf(Type.create("Free").addGeneric(Generic.create("S")).addGeneric(Generic.create("Y")))
 			)
-		).addModifier(Modifier.PUBLIC).expands(Object.class);
+		).addModifier(Modifier.PUBLIC).expands(Object.class)
+		.addField(
+			Variable.create(Type.create(Integer.class), "index1").addModifier(Modifier.PRIVATE).addOuterCode("@Field")
+		)
+		.addField(
+			Variable.create(Type.create(Integer.class), "index2").addModifier(Modifier.PRIVATE)
+		);
+		cls.addInnerClass(Class.create(
+			Type.create("Generated").addGeneric(
+					Generic.create("T").expands(Type.create("Class").addGeneric(Generic.create("F").expands(Type.create("ClassTwo").addGeneric(Generic.create("H")))))
+				).addGeneric(
+					Generic.create("?").parentOf(Type.create("Free").addGeneric(Generic.create("S")).addGeneric(Generic.create("Y")))
+				)
+			).addModifier(Modifier.PUBLIC).expands(Object.class)
+			.addField(
+				Variable.create(Type.create(Integer.class), "index1").addModifier(Modifier.PRIVATE).addOuterCode("@Field")
+			)
+			.addField(
+				Variable.create(Type.create(Integer.class), "index2").addModifier(Modifier.PRIVATE)
+			)
+		);
 		System.out.println(cls.make());
 		cls.getAllTypes().forEach(type -> System.out.println(type.getSimpleName()));
 	}

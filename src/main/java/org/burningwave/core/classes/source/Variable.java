@@ -1,11 +1,66 @@
 package org.burningwave.core.classes.source;
 
-public class Variable extends Generator.Abst {
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Optional;
 
+public class Variable extends Generator.Abst {
+	private String indentationElement;
+	private Collection<String> outerCode;
+	private String separator;
+	private Integer modifier;
+	private Type type;
+	private String name;
+	private String value;
+	
+	private Variable(Type type, String name) {
+		this.type = type;
+		this.name = name;
+	}
+	
+	public static Variable create(Type type, String name) {
+		return new Variable(type, name);
+	}
+	
+	public Variable addModifier(Integer modifier) {
+		if (this.modifier == null) {
+			this.modifier = modifier;
+		} else {
+			this.modifier |= modifier; 
+		}
+		return this;
+	}
+	
+	public Variable addOuterCode(String code) {
+		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
+		this.outerCode.addAll(Arrays.asList(code));
+		return this;
+	}
+	
+	Variable setIndentationElement(String indentationElement) {
+		this.indentationElement = indentationElement;
+		return this;
+	}
+	
+	Variable setSeparator(String separator) {
+		this.separator = separator;
+		return this;
+	}
+	
 	@Override
 	public String make() {
-		// TODO Auto-generated method stub
-		return null;
+		return getOrEmpty(
+			Optional.ofNullable(outerCode).map(outerCode ->
+				getOrEmpty(indentationElement, outerCode)
+			).orElseGet(() -> null),
+			indentationElement,
+			Modifier.toString(this.modifier),
+			type,
+			name,
+			Optional.ofNullable(value).map(value -> " = " + value).orElseGet(() -> null)
+		) + separator;
 	}
 
 }

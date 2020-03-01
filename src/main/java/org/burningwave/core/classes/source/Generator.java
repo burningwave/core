@@ -51,7 +51,7 @@ public interface Generator {
 				} else if (object instanceof Collection) {
 					value += getOrEmpty((Collection<?>)object);
 				}
-				if (objectsItr.hasNext()) {
+				if (objectsItr.hasNext() && !value.endsWith("\t") && !value.endsWith("\n")) {
 					value += separator;
 				}
 			}
