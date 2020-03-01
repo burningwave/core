@@ -2,12 +2,11 @@ package org.burningwave.core.classes.source;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 
 public class Variable extends Generator.Abst {
-	private String indentationElement;
+	private String indentationElementForOuterCode;
 	private Collection<String> outerCode;
 	private String separator;
 	private Integer modifier;
@@ -35,12 +34,12 @@ public class Variable extends Generator.Abst {
 	
 	public Variable addOuterCode(String code) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
-		this.outerCode.addAll(Arrays.asList(code));
+		this.outerCode.add(code + "\n");
 		return this;
 	}
 	
-	Variable setIndentationElement(String indentationElement) {
-		this.indentationElement = indentationElement;
+	Variable setIndentationElementForOuterCode(String indentationElement) {
+		this.indentationElementForOuterCode = indentationElement;
 		return this;
 	}
 	
@@ -53,14 +52,13 @@ public class Variable extends Generator.Abst {
 	public String make() {
 		return getOrEmpty(
 			Optional.ofNullable(outerCode).map(outerCode ->
-				getOrEmpty(indentationElement, outerCode)
+				indentationElementForOuterCode + getOrEmpty(outerCode).replace("\n", indentationElementForOuterCode)
 			).orElseGet(() -> null),
-			indentationElement,
 			Modifier.toString(this.modifier),
 			type,
 			name,
 			Optional.ofNullable(value).map(value -> " = " + value).orElseGet(() -> null)
-		) + separator;
+		) + Optional.ofNullable(separator).orElseGet(() -> "");
 	}
 
 }
