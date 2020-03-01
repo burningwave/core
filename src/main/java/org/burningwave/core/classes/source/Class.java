@@ -15,8 +15,8 @@ public class Class extends Generator.Abst {
 	private Type expandedType;
 	private String concretize;
 	private Collection<Type> concretizedTypes;
-	private Collection<Generator> members;
-	private Collection<Class> classes;
+	private Collection<Variable> fields;
+	private Collection<Class> innerClasses;
 	
 	private Class(String classType, Type type) {
 		this.classType = classType;
@@ -64,22 +64,22 @@ public class Class extends Generator.Abst {
 	}
 	
 	public Class addField(Variable field) {
-		this.members = Optional.ofNullable(this.members).orElseGet(ArrayList::new);
-		this.members.add(field.setIndentationElementForOuterCode("\n\t").setSeparator(";\n\t"));
+		this.fields = Optional.ofNullable(this.fields).orElseGet(ArrayList::new);
+		this.fields.add(field.setIndentationElementForOuterCode("\n\t").setSeparator(";\n\t"));
 		return this;
 	}
 	
 	public Class addInnerClass(Class cls) {
-		this.classes = Optional.ofNullable(this.classes).orElseGet(ArrayList::new);
-		this.classes.add(cls);
+		this.innerClasses = Optional.ofNullable(this.innerClasses).orElseGet(ArrayList::new);
+		this.innerClasses.add(cls);
 		return this;
 	}
 	
 	private String makeInnerClasses() {
-		String innerClasses = "";
-		if (classes != null) {
-			for (Class cls : classes) {
-				innerClasses += cls.makeInnerClasses();
+		String innerClassesAsString = "";
+		if (innerClasses != null) {
+			for (Class cls : innerClasses) {
+				innerClassesAsString += cls.makeInnerClasses();
 			}
 		}
 		StringBuilder indentationElementOne = new StringBuilder();
@@ -99,17 +99,17 @@ public class Class extends Generator.Abst {
 				concretize,
 				concretizedTypes, 
 				"{\n",
-				getOrEmpty(members),
-				innerClasses
+				getOrEmpty(fields),
+				innerClassesAsString
 			).replace("\n\t", indentationElementOne) + indentationElementTwo.toString() + "}";
 	}
 	
 	@Override
 	public String make() {
-		String innerClasses = "";
-		if (classes != null) {
-			for (Class cls : classes) {
-				innerClasses += cls.makeInnerClasses();
+		String innerClassesAsString = "";
+		if (innerClasses != null) {
+			for (Class cls : innerClasses) {
+				innerClassesAsString += cls.makeInnerClasses();
 			}	
 		}
 		return getOrEmpty(
@@ -124,8 +124,8 @@ public class Class extends Generator.Abst {
 			concretize,
 			concretizedTypes, 
 			"{\n",
-			getOrEmpty(members),
-			innerClasses,
+			getOrEmpty(fields),
+			innerClassesAsString,
 			"\n}"
 		);
 	}
