@@ -75,7 +75,7 @@ public class Class extends Generator.Abst {
 		return this;
 	}
 	
-	public String makeInnerClasses() {
+	private String makeInnerClasses() {
 		String innerClasses = "";
 		if (classes != null) {
 			for (Class cls : classes) {
