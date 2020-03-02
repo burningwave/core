@@ -7,7 +7,7 @@ import java.util.Optional;
 public class Generic extends Generator.Abst {
 	private String name;
 	private String hirearchyOperator;
-	private Type hirearchyElement;
+	private TypeDeclaration hirearchyElement;
 	
 	private Generic(String name) {
 		this.name = name;
@@ -17,20 +17,20 @@ public class Generic extends Generator.Abst {
 		return new Generic(name);		
 	}
 	
-	public Generic expands(Type hirearchyElement) {
+	public Generic expands(TypeDeclaration hirearchyElement) {
 		hirearchyOperator = "extends";
 		this.hirearchyElement = hirearchyElement;
 		return this;
 	}
 	
-	public Generic parentOf(Type hirearchyElement) {
+	public Generic parentOf(TypeDeclaration hirearchyElement) {
 		hirearchyOperator = "super";
 		this.hirearchyElement = hirearchyElement;
 		return this;
 	}
 	
-	Collection<Type> getAllTypes() {
-		Collection<Type> types = new ArrayList<>();
+	Collection<TypeDeclaration> getAllTypes() {
+		Collection<TypeDeclaration> types = new ArrayList<>();
 		Optional.ofNullable(hirearchyElement).ifPresent(hirearchyElement -> {
 			types.addAll(hirearchyElement.getAllTypes());
 		});

@@ -9,16 +9,16 @@ public class Variable extends Generator.Abst {
 	private Collection<String> outerCode;
 	private String separator;
 	private Integer modifier;
-	private Type type;
+	private TypeDeclaration type;
 	private String name;
 	private String value;
 	
-	private Variable(Type type, String name) {
+	private Variable(TypeDeclaration type, String name) {
 		this.type = type;
 		this.name = name;
 	}
 	
-	public static Variable create(Type type, String name) {
+	public static Variable create(TypeDeclaration type, String name) {
 		return new Variable(type, name);
 	}
 	
@@ -31,14 +31,24 @@ public class Variable extends Generator.Abst {
 		return this;
 	}
 	
-	public Variable addOuterCodeRow(String code) {
+	public Variable addOuterCode(String code) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
-		this.outerCode.add(code + "\n");
+		this.outerCode.add(code);
 		return this;
 	}
 	
-	public Collection<Type> getAllTypes() {
-		Collection<Type> types = new ArrayList<>();
+	public Variable addOuterCodeRow(String code) {
+		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
+		if (!this.outerCode.isEmpty()) {
+			this.outerCode.add("\n" + code);
+		} else {
+			this.outerCode.add(code);
+		}
+		return this;
+	}
+	
+	public Collection<TypeDeclaration> getAllTypes() {
+		Collection<TypeDeclaration> types = new ArrayList<>();
 		Optional.ofNullable(type).ifPresent(type -> {
 			types.addAll(type.getAllTypes());
 		});
@@ -50,12 +60,15 @@ public class Variable extends Generator.Abst {
 		return this;
 	}
 	
-	
+	String getSeparator() {
+		return this.separator;
+	}
 	
 	@Override
 	public String make() {
 		return getOrEmpty(
 			getOrEmpty(outerCode),
+			"\n",
 			Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
 			type,
 			name,

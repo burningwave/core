@@ -5,38 +5,38 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 
-public class Type extends Generator.Abst {
+public class TypeDeclaration extends Generator.Abst {
 	private String name;
 	private String simpleName;
 	private Collection<Generic> generics;
 	
-	private Type(String name, String simpleName) {
+	private TypeDeclaration(String name, String simpleName) {
 		this.name = name;
 		this.simpleName = simpleName;
 	}
 	
-	private Type() {}
+	private TypeDeclaration() {}
 	
-	public static Type create(String name) {
-		return new Type(null, name);
+	public static TypeDeclaration create(String name) {
+		return new TypeDeclaration(null, name);
 	}
 	
-	public static Type create(java.lang.Class<?> cls) {
-		return new Type(cls.getName(), cls.getSimpleName());
+	public static TypeDeclaration create(java.lang.Class<?> cls) {
+		return new TypeDeclaration(cls.getName(), cls.getSimpleName());
 	}
 	
-	public static Type create(Generic... generics) {
-		return new Type().addGeneric(generics);
+	public static TypeDeclaration create(Generic... generics) {
+		return new TypeDeclaration().addGeneric(generics);
 	}
 	
-	public Type addGeneric(Generic... generics) {
+	public TypeDeclaration addGeneric(Generic... generics) {
 		this.generics = Optional.ofNullable(this.generics).orElseGet(ArrayList::new);
 		this.generics.addAll(Arrays.asList(generics));
 		return this;
 	}
 	
-	Collection<Type> getAllTypes() {
-		Collection<Type> types = new ArrayList<>();
+	Collection<TypeDeclaration> getAllTypes() {
+		Collection<TypeDeclaration> types = new ArrayList<>();
 		types.add(this);
 		Optional.ofNullable(generics).ifPresent(generics -> {
 			generics.forEach(generic -> {
