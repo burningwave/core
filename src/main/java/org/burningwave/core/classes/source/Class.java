@@ -70,7 +70,7 @@ public class Class extends Generator.Abst {
 	
 	public Class addField(Variable field) {
 		this.fields = Optional.ofNullable(this.fields).orElseGet(ArrayList::new);
-		this.fields.add(field.setSeparator(";"));
+		this.fields.add(field.setSeparator(";\n"));
 		return this;
 	}
 	
@@ -87,11 +87,11 @@ public class Class extends Generator.Abst {
 	}
 	
 	private String getFieldsCode() {
-		return Optional.ofNullable(fields).map(flds -> "\n\t" + getOrEmpty(flds).replace("\n", "\n\t")).orElseGet(() ->"");
+		return Optional.ofNullable(fields).map(flds -> "\t" + getOrEmpty(flds).replace("\n", "\n\t")).orElseGet(() ->"");
 	}
 	
 	private String getMethodsCode() {
-		return Optional.ofNullable(methods).map(mths -> "\n\t" + getOrEmpty(mths).replace("\n", "\n\t")).orElseGet(() ->"");
+		return Optional.ofNullable(methods).map(mths -> "\t" + getOrEmpty(mths).replace("\n", "\n\t")).orElseGet(() ->"");
 	}
 	
 	@Override
@@ -155,6 +155,16 @@ public class Class extends Generator.Abst {
 	}
 	
 	public static void main(String[] args) {
+		Function method = Function.create("find").addModifier(Modifier.PUBLIC)
+		.setTypeDeclaration(TypeDeclaration.create(Generic.create("F"), Generic.create("G")))
+		.setReturnType(TypeDeclaration.create(Long.class)).addParameter(Variable.create(TypeDeclaration.create(Long.class), "parameter1").addOuterCodeRow("@Parameter"))
+		.addParameter(Variable.create(TypeDeclaration.create(String.class), "parameter2"))
+				.addParameter(Variable.create(TypeDeclaration.create(Long.class), "parameter3"))
+				.addInnerCodeRow("System.out.println(\"Hello world!\");")
+				.addInnerCodeRow("System.out.println(\"How are you!\");")
+				.addInnerCodeRow("return new Long(1);")
+				.addOuterCodeRow("@MethodAnnotation");
+		
 		Class cls = Class
 				.create(TypeDeclaration.create("Generated")
 						.addGeneric(Generic.create("T")
@@ -166,15 +176,11 @@ public class Class extends Generator.Abst {
 										.addGeneric(Generic.create("Y")))))
 				.addModifier(Modifier.PUBLIC).expands(Object.class)
 				.addField(Variable.create(TypeDeclaration.create(Integer.class), "index1").addModifier(Modifier.PRIVATE)
-						.addOuterCodeRow("@Field").addOuterCodeRow("@Annotation2"))
+						//.addOuterCodeRow("@Field").addOuterCodeRow("@Annotation2")
+				)
 				.addField(
 						Variable.create(TypeDeclaration.create(Integer.class), "index2").addModifier(Modifier.PRIVATE))
-				.addMethod(Function.create("find").addModifier(Modifier.PUBLIC)
-						.setTypeDeclaration(TypeDeclaration.create(Generic.create("F"), Generic.create("G")))
-						.setReturnType(TypeDeclaration.create(void.class)).addParameter(Variable.create(TypeDeclaration.create(Long.class), "parameter1").addOuterCodeRow("@Parameter"))
-						.addParameter(Variable.create(TypeDeclaration.create(String.class), "parameter2"))
-								.addParameter(Variable.create(TypeDeclaration.create(Long.class), "parameter3"))
-				);
+				.addMethod(method);
 		cls.addInnerClass(Class
 				.create(TypeDeclaration.create("Generated")
 						.addGeneric(Generic.create("T")
@@ -202,7 +208,7 @@ public class Class extends Generator.Abst {
 								.addModifier(Modifier.PRIVATE).addOuterCodeRow("@Field"))
 						.addField(Variable.create(TypeDeclaration.create(Integer.class), "index2")
 								.addModifier(Modifier.PRIVATE))
-						.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation 2")))
+						.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation 2")).addMethod(method))
 				.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation 2");
 		System.out.println(cls.make());
 		// cls.getAllTypes().forEach(type -> System.out.println(type.getSimpleName()));

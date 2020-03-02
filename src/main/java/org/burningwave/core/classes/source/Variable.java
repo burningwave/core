@@ -67,13 +67,16 @@ public class Variable extends Generator.Abst {
 	@Override
 	public String make() {
 		return getOrEmpty(
-			getOrEmpty(outerCode),
-			"\n",
+			getOuterCode(),
 			Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
 			type,
 			name,
 			Optional.ofNullable(value).map(value -> " = " + value).orElseGet(() -> null)
 		) + Optional.ofNullable(separator).orElseGet(() -> "");
+	}
+
+	protected String getOuterCode() {
+		return Optional.ofNullable(outerCode).map(oc -> getOrEmpty(outerCode) + "\n").orElseGet(() -> null);
 	}
 
 }

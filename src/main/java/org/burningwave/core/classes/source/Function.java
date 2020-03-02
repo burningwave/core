@@ -50,41 +50,48 @@ public class Function extends Generator.Abst {
 	
 	public Function addOuterCodeRow(String code) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
-		this.outerCode.add(code + "\n");
+		this.outerCode.add("\n" + code);
 		return this;
 	}
 	
 	public Function addInnerCodeRow(String code) {
 		this.innerCode = Optional.ofNullable(this.innerCode).orElseGet(ArrayList::new);
-		this.innerCode.add("\t" + code + "\n");
+		this.innerCode.add("\n\t" + code);
 		return this;
 	}
 	
 	@Override
 	public String make() {
-		return "\n" + 
-			getOrEmpty(
+		return getOrEmpty(
 				Optional.ofNullable(outerCode).map(outerCode ->
-					getOrEmpty(outerCode)
+					getOrEmpty(outerCode) + "\n"
 				).orElseGet(() -> null),
 				Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
 				typesDeclaration,
 				returnType,
 				name,
 				getParametersCode(),
-				"{"
+				getInnerCode()
 			);
 	}
 	
+	private String getInnerCode() {
+		if (innerCode != null) {
+			return "{" + getOrEmpty(innerCode) + "\n}";
+		}
+		return "";
+	}
+
 	private String getParametersCode() {
 		String paramsCode = "(";
 		if (parameters != null) {
+			paramsCode += "\n";
 			Iterator<Variable> paramsIterator =  parameters.iterator();
 			while (paramsIterator.hasNext()) {
 				Variable param = paramsIterator.next();
-				paramsCode += param.make().replace("\n", "\n\t");
+				paramsCode += "\t" + param.make().replace("\n", "\n\t");
 				if (paramsIterator.hasNext()) {
-					paramsCode += ",";
+					paramsCode += ",\n";
 				} else {
 					paramsCode += "\n";
 				}
