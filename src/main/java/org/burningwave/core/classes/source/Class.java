@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class Class extends Generator.Abst {
-	private String indentationElementForOuterCode;
 	private Collection<String> outerCode;
 	private Integer modifier;
 	private String classType;
@@ -58,7 +57,7 @@ public class Class extends Generator.Abst {
 		return this;		
 	}
 	
-	public Class addOuterCode(String code) {
+	public Class addOuterCodeRow(String code) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
 		this.outerCode.add(code + "\n");
 		return this;
@@ -66,82 +65,46 @@ public class Class extends Generator.Abst {
 	
 	public Class addField(Variable field) {
 		this.fields = Optional.ofNullable(this.fields).orElseGet(ArrayList::new);
-		this.fields.add(field.setIndentationElementForOuterCode("\n\t").setSeparator(";\n\t"));
+		this.fields.add(field.setSeparator(";\n"));
 		return this;
 	}
 	
 	public Class addInnerClass(Class cls) {
 		this.innerClasses = Optional.ofNullable(this.innerClasses).orElseGet(ArrayList::new);
-		this.innerClasses.add(cls.setIndentationElementForOuterCode("\n"));
+		this.innerClasses.add(cls);
 		return this;
 	}
 	
-	Class setIndentationElementForOuterCode(String indentationElement) {
-		this.indentationElementForOuterCode = indentationElement;
-		return this;
-	}
-	
-	private String makeInnerClasses() {
-		String innerClassesAsString = null;
-		if (innerClasses != null) {
-			innerClassesAsString = "";
-			for (Class cls : innerClasses) {
-				innerClassesAsString += cls.makeInnerClasses();
-			}
-		}
-		StringBuilder indentationElementOne = new StringBuilder();
-		StringBuilder indentationElementTwo = new StringBuilder();
-		indentationElementOne.append("\n\t\t");
-		indentationElementTwo.append("\n\t");
-		String classCode = getOrEmpty(
-			getOuterCode(),
-			Modifier.toString(this.modifier),
-			classType,
-			type,
-			expands,
-			expandedType,
-			concretize,
-			concretizedTypes, 
-			"{\n",
-			getOrEmpty(fields),
-			innerClassesAsString
-		);
-		return classCode.replace("\n\t", indentationElementOne) + indentationElementTwo.toString() + "}";
-	}
-
 	@Override
 	public String make() {
 		String innerClassesAsString = "";
 		if (innerClasses != null) {
 			for (Class cls : innerClasses) {
-				innerClassesAsString += cls.makeInnerClasses();
-			}	
-		}
-		return getOrEmpty(
-			getOuterCode(),
-			Modifier.toString(this.modifier),
-			classType,
-			type,
-			expands,
-			expandedType,
-			concretize,
-			concretizedTypes, 
-			"{\n",
-			getOrEmpty(fields),
-			innerClassesAsString
-		) + "\n}";
-	}
-	
-	private String getOuterCode() {
-		if (outerCode != null) {
-			if (indentationElementForOuterCode != null) {
-				return (indentationElementForOuterCode + getOrEmpty(outerCode)).replace("\n", indentationElementForOuterCode + "\t");
-			} else {
-				return getOrEmpty(outerCode);
+				innerClassesAsString += cls.make().replaceAll("\n(.)", "\n\t$1");
 			}
 		}
-		return null;
-	}	
+		return 
+			getOrEmpty(
+				Optional.ofNullable(outerCode).map(outerCode ->
+					getOrEmpty(outerCode)
+				).orElseGet(() -> null),
+				Modifier.toString(this.modifier),
+				classType,
+				type,
+				expands,
+				expandedType,
+				concretize,
+				concretizedTypes, 
+				"{\n\n",
+				getFieldsCode(),
+				innerClassesAsString,
+				"\n}"
+			);
+	}
+
+	private String getFieldsCode() {
+		return "\t" + getOrEmpty(fields).replace("\n", "\n\t");
+	}
 	
 	public Collection<Type> getAllTypes() {
 		Collection<Type> types = type.getGenericTypes();
@@ -167,7 +130,7 @@ public class Class extends Generator.Abst {
 			)
 		).addModifier(Modifier.PUBLIC).expands(Object.class)
 		.addField(
-			Variable.create(Type.create(Integer.class), "index1").addModifier(Modifier.PRIVATE).addOuterCode("@Field").addOuterCode("@Annotation2")
+			Variable.create(Type.create(Integer.class), "index1").addModifier(Modifier.PRIVATE).addOuterCodeRow("@Field").addOuterCodeRow("@Annotation2")
 		)
 		.addField(
 			Variable.create(Type.create(Integer.class), "index2").addModifier(Modifier.PRIVATE)
@@ -180,11 +143,11 @@ public class Class extends Generator.Abst {
 				)
 			).addModifier(Modifier.PUBLIC).expands(Object.class)
 			.addField(
-				Variable.create(Type.create(Integer.class), "index1").addModifier(Modifier.PRIVATE).addOuterCode("@Field")
+				Variable.create(Type.create(Integer.class), "index1").addModifier(Modifier.PRIVATE).addOuterCodeRow("@Field")
 			)
 			.addField(
 				Variable.create(Type.create(Integer.class), "index2").addModifier(Modifier.PRIVATE)
-			).addOuterCode("@Annotation").addOuterCode("@Annotation 2").addInnerClass(Class.create(
+			).addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation 2").addInnerClass(Class.create(
 			Type.create("Generated").addGeneric(
 					Generic.create("T").expands(Type.create("Class").addGeneric(Generic.create("F").expands(Type.create("ClassTwo").addGeneric(Generic.create("H")))))
 				).addGeneric(
@@ -192,12 +155,12 @@ public class Class extends Generator.Abst {
 				)
 			).addModifier(Modifier.PUBLIC).expands(Object.class)
 			.addField(
-				Variable.create(Type.create(Integer.class), "index1").addModifier(Modifier.PRIVATE).addOuterCode("@Field")
+				Variable.create(Type.create(Integer.class), "index1").addModifier(Modifier.PRIVATE).addOuterCodeRow("@Field")
 			)
 			.addField(
 				Variable.create(Type.create(Integer.class), "index2").addModifier(Modifier.PRIVATE)
-			).addOuterCode("@Annotation").addOuterCode("@Annotation 2"))
-		).addOuterCode("@Annotation").addOuterCode("@Annotation 2");
+			).addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation 2"))
+		).addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation 2");
 		System.out.println(cls.make());
 		cls.getAllTypes().forEach(type -> System.out.println(type.getSimpleName()));
 	}

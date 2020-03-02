@@ -38,7 +38,7 @@ public interface Generator {
 		
 		String getOrEmpty(Collection<?> objects, String separator) {
 			String value = "";
-			objects = new ArrayList<>(objects);
+			objects = Optional.ofNullable(objects).map(objs -> new ArrayList<>(objs)).orElseGet(ArrayList::new);
 			objects.removeAll(Collections.singleton(null));
 			objects.removeAll(Collections.singleton(""));
 			Iterator<?> objectsItr = objects.iterator();

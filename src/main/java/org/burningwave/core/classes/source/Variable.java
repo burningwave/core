@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class Variable extends Generator.Abst {
-	private String indentationElementForOuterCode;
 	private Collection<String> outerCode;
 	private String separator;
 	private Integer modifier;
@@ -32,14 +31,9 @@ public class Variable extends Generator.Abst {
 		return this;
 	}
 	
-	public Variable addOuterCode(String code) {
+	public Variable addOuterCodeRow(String code) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
 		this.outerCode.add(code + "\n");
-		return this;
-	}
-	
-	Variable setIndentationElementForOuterCode(String indentationElement) {
-		this.indentationElementForOuterCode = indentationElement;
 		return this;
 	}
 	
@@ -51,9 +45,7 @@ public class Variable extends Generator.Abst {
 	@Override
 	public String make() {
 		return getOrEmpty(
-			Optional.ofNullable(outerCode).map(outerCode ->
-				indentationElementForOuterCode + getOrEmpty(outerCode).replace("\n", indentationElementForOuterCode)
-			).orElseGet(() -> null),
+			getOrEmpty(outerCode),
 			Modifier.toString(this.modifier),
 			type,
 			name,
