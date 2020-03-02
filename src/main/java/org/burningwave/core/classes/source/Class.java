@@ -80,15 +80,15 @@ public class Class extends Generator.Abst {
 		String innerClassesAsString = "";
 		if (innerClasses != null) {
 			for (Class cls : innerClasses) {
-				innerClassesAsString += cls.make().replaceAll("\n(.)", "\n\t$1");
+				innerClassesAsString += ("\n" + cls.make()).replaceAll("\n(.)", "\n\t$1") +"\n";
 			}
 		}
 		return 
-			getOrEmpty(
+			"\n" + getOrEmpty(
 				Optional.ofNullable(outerCode).map(outerCode ->
 					getOrEmpty(outerCode)
 				).orElseGet(() -> null),
-				Modifier.toString(this.modifier),
+				Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
 				classType,
 				type,
 				expands,
@@ -107,17 +107,26 @@ public class Class extends Generator.Abst {
 	}
 	
 	public Collection<Type> getAllTypes() {
-		Collection<Type> types = type.getGenericTypes();
+		Collection<Type> types = type.getAllTypes();
 		Optional.ofNullable(expandedType).ifPresent(expandedType -> {
-			types.add(expandedType);
-			types.addAll(expandedType.getGenericTypes());
+			types.addAll(expandedType.getAllTypes());
 		});
 		Optional.ofNullable(concretizedTypes).ifPresent(concretizedTypes -> {
 			types.addAll(concretizedTypes);
 			for (Type type : concretizedTypes) {
-				types.addAll(type.getGenericTypes());
+				types.addAll(type.getAllTypes());
 			}
 		});
+		Optional.ofNullable(fields).ifPresent(fields -> {
+			for (Variable field : fields) {
+				types.addAll(field.getAllTypes());
+			}
+		});
+		Optional.ofNullable(innerClasses).ifPresent(innerClasses -> {
+			for (Class cls : innerClasses) {
+				types.addAll(cls.getAllTypes());
+			}
+		});	
 		return types;
 	}
 	
@@ -130,7 +139,8 @@ public class Class extends Generator.Abst {
 			)
 		).addModifier(Modifier.PUBLIC).expands(Object.class)
 		.addField(
-			Variable.create(Type.create(Integer.class), "index1").addModifier(Modifier.PRIVATE).addOuterCodeRow("@Field").addOuterCodeRow("@Annotation2")
+			Variable.create(Type.create(Integer.class), "index1").addModifier(Modifier.PRIVATE)
+			.addOuterCodeRow("@Field").addOuterCodeRow("@Annotation2")
 		)
 		.addField(
 			Variable.create(Type.create(Integer.class), "index2").addModifier(Modifier.PRIVATE)
@@ -143,11 +153,14 @@ public class Class extends Generator.Abst {
 				)
 			).addModifier(Modifier.PUBLIC).expands(Object.class)
 			.addField(
-				Variable.create(Type.create(Integer.class), "index1").addModifier(Modifier.PRIVATE).addOuterCodeRow("@Field")
+				Variable.create(Type.create(Integer.class), "index1").addModifier(Modifier.PRIVATE)
+				.addOuterCodeRow("@Field")
 			)
 			.addField(
 				Variable.create(Type.create(Integer.class), "index2").addModifier(Modifier.PRIVATE)
-			).addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation 2").addInnerClass(Class.create(
+			)
+			.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation 2")
+			.addInnerClass(Class.create(
 			Type.create("Generated").addGeneric(
 					Generic.create("T").expands(Type.create("Class").addGeneric(Generic.create("F").expands(Type.create("ClassTwo").addGeneric(Generic.create("H")))))
 				).addGeneric(
@@ -155,12 +168,17 @@ public class Class extends Generator.Abst {
 				)
 			).addModifier(Modifier.PUBLIC).expands(Object.class)
 			.addField(
-				Variable.create(Type.create(Integer.class), "index1").addModifier(Modifier.PRIVATE).addOuterCodeRow("@Field")
+				Variable.create(Type.create(Integer.class), "index1").addModifier(Modifier.PRIVATE)
+				.addOuterCodeRow("@Field")
 			)
 			.addField(
 				Variable.create(Type.create(Integer.class), "index2").addModifier(Modifier.PRIVATE)
-			).addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation 2"))
-		).addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation 2");
+			)
+			.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation 2")
+			)
+		)
+		.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation 2")
+		;
 		System.out.println(cls.make());
 		cls.getAllTypes().forEach(type -> System.out.println(type.getSimpleName()));
 	}

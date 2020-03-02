@@ -37,16 +37,26 @@ public class Variable extends Generator.Abst {
 		return this;
 	}
 	
+	public Collection<Type> getAllTypes() {
+		Collection<Type> types = new ArrayList<>();
+		Optional.ofNullable(type).ifPresent(type -> {
+			types.addAll(type.getAllTypes());
+		});
+		return types;
+	}
+	
 	Variable setSeparator(String separator) {
 		this.separator = separator;
 		return this;
 	}
 	
+	
+	
 	@Override
 	public String make() {
 		return getOrEmpty(
 			getOrEmpty(outerCode),
-			Modifier.toString(this.modifier),
+			Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
 			type,
 			name,
 			Optional.ofNullable(value).map(value -> " = " + value).orElseGet(() -> null)

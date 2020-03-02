@@ -35,8 +35,9 @@ public class Type extends Generator.Abst {
 		return this;
 	}
 	
-	public Collection<Type> getGenericTypes() {
+	Collection<Type> getAllTypes() {
 		Collection<Type> types = new ArrayList<>();
+		types.add(this);
 		Optional.ofNullable(generics).ifPresent(generics -> {
 			generics.forEach(generic -> {
 				types.addAll(generic.getAllTypes());
