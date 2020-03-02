@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class Class extends Generator.Abst {
+	private String indentationElementForOuterCode;
 	private Collection<String> outerCode;
 	private Integer modifier;
 	private String classType;
@@ -71,13 +72,19 @@ public class Class extends Generator.Abst {
 	
 	public Class addInnerClass(Class cls) {
 		this.innerClasses = Optional.ofNullable(this.innerClasses).orElseGet(ArrayList::new);
-		this.innerClasses.add(cls);
+		this.innerClasses.add(cls.setIndentationElementForOuterCode("\n"));
+		return this;
+	}
+	
+	Class setIndentationElementForOuterCode(String indentationElement) {
+		this.indentationElementForOuterCode = indentationElement;
 		return this;
 	}
 	
 	private String makeInnerClasses() {
-		String innerClassesAsString = "";
+		String innerClassesAsString = null;
 		if (innerClasses != null) {
+			innerClassesAsString = "";
 			for (Class cls : innerClasses) {
 				innerClassesAsString += cls.makeInnerClasses();
 			}
@@ -86,36 +93,8 @@ public class Class extends Generator.Abst {
 		StringBuilder indentationElementTwo = new StringBuilder();
 		indentationElementOne.append("\n\t\t");
 		indentationElementTwo.append("\n\t");
-		return 
-			Optional.ofNullable(outerCode).map(outerCode ->
-				"\n" + getOrEmpty(outerCode)
-			).orElseGet(() -> null).replace("\n", indentationElementTwo)	+
-			getOrEmpty(
-				Modifier.toString(this.modifier),
-				classType,
-				type,
-				expands,
-				expandedType,
-				concretize,
-				concretizedTypes, 
-				"{\n",
-				getOrEmpty(fields),
-				innerClassesAsString
-			).replace("\n\t", indentationElementOne) + indentationElementTwo.toString() + "}";
-	}
-	
-	@Override
-	public String make() {
-		String innerClassesAsString = "";
-		if (innerClasses != null) {
-			for (Class cls : innerClasses) {
-				innerClassesAsString += cls.makeInnerClasses();
-			}	
-		}
-		return getOrEmpty(
-			Optional.ofNullable(outerCode).map(outerCode ->
-				getOrEmpty(outerCode)
-			).orElseGet(() -> null),
+		String classCode = getOrEmpty(
+			getOuterCode(),
 			Modifier.toString(this.modifier),
 			classType,
 			type,
@@ -125,10 +104,44 @@ public class Class extends Generator.Abst {
 			concretizedTypes, 
 			"{\n",
 			getOrEmpty(fields),
-			innerClassesAsString,
-			"\n}"
+			innerClassesAsString
 		);
+		return classCode.replace("\n\t", indentationElementOne) + indentationElementTwo.toString() + "}";
 	}
+
+	@Override
+	public String make() {
+		String innerClassesAsString = "";
+		if (innerClasses != null) {
+			for (Class cls : innerClasses) {
+				innerClassesAsString += cls.makeInnerClasses();
+			}	
+		}
+		return getOrEmpty(
+			getOuterCode(),
+			Modifier.toString(this.modifier),
+			classType,
+			type,
+			expands,
+			expandedType,
+			concretize,
+			concretizedTypes, 
+			"{\n",
+			getOrEmpty(fields),
+			innerClassesAsString
+		) + "\n}";
+	}
+	
+	private String getOuterCode() {
+		if (outerCode != null) {
+			if (indentationElementForOuterCode != null) {
+				return (indentationElementForOuterCode + getOrEmpty(outerCode)).replace("\n", indentationElementForOuterCode + "\t");
+			} else {
+				return getOrEmpty(outerCode);
+			}
+		}
+		return null;
+	}	
 	
 	public Collection<Type> getAllTypes() {
 		Collection<Type> types = type.getGenericTypes();
