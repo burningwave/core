@@ -23,6 +23,15 @@ public class Function extends Generator.Abst {
 		return new Function(name);
 	}
 	
+	public static Function create() {
+		return new Function(null);
+	}
+	
+	Function setName(String name) {
+		this.name = name;
+		return this;
+	}
+	
 	public Function addModifier(Integer modifier) {
 		if (this.modifier == null) {
 			this.modifier = modifier;
@@ -50,7 +59,11 @@ public class Function extends Generator.Abst {
 	
 	public Function addOuterCodeRow(String code) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
-		this.outerCode.add("\n" + code);
+		if (!this.outerCode.isEmpty()) {
+			this.outerCode.add("\n" + code);
+		} else {
+			this.outerCode.add(code);
+		}
 		return this;
 	}
 	
@@ -58,21 +71,6 @@ public class Function extends Generator.Abst {
 		this.innerCode = Optional.ofNullable(this.innerCode).orElseGet(ArrayList::new);
 		this.innerCode.add("\n\t" + code);
 		return this;
-	}
-	
-	@Override
-	public String make() {
-		return getOrEmpty(
-				Optional.ofNullable(outerCode).map(outerCode ->
-					getOrEmpty(outerCode) + "\n"
-				).orElseGet(() -> null),
-				Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
-				typesDeclaration,
-				returnType,
-				name,
-				getParametersCode(),
-				getInnerCode()
-			);
 	}
 	
 	private String getInnerCode() {
@@ -100,8 +98,18 @@ public class Function extends Generator.Abst {
 		return paramsCode + ")";
 	}
 	
-	public <T> T  get() {
-		return null;
+	@Override
+	public String make() {
+		return getOrEmpty(
+			Optional.ofNullable(outerCode).map(outerCode ->
+				getOrEmpty(outerCode) + "\n"
+			).orElseGet(() -> null),
+			Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
+			typesDeclaration,
+			returnType,
+			name + getParametersCode(),
+			getInnerCode()
+		);
 	}
-	
+		
 }

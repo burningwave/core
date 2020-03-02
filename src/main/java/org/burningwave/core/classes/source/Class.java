@@ -16,6 +16,7 @@ public class Class extends Generator.Abst {
 	private String concretize;
 	private Collection<TypeDeclaration> concretizedTypes;
 	private Collection<Variable> fields;
+	private Collection<Function> constructors;
 	private Collection<Function> methods;
 	private Collection<Class> innerClasses;
 	
@@ -70,7 +71,15 @@ public class Class extends Generator.Abst {
 	
 	public Class addField(Variable field) {
 		this.fields = Optional.ofNullable(this.fields).orElseGet(ArrayList::new);
-		this.fields.add(field.setSeparator(";\n"));
+		this.fields.add(field.setSeparator(";"));
+		return this;
+	}
+	
+	public Class addConstructor(Function constructor) {
+		this.constructors = Optional.ofNullable(this.constructors).orElseGet(ArrayList::new);
+		this.constructors.add(constructor);
+		constructor.setName(this.typeDeclaration.getSimpleName());
+		constructor.setReturnType(null);
 		return this;
 	}
 	
@@ -87,15 +96,30 @@ public class Class extends Generator.Abst {
 	}
 	
 	private String getFieldsCode() {
-		return Optional.ofNullable(fields).map(flds -> "\t" + getOrEmpty(flds).replace("\n", "\n\t")).orElseGet(() ->"");
+		return Optional.ofNullable(fields).map(flds -> "\t" + getOrEmpty(flds, "\n").replace("\n", "\n\t")).orElseGet(() -> null);
 	}
 	
-	private String getMethodsCode() {
-		return Optional.ofNullable(methods).map(mths -> "\t" + getOrEmpty(mths).replace("\n", "\n\t")).orElseGet(() ->"");
+	private String getFunctionCode(Collection<Function> functions) {
+		return Optional.ofNullable(functions).map(mths -> "\t" + getOrEmpty(mths, "\n\n").replace("\n", "\n\t")).orElseGet(() -> null);
+	}
+	
+	private String getInnerClassesCode() {
+		String innerClassesAsString = null;
+		if (innerClasses != null) {
+			innerClassesAsString = "\t";
+			for (Class cls : innerClasses) {
+				innerClassesAsString += (cls.make()).replaceAll("\n(.)", "\n\t$1");
+			}
+		}
+		return innerClassesAsString;
 	}
 	
 	@Override
 	public String make() {
+		String fieldsCode = getFieldsCode();
+		String constructorsCode = getFunctionCode(constructors);
+		String methodsCode = getFunctionCode(methods);
+		String innerClassesCode = getInnerClassesCode();
 		return
 			getOrEmpty(
 				getOuterCode(),
@@ -106,27 +130,18 @@ public class Class extends Generator.Abst {
 				expandedType,
 				concretize,
 				concretizedTypes, 
-				"{\n",
-				getFieldsCode(),
-				getMethodsCode(),
-				getInnerClassesCode(),
+				"{",
+				fieldsCode != null? "\n\n" + fieldsCode : null,
+				constructorsCode != null? "\n\n" + constructorsCode : null,
+				methodsCode != null? "\n\n" + methodsCode : null,
+				innerClassesCode != null? "\n\n" + innerClassesCode : null,
 				"\n\n}"
 			);
 	}
 
-	protected String getInnerClassesCode() {
-		String innerClassesAsString = "";
-		if (innerClasses != null) {
-			for (Class cls : innerClasses) {
-				innerClassesAsString += ("\n\n" + cls.make()).replaceAll("\n(.)", "\n\t$1");
-			}
-		}
-		return innerClassesAsString;
-	}
-
 	protected String getOuterCode() {
 		return Optional.ofNullable(outerCode).map(outerCode ->
-			getOrEmpty(outerCode)
+			getOrEmpty(outerCode) +"\n"
 		).orElseGet(() -> null);
 	}
 	
@@ -165,6 +180,17 @@ public class Class extends Generator.Abst {
 				.addInnerCodeRow("return new Long(1);")
 				.addOuterCodeRow("@MethodAnnotation");
 		
+		Function method2 = Function.create("find2").addModifier(Modifier.PUBLIC)
+				.setTypeDeclaration(TypeDeclaration.create(Generic.create("F"), Generic.create("G")))
+				.setReturnType(TypeDeclaration.create(Long.class)).addParameter(Variable.create(TypeDeclaration.create(Long.class), "parameter1"))
+				.addParameter(Variable.create(TypeDeclaration.create(String.class), "parameter2"))
+						.addParameter(Variable.create(TypeDeclaration.create(Long.class), "parameter3"))
+						.addInnerCodeRow("System.out.println(\"Hello world!\");")
+						.addInnerCodeRow("System.out.println(\"How are you!\");")
+						.addInnerCodeRow("return new Long(1);");
+		
+		Function constructor = Function.create().addModifier(Modifier.PUBLIC).addInnerCodeRow("this.index1 = 1;");
+		
 		Class cls = Class
 				.create(TypeDeclaration.create("Generated")
 						.addGeneric(Generic.create("T")
@@ -176,11 +202,12 @@ public class Class extends Generator.Abst {
 										.addGeneric(Generic.create("Y")))))
 				.addModifier(Modifier.PUBLIC).expands(Object.class)
 				.addField(Variable.create(TypeDeclaration.create(Integer.class), "index1").addModifier(Modifier.PRIVATE)
-						//.addOuterCodeRow("@Field").addOuterCodeRow("@Annotation2")
+						.addOuterCodeRow("@Field").addOuterCodeRow("@Annotation2")
 				)
 				.addField(
 						Variable.create(TypeDeclaration.create(Integer.class), "index2").addModifier(Modifier.PRIVATE))
-				.addMethod(method);
+				.addConstructor(constructor)
+				.addMethod(method).addMethod(method2);
 		cls.addInnerClass(Class
 				.create(TypeDeclaration.create("Generated")
 						.addGeneric(Generic.create("T")
@@ -194,7 +221,7 @@ public class Class extends Generator.Abst {
 						.addOuterCodeRow("@Field"))
 				.addField(
 						Variable.create(TypeDeclaration.create(Integer.class), "index2").addModifier(Modifier.PRIVATE))
-				.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation 2")
+				.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation2")
 				.addInnerClass(Class
 						.create(TypeDeclaration.create("Generated")
 								.addGeneric(Generic.create("T").expands(TypeDeclaration.create("Class")
@@ -208,8 +235,8 @@ public class Class extends Generator.Abst {
 								.addModifier(Modifier.PRIVATE).addOuterCodeRow("@Field"))
 						.addField(Variable.create(TypeDeclaration.create(Integer.class), "index2")
 								.addModifier(Modifier.PRIVATE))
-						.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation 2")).addMethod(method))
-				.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation 2");
+						.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation2")).addMethod(method))
+				.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation2");
 		System.out.println(cls.make());
 		// cls.getAllTypes().forEach(type -> System.out.println(type.getSimpleName()));
 	}
