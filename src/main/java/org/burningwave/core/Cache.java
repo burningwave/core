@@ -38,7 +38,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.Collection;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -145,7 +145,7 @@ public class Cache {
 	public static class SyncObjectForObject<T, R> extends ObjectForObject.Abst<T, R> {
 
 		public SyncObjectForObject() {
-			super(new LinkedHashMap<>());
+			super(new HashMap<>());
 		}
 	}
 	
@@ -211,7 +211,7 @@ public class Cache {
 	public static class SyncObjectAndPathForResources<T, R> extends ObjectAndPathForResources.Abst<T, R> {
 
 		public SyncObjectAndPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
-			super(LinkedHashMap::new, () -> new SyncPathForResources<>(partitionStartLevel, sharer));
+			super(HashMap::new, () -> new SyncPathForResources<>(partitionStartLevel, sharer));
 		}
 		
 	}
@@ -311,7 +311,7 @@ public class Cache {
 	public static class SyncPathForResources<R> extends PathForResources.Abst <R> {
 		private SyncPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
 			super(partitionStartLevel, sharer);
-			resources = new LinkedHashMap<>();
+			resources = new HashMap<>();
 		}		
 		
 		@Override

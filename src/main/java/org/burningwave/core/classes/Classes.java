@@ -47,6 +47,7 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -361,7 +362,7 @@ public class Classes implements Component {
 		if (object instanceof String) {
 			return (String)object;
 		} else if (object.getClass().isPrimitive()) {
-			return ((Integer)object).toString();
+			return object.toString();
 		}
         return object.getClass().getName() + "@" + object.hashCode();
     }
@@ -390,9 +391,9 @@ public class Classes implements Component {
 		protected Map<String, MethodHandle> classLoadersMethods;
 		
 		private Loaders() {
-			this.classLoadersClasses = new ConcurrentHashMap<>();
-			this.classLoadersPackages = new ConcurrentHashMap<>();
-			this.classLoadersMethods = new ConcurrentHashMap<>();
+			this.classLoadersClasses = new HashMap<>();
+			this.classLoadersPackages = new HashMap<>();
+			this.classLoadersMethods = new HashMap<>();
 		}
 		
 		public static Loaders create() {
