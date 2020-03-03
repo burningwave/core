@@ -1,3 +1,31 @@
+/*
+ * This file is part of Burningwave Core.
+ *
+ * Author: Roberto Gentili
+ *
+ * Hosted at: https://github.com/burningwave/core
+ *
+ * --
+ *
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2019 Roberto Gentili
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without
+ * limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial
+ * portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+ * EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+ * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+ * OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package org.burningwave.core.classes.source;
 
 import java.lang.reflect.Modifier;
@@ -7,15 +35,18 @@ import java.util.Optional;
 
 public class Variable extends Generator.Abst {
 	private Collection<String> outerCode;
-	private String separator;
+	private String assignmentOperator;
+	private String delimiter;
 	private Integer modifier;
 	private TypeDeclaration type;
 	private String name;
-	private String value;
+	private Generator value;
 	
 	private Variable(TypeDeclaration type, String name) {
 		this.type = type;
 		this.name = name;
+		this.assignmentOperator = " = ";
+		this.delimiter = ";";
 	}
 	
 	public static Variable create(TypeDeclaration type, String name) {
@@ -55,13 +86,28 @@ public class Variable extends Generator.Abst {
 		return types;
 	}
 	
-	Variable setSeparator(String separator) {
-		this.separator = separator;
+	public Variable setValue(String value) {
+		return setValue(new Generator() {
+			@Override
+			public String make() {
+				return value;
+			}
+		});
+	}
+	
+	public Variable setValue(Generator valueGenerator) {
+		this.value = valueGenerator;
 		return this;
 	}
 	
-	String getSeparator() {
-		return this.separator;
+	Variable setAssignementOperator(String operator) {
+		this.assignmentOperator = operator;
+		return this;
+	}
+	
+	Variable setDelimiter(String separator) {
+		this.delimiter = separator;
+		return this;
 	}
 	
 	@Override
@@ -73,7 +119,7 @@ public class Variable extends Generator.Abst {
 			Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
 			type,
 			name,
-			Optional.ofNullable(value).map(value -> " = " + value).orElseGet(() -> null)
-		) + Optional.ofNullable(separator).orElseGet(() -> "");
+			Optional.ofNullable(value).map(value -> assignmentOperator + value).orElseGet(() -> null)
+		) + Optional.ofNullable(delimiter).orElseGet(() -> "");
 	}
 }
