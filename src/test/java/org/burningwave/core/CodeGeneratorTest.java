@@ -17,6 +17,7 @@ public class CodeGeneratorTest extends BaseTest {
 	public void generateUnitTestOne() throws Throwable {
 		testDoesNotThrow(() -> {
 			Unit unit = Unit.create("code.generator.try");
+			unit.addClass(Class.createEnum(TypeDeclaration.create("MyEnum")).addField(Variable.create(null, "FIRST_VALUE")).addField(Variable.create(null, "SECOND_VALUE")));
 			Function method = Function.create("find").addModifier(Modifier.PUBLIC)
 					.setTypeDeclaration(TypeDeclaration.create(Generic.create("F"), Generic.create("G")))
 					.setReturnType(TypeDeclaration.create(Long.class))

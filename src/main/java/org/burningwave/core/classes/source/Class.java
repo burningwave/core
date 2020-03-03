@@ -61,6 +61,10 @@ public class Class extends Generator.Abst {
 		return new Class("interface", type);
 	}
 	
+	public static Class createEnum(TypeDeclaration type) {
+		return new Class("enum", type);
+	}
+	
 	public Class addModifier(Integer modifier) {
 		if (this.modifier == null) {
 			this.modifier = modifier;
@@ -100,6 +104,10 @@ public class Class extends Generator.Abst {
 	public Class addField(Variable field) {
 		this.fields = Optional.ofNullable(this.fields).orElseGet(ArrayList::new);
 		this.fields.add(field);
+		if (classType.equals("enum")) {
+			field.setAssignementOperator(null);
+			field.setDelimiter(",");
+		}
 		return this;
 	}
 	
