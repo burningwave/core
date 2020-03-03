@@ -106,7 +106,7 @@ public class Class extends Generator.Abst {
 		this.fields.add(field);
 		if (classType.equals("enum")) {
 			field.setAssignementOperator(null);
-			field.setDelimiter(",");
+			field.setDelimiter(COMMA);
 		}
 		return this;
 	}

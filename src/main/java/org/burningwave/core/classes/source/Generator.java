@@ -46,6 +46,7 @@ public interface Generator {
 	public static abstract class Abst implements Generator {
 		static final String EMPTY_SPACE = " ";
 		static final String COMMA = ",";
+		static final String SEMICOLON = ";";
 		
 		@Override
 		public String toString() {

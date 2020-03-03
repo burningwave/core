@@ -116,7 +116,7 @@ public class Function extends Generator.Abst {
 				Variable param = paramsIterator.next();
 				paramsCode += "\t" + param.make().replace("\n", "\n\t");
 				if (paramsIterator.hasNext()) {
-					paramsCode += ",\n";
+					paramsCode += COMMA + "\n";
 				} else {
 					paramsCode += "\n";
 				}
