@@ -145,99 +145,37 @@ public class Class extends Generator.Abst {
 		).orElseGet(() -> null);
 	}
 	
-	public Collection<TypeDeclaration> getAllTypes() {
-		Collection<TypeDeclaration> types = typeDeclaration.getAllTypes();
+	Collection<TypeDeclaration> getTypeDeclarations() {
+		Collection<TypeDeclaration> types = typeDeclaration.getTypeDeclarations();
 		Optional.ofNullable(expandedType).ifPresent(expandedType -> {
-			types.addAll(expandedType.getAllTypes());
+			types.addAll(expandedType.getTypeDeclarations());
 		});
 		Optional.ofNullable(concretizedTypes).ifPresent(concretizedTypes -> {
 			types.addAll(concretizedTypes);
 			for (TypeDeclaration type : concretizedTypes) {
-				types.addAll(type.getAllTypes());
+				types.addAll(type.getTypeDeclarations());
 			}
 		});
 		Optional.ofNullable(fields).ifPresent(fields -> {
 			for (Variable field : fields) {
-				types.addAll(field.getAllTypes());
+				types.addAll(field.getTypeDeclarations());
+			}
+		});
+		Optional.ofNullable(constructors).ifPresent(constructors -> {
+			for (Function constructor : constructors) {
+				types.addAll(constructor.getTypeDeclarations());
+			}
+		});
+		Optional.ofNullable(methods).ifPresent(methods -> {
+			for (Function method : methods) {
+				types.addAll(method.getTypeDeclarations());
 			}
 		});
 		Optional.ofNullable(innerClasses).ifPresent(innerClasses -> {
 			for (Class cls : innerClasses) {
-				types.addAll(cls.getAllTypes());
+				types.addAll(cls.getTypeDeclarations());
 			}
 		});	
 		return types;
-	}
-	
-	public static void main(String[] args) {
-		Function method = Function.create("find").addModifier(Modifier.PUBLIC)
-		.setTypeDeclaration(TypeDeclaration.create(Generic.create("F"), Generic.create("G")))
-		.setReturnType(TypeDeclaration.create(Long.class)).addParameter(Variable.create(TypeDeclaration.create(Long.class), "parameter1").addOuterCodeRow("@Parameter"))
-		.addParameter(Variable.create(TypeDeclaration.create(String.class), "parameter2"))
-				.addParameter(Variable.create(TypeDeclaration.create(Long.class), "parameter3"))
-				.addInnerCodeRow("System.out.println(\"Hello world!\");")
-				.addInnerCodeRow("System.out.println(\"How are you!\");")
-				.addInnerCodeRow("return new Long(1);")
-				.addOuterCodeRow("@MethodAnnotation");
-		
-		Function method2 = Function.create("find2").addModifier(Modifier.PUBLIC)
-				.setTypeDeclaration(TypeDeclaration.create(Generic.create("F"), Generic.create("G")))
-				.setReturnType(TypeDeclaration.create(Long.class)).addParameter(Variable.create(TypeDeclaration.create(Long.class), "parameter1"))
-				.addParameter(Variable.create(TypeDeclaration.create(String.class), "parameter2"))
-						.addParameter(Variable.create(TypeDeclaration.create(Long.class), "parameter3"))
-						.addInnerCodeRow("System.out.println(\"Hello world!\");")
-						.addInnerCodeRow("System.out.println(\"How are you!\");")
-						.addInnerCodeRow("return new Long(1);");
-		
-		Function constructor = Function.create().addModifier(Modifier.PUBLIC).addInnerCodeRow("this.index1 = 1;");
-		
-		Class cls = Class
-				.create(TypeDeclaration.create("Generated")
-						.addGeneric(Generic.create("T")
-								.expands(TypeDeclaration.create("Class")
-										.addGeneric(Generic.create("F").expands(
-												TypeDeclaration.create("ClassTwo").addGeneric(Generic.create("H"))))))
-						.addGeneric(Generic.create("?")
-								.parentOf(TypeDeclaration.create("Free").addGeneric(Generic.create("S"))
-										.addGeneric(Generic.create("Y")))))
-				.addModifier(Modifier.PUBLIC).expands(Object.class)
-				.addField(Variable.create(TypeDeclaration.create(Integer.class), "index1").addModifier(Modifier.PRIVATE)
-						.addOuterCodeRow("@Field").addOuterCodeRow("@Annotation2")
-				)
-				.addField(
-						Variable.create(TypeDeclaration.create(Integer.class), "index2").addModifier(Modifier.PRIVATE))
-				.addConstructor(constructor)
-				.addMethod(method).addMethod(method2);
-		cls.addInnerClass(Class
-				.create(TypeDeclaration.create("Generated")
-						.addGeneric(Generic.create("T")
-								.expands(TypeDeclaration.create("Class")
-										.addGeneric(Generic.create("F").expands(
-												TypeDeclaration.create("ClassTwo").addGeneric(Generic.create("H"))))))
-						.addGeneric(Generic.create("?").parentOf(TypeDeclaration.create("Free")
-								.addGeneric(Generic.create("S")).addGeneric(Generic.create("Y")))))
-				.addModifier(Modifier.PUBLIC).expands(Object.class)
-				.addField(Variable.create(TypeDeclaration.create(Integer.class), "index1").addModifier(Modifier.PRIVATE)
-						.addOuterCodeRow("@Field"))
-				.addField(
-						Variable.create(TypeDeclaration.create(Integer.class), "index2").addModifier(Modifier.PRIVATE))
-				.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation2")
-				.addInnerClass(Class
-						.create(TypeDeclaration.create("Generated")
-								.addGeneric(Generic.create("T").expands(TypeDeclaration.create("Class")
-										.addGeneric(Generic.create("F").expands(
-												TypeDeclaration.create("ClassTwo").addGeneric(Generic.create("H"))))))
-								.addGeneric(Generic.create("?")
-										.parentOf(TypeDeclaration.create("Free").addGeneric(Generic.create("S"))
-												.addGeneric(Generic.create("Y")))))
-						.addModifier(Modifier.PUBLIC).expands(Object.class)
-						.addField(Variable.create(TypeDeclaration.create(Integer.class), "index1")
-								.addModifier(Modifier.PRIVATE).addOuterCodeRow("@Field"))
-						.addField(Variable.create(TypeDeclaration.create(Integer.class), "index2")
-								.addModifier(Modifier.PRIVATE))
-						.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation2")).addMethod(method))
-				.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation2");
-		System.out.println(cls.make());
-		// cls.getAllTypes().forEach(type -> System.out.println(type.getSimpleName()));
 	}
 }

@@ -29,18 +29,26 @@ public class TypeDeclaration extends Generator.Abst {
 		return new TypeDeclaration().addGeneric(generics);
 	}
 	
+	public String getName() {
+		return name;
+	}
+
+	public String getSimpleName() {
+		return simpleName;
+	}
+	
 	public TypeDeclaration addGeneric(Generic... generics) {
 		this.generics = Optional.ofNullable(this.generics).orElseGet(ArrayList::new);
 		this.generics.addAll(Arrays.asList(generics));
 		return this;
 	}
 	
-	Collection<TypeDeclaration> getAllTypes() {
+	Collection<TypeDeclaration> getTypeDeclarations() {
 		Collection<TypeDeclaration> types = new ArrayList<>();
 		types.add(this);
 		Optional.ofNullable(generics).ifPresent(generics -> {
 			generics.forEach(generic -> {
-				types.addAll(generic.getAllTypes());
+				types.addAll(generic.getTypesDeclarations());
 			});
 		});
 		return types;
@@ -50,14 +58,5 @@ public class TypeDeclaration extends Generator.Abst {
 	public String make() {
 		return getOrEmpty(simpleName)  + Optional.ofNullable(generics).map(generics -> 
 		"<" + getOrEmpty(generics, COMMA + EMPTY_SPACE) + ">").orElseGet(() -> "");
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public String getSimpleName() {
-		return simpleName;
-	}
-	
+	}	
 }

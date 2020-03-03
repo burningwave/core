@@ -98,6 +98,22 @@ public class Function extends Generator.Abst {
 		return paramsCode + ")";
 	}
 	
+	Collection<TypeDeclaration> getTypeDeclarations() {
+		Collection<TypeDeclaration> types = new ArrayList<>();
+		Optional.ofNullable(typesDeclaration).ifPresent(typesDeclaration -> {
+			types.addAll(typesDeclaration.getTypeDeclarations());
+		});
+		Optional.ofNullable(returnType).ifPresent(returnType -> {
+			types.addAll(returnType.getTypeDeclarations());
+		});
+		Optional.ofNullable(parameters).ifPresent(parameters -> {
+			parameters.forEach(parameter -> {
+				types.addAll(parameter.getTypeDeclarations());
+			});
+		});;
+		return types;
+	}
+	
 	@Override
 	public String make() {
 		return getOrEmpty(

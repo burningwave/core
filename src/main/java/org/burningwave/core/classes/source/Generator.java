@@ -49,7 +49,7 @@ public interface Generator {
 				} else if (object instanceof String) {
 					value += getOrEmpty((String)object);
 				} else if (object instanceof Collection) {
-					value += getOrEmpty((Collection<?>)object);
+					value += getOrEmpty((Collection<?>)object, separator);
 				}
 				if (objectsItr.hasNext() && !value.endsWith("\t") && !value.endsWith("\n")) {
 					value += separator;

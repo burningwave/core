@@ -29,10 +29,10 @@ public class Generic extends Generator.Abst {
 		return this;
 	}
 	
-	Collection<TypeDeclaration> getAllTypes() {
+	Collection<TypeDeclaration> getTypesDeclarations() {
 		Collection<TypeDeclaration> types = new ArrayList<>();
 		Optional.ofNullable(hirearchyElement).ifPresent(hirearchyElement -> {
-			types.addAll(hirearchyElement.getAllTypes());
+			types.addAll(hirearchyElement.getTypeDeclarations());
 		});
 		return types;
 	}

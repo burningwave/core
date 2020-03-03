@@ -47,10 +47,10 @@ public class Variable extends Generator.Abst {
 		return this;
 	}
 	
-	public Collection<TypeDeclaration> getAllTypes() {
+	Collection<TypeDeclaration> getTypeDeclarations() {
 		Collection<TypeDeclaration> types = new ArrayList<>();
 		Optional.ofNullable(type).ifPresent(type -> {
-			types.addAll(type.getAllTypes());
+			types.addAll(type.getTypeDeclarations());
 		});
 		return types;
 	}

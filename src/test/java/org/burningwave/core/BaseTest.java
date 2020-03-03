@@ -131,6 +131,7 @@ public class BaseTest implements Component {
 		Throwable throwable = null;
 		long initialTime = System.currentTimeMillis();
 		try {
+			logDebug("Initializing logger");
 			executable.execute();
 			logInfo("Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 		} catch (Throwable exc) {
