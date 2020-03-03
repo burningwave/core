@@ -64,17 +64,23 @@ public class StaticComponentsContainer {
 	}
 	
 	private static org.burningwave.core.ManagedLogger.Repository createManagedLoggersRepository(Properties properties) {
+		org.burningwave.core.ManagedLogger.Repository repository = null;
 		try {
 			String className = (String)GlobalProperties.getProperty(Repository.REPOSITORY_TYPE_CONFIG_KEY);
-			return (Repository)Class.forName(className).getConstructor().newInstance();
+			repository = (Repository)Class.forName(className).getConstructor().newInstance();
 		} catch (Throwable exc) {
 			try {
 				Class.forName("org.slf4j.Logger");
-				return new SLF4JManagedLoggerRepository();
+				repository = new SLF4JManagedLoggerRepository();
 			} catch (Throwable exc2) {
-				return new SimpleManagedLoggerRepository();
+				repository = new SimpleManagedLoggerRepository();
 			}
 		}
+		String disabledFlag = (String)GlobalProperties.getProperty(Repository.REPOSITORY_DISABLED_FLAG_CONFIG_KEY);
+		if (disabledFlag != null && Boolean.parseBoolean(disabledFlag)) {
+			repository.disableLogging();
+		}
+		return repository;
 	}
 	
 }

@@ -1,18 +1,27 @@
 package org.burningwave.core;
 
 import java.io.PrintStream;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.ManagedLogger.Repository;
 
 public class SimpleManagedLoggerRepository implements Repository {
-	private static Map<Class<?>, Boolean> loggers = new ConcurrentHashMap<>();
+	private static Map<Class<?>, Boolean> loggers = new HashMap<>();
+	private boolean isDisabled;
 	
 	private Boolean getLoggerEnabledFlag(Class<?> client) {
+		if (isDisabled) {
+			return !isDisabled;
+		}
 		Boolean loggerEnabledFlag = loggers.get(client);
 		if (loggerEnabledFlag == null) {
-			loggers.put(client, loggerEnabledFlag = Boolean.TRUE);
+			synchronized (loggers.toString() + "_" + client.toString()) {
+				loggerEnabledFlag = loggers.get(client);
+				if (loggerEnabledFlag == null) {
+					loggers.put(client, loggerEnabledFlag = Boolean.TRUE);
+				}
+			}
 		}
 		return loggerEnabledFlag;
 	}
@@ -30,6 +39,14 @@ public class SimpleManagedLoggerRepository implements Repository {
 				exception.printStackTrace(printStream);
 			}
 		}
+	}
+	
+	public void disableLogging() {
+		isDisabled = true;	
+	}
+
+	public void enableLogging() {
+		isDisabled = false;		
 	}
 	
 	public void disableLogging(Class<?> client) {

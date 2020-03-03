@@ -1,20 +1,26 @@
 package org.burningwave.core;
 
 import java.util.AbstractMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import org.slf4j.LoggerFactory;
 
 public class SLF4JManagedLoggerRepository implements ManagedLogger.Repository{
-	private Map<Class<?>, Map.Entry<org.slf4j.Logger, Boolean>> loggers = new ConcurrentHashMap<>();
+	private Map<Class<?>, Map.Entry<org.slf4j.Logger, Boolean>> loggers = new HashMap<>();
+	private boolean isDisabled;
 	
 	private Map.Entry<org.slf4j.Logger, Boolean> getLoggerEntry(Class<?> client) {
 		Map.Entry<org.slf4j.Logger, Boolean> loggerEntry = loggers.get(client);
 		if (loggerEntry == null) {
-			loggers.put(client, loggerEntry = new AbstractMap.SimpleEntry<>(LoggerFactory.getLogger(client), Boolean.TRUE));
+			synchronized (loggers.toString() + "_" + client.toString()) {
+				loggerEntry = loggers.get(client);
+				if (loggerEntry == null) {
+					loggers.put(client, loggerEntry = new AbstractMap.SimpleEntry<>(LoggerFactory.getLogger(client), Boolean.TRUE));
+				}
+			}
 		}
 		return loggerEntry;
 	}
@@ -24,8 +30,19 @@ public class SLF4JManagedLoggerRepository implements ManagedLogger.Repository{
 	}
 	
 	private org.slf4j.Logger getLogger(Class<?> client) {
+		if (isDisabled) {
+			return null;
+		}
 		Map.Entry<org.slf4j.Logger, Boolean> loggerEntry = getLoggerEntry(client);
 		return loggerEntry.getValue()? loggerEntry.getKey() : null;
+	}	
+
+	public void disableLogging() {
+		isDisabled = true;	
+	}
+
+	public void enableLogging() {
+		isDisabled = false;		
 	}
 	
 	public void disableLogging(Class<?> client) {
@@ -67,4 +84,5 @@ public class SLF4JManagedLoggerRepository implements ManagedLogger.Repository{
 	public void logWarn(Class<?> client, String message, Object... arguments) {
 		log(client, (logger) -> logger.warn(message, arguments));
 	}
+
 }

@@ -79,6 +79,11 @@ public interface ManagedLogger {
 	
 	public static interface Repository {
 		public static final String REPOSITORY_TYPE_CONFIG_KEY = "managed-logger.repository";
+		public static final String REPOSITORY_DISABLED_FLAG_CONFIG_KEY = "managed-logger.repository.disabled";
+		
+		public void disableLogging();
+		
+		public void enableLogging();
 		
 		public void disableLogging(Class<?> client);
 		
