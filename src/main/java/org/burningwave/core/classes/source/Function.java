@@ -42,7 +42,7 @@ public class Function extends Generator.Abst {
 	private TypeDeclaration returnType;
 	private String name;
 	private Collection<Variable> parameters;
-	private Collection<String> innerCode;
+	private Statement body;
 	
 	private Function(String name) {
 		this.name = name;
@@ -102,16 +102,9 @@ public class Function extends Generator.Abst {
 	}
 	
 	public Function addInnerCodeRow(String code) {
-		this.innerCode = Optional.ofNullable(this.innerCode).orElseGet(ArrayList::new);
-		this.innerCode.add("\n\t" + code);
+		this.body = Optional.ofNullable(this.body).orElseGet(Statement::create);
+		this.body.addElement(code);
 		return this;
-	}
-	
-	private String getInnerCode() {
-		if (innerCode != null) {
-			return "{" + getOrEmpty(innerCode) + "\n}";
-		}
-		return "";
 	}
 
 	private String getParametersCode() {
@@ -159,7 +152,7 @@ public class Function extends Generator.Abst {
 			typesDeclaration,
 			returnType,
 			name + getParametersCode(),
-			getInnerCode()
+			body
 		);
 	}
 		

@@ -35,20 +35,27 @@ import java.util.Optional;
 public class Statement extends Generator.Abst {
 	private String startingDelimiter;
 	private String endingDelimiter;
+	private String elementPrefix;
 	private String elementSeparator;
 	private Collection<Generator> bodyGenerators;
 		
 	private Statement() {
 		setDelimiters("{\n", "\n}");
-		this.elementSeparator = "\n\t";
+		this.elementSeparator = "\n";
+		this.elementPrefix = "\t";
 	}
 	
-	public Statement create() {
+	public static Statement create() {
 		return new Statement();
 	}
 	
 	public Statement setBodyElementSeparator(String elementSeparator) {
 		this.elementSeparator = elementSeparator;
+		return this;
+	}
+	
+	public Statement setElementPrefix(String elementPrefix) {
+		this.elementPrefix = elementPrefix;
 		return this;
 	}
 	
@@ -58,18 +65,18 @@ public class Statement extends Generator.Abst {
 		return this;
 	}
 	
-	public Statement addBodyElement(Generator generator) {
+	public Statement addElement(Generator generator) {
 		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
 		this.bodyGenerators.add(generator);
 		return this;		
 	}
 	
-	public Statement addBodyElement(String element) {
+	public Statement addElement(String element) {
 		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
 		this.bodyGenerators.add(new Generator() {
 			@Override
 			public String make() {
-				return element;
+				return Optional.ofNullable(elementPrefix).orElseGet(() -> "") + element;
 			}
 		});
 		return this;
