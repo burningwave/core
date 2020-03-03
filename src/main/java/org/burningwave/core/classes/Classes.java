@@ -361,10 +361,8 @@ public class Classes implements Component {
 	public String getId(Object object) {
 		if (object instanceof String) {
 			return (String)object;
-		} else if (object.getClass().isPrimitive()) {
-			return object.toString();
 		}
-        return object.getClass().getName() + "@" + object.hashCode();
+        return object.getClass().getName() + "@" + System.identityHashCode(object);
     }
 	 
 	public String getId(Object... objects) {
