@@ -67,7 +67,7 @@ public class Unit extends Generator.Abst {
 	@Override
 	public String make() {
 		return getOrEmpty(
-			Arrays.asList("package " + packageName + ";", "\n", getImports(), "\n", classes), "\n"	
+			Arrays.asList("package " + packageName + ";", "\n", getImports(), "\n", getOrEmpty(classes, "\n\n")), "\n"	
 		);
 	}
 }
