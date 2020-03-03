@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class Generic extends Generator.Abst {
+	private Collection<String> outerCode;
 	private String name;
 	private String hirearchyOperator;
 	private TypeDeclaration hirearchyElement;
@@ -15,6 +16,12 @@ public class Generic extends Generator.Abst {
 	
 	public static Generic create(String name) {
 		return new Generic(name);		
+	}
+	
+	public Generic addOuterCode(String code) {
+		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
+		this.outerCode.add(code);
+		return this;
 	}
 	
 	public Generic expands(TypeDeclaration hirearchyElement) {
@@ -39,7 +46,7 @@ public class Generic extends Generator.Abst {
 	
 	@Override
 	public String make() {
-		return getOrEmpty(name, hirearchyOperator, hirearchyElement);
+		return getOrEmpty(outerCode, name, hirearchyOperator, hirearchyElement);
 	}	
 	
 	
