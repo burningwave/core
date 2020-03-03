@@ -30,6 +30,8 @@ package org.burningwave.core.classes.source;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Optional;
 
 public class Statement extends Generator.Abst {
@@ -41,8 +43,8 @@ public class Statement extends Generator.Abst {
 		
 	private Statement() {
 		setDelimiters("{\n", "\n}");
-		this.elementSeparator = "\n";
 		this.elementPrefix = "\t";
+		this.elementSeparator = "\n";
 	}
 	
 	public static Statement create() {
@@ -71,20 +73,40 @@ public class Statement extends Generator.Abst {
 		return this;		
 	}
 	
+	public Statement addAllElements(Collection<? extends Generator> generators) {
+		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
+		this.bodyGenerators.addAll(generators);
+		return this;		
+	}
+	
 	public Statement addElement(String element) {
 		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
 		this.bodyGenerators.add(new Generator() {
 			@Override
 			public String make() {
-				return Optional.ofNullable(elementPrefix).orElseGet(() -> "") + element;
+				return element;
 			}
 		});
 		return this;
 	}
 	
+	String getBody() {
+		String value = "";
+		bodyGenerators.removeAll(Collections.singleton(null));
+		Iterator<Generator> bodyGeneratorsItr = bodyGenerators.iterator();
+		while (bodyGeneratorsItr.hasNext()) {
+			Generator generator = bodyGeneratorsItr.next();
+			value += Optional.ofNullable(elementPrefix).orElseGet(() -> "") + generator.make();
+			if (bodyGeneratorsItr.hasNext() && elementSeparator != null) {
+				value += elementSeparator;
+			}
+		}
+		return value;
+	}		
+	
 	@Override
 	public String make() {
-		return getOrEmpty(startingDelimiter, getOrEmpty(bodyGenerators, elementSeparator), endingDelimiter);
+		return getOrEmpty(startingDelimiter, getBody(), endingDelimiter);
 	}
 	
 }
