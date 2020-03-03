@@ -11,6 +11,10 @@ public interface Generator {
 	
 	public String make();
 	
+	public default <F> String _toString() {
+		return make();
+	}
+	
 	public static abstract class Abst implements Generator {
 		static final String EMPTY_SPACE = " ";
 		static final String COMMA = ",";

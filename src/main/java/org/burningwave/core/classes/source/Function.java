@@ -9,6 +9,7 @@ import java.util.Optional;
 public class Function extends Generator.Abst {
 	private Collection<String> outerCode;
 	private Integer modifier;
+	private boolean defaultFunction;
 	private TypeDeclaration typesDeclaration;
 	private TypeDeclaration returnType;
 	private String name;
@@ -38,6 +39,11 @@ public class Function extends Generator.Abst {
 		} else {
 			this.modifier |= modifier; 
 		}
+		return this;
+	}
+	
+	public Function setDefault() {
+		this.defaultFunction = true;
 		return this;
 	}
 	
@@ -121,6 +127,7 @@ public class Function extends Generator.Abst {
 				getOrEmpty(outerCode) + "\n"
 			).orElseGet(() -> null),
 			Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
+			defaultFunction ? "default" : null,
 			typesDeclaration,
 			returnType,
 			name + getParametersCode(),
