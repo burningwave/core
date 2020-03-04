@@ -79,8 +79,6 @@ public interface ComponentSupplier extends Component {
 	
 	public CodeGenerator.ForPojo getCodeGeneratorForPojo();
 	
-	public CodeGenerator.ForPredicate getCodeGeneratorForPredicate();
-	
 	public ConcurrentHelper getConcurrentHelper();
 	
 	public FileSystemHelper getFileSystemHelper();

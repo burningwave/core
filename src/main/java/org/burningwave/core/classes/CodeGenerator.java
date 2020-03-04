@@ -360,53 +360,6 @@ public abstract class CodeGenerator implements Component {
 	}
 	
 	
-	public static class ForPredicate extends CodeGenerator {
-				
-		private ForPredicate(
-			StreamHelper streamHelper
-		) {
-			super(streamHelper);
-			PACKAGE_NAME = BASE_PACKAGE_NAME_FOR_TEMPLATE + ".function";
-			TEMPLATE = readTemplate(PACKAGE_NAME.replaceAll("\\.", "/") + "/MultiParameterPredicate.jt");
-		}
-		
-		public static ForPredicate create(
-			StreamHelper streamHelper
-		) {
-			return new ForPredicate(streamHelper);
-		}
-		
-		public String generate(Object... objs) {
-			int paramsLength = (Integer)objs[0];
-			String[] generics = new String[paramsLength];
-			String[] params = new String[paramsLength];
-			String[] genericParams = new String[paramsLength];
-			String[] genericParamsCasted = new String[paramsLength];
-			for (int i = 0; i < generics.length; i++) {
-				generics[i] = "P" + i;
-				params[i] = "p" + i;
-				genericParams[i] = generics[i] + " " + params[i];
-				genericParamsCasted[i] = "(" + generics[i] + ")params[" + i + "]";
-			}
-						
-			String className = "PredicateFor" + paramsLength + "Parameters";
-			String genericsAsString_01 = String.join(", ", generics);		
-			String genericParamsAsString_01 = String.join(", ", genericParams);
-			String genericParamsCastedAsString_01 = String.join(", ", genericParamsCasted);
-		
-			Map<String, String> map = new LinkedHashMap<>();
-			map.put("${packageName}", PACKAGE_NAME);
-			//map.put("${imports}", getImports(MultiParamsPredicate.class));
-			map.put("${className}", className);
-			map.put("${generics_01}", genericsAsString_01);
-			map.put("${genericParams_01}", genericParamsAsString_01);
-			map.put("${genericParamsCasted_01}", genericParamsCastedAsString_01);			
-			
-			return Strings.replace(TEMPLATE, map);
-		}
-	}
-	
-	
 	public static class ForCodeExecutor extends CodeGenerator {
 		
 		private ForCodeExecutor(

@@ -48,6 +48,7 @@ import org.burningwave.core.classes.source.TypeDeclaration;
 import org.burningwave.core.classes.source.Unit;
 import org.burningwave.core.classes.source.Variable;
 import org.burningwave.core.function.MultiParamsFunction;
+import org.burningwave.core.function.MultiParamsPredicate;
 import org.burningwave.core.function.TriFunction;
 import org.burningwave.core.io.PathHelper;
 
@@ -61,17 +62,50 @@ public class ClassFactory implements Component {
 	private JavaMemoryCompiler javaMemoryCompiler;
 	private CodeGenerator codeGeneratorForPojo;
 	private CodeGenerator codeGeneratorForConsumer;
-	private CodeGenerator codeGeneratorForPredicate;
 	private CodeGenerator codeGeneratorForExecutor;
+	
+	
+	private TriFunction<String, String, Integer, Unit> codeGeneratorForPredicate = (packageName, functionalInterfaceName, parametersLength) -> {
+		TypeDeclaration typeDeclaration = TypeDeclaration.create(functionalInterfaceName);
+		Function applyMethod = Function.create("test").setReturnType(
+			boolean.class
+		).addModifier(Modifier.PUBLIC | Modifier.ABSTRACT);
+		Function varArgsApplyMethod = Function.create("test").setReturnType(
+			boolean.class
+		).addModifier(Modifier.PUBLIC).setDefault().addParameter(
+			Variable.create(TypeDeclaration.create("Object..."), "params")
+		).addOuterCodeRow("@Override");
+		varArgsApplyMethod.addBodyCodeRow("return test(");
+		Statement applyMethodCodeOne = Statement.createSimple().setBodyElementSeparator(", ");
+		for (int i = 0; i < parametersLength; i++) {
+			typeDeclaration.addGeneric(Generic.create("P" + i));
+			applyMethod.addParameter(Variable.create(TypeDeclaration.create("P" + i), "p" + i));
+			applyMethodCodeOne.addCode("(P" + i + ")params["+i+"]");
+		}
+		varArgsApplyMethod.addBodyElement(applyMethodCodeOne);
+		varArgsApplyMethod.addBodyCode(");");
+		Class cls = Class.createInterface(
+			typeDeclaration
+		).addModifier(
+			Modifier.PUBLIC
+		).expands(
+			TypeDeclaration.create(MultiParamsPredicate.class)
+		).addMethod(
+			applyMethod
+		).addMethod(
+			varArgsApplyMethod
+		).addOuterCodeRow("@FunctionalInterface");
+		return Unit.create(packageName).addClass(cls);
+	};
 	
 	private TriFunction<String, String, Integer, Unit> codeGeneratorForFunction = (packageName, functionalInterfaceName, parametersLength) -> {
 		TypeDeclaration typeDeclaration = TypeDeclaration.create(functionalInterfaceName);
 		Generic returnType = Generic.create("R");
 		Function applyMethod = Function.create("apply").setReturnType(
-			TypeDeclaration.create(returnType.getName())
+			returnType
 		).addModifier(Modifier.PUBLIC | Modifier.ABSTRACT);
 		Function varArgsApplyMethod = Function.create("apply").setReturnType(
-			TypeDeclaration.create(returnType.getName())
+			returnType
 		).addModifier(Modifier.PUBLIC).setDefault().addParameter(
 			Variable.create(TypeDeclaration.create("Object..."), "params")
 		).addOuterCodeRow("@Override");
@@ -106,7 +140,6 @@ public class ClassFactory implements Component {
 		PathHelper pathHelper,
 		CodeGenerator.ForPojo codeGeneratorForPojo,
 		CodeGenerator.ForConsumer codeGeneratorForConsumer,
-		CodeGenerator.ForPredicate codeGeneratorForPredicate,
 		CodeGenerator.ForCodeExecutor codeGeneratorForExecutor
 	) {	
 		this.sourceCodeHandler = sourceCodeHandler;
@@ -115,7 +148,6 @@ public class ClassFactory implements Component {
 		this.pathHelper = pathHelper;
 		this.codeGeneratorForPojo = codeGeneratorForPojo;
 		this.codeGeneratorForConsumer = codeGeneratorForConsumer;
-		this.codeGeneratorForPredicate = codeGeneratorForPredicate;
 		this.codeGeneratorForExecutor = codeGeneratorForExecutor;
 	}
 	
@@ -126,13 +158,12 @@ public class ClassFactory implements Component {
 		PathHelper pathHelper,
 		CodeGenerator.ForPojo codeGeneratorForPojo,
 		CodeGenerator.ForConsumer codeGeneratorForConsumer,
-		CodeGenerator.ForPredicate codeGeneratorForPredicate,
 		CodeGenerator.ForCodeExecutor codeGeneratorForExecutor
 	) {
 		return new ClassFactory(
 			sourceCodeHandler, classesLoaders,
 			javaMemoryCompiler, pathHelper, codeGeneratorForPojo, 
-			codeGeneratorForConsumer, codeGeneratorForPredicate, codeGeneratorForExecutor
+			codeGeneratorForConsumer, codeGeneratorForExecutor
 		);
 	}
 	
@@ -215,7 +246,14 @@ public class ClassFactory implements Component {
 	}
 	
 	public java.lang.Class<?> getOrBuildPredicateSubType(ClassLoader classLoader, int parametersLength) {
-		return getOrBuild(codeGeneratorForPredicate.generate(parametersLength),classLoader);
+		String functionalInterfaceName = "PredicateFor" + parametersLength + "Parameters";
+		String packageName = MultiParamsPredicate.class.getPackage().getName();
+		String className = packageName + "." + functionalInterfaceName;
+		return getOrBuild(
+			className,
+			() -> codeGeneratorForPredicate.apply(packageName, functionalInterfaceName, parametersLength),
+			classLoader
+		);
 	}
 	
 	public java.lang.Class<?> getOrBuildCodeExecutorSubType(String imports, String classSimpleName, String supplierCode, ComponentSupplier componentSupplier, ClassLoader classLoader) {
