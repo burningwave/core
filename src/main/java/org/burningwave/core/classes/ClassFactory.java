@@ -28,14 +28,15 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
@@ -51,7 +52,6 @@ import org.burningwave.core.classes.source.Variable;
 import org.burningwave.core.function.MultiParamsConsumer;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.MultiParamsPredicate;
-import org.burningwave.core.function.TriFunction;
 import org.burningwave.core.io.PathHelper;
 
 
@@ -64,8 +64,13 @@ public class ClassFactory implements Component {
 	private JavaMemoryCompiler javaMemoryCompiler;
 	private CodeGenerator codeGeneratorForPojo;
 	
-	private TriFunction<String, String, Statement, Unit> codeGeneratorForExecutor = (packageName, className, statement) -> {
-		TypeDeclaration typeDeclaration = TypeDeclaration.create(className);
+	private BiFunction<String, Statement, Unit> codeGeneratorForExecutor = (className, statement) -> {
+		if (className.contains("$")) {
+			throw Throwables.toRuntimeException(className + " CodeExecutor could not be a inner class");
+		}
+		String packageName = Classes.retrievePackageName(className);
+		String classSimpleName = Classes.retrieveSimpleName(className);
+		TypeDeclaration typeDeclaration = TypeDeclaration.create(classSimpleName);
 		Generic returnType = Generic.create("T");
 		Function executeMethod = Function.create("execute").setReturnType(
 			returnType
@@ -93,8 +98,13 @@ public class ClassFactory implements Component {
 		return Unit.create(packageName).addClass(cls);
 	};
 	
-	private TriFunction<String, String, Integer, Unit> codeGeneratorForConsumer = (packageName, functionalInterfaceName, parametersLength) -> {
-		TypeDeclaration typeDeclaration = TypeDeclaration.create(functionalInterfaceName);
+	private BiFunction<String, Integer, Unit> codeGeneratorForConsumer = (className, parametersLength) -> {
+		String packageName = Classes.retrievePackageName(className);
+		String classSimpleName = Classes.retrieveSimpleName(className);
+		if (className.contains("$")) {
+			throw Throwables.toRuntimeException(className + " CodeExecutor could not be a inner class");
+		}
+		TypeDeclaration typeDeclaration = TypeDeclaration.create(classSimpleName);
 		Function acceptMethod = Function.create("accept").setReturnType(
 			void.class
 		).addModifier(Modifier.PUBLIC | Modifier.ABSTRACT);
@@ -126,8 +136,13 @@ public class ClassFactory implements Component {
 		return Unit.create(packageName).addClass(cls);
 	};
 	
-	private TriFunction<String, String, Integer, Unit> codeGeneratorForPredicate = (packageName, functionalInterfaceName, parametersLength) -> {
-		TypeDeclaration typeDeclaration = TypeDeclaration.create(functionalInterfaceName);
+	private BiFunction<String, Integer, Unit> codeGeneratorForPredicate = (className, parametersLength) -> {
+		String packageName = Classes.retrievePackageName(className);
+		String classSimpleName = Classes.retrieveSimpleName(className);
+		if (className.contains("$")) {
+			throw Throwables.toRuntimeException(className + " CodeExecutor could not be a inner class");
+		}
+		TypeDeclaration typeDeclaration = TypeDeclaration.create(classSimpleName);
 		Function testMethod = Function.create("test").setReturnType(
 			boolean.class
 		).addModifier(Modifier.PUBLIC | Modifier.ABSTRACT);
@@ -159,8 +174,13 @@ public class ClassFactory implements Component {
 		return Unit.create(packageName).addClass(cls);
 	};
 	
-	private TriFunction<String, String, Integer, Unit> codeGeneratorForFunction = (packageName, functionalInterfaceName, parametersLength) -> {
-		TypeDeclaration typeDeclaration = TypeDeclaration.create(functionalInterfaceName);
+	private BiFunction<String, Integer, Unit> codeGeneratorForFunction = (className, parametersLength) -> {
+		String packageName = Classes.retrievePackageName(className);
+		String classSimpleName = Classes.retrieveSimpleName(className);
+		if (className.contains("$")) {
+			throw Throwables.toRuntimeException(className + " CodeExecutor could not be a inner class");
+		}
+		TypeDeclaration typeDeclaration = TypeDeclaration.create(classSimpleName);
 		Generic returnType = Generic.create("R");
 		Function applyMethod = Function.create("apply").setReturnType(
 			returnType
@@ -296,7 +316,7 @@ public class ClassFactory implements Component {
 		String className = packageName + "." + functionalInterfaceName;
 		return getOrBuild(
 			className,
-			() -> codeGeneratorForFunction.apply(packageName, functionalInterfaceName, parametersLength),
+			() -> codeGeneratorForFunction.apply(className, parametersLength),
 			classLoader
 		);
 	}
@@ -307,7 +327,7 @@ public class ClassFactory implements Component {
 		String className = packageName + "." + functionalInterfaceName;
 		return getOrBuild(
 			className,
-			() -> codeGeneratorForConsumer.apply(packageName, functionalInterfaceName, parametersLength),
+			() -> codeGeneratorForConsumer.apply(className, parametersLength),
 			classLoader
 		);
 	}
@@ -318,18 +338,15 @@ public class ClassFactory implements Component {
 		String className = packageName + "." + functionalInterfaceName;
 		return getOrBuild(
 			className,
-			() -> codeGeneratorForPredicate.apply(packageName, functionalInterfaceName, parametersLength),
+			() -> codeGeneratorForPredicate.apply(className, parametersLength),
 			classLoader
 		);
 	}
 	
 	public java.lang.Class<?> getOrBuildCodeExecutorSubType(ClassLoader classLoader, String className, Statement statement) {
-		String packageName = Classes.retrievePackageName(className);
-		String classSimpleName = Classes.retrieveSimpleName(className);
-		className = packageName + "." + classSimpleName;
 		return getOrBuild(
 			className,
-			() -> codeGeneratorForExecutor.apply(packageName, classSimpleName, statement),
+			() -> codeGeneratorForExecutor.apply(className, statement),
 			classLoader
 		);
 

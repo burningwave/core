@@ -10,23 +10,23 @@ import org.junit.jupiter.api.Test;
 
 public class ClassFactoryTest extends BaseTest {
 	
-	@Test
-	public void getOrBuildFunctionClassTestOne() {
-		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildFunctionSubType(getComponentSupplier().getMemoryClassLoader(), 10));
-	}	
-	
-	@Test
-	public void getOrBuildConsumerClassTestOne() {
-		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildConsumerSubType(getComponentSupplier().getMemoryClassLoader(), 2));
-	}
-	
-	@Test
-	public void getOrBuildPredicateClassTestOne() {
-		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildPredicateSubType(getComponentSupplier().getMemoryClassLoader(), 10));
-	}
+//	@Test
+//	public void getOrBuildFunctionClassTestOne() {
+//		ComponentSupplier componentSupplier = getComponentSupplier();
+//		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildFunctionSubType(getComponentSupplier().getMemoryClassLoader(), 10));
+//	}	
+//	
+//	@Test
+//	public void getOrBuildConsumerClassTestOne() {
+//		ComponentSupplier componentSupplier = getComponentSupplier();
+//		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildConsumerSubType(getComponentSupplier().getMemoryClassLoader(), 2));
+//	}
+//	
+//	@Test
+//	public void getOrBuildPredicateClassTestOne() {
+//		ComponentSupplier componentSupplier = getComponentSupplier();
+//		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildPredicateSubType(getComponentSupplier().getMemoryClassLoader(), 10));
+//	}
 	
 	
 	@Test
@@ -34,7 +34,7 @@ public class ClassFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> 
 			componentSupplier.getClassFactory().getOrBuildPojoSubType(
-				getComponentSupplier().getMemoryClassLoader(), this.getClass().getPackage().getName() + ".SimpleVirtual"
+				getComponentSupplier().getMemoryClassLoader(), this.getClass().getPackage().getName(), "SimpleVirtual"
 			)
 		);
 	}
@@ -44,13 +44,13 @@ public class ClassFactoryTest extends BaseTest {
 	public void getOrBuildPojoClassTestTwo() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		Class<?> cls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
-			getComponentSupplier().getMemoryClassLoader(), this.getClass().getPackage().getName() + ".TestTwoPojoImpl",
+			getComponentSupplier().getMemoryClassLoader(), this.getClass().getPackage().getName(),"TestTwoPojoImpl",
 			Complex.Data.Item.class,
 			PojoInterface.class
 		);
 		testNotNull(() -> 
 			componentSupplier.getClassFactory().getOrBuildPojoSubType(
-				getComponentSupplier().getMemoryClassLoader(), cls.getPackage().getName() + ".ExtendedPojoImpl", cls
+				getComponentSupplier().getMemoryClassLoader(), cls.getPackage().getName(), "ExtendedPojoImpl", cls
 			)			
 		);
 	}
@@ -76,7 +76,7 @@ public class ClassFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> {
 			Class<?> virtualClass = componentSupplier.getClassFactory().getOrBuildPojoSubType(
-				getComponentSupplier().getMemoryClassLoader(), this.getClass().getPackage().getName() + ".TestThreePojoImpl", 
+				getComponentSupplier().getMemoryClassLoader(), this.getClass().getPackage().getName(), "TestThreePojoImpl", 
 				Service.class,
 				PojoInterface.class
 			);
