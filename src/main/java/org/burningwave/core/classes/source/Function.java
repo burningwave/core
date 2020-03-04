@@ -179,5 +179,5 @@ public class Function extends Generator.Abst {
 			body,
 			Optional.ofNullable(modifier).map(mod -> Modifier.isAbstract(mod)? ";" : null).orElseGet(() -> null)
 		);
-	}		
+	}	
 }

@@ -1,5 +1,8 @@
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 
@@ -52,11 +55,14 @@ public class ClassFactoryTest extends BaseTest {
 			Complex.Data.Item.class,
 			PojoInterface.class
 		);
-		testNotNull(() -> 
-			componentSupplier.getClassFactory().getOrBuildPojoSubType(
+		testNotNull(() -> {
+			java.lang.Class<?> reloadedCls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
 				getComponentSupplier().getMemoryClassLoader(), cls.getPackage().getName() + ".ExtendedPojoImpl", cls
-			)			
-		);
+			);
+			Constructor<?> ctorr = Classes.getDeclaredConstructors(reloadedCls, ctor -> ctor.getParameterTypes()[0].equals(String.class)).stream().findFirst().orElse(null);
+			PojoInterface pojoObject = (PojoInterface)ctorr.newInstance("try");
+			return pojoObject;
+		});
 	}
 	
 	@Test

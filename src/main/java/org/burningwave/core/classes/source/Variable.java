@@ -49,6 +49,10 @@ public class Variable extends Generator.Abst {
 		this.delimiter = ";";
 	}
 	
+	public static Variable create(java.lang.Class<?> type, String name) {
+		return new Variable(TypeDeclaration.create(type), name);
+	}
+	
 	public static Variable create(TypeDeclaration type, String name) {
 		return new Variable(type, name);
 	}

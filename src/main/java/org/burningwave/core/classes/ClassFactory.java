@@ -29,12 +29,19 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -65,36 +72,74 @@ public class ClassFactory implements Component {
 	
 	private BiFunction<String, java.lang.Class<?>[], Unit> codeGeneratorForPojo = (className, superClasses) -> {
 		if (className.contains("$")) {
-			throw Throwables.toRuntimeException(className + " CodeExecutor could not be a inner class");
+			throw Throwables.toRuntimeException(className + " Pojo could not be a inner class");
 		}
 		String packageName = Classes.retrievePackageName(className);
 		String classSimpleName = Classes.retrieveSimpleName(className);
-		TypeDeclaration typeDeclaration = TypeDeclaration.create(classSimpleName);
-		Generic returnType = Generic.create("T");
-//		Function executeMethod = Function.create("execute").setReturnType(
-//			returnType
-//		).addModifier(
-//			Modifier.PUBLIC
-//		).addParameter(
-//			Variable.create(
-//				TypeDeclaration.create(ComponentSupplier.class), "componentSupplier"
-//			)
-//		).addParameter(
-//			Variable.create(
-//				TypeDeclaration.create("Object... "), "objects"
-//			)
-//		).addOuterCodeRow("@Override").addBodyElement(statement);
-//		typeDeclaration.addGeneric(returnType);		
-//		Class cls = Class.create(
-//			typeDeclaration
-//		).addModifier(
-//			Modifier.PUBLIC
-//		).addConcretizedType(
-//			CodeExecutor.class
-//		).addMethod(
-//			executeMethod
-//		);
-		return Unit.create(packageName);
+		Class cls = Class.create(
+			TypeDeclaration.create(classSimpleName)
+		).addModifier(
+			Modifier.PUBLIC
+		);
+		java.lang.Class<?> superClass = null;
+		Collection<java.lang.Class<?>> interfaces = new LinkedHashSet<>();
+		for (java.lang.Class<?> iteratedSuperClass : superClasses) {
+			if (iteratedSuperClass.isInterface()) {
+				cls.addConcretizedType(iteratedSuperClass);
+				interfaces.add(iteratedSuperClass);
+			} else if (superClass == null) {
+				cls.expands(iteratedSuperClass);
+				superClass = iteratedSuperClass;
+			} else {
+				throw Throwables.toRuntimeException(className + " Pojo could not extends more than one class");
+			}
+		}
+		if (superClass != null) {
+			for (Constructor<?> constructor : Classes.getDeclaredConstructors(superClass, constructor -> 
+				Modifier.isPublic(constructor.getModifiers()) || 
+				Modifier.isProtected(constructor.getModifiers()))
+			) {
+				Function ctor = Function.create(classSimpleName).addModifier(constructor.getModifiers());
+				Collection<String> params = new ArrayList<>();
+				for (Parameter paramType : constructor.getParameters()) {
+					ctor.addParameter(
+						Variable.create(TypeDeclaration.create(paramType.getType()), paramType.getName())
+					);
+					params.add(paramType.getName());
+				}
+				ctor.addBodyCodeRow("super(" + String.join(", ", params) + ");");
+				cls.addConstructor(ctor);
+			}
+		}
+		Map<String, Variable> fieldsMap = new HashMap<>();
+		for (java.lang.Class<?> interf : interfaces) {
+			for (Method method : Classes.getDeclaredMethods(interf, method -> 
+				method.getName().startsWith("set") || method.getName().startsWith("get") || method.getName().startsWith("is")
+			)) {
+				Integer modifiers = method.getModifiers();
+				if (Modifier.isAbstract(modifiers)) {
+					modifiers ^= Modifier.ABSTRACT;
+				}
+				Function mth = Function.create(method.getName()).addModifier(modifiers);
+				mth.setReturnType(method.getReturnType());
+				if (method.getName().startsWith("set")) {
+					String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst("set", ""));
+					java.lang.Class<?> paramType = method.getParameters()[0].getType();
+					fieldsMap.put(fieldName, Variable.create(paramType, fieldName));
+					mth.addParameter(Variable.create(paramType, fieldName));
+					mth.addBodyCodeRow("this." + fieldName + " = " + fieldName + ";");
+				} else if (method.getName().startsWith("get") || method.getName().startsWith("is")) {
+					String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst("get", ""));
+					fieldsMap.put(fieldName, Variable.create(method.getReturnType(), fieldName));
+					mth.addBodyCodeRow("return this." + fieldName + ";");
+				}
+				cls.addMethod(mth);
+			}
+			fieldsMap.entrySet().forEach(entry -> {
+				cls.addField(entry.getValue());
+			});
+		}
+		return Unit.create(packageName).addClass(cls);
 	};
 	
 	private BiFunction<String, Statement, Unit> codeGeneratorForExecutor = (className, statement) -> {
@@ -320,12 +365,13 @@ public class ClassFactory implements Component {
 		unit.getAllClasses().values().forEach(cls -> {
 			cls.addConcretizedType(TypeDeclaration.create(Virtual.class));
 		});
-		Map<String, ByteBuffer> compiledFiles = build(unit.make());
-		logInfo("Class " + className + " succesfully created");
+		
 		try {
+			Map<String, ByteBuffer> compiledFiles = build(unit.make());
+			logInfo("Class " + className + " succesfully created");
 			return classesLoaders.loadOrUploadClass(className, compiledFiles, classLoader);
-		} catch (ClassNotFoundException e) {
-			throw Throwables.toRuntimeException(e);
+		} catch (Throwable exc) {
+			throw Throwables.toRuntimeException(exc);
 		}
 	}
 
@@ -339,7 +385,11 @@ public class ClassFactory implements Component {
 	}	
 	
 	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, java.lang.Class<?>... superClasses) {
-		return getOrBuild(className, codeGeneratorForPojo.apply(className, superClasses), classLoader);
+		return getOrBuild(
+			className, 
+			() -> codeGeneratorForPojo.apply(className, superClasses),
+			classLoader
+		);
 	}
 	
 	public java.lang.Class<?> getOrBuildFunctionSubType(ClassLoader classLoader, int parametersLength) {

@@ -341,10 +341,10 @@ public class Classes implements Component {
 		);
 	}
 	
-	public Collection<Method> getDeclaredMethods(Class<?> cls, Predicate<Method> fieldPredicate) {
+	public Collection<Method> getDeclaredMethods(Class<?> cls, Predicate<Method> methodPredicate) {
 		Collection<Method> members = new LinkedHashSet<>();
 		for (Method member : getDeclaredMethods(cls)) {
-			if (fieldPredicate.test(member)) {
+			if (methodPredicate.test(member)) {
 				members.add(member);
 			}
 		}
