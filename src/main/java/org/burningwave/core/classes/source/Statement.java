@@ -30,8 +30,6 @@ package org.burningwave.core.classes.source;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.Optional;
 
 public class Statement extends Generator.Abst {
@@ -41,14 +39,14 @@ public class Statement extends Generator.Abst {
 	private String elementSeparator;
 	private Collection<Generator> bodyGenerators;
 		
-	private Statement() {
-		setDelimiters("{\n", "\n}");
-		this.elementPrefix = "\t";
-		this.elementSeparator = "\n";
-	}
+	private Statement() {}
 	
 	public static Statement create() {
-		return new Statement();
+		return new Statement().setDelimiters("{", "\n}").setElementPrefix("\t");
+	}
+	
+	public static Statement createSimple() {
+		return new Statement().setDelimiters(null, null).setElementPrefix(null); 
 	}
 	
 	public Statement setBodyElementSeparator(String elementSeparator) {
@@ -73,13 +71,7 @@ public class Statement extends Generator.Abst {
 		return this;		
 	}
 	
-	public Statement addAllElements(Collection<? extends Generator> generators) {
-		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
-		this.bodyGenerators.addAll(generators);
-		return this;		
-	}
-	
-	public Statement addElement(String element) {
+	public Statement addCode(String element) {
 		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
 		this.bodyGenerators.add(new Generator() {
 			@Override
@@ -89,24 +81,20 @@ public class Statement extends Generator.Abst {
 		});
 		return this;
 	}
+
+	public Statement addCodeRow(String code) {
+		return addCode("\n" + Optional.ofNullable(elementPrefix).orElseGet(() -> "") + code);		
+	}
 	
-	String getBody() {
-		String value = "";
-		bodyGenerators.removeAll(Collections.singleton(null));
-		Iterator<Generator> bodyGeneratorsItr = bodyGenerators.iterator();
-		while (bodyGeneratorsItr.hasNext()) {
-			Generator generator = bodyGeneratorsItr.next();
-			value += Optional.ofNullable(elementPrefix).orElseGet(() -> "") + generator.make();
-			if (bodyGeneratorsItr.hasNext() && elementSeparator != null) {
-				value += elementSeparator;
-			}
-		}
-		return value;
-	}		
+	public Statement addAllElements(Collection<? extends Generator> generators) {
+		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
+		this.bodyGenerators.addAll(generators);
+		return this;		
+	}
 	
 	@Override
 	public String make() {
-		return getOrEmpty(startingDelimiter, getBody(), endingDelimiter);
+		return getOrEmpty(startingDelimiter, getOrEmpty((Collection<?>)bodyGenerators, (String)Optional.ofNullable(elementSeparator).orElse(EMPTY_SPACE)), endingDelimiter);
 	}
 	
 }

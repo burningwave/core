@@ -32,6 +32,8 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class Class extends Generator.Abst {
@@ -51,6 +53,10 @@ public class Class extends Generator.Abst {
 	private Class(String classType, TypeDeclaration typeDeclaration) {
 		this.classType = classType;
 		this.typeDeclaration = typeDeclaration;
+	}
+	
+	TypeDeclaration getTypeDeclaration() {
+		return typeDeclaration;
 	}
 	
 	public static Class create(TypeDeclaration type) {
@@ -75,17 +81,39 @@ public class Class extends Generator.Abst {
 	}
 	
 	public Class expands(java.lang.Class<?> extendedClass) {
-		return expands(TypeDeclaration.create(extendedClass));
+		return expands(TypeDeclaration.create(extendedClass));		
 	}
 	
 	public Class expands(TypeDeclaration expandedType) {
-		expands = "extends";
-		this.expandedType = expandedType;
-		return this;
+		if (classType.equals("interface")) {
+			this.concretize = "extends";
+			return addConcretizedType(expandedType);
+		} else {
+			expands = "extends";
+			this.expandedType = expandedType;
+			return this;
+		}
+	}
+	
+	public Class addConcretizedType(java.lang.Class<?>... concretizedTypes) {
+		if (classType.equals("interface")) {
+			concretize = "extends";
+		} else {
+			concretize = "implements";
+		}
+		this.concretizedTypes = Optional.ofNullable(this.concretizedTypes).orElseGet(ArrayList::new);
+		for (java.lang.Class<?> cls : concretizedTypes) {
+			this.concretizedTypes.add(TypeDeclaration.create(cls));
+		}
+		return this;	
 	}
 	
 	public Class addConcretizedType(TypeDeclaration... concretizedTypes) {
-		concretize = "implements";
+		if (classType.equals("interface")) {
+			concretize = "extends";
+		} else {
+			concretize = "implements";
+		}
 		this.concretizedTypes = Optional.ofNullable(this.concretizedTypes).orElseGet(ArrayList::new);
 		this.concretizedTypes.addAll(Arrays.asList(concretizedTypes));
 		return this;		
@@ -150,6 +178,19 @@ public class Class extends Generator.Abst {
 		return innerClassesAsString;
 	}
 	
+	Map<String, Class> getAllInnerClasses() {
+		Map<String, Class> classes = new HashMap<>();
+		Optional.ofNullable(innerClasses).ifPresent(innerclasses -> {
+			innerclasses.forEach(innerClass -> {
+				classes.put(typeDeclaration.getSimpleName() + "$" + innerClass.typeDeclaration.getSimpleName(), innerClass);
+				for (Map.Entry<String, Class> cls : innerClass.getAllInnerClasses().entrySet()) {
+					classes.put(typeDeclaration.getSimpleName() + "$" + cls.getKey(), cls.getValue());
+				}
+			});
+		});
+		return classes;
+	}
+	
 	@Override
 	public String make() {
 		String fieldsCode = getFieldsCode();
@@ -165,7 +206,7 @@ public class Class extends Generator.Abst {
 				expands,
 				expandedType,
 				concretize,
-				concretizedTypes, 
+				getOrEmpty(concretizedTypes, ", "), 
 				"{",
 				fieldsCode != null? "\n\n" + fieldsCode : null,
 				constructorsCode != null? "\n\n" + constructorsCode : null,

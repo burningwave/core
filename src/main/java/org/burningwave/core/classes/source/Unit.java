@@ -31,7 +31,9 @@ package org.burningwave.core.classes.source;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -90,6 +92,19 @@ public class Unit extends Generator.Abst {
 			});
 		});
 		return types;
+	}
+	
+	public Map<String, Class> getAllClasses() {
+		Map<String, Class> allClasses = new HashMap<>();
+		Optional.ofNullable(classes).ifPresent(classes -> {
+			classes.forEach(cls -> {
+				allClasses.put(packageName + "." + cls.getTypeDeclaration().getSimpleName(), cls);
+				cls.getAllInnerClasses().entrySet().forEach(innerClass -> {
+					allClasses.put(packageName + "." + innerClass.getKey(), cls);
+				});
+			});
+		});
+		return allClasses;
 	}
 	
 	@Override

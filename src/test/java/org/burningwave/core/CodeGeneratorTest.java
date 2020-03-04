@@ -25,8 +25,8 @@ public class CodeGeneratorTest extends BaseTest {
 							.addOuterCodeRow("@Parameter"))
 					.addParameter(Variable.create(TypeDeclaration.create(String.class), "parameter2"))
 					.addParameter(Variable.create(TypeDeclaration.create(Long.class), "parameter3"))
-					.addInnerCodeRow("System.out.println(\"Hello world!\");")
-					.addInnerCodeRow("System.out.println(\"How are you!\");").addInnerCodeRow("return new Long(1);")
+					.addBodyCodeRow("System.out.println(\"Hello world!\");")
+					.addBodyCodeRow("System.out.println(\"How are you!\");").addBodyCodeRow("return new Long(1);")
 					.addOuterCodeRow("@MethodAnnotation");
 
 			Function method2 = Function.create("find2").addModifier(Modifier.PUBLIC)
@@ -35,13 +35,13 @@ public class CodeGeneratorTest extends BaseTest {
 					.addParameter(Variable.create(TypeDeclaration.create(Long.class), "parameter1"))
 					.addParameter(Variable.create(TypeDeclaration.create(String.class), "parameter2"))
 					.addParameter(Variable.create(TypeDeclaration.create(Long.class), "parameter3"))
-					.addInnerCodeRow("System.out.println(\"Hello world!\");")
-					.addInnerCodeRow("System.out.println(\"How are you!\");").addInnerCodeRow("return new Long(1);");
+					.addBodyCodeRow("System.out.println(\"Hello world!\");")
+					.addBodyCodeRow("System.out.println(\"How are you!\");").addBodyCodeRow("return new Long(1);");
 
-			Function constructor = Function.create().addModifier(Modifier.PUBLIC).addInnerCodeRow("this.index1 = 1;");
+			Function constructor = Function.create().addModifier(Modifier.PUBLIC).addBodyCodeRow("this.index1 = 1;");
 
 			Class cls = Class
-					.create(TypeDeclaration.create("Generated")
+					.create(TypeDeclaration.create("Generated0")
 							.addGeneric(Generic.create("T").expands(TypeDeclaration.create("Class")
 									.addGeneric(Generic.create("F").expands(
 											TypeDeclaration.create("ClassTwo").addGeneric(Generic.create("H"))))))
@@ -55,7 +55,7 @@ public class CodeGeneratorTest extends BaseTest {
 							.addModifier(Modifier.PRIVATE))
 					.addConstructor(constructor).addMethod(method).addMethod(method2);
 			cls.addInnerClass(Class
-					.create(TypeDeclaration.create("Generated")
+					.create(TypeDeclaration.create("Generated1")
 							.addGeneric(Generic.create("T").expands(TypeDeclaration.create("Class")
 									.addGeneric(Generic.create("F").expands(
 											TypeDeclaration.create("ClassTwo").addGeneric(Generic.create("H"))))))
@@ -69,7 +69,7 @@ public class CodeGeneratorTest extends BaseTest {
 							.addModifier(Modifier.PRIVATE))
 					.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation2")
 					.addInnerClass(Class
-							.create(TypeDeclaration.create("Generated")
+							.create(TypeDeclaration.create("Generated2")
 									.addGeneric(Generic.create("T")
 											.expands(TypeDeclaration.create("Class")
 													.addGeneric(Generic.create("F")
@@ -88,6 +88,7 @@ public class CodeGeneratorTest extends BaseTest {
 			unit.addClass(cls);
 			unit.addClass(cls);
 			System.out.println(unit.make());
+			unit.getAllClasses().keySet().forEach(System.out::println);
 		});
 	}
 }

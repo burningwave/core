@@ -46,6 +46,10 @@ public class Generic extends Generator.Abst {
 		return new Generic(name);		
 	}
 	
+	public String getName() {
+		return name;
+	}	
+	
 	public Generic addOuterCode(String code) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
 		this.outerCode.add(code);
@@ -75,7 +79,6 @@ public class Generic extends Generator.Abst {
 	@Override
 	public String make() {
 		return getOrEmpty(outerCode, name, hirearchyOperator, hirearchyElement);
-	}	
-	
-	
+	}
+
 }

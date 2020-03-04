@@ -101,9 +101,21 @@ public class Function extends Generator.Abst {
 		return this;
 	}
 	
-	public Function addInnerCodeRow(String code) {
+	public Function addBodyCode(String code) {
 		this.body = Optional.ofNullable(this.body).orElseGet(Statement::create);
-		this.body.addElement(code);
+		this.body.addCode(code);
+		return this;
+	}
+	
+	public Function addBodyCodeRow(String code) {
+		this.body = Optional.ofNullable(this.body).orElseGet(Statement::create);
+		this.body.addCodeRow(code);
+		return this;
+	}
+	
+	public Function addBodyElement(Generator generator) {
+		this.body = Optional.ofNullable(this.body).orElseGet(Statement::create);
+		this.body.addElement(generator);
 		return this;
 	}
 
@@ -152,7 +164,8 @@ public class Function extends Generator.Abst {
 			typesDeclaration,
 			returnType,
 			name + getParametersCode(),
-			body
+			body,
+			Optional.ofNullable(modifier).map(mod -> Modifier.isAbstract(mod)? ";" : null).orElseGet(() -> null)
 		);
 	}
 		
