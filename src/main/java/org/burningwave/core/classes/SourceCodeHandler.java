@@ -31,12 +31,13 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
 
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.source.Statement;
 import org.burningwave.core.function.ThrowingSupplier;
 
 
@@ -80,11 +81,8 @@ public class SourceCodeHandler implements Component {
 	
 	
 	public <T> T execute(
-		String imports, 
-		String className, 
-		String supplierCode, 
-		ComponentSupplier componentSupplier,
 		ClassLoader classLoaderParentOfOneShotClassLoader,
+		Statement statement,
 		Object... parameters
 	) {	
 		return ThrowingSupplier.get(() -> {
@@ -94,11 +92,21 @@ public class SourceCodeHandler implements Component {
 					classesLoaders
 				)
 			) {
-				Class<?> virtualClass = getClassFactory().getOrBuildCodeExecutorSubType(
-					imports, className, supplierCode, componentSupplier, memoryClassLoader
+				String packageName = CodeExecutor.class.getPackage().getName();
+				Class<?> executableClass = getClassFactory().getOrBuildCodeExecutorSubType(
+					packageName, "CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""), statement, memoryClassLoader
 				);
-				Virtual virtualObject = ((Virtual)virtualClass.getDeclaredConstructor().newInstance());
-				T retrievedElement = virtualObject.invokeWithoutCachingMethod("execute", componentSupplier, parameters);
+				CodeExecutor executor = (CodeExecutor)executableClass.getDeclaredConstructor().newInstance();
+				ComponentSupplier componentSupplier = null;
+				if (parameters != null && parameters.length > 0) {
+					for (Object param : parameters) {
+						if (param instanceof ComponentSupplier) {
+							componentSupplier = (ComponentSupplier) param;
+							break;
+						}
+					}
+				}
+				T retrievedElement = executor.execute(componentSupplier, parameters);
 				return retrievedElement;
 			}
 		});

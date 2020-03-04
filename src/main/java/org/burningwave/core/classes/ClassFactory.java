@@ -62,27 +62,55 @@ public class ClassFactory implements Component {
 	private Classes.Loaders classesLoaders;
 	private JavaMemoryCompiler javaMemoryCompiler;
 	private CodeGenerator codeGeneratorForPojo;
-	private CodeGenerator codeGeneratorForExecutor;
-
+	
+	private TriFunction<String, String, Statement, Unit> codeGeneratorForExecutor = (packageName, className, statement) -> {
+		TypeDeclaration typeDeclaration = TypeDeclaration.create(className);
+		Generic returnType = Generic.create("T");
+		Function executeMethod = Function.create("execute").setReturnType(
+			returnType
+		).addModifier(
+			Modifier.PUBLIC
+		).addParameter(
+			Variable.create(
+				TypeDeclaration.create(ComponentSupplier.class), "componentSupplier"
+			)
+		).addParameter(
+			Variable.create(
+				TypeDeclaration.create("Object... "), "objects"
+			)
+		).addOuterCodeRow("@Override").addBodyElement(statement);
+		typeDeclaration.addGeneric(returnType);		
+		Class cls = Class.create(
+			typeDeclaration
+		).addModifier(
+			Modifier.PUBLIC
+		).addConcretizedType(
+			CodeExecutor.class
+		).addMethod(
+			executeMethod
+		);
+		return Unit.create(packageName).addClass(cls);
+	};
+	
 	private TriFunction<String, String, Integer, Unit> codeGeneratorForConsumer = (packageName, functionalInterfaceName, parametersLength) -> {
 		TypeDeclaration typeDeclaration = TypeDeclaration.create(functionalInterfaceName);
-		Function applyMethod = Function.create("accept").setReturnType(
+		Function acceptMethod = Function.create("accept").setReturnType(
 			void.class
 		).addModifier(Modifier.PUBLIC | Modifier.ABSTRACT);
-		Function varArgsApplyMethod = Function.create("accept").setReturnType(
+		Function varArgsAcceptMethod = Function.create("accept").setReturnType(
 			void.class
 		).addModifier(Modifier.PUBLIC).setDefault().addParameter(
 			Variable.create(TypeDeclaration.create("Object..."), "params")
 		).addOuterCodeRow("@Override");
-		varArgsApplyMethod.addBodyCodeRow("accept(");
+		varArgsAcceptMethod.addBodyCodeRow("accept(");
 		Statement applyMethodCodeOne = Statement.createSimple().setBodyElementSeparator(", ");
 		for (int i = 0; i < parametersLength; i++) {
 			typeDeclaration.addGeneric(Generic.create("P" + i));
-			applyMethod.addParameter(Variable.create(TypeDeclaration.create("P" + i), "p" + i));
+			acceptMethod.addParameter(Variable.create(TypeDeclaration.create("P" + i), "p" + i));
 			applyMethodCodeOne.addCode("(P" + i + ")params["+i+"]");
 		}
-		varArgsApplyMethod.addBodyElement(applyMethodCodeOne);
-		varArgsApplyMethod.addBodyCode(");");
+		varArgsAcceptMethod.addBodyElement(applyMethodCodeOne);
+		varArgsAcceptMethod.addBodyCode(");");
 		Class cls = Class.createInterface(
 			typeDeclaration
 		).addModifier(
@@ -90,32 +118,32 @@ public class ClassFactory implements Component {
 		).expands(
 			TypeDeclaration.create(MultiParamsConsumer.class)
 		).addMethod(
-			applyMethod
+			acceptMethod
 		).addMethod(
-			varArgsApplyMethod
+			varArgsAcceptMethod
 		).addOuterCodeRow("@FunctionalInterface");
 		return Unit.create(packageName).addClass(cls);
 	};
 	
 	private TriFunction<String, String, Integer, Unit> codeGeneratorForPredicate = (packageName, functionalInterfaceName, parametersLength) -> {
 		TypeDeclaration typeDeclaration = TypeDeclaration.create(functionalInterfaceName);
-		Function applyMethod = Function.create("test").setReturnType(
+		Function testMethod = Function.create("test").setReturnType(
 			boolean.class
 		).addModifier(Modifier.PUBLIC | Modifier.ABSTRACT);
-		Function varArgsApplyMethod = Function.create("test").setReturnType(
+		Function varArgsTestMethod = Function.create("test").setReturnType(
 			boolean.class
 		).addModifier(Modifier.PUBLIC).setDefault().addParameter(
 			Variable.create(TypeDeclaration.create("Object..."), "params")
 		).addOuterCodeRow("@Override");
-		varArgsApplyMethod.addBodyCodeRow("return test(");
+		varArgsTestMethod.addBodyCodeRow("return test(");
 		Statement applyMethodCodeOne = Statement.createSimple().setBodyElementSeparator(", ");
 		for (int i = 0; i < parametersLength; i++) {
 			typeDeclaration.addGeneric(Generic.create("P" + i));
-			applyMethod.addParameter(Variable.create(TypeDeclaration.create("P" + i), "p" + i));
+			testMethod.addParameter(Variable.create(TypeDeclaration.create("P" + i), "p" + i));
 			applyMethodCodeOne.addCode("(P" + i + ")params["+i+"]");
 		}
-		varArgsApplyMethod.addBodyElement(applyMethodCodeOne);
-		varArgsApplyMethod.addBodyCode(");");
+		varArgsTestMethod.addBodyElement(applyMethodCodeOne);
+		varArgsTestMethod.addBodyCode(");");
 		Class cls = Class.createInterface(
 			typeDeclaration
 		).addModifier(
@@ -123,9 +151,9 @@ public class ClassFactory implements Component {
 		).expands(
 			TypeDeclaration.create(MultiParamsPredicate.class)
 		).addMethod(
-			applyMethod
+			testMethod
 		).addMethod(
-			varArgsApplyMethod
+			varArgsTestMethod
 		).addOuterCodeRow("@FunctionalInterface");
 		return Unit.create(packageName).addClass(cls);
 	};
@@ -170,15 +198,13 @@ public class ClassFactory implements Component {
 		Classes.Loaders classesLoaders,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
-		CodeGenerator.ForPojo codeGeneratorForPojo,
-		CodeGenerator.ForCodeExecutor codeGeneratorForExecutor
+		CodeGenerator.ForPojo codeGeneratorForPojo
 	) {	
 		this.sourceCodeHandler = sourceCodeHandler;
 		this.classesLoaders = classesLoaders;
 		this.javaMemoryCompiler = javaMemoryCompiler;
 		this.pathHelper = pathHelper;
 		this.codeGeneratorForPojo = codeGeneratorForPojo;
-		this.codeGeneratorForExecutor = codeGeneratorForExecutor;
 	}
 	
 	public static ClassFactory create(
@@ -186,13 +212,11 @@ public class ClassFactory implements Component {
 		Classes.Loaders classesLoaders,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
-		CodeGenerator.ForPojo codeGeneratorForPojo,
-		CodeGenerator.ForCodeExecutor codeGeneratorForExecutor
+		CodeGenerator.ForPojo codeGeneratorForPojo
 	) {
 		return new ClassFactory(
 			sourceCodeHandler, classesLoaders,
-			javaMemoryCompiler, pathHelper, codeGeneratorForPojo, 
-			codeGeneratorForExecutor
+			javaMemoryCompiler, pathHelper, codeGeneratorForPojo
 		);
 	}
 	
@@ -224,10 +248,16 @@ public class ClassFactory implements Component {
 		}
 	}
 	
+	public java.lang.Class<?> getOrBuild(String className, Unit unitCode, ClassLoader classLoader) {
+		return getOrBuild(className, () -> unitCode, classLoader);
+	}	
+	
 	public java.lang.Class<?> getOrBuild(String className, Supplier<Unit> unitCode, ClassLoader classLoader) {
 		java.lang.Class<?> toRet = classesLoaders.retrieveLoadedClass(classLoader, className);
 		if (toRet == null) {
 			toRet = buildAndUploadTo(className, unitCode, classLoader);
+		} else {
+			logInfo("Class " + className + " succesfully retrieved");
 		}
 		return toRet;
 	}	
@@ -292,14 +322,13 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	public java.lang.Class<?> getOrBuildCodeExecutorSubType(String imports, String classSimpleName, String supplierCode, ComponentSupplier componentSupplier, ClassLoader classLoader) {
-		String classCode = codeGeneratorForExecutor.generate(
-			imports, classSimpleName, supplierCode
-		);	
-		try {
-			return classesLoaders.loadOrUploadClass(sourceCodeHandler.extractClassName(classCode), build(classCode), classLoader);
-		} catch (ClassNotFoundException exc) {
-			throw Throwables.toRuntimeException(exc);
-		}
+	public java.lang.Class<?> getOrBuildCodeExecutorSubType(String packageName, String classSimpleName, Statement statement, ClassLoader classLoader) {
+		String className = packageName + "." + classSimpleName;
+		return getOrBuild(
+			className,
+			() -> codeGeneratorForExecutor.apply(packageName, classSimpleName, statement),
+			classLoader
+		);
+
 	}
 }

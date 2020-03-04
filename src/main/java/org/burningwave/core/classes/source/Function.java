@@ -158,7 +158,10 @@ public class Function extends Generator.Abst {
 			parameters.forEach(parameter -> {
 				types.addAll(parameter.getTypeDeclarations());
 			});
-		});;
+		});
+		Optional.ofNullable(body).ifPresent(body -> {
+			types.addAll(body.getTypeDeclarations());
+		});
 		return types;
 	}
 	

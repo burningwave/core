@@ -59,7 +59,7 @@ import org.burningwave.core.io.FileSystemItem;public class JavaClass {
 			null;
 	}
 
-	private String _getClassName() {
+	private String _getSimpleName() {
 		return className.contains("/") ?
 			className.substring(className.lastIndexOf("/") + 1) :
 			className;
@@ -69,8 +69,8 @@ import org.burningwave.core.io.FileSystemItem;public class JavaClass {
 		return Optional.ofNullable(_getPackageName()).map(value -> value.replace("/", ".")).orElse(null);
 	}
 	
-	public String getClassName() {
-		return Optional.ofNullable(_getClassName()).orElse(null);
+	public String getSimpleName() {
+		return Optional.ofNullable(_getSimpleName()).orElse(null);
 	}
 	
 	public String getPackagePath() {
@@ -79,7 +79,7 @@ import org.burningwave.core.io.FileSystemItem;public class JavaClass {
 	}
 	
 	public String getClassFileName() {
-		String classFileName = getClassName();
+		String classFileName = getSimpleName();
 		return classFileName != null? classFileName.replace(".", "$") + ".class" : null;
 	}
 	
@@ -101,7 +101,7 @@ import org.burningwave.core.io.FileSystemItem;public class JavaClass {
 	
 	public String getName() {
 		String packageName = getPackageName();
-		String classSimpleName = getClassName();
+		String classSimpleName = getSimpleName();
 		String name = null;
 		if (packageName != null) {
 			name = packageName;

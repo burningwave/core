@@ -45,7 +45,6 @@ import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.CodeGenerator;
-import org.burningwave.core.classes.CodeGenerator.ForCodeExecutor;
 import org.burningwave.core.classes.CodeGenerator.ForPojo;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
@@ -201,8 +200,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getClassesLoaders(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
-				getCodeGeneratorForPojo(),
-				getCodeGeneratorForCodeExecutor()
+				getCodeGeneratorForPojo()
 			)
 		);	
 	}
@@ -214,15 +212,6 @@ public class ComponentContainer implements ComponentSupplier {
 				getPathHelper(),
 				getSourceCodeHandler(),
 				getClassPathHunter()
-			)
-		);
-	}
-	
-	@Override
-	public ForCodeExecutor getCodeGeneratorForCodeExecutor() {
-		return getOrCreate(CodeGenerator.ForCodeExecutor.class, () ->
-			CodeGenerator.ForCodeExecutor.create(
-				getStreamHelper()
 			)
 		);
 	}

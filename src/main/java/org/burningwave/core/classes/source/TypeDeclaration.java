@@ -45,8 +45,12 @@ public class TypeDeclaration extends Generator.Abst {
 	
 	private TypeDeclaration() {}
 	
-	public static TypeDeclaration create(String name) {
-		return new TypeDeclaration(null, name);
+	static TypeDeclaration create(String name, String simpleName) {
+		return new TypeDeclaration(name, simpleName);
+	}
+	
+	public static TypeDeclaration create(String simpleName) {
+		return new TypeDeclaration(null, simpleName);
 	}
 	
 	public static TypeDeclaration create(java.lang.Class<?> cls) {

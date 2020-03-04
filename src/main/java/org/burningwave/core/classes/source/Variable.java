@@ -40,12 +40,12 @@ public class Variable extends Generator.Abst {
 	private Integer modifier;
 	private TypeDeclaration type;
 	private String name;
-	private Generator value;
+	private Statement valueBody;
 	
 	private Variable(TypeDeclaration type, String name) {
 		this.type = type;
 		this.name = name;
-		this.assignmentOperator = " = ";
+		this.assignmentOperator = "= ";
 		this.delimiter = ";";
 	}
 	
@@ -83,20 +83,18 @@ public class Variable extends Generator.Abst {
 		Optional.ofNullable(type).ifPresent(type -> {
 			types.addAll(type.getTypeDeclarations());
 		});
+		Optional.ofNullable(valueBody).ifPresent(valueBody -> {
+			types.addAll(valueBody.getTypeDeclarations());
+		});
 		return types;
 	}
 	
 	public Variable setValue(String value) {
-		return setValue(new Generator() {
-			@Override
-			public String make() {
-				return value;
-			}
-		});
+		return setValue(Statement.createSimple().addCode(value));
 	}
 	
-	public Variable setValue(Generator valueGenerator) {
-		this.value = valueGenerator;
+	public Variable setValue(Statement valueGenerator) {
+		this.valueBody = valueGenerator;
 		return this;
 	}
 	
@@ -119,7 +117,7 @@ public class Variable extends Generator.Abst {
 			Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
 			type,
 			name,
-			Optional.ofNullable(value).map(value -> assignmentOperator + value).orElseGet(() -> null)
+			Optional.ofNullable(valueBody).map(value -> assignmentOperator + value).orElseGet(() -> null)
 		) + Optional.ofNullable(delimiter).orElseGet(() -> "");
 	}
 }

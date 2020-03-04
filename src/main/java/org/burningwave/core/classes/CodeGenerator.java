@@ -311,31 +311,5 @@ public abstract class CodeGenerator implements Component {
 					+ "\t}\n\n";
 		}
 	}
-		
-	public static class ForCodeExecutor extends CodeGenerator {
-		
-		private ForCodeExecutor(
-			StreamHelper streamHelper
-		) {
-			super(streamHelper);
-			PACKAGE_NAME = BASE_PACKAGE_NAME_FOR_TEMPLATE + ".classes";
-			TEMPLATE = readTemplate(PACKAGE_NAME.replaceAll("\\.", "/") + "/CodeExecutor.jt");
-		}
-		
-		public static ForCodeExecutor create(
-			StreamHelper streamHelper
-		) {
-			return new ForCodeExecutor(streamHelper);
-		}
-		
-		public String generate(Object... objs) {
-			Map<String, String> map = new LinkedHashMap<>();
-			map.put("${packageName}", PACKAGE_NAME);
-			map.put("${imports}", (String)objs[0] + getImports() + "\n");
-			map.put("${className}", (String)objs[1]);
-			map.put("${code}", (String)objs[2]);
-			//map.put("${returnType}",((Class<?>)objs[3]).getSimpleName());
-			return Strings.replace(TEMPLATE, map);
-		}
-	}
+
 }

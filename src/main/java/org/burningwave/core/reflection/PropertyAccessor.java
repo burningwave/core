@@ -42,7 +42,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,6 +50,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.SourceCodeHandler;
+import org.burningwave.core.classes.source.Statement;
 import org.burningwave.core.function.ThrowingBiFunction;
 import org.burningwave.core.function.ThrowingFunction;
 import org.burningwave.core.iterable.IterableObjectHelper;
@@ -84,7 +84,7 @@ public abstract class PropertyAccessor implements Component {
 			(iterableObjectHelper = iterableObjectHelperSupplier.get());
 	}
 	
-	protected SourceCodeHandler getClassHelper() {
+	protected SourceCodeHandler getSourceCodeHandler() {
 		return sourceCodeHandler != null ?
 			sourceCodeHandler :
 			(sourceCodeHandler = sourceCodeHandlerSupplier.get());
@@ -276,27 +276,27 @@ public abstract class PropertyAccessor implements Component {
 		Properties config, 
 		String supplierCodeKey,
 		Map<String, String> defaultValues,
-		ComponentSupplier componentSupplier
+		Object... params
 	) {	
-		String supplierCode = getIterableObjectHelper().get(config, supplierCodeKey, defaultValues);
-		supplierCode = supplierCode.contains("return")?
-			supplierCode:
-			"return (T)" + supplierCode + ";";
+		Statement statement = Statement.createSimple().setElementPrefix("\t");
+		if (params != null && params.length > 0) {
+			for (Object param : params) {
+				statement.useType(ComponentSupplier.class, param.getClass());
+			}
+		}
 		String importFromConfig = getIterableObjectHelper().get(config, supplierCodeKey + SUPPLIER_IMPORTS_KEY_SUFFIX, defaultValues);
 		if (Strings.isNotEmpty(importFromConfig)) {
-			final StringBuffer stringBufferImports = new StringBuffer();
 			Arrays.stream(importFromConfig.split(";")).forEach(imp -> {
-				stringBufferImports.append("import ").append(imp).append(";\n");
+				statement.useType(imp);
 			});
-			importFromConfig = stringBufferImports.toString();
 		}
-		String imports =
-			"import " + ComponentSupplier.class.getName() + ";\n" +
-			"import " + componentSupplier.getClass().getName() + ";\n" + importFromConfig;
-		String className = "ObjectSupplier_" + UUID.randomUUID().toString().replaceAll("-", "");
-		return getClassHelper().execute(
-			imports, className, supplierCode, 
-			componentSupplier, Thread.currentThread().getContextClassLoader()
+		String supplierCode = getIterableObjectHelper().get(config, supplierCodeKey, defaultValues);
+		statement.addCodeRow(supplierCode.contains("return")?
+			supplierCode:
+			"return (T)" + supplierCode + ";"
+		);
+		return getSourceCodeHandler().execute(
+			this.getClass().getClassLoader(), statement, params
 		);
 	}
 	

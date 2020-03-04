@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class Statement extends Generator.Abst {
+	private Collection<TypeDeclaration> usedTypes;
 	private String startingDelimiter;
 	private String endingDelimiter;
 	private String elementPrefix;
@@ -68,6 +69,10 @@ public class Statement extends Generator.Abst {
 	public Statement addElement(Generator generator) {
 		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
 		this.bodyGenerators.add(generator);
+		if (generator instanceof Statement) {
+			this.usedTypes = Optional.ofNullable(this.usedTypes).orElseGet(ArrayList::new);
+			usedTypes.addAll(((Statement)generator).getTypeDeclarations());
+		}
 		return this;		
 	}
 	
@@ -88,7 +93,31 @@ public class Statement extends Generator.Abst {
 	
 	public Statement addAllElements(Collection<? extends Generator> generators) {
 		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
-		this.bodyGenerators.addAll(generators);
+		generators.forEach(generator -> {
+			addElement(generator);
+		});
+		return this;		
+	}
+	
+	Collection<TypeDeclaration> getTypeDeclarations() {
+		Collection<TypeDeclaration> types = new ArrayList<>();
+		Optional.ofNullable(usedTypes).ifPresent(usedTypes -> types.addAll(usedTypes));
+		return types;
+	}
+	
+	public Statement useType(java.lang.Class<?>... classes) {
+		this.usedTypes = Optional.ofNullable(this.usedTypes).orElseGet(ArrayList::new);
+		for (java.lang.Class<?> cls : classes) {			
+			this.usedTypes.add(TypeDeclaration.create(cls));
+		}
+		return this;		
+	}
+	
+	public Statement useType(String... classes) {
+		this.usedTypes = Optional.ofNullable(this.usedTypes).orElseGet(ArrayList::new);
+		for (String cls : classes) {			
+			this.usedTypes.add(TypeDeclaration.create(cls, null));
+		}
 		return this;		
 	}
 	

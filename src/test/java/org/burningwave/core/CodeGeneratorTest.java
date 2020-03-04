@@ -49,7 +49,7 @@ public class CodeGeneratorTest extends BaseTest {
 									.parentOf(TypeDeclaration.create("Free").addGeneric(Generic.create("S"))
 											.addGeneric(Generic.create("Y")))))
 					.addModifier(Modifier.PUBLIC).expands(Object.class)
-					.addField(Variable.create(TypeDeclaration.create(Integer.class), "index1")
+					.addField(Variable.create(TypeDeclaration.create(Integer.class), "index1").setValue("new Integer(1)")
 							.addModifier(Modifier.PRIVATE).addOuterCodeRow("@Field").addOuterCodeRow("@Annotation2"))
 					.addField(Variable.create(TypeDeclaration.create(Collection.class).addGeneric(Generic.create("String").addOuterCode("@NotNull")), "collection")
 							.addModifier(Modifier.PRIVATE))
