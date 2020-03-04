@@ -143,7 +143,7 @@ public class Class extends Generator.Abst {
 		this.constructors = Optional.ofNullable(this.constructors).orElseGet(ArrayList::new);
 		this.constructors.add(constructor);
 		constructor.setName(this.typeDeclaration.getSimpleName());
-		constructor.setReturnType(null);
+		constructor.setReturnType((TypeDeclaration)null);
 		return this;
 	}
 	

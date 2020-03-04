@@ -85,6 +85,15 @@ public class Function extends Generator.Abst {
 		return this;
 	}
 	
+	public Function setReturnType(Generic returnType) {
+		return setReturnType(TypeDeclaration.create(returnType.getName()));
+	}
+	
+	public Function setReturnType(java.lang.Class<?> returnType) {
+		this.returnType = TypeDeclaration.create(returnType);
+		return this;
+	}
+	
 	public Function addParameter(Variable parameter) {
 		this.parameters = Optional.ofNullable(this.parameters).orElseGet(ArrayList::new);
 		this.parameters.add(parameter.setDelimiter(null));
@@ -167,6 +176,5 @@ public class Function extends Generator.Abst {
 			body,
 			Optional.ofNullable(modifier).map(mod -> Modifier.isAbstract(mod)? ";" : null).orElseGet(() -> null)
 		);
-	}
-		
+	}		
 }

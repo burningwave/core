@@ -50,7 +50,7 @@ public class TypeDeclaration extends Generator.Abst {
 	}
 	
 	public static TypeDeclaration create(java.lang.Class<?> cls) {
-		return new TypeDeclaration(cls.getName(), cls.getSimpleName());
+		return new TypeDeclaration(cls.isPrimitive()? null : cls.getName(), cls.getSimpleName());
 	}
 	
 	public static TypeDeclaration create(Generic... generics) {
