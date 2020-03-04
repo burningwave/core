@@ -94,7 +94,7 @@ public class SourceCodeHandler implements Component {
 			) {
 				String packageName = CodeExecutor.class.getPackage().getName();
 				Class<?> executableClass = getClassFactory().getOrBuildCodeExecutorSubType(
-					packageName, "CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""), statement, memoryClassLoader
+					memoryClassLoader, packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""), statement
 				);
 				CodeExecutor executor = (CodeExecutor)executableClass.getDeclaredConstructor().newInstance();
 				ComponentSupplier componentSupplier = null;

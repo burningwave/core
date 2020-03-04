@@ -143,6 +143,27 @@ public class Classes implements Component {
 		return classesName;
 	}
 	
+	public String retrievePackageName(String className) {
+		String packageName = null;
+		if (className.contains(("."))) {
+			packageName = className.substring(0, className.lastIndexOf("."));
+		}
+		return packageName;
+	}
+	
+	public String retrieveSimpleName(String className) {
+		String classSimpleName = null;
+		if (className.contains(("."))) {
+			classSimpleName = className.substring(className.lastIndexOf(".")+1);
+		} else {
+			classSimpleName = className;
+		}
+		if (classSimpleName.contains("$")) {
+			classSimpleName = classSimpleName.substring(classSimpleName.lastIndexOf("$")+1);
+		}
+		return classSimpleName;
+	}
+	
 	public String retrieveName(ByteBuffer classFileBuffer) {
 		return retrieveName(classFileBuffer, true);
 	}

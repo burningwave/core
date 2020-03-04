@@ -29,6 +29,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
 
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
@@ -285,8 +286,8 @@ public class ClassFactory implements Component {
 		return toRet;
 	}	
 	
-	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, java.lang.Class<?>... superClasses) {
-		return getOrBuild(codeGeneratorForPojo.generate(className, superClasses), classLoader);
+	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String packageName, String classSimpleName, java.lang.Class<?>... superClasses) {
+		return getOrBuild(codeGeneratorForPojo.generate(packageName + "." + classSimpleName, superClasses), classLoader);
 	}
 	
 	public java.lang.Class<?> getOrBuildFunctionSubType(ClassLoader classLoader, int parametersLength) {
@@ -322,8 +323,10 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	public java.lang.Class<?> getOrBuildCodeExecutorSubType(String packageName, String classSimpleName, Statement statement, ClassLoader classLoader) {
-		String className = packageName + "." + classSimpleName;
+	public java.lang.Class<?> getOrBuildCodeExecutorSubType(ClassLoader classLoader, String className, Statement statement) {
+		String packageName = Classes.retrievePackageName(className);
+		String classSimpleName = Classes.retrieveSimpleName(className);
+		className = packageName + "." + classSimpleName;
 		return getOrBuild(
 			className,
 			() -> codeGeneratorForExecutor.apply(packageName, classSimpleName, statement),
