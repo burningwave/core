@@ -358,10 +358,10 @@ public class Classes implements Component {
 		);
 	}
 	
-	public Collection<Constructor<?>> getDeclaredConstructors(Class<?> cls, Predicate<Constructor<?>> fieldPredicate) {
+	public Collection<Constructor<?>> getDeclaredConstructors(Class<?> cls, Predicate<Constructor<?>> constructorPredicate) {
 		Collection<Constructor<?>> members = new LinkedHashSet<>();
 		for (Constructor<?> member : getDeclaredConstructors(cls)) {
-			if (fieldPredicate.test(member)) {
+			if (constructorPredicate.test(member)) {
 				members.add(member);
 			}
 		}

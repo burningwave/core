@@ -72,13 +72,13 @@ public class Unit extends Generator.Abst {
 		Set<String> imports = new LinkedHashSet<>();
 		Optional.ofNullable(imports).ifPresent(imprts -> {
 			imprts.forEach(imprt -> {
-				imports.add("import " + imprt + ";");
+				imports.add("import " + imprt.replace("$", ".") + ";");
 			});
 		});
 		
 		getTypeDeclarations().forEach(typeDeclaration -> {
 			Optional.ofNullable(typeDeclaration.getName()).ifPresent(className -> {
-				imports.add("import " + className + ";");
+				imports.add("import " + className.replace("$", ".") + ";");
 			});
 		});
 		return imports;
