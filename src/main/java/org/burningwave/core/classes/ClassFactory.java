@@ -102,7 +102,7 @@ public class ClassFactory implements Component {
 		String packageName = Classes.retrievePackageName(className);
 		String classSimpleName = Classes.retrieveSimpleName(className);
 		if (className.contains("$")) {
-			throw Throwables.toRuntimeException(className + " CodeExecutor could not be a inner class");
+			throw Throwables.toRuntimeException(className + " Consumer could not be a inner class");
 		}
 		TypeDeclaration typeDeclaration = TypeDeclaration.create(classSimpleName);
 		Function acceptMethod = Function.create("accept").setReturnType(
@@ -140,7 +140,7 @@ public class ClassFactory implements Component {
 		String packageName = Classes.retrievePackageName(className);
 		String classSimpleName = Classes.retrieveSimpleName(className);
 		if (className.contains("$")) {
-			throw Throwables.toRuntimeException(className + " CodeExecutor could not be a inner class");
+			throw Throwables.toRuntimeException(className + " Predicate could not be a inner class");
 		}
 		TypeDeclaration typeDeclaration = TypeDeclaration.create(classSimpleName);
 		Function testMethod = Function.create("test").setReturnType(
@@ -178,7 +178,7 @@ public class ClassFactory implements Component {
 		String packageName = Classes.retrievePackageName(className);
 		String classSimpleName = Classes.retrieveSimpleName(className);
 		if (className.contains("$")) {
-			throw Throwables.toRuntimeException(className + " CodeExecutor could not be a inner class");
+			throw Throwables.toRuntimeException(className + " Function could not be a inner class");
 		}
 		TypeDeclaration typeDeclaration = TypeDeclaration.create(classSimpleName);
 		Generic returnType = Generic.create("R");
