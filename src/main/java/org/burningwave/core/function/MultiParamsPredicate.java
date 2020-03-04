@@ -31,9 +31,7 @@ package org.burningwave.core.function;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-import org.burningwave.core.Virtual;
-
-public interface MultiParamsPredicate extends Virtual {
+public interface MultiParamsPredicate {
 	
 	public boolean test(Object... objects); 
 	

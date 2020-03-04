@@ -48,8 +48,8 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 				.and().parameterType((params, idx) -> idx == 2 && params[idx].equals(String.class)),
 				Service.class				
 			);
-			MultiParamsPredicate virtualObj = componentSupplier.getFunctionalInterfaceFactory().create(mth);
-			virtualObj.test(new Service(), new Object(), "World!", "How are you?");
+			Virtual virtualObj = componentSupplier.getFunctionalInterfaceFactory().create(mth);
+			((MultiParamsPredicate)virtualObj).test(new Service(), new Object(), "World!", "How are you?");
 		});
 	}
 	

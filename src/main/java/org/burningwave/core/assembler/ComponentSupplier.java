@@ -74,8 +74,6 @@ public interface ComponentSupplier extends Component {
 	public ClassPathHunter getClassPathHunter();
 
 	public CodeGenerator.ForCodeExecutor getCodeGeneratorForCodeExecutor();
-
-	public CodeGenerator.ForConsumer getCodeGeneratorForConsumer();
 	
 	public CodeGenerator.ForPojo getCodeGeneratorForPojo();
 	
