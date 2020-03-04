@@ -313,54 +313,6 @@ public abstract class CodeGenerator implements Component {
 	}
 	
 	
-	public static class ForFunction extends CodeGenerator {
-			
-		private ForFunction(
-			StreamHelper streamHelper
-		) {
-			super(streamHelper);
-			PACKAGE_NAME = BASE_PACKAGE_NAME_FOR_TEMPLATE + ".function";
-			TEMPLATE = readTemplate(PACKAGE_NAME.replaceAll("\\.", "/") + "/MultiParameterFunction.jt");
-		}
-		
-		public static ForFunction create(
-			StreamHelper streamHelper
-		) {
-			return new ForFunction(streamHelper);
-		}
-		
-		public String generate(Object... objs) {
-			int paramsLength = (Integer)objs[0];
-			String[] generics = new String[paramsLength];
-			String[] params = new String[paramsLength];
-			String[] genericParams = new String[paramsLength];
-			String[] genericParamsCasted = new String[paramsLength];
-			for (int i = 0; i < generics.length; i++) {
-				generics[i] = "P" + i;
-				params[i] = "p" + i;
-				genericParams[i] = generics[i] + " " + params[i];
-				genericParamsCasted[i] = "(" + generics[i] + ")params[" + i + "]"; 
-			}
-						
-			String className = "FunctionFor" + paramsLength + "Parameters";
-			String returnGenericType_01 = "R";
-			String genericsAsString_01 = String.join(", ", String.join(", ", generics),returnGenericType_01);
-			String genericParamsAsString_01 = String.join(", ", genericParams);
-			String genericParamsCastedAsString_01 = String.join(", ", genericParamsCasted);
-			
-			Map<String, String> map = new LinkedHashMap<>();
-			map.put("${packageName}", PACKAGE_NAME);
-			//map.put("${imports}", getImports(MultiParamsFunction.class));
-			map.put("${className}", className);
-			map.put("${returnGenericType_01}", returnGenericType_01);
-			map.put("${generics_01}", genericsAsString_01);
-			map.put("${genericParamsCasted_01}", genericParamsCastedAsString_01);
-			map.put("${genericParams_01}", genericParamsAsString_01);			
-			
-			return Strings.replace(TEMPLATE, map);
-		}
-	}
-	
 	public static class ForConsumer extends CodeGenerator {
 	
 		private ForConsumer(

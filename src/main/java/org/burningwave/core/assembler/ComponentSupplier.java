@@ -77,8 +77,6 @@ public interface ComponentSupplier extends Component {
 
 	public CodeGenerator.ForConsumer getCodeGeneratorForConsumer();
 	
-	public CodeGenerator.ForFunction getCodeGeneratorForFunction();
-	
 	public CodeGenerator.ForPojo getCodeGeneratorForPojo();
 	
 	public CodeGenerator.ForPredicate getCodeGeneratorForPredicate();
