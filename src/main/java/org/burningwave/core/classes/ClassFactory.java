@@ -306,8 +306,8 @@ public class ClassFactory implements Component {
 		return toRet;
 	}	
 	
-	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String packageName, String classSimpleName, java.lang.Class<?>... superClasses) {
-		return getOrBuild(codeGeneratorForPojo.generate(packageName + "." + classSimpleName, superClasses), classLoader);
+	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, java.lang.Class<?>... superClasses) {
+		return getOrBuild(codeGeneratorForPojo.generate(className, superClasses), classLoader);
 	}
 	
 	public java.lang.Class<?> getOrBuildFunctionSubType(ClassLoader classLoader, int parametersLength) {
