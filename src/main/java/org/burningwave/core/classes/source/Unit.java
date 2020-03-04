@@ -100,7 +100,7 @@ public class Unit extends Generator.Abst {
 			classes.forEach(cls -> {
 				allClasses.put(packageName + "." + cls.getTypeDeclaration().getSimpleName(), cls);
 				cls.getAllInnerClasses().entrySet().forEach(innerClass -> {
-					allClasses.put(packageName + "." + innerClass.getKey(), cls);
+					allClasses.put(packageName + "." + innerClass.getKey(), innerClass.getValue());
 				});
 			});
 		});

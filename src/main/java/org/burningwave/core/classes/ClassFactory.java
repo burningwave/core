@@ -62,7 +62,40 @@ public class ClassFactory implements Component {
 	private PathHelper pathHelper;
 	private Classes.Loaders classesLoaders;
 	private JavaMemoryCompiler javaMemoryCompiler;
-	private CodeGenerator codeGeneratorForPojo;
+	
+	private BiFunction<String, java.lang.Class<?>[], Unit> codeGeneratorForPojo = (className, superClasses) -> {
+		if (className.contains("$")) {
+			throw Throwables.toRuntimeException(className + " CodeExecutor could not be a inner class");
+		}
+		String packageName = Classes.retrievePackageName(className);
+		String classSimpleName = Classes.retrieveSimpleName(className);
+		TypeDeclaration typeDeclaration = TypeDeclaration.create(classSimpleName);
+		Generic returnType = Generic.create("T");
+//		Function executeMethod = Function.create("execute").setReturnType(
+//			returnType
+//		).addModifier(
+//			Modifier.PUBLIC
+//		).addParameter(
+//			Variable.create(
+//				TypeDeclaration.create(ComponentSupplier.class), "componentSupplier"
+//			)
+//		).addParameter(
+//			Variable.create(
+//				TypeDeclaration.create("Object... "), "objects"
+//			)
+//		).addOuterCodeRow("@Override").addBodyElement(statement);
+//		typeDeclaration.addGeneric(returnType);		
+//		Class cls = Class.create(
+//			typeDeclaration
+//		).addModifier(
+//			Modifier.PUBLIC
+//		).addConcretizedType(
+//			CodeExecutor.class
+//		).addMethod(
+//			executeMethod
+//		);
+		return Unit.create(packageName);
+	};
 	
 	private BiFunction<String, Statement, Unit> codeGeneratorForExecutor = (className, statement) -> {
 		if (className.contains("$")) {
@@ -225,7 +258,6 @@ public class ClassFactory implements Component {
 		this.classesLoaders = classesLoaders;
 		this.javaMemoryCompiler = javaMemoryCompiler;
 		this.pathHelper = pathHelper;
-		this.codeGeneratorForPojo = codeGeneratorForPojo;
 	}
 	
 	public static ClassFactory create(
@@ -307,7 +339,7 @@ public class ClassFactory implements Component {
 	}	
 	
 	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, java.lang.Class<?>... superClasses) {
-		return getOrBuild(codeGeneratorForPojo.generate(className, superClasses), classLoader);
+		return getOrBuild(className, codeGeneratorForPojo.apply(className, superClasses), classLoader);
 	}
 	
 	public java.lang.Class<?> getOrBuildFunctionSubType(ClassLoader classLoader, int parametersLength) {
