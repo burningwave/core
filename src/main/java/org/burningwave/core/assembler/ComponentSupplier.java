@@ -36,7 +36,6 @@ import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.Classes;
-import org.burningwave.core.classes.CodeGenerator;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.MemoryClassLoader;
@@ -72,8 +71,6 @@ public interface ComponentSupplier extends Component {
 	public ClassHunter getClassHunter();
 
 	public ClassPathHunter getClassPathHunter();
-	
-	public CodeGenerator.ForPojo getCodeGeneratorForPojo();
 	
 	public ConcurrentHelper getConcurrentHelper();
 	

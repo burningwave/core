@@ -230,8 +230,7 @@ public class ClassFactory implements Component {
 		SourceCodeHandler sourceCodeHandler,
 		Classes.Loaders classesLoaders,
 		JavaMemoryCompiler javaMemoryCompiler,
-		PathHelper pathHelper,
-		CodeGenerator.ForPojo codeGeneratorForPojo
+		PathHelper pathHelper
 	) {	
 		this.sourceCodeHandler = sourceCodeHandler;
 		this.classesLoaders = classesLoaders;
@@ -244,12 +243,11 @@ public class ClassFactory implements Component {
 		SourceCodeHandler sourceCodeHandler,
 		Classes.Loaders classesLoaders,
 		JavaMemoryCompiler javaMemoryCompiler,
-		PathHelper pathHelper,
-		CodeGenerator.ForPojo codeGeneratorForPojo
+		PathHelper pathHelper
 	) {
 		return new ClassFactory(
 			sourceCodeHandler, classesLoaders,
-			javaMemoryCompiler, pathHelper, codeGeneratorForPojo
+			javaMemoryCompiler, pathHelper
 		);
 	}
 	
