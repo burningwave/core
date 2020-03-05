@@ -31,8 +31,10 @@ package org.burningwave.core.classes.source;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -56,8 +58,11 @@ public class Unit extends Generator.Abst {
 		return this;
 	}
 	
-	public Unit addImport(java.lang.Class<?> cls) {
-		return this.addImport(cls.getName());
+	public Unit addImport(java.lang.Class<?>... classes) {
+		for (java.lang.Class<?> cls : classes) {
+			this.addImport(cls.getName());
+		}
+		return this;
 	}
 	
 	public Unit addClass(Class... clazzes) {
@@ -69,7 +74,7 @@ public class Unit extends Generator.Abst {
 	}
 
 	private Set<String> getImports() {
-		Set<String> imports = new LinkedHashSet<>();
+		List<String> imports = new ArrayList<>();
 		Optional.ofNullable(imports).ifPresent(imprts -> {
 			imprts.forEach(imprt -> {
 				imports.add("import " + imprt.replace("$", ".") + ";");
@@ -81,7 +86,8 @@ public class Unit extends Generator.Abst {
 				imports.add("import " + className.replace("$", ".") + ";");
 			});
 		});
-		return imports;
+		Collections.sort(imports);
+		return new LinkedHashSet<>(imports);
 	}
 	
 	Collection<TypeDeclaration> getTypeDeclarations() {
@@ -105,6 +111,10 @@ public class Unit extends Generator.Abst {
 			});
 		});
 		return allClasses;
+	}
+	
+	public Class getClass(String className) {
+		return getAllClasses().get(className);
 	}
 	
 	@Override

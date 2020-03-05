@@ -51,13 +51,13 @@ public class ClassFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		java.lang.Class<?> cls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
 			getComponentSupplier().getMemoryClassLoader(), this.getClass().getPackage().getName() + ".TestTwoPojoImpl",
-			true,
+			true, false,
 			Complex.Data.Item.class,
 			PojoInterface.class
 		);
 		testNotNull(() -> {
 			java.lang.Class<?> reloadedCls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
-				getComponentSupplier().getMemoryClassLoader(), cls.getPackage().getName() + ".ExtendedPojoImpl", true, cls
+				getComponentSupplier().getMemoryClassLoader(), cls.getPackage().getName() + ".ExtendedPojoImpl", true, false, cls
 			);
 			java.lang.reflect.Method createMethod = Classes.getDeclaredMethods(reloadedCls, method -> 
 				method.getName().equals("create") &&

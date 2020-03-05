@@ -63,6 +63,7 @@ import org.burningwave.core.classes.source.Variable;
 import org.burningwave.core.function.MultiParamsConsumer;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.MultiParamsPredicate;
+import org.burningwave.core.function.TriConsumer;
 import org.burningwave.core.io.PathHelper;
 
 
@@ -74,7 +75,6 @@ public class ClassFactory implements Component {
 	private Classes.Loaders classesLoaders;
 	private JavaMemoryCompiler javaMemoryCompiler;
 	private PojoSubTypeRetriever pojoSubTypeRetriever;	
-	
 	
 	private BiFunction<String, Statement, Unit> codeGeneratorForExecutor = (className, statement) -> {
 		if (className.contains("$")) {
@@ -237,9 +237,7 @@ public class ClassFactory implements Component {
 		this.classesLoaders = classesLoaders;
 		this.javaMemoryCompiler = javaMemoryCompiler;
 		this.pathHelper = pathHelper;
-		this.pojoSubTypeRetriever = new PojoSubTypeRetriever(
-			this, PojoSubTypeRetriever.Config.createDefault()
-		);
+		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
 	}
 	
 	public static ClassFactory create(
@@ -321,18 +319,16 @@ public class ClassFactory implements Component {
 		return toRet;
 	}	
 	
-	public PojoSubTypeRetriever getPojoSubTypeRetriever(
-		PojoSubTypeRetriever.Config config
-	) {
-		return new PojoSubTypeRetriever(this, config);
+	public PojoSubTypeRetriever createPojoSubTypeRetriever() {
+		return PojoSubTypeRetriever.createDefault(this);
 	}
 	
 	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, java.lang.Class<?>... superClasses) {
-		return pojoSubTypeRetriever.getOrBuild(classLoader, className, false, superClasses);
+		return pojoSubTypeRetriever.getOrBuild(classLoader, className, false, false, superClasses);
 	}
 	
-	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, boolean builderMethodsCreationEnabled, java.lang.Class<?>... superClasses) {
-		return pojoSubTypeRetriever.getOrBuild(classLoader, className, builderMethodsCreationEnabled, superClasses);
+	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, boolean builderMethodsCreationEnabled, boolean useFullyQualifiedNames, java.lang.Class<?>... superClasses) {
+		return pojoSubTypeRetriever.getOrBuild(classLoader, className, builderMethodsCreationEnabled, useFullyQualifiedNames, superClasses);
 	}
 	
 	public java.lang.Class<?> getOrBuildFunctionSubType(ClassLoader classLoader, int parametersLength) {
@@ -382,72 +378,76 @@ public class ClassFactory implements Component {
 		private BiConsumer<Map<String, Variable>, Class> fieldsBuilder;
 		private BiConsumer<Function, String> setterMethodsBodyBuilder;
 		private BiConsumer<Function, String> getterMethodsBodyBuilder;
-		
-		public static class Config {
-			private final BiConsumer<Map<String, Variable>, Class> fieldsBuilder;
-			private final BiConsumer<Function, String> setterMethodsBodyBuilder;
-			private final BiConsumer<Function, String> getterMethodsBodyBuilder;
-
-			private Config(
-				BiConsumer<Map<String, Variable>, Class> fieldsBuilder,
-				BiConsumer<Function, String> setterMethodsBodyBuilder,
-				BiConsumer<Function, String> getterMethodsBodyBuilder
-			) {
-				this.fieldsBuilder = fieldsBuilder;
-				this.setterMethodsBodyBuilder = setterMethodsBodyBuilder;
-				this.getterMethodsBodyBuilder = getterMethodsBodyBuilder;
-			}
-			
-			public static Config create(
-				BiConsumer<Map<String, Variable>, Class> fieldsBuilder,
-				BiConsumer<Function, String> setterMethodsBodyBuilder,
-				BiConsumer<Function, String> getterMethodsBodyBuilder
-			) {
-				return new Config(fieldsBuilder, setterMethodsBodyBuilder, getterMethodsBodyBuilder);
-			}
-			
-			public static Config createDefault() {
-				return new PojoSubTypeRetriever.Config((fieldsMap, cls) -> {
-					fieldsMap.entrySet().forEach(entry -> {
-						cls.addField(entry.getValue().addModifier(Modifier.PRIVATE));
-					});
-				}, (method, fieldName) -> 
-					method.addBodyCodeRow("this." + fieldName + " = " + fieldName + ";"), (method, fieldName) -> 
-				method.addBodyCodeRow("return this." + fieldName + ";"));
-			}
-			
-			public BiConsumer<Map<String, Variable>, Class> getFieldsBuilder() {
-				return fieldsBuilder;
-			}
-
-			public BiConsumer<Function, String> getSetterMethodsBodyBuilder() {
-				return setterMethodsBodyBuilder;
-			}
-
-			public BiConsumer<Function, String> getGetterMethodsBodyBuilder() {
-				return getterMethodsBodyBuilder;
-			}
-		}
+		private TriConsumer<Unit, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder;
 
 		private PojoSubTypeRetriever(
 			ClassFactory classFactory,
-			Config parameterObject
+			BiConsumer<Map<String, Variable>, Class> fieldsBuilder,
+			BiConsumer<Function, String> setterMethodsBodyBuilder,
+			BiConsumer<Function, String> getterMethodsBodyBuilder,
+			TriConsumer<Unit, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder
 		) {
 			this.classFactory = classFactory;
-			this.fieldsBuilder = parameterObject.getFieldsBuilder();
-			this.setterMethodsBodyBuilder = parameterObject.getSetterMethodsBodyBuilder();
-			this.getterMethodsBodyBuilder = parameterObject.getGetterMethodsBodyBuilder();
+			this.fieldsBuilder = fieldsBuilder;
+			this.setterMethodsBodyBuilder = setterMethodsBodyBuilder;
+			this.getterMethodsBodyBuilder = getterMethodsBodyBuilder;
+			this.extraElementsBuilder = extraElementsBuilder;
 		}
 		
-		public java.lang.Class<?> getOrBuild(ClassLoader classLoader, String className, boolean builderMethodsCreationEnabled, java.lang.Class<?>... superClasses) {
+		public static PojoSubTypeRetriever createDefault(ClassFactory classFactory) {
+			return new PojoSubTypeRetriever(classFactory, (fieldsMap, cls) -> {
+				fieldsMap.entrySet().forEach(entry -> {
+					cls.addField(entry.getValue().addModifier(Modifier.PRIVATE));
+				});
+			}, (method, fieldName) -> 
+				method.addBodyCodeRow("this." + fieldName + " = " + fieldName + ";"), (method, fieldName) -> 
+					method.addBodyCodeRow("return this." + fieldName + ";"), null
+			);
+		}
+		
+		public PojoSubTypeRetriever setFieldsBuilder(BiConsumer<Map<String, Variable>, Class> fieldsBuilder) {
+			this.fieldsBuilder = fieldsBuilder;
+			return this;
+		}
+
+		public PojoSubTypeRetriever setSetterMethodsBodyBuilder(BiConsumer<Function, String> setterMethodsBodyBuilder) {
+			this.setterMethodsBodyBuilder = setterMethodsBodyBuilder;
+			return this;
+		}
+
+		public PojoSubTypeRetriever setGetterMethodsBodyBuilder(BiConsumer<Function, String> getterMethodsBodyBuilder) {
+			this.getterMethodsBodyBuilder = getterMethodsBodyBuilder;
+			return this;
+		}
+
+		public PojoSubTypeRetriever setExtraElementsBuilder(
+				TriConsumer<Unit, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder) {
+			this.extraElementsBuilder = extraElementsBuilder;
+			return this;
+		}
+		
+		public java.lang.Class<?> getOrBuild(
+				ClassLoader classLoader,
+			String className,
+			java.lang.Class<?>... superClasses
+		) {
+			return getOrBuild(classLoader, className, false, false, superClasses);
+		}	
+		
+		public java.lang.Class<?> getOrBuild(
+			ClassLoader classLoader,
+			String className, boolean builderMethodsCreationEnabled,
+			boolean useFullyQualifiedNames, 
+			java.lang.Class<?>... superClasses
+		) {
 			return classFactory.getOrBuild(
 				className, 
-				() -> generateSource(className, builderMethodsCreationEnabled, superClasses),
+				() -> generateSource(className, builderMethodsCreationEnabled, useFullyQualifiedNames, superClasses),
 				classLoader
 			);
 		}		
 		
-		private Unit generateSource(String className, boolean builderMethodsCreationEnabled, java.lang.Class<?>... superClasses) {
+		public Unit generateSource(String className, boolean builderMethodsCreationEnabled, boolean useFullyQualifiedNames, java.lang.Class<?>... superClasses) {
 			if (className.contains("$")) {
 				throw Throwables.toRuntimeException(className + " Pojo could not be a inner class");
 			}
@@ -462,10 +462,10 @@ public class ClassFactory implements Component {
 			Collection<java.lang.Class<?>> interfaces = new LinkedHashSet<>();
 			for (java.lang.Class<?> iteratedSuperClass : superClasses) {
 				if (iteratedSuperClass.isInterface()) {
-					cls.addConcretizedType(iteratedSuperClass);
+					cls.addConcretizedType(createTypeDeclaration(useFullyQualifiedNames, iteratedSuperClass));
 					interfaces.add(iteratedSuperClass);
 				} else if (superClass == null) {
-					cls.expands(iteratedSuperClass);
+					cls.expands(createTypeDeclaration(useFullyQualifiedNames, iteratedSuperClass));
 					superClass = iteratedSuperClass;
 				} else {
 					throw Throwables.toRuntimeException(className + " Pojo could not extends more than one class");
@@ -492,13 +492,16 @@ public class ClassFactory implements Component {
 					cls.addConstructor(
 						create(
 							classSimpleName, constructor, modifiers, (funct, params) ->
-							funct.addBodyCodeRow("super(" + String.join(", ", params) + ");")
+							funct.addBodyCodeRow("super(" + String.join(", ", params) + ");"),
+							useFullyQualifiedNames
 						)
 					);
 					if (builderMethodsCreationEnabled) {
-						cls.addMethod(create(
-							"create", constructor, modifiers, (funct, params) ->
-								funct.addBodyCodeRow("return new " + classSimpleName + "(" + String.join(", ", params) + ");")
+						cls.addMethod(
+							create(
+								"create", constructor, modifiers, (funct, params) ->
+									funct.addBodyCodeRow("return new " + classSimpleName + "(" + String.join(", ", params) + ");"),
+								useFullyQualifiedNames
 							).addModifier(Modifier.STATIC | Modifier.PUBLIC).setReturnType(classSimpleName)
 						);
 					}
@@ -514,19 +517,19 @@ public class ClassFactory implements Component {
 						modifiers ^= Modifier.ABSTRACT;
 					}
 					Function mth = Function.create(method.getName()).addModifier(modifiers);
-					mth.setReturnType(method.getReturnType());
+					mth.setReturnType(createTypeDeclaration(useFullyQualifiedNames, method.getReturnType()));
 					if (method.getName().startsWith("set")) {
 						String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst("set", ""));
 						java.lang.Class<?> paramType = method.getParameters()[0].getType();
-						fieldsMap.put(fieldName, Variable.create(paramType, fieldName));
-						mth.addParameter(Variable.create(paramType, fieldName));
+						fieldsMap.put(fieldName, Variable.create(createTypeDeclaration(useFullyQualifiedNames, paramType), fieldName));
+						mth.addParameter(Variable.create(createTypeDeclaration(useFullyQualifiedNames, paramType), fieldName));
 						if (setterMethodsBodyBuilder != null) {
 							setterMethodsBodyBuilder.accept(mth, fieldName);
 						}
 					} else if (method.getName().startsWith("get") || method.getName().startsWith("is")) {
 						String prefix = method.getName().startsWith("get")? "get" : "is";
 						String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst(prefix, ""));
-						fieldsMap.put(fieldName, Variable.create(method.getReturnType(), fieldName));
+						fieldsMap.put(fieldName, Variable.create(createTypeDeclaration(useFullyQualifiedNames, method.getReturnType()), fieldName));
 						if (getterMethodsBodyBuilder != null) {
 							getterMethodsBodyBuilder.accept(mth, fieldName);
 						}
@@ -537,15 +540,34 @@ public class ClassFactory implements Component {
 					fieldsBuilder.accept(fieldsMap, cls);
 				}
 			}
-			return Unit.create(packageName).addClass(cls);
+			Unit unit = Unit.create(packageName).addClass(cls);
+			if (extraElementsBuilder != null) {
+				extraElementsBuilder.accept(unit, superClass, interfaces);
+			}
+			return unit;
+		}
+
+		protected TypeDeclaration createTypeDeclaration(boolean useFullyQualifiedNames,
+				java.lang.Class<?> cls) {
+			if (useFullyQualifiedNames) {
+				return TypeDeclaration.create(cls.getName().replace("$", "."));
+			} else {
+				return TypeDeclaration.create(cls);
+			}
 		};
 		
-		private Function create(String functionName, java.lang.reflect.Executable executable, Integer modifiers, BiConsumer<Function, Collection<String>> bodyBuilder) {
+		private Function create(
+			String functionName,
+			java.lang.reflect.Executable executable,
+			Integer modifiers,
+			BiConsumer<Function, Collection<String>> bodyBuilder,
+			boolean useFullyQualifiedNames
+		) {
 			Function function = Function.create(functionName);
 			Collection<String> params = new ArrayList<>();
 			for (Parameter paramType : executable.getParameters()) {
 				function.addParameter(
-					Variable.create(TypeDeclaration.create(paramType.getType()), paramType.getName())
+					Variable.create(createTypeDeclaration(useFullyQualifiedNames, paramType.getType()), paramType.getName())
 				);
 				params.add(paramType.getName());
 			}
