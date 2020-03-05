@@ -238,4 +238,10 @@ public class Strings implements Component {
 			return path;
 		}
 	}
+
+
+	public boolean areEquals(String string1, String string2) {
+		return (isEmpty(string1) && isEmpty(string2)) || 
+			(isNotEmpty(string1) && isNotEmpty(string2) && string1.equals(string2));
+	}
 }

@@ -2,7 +2,6 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 
@@ -52,15 +51,18 @@ public class ClassFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		java.lang.Class<?> cls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
 			getComponentSupplier().getMemoryClassLoader(), this.getClass().getPackage().getName() + ".TestTwoPojoImpl",
+			true,
 			Complex.Data.Item.class,
 			PojoInterface.class
 		);
 		testNotNull(() -> {
 			java.lang.Class<?> reloadedCls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
-				getComponentSupplier().getMemoryClassLoader(), cls.getPackage().getName() + ".ExtendedPojoImpl", cls
+				getComponentSupplier().getMemoryClassLoader(), cls.getPackage().getName() + ".ExtendedPojoImpl", true, cls
 			);
-			Constructor<?> ctorr = Classes.getDeclaredConstructors(reloadedCls, ctor -> ctor.getParameterTypes()[0].equals(String.class)).stream().findFirst().orElse(null);
-			PojoInterface pojoObject = (PojoInterface)ctorr.newInstance("try");
+			java.lang.reflect.Method createMethod = Classes.getDeclaredMethods(reloadedCls, method -> 
+				method.getName().equals("create") &&
+				method.getParameterTypes()[0].equals(String.class)).stream().findFirst().orElse(null);
+			PojoInterface pojoObject = (PojoInterface)createMethod.invoke(null, "try");
 			return pojoObject;
 		});
 	}

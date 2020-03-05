@@ -80,6 +80,11 @@ public class Function extends Generator.Abst {
 		return this;
 	}
 	
+	public Function setReturnType(String name) {
+		this.returnType = TypeDeclaration.create(name);
+		return this;
+	}
+	
 	public Function setReturnType(TypeDeclaration returnType) {
 		this.returnType = returnType;
 		return this;
