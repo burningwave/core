@@ -87,8 +87,8 @@ public class CodeGeneratorTest extends BaseTest {
 					.addMethod(method)).addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation2");
 			unit.addClass(cls);
 			unit.addClass(cls);
-			System.out.println(unit.make());
-			unit.getAllClasses().keySet().forEach(System.out::println);
+			logDebug(unit.make());
+			unit.getAllClasses().keySet().forEach(this::logDebug);
 		});
 	}
 }
