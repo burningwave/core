@@ -334,6 +334,14 @@ public class Classes implements Component {
 		);
 	}
 	
+	public Field getDeclaredField(Class<?> cls, Predicate<Field> predicate) {
+		Collection<Field> members = getDeclaredFields(cls, predicate);
+		if (members.size() > 1) {
+			throw Throwables.toRuntimeException("More than one member found for class " + cls.getName());
+		}
+		return members.stream().findFirst().orElse(null);
+	}
+	
 	public Field[] getDeclaredFields(Class<?> cls)  {
 		return Cache.classLoaderForFields.getOrUploadIfAbsent(
 			getClassLoader(cls), cls.getName().replace(".", "/"),
@@ -341,10 +349,18 @@ public class Classes implements Component {
 		);
 	}
 	
-	public Collection<Method> getDeclaredMethods(Class<?> cls, Predicate<Method> methodPredicate) {
+	public Method getDeclaredMethod(Class<?> cls, Predicate<Method> predicate) {
+		Collection<Method> members = getDeclaredMethods(cls, predicate);
+		if (members.size() > 1) {
+			throw Throwables.toRuntimeException("More than one member found for class " + cls.getName());
+		}
+		return members.stream().findFirst().orElse(null);
+	}
+	
+	public Collection<Method> getDeclaredMethods(Class<?> cls, Predicate<Method> predicate) {
 		Collection<Method> members = new LinkedHashSet<>();
 		for (Method member : getDeclaredMethods(cls)) {
-			if (methodPredicate.test(member)) {
+			if (predicate.test(member)) {
 				members.add(member);
 			}
 		}
@@ -358,10 +374,18 @@ public class Classes implements Component {
 		);
 	}
 	
-	public Collection<Constructor<?>> getDeclaredConstructors(Class<?> cls, Predicate<Constructor<?>> constructorPredicate) {
+	public Constructor<?> getDeclaredConstructor(Class<?> cls, Predicate<Constructor<?>> predicate) {
+		Collection<Constructor<?>> members = getDeclaredConstructors(cls, predicate);
+		if (members.size() > 1) {
+			throw Throwables.toRuntimeException("More than one member found for class " + cls.getName());
+		}
+		return members.stream().findFirst().orElse(null);
+	}
+	
+	public Collection<Constructor<?>> getDeclaredConstructors(Class<?> cls, Predicate<Constructor<?>> predicate) {
 		Collection<Constructor<?>> members = new LinkedHashSet<>();
 		for (Constructor<?> member : getDeclaredConstructors(cls)) {
-			if (constructorPredicate.test(member)) {
+			if (predicate.test(member)) {
 				members.add(member);
 			}
 		}
