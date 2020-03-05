@@ -73,7 +73,7 @@ public class ClassFactory implements Component {
 	private PathHelper pathHelper;
 	private Classes.Loaders classesLoaders;
 	private JavaMemoryCompiler javaMemoryCompiler;
-	private PojoRetriever pojoRetriever;	
+	private PojoSubTypeRetriever pojoSubTypeRetriever;	
 	
 	
 	private BiFunction<String, Statement, Unit> codeGeneratorForExecutor = (className, statement) -> {
@@ -237,8 +237,8 @@ public class ClassFactory implements Component {
 		this.classesLoaders = classesLoaders;
 		this.javaMemoryCompiler = javaMemoryCompiler;
 		this.pathHelper = pathHelper;
-		this.pojoRetriever = new PojoRetriever(
-			this, PojoRetriever.Config.createDefault()
+		this.pojoSubTypeRetriever = new PojoSubTypeRetriever(
+			this, PojoSubTypeRetriever.Config.createDefault()
 		);
 	}
 	
@@ -321,18 +321,18 @@ public class ClassFactory implements Component {
 		return toRet;
 	}	
 	
-	public PojoRetriever getPojoSubTypeRetriever(
-		PojoRetriever.Config config
+	public PojoSubTypeRetriever getPojoSubTypeRetriever(
+		PojoSubTypeRetriever.Config config
 	) {
-		return new PojoRetriever(this, config);
+		return new PojoSubTypeRetriever(this, config);
 	}
 	
 	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, java.lang.Class<?>... superClasses) {
-		return pojoRetriever.getOrBuild(classLoader, className, false, superClasses);
+		return pojoSubTypeRetriever.getOrBuild(classLoader, className, false, superClasses);
 	}
 	
 	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, boolean builderMethodsCreationEnabled, java.lang.Class<?>... superClasses) {
-		return pojoRetriever.getOrBuild(classLoader, className, builderMethodsCreationEnabled, superClasses);
+		return pojoSubTypeRetriever.getOrBuild(classLoader, className, builderMethodsCreationEnabled, superClasses);
 	}
 	
 	public java.lang.Class<?> getOrBuildFunctionSubType(ClassLoader classLoader, int parametersLength) {
@@ -377,7 +377,7 @@ public class ClassFactory implements Component {
 
 	}
 	
-	public static class PojoRetriever {
+	public static class PojoSubTypeRetriever {
 		private ClassFactory classFactory;
 		private BiConsumer<Map<String, Variable>, Class> fieldsBuilder;
 		private BiConsumer<Function, String> setterMethodsBodyBuilder;
@@ -407,7 +407,7 @@ public class ClassFactory implements Component {
 			}
 			
 			public static Config createDefault() {
-				return new PojoRetriever.Config((fieldsMap, cls) -> {
+				return new PojoSubTypeRetriever.Config((fieldsMap, cls) -> {
 					fieldsMap.entrySet().forEach(entry -> {
 						cls.addField(entry.getValue().addModifier(Modifier.PRIVATE));
 					});
@@ -429,7 +429,7 @@ public class ClassFactory implements Component {
 			}
 		}
 
-		private PojoRetriever(
+		private PojoSubTypeRetriever(
 			ClassFactory classFactory,
 			Config parameterObject
 		) {
