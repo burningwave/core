@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes.source;
+package org.burningwave.core.classes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,35 +39,35 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public class Unit extends Generator.Abst {
+public class UnitSourceGenerator extends SourceGenerator.Abst {
 	private String packageName;
 	private Collection<String> imports;
-	private Collection<Class> classes;	
+	private Collection<ClassSourceGenerator> classes;	
 	
-	private Unit(String packageName) {
+	private UnitSourceGenerator(String packageName) {
 		this.packageName = packageName;
 	}
 	
-	public static Unit create(String packageName) {
-		return new Unit(packageName);
+	public static UnitSourceGenerator create(String packageName) {
+		return new UnitSourceGenerator(packageName);
 	}
 	
-	public Unit addImport(String imprt) {
+	public UnitSourceGenerator addImport(String imprt) {
 		this.imports = Optional.ofNullable(this.imports).orElseGet(ArrayList::new);
 		this.imports.add(imprt);
 		return this;
 	}
 	
-	public Unit addImport(java.lang.Class<?>... classes) {
+	public UnitSourceGenerator addImport(java.lang.Class<?>... classes) {
 		for (java.lang.Class<?> cls : classes) {
 			this.addImport(cls.getName());
 		}
 		return this;
 	}
 	
-	public Unit addClass(Class... clazzes) {
+	public UnitSourceGenerator addClass(ClassSourceGenerator... clazzes) {
 		this.classes = Optional.ofNullable(this.classes).orElseGet(ArrayList::new);
-		for (Class cls : clazzes) {
+		for (ClassSourceGenerator cls : clazzes) {
 			classes.add(cls);
 		}
 		return this;
@@ -90,8 +90,8 @@ public class Unit extends Generator.Abst {
 		return new LinkedHashSet<>(imports);
 	}
 	
-	Collection<TypeDeclaration> getTypeDeclarations() {
-		Collection<TypeDeclaration> types = new ArrayList<>();
+	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
+		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(classes).ifPresent(clazzes -> {
 			clazzes.forEach(cls -> {
 				types.addAll(cls.getTypeDeclarations());
@@ -100,8 +100,8 @@ public class Unit extends Generator.Abst {
 		return types;
 	}
 	
-	public Map<String, Class> getAllClasses() {
-		Map<String, Class> allClasses = new HashMap<>();
+	public Map<String, ClassSourceGenerator> getAllClasses() {
+		Map<String, ClassSourceGenerator> allClasses = new HashMap<>();
 		Optional.ofNullable(classes).ifPresent(classes -> {
 			classes.forEach(cls -> {
 				allClasses.put(packageName + "." + cls.getTypeDeclaration().getSimpleName(), cls);
@@ -113,7 +113,7 @@ public class Unit extends Generator.Abst {
 		return allClasses;
 	}
 	
-	public Class getClass(String className) {
+	public ClassSourceGenerator getClass(String className) {
 		return getAllClasses().get(className);
 	}
 	

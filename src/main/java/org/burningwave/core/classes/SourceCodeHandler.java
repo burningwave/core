@@ -37,7 +37,6 @@ import java.util.regex.Pattern;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.source.Statement;
 import org.burningwave.core.function.ThrowingSupplier;
 
 
@@ -82,7 +81,7 @@ public class SourceCodeHandler implements Component {
 	
 	public <T> T execute(
 		ClassLoader classLoaderParentOfOneShotClassLoader,
-		Statement statement,
+		StatementSourceGenerator statement,
 		Object... parameters
 	) {	
 		return ThrowingSupplier.get(() -> {

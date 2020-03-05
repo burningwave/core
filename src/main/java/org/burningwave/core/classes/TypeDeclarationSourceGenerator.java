@@ -26,39 +26,39 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes.source;
+package org.burningwave.core.classes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 
-public class TypeDeclaration extends Generator.Abst {
+public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	private String name;
 	private String simpleName;
-	private Collection<Generic> generics;
+	private Collection<GenericSourceGenerator> generics;
 	
-	private TypeDeclaration(String name, String simpleName) {
+	private TypeDeclarationSourceGenerator(String name, String simpleName) {
 		this.name = name;
 		this.simpleName = simpleName;
 	}
 	
-	private TypeDeclaration() {}
+	private TypeDeclarationSourceGenerator() {}
 	
-	static TypeDeclaration create(String name, String simpleName) {
-		return new TypeDeclaration(name, simpleName);
+	static TypeDeclarationSourceGenerator create(String name, String simpleName) {
+		return new TypeDeclarationSourceGenerator(name, simpleName);
 	}
 	
-	public static TypeDeclaration create(String simpleName) {
-		return new TypeDeclaration(null, simpleName);
+	public static TypeDeclarationSourceGenerator create(String simpleName) {
+		return new TypeDeclarationSourceGenerator(null, simpleName);
 	}
 	
-	public static TypeDeclaration create(java.lang.Class<?> cls) {
-		return new TypeDeclaration(cls.isPrimitive()? null : cls.getName(), cls.getSimpleName());
+	public static TypeDeclarationSourceGenerator create(java.lang.Class<?> cls) {
+		return new TypeDeclarationSourceGenerator(cls.isPrimitive()? null : cls.getName(), cls.getSimpleName());
 	}
 	
-	public static TypeDeclaration create(Generic... generics) {
-		return new TypeDeclaration().addGeneric(generics);
+	public static TypeDeclarationSourceGenerator create(GenericSourceGenerator... generics) {
+		return new TypeDeclarationSourceGenerator().addGeneric(generics);
 	}
 	
 	public String getName() {
@@ -69,14 +69,14 @@ public class TypeDeclaration extends Generator.Abst {
 		return simpleName;
 	}
 	
-	public TypeDeclaration addGeneric(Generic... generics) {
+	public TypeDeclarationSourceGenerator addGeneric(GenericSourceGenerator... generics) {
 		this.generics = Optional.ofNullable(this.generics).orElseGet(ArrayList::new);
 		this.generics.addAll(Arrays.asList(generics));
 		return this;
 	}
 	
-	Collection<TypeDeclaration> getTypeDeclarations() {
-		Collection<TypeDeclaration> types = new ArrayList<>();
+	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
+		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		types.add(this);
 		Optional.ofNullable(generics).ifPresent(generics -> {
 			generics.forEach(generic -> {

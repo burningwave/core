@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes.source;
+package org.burningwave.core.classes;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -34,34 +34,34 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 
-public class Function extends Generator.Abst {
+public class FunctionSourceGenerator extends SourceGenerator.Abst {
 	private Collection<String> outerCode;
 	private Integer modifier;
 	private boolean defaultFunction;
-	private TypeDeclaration typesDeclaration;
-	private TypeDeclaration returnType;
+	private TypeDeclarationSourceGenerator typesDeclaration;
+	private TypeDeclarationSourceGenerator returnType;
 	private String name;
-	private Collection<Variable> parameters;
-	private Statement body;
+	private Collection<VariableSourceGenerator> parameters;
+	private StatementSourceGenerator body;
 	
-	private Function(String name) {
+	private FunctionSourceGenerator(String name) {
 		this.name = name;
 	}
 	
-	public static Function create(String name) {
-		return new Function(name);
+	public static FunctionSourceGenerator create(String name) {
+		return new FunctionSourceGenerator(name);
 	}
 	
-	public static Function create() {
-		return new Function(null);
+	public static FunctionSourceGenerator create() {
+		return new FunctionSourceGenerator(null);
 	}
 	
-	Function setName(String name) {
+	FunctionSourceGenerator setName(String name) {
 		this.name = name;
 		return this;
 	}
 	
-	public Function addModifier(Integer modifier) {
+	public FunctionSourceGenerator addModifier(Integer modifier) {
 		if (this.modifier == null) {
 			this.modifier = modifier;
 		} else {
@@ -70,42 +70,42 @@ public class Function extends Generator.Abst {
 		return this;
 	}
 	
-	public Function setDefault() {
+	public FunctionSourceGenerator setDefault() {
 		this.defaultFunction = true;
 		return this;
 	}
 	
-	public Function setTypeDeclaration(TypeDeclaration typesDeclaration) {
+	public FunctionSourceGenerator setTypeDeclaration(TypeDeclarationSourceGenerator typesDeclaration) {
 		this.typesDeclaration = typesDeclaration;
 		return this;
 	}
 	
-	public Function setReturnType(String name) {
-		this.returnType = TypeDeclaration.create(name);
+	public FunctionSourceGenerator setReturnType(String name) {
+		this.returnType = TypeDeclarationSourceGenerator.create(name);
 		return this;
 	}
 	
-	public Function setReturnType(TypeDeclaration returnType) {
+	public FunctionSourceGenerator setReturnType(TypeDeclarationSourceGenerator returnType) {
 		this.returnType = returnType;
 		return this;
 	}
 	
-	public Function setReturnType(Generic returnType) {
-		return setReturnType(TypeDeclaration.create(returnType.getName()));
+	public FunctionSourceGenerator setReturnType(GenericSourceGenerator returnType) {
+		return setReturnType(TypeDeclarationSourceGenerator.create(returnType.getName()));
 	}
 	
-	public Function setReturnType(java.lang.Class<?> returnType) {
-		this.returnType = TypeDeclaration.create(returnType);
+	public FunctionSourceGenerator setReturnType(java.lang.Class<?> returnType) {
+		this.returnType = TypeDeclarationSourceGenerator.create(returnType);
 		return this;
 	}
 	
-	public Function addParameter(Variable parameter) {
+	public FunctionSourceGenerator addParameter(VariableSourceGenerator parameter) {
 		this.parameters = Optional.ofNullable(this.parameters).orElseGet(ArrayList::new);
 		this.parameters.add(parameter.setDelimiter(null));
 		return this;
 	}
 	
-	public Function addOuterCodeRow(String code) {
+	public FunctionSourceGenerator addOuterCodeRow(String code) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
 		if (!this.outerCode.isEmpty()) {
 			this.outerCode.add("\n" + code);
@@ -115,20 +115,20 @@ public class Function extends Generator.Abst {
 		return this;
 	}
 	
-	public Function addBodyCode(String code) {
-		this.body = Optional.ofNullable(this.body).orElseGet(Statement::create);
+	public FunctionSourceGenerator addBodyCode(String code) {
+		this.body = Optional.ofNullable(this.body).orElseGet(StatementSourceGenerator::create);
 		this.body.addCode(code);
 		return this;
 	}
 	
-	public Function addBodyCodeRow(String code) {
-		this.body = Optional.ofNullable(this.body).orElseGet(Statement::create);
+	public FunctionSourceGenerator addBodyCodeRow(String code) {
+		this.body = Optional.ofNullable(this.body).orElseGet(StatementSourceGenerator::create);
 		this.body.addCodeRow(code);
 		return this;
 	}
 	
-	public Function addBodyElement(Generator generator) {
-		this.body = Optional.ofNullable(this.body).orElseGet(Statement::create);
+	public FunctionSourceGenerator addBodyElement(SourceGenerator generator) {
+		this.body = Optional.ofNullable(this.body).orElseGet(StatementSourceGenerator::create);
 		this.body.addElement(generator);
 		return this;
 	}
@@ -137,9 +137,9 @@ public class Function extends Generator.Abst {
 		String paramsCode = "(";
 		if (parameters != null) {
 			paramsCode += "\n";
-			Iterator<Variable> paramsIterator =  parameters.iterator();
+			Iterator<VariableSourceGenerator> paramsIterator =  parameters.iterator();
 			while (paramsIterator.hasNext()) {
-				Variable param = paramsIterator.next();
+				VariableSourceGenerator param = paramsIterator.next();
 				paramsCode += "\t" + param.make().replace("\n", "\n\t");
 				if (paramsIterator.hasNext()) {
 					paramsCode += COMMA + "\n";
@@ -151,8 +151,8 @@ public class Function extends Generator.Abst {
 		return paramsCode + ")";
 	}
 	
-	Collection<TypeDeclaration> getTypeDeclarations() {
-		Collection<TypeDeclaration> types = new ArrayList<>();
+	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
+		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(typesDeclaration).ifPresent(typesDeclaration -> {
 			types.addAll(typesDeclaration.getTypeDeclarations());
 		});
@@ -186,7 +186,7 @@ public class Function extends Generator.Abst {
 		);
 	}
 
-	public TypeDeclaration getReturnType() {
+	public TypeDeclarationSourceGenerator getReturnType() {
 		return returnType;
 	}	
 }

@@ -53,13 +53,6 @@ import java.util.function.Supplier;
 import org.burningwave.core.Component;
 import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.source.Class;
-import org.burningwave.core.classes.source.Function;
-import org.burningwave.core.classes.source.Generic;
-import org.burningwave.core.classes.source.Statement;
-import org.burningwave.core.classes.source.TypeDeclaration;
-import org.burningwave.core.classes.source.Unit;
-import org.burningwave.core.classes.source.Variable;
 import org.burningwave.core.function.MultiParamsConsumer;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.MultiParamsPredicate;
@@ -76,29 +69,29 @@ public class ClassFactory implements Component {
 	private JavaMemoryCompiler javaMemoryCompiler;
 	private PojoSubTypeRetriever pojoSubTypeRetriever;	
 	
-	private BiFunction<String, Statement, Unit> codeGeneratorForExecutor = (className, statement) -> {
+	private BiFunction<String, StatementSourceGenerator, UnitSourceGenerator> codeGeneratorForExecutor = (className, statement) -> {
 		if (className.contains("$")) {
 			throw Throwables.toRuntimeException(className + " CodeExecutor could not be a inner class");
 		}
 		String packageName = Classes.retrievePackageName(className);
 		String classSimpleName = Classes.retrieveSimpleName(className);
-		TypeDeclaration typeDeclaration = TypeDeclaration.create(classSimpleName);
-		Generic returnType = Generic.create("T");
-		Function executeMethod = Function.create("execute").setReturnType(
+		TypeDeclarationSourceGenerator typeDeclaration = TypeDeclarationSourceGenerator.create(classSimpleName);
+		GenericSourceGenerator returnType = GenericSourceGenerator.create("T");
+		FunctionSourceGenerator executeMethod = FunctionSourceGenerator.create("execute").setReturnType(
 			returnType
 		).addModifier(
 			Modifier.PUBLIC
 		).addParameter(
-			Variable.create(
-				TypeDeclaration.create(ComponentSupplier.class), "componentSupplier"
+			VariableSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create(ComponentSupplier.class), "componentSupplier"
 			)
 		).addParameter(
-			Variable.create(
-				TypeDeclaration.create("Object... "), "objects"
+			VariableSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("Object... "), "objects"
 			)
 		).addOuterCodeRow("@Override").addBodyElement(statement);
 		typeDeclaration.addGeneric(returnType);		
-		Class cls = Class.create(
+		ClassSourceGenerator cls = ClassSourceGenerator.create(
 			typeDeclaration
 		).addModifier(
 			Modifier.PUBLIC
@@ -107,123 +100,123 @@ public class ClassFactory implements Component {
 		).addMethod(
 			executeMethod
 		);
-		return Unit.create(packageName).addClass(cls);
+		return UnitSourceGenerator.create(packageName).addClass(cls);
 	};
 	
-	private BiFunction<String, Integer, Unit> codeGeneratorForConsumer = (className, parametersLength) -> {
+	private BiFunction<String, Integer, UnitSourceGenerator> codeGeneratorForConsumer = (className, parametersLength) -> {
 		String packageName = Classes.retrievePackageName(className);
 		String classSimpleName = Classes.retrieveSimpleName(className);
 		if (className.contains("$")) {
 			throw Throwables.toRuntimeException(className + " Consumer could not be a inner class");
 		}
-		TypeDeclaration typeDeclaration = TypeDeclaration.create(classSimpleName);
-		Function acceptMethod = Function.create("accept").setReturnType(
+		TypeDeclarationSourceGenerator typeDeclaration = TypeDeclarationSourceGenerator.create(classSimpleName);
+		FunctionSourceGenerator acceptMethod = FunctionSourceGenerator.create("accept").setReturnType(
 			void.class
 		).addModifier(Modifier.PUBLIC | Modifier.ABSTRACT);
-		Function varArgsAcceptMethod = Function.create("accept").setReturnType(
+		FunctionSourceGenerator varArgsAcceptMethod = FunctionSourceGenerator.create("accept").setReturnType(
 			void.class
 		).addModifier(Modifier.PUBLIC).setDefault().addParameter(
-			Variable.create(TypeDeclaration.create("Object..."), "params")
+			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("Object..."), "params")
 		).addOuterCodeRow("@Override");
 		varArgsAcceptMethod.addBodyCodeRow("accept(");
-		Statement applyMethodCodeOne = Statement.createSimple().setBodyElementSeparator(", ");
+		StatementSourceGenerator applyMethodCodeOne = StatementSourceGenerator.createSimple().setBodyElementSeparator(", ");
 		for (int i = 0; i < parametersLength; i++) {
-			typeDeclaration.addGeneric(Generic.create("P" + i));
-			acceptMethod.addParameter(Variable.create(TypeDeclaration.create("P" + i), "p" + i));
+			typeDeclaration.addGeneric(GenericSourceGenerator.create("P" + i));
+			acceptMethod.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("P" + i), "p" + i));
 			applyMethodCodeOne.addCode("(P" + i + ")params["+i+"]");
 		}
 		varArgsAcceptMethod.addBodyElement(applyMethodCodeOne);
 		varArgsAcceptMethod.addBodyCode(");");
-		Class cls = Class.createInterface(
+		ClassSourceGenerator cls = ClassSourceGenerator.createInterface(
 			typeDeclaration
 		).addModifier(
 			Modifier.PUBLIC
 		).expands(
-			TypeDeclaration.create(MultiParamsConsumer.class)
+			TypeDeclarationSourceGenerator.create(MultiParamsConsumer.class)
 		).addMethod(
 			acceptMethod
 		).addMethod(
 			varArgsAcceptMethod
 		).addOuterCodeRow("@FunctionalInterface");
-		return Unit.create(packageName).addClass(cls);
+		return UnitSourceGenerator.create(packageName).addClass(cls);
 	};
 	
-	private BiFunction<String, Integer, Unit> codeGeneratorForPredicate = (className, parametersLength) -> {
+	private BiFunction<String, Integer, UnitSourceGenerator> codeGeneratorForPredicate = (className, parametersLength) -> {
 		String packageName = Classes.retrievePackageName(className);
 		String classSimpleName = Classes.retrieveSimpleName(className);
 		if (className.contains("$")) {
 			throw Throwables.toRuntimeException(className + " Predicate could not be a inner class");
 		}
-		TypeDeclaration typeDeclaration = TypeDeclaration.create(classSimpleName);
-		Function testMethod = Function.create("test").setReturnType(
+		TypeDeclarationSourceGenerator typeDeclaration = TypeDeclarationSourceGenerator.create(classSimpleName);
+		FunctionSourceGenerator testMethod = FunctionSourceGenerator.create("test").setReturnType(
 			boolean.class
 		).addModifier(Modifier.PUBLIC | Modifier.ABSTRACT);
-		Function varArgsTestMethod = Function.create("test").setReturnType(
+		FunctionSourceGenerator varArgsTestMethod = FunctionSourceGenerator.create("test").setReturnType(
 			boolean.class
 		).addModifier(Modifier.PUBLIC).setDefault().addParameter(
-			Variable.create(TypeDeclaration.create("Object..."), "params")
+			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("Object..."), "params")
 		).addOuterCodeRow("@Override");
 		varArgsTestMethod.addBodyCodeRow("return test(");
-		Statement applyMethodCodeOne = Statement.createSimple().setBodyElementSeparator(", ");
+		StatementSourceGenerator applyMethodCodeOne = StatementSourceGenerator.createSimple().setBodyElementSeparator(", ");
 		for (int i = 0; i < parametersLength; i++) {
-			typeDeclaration.addGeneric(Generic.create("P" + i));
-			testMethod.addParameter(Variable.create(TypeDeclaration.create("P" + i), "p" + i));
+			typeDeclaration.addGeneric(GenericSourceGenerator.create("P" + i));
+			testMethod.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("P" + i), "p" + i));
 			applyMethodCodeOne.addCode("(P" + i + ")params["+i+"]");
 		}
 		varArgsTestMethod.addBodyElement(applyMethodCodeOne);
 		varArgsTestMethod.addBodyCode(");");
-		Class cls = Class.createInterface(
+		ClassSourceGenerator cls = ClassSourceGenerator.createInterface(
 			typeDeclaration
 		).addModifier(
 			Modifier.PUBLIC
 		).expands(
-			TypeDeclaration.create(MultiParamsPredicate.class)
+			TypeDeclarationSourceGenerator.create(MultiParamsPredicate.class)
 		).addMethod(
 			testMethod
 		).addMethod(
 			varArgsTestMethod
 		).addOuterCodeRow("@FunctionalInterface");
-		return Unit.create(packageName).addClass(cls);
+		return UnitSourceGenerator.create(packageName).addClass(cls);
 	};
 	
-	private BiFunction<String, Integer, Unit> codeGeneratorForFunction = (className, parametersLength) -> {
+	private BiFunction<String, Integer, UnitSourceGenerator> codeGeneratorForFunction = (className, parametersLength) -> {
 		String packageName = Classes.retrievePackageName(className);
 		String classSimpleName = Classes.retrieveSimpleName(className);
 		if (className.contains("$")) {
 			throw Throwables.toRuntimeException(className + " Function could not be a inner class");
 		}
-		TypeDeclaration typeDeclaration = TypeDeclaration.create(classSimpleName);
-		Generic returnType = Generic.create("R");
-		Function applyMethod = Function.create("apply").setReturnType(
+		TypeDeclarationSourceGenerator typeDeclaration = TypeDeclarationSourceGenerator.create(classSimpleName);
+		GenericSourceGenerator returnType = GenericSourceGenerator.create("R");
+		FunctionSourceGenerator applyMethod = FunctionSourceGenerator.create("apply").setReturnType(
 			returnType
 		).addModifier(Modifier.PUBLIC | Modifier.ABSTRACT);
-		Function varArgsApplyMethod = Function.create("apply").setReturnType(
+		FunctionSourceGenerator varArgsApplyMethod = FunctionSourceGenerator.create("apply").setReturnType(
 			returnType
 		).addModifier(Modifier.PUBLIC).setDefault().addParameter(
-			Variable.create(TypeDeclaration.create("Object..."), "params")
+			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("Object..."), "params")
 		).addOuterCodeRow("@Override");
 		varArgsApplyMethod.addBodyCodeRow("return apply(");
-		Statement applyMethodCodeOne = Statement.createSimple().setBodyElementSeparator(", ");
+		StatementSourceGenerator applyMethodCodeOne = StatementSourceGenerator.createSimple().setBodyElementSeparator(", ");
 		for (int i = 0; i < parametersLength; i++) {
-			typeDeclaration.addGeneric(Generic.create("P" + i));
-			applyMethod.addParameter(Variable.create(TypeDeclaration.create("P" + i), "p" + i));
+			typeDeclaration.addGeneric(GenericSourceGenerator.create("P" + i));
+			applyMethod.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("P" + i), "p" + i));
 			applyMethodCodeOne.addCode("(P" + i + ")params["+i+"]");
 		}
 		varArgsApplyMethod.addBodyElement(applyMethodCodeOne);
 		varArgsApplyMethod.addBodyCode(");");
 		typeDeclaration.addGeneric(returnType);		
-		Class cls = Class.createInterface(
+		ClassSourceGenerator cls = ClassSourceGenerator.createInterface(
 			typeDeclaration
 		).addModifier(
 			Modifier.PUBLIC
 		).expands(
-			TypeDeclaration.create(MultiParamsFunction.class).addGeneric(returnType)
+			TypeDeclarationSourceGenerator.create(MultiParamsFunction.class).addGeneric(returnType)
 		).addMethod(
 			applyMethod
 		).addMethod(
 			varArgsApplyMethod
 		).addOuterCodeRow("@FunctionalInterface");
-		return Unit.create(packageName).addClass(cls);
+		return UnitSourceGenerator.create(packageName).addClass(cls);
 	};
 	
 	private ClassFactory(
@@ -279,11 +272,11 @@ public class ClassFactory implements Component {
 		}
 	}
 	
-	public java.lang.Class<?> getOrBuild(ClassLoader classLoader, String className, Unit unitCode) {
+	public java.lang.Class<?> getOrBuild(ClassLoader classLoader, String className, UnitSourceGenerator unitCode) {
 		return getOrBuild(classLoader, className, () -> unitCode);
 	}	
 	
-	public java.lang.Class<?> getOrBuild(ClassLoader classLoader, String className, Supplier<Unit> unitCode) {
+	public java.lang.Class<?> getOrBuild(ClassLoader classLoader, String className, Supplier<UnitSourceGenerator> unitCode) {
 		java.lang.Class<?> toRet = classesLoaders.retrieveLoadedClass(classLoader, className);
 		if (toRet == null) {
 			toRet = buildAndUploadTo(classLoader, className, unitCode);
@@ -293,11 +286,11 @@ public class ClassFactory implements Component {
 		return toRet;
 	}	
 	
-	public java.lang.Class<?> buildAndUploadTo(ClassLoader classLoader, String className, Supplier<Unit> unitCodeSupplier) {
+	public java.lang.Class<?> buildAndUploadTo(ClassLoader classLoader, String className, Supplier<UnitSourceGenerator> unitCodeSupplier) {
 		try {
-			Unit unit = unitCodeSupplier.get();
+			UnitSourceGenerator unit = unitCodeSupplier.get();
 			unit.getAllClasses().values().forEach(cls -> {
-				cls.addConcretizedType(TypeDeclaration.create(Virtual.class));
+				cls.addConcretizedType(TypeDeclarationSourceGenerator.create(Virtual.class));
 			});
 			Map<String, ByteBuffer> compiledFiles = build(unit.make());
 			logInfo("Class " + className + " succesfully created");
@@ -361,7 +354,7 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	public java.lang.Class<?> getOrBuildCodeExecutorSubType(ClassLoader classLoader, String className, Statement statement) {
+	public java.lang.Class<?> getOrBuildCodeExecutorSubType(ClassLoader classLoader, String className, StatementSourceGenerator statement) {
 		return getOrBuild(
 			classLoader,
 			className,
@@ -372,17 +365,17 @@ public class ClassFactory implements Component {
 	
 	public static class PojoSubTypeRetriever {
 		private ClassFactory classFactory;
-		private BiConsumer<Map<String, Variable>, Class> fieldsBuilder;
-		private BiConsumer<Function, String> setterMethodsBodyBuilder;
-		private BiConsumer<Function, String> getterMethodsBodyBuilder;
-		private TriConsumer<Unit, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder;
+		private BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder;
+		private BiConsumer<FunctionSourceGenerator, String> setterMethodsBodyBuilder;
+		private BiConsumer<FunctionSourceGenerator, String> getterMethodsBodyBuilder;
+		private TriConsumer<UnitSourceGenerator, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder;
 
 		private PojoSubTypeRetriever(
 			ClassFactory classFactory,
-			BiConsumer<Map<String, Variable>, Class> fieldsBuilder,
-			BiConsumer<Function, String> setterMethodsBodyBuilder,
-			BiConsumer<Function, String> getterMethodsBodyBuilder,
-			TriConsumer<Unit, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder
+			BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder,
+			BiConsumer<FunctionSourceGenerator, String> setterMethodsBodyBuilder,
+			BiConsumer<FunctionSourceGenerator, String> getterMethodsBodyBuilder,
+			TriConsumer<UnitSourceGenerator, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder
 		) {
 			this.classFactory = classFactory;
 			this.fieldsBuilder = fieldsBuilder;
@@ -402,23 +395,23 @@ public class ClassFactory implements Component {
 			);
 		}
 		
-		public PojoSubTypeRetriever setFieldsBuilder(BiConsumer<Map<String, Variable>, Class> fieldsBuilder) {
+		public PojoSubTypeRetriever setFieldsBuilder(BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder) {
 			this.fieldsBuilder = fieldsBuilder;
 			return this;
 		}
 
-		public PojoSubTypeRetriever setSetterMethodsBodyBuilder(BiConsumer<Function, String> setterMethodsBodyBuilder) {
+		public PojoSubTypeRetriever setSetterMethodsBodyBuilder(BiConsumer<FunctionSourceGenerator, String> setterMethodsBodyBuilder) {
 			this.setterMethodsBodyBuilder = setterMethodsBodyBuilder;
 			return this;
 		}
 
-		public PojoSubTypeRetriever setGetterMethodsBodyBuilder(BiConsumer<Function, String> getterMethodsBodyBuilder) {
+		public PojoSubTypeRetriever setGetterMethodsBodyBuilder(BiConsumer<FunctionSourceGenerator, String> getterMethodsBodyBuilder) {
 			this.getterMethodsBodyBuilder = getterMethodsBodyBuilder;
 			return this;
 		}
 
 		public PojoSubTypeRetriever setExtraElementsBuilder(
-				TriConsumer<Unit, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder) {
+				TriConsumer<UnitSourceGenerator, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder) {
 			this.extraElementsBuilder = extraElementsBuilder;
 			return this;
 		}
@@ -444,14 +437,14 @@ public class ClassFactory implements Component {
 			);
 		}		
 		
-		public Unit generateSource(String className, boolean builderMethodsCreationEnabled, boolean useFullyQualifiedNames, java.lang.Class<?>... superClasses) {
+		public UnitSourceGenerator generateSource(String className, boolean builderMethodsCreationEnabled, boolean useFullyQualifiedNames, java.lang.Class<?>... superClasses) {
 			if (className.contains("$")) {
 				throw Throwables.toRuntimeException(className + " Pojo could not be a inner class");
 			}
 			String packageName = Classes.retrievePackageName(className);
 			String classSimpleName = Classes.retrieveSimpleName(className);
-			Class cls = Class.create(
-				TypeDeclaration.create(classSimpleName)
+			ClassSourceGenerator cls = ClassSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create(classSimpleName)
 			).addModifier(
 				Modifier.PUBLIC
 			);
@@ -504,7 +497,7 @@ public class ClassFactory implements Component {
 					}
 				}
 			}
-			Map<String, Variable> fieldsMap = new HashMap<>();
+			Map<String, VariableSourceGenerator> fieldsMap = new HashMap<>();
 			for (java.lang.Class<?> interf : interfaces) {
 				for (Method method : Classes.getDeclaredMethods(interf, method -> 
 					method.getName().startsWith("set") || method.getName().startsWith("get") || method.getName().startsWith("is")
@@ -513,20 +506,20 @@ public class ClassFactory implements Component {
 					if (Modifier.isAbstract(modifiers)) {
 						modifiers ^= Modifier.ABSTRACT;
 					}
-					Function mth = Function.create(method.getName()).addModifier(modifiers);
+					FunctionSourceGenerator mth = FunctionSourceGenerator.create(method.getName()).addModifier(modifiers);
 					mth.setReturnType(createTypeDeclaration(useFullyQualifiedNames, method.getReturnType()));
 					if (method.getName().startsWith("set")) {
 						String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst("set", ""));
 						java.lang.Class<?> paramType = method.getParameters()[0].getType();
-						fieldsMap.put(fieldName, Variable.create(createTypeDeclaration(useFullyQualifiedNames, paramType), fieldName));
-						mth.addParameter(Variable.create(createTypeDeclaration(useFullyQualifiedNames, paramType), fieldName));
+						fieldsMap.put(fieldName, VariableSourceGenerator.create(createTypeDeclaration(useFullyQualifiedNames, paramType), fieldName));
+						mth.addParameter(VariableSourceGenerator.create(createTypeDeclaration(useFullyQualifiedNames, paramType), fieldName));
 						if (setterMethodsBodyBuilder != null) {
 							setterMethodsBodyBuilder.accept(mth, fieldName);
 						}
 					} else if (method.getName().startsWith("get") || method.getName().startsWith("is")) {
 						String prefix = method.getName().startsWith("get")? "get" : "is";
 						String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst(prefix, ""));
-						fieldsMap.put(fieldName, Variable.create(createTypeDeclaration(useFullyQualifiedNames, method.getReturnType()), fieldName));
+						fieldsMap.put(fieldName, VariableSourceGenerator.create(createTypeDeclaration(useFullyQualifiedNames, method.getReturnType()), fieldName));
 						if (getterMethodsBodyBuilder != null) {
 							getterMethodsBodyBuilder.accept(mth, fieldName);
 						}
@@ -537,34 +530,34 @@ public class ClassFactory implements Component {
 					fieldsBuilder.accept(fieldsMap, cls);
 				}
 			}
-			Unit unit = Unit.create(packageName).addClass(cls);
+			UnitSourceGenerator unit = UnitSourceGenerator.create(packageName).addClass(cls);
 			if (extraElementsBuilder != null) {
 				extraElementsBuilder.accept(unit, superClass, interfaces);
 			}
 			return unit;
 		}
 
-		protected TypeDeclaration createTypeDeclaration(boolean useFullyQualifiedNames,
+		protected TypeDeclarationSourceGenerator createTypeDeclaration(boolean useFullyQualifiedNames,
 				java.lang.Class<?> cls) {
 			if (useFullyQualifiedNames) {
-				return TypeDeclaration.create(cls.getName().replace("$", "."));
+				return TypeDeclarationSourceGenerator.create(cls.getName().replace("$", "."));
 			} else {
-				return TypeDeclaration.create(cls);
+				return TypeDeclarationSourceGenerator.create(cls);
 			}
 		};
 		
-		private Function create(
+		private FunctionSourceGenerator create(
 			String functionName,
 			java.lang.reflect.Executable executable,
 			Integer modifiers,
-			BiConsumer<Function, Collection<String>> bodyBuilder,
+			BiConsumer<FunctionSourceGenerator, Collection<String>> bodyBuilder,
 			boolean useFullyQualifiedNames
 		) {
-			Function function = Function.create(functionName);
+			FunctionSourceGenerator function = FunctionSourceGenerator.create(functionName);
 			Collection<String> params = new ArrayList<>();
 			for (Parameter paramType : executable.getParameters()) {
 				function.addParameter(
-					Variable.create(createTypeDeclaration(useFullyQualifiedNames, paramType.getType()), paramType.getName())
+					VariableSourceGenerator.create(createTypeDeclaration(useFullyQualifiedNames, paramType.getType()), paramType.getName())
 				);
 				params.add(paramType.getName());
 			}

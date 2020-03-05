@@ -50,7 +50,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.SourceCodeHandler;
-import org.burningwave.core.classes.source.Statement;
+import org.burningwave.core.classes.StatementSourceGenerator;
 import org.burningwave.core.function.ThrowingBiFunction;
 import org.burningwave.core.function.ThrowingFunction;
 import org.burningwave.core.iterable.IterableObjectHelper;
@@ -278,7 +278,7 @@ public abstract class PropertyAccessor implements Component {
 		Map<String, String> defaultValues,
 		Object... params
 	) {	
-		Statement statement = Statement.createSimple().setElementPrefix("\t");
+		StatementSourceGenerator statement = StatementSourceGenerator.createSimple().setElementPrefix("\t");
 		if (params != null && params.length > 0) {
 			for (Object param : params) {
 				statement.useType(ComponentSupplier.class, param.getClass());

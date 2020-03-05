@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes.source;
+package org.burningwave.core.classes;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -36,42 +36,42 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class Class extends Generator.Abst {
+public class ClassSourceGenerator extends SourceGenerator.Abst {
 	private Collection<String> outerCode;
 	private Integer modifier;
 	private String classType;
-	private TypeDeclaration typeDeclaration;
+	private TypeDeclarationSourceGenerator typeDeclaration;
 	private String expands;
-	private TypeDeclaration expandedType;
+	private TypeDeclarationSourceGenerator expandedType;
 	private String concretize;
-	private Collection<TypeDeclaration> concretizedTypes;
-	private Collection<Variable> fields;
-	private Collection<Function> constructors;
-	private Collection<Function> methods;
-	private Collection<Class> innerClasses;
+	private Collection<TypeDeclarationSourceGenerator> concretizedTypes;
+	private Collection<VariableSourceGenerator> fields;
+	private Collection<FunctionSourceGenerator> constructors;
+	private Collection<FunctionSourceGenerator> methods;
+	private Collection<ClassSourceGenerator> innerClasses;
 	
-	private Class(String classType, TypeDeclaration typeDeclaration) {
+	private ClassSourceGenerator(String classType, TypeDeclarationSourceGenerator typeDeclaration) {
 		this.classType = classType;
 		this.typeDeclaration = typeDeclaration;
 	}
 	
-	TypeDeclaration getTypeDeclaration() {
+	TypeDeclarationSourceGenerator getTypeDeclaration() {
 		return typeDeclaration;
 	}
 	
-	public static Class create(TypeDeclaration type) {
-		return new Class("class", type);
+	public static ClassSourceGenerator create(TypeDeclarationSourceGenerator type) {
+		return new ClassSourceGenerator("class", type);
 	}
 	
-	public static Class createInterface(TypeDeclaration type) {
-		return new Class("interface", type);
+	public static ClassSourceGenerator createInterface(TypeDeclarationSourceGenerator type) {
+		return new ClassSourceGenerator("interface", type);
 	}
 	
-	public static Class createEnum(TypeDeclaration type) {
-		return new Class("enum", type);
+	public static ClassSourceGenerator createEnum(TypeDeclarationSourceGenerator type) {
+		return new ClassSourceGenerator("enum", type);
 	}
 	
-	public Class addModifier(Integer modifier) {
+	public ClassSourceGenerator addModifier(Integer modifier) {
 		if (this.modifier == null) {
 			this.modifier = modifier;
 		} else {
@@ -80,11 +80,11 @@ public class Class extends Generator.Abst {
 		return this;
 	}
 	
-	public Class expands(java.lang.Class<?> extendedClass) {
-		return expands(TypeDeclaration.create(extendedClass));		
+	public ClassSourceGenerator expands(java.lang.Class<?> extendedClass) {
+		return expands(TypeDeclarationSourceGenerator.create(extendedClass));		
 	}
 	
-	public Class expands(TypeDeclaration expandedType) {
+	public ClassSourceGenerator expands(TypeDeclarationSourceGenerator expandedType) {
 		if (classType.equals("interface")) {
 			this.concretize = "extends";
 			return addConcretizedType(expandedType);
@@ -95,7 +95,7 @@ public class Class extends Generator.Abst {
 		}
 	}
 	
-	public Class addConcretizedType(java.lang.Class<?>... concretizedTypes) {
+	public ClassSourceGenerator addConcretizedType(java.lang.Class<?>... concretizedTypes) {
 		if (classType.equals("interface")) {
 			concretize = "extends";
 		} else {
@@ -103,12 +103,12 @@ public class Class extends Generator.Abst {
 		}
 		this.concretizedTypes = Optional.ofNullable(this.concretizedTypes).orElseGet(ArrayList::new);
 		for (java.lang.Class<?> cls : concretizedTypes) {
-			this.concretizedTypes.add(TypeDeclaration.create(cls));
+			this.concretizedTypes.add(TypeDeclarationSourceGenerator.create(cls));
 		}
 		return this;	
 	}
 	
-	public Class addConcretizedType(TypeDeclaration... concretizedTypes) {
+	public ClassSourceGenerator addConcretizedType(TypeDeclarationSourceGenerator... concretizedTypes) {
 		if (classType.equals("interface")) {
 			concretize = "extends";
 		} else {
@@ -119,7 +119,7 @@ public class Class extends Generator.Abst {
 		return this;		
 	}
 	
-	public Class addOuterCodeRow(String code) {
+	public ClassSourceGenerator addOuterCodeRow(String code) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
 		if (!this.outerCode.isEmpty()) {
 			this.outerCode.add("\n" + code);
@@ -129,7 +129,7 @@ public class Class extends Generator.Abst {
 		return this;
 	}
 	
-	public Class addField(Variable field) {
+	public ClassSourceGenerator addField(VariableSourceGenerator field) {
 		this.fields = Optional.ofNullable(this.fields).orElseGet(ArrayList::new);
 		this.fields.add(field);
 		if (classType.equals("enum")) {
@@ -139,21 +139,21 @@ public class Class extends Generator.Abst {
 		return this;
 	}
 	
-	public Class addConstructor(Function constructor) {
+	public ClassSourceGenerator addConstructor(FunctionSourceGenerator constructor) {
 		this.constructors = Optional.ofNullable(this.constructors).orElseGet(ArrayList::new);
 		this.constructors.add(constructor);
 		constructor.setName(this.typeDeclaration.getSimpleName());
-		constructor.setReturnType((TypeDeclaration)null);
+		constructor.setReturnType((TypeDeclarationSourceGenerator)null);
 		return this;
 	}
 	
-	public Class addMethod(Function method) {
+	public ClassSourceGenerator addMethod(FunctionSourceGenerator method) {
 		this.methods = Optional.ofNullable(this.methods).orElseGet(ArrayList::new);
 		this.methods.add(method);
 		return this;
 	}
 	
-	public Class addInnerClass(Class cls) {
+	public ClassSourceGenerator addInnerClass(ClassSourceGenerator cls) {
 		this.innerClasses = Optional.ofNullable(this.innerClasses).orElseGet(ArrayList::new);
 		this.innerClasses.add(cls);
 		return this;
@@ -163,7 +163,7 @@ public class Class extends Generator.Abst {
 		return Optional.ofNullable(fields).map(flds -> "\t" + getOrEmpty(flds, "\n").replace("\n", "\n\t")).orElseGet(() -> null);
 	}
 	
-	private String getFunctionCode(Collection<Function> functions) {
+	private String getFunctionCode(Collection<FunctionSourceGenerator> functions) {
 		return Optional.ofNullable(functions).map(mths -> "\t" + getOrEmpty(mths, "\n\n").replace("\n", "\n\t")).orElseGet(() -> null);
 	}
 	
@@ -171,19 +171,19 @@ public class Class extends Generator.Abst {
 		String innerClassesAsString = null;
 		if (innerClasses != null) {
 			innerClassesAsString = "\t";
-			for (Class cls : innerClasses) {
+			for (ClassSourceGenerator cls : innerClasses) {
 				innerClassesAsString += (cls.make()).replaceAll("\n(.)", "\n\t$1");
 			}
 		}
 		return innerClassesAsString;
 	}
 	
-	Map<String, Class> getAllInnerClasses() {
-		Map<String, Class> classes = new HashMap<>();
+	Map<String, ClassSourceGenerator> getAllInnerClasses() {
+		Map<String, ClassSourceGenerator> classes = new HashMap<>();
 		Optional.ofNullable(innerClasses).ifPresent(innerclasses -> {
 			innerclasses.forEach(innerClass -> {
 				classes.put(typeDeclaration.getSimpleName() + "$" + innerClass.typeDeclaration.getSimpleName(), innerClass);
-				for (Map.Entry<String, Class> cls : innerClass.getAllInnerClasses().entrySet()) {
+				for (Map.Entry<String, ClassSourceGenerator> cls : innerClass.getAllInnerClasses().entrySet()) {
 					classes.put(typeDeclaration.getSimpleName() + "$" + cls.getKey(), cls.getValue());
 				}
 			});
@@ -222,34 +222,34 @@ public class Class extends Generator.Abst {
 		).orElseGet(() -> null);
 	}
 	
-	Collection<TypeDeclaration> getTypeDeclarations() {
-		Collection<TypeDeclaration> types = typeDeclaration.getTypeDeclarations();
+	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
+		Collection<TypeDeclarationSourceGenerator> types = typeDeclaration.getTypeDeclarations();
 		Optional.ofNullable(expandedType).ifPresent(expandedType -> {
 			types.addAll(expandedType.getTypeDeclarations());
 		});
 		Optional.ofNullable(concretizedTypes).ifPresent(concretizedTypes -> {
 			types.addAll(concretizedTypes);
-			for (TypeDeclaration type : concretizedTypes) {
+			for (TypeDeclarationSourceGenerator type : concretizedTypes) {
 				types.addAll(type.getTypeDeclarations());
 			}
 		});
 		Optional.ofNullable(fields).ifPresent(fields -> {
-			for (Variable field : fields) {
+			for (VariableSourceGenerator field : fields) {
 				types.addAll(field.getTypeDeclarations());
 			}
 		});
 		Optional.ofNullable(constructors).ifPresent(constructors -> {
-			for (Function constructor : constructors) {
+			for (FunctionSourceGenerator constructor : constructors) {
 				types.addAll(constructor.getTypeDeclarations());
 			}
 		});
 		Optional.ofNullable(methods).ifPresent(methods -> {
-			for (Function method : methods) {
+			for (FunctionSourceGenerator method : methods) {
 				types.addAll(method.getTypeDeclarations());
 			}
 		});
 		Optional.ofNullable(innerClasses).ifPresent(innerClasses -> {
-			for (Class cls : innerClasses) {
+			for (ClassSourceGenerator cls : innerClasses) {
 				types.addAll(cls.getTypeDeclarations());
 			}
 		});	

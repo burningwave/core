@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes.source;
+package org.burningwave.core.classes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,7 +35,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Optional;
 
-public interface Generator {
+public interface SourceGenerator {
 	
 	public String make();
 	
@@ -43,7 +43,7 @@ public interface Generator {
 		return make();
 	}
 	
-	public static abstract class Abst implements Generator {
+	public static abstract class Abst implements SourceGenerator {
 		static final String EMPTY_SPACE = " ";
 		static final String COMMA = ",";
 		static final String SEMICOLON = ";";
@@ -53,7 +53,7 @@ public interface Generator {
 			return make();
 		}
 		
-		String getOrEmpty(Generator value) {
+		String getOrEmpty(SourceGenerator value) {
 			return Optional.ofNullable(value.make()).orElseGet(() -> "");
 		}
 		
@@ -77,8 +77,8 @@ public interface Generator {
 			Iterator<?> objectsItr = objects.iterator();
 			while (objectsItr.hasNext()) {
 				Object object = objectsItr.next();
-				if (object instanceof Generator) {
-					value += getOrEmpty((Generator)object);
+				if (object instanceof SourceGenerator) {
+					value += getOrEmpty((SourceGenerator)object);
 				} else if (object instanceof String) {
 					value += getOrEmpty((String)object);
 				} else if (object instanceof Collection) {

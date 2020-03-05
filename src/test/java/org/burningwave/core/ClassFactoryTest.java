@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.bean.Complex;
 import org.burningwave.core.bean.PojoInterface;
-import org.burningwave.core.classes.source.Class;
-import org.burningwave.core.classes.source.TypeDeclaration;
-import org.burningwave.core.classes.source.Unit;
+import org.burningwave.core.classes.ClassSourceGenerator;
+import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
+import org.burningwave.core.classes.UnitSourceGenerator;
 import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
 
@@ -74,14 +74,14 @@ public class ClassFactoryTest extends BaseTest {
 		;
 		testNotNull(() -> componentSupplier.getClassFactory().getOrBuild(
 			getComponentSupplier().getMemoryClassLoader(),
-			"tryyy.ReTry", () -> Unit.create("tryyy").addClass(
-					Class.create(
-							TypeDeclaration.create("ReTry")
+			"tryyy.ReTry", () -> UnitSourceGenerator.create("tryyy").addClass(
+					ClassSourceGenerator.create(
+							TypeDeclarationSourceGenerator.create("ReTry")
 						).addModifier(
 							Modifier.PUBLIC
 						).addInnerClass(
-							Class.create(
-								TypeDeclaration.create("ReReTry")
+							ClassSourceGenerator.create(
+								TypeDeclarationSourceGenerator.create("ReReTry")
 							).addModifier(
 								Modifier.PUBLIC | Modifier.STATIC
 							)

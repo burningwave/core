@@ -26,38 +26,38 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes.source;
+package org.burningwave.core.classes;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 
-public class Variable extends Generator.Abst {
+public class VariableSourceGenerator extends SourceGenerator.Abst {
 	private Collection<String> outerCode;
 	private String assignmentOperator;
 	private String delimiter;
 	private Integer modifier;
-	private TypeDeclaration type;
+	private TypeDeclarationSourceGenerator type;
 	private String name;
-	private Statement valueBody;
+	private StatementSourceGenerator valueBody;
 	
-	private Variable(TypeDeclaration type, String name) {
+	private VariableSourceGenerator(TypeDeclarationSourceGenerator type, String name) {
 		this.type = type;
 		this.name = name;
 		this.assignmentOperator = "= ";
 		this.delimiter = ";";
 	}
 	
-	public static Variable create(java.lang.Class<?> type, String name) {
-		return new Variable(TypeDeclaration.create(type), name);
+	public static VariableSourceGenerator create(java.lang.Class<?> type, String name) {
+		return new VariableSourceGenerator(TypeDeclarationSourceGenerator.create(type), name);
 	}
 	
-	public static Variable create(TypeDeclaration type, String name) {
-		return new Variable(type, name);
+	public static VariableSourceGenerator create(TypeDeclarationSourceGenerator type, String name) {
+		return new VariableSourceGenerator(type, name);
 	}
 	
-	public Variable addModifier(Integer modifier) {
+	public VariableSourceGenerator addModifier(Integer modifier) {
 		if (this.modifier == null) {
 			this.modifier = modifier;
 		} else {
@@ -66,13 +66,13 @@ public class Variable extends Generator.Abst {
 		return this;
 	}
 	
-	public Variable addOuterCode(String code) {
+	public VariableSourceGenerator addOuterCode(String code) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
 		this.outerCode.add(code);
 		return this;
 	}
 	
-	public Variable addOuterCodeRow(String code) {
+	public VariableSourceGenerator addOuterCodeRow(String code) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
 		if (!this.outerCode.isEmpty()) {
 			this.outerCode.add("\n" + code);
@@ -82,8 +82,8 @@ public class Variable extends Generator.Abst {
 		return this;
 	}
 	
-	Collection<TypeDeclaration> getTypeDeclarations() {
-		Collection<TypeDeclaration> types = new ArrayList<>();
+	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
+		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(type).ifPresent(type -> {
 			types.addAll(type.getTypeDeclarations());
 		});
@@ -93,21 +93,21 @@ public class Variable extends Generator.Abst {
 		return types;
 	}
 	
-	public Variable setValue(String value) {
-		return setValue(Statement.createSimple().addCode(value));
+	public VariableSourceGenerator setValue(String value) {
+		return setValue(StatementSourceGenerator.createSimple().addCode(value));
 	}
 	
-	public Variable setValue(Statement valueGenerator) {
+	public VariableSourceGenerator setValue(StatementSourceGenerator valueGenerator) {
 		this.valueBody = valueGenerator;
 		return this;
 	}
 	
-	Variable setAssignementOperator(String operator) {
+	VariableSourceGenerator setAssignementOperator(String operator) {
 		this.assignmentOperator = operator;
 		return this;
 	}
 	
-	Variable setDelimiter(String separator) {
+	VariableSourceGenerator setDelimiter(String separator) {
 		this.delimiter = separator;
 		return this;
 	}

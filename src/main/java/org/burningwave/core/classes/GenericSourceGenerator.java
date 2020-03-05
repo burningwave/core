@@ -26,50 +26,50 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes.source;
+package org.burningwave.core.classes;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 
-public class Generic extends Generator.Abst {
+public class GenericSourceGenerator extends SourceGenerator.Abst {
 	private Collection<String> outerCode;
 	private String name;
 	private String hirearchyOperator;
-	private TypeDeclaration hirearchyElement;
+	private TypeDeclarationSourceGenerator hirearchyElement;
 	
-	private Generic(String name) {
+	private GenericSourceGenerator(String name) {
 		this.name = name;
 	}
 	
-	public static Generic create(String name) {
-		return new Generic(name);		
+	public static GenericSourceGenerator create(String name) {
+		return new GenericSourceGenerator(name);		
 	}
 	
 	public String getName() {
 		return name;
 	}	
 	
-	public Generic addOuterCode(String code) {
+	public GenericSourceGenerator addOuterCode(String code) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
 		this.outerCode.add(code);
 		return this;
 	}
 	
-	public Generic expands(TypeDeclaration hirearchyElement) {
+	public GenericSourceGenerator expands(TypeDeclarationSourceGenerator hirearchyElement) {
 		hirearchyOperator = "extends";
 		this.hirearchyElement = hirearchyElement;
 		return this;
 	}
 	
-	public Generic parentOf(TypeDeclaration hirearchyElement) {
+	public GenericSourceGenerator parentOf(TypeDeclarationSourceGenerator hirearchyElement) {
 		hirearchyOperator = "super";
 		this.hirearchyElement = hirearchyElement;
 		return this;
 	}
 	
-	Collection<TypeDeclaration> getTypesDeclarations() {
-		Collection<TypeDeclaration> types = new ArrayList<>();
+	Collection<TypeDeclarationSourceGenerator> getTypesDeclarations() {
+		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(hirearchyElement).ifPresent(hirearchyElement -> {
 			types.addAll(hirearchyElement.getTypeDeclarations());
 		});

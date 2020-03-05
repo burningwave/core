@@ -26,59 +26,59 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes.source;
+package org.burningwave.core.classes;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 
-public class Statement extends Generator.Abst {
-	private Collection<TypeDeclaration> usedTypes;
+public class StatementSourceGenerator extends SourceGenerator.Abst {
+	private Collection<TypeDeclarationSourceGenerator> usedTypes;
 	private String startingDelimiter;
 	private String endingDelimiter;
 	private String elementPrefix;
 	private String elementSeparator;
-	private Collection<Generator> bodyGenerators;
+	private Collection<SourceGenerator> bodyGenerators;
 		
-	private Statement() {}
+	private StatementSourceGenerator() {}
 	
-	public static Statement create() {
-		return new Statement().setDelimiters("{", "\n}").setElementPrefix("\t");
+	public static StatementSourceGenerator create() {
+		return new StatementSourceGenerator().setDelimiters("{", "\n}").setElementPrefix("\t");
 	}
 	
-	public static Statement createSimple() {
-		return new Statement().setDelimiters(null, null).setElementPrefix(null); 
+	public static StatementSourceGenerator createSimple() {
+		return new StatementSourceGenerator().setDelimiters(null, null).setElementPrefix(null); 
 	}
 	
-	public Statement setBodyElementSeparator(String elementSeparator) {
+	public StatementSourceGenerator setBodyElementSeparator(String elementSeparator) {
 		this.elementSeparator = elementSeparator;
 		return this;
 	}
 	
-	public Statement setElementPrefix(String elementPrefix) {
+	public StatementSourceGenerator setElementPrefix(String elementPrefix) {
 		this.elementPrefix = elementPrefix;
 		return this;
 	}
 	
-	public Statement setDelimiters(String startingDelimiter, String endingDelimiter) {
+	public StatementSourceGenerator setDelimiters(String startingDelimiter, String endingDelimiter) {
 		this.startingDelimiter = startingDelimiter;
 		this.endingDelimiter = endingDelimiter;
 		return this;
 	}
 	
-	public Statement addElement(Generator generator) {
+	public StatementSourceGenerator addElement(SourceGenerator generator) {
 		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
 		this.bodyGenerators.add(generator);
-		if (generator instanceof Statement) {
+		if (generator instanceof StatementSourceGenerator) {
 			this.usedTypes = Optional.ofNullable(this.usedTypes).orElseGet(ArrayList::new);
-			usedTypes.addAll(((Statement)generator).getTypeDeclarations());
+			usedTypes.addAll(((StatementSourceGenerator)generator).getTypeDeclarations());
 		}
 		return this;		
 	}
 	
-	public Statement addCode(String element) {
+	public StatementSourceGenerator addCode(String element) {
 		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
-		this.bodyGenerators.add(new Generator() {
+		this.bodyGenerators.add(new SourceGenerator() {
 			@Override
 			public String make() {
 				return element;
@@ -87,11 +87,11 @@ public class Statement extends Generator.Abst {
 		return this;
 	}
 
-	public Statement addCodeRow(String code) {
+	public StatementSourceGenerator addCodeRow(String code) {
 		return addCode("\n" + Optional.ofNullable(elementPrefix).orElseGet(() -> "") + code);		
 	}
 	
-	public Statement addAllElements(Collection<? extends Generator> generators) {
+	public StatementSourceGenerator addAllElements(Collection<? extends SourceGenerator> generators) {
 		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
 		generators.forEach(generator -> {
 			addElement(generator);
@@ -99,24 +99,24 @@ public class Statement extends Generator.Abst {
 		return this;		
 	}
 	
-	Collection<TypeDeclaration> getTypeDeclarations() {
-		Collection<TypeDeclaration> types = new ArrayList<>();
+	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
+		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(usedTypes).ifPresent(usedTypes -> types.addAll(usedTypes));
 		return types;
 	}
 	
-	public Statement useType(java.lang.Class<?>... classes) {
+	public StatementSourceGenerator useType(java.lang.Class<?>... classes) {
 		this.usedTypes = Optional.ofNullable(this.usedTypes).orElseGet(ArrayList::new);
 		for (java.lang.Class<?> cls : classes) {			
-			this.usedTypes.add(TypeDeclaration.create(cls));
+			this.usedTypes.add(TypeDeclarationSourceGenerator.create(cls));
 		}
 		return this;		
 	}
 	
-	public Statement useType(String... classes) {
+	public StatementSourceGenerator useType(String... classes) {
 		this.usedTypes = Optional.ofNullable(this.usedTypes).orElseGet(ArrayList::new);
 		for (String cls : classes) {			
-			this.usedTypes.add(TypeDeclaration.create(cls, null));
+			this.usedTypes.add(TypeDeclarationSourceGenerator.create(cls, null));
 		}
 		return this;		
 	}
