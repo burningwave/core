@@ -343,7 +343,7 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	public java.lang.Class<?> getOrBuildPredicateSubType(ClassLoader classLoader, int parametersLength) {
+	public Class<?> getOrBuildPredicateSubType(ClassLoader classLoader, int parametersLength) {
 		String functionalInterfaceName = "PredicateFor" + parametersLength + "Parameters";
 		String packageName = MultiParamsPredicate.class.getPackage().getName();
 		String className = packageName + "." + functionalInterfaceName;
@@ -354,7 +354,7 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	public java.lang.Class<?> getOrBuildCodeExecutorSubType(ClassLoader classLoader, String className, StatementSourceGenerator statement) {
+	public Class<?> getOrBuildCodeExecutorSubType(ClassLoader classLoader, String className, StatementSourceGenerator statement) {
 		return getOrBuild(
 			classLoader,
 			className,
@@ -390,19 +390,19 @@ public class ClassFactory implements Component {
 			));
 		}
 		
-		public java.lang.Class<?> getOrBuild(
+		public Class<?> getOrBuild(
 				ClassLoader classLoader,
 			String className,
-			java.lang.Class<?>... superClasses
+			Class<?>... superClasses
 		) {
 			return getOrBuild(classLoader, className, SourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
 		}	
 		
-		public java.lang.Class<?> getOrBuild(
+		public Class<?> getOrBuild(
 			ClassLoader classLoader,
 			String className,
 			int options, 
-			java.lang.Class<?>... superClasses
+			Class<?>... superClasses
 		) {
 			return classFactory.getOrBuild(
 				classLoader, 
@@ -419,13 +419,13 @@ public class ClassFactory implements Component {
 			private BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder;
 			private BiConsumer<FunctionSourceGenerator, String> setterMethodsBodyBuilder;
 			private BiConsumer<FunctionSourceGenerator, String> getterMethodsBodyBuilder;
-			private TriConsumer<UnitSourceGenerator, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder;
+			private TriConsumer<UnitSourceGenerator, Class<?>, Collection<Class<?>>> extraElementsBuilder;
 			
 			private SourceGenerator(
 				BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder,
 				BiConsumer<FunctionSourceGenerator, String> setterMethodsBodyBuilder,
 				BiConsumer<FunctionSourceGenerator, String> getterMethodsBodyBuilder,
-				TriConsumer<UnitSourceGenerator, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder
+				TriConsumer<UnitSourceGenerator, Class<?>, Collection<Class<?>>> extraElementsBuilder
 			) {
 				this.fieldsBuilder = fieldsBuilder;
 				this.setterMethodsBodyBuilder = setterMethodsBodyBuilder;
@@ -460,12 +460,12 @@ public class ClassFactory implements Component {
 			}
 
 			public SourceGenerator setExtraElementsBuilder(
-					TriConsumer<UnitSourceGenerator, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder) {
+					TriConsumer<UnitSourceGenerator, Class<?>, Collection<Class<?>>> extraElementsBuilder) {
 				this.extraElementsBuilder = extraElementsBuilder;
 				return this;
 			}
 			
-			public UnitSourceGenerator make(String className, int options, java.lang.Class<?>... superClasses) {
+			public UnitSourceGenerator make(String className, int options, Class<?>... superClasses) {
 				if (className.contains("$")) {
 					throw Throwables.toRuntimeException(className + " Pojo could not be a inner class");
 				}
@@ -476,9 +476,9 @@ public class ClassFactory implements Component {
 				).addModifier(
 					Modifier.PUBLIC
 				);
-				java.lang.Class<?> superClass = null;
-				Collection<java.lang.Class<?>> interfaces = new LinkedHashSet<>();
-				for (java.lang.Class<?> iteratedSuperClass : superClasses) {
+				Class<?> superClass = null;
+				Collection<Class<?>> interfaces = new LinkedHashSet<>();
+				for (Class<?> iteratedSuperClass : superClasses) {
 					if (iteratedSuperClass.isInterface()) {
 						cls.addConcretizedType(createTypeDeclaration((options & USE_OF_FULLY_QUALIFIED_CLASS_NAMES_ENABLED) != 0, iteratedSuperClass));
 						interfaces.add(iteratedSuperClass);
@@ -526,7 +526,7 @@ public class ClassFactory implements Component {
 					}
 				}
 				Map<String, VariableSourceGenerator> fieldsMap = new HashMap<>();
-				for (java.lang.Class<?> interf : interfaces) {
+				for (Class<?> interf : interfaces) {
 					for (Method method : Classes.getDeclaredMethods(interf, method -> 
 						method.getName().startsWith("set") || method.getName().startsWith("get") || method.getName().startsWith("is")
 					)) {
@@ -538,7 +538,7 @@ public class ClassFactory implements Component {
 						mth.setReturnType(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), method.getReturnType()));
 						if (method.getName().startsWith("set")) {
 							String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst("set", ""));
-							java.lang.Class<?> paramType = method.getParameters()[0].getType();
+							Class<?> paramType = method.getParameters()[0].getType();
 							fieldsMap.put(fieldName, VariableSourceGenerator.create(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), paramType), fieldName));
 							mth.addParameter(VariableSourceGenerator.create(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), paramType), fieldName));
 							if (setterMethodsBodyBuilder != null) {
@@ -574,7 +574,7 @@ public class ClassFactory implements Component {
 			}
 			
 			protected TypeDeclarationSourceGenerator createTypeDeclaration(boolean useFullyQualifiedNames,
-					java.lang.Class<?> cls) {
+					Class<?> cls) {
 				if (useFullyQualifiedNames) {
 					return TypeDeclarationSourceGenerator.create(cls.getName().replace("$", "."));
 				} else {
@@ -584,7 +584,7 @@ public class ClassFactory implements Component {
 			
 			private FunctionSourceGenerator create(
 				String functionName,
-				java.lang.reflect.Executable executable,
+				Executable executable,
 				Integer modifiers,
 				BiConsumer<FunctionSourceGenerator, Collection<String>> bodyBuilder,
 				boolean useFullyQualifiedNames
