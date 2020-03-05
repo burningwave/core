@@ -85,6 +85,10 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
+	public TypeDeclarationSourceGenerator getReturnType() {
+		return returnType;
+	}	
+	
 	public FunctionSourceGenerator setReturnType(TypeDeclarationSourceGenerator returnType) {
 		this.returnType = returnType;
 		return this;
@@ -103,6 +107,10 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		this.parameters = Optional.ofNullable(this.parameters).orElseGet(ArrayList::new);
 		this.parameters.add(parameter.setDelimiter(null));
 		return this;
+	}
+	
+	public Collection<VariableSourceGenerator> getParameters() {
+		return this.parameters;
 	}
 	
 	public FunctionSourceGenerator addOuterCodeRow(String code) {
@@ -185,8 +193,4 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 			Optional.ofNullable(modifier).map(mod -> Modifier.isAbstract(mod)? ";" : null).orElseGet(() -> null)
 		);
 	}
-
-	public TypeDeclarationSourceGenerator getReturnType() {
-		return returnType;
-	}	
 }
