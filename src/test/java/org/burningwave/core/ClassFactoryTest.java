@@ -50,7 +50,8 @@ public class ClassFactoryTest extends BaseTest {
 	public void getOrBuildPojoClassTestTwo() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		java.lang.Class<?> cls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
-			getComponentSupplier().getMemoryClassLoader(), this.getClass().getPackage().getName() + ".TestTwoPojoImpl",
+			getComponentSupplier().getMemoryClassLoader(),
+			this.getClass().getPackage().getName() + ".TestTwoPojoImpl",
 			true, false,
 			Complex.Data.Item.class,
 			PojoInterface.class
