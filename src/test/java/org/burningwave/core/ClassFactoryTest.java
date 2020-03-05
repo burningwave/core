@@ -73,20 +73,20 @@ public class ClassFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		;
 		testNotNull(() -> componentSupplier.getClassFactory().getOrBuild(
-			"tryyy.ReTry",
-			() -> Unit.create("tryyy").addClass(
-				Class.create(
-						TypeDeclaration.create("ReTry")
-					).addModifier(
-						Modifier.PUBLIC
-					).addInnerClass(
-						Class.create(
-							TypeDeclaration.create("ReReTry")
+			getComponentSupplier().getMemoryClassLoader(),
+			"tryyy.ReTry", () -> Unit.create("tryyy").addClass(
+					Class.create(
+							TypeDeclaration.create("ReTry")
 						).addModifier(
-							Modifier.PUBLIC | Modifier.STATIC
+							Modifier.PUBLIC
+						).addInnerClass(
+							Class.create(
+								TypeDeclaration.create("ReReTry")
+							).addModifier(
+								Modifier.PUBLIC | Modifier.STATIC
+							)
 						)
 					)
-				), getComponentSupplier().getMemoryClassLoader()
 		));
 		testNotNull(() -> 
 			componentSupplier.getMemoryClassLoader().loadClass("tryyy.ReTry$ReReTry")

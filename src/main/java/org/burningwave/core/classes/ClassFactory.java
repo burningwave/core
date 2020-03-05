@@ -268,38 +268,37 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	private java.lang.Class<?> buildAndUploadTo(String classCode, ClassLoader classLoader) {
-		String className = sourceCodeHandler.extractClassName(classCode);
-		Map<String, ByteBuffer> compiledFiles = build(classCode);
-		logInfo("Class " + className + " succesfully created");
+	public java.lang.Class<?> buildAndUploadTo(ClassLoader classLoader, String classCode) {
 		try {
+			String className = sourceCodeHandler.extractClassName(classCode);
+			Map<String, ByteBuffer> compiledFiles = build(classCode);
+			logInfo("Class " + className + " succesfully created");
 			return classesLoaders.loadOrUploadClass(className, compiledFiles, classLoader);
-		} catch (ClassNotFoundException e) {
-			throw Throwables.toRuntimeException(e);
+		} catch (Throwable exc) {
+			throw Throwables.toRuntimeException(exc);
 		}
 	}
 	
-	public java.lang.Class<?> getOrBuild(String className, Unit unitCode, ClassLoader classLoader) {
-		return getOrBuild(className, () -> unitCode, classLoader);
+	public java.lang.Class<?> getOrBuild(ClassLoader classLoader, String className, Unit unitCode) {
+		return getOrBuild(classLoader, className, () -> unitCode);
 	}	
 	
-	public java.lang.Class<?> getOrBuild(String className, Supplier<Unit> unitCode, ClassLoader classLoader) {
+	public java.lang.Class<?> getOrBuild(ClassLoader classLoader, String className, Supplier<Unit> unitCode) {
 		java.lang.Class<?> toRet = classesLoaders.retrieveLoadedClass(classLoader, className);
 		if (toRet == null) {
-			toRet = buildAndUploadTo(className, unitCode, classLoader);
+			toRet = buildAndUploadTo(classLoader, className, unitCode);
 		} else {
 			logInfo("Class " + className + " succesfully retrieved");
 		}
 		return toRet;
 	}	
 	
-	private java.lang.Class<?> buildAndUploadTo(String className, Supplier<Unit> unitCodeSupplier, ClassLoader classLoader) {
-		Unit unit = unitCodeSupplier.get();
-		unit.getAllClasses().values().forEach(cls -> {
-			cls.addConcretizedType(TypeDeclaration.create(Virtual.class));
-		});
-		
+	public java.lang.Class<?> buildAndUploadTo(ClassLoader classLoader, String className, Supplier<Unit> unitCodeSupplier) {
 		try {
+			Unit unit = unitCodeSupplier.get();
+			unit.getAllClasses().values().forEach(cls -> {
+				cls.addConcretizedType(TypeDeclaration.create(Virtual.class));
+			});
 			Map<String, ByteBuffer> compiledFiles = build(unit.make());
 			logInfo("Class " + className + " succesfully created");
 			return classesLoaders.loadOrUploadClass(className, compiledFiles, classLoader);
@@ -308,11 +307,11 @@ public class ClassFactory implements Component {
 		}
 	}
 
-	public java.lang.Class<?> getOrBuild(String classCode, ClassLoader classLoader) {
+	public java.lang.Class<?> getOrBuild(ClassLoader classLoader, String classCode) {
 		String className = sourceCodeHandler.extractClassName(classCode);
 		java.lang.Class<?> toRet = classesLoaders.retrieveLoadedClass(classLoader, className);
 		if (toRet == null) {
-			toRet = buildAndUploadTo(classCode, classLoader);
+			toRet = buildAndUploadTo(classLoader, classCode);
 		}
 		return toRet;
 	}	
@@ -334,9 +333,9 @@ public class ClassFactory implements Component {
 		String packageName = MultiParamsFunction.class.getPackage().getName();
 		String className = packageName + "." + functionalInterfaceName;
 		return getOrBuild(
+			classLoader,
 			className,
-			() -> codeGeneratorForFunction.apply(className, parametersLength),
-			classLoader
+			() -> codeGeneratorForFunction.apply(className, parametersLength)
 		);
 	}
 	
@@ -345,9 +344,9 @@ public class ClassFactory implements Component {
 		String packageName = MultiParamsConsumer.class.getPackage().getName();
 		String className = packageName + "." + functionalInterfaceName;
 		return getOrBuild(
+			classLoader,
 			className,
-			() -> codeGeneratorForConsumer.apply(className, parametersLength),
-			classLoader
+			() -> codeGeneratorForConsumer.apply(className, parametersLength)
 		);
 	}
 	
@@ -356,17 +355,17 @@ public class ClassFactory implements Component {
 		String packageName = MultiParamsPredicate.class.getPackage().getName();
 		String className = packageName + "." + functionalInterfaceName;
 		return getOrBuild(
+			classLoader,
 			className,
-			() -> codeGeneratorForPredicate.apply(className, parametersLength),
-			classLoader
+			() -> codeGeneratorForPredicate.apply(className, parametersLength)
 		);
 	}
 	
 	public java.lang.Class<?> getOrBuildCodeExecutorSubType(ClassLoader classLoader, String className, Statement statement) {
 		return getOrBuild(
+			classLoader,
 			className,
-			() -> codeGeneratorForExecutor.apply(className, statement),
-			classLoader
+			() -> codeGeneratorForExecutor.apply(className, statement)
 		);
 
 	}
@@ -439,9 +438,9 @@ public class ClassFactory implements Component {
 			java.lang.Class<?>... superClasses
 		) {
 			return classFactory.getOrBuild(
-				className, 
-				() -> generateSource(className, builderMethodsCreationEnabled, useFullyQualifiedNames, superClasses),
-				classLoader
+				classLoader, 
+				className,
+				() -> generateSource(className, builderMethodsCreationEnabled, useFullyQualifiedNames, superClasses)
 			);
 		}		
 		
