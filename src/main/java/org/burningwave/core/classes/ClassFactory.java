@@ -309,8 +309,8 @@ public class ClassFactory implements Component {
 		return toRet;
 	}	
 	
-	public PojoSubTypeRetriever createPojoSubTypeRetriever() {
-		return PojoSubTypeRetriever.createDefault(this);
+	public PojoSubTypeRetriever createPojoSubTypeRetriever(PojoSubTypeRetriever.SourceGenerator sourceGenerator) {
+		return PojoSubTypeRetriever.create(this, sourceGenerator);
 	}
 	
 	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, java.lang.Class<?>... superClasses) {
@@ -365,55 +365,29 @@ public class ClassFactory implements Component {
 	
 	public static class PojoSubTypeRetriever {
 		private ClassFactory classFactory;
-		private BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder;
-		private BiConsumer<FunctionSourceGenerator, String> setterMethodsBodyBuilder;
-		private BiConsumer<FunctionSourceGenerator, String> getterMethodsBodyBuilder;
-		private TriConsumer<UnitSourceGenerator, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder;
-
+		private SourceGenerator sourceGenerator;
+		
 		private PojoSubTypeRetriever(
 			ClassFactory classFactory,
-			BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder,
-			BiConsumer<FunctionSourceGenerator, String> setterMethodsBodyBuilder,
-			BiConsumer<FunctionSourceGenerator, String> getterMethodsBodyBuilder,
-			TriConsumer<UnitSourceGenerator, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder
+			SourceGenerator sourceGenerator
 		) {
 			this.classFactory = classFactory;
-			this.fieldsBuilder = fieldsBuilder;
-			this.setterMethodsBodyBuilder = setterMethodsBodyBuilder;
-			this.getterMethodsBodyBuilder = getterMethodsBodyBuilder;
-			this.extraElementsBuilder = extraElementsBuilder;
+			this.sourceGenerator = sourceGenerator;
 		}
 		
+		public static PojoSubTypeRetriever create(ClassFactory classFactory, SourceGenerator sourceGenerator) {
+			return new PojoSubTypeRetriever(classFactory, sourceGenerator) ;
+		}
+
 		public static PojoSubTypeRetriever createDefault(ClassFactory classFactory) {
-			return new PojoSubTypeRetriever(classFactory, (fieldsMap, cls) -> {
+			return new PojoSubTypeRetriever(classFactory, new SourceGenerator((fieldsMap, cls) -> {
 				fieldsMap.entrySet().forEach(entry -> {
 					cls.addField(entry.getValue().addModifier(Modifier.PRIVATE));
 				});
 			}, (method, fieldName) -> 
 				method.addBodyCodeRow("this." + fieldName + " = " + fieldName + ";"), (method, fieldName) -> 
 					method.addBodyCodeRow("return this." + fieldName + ";"), null
-			);
-		}
-		
-		public PojoSubTypeRetriever setFieldsBuilder(BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder) {
-			this.fieldsBuilder = fieldsBuilder;
-			return this;
-		}
-
-		public PojoSubTypeRetriever setSetterMethodsBodyBuilder(BiConsumer<FunctionSourceGenerator, String> setterMethodsBodyBuilder) {
-			this.setterMethodsBodyBuilder = setterMethodsBodyBuilder;
-			return this;
-		}
-
-		public PojoSubTypeRetriever setGetterMethodsBodyBuilder(BiConsumer<FunctionSourceGenerator, String> getterMethodsBodyBuilder) {
-			this.getterMethodsBodyBuilder = getterMethodsBodyBuilder;
-			return this;
-		}
-
-		public PojoSubTypeRetriever setExtraElementsBuilder(
-				TriConsumer<UnitSourceGenerator, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder) {
-			this.extraElementsBuilder = extraElementsBuilder;
-			return this;
+			));
 		}
 		
 		public java.lang.Class<?> getOrBuild(
@@ -433,136 +407,187 @@ public class ClassFactory implements Component {
 			return classFactory.getOrBuild(
 				classLoader, 
 				className,
-				() -> generateSource(className, builderMethodsCreationEnabled, useFullyQualifiedNames, superClasses)
+				() -> sourceGenerator.make(className, builderMethodsCreationEnabled, useFullyQualifiedNames, superClasses)
 			);
 		}		
 		
-		public UnitSourceGenerator generateSource(String className, boolean builderMethodsCreationEnabled, boolean useFullyQualifiedNames, java.lang.Class<?>... superClasses) {
-			if (className.contains("$")) {
-				throw Throwables.toRuntimeException(className + " Pojo could not be a inner class");
+		public static class SourceGenerator {
+			private BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder;
+			private BiConsumer<FunctionSourceGenerator, String> setterMethodsBodyBuilder;
+			private BiConsumer<FunctionSourceGenerator, String> getterMethodsBodyBuilder;
+			private TriConsumer<UnitSourceGenerator, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder;
+			
+			private SourceGenerator(
+				BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder,
+				BiConsumer<FunctionSourceGenerator, String> setterMethodsBodyBuilder,
+				BiConsumer<FunctionSourceGenerator, String> getterMethodsBodyBuilder,
+				TriConsumer<UnitSourceGenerator, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder
+			) {
+				this.fieldsBuilder = fieldsBuilder;
+				this.setterMethodsBodyBuilder = setterMethodsBodyBuilder;
+				this.getterMethodsBodyBuilder = getterMethodsBodyBuilder;
+				this.extraElementsBuilder = extraElementsBuilder;
 			}
-			String packageName = Classes.retrievePackageName(className);
-			String classSimpleName = Classes.retrieveSimpleName(className);
-			ClassSourceGenerator cls = ClassSourceGenerator.create(
-				TypeDeclarationSourceGenerator.create(classSimpleName)
-			).addModifier(
-				Modifier.PUBLIC
-			);
-			java.lang.Class<?> superClass = null;
-			Collection<java.lang.Class<?>> interfaces = new LinkedHashSet<>();
-			for (java.lang.Class<?> iteratedSuperClass : superClasses) {
-				if (iteratedSuperClass.isInterface()) {
-					cls.addConcretizedType(createTypeDeclaration(useFullyQualifiedNames, iteratedSuperClass));
-					interfaces.add(iteratedSuperClass);
-				} else if (superClass == null) {
-					cls.expands(createTypeDeclaration(useFullyQualifiedNames, iteratedSuperClass));
-					superClass = iteratedSuperClass;
-				} else {
-					throw Throwables.toRuntimeException(className + " Pojo could not extends more than one class");
-				}
-			}
-			if (superClass != null) {
-				String superClassPackage = Optional.ofNullable(superClass.getPackage()).map(pckg -> pckg.getName()).orElseGet(() -> "");
-				Predicate<Executable> modifierTester = 
-					Strings.areEquals(packageName, superClassPackage) ?
-						executable ->
-							!Modifier.isPrivate(executable.getModifiers()) :
-						executable ->
-							Modifier.isPublic(executable.getModifiers()) ||
-							Modifier.isProtected(executable.getModifiers());						
-				for (Constructor<?> constructor : Classes.getDeclaredConstructors(superClass, constructor -> 
-					modifierTester.test(constructor))
-				) {
-					Integer modifiers = constructor.getModifiers();
-					if (builderMethodsCreationEnabled) {
-						if (Modifier.isPublic(modifiers)) {
-							modifiers ^= Modifier.PUBLIC;
-						}
-					}
-					cls.addConstructor(
-						create(
-							classSimpleName, constructor, modifiers, (funct, params) ->
-							funct.addBodyCodeRow("super(" + String.join(", ", params) + ");"),
-							useFullyQualifiedNames
-						)
-					);
-					if (builderMethodsCreationEnabled) {
-						cls.addMethod(
-							create(
-								"create", constructor, modifiers, (funct, params) ->
-									funct.addBodyCodeRow("return new " + classSimpleName + "(" + String.join(", ", params) + ");"),
-								useFullyQualifiedNames
-							).addModifier(Modifier.STATIC | Modifier.PUBLIC).setReturnType(classSimpleName)
-						);
-					}
-				}
-			}
-			Map<String, VariableSourceGenerator> fieldsMap = new HashMap<>();
-			for (java.lang.Class<?> interf : interfaces) {
-				for (Method method : Classes.getDeclaredMethods(interf, method -> 
-					method.getName().startsWith("set") || method.getName().startsWith("get") || method.getName().startsWith("is")
-				)) {
-					Integer modifiers = method.getModifiers();
-					if (Modifier.isAbstract(modifiers)) {
-						modifiers ^= Modifier.ABSTRACT;
-					}
-					FunctionSourceGenerator mth = FunctionSourceGenerator.create(method.getName()).addModifier(modifiers);
-					mth.setReturnType(createTypeDeclaration(useFullyQualifiedNames, method.getReturnType()));
-					if (method.getName().startsWith("set")) {
-						String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst("set", ""));
-						java.lang.Class<?> paramType = method.getParameters()[0].getType();
-						fieldsMap.put(fieldName, VariableSourceGenerator.create(createTypeDeclaration(useFullyQualifiedNames, paramType), fieldName));
-						mth.addParameter(VariableSourceGenerator.create(createTypeDeclaration(useFullyQualifiedNames, paramType), fieldName));
-						if (setterMethodsBodyBuilder != null) {
-							setterMethodsBodyBuilder.accept(mth, fieldName);
-						}
-					} else if (method.getName().startsWith("get") || method.getName().startsWith("is")) {
-						String prefix = method.getName().startsWith("get")? "get" : "is";
-						String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst(prefix, ""));
-						fieldsMap.put(fieldName, VariableSourceGenerator.create(createTypeDeclaration(useFullyQualifiedNames, method.getReturnType()), fieldName));
-						if (getterMethodsBodyBuilder != null) {
-							getterMethodsBodyBuilder.accept(mth, fieldName);
-						}
-					}
-					cls.addMethod(mth);
-				}
-				if (fieldsBuilder != null) {
-					fieldsBuilder.accept(fieldsMap, cls);
-				}
-			}
-			UnitSourceGenerator unit = UnitSourceGenerator.create(packageName).addClass(cls);
-			if (extraElementsBuilder != null) {
-				extraElementsBuilder.accept(unit, superClass, interfaces);
-			}
-			return unit;
-		}
-
-		protected TypeDeclarationSourceGenerator createTypeDeclaration(boolean useFullyQualifiedNames,
-				java.lang.Class<?> cls) {
-			if (useFullyQualifiedNames) {
-				return TypeDeclarationSourceGenerator.create(cls.getName().replace("$", "."));
-			} else {
-				return TypeDeclarationSourceGenerator.create(cls);
-			}
-		};
-		
-		private FunctionSourceGenerator create(
-			String functionName,
-			java.lang.reflect.Executable executable,
-			Integer modifiers,
-			BiConsumer<FunctionSourceGenerator, Collection<String>> bodyBuilder,
-			boolean useFullyQualifiedNames
-		) {
-			FunctionSourceGenerator function = FunctionSourceGenerator.create(functionName);
-			Collection<String> params = new ArrayList<>();
-			for (Parameter paramType : executable.getParameters()) {
-				function.addParameter(
-					VariableSourceGenerator.create(createTypeDeclaration(useFullyQualifiedNames, paramType.getType()), paramType.getName())
+			
+			public static SourceGenerator createDefault() {
+				return new SourceGenerator((fieldsMap, cls) -> {
+					fieldsMap.entrySet().forEach(entry -> {
+						cls.addField(entry.getValue().addModifier(Modifier.PRIVATE));
+					});
+				}, (method, fieldName) -> 
+					method.addBodyCodeRow("this." + fieldName + " = " + fieldName + ";"), (method, fieldName) -> 
+						method.addBodyCodeRow("return this." + fieldName + ";"), null
 				);
-				params.add(paramType.getName());
 			}
-			bodyBuilder.accept(function, params);
-			return function;
+			
+			public SourceGenerator setFieldsBuilder(BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder) {
+				this.fieldsBuilder = fieldsBuilder;
+				return this;
+			}
+
+			public SourceGenerator setSetterMethodsBodyBuilder(BiConsumer<FunctionSourceGenerator, String> setterMethodsBodyBuilder) {
+				this.setterMethodsBodyBuilder = setterMethodsBodyBuilder;
+				return this;
+			}
+
+			public SourceGenerator setGetterMethodsBodyBuilder(BiConsumer<FunctionSourceGenerator, String> getterMethodsBodyBuilder) {
+				this.getterMethodsBodyBuilder = getterMethodsBodyBuilder;
+				return this;
+			}
+
+			public SourceGenerator setExtraElementsBuilder(
+					TriConsumer<UnitSourceGenerator, java.lang.Class<?>, Collection<java.lang.Class<?>>> extraElementsBuilder) {
+				this.extraElementsBuilder = extraElementsBuilder;
+				return this;
+			}
+			
+			public UnitSourceGenerator make(String className, boolean builderMethodsCreationEnabled, boolean useFullyQualifiedNames, java.lang.Class<?>... superClasses) {
+				if (className.contains("$")) {
+					throw Throwables.toRuntimeException(className + " Pojo could not be a inner class");
+				}
+				String packageName = Classes.retrievePackageName(className);
+				String classSimpleName = Classes.retrieveSimpleName(className);
+				ClassSourceGenerator cls = ClassSourceGenerator.create(
+					TypeDeclarationSourceGenerator.create(classSimpleName)
+				).addModifier(
+					Modifier.PUBLIC
+				);
+				java.lang.Class<?> superClass = null;
+				Collection<java.lang.Class<?>> interfaces = new LinkedHashSet<>();
+				for (java.lang.Class<?> iteratedSuperClass : superClasses) {
+					if (iteratedSuperClass.isInterface()) {
+						cls.addConcretizedType(createTypeDeclaration(useFullyQualifiedNames, iteratedSuperClass));
+						interfaces.add(iteratedSuperClass);
+					} else if (superClass == null) {
+						cls.expands(createTypeDeclaration(useFullyQualifiedNames, iteratedSuperClass));
+						superClass = iteratedSuperClass;
+					} else {
+						throw Throwables.toRuntimeException(className + " Pojo could not extends more than one class");
+					}
+				}
+				if (superClass != null) {
+					String superClassPackage = Optional.ofNullable(superClass.getPackage()).map(pckg -> pckg.getName()).orElseGet(() -> "");
+					Predicate<Executable> modifierTester = 
+						Strings.areEquals(packageName, superClassPackage) ?
+							executable ->
+								!Modifier.isPrivate(executable.getModifiers()) :
+							executable ->
+								Modifier.isPublic(executable.getModifiers()) ||
+								Modifier.isProtected(executable.getModifiers());						
+					for (Constructor<?> constructor : Classes.getDeclaredConstructors(superClass, constructor -> 
+						modifierTester.test(constructor))
+					) {
+						Integer modifiers = constructor.getModifiers();
+						if (builderMethodsCreationEnabled) {
+							if (Modifier.isPublic(modifiers)) {
+								modifiers ^= Modifier.PUBLIC;
+							}
+						}
+						cls.addConstructor(
+							create(
+								classSimpleName, constructor, modifiers, (funct, params) ->
+								funct.addBodyCodeRow("super(" + String.join(", ", params) + ");"),
+								useFullyQualifiedNames
+							)
+						);
+						if (builderMethodsCreationEnabled) {
+							cls.addMethod(
+								create(
+									"create", constructor, modifiers, (funct, params) ->
+										funct.addBodyCodeRow("return new " + classSimpleName + "(" + String.join(", ", params) + ");"),
+									useFullyQualifiedNames
+								).addModifier(Modifier.STATIC | Modifier.PUBLIC).setReturnType(classSimpleName)
+							);
+						}
+					}
+				}
+				Map<String, VariableSourceGenerator> fieldsMap = new HashMap<>();
+				for (java.lang.Class<?> interf : interfaces) {
+					for (Method method : Classes.getDeclaredMethods(interf, method -> 
+						method.getName().startsWith("set") || method.getName().startsWith("get") || method.getName().startsWith("is")
+					)) {
+						Integer modifiers = method.getModifiers();
+						if (Modifier.isAbstract(modifiers)) {
+							modifiers ^= Modifier.ABSTRACT;
+						}
+						FunctionSourceGenerator mth = FunctionSourceGenerator.create(method.getName()).addModifier(modifiers);
+						mth.setReturnType(createTypeDeclaration(useFullyQualifiedNames, method.getReturnType()));
+						if (method.getName().startsWith("set")) {
+							String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst("set", ""));
+							java.lang.Class<?> paramType = method.getParameters()[0].getType();
+							fieldsMap.put(fieldName, VariableSourceGenerator.create(createTypeDeclaration(useFullyQualifiedNames, paramType), fieldName));
+							mth.addParameter(VariableSourceGenerator.create(createTypeDeclaration(useFullyQualifiedNames, paramType), fieldName));
+							if (setterMethodsBodyBuilder != null) {
+								setterMethodsBodyBuilder.accept(mth, fieldName);
+							}
+						} else if (method.getName().startsWith("get") || method.getName().startsWith("is")) {
+							String prefix = method.getName().startsWith("get")? "get" : "is";
+							String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst(prefix, ""));
+							fieldsMap.put(fieldName, VariableSourceGenerator.create(createTypeDeclaration(useFullyQualifiedNames, method.getReturnType()), fieldName));
+							if (getterMethodsBodyBuilder != null) {
+								getterMethodsBodyBuilder.accept(mth, fieldName);
+							}
+						}
+						cls.addMethod(mth);
+					}
+					if (fieldsBuilder != null) {
+						fieldsBuilder.accept(fieldsMap, cls);
+					}
+				}
+				UnitSourceGenerator unit = UnitSourceGenerator.create(packageName).addClass(cls);
+				if (extraElementsBuilder != null) {
+					extraElementsBuilder.accept(unit, superClass, interfaces);
+				}
+				return unit;
+			}
+	
+			protected TypeDeclarationSourceGenerator createTypeDeclaration(boolean useFullyQualifiedNames,
+					java.lang.Class<?> cls) {
+				if (useFullyQualifiedNames) {
+					return TypeDeclarationSourceGenerator.create(cls.getName().replace("$", "."));
+				} else {
+					return TypeDeclarationSourceGenerator.create(cls);
+				}
+			};
+			
+			private FunctionSourceGenerator create(
+				String functionName,
+				java.lang.reflect.Executable executable,
+				Integer modifiers,
+				BiConsumer<FunctionSourceGenerator, Collection<String>> bodyBuilder,
+				boolean useFullyQualifiedNames
+			) {
+				FunctionSourceGenerator function = FunctionSourceGenerator.create(functionName);
+				Collection<String> params = new ArrayList<>();
+				for (Parameter paramType : executable.getParameters()) {
+					function.addParameter(
+						VariableSourceGenerator.create(createTypeDeclaration(useFullyQualifiedNames, paramType.getType()), paramType.getName())
+					);
+					params.add(paramType.getName());
+				}
+				bodyBuilder.accept(function, params);
+				return function;
+			}
 		}
 	}
 }
