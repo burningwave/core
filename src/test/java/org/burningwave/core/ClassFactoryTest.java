@@ -73,7 +73,7 @@ public class ClassFactoryTest extends BaseTest {
 	@Test
 	public void getOrBuildClassTestOne() throws ClassNotFoundException {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		;
+
 		testNotNull(() -> componentSupplier.getClassFactory().getOrBuild(
 			getComponentSupplier().getMemoryClassLoader(),
 			"tryyy.ReTry", () -> UnitSourceGenerator.create("tryyy").addClass(
