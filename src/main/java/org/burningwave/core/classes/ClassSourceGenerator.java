@@ -80,7 +80,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
-	public ClassSourceGenerator expands(java.lang.Class<?> extendedClass) {
+	public ClassSourceGenerator expands(Class<?> extendedClass) {
 		return expands(TypeDeclarationSourceGenerator.create(extendedClass));		
 	}
 	
@@ -95,14 +95,14 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		}
 	}
 	
-	public ClassSourceGenerator addConcretizedType(java.lang.Class<?>... concretizedTypes) {
+	public ClassSourceGenerator addConcretizedType(Class<?>... concretizedTypes) {
 		if (classType.equals("interface")) {
 			concretize = "extends";
 		} else {
 			concretize = "implements";
 		}
 		this.concretizedTypes = Optional.ofNullable(this.concretizedTypes).orElseGet(ArrayList::new);
-		for (java.lang.Class<?> cls : concretizedTypes) {
+		for (Class<?> cls : concretizedTypes) {
 			this.concretizedTypes.add(TypeDeclarationSourceGenerator.create(cls));
 		}
 		return this;	
