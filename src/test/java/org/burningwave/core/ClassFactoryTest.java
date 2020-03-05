@@ -12,6 +12,7 @@ import org.burningwave.core.bean.PojoInterface;
 import org.burningwave.core.classes.ClassSourceGenerator;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
+import org.burningwave.core.classes.ClassFactory.PojoSubTypeRetriever;
 import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
 
@@ -53,13 +54,13 @@ public class ClassFactoryTest extends BaseTest {
 		java.lang.Class<?> cls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
 			getComponentSupplier().getMemoryClassLoader(),
 			this.getClass().getPackage().getName() + ".TestTwoPojoImpl",
-			true, false,
+			PojoSubTypeRetriever.SourceGenerator.BUILDING_METHODS_CREATION_ENABLED,
 			Complex.Data.Item.class,
 			PojoInterface.class
 		);
 		testNotNull(() -> {
 			java.lang.Class<?> reloadedCls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
-				getComponentSupplier().getMemoryClassLoader(), cls.getPackage().getName() + ".ExtendedPojoImpl", true, false, cls
+				getComponentSupplier().getMemoryClassLoader(), cls.getPackage().getName() + ".ExtendedPojoImpl", PojoSubTypeRetriever.SourceGenerator.BUILDING_METHODS_CREATION_ENABLED, cls
 			);
 			java.lang.reflect.Method createMethod = Classes.getDeclaredMethods(reloadedCls, method -> 
 				method.getName().equals("create") &&

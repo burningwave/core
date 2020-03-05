@@ -314,11 +314,11 @@ public class ClassFactory implements Component {
 	}
 	
 	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, java.lang.Class<?>... superClasses) {
-		return pojoSubTypeRetriever.getOrBuild(classLoader, className, false, false, superClasses);
+		return pojoSubTypeRetriever.getOrBuild(classLoader, className, PojoSubTypeRetriever.SourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
 	}
 	
-	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, boolean builderMethodsCreationEnabled, boolean useFullyQualifiedNames, java.lang.Class<?>... superClasses) {
-		return pojoSubTypeRetriever.getOrBuild(classLoader, className, builderMethodsCreationEnabled, useFullyQualifiedNames, superClasses);
+	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, int options, java.lang.Class<?>... superClasses) {
+		return pojoSubTypeRetriever.getOrBuild(classLoader, className, options, superClasses);
 	}
 	
 	public java.lang.Class<?> getOrBuildFunctionSubType(ClassLoader classLoader, int parametersLength) {
@@ -395,23 +395,27 @@ public class ClassFactory implements Component {
 			String className,
 			java.lang.Class<?>... superClasses
 		) {
-			return getOrBuild(classLoader, className, false, false, superClasses);
+			return getOrBuild(classLoader, className, SourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
 		}	
 		
 		public java.lang.Class<?> getOrBuild(
 			ClassLoader classLoader,
-			String className, boolean builderMethodsCreationEnabled,
-			boolean useFullyQualifiedNames, 
+			String className,
+			int options, 
 			java.lang.Class<?>... superClasses
 		) {
 			return classFactory.getOrBuild(
 				classLoader, 
 				className,
-				() -> sourceGenerator.make(className, builderMethodsCreationEnabled, useFullyQualifiedNames, superClasses)
+				() -> sourceGenerator.make(className, options, superClasses)
 			);
 		}		
 		
 		public static class SourceGenerator {
+			public static int ALL_OPTIONS_DISABLED = 0b00000000;
+			public static int BUILDING_METHODS_CREATION_ENABLED = 0b00000001;
+			public static int USE_OF_FULLY_QUALIFIED_CLASS_NAMES_ENABLED = 0b00000010;
+			
 			private BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder;
 			private BiConsumer<FunctionSourceGenerator, String> setterMethodsBodyBuilder;
 			private BiConsumer<FunctionSourceGenerator, String> getterMethodsBodyBuilder;
@@ -461,7 +465,7 @@ public class ClassFactory implements Component {
 				return this;
 			}
 			
-			public UnitSourceGenerator make(String className, boolean builderMethodsCreationEnabled, boolean useFullyQualifiedNames, java.lang.Class<?>... superClasses) {
+			public UnitSourceGenerator make(String className, int options, java.lang.Class<?>... superClasses) {
 				if (className.contains("$")) {
 					throw Throwables.toRuntimeException(className + " Pojo could not be a inner class");
 				}
@@ -476,10 +480,10 @@ public class ClassFactory implements Component {
 				Collection<java.lang.Class<?>> interfaces = new LinkedHashSet<>();
 				for (java.lang.Class<?> iteratedSuperClass : superClasses) {
 					if (iteratedSuperClass.isInterface()) {
-						cls.addConcretizedType(createTypeDeclaration(useFullyQualifiedNames, iteratedSuperClass));
+						cls.addConcretizedType(createTypeDeclaration((options & USE_OF_FULLY_QUALIFIED_CLASS_NAMES_ENABLED) != 0, iteratedSuperClass));
 						interfaces.add(iteratedSuperClass);
 					} else if (superClass == null) {
-						cls.expands(createTypeDeclaration(useFullyQualifiedNames, iteratedSuperClass));
+						cls.expands(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), iteratedSuperClass));
 						superClass = iteratedSuperClass;
 					} else {
 						throw Throwables.toRuntimeException(className + " Pojo could not extends more than one class");
@@ -498,7 +502,7 @@ public class ClassFactory implements Component {
 						modifierTester.test(constructor))
 					) {
 						Integer modifiers = constructor.getModifiers();
-						if (builderMethodsCreationEnabled) {
+						if (isBuildingMethodsCreationEnabled(options)) {
 							if (Modifier.isPublic(modifiers)) {
 								modifiers ^= Modifier.PUBLIC;
 							}
@@ -507,15 +511,15 @@ public class ClassFactory implements Component {
 							create(
 								classSimpleName, constructor, modifiers, (funct, params) ->
 								funct.addBodyCodeRow("super(" + String.join(", ", params) + ");"),
-								useFullyQualifiedNames
+								isUseFullyQualifiedClassNamesEnabled(options)
 							)
 						);
-						if (builderMethodsCreationEnabled) {
+						if (isBuildingMethodsCreationEnabled(options)) {
 							cls.addMethod(
 								create(
 									"create", constructor, modifiers, (funct, params) ->
 										funct.addBodyCodeRow("return new " + classSimpleName + "(" + String.join(", ", params) + ");"),
-									useFullyQualifiedNames
+									isUseFullyQualifiedClassNamesEnabled(options)
 								).addModifier(Modifier.STATIC | Modifier.PUBLIC).setReturnType(classSimpleName)
 							);
 						}
@@ -531,19 +535,19 @@ public class ClassFactory implements Component {
 							modifiers ^= Modifier.ABSTRACT;
 						}
 						FunctionSourceGenerator mth = FunctionSourceGenerator.create(method.getName()).addModifier(modifiers);
-						mth.setReturnType(createTypeDeclaration(useFullyQualifiedNames, method.getReturnType()));
+						mth.setReturnType(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), method.getReturnType()));
 						if (method.getName().startsWith("set")) {
 							String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst("set", ""));
 							java.lang.Class<?> paramType = method.getParameters()[0].getType();
-							fieldsMap.put(fieldName, VariableSourceGenerator.create(createTypeDeclaration(useFullyQualifiedNames, paramType), fieldName));
-							mth.addParameter(VariableSourceGenerator.create(createTypeDeclaration(useFullyQualifiedNames, paramType), fieldName));
+							fieldsMap.put(fieldName, VariableSourceGenerator.create(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), paramType), fieldName));
+							mth.addParameter(VariableSourceGenerator.create(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), paramType), fieldName));
 							if (setterMethodsBodyBuilder != null) {
 								setterMethodsBodyBuilder.accept(mth, fieldName);
 							}
 						} else if (method.getName().startsWith("get") || method.getName().startsWith("is")) {
 							String prefix = method.getName().startsWith("get")? "get" : "is";
 							String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst(prefix, ""));
-							fieldsMap.put(fieldName, VariableSourceGenerator.create(createTypeDeclaration(useFullyQualifiedNames, method.getReturnType()), fieldName));
+							fieldsMap.put(fieldName, VariableSourceGenerator.create(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), method.getReturnType()), fieldName));
 							if (getterMethodsBodyBuilder != null) {
 								getterMethodsBodyBuilder.accept(mth, fieldName);
 							}
@@ -560,7 +564,15 @@ public class ClassFactory implements Component {
 				}
 				return unit;
 			}
-	
+			
+			private boolean isUseFullyQualifiedClassNamesEnabled(int options) {
+				return (options & USE_OF_FULLY_QUALIFIED_CLASS_NAMES_ENABLED) != 0;
+			}
+			
+			private boolean isBuildingMethodsCreationEnabled(int options) {
+				return (options & BUILDING_METHODS_CREATION_ENABLED) != 0;
+			}
+			
 			protected TypeDeclarationSourceGenerator createTypeDeclaration(boolean useFullyQualifiedNames,
 					java.lang.Class<?> cls) {
 				if (useFullyQualifiedNames) {
