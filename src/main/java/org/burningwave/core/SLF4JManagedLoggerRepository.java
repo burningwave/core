@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 public class SLF4JManagedLoggerRepository implements ManagedLogger.Repository{
 	private Map<Class<?>, Map.Entry<org.slf4j.Logger, Boolean>> loggers = new HashMap<>();
-	private boolean isDisabled;
+	private boolean isEnabled;
 	
 	private Map.Entry<org.slf4j.Logger, Boolean> getLoggerEntry(Class<?> client) {
 		Map.Entry<org.slf4j.Logger, Boolean> loggerEntry = loggers.get(client);
@@ -30,19 +30,24 @@ public class SLF4JManagedLoggerRepository implements ManagedLogger.Repository{
 	}
 	
 	private org.slf4j.Logger getLogger(Class<?> client) {
-		if (isDisabled) {
+		if (!isEnabled) {
 			return null;
 		}
 		Map.Entry<org.slf4j.Logger, Boolean> loggerEntry = getLoggerEntry(client);
 		return loggerEntry.getValue()? loggerEntry.getKey() : null;
 	}	
-
+	
+	@Override
+	public boolean isEnabled() {
+		return isEnabled;
+	}
+	
 	public void disableLogging() {
-		isDisabled = true;	
+		isEnabled = false;	
 	}
 
 	public void enableLogging() {
-		isDisabled = false;		
+		isEnabled = true;		
 	}
 	
 	public void disableLogging(Class<?> client) {

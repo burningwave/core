@@ -50,7 +50,8 @@ public class StaticComponentsContainer {
 	}
 	
 	private static org.burningwave.core.iterable.Properties loadGlobalProperties(String fileName) {
-		InputStream propertiesFileIS = Optional.ofNullable(StaticComponentsContainer.class.getClassLoader()).orElseGet(() -> ClassLoader.getSystemClassLoader()).getResourceAsStream(fileName);
+		InputStream propertiesFileIS = Optional.ofNullable(StaticComponentsContainer.class.getClassLoader()).orElseGet(() ->
+			ClassLoader.getSystemClassLoader()).getResourceAsStream(fileName);
 		org.burningwave.core.iterable.Properties properties = new Properties();
 		if (propertiesFileIS != null) {				
 			try {
@@ -76,9 +77,9 @@ public class StaticComponentsContainer {
 				repository = new SimpleManagedLoggerRepository();
 			}
 		}
-		String disabledFlag = (String)GlobalProperties.getProperty(Repository.REPOSITORY_DISABLED_FLAG_CONFIG_KEY);
-		if (disabledFlag != null && Boolean.parseBoolean(disabledFlag)) {
-			repository.disableLogging();
+		String enabledFlag = (String)GlobalProperties.getProperty(Repository.REPOSITORY_ENABLED_FLAG_CONFIG_KEY);
+		if (enabledFlag != null && Boolean.parseBoolean(enabledFlag)) {
+			repository.enableLogging();
 		}
 		return repository;
 	}

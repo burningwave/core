@@ -8,11 +8,11 @@ import org.burningwave.core.ManagedLogger.Repository;
 
 public class SimpleManagedLoggerRepository implements Repository {
 	private static Map<Class<?>, Boolean> loggers = new HashMap<>();
-	private boolean isDisabled;
+	private boolean isEnabled;
 	
 	private Boolean getLoggerEnabledFlag(Class<?> client) {
-		if (isDisabled) {
-			return !isDisabled;
+		if (!isEnabled) {
+			return !isEnabled;
 		}
 		Boolean loggerEnabledFlag = loggers.get(client);
 		if (loggerEnabledFlag == null) {
@@ -41,12 +41,17 @@ public class SimpleManagedLoggerRepository implements Repository {
 		}
 	}
 	
+	@Override
+	public boolean isEnabled() {
+		return isEnabled;
+	}
+	
 	public void disableLogging() {
-		isDisabled = true;	
+		isEnabled = false;	
 	}
 
 	public void enableLogging() {
-		isDisabled = false;		
+		isEnabled = true;		
 	}
 	
 	public void disableLogging(Class<?> client) {
@@ -109,4 +114,5 @@ public class SimpleManagedLoggerRepository implements Repository {
 		.replace(".", "\\.")
 		.replace("$", "\\$");
 	}
+	
 }
