@@ -36,7 +36,9 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 
 import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
-import org.burningwave.core.io.FileSystemItem;public class JavaClass {
+import org.burningwave.core.io.FileSystemItem;
+
+public class JavaClass {
 	private final ByteBuffer byteCode;
 	private final String className;
 	
