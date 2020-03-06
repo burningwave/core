@@ -28,7 +28,10 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.ManagedLoggersRepository;;
+import static org.burningwave.core.assembler.StaticComponentsContainer.ManagedLoggersRepository;
+
+import java.util.Collection;
+import java.util.HashSet;;
 
 public interface ManagedLogger {
 		
@@ -80,6 +83,9 @@ public interface ManagedLogger {
 	public static interface Repository {
 		public static final String REPOSITORY_TYPE_CONFIG_KEY = "managed-logger.repository";
 		public static final String REPOSITORY_ENABLED_FLAG_CONFIG_KEY = "managed-logger.repository.enabled";
+		public static final String REPOSITORY_LOGGER_DISABLED_FOR_CONFIG_KEY = "managed-logger.repository.logger.disabled-for";
+		
+		public void disableLoggingFor(String... className);
 		
 		public boolean isEnabled();
 		
@@ -106,5 +112,61 @@ public interface ManagedLogger {
 		public void logWarn(Class<?> client, String message);
 		
 		public void logWarn(Class<?> client, String message, Object... arguments);
+		
+		public static abstract class Abst implements Repository{
+			Collection<String> namesOfClassesForWhichLoggingIsDisabled;
+			boolean isEnabled;
+			
+			public Abst() {
+				namesOfClassesForWhichLoggingIsDisabled = new HashSet<>();
+			}
+			
+			String getId(Object object) {
+				if (object instanceof String) {
+					return (String)object;
+				} else if (object instanceof Class<?>) {
+					return getId((Class<?>)object);
+				}
+		        return object.getClass().getName() + "@" + System.identityHashCode(object);
+		    }
+			
+			String getId(Class<?> cls) {
+				return cls.getName() + "@" + System.identityHashCode(cls); 
+			}
+			 
+			String getId(Object... objects) {
+				String id = "_";
+				for (Object object : objects) {
+					id += getId(object) + "_";
+				}
+				return id;
+			}
+			
+			@Override
+			public void disableLoggingFor(String... classNames) {
+				for (String className : classNames) {
+					synchronized(getId(namesOfClassesForWhichLoggingIsDisabled, className)) {
+						namesOfClassesForWhichLoggingIsDisabled.add(className);
+					}
+				}		
+			}
+			
+			@Override
+			public boolean isEnabled() {
+				return isEnabled;
+			}
+			
+			public void disableLogging() {
+				isEnabled = false;	
+			}
+
+			public void enableLogging() {
+				isEnabled = true;		
+			}
+			
+			public void enableLogging(Class<?> client) {
+				namesOfClassesForWhichLoggingIsDisabled.remove(client.getName());
+			}
+		}
 	}
 }

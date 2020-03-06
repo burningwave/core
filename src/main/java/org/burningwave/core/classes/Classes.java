@@ -406,9 +406,15 @@ public class Classes implements Component {
 	public String getId(Object object) {
 		if (object instanceof String) {
 			return (String)object;
+		} else if (object instanceof Class<?>) {
+			return getId((Class<?>)object);
 		}
         return object.getClass().getName() + "@" + System.identityHashCode(object);
     }
+	
+	public String getId(Class<?> cls) {
+		return cls.getName() + "@" + System.identityHashCode(cls); 
+	}
 	 
 	public String getId(Object... objects) {
 		String id = "_";

@@ -81,6 +81,10 @@ public class StaticComponentsContainer {
 		if (enabledFlag != null && Boolean.parseBoolean(enabledFlag)) {
 			repository.enableLogging();
 		}
+		String loggerDisabledFor = (String)GlobalProperties.getProperty(Repository.REPOSITORY_LOGGER_DISABLED_FOR_CONFIG_KEY);
+		if (loggerDisabledFor != null) {
+			repository.disableLoggingFor(loggerDisabledFor.split(";"));
+		}
 		return repository;
 	}
 	

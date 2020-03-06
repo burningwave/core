@@ -6,17 +6,21 @@ import java.util.Map;
 
 import org.burningwave.core.ManagedLogger.Repository;
 
-public class SimpleManagedLoggerRepository implements Repository {
-	private static Map<Class<?>, Boolean> loggers = new HashMap<>();
-	private boolean isEnabled;
+public class SimpleManagedLoggerRepository extends Repository.Abst {
+	private Map<Class<?>, Boolean> loggers;
+	
+	public SimpleManagedLoggerRepository() {
+		super();
+		loggers = new HashMap<>();
+	}
 	
 	private Boolean getLoggerEnabledFlag(Class<?> client) {
-		if (!isEnabled) {
+		if (!isEnabled || namesOfClassesForWhichLoggingIsDisabled.contains(client.getName())) {
 			return !isEnabled;
 		}
 		Boolean loggerEnabledFlag = loggers.get(client);
 		if (loggerEnabledFlag == null) {
-			synchronized (loggers.toString() + "_" + client.toString()) {
+			synchronized (getId(loggers, client)) {
 				loggerEnabledFlag = loggers.get(client);
 				if (loggerEnabledFlag == null) {
 					loggers.put(client, loggerEnabledFlag = Boolean.TRUE);
@@ -41,24 +45,12 @@ public class SimpleManagedLoggerRepository implements Repository {
 		}
 	}
 	
-	@Override
-	public boolean isEnabled() {
-		return isEnabled;
-	}
-	
-	public void disableLogging() {
-		isEnabled = false;	
-	}
-
-	public void enableLogging() {
-		isEnabled = true;		
-	}
-	
 	public void disableLogging(Class<?> client) {
 		setLoggerEnabledFlag(client, false);
 	}
 	
 	public void enableLogging(Class<?> client) {
+		super.enableLogging(client);
 		setLoggerEnabledFlag(client, true);
 	}
 	
