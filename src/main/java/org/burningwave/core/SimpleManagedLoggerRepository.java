@@ -3,39 +3,66 @@ package org.burningwave.core;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import org.burningwave.core.ManagedLogger.Repository;
 
 public class SimpleManagedLoggerRepository extends Repository.Abst {
-	private Map<Class<?>, Boolean> loggers;
+	private Map<String, LoggingLevel.Mutable> loggers;
 	
-	public SimpleManagedLoggerRepository() {
-		super();
-		loggers = new HashMap<>();
+	public SimpleManagedLoggerRepository(Properties properties) {
+		super(properties);
 	}
 	
-	private Boolean getLoggerEnabledFlag(Class<?> client) {
-		if (!isEnabled || namesOfClassesForWhichLoggingIsDisabled.contains(client.getName())) {
-			return !isEnabled;
-		}
-		Boolean loggerEnabledFlag = loggers.get(client);
+	
+	@Override
+	void init(Properties properties) {
+		loggers = new HashMap<>();		
+	}
+	
+	private LoggingLevel.Mutable getLoggerEnabledFlag(String clientName) {
+		LoggingLevel.Mutable loggerEnabledFlag = loggers.get(clientName);
 		if (loggerEnabledFlag == null) {
-			synchronized (getId(loggers, client)) {
-				loggerEnabledFlag = loggers.get(client);
+			synchronized (getId(loggers, clientName)) {
+				loggerEnabledFlag = loggers.get(clientName);
 				if (loggerEnabledFlag == null) {
-					loggers.put(client, loggerEnabledFlag = Boolean.TRUE);
+					loggers.put(clientName, loggerEnabledFlag = new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_ENABLED));
 				}
 			}
 		}
 		return loggerEnabledFlag;
 	}
 	
-	private void setLoggerEnabledFlag(Class<?> client, Boolean flag) {
-		loggers.put(client, flag);
+	@Override
+	public void addLoggingLevelFor(LoggingLevel logLevel, String... classNames) {
+		for (String className : classNames) {
+			getLoggerEnabledFlag(className).add(logLevel.flags);
+		}		
 	}
 
-	private void log(Class<?> client, PrintStream printStream, String text, Throwable exception) {
-		if (getLoggerEnabledFlag(client)) {
+	@Override
+	public void removeLoggingLevelFor(LoggingLevel logLevel, String... classNames) {
+		for (String className : classNames) {
+			getLoggerEnabledFlag(className).remove(logLevel.flags);
+		}	
+	}
+	
+	@Override
+	public void setLoggingLevelFor(LoggingLevel logLevel, String... classNames) {
+		for (String className : classNames) {
+			getLoggerEnabledFlag(className).set(logLevel.flags);
+		}
+	}
+	
+	private void setLoggerEnabledFlag(String client, LoggingLevel level) {
+		loggers.put(client, new LoggingLevel.Mutable(level.flags));
+	}
+
+	private void log(Class<?> client, LoggingLevel level, PrintStream printStream, String text, Throwable exception) {
+		if (!isEnabled) {
+			return;
+		}
+		if (getLoggerEnabledFlag(client.getName()).matchPartialy(level)) {
 			if (exception == null) {
 				printStream.println(client.getName() + " - " + text);
 			} else {
@@ -46,47 +73,57 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	}
 	
 	public void disableLogging(Class<?> client) {
-		setLoggerEnabledFlag(client, false);
+		setLoggerEnabledFlag(client.getName(), new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_DISABLED));
 	}
 	
 	public void enableLogging(Class<?> client) {
-		super.enableLogging(client);
-		setLoggerEnabledFlag(client, true);
+		setLoggerEnabledFlag(client.getName(), new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_ENABLED));
 	}
 	
 	public void logError(Class<?> client, String message, Throwable exc) {
-		log(client, System.err, message, exc);
+		log(client, LoggingLevel.ERROR, System.err, message, exc);
 	}
 
 	public void logError(Class<?> client, String message) {
-		log(client, System.err, message, null);
+		log(client, LoggingLevel.ERROR, System.err, message, null);
 	}
 	
 	public void logDebug(Class<?> client, String message) {
-		log(client, System.out, message, null);
+		log(client, LoggingLevel.DEBUG, System.out, message, null);
 	}
 	
 	public void logDebug(Class<?> client, String message, Object... arguments) {
 		message = replacePlaceHolder(message, arguments);
-		log(client, System.out, message, null);
+		log(client, LoggingLevel.DEBUG, System.out, message, null);
 	}
 	
 	public void logInfo(Class<?> client, String message) {
-		log(client, System.out, message, null);
+		log(client, LoggingLevel.INFO, System.out, message, null);
 	}
 	
 	public void logInfo(Class<?> client, String message, Object... arguments) {
 		message = replacePlaceHolder(message, arguments);
-		log(client, System.out, message, null);
+		log(client, LoggingLevel.INFO, System.out, message, null);
 	}
 	
 	public void logWarn(Class<?> client, String message) {
-		log(client, System.out, message, null);
+		log(client, LoggingLevel.WARN, System.out, message, null);
 	}
 	
 	public void logWarn(Class<?> client, String message, Object... arguments) {
 		message = replacePlaceHolder(message, arguments);
-		log(client, System.out, message, null);
+		log(client, LoggingLevel.WARN, System.out, message, null);
+	}
+	
+	@Override
+	public void logTrace(Class<?> client, String message) {
+		log(client, LoggingLevel.TRACE, System.out, message, null);
+	}
+
+	@Override
+	public void logTrace(Class<?> client, String message, Object... arguments) {
+		message = replacePlaceHolder(message, arguments);
+		log(client, LoggingLevel.TRACE, System.out, message, null);
 	}
 	
 	private String replacePlaceHolder(String message, Object... arguments) {

@@ -34,6 +34,7 @@ import static org.burningwave.core.assembler.StaticComponentsContainer.Throwable
 
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -50,7 +51,6 @@ import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.concurrent.ConcurrentHelper;
 import org.burningwave.core.io.FileSystemHelper;
-import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
@@ -90,10 +90,10 @@ public class ComponentContainer implements ComponentSupplier {
 		config.put(ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "componentSupplier.getMemoryClassLoader()");
 		
 		try (Initializer initializer = new Initializer(configFileName)) {	
-			FileSystemHelper fileSystemHelper = initializer.getFileSystemHelper();
-			FileSystemItem customConfig = fileSystemHelper.getResource(configFileName);
+			InputStream customConfig = Optional.ofNullable(this.getClass().getClassLoader()).orElseGet(() ->
+				ClassLoader.getSystemClassLoader()).getResourceAsStream(configFileName);
 			if (customConfig != null) {
-				try(InputStream inputStream = customConfig.toInputStream()) {
+				try(InputStream inputStream = customConfig) {
 					config.load(inputStream);
 				} catch (Throwable exc) {
 					Throwables.toRuntimeException(exc);

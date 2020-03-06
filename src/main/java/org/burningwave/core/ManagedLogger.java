@@ -30,11 +30,10 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentsContainer.ManagedLoggersRepository;
 
-import java.util.Collection;
-import java.util.HashSet;;
+import java.util.Properties;;
 
-public interface ManagedLogger {
-		
+public interface ManagedLogger {	
+	
 	@SuppressWarnings("unchecked")
 	public default <T extends ManagedLogger> T disableLogging() {
 		ManagedLoggersRepository.disableLogging(this.getClass());
@@ -81,11 +80,20 @@ public interface ManagedLogger {
 	
 	
 	public static interface Repository {
-		public static final String REPOSITORY_TYPE_CONFIG_KEY = "managed-logger.repository";
-		public static final String REPOSITORY_ENABLED_FLAG_CONFIG_KEY = "managed-logger.repository.enabled";
-		public static final String REPOSITORY_LOGGER_DISABLED_FOR_CONFIG_KEY = "managed-logger.repository.logger.disabled-for";
+		public static final String TYPE_CONFIG_KEY = "managed-logger.repository";
+		public static final String ENABLED_FLAG_CONFIG_KEY = "managed-logger.repository.enabled";
+		public static final String ALL_LEVEL_LOGGING_DISABLED_FOR_CONFIG_KEY = "managed-logger.repository.logging.all-level.disabled-for";
+		public static final String TRACE_LOGGING_DISABLED_FOR_CONFIG_KEY = "managed-logger.repository.logging.trace.disabled-for";
+		public static final String DEBUG_LOGGING_DISABLED_FOR_CONFIG_KEY = "managed-logger.repository.logging.debug.disabled-for";
+		public static final String INFO_LOGGING_DISABLED_FOR_CONFIG_KEY = "managed-logger.repository.logging.info.disabled-for";
+		public static final String WARN_LOGGING_DISABLED_FOR_CONFIG_KEY = "managed-logger.repository.logging.warn.disabled-for";
+		public static final String ERROR_LOGGING_DISABLED_FOR_CONFIG_KEY = "managed-logger.repository.logging.error.disabled-for";
 		
-		public void disableLoggingFor(String... className);
+		public void setLoggingLevelFor(LoggingLevel logLevel, String... classNames);
+		
+		public void addLoggingLevelFor(LoggingLevel logLevel, String... classNames);
+		
+		public void removeLoggingLevelFor(LoggingLevel logLevel, String... classNames);
 		
 		public boolean isEnabled();
 		
@@ -113,22 +121,39 @@ public interface ManagedLogger {
 		
 		public void logWarn(Class<?> client, String message, Object... arguments);
 		
+		public void logTrace(Class<?> client, String message);
+		
+		public void logTrace(Class<?> client, String message, Object... arguments);
+		
 		public static abstract class Abst implements Repository{
-			Collection<String> namesOfClassesForWhichLoggingIsDisabled;
 			boolean isEnabled;
 			
-			public Abst() {
-				namesOfClassesForWhichLoggingIsDisabled = new HashSet<>();
+			Abst(Properties properties) {
+				init(properties);
+				String enabledFlag = (String)properties.getProperty(Repository.ENABLED_FLAG_CONFIG_KEY);
+				if (enabledFlag != null && Boolean.parseBoolean(enabledFlag)) {
+					enableLogging();
+				}
+				removeLoggingLevelFor(properties, TRACE_LOGGING_DISABLED_FOR_CONFIG_KEY, LoggingLevel.TRACE);
+				removeLoggingLevelFor(properties, DEBUG_LOGGING_DISABLED_FOR_CONFIG_KEY, LoggingLevel.DEBUG);
+				removeLoggingLevelFor(properties, INFO_LOGGING_DISABLED_FOR_CONFIG_KEY, LoggingLevel.INFO);
+				removeLoggingLevelFor(properties, WARN_LOGGING_DISABLED_FOR_CONFIG_KEY, LoggingLevel.WARN);
+				removeLoggingLevelFor(properties, ERROR_LOGGING_DISABLED_FOR_CONFIG_KEY, LoggingLevel.ERROR);
+				removeLoggingLevelFor(properties, ALL_LEVEL_LOGGING_DISABLED_FOR_CONFIG_KEY,
+					LoggingLevel.TRACE, LoggingLevel.DEBUG, LoggingLevel.INFO, LoggingLevel.WARN, LoggingLevel.ERROR
+				);	
 			}
 			
-			String getId(Object object) {
-				if (object instanceof String) {
-					return (String)object;
-				} else if (object instanceof Class<?>) {
-					return getId((Class<?>)object);
+			abstract void init(Properties properties);
+			
+			protected void removeLoggingLevelFor(Properties properties, String configKey, LoggingLevel... loggingLevels) {
+				String loggerDisabledFor = (String)properties.getProperty(configKey);
+				if (loggerDisabledFor != null) {
+					for (LoggingLevel loggingLevel : loggingLevels) {
+						removeLoggingLevelFor(loggingLevel, loggerDisabledFor.split(";"));
+					}
 				}
-		        return object.getClass().getName() + "@" + System.identityHashCode(object);
-		    }
+			}
 			
 			String getId(Class<?> cls) {
 				return cls.getName() + "@" + System.identityHashCode(cls); 
@@ -143,15 +168,6 @@ public interface ManagedLogger {
 			}
 			
 			@Override
-			public void disableLoggingFor(String... classNames) {
-				for (String className : classNames) {
-					synchronized(getId(namesOfClassesForWhichLoggingIsDisabled, className)) {
-						namesOfClassesForWhichLoggingIsDisabled.add(className);
-					}
-				}		
-			}
-			
-			@Override
 			public boolean isEnabled() {
 				return isEnabled;
 			}
@@ -162,10 +178,6 @@ public interface ManagedLogger {
 
 			public void enableLogging() {
 				isEnabled = true;		
-			}
-			
-			public void enableLogging(Class<?> client) {
-				namesOfClassesForWhichLoggingIsDisabled.remove(client.getName());
 			}
 		}
 	}

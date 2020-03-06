@@ -3,9 +3,9 @@ package org.burningwave.core.assembler;
 import java.io.InputStream;
 import java.util.Optional;
 
+import org.burningwave.core.ManagedLogger.Repository;
 import org.burningwave.core.SLF4JManagedLoggerRepository;
 import org.burningwave.core.SimpleManagedLoggerRepository;
-import org.burningwave.core.ManagedLogger.Repository;
 import org.burningwave.core.iterable.Properties;
 
 public class StaticComponentsContainer {
@@ -28,7 +28,7 @@ public class StaticComponentsContainer {
 	
 	static {
 		Throwables = org.burningwave.core.Throwables.create();
-		GlobalProperties = loadGlobalProperties("burningwave.static.properties");
+		GlobalProperties = loadFirstOneFound("burningwave.static.properties", "burningwave.static.default.properties");
 		ManagedLoggersRepository = createManagedLoggersRepository(GlobalProperties);
 		try {			
 			Strings = org.burningwave.core.Strings.create();
@@ -49,16 +49,19 @@ public class StaticComponentsContainer {
 		}
 	}
 	
-	private static org.burningwave.core.iterable.Properties loadGlobalProperties(String fileName) {
-		InputStream propertiesFileIS = Optional.ofNullable(StaticComponentsContainer.class.getClassLoader()).orElseGet(() ->
-			ClassLoader.getSystemClassLoader()).getResourceAsStream(fileName);
+	private static org.burningwave.core.iterable.Properties loadFirstOneFound(String... fileNames) {
 		org.burningwave.core.iterable.Properties properties = new Properties();
-		if (propertiesFileIS != null) {				
-			try {
-				properties.load(propertiesFileIS);
-			} catch (Throwable exc) {
-				exc.printStackTrace();
-				throw Throwables.toRuntimeException(exc);
+		for (String fileName : fileNames) {
+			InputStream propertiesFileIS = Optional.ofNullable(StaticComponentsContainer.class.getClassLoader()).orElseGet(() ->
+				ClassLoader.getSystemClassLoader()).getResourceAsStream(fileName);
+			if (propertiesFileIS != null) {				
+				try {
+					properties.load(propertiesFileIS);
+					break;
+				} catch (Throwable exc) {
+					exc.printStackTrace();
+					throw Throwables.toRuntimeException(exc);
+				}
 			}
 		}
 		return properties;
@@ -67,23 +70,15 @@ public class StaticComponentsContainer {
 	private static org.burningwave.core.ManagedLogger.Repository createManagedLoggersRepository(Properties properties) {
 		org.burningwave.core.ManagedLogger.Repository repository = null;
 		try {
-			String className = (String)GlobalProperties.getProperty(Repository.REPOSITORY_TYPE_CONFIG_KEY);
-			repository = (Repository)Class.forName(className).getConstructor().newInstance();
+			String className = (String)GlobalProperties.getProperty(Repository.TYPE_CONFIG_KEY);
+			repository = (Repository)Class.forName(className).getConstructor(Properties.class).newInstance(properties);
 		} catch (Throwable exc) {
 			try {
 				Class.forName("org.slf4j.Logger");
-				repository = new SLF4JManagedLoggerRepository();
+				repository = new SLF4JManagedLoggerRepository(properties);
 			} catch (Throwable exc2) {
-				repository = new SimpleManagedLoggerRepository();
+				repository = new SimpleManagedLoggerRepository(properties);
 			}
-		}
-		String enabledFlag = (String)GlobalProperties.getProperty(Repository.REPOSITORY_ENABLED_FLAG_CONFIG_KEY);
-		if (enabledFlag != null && Boolean.parseBoolean(enabledFlag)) {
-			repository.enableLogging();
-		}
-		String loggerDisabledFor = (String)GlobalProperties.getProperty(Repository.REPOSITORY_LOGGER_DISABLED_FOR_CONFIG_KEY);
-		if (loggerDisabledFor != null) {
-			repository.disableLoggingFor(loggerDisabledFor.split(";"));
 		}
 		return repository;
 	}
