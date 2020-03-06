@@ -20,47 +20,37 @@ Below you will find how to include the library in your projects and a simple cod
 </dependency>
 ```
 
-* **Gradle Groovy**:
-```
-implementation 'org.burningwave:core:5.2.0'
-```
-
-* **Gradle Kotlin**:
-```
-implementation("org.burningwave:core:5.2.0")
-```
-
-* **Scala**:
-```
-libraryDependencies += "org.burningwave" % "core" % "5.2.0"
-```
-
-* **Apache Ivy**:
-```
-<dependency org="org.burningwave" name="core" rev="5.2.0" />
-```
-
-* **Groovy Grape**:
-```
-@Grapes(
-  @Grab(group='org.burningwave', module='core', version='5.2.0')
-)
-```
-
-* **Leiningen**:
-```
-[org.burningwave/core "5.2.0"]
-```
-
-* **Apache Buildr**:
-```
-'org.burningwave:core:jar:5.2.0'
-```
-
-* **PURL**:
-```
-pkg:maven/org.burningwave/core@5.2.0
-```
+<details>
+	<summary><b>... And with (click to expand)</b>:</summary>
+	<br/>
+	<ul><li><b>Gradle Groovy</b>:</li></ul>
+	<pre>implementation 'org.burningwave:core:5.2.0'</pre>
+	<br/>
+	<ul><li><b>Gradle Kotlin</b>:</li></ul>
+	<pre>implementation("org.burningwave:core:5.2.0")</pre>
+	<br/>
+	<ul><li><b>Scala</b>:</li></ul>
+	<pre>libraryDependencies += "org.burningwave" % "core" % "5.2.0"</pre>
+	<br/>
+	<ul><li><b>Apache Ivy</b>:</li></ul>
+	<pre>&lt;dependency org="org.burningwave" name="core" rev="5.2.0" /&gt;</pre>
+	<br/>
+	<ul><li><b>Groovy Grape</b>:</li></ul>
+	<pre>
+		@Grapes(
+  			@Grab(group='org.burningwave', module='core', version='5.2.0')
+		)
+	</pre>
+	<br/>
+	<ul><li><b>Leiningen</b>:</li></ul>
+	<pre>[org.burningwave/core "5.2.0"]</pre>
+	<br/>
+	<ul><li><b>Apache Buildr</b>:</li></ul>
+	<pre>'org.burningwave:core:jar:5.2.0'</pre>
+	<br/>
+	<ul><li><b>PURL</b>:</li></ul>
+	<pre>pkg:maven/org.burningwave/core@5.2.0</pre>
+</details>
 
 ## ... And now the code: let's retrieve all classes of the runtime classpath!
 ```java
@@ -77,9 +67,9 @@ import org.burningwave.core.io.PathHelper;
 public class Finder {
 
 	public Collection<Class<?>> find() {
-		ComponentSupplier componentConatiner = ComponentContainer.getInstance();
-		PathHelper pathHelper = componentConatiner.getPathHelper();
-		ClassHunter classHunter = componentConatiner.getClassHunter();
+		ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
+		ClassHunter classHunter = componentSupplier.getClassHunter();
 
 		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			//Here you can add all absolute path you want:
