@@ -51,6 +51,7 @@ Below you will find how to include the library in your projects and a simple cod
 	<ul><li><b>PURL</b>:</li></ul>
 	<pre>pkg:maven/org.burningwave/core@5.2.0</pre>
 </details>
+<br/>
 
 ## ... And now the code: let's retrieve all classes of the runtime classpath!
 ```java
