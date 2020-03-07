@@ -32,13 +32,11 @@ import static org.burningwave.core.assembler.StaticComponentsContainer.ByteBuffe
 import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.math.BigDecimal;
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -90,7 +88,7 @@ public class Streams implements Component {
 		return new Streams(properties);
 	}
 	
-	public boolean isArchive(File file) throws FileNotFoundException, IOException {
+	public boolean isArchive(File file) throws IOException {
 		try (RandomAccessFile raf = new RandomAccessFile(file, "r")){
 			if (raf.length() < 4) {
 				return false;
@@ -112,12 +110,7 @@ public class Streams implements Component {
 			return false;
 		}
 		bytes = bytes.duplicate();
-		try {
-			return predicate.test(bytes.getInt());
-		} catch (BufferUnderflowException exc) {
-			logError("Exception occurred while calling isArchive", exc);
-			return false;
-		}
+		return predicate.test(bytes.getInt());
 	}
 	
 	private boolean isArchive(int fileSignature) {

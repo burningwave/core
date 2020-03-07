@@ -36,7 +36,6 @@ import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -139,9 +138,6 @@ public class FileSystemItem implements ManagedLogger {
 						} else {
 							return realAbsolutePath;
 						}
-					} catch (FileNotFoundException exc) {
-						logWarn("Exception occurred while calling isArchive on file {}: {}", file.getAbsolutePath(), exc.getMessage());
-						return realAbsolutePath;
 					} catch (IOException exc) {
 						logWarn("Exception occurred while calling isArchive on file {}: {}", file.getAbsolutePath(), exc.getMessage());
 						return realAbsolutePath;
