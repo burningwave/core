@@ -114,10 +114,18 @@ public class LowLevelObjectsHandler implements Component {
 		ClassLoader temporaryClassLoader = new ClassLoader() {
 			@Override
 			public String toString() {
-				definedClass.set(super.defineClass(
-					LowLevelObjectsHandler.class.getName(),
-					Streams.toByteBuffer(Optional.ofNullable(this.getClass().getClassLoader()).orElseGet(() -> ClassLoader.getSystemClassLoader()).getResourceAsStream(LowLevelObjectsHandler.class.getName().replace(".", "/")+ ".class")),	
-					null)
+				definedClass.set(
+					super.defineClass(
+						EmptyClass.class.getName(),
+						Streams.toByteBuffer(
+							Optional.ofNullable(
+								this.getClass().getClassLoader()
+							).orElseGet(() -> ClassLoader.getSystemClassLoader()).getResourceAsStream(
+								EmptyClass.class.getName().replace(".", "/")+ ".class"
+							)
+						),	
+						null
+					)
 				);
 				return "lowlevelobjectshandler.initializator";
 			}							
@@ -411,4 +419,8 @@ public class LowLevelObjectsHandler implements Component {
 		
 	}
 
+}
+
+class EmptyClass {
+	
 }
