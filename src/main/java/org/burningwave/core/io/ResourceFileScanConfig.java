@@ -39,7 +39,8 @@ public class ResourceFileScanConfig extends FileScanConfigAbst<ResourceFileScanC
 		name.endsWith(".jar") ||
 		name.endsWith(".war") ||
 		name.endsWith(".ear") ||
-		name.endsWith(".zip");
+		name.endsWith(".zip") ||
+		name.endsWith(".jmod");
 	private final static Predicate<String> RESOURCE_PREDICATE = ARCHIVE_PREDICATE.negate().and(name -> !name.endsWith(".class"));
 	private final static Predicate<String> RESOURCE_PREDICATE_FOR_ZIP_ENTRY = RESOURCE_PREDICATE.and(name -> !name.endsWith("/"));
 	
