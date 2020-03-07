@@ -31,7 +31,6 @@ package org.burningwave.core.io;
 import static org.burningwave.core.assembler.StaticComponentsContainer.ByteBufferDelegate;
 import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
 
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -93,11 +92,11 @@ public class Streams implements Component {
 	
 	public boolean isArchive(File file) throws FileNotFoundException, IOException {
 		try (RandomAccessFile raf = new RandomAccessFile(file, "r")){
-	    	return isArchive(raf.readInt());
-	    } catch (EOFException exc) {
-	    	//ManagedLogger.Repository.logError(Streams.class, "Exception occurred while calling isArchive on file " + file.getName(), exc);
-	    	return false;
-		}
+			if (raf.length() < 4) {
+				return false;
+			}
+			return isArchive(raf.readInt());
+	    }
 	}
 	
 	public boolean isArchive(ByteBuffer bytes) {
