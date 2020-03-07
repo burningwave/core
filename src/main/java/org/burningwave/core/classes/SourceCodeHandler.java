@@ -29,6 +29,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentsContainer.ConstructorHelper;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -95,7 +96,7 @@ public class SourceCodeHandler implements Component {
 				Class<?> executableClass = getClassFactory().getOrBuildCodeExecutorSubType(
 					memoryClassLoader, packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""), statement
 				);
-				CodeExecutor executor = (CodeExecutor)executableClass.getDeclaredConstructor().newInstance();
+				CodeExecutor executor = (CodeExecutor)ConstructorHelper.newInstanceOf(executableClass);
 				ComponentSupplier componentSupplier = null;
 				if (parameters != null && parameters.length > 0) {
 					for (Object param : parameters) {

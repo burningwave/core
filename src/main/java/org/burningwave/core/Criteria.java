@@ -28,14 +28,15 @@
  */
 package org.burningwave.core;
 
-import java.lang.reflect.Constructor;
+import static org.burningwave.core.assembler.StaticComponentsContainer.ConstructorHelper;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.function.TriPredicate;
 
@@ -96,9 +97,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 	
 	protected C newInstance() {
 		return ThrowingSupplier.get(() -> {
-			Constructor<?> constructor = getClass().getDeclaredConstructor();
-			constructor.setAccessible(true);
-			return (C)constructor.newInstance();
+			return (C)ConstructorHelper.newInstanceOf(this);
 		});
 	}
 	

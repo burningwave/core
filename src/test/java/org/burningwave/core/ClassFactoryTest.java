@@ -1,18 +1,18 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentsContainer.ConstructorHelper;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.bean.Complex;
 import org.burningwave.core.bean.PojoInterface;
+import org.burningwave.core.classes.ClassFactory.PojoSubTypeRetriever;
 import org.burningwave.core.classes.ClassSourceGenerator;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
-import org.burningwave.core.classes.ClassFactory.PojoSubTypeRetriever;
 import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
 
@@ -105,9 +105,7 @@ public class ClassFactoryTest extends BaseTest {
 				Service.class,
 				PojoInterface.class
 			);
-			Constructor<?> virtualClassConstructor = virtualClass.getDeclaredConstructor();
-			virtualClassConstructor.setAccessible(true);
-			Virtual virtual = (Virtual) virtualClassConstructor.newInstance();
+			Virtual virtual = (Virtual)ConstructorHelper.newInstanceOf(virtualClass);
 			virtual.invokeDirect("setList", new ArrayList<>());
 			virtual.invoke("setList", new ArrayList<>());
 			virtual.invokeDirect("setList", new ArrayList<>());
