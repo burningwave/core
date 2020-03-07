@@ -58,8 +58,6 @@ import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.reflection.PropertyAccessor;
 
-
-
 public class ComponentContainer implements ComponentSupplier {
 	protected Map<Class<? extends Component>, Component> components;
 	private String configFileName;
@@ -89,24 +87,22 @@ public class ComponentContainer implements ComponentSupplier {
 		config.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
 		config.put(ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "componentSupplier.getMemoryClassLoader()");
 		
-		try (Initializer initializer = new Initializer(configFileName)) {	
-			InputStream customConfig = Optional.ofNullable(this.getClass().getClassLoader()).orElseGet(() ->
-				ClassLoader.getSystemClassLoader()).getResourceAsStream(configFileName);
-			if (customConfig != null) {
-				try(InputStream inputStream = customConfig) {
-					config.load(inputStream);
-				} catch (Throwable exc) {
-					Throwables.toRuntimeException(exc);
-				}
-			} else {
-				logInfo("Custom configuration file burningwave.properties not found.");
+		InputStream customConfig = Optional.ofNullable(this.getClass().getClassLoader()).orElseGet(() ->
+		ClassLoader.getSystemClassLoader()).getResourceAsStream(configFileName);
+		if (customConfig != null) {
+			try(InputStream inputStream = customConfig) {
+				config.load(inputStream);
+			} catch (Throwable exc) {
+				Throwables.toRuntimeException(exc);
 			}
-			logInfo(
-				"Configuration values:\n\n{}\n\n... Are assumed",
-				config.entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
-			);
-			return this;
+		} else {
+			logInfo("Custom configuration file burningwave.properties not found.");
 		}
+		logInfo(
+			"Configuration values:\n\n{}\n\n... Are assumed",
+			config.entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
+		);
+		return this;
 	}
 	
 	private ComponentContainer launchInit() {
@@ -384,27 +380,5 @@ public class ComponentContainer implements ComponentSupplier {
 		private static ComponentContainer getComponentContainerInstance() {
 			return COMPONENT_CONTAINER_INSTANCE;
 		}
-	}
-	
-	public static class Initializer extends ComponentContainer {
-
-			Initializer(String fileName) {
-				super(fileName);
-			}
-
-			@SuppressWarnings("unchecked")
-			public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
-				T component = (T)components.get(componentType);
-				if (component == null) {
-					synchronized (components) {
-						if ((component = (T)components.get(componentType)) == null) {
-							component = componentSupplier.get();
-							components.put(componentType, component);
-						}				
-					}
-				}
-				return component;
-			}
-
 	}
 }
