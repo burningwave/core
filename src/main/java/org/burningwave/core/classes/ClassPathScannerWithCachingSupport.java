@@ -37,7 +37,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -223,7 +222,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 				getZipEntryTransformer(context)
 			).afterScanPath((mainScanContext, path) -> {
 				mainScanContext.waitForTasksEnding();
-				Map<String, I> itemsForPath = new ConcurrentHashMap<>();
+				Map<String, I> itemsForPath = new HashMap<>();
 				Map<String, I> itemsFound = context.getItemsFound(path);
 				if (itemsFound != null) {
 					itemsForPath.putAll(itemsFound);

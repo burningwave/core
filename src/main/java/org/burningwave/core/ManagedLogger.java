@@ -154,15 +154,11 @@ public interface ManagedLogger {
 					}
 				}
 			}
-			
-			String getId(Class<?> cls) {
-				return cls.getName() + "@" + System.identityHashCode(cls); 
-			}
 			 
-			String getId(Object... objects) {
+			public String getId(Object... objects) {
 				String id = "_";
 				for (Object object : objects) {
-					id += getId(object) + "_";
+					id += System.identityHashCode(object) + "_";
 				}
 				return id;
 			}

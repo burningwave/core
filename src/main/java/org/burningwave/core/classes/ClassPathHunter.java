@@ -32,6 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -201,8 +202,10 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 					if (classPaths == null) {
 						classPaths = itemsFoundFlatMaps.keySet().stream().map(path -> 
 							FileSystemItem.ofPath(path)
-						).collect(Collectors.toCollection(() ->
-							ConcurrentHashMap.newKeySet())
+						).collect(
+							Collectors.toCollection(
+								HashSet::new
+							)
 						);
 					}
 				}
