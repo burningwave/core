@@ -46,7 +46,7 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 	private Map.Entry<org.slf4j.Logger, LoggingLevel.Mutable> getLoggerEntry(String clientName) {
 		Map.Entry<org.slf4j.Logger, LoggingLevel.Mutable> loggerEntry = loggers.get(clientName);
 		if (loggerEntry == null) {
-			synchronized (loggers.toString() + "_" + clientName) {
+			synchronized (System.identityHashCode(loggers) + "_" + System.identityHashCode(clientName)) {
 				loggerEntry = loggers.get(clientName);
 				if (loggerEntry == null) {
 					loggers.put(clientName, loggerEntry = new AbstractMap.SimpleEntry<>(
@@ -131,5 +131,4 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 	public void logTrace(Class<?> client, String message, Object... arguments) {
 		log(client, LoggingLevel.TRACE, (logger) -> logger.trace(message, arguments));
 	}
-
 }

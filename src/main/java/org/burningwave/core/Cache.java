@@ -417,7 +417,7 @@ public class Cache {
 		R getOrUploadIfAbsent(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
 			R resource = loadedResources.get(path);
 			if (resource == null) {
-				synchronized (mutexPrefixName + "_" + path) {
+				synchronized (Classes.getId(mutexPrefixName, path)) {
 					resource = loadedResources.get(path);
 					if (resource == null && resourceSupplier != null) {
 						resource = resourceSupplier.get();
@@ -435,7 +435,7 @@ public class Cache {
 		@Override
 		public R upload(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
 			R resource = null;
-			synchronized (mutexPrefixName + "_" + path) {
+			synchronized (Classes.getId(mutexPrefixName, path)) {
 				if (resourceSupplier != null) {
 					resource = resourceSupplier.get();
 					if (resource != null) {
@@ -452,7 +452,7 @@ public class Cache {
 		Map<String, Map<String, R>> retrievePartition(Map<Long, Map<String, Map<String, R>>> resourcesPartitioned, Long partitionIndex) {
 			Map<String, Map<String, R>> resources = resourcesPartitioned.get(partitionIndex);
 			if (resources == null) {
-				synchronized (mutexPrefixName + "_" + partitionIndex) {
+				synchronized (Classes.getId(mutexPrefixName, partitionIndex)) {
 					resources = resourcesPartitioned.get(partitionIndex);
 					if (resources == null) {
 						resourcesPartitioned.put(partitionIndex, resources = new ConcurrentHashMap<>());

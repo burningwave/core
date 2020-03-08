@@ -402,7 +402,7 @@ public class Classes implements Component {
 	public void setAccessible(AccessibleObject object, boolean flag) {
 		LowLevelObjectsHandler.setAccessible(object, flag);
 	}
-	 
+	
 	public String getId(Object... objects) {
 		String id = "_";
 		for (Object object : objects) {
@@ -522,7 +522,7 @@ public class Classes implements Component {
 		private MethodHandle getMethod(ClassLoader classLoader, String key, Supplier<MethodHandle> methodSupplier) {
 			MethodHandle method = classLoadersMethods.get(key);
 			if (method == null) {
-				synchronized (classLoadersMethods) {
+				synchronized (Classes.getId(classLoadersMethods, key)) {
 					method = classLoadersMethods.get(key);
 					if (method == null) {
 						classLoadersMethods.put(key, method = methodSupplier.get());
