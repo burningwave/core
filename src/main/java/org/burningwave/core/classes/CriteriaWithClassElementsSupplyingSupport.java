@@ -163,7 +163,7 @@ public abstract class CriteriaWithClassElementsSupplyingSupport<
 	protected Map<Class<?>, byte[]> getLoadedBytecode() {
 		if (loadedBytecode == null) {
 			synchronized (this) {
-				Map<Class<?>, byte[]> loadedBytecode = new ConcurrentHashMap<>();
+				Map<Class<?>, byte[]> loadedBytecode = new HashMap<>();
 				for (Class<?> cls : classesToBeUploaded) {
 					loadedBytecode.put(cls, Streams.toByteArray(byteCodeSupplier.apply(cls)));
 				}
