@@ -49,7 +49,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -350,14 +349,18 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getChildren(Predicate<FileSystemItem> filter) {
-		return getChildren(filter, ConcurrentHashMap::newKeySet);
+		return getChildren(filter, HashSet::new);
 	}
 	
 	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getChildren(Predicate<FileSystemItem> filter, Supplier<C> setSupplier) {
-		return getChildren().stream().filter(filter).collect(Collectors.toCollection(setSupplier));
+		return Optional.ofNullable(getChildren0()).map(children -> children.stream().filter(filter).collect(Collectors.toCollection(setSupplier))).orElseGet(() -> null);
 	}
 	
 	public Set<FileSystemItem> getChildren() {
+		return Optional.ofNullable(getChildren0()).map(children -> new HashSet<>(children)).orElseGet(() -> null);
+	}
+	
+	private Set<FileSystemItem> getChildren0() {
 		if (children == null) {
 			synchronized (this) {
 				if (children == null) {
@@ -421,15 +424,20 @@ public class FileSystemItem implements ManagedLogger {
 		return null;
 	}
 	
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(Predicate<FileSystemItem> filter, Supplier<C> setSupplier) {
-		return getAllChildren().stream().filter(filter).collect(Collectors.toCollection(setSupplier));
-	}
 	
 	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(Predicate<FileSystemItem> filter) {
-		return getAllChildren(filter, ConcurrentHashMap::newKeySet);
+		return getAllChildren(filter, HashSet::new);
+	}
+	
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(Predicate<FileSystemItem> filter, Supplier<C> setSupplier) {
+		return Optional.ofNullable(getAllChildren0()).map(children -> children.stream().filter(filter).collect(Collectors.toCollection(setSupplier))).orElseGet(() -> null);
 	}
 	
 	public Set<FileSystemItem> getAllChildren() {
+		return Optional.ofNullable(getAllChildren0()).map(children -> new HashSet<>(children)).orElseGet(() -> null);
+	}
+	
+	public Set<FileSystemItem> getAllChildren0() {
 		if (allChildren == null) {
 			synchronized (this) {
 				if (allChildren == null) {
@@ -453,7 +461,7 @@ public class FileSystemItem implements ManagedLogger {
 			}
 			final FileSystemItem parentContainer = parentContainerTemp;
 			try (IterableZipContainer zipInputStream = IterableZipContainer.create(parentContainer.getAbsolutePath(), parentContainer.toByteBuffer())) {					
-				Set<FileSystemItem> allChildren = ConcurrentHashMap.newKeySet();
+				Set<FileSystemItem> allChildren = new HashSet<>();
 				zipInputStream.findAllAndConvert(
 					() -> allChildren,
 					zipEntryPredicate,
@@ -484,7 +492,7 @@ public class FileSystemItem implements ManagedLogger {
 			logDebug("Retrieving all children of " + absolutePath.getKey());
 			Set<FileSystemItem> children = getChildren();
 			if (children != null) {
-				Set<FileSystemItem> allChildren = ConcurrentHashMap.newKeySet();
+				Set<FileSystemItem> allChildren = new HashSet<>();
 				allChildren.addAll(children);
 				children.forEach(
 					child -> {
