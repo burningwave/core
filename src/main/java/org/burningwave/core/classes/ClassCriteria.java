@@ -35,6 +35,7 @@ import static org.burningwave.core.assembler.StaticComponentsContainer.Throwable
 
 import java.lang.reflect.Member;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,7 +56,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 	
 	private ClassCriteria() {
 		super();
-		memberCriterias = new ConcurrentHashMap<>();
+		memberCriterias = new HashMap<>();
 	}
 	
 	public static ClassCriteria create() {
