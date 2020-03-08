@@ -402,24 +402,11 @@ public class Classes implements Component {
 	public void setAccessible(AccessibleObject object, boolean flag) {
 		LowLevelObjectsHandler.setAccessible(object, flag);
 	}
-	
-	public String getId(Object object) {
-		if (object instanceof String) {
-			return (String)object;
-		} else if (object instanceof Class<?>) {
-			return getId((Class<?>)object);
-		}
-        return object.getClass().getName() + "@" + System.identityHashCode(object);
-    }
-	
-	public String getId(Class<?> cls) {
-		return cls.getName() + "@" + System.identityHashCode(cls); 
-	}
 	 
 	public String getId(Object... objects) {
 		String id = "_";
 		for (Object object : objects) {
-			id += getId(object) + "_";
+			id += System.identityHashCode(object) + "_";
 		}
 		return id;
 	}
