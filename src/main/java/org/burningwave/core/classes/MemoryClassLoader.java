@@ -37,6 +37,7 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -44,7 +45,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -71,8 +71,8 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	) {
 		super(parentClassLoader);
 		this.classesLoaders = classesLoaders;
-		this.notLoadedCompiledClasses = new ConcurrentHashMap<>();
-		this.loadedCompiledClasses = new ConcurrentHashMap<>();
+		this.notLoadedCompiledClasses = new HashMap<>();
+		this.loadedCompiledClasses = new HashMap<>();
 	}
 	
 	static {
@@ -87,7 +87,9 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 
 	public void addCompiledClass(String className, ByteBuffer byteCode) {
     	if (classesLoaders.retrieveLoadedClass(this, className) == null) {
-    		notLoadedCompiledClasses.put(className, byteCode);
+    		synchronized (Classes.getId(notLoadedCompiledClasses, className)) {
+    			notLoadedCompiledClasses.put(className, byteCode);
+    		}
 		} else {
 			logDebug("Could not add compiled class {} cause it's already defined", className);
 		}
@@ -214,14 +216,9 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
     
     protected void addLoadedCompiledClass(String className, ByteBuffer byteCode) {
-    	ByteBuffer compiledCode = loadedCompiledClasses.get(className);
-    	if (compiledCode == null) {
-    		synchronized (loadedCompiledClasses) {
-				if((compiledCode = loadedCompiledClasses.get(className)) == null) {
-					loadedCompiledClasses.put(className, byteCode);
-				}
-			}
-    	}
+    	synchronized (Classes.getId(loadedCompiledClasses, className)) {
+    		loadedCompiledClasses.put(className, byteCode);
+		}
     }
     
     
@@ -276,7 +273,9 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 
 	public void removeNotLoadedCompiledClass(String className) {
-		notLoadedCompiledClasses.remove(className);
+		synchronized (Classes.getId(notLoadedCompiledClasses, className)) {
+			notLoadedCompiledClasses.remove(className);
+		}
 	}
 	
 	

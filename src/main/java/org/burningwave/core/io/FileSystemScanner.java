@@ -5,13 +5,13 @@ import static org.burningwave.core.assembler.StaticComponentsContainer.Paths;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -374,10 +374,10 @@ public class FileSystemScanner implements Component {
 
 			private Configuration() {
 				maxParallelTasks = Runtime.getRuntime().availableProcessors();
-				filterAndMapperForDirectory = new ConcurrentHashMap<>(); 
-				filterAndMapperForFile = new ConcurrentHashMap<>();
-				filterAndMapperForZipEntry = new ConcurrentHashMap<>();
-				paths = new CopyOnWriteArrayList<>();
+				filterAndMapperForDirectory = new HashMap<>(); 
+				filterAndMapperForFile = new HashMap<>();
+				filterAndMapperForZipEntry = new HashMap<>();
+				paths = new ArrayList<>();
 			}
 
 			public static Configuration create() {
