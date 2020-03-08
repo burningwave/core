@@ -133,7 +133,7 @@ public class SearchContext<T> implements Component {
 			if (allItems != null) {
 				items = allItems.get(path);
 				if (items == null) {
-					synchronized(allItems) {
+					synchronized(Classes.getId(allItems, path)) {
 						items = allItems.get(path);
 						if (items == null) {
 							items = mapForPathSupplier.get();

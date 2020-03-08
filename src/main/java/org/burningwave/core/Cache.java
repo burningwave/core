@@ -323,7 +323,7 @@ public class Cache {
 			}
 			Map<String, R> innerPartion = partion.get(partitionKey);
 			if (innerPartion == null) {
-				synchronized (partion) {
+				synchronized (Classes.getId(partion, partitionKey)) {
 					innerPartion = partion.get(partitionKey);
 					if (innerPartion == null) {
 						partion.put(partitionKey, innerPartion = new ConcurrentHashMap<>());
@@ -372,7 +372,7 @@ public class Cache {
 		Map<String, Map<String, R>> retrievePartition(Map<Long, Map<String, Map<String, R>>> resourcesPartitioned, Long partitionIndex) {
 			Map<String, Map<String, R>> resources = resourcesPartitioned.get(partitionIndex);
 			if (resources == null) {
-				synchronized (resourcesPartitioned) {
+				synchronized (Classes.getId(resourcesPartitioned, partitionIndex)) {
 					resources = resourcesPartitioned.get(partitionIndex);
 					if (resources == null) {
 						resourcesPartitioned.put(partitionIndex, resources = new ConcurrentHashMap<>());

@@ -183,7 +183,7 @@ public class PathHelper implements Component {
 	private Collection<String> getOrCreatePathGroup(String name) {
 		Collection<String> classPathsGroup = null;
 		if ((classPathsGroup = this.pathGroups.get(name)) == null) {
-			synchronized (this.pathGroups) {
+			synchronized(Classes.getId(this.pathGroups, name)) {
 				if ((classPathsGroup = this.pathGroups.get(name)) == null) {
 					classPathsGroup = ConcurrentHashMap.newKeySet();
 					this.pathGroups.put(name, classPathsGroup);
