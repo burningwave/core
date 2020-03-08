@@ -28,10 +28,12 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -63,11 +65,11 @@ public abstract class CriteriaWithClassElementsSupplyingSupport<
 	C init(Function<Class<?>, Class<?>> classSupplier, Function<Class<?>, ByteBuffer> byteCodeSupplier) {
 		if (classSupplier != null) {
 			this.classSupplier = classSupplier;
-			this.uploadedClassesMap = new ConcurrentHashMap<>();
+			this.uploadedClassesMap = new HashMap<>();
 		}
 		if (byteCodeSupplier != null) {
 			this.byteCodeSupplier = byteCodeSupplier;
-			this.byteCodeForClasses = new ConcurrentHashMap<>();
+			this.byteCodeForClasses = new HashMap<>();
 		}
 		return (C)this;
 	}
@@ -104,9 +106,9 @@ public abstract class CriteriaWithClassElementsSupplyingSupport<
 	
 	protected Map<Class<?>, Class<?>> getUploadedClasses() {
 		if (uploadedClasses == null) {
-			synchronized (this) {
+			synchronized (Classes.getId(this, "uploadedClasses")) {
 				if (uploadedClasses == null) {
-					Map<Class<?>, Class<?>> uploadedClasses = new ConcurrentHashMap<>();
+					Map<Class<?>, Class<?>> uploadedClasses = new HashMap<>();
 					for (Class<?> cls : classesToBeUploaded) {
 						uploadedClasses.put(cls, classSupplier.apply(cls));
 					}

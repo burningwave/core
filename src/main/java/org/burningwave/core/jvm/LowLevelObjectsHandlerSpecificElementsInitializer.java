@@ -9,10 +9,10 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 
@@ -83,7 +83,7 @@ abstract class LowLevelObjectsHandlerSpecificElementsInitializer implements Comp
 				MethodType.methodType(Constructor[].class, boolean.class),
 				Class.class
 			);
-			lowLevelObjectsHandler.parentClassLoaderFields = new ConcurrentHashMap<>();
+			lowLevelObjectsHandler.parentClassLoaderFields = new HashMap<>();
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
 		}

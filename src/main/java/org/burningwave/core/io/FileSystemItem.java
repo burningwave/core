@@ -45,6 +45,7 @@ import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -411,9 +412,9 @@ public class FileSystemItem implements ManagedLogger {
 						FileSystemItem.ofPath(fl.getAbsolutePath())
 					).collect(
 						Collectors.toCollection(
-							ConcurrentHashMap::newKeySet
+							HashSet::new
 						)
-					)).orElseGet(ConcurrentHashMap::newKeySet);
+					)).orElseGet(HashSet::new);
 				}
 			}
 		}

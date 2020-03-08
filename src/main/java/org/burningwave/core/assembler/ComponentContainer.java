@@ -33,9 +33,9 @@ import static org.burningwave.core.assembler.StaticComponentsContainer.ManagedLo
 import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -66,7 +66,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	ComponentContainer(String fileName) {
 		configFileName = fileName;
-		components = new ConcurrentHashMap<>();
+		components = new HashMap<>();
 		config = new Properties();
 	}
 	

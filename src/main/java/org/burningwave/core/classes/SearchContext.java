@@ -33,6 +33,8 @@ import static org.burningwave.core.assembler.StaticComponentsContainer.Throwable
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -71,8 +73,8 @@ public class SearchContext<T> implements Component {
 		InitContext initContext
 	) {
 		this.fileSystemHelper = fileSystemHelper;
-		this.itemsFoundFlatMap = new ConcurrentHashMap<>();
-		this.itemsFoundMap = new ConcurrentHashMap<>();
+		this.itemsFoundFlatMap = new HashMap<>();
+		this.itemsFoundMap = new HashMap<>();
 		this.skippedClassNames = ConcurrentHashMap.newKeySet();
 		this.sharedPathMemoryClassLoader = initContext.getSharedPathMemoryClassLoader();
 		this.pathMemoryClassLoader = initContext.getPathMemoryClassLoader();
@@ -114,17 +116,23 @@ public class SearchContext<T> implements Component {
 	void addItemFound(String path, String key, T item) {
 		retrieveCollectionForPath(
 			itemsFoundMap,
-			ConcurrentHashMap::new, path
+			HashMap::new, path
 		).put(key, item);
-		itemsFoundFlatMap.put(key, item);
+		synchronized(Classes.getId(itemsFoundFlatMap, key)) {
+			itemsFoundFlatMap.put(key, item);
+		}		
 	}
 	
 	void addAllItemsFound(String path, Map<String, T> items) {
 		retrieveCollectionForPath(
 			itemsFoundMap,
-			ConcurrentHashMap::new, path
+			HashMap::new, path
 		).putAll(items);
-		itemsFoundFlatMap.putAll(items);
+		for (Map.Entry<String, T> item : items.entrySet()) {
+			synchronized(Classes.getId(itemsFoundFlatMap, item.getKey())) {
+				itemsFoundFlatMap.put(item.getKey(), item.getValue());
+			}
+		}
 	}
 	
 	 Map<String, T> retrieveCollectionForPath(Map<String, Map<String, T>> allItems, Supplier<Map<String, T>> mapForPathSupplier, String path) {
@@ -163,9 +171,9 @@ public class SearchContext<T> implements Component {
 	
 	Collection<T> getItemsFound() {
 		if (itemsFound == null) {
-			synchronized(itemsFoundFlatMap) {
+			synchronized(Classes.getId(itemsFoundFlatMap,  "itemsFound")) {
 				if (itemsFound == null) {
-					this.itemsFound = ConcurrentHashMap.newKeySet();
+					this.itemsFound = new HashSet<>();
 					this.itemsFound.addAll(this.itemsFoundFlatMap.values());
 				}
 			}

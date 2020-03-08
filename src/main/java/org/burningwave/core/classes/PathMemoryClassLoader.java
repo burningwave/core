@@ -33,9 +33,9 @@ import static org.burningwave.core.assembler.StaticComponentsContainer.Paths;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.burningwave.core.io.PathHelper;
@@ -61,7 +61,7 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 		super(parentClassLoader, classesLoaders);
 		this.pathHelper = pathHelper;
 		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
-		loadedPaths = ConcurrentHashMap.newKeySet();
+		loadedPaths = new HashSet<>();
 	}
 	
 	public static PathMemoryClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, Classes.Loaders classesLoaders, Supplier<ByteCodeHunter> byteCodeHunterSupplier) {

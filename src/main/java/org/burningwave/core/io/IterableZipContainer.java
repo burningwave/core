@@ -2,17 +2,17 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 
 import java.io.File;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 import org.burningwave.core.Component;
 
 public interface IterableZipContainer extends Component {
@@ -71,7 +71,7 @@ public interface IterableZipContainer extends Component {
 		Function<IterableZipContainer.Entry, T> tSupplier,
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
-		return findAllAndConvert(ConcurrentHashMap::newKeySet, zipEntryPredicate, tSupplier, loadZipEntryData);
+		return findAllAndConvert(HashSet::new, zipEntryPredicate, tSupplier, loadZipEntryData);
 	}
 	
 	public default <T> Set<T> findAllAndConvert(
@@ -185,7 +185,7 @@ public interface IterableZipContainer extends Component {
 	}
 	
 	public default Set<IterableZipContainer.Entry> findAll(Predicate<IterableZipContainer.Entry> zipEntryPredicate, Predicate<IterableZipContainer.Entry> loadZipEntryData) {
-		return findAll(ConcurrentHashMap::newKeySet, zipEntryPredicate, loadZipEntryData);
+		return findAll(HashSet::new, zipEntryPredicate, loadZipEntryData);
 	}
 	
 	public default Set<IterableZipContainer.Entry> findAll(

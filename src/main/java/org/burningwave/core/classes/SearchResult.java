@@ -31,8 +31,8 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Criteria;
@@ -53,7 +53,7 @@ public class SearchResult<E> implements Component {
 	}
 	
 	public <C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> Map<String, E> getClasses(C criteria) {
-		Map<String, E> itemsFound = new ConcurrentHashMap<>();
+		Map<String, E> itemsFound = new HashMap<>();
 		final C criteriaCopy = createCriteriaCopy(criteria);
 		getItemsFoundFlatMap().forEach((path, javaClass) -> {
 			if (criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault(javaClass).getResult()) {
@@ -64,7 +64,7 @@ public class SearchResult<E> implements Component {
 	}
 	
 	public <C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> Map.Entry<String, E> getUnique(C criteria) {
-		Map<String, E> itemsFound = new ConcurrentHashMap<>();
+		Map<String, E> itemsFound = new HashMap<>();
 		final C criteriaCopy = createCriteriaCopy(criteria);
 		getItemsFoundFlatMap().forEach((path, javaClass) -> {
 			if (criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault(javaClass).getResult()) {
