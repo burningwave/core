@@ -48,6 +48,7 @@ import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -55,7 +56,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -791,7 +791,7 @@ public class Classes implements Component {
 		}	
 		
 		public Set<Class<?>> retrieveLoadedClassesForPackage(ClassLoader classLoader, Predicate<Package> packagePredicate) {
-			Set<Class<?>> classesFound = ConcurrentHashMap.newKeySet();
+			Set<Class<?>> classesFound = new HashSet<>();
 			Vector<Class<?>> definedClasses = retrieveLoadedClasses(classLoader);
 			synchronized(definedClasses) {
 				Iterator<?> itr = definedClasses.iterator();

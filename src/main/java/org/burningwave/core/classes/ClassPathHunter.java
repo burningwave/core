@@ -31,6 +31,7 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -163,7 +164,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		void addItemFound(String basePathAsString, String classPathAsFile, Class<?> testedClass) {
 			Map<String, Collection<Class<?>>> testedClassesForClassPathMap = retrieveCollectionForPath(
 				itemsFoundMap,
-				ConcurrentHashMap::new,
+				HashMap::new,
 				basePathAsString
 			);
 			Collection<Class<?>> testedClassesForClassPath = testedClassesForClassPathMap.get(classPathAsFile);
