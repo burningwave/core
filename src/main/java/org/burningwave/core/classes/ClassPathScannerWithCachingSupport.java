@@ -32,6 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentsContainer.Paths;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -75,7 +76,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 			contextSupplier,
 			resultSupplier
 		);
-		this.cache = new ConcurrentHashMap<>();
+		this.cache = new HashMap<>();
 	}
 	
 	//Cached search
