@@ -29,32 +29,24 @@
 package org.burningwave.core.io;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingSupplier;
 
 
 public class FileSystemHelper implements Component {
-	private static File BASE_TEMPORARY_FOLDER;
-	private Supplier<PathHelper> pathHelperSupplier; 
-	private PathHelper pathHelper;
+	private File BASE_TEMPORARY_FOLDER;
 	
-	private FileSystemHelper(Supplier<PathHelper> pathHelperSupplier) {
-		this.pathHelperSupplier = pathHelperSupplier;
-	}
+	private FileSystemHelper() {}
 	
-	public static void clearMainTemporaryFolder() {
+	public void clearMainTemporaryFolder() {
 		delete(Arrays.asList(getOrCreateMainTemporaryFolder().listFiles()));
 	}
 	
-	private static File getOrCreateMainTemporaryFolder() {
+	private File getOrCreateMainTemporaryFolder() {
 		if (BASE_TEMPORARY_FOLDER != null) {
 			return BASE_TEMPORARY_FOLDER;
 		}
@@ -70,7 +62,7 @@ public class FileSystemHelper implements Component {
 		});
 	}
 	
-	public static File getOrCreateTemporaryFolder(String folderName) {
+	public File getOrCreateTemporaryFolder(String folderName) {
 		return ThrowingSupplier.get(() -> {
 			File tempFolder = new File(getOrCreateMainTemporaryFolder().getAbsolutePath() + "/" + folderName);
 			if (!tempFolder.exists()) {
@@ -80,64 +72,16 @@ public class FileSystemHelper implements Component {
 		});
 	}
 	
-	public static FileSystemHelper create(Supplier<PathHelper> pathHelperSupplier) {
-		return new FileSystemHelper(pathHelperSupplier);
+	public static FileSystemHelper create() {
+		return new FileSystemHelper();
 	}
-	
-	private PathHelper getPathHelper() {
-		return pathHelper != null ?
-			pathHelper :
-			(pathHelper = pathHelperSupplier.get());
-	}
-	
-	public Collection<FileSystemItem> getResources(String... resourcesRelativePaths) {
-		return getResources((coll, file) -> coll.add(file), resourcesRelativePaths);
-	}
-	
-	public FileSystemItem getResource(String resourceRelativePath) {
-		return getResource(
-				(coll, file) -> 
-					coll.add(file), resourceRelativePath);
-	}
-	
-	
-	public <T> Collection<T> getResources(
-		BiConsumer<Collection<T>, FileSystemItem> fileConsumer,
-		String... resourcesRelativePaths
-	) {
-		Collection<T> files = new ArrayList<>();
-		if (resourcesRelativePaths != null && resourcesRelativePaths.length > 0) {
-			PathHelper pathHelper = getPathHelper();
-			FileSystemItem.disableLog();
-			for (String resourceRelativePath : resourcesRelativePaths) {
-				pathHelper.getAllPaths().stream().forEach((path) -> {
-					FileSystemItem fileSystemItem = FileSystemItem.ofPath(path + "/" + resourceRelativePath);
-					if (fileSystemItem.exists()) {
-						fileConsumer.accept(files, fileSystemItem);
-					}
-				});
-			}
-			FileSystemItem.enableLog();
-		}
-		return files;
-	}
-	
-	
-	public <T> T getResource(BiConsumer<Collection<T>, FileSystemItem> fileConsumer, String resourceRelativePath) {
-		Collection<T> files = getResources(fileConsumer, resourceRelativePath);
-		if (files.size() > 1) {
-			throw Throwables.toRuntimeException("Found more than one resource under relative path " + resourceRelativePath);
-		}
-		return files.stream().findFirst().orElse(null);
-	}
-	
 
-	public static void deleteTempraryFiles(Collection<File> temporaryFiles) {
+	public void deleteTempraryFiles(Collection<File> temporaryFiles) {
 		delete(temporaryFiles);
 		temporaryFiles.removeAll(temporaryFiles);
 	}
 	
-	public static void delete(Collection<File> files) {
+	public void delete(Collection<File> files) {
 		if (files != null) {
 			Iterator<File> itr = files.iterator();
 			while(itr.hasNext()) {
@@ -149,7 +93,7 @@ public class FileSystemHelper implements Component {
 		}
 	}
 	
-	public static boolean delete(File file) {
+	public boolean delete(File file) {
 		if (file.isDirectory()) {
 			return deleteFolder(file);
 		} else {
@@ -157,11 +101,11 @@ public class FileSystemHelper implements Component {
 		}
 	}
 	
-	public static void delete(String absolutePath) {
+	public void delete(String absolutePath) {
 		delete(new File(absolutePath));	
 	}
 
-	public static boolean deleteFolder(File folder) {
+	public boolean deleteFolder(File folder) {
 	    File[] files = folder.listFiles();
 	    if(files!=null) { //some JVMs return null for empty dirs
 	        for(File f: files) {
@@ -175,12 +119,9 @@ public class FileSystemHelper implements Component {
 	    return folder.delete();
 	}
 
-
-	
-	
 	@Override
 	public void close() {
-		
+		BASE_TEMPORARY_FOLDER = null;
 	}
 
 }

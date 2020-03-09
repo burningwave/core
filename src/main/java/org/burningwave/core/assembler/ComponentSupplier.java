@@ -41,7 +41,6 @@ import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.concurrent.ConcurrentHelper;
-import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
@@ -73,8 +72,6 @@ public interface ComponentSupplier extends Component {
 	public ClassPathHunter getClassPathHunter();
 	
 	public ConcurrentHelper getConcurrentHelper();
-	
-	public FileSystemHelper getFileSystemHelper();
 	
 	public FileSystemScanner getFileSystemScanner();
 

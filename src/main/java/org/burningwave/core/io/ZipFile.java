@@ -29,8 +29,10 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,8 +46,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
-
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 class ZipFile implements IterableZipContainer {
 	String absolutePath;

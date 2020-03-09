@@ -44,12 +44,10 @@ import org.burningwave.core.Component;
 import org.burningwave.core.Context;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.ClassFileScanConfig;
-import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.StreamHelper;
 
 public class SearchContext<T> implements Component {
 
-	FileSystemHelper fileSystemHelper;
 	ClassFileScanConfig classFileScanConfiguration;
 	SearchConfigAbst<?> searchConfig;
 	Map<String, T> itemsFoundFlatMap;
@@ -68,11 +66,9 @@ public class SearchContext<T> implements Component {
 	
 
 	SearchContext(
-		FileSystemHelper fileSystemHelper,
 		StreamHelper streamHelper,
 		InitContext initContext
 	) {
-		this.fileSystemHelper = fileSystemHelper;
 		this.itemsFoundFlatMap = new HashMap<>();
 		this.itemsFoundMap = new HashMap<>();
 		this.skippedClassNames = ConcurrentHashMap.newKeySet();
@@ -86,11 +82,10 @@ public class SearchContext<T> implements Component {
 	}
 	
 	public static <T> SearchContext<T> create(
-		FileSystemHelper fileSystemHelper,
 		StreamHelper streamHelper,
 		InitContext initContext
 	) {
-		return new SearchContext<>(fileSystemHelper, streamHelper, initContext);
+		return new SearchContext<>(streamHelper, initContext);
 	}
 	
 	void executeSearch(Runnable searcher) {
@@ -264,7 +259,6 @@ public class SearchContext<T> implements Component {
 	
 	@Override
 	public void close() {
-		fileSystemHelper = null;
 		if (searchConfig.deleteFoundItemsOnClose) {
 			itemsFoundFlatMap.clear();
 			itemsFoundMap.entrySet().stream().forEach(entry -> {

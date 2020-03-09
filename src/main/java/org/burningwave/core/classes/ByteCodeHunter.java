@@ -32,7 +32,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.PathHelper;
@@ -43,7 +42,6 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 	private ByteCodeHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		FileSystemHelper fileSystemHelper,
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
@@ -52,13 +50,12 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 		super(
 			byteCodeHunterSupplier,
 			classHunterSupplier,
-			fileSystemHelper,
 			fileSystemScanner,
 			pathHelper,
 			streamHelper,
 			classesLoaders,
 			(initContext) -> SearchContext.<JavaClass>create(
-				fileSystemHelper, streamHelper, initContext
+				streamHelper, initContext
 			),
 			(context) -> new ByteCodeHunter.SearchResult(context)
 		);
@@ -67,13 +64,12 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 	public static ByteCodeHunter create(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier, 
-		FileSystemHelper fileSystemHelper,
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
 		Classes.Loaders classesLoaders
 	) {
-		return new ByteCodeHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, fileSystemScanner, pathHelper, streamHelper, classesLoaders);
+		return new ByteCodeHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemScanner, pathHelper, streamHelper, classesLoaders);
 	}
 	
 	@Override

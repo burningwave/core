@@ -41,7 +41,6 @@ import java.util.stream.Collectors;
 import org.burningwave.core.Criteria;
 import org.burningwave.core.Criteria.TestContext;
 import org.burningwave.core.io.ClassFileScanConfig;
-import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.PathHelper;
@@ -58,7 +57,6 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	ClassHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		FileSystemHelper fileSystemHelper,
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
@@ -68,13 +66,12 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		super(
 			byteCodeHunterSupplier,
 			classHunterSupplier,
-			fileSystemHelper,
 			fileSystemScanner,
 			pathHelper,
 			streamHelper,
 			classesLoaders,
 			(initContext) -> ClassHunter.SearchContext._create(
-				fileSystemHelper, streamHelper, initContext
+				streamHelper, initContext
 			),
 			(context) -> new ClassHunter.SearchResult(context)
 		);
@@ -91,7 +88,6 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	public static ClassHunter create(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier, 
 		Supplier<ClassHunter> classHunterSupplier, 
-		FileSystemHelper fileSystemHelper,
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper, 
 		StreamHelper streamHelper,
@@ -99,7 +95,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		ClassLoader parentClassLoader
 	) {
 		return new ClassHunter(
-			byteCodeHunterSupplier, classHunterSupplier, fileSystemHelper, fileSystemScanner, pathHelper, streamHelper, classesLoaders, parentClassLoader
+			byteCodeHunterSupplier, classHunterSupplier, fileSystemScanner, pathHelper, streamHelper, classesLoaders, parentClassLoader
 		);
 	}
 	
@@ -156,12 +152,12 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound;
 		private Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap;
 		
-		static SearchContext _create(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
-			return new SearchContext(fileSystemHelper, streamHelper, initContext);
+		static SearchContext _create(StreamHelper streamHelper, InitContext initContext) {
+			return new SearchContext(streamHelper, initContext);
 		}
 		
-		SearchContext(FileSystemHelper fileSystemHelper, StreamHelper streamHelper, InitContext initContext) {
-			super(fileSystemHelper, streamHelper, initContext);
+		SearchContext(StreamHelper streamHelper, InitContext initContext) {
+			super(streamHelper, initContext);
 			membersFound = new ConcurrentHashMap<>();
 			membersFoundFlatMap = new ConcurrentHashMap<>();
 		}

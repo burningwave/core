@@ -35,6 +35,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 
 import java.io.File;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -45,9 +46,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -65,15 +66,12 @@ public class PathHelper implements Component {
 	public static String MAIN_CLASS_PATHS_EXTENSION = MAIN_CLASS_PATHS + ".extension";
 	private static Pattern PATH_REGEX = Pattern.compile("\\/\\/(.*)\\/\\/(children|allChildren):(.*)");
 	private IterableObjectHelper iterableObjectHelper;
-	private Supplier<FileSystemHelper> fileSystemHelperSupplier;
-	private FileSystemHelper fileSystemHelper;
 	private Map<String, Collection<String>> pathGroups;
 	private Collection<String> allPaths;
 	private Properties config;
 		
-	private PathHelper(Supplier<FileSystemHelper> fileSystemHelperSupplier, IterableObjectHelper iterableObjectHelper, Properties config) {
+	private PathHelper(IterableObjectHelper iterableObjectHelper, Properties config) {
 		this.iterableObjectHelper = iterableObjectHelper;
-		this.fileSystemHelperSupplier = fileSystemHelperSupplier;
 		pathGroups = new ConcurrentHashMap<>();
 		allPaths = ConcurrentHashMap.newKeySet();
 		loadMainClassPaths();
@@ -93,14 +91,8 @@ public class PathHelper implements Component {
 		Component.super.receiveNotification(properties, event, key, value);
 	}
 	
-	public static PathHelper create(Supplier<FileSystemHelper> fileSystemHelperSupplier, IterableObjectHelper iterableObjectHelper, Properties config) {
-		return new PathHelper(fileSystemHelperSupplier, iterableObjectHelper, config);
-	}
-	
-	private FileSystemHelper getFileSystemHelper() {
-		return fileSystemHelper != null ?
-			fileSystemHelper	:
-			(fileSystemHelper = fileSystemHelperSupplier.get());
+	public static PathHelper create(IterableObjectHelper iterableObjectHelper, Properties config) {
+		return new PathHelper(iterableObjectHelper, config);
 	}
 	
 	private void loadMainClassPaths() {
@@ -280,7 +272,7 @@ public class PathHelper implements Component {
 	
 	public String getAbsolutePath(String resourceRelativePath) {
 		String path = Objects.requireNonNull(
-			getFileSystemHelper().getResource(resourceRelativePath), 
+			getResource(resourceRelativePath), 
 			"Could not find file " + resourceRelativePath
 		).getAbsolutePath();
 		if (System.getProperty("os.name").toLowerCase().contains("windows")) {
@@ -293,6 +285,45 @@ public class PathHelper implements Component {
 		return path;
 	}
 	
+	public Collection<FileSystemItem> getResources(String... resourcesRelativePaths) {
+		return getResources((coll, file) -> coll.add(file), resourcesRelativePaths);
+	}
+	
+	public FileSystemItem getResource(String resourceRelativePath) {
+		return getResource(
+				(coll, file) -> 
+					coll.add(file), resourceRelativePath);
+	}
+	
+	
+	public <T> Collection<T> getResources(
+		BiConsumer<Collection<T>, FileSystemItem> fileConsumer,
+		String... resourcesRelativePaths
+	) {
+		Collection<T> files = new ArrayList<>();
+		if (resourcesRelativePaths != null && resourcesRelativePaths.length > 0) {
+			FileSystemItem.disableLog();
+			for (String resourceRelativePath : resourcesRelativePaths) {
+				getAllPaths().stream().forEach((path) -> {
+					FileSystemItem fileSystemItem = FileSystemItem.ofPath(path + "/" + resourceRelativePath);
+					if (fileSystemItem.exists()) {
+						fileConsumer.accept(files, fileSystemItem);
+					}
+				});
+			}
+			FileSystemItem.enableLog();
+		}
+		return files;
+	}
+	
+	
+	public <T> T getResource(BiConsumer<Collection<T>, FileSystemItem> fileConsumer, String resourceRelativePath) {
+		Collection<T> files = getResources(fileConsumer, resourceRelativePath);
+		if (files.size() > 1) {
+			throw Throwables.toRuntimeException("Found more than one resource under relative path " + resourceRelativePath);
+		}
+		return files.stream().findFirst().orElse(null);
+	}
 	
 	public CheckResult check(Collection<String> pathCollection1, Collection<String> pathCollection2) {
 		CheckResult checkPathsResult = new CheckResult();

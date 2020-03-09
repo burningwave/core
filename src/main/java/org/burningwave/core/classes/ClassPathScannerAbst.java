@@ -37,7 +37,6 @@ import java.util.function.Supplier;
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.io.ClassFileScanConfig;
-import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.PathHelper;
@@ -51,7 +50,6 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	Supplier<ClassHunter> classHunterSupplier;
 	ClassHunter classHunter;
 	Classes.Loaders classesLoaders;
-	FileSystemHelper fileSystemHelper;
 	FileSystemScanner fileSystemScanner;
 	StreamHelper streamHelper;
 	PathHelper pathHelper;
@@ -61,7 +59,6 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	ClassPathScannerAbst(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		FileSystemHelper fileSystemHelper,
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
@@ -69,7 +66,6 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		Function<InitContext, C> contextSupplier,
 		Function<C, R> resultSupplier
 	) {
-		this.fileSystemHelper = fileSystemHelper;
 		this.fileSystemScanner = fileSystemScanner;
 		this.pathHelper = pathHelper;
 		this.streamHelper = streamHelper;
@@ -179,7 +175,6 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	public void close() {
 		byteCodeHunterSupplier = null;
 		classesLoaders = null;
-		fileSystemHelper = null;
 		streamHelper = null;
 		pathHelper = null;
 		contextSupplier = null;

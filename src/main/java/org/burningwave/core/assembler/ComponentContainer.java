@@ -50,7 +50,6 @@ import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.concurrent.ConcurrentHelper;
-import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.StreamHelper;
@@ -215,7 +214,6 @@ public class ComponentContainer implements ComponentSupplier {
 			return ClassHunter.create(
 				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
-				getFileSystemHelper(),
 				getFileSystemScanner(),
 				getPathHelper(),
 				getStreamHelper(),
@@ -237,7 +235,6 @@ public class ComponentContainer implements ComponentSupplier {
 			ClassPathHunter.create(
 				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
-				getFileSystemHelper(),
 				getFileSystemScanner(),
 				getPathHelper(),
 				getStreamHelper(),
@@ -252,7 +249,6 @@ public class ComponentContainer implements ComponentSupplier {
 			ByteCodeHunter.create(
 				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
-				getFileSystemHelper(),
 				getFileSystemScanner(),
 				getPathHelper(),
 				getStreamHelper(),
@@ -294,7 +290,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public PathHelper getPathHelper() {
 		return getOrCreate(PathHelper.class, () ->
 			PathHelper.create(
-				() -> getFileSystemHelper(),
 				getIterableObjectHelper(),
 				config
 			)
@@ -304,15 +299,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public StreamHelper getStreamHelper() {
 		return getOrCreate(StreamHelper.class, () -> 
 			StreamHelper.create(
-				getFileSystemHelper()
-			)
-		);
-	}
-	
-	public FileSystemHelper getFileSystemHelper() {
-		return getOrCreate(FileSystemHelper.class, () -> 
-			FileSystemHelper.create(
-				() -> getPathHelper()
+				getPathHelper()
 			)
 		);
 	}

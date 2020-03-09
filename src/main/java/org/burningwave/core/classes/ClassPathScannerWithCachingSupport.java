@@ -44,7 +44,6 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.io.ClassFileScanConfig;
-import org.burningwave.core.io.FileSystemHelper;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.PathHelper.CheckResult;
@@ -57,7 +56,6 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 	ClassPathScannerWithCachingSupport(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		FileSystemHelper fileSystemHelper,
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
@@ -67,7 +65,6 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		super(
 			byteCodeHunterSupplier,
 			classHunterSupplier,
-			fileSystemHelper,
 			fileSystemScanner,
 			pathHelper,
 			streamHelper,
@@ -263,7 +260,6 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		cache = null;
 		byteCodeHunterSupplier = null;
 		classesLoaders = null;
-		fileSystemHelper = null;
 		streamHelper = null;
 		pathHelper = null;
 		contextSupplier = null;

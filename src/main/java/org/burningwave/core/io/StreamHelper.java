@@ -38,22 +38,22 @@ import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
 public class StreamHelper implements Component {
-	private FileSystemHelper fileSystemHelper;
+	private PathHelper pathHelper;
 	
-	private StreamHelper(FileSystemHelper fileSystemHelper) {
-		this.fileSystemHelper = fileSystemHelper;	
+	private StreamHelper(PathHelper pathHelper) {
+		this.pathHelper = pathHelper;	
 	}
 	
-	public static StreamHelper create(FileSystemHelper fileSystemHelper) {
-		return new StreamHelper(fileSystemHelper);
+	public static StreamHelper create(PathHelper pathHelper) {
+		return new StreamHelper(pathHelper);
 	}
 	
 	public Collection<InputStream> getResourcesAsStreams(String... resourcesRelativePaths) {
-		return fileSystemHelper.getResources((coll, fileSystemItem) -> coll.add(fileSystemItem.toInputStream()), resourcesRelativePaths);
+		return pathHelper.getResources((coll, fileSystemItem) -> coll.add(fileSystemItem.toInputStream()), resourcesRelativePaths);
 	}
 	
 	public InputStream getResourceAsStream(String resourceRelativePath) {
-		return fileSystemHelper.getResource((coll, fileSystemItem) ->
+		return pathHelper.getResource((coll, fileSystemItem) ->
 			coll.add(fileSystemItem.toInputStream()), 
 			resourceRelativePath
 		);
