@@ -7,4 +7,4 @@ It’s possible to search classes by every criteria that your immagination can m
 
 Below you will find how to include the library in your projects and a simple code example and in the [wiki](https://github.com/burningwave/core/wiki) you will find more detailed examples.
 
-[## Get started](https://github.com/burningwave/core/wiki)
+## [Get started](https://github.com/burningwave/core/wiki)
