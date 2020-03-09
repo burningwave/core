@@ -5,4 +5,4 @@ It’s possible to search classes by every criteria that your immagination can m
 
 **Tested on Java versions ranging from 8 to 13, Burningwave Core is also useful for creating classes during runtime, facilitate the use of reflection and much more...**
 
-## [Get started](https://github.com/burningwave/core/wiki)
+## [Click here to get started](https://github.com/burningwave/core/wiki)
