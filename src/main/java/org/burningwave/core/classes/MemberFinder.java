@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 
 import java.lang.reflect.Member;
 import java.util.Collection;
@@ -40,7 +40,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 import org.burningwave.core.Component;
 
 public class MemberFinder implements Component {

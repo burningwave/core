@@ -28,9 +28,9 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Paths;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
+import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;

@@ -28,9 +28,9 @@
  */
 package org.burningwave.core.assembler;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentsContainer.ManagedLoggersRepository;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.InputStream;
 import java.util.HashMap;

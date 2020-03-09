@@ -1,8 +1,8 @@
 package org.burningwave.core.jvm;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.JVMInfo;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
+import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;

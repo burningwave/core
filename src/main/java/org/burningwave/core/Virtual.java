@@ -28,7 +28,7 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.MethodHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.MethodHelper;
 
 
 public interface Virtual extends Component {

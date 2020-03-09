@@ -28,10 +28,10 @@
  */
 package org.burningwave.core.reflection;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentsContainer.LowLevelObjectsHandler;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;

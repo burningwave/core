@@ -28,14 +28,14 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 import org.burningwave.core.io.FileSystemItem;
 
 public class JavaClass {

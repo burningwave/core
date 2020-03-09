@@ -28,10 +28,10 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentsContainer.MemberFinder;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.MemberFinder;
+import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.reflect.Member;
 import java.util.Collection;

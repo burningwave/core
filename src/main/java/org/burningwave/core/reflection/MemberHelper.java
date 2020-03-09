@@ -28,8 +28,8 @@
  */
 package org.burningwave.core.reflection;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentsContainer.MemberFinder;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.MemberFinder;
 
 import java.lang.reflect.Member;
 import java.util.Collection;

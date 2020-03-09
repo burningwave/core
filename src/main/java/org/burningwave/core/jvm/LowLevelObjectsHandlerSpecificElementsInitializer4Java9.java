@@ -1,6 +1,6 @@
 package org.burningwave.core.jvm;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.io.InputStream;
 import java.lang.invoke.LambdaMetafactory;
@@ -14,7 +14,7 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 import org.burningwave.core.io.ByteBufferOutputStream;
 
 @SuppressWarnings("restriction")

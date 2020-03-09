@@ -28,8 +28,8 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.ConstructorHelper;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Optional;
 import java.util.function.BiFunction;

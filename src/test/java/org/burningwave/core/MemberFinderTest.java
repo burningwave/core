@@ -1,6 +1,6 @@
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.MemberFinder;
+import static org.burningwave.core.assembler.StaticComponentContainer.MemberFinder;
 
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.service.ExtendedService;

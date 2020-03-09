@@ -1,6 +1,6 @@
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.ConstructorHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;

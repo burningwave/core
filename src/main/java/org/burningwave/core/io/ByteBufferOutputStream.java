@@ -29,8 +29,8 @@
 package org.burningwave.core.io;
 
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.ByteBufferDelegate;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
+import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.io.InputStream;
 import java.io.OutputStream;

@@ -1,7 +1,7 @@
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Paths;
+import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 
 import java.io.File;
 import java.nio.ByteBuffer;

@@ -36,7 +36,7 @@ import java.util.Iterator;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingSupplier;
 

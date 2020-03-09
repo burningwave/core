@@ -28,11 +28,11 @@
  */
 package org.burningwave.core.reflection;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.FieldHelper;
-import static org.burningwave.core.assembler.StaticComponentsContainer.MemberFinder;
-import static org.burningwave.core.assembler.StaticComponentsContainer.MethodHelper;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.FieldHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.MemberFinder;
+import static org.burningwave.core.assembler.StaticComponentContainer.MethodHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;

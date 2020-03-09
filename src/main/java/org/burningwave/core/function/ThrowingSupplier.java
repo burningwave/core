@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.function;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 @FunctionalInterface
 public interface ThrowingSupplier<T, E extends Throwable> {

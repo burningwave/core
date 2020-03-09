@@ -28,8 +28,8 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
-import static org.burningwave.core.assembler.StaticComponentsContainer.ConstructorHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
 
 import java.util.Optional;
 import java.util.UUID;

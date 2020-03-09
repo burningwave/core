@@ -1,7 +1,7 @@
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentsContainer.ConstructorHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;

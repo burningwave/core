@@ -1,6 +1,6 @@
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.MemberFinder;
+import static org.burningwave.core.assembler.StaticComponentContainer.MemberFinder;
 
 import java.lang.reflect.Method;
 import java.util.function.BiConsumer;

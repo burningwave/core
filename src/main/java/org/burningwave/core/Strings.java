@@ -28,7 +28,7 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

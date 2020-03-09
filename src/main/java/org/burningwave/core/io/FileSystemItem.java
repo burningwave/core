@@ -28,12 +28,12 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentsContainer.Cache;
-import static org.burningwave.core.assembler.StaticComponentsContainer.ManagedLoggersRepository;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Paths;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Streams;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Strings;
-import static org.burningwave.core.assembler.StaticComponentsContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
+import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.File;
 import java.io.IOException;

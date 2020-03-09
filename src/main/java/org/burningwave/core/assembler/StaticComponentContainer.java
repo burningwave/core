@@ -8,7 +8,7 @@ import org.burningwave.core.SLF4JManagedLoggerRepository;
 import org.burningwave.core.SimpleManagedLoggerRepository;
 import org.burningwave.core.iterable.Properties;
 
-public class StaticComponentsContainer {
+public class StaticComponentContainer {
 	
 	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 	public static final org.burningwave.core.Throwables Throwables;
@@ -44,7 +44,7 @@ public class StaticComponentsContainer {
 			FieldHelper = org.burningwave.core.reflection.FieldHelper.create();
 			MethodHelper = org.burningwave.core.reflection.MethodHelper.create();
 		} catch (Throwable exc){
-			ManagedLoggersRepository.logError(StaticComponentsContainer.class, "Exception occurred", exc);
+			ManagedLoggersRepository.logError(StaticComponentContainer.class, "Exception occurred", exc);
 			throw Throwables.toRuntimeException(exc);
 		}
 	}
@@ -52,7 +52,7 @@ public class StaticComponentsContainer {
 	private static org.burningwave.core.iterable.Properties loadFirstOneFound(String... fileNames) {
 		org.burningwave.core.iterable.Properties properties = new Properties();
 		for (String fileName : fileNames) {
-			InputStream propertiesFileIS = Optional.ofNullable(StaticComponentsContainer.class.getClassLoader()).orElseGet(() ->
+			InputStream propertiesFileIS = Optional.ofNullable(StaticComponentContainer.class.getClassLoader()).orElseGet(() ->
 				ClassLoader.getSystemClassLoader()).getResourceAsStream(fileName);
 			if (propertiesFileIS != null) {				
 				try {
