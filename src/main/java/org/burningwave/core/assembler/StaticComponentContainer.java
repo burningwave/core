@@ -71,7 +71,8 @@ public class StaticComponentContainer {
 		org.burningwave.core.iterable.Properties properties = new Properties();
 		for (String fileName : fileNames) {
 			InputStream propertiesFileIS = Optional.ofNullable(StaticComponentContainer.class.getClassLoader()).orElseGet(() ->
-				ClassLoader.getSystemClassLoader()).getResourceAsStream(fileName);
+				ClassLoader.getSystemClassLoader()
+			).getResourceAsStream(fileName);
 			if (propertiesFileIS != null) {				
 				try {
 					properties.load(propertiesFileIS);

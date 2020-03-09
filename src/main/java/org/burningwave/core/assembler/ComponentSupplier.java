@@ -55,6 +55,8 @@ public interface ComponentSupplier extends Component {
 
 	public ComponentSupplier clear();
 
+	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier);
+	
 	public PropertyAccessor.ByFieldOrByMethod getByFieldOrByMethodPropertyAccessor();
 
 	public PropertyAccessor.ByMethodOrByField getByMethodOrByFieldPropertyAccessor();
@@ -82,9 +84,7 @@ public interface ComponentSupplier extends Component {
 	public JavaMemoryCompiler getJavaMemoryCompiler();
 
 	public MemoryClassLoader getMemoryClassLoader();
-	
-	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier);
-	
+		
 	public PathHelper getPathHelper();
 	
 	public StreamHelper getStreamHelper();
