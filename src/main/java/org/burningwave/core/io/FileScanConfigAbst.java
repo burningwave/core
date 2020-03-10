@@ -181,9 +181,11 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		if (recursiveOnDirectoryOfFileSystemEntry && directoryCriteriaForFileSystemEntry == null) {
 			config.scanRecursivelyAllDirectory();
 		} else if (recursiveOnDirectoryOfFileSystemEntry && directoryCriteriaForFileSystemEntry != null) {
-			config.scanRecursivelyAllDirectoryThat((basePath, currentPath) -> directoryCriteriaForFileSystemEntry.getPredicateOrTruePredicateIfNull().test(currentPath));
+			config.scanRecursivelyAllDirectoryThat((basePath, currentPath) ->
+				directoryCriteriaForFileSystemEntry.getPredicateOrTruePredicateIfNull().test(currentPath));
 		} else if (!recursiveOnDirectoryOfFileSystemEntry && directoryCriteriaForFileSystemEntry != null) {
-			config.scanRecursivelyAllDirectoryThat((basePath, currentPath) -> basePath.equals(currentPath) && directoryCriteriaForFileSystemEntry.getPredicateOrTruePredicateIfNull().test(currentPath));
+			config.scanRecursivelyAllDirectoryThat((basePath, currentPath) ->
+				basePath.equals(currentPath) && directoryCriteriaForFileSystemEntry.getPredicateOrTruePredicateIfNull().test(currentPath));
 		} else {
 			config.scanStrictlyDirectory();
 		}
