@@ -56,6 +56,7 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.function.MultiParamsConsumer;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.MultiParamsPredicate;
+import org.burningwave.core.function.QuadConsumer;
 import org.burningwave.core.function.TriConsumer;
 import org.burningwave.core.io.PathHelper;
 
@@ -380,14 +381,7 @@ public class ClassFactory implements Component {
 		}
 
 		public static PojoSubTypeRetriever createDefault(ClassFactory classFactory) {
-			return new PojoSubTypeRetriever(classFactory, new SourceGenerator((fieldsMap, cls) -> {
-				fieldsMap.entrySet().forEach(entry -> {
-					cls.addField(entry.getValue().addModifier(Modifier.PRIVATE));
-				});
-			}, (method, fieldName) -> 
-				method.addBodyCodeRow("this." + fieldName + " = " + fieldName + ";"), (method, fieldName) -> 
-					method.addBodyCodeRow("return this." + fieldName + ";"), null
-			));
+			return new PojoSubTypeRetriever(classFactory, SourceGenerator.createDefault());
 		}
 		
 		public Class<?> getOrBuild(
@@ -417,15 +411,15 @@ public class ClassFactory implements Component {
 			public static int USE_OF_FULLY_QUALIFIED_CLASS_NAMES_ENABLED = 0b00000010;
 			
 			private BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder;
-			private BiConsumer<FunctionSourceGenerator, String> setterMethodsBodyBuilder;
-			private BiConsumer<FunctionSourceGenerator, String> getterMethodsBodyBuilder;
-			private TriConsumer<UnitSourceGenerator, Class<?>, Collection<Class<?>>> extraElementsBuilder;
+			private TriConsumer<FunctionSourceGenerator, Method, Integer> setterMethodsBodyBuilder;
+			private TriConsumer<FunctionSourceGenerator, Method, Integer> getterMethodsBodyBuilder;
+			private QuadConsumer<UnitSourceGenerator, Class<?>, Collection<Class<?>>, Integer> extraElementsBuilder;
 			
 			private SourceGenerator(
 				BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder,
-				BiConsumer<FunctionSourceGenerator, String> setterMethodsBodyBuilder,
-				BiConsumer<FunctionSourceGenerator, String> getterMethodsBodyBuilder,
-				TriConsumer<UnitSourceGenerator, Class<?>, Collection<Class<?>>> extraElementsBuilder
+				TriConsumer<FunctionSourceGenerator, Method, Integer> setterMethodsBodyBuilder,
+				TriConsumer<FunctionSourceGenerator, Method, Integer> getterMethodsBodyBuilder,
+				QuadConsumer<UnitSourceGenerator, Class<?>, Collection<Class<?>>, Integer> extraElementsBuilder
 			) {
 				this.fieldsBuilder = fieldsBuilder;
 				this.setterMethodsBodyBuilder = setterMethodsBodyBuilder;
@@ -434,13 +428,19 @@ public class ClassFactory implements Component {
 			}
 			
 			public static SourceGenerator createDefault() {
-				return new SourceGenerator((fieldsMap, cls) -> {
-					fieldsMap.entrySet().forEach(entry -> {
-						cls.addField(entry.getValue().addModifier(Modifier.PRIVATE));
-					});
-				}, (method, fieldName) -> 
-					method.addBodyCodeRow("this." + fieldName + " = " + fieldName + ";"), (method, fieldName) -> 
-						method.addBodyCodeRow("return this." + fieldName + ";"), null
+				return new SourceGenerator(
+					(fieldsMap, cls) -> {
+						fieldsMap.entrySet().forEach(entry -> {
+							cls.addField(entry.getValue().addModifier(Modifier.PRIVATE));
+						});
+					}, (methodSG, method, options) -> {
+						String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst("set", ""));
+						methodSG.addBodyCodeRow("this." + fieldName + " = " + fieldName + ";");
+					}, (methodSG, method, options) -> {
+						String prefix = method.getName().startsWith("get")? "get" : "is";
+						String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst(prefix, ""));
+						methodSG.addBodyCodeRow("return this." + fieldName + ";");
+					}, null
 				);
 			}
 			
@@ -449,18 +449,19 @@ public class ClassFactory implements Component {
 				return this;
 			}
 
-			public SourceGenerator setSetterMethodsBodyBuilder(BiConsumer<FunctionSourceGenerator, String> setterMethodsBodyBuilder) {
+			public SourceGenerator setSetterMethodsBodyBuilder(TriConsumer<FunctionSourceGenerator, Method, Integer> setterMethodsBodyBuilder) {
 				this.setterMethodsBodyBuilder = setterMethodsBodyBuilder;
 				return this;
 			}
 
-			public SourceGenerator setGetterMethodsBodyBuilder(BiConsumer<FunctionSourceGenerator, String> getterMethodsBodyBuilder) {
+			public SourceGenerator setGetterMethodsBodyBuilder(TriConsumer<FunctionSourceGenerator, Method, Integer> getterMethodsBodyBuilder) {
 				this.getterMethodsBodyBuilder = getterMethodsBodyBuilder;
 				return this;
 			}
 
 			public SourceGenerator setExtraElementsBuilder(
-					TriConsumer<UnitSourceGenerator, Class<?>, Collection<Class<?>>> extraElementsBuilder) {
+				QuadConsumer<UnitSourceGenerator, Class<?>, Collection<Class<?>>, Integer> extraElementsBuilder
+			) {
 				this.extraElementsBuilder = extraElementsBuilder;
 				return this;
 			}
@@ -534,25 +535,25 @@ public class ClassFactory implements Component {
 						if (Modifier.isAbstract(modifiers)) {
 							modifiers ^= Modifier.ABSTRACT;
 						}
-						FunctionSourceGenerator mth = FunctionSourceGenerator.create(method.getName()).addModifier(modifiers);
-						mth.setReturnType(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), method.getReturnType()));
+						FunctionSourceGenerator methodSG = FunctionSourceGenerator.create(method.getName()).addModifier(modifiers);
+						methodSG.setReturnType(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), method.getReturnType()));
 						if (method.getName().startsWith("set")) {
 							String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst("set", ""));
 							Class<?> paramType = method.getParameters()[0].getType();
 							fieldsMap.put(fieldName, VariableSourceGenerator.create(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), paramType), fieldName));
-							mth.addParameter(VariableSourceGenerator.create(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), paramType), fieldName));
+							methodSG.addParameter(VariableSourceGenerator.create(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), paramType), fieldName));
 							if (setterMethodsBodyBuilder != null) {
-								setterMethodsBodyBuilder.accept(mth, fieldName);
+								setterMethodsBodyBuilder.accept(methodSG, method, options);
 							}
 						} else if (method.getName().startsWith("get") || method.getName().startsWith("is")) {
 							String prefix = method.getName().startsWith("get")? "get" : "is";
 							String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst(prefix, ""));
 							fieldsMap.put(fieldName, VariableSourceGenerator.create(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), method.getReturnType()), fieldName));
 							if (getterMethodsBodyBuilder != null) {
-								getterMethodsBodyBuilder.accept(mth, fieldName);
+								getterMethodsBodyBuilder.accept(methodSG, method, options);
 							}
 						}
-						cls.addMethod(mth);
+						cls.addMethod(methodSG);
 					}
 					if (fieldsBuilder != null) {
 						fieldsBuilder.accept(fieldsMap, cls);
@@ -560,16 +561,16 @@ public class ClassFactory implements Component {
 				}
 				UnitSourceGenerator unit = UnitSourceGenerator.create(packageName).addClass(cls);
 				if (extraElementsBuilder != null) {
-					extraElementsBuilder.accept(unit, superClass, interfaces);
+					extraElementsBuilder.accept(unit, superClass, interfaces, options);
 				}
 				return unit;
 			}
 			
-			private boolean isUseFullyQualifiedClassNamesEnabled(int options) {
+			public boolean isUseFullyQualifiedClassNamesEnabled(int options) {
 				return (options & USE_OF_FULLY_QUALIFIED_CLASS_NAMES_ENABLED) != 0;
 			}
 			
-			private boolean isBuildingMethodsCreationEnabled(int options) {
+			public boolean isBuildingMethodsCreationEnabled(int options) {
 				return (options & BUILDING_METHODS_CREATION_ENABLED) != 0;
 			}
 			

@@ -183,7 +183,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		return Optional.ofNullable(functions).map(mths -> "\t" + getOrEmpty(mths, "\n\n").replace("\n", "\n\t")).orElseGet(() -> null);
 	}
 	
-	private String getInnerClassesCode() {
+	String getInnerClassesCode() {
 		String innerClassesAsString = null;
 		if (innerClasses != null) {
 			innerClassesAsString = "\t";
