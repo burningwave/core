@@ -40,6 +40,7 @@ import java.util.function.Predicate;
 
 import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.FileSystemScanner.Scan.Configuration;
+import org.burningwave.core.io.IterableZipContainer.Entry;
 
 @SuppressWarnings({"unchecked"})
 public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
@@ -58,10 +59,10 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	FileScanConfigAbst() {
 		paths = ConcurrentHashMap.newKeySet();
 		maxParallelTasksForUnit = Runtime.getRuntime().availableProcessors();
-		fileCriteriaForFileSystemEntry = FileCriteria.create().name(getFilePredicateForFileSystemEntry());
-		archiveCriteriaForFileSystemEntry = FileCriteria.create().name(getArchivePredicateForFileSystemEntry());
-		fileCriteriaForZipEntry = ZipContainerEntryCriteria.create().name(getFilePredicateForZipEntry());
-		archiveCriteriaForZipEntry = ZipContainerEntryCriteria.create().name(getArchivePredicateForZipEntry());
+		fileCriteriaForFileSystemEntry = FileCriteria.create().allThat(getFilePredicateForFileSystemEntry());
+		archiveCriteriaForFileSystemEntry = FileCriteria.create().allThat(getArchivePredicateForFileSystemEntry());
+		fileCriteriaForZipEntry = ZipContainerEntryCriteria.create().allThat(getFilePredicateForZipEntry());
+		archiveCriteriaForZipEntry = ZipContainerEntryCriteria.create().allThat(getArchivePredicateForZipEntry());
 		recursiveOnDirectoryOfFileSystemEntry = true;
 		recursiveOnArchiveOfZipEntry = true;
 	}
@@ -75,13 +76,13 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		temp.clear();
 	}
 	
-	abstract Predicate<String> getFilePredicateForFileSystemEntry();
+	abstract Predicate<File> getFilePredicateForFileSystemEntry();
 	
-	abstract Predicate<String> getArchivePredicateForFileSystemEntry();
+	abstract Predicate<File> getArchivePredicateForFileSystemEntry();
 	
-	abstract Predicate<String> getFilePredicateForZipEntry();
+	abstract Predicate<Entry> getFilePredicateForZipEntry();
 	
-	abstract Predicate<String> getArchivePredicateForZipEntry();
+	abstract Predicate<Entry> getArchivePredicateForZipEntry();
 	
 
 	public F setPaths(Collection<String> newPaths) {

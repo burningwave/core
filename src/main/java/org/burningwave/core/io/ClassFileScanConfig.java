@@ -28,23 +28,48 @@
  */
 package org.burningwave.core.io;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.burningwave.core.io.IterableZipContainer.Entry;
+
 public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig> {
-	private final static Predicate<String> CLASS_PREDICATE = name ->
-		name.endsWith(".class") && 
-		!name.endsWith("module-info.class") &&
-		!name.endsWith("package-info.class");
-	private final static Predicate<String> ARCHIVE_PREDICATE = name -> 
-		name.endsWith(".jar") ||
-		name.endsWith(".war") ||
-		name.endsWith(".ear") ||
-		name.endsWith(".zip") ||
-		name.endsWith(".jmod");
+	private final static Predicate<File> CLASS_PREDICATE_FOR_FILE_SYSTEM_ENTRY = entry -> {
+		String name = entry.getName();
+		return name.endsWith(".class") && 
+			!name.endsWith("module-info.class") &&
+			!name.endsWith("package-info.class");
+	};
+	
+	private static final Predicate<Entry> CLASS_PREDICATE_FOR_ZIP_ENTRY = entry -> {
+		String name = entry.getName();
+		return name.endsWith(".class") && 
+			!name.endsWith("module-info.class") &&
+			!name.endsWith("package-info.class");
+	};
+	
+	private final static Predicate<File> ARCHIVE_PREDICATE_FOR_FILE_SYSTEM_ENTRY = entry -> {
+		String name = entry.getName();
+		return name.endsWith(".jar") ||
+			name.endsWith(".war") ||
+			name.endsWith(".ear") ||
+			name.endsWith(".zip") ||
+			name.endsWith(".jmod");
+	};
+	
+	private static final Predicate<Entry> ARCHIVE_PREDICATE_FOR_ZIP_ENTRY = entry -> {
+		String name = entry.getName();
+		return name.endsWith(".jar") ||
+			name.endsWith(".war") ||
+			name.endsWith(".ear") ||
+			name.endsWith(".zip") ||
+			name.endsWith(".jmod");
+	};
+	
 
 	private static ClassFileScanConfig create() {
 		return new ClassFileScanConfig();
@@ -65,22 +90,22 @@ public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig>
 		return forPaths(Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
 	}
 	@Override
-	Predicate<String> getFilePredicateForFileSystemEntry() {
-		return CLASS_PREDICATE;
+	Predicate<File> getFilePredicateForFileSystemEntry() {
+		return CLASS_PREDICATE_FOR_FILE_SYSTEM_ENTRY;
 	}
 
 	@Override
-	Predicate<String> getArchivePredicateForFileSystemEntry() {
-		return ARCHIVE_PREDICATE;
+	Predicate<File> getArchivePredicateForFileSystemEntry() {
+		return ARCHIVE_PREDICATE_FOR_FILE_SYSTEM_ENTRY;
 	}
 
 	@Override
-	Predicate<String> getFilePredicateForZipEntry() {
-		return CLASS_PREDICATE;
+	Predicate<Entry> getFilePredicateForZipEntry() {
+		return CLASS_PREDICATE_FOR_ZIP_ENTRY;
 	}
 
 	@Override
-	Predicate<String> getArchivePredicateForZipEntry() {
-		return ARCHIVE_PREDICATE;
+	Predicate<Entry> getArchivePredicateForZipEntry() {
+		return ARCHIVE_PREDICATE_FOR_ZIP_ENTRY;
 	}
 }

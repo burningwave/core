@@ -28,21 +28,38 @@
  */
 package org.burningwave.core.io;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.burningwave.core.io.IterableZipContainer.Entry;
+
 public class FileScanConfig extends FileScanConfigAbst<FileScanConfig> {
-	private final static Predicate<String> ARCHIVE_PREDICATE = name -> 
-		name.endsWith(".jar") ||
-		name.endsWith(".war") ||
-		name.endsWith(".ear") ||
-		name.endsWith(".zip") ||
-		name.endsWith(".jmod");	
-	private final static Predicate<String> FILE_PREDICATE = ARCHIVE_PREDICATE.negate();
-	private final static Predicate<String> FILE_PREDICATE_FOR_ZIP_ENTRY = FILE_PREDICATE.and(name -> !name.endsWith("/"));
+
+	private final static Predicate<File> ARCHIVE_PREDICATE_FOR_FILE_SYSTEM_ENTRY = entry -> {
+		String name = entry.getName();
+		return name.endsWith(".jar") ||
+			name.endsWith(".war") ||
+			name.endsWith(".ear") ||
+			name.endsWith(".zip") ||
+			name.endsWith(".jmod");
+	};
+	
+	private final static Predicate<File> FILE_PREDICATE_FOR_FILE_SYSTEM_ENTRY = ARCHIVE_PREDICATE_FOR_FILE_SYSTEM_ENTRY.negate();
+	
+	private static final Predicate<Entry> ARCHIVE_PREDICATE_FOR_ZIP_ENTRY = entry -> {
+		String name = entry.getName();
+		return name.endsWith(".jar") ||
+			name.endsWith(".war") ||
+			name.endsWith(".ear") ||
+			name.endsWith(".zip") ||
+			name.endsWith(".jmod");
+	};
+	
+	private static final Predicate<Entry> FILE_PREDICATE_FOR_ZIP_ENTRY = ARCHIVE_PREDICATE_FOR_ZIP_ENTRY.negate().and(entry -> !entry.getName().endsWith("/"));
 	
 	private static FileScanConfig create() {
 		return new FileScanConfig();
@@ -63,22 +80,22 @@ public class FileScanConfig extends FileScanConfigAbst<FileScanConfig> {
 		return forPaths(Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
 	}
 	@Override
-	Predicate<String> getFilePredicateForFileSystemEntry() {
-		return FILE_PREDICATE;
+	Predicate<File> getFilePredicateForFileSystemEntry() {
+		return FILE_PREDICATE_FOR_FILE_SYSTEM_ENTRY;
 	}
 
 	@Override
-	Predicate<String> getArchivePredicateForFileSystemEntry() {
-		return ARCHIVE_PREDICATE;
+	Predicate<File> getArchivePredicateForFileSystemEntry() {
+		return ARCHIVE_PREDICATE_FOR_FILE_SYSTEM_ENTRY;
 	}
 
 	@Override
-	Predicate<String> getFilePredicateForZipEntry() {
+	Predicate<Entry> getFilePredicateForZipEntry() {
 		return FILE_PREDICATE_FOR_ZIP_ENTRY;
 	}
 
 	@Override
-	Predicate<String> getArchivePredicateForZipEntry() {
-		return ARCHIVE_PREDICATE;
+	Predicate<Entry> getArchivePredicateForZipEntry() {
+		return ARCHIVE_PREDICATE_FOR_ZIP_ENTRY;
 	}
 }
