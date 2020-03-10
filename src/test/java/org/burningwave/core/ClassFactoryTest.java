@@ -60,7 +60,8 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		testNotNull(() -> {
 			java.lang.Class<?> reloadedCls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
-				getComponentSupplier().getMemoryClassLoader(), cls.getPackage().getName() + ".ExtendedPojoImpl", PojoSubTypeRetriever.SourceGenerator.BUILDING_METHODS_CREATION_ENABLED, cls
+				getComponentSupplier().getMemoryClassLoader(), cls.getPackage().getName() + ".ExtendedPojoImpl",
+				PojoSubTypeRetriever.SourceGenerator.BUILDING_METHODS_CREATION_ENABLED, cls
 			);
 			java.lang.reflect.Method createMethod = Classes.getDeclaredMethods(reloadedCls, method -> 
 				method.getName().equals("create") &&
@@ -74,23 +75,26 @@ public class ClassFactoryTest extends BaseTest {
 	public void getOrBuildClassTestOne() throws ClassNotFoundException {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 
-		testNotNull(() -> componentSupplier.getClassFactory().getOrBuild(
-			getComponentSupplier().getMemoryClassLoader(),
-			"tryyy.ReTry", () -> 
-				UnitSourceGenerator.create("tryyy").addClass(
-					ClassSourceGenerator.create(
-						TypeDeclarationSourceGenerator.create("ReTry")
-					).addModifier(
-						Modifier.PUBLIC
-					).addInnerClass(
-						ClassSourceGenerator.create(
-							TypeDeclarationSourceGenerator.create("ReReTry")
-						).addModifier(
-							Modifier.PUBLIC | Modifier.STATIC
-						)
-					)
+		testNotNull(() -> {
+			ClassSourceGenerator ClassSG = ClassSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("ReTry")
+			).addModifier(
+				Modifier.PUBLIC
+			).addInnerClass(
+				ClassSourceGenerator.create(
+					TypeDeclarationSourceGenerator.create("ReReTry")
+				).addModifier(
+					Modifier.PUBLIC | Modifier.STATIC
 				)
-		));
+			);
+			UnitSourceGenerator unitSG = UnitSourceGenerator.create("tryyy").addClass(
+				ClassSG
+			);
+			return componentSupplier.getClassFactory().getOrBuild(
+				getComponentSupplier().getMemoryClassLoader(),
+				"tryyy.ReTry", () -> unitSG
+			);
+		});
 		testNotNull(() -> 
 			componentSupplier.getMemoryClassLoader().loadClass("tryyy.ReTry$ReReTry")
 		);

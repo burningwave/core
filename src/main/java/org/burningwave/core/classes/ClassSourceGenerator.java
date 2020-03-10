@@ -30,7 +30,6 @@ package org.burningwave.core.classes;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -103,7 +102,9 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		}
 		this.concretizedTypes = Optional.ofNullable(this.concretizedTypes).orElseGet(ArrayList::new);
 		for (Class<?> cls : concretizedTypes) {
-			this.concretizedTypes.add(TypeDeclarationSourceGenerator.create(cls));
+			if (!isAlreadyAdded(cls.getName())) {
+				this.concretizedTypes.add(TypeDeclarationSourceGenerator.create(cls));
+			}
 		}
 		return this;	
 	}
@@ -115,8 +116,23 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 			concretize = "implements";
 		}
 		this.concretizedTypes = Optional.ofNullable(this.concretizedTypes).orElseGet(ArrayList::new);
-		this.concretizedTypes.addAll(Arrays.asList(concretizedTypes));
+		for (TypeDeclarationSourceGenerator typeDeclarationSG : concretizedTypes) {
+			if (!isAlreadyAdded(typeDeclarationSG.getName())) {
+				this.concretizedTypes.add(typeDeclarationSG);
+			}
+		}
 		return this;		
+	}
+	
+	boolean isAlreadyAdded(String className) {
+		boolean isAlreadyAdded = false;
+		for (TypeDeclarationSourceGenerator typeDeclarationSG : this.concretizedTypes) {
+			if ((typeDeclarationSG.getName() != null && typeDeclarationSG.getName().equals(className))) {
+				isAlreadyAdded = true;
+				break;
+			}
+		}
+		return isAlreadyAdded;
 	}
 	
 	public ClassSourceGenerator addOuterCodeRow(String code) {
