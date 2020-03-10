@@ -100,7 +100,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		return types;
 	}
 	
-	public Map<String, ClassSourceGenerator> getAllClasses() {
+	Map<String, ClassSourceGenerator> getAllClasses() {
 		Map<String, ClassSourceGenerator> allClasses = new HashMap<>();
 		Optional.ofNullable(classes).ifPresent(classes -> {
 			classes.forEach(cls -> {
@@ -113,7 +113,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		return allClasses;
 	}
 	
-	public ClassSourceGenerator getClass(String className) {
+	ClassSourceGenerator getClass(String className) {
 		return getAllClasses().get(className);
 	}
 	

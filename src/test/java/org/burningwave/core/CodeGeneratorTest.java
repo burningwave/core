@@ -88,7 +88,6 @@ public class CodeGeneratorTest extends BaseTest {
 			unit.addClass(cls);
 			unit.addClass(cls);
 			logDebug(unit.make());
-			unit.getAllClasses().keySet().forEach(this::logDebug);
 		});
 	}
 }

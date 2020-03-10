@@ -85,7 +85,7 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
-	public TypeDeclarationSourceGenerator getReturnType() {
+	TypeDeclarationSourceGenerator getReturnType() {
 		return returnType;
 	}	
 	
@@ -109,7 +109,7 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
-	public Collection<VariableSourceGenerator> getParameters() {
+	Collection<VariableSourceGenerator> getParameters() {
 		return this.parameters;
 	}
 	
