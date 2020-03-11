@@ -168,6 +168,7 @@
 				<configuration>
 					<excludes>
 						<exclude>jdk/</exclude>
+						<exclude>META-INF/maven/</exclude>
 					</excludes>
 					<archive>
 						<addMavenDescriptor>false</addMavenDescriptor>
