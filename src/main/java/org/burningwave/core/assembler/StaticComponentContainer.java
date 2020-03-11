@@ -6,11 +6,6 @@ import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
 
-import org.burningwave.core.ManagedLogger.Repository;
-import org.burningwave.core.SLF4JManagedLoggerRepository;
-import org.burningwave.core.SimpleManagedLoggerRepository;
-import org.burningwave.core.iterable.Properties;
-
 public class StaticComponentContainer {
 	
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
@@ -63,18 +58,21 @@ public class StaticComponentContainer {
 		}
 	}
 	
-	private static org.burningwave.core.ManagedLogger.Repository createManagedLoggersRepository(Properties properties) {
+	private static org.burningwave.core.ManagedLogger.Repository createManagedLoggersRepository(
+		org.burningwave.core.iterable.Properties properties
+	) {
 		try {
-			String className = (String)GlobalProperties.getProperty(Repository.TYPE_CONFIG_KEY);
+			String className = (String)GlobalProperties.getProperty(org.burningwave.core.ManagedLogger.Repository.TYPE_CONFIG_KEY);
 			if (className == null || "autodetect".equalsIgnoreCase(className = className.trim())) {
 				try {
 					Class.forName("org.slf4j.Logger");
-					return new SLF4JManagedLoggerRepository(properties);
+					return new org.burningwave.core.SLF4JManagedLoggerRepository(properties);
 				} catch (Throwable exc2) {
-					return new SimpleManagedLoggerRepository(properties);
+					return new org.burningwave.core.SimpleManagedLoggerRepository(properties);
 				}
 			} else {
-				return (Repository)Class.forName(className).getConstructor(java.util.Properties.class).newInstance(properties);
+				return (org.burningwave.core.ManagedLogger.Repository)
+					Class.forName(className).getConstructor(java.util.Properties.class).newInstance(properties);
 			}
 			
 		} catch (Throwable exc) {
@@ -84,7 +82,7 @@ public class StaticComponentContainer {
 	}
 	
 	private static Map.Entry<org.burningwave.core.iterable.Properties, URL> loadFirstOneFound(String... fileNames) {
-		org.burningwave.core.iterable.Properties properties = new Properties();
+		org.burningwave.core.iterable.Properties properties = new org.burningwave.core.iterable.Properties();
 		Map.Entry<org.burningwave.core.iterable.Properties, URL> propertiesBag = new AbstractMap.SimpleEntry<>(properties, null);
 		for (String fileName : fileNames) {
 			ClassLoader classLoader = Optional.ofNullable(StaticComponentContainer.class.getClassLoader()).orElseGet(() ->
