@@ -37,8 +37,12 @@ abstract class LowLevelObjectsHandlerInitializer implements Component {
 	
 	void init() {
 		CavyForRetrievingElementsOfClassLoaderClass cavy = new CavyForRetrievingElementsOfClassLoaderClass();
-		initLoadedClassesVectorMemoryOffset(cavy);
-		initLoadedPackageMapOffset(cavy);
+		iterateClassLoaderFields(
+			cavy, getLoadedClassesVectorMemoryOffsetInitializator(cavy.clsForTest)
+		);
+		iterateClassLoaderFields(
+			cavy, getLoadedPackageMapMemoryOffsetInitializator(cavy.packageForTest)
+		);
 		initEmptyMembersArrays();
 		initMembersRetrievers();
 		initSpecificElements();
@@ -86,20 +90,6 @@ abstract class LowLevelObjectsHandlerInitializer implements Component {
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
-	}
-	
-	private void initLoadedClassesVectorMemoryOffset(CavyForRetrievingElementsOfClassLoaderClass cavy) {
-		iterateClassLoaderFields(
-			cavy, 
-			getLoadedClassesVectorMemoryOffsetInitializator(cavy.clsForTest)
-		);
-	}
-	
-	private void initLoadedPackageMapOffset(CavyForRetrievingElementsOfClassLoaderClass cavy) {
-		iterateClassLoaderFields(
-			cavy, 
-			getLoadedPackageMapMemoryOffsetInitializator(cavy.packageForTest)
-		);
 	}
 	
 	private BiPredicate<Object, Long> getLoadedClassesVectorMemoryOffsetInitializator(Class<?> definedClass) {
