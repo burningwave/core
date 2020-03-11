@@ -82,7 +82,7 @@ public class LowLevelObjectsHandler implements Component {
 	Long loadedClassesVectorMemoryOffset;	
 
 	private LowLevelObjectsHandler() {
-		LowLevelObjectsHandlerSpecificElementsInitializer.build(this);
+		LowLevelObjectsHandlerInitializer.build(this);
 	}
 	
 	public static LowLevelObjectsHandler create() {

@@ -32,6 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
+
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -48,7 +49,7 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.IterableZipContainer;
 import org.burningwave.core.iterable.Properties;
 
-public class Cache {
+public class Cache implements Component {
 	private static final String TYPE_CONFIG_KEY = "cache.type";
 	
 	public final PathForResources<ByteBuffer> pathForContents;
@@ -64,6 +65,7 @@ public class Cache {
 	
 	private Cache(Properties properties) {
 		if ("async".equalsIgnoreCase((String)properties.getProperty(TYPE_CONFIG_KEY))) {
+			logInfo("Building async cache");
 			pathForContents = new AsyncPathForResources<>(1L, Streams::shareContent);
 			pathForFileSystemItems = new AsyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
 			pathForZipFiles = new AsyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);
@@ -75,6 +77,7 @@ public class Cache {
 			uniqueKeyForMethods = new AsyncPathForResources<>(1L, methods -> methods);
 			uniqueKeyForMethodHandle = new AsyncObjectForObject<>();
 		} else {
+			logInfo("Building sync cache");
 			pathForContents = new SyncPathForResources<>(1L, Streams::shareContent);
 			pathForFileSystemItems = new SyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
 			pathForZipFiles = new SyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);
@@ -92,7 +95,7 @@ public class Cache {
 		return new Cache(properties);
 	}
 	
-	public static interface ObjectForObject<T, R> {
+	public static interface ObjectForObject<T, R> extends Component {
 		
 		public R getOrUploadIfAbsent(T object, Supplier<R> resourceSupplier);
 		
@@ -149,7 +152,7 @@ public class Cache {
 		}
 	}
 	
-	public static interface ObjectAndPathForResources<T, R> {
+	public static interface ObjectAndPathForResources<T, R> extends Component  {
 		
 		public R getOrUploadIfAbsent(T object, String path, Supplier<R> resourceSupplier);
 
@@ -216,7 +219,7 @@ public class Cache {
 		
 	}
 	
-	public static interface PathForResources<R> {
+	public static interface PathForResources<R> extends Component  {
 
 		R upload(String path, Supplier<R> resourceSupplier);
 

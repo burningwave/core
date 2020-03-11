@@ -8,9 +8,9 @@ import java.lang.reflect.Method;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
-class LowLevelObjectsHandlerSpecificElementsInitializer4Java8 extends LowLevelObjectsHandlerSpecificElementsInitializer{
+class LowLevelObjectsHandlerInitializer4Java8 extends LowLevelObjectsHandlerInitializer{
 
-	LowLevelObjectsHandlerSpecificElementsInitializer4Java8(LowLevelObjectsHandler lowLevelObjectsHandler) {
+	LowLevelObjectsHandlerInitializer4Java8(LowLevelObjectsHandler lowLevelObjectsHandler) {
 		super(lowLevelObjectsHandler);
 		Field modes;
 		try {

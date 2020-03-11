@@ -18,9 +18,9 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import org.burningwave.core.io.ByteBufferOutputStream;
 
 @SuppressWarnings("restriction")
-class LowLevelObjectsHandlerSpecificElementsInitializer4Java9 extends LowLevelObjectsHandlerSpecificElementsInitializer {
+class LowLevelObjectsHandlerInitializer4Java9 extends LowLevelObjectsHandlerInitializer {
 	
-	LowLevelObjectsHandlerSpecificElementsInitializer4Java9(LowLevelObjectsHandler lowLevelObjectsHandler) {
+	LowLevelObjectsHandlerInitializer4Java9(LowLevelObjectsHandler lowLevelObjectsHandler) {
 		super(lowLevelObjectsHandler);
 		try {
 	        Class<?> cls = Class.forName("jdk.internal.module.IllegalAccessLogger");

@@ -1,6 +1,9 @@
 package org.burningwave.core.assembler;
 
 import java.io.InputStream;
+import java.net.URL;
+import java.util.AbstractMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.burningwave.core.ManagedLogger.Repository;
@@ -29,8 +32,16 @@ public class StaticComponentContainer {
 	
 	static {
 		Throwables = org.burningwave.core.Throwables.create();
-		GlobalProperties = loadFirstOneFound("burningwave.static.properties", "burningwave.static.default.properties");
+		Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
+			loadFirstOneFound("burningwave.static.properties", "burningwave.static.default.properties");
+		GlobalProperties = propBag.getKey();
 		ManagedLoggersRepository = createManagedLoggersRepository(GlobalProperties);
+		URL globalPropertiesFileUrl = propBag.getValue();
+		if (globalPropertiesFileUrl != null) {
+			ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Building static components by using " + globalPropertiesFileUrl);
+		} else {
+			ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Building static components by using configuration");
+		}
 		try {			
 			Strings = org.burningwave.core.Strings.create();
 			Paths = org.burningwave.core.Strings.Paths.create();
@@ -67,15 +78,19 @@ public class StaticComponentContainer {
 		return repository;
 	}
 	
-	private static org.burningwave.core.iterable.Properties loadFirstOneFound(String... fileNames) {
+	private static Map.Entry<org.burningwave.core.iterable.Properties, URL> loadFirstOneFound(String... fileNames) {
 		org.burningwave.core.iterable.Properties properties = new Properties();
+		Map.Entry<org.burningwave.core.iterable.Properties, URL> propertiesBag = new AbstractMap.SimpleEntry<>(properties, null);
 		for (String fileName : fileNames) {
-			InputStream propertiesFileIS = Optional.ofNullable(StaticComponentContainer.class.getClassLoader()).orElseGet(() ->
+			ClassLoader classLoader = Optional.ofNullable(StaticComponentContainer.class.getClassLoader()).orElseGet(() ->
 				ClassLoader.getSystemClassLoader()
-			).getResourceAsStream(fileName);
+			);
+			InputStream propertiesFileIS = classLoader.getResourceAsStream(fileName);
 			if (propertiesFileIS != null) {				
 				try {
 					properties.load(propertiesFileIS);
+					URL configFileURL = classLoader.getResource(fileName);
+					propertiesBag.setValue(configFileURL);
 					break;
 				} catch (Throwable exc) {
 					exc.printStackTrace();
@@ -83,7 +98,7 @@ public class StaticComponentContainer {
 				}
 			}
 		}
-		return properties;
+		return propertiesBag;
 	}
 	
 }

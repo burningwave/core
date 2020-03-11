@@ -21,10 +21,10 @@ import org.burningwave.core.Component;
 import sun.misc.Unsafe;
 
 @SuppressWarnings("restriction")
-abstract class LowLevelObjectsHandlerSpecificElementsInitializer implements Component {
+abstract class LowLevelObjectsHandlerInitializer implements Component {
 	LowLevelObjectsHandler lowLevelObjectsHandler;
 	
-	LowLevelObjectsHandlerSpecificElementsInitializer(LowLevelObjectsHandler lowLevelObjectsHandler) {
+	LowLevelObjectsHandlerInitializer(LowLevelObjectsHandler lowLevelObjectsHandler) {
 		this.lowLevelObjectsHandler = lowLevelObjectsHandler;
 		try {
 			Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
@@ -53,10 +53,10 @@ abstract class LowLevelObjectsHandlerSpecificElementsInitializer implements Comp
 	}
 	
 	public static void build(LowLevelObjectsHandler lowLevelObjectsHandler) {
-		try (LowLevelObjectsHandlerSpecificElementsInitializer initializer =
+		try (LowLevelObjectsHandlerInitializer initializer =
 				JVMInfo.getVersion() > 8 ?
-				new LowLevelObjectsHandlerSpecificElementsInitializer4Java9(lowLevelObjectsHandler):
-				new LowLevelObjectsHandlerSpecificElementsInitializer4Java8(lowLevelObjectsHandler)) {
+				new LowLevelObjectsHandlerInitializer4Java9(lowLevelObjectsHandler):
+				new LowLevelObjectsHandlerInitializer4Java8(lowLevelObjectsHandler)) {
 			initializer.init();
 		}
 	}
