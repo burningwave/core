@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Vector;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 
 import org.burningwave.core.Component;
@@ -34,12 +33,12 @@ abstract class LowLevelObjectsHandlerInitializer implements Component {
 			logInfo("Exception while retrieving unsafe");
 			throw Throwables.toRuntimeException(exc);
 		}
-	}
-	
+	}	
 	
 	void init() {
-		initLoadedClassesVectorMemoryOffset();
-		initLoadedPackageMapOffset();
+		CavyForRetrievingElementsOfClassLoaderClass cavy = new CavyForRetrievingElementsOfClassLoaderClass();
+		initLoadedClassesVectorMemoryOffset(cavy);
+		initLoadedPackageMapOffset(cavy);
 		initEmptyMembersArrays();
 		initMembersRetrievers();
 		initSpecificElements();
@@ -89,48 +88,17 @@ abstract class LowLevelObjectsHandlerInitializer implements Component {
 		}
 	}
 	
-	private void initLoadedClassesVectorMemoryOffset() {
-		AtomicReference<Class<?>> definedClass = new AtomicReference<>();
-		ClassLoader temporaryClassLoader = new ClassLoader() {
-			@Override
-			public String toString() {
-				definedClass.set(
-					super.defineClass(
-						EmptyClass.class.getName(),
-						Streams.toByteBuffer(
-							Optional.ofNullable(
-								this.getClass().getClassLoader()
-							).orElseGet(() -> ClassLoader.getSystemClassLoader()).getResourceAsStream(
-								EmptyClass.class.getName().replace(".", "/")+ ".class"
-							)
-						),	
-						null
-					)
-				);
-				return "lowlevelobjectshandler.initializator";
-			}							
-		};
-		temporaryClassLoader.toString();
+	private void initLoadedClassesVectorMemoryOffset(CavyForRetrievingElementsOfClassLoaderClass cavy) {
 		iterateClassLoaderFields(
-			temporaryClassLoader, 
-			getLoadedClassesVectorMemoryOffsetInitializator(definedClass.get())
+			cavy, 
+			getLoadedClassesVectorMemoryOffsetInitializator(cavy.clsForTest)
 		);
 	}
 	
-	private void initLoadedPackageMapOffset() {
-		AtomicReference<Object> definedPackage = new AtomicReference<>();
-		ClassLoader temporaryClassLoader = new ClassLoader() {
-			@Override
-			public String toString() {
-				definedPackage.set(super.definePackage("lowlevelobjectshandler.loadedpackagemapoffset.initializator.packagefortesting", 
-					null, null, null, null, null, null, null));
-				return "lowlevelobjectshandler.initializator";
-			}							
-		};
-		temporaryClassLoader.toString();
+	private void initLoadedPackageMapOffset(CavyForRetrievingElementsOfClassLoaderClass cavy) {
 		iterateClassLoaderFields(
-			temporaryClassLoader, 
-			getLoadedPackageMapMemoryOffsetInitializator(definedPackage.get())
+			cavy, 
+			getLoadedPackageMapMemoryOffsetInitializator(cavy.packageForTest)
 		);
 	}
 	
@@ -178,7 +146,7 @@ abstract class LowLevelObjectsHandlerInitializer implements Component {
 		}
 		logInfo("Iterating by unsafe fields of classLoader {}", classLoader.getClass().getName());
 		while (true) {
-			logInfo("Evaluating offset {}", offset);
+			logInfo("Evaluating offset {} of ", offset, classLoader);
 			Object object = lowLevelObjectsHandler.unsafe.getObject(classLoader, offset);
 			//logDebug(offset + " " + object);
 			if (predicate.test(object, offset)) {
@@ -194,8 +162,28 @@ abstract class LowLevelObjectsHandlerInitializer implements Component {
 	public void close() {
 		this.lowLevelObjectsHandler = null;
 	}
-}
-
-class EmptyClass {
 	
+	private static class CavyForRetrievingElementsOfClassLoaderClass extends ClassLoader {
+		Class<?> clsForTest;
+		Object packageForTest;
+		
+		CavyForRetrievingElementsOfClassLoaderClass() {
+			clsForTest = super.defineClass(
+				CavyForRetrievingElementsOfClassLoaderClass.class.getName(),
+				Streams.toByteBuffer(
+					Optional.ofNullable(
+						this.getClass().getClassLoader()
+					).orElseGet(() -> ClassLoader.getSystemClassLoader()).getResourceAsStream(
+						CavyForRetrievingElementsOfClassLoaderClass.class.getName().replace(".", "/") + ".class"
+					)
+				),	
+				null
+			);
+			packageForTest = super.definePackage(
+				"lowlevelobjectshandler.loadedpackagemapoffset.initializator.packagefortesting", 
+				null, null, null, null, null, null, null
+			);
+		}
+		
+	}
 }
