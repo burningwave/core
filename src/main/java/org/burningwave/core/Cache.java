@@ -63,18 +63,7 @@ public class Cache {
 	public final ObjectForObject<Method, MethodHandle> uniqueKeyForMethodHandle;
 	
 	private Cache(Properties properties) {
-		if ("sync".equalsIgnoreCase((String)properties.getProperty(TYPE_CONFIG_KEY))) {
-			pathForContents = new SyncPathForResources<>(1L, Streams::shareContent);
-			pathForFileSystemItems = new SyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
-			pathForZipFiles = new SyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);
-			classLoaderForFields = new SyncObjectAndPathForResources<>(1L, fields -> fields);
-			classLoaderForMethods = new SyncObjectAndPathForResources<>(1L, methods -> methods);
-			classLoaderForConstructors = new SyncObjectAndPathForResources<>(1L, constructors -> constructors);
-			bindedFunctionalInterfaces = new SyncObjectForObject<>();
-			uniqueKeyForField = new SyncPathForResources<>(1L, field -> field);
-			uniqueKeyForMethods = new SyncPathForResources<>(1L, methods -> methods);
-			uniqueKeyForMethodHandle = new SyncObjectForObject<>();
-		} else {
+		if ("async".equalsIgnoreCase((String)properties.getProperty(TYPE_CONFIG_KEY))) {
 			pathForContents = new AsyncPathForResources<>(1L, Streams::shareContent);
 			pathForFileSystemItems = new AsyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
 			pathForZipFiles = new AsyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);
@@ -85,6 +74,17 @@ public class Cache {
 			uniqueKeyForField = new AsyncPathForResources<>(1L, fields -> fields);
 			uniqueKeyForMethods = new AsyncPathForResources<>(1L, methods -> methods);
 			uniqueKeyForMethodHandle = new AsyncObjectForObject<>();
+		} else {
+			pathForContents = new SyncPathForResources<>(1L, Streams::shareContent);
+			pathForFileSystemItems = new SyncPathForResources<>(1L, fileSystemItem -> fileSystemItem);
+			pathForZipFiles = new SyncPathForResources<>(1L, zipFileContainer -> zipFileContainer);
+			classLoaderForFields = new SyncObjectAndPathForResources<>(1L, fields -> fields);
+			classLoaderForMethods = new SyncObjectAndPathForResources<>(1L, methods -> methods);
+			classLoaderForConstructors = new SyncObjectAndPathForResources<>(1L, constructors -> constructors);
+			bindedFunctionalInterfaces = new SyncObjectForObject<>();
+			uniqueKeyForField = new SyncPathForResources<>(1L, field -> field);
+			uniqueKeyForMethods = new SyncPathForResources<>(1L, methods -> methods);
+			uniqueKeyForMethodHandle = new SyncObjectForObject<>();
 		}	
 	}
 	
