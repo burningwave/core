@@ -74,7 +74,7 @@ public class StaticComponentContainer {
 					return new SimpleManagedLoggerRepository(properties);
 				}
 			} else {
-				return (Repository)Class.forName(className).getConstructor(Properties.class).newInstance(properties);
+				return (Repository)Class.forName(className).getConstructor(java.util.Properties.class).newInstance(properties);
 			}
 			
 		} catch (Throwable exc) {
