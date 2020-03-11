@@ -28,8 +28,6 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -180,20 +178,17 @@ public class Strings implements Component {
 		private Paths() {
 			if (System.getProperty("os.name").toLowerCase().contains("windows")) {
 				pathCleaner = (path) -> {
-					path = Strings.strip(path, " ");
 					path = path.replace("\\", "/");
-					// ON LINUX UNIX FIRST SLASH CHARACTER MUST NOT BE REMOVED.
 					if (path.startsWith("/")) {
 						path = path.substring(1);
 					}
-					// ... AND FINAL TOO
 					if (path.endsWith("/")) {
 						path = path.substring(0, path.length() - 1);
 					}	
 					return path.replaceAll("\\/{2,}", "/");
 				};
 			} else {
-				pathCleaner = (path) -> Strings.strip(path, " ").replace("\\", "/").replaceAll("\\/{2,}", "/");
+				pathCleaner = (path) -> path.replace("\\", "/").replaceAll("\\/{2,}", "/");
 			}
 		}
 		
