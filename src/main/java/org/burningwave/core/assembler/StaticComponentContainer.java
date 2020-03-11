@@ -42,6 +42,7 @@ public class StaticComponentContainer {
 		} else {
 			ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Building static components by using configuration");
 		}
+		ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Instantiated {}", ManagedLoggersRepository.getClass().getName());
 		try {			
 			Strings = org.burningwave.core.Strings.create();
 			Paths = org.burningwave.core.Strings.Paths.create();
@@ -63,19 +64,23 @@ public class StaticComponentContainer {
 	}
 	
 	private static org.burningwave.core.ManagedLogger.Repository createManagedLoggersRepository(Properties properties) {
-		org.burningwave.core.ManagedLogger.Repository repository = null;
 		try {
 			String className = (String)GlobalProperties.getProperty(Repository.TYPE_CONFIG_KEY);
-			repository = (Repository)Class.forName(className).getConstructor(Properties.class).newInstance(properties);
-		} catch (Throwable exc) {
-			try {
-				Class.forName("org.slf4j.Logger");
-				repository = new SLF4JManagedLoggerRepository(properties);
-			} catch (Throwable exc2) {
-				repository = new SimpleManagedLoggerRepository(properties);
+			if (className == null || "autodetect".equalsIgnoreCase(className = className.trim())) {
+				try {
+					Class.forName("org.slf4j.Logger");
+					return new SLF4JManagedLoggerRepository(properties);
+				} catch (Throwable exc2) {
+					return new SimpleManagedLoggerRepository(properties);
+				}
+			} else {
+				return (Repository)Class.forName(className).getConstructor(Properties.class).newInstance(properties);
 			}
+			
+		} catch (Throwable exc) {
+			exc.printStackTrace();
+			throw Throwables.toRuntimeException(exc);
 		}
-		return repository;
 	}
 	
 	private static Map.Entry<org.burningwave.core.iterable.Properties, URL> loadFirstOneFound(String... fileNames) {

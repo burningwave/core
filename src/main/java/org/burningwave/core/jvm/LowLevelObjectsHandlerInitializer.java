@@ -178,7 +178,7 @@ abstract class LowLevelObjectsHandlerInitializer implements Component {
 		}
 		logInfo("Iterating by unsafe fields of classLoader {}", classLoader.getClass().getName());
 		while (true) {
-			logInfo("Processing offset {}", offset);
+			logInfo("Evaluating offset {}", offset);
 			Object object = lowLevelObjectsHandler.unsafe.getObject(classLoader, offset);
 			//logDebug(offset + " " + object);
 			if (predicate.test(object, offset)) {
