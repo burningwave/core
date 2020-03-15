@@ -170,7 +170,7 @@ abstract class LowLevelObjectsHandlerInitializer implements Component {
 				null
 			);
 			packageForTest = super.definePackage(
-				"lowlevelobjectshandler.loadedpackagemapoffset.initializator.packagefortesting", 
+				"lowlevelobjectshandler.cavyforretrievingelementsofclassloaderclass", 
 				null, null, null, null, null, null, null
 			);
 		}

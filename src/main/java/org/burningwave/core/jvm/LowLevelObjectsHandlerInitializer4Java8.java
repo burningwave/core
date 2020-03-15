@@ -46,7 +46,4 @@ class LowLevelObjectsHandlerInitializer4Java8 extends LowLevelObjectsHandlerInit
 			throw Throwables.toRuntimeException(exc2);
 		}		
 	}
-	
-	
-	
 }

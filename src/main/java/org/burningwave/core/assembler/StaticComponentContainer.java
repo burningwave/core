@@ -47,7 +47,7 @@ public class StaticComponentContainer {
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
 			LowLevelObjectsHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.create();
 			Classes = org.burningwave.core.classes.Classes.create();
-			Cache = org.burningwave.core.Cache.create(GlobalProperties);
+			Cache = org.burningwave.core.Cache.create();
 			MemberFinder = org.burningwave.core.classes.MemberFinder.create();
 			ConstructorHelper = org.burningwave.core.reflection.ConstructorHelper.create();
 			FieldHelper = org.burningwave.core.reflection.FieldHelper.create();
