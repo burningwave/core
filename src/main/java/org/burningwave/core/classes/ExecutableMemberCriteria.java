@@ -65,6 +65,9 @@ public abstract class ExecutableMemberCriteria<
 				this.predicate = concat(
 					this.predicate,
 					(context, member) -> {
+						if (member.getName().equals("execute")) {
+							logDebug("Entered");
+						}
 						Class<?>[] memberParameters = member.getParameterTypes();
 						if (argumentsClassesAsList.size() == memberParameters.length) {							
 							TriPredicate<List<Class<?>>, Class<?>[], Integer> predicate = (argClasses, paramTypes, innerIdx) -> 

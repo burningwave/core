@@ -50,6 +50,7 @@ import java.util.regex.Pattern;
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassFactory;
+import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.StatementSourceGenerator;
 import org.burningwave.core.function.ThrowingBiFunction;
@@ -297,7 +298,7 @@ public abstract class PropertyAccessor implements Component {
 			"return (T)" + supplierCode + ";"
 		);
 		return getClassFactory().execute(
-			this.getClass().getClassLoader(), statement, params
+			CodeExecutor.class.getClassLoader(), statement, params
 		);
 	}
 	

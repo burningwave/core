@@ -250,36 +250,43 @@ public class ClassFactory implements Component {
 	}
 	
 	public <T> T execute(
-			ClassLoader classLoaderParentOfOneShotClassLoader,
-			StatementSourceGenerator statement,
-			Object... parameters
-		) {	
-			return ThrowingSupplier.get(() -> {
-				try (MemoryClassLoader memoryClassLoader = 
-					MemoryClassLoader.create(
-						classLoaderParentOfOneShotClassLoader,
-						classesLoaders
-					)
-				) {
-					String packageName = CodeExecutor.class.getPackage().getName();
-					Class<?> executableClass = getOrBuildCodeExecutorSubType(
-						memoryClassLoader, packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""), statement
-					);
-					CodeExecutor executor = (CodeExecutor)ConstructorHelper.newInstanceOf(executableClass);
-					ComponentSupplier componentSupplier = null;
-					if (parameters != null && parameters.length > 0) {
-						for (Object param : parameters) {
-							if (param instanceof ComponentSupplier) {
-								componentSupplier = (ComponentSupplier) param;
-								break;
-							}
+		StatementSourceGenerator statement,
+		Object... parameters
+	) {
+		return execute(getDefaultClassLoader(), statement, parameters);
+	}
+	
+	public <T> T execute(
+		ClassLoader classLoaderParentOfOneShotClassLoader,
+		StatementSourceGenerator statement,
+		Object... parameters
+	) {	
+		return ThrowingSupplier.get(() -> {
+			try (MemoryClassLoader memoryClassLoader = 
+				MemoryClassLoader.create(
+					classLoaderParentOfOneShotClassLoader,
+					classesLoaders
+				)
+			) {
+				String packageName = CodeExecutor.class.getPackage().getName();
+				Class<?> executableClass = getOrBuildCodeExecutorSubType(
+					memoryClassLoader, packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""), statement
+				);
+				CodeExecutor executor = (CodeExecutor)ConstructorHelper.newInstanceOf(executableClass);
+				ComponentSupplier componentSupplier = null;
+				if (parameters != null && parameters.length > 0) {
+					for (Object param : parameters) {
+						if (param instanceof ComponentSupplier) {
+							componentSupplier = (ComponentSupplier) param;
+							break;
 						}
 					}
-					T retrievedElement = executor.execute(componentSupplier, parameters);
-					return retrievedElement;
 				}
-			});
-		}
+				T retrievedElement = executor.execute(componentSupplier, parameters);
+				return retrievedElement;
+			}
+		});
+	}
 	
 	public static class PojoSubTypeRetriever {
 		private ClassFactory classFactory;

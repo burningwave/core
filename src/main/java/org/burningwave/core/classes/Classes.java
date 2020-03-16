@@ -586,8 +586,8 @@ public class Classes implements Component {
 			}
 		}
 		
-		public Class<?> loadOrUploadClass(
-			Class<?> toLoad, 
+		public <T> Class<T> loadOrUploadClass(
+			Class<T> toLoad, 
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
 			return loadOrUploadClass(
@@ -597,7 +597,7 @@ public class Classes implements Component {
 			);
 		}
 		
-		public Class<?> loadOrUploadClass(
+		public <T> Class<T> loadOrUploadClass(
 			JavaClass javaClass,
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
@@ -625,7 +625,8 @@ public class Classes implements Component {
 			}			
 		}
 		
-		public Class<?> loadOrUploadClass(
+		@SuppressWarnings("unchecked")
+		public <T> Class<T> loadOrUploadClass(
 			String className,
 			Map<String, ByteBuffer> byteCodes,
 			ClassLoader classLoader
@@ -644,11 +645,11 @@ public class Classes implements Component {
 						clazz.getKey(), clazz.getValue()
 					);
 				}
-				return classLoader.loadClass(className);
+				return (Class<T>) classLoader.loadClass(className);
 			}
 		}
 		
-		public Class<?> loadOrUploadClass(
+		public <T> Class<T> loadOrUploadClass(
 			ByteBuffer byteCode,
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
@@ -659,19 +660,20 @@ public class Classes implements Component {
 			);
 		}
 		
-		private Class<?> loadOrUploadClass(
+		@SuppressWarnings("unchecked")
+		private <T> Class<T> loadOrUploadClass(
 			JavaClass javaClass, 
 			ClassLoader classLoader, 
 			MethodHandle defineClassMethod, 
 			MethodHandle definePackageMethod
 		) throws ClassNotFoundException {
 	    	try {
-	    		return classLoader.loadClass(javaClass.getName());
+	    		return (Class<T>) classLoader.loadClass(javaClass.getName());
 	    	} catch (ClassNotFoundException | NoClassDefFoundError outerEx) {
 	    		try {
 	    			Class<?> cls = defineClass(classLoader, defineClassMethod, javaClass.getName(), javaClass.getByteCode());
 	    			definePackageFor(cls, classLoader, definePackageMethod);
-	    			return cls;
+	    			return (Class<T>) cls;
 				} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException outerExc) {
 					String newNotFoundClassName = Classes.retrieveNames(outerExc).stream().findFirst().orElseGet(() -> null);
 					loadOrUploadClass(
@@ -687,19 +689,20 @@ public class Classes implements Component {
 	    	}
 	    }
 		
-		private Class<?> loadOrUploadClass(
-			Class<?> toLoad, 
+		@SuppressWarnings("unchecked")
+		private <T> Class<T> loadOrUploadClass(
+			Class<T> toLoad, 
 			ClassLoader classLoader, 
 			MethodHandle defineClassMethod, 
 			MethodHandle definePackageMethod
 		) throws ClassNotFoundException {
 	    	try {
-	    		return classLoader.loadClass(toLoad.getName());
+	    		return (Class<T>)classLoader.loadClass(toLoad.getName());
 	    	} catch (ClassNotFoundException | NoClassDefFoundError outerEx) {
 	    		try {
 	    			Class<?> cls = defineClass(classLoader, defineClassMethod, toLoad.getName(), Streams.shareContent(Classes.getByteCode(toLoad)));
 	    			definePackageFor(cls, classLoader, definePackageMethod);
-	    			return cls;
+	    			return (Class<T>) cls;
 				} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException outerExc) {
 					String newNotFoundClassName = Classes.retrieveNames(outerExc).stream().findFirst().orElseGet(() -> null);
 					loadOrUploadClass(
@@ -708,7 +711,7 @@ public class Classes implements Component {
 	        			),
 	        			classLoader, defineClassMethod, definePackageMethod
 	        		);
-					return loadOrUploadClass(
+					return (Class<T>)loadOrUploadClass(
 	        			Class.forName(
 	        					toLoad.getName(), false, toLoad.getClassLoader()
 	        			),
@@ -724,14 +727,14 @@ public class Classes implements Component {
 			return definedClass;
 		}
 		
-		private Class<?> defineClass(
+		private <T> Class<T> defineClass(
 			ClassLoader classLoader, 
 			MethodHandle method, 
 			String className,
 			ByteBuffer byteCode
 		) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
 			try {
-				return (Class<?>)method.invoke(classLoader, className, byteCode, null);
+				return (Class<T>)method.invoke(classLoader, className, byteCode, null);
 			} catch (InvocationTargetException | ClassNotFoundException | NoClassDefFoundError exc) {
 				throw exc;
 			} catch (Throwable exc) {

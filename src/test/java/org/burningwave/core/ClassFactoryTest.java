@@ -3,6 +3,7 @@ package org.burningwave.core;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 
@@ -59,11 +60,11 @@ public class ClassFactoryTest extends BaseTest {
 			PojoInterface.class
 		);
 		testNotNull(() -> {
-			java.lang.Class<?> reloadedCls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
+			Class<?> reloadedCls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
 				Thread.currentThread().getContextClassLoader(), cls.getPackage().getName() + ".ExtendedPojoImpl",
 				PojoSourceGenerator.BUILDING_METHODS_CREATION_ENABLED, cls
 			);
-			java.lang.reflect.Method createMethod = Classes.getDeclaredMethods(reloadedCls, method -> 
+			Method createMethod = Classes.getDeclaredMethods(reloadedCls, method -> 
 				method.getName().equals("create") &&
 				method.getParameterTypes()[0].equals(String.class)).stream().findFirst().orElse(null);
 			PojoInterface pojoObject = (PojoInterface)createMethod.invoke(null, "try");
