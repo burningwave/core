@@ -30,6 +30,7 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -41,15 +42,17 @@ import org.burningwave.core.function.ThrowingRunnable;
 public class FileInputStream extends java.io.FileInputStream implements Component {
 	
 	private File file;
+	private String absolutePath;
 
 
 	private FileInputStream(File file) throws FileNotFoundException {
 		super(file);
 		this.file = file;
+		this.absolutePath = Paths.clean(file.getAbsolutePath());
 	}
 	
-	private FileInputStream(String name) throws FileNotFoundException {
-		this(name != null ? new File(name) : null);
+	private FileInputStream(String absolutePath) throws FileNotFoundException {
+		this(absolutePath != null ? new File(absolutePath) : null);
 	}
 	
 	public static FileInputStream create(File file) {
@@ -75,10 +78,12 @@ public class FileInputStream extends java.io.FileInputStream implements Componen
 	@Override
 	public void close() {
 		ThrowingRunnable.run(() -> super.close());
+		file = null;
+		absolutePath = null;
 	}
 
 	public String getAbsolutePath() {
-		return this.getFile().getAbsolutePath().replace("\\", "/");
+		return this.absolutePath;
 	}
 	
 	public byte[] toByteArray() {

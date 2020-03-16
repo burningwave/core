@@ -62,19 +62,20 @@ public class FileOutputStream extends java.io.FileOutputStream implements Serial
 		return ThrowingSupplier.get(() -> new FileOutputStream(file));
 	}
 	
-	public FileOutputStream(String name, boolean append)
+	public FileOutputStream(String absolutePath, boolean append)
 			throws FileNotFoundException {
-		this(name != null ? new File(name) : null, append);
+		this(absolutePath != null ? new File(absolutePath) : null, append);
 	}
 
 	
-	public FileOutputStream(String name) throws FileNotFoundException {
-		this(name != null ? new File(name) : null, false);
+	public FileOutputStream(String absolutePath) throws FileNotFoundException {
+		this(absolutePath != null ? new File(absolutePath) : null, false);
 	}
 	
 	@Override
 	public void close() {
 		ThrowingRunnable.run(() -> super.close());
+		file = null;
 	}
 	
 	public File getFile() {
