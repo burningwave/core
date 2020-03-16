@@ -39,7 +39,6 @@ import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -50,12 +49,9 @@ import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.io.ByteBufferInputStream;
-import org.burningwave.core.reflection.PropertyAccessor;
 
 
 public class MemoryClassLoader extends ClassLoader implements Component {
-	public final static String PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY = "memory-class-loader.parent";
-	public final static Map<String, String> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
 		
 	protected Classes.Loaders classesLoaders;
 	protected Map<String, ByteBuffer> notLoadedCompiledClasses;
@@ -74,12 +70,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		this.notLoadedCompiledClasses = new HashMap<>();
 		this.loadedCompiledClasses = new HashMap<>();
 	}
-	
-	static {
-		DEFAULT_CONFIG_VALUES.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY, "null");
-		DEFAULT_CONFIG_VALUES.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY + PropertyAccessor.SUPPLIER_IMPORTS_KEY_SUFFIX, "");
-	}
-
 	
 	public static MemoryClassLoader create(ClassLoader parentClassLoader, Classes.Loaders classesLoaders) {
 		return new MemoryClassLoader(parentClassLoader, classesLoaders);

@@ -49,7 +49,7 @@ import org.burningwave.core.reflection.PropertyAccessor;
 
 
 public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, ClassHunter.SearchContext, ClassHunter.SearchResult> {
-	public final static String PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY = "class-hunter.path-memory-class-loader.parent";
+	public final static String PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY = "class-hunter.path-memory-class-loader.parent";
 	public final static Map<String, String> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
 
 	PathMemoryClassLoader pathMemoryClassLoader;
@@ -81,8 +81,8 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	}
 	
 	static {
-		DEFAULT_CONFIG_VALUES.put(PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY + PropertyAccessor.SUPPLIER_IMPORTS_KEY_SUFFIX, "");
-		DEFAULT_CONFIG_VALUES.put(PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "null");
+		DEFAULT_CONFIG_VALUES.put(PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY + PropertyAccessor.SUPPLIER_IMPORTS_KEY_SUFFIX, "");
+		DEFAULT_CONFIG_VALUES.put(PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "null");
 	}
 	
 	public static ClassHunter create(

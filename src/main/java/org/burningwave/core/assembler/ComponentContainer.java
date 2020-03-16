@@ -47,7 +47,6 @@ import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
-import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.concurrent.ConcurrentHelper;
 import org.burningwave.core.io.FileSystemScanner;
@@ -83,8 +82,8 @@ public class ComponentContainer implements ComponentSupplier {
 	private ComponentContainer init() {
 		config.put(PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES, "${classPaths}");
 		config.put(PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION, PathHelper.MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE);
-		config.put(MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
-		config.put(ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "componentSupplier.getMemoryClassLoader()");
+		config.put(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
+		config.put(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
 		
 		InputStream customConfig = Optional.ofNullable(this.getClass().getClassLoader()).orElseGet(() ->
 		ClassLoader.getSystemClassLoader()).getResourceAsStream(configFileName);
@@ -162,21 +161,6 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 		return component;
 	}
-
-	@Override
-	public MemoryClassLoader getMemoryClassLoader() {
-		return getOrCreate(MemoryClassLoader.class, () -> {
-			return MemoryClassLoader.create(
-				getByFieldOrByMethodPropertyAccessor().retrieveFromFile(
-					config,
-					MemoryClassLoader.PARENT_CLASS_LOADER_SUPPLIER_CONFIG_KEY,
-					MemoryClassLoader.DEFAULT_CONFIG_VALUES,
-					this
-				),
-				getClassesLoaders()
-			);
-		});
-	}
 	
 	@Override
 	public Classes.Loaders getClassesLoaders() {
@@ -192,7 +176,8 @@ public class ComponentContainer implements ComponentSupplier {
 				getSourceCodeHandler(),
 				getClassesLoaders(),
 				getJavaMemoryCompiler(),
-				getPathHelper()
+				getPathHelper(),
+				config
 			)
 		);	
 	}
@@ -220,7 +205,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getClassesLoaders(),
 				getByFieldOrByMethodPropertyAccessor().retrieveFromFile(
 					config,
-					ClassHunter.PARENT_CLASS_LOADER_SUPPLIER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
+					ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
 					ClassHunter.DEFAULT_CONFIG_VALUES,
 					this
 				)

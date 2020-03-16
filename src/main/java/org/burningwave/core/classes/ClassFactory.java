@@ -46,41 +46,53 @@ import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.MultiParamsPredicate;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.iterable.Properties;
 
 
 public class ClassFactory implements Component {
-	public static String CLASS_REPOSITORIES = "class-factory.class-repositories";
+	public static final String DEFAULT_CLASS_LOADER_CONFIG_KEY = "class-factory.default-class-loader";
+	public static final String CLASS_REPOSITORIES = "class-factory.class-repositories";
 	
 	private SourceCodeHandler sourceCodeHandler;
 	private PathHelper pathHelper;
 	private Classes.Loaders classesLoaders;
 	private JavaMemoryCompiler javaMemoryCompiler;
 	private PojoSubTypeRetriever pojoSubTypeRetriever;	
-	
+	private ClassLoader defaultClassLoader;
 	
 	
 	private ClassFactory(
 		SourceCodeHandler sourceCodeHandler,
 		Classes.Loaders classesLoaders,
 		JavaMemoryCompiler javaMemoryCompiler,
-		PathHelper pathHelper
+		PathHelper pathHelper, Properties config
 	) {	
 		this.sourceCodeHandler = sourceCodeHandler;
 		this.classesLoaders = classesLoaders;
 		this.javaMemoryCompiler = javaMemoryCompiler;
 		this.pathHelper = pathHelper;
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
+		String codeFromProperty = config.getProperty(DEFAULT_CLASS_LOADER_CONFIG_KEY);
+		if (!codeFromProperty.contains("return")) {
+			codeFromProperty = "return (T)" + codeFromProperty;
+		}
+		if (!codeFromProperty.endsWith(";")) {
+			codeFromProperty += ";";
+		}
+		defaultClassLoader = execute(CodeExecutor.class.getClassLoader(),
+			StatementSourceGenerator.createSimple().setElementPrefix("\t").addCodeRow(codeFromProperty)
+		);
 	}
 	
 	public static ClassFactory create(
 		SourceCodeHandler sourceCodeHandler,
 		Classes.Loaders classesLoaders,
 		JavaMemoryCompiler javaMemoryCompiler,
-		PathHelper pathHelper
+		PathHelper pathHelper, Properties config
 	) {
 		return new ClassFactory(
 			sourceCodeHandler, classesLoaders,
-			javaMemoryCompiler, pathHelper
+			javaMemoryCompiler, pathHelper, config
 		);
 	}
 	
@@ -101,23 +113,32 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	public java.lang.Class<?> buildAndUploadTo(ClassLoader classLoader, String classCode) {
+	public Class<?> buildAndUploadTo(ClassLoader classLoader, String unitCode) {
 		try {
-			String className = sourceCodeHandler.extractClassName(classCode);
-			Map<String, ByteBuffer> compiledFiles = build(classCode);
+			String className = sourceCodeHandler.extractClassName(unitCode);
+			Map<String, ByteBuffer> compiledFiles = build(unitCode);
 			logInfo("Class " + className + " succesfully created");
-			return classesLoaders.loadOrUploadClass(className, compiledFiles, classLoader);
+			classesLoaders.loadOrUploadClasses(compiledFiles, classLoader);
+			return classLoader.loadClass(className);
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
 	}
 	
-	public java.lang.Class<?> getOrBuild(ClassLoader classLoader, String className, UnitSourceGenerator unitCode) {
+	public Class<?> getOrBuild(String className, UnitSourceGenerator unitCode) {
+		return getOrBuild(defaultClassLoader, className, unitCode);
+	}
+	
+	public Class<?> getOrBuild(ClassLoader classLoader, String className, UnitSourceGenerator unitCode) {
 		return getOrBuild(classLoader, className, () -> unitCode);
 	}	
 	
-	private java.lang.Class<?> getOrBuild(ClassLoader classLoader, String className, Supplier<UnitSourceGenerator> unitCode) {
-		java.lang.Class<?> toRet = classesLoaders.retrieveLoadedClass(classLoader, className);
+	private Class<?> getOrBuild(String className, Supplier<UnitSourceGenerator> unitCode) {
+		return getOrBuild(defaultClassLoader, className, unitCode);
+	}
+	
+	private Class<?> getOrBuild(ClassLoader classLoader, String className, Supplier<UnitSourceGenerator> unitCode) {
+		Class<?> toRet = classesLoaders.retrieveLoadedClass(classLoader, className);
 		if (toRet == null) {
 			toRet = buildAndUploadTo(classLoader, className, unitCode);
 		} else {
@@ -126,7 +147,7 @@ public class ClassFactory implements Component {
 		return toRet;
 	}	
 	
-	private java.lang.Class<?> buildAndUploadTo(ClassLoader classLoader, String className, Supplier<UnitSourceGenerator> unitCodeSupplier) {
+	private Class<?> buildAndUploadTo(ClassLoader classLoader, String className, Supplier<UnitSourceGenerator> unitCodeSupplier) {
 		try {
 			UnitSourceGenerator unit = unitCodeSupplier.get();
 			unit.getAllClasses().values().forEach(cls -> {
@@ -134,13 +155,18 @@ public class ClassFactory implements Component {
 			});
 			Map<String, ByteBuffer> compiledFiles = build(unit.make());
 			logInfo("Class " + className + " succesfully created");
-			return classesLoaders.loadOrUploadClass(className, compiledFiles, classLoader);
+			classesLoaders.loadOrUploadClasses(compiledFiles, classLoader);
+			return classLoader.loadClass(className);
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
 	}
 
-	public java.lang.Class<?> getOrBuild(ClassLoader classLoader, String classCode) {
+	public Class<?> getOrBuild(String classCode) {
+		return getOrBuild(defaultClassLoader, classCode);
+	}
+	
+	public Class<?> getOrBuild(ClassLoader classLoader, String classCode) {
 		String className = sourceCodeHandler.extractClassName(classCode);
 		java.lang.Class<?> toRet = classesLoaders.retrieveLoadedClass(classLoader, className);
 		if (toRet == null) {
@@ -153,15 +179,27 @@ public class ClassFactory implements Component {
 		return PojoSubTypeRetriever.create(this, sourceGenerator);
 	}
 	
-	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, java.lang.Class<?>... superClasses) {
+	public Class<?> getOrBuildPojoSubType(String className, Class<?>... superClasses) {
+		return getOrBuildPojoSubType(defaultClassLoader, className, superClasses);
+	}
+	
+	public Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, Class<?>... superClasses) {
 		return pojoSubTypeRetriever.getOrBuild(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
 	}
 	
-	public java.lang.Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, int options, java.lang.Class<?>... superClasses) {
+	public Class<?> getOrBuildPojoSubType(String className, int options, Class<?>... superClasses) {
+		return getOrBuildPojoSubType(defaultClassLoader, className, options, superClasses);
+	}
+	
+	public Class<?> getOrBuildPojoSubType(ClassLoader classLoader, String className, int options, Class<?>... superClasses) {
 		return pojoSubTypeRetriever.getOrBuild(classLoader, className, options, superClasses);
 	}
 	
-	public java.lang.Class<?> getOrBuildFunctionSubType(ClassLoader classLoader, int parametersLength) {
+	public Class<?> getOrBuildFunctionSubType(int parametersLength) {
+		return getOrBuildFunctionSubType(defaultClassLoader, parametersLength);
+	}
+	
+	public Class<?> getOrBuildFunctionSubType(ClassLoader classLoader, int parametersLength) {
 		String functionalInterfaceName = "FunctionFor" + parametersLength +	"Parameters";
 		String packageName = MultiParamsFunction.class.getPackage().getName();
 		String className = packageName + "." + functionalInterfaceName;
@@ -172,7 +210,11 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	public java.lang.Class<?> getOrBuildConsumerSubType(ClassLoader classLoader, int parametersLength) {
+	public Class<?> getOrBuildConsumerSubType(int parametersLength) {
+		return getOrBuildConsumerSubType(defaultClassLoader, parametersLength);
+	}
+	
+	public Class<?> getOrBuildConsumerSubType(ClassLoader classLoader, int parametersLength) {
 		String functionalInterfaceName = "ConsumerFor" + parametersLength + "Parameters";
 		String packageName = MultiParamsConsumer.class.getPackage().getName();
 		String className = packageName + "." + functionalInterfaceName;
@@ -181,6 +223,10 @@ public class ClassFactory implements Component {
 			className,
 			() -> sourceCodeHandler.generateConsumer(className, parametersLength)
 		);
+	}
+	
+	public Class<?> getOrBuildPredicateSubType(int parametersLength) {
+		return getOrBuildPredicateSubType(defaultClassLoader, parametersLength);
 	}
 	
 	public Class<?> getOrBuildPredicateSubType(ClassLoader classLoader, int parametersLength) {
@@ -194,13 +240,16 @@ public class ClassFactory implements Component {
 		);
 	}
 	
+	public Class<?> getOrBuildCodeExecutorSubType(String className, StatementSourceGenerator statement) {
+		return getOrBuildCodeExecutorSubType(defaultClassLoader, className, statement);
+	}
+	
 	public Class<?> getOrBuildCodeExecutorSubType(ClassLoader classLoader, String className, StatementSourceGenerator statement) {
 		return getOrBuild(
 			classLoader,
 			className,
 			() -> sourceCodeHandler.generateExecutor(className, statement)
 		);
-
 	}
 	
 	public <T> T execute(
@@ -262,6 +311,17 @@ public class ClassFactory implements Component {
 		) {
 			return getOrBuild(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
 		}	
+		
+		public Class<?> getOrBuild(
+			String className,
+			int options, 
+			Class<?>... superClasses
+		) {
+			return classFactory.getOrBuild(
+				className,
+				() -> sourceGenerator.make(className, options, superClasses)
+			);
+		}
 		
 		public Class<?> getOrBuild(
 			ClassLoader classLoader,

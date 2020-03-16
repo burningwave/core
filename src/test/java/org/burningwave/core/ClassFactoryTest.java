@@ -21,19 +21,19 @@ public class ClassFactoryTest extends BaseTest {
 	@Test
 	public void getOrBuildFunctionClassTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildFunctionSubType(getComponentSupplier().getMemoryClassLoader(), 10));
+		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildFunctionSubType(Thread.currentThread().getContextClassLoader(), 10));
 	}	
 	
 	@Test
 	public void getOrBuildConsumerClassTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildConsumerSubType(getComponentSupplier().getMemoryClassLoader(), 2));
+		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildConsumerSubType(Thread.currentThread().getContextClassLoader(), 2));
 	}
 	
 	@Test
 	public void getOrBuildPredicateClassTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildPredicateSubType(getComponentSupplier().getMemoryClassLoader(), 10));
+		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildPredicateSubType(Thread.currentThread().getContextClassLoader(), 10));
 	}
 	
 	
@@ -42,7 +42,7 @@ public class ClassFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> 
 			componentSupplier.getClassFactory().getOrBuildPojoSubType(
-				getComponentSupplier().getMemoryClassLoader(), this.getClass().getPackage().getName() + ".SimpleVirtual"
+				Thread.currentThread().getContextClassLoader(), this.getClass().getPackage().getName() + ".SimpleVirtual"
 			)
 		);
 	}
@@ -52,7 +52,7 @@ public class ClassFactoryTest extends BaseTest {
 	public void getOrBuildPojoClassTestTwo() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		java.lang.Class<?> cls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
-			getComponentSupplier().getMemoryClassLoader(),
+			Thread.currentThread().getContextClassLoader(),
 			this.getClass().getPackage().getName() + ".TestTwoPojoImpl",
 			PojoSourceGenerator.BUILDING_METHODS_CREATION_ENABLED,
 			Complex.Data.Item.class,
@@ -60,7 +60,7 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		testNotNull(() -> {
 			java.lang.Class<?> reloadedCls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
-				getComponentSupplier().getMemoryClassLoader(), cls.getPackage().getName() + ".ExtendedPojoImpl",
+				Thread.currentThread().getContextClassLoader(), cls.getPackage().getName() + ".ExtendedPojoImpl",
 				PojoSourceGenerator.BUILDING_METHODS_CREATION_ENABLED, cls
 			);
 			java.lang.reflect.Method createMethod = Classes.getDeclaredMethods(reloadedCls, method -> 
@@ -91,12 +91,11 @@ public class ClassFactoryTest extends BaseTest {
 				ClassSG
 			);
 			return componentSupplier.getClassFactory().getOrBuild(
-				getComponentSupplier().getMemoryClassLoader(),
 				"tryyy.ReTry", unitSG
 			);
 		});
 		testNotNull(() -> 
-			componentSupplier.getMemoryClassLoader().loadClass("tryyy.ReTry$ReReTry")
+			componentSupplier.getClassFactory().getOrBuild("tryyy.ReTry$ReReTry", null)
 		);
 	}
 
@@ -105,7 +104,7 @@ public class ClassFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> {
 			java.lang.Class<?> virtualClass = componentSupplier.getClassFactory().getOrBuildPojoSubType(
-				getComponentSupplier().getMemoryClassLoader(), this.getClass().getPackage().getName() + ".TestThreePojoImpl", 
+				Thread.currentThread().getContextClassLoader(), this.getClass().getPackage().getName() + ".TestThreePojoImpl", 
 				Service.class,
 				PojoInterface.class
 			);
