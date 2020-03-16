@@ -187,7 +187,7 @@ public class JavaMemoryCompiler implements Component {
 			}
 			Collection<FileSystemItem> fsObjects = null;
 			
-			Map.Entry<String, Predicate<Class<?>>> classNameAndClassPredicate = getClassPredicateFromErrorMessage(message);
+			Map.Entry<String, Predicate<Class<?>>> classNameAndClassPredicate = getClassPredicateBagFromErrorMessage(message);
 			String packageName = null;
 			if (classNameAndClassPredicate != null) {
 				try {
@@ -227,7 +227,7 @@ public class JavaMemoryCompiler implements Component {
 			});		
 		}
 
-		private Map.Entry<String, Predicate<Class<?>>> getClassPredicateFromErrorMessage(String message) {
+		private Map.Entry<String, Predicate<Class<?>>> getClassPredicateBagFromErrorMessage(String message) {
 			if (message.contains("class file for") && message.contains("not found")) {
 				String objName = message.substring(message.indexOf("for ") + 4);
 				objName = objName.substring(0, objName.indexOf(" "));

@@ -116,7 +116,7 @@ public class ClassFactory implements Component {
 		return getOrBuild(classLoader, className, () -> unitCode);
 	}	
 	
-	public java.lang.Class<?> getOrBuild(ClassLoader classLoader, String className, Supplier<UnitSourceGenerator> unitCode) {
+	private java.lang.Class<?> getOrBuild(ClassLoader classLoader, String className, Supplier<UnitSourceGenerator> unitCode) {
 		java.lang.Class<?> toRet = classesLoaders.retrieveLoadedClass(classLoader, className);
 		if (toRet == null) {
 			toRet = buildAndUploadTo(classLoader, className, unitCode);
@@ -126,7 +126,7 @@ public class ClassFactory implements Component {
 		return toRet;
 	}	
 	
-	public java.lang.Class<?> buildAndUploadTo(ClassLoader classLoader, String className, Supplier<UnitSourceGenerator> unitCodeSupplier) {
+	private java.lang.Class<?> buildAndUploadTo(ClassLoader classLoader, String className, Supplier<UnitSourceGenerator> unitCodeSupplier) {
 		try {
 			UnitSourceGenerator unit = unitCodeSupplier.get();
 			unit.getAllClasses().values().forEach(cls -> {

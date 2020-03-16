@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class StaticComponentContainer {
+	private static final String CLEAR_TEMPORARY_FOLDER_ON_STARTUP_CONFIG_KEY = "static-component-container.clear-temporary-folder-on-startup";
 	
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
 	public static final org.burningwave.core.Cache Cache;
@@ -42,6 +43,10 @@ public class StaticComponentContainer {
 			Strings = org.burningwave.core.Strings.create();
 			Paths = org.burningwave.core.Strings.Paths.create();
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create();
+			boolean clearTemporaryFolderOnStartup = Boolean.valueOf(GlobalProperties.getProperty(CLEAR_TEMPORARY_FOLDER_ON_STARTUP_CONFIG_KEY));
+			if (clearTemporaryFolderOnStartup) {
+				FileSystemHelper.clearMainTemporaryFolder();
+			}
 			ByteBufferDelegate = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate.create();
 			Streams = org.burningwave.core.io.Streams.create(GlobalProperties);
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();

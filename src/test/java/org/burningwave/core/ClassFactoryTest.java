@@ -92,7 +92,7 @@ public class ClassFactoryTest extends BaseTest {
 			);
 			return componentSupplier.getClassFactory().getOrBuild(
 				getComponentSupplier().getMemoryClassLoader(),
-				"tryyy.ReTry", () -> unitSG
+				"tryyy.ReTry", unitSG
 			);
 		});
 		testNotNull(() -> 

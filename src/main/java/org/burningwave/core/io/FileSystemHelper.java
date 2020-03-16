@@ -38,7 +38,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 
 
 public class FileSystemHelper implements Component {
-	private File BASE_TEMPORARY_FOLDER;
+	private File baseTemporaryFolder;
 	
 	private FileSystemHelper() {}
 	
@@ -47,8 +47,8 @@ public class FileSystemHelper implements Component {
 	}
 	
 	private File getOrCreateMainTemporaryFolder() {
-		if (BASE_TEMPORARY_FOLDER != null) {
-			return BASE_TEMPORARY_FOLDER;
+		if (baseTemporaryFolder != null) {
+			return baseTemporaryFolder;
 		}
 		return ThrowingSupplier.get(() -> {
 			File toDelete = File.createTempFile("_BW_TEMP_", "_temp");
@@ -59,6 +59,17 @@ public class FileSystemHelper implements Component {
 			}
 			toDelete.delete();
 			return folder;
+		});
+	}
+	
+	public File createTemporaryFolder(String folderName) {
+		return ThrowingSupplier.get(() -> {
+			File tempFolder = new File(getOrCreateMainTemporaryFolder().getAbsolutePath() + "/" + folderName);
+			if (tempFolder.exists()) {
+				tempFolder.delete();
+			}
+			tempFolder.mkdirs();
+			return tempFolder;
 		});
 	}
 	
@@ -121,7 +132,7 @@ public class FileSystemHelper implements Component {
 
 	@Override
 	public void close() {
-		BASE_TEMPORARY_FOLDER = null;
+		baseTemporaryFolder = null;
 	}
 
 }
