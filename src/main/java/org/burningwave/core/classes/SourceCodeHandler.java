@@ -28,41 +28,26 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
-import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
+import java.lang.reflect.Modifier;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.function.MultiParamsConsumer;
+import org.burningwave.core.function.MultiParamsFunction;
+import org.burningwave.core.function.MultiParamsPredicate;
 
 
 public class SourceCodeHandler implements Component {
-	private ClassFactory classFactory;
-	private Supplier<ClassFactory> classFactorySupplier;
-	private Classes.Loaders classesLoaders;
-
-	private SourceCodeHandler(
-		Supplier<ClassFactory> classFactorySupplier,
-		Classes.Loaders classesLoaders
-	) {
-		this.classFactorySupplier = classFactorySupplier;
-		this.classesLoaders = classesLoaders;
-	}
+	private SourceCodeHandler() {}
 	
-	public static SourceCodeHandler create(
-		Supplier<ClassFactory> classFactorySupplier,
-		Classes.Loaders classesLoaders
-	) {
-		return new SourceCodeHandler(classFactorySupplier, classesLoaders);
-	}
-	
-	private ClassFactory getClassFactory() {
-		return classFactory != null? classFactory : (classFactory = classFactorySupplier.get());
+	public static SourceCodeHandler create() {
+		return new SourceCodeHandler();
 	}
 	
 	public String extractClassName(String classCode) {
@@ -78,43 +63,157 @@ public class SourceCodeHandler implements Component {
 				Pattern.compile("(?<=\\n|\\A)(?:public\\s*)?(class|interface|enum)\\s*([^\\n\\s<]*)"), classCode
 			).get(2).get(0);
 	}
+
+	public UnitSourceGenerator generateExecutor(String className, StatementSourceGenerator statement) {
+		if (className.contains("$")) {
+			throw Throwables.toRuntimeException(className + " CodeExecutor could not be a inner class");
+		}
+		String packageName = Classes.retrievePackageName(className);
+		String classSimpleName = Classes.retrieveSimpleName(className);
+		TypeDeclarationSourceGenerator typeDeclaration = TypeDeclarationSourceGenerator.create(classSimpleName);
+		GenericSourceGenerator returnType = GenericSourceGenerator.create("T");
+		FunctionSourceGenerator executeMethod = FunctionSourceGenerator.create("execute").setReturnType(
+			returnType
+		).addModifier(
+			Modifier.PUBLIC
+		).addParameter(
+			VariableSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create(ComponentSupplier.class), "componentSupplier"
+			)
+		).addParameter(
+			VariableSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("Object... "), "objects"
+			)
+		).addOuterCodeRow("@Override").addBodyElement(statement);
+		typeDeclaration.addGeneric(returnType);		
+		ClassSourceGenerator cls = ClassSourceGenerator.create(
+			typeDeclaration
+		).addModifier(
+			Modifier.PUBLIC
+		).addConcretizedType(
+			CodeExecutor.class
+		).addMethod(
+			executeMethod
+		);
+		return UnitSourceGenerator.create(packageName).addClass(cls);
+	};
 	
+	public UnitSourceGenerator generateConsumer(String className, int parametersLength) {
+		String packageName = Classes.retrievePackageName(className);
+		String classSimpleName = Classes.retrieveSimpleName(className);
+		if (className.contains("$")) {
+			throw Throwables.toRuntimeException(className + " Consumer could not be a inner class");
+		}
+		TypeDeclarationSourceGenerator typeDeclaration = TypeDeclarationSourceGenerator.create(classSimpleName);
+		FunctionSourceGenerator acceptMethod = FunctionSourceGenerator.create("accept").setReturnType(
+			void.class
+		).addModifier(Modifier.PUBLIC | Modifier.ABSTRACT);
+		FunctionSourceGenerator varArgsAcceptMethod = FunctionSourceGenerator.create("accept").setReturnType(
+			void.class
+		).addModifier(Modifier.PUBLIC).setDefault().addParameter(
+			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("Object..."), "params")
+		).addOuterCodeRow("@Override");
+		varArgsAcceptMethod.addBodyCodeRow("accept(");
+		StatementSourceGenerator applyMethodCodeOne = StatementSourceGenerator.createSimple().setBodyElementSeparator(", ");
+		for (int i = 0; i < parametersLength; i++) {
+			typeDeclaration.addGeneric(GenericSourceGenerator.create("P" + i));
+			acceptMethod.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("P" + i), "p" + i));
+			applyMethodCodeOne.addCode("(P" + i + ")params["+i+"]");
+		}
+		varArgsAcceptMethod.addBodyElement(applyMethodCodeOne);
+		varArgsAcceptMethod.addBodyCode(");");
+		ClassSourceGenerator cls = ClassSourceGenerator.createInterface(
+			typeDeclaration
+		).addModifier(
+			Modifier.PUBLIC
+		).expands(
+			TypeDeclarationSourceGenerator.create(MultiParamsConsumer.class)
+		).addMethod(
+			acceptMethod
+		).addMethod(
+			varArgsAcceptMethod
+		).addOuterCodeRow("@FunctionalInterface");
+		return UnitSourceGenerator.create(packageName).addClass(cls);
+	};
 	
-	public <T> T execute(
-		ClassLoader classLoaderParentOfOneShotClassLoader,
-		StatementSourceGenerator statement,
-		Object... parameters
-	) {	
-		return ThrowingSupplier.get(() -> {
-			try (MemoryClassLoader memoryClassLoader = 
-				MemoryClassLoader.create(
-					classLoaderParentOfOneShotClassLoader,
-					classesLoaders
-				)
-			) {
-				String packageName = CodeExecutor.class.getPackage().getName();
-				Class<?> executableClass = getClassFactory().getOrBuildCodeExecutorSubType(
-					memoryClassLoader, packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""), statement
-				);
-				CodeExecutor executor = (CodeExecutor)ConstructorHelper.newInstanceOf(executableClass);
-				ComponentSupplier componentSupplier = null;
-				if (parameters != null && parameters.length > 0) {
-					for (Object param : parameters) {
-						if (param instanceof ComponentSupplier) {
-							componentSupplier = (ComponentSupplier) param;
-							break;
-						}
-					}
-				}
-				T retrievedElement = executor.execute(componentSupplier, parameters);
-				return retrievedElement;
-			}
-		});
-	}
+	public UnitSourceGenerator generatePredicate(String className, int parametersLength) {
+		String packageName = Classes.retrievePackageName(className);
+		String classSimpleName = Classes.retrieveSimpleName(className);
+		if (className.contains("$")) {
+			throw Throwables.toRuntimeException(className + " Predicate could not be a inner class");
+		}
+		TypeDeclarationSourceGenerator typeDeclaration = TypeDeclarationSourceGenerator.create(classSimpleName);
+		FunctionSourceGenerator testMethod = FunctionSourceGenerator.create("test").setReturnType(
+			boolean.class
+		).addModifier(Modifier.PUBLIC | Modifier.ABSTRACT);
+		FunctionSourceGenerator varArgsTestMethod = FunctionSourceGenerator.create("test").setReturnType(
+			boolean.class
+		).addModifier(Modifier.PUBLIC).setDefault().addParameter(
+			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("Object..."), "params")
+		).addOuterCodeRow("@Override");
+		varArgsTestMethod.addBodyCodeRow("return test(");
+		StatementSourceGenerator applyMethodCodeOne = StatementSourceGenerator.createSimple().setBodyElementSeparator(", ");
+		for (int i = 0; i < parametersLength; i++) {
+			typeDeclaration.addGeneric(GenericSourceGenerator.create("P" + i));
+			testMethod.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("P" + i), "p" + i));
+			applyMethodCodeOne.addCode("(P" + i + ")params["+i+"]");
+		}
+		varArgsTestMethod.addBodyElement(applyMethodCodeOne);
+		varArgsTestMethod.addBodyCode(");");
+		ClassSourceGenerator cls = ClassSourceGenerator.createInterface(
+			typeDeclaration
+		).addModifier(
+			Modifier.PUBLIC
+		).expands(
+			TypeDeclarationSourceGenerator.create(MultiParamsPredicate.class)
+		).addMethod(
+			testMethod
+		).addMethod(
+			varArgsTestMethod
+		).addOuterCodeRow("@FunctionalInterface");
+		return UnitSourceGenerator.create(packageName).addClass(cls);
+	};
+	
+	public UnitSourceGenerator generateFunction(String className, int parametersLength) {
+		String packageName = Classes.retrievePackageName(className);
+		String classSimpleName = Classes.retrieveSimpleName(className);
+		if (className.contains("$")) {
+			throw Throwables.toRuntimeException(className + " Function could not be a inner class");
+		}
+		TypeDeclarationSourceGenerator typeDeclaration = TypeDeclarationSourceGenerator.create(classSimpleName);
+		GenericSourceGenerator returnType = GenericSourceGenerator.create("R");
+		FunctionSourceGenerator applyMethod = FunctionSourceGenerator.create("apply").setReturnType(
+			returnType
+		).addModifier(Modifier.PUBLIC | Modifier.ABSTRACT);
+		FunctionSourceGenerator varArgsApplyMethod = FunctionSourceGenerator.create("apply").setReturnType(
+			returnType
+		).addModifier(Modifier.PUBLIC).setDefault().addParameter(
+			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("Object..."), "params")
+		).addOuterCodeRow("@Override");
+		varArgsApplyMethod.addBodyCodeRow("return apply(");
+		StatementSourceGenerator applyMethodCodeOne = StatementSourceGenerator.createSimple().setBodyElementSeparator(", ");
+		for (int i = 0; i < parametersLength; i++) {
+			typeDeclaration.addGeneric(GenericSourceGenerator.create("P" + i));
+			applyMethod.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("P" + i), "p" + i));
+			applyMethodCodeOne.addCode("(P" + i + ")params["+i+"]");
+		}
+		varArgsApplyMethod.addBodyElement(applyMethodCodeOne);
+		varArgsApplyMethod.addBodyCode(");");
+		typeDeclaration.addGeneric(returnType);		
+		ClassSourceGenerator cls = ClassSourceGenerator.createInterface(
+			typeDeclaration
+		).addModifier(
+			Modifier.PUBLIC
+		).expands(
+			TypeDeclarationSourceGenerator.create(MultiParamsFunction.class).addGeneric(returnType)
+		).addMethod(
+			applyMethod
+		).addMethod(
+			varArgsApplyMethod
+		).addOuterCodeRow("@FunctionalInterface");
+		return UnitSourceGenerator.create(packageName).addClass(cls);
+	};
 	
 	@Override
-	public void close() {
-		classFactory = null;
-		classFactorySupplier = null;
-	}
+	public void close() {}
 }

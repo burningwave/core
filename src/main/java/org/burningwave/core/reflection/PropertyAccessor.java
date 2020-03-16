@@ -1,4 +1,5 @@
 /*
+
  * This file is part of Burningwave Core.
  *
  * Author: Roberto Gentili
@@ -48,8 +49,8 @@ import java.util.regex.Pattern;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.FieldCriteria;
-import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.classes.StatementSourceGenerator;
 import org.burningwave.core.function.ThrowingBiFunction;
 import org.burningwave.core.function.ThrowingFunction;
@@ -61,19 +62,19 @@ public abstract class PropertyAccessor implements Component {
 	public final static String REG_EXP_FOR_JAVA_PROPERTIES = "([a-zA-Z\\$\\_\\-0-9]*)(\\[*.*)";
 	public final static String REG_EXP_FOR_INDEXES_OF_JAVA_INDEXED_PROPERTIES = "\\[([a-zA-Z0-9]*)\\]";
 
-	private SourceCodeHandler sourceCodeHandler;
+	private ClassFactory classFactory;
 	private List<ThrowingBiFunction<Object, String, Object, Throwable>> propertyRetrievers;
 	private List<ThrowingFunction<Object[], Boolean, Throwable>> propertySetters;
-	private Supplier<SourceCodeHandler> sourceCodeHandlerSupplier;
+	private Supplier<ClassFactory> classFactorySupplier;
 	private IterableObjectHelper iterableObjectHelper;	
 	private Supplier<IterableObjectHelper> iterableObjectHelperSupplier;
 	
 	PropertyAccessor(
-		Supplier<SourceCodeHandler> sourceCodeHandlerSupplier,
+		Supplier<ClassFactory> classFactorySupplier,
 		Supplier<IterableObjectHelper> iterableObjectHelperSupplier
 	) {
 		this.iterableObjectHelperSupplier = iterableObjectHelperSupplier;
-		this.sourceCodeHandlerSupplier = sourceCodeHandlerSupplier;
+		this.classFactorySupplier = classFactorySupplier;
 		this.propertyRetrievers = getPropertyRetrievers();
 		this.propertySetters= getPropertySetters();
 	}
@@ -84,10 +85,10 @@ public abstract class PropertyAccessor implements Component {
 			(iterableObjectHelper = iterableObjectHelperSupplier.get());
 	}
 	
-	protected SourceCodeHandler getSourceCodeHandler() {
-		return sourceCodeHandler != null ?
-			sourceCodeHandler :
-			(sourceCodeHandler = sourceCodeHandlerSupplier.get());
+	protected ClassFactory getClassFactory() {
+		return classFactory != null ?
+			classFactory :
+			(classFactory = classFactorySupplier.get());
 	}
 	
 	abstract List<ThrowingFunction<Object[], Boolean, Throwable>> getPropertySetters();
@@ -295,18 +296,18 @@ public abstract class PropertyAccessor implements Component {
 			supplierCode:
 			"return (T)" + supplierCode + ";"
 		);
-		return getSourceCodeHandler().execute(
+		return getClassFactory().execute(
 			this.getClass().getClassLoader(), statement, params
 		);
 	}
 	
 	public static class ByFieldOrByMethod extends PropertyAccessor {
 
-		private ByFieldOrByMethod(Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+		private ByFieldOrByMethod(Supplier<ClassFactory> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
 			super(sourceCodeHandlerSupplier, iterableObjectHelperSupplier);
 		}
 		
-		public static ByFieldOrByMethod create(Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+		public static ByFieldOrByMethod create(Supplier<ClassFactory> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
 			return new ByFieldOrByMethod(sourceCodeHandlerSupplier, iterableObjectHelperSupplier);
 		}
 
@@ -328,11 +329,11 @@ public abstract class PropertyAccessor implements Component {
 	
 	public static class ByMethodOrByField extends PropertyAccessor {
 
-		private ByMethodOrByField(Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+		private ByMethodOrByField(Supplier<ClassFactory> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
 			super(sourceCodeHandlerSupplier, iterableObjectHelperSupplier);
 		}
 		
-		public static ByMethodOrByField create(Supplier<SourceCodeHandler> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
+		public static ByMethodOrByField create(Supplier<ClassFactory> sourceCodeHandlerSupplier, Supplier<IterableObjectHelper> iterableObjectHelperSupplier) {
 			return new ByMethodOrByField(sourceCodeHandlerSupplier, iterableObjectHelperSupplier);
 		}
 

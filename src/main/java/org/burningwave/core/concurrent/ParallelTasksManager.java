@@ -37,7 +37,7 @@ import java.util.concurrent.Executors;
 
 import org.burningwave.core.Component;
 
-public class ParallelTasksManager implements Component{
+public class ParallelTasksManager implements Component {
 
 	protected Collection<CompletableFuture<Void>> tasks;
 	protected ExecutorService executorService;

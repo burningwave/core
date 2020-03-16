@@ -261,7 +261,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public PropertyAccessor.ByFieldOrByMethod getByFieldOrByMethodPropertyAccessor() {
 		return getOrCreate(PropertyAccessor.ByFieldOrByMethod.class, () ->  
 			PropertyAccessor.ByFieldOrByMethod.create(
-				() -> getSourceCodeHandler(),
+				() -> getClassFactory(),
 				() -> getIterableObjectHelper()
 			)
 		);
@@ -271,7 +271,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public PropertyAccessor.ByMethodOrByField getByMethodOrByFieldPropertyAccessor() {
 		return getOrCreate(PropertyAccessor.ByMethodOrByField.class, () ->  
 			PropertyAccessor.ByMethodOrByField.create(
-				() -> getSourceCodeHandler(),
+				() -> getClassFactory(),
 				() -> getIterableObjectHelper()
 			)
 		);
@@ -330,10 +330,7 @@ public class ComponentContainer implements ComponentSupplier {
 	@Override
 	public SourceCodeHandler getSourceCodeHandler() {
 		return getOrCreate(SourceCodeHandler.class, () ->
-			SourceCodeHandler.create(
-				() -> getClassFactory(),
-				getClassesLoaders()
-			)
+			SourceCodeHandler.create()
 		);
 	}
 	
