@@ -177,7 +177,12 @@ public class ComponentContainer implements ComponentSupplier {
 				getClassesLoaders(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
-				config
+				() -> getByFieldOrByMethodPropertyAccessor().retrieveFromFile(
+					config,
+					ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY,
+					null,
+					this
+				)
 			)
 		);	
 	}
