@@ -317,7 +317,7 @@ public class FileSystemItem implements ManagedLogger {
 		return parentContainer;
 	}
 	
-	public synchronized void refresh() {
+	public synchronized FileSystemItem refresh() {
 		if (allChildren != null) {
 			for (FileSystemItem child : allChildren) {
 				removeFromCache(child);
@@ -339,7 +339,8 @@ public class FileSystemItem implements ManagedLogger {
 		parentContainer = null;
 		absolutePath.setValue(null);
 		parent = null;
-		getConventionedAbsolutePath();		
+		getConventionedAbsolutePath();
+		return this;
 	}
 
 	private void removeFromCache(FileSystemItem fileSystemItem) {
