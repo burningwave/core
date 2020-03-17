@@ -190,7 +190,7 @@ public abstract class PropertyAccessor implements Component {
 		Matcher matcher = Pattern.compile(REG_EXP_FOR_INDEXES_OF_JAVA_INDEXED_PROPERTIES).matcher(indexes);
 		if (matcher.find()) {
 			String index = matcher.group(1);
-			java.util.function.Supplier<Object> propertyRetriever = null;
+			Supplier<Object> propertyRetriever = null;
 			if (property.getClass().isArray()) {
 				propertyRetriever = () -> Array.get(property, Integer.valueOf(index));
 			} else if (List.class.isAssignableFrom(property.getClass())) {
@@ -211,7 +211,8 @@ public abstract class PropertyAccessor implements Component {
 	Object retrievePropertyByField(Object obj, String propertyName) throws IllegalAccessException {
 		Object objToReturn;
 		Field field = FieldHelper.findOneAndMakeItAccessible(obj,
-				propertyName);
+			propertyName
+		);
 		objToReturn = field.get(obj);
 		return objToReturn;
 	}
@@ -219,9 +220,10 @@ public abstract class PropertyAccessor implements Component {
 	Object retrievePropertyByGetterMethod(Object obj, String propertyName) {
 		Object objToReturn;
 		objToReturn = MethodHelper.invoke(
-				obj, 
-				MethodHelper.createGetterMethodNameByPropertyName(propertyName), 
-				(Object[])null);
+			obj, 
+			MethodHelper.createGetterMethodNameByPropertyName(propertyName), 
+			(Object[])null
+		);
 		return objToReturn;
 	}
 
