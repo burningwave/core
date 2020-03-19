@@ -776,14 +776,15 @@ public class Classes implements Component {
 			}
 		}
 		
-		public Class<?> retrieveLoadedClass(ClassLoader classLoader, String className) {
+		@SuppressWarnings("unchecked")
+		public <T> Class<T> retrieveLoadedClass(ClassLoader classLoader, String className) {
 			Vector<Class<?>> definedClasses = retrieveLoadedClasses(classLoader);
 			synchronized(definedClasses) {
 				Iterator<?> itr = definedClasses.iterator();
 				while(itr.hasNext()) {
 					Class<?> cls = (Class<?>)itr.next();
 					if (cls.getName().equals(className)) {
-						return cls;
+						return (Class<T>) cls;
 					}
 				}
 			}
