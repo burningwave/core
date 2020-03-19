@@ -500,7 +500,7 @@ public class Classes implements Component {
 		public MethodHandle getDefineClassMethod(ClassLoader classLoader) {
 			return getMethod(
 				classLoader,
-				classLoader.getClass().getName() + "_" + "defineClass",
+				Classes.getId(Classes.getClassLoader(classLoader.getClass()), classLoader, "defineClass"),
 				() -> findDefineClassMethodAndMakeItAccesible(classLoader)
 			);
 		}
