@@ -59,7 +59,7 @@ public class ConstructorHelper extends MemberHelper<Constructor<?>>  {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> Constructor<T> findOneAndMakeItAccessible(T object, Object... arguments) {
+	public <T> Constructor<T> findOneAndMakeItAccessible(Object object, Object... arguments) {
 		ConstructorCriteria criteria = ConstructorCriteria.byScanUpTo(object).parameterTypesAreAssignableFrom(
 			arguments
 		);
