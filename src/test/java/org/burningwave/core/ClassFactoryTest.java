@@ -12,6 +12,7 @@ import org.burningwave.core.bean.Complex;
 import org.burningwave.core.bean.PojoInterface;
 import org.burningwave.core.classes.ClassSourceGenerator;
 import org.burningwave.core.classes.PojoSourceGenerator;
+import org.burningwave.core.classes.StatementSourceGenerator;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
 import org.burningwave.core.service.Service;
@@ -118,5 +119,16 @@ public class ClassFactoryTest extends BaseTest {
 			return virtual;
 			}
 		);
+	}
+	
+	@Test
+	public void executeCodeTest() throws Exception {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotNull(() -> {
+			StatementSourceGenerator statementSG = StatementSourceGenerator.createSimple().setElementPrefix("\t");
+			statementSG.addCodeRow("System.out.println(objects[0]);");
+			statementSG.addCodeRow("return (T)objects[0];");
+			return componentSupplier.getClassFactory().execute(statementSG, Integer.valueOf(5));
+		});
 	}
 }

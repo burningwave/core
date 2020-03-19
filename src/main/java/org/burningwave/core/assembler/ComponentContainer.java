@@ -177,7 +177,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getClassesLoaders(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
-				() -> getByFieldOrByMethodPropertyAccessor().retrieveFromFile(
+				() -> getByFieldOrByMethodPropertyAccessor().retrieveFrom(
 					config,
 					ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY,
 					null,
@@ -208,7 +208,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getPathHelper(),
 				getStreamHelper(),
 				getClassesLoaders(),
-				getByFieldOrByMethodPropertyAccessor().retrieveFromFile(
+				getByFieldOrByMethodPropertyAccessor().retrieveFrom(
 					config,
 					ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
 					ClassHunter.DEFAULT_CONFIG_VALUES,

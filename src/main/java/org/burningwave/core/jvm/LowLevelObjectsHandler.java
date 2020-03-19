@@ -159,7 +159,6 @@ public class LowLevelObjectsHandler implements Component {
 		Class<?> classLoaderBaseClass = builtinClassLoaderClass;
 		if (builtinClassLoaderClass != null && builtinClassLoaderClass.isAssignableFrom(classLoader.getClass())) {
 			try {
-				Method initMethod = MemberFinder.findOne(MethodCriteria.on(classLoaderDelegateClass).name("init"::equals), classLoaderDelegateClass);
 				Collection<Method> methods = MemberFinder.findAll(
 					MethodCriteria.byScanUpTo(
 						cls -> cls.getName().equals(ClassLoader.class.getName())
@@ -169,10 +168,15 @@ public class LowLevelObjectsHandler implements Component {
 						String.class, boolean.class
 					), futureParent.getClass()
 				);
-				Method loadClassMethod = methods.stream().skip(methods.size() - 1).findFirst().get();
-				MethodHandle methodHandle = MethodHelper.convertToMethodHandle(loadClassMethod);
 				Object classLoaderDelegate = unsafe.allocateInstance(classLoaderDelegateClass);
-				invoke(classLoaderDelegate, initMethod, futureParent, methodHandle);
+				invoke(classLoaderDelegate,
+					MemberFinder.findOne(
+						MethodCriteria.on(classLoaderDelegateClass).name("init"::equals), classLoaderDelegateClass
+					), futureParent,
+					MethodHelper.convertToMethodHandle(
+						methods.stream().skip(methods.size() - 1).findFirst().get()
+					)
+				);
 				futureParent = (ClassLoader)classLoaderDelegate;
 			} catch (Throwable exc) {
 				throw Throwables.toRuntimeException(exc);

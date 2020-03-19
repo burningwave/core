@@ -276,9 +276,9 @@ public abstract class PropertyAccessor implements Component {
 		return Boolean.TRUE;
 	}
 	
-	public <T> T retrieveFromFile(
-		Properties config, 
-		String supplierCodeKey,
+	public <T> T retrieveFrom(
+		Properties properties, 
+		String key,
 		Map<String, String> defaultValues,
 		Object... params
 	) {	
@@ -288,13 +288,13 @@ public abstract class PropertyAccessor implements Component {
 				statement.useType(ComponentSupplier.class, param.getClass());
 			}
 		}
-		String importFromConfig = getIterableObjectHelper().get(config, supplierCodeKey + SUPPLIER_IMPORTS_KEY_SUFFIX, defaultValues);
+		String importFromConfig = getIterableObjectHelper().get(properties, key + SUPPLIER_IMPORTS_KEY_SUFFIX, defaultValues);
 		if (Strings.isNotEmpty(importFromConfig)) {
 			Arrays.stream(importFromConfig.split(";")).forEach(imp -> {
 				statement.useType(imp);
 			});
 		}
-		String supplierCode = getIterableObjectHelper().get(config, supplierCodeKey, defaultValues);
+		String supplierCode = getIterableObjectHelper().get(properties, key, defaultValues);
 		statement.addCodeRow(supplierCode.contains("return")?
 			supplierCode:
 			"return (T)" + supplierCode + ";"
