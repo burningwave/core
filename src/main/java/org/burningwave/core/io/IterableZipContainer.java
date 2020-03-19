@@ -32,6 +32,7 @@ public interface IterableZipContainer extends Component {
 		return zipContainer;
 	}
 
+	@SuppressWarnings("resource")
 	public static IterableZipContainer create(String absolutePath, ByteBuffer bytes) {
 		if (Streams.isJModArchive(bytes)) {
 			return Cache.pathForZipFiles.getOrUploadIfAbsent(

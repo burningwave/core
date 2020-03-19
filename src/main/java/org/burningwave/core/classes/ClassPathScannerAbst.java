@@ -110,6 +110,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		return resultSupplier.apply(context);
 	}
 	
+	@SuppressWarnings("resource")
 	C createContext(ClassFileScanConfig scanConfig, SearchConfigAbst<?> searchConfig) {
 		PathMemoryClassLoader sharedClassLoader = getClassHunter().pathMemoryClassLoader;
 		if (searchConfig.useSharedClassLoaderAsParent) {
