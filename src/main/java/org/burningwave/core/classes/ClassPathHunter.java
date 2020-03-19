@@ -53,8 +53,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
-		StreamHelper streamHelper,
-		Classes.Loaders classesLoaders
+		StreamHelper streamHelper
 	) {
 		super(
 			byteCodeHunterSupplier,
@@ -62,7 +61,6 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 			fileSystemScanner,
 			pathHelper,
 			streamHelper,
-			classesLoaders,
 			(initContext) -> SearchContext._create(streamHelper, initContext),
 			(context) -> new ClassPathHunter.SearchResult(context)
 		);
@@ -73,16 +71,14 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
-		StreamHelper streamHelper,
-		Classes.Loaders classesLoaders
+		StreamHelper streamHelper
 	) {
 		return new ClassPathHunter(
 			byteCodeHunterSupplier,
 			classHunterSupplier,
 			fileSystemScanner,
 			pathHelper,
-			streamHelper,
-			classesLoaders
+			streamHelper
 		);
 	}
 	

@@ -44,8 +44,7 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
-		StreamHelper streamHelper,
-		Classes.Loaders classesLoaders
+		StreamHelper streamHelper
 	) {
 		super(
 			byteCodeHunterSupplier,
@@ -53,7 +52,6 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 			fileSystemScanner,
 			pathHelper,
 			streamHelper,
-			classesLoaders,
 			(initContext) -> SearchContext.<JavaClass>create(
 				streamHelper, initContext
 			),
@@ -66,10 +64,9 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 		Supplier<ClassHunter> classHunterSupplier, 
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
-		StreamHelper streamHelper,
-		Classes.Loaders classesLoaders
+		StreamHelper streamHelper
 	) {
-		return new ByteCodeHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemScanner, pathHelper, streamHelper, classesLoaders);
+		return new ByteCodeHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemScanner, pathHelper, streamHelper);
 	}
 	
 	@Override

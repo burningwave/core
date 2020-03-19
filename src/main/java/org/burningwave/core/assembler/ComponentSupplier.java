@@ -35,7 +35,6 @@ import org.burningwave.core.classes.ByteCodeHunter;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHunter;
-import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.SourceCodeHandler;
@@ -65,8 +64,6 @@ public interface ComponentSupplier extends Component {
 	public ClassFactory getClassFactory();
 
 	public SourceCodeHandler getSourceCodeHandler();
-	
-	public Classes.Loaders getClassesLoaders();
 	
 	public ClassHunter getClassHunter();
 

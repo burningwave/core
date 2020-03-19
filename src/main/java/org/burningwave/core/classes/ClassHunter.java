@@ -60,7 +60,6 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
-		Classes.Loaders classesLoaders,
 		ClassLoader parentClassLoader
 	) {
 		super(
@@ -69,14 +68,13 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			fileSystemScanner,
 			pathHelper,
 			streamHelper,
-			classesLoaders,
 			(initContext) -> ClassHunter.SearchContext._create(
 				streamHelper, initContext
 			),
 			(context) -> new ClassHunter.SearchResult(context)
 		);
 		this.pathMemoryClassLoader = PathMemoryClassLoader.create(
-			parentClassLoader, pathHelper, classesLoaders, byteCodeHunterSupplier
+			parentClassLoader, pathHelper, byteCodeHunterSupplier
 		);
 	}
 	
@@ -91,11 +89,10 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper, 
 		StreamHelper streamHelper,
-		Classes.Loaders classesLoaders,
 		ClassLoader parentClassLoader
 	) {
 		return new ClassHunter(
-			byteCodeHunterSupplier, classHunterSupplier, fileSystemScanner, pathHelper, streamHelper, classesLoaders, parentClassLoader
+			byteCodeHunterSupplier, classHunterSupplier, fileSystemScanner, pathHelper, streamHelper, parentClassLoader
 		);
 	}
 	

@@ -28,16 +28,14 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
+
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.burningwave.core.Strings;
-import org.burningwave.core.io.Streams;
-
 public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfig> {
-	Strings.Paths stringsPaths;
 	int maxParallelTasksForUnit;
 	Collection<String> paths;
 	
@@ -48,12 +46,12 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 		maxParallelTasksForUnit = Runtime.getRuntime().availableProcessors();
 	}
 	
-	void init(Strings.Paths stringsPaths, Streams streams, Classes classes, Classes.Loaders classesLoaders, PathMemoryClassLoader classSupplier) {
-		super.init(classesLoaders, classSupplier);
+	void init(PathMemoryClassLoader classSupplier) {
+		super.init(classSupplier);
 		Set<String> temp = new LinkedHashSet<String>(paths);
 		paths.clear();
 		for(String path : temp) {
-			paths.add(stringsPaths.clean(path));
+			paths.add(Paths.clean(path));
 		}
 		temp.clear();
 	}

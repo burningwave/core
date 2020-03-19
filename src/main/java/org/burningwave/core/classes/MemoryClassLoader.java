@@ -27,7 +27,7 @@
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package org.burningwave.core.classes;
-
+import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -52,8 +52,7 @@ import org.burningwave.core.io.ByteBufferInputStream;
 
 
 public class MemoryClassLoader extends ClassLoader implements Component {
-		
-	protected Classes.Loaders classesLoaders;
+
 	protected Map<String, ByteBuffer> notLoadedCompiledClasses;
 	protected Map<String, ByteBuffer> loadedCompiledClasses;
 	
@@ -62,21 +61,19 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     }
 	
 	protected MemoryClassLoader(
-		ClassLoader parentClassLoader,
-		Classes.Loaders classesLoaders
+		ClassLoader parentClassLoader
 	) {
 		super(parentClassLoader);
-		this.classesLoaders = classesLoaders;
 		this.notLoadedCompiledClasses = new HashMap<>();
 		this.loadedCompiledClasses = new HashMap<>();
 	}
 	
-	public static MemoryClassLoader create(ClassLoader parentClassLoader, Classes.Loaders classesLoaders) {
-		return new MemoryClassLoader(parentClassLoader, classesLoaders);
+	public static MemoryClassLoader create(ClassLoader parentClassLoader) {
+		return new MemoryClassLoader(parentClassLoader);
 	}
 
 	public void addCompiledClass(String className, ByteBuffer byteCode) {
-    	if (classesLoaders.retrieveLoadedClass(this, className) == null) {
+    	if (ClassLoaders.retrieveLoadedClass(this, className) == null) {
     		synchronized (Classes.getId(notLoadedCompiledClasses, className)) {
     			notLoadedCompiledClasses.put(className, byteCode);
     		}
@@ -119,7 +116,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
 	public boolean hasPackageBeenDefined(String packageName) {
 		if (Strings.isNotEmpty(packageName)) {
-			return classesLoaders.retrieveLoadedPackage(this, packageName) != null;
+			return ClassLoaders.retrieveLoadedPackage(this, packageName) != null;
 		} else {
 			return true;
 		}
@@ -132,14 +129,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	) throws IllegalArgumentException {
     	Package pkg = null;
     	if (Strings.isNotEmpty(packageName)) {
-    		pkg = classesLoaders.retrieveLoadedPackage(this, packageName);
+    		pkg = ClassLoaders.retrieveLoadedPackage(this, packageName);
     		if (pkg == null) {
     			try {
     				pkg = super.definePackage(packageName, specTitle, specVersion, specVendor, implTitle,
     		    			implVersion, implVendor, sealBase);
     			} catch (IllegalArgumentException exc) {
     				logWarn("Package " + packageName + " already defined");
-    				pkg = classesLoaders.retrieveLoadedPackage(this, packageName);
+    				pkg = ClassLoaders.retrieveLoadedPackage(this, packageName);
     			}
     		}
     	}
@@ -151,7 +148,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			String pckgName = cls.getName().substring(
 		    	0, cls.getName().lastIndexOf(".")
 		    );
-		    if (classesLoaders.retrieveLoadedPackage(this, pckgName) == null) {
+		    if (ClassLoaders.retrieveLoadedPackage(this, pckgName) == null) {
 		    	definePackage(pckgName, null, null, null, null, null, null, null);
 			}	
 		}
@@ -171,15 +168,15 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
     
     public Class<?> loadOrUploadClass(Class<?> toLoad) throws ClassNotFoundException {
-    	return classesLoaders.loadOrUploadClass(toLoad, this);
+    	return ClassLoaders.loadOrUploadClass(toLoad, this);
     }
     
     public Class<?> loadOrUploadClass(JavaClass toLoad) throws ClassNotFoundException {
-    	return classesLoaders.loadOrUploadClass(toLoad, this);
+    	return ClassLoaders.loadOrUploadClass(toLoad, this);
     }
     
     public Class<?> loadOrUploadClass(ByteBuffer byteCode) throws ClassNotFoundException {
-    	return classesLoaders.loadOrUploadClass(byteCode, this);
+    	return ClassLoaders.loadOrUploadClass(byteCode, this);
     }
     
     
@@ -270,7 +267,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	
 	public Set<Class<?>> getLoadedClassesForPackage(Predicate<Package> packagePredicate	) {
-		return classesLoaders.retrieveLoadedClassesForPackage(this, packagePredicate);
+		return ClassLoaders.retrieveLoadedClassesForPackage(this, packagePredicate);
 	}
 	
 	Map<String, ByteBuffer> getLoadedCompiledClasses() {
@@ -304,7 +301,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	protected void unregister() {
-		classesLoaders.unregister(this);
+		ClassLoaders.unregister(this);
 		Cache.classLoaderForConstructors.remove(this);
 		Cache.classLoaderForFields.remove(this);
 		Cache.classLoaderForMethods.remove(this);

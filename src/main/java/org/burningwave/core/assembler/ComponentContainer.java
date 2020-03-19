@@ -44,7 +44,6 @@ import org.burningwave.core.classes.ByteCodeHunter;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHunter;
-import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.SourceCodeHandler;
@@ -163,18 +162,10 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	@Override
-	public Classes.Loaders getClassesLoaders() {
-		return getOrCreate(Classes.Loaders.class, () -> 
-			org.burningwave.core.classes.Classes.Loaders.create()
-		);	
-	}
-	
-	@Override
 	public ClassFactory getClassFactory() {
 		return getOrCreate(ClassFactory.class, () -> 
 			ClassFactory.create(
 				getSourceCodeHandler(),
-				getClassesLoaders(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
 				() -> getByFieldOrByMethodPropertyAccessor().retrieveFrom(
@@ -207,7 +198,6 @@ public class ComponentContainer implements ComponentSupplier {
 				getFileSystemScanner(),
 				getPathHelper(),
 				getStreamHelper(),
-				getClassesLoaders(),
 				getByFieldOrByMethodPropertyAccessor().retrieveFrom(
 					config,
 					ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
@@ -227,8 +217,7 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getClassHunter(),
 				getFileSystemScanner(),
 				getPathHelper(),
-				getStreamHelper(),
-				getClassesLoaders()
+				getStreamHelper()
 			)
 		);
 	}
@@ -241,8 +230,7 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getClassHunter(),
 				getFileSystemScanner(),
 				getPathHelper(),
-				getStreamHelper(),
-				getClassesLoaders()
+				getStreamHelper()
 			)
 		);
 	}

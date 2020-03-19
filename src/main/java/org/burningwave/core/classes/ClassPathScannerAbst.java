@@ -49,7 +49,6 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	ByteCodeHunter byteCodeHunter;
 	Supplier<ClassHunter> classHunterSupplier;
 	ClassHunter classHunter;
-	Classes.Loaders classesLoaders;
 	FileSystemScanner fileSystemScanner;
 	StreamHelper streamHelper;
 	PathHelper pathHelper;
@@ -62,14 +61,12 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
-		Classes.Loaders classesLoaders,
 		Function<InitContext, C> contextSupplier,
 		Function<C, R> resultSupplier
 	) {
 		this.fileSystemScanner = fileSystemScanner;
 		this.pathHelper = pathHelper;
 		this.streamHelper = streamHelper;
-		this.classesLoaders = classesLoaders;
 		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
 		this.classHunterSupplier = classHunterSupplier;
 		this.contextSupplier = contextSupplier;
@@ -94,7 +91,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		final ClassFileScanConfig scanConfigCopy = scanConfig.createCopy();
 		searchConfig = searchConfig.createCopy();
 		C context = createContext(scanConfigCopy, searchConfig);
-		searchConfig.init(this.classesLoaders, context.pathMemoryClassLoader);
+		searchConfig.init(context.pathMemoryClassLoader);
 		context.executeSearch(() -> {
 			fileSystemScanner.scan(
 				scanConfigCopy.toScanConfiguration(
@@ -123,7 +120,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 					sharedClassLoader :
 					PathMemoryClassLoader.create(
 						searchConfig.parentClassLoaderForMainClassLoader, 
-						pathHelper, classesLoaders, byteCodeHunterSupplier
+						pathHelper, byteCodeHunterSupplier
 					),
 				scanConfig,
 				searchConfig
@@ -175,7 +172,6 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	@Override
 	public void close() {
 		byteCodeHunterSupplier = null;
-		classesLoaders = null;
 		streamHelper = null;
 		pathHelper = null;
 		contextSupplier = null;

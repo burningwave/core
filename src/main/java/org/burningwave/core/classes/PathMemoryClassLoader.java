@@ -55,17 +55,16 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 	protected PathMemoryClassLoader(
 		ClassLoader parentClassLoader,
 		PathHelper pathHelper,
-		Classes.Loaders classesLoaders,
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier
 	) {
-		super(parentClassLoader, classesLoaders);
+		super(parentClassLoader);
 		this.pathHelper = pathHelper;
 		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
 		loadedPaths = new HashSet<>();
 	}
 	
-	public static PathMemoryClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, Classes.Loaders classesLoaders, Supplier<ByteCodeHunter> byteCodeHunterSupplier) {
-		return new PathMemoryClassLoader(parentClassLoader, pathHelper, classesLoaders, byteCodeHunterSupplier);
+	public static PathMemoryClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, Supplier<ByteCodeHunter> byteCodeHunterSupplier) {
+		return new PathMemoryClassLoader(parentClassLoader, pathHelper, byteCodeHunterSupplier);
 	}
 	
 	ByteCodeHunter getByteCodeHunter() {

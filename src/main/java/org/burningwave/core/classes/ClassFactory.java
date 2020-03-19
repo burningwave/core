@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -54,7 +55,6 @@ public class ClassFactory implements Component {
 	
 	private SourceCodeHandler sourceCodeHandler;
 	private PathHelper pathHelper;
-	private Classes.Loaders classesLoaders;
 	private JavaMemoryCompiler javaMemoryCompiler;
 	private PojoSubTypeRetriever pojoSubTypeRetriever;	
 	private ClassLoader defaultClassLoader;
@@ -62,13 +62,11 @@ public class ClassFactory implements Component {
 	
 	private ClassFactory(
 		SourceCodeHandler sourceCodeHandler,
-		Classes.Loaders classesLoaders,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		Supplier<ClassLoader> defaultClassLoaderSupplier
 	) {	
 		this.sourceCodeHandler = sourceCodeHandler;
-		this.classesLoaders = classesLoaders;
 		this.javaMemoryCompiler = javaMemoryCompiler;
 		this.pathHelper = pathHelper;
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
@@ -77,13 +75,12 @@ public class ClassFactory implements Component {
 	
 	public static ClassFactory create(
 		SourceCodeHandler sourceCodeHandler,
-		Classes.Loaders classesLoaders,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		Supplier<ClassLoader> defaultClassLoaderSupplier
 	) {
 		return new ClassFactory(
-			sourceCodeHandler, classesLoaders,
+			sourceCodeHandler, 
 			javaMemoryCompiler, pathHelper, defaultClassLoaderSupplier
 		);
 	}
@@ -115,7 +112,7 @@ public class ClassFactory implements Component {
 			String className = sourceCodeHandler.extractClassName(unitCode);
 			Map<String, ByteBuffer> compiledFiles = build(unitCode);
 			logInfo("Class " + className + " succesfully created");
-			classesLoaders.loadOrUploadClasses(compiledFiles, classLoader);
+			ClassLoaders.loadOrUploadClasses(compiledFiles, classLoader);
 			return classLoader.loadClass(className);
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
@@ -135,7 +132,7 @@ public class ClassFactory implements Component {
 	}
 	
 	private Class<?> getOrBuild(ClassLoader classLoader, String className, Supplier<UnitSourceGenerator> unitCode) {
-		Class<?> toRet = classesLoaders.retrieveLoadedClass(classLoader, className);
+		Class<?> toRet = ClassLoaders.retrieveLoadedClass(classLoader, className);
 		if (toRet == null) {
 			toRet = buildAndUploadTo(classLoader, className, unitCode);
 		} else {
@@ -152,7 +149,7 @@ public class ClassFactory implements Component {
 			});
 			Map<String, ByteBuffer> compiledFiles = build(unit.make());
 			logInfo("Class " + className + " succesfully created");
-			classesLoaders.loadOrUploadClasses(compiledFiles, classLoader);
+			ClassLoaders.loadOrUploadClasses(compiledFiles, classLoader);
 			return classLoader.loadClass(className);
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
@@ -165,7 +162,7 @@ public class ClassFactory implements Component {
 	
 	public Class<?> getOrBuild(ClassLoader classLoader, String classCode) {
 		String className = sourceCodeHandler.extractClassName(classCode);
-		java.lang.Class<?> toRet = classesLoaders.retrieveLoadedClass(classLoader, className);
+		java.lang.Class<?> toRet = ClassLoaders.retrieveLoadedClass(classLoader, className);
 		if (toRet == null) {
 			toRet = buildAndUploadTo(classLoader, classCode);
 		}
@@ -264,8 +261,7 @@ public class ClassFactory implements Component {
 		return ThrowingSupplier.get(() -> {
 			try (MemoryClassLoader memoryClassLoader = 
 				MemoryClassLoader.create(
-					classLoaderParentOfOneShotClassLoader,
-					classesLoaders
+					classLoaderParentOfOneShotClassLoader
 				)
 			) {
 				String packageName = CodeExecutor.class.getPackage().getName();

@@ -59,7 +59,6 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		StreamHelper streamHelper,
-		Classes.Loaders classesLoaders,
 		Function<InitContext, C> contextSupplier,
 		Function<C, R> resultSupplier) {
 		super(
@@ -68,7 +67,6 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 			fileSystemScanner,
 			pathHelper,
 			streamHelper,
-			classesLoaders,
 			contextSupplier,
 			resultSupplier
 		);
@@ -84,7 +82,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 			), 
 			searchConfig
 		);
-		searchConfig.init(this.classesLoaders, context.pathMemoryClassLoader);
+		searchConfig.init(context.pathMemoryClassLoader);
 		context.executeSearch(() ->
 			scan(context)
 		);
@@ -259,7 +257,6 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		clearCache();
 		cache = null;
 		byteCodeHunterSupplier = null;
-		classesLoaders = null;
 		streamHelper = null;
 		pathHelper = null;
 		contextSupplier = null;

@@ -12,6 +12,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
 	public static final org.burningwave.core.Cache Cache;
 	public static final org.burningwave.core.classes.Classes Classes;
+	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
 	public static final org.burningwave.core.reflection.ConstructorHelper ConstructorHelper;
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.reflection.FieldHelper FieldHelper;
@@ -52,6 +53,7 @@ public class StaticComponentContainer {
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
 			LowLevelObjectsHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.create();
 			Classes = org.burningwave.core.classes.Classes.create();
+			ClassLoaders = org.burningwave.core.classes.Classes.Loaders.create();
 			Cache = org.burningwave.core.Cache.create();
 			MemberFinder = org.burningwave.core.classes.MemberFinder.create();
 			ConstructorHelper = org.burningwave.core.reflection.ConstructorHelper.create();

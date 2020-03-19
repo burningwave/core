@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.MemberFinder;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
@@ -63,10 +64,10 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		return new ClassCriteria();
 	}
 	
-	void init(Classes.Loaders classesLoaders, ClassLoader classSupplier) {
+	void init(ClassLoader classSupplier) {
 		this.classSupplier = cls -> {
 			try {
-				return classesLoaders.loadOrUploadClass(cls, classSupplier);
+				return ClassLoaders.loadOrUploadClass(cls, classSupplier);
 			} catch (ClassNotFoundException exc) {
 				throw Throwables.toRuntimeException(exc);
 			}
