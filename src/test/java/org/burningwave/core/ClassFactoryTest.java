@@ -6,6 +6,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Constructo
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.bean.Complex;
@@ -126,8 +127,15 @@ public class ClassFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> {
 			StatementSourceGenerator statementSG = StatementSourceGenerator.createSimple().setElementPrefix("\t");
-			statementSG.addCodeRow("System.out.println(objects[0]);");
-			statementSG.addCodeRow("return (T)objects[0];");
+			statementSG.useType(ArrayList.class);
+			statementSG.useType(List.class);
+			statementSG.addCodeRow("System.out.println(\"number to add: \" + parameter[0]);");
+			statementSG.addCodeRow("List<Integer> numbers = new ArrayList<>();");
+			statementSG.addCodeRow("numbers.add((Integer)parameter[0]);");
+			statementSG.addCodeRow("System.out.println(\"number list size: \" + numbers.size());");
+			statementSG.addCodeRow("System.out.println(\"number in the list: \" + numbers.get(0));");
+			statementSG.addCodeRow("Integer inputNumber = (Integer)parameter[0];");
+			statementSG.addCodeRow("return (T)inputNumber++;");
 			return componentSupplier.getClassFactory().execute(statementSG, Integer.valueOf(5));
 		});
 	}

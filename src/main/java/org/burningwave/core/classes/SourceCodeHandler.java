@@ -82,7 +82,7 @@ public class SourceCodeHandler implements Component {
 			)
 		).addParameter(
 			VariableSourceGenerator.create(
-				TypeDeclarationSourceGenerator.create("Object... "), "objects"
+				TypeDeclarationSourceGenerator.create("Object... "), "parameter"
 			)
 		).addOuterCodeRow("@Override").addBodyElement(statement);
 		typeDeclaration.addGeneric(returnType);		
