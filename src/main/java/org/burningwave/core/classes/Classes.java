@@ -671,9 +671,9 @@ public class Classes implements Component {
 	    		return (Class<T>) classLoader.loadClass(javaClass.getName());
 	    	} catch (ClassNotFoundException | NoClassDefFoundError outerEx) {
 	    		try {
-	    			Class<?> cls = defineClass(classLoader, defineClassMethod, javaClass.getName(), javaClass.getByteCode());
+	    			Class<T> cls = defineClass(classLoader, defineClassMethod, javaClass.getName(), javaClass.getByteCode());
 	    			definePackageFor(cls, classLoader, definePackageMethod);
-	    			return (Class<T>) cls;
+	    			return cls;
 				} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException outerExc) {
 					String newNotFoundClassName = Classes.retrieveNames(outerExc).stream().findFirst().orElseGet(() -> null);
 					loadOrUploadClass(
@@ -700,9 +700,9 @@ public class Classes implements Component {
 	    		return (Class<T>)classLoader.loadClass(toLoad.getName());
 	    	} catch (ClassNotFoundException | NoClassDefFoundError outerEx) {
 	    		try {
-	    			Class<?> cls = defineClass(classLoader, defineClassMethod, toLoad.getName(), Streams.shareContent(Classes.getByteCode(toLoad)));
+	    			Class<T> cls = defineClass(classLoader, defineClassMethod, toLoad.getName(), Streams.shareContent(Classes.getByteCode(toLoad)));
 	    			definePackageFor(cls, classLoader, definePackageMethod);
-	    			return (Class<T>) cls;
+	    			return cls;
 				} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException outerExc) {
 					String newNotFoundClassName = Classes.retrieveNames(outerExc).stream().findFirst().orElseGet(() -> null);
 					loadOrUploadClass(
@@ -721,8 +721,8 @@ public class Classes implements Component {
 	    	}
 	    }
 		
-		public Class<?> upload(ClassLoader classLoader, JavaClass javaClass) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
-			Class<?> definedClass = defineClass(classLoader, getDefineClassMethod(classLoader), javaClass.getName(), javaClass.getByteCode());
+		public <T> Class<T> upload(ClassLoader classLoader, JavaClass javaClass) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
+			Class<T> definedClass = defineClass(classLoader, getDefineClassMethod(classLoader), javaClass.getName(), javaClass.getByteCode());
 			definePackageFor(definedClass, classLoader, getDefinePackageMethod(classLoader));
 			return definedClass;
 		}
