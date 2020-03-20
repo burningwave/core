@@ -148,11 +148,11 @@ public class MethodHelper extends MemberHelper<Method> {
 			}
 		}
 		return ThrowingSupplier.get(() -> {
-				if (Modifier.isStatic(method.getModifiers())) {
-					return (T)methodHandleWrapper.get().invokeWithArguments(arguments);
-				} else {
-					return (T)methodHandleWrapper.get().bindTo(target).invokeWithArguments(arguments);
+				MethodHandle methodHandle = methodHandleWrapper.get();
+				if (!Modifier.isStatic(method.getModifiers())) {
+					methodHandle = methodHandle.bindTo(target);
 				}
+				return (T)methodHandle.invokeWithArguments(arguments);
 			}
 		);
 	}
