@@ -140,7 +140,7 @@ public class MethodHelper extends MemberHelper<Method> {
 		if (methodHandleWrapper.get() == null) {
 			methodHandleWrapper.set(
 				convertToMethodHandle(
-						method
+					method
 				)
 			);
 			if (cacheMethod) {
