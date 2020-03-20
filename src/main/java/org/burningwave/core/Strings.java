@@ -41,6 +41,11 @@ public class Strings implements Component {
 	
 	private Strings() {}
 	
+	public String capitalizeFirstCharacter(String value) {
+		return Character.valueOf(value.charAt(0)).toString().toUpperCase()
+		+ value.substring(1, value.length());
+	}
+	
 	public static Strings create() {
 		return new Strings();
 	}

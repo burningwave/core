@@ -31,6 +31,7 @@ package org.burningwave.core.reflection;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.invoke.MethodHandle;
@@ -62,19 +63,14 @@ public class MethodHelper extends MemberHelper<Method> {
 
 	public String createGetterMethodNameByPropertyName(String property) {
 		String methodName = 
-				"get" + capitalizeFirstCharacter(property);
+			"get" + Strings.capitalizeFirstCharacter(property);
 		return methodName;
 	}
 
 	public String createSetterMethodNameByPropertyName(String property) {
 		String methodName = 
-				"set" + capitalizeFirstCharacter(property);
+			"set" + Strings.capitalizeFirstCharacter(property);
 		return methodName;
-	}
-	
-	private String capitalizeFirstCharacter(String value) {
-		return Character.valueOf(value.charAt(0)).toString().toUpperCase()
-		+ value.substring(1, value.length());
 	}
 	
 	public Method findOneAndMakeItAccessible(Object target, String methodName, Object... arguments) {
