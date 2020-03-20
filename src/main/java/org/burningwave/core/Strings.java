@@ -41,13 +41,13 @@ public class Strings implements Component {
 	
 	private Strings() {}
 	
+	public static Strings create() {
+		return new Strings();
+	}
+	
 	public String capitalizeFirstCharacter(String value) {
 		return Character.valueOf(value.charAt(0)).toString().toUpperCase()
 		+ value.substring(1, value.length());
-	}
-	
-	public static Strings create() {
-		return new Strings();
 	}
 	
 	public boolean isBlank(String str) {
@@ -61,8 +61,7 @@ public class Strings implements Component {
 			}
 		}
 		return true;
-	}
-	
+	}	
 	
 	public boolean isNotBlank(String str) {
 		return (!(isBlank(str)));
@@ -72,7 +71,6 @@ public class Strings implements Component {
 	public boolean isEmpty(String str) {
 		return ((str == null) || (str.length() == 0));
 	}
-
 
 	public boolean isNotEmpty(String str) {
 		return (!(isEmpty(str)));
