@@ -32,6 +32,8 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingSupplier;
@@ -39,8 +41,11 @@ import org.burningwave.core.function.ThrowingSupplier;
 
 public class FileSystemHelper implements Component {
 	private File baseTemporaryFolder;
+	private Set<File> temporaryFolders;
 	
-	private FileSystemHelper() {}
+	private FileSystemHelper() {
+		temporaryFolders = ConcurrentHashMap.newKeySet();	
+	}
 	
 	public void clearMainTemporaryFolder() {
 		delete(Arrays.asList(getOrCreateMainTemporaryFolder().listFiles()));
@@ -69,15 +74,18 @@ public class FileSystemHelper implements Component {
 				tempFolder.delete();
 			}
 			tempFolder.mkdirs();
+			temporaryFolders.add(tempFolder);
 			return tempFolder;
 		});
 	}
 	
+	@Override
 	public File getOrCreateTemporaryFolder(String folderName) {
 		return ThrowingSupplier.get(() -> {
 			File tempFolder = new File(getOrCreateMainTemporaryFolder().getAbsolutePath() + "/" + folderName);
 			if (!tempFolder.exists()) {
 				tempFolder.mkdirs();
+				temporaryFolders.add(tempFolder);
 			}
 			return tempFolder;
 		});
@@ -85,11 +93,6 @@ public class FileSystemHelper implements Component {
 	
 	public static FileSystemHelper create() {
 		return new FileSystemHelper();
-	}
-
-	public void deleteTempraryFiles(Collection<File> temporaryFiles) {
-		delete(temporaryFiles);
-		temporaryFiles.removeAll(temporaryFiles);
 	}
 	
 	public void delete(Collection<File> files) {
@@ -133,6 +136,9 @@ public class FileSystemHelper implements Component {
 	@Override
 	public void close() {
 		baseTemporaryFolder = null;
+		delete(temporaryFolders);
+		temporaryFolders.clear();
+		temporaryFolders = null;
 	}
 
 }

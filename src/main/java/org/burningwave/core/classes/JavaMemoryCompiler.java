@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -85,15 +84,9 @@ public class JavaMemoryCompiler implements Component {
 		this.classPathHunter = classPathHunter;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
 		this.sourceCodeExecutor = sourceCodeExecutor;
-		compiledClassesClassPath = FileSystemItem.ofPath(
-			FileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix() + "/compiled").getAbsolutePath()
-		);
-		classPathHunterBasePathForCompressedLibs = FileSystemItem.ofPath(
-			FileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix() + "/lib").getAbsolutePath()
-		);
-		classPathHunterBasePathForCompressedClasses = FileSystemItem.ofPath(
-			FileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix() + "/classes").getAbsolutePath()
-		);		
+		this.compiledClassesClassPath = FileSystemItem.of(getOrCreateTemporaryFolder("compiled"));
+		this.classPathHunterBasePathForCompressedLibs = FileSystemItem.of(getOrCreateTemporaryFolder("lib"));
+		this.classPathHunterBasePathForCompressedClasses = FileSystemItem.of(getOrCreateTemporaryFolder("classes"));
 	}	
 	
 	public static JavaMemoryCompiler create(

@@ -75,7 +75,11 @@ public class FileSystemItem implements ManagedLogger {
 		this.absolutePath = new AbstractMap.SimpleEntry<>(realAbsolutePath, conventionedAbsolutePath);
 	}
 	
-	public static FileSystemItem ofPath(URL realAbsolutePath) {
+	public static FileSystemItem of(File file) {
+		return ofPath(file.getAbsolutePath());
+	}
+	
+	public static FileSystemItem of(URL realAbsolutePath) {
 		return ofPath(Paths.convertFromURLPath(realAbsolutePath.getPath()));
 	}
 	
@@ -745,4 +749,5 @@ public class FileSystemItem implements ManagedLogger {
 	public String toString() {
 		return absolutePath.getKey();
 	}
+
 }
