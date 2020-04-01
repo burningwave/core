@@ -79,8 +79,8 @@ public class FileSystemItem implements ManagedLogger {
 		return ofPath(file.getAbsolutePath());
 	}
 	
-	public static FileSystemItem of(URL realAbsolutePath) {
-		return ofPath(Paths.convertFromURLPath(realAbsolutePath.getPath()));
+	public static FileSystemItem of(URL url) {
+		return ofPath(Paths.convertFromURLPath(url.getPath()));
 	}
 	
 	public static FileSystemItem ofPath(String realAbsolutePath) {
