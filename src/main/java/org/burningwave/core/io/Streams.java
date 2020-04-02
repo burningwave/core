@@ -31,17 +31,21 @@ package org.burningwave.core.io;
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.Properties;
@@ -183,4 +187,26 @@ public class Streams implements Component {
 		);		
 		return FileSystemItem.ofPath(file.getAbsolutePath());
 	}
+	
+	public StringBuffer getResourceAsStringBuffer(String resourceRelativePath) {
+		return ThrowingSupplier.get(() -> {
+			ClassLoader classLoader = Optional.ofNullable(StaticComponentContainer.class.getClassLoader()).orElseGet(() ->
+				ClassLoader.getSystemClassLoader()
+			);
+			try (BufferedReader reader = new BufferedReader(
+					new InputStreamReader(
+						classLoader.getResourceAsStream(resourceRelativePath)
+					)
+				)
+			) {
+				StringBuffer result = new StringBuffer();
+				String sCurrentLine;
+				while ((sCurrentLine = reader.readLine()) != null) {
+					result.append(sCurrentLine + "\n");
+				}
+				return result;
+			}
+		});
+	}
+
 }

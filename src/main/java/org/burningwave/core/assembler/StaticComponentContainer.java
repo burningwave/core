@@ -1,13 +1,19 @@
 package org.burningwave.core.assembler;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
+
+import org.burningwave.core.function.ThrowingSupplier;
 
 public class StaticComponentContainer {
-	private static final String CLEAR_TEMPORARY_FOLDER_ON_STARTUP_CONFIG_KEY = "static-component-container.clear-temporary-folder-on-startup";
+	private static final String CLEAR_TEMPORARY_FOLDER_ON_INIT_CONFIG_KEY = "static-component-container.clear-temporary-folder-on-init";
+	private static final String HIDE_BANNER_ON_INIT_CONFIG_KEY = "static-component-container.hide-banner-on-init";
 	
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
 	public static final org.burningwave.core.Cache Cache;
@@ -32,6 +38,10 @@ public class StaticComponentContainer {
 		Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
 			loadFirstOneFound("burningwave.static.properties", "burningwave.static.default.properties");
 		GlobalProperties = propBag.getKey();
+		boolean hideBannerOnInit = Boolean.valueOf(GlobalProperties.getProperty(HIDE_BANNER_ON_INIT_CONFIG_KEY));
+		if (!hideBannerOnInit) {
+			showBanner();
+		}
 		ManagedLoggersRepository = createManagedLoggersRepository(GlobalProperties);
 		URL globalPropertiesFileUrl = propBag.getValue();
 		if (globalPropertiesFileUrl != null) {
@@ -45,8 +55,8 @@ public class StaticComponentContainer {
 			Paths = org.burningwave.core.Strings.Paths.create();
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create();
 			Runtime.getRuntime().addShutdownHook(new Thread(FileSystemHelper::close));
-			boolean clearTemporaryFolderOnStartup = Boolean.valueOf(GlobalProperties.getProperty(CLEAR_TEMPORARY_FOLDER_ON_STARTUP_CONFIG_KEY));
-			if (clearTemporaryFolderOnStartup) {
+			boolean clearTemporaryFolderOnInit = Boolean.valueOf(GlobalProperties.getProperty(CLEAR_TEMPORARY_FOLDER_ON_INIT_CONFIG_KEY));
+			if (clearTemporaryFolderOnInit) {
 				FileSystemHelper.clearMainTemporaryFolder();
 			}
 			ByteBufferDelegate = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate.create();
@@ -64,6 +74,11 @@ public class StaticComponentContainer {
 			ManagedLoggersRepository.logError(StaticComponentContainer.class, "Exception occurred", exc);
 			throw Throwables.toRuntimeException(exc);
 		}
+	}
+
+	static void showBanner() {
+		String[] banners = getResourceAsStringBuffer("banner.txt").toString().split("--------------------------------------------------------------------------------------------------");
+		System.out.println(banners[new Random().nextInt(banners.length)]);
 	}
 	
 	private static org.burningwave.core.ManagedLogger.Repository createManagedLoggersRepository(
@@ -110,6 +125,27 @@ public class StaticComponentContainer {
 			}
 		}
 		return propertiesBag;
+	}
+	
+	private static StringBuffer getResourceAsStringBuffer(String resourceRelativePath) {
+		return ThrowingSupplier.get(() -> {
+			ClassLoader classLoader = Optional.ofNullable(StaticComponentContainer.class.getClassLoader()).orElseGet(() ->
+				ClassLoader.getSystemClassLoader()
+			);
+			try (BufferedReader reader = new BufferedReader(
+					new InputStreamReader(
+						classLoader.getResourceAsStream(resourceRelativePath)
+					)
+				)
+			) {
+				StringBuffer result = new StringBuffer();
+				String sCurrentLine;
+				while ((sCurrentLine = reader.readLine()) != null) {
+					result.append(sCurrentLine + "\n");
+				}
+				return result;
+			}
+		});
 	}
 	
 }
