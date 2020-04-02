@@ -77,7 +77,7 @@ public class StaticComponentContainer {
 	}
 
 	static void showBanner() {
-		String[] banners = getResourceAsStringBuffer("org/burningwave/banner.txt").toString().split("--------------------------------------------------------------------------------------------------");
+		String[] banners = getResourceAsStringBuffer("org/burningwave/banner.txt").toString().split("-------------------------------------------------------------------------------------------------------------");
 		System.out.println(banners[new Random().nextInt(banners.length)]);
 	}
 	
