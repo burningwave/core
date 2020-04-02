@@ -38,8 +38,7 @@ public class StaticComponentContainer {
 		Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
 			loadFirstOneFound("burningwave.static.properties", "burningwave.static.default.properties");
 		GlobalProperties = propBag.getKey();
-		boolean hideBannerOnInit = Boolean.valueOf(GlobalProperties.getProperty(HIDE_BANNER_ON_INIT_CONFIG_KEY));
-		if (!hideBannerOnInit) {
+		if (!Boolean.valueOf(GlobalProperties.getProperty(HIDE_BANNER_ON_INIT_CONFIG_KEY))) {
 			showBanner();
 		}
 		ManagedLoggersRepository = createManagedLoggersRepository(GlobalProperties);
@@ -55,8 +54,7 @@ public class StaticComponentContainer {
 			Paths = org.burningwave.core.Strings.Paths.create();
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create();
 			Runtime.getRuntime().addShutdownHook(new Thread(FileSystemHelper::close));
-			boolean clearTemporaryFolderOnInit = Boolean.valueOf(GlobalProperties.getProperty(CLEAR_TEMPORARY_FOLDER_ON_INIT_CONFIG_KEY));
-			if (clearTemporaryFolderOnInit) {
+			if (Boolean.valueOf(GlobalProperties.getProperty(CLEAR_TEMPORARY_FOLDER_ON_INIT_CONFIG_KEY))) {
 				FileSystemHelper.clearMainTemporaryFolder();
 			}
 			ByteBufferDelegate = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate.create();
