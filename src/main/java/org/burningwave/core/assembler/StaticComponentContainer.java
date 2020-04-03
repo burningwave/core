@@ -86,10 +86,10 @@ public class StaticComponentContainer {
 	}
 
 	static void showBanner() {
-		String[] banners = getResourceAsStringBuffer("org/burningwave/banner.txt").toString().split("-------------------------------------------------------------------------------------------------------------");
+		String[] banners = getResourceAsStringBuffer("org/burningwave/banner.bwb").toString().split("-------------------------------------------------------------------------------------------------------------");
 		List<String> bannerList = Arrays.asList(banners);
 		Collections.shuffle(bannerList);
-		System.out.println("\n" + bannerList.toArray(banners)[new Random().nextInt(banners.length)]);
+		System.out.println("\n" + bannerList.toArray(banners)[new Random().nextInt(bannerList.size())]);
 	}
 	
 	private static org.burningwave.core.ManagedLogger.Repository createManagedLoggersRepository(
