@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,7 +49,13 @@ public class StaticComponentContainer {
 		ManagedLoggersRepository = createManagedLoggersRepository(GlobalProperties);
 		URL globalPropertiesFileUrl = propBag.getValue();
 		if (globalPropertiesFileUrl != null) {
-			ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Building static components by using " + globalPropertiesFileUrl);
+			ManagedLoggersRepository.logInfo(
+				StaticComponentContainer.class, "Building static components by using " + ThrowingSupplier.get(() ->
+					URLDecoder.decode(
+						globalPropertiesFileUrl.toString(), StandardCharsets.UTF_8.name()
+					)
+				)
+			);
 		} else {
 			ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Building static components by using configuration");
 		}
@@ -81,7 +89,7 @@ public class StaticComponentContainer {
 		String[] banners = getResourceAsStringBuffer("org/burningwave/banner.txt").toString().split("-------------------------------------------------------------------------------------------------------------");
 		List<String> bannerList = Arrays.asList(banners);
 		Collections.shuffle(bannerList);
-		System.out.println(bannerList.toArray(banners)[new Random().nextInt(banners.length)]);
+		System.out.println("\n" + bannerList.toArray(banners)[new Random().nextInt(banners.length)]);
 	}
 	
 	private static org.burningwave.core.ManagedLogger.Repository createManagedLoggersRepository(

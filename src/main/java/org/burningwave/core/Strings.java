@@ -28,6 +28,8 @@
  */
 package org.burningwave.core;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,6 +38,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.burningwave.core.function.ThrowingSupplier;
 
 public class Strings implements Component {
 	
@@ -204,11 +208,17 @@ public class Strings implements Component {
 		}
 		
 		
-		public String convertFromURLPath(String uRLPath) {
+		public String convertFromURLPath(String inputURLPath) {
+			String uRLPath = ThrowingSupplier.get(() ->
+				URLDecoder.decode(
+					inputURLPath, StandardCharsets.UTF_8.name()
+				)
+			);
 			uRLPath = removeInitialPathElements(uRLPath, 
 					"file:", 
 					//Patch for tomcat 7
 					"!");
+			
 			if (uRLPath.contains("\\")) {
 				uRLPath = uRLPath.replace("\\", "/");
 			}		
@@ -218,17 +228,8 @@ public class Strings implements Component {
 			if (!uRLPath.endsWith("/")) {
 				uRLPath = uRLPath + "/";
 			}
-			if (uRLPath.contains("%20")) {
-				uRLPath = uRLPath.replace("%20", " ");
-			}
 			if (uRLPath.contains(".jar!/")) {
 				uRLPath = uRLPath.replace(".jar!/", ".jar/");
-			}
-			if (uRLPath.contains("%5b")) {
-				uRLPath = uRLPath.replace("%5b", "[");
-			}
-			if (uRLPath.contains("%5d")) {
-				uRLPath = uRLPath.replace("%5d", "]");
 			}
 			return uRLPath;
 		}
