@@ -5,6 +5,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.AbstractMap;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -76,7 +79,9 @@ public class StaticComponentContainer {
 
 	static void showBanner() {
 		String[] banners = getResourceAsStringBuffer("org/burningwave/banner.txt").toString().split("-------------------------------------------------------------------------------------------------------------");
-		System.out.println(banners[new Random().nextInt(banners.length)]);
+		List<String> bannerList = Arrays.asList(banners);
+		Collections.shuffle(bannerList);
+		System.out.println(bannerList.toArray(banners)[new Random().nextInt(banners.length)]);
 	}
 	
 	private static org.burningwave.core.ManagedLogger.Repository createManagedLoggersRepository(
