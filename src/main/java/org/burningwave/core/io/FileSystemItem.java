@@ -40,7 +40,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collections;
@@ -55,6 +57,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemScanner.Scan;
 
 public class FileSystemItem implements ManagedLogger {
@@ -79,8 +82,8 @@ public class FileSystemItem implements ManagedLogger {
 		return ofPath(file.getAbsolutePath());
 	}
 	
-	public static FileSystemItem of(URL url) {
-		return ofPath(Paths.convertFromURLPath(url.getPath()));
+	public static FileSystemItem of(URL realAbsolutePath) {
+		return ofPath(Paths.convertURLPathToAbsolutePath(realAbsolutePath.getPath()));
 	}
 	
 	public static FileSystemItem ofPath(String realAbsolutePath) {
@@ -244,16 +247,9 @@ public class FileSystemItem implements ManagedLogger {
 		if (isCompressed()) {
 			prefix = getParentContainer().getExtension() + ":" + prefix;
 		}
-		url = prefix + url.replace(IterableZipContainer.ZIP_PATH_SEPARATOR, "!/");
-		if (url.contains(" ")) {
-			url = url.replace(" ", "%20");
-		}
-		if (url.contains("[")) {
-			url = url.replace("[", "%5b");
-		}
-		if (url.contains("]")) {
-			url = url.replace("]", "%5d");
-		}
+		String uRLToRet = url.replace(IterableZipContainer.ZIP_PATH_SEPARATOR, "!/");
+		url = ThrowingSupplier.get(() -> URLEncoder.encode(uRLToRet, StandardCharsets.UTF_8.name())).replace("%3A", ":").replace("%21", "!").replace("%2F", "/");
+		url = prefix + url;
 		return url;
 	}
 	
@@ -262,8 +258,11 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public String getExtension() {
-		String extension = getName();
-		extension = extension.substring(extension.lastIndexOf(".") + 1);
+		String extension = null;
+		String name = getName();
+		if (name.contains(".")) {
+			extension = name.substring(name.lastIndexOf(".") + 1);
+		}
 		return extension;
 	}
 	

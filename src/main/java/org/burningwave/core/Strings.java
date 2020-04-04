@@ -181,6 +181,7 @@ public class Strings implements Component {
 	
 	public static class Paths {
 		Function<String, String> pathCleaner;
+		Function<String, String> uRLPathConverter;
 		
 		private Paths() {
 			if (System.getProperty("os.name").toLowerCase().contains("windows")) {
@@ -194,8 +195,10 @@ public class Strings implements Component {
 					}	
 					return path.replaceAll("\\/{2,}", "/");
 				};
+				uRLPathConverter = this::convertURLPathToAbsolutePath0;
 			} else {
 				pathCleaner = (path) -> path.replace("\\", "/").replaceAll("\\/{2,}", "/");
+				uRLPathConverter = this::convertURLPathToAbsolutePath1;
 			}
 		}
 		
@@ -207,31 +210,69 @@ public class Strings implements Component {
 			return pathCleaner.apply(path);
 		}
 		
+		public String getExtension(String path) {
+			if (path.endsWith("/")) {
+				return null;
+			}
+			if (path.contains("/")) {
+				String name = path.substring(path.lastIndexOf("/") + 1);
+				if (name.contains(".")) {
+					return name.substring(name.lastIndexOf(".") + 1);
+				}
+				return null;
+			}
+			return null;
+		}
 		
-		public String convertFromURLPath(String inputURLPath) {
-			String uRLPath = ThrowingSupplier.get(() ->
+		public String convertURLPathToAbsolutePath(String inputURLPath) {
+			return uRLPathConverter.apply(inputURLPath);
+		}
+		
+		private String convertURLPathToAbsolutePath0(String inputURLPath) {
+			String absolutePath = ThrowingSupplier.get(() ->
 				URLDecoder.decode(
 					inputURLPath, StandardCharsets.UTF_8.name()
 				)
 			);
-			uRLPath = removeInitialPathElements(uRLPath, 
-					"file:", 
-					//Patch for tomcat 7
-					"!");
+			absolutePath = removeInitialPathElements(absolutePath,
+				"jar:",
+				"zip:",
+				"file:", 
+				//Patch for tomcat 7
+				"!"
+			);
 			
-			if (uRLPath.contains("\\")) {
-				uRLPath = uRLPath.replace("\\", "/");
-			}		
-			if (!uRLPath.startsWith("/")) {
-				uRLPath = "/" + uRLPath;
+			if (absolutePath.startsWith("/")) {
+				absolutePath = absolutePath.substring(1);
 			}
-			if (!uRLPath.endsWith("/")) {
-				uRLPath = uRLPath + "/";
+			if (absolutePath.endsWith("/")) {
+				absolutePath = absolutePath.substring(0, absolutePath.length() - 1);
 			}
-			if (uRLPath.contains(".jar!/")) {
-				uRLPath = uRLPath.replace(".jar!/", ".jar/");
+			
+			if (absolutePath.contains(".jar!/")) {
+				absolutePath = absolutePath.replace(".jar!/", ".jar/");
 			}
-			return uRLPath;
+			return absolutePath;
+		}
+		
+		private String convertURLPathToAbsolutePath1(String inputURLPath) {
+			String absolutePath = ThrowingSupplier.get(() ->
+				URLDecoder.decode(
+					inputURLPath, StandardCharsets.UTF_8.name()
+				)
+			);
+			absolutePath = removeInitialPathElements(absolutePath,
+				"jar:",
+				"zip:",
+				"file:", 
+				//Patch for tomcat 7
+				"!"
+			);
+			
+			if (absolutePath.contains(".jar!/")) {
+				absolutePath = absolutePath.replace(".jar!/", ".jar/");
+			}
+			return absolutePath;
 		}
 		
 		public String removeInitialPathElements(String path, String... toRemove) {
