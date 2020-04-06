@@ -30,12 +30,12 @@ package org.burningwave.core.assembler;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -50,7 +50,6 @@ import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.concurrent.ConcurrentHelper;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.reflection.PropertyAccessor;
@@ -84,8 +83,7 @@ public class ComponentContainer implements ComponentSupplier {
 		config.put(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
 		config.put(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
 		
-		InputStream customConfig = Optional.ofNullable(this.getClass().getClassLoader()).orElseGet(() ->
-		ClassLoader.getSystemClassLoader()).getResourceAsStream(configFileName);
+		InputStream customConfig = Resources.getAsInputStream(this.getClass().getClassLoader(), configFileName);
 		if (customConfig != null) {
 			try(InputStream inputStream = customConfig) {
 				config.load(inputStream);
@@ -197,7 +195,6 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getClassHunter(),
 				getFileSystemScanner(),
 				getPathHelper(),
-				getStreamHelper(),
 				getByFieldOrByMethodPropertyAccessor().retrieveFrom(
 					config,
 					ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
@@ -216,8 +213,7 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
 				getFileSystemScanner(),
-				getPathHelper(),
-				getStreamHelper()
+				getPathHelper()
 			)
 		);
 	}
@@ -229,8 +225,7 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
 				getFileSystemScanner(),
-				getPathHelper(),
-				getStreamHelper()
+				getPathHelper()
 			)
 		);
 	}
@@ -270,14 +265,6 @@ public class ComponentContainer implements ComponentSupplier {
 			PathHelper.create(
 				getIterableObjectHelper(),
 				config
-			)
-		);
-	}
-	
-	public StreamHelper getStreamHelper() {
-		return getOrCreate(StreamHelper.class, () -> 
-			StreamHelper.create(
-				getPathHelper()
 			)
 		);
 	}

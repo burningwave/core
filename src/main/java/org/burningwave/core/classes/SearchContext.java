@@ -44,7 +44,6 @@ import org.burningwave.core.Component;
 import org.burningwave.core.Context;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.ClassFileScanConfig;
-import org.burningwave.core.io.StreamHelper;
 
 public class SearchContext<T> implements Component {
 
@@ -66,7 +65,6 @@ public class SearchContext<T> implements Component {
 	
 
 	SearchContext(
-		StreamHelper streamHelper,
 		InitContext initContext
 	) {
 		this.itemsFoundFlatMap = new HashMap<>();
@@ -82,10 +80,9 @@ public class SearchContext<T> implements Component {
 	}
 	
 	public static <T> SearchContext<T> create(
-		StreamHelper streamHelper,
 		InitContext initContext
 	) {
-		return new SearchContext<>(streamHelper, initContext);
+		return new SearchContext<>(initContext);
 	}
 	
 	void executeSearch(Runnable searcher) {

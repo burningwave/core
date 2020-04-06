@@ -1,8 +1,6 @@
 package org.burningwave.core.assembler;
 
-import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -11,7 +9,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Random;
 
 import org.burningwave.core.function.ThrowingSupplier;
@@ -34,11 +31,13 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.classes.MemberFinder MemberFinder;
 	public static final org.burningwave.core.reflection.MethodHelper MethodHelper;
 	public static final org.burningwave.core.Strings.Paths Paths;
+	public static final org.burningwave.core.io.Resources Resources;
 	public static final org.burningwave.core.io.Streams Streams;
 	public static final org.burningwave.core.Strings Strings;
 	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
+		Resources = new org.burningwave.core.io.Resources();
 		Throwables = org.burningwave.core.Throwables.create();
 		Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
 			loadFirstOneFound("burningwave.static.properties", "burningwave.static.default.properties");
@@ -87,7 +86,9 @@ public class StaticComponentContainer {
 
 	static void showBanner() {
 		List<String> bannerList = Arrays.asList(
-			getResourceAsStringBuffer("org/burningwave/banner.bwb").toString().split("-------------------------------------------------------------------------------------------------------------")	
+			Resources.getAsStringBuffer(
+				StaticComponentContainer.class.getClassLoader(), "org/burningwave/banner.bwb"
+			).toString().split("-------------------------------------------------------------------------------------------------------------")	
 		);
 		Collections.shuffle(bannerList);
 		System.out.println("\n" + bannerList.get(new Random().nextInt(bannerList.size())));
@@ -120,14 +121,12 @@ public class StaticComponentContainer {
 		org.burningwave.core.iterable.Properties properties = new org.burningwave.core.iterable.Properties();
 		Map.Entry<org.burningwave.core.iterable.Properties, URL> propertiesBag = new AbstractMap.SimpleEntry<>(properties, null);
 		for (String fileName : fileNames) {
-			ClassLoader classLoader = Optional.ofNullable(StaticComponentContainer.class.getClassLoader()).orElseGet(() ->
-				ClassLoader.getSystemClassLoader()
-			);
-			InputStream propertiesFileIS = classLoader.getResourceAsStream(fileName);
+			ClassLoader classLoader = StaticComponentContainer.class.getClassLoader();
+			InputStream propertiesFileIS = Resources.getAsInputStream(classLoader, fileName);
 			if (propertiesFileIS != null) {				
 				try {
 					properties.load(propertiesFileIS);
-					URL configFileURL = classLoader.getResource(fileName);
+					URL configFileURL = Resources.get(classLoader, fileName);
 					propertiesBag.setValue(configFileURL);
 					break;
 				} catch (Throwable exc) {
@@ -137,27 +136,6 @@ public class StaticComponentContainer {
 			}
 		}
 		return propertiesBag;
-	}
-	
-	private static StringBuffer getResourceAsStringBuffer(String resourceRelativePath) {
-		return ThrowingSupplier.get(() -> {
-			ClassLoader classLoader = Optional.ofNullable(StaticComponentContainer.class.getClassLoader()).orElseGet(() ->
-				ClassLoader.getSystemClassLoader()
-			);
-			try (BufferedReader reader = new BufferedReader(
-					new InputStreamReader(
-						classLoader.getResourceAsStream(resourceRelativePath)
-					)
-				)
-			) {
-				StringBuffer result = new StringBuffer();
-				String sCurrentLine;
-				while ((sCurrentLine = reader.readLine()) != null) {
-					result.append(sCurrentLine + "\n");
-				}
-				return result;
-			}
-		});
 	}
 	
 }

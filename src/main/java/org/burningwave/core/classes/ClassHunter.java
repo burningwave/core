@@ -44,7 +44,6 @@ import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.reflection.PropertyAccessor;
 
 
@@ -59,7 +58,6 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
-		StreamHelper streamHelper,
 		ClassLoader parentClassLoader
 	) {
 		super(
@@ -67,9 +65,8 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			classHunterSupplier,
 			fileSystemScanner,
 			pathHelper,
-			streamHelper,
 			(initContext) -> ClassHunter.SearchContext._create(
-				streamHelper, initContext
+				initContext
 			),
 			(context) -> new ClassHunter.SearchResult(context)
 		);
@@ -87,12 +84,11 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier, 
 		Supplier<ClassHunter> classHunterSupplier, 
 		FileSystemScanner fileSystemScanner,
-		PathHelper pathHelper, 
-		StreamHelper streamHelper,
+		PathHelper pathHelper,
 		ClassLoader parentClassLoader
 	) {
 		return new ClassHunter(
-			byteCodeHunterSupplier, classHunterSupplier, fileSystemScanner, pathHelper, streamHelper, parentClassLoader
+			byteCodeHunterSupplier, classHunterSupplier, fileSystemScanner, pathHelper, parentClassLoader
 		);
 	}
 	
@@ -149,12 +145,12 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound;
 		private Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap;
 		
-		static SearchContext _create(StreamHelper streamHelper, InitContext initContext) {
-			return new SearchContext(streamHelper, initContext);
+		static SearchContext _create(InitContext initContext) {
+			return new SearchContext(initContext);
 		}
 		
-		SearchContext(StreamHelper streamHelper, InitContext initContext) {
-			super(streamHelper, initContext);
+		SearchContext(InitContext initContext) {
+			super(initContext);
 			membersFound = new ConcurrentHashMap<>();
 			membersFoundFlatMap = new ConcurrentHashMap<>();
 		}

@@ -33,7 +33,10 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,6 +57,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
@@ -323,6 +327,30 @@ public class PathHelper implements Component {
 			throw Throwables.toRuntimeException("Found more than one resource under relative path " + resourceRelativePath);
 		}
 		return files.stream().findFirst().orElse(null);
+	}
+	
+	public Collection<InputStream> getResourcesAsStreams(String... resourcesRelativePaths) {
+		return getResources((coll, fileSystemItem) -> coll.add(fileSystemItem.toInputStream()), resourcesRelativePaths);
+	}
+	
+	public InputStream getResourceAsStream(String resourceRelativePath) {
+		return getResource((coll, fileSystemItem) ->
+			coll.add(fileSystemItem.toInputStream()), 
+			resourceRelativePath
+		);
+	}
+	
+	public StringBuffer getResourceAsStringBuffer(String resourceRelativePath) {
+		return ThrowingSupplier.get(() -> {
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(getResourceAsStream(resourceRelativePath)))) {
+				StringBuffer result = new StringBuffer();
+				String sCurrentLine;
+				while ((sCurrentLine = reader.readLine()) != null) {
+					result.append(sCurrentLine + "\n");
+				}
+				return result;
+			}
+		});
 	}
 	
 	public CheckResult check(Collection<String> pathCollection1, Collection<String> pathCollection2) {

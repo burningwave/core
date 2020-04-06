@@ -1,6 +1,8 @@
 package org.burningwave.core.jvm;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.InputStream;
 import java.lang.invoke.LambdaMetafactory;
@@ -11,10 +13,8 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Optional;
 import java.util.function.BiFunction;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 import org.burningwave.core.io.ByteBufferOutputStream;
 
 @SuppressWarnings("restriction")
@@ -85,11 +85,9 @@ class LowLevelObjectsHandlerInitializer4Java9 extends LowLevelObjectsHandlerInit
 				throw Throwables.toRuntimeException(exc);
 			}
 			try (
-				InputStream inputStream = Optional.ofNullable(
-					this.getClass().getClassLoader()
-				).orElseGet(() -> 
-					ClassLoader.getSystemClassLoader()
-				).getResourceAsStream("org/burningwave/core/classes/ClassLoaderDelegate.bwc");
+				InputStream inputStream =
+					Resources.getAsInputStream(this.getClass().getClassLoader(), "org/burningwave/core/classes/ClassLoaderDelegate.bwc"
+				);
 				ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 			) {
 				Streams.copy(inputStream, bBOS);

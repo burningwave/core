@@ -40,7 +40,6 @@ import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.io.StreamHelper;
 
 
 abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends SearchResult<I>> implements Component {
@@ -50,7 +49,6 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	Supplier<ClassHunter> classHunterSupplier;
 	ClassHunter classHunter;
 	FileSystemScanner fileSystemScanner;
-	StreamHelper streamHelper;
 	PathHelper pathHelper;
 	Function<InitContext, C> contextSupplier;
 	Function<C, R> resultSupplier;
@@ -60,13 +58,11 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
-		StreamHelper streamHelper,
 		Function<InitContext, C> contextSupplier,
 		Function<C, R> resultSupplier
 	) {
 		this.fileSystemScanner = fileSystemScanner;
 		this.pathHelper = pathHelper;
-		this.streamHelper = streamHelper;
 		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
 		this.classHunterSupplier = classHunterSupplier;
 		this.contextSupplier = contextSupplier;
@@ -172,7 +168,6 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	@Override
 	public void close() {
 		byteCodeHunterSupplier = null;
-		streamHelper = null;
 		pathHelper = null;
 		contextSupplier = null;
 	}

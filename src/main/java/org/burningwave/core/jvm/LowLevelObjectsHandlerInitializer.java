@@ -1,6 +1,7 @@
 package org.burningwave.core.jvm;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
+import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -11,7 +12,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Vector;
 import java.util.function.BiPredicate;
 
@@ -161,10 +161,8 @@ abstract class LowLevelObjectsHandlerInitializer implements Component {
 			clsForTest = super.defineClass(
 				CavyForRetrievingElementsOfClassLoaderClass.class.getName(),
 				Streams.toByteBuffer(
-					Optional.ofNullable(
-						this.getClass().getClassLoader()
-					).orElseGet(() -> ClassLoader.getSystemClassLoader()).getResourceAsStream(
-						CavyForRetrievingElementsOfClassLoaderClass.class.getName().replace(".", "/") + ".class"
+					Resources.getAsInputStream(
+						this.getClass().getClassLoader(), CavyForRetrievingElementsOfClassLoaderClass.class.getName().replace(".", "/") + ".class"
 					)
 				),	
 				null

@@ -41,7 +41,6 @@ import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.concurrent.ConcurrentHelper;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.io.StreamHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.reflection.PropertyAccessor;
 
@@ -80,7 +79,5 @@ public interface ComponentSupplier extends Component {
 	public JavaMemoryCompiler getJavaMemoryCompiler();
 		
 	public PathHelper getPathHelper();
-	
-	public StreamHelper getStreamHelper();
 	
 }

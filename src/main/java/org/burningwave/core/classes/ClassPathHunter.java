@@ -45,23 +45,20 @@ import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.IterableZipContainer;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.io.StreamHelper;
 
 public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collection<Class<?>>, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
 	private ClassPathHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemScanner fileSystemScanner,
-		PathHelper pathHelper,
-		StreamHelper streamHelper
+		PathHelper pathHelper
 	) {
 		super(
 			byteCodeHunterSupplier,
 			classHunterSupplier,
 			fileSystemScanner,
 			pathHelper,
-			streamHelper,
-			(initContext) -> SearchContext._create(streamHelper, initContext),
+			(initContext) -> SearchContext._create(initContext),
 			(context) -> new ClassPathHunter.SearchResult(context)
 		);
 	}
@@ -70,15 +67,13 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemScanner fileSystemScanner,
-		PathHelper pathHelper,
-		StreamHelper streamHelper
+		PathHelper pathHelper
 	) {
 		return new ClassPathHunter(
 			byteCodeHunterSupplier,
 			classHunterSupplier,
 			fileSystemScanner,
-			pathHelper,
-			streamHelper
+			pathHelper
 		);
 	}
 	
@@ -141,14 +136,14 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 	public static class SearchContext extends org.burningwave.core.classes.SearchContext<Collection<Class<?>>> {
 		ParallelTasksManager tasksManager;
 		
-		SearchContext(StreamHelper streamHelper, InitContext initContext) {
-			super(streamHelper, initContext);
+		SearchContext(InitContext initContext) {
+			super(initContext);
 			ClassFileScanConfig scanConfig = initContext.getClassFileScanConfiguration();
 			this.tasksManager = ParallelTasksManager.create(scanConfig.getMaxParallelTasksForUnit());
 		}		
 
-		static SearchContext _create(StreamHelper streamHelper, InitContext initContext) {
-			return new SearchContext(streamHelper,  initContext);
+		static SearchContext _create(InitContext initContext) {
+			return new SearchContext(initContext);
 		}
 
 		

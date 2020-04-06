@@ -47,7 +47,6 @@ import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.PathHelper.CheckResult;
-import org.burningwave.core.io.StreamHelper;
 
 
 abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>, R extends SearchResult<I>> extends ClassPathScannerAbst<I, C, R> {
@@ -58,7 +57,6 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
-		StreamHelper streamHelper,
 		Function<InitContext, C> contextSupplier,
 		Function<C, R> resultSupplier) {
 		super(
@@ -66,7 +64,6 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 			classHunterSupplier,
 			fileSystemScanner,
 			pathHelper,
-			streamHelper,
 			contextSupplier,
 			resultSupplier
 		);
@@ -257,7 +254,6 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		clearCache();
 		cache = null;
 		byteCodeHunterSupplier = null;
-		streamHelper = null;
 		pathHelper = null;
 		contextSupplier = null;
 	}
