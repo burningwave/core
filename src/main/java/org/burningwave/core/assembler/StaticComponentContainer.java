@@ -1,10 +1,8 @@
 package org.burningwave.core.assembler;
 
-import java.io.InputStream;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -37,10 +35,10 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
-		Resources = new org.burningwave.core.io.Resources();
 		Throwables = org.burningwave.core.Throwables.create();
+		Resources = new org.burningwave.core.io.Resources();
 		Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
-			loadFirstOneFound("burningwave.static.properties", "burningwave.static.default.properties");
+			Resources.loadFirstOneFound("burningwave.static.properties", "burningwave.static.default.properties");
 		GlobalProperties = propBag.getKey();
 		if (!Boolean.valueOf(GlobalProperties.getProperty(HIDE_BANNER_ON_INIT_CONFIG_KEY))) {
 			showBanner();
@@ -115,27 +113,6 @@ public class StaticComponentContainer {
 			exc.printStackTrace();
 			throw Throwables.toRuntimeException(exc);
 		}
-	}
-	
-	private static Map.Entry<org.burningwave.core.iterable.Properties, URL> loadFirstOneFound(String... fileNames) {
-		org.burningwave.core.iterable.Properties properties = new org.burningwave.core.iterable.Properties();
-		Map.Entry<org.burningwave.core.iterable.Properties, URL> propertiesBag = new AbstractMap.SimpleEntry<>(properties, null);
-		for (String fileName : fileNames) {
-			ClassLoader classLoader = StaticComponentContainer.class.getClassLoader();
-			InputStream propertiesFileIS = Resources.getAsInputStream(classLoader, fileName);
-			if (propertiesFileIS != null) {				
-				try {
-					properties.load(propertiesFileIS);
-					URL configFileURL = Resources.get(classLoader, fileName);
-					propertiesBag.setValue(configFileURL);
-					break;
-				} catch (Throwable exc) {
-					exc.printStackTrace();
-					throw Throwables.toRuntimeException(exc);
-				}
-			}
-		}
-		return propertiesBag;
 	}
 	
 }
