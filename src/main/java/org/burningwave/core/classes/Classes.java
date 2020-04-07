@@ -608,21 +608,24 @@ public class Classes implements Component {
 			);
 		}
 		
-		public void loadOrUploadClasses(
+		public Map<String, Class<?>> loadOrUploadClasses(
 			Map<String, ByteBuffer> byteCodes,
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
+			Map<String, Class<?>> classes = new HashMap<>();
 			if (!(classLoader instanceof MemoryClassLoader)) {
 				for (Map.Entry<String, ByteBuffer> classNameForByteCode : byteCodes.entrySet()) {
-					loadOrUploadClass(classNameForByteCode.getKey(), byteCodes, classLoader);
+					classes.put(classNameForByteCode.getKey(),loadOrUploadClass(classNameForByteCode.getKey(), byteCodes, classLoader));
 				}
 			} else {
 				for (Map.Entry<String, ByteBuffer> clazz : byteCodes.entrySet()) {
 					((MemoryClassLoader)classLoader).addCompiledClass(
 						clazz.getKey(), clazz.getValue()
 					);
+					classes.put(clazz.getKey(), classLoader.loadClass(clazz.getKey()));
 				}
-			}			
+			}	
+			return classes;
 		}
 		
 		@SuppressWarnings("unchecked")

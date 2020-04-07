@@ -115,7 +115,7 @@ public class FunctionalInterfaceFactory implements Component {
 					new AbstractMap.SimpleEntry<>(
 						retrieveClass(
 							Function.class,
-							(parameterCount) -> classFactory.getOrBuildFunctionSubType(targetMethod.getDeclaringClass().getClassLoader(), parameterCount),
+							(parameterCount) -> classFactory.buildFunctionSubTypeAndLoadOrUploadTo(targetMethod.getDeclaringClass().getClassLoader(), parameterCount),
 							Modifier.isStatic(targetMethod.getModifiers()) ?
 								targetMethod.getParameterCount() : 
 								targetMethod.getParameterCount() + 1
@@ -139,7 +139,7 @@ public class FunctionalInterfaceFactory implements Component {
 							retrieveClass(
 								Consumer.class,
 								(parameterCount) ->
-									classFactory.getOrBuildConsumerSubType(targetMethod.getDeclaringClass().getClassLoader(), parameterCount),
+									classFactory.buildConsumerSubTypeAndLoadOrUploadTo(targetMethod.getDeclaringClass().getClassLoader(), parameterCount),
 								Modifier.isStatic(targetMethod.getModifiers()) ?
 									targetMethod.getParameterCount() : 
 									targetMethod.getParameterCount() + 1
@@ -162,7 +162,7 @@ public class FunctionalInterfaceFactory implements Component {
 						retrieveClass(
 							Predicate.class,
 							(parameterCount) ->
-								classFactory.getOrBuildPredicateSubType(targetMethod.getDeclaringClass().getClassLoader(), parameterCount),
+								classFactory.buildPredicateSubTypeAndLoadOrUploadTo(targetMethod.getDeclaringClass().getClassLoader(), parameterCount),
 							Modifier.isStatic(targetMethod.getModifiers()) ?
 								targetMethod.getParameterCount() : 
 								targetMethod.getParameterCount() + 1

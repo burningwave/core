@@ -38,6 +38,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Virtual;
@@ -90,7 +91,12 @@ public class ClassFactory implements Component {
 			(defaultClassLoader = defaultClassLoaderSupplier.get());
 	}
 	
+	public Map<String, ByteBuffer> build(UnitSourceGenerator... unitsCode) {
+		return build(Arrays.asList(unitsCode).stream().map(unitCode -> unitCode.make()).collect(Collectors.toList()));
+	}
+	
 	public Map<String, ByteBuffer> build(Collection<String> unitsCode) {
+		logInfo("Try to compile: \n\n{}\n",String.join("\n", unitsCode));
 		return javaMemoryCompiler.compile(
 			unitsCode, 
 			pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
@@ -98,153 +104,114 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	public Map<String, ByteBuffer> build(String unitCode) {
-		logInfo("Try to compile unit code:\n\n" + unitCode +"\n");
+	public Map<String, ByteBuffer> build(String... unitsCode) {
+		logInfo("Try to compile: \n\n{}\n",String.join("\n", unitsCode));
 		return javaMemoryCompiler.compile(
-			Arrays.asList(unitCode), 
+			Arrays.asList(unitsCode), 
 			pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
 			pathHelper.getPaths(CLASS_REPOSITORIES)
 		);
 	}
 	
-	@SuppressWarnings("unchecked")
-	public <T> Class<T> buildAndUploadTo(ClassLoader classLoader, String unitCode) {
+	public Map<String, Class<?>> buildAndLoadOrUpload(UnitSourceGenerator... unitsCode) {
+		return buildAndLoadOrUploadTo(getDefaultClassLoader(), unitsCode);
+	}
+	
+	public Map<String, Class<?>> buildAndLoadOrUploadTo(ClassLoader classLoader, UnitSourceGenerator... unitsCode) {
 		try {
-			String className = sourceCodeHandler.extractClassName(unitCode);
-			Map<String, ByteBuffer> compiledFiles = build(unitCode);
-			logInfo("Class " + className + " succesfully created");
-			ClassLoaders.loadOrUploadClasses(compiledFiles, classLoader);
-			return (Class<T>)classLoader.loadClass(className);
+			Arrays.stream(unitsCode).forEach(unitCode -> 
+				unitCode.getAllClasses().values().forEach(cls -> {
+					cls.addConcretizedType(TypeDeclarationSourceGenerator.create(Virtual.class));
+				})
+			);
+			return ClassLoaders.loadOrUploadClasses(build(unitsCode), classLoader);
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
 	}
-	
-	public Class<?> getOrBuild(String className, UnitSourceGenerator unitCode) {
-		return getOrBuild(getDefaultClassLoader(), className, unitCode);
-	}
-	
-	public Class<?> getOrBuild(ClassLoader classLoader, String className, UnitSourceGenerator unitCode) {
-		return getOrBuild(classLoader, className, () -> unitCode);
-	}	
-	
-	private <T> Class<T> getOrBuild(String className, Supplier<UnitSourceGenerator> unitCode) {
-		return getOrBuild(getDefaultClassLoader(), className, unitCode);
-	}
-	
-	private <T> Class<T> getOrBuild(ClassLoader classLoader, String className, Supplier<UnitSourceGenerator> unitCode) {
-		Class<T> toRet = ClassLoaders.retrieveLoadedClass(classLoader, className);
-		if (toRet == null) {
-			toRet = buildAndUploadTo(classLoader, className, unitCode);
-		} else {
-			logInfo("Class " + className + " succesfully retrieved");
-		}
-		return toRet;
-	}	
-	
-	@SuppressWarnings("unchecked")
-	private <T> Class<T> buildAndUploadTo(ClassLoader classLoader, String className, Supplier<UnitSourceGenerator> unitCodeSupplier) {
-		try {
-			UnitSourceGenerator unit = unitCodeSupplier.get();
-			unit.getAllClasses().values().forEach(cls -> {
-				cls.addConcretizedType(TypeDeclarationSourceGenerator.create(Virtual.class));
-			});
-			Map<String, ByteBuffer> compiledFiles = build(unit.make());
-			logInfo("Class " + className + " succesfully created");
-			ClassLoaders.loadOrUploadClasses(compiledFiles, classLoader);
-			return (Class<T>)classLoader.loadClass(className);
-		} catch (Throwable exc) {
-			throw Throwables.toRuntimeException(exc);
-		}
-	}
-
-	public Class<?> getOrBuild(String classCode) {
-		return getOrBuild(getDefaultClassLoader(), classCode);
-	}
-	
-	public <T> Class<T> getOrBuild(ClassLoader classLoader, String classCode) {
-		String className = sourceCodeHandler.extractClassName(classCode);
-		Class<T> toRet = ClassLoaders.retrieveLoadedClass(classLoader, className);
-		if (toRet == null) {
-			toRet = buildAndUploadTo(classLoader, classCode);
-		}
-		return toRet;
-	}	
 	
 	public PojoSubTypeRetriever createPojoSubTypeRetriever(PojoSourceGenerator sourceGenerator) {
 		return PojoSubTypeRetriever.create(this, sourceGenerator);
 	}
 	
-	public <T> Class<T> getOrBuildPojoSubType(String className, Class<?>... superClasses) {
-		return getOrBuildPojoSubType(getDefaultClassLoader(), className, superClasses);
+	public <T> Class<T> buildPojoSubTypeAndLoadOrUpload(String className, Class<?>... superClasses) {
+		return buildPojoSubTypeAndLoadOrUploadTo(getDefaultClassLoader(), className, superClasses);
 	}
 	
-	public <T> Class<T> getOrBuildPojoSubType(ClassLoader classLoader, String className, Class<?>... superClasses) {
-		return pojoSubTypeRetriever.getOrBuild(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
+	public <T> Class<T> buildPojoSubTypeAndLoadOrUploadTo(ClassLoader classLoader, String className, Class<?>... superClasses) {
+		return pojoSubTypeRetriever.buildAndLoadOrUploadTo(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
 	}
 	
-	public <T> Class<T> getOrBuildPojoSubType(String className, int options, Class<?>... superClasses) {
-		return getOrBuildPojoSubType(getDefaultClassLoader(), className, options, superClasses);
+	public <T> Class<T> buildPojoSubTypeAndLoadOrUpload(String className, int options, Class<?>... superClasses) {
+		return buildPojoSubTypeAndLoadOrUploadTo(getDefaultClassLoader(), className, options, superClasses);
 	}
 	
-	public <T> Class<T> getOrBuildPojoSubType(ClassLoader classLoader, String className, int options, Class<?>... superClasses) {
-		return pojoSubTypeRetriever.getOrBuild(classLoader, className, options, superClasses);
+	public <T> Class<T> buildPojoSubTypeAndLoadOrUploadTo(ClassLoader classLoader, String className, int options, Class<?>... superClasses) {
+		return pojoSubTypeRetriever.buildAndLoadOrUploadTo(classLoader, className, options, superClasses);
 	}
 	
-	public <T> Class<T> getOrBuildFunctionSubType(int parametersLength) {
-		return getOrBuildFunctionSubType(getDefaultClassLoader(), parametersLength);
+	public <T> Class<T> buildFunctionSubTypeAndLoadOrUpload(int parametersLength) {
+		return buildFunctionSubTypeAndLoadOrUploadTo(getDefaultClassLoader(), parametersLength);
 	}
 	
-	public <T> Class<T> getOrBuildFunctionSubType(ClassLoader classLoader, int parametersLength) {
+	@SuppressWarnings("unchecked")
+	public <T> Class<T> buildFunctionSubTypeAndLoadOrUploadTo(ClassLoader classLoader, int parametersLength) {
 		String functionalInterfaceName = "FunctionFor" + parametersLength +	"Parameters";
 		String packageName = MultiParamsFunction.class.getPackage().getName();
 		String className = packageName + "." + functionalInterfaceName;
-		return getOrBuild(
+		return (Class<T>) buildAndLoadOrUploadTo(
 			classLoader,
-			className,
-			() -> sourceCodeHandler.generateFunction(className, parametersLength)
+			sourceCodeHandler.generateFunction(className, parametersLength)
+		).get(
+			className
 		);
 	}
 	
-	public <T> Class<T> getOrBuildConsumerSubType(int parametersLength) {
-		return getOrBuildConsumerSubType(getDefaultClassLoader(), parametersLength);
+	public <T> Class<T> buildConsumerSubTypeAndLoadOrUpload(int parametersLength) {
+		return buildConsumerSubTypeAndLoadOrUploadTo(getDefaultClassLoader(), parametersLength);
 	}
 	
-	public <T> Class<T> getOrBuildConsumerSubType(ClassLoader classLoader, int parametersLength) {
+	@SuppressWarnings("unchecked")
+	public <T> Class<T> buildConsumerSubTypeAndLoadOrUploadTo(ClassLoader classLoader, int parametersLength) {
 		String functionalInterfaceName = "ConsumerFor" + parametersLength + "Parameters";
 		String packageName = MultiParamsConsumer.class.getPackage().getName();
 		String className = packageName + "." + functionalInterfaceName;
-		return getOrBuild(
+		return (Class<T>) buildAndLoadOrUploadTo(
 			classLoader,
-			className,
-			() -> sourceCodeHandler.generateConsumer(className, parametersLength)
+			sourceCodeHandler.generateConsumer(className, parametersLength)
+		).get(
+			className
 		);
 	}
 	
-	public <T> Class<T> getOrBuildPredicateSubType(int parametersLength) {
-		return getOrBuildPredicateSubType(getDefaultClassLoader(), parametersLength);
+	public <T> Class<T> buildPredicateSubTypeAndLoadOrUpload(int parametersLength) {
+		return buildPredicateSubTypeAndLoadOrUploadTo(getDefaultClassLoader(), parametersLength);
 	}
 	
-	public <T> Class<T> getOrBuildPredicateSubType(ClassLoader classLoader, int parametersLength) {
+	@SuppressWarnings("unchecked")
+	public <T> Class<T> buildPredicateSubTypeAndLoadOrUploadTo(ClassLoader classLoader, int parametersLength) {
 		String functionalInterfaceName = "PredicateFor" + parametersLength + "Parameters";
 		String packageName = MultiParamsPredicate.class.getPackage().getName();
 		String className = packageName + "." + functionalInterfaceName;
-		return getOrBuild(
+		return (Class<T>) buildAndLoadOrUploadTo(
 			classLoader,
-			className,
-			() -> sourceCodeHandler.generatePredicate(className, parametersLength)
+			sourceCodeHandler.generatePredicate(className, parametersLength)
+		).get(
+			className
 		);
 	}
 	
-	public <T extends CodeExecutor> Class<T> getOrBuildCodeExecutorSubType(String className, StatementSourceGenerator statement) {
-		return getOrBuildCodeExecutorSubType(getDefaultClassLoader(), className, statement);
+	public <T extends CodeExecutor> Class<T> buildCodeExecutorSubTypeAndLoadOrUpload(String className, StatementSourceGenerator statement) {
+		return buildCodeExecutorSubTypeAndLoadOrUploadTo(getDefaultClassLoader(), className, statement);
 	}
 	
-	public <T extends CodeExecutor> Class<T> getOrBuildCodeExecutorSubType(ClassLoader classLoader, String className, StatementSourceGenerator statement) {
-		return getOrBuild(
+	@SuppressWarnings("unchecked")
+	public <T extends CodeExecutor> Class<T> buildCodeExecutorSubTypeAndLoadOrUploadTo(ClassLoader classLoader, String className, StatementSourceGenerator statement) {
+		return (Class<T>) buildAndLoadOrUploadTo(
 			classLoader,
-			className,
-			() -> sourceCodeHandler.generateExecutor(className, statement)
+			sourceCodeHandler.generateExecutor(className, statement)
+		).get(
+			className
 		);
 	}
 	
@@ -267,7 +234,7 @@ public class ClassFactory implements Component {
 				)
 			) {
 				String packageName = CodeExecutor.class.getPackage().getName();
-				Class<? extends CodeExecutor> executableClass = getOrBuildCodeExecutorSubType(
+				Class<? extends CodeExecutor> executableClass = buildCodeExecutorSubTypeAndLoadOrUploadTo(
 					memoryClassLoader, packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""), statement
 				);
 				CodeExecutor executor = ConstructorHelper.newInstanceOf(executableClass);
@@ -311,30 +278,33 @@ public class ClassFactory implements Component {
 			String className,
 			Class<?>... superClasses
 		) {
-			return getOrBuild(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
+			return buildAndLoadOrUploadTo(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
 		}	
 		
-		public Class<?> getOrBuild(
+		public Class<?> buildAndLoadOrUpload(
 			String className,
 			int options, 
 			Class<?>... superClasses
 		) {
-			return classFactory.getOrBuild(
-				className,
-				() -> sourceGenerator.make(className, options, superClasses)
+			return classFactory.buildAndLoadOrUpload(
+				sourceGenerator.create(className, options, superClasses)
+			).get(
+				className
 			);
 		}
 		
-		public <T> Class<T> getOrBuild(
+		@SuppressWarnings("unchecked")
+		public <T> Class<T> buildAndLoadOrUploadTo(
 			ClassLoader classLoader,
 			String className,
 			int options, 
 			Class<?>... superClasses
 		) {
-			return classFactory.getOrBuild(
+			return (Class<T>) classFactory.buildAndLoadOrUploadTo(
 				classLoader, 
-				className,
-				() -> sourceGenerator.make(className, options, superClasses)
+				sourceGenerator.create(className, options, superClasses)
+			).get(
+				className
 			);
 		}
 	}

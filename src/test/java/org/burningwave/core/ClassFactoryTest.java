@@ -24,19 +24,19 @@ public class ClassFactoryTest extends BaseTest {
 	@Test
 	public void getOrBuildFunctionClassTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildFunctionSubType(Thread.currentThread().getContextClassLoader(), 10));
+		testNotNull(() -> componentSupplier.getClassFactory().buildFunctionSubTypeAndLoadOrUploadTo(Thread.currentThread().getContextClassLoader(), 10));
 	}	
 	
 	@Test
 	public void getOrBuildConsumerClassTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildConsumerSubType(Thread.currentThread().getContextClassLoader(), 2));
+		testNotNull(() -> componentSupplier.getClassFactory().buildConsumerSubTypeAndLoadOrUploadTo(Thread.currentThread().getContextClassLoader(), 2));
 	}
 	
 	@Test
 	public void getOrBuildPredicateClassTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> componentSupplier.getClassFactory().getOrBuildPredicateSubType(Thread.currentThread().getContextClassLoader(), 10));
+		testNotNull(() -> componentSupplier.getClassFactory().buildPredicateSubTypeAndLoadOrUploadTo(Thread.currentThread().getContextClassLoader(), 10));
 	}
 	
 	
@@ -44,7 +44,7 @@ public class ClassFactoryTest extends BaseTest {
 	public void getOrBuildPojoClassTestOne() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> 
-			componentSupplier.getClassFactory().getOrBuildPojoSubType(
+			componentSupplier.getClassFactory().buildPojoSubTypeAndLoadOrUploadTo(
 				Thread.currentThread().getContextClassLoader(), this.getClass().getPackage().getName() + ".SimpleVirtual"
 			)
 		);
@@ -54,7 +54,7 @@ public class ClassFactoryTest extends BaseTest {
 	@Test
 	public void getOrBuildPojoClassTestTwo() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		java.lang.Class<?> cls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
+		java.lang.Class<?> cls = componentSupplier.getClassFactory().buildPojoSubTypeAndLoadOrUploadTo(
 			Thread.currentThread().getContextClassLoader(),
 			this.getClass().getPackage().getName() + ".TestTwoPojoImpl",
 			PojoSourceGenerator.BUILDING_METHODS_CREATION_ENABLED,
@@ -62,7 +62,7 @@ public class ClassFactoryTest extends BaseTest {
 			PojoInterface.class
 		);
 		testNotNull(() -> {
-			Class<?> reloadedCls = componentSupplier.getClassFactory().getOrBuildPojoSubType(
+			Class<?> reloadedCls = componentSupplier.getClassFactory().buildPojoSubTypeAndLoadOrUploadTo(
 				Thread.currentThread().getContextClassLoader(), cls.getPackage().getName() + ".ExtendedPojoImpl",
 				PojoSourceGenerator.BUILDING_METHODS_CREATION_ENABLED, cls
 			);
@@ -77,28 +77,29 @@ public class ClassFactoryTest extends BaseTest {
 	@Test
 	public void getOrBuildClassTestOne() throws ClassNotFoundException {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-
-		testNotNull(() -> {
-			ClassSourceGenerator ClassSG = ClassSourceGenerator.create(
-				TypeDeclarationSourceGenerator.create("ReTry")
+		ClassSourceGenerator ClassSG = ClassSourceGenerator.create(
+			TypeDeclarationSourceGenerator.create("ReTry")
+		).addModifier(
+			Modifier.PUBLIC
+		).addInnerClass(
+			ClassSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("ReReTry")
 			).addModifier(
-				Modifier.PUBLIC
-			).addInnerClass(
-				ClassSourceGenerator.create(
-					TypeDeclarationSourceGenerator.create("ReReTry")
-				).addModifier(
-					Modifier.PUBLIC | Modifier.STATIC
-				)
-			);
-			UnitSourceGenerator unitSG = UnitSourceGenerator.create("tryyy").addClass(
-				ClassSG
-			);
-			return componentSupplier.getClassFactory().getOrBuild(
-				"tryyy.ReTry", unitSG
+				Modifier.PUBLIC | Modifier.STATIC
+			)
+		);
+		UnitSourceGenerator unitSG = UnitSourceGenerator.create("tryyy").addClass(
+			ClassSG
+		);
+		testNotNull(() -> {
+			return componentSupplier.getClassFactory().buildAndLoadOrUpload(
+				unitSG
+			).get(
+				"tryyy.ReTry"
 			);
 		});
 		testNotNull(() -> 
-			componentSupplier.getClassFactory().getOrBuild("tryyy.ReTry$ReReTry", null)
+			componentSupplier.getClassFactory().buildAndLoadOrUpload(unitSG).get("tryyy.ReTry$ReReTry")
 		);
 	}
 
@@ -106,7 +107,7 @@ public class ClassFactoryTest extends BaseTest {
 	public void getOrBuildPojoClassTestThree() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> {
-			java.lang.Class<?> virtualClass = componentSupplier.getClassFactory().getOrBuildPojoSubType(
+			java.lang.Class<?> virtualClass = componentSupplier.getClassFactory().buildPojoSubTypeAndLoadOrUploadTo(
 				Thread.currentThread().getContextClassLoader(), this.getClass().getPackage().getName() + ".TestThreePojoImpl", 
 				Service.class,
 				PojoInterface.class
