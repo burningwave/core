@@ -95,7 +95,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public final static ComponentContainer create() {
-		return create((Properties)null);
+		return create(new Properties());
 	}
 
 	
@@ -129,6 +129,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public void reInit() {
 		clear();
+		config.clear();
 		launchInit();
 	}
 	
