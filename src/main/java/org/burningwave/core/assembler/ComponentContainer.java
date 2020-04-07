@@ -74,8 +74,9 @@ public class ComponentContainer implements ComponentSupplier {
 					Properties config = new Properties();
 					if (inputStream != null) {
 						config.load(inputStream);
+						ManagedLoggersRepository.logInfo(ComponentContainer.class, configFileName + " loaded");
 					} else {
-						ManagedLoggersRepository.logWarn(ComponentContainer.class, configFileName + " not found");
+						ManagedLoggersRepository.logInfo(ComponentContainer.class, configFileName + " not found");
 					}
 					return config;
 				} catch (Throwable exc) {
