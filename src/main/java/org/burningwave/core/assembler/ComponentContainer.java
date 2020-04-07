@@ -182,12 +182,24 @@ public class ComponentContainer implements ComponentSupplier {
 				getSourceCodeHandler(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
-				() -> getByFieldOrByMethodPropertyAccessor().retrieveFrom(
-					config,
-					ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY,
-					null,
-					this
-				)
+				() -> {
+					Object object = config.get(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY);
+					if (object instanceof ClassLoader) {
+						return (ClassLoader)object;
+					} else if (object instanceof String) {
+						return getByFieldOrByMethodPropertyAccessor().retrieveFrom(
+							config,
+							ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY,
+							null,
+							this
+						);
+					} else {
+						throw Throwables.toRuntimeException("Value " + object + " of configuration property" + 
+							ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY + " is not valid"
+						);
+					}
+					
+				}
 			)
 		);	
 	}
