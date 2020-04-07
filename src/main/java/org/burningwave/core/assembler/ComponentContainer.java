@@ -106,7 +106,10 @@ public class ComponentContainer implements ComponentSupplier {
 		config.put(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
 		
 		if (propertySupplier != null) {
-			config.putAll(propertySupplier.get());
+			Properties customConfig = propertySupplier.get();
+			if (customConfig != null) {
+				config.putAll(customConfig);
+			}
 		}
 		logInfo(
 			"Configuration values:\n\n{}\n\n... Are assumed",
