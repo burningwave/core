@@ -72,7 +72,11 @@ public class ComponentContainer implements ComponentSupplier {
 			return new ComponentContainer(() -> {
 				try(InputStream inputStream = Resources.getAsInputStream(ComponentContainer.class.getClassLoader(), configFileName)) {
 					Properties config = new Properties();
-					config.load(inputStream);
+					if (inputStream != null) {
+						config.load(inputStream);
+					} else {
+						ManagedLoggersRepository.logWarn(ComponentContainer.class, configFileName + " not found");
+					}
 					return config;
 				} catch (Throwable exc) {
 					throw Throwables.toRuntimeException(exc);
@@ -95,7 +99,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public final static ComponentContainer create() {
-		return create(new Properties());
+		return create((Properties)null);
 	}
 
 	
@@ -105,11 +109,9 @@ public class ComponentContainer implements ComponentSupplier {
 		config.put(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
 		config.put(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
 		
-		if (propertySupplier != null) {
-			Properties customConfig = propertySupplier.get();
-			if (customConfig != null) {
-				config.putAll(customConfig);
-			}
+		Properties customConfig = propertySupplier.get();
+		if (customConfig != null) {
+			config.putAll(customConfig);
 		}
 		logInfo(
 			"Configuration values:\n\n{}\n\n... Are assumed",
