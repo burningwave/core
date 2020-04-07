@@ -56,26 +56,48 @@ import org.burningwave.core.reflection.PropertyAccessor;
 
 public class ComponentContainer implements ComponentSupplier {
 	protected Map<Class<? extends Component>, Component> components;
-	private String configFileName;
+	private Supplier<Properties> propertySupplier;
 	private Properties config;
 	private Thread initializerTask;
 	
-	ComponentContainer(String fileName) {
-		configFileName = fileName;
-		components = new HashMap<>();
-		config = new Properties();
+	ComponentContainer(Supplier<Properties> propertySupplier) {
+		this.propertySupplier = propertySupplier;
+		this.components = new HashMap<>();
+		this.config = new Properties();
 	}
 	
-	public final static ComponentContainer create(String fileName) {
+	@SuppressWarnings("resource")
+	public final static ComponentContainer create(String configFileName) {
 		try {
-			ComponentContainer componentContainer = new ComponentContainer(fileName);
-			componentContainer.launchInit();
-			return componentContainer;
+			return new ComponentContainer(() -> {
+				try(InputStream inputStream = Resources.getAsInputStream(ComponentContainer.class.getClassLoader(), configFileName)) {
+					Properties config = new Properties();
+					config.load(inputStream);
+					return config;
+				} catch (Throwable exc) {
+					throw Throwables.toRuntimeException(exc);
+				}
+			}).launchInit();
 		} catch (Throwable exc){
 			ManagedLoggersRepository.logError(ComponentContainer.class, "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
 			throw Throwables.toRuntimeException(exc);
 		}
 	}
+	
+	@SuppressWarnings("resource")
+	public final static ComponentContainer create(Properties properties) {
+		try {
+			return new ComponentContainer(() -> properties).launchInit();
+		} catch (Throwable exc){
+			ManagedLoggersRepository.logError(ComponentContainer.class, "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
+			throw Throwables.toRuntimeException(exc);
+		}
+	}
+	
+	public final static ComponentContainer create() {
+		return create((Properties)null);
+	}
+
 	
 	private ComponentContainer init() {
 		config.put(PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES, "${classPaths}");
@@ -83,15 +105,8 @@ public class ComponentContainer implements ComponentSupplier {
 		config.put(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
 		config.put(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
 		
-		InputStream customConfig = Resources.getAsInputStream(this.getClass().getClassLoader(), configFileName);
-		if (customConfig != null) {
-			try(InputStream inputStream = customConfig) {
-				config.load(inputStream);
-			} catch (Throwable exc) {
-				Throwables.toRuntimeException(exc);
-			}
-		} else {
-			logInfo("Custom configuration file burningwave.properties not found.");
+		if (propertySupplier != null) {
+			config.putAll(propertySupplier.get());
 		}
 		logInfo(
 			"Configuration values:\n\n{}\n\n... Are assumed",
