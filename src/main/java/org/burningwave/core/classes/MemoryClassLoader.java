@@ -196,7 +196,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     		if (byteCode == null) {
     			byteCode = notLoadedCompiledClasses.get(className);
     		}
-    		if (byteCode == null) {
+    		if (byteCode != null) {
 	    		return new ByteBufferInputStream(
 	    			byteCode
 	    		);
