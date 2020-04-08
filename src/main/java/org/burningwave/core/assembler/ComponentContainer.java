@@ -188,24 +188,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getSourceCodeHandler(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
-				() -> {
-					Object object = config.get(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY);
-					if (object instanceof ClassLoader) {
-						return (ClassLoader)object;
-					} else if (object instanceof String) {
-						return getByFieldOrByMethodPropertyAccessor().retrieveFrom(
-							config,
-							ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY,
-							null,
-							this
-						);
-					} else {
-						throw Throwables.toRuntimeException("Value " + object + " of configuration property" + 
-							ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY + " is not valid"
-						);
-					}
-					
-				}
+				() -> retrieveClassLoader(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, null)
 			)
 		);	
 	}
@@ -229,12 +212,7 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getClassHunter(),
 				getFileSystemScanner(),
 				getPathHelper(),
-				getByFieldOrByMethodPropertyAccessor().retrieveFrom(
-					config,
-					ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY,
-					ClassHunter.DEFAULT_CONFIG_VALUES,
-					this
-				)
+				retrieveClassLoader(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, ClassHunter.DEFAULT_CONFIG_VALUES)
 			);
 		});
 	}
@@ -331,6 +309,24 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(SourceCodeHandler.class, () ->
 			SourceCodeHandler.create()
 		);
+	}
+	
+	private ClassLoader retrieveClassLoader(String configKey, Map<String, String> defaultValues) {
+		Object object = config.get(configKey);
+		if (object instanceof ClassLoader) {
+			return (ClassLoader)object;
+		} else if (object instanceof String) {
+			return getByFieldOrByMethodPropertyAccessor().retrieveFrom(
+				config,
+				configKey,
+				defaultValues,
+				this
+			);
+		} else {
+			throw Throwables.toRuntimeException("Value " + object + " of configuration property" + 
+				configKey + " is not valid"
+			);
+		}
 	}
 	
 	public ComponentSupplier clear() {
