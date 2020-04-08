@@ -35,7 +35,10 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -119,12 +122,23 @@ public class ClassFactory implements Component {
 	
 	public Map<String, Class<?>> buildAndLoadOrUploadTo(ClassLoader classLoader, UnitSourceGenerator... unitsCode) {
 		try {
+			Set<String> classesName = new HashSet<>();
 			Arrays.stream(unitsCode).forEach(unitCode -> 
-				unitCode.getAllClasses().values().forEach(cls -> {
-					cls.addConcretizedType(TypeDeclarationSourceGenerator.create(Virtual.class));
+				unitCode.getAllClasses().entrySet().forEach(entry -> {
+					entry.getValue().addConcretizedType(TypeDeclarationSourceGenerator.create(Virtual.class));
+					classesName.add(entry.getKey());
 				})
 			);
-			return ClassLoaders.loadOrUploadClasses(build(unitsCode), classLoader);
+			Map<String, Class<?>> classes = new HashMap<>();
+			for (String className : classesName) {
+				try {
+					classes.put(className, classLoader.loadClass(className));
+				} catch (Throwable exc) {
+					return ClassLoaders.loadOrUploadClasses(build(unitsCode), classLoader);
+				}
+			}
+			logInfo("Classes {} loaded without bulding by classloader {} ", String.join(", ", classes.keySet()), classLoader);
+			return classes;
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
