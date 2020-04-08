@@ -196,37 +196,37 @@ public class PathHelper implements Component {
 	public Collection<String> loadPaths(String pathGroupName, String paths) {
 		String pathGroupPropertyName = PATHS_KEY_PREFIX + pathGroupName;
 		Collection<String> groupPaths = ConcurrentHashMap.newKeySet();
-			synchronized(Classes.getId(pathGroups, pathGroupName)) {
-				String currentPropertyPaths = config.getProperty(pathGroupPropertyName);
-				if (Strings.isNotEmpty(currentPropertyPaths) && Strings.isNotEmpty(paths)) {
-					if (!currentPropertyPaths.endsWith(";")) {
-						currentPropertyPaths += ";";
-					}
-					currentPropertyPaths += paths;
-					config.put(pathGroupPropertyName, currentPropertyPaths);
-				} else if (Strings.isNotEmpty(paths)) {
-					currentPropertyPaths = paths;
-					config.put(pathGroupPropertyName, currentPropertyPaths);
+		synchronized(Classes.getId(pathGroups, pathGroupName)) {
+			String currentPropertyPaths = config.getProperty(pathGroupPropertyName);
+			if (Strings.isNotEmpty(currentPropertyPaths) && Strings.isNotEmpty(paths)) {
+				if (!currentPropertyPaths.endsWith(";")) {
+					currentPropertyPaths += ";";
 				}
-				paths = currentPropertyPaths;
-				
-				if (paths != null) {
-					if (paths.contains("${classPaths}")) {
-						Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
-						for (String mainClassPath : mainClassPaths) {
-							Map<String, String> defaultValues = new LinkedHashMap<>();
-							defaultValues.put("classPaths", mainClassPath);
-							paths = Paths.clean(iterableObjectHelper.get(config, pathGroupPropertyName, defaultValues));
-							for (String path : paths.split(";")) {
-								groupPaths.addAll(addPath(pathGroupName, path));
-							}
-						}	
-					} else {
-						for (String path : iterableObjectHelper.get(config, pathGroupPropertyName, null).split(";")) {
+				currentPropertyPaths += paths;
+				config.put(pathGroupPropertyName, currentPropertyPaths);
+			} else if (Strings.isNotEmpty(paths)) {
+				currentPropertyPaths = paths;
+				config.put(pathGroupPropertyName, currentPropertyPaths);
+			}
+			paths = currentPropertyPaths;
+			
+			if (paths != null) {
+				if (paths.contains("${classPaths}")) {
+					Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
+					for (String mainClassPath : mainClassPaths) {
+						Map<String, String> defaultValues = new LinkedHashMap<>();
+						defaultValues.put("classPaths", mainClassPath);
+						paths = Paths.clean(iterableObjectHelper.get(config, pathGroupPropertyName, defaultValues));
+						for (String path : paths.split(";")) {
 							groupPaths.addAll(addPath(pathGroupName, path));
 						}
+					}	
+				} else {
+					for (String path : iterableObjectHelper.get(config, pathGroupPropertyName, null).split(";")) {
+						groupPaths.addAll(addPath(pathGroupName, path));
 					}
 				}
+			}
 		}
 		return groupPaths;
 	}	
