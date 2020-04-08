@@ -256,6 +256,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	protected Class<?> _defineClass(String className, java.nio.ByteBuffer byteCode, ProtectionDomain protectionDomain) {
 		Class<?> cls = super.defineClass(className, byteCode, protectionDomain);
 		addLoadedCompiledClass(className, byteCode);
+		removeNotLoadedCompiledClass(className);
 		return cls;
 	}
 
