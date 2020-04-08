@@ -184,15 +184,19 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     public InputStream getResourceAsStream(String name) {
     	InputStream inputStream = super.getResourceAsStream(name);
     	if (inputStream == null && name.endsWith(".class")) {
-    		inputStream = getLoadedCompiledClassesAsInputStream(name);
+    		inputStream = getCompiledClassAsInputStream(name);
     	}
     	return inputStream;
     }
 
-	protected InputStream getLoadedCompiledClassesAsInputStream(String name) {
-		if (name.endsWith(".class")) {
-    		ByteBuffer byteCode = loadedCompiledClasses.get(name.substring(0, name.lastIndexOf(".class")).replace("/", "."));
-    		if (byteCode != null) {
+	protected InputStream getCompiledClassAsInputStream(String classRelativePath) {
+		if (classRelativePath.endsWith(".class")) {
+			String className = classRelativePath.substring(0, classRelativePath.lastIndexOf(".class")).replace("/", ".");
+    		ByteBuffer byteCode = loadedCompiledClasses.get(className);
+    		if (byteCode == null) {
+    			byteCode = notLoadedCompiledClasses.get(className);
+    		}
+    		if (byteCode == null) {
 	    		return new ByteBufferInputStream(
 	    			byteCode
 	    		);
