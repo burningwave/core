@@ -66,7 +66,7 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 			return null;
 		}
 		Map.Entry<org.slf4j.Logger, LoggingLevel.Mutable> loggerEntry = getLoggerEntry(client.getName());
-		return loggerEntry.getValue().matchPartialy(loggingLevel)? loggerEntry.getKey() : null;
+		return loggerEntry.getValue().partialyMatch(loggingLevel)? loggerEntry.getKey() : null;
 	}	
 	
 	@Override

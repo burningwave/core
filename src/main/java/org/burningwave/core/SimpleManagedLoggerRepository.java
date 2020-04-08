@@ -62,7 +62,7 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 		if (!isEnabled) {
 			return;
 		}
-		if (getLoggerEnabledFlag(client.getName()).matchPartialy(level)) {
+		if (getLoggerEnabledFlag(client.getName()).partialyMatch(level)) {
 			if (exception == null) {
 				printStream.println(client.getName() + " - " + text);
 			} else {
