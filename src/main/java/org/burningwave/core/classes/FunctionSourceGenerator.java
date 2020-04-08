@@ -140,6 +140,18 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		this.body.addElement(generator);
 		return this;
 	}
+	
+	public FunctionSourceGenerator useType(java.lang.Class<?>... classes) {
+		this.body = Optional.ofNullable(this.body).orElseGet(StatementSourceGenerator::create);
+		body.useType(classes);
+		return this;		
+	}
+	
+	public FunctionSourceGenerator useType(String... classes) {
+		this.body = Optional.ofNullable(this.body).orElseGet(StatementSourceGenerator::create);
+		body.useType(classes);
+		return this;	
+	}
 
 	private String getParametersCode() {
 		String paramsCode = "(";

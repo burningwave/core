@@ -3,6 +3,7 @@ package org.burningwave.core.examples.classfactory;
 import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
 
 import java.lang.reflect.Modifier;
+import java.util.Date;
 
 import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentContainer;
@@ -10,6 +11,7 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassSourceGenerator;
 import org.burningwave.core.classes.FunctionSourceGenerator;
+import org.burningwave.core.classes.GenericSourceGenerator;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
 
@@ -24,11 +26,12 @@ public class RuntimeClassExtender {
                 Modifier.PUBLIC
             //generating new method that override MyInterface.getNumber()
             ).addMethod(
-                FunctionSourceGenerator.create("getNumber")
-                .setReturnType(Integer.class)
+                FunctionSourceGenerator.create("now")
+                .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create(Date.class.getSimpleName())))
                 .addModifier(Modifier.PUBLIC)
                 .addOuterCodeRow("@Override")
-                .addBodyCodeRow("return 1;")
+                .addBodyCodeRow("return new Date();")
+                .useType(Date.class)
             ).addConcretizedType(
                 MyInterface.class
             ).expands(ToBeExtended.class)
@@ -50,7 +53,7 @@ public class RuntimeClassExtender {
             ConstructorHelper.newInstanceOf(generatedClass);
         generatedClassObject.printSomeThing();
         System.out.println(
-            ((MyInterface)generatedClassObject).getNumber().toString()
+            ((MyInterface)generatedClassObject).now().toString()
         );
         //You can also invoke methods by casting to Virtual (an interface offered by the
         //library for faciliate use of runtime generated classes)
@@ -60,21 +63,21 @@ public class RuntimeClassExtender {
         //Invoke by using MethodHandle
         virtualObject.invokeDirect("printSomeThing");
         System.out.println(
-            ((Integer)virtualObject.invokeDirect("getNumber")).toString()
+            ((Date)virtualObject.invokeDirect("now")).toString()
         );
     }   
 
     public static class ToBeExtended {
 
         public void printSomeThing() {
-            System.out.println("Called");
+            System.out.println("Called method printSomeThing");
         }
 
     }
 
     public static interface MyInterface {
 
-        public Integer getNumber();
+        public Comparable<Date> now();
 
     }
 
