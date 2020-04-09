@@ -42,7 +42,7 @@ import org.burningwave.core.io.IterableZipContainer.Entry;
 
 public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig> {
 
-	ClassFileScanConfig(boolean deepFilesCheck) {
+	public ClassFileScanConfig(boolean deepFilesCheck) {
 		super(deepFilesCheck);
 	}
 
@@ -55,18 +55,16 @@ public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig>
 		return forPaths(false, paths);
 	}
 	
-	public static ClassFileScanConfig forPaths(boolean compressedFilesDeepCheck, Collection<String> paths) {
-		ClassFileScanConfig criteria = new ClassFileScanConfig(compressedFilesDeepCheck);
-		criteria.paths.addAll(paths);
-		return criteria;
+	public static ClassFileScanConfig forPaths(boolean deepFilesCheck, Collection<String> paths) {
+		return new ClassFileScanConfig(deepFilesCheck).addPaths(paths);
 	}			
 	
 	public static ClassFileScanConfig forPaths(String... paths) {
 		return forPaths(Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
 	}
 	
-	public static ClassFileScanConfig forPaths(boolean compressedFilesDeepCheck, String... paths) {
-		return forPaths(compressedFilesDeepCheck, Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
+	public static ClassFileScanConfig forPaths(boolean deepFilesCheck, String... paths) {
+		return forPaths(deepFilesCheck, Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
 	}
 	
 	@Override
