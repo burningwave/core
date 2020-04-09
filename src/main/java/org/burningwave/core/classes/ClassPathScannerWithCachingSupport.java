@@ -74,7 +74,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 	public R findBy(CacheableSearchConfig searchConfig) {
 		searchConfig = searchConfig.createCopy();
 		C context = createContext(
-			ClassFileScanConfig.forPaths(searchConfig.getPaths()).maxParallelTasksForUnit(
+			ClassFileScanConfig.forPaths(searchConfig.isDeepFilesCheckEnabled(), searchConfig.getPaths()).maxParallelTasksForUnit(
 				searchConfig.maxParallelTasksForUnit
 			), 
 			searchConfig

@@ -25,7 +25,7 @@ public class ClassHunterTest extends BaseTest {
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePath("libs-for-test.zip")
-				)
+				).deepFileCheck(false)
 			),
 			(result) ->
 				result.getClasses()

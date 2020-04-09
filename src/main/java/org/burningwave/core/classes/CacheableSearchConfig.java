@@ -36,7 +36,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfig> {
+	
 	int maxParallelTasksForUnit;
+	boolean deepFilesCheck;
 	Collection<String> paths;
 	
 	
@@ -68,12 +70,21 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 	
 	public Collection<String> getPaths() {
 		return paths;
+	}	
+	
+	public CacheableSearchConfig deepFileCheck(boolean value) {
+		this.deepFilesCheck = value;
+		return this;
 	}
 	
+	public boolean isDeepFilesCheckEnabled() {
+		return deepFilesCheck;
+	}
 	
 	@Override
 	public CacheableSearchConfig createCopy() {
 		CacheableSearchConfig copy = super.createCopy();
+		copy.deepFilesCheck = this.deepFilesCheck;
 		copy.paths.addAll(this.getPaths());
 		copy.maxParallelTasksForUnit = this.maxParallelTasksForUnit;
 		return copy;

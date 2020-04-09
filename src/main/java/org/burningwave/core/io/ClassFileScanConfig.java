@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,53 +37,26 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.IterableZipContainer.Entry;
 
 public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig> {
-	private final static Predicate<File> CLASS_PREDICATE_FOR_FILE_SYSTEM_ENTRY = entry -> {
-		String name = entry.getName();
-		return name.endsWith(".class") && 
-			!name.endsWith("module-info.class") &&
-			!name.endsWith("package-info.class");
-	};
-	
-	private static final Predicate<Entry> CLASS_PREDICATE_FOR_ZIP_ENTRY = entry -> {
-		String name = entry.getName();
-		return name.endsWith(".class") && 
-			!name.endsWith("module-info.class") &&
-			!name.endsWith("package-info.class");
-	};
-	
-	private final static Predicate<File> ARCHIVE_PREDICATE_FOR_FILE_SYSTEM_ENTRY = entry -> {
-		String name = entry.getName();
-		return name.endsWith(".jar") ||
-			name.endsWith(".war") ||
-			name.endsWith(".ear") ||
-			name.endsWith(".zip") ||
-			name.endsWith(".jmod");
-	};
-	
-	private static final Predicate<Entry> ARCHIVE_PREDICATE_FOR_ZIP_ENTRY = entry -> {
-		String name = entry.getName();
-		return name.endsWith(".jar") ||
-			name.endsWith(".war") ||
-			name.endsWith(".ear") ||
-			name.endsWith(".zip") ||
-			name.endsWith(".jmod");
-	};
-	
 
-	private static ClassFileScanConfig create() {
-		return new ClassFileScanConfig();
-	}	
+	ClassFileScanConfig(boolean deepFilesCheck) {
+		super(deepFilesCheck);
+	}
 
 	@Override
-	ClassFileScanConfig _create() {
-		return create();
+	ClassFileScanConfig create() {
+		return new ClassFileScanConfig(deepFilesCheck);
 	}
 	
 	public static ClassFileScanConfig forPaths(Collection<String> paths) {
-		ClassFileScanConfig criteria = create();
+		return forPaths(false, paths);
+	}
+	
+	public static ClassFileScanConfig forPaths(boolean compressedFilesDeepCheck, Collection<String> paths) {
+		ClassFileScanConfig criteria = new ClassFileScanConfig(compressedFilesDeepCheck);
 		criteria.paths.addAll(paths);
 		return criteria;
 	}			
@@ -89,23 +64,36 @@ public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig>
 	public static ClassFileScanConfig forPaths(String... paths) {
 		return forPaths(Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
 	}
+	
+	public static ClassFileScanConfig forPaths(boolean compressedFilesDeepCheck, String... paths) {
+		return forPaths(compressedFilesDeepCheck, Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
+	}
+	
 	@Override
 	Predicate<File> getFilePredicateForFileSystemEntry() {
-		return CLASS_PREDICATE_FOR_FILE_SYSTEM_ENTRY;
-	}
-
-	@Override
-	Predicate<File> getArchivePredicateForFileSystemEntry() {
-		return ARCHIVE_PREDICATE_FOR_FILE_SYSTEM_ENTRY;
+		if (deepFilesCheck) {
+			return entry -> ThrowingSupplier.get(() -> Streams.isClass(entry));
+		} else {
+			return entry -> {
+				String name = entry.getName();
+				return name.endsWith(".class") && 
+					!name.endsWith("module-info.class") &&
+					!name.endsWith("package-info.class");
+			};
+		}
 	}
 
 	@Override
 	Predicate<Entry> getFilePredicateForZipEntry() {
-		return CLASS_PREDICATE_FOR_ZIP_ENTRY;
-	}
-
-	@Override
-	Predicate<Entry> getArchivePredicateForZipEntry() {
-		return ARCHIVE_PREDICATE_FOR_ZIP_ENTRY;
+		if (deepFilesCheck) {
+			return entry -> ThrowingSupplier.get(() -> Streams.isClass(entry.toByteBuffer()));
+		} else {
+			return entry -> {
+				String name = entry.getName();
+				return name.endsWith(".class") && 
+					!name.endsWith("module-info.class") &&
+					!name.endsWith("package-info.class");
+			};
+		}
 	}
 }

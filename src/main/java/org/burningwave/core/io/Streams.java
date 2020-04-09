@@ -89,28 +89,37 @@ public class Streams implements Component {
 	}
 	
 	public boolean isArchive(File file) throws IOException {
-		try (RandomAccessFile raf = new RandomAccessFile(file, "r")){
-			if (raf.length() < 4) {
-				return false;
-			}
-			return isArchive(raf.readInt());
-	    }
+		return is(file, this::isArchive);
+	}
+	
+	public boolean isJModArchive(File file) throws IOException {
+		return is(file, this::isJModArchive);
+	}
+	
+	public boolean isClass(File file) throws IOException {
+		return is(file, this::isClass);
 	}
 	
 	public boolean isArchive(ByteBuffer bytes) {
-		return isArchive(bytes, this::isArchive);
+		return is(bytes, this::isArchive);
 	}
 	
 	public boolean isJModArchive(ByteBuffer bytes) {
-		return isArchive(bytes, this::isJModArchive);
+		return is(bytes, this::isJModArchive);
 	}
 	
-	private boolean isArchive(ByteBuffer bytes, Predicate<Integer> predicate) {
-		if (bytes.capacity() < 4) {
-			return false;
-		}
-		bytes = bytes.duplicate();
-		return predicate.test(bytes.getInt());
+	public boolean isClass(ByteBuffer bytes) {
+		return is(bytes, this::isClass);
+	}
+	
+	public boolean is(File file, Predicate<Integer> predicate) throws IOException {
+		try (RandomAccessFile raf = new RandomAccessFile(file, "r")){
+			return raf.length() > 4 && predicate.test(raf.readInt());
+	    }
+	}
+	
+	private boolean is(ByteBuffer bytes, Predicate<Integer> predicate) {
+		return bytes.capacity() > 4 && predicate.test(bytes.duplicate().getInt());
 	}
 	
 	private boolean isArchive(int fileSignature) {
@@ -119,6 +128,10 @@ public class Streams implements Component {
 	
 	private boolean isJModArchive(int fileSignature) {
 		return fileSignature == 0x4A4D0100 || fileSignature == 0x4A4D0000;
+	}
+	
+	private boolean isClass(int fileSignature) {
+		return fileSignature == 0xCAFEBABE;
 	}
 
 	public byte[] toByteArray(InputStream inputStream) {

@@ -29,6 +29,7 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
+import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.io.File;
 import java.util.Collection;
@@ -38,13 +39,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.FileSystemScanner.Scan.Configuration;
 import org.burningwave.core.io.IterableZipContainer.Entry;
 
 @SuppressWarnings({"unchecked"})
 public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
-	
+	boolean deepFilesCheck; 
 	PathHelper pathHelper;
 	Collection<String> paths;
 	FileCriteria directoryCriteriaForFileSystemEntry;
@@ -56,7 +58,8 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	boolean recursiveOnDirectoryOfFileSystemEntry;
 	boolean recursiveOnArchiveOfZipEntry;
 	
-	FileScanConfigAbst() {
+	FileScanConfigAbst(boolean deepFilesCheck) {
+		this.deepFilesCheck = deepFilesCheck;
 		paths = ConcurrentHashMap.newKeySet();
 		maxParallelTasksForUnit = Runtime.getRuntime().availableProcessors();
 		fileCriteriaForFileSystemEntry = FileCriteria.create().allThat(getFilePredicateForFileSystemEntry());
@@ -76,14 +79,39 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		temp.clear();
 	}
 	
+	Predicate<File> getArchivePredicateForFileSystemEntry(){
+		if (deepFilesCheck) {
+			return entry -> ThrowingSupplier.get(() -> Streams.isArchive(entry));
+		} else {
+			return entry -> {
+				String name = entry.getName();
+				return name.endsWith(".jar") ||
+					name.endsWith(".war") ||
+					name.endsWith(".ear") ||
+					name.endsWith(".zip") ||
+					name.endsWith(".jmod");
+			};
+		}	
+	}
+	
 	abstract Predicate<File> getFilePredicateForFileSystemEntry();
 	
-	abstract Predicate<File> getArchivePredicateForFileSystemEntry();
+	Predicate<Entry> getArchivePredicateForZipEntry() {
+		if (deepFilesCheck) {
+			return entry -> ThrowingSupplier.get(() -> Streams.isArchive(entry.toByteBuffer()));
+		} else {
+			return entry -> {
+				String name = entry.getName();
+				return name.endsWith(".jar") ||
+					name.endsWith(".war") ||
+					name.endsWith(".ear") ||
+					name.endsWith(".zip") ||
+					name.endsWith(".jmod");
+			};
+		}
+	}
 	
-	abstract Predicate<Entry> getFilePredicateForZipEntry();
-	
-	abstract Predicate<Entry> getArchivePredicateForZipEntry();
-	
+	abstract Predicate<Entry> getFilePredicateForZipEntry();	
 
 	public F setPaths(Collection<String> newPaths) {
 		this.paths.clear();
@@ -197,10 +225,10 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return config;
 	}
 	
-	abstract F _create();
+	abstract F create();
 	
 	public  F createCopy() {
-		F copy = _create();
+		F copy = create();
 		copy.directoryCriteriaForFileSystemEntry = 
 			this.directoryCriteriaForFileSystemEntry != null?	
 				this.directoryCriteriaForFileSystemEntry.createCopy()

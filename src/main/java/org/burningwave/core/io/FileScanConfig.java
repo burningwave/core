@@ -39,39 +39,21 @@ import org.burningwave.core.io.IterableZipContainer.Entry;
 
 public class FileScanConfig extends FileScanConfigAbst<FileScanConfig> {
 
-	private final static Predicate<File> ARCHIVE_PREDICATE_FOR_FILE_SYSTEM_ENTRY = entry -> {
-		String name = entry.getName();
-		return name.endsWith(".jar") ||
-			name.endsWith(".war") ||
-			name.endsWith(".ear") ||
-			name.endsWith(".zip") ||
-			name.endsWith(".jmod");
-	};
-	
-	private final static Predicate<File> FILE_PREDICATE_FOR_FILE_SYSTEM_ENTRY = ARCHIVE_PREDICATE_FOR_FILE_SYSTEM_ENTRY.negate();
-	
-	private static final Predicate<Entry> ARCHIVE_PREDICATE_FOR_ZIP_ENTRY = entry -> {
-		String name = entry.getName();
-		return name.endsWith(".jar") ||
-			name.endsWith(".war") ||
-			name.endsWith(".ear") ||
-			name.endsWith(".zip") ||
-			name.endsWith(".jmod");
-	};
-	
-	private static final Predicate<Entry> FILE_PREDICATE_FOR_ZIP_ENTRY = ARCHIVE_PREDICATE_FOR_ZIP_ENTRY.negate().and(entry -> !entry.getName().endsWith("/"));
-	
-	private static FileScanConfig create() {
-		return new FileScanConfig();
-	}	
+	FileScanConfig(boolean compressedFilesDeepCheck) {
+		super(compressedFilesDeepCheck);
+	}
 
 	@Override
-	FileScanConfig _create() {
-		return create();
+	FileScanConfig create() {
+		return new FileScanConfig(deepFilesCheck);
 	}
 	
 	public static FileScanConfig forPaths(Collection<String> paths) {
-		FileScanConfig criteria = create();
+		return forPaths(false, paths);
+	}
+	
+	public static FileScanConfig forPaths(boolean compressedFilesDeepCheck, Collection<String> paths) {
+		FileScanConfig criteria = new FileScanConfig(compressedFilesDeepCheck);
 		criteria.paths.addAll(paths);
 		return criteria;
 	}			
@@ -79,23 +61,18 @@ public class FileScanConfig extends FileScanConfigAbst<FileScanConfig> {
 	public static FileScanConfig forPaths(String... paths) {
 		return forPaths(Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
 	}
+	
+	public static FileScanConfig forPaths(boolean compressedFilesDeepCheck, String... paths) {
+		return forPaths(compressedFilesDeepCheck, Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
+	}
+	
 	@Override
 	Predicate<File> getFilePredicateForFileSystemEntry() {
-		return FILE_PREDICATE_FOR_FILE_SYSTEM_ENTRY;
-	}
-
-	@Override
-	Predicate<File> getArchivePredicateForFileSystemEntry() {
-		return ARCHIVE_PREDICATE_FOR_FILE_SYSTEM_ENTRY;
+		return getArchivePredicateForFileSystemEntry().negate();
 	}
 
 	@Override
 	Predicate<Entry> getFilePredicateForZipEntry() {
-		return FILE_PREDICATE_FOR_ZIP_ENTRY;
-	}
-
-	@Override
-	Predicate<Entry> getArchivePredicateForZipEntry() {
-		return ARCHIVE_PREDICATE_FOR_ZIP_ENTRY;
+		return getArchivePredicateForZipEntry().negate().and(entry -> !entry.getName().endsWith("/"));
 	}
 }
