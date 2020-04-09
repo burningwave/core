@@ -32,7 +32,7 @@ public class ByteCodeHunterTest extends BaseTest {
 					)
 				).deleteFoundItemsOnClose(
 					false
-				)					
+				).deepFileCheck(false)					
 			),
 			(result) -> result.getClasses()
 		);
