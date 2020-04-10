@@ -46,7 +46,7 @@ import org.burningwave.core.io.IterableZipContainer.Entry;
 
 @SuppressWarnings({"unchecked"})
 public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
-	boolean deepFilesCheck; 
+
 	PathHelper pathHelper;
 	Collection<String> paths;
 	FileCriteria directoryCriteriaForFileSystemEntry;
@@ -57,6 +57,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	int maxParallelTasksForUnit;
 	boolean recursiveOnDirectoryOfFileSystemEntry;
 	boolean recursiveOnArchiveOfZipEntry;
+	boolean deepFilesCheck; 
 	
 	FileScanConfigAbst() {
 		paths = ConcurrentHashMap.newKeySet();
