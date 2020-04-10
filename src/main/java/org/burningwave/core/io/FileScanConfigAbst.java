@@ -58,14 +58,13 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	boolean recursiveOnDirectoryOfFileSystemEntry;
 	boolean recursiveOnArchiveOfZipEntry;
 	
-	FileScanConfigAbst(boolean deepFilesCheck) {
-		this.deepFilesCheck = deepFilesCheck;
+	FileScanConfigAbst() {
 		paths = ConcurrentHashMap.newKeySet();
 		maxParallelTasksForUnit = Runtime.getRuntime().availableProcessors();
-		fileCriteriaForFileSystemEntry = FileCriteria.create().allThat(getFilePredicateForFileSystemEntry());
-		archiveCriteriaForFileSystemEntry = FileCriteria.create().allThat(getArchivePredicateForFileSystemEntry());
-		fileCriteriaForZipEntry = ZipContainerEntryCriteria.create().allThat(getFilePredicateForZipEntry());
-		archiveCriteriaForZipEntry = ZipContainerEntryCriteria.create().allThat(getArchivePredicateForZipEntry());
+		fileCriteriaForFileSystemEntry = FileCriteria.create();
+		archiveCriteriaForFileSystemEntry = FileCriteria.create();
+		fileCriteriaForZipEntry = ZipContainerEntryCriteria.create();
+		archiveCriteriaForZipEntry = ZipContainerEntryCriteria.create();
 		recursiveOnDirectoryOfFileSystemEntry = true;
 		recursiveOnArchiveOfZipEntry = true;
 	}
@@ -77,6 +76,10 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 			paths.add(Paths.clean(path));
 		}
 		temp.clear();
+		fileCriteriaForFileSystemEntry = FileCriteria.create().allThat(getFilePredicateForFileSystemEntry()).and(fileCriteriaForFileSystemEntry);
+		archiveCriteriaForFileSystemEntry = FileCriteria.create().allThat(getArchivePredicateForFileSystemEntry()).and(archiveCriteriaForFileSystemEntry);
+		fileCriteriaForZipEntry = ZipContainerEntryCriteria.create().allThat(getFilePredicateForZipEntry()).and(fileCriteriaForZipEntry);
+		archiveCriteriaForZipEntry = ZipContainerEntryCriteria.create().allThat(getArchivePredicateForZipEntry()).and(archiveCriteriaForZipEntry);
 	}
 	
 	Predicate<File> getArchivePredicateForFileSystemEntry(){
@@ -112,7 +115,12 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	}
 	
 	abstract Predicate<Entry> getFilePredicateForZipEntry();	
-
+	
+	public F deepFilesCheck(boolean flag) {
+		this.deepFilesCheck = flag;
+		return (F)this;
+	}
+	
 	public F setPaths(Collection<String> newPaths) {
 		this.paths.clear();
 		this.paths.addAll(newPaths);
@@ -229,6 +237,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	
 	public  F createCopy() {
 		F copy = create();
+		copy.deepFilesCheck = this.deepFilesCheck;
 		copy.directoryCriteriaForFileSystemEntry = 
 			this.directoryCriteriaForFileSystemEntry != null?	
 				this.directoryCriteriaForFileSystemEntry.createCopy()
