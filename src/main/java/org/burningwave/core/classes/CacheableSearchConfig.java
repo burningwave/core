@@ -72,7 +72,7 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 		return paths;
 	}	
 	
-	public CacheableSearchConfig deepFileCheck(boolean value) {
+	public CacheableSearchConfig deepFilesCheck(boolean value) {
 		this.deepFilesCheck = value;
 		return this;
 	}
