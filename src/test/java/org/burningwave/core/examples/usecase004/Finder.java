@@ -7,9 +7,11 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
+import org.burningwave.core.classes.ClassHunter.SearchResult;
+import org.burningwave.core.classes.ConstructorCriteria;
+import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.classes.SearchConfig;
-import org.burningwave.core.classes.ClassHunter.SearchResult;
 import org.burningwave.core.io.PathHelper;
 
 public class Finder {
@@ -33,6 +35,18 @@ public class Finder {
 					return lastClassInHierarchy.equals(currentScannedClass);
 				}).allThat((method) -> {
 					return method.getAnnotations() != null && method.getAnnotations().length > 0;
+				})
+			).or().byMembers(
+				FieldCriteria.byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
+					return lastClassInHierarchy.equals(currentScannedClass);
+				}).allThat((field) -> {
+					return field.getAnnotations() != null && field.getAnnotations().length > 0;
+				})
+			).or().byMembers(
+				ConstructorCriteria.byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
+					return lastClassInHierarchy.equals(currentScannedClass);
+				}).allThat((ctor) -> {
+					return ctor.getAnnotations() != null && ctor.getAnnotations().length > 0;
 				})
 			)
 		);
