@@ -8,7 +8,7 @@ It’s possible to search classes by every criteria that your immagination can m
 ### [**Get started**](https://github.com/burningwave/core/wiki)
 ### [Overview and configuration](https://github.com/burningwave/core/wiki/Overview-and-configuration)
 ### Examples of use of some components:
-<details>
+<details open>
 	<summary><b>ClassFactory</b></summary>
 	<ul>
 		<li>
