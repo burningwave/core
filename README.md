@@ -23,7 +23,7 @@ It’s possible to search classes by every criteria that your immagination can m
 		</li>
 	</ul>
 </details>
-<details>
+<details open>
 	<summary><b>ClassHunter</b></summary>
 	<ul>
 		<li>
@@ -78,7 +78,7 @@ It’s possible to search classes by every criteria that your immagination can m
 		</li>
 	</ul>
 </details>
-<details>
+<details open>
 	<summary><b>ClassPathHunter</b></summary>
 	<ul>
 		<li>
@@ -88,7 +88,7 @@ It’s possible to search classes by every criteria that your immagination can m
 		</li>
 	</ul>
 </details>
-<details>
+<details open>
 	<summary><b>PropertyAccessor</b></summary>
 	<ul>
 		<li>
