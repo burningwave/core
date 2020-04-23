@@ -11,7 +11,7 @@ import org.burningwave.core.classes.UnitSourceGenerator;
 import org.burningwave.core.classes.VariableSourceGenerator;
 import org.junit.jupiter.api.Test;
 
-public class CodeGeneratorTest extends BaseTest {
+public class UnitSourceGeneratorTest extends BaseTest {
 
 	@Test
 	public void generateUnitTestOne() throws Throwable {
