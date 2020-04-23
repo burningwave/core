@@ -28,6 +28,10 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
+import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,6 +42,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+
+import org.burningwave.core.io.FileSystemItem;
 
 public class UnitSourceGenerator extends SourceGenerator.Abst {
 	private String packageName;
@@ -75,7 +81,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 
 	private Set<String> getImports() {
 		List<String> imports = new ArrayList<>();
-		Optional.ofNullable(imports).ifPresent(imprts -> {
+		Optional.ofNullable(this.imports).ifPresent(imprts -> {
 			imprts.forEach(imprt -> {
 				imports.add("import " + imprt.replace("$", ".") + ";");
 			});
@@ -122,5 +128,17 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		return getOrEmpty(
 			Arrays.asList("package " + packageName + ";", "\n", getImports(), "\n", getOrEmpty(classes, "\n\n")), "\n"	
 		);
+	}
+	
+	public FileSystemItem storeToClassPath(String classPathFolder) {
+		classPathFolder = Paths.clean(classPathFolder);
+		String classRelativePath = packageName != null? packageName.replace(".", "/") : "";
+		for (ClassSourceGenerator cSG : classes) {
+			if (cSG.getModifier() != null && Modifier.isPublic(cSG.getModifier())) {
+				classRelativePath += "/" + cSG.getSimpleName() + ".java";
+				break;
+			}
+		}
+		return Streams.store(classPathFolder + "/" + classRelativePath, make().getBytes());
 	}
 }

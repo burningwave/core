@@ -66,6 +66,10 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		return new ClassSourceGenerator("interface", type);
 	}
 	
+	public static ClassSourceGenerator createAnnotation(TypeDeclarationSourceGenerator type) {
+		return new ClassSourceGenerator("@interface", type);
+	}
+	
 	public static ClassSourceGenerator createEnum(TypeDeclarationSourceGenerator type) {
 		return new ClassSourceGenerator("enum", type);
 	}
@@ -77,6 +81,14 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 			this.modifier |= modifier; 
 		}
 		return this;
+	}
+	
+	Integer getModifier() {
+		return this.modifier;
+	}
+	
+	String getSimpleName() {
+		return typeDeclaration.getSimpleName();
 	}
 	
 	public ClassSourceGenerator expands(Class<?> extendedClass) {

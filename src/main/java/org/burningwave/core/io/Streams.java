@@ -176,6 +176,10 @@ public class Streams implements Component {
 		return duplicated;
 	}
 	
+	public FileSystemItem store(String fileAbsolutePath, byte[] bytes) {
+		return store(fileAbsolutePath, defaultByteBufferAllocationMode.apply(bytes.length).put(bytes, 0, bytes.length));
+	}
+	
 	public FileSystemItem store(String fileAbsolutePath, ByteBuffer bytes) {
 		ByteBuffer content = shareContent(bytes);
 		File file = new File(fileAbsolutePath);

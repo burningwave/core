@@ -90,4 +90,34 @@ public class CodeGeneratorTest extends BaseTest {
 			logDebug(unit.make());
 		});
 	}
+	@Test
+	public void generateUnitAndStoreTestOne() throws Throwable {
+		UnitSourceGenerator.create(
+			"code.generator.test"
+		).addClass(
+			ClassSourceGenerator.createInterface(
+				TypeDeclarationSourceGenerator.create(
+					"Function"
+				).addGeneric(
+					GenericSourceGenerator.create("T")
+				).addGeneric(
+					GenericSourceGenerator.create("R")
+				)
+			).addModifier(
+				Modifier.PUBLIC
+			).addMethod(
+				FunctionSourceGenerator.create(
+					"apply"
+				).addParameter(
+					VariableSourceGenerator.create(
+						TypeDeclarationSourceGenerator.create("T"), "t"
+					)
+				).setReturnType("R").addModifier(Modifier.PUBLIC | Modifier.ABSTRACT)
+			).addOuterCodeRow("@FunctionalInterface")
+		).addImport(
+			FunctionalInterface.class
+		).storeToClassPath(
+			System.getProperty("user.home") + "/Desktop/bw-tests"
+		);
+	}
 }
