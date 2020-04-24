@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class VariableSourceGenerator extends SourceGenerator.Abst {
+	private Collection<TypeDeclarationSourceGenerator> usedTypes;
 	private Collection<String> outerCode;
 	private String assignmentOperator;
 	private String delimiter;
@@ -55,6 +56,10 @@ public class VariableSourceGenerator extends SourceGenerator.Abst {
 	
 	public static VariableSourceGenerator create(TypeDeclarationSourceGenerator type, String name) {
 		return new VariableSourceGenerator(type, name);
+	}
+	
+	public static VariableSourceGenerator create(String name) {
+		return new VariableSourceGenerator(null, name);
 	}
 	
 	public VariableSourceGenerator addModifier(Integer modifier) {
@@ -90,6 +95,9 @@ public class VariableSourceGenerator extends SourceGenerator.Abst {
 		Optional.ofNullable(valueBody).ifPresent(valueBody -> {
 			types.addAll(valueBody.getTypeDeclarations());
 		});
+		Optional.ofNullable(usedTypes).ifPresent(usedTypes ->
+			types.addAll(usedTypes)
+		);
 		return types;
 	}
 	
@@ -110,6 +118,14 @@ public class VariableSourceGenerator extends SourceGenerator.Abst {
 	VariableSourceGenerator setDelimiter(String separator) {
 		this.delimiter = separator;
 		return this;
+	}
+	
+	public VariableSourceGenerator useType(java.lang.Class<?>... classes) {
+		this.usedTypes = Optional.ofNullable(this.usedTypes).orElseGet(ArrayList::new);
+		for (java.lang.Class<?> cls : classes) {			
+			this.usedTypes.add(TypeDeclarationSourceGenerator.create(cls));
+		}
+		return this;		
 	}
 	
 	@Override

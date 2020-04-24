@@ -40,7 +40,7 @@ public class StatementSourceGenerator extends SourceGenerator.Abst {
 	private String elementSeparator;
 	private Collection<SourceGenerator> bodyGenerators;
 		
-	private StatementSourceGenerator() {}
+	StatementSourceGenerator() {}
 	
 	public static StatementSourceGenerator create() {
 		return new StatementSourceGenerator().setDelimiters("{", "\n}").setElementPrefix("\t");
@@ -69,10 +69,6 @@ public class StatementSourceGenerator extends SourceGenerator.Abst {
 	public StatementSourceGenerator addElement(SourceGenerator generator) {
 		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
 		this.bodyGenerators.add(generator);
-		if (generator instanceof StatementSourceGenerator) {
-			this.usedTypes = Optional.ofNullable(this.usedTypes).orElseGet(ArrayList::new);
-			usedTypes.addAll(((StatementSourceGenerator)generator).getTypeDeclarations());
-		}
 		return this;		
 	}
 	
@@ -102,6 +98,19 @@ public class StatementSourceGenerator extends SourceGenerator.Abst {
 	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(usedTypes).ifPresent(usedTypes -> types.addAll(usedTypes));
+		Optional.ofNullable(bodyGenerators).ifPresent(bodyGenerators -> {
+			for (SourceGenerator generator : bodyGenerators) {
+				if (generator instanceof StatementSourceGenerator) {
+					types.addAll(((StatementSourceGenerator)generator).getTypeDeclarations());
+				}
+				if (generator instanceof VariableSourceGenerator) {
+					types.addAll(((VariableSourceGenerator)generator).getTypeDeclarations());
+				}
+				if (generator instanceof AnnotationSourceGenerator) {
+					types.addAll(((AnnotationSourceGenerator)generator).getTypeDeclarations());
+				}
+			}
+		});
 		return types;
 	}
 	

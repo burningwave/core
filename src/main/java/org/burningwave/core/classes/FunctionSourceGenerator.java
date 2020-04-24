@@ -36,6 +36,7 @@ import java.util.Optional;
 
 public class FunctionSourceGenerator extends SourceGenerator.Abst {
 	private Collection<String> outerCode;
+	private Collection<AnnotationSourceGenerator> annotations;
 	private Integer modifier;
 	private boolean defaultFunction;
 	private TypeDeclarationSourceGenerator typesDeclaration;
@@ -123,6 +124,12 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
+	public FunctionSourceGenerator addAnnotation(AnnotationSourceGenerator annotation) {
+		this.annotations = Optional.ofNullable(this.annotations).orElseGet(ArrayList::new);
+		this.annotations.add(annotation);
+		return this;
+	}
+	
 	public FunctionSourceGenerator addBodyCode(String code) {
 		this.body = Optional.ofNullable(this.body).orElseGet(StatementSourceGenerator::create);
 		this.body.addCode(code);
@@ -187,7 +194,16 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		Optional.ofNullable(body).ifPresent(body -> {
 			types.addAll(body.getTypeDeclarations());
 		});
+		Optional.ofNullable(annotations).ifPresent(innerClasses -> {
+			for (AnnotationSourceGenerator annotation : annotations) {
+				types.addAll(annotation.getTypeDeclarations());
+			}
+		});	
 		return types;
+	}
+	
+	private String getAnnotations() {
+		return Optional.ofNullable(annotations).map(annts -> getOrEmpty(annts, "\n") +"\n").orElseGet(() -> null);
 	}
 	
 	@Override
@@ -196,6 +212,7 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 			Optional.ofNullable(outerCode).map(outerCode ->
 				getOrEmpty(outerCode) + "\n"
 			).orElseGet(() -> null),
+			getAnnotations(),
 			Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
 			defaultFunction ? "default" : null,
 			typesDeclaration,

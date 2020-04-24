@@ -1,14 +1,22 @@
 package org.burningwave.core;
 
+import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
+import java.util.Date;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
+import org.burningwave.core.classes.AnnotationSourceGenerator;
 import org.burningwave.core.classes.ClassSourceGenerator;
 import org.burningwave.core.classes.FunctionSourceGenerator;
 import org.burningwave.core.classes.GenericSourceGenerator;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
 import org.burningwave.core.classes.VariableSourceGenerator;
+import org.burningwave.core.examples.classfactory.RuntimeClassExtenderTwo.MyInterface;
+import org.burningwave.core.examples.classfactory.RuntimeClassExtenderTwo.ToBeExtended;
 import org.junit.jupiter.api.Test;
 
 public class UnitSourceGeneratorTest extends BaseTest {
@@ -83,13 +91,26 @@ public class UnitSourceGeneratorTest extends BaseTest {
 									.addModifier(Modifier.PRIVATE).addOuterCodeRow("@Field"))
 							.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Integer.class), "index2")
 									.addModifier(Modifier.PRIVATE))
-							.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation2"))
+							.addAnnotation(
+					            	AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameters(
+					            		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
+					            			VariableSourceGenerator.create("message").setValue("\"Person name should not be empty\"")
+					            		).addParameter(
+					            			VariableSourceGenerator.create("groups").setValue(this.getClass().getSimpleName() + ".class").useType(this.getClass())
+					            		),
+					            		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
+					            			VariableSourceGenerator.create("message").setValue("\"Company name should not be empty\"")
+					            		)
+					            	)
+					            )
+							)
 					.addMethod(method)).addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation2");
 			unit.addClass(cls);
 			unit.addClass(cls);
 			logDebug(unit.make());
 		});
 	}
+	
 	@Test
 	public void generateUnitAndStoreTestOne() throws Throwable {
 		UnitSourceGenerator.create(
@@ -119,5 +140,52 @@ public class UnitSourceGeneratorTest extends BaseTest {
 		).storeToClassPath(
 			System.getProperty("user.home") + "/Desktop/bw-tests"
 		);
+	}
+	
+	
+	@Test
+	public void generateUnitTwo() throws Throwable {
+		UnitSourceGenerator unitSG = UnitSourceGenerator.create("org.burningwave.core.examples.classfactory").addClass(
+            ClassSourceGenerator.create(
+                TypeDeclarationSourceGenerator.create("MyExtendedClass")
+            ).addAnnotation(
+            	AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameters(
+            		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
+            			VariableSourceGenerator.create("message").setValue("\"Person name should not be empty\"")
+            		).addParameter(
+            			VariableSourceGenerator.create("groups").setValue(this.getClass().getSimpleName() + ".class").useType(this.getClass())
+            		),
+            		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
+            			VariableSourceGenerator.create("message").setValue("\"Company name should not be empty\"")
+            		)
+            	)
+            ).addAnnotation(
+                	AnnotationSourceGenerator.create(NotNull.class)
+            ).addAnnotation(
+                	AnnotationSourceGenerator.create(SuppressWarnings.class).addParameter(VariableSourceGenerator.create("\"resource\""))
+            ).addModifier(
+                Modifier.PUBLIC
+            //generating new method that override MyInterface.now()
+            ).addMethod(
+                FunctionSourceGenerator.create("now")
+                .setTypeDeclaration(
+                	TypeDeclarationSourceGenerator.create(
+                		GenericSourceGenerator.create("T").expands(
+                			TypeDeclarationSourceGenerator.create(Cloneable.class),
+                			TypeDeclarationSourceGenerator.create(Serializable.class)
+                		)
+                	)
+                )
+                .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create("T")))
+                .addModifier(Modifier.PUBLIC)
+                .addOuterCodeRow("@Override")
+                .addBodyCodeRow("return (Comparable<T>)new Date();")
+                .useType(Date.class)
+            ).addConcretizedType(
+                MyInterface.class
+            ).expands(ToBeExtended.class)
+        );
+		unitSG.storeToClassPath("F:\\Shared\\Dati\\Workspaces\\Eclipse\\Projects\\Java\\BurningWave\\core\\src\\test\\java");
+        System.out.println("\nGenerated code:\n" + unitSG.make());
 	}
 }

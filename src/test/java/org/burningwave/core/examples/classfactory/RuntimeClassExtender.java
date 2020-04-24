@@ -2,13 +2,13 @@ package org.burningwave.core.examples.classfactory;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
 
-import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.util.Date;
 
 import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.AnnotationSourceGenerator;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassSourceGenerator;
 import org.burningwave.core.classes.FunctionSourceGenerator;
@@ -17,7 +17,7 @@ import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
 
 public class RuntimeClassExtender {
-	
+
     @SuppressWarnings("resource")
 	public static void execute() throws Throwable {
         UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
@@ -28,18 +28,10 @@ public class RuntimeClassExtender {
             //generating new method that override MyInterface.now()
             ).addMethod(
                 FunctionSourceGenerator.create("now")
-                .setTypeDeclaration(
-                	TypeDeclarationSourceGenerator.create(
-                		GenericSourceGenerator.create("T").expands(
-                			TypeDeclarationSourceGenerator.create(Cloneable.class),
-                			TypeDeclarationSourceGenerator.create(Serializable.class)
-                		)
-                	)
-                )
-                .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create("T")))
+                .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create(Date.class.getSimpleName())))
                 .addModifier(Modifier.PUBLIC)
-                .addOuterCodeRow("@Override")
-                .addBodyCodeRow("return (Comparable<T>)new Date();")
+                .addAnnotation(AnnotationSourceGenerator.create(Override.class))
+                .addBodyCodeRow("return new Date();")
                 .useType(Date.class)
             ).addConcretizedType(
                 MyInterface.class
@@ -60,7 +52,7 @@ public class RuntimeClassExtender {
         );
         ToBeExtended generatedClassObject =
             ConstructorHelper.newInstanceOf(generatedClass);
-        generatedClassObject.printSomeThing("print something call 1");
+        generatedClassObject.printSomeThing();
         System.out.println(
             ((MyInterface)generatedClassObject).now().toString()
         );
@@ -68,9 +60,9 @@ public class RuntimeClassExtender {
         //library for faciliate use of runtime generated classes)
         Virtual virtualObject = (Virtual)generatedClassObject;
         //Invoke by using reflection
-        virtualObject.invoke("printSomeThing", "print something call 2");
+        virtualObject.invoke("printSomeThing");
         //Invoke by using MethodHandle
-        virtualObject.invokeDirect("printSomeThing", "print something call 3");
+        virtualObject.invokeDirect("printSomeThing");
         System.out.println(
             ((Date)virtualObject.invokeDirect("now")).toString()
         );
@@ -78,15 +70,15 @@ public class RuntimeClassExtender {
 
     public static class ToBeExtended {
 
-        public void printSomeThing(String toBePrinted) {
-            System.out.println(toBePrinted);
+        public void printSomeThing() {
+            System.out.println("Called method printSomeThing");
         }
 
     }
 
     public static interface MyInterface {
 
-        public <T extends Cloneable & Serializable> Comparable<T> now();
+        public Comparable<Date> now();
 
     }
 

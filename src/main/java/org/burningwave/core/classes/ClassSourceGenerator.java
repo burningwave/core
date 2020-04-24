@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class ClassSourceGenerator extends SourceGenerator.Abst {
+	private Collection<AnnotationSourceGenerator> annotations;
 	private Collection<String> outerCode;
 	private Integer modifier;
 	private String classType;
@@ -157,6 +158,12 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
+	public ClassSourceGenerator addAnnotation(AnnotationSourceGenerator annotation) {
+		this.annotations = Optional.ofNullable(this.annotations).orElseGet(ArrayList::new);
+		this.annotations.add(annotation);
+		return this;
+	}
+	
 	public ClassSourceGenerator addField(VariableSourceGenerator field) {
 		this.fields = Optional.ofNullable(this.fields).orElseGet(ArrayList::new);
 		this.fields.add(field);
@@ -185,6 +192,10 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		this.innerClasses = Optional.ofNullable(this.innerClasses).orElseGet(ArrayList::new);
 		this.innerClasses.add(cls);
 		return this;
+	}
+	
+	private String getAnnotations() {
+		return Optional.ofNullable(annotations).map(annts -> getOrEmpty(annts, "\n") +"\n").orElseGet(() -> null);
 	}
 	
 	private String getFieldsCode() {
@@ -221,6 +232,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	
 	@Override
 	public String make() {
+		String annotations = getAnnotations();
 		String fieldsCode = getFieldsCode();
 		String constructorsCode = getFunctionCode(constructors);
 		String methodsCode = getFunctionCode(methods);
@@ -228,6 +240,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		return
 			getOrEmpty(
 				getOuterCode(),
+				annotations,
 				Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
 				classType,
 				typeDeclaration,
@@ -252,6 +265,11 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	
 	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = typeDeclaration.getTypeDeclarations();
+		Optional.ofNullable(annotations).ifPresent(innerClasses -> {
+			for (AnnotationSourceGenerator annotation : annotations) {
+				types.addAll(annotation.getTypeDeclarations());
+			}
+		});	
 		Optional.ofNullable(expandedType).ifPresent(expandedType -> {
 			types.addAll(expandedType.getTypeDeclarations());
 		});
