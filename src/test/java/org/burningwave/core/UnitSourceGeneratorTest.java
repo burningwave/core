@@ -135,7 +135,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 						TypeDeclarationSourceGenerator.create("T"), "t"
 					)
 				).setReturnType("R").addModifier(Modifier.PUBLIC | Modifier.ABSTRACT)
-			).addOuterCodeRow("@FunctionalInterface")
+			).addAnnotation(AnnotationSourceGenerator.create(FunctionalInterface.class))
 		).addImport(
 			FunctionalInterface.class
 		).storeToClassPath(
