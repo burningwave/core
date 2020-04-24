@@ -1,6 +1,7 @@
 package org.burningwave.core;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Date;
@@ -88,7 +89,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 													.addGeneric(GenericSourceGenerator.create("Y")))))
 							.addModifier(Modifier.PUBLIC).expands(Object.class)
 							.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Integer.class), "index1")
-									.addModifier(Modifier.PRIVATE).addOuterCodeRow("@Field"))
+									.addModifier(Modifier.PRIVATE).addAnnotation(AnnotationSourceGenerator.create(Field.class)))
 							.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Integer.class), "index2")
 									.addModifier(Modifier.PRIVATE))
 							.addAnnotation(
@@ -185,7 +186,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
                 MyInterface.class
             ).expands(ToBeExtended.class)
         );
-		unitSG.storeToClassPath("F:\\Shared\\Dati\\Workspaces\\Eclipse\\Projects\\Java\\BurningWave\\core\\src\\test\\java");
+		//unitSG.storeToClassPath("F:\\Shared\\Dati\\Workspaces\\Eclipse\\Projects\\Java\\BurningWave\\core\\src\\test\\java");
         System.out.println("\nGenerated code:\n" + unitSG.make());
 	}
 }

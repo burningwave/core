@@ -34,14 +34,15 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class VariableSourceGenerator extends SourceGenerator.Abst {
-	private Collection<TypeDeclarationSourceGenerator> usedTypes;
 	private Collection<String> outerCode;
+	private Collection<AnnotationSourceGenerator> annotations;
 	private String assignmentOperator;
 	private String delimiter;
 	private Integer modifier;
 	private TypeDeclarationSourceGenerator type;
 	private String name;
 	private StatementSourceGenerator valueBody;
+	private Collection<TypeDeclarationSourceGenerator> usedTypes;
 	
 	private VariableSourceGenerator(TypeDeclarationSourceGenerator type, String name) {
 		this.type = type;
@@ -87,8 +88,19 @@ public class VariableSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
+	public VariableSourceGenerator addAnnotation(AnnotationSourceGenerator annotation) {
+		this.annotations = Optional.ofNullable(this.annotations).orElseGet(ArrayList::new);
+		this.annotations.add(annotation);
+		return this;
+	}
+	
 	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
+		Optional.ofNullable(annotations).ifPresent(innerClasses -> {
+			for (AnnotationSourceGenerator annotation : annotations) {
+				types.addAll(annotation.getTypeDeclarations());
+			}
+		});	
 		Optional.ofNullable(type).ifPresent(type -> {
 			types.addAll(type.getTypeDeclarations());
 		});
@@ -128,12 +140,17 @@ public class VariableSourceGenerator extends SourceGenerator.Abst {
 		return this;		
 	}
 	
+	private String getAnnotations() {
+		return Optional.ofNullable(annotations).map(annts -> getOrEmpty(annts, "\n") +"\n").orElseGet(() -> null);
+	}
+	
 	@Override
 	public String make() {
 		return getOrEmpty(
 			Optional.ofNullable(outerCode).map(oc -> 
 				getOrEmpty(outerCode) + "\n"
 			).orElseGet(() -> null),
+			getAnnotations(),
 			Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
 			type,
 			name,
