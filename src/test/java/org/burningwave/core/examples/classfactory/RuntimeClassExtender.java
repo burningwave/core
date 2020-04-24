@@ -17,7 +17,7 @@ import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
 
 public class RuntimeClassExtender {
-
+	
     @SuppressWarnings("resource")
 	public static void execute() throws Throwable {
         UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
@@ -25,12 +25,15 @@ public class RuntimeClassExtender {
                 TypeDeclarationSourceGenerator.create("MyExtendedClass")
             ).addModifier(
                 Modifier.PUBLIC
-            //generating new method that override MyInterface.getNumber()
+            //generating new method that override MyInterface.now()
             ).addMethod(
                 FunctionSourceGenerator.create("now")
                 .setTypeDeclaration(
                 	TypeDeclarationSourceGenerator.create(
-                		GenericSourceGenerator.create("T").expands(TypeDeclarationSourceGenerator.create(Cloneable.class), TypeDeclarationSourceGenerator.create(Serializable.class))
+                		GenericSourceGenerator.create("T").expands(
+                			TypeDeclarationSourceGenerator.create(Cloneable.class),
+                			TypeDeclarationSourceGenerator.create(Serializable.class)
+                		)
                 	)
                 )
                 .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create("T")))
@@ -57,7 +60,7 @@ public class RuntimeClassExtender {
         );
         ToBeExtended generatedClassObject =
             ConstructorHelper.newInstanceOf(generatedClass);
-        generatedClassObject.printSomeThing();
+        generatedClassObject.printSomeThing("print something call 1");
         System.out.println(
             ((MyInterface)generatedClassObject).now().toString()
         );
@@ -65,9 +68,9 @@ public class RuntimeClassExtender {
         //library for faciliate use of runtime generated classes)
         Virtual virtualObject = (Virtual)generatedClassObject;
         //Invoke by using reflection
-        virtualObject.invoke("printSomeThing");
+        virtualObject.invoke("printSomeThing", "print something call 2");
         //Invoke by using MethodHandle
-        virtualObject.invokeDirect("printSomeThing");
+        virtualObject.invokeDirect("printSomeThing", "print something call 3");
         System.out.println(
             ((Date)virtualObject.invokeDirect("now")).toString()
         );
@@ -75,8 +78,8 @@ public class RuntimeClassExtender {
 
     public static class ToBeExtended {
 
-        public void printSomeThing() {
-            System.out.println("Called method printSomeThing");
+        public void printSomeThing(String toBePrinted) {
+            System.out.println(toBePrinted);
         }
 
     }
