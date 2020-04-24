@@ -2,6 +2,7 @@ package org.burningwave.core.examples.classfactory;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
 
+import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.util.Date;
 
@@ -27,10 +28,15 @@ public class RuntimeClassExtender {
             //generating new method that override MyInterface.getNumber()
             ).addMethod(
                 FunctionSourceGenerator.create("now")
-                .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create(Date.class.getSimpleName())))
+                .setTypeDeclaration(
+                	TypeDeclarationSourceGenerator.create(
+                		GenericSourceGenerator.create("T").expands(TypeDeclarationSourceGenerator.create(Cloneable.class), TypeDeclarationSourceGenerator.create(Serializable.class))
+                	)
+                )
+                .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create("T")))
                 .addModifier(Modifier.PUBLIC)
                 .addOuterCodeRow("@Override")
-                .addBodyCodeRow("return new Date();")
+                .addBodyCodeRow("return (Comparable<T>)new Date();")
                 .useType(Date.class)
             ).addConcretizedType(
                 MyInterface.class
@@ -77,7 +83,7 @@ public class RuntimeClassExtender {
 
     public static interface MyInterface {
 
-        public Comparable<Date> now();
+        public <T extends Cloneable & Serializable> Comparable<T> now();
 
     }
 

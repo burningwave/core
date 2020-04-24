@@ -195,7 +195,7 @@ public class JavaMemoryCompiler implements Component {
 					logError("Exception occurred", e);
 				}
 			} else {
-				throw new UnknownCompilerErrorMessageException("Can't retrieve class or package from message:\n" + message);
+				throw new UnknownCompilerErrorMessageException(message);
 			}
 			if (fsObjects == null || fsObjects.isEmpty()) {
 				throw Throwables.toRuntimeException("Class or package \"" + classNameAndClassPredicate.getKey() + "\" not found");
@@ -221,18 +221,18 @@ public class JavaMemoryCompiler implements Component {
 		}
 
 		private Map.Entry<String, Predicate<Class<?>>> getClassPredicateBagFromErrorMessage(String message) {
-			if (message.contains("class file for") && message.contains("not found")) {
+			if (message.indexOf("class file for") != -1 && message.indexOf("not found") != -1) {
 				String objName = message.substring(message.indexOf("for ") + 4);
 				objName = objName.substring(0, objName.indexOf(" "));
 				final String className = objName;
 				return new AbstractMap.SimpleEntry<>(objName, (cls) -> cls.getName().equals(className));
-			} else if(message.contains("class") && message.contains("package")){
+			} else if(message.indexOf("class ") != -1 && message.indexOf("package ") != -1 ){
 				String className = message.substring(message.indexOf("class ")+6);
 				className = className.substring(0, className.indexOf("\n"));
 				String packageName = message.substring(message.indexOf("package") + 8);
 				final String objName = packageName+"."+className;
 				return new AbstractMap.SimpleEntry<>(objName, (cls) -> cls.getName().equals(objName));
-			} else if(message.contains("symbol: class")) {
+			} else if(message.indexOf("symbol: class") != -1) {
 				String className = message.substring(message.indexOf("class ")+6);
 				final String objName = className;
 				return new AbstractMap.SimpleEntry<>(objName, (cls) -> cls.getSimpleName().equals(objName));
@@ -242,8 +242,8 @@ public class JavaMemoryCompiler implements Component {
 		
 		private String getPackageNameFromErrorMessage(String message) {
 			String objName = null;
-			if (!message.contains("package exists in another module") && !message.contains("cannot be accessed from outside package")) {
-				if (message.contains("package")){
+			if (message.indexOf("package exists in another module") == -1 && message.indexOf("cannot be accessed from outside package") == -1) {
+				if (message.indexOf("package ") != -1){
 					objName = message.substring(message.indexOf("package") + 8);
 					int firstOccOfSpaceIdx = objName.indexOf(" ");
 					if(firstOccOfSpaceIdx!=-1) {

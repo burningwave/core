@@ -33,10 +33,11 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class GenericSourceGenerator extends SourceGenerator.Abst {
+	private TypeDeclarationSourceGenerator type;
 	private Collection<String> outerCode;
 	private String name;
 	private String hirearchyOperator;
-	private TypeDeclarationSourceGenerator hirearchyElement;
+	private Collection<TypeDeclarationSourceGenerator> hirearchyElements;
 	
 	private GenericSourceGenerator(String name) {
 		this.name = name;
@@ -44,6 +45,13 @@ public class GenericSourceGenerator extends SourceGenerator.Abst {
 	
 	public static GenericSourceGenerator create(String name) {
 		return new GenericSourceGenerator(name);		
+	}
+	
+
+	public static GenericSourceGenerator create(Class<?> cls) {
+		GenericSourceGenerator generic = new GenericSourceGenerator(cls.getSimpleName());
+		generic.type = TypeDeclarationSourceGenerator.create(cls);
+		return generic;
 	}
 	
 	public String getName() {
@@ -56,29 +64,38 @@ public class GenericSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
-	public GenericSourceGenerator expands(TypeDeclarationSourceGenerator hirearchyElement) {
+	public GenericSourceGenerator expands(TypeDeclarationSourceGenerator... hirearchyElements) {
 		hirearchyOperator = "extends";
-		this.hirearchyElement = hirearchyElement;
+		this.hirearchyElements = Optional.ofNullable(this.hirearchyElements).orElseGet(ArrayList::new);
+		for (TypeDeclarationSourceGenerator hirearchyElement : hirearchyElements) {
+			this.hirearchyElements.add(hirearchyElement);
+		}
 		return this;
 	}
 	
 	public GenericSourceGenerator parentOf(TypeDeclarationSourceGenerator hirearchyElement) {
 		hirearchyOperator = "super";
-		this.hirearchyElement = hirearchyElement;
+		this.hirearchyElements = Optional.ofNullable(this.hirearchyElements).orElseGet(ArrayList::new);
+		this.hirearchyElements.add(hirearchyElement);
 		return this;
 	}
 	
 	Collection<TypeDeclarationSourceGenerator> getTypesDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
-		Optional.ofNullable(hirearchyElement).ifPresent(hirearchyElement -> {
-			types.addAll(hirearchyElement.getTypeDeclarations());
+		Optional.ofNullable(hirearchyElements).ifPresent(hirearchyElements -> {
+			hirearchyElements.forEach(hirearchyElement -> {
+				types.addAll(hirearchyElement.getTypeDeclarations());
+			});
+		});
+		Optional.ofNullable(type).ifPresent(hirearchyElement -> {
+			types.add(type);
 		});
 		return types;
 	}
 	
 	@Override
 	public String make() {
-		return getOrEmpty(outerCode, name, hirearchyOperator, hirearchyElement);
+		return getOrEmpty(outerCode, name, hirearchyOperator, getOrEmpty(hirearchyElements, " & "));
 	}
 
 }
