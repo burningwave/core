@@ -38,6 +38,8 @@ public class RuntimeClassExtender {
             ).expands(ToBeExtended.class)
         );
         System.out.println("\nGenerated code:\n" + unitSG.make());
+        //With this we store the generated source to a path
+        unitSG.storeToClassPath(System.getProperty("user.home") + "/Desktop/bw-tests");
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         ClassFactory classFactory = componentSupplier.getClassFactory();
         //this method compile all compilation units and upload the generated classes to default
