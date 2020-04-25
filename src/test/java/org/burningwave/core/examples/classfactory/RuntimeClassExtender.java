@@ -3,6 +3,8 @@ package org.burningwave.core.examples.classfactory;
 import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
 
 import java.lang.reflect.Modifier;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 
 import org.burningwave.core.Virtual;
@@ -28,11 +30,11 @@ public class RuntimeClassExtender {
             //generating new method that override MyInterface.now()
             ).addMethod(
                 FunctionSourceGenerator.create("now")
-                .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create(Date.class.getSimpleName())))
+                .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create(Date.class)))
                 .addModifier(Modifier.PUBLIC)
                 .addAnnotation(AnnotationSourceGenerator.create(Override.class))
-                .addBodyCodeRow("return new Date();")
-                .useType(Date.class)
+                .addBodyCodeRow("return Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());")
+                .useType(ZoneId.class, LocalDateTime.class)
             ).addConcretizedType(
                 MyInterface.class
             ).expands(ToBeExtended.class)
