@@ -17,6 +17,7 @@ import org.burningwave.core.classes.FunctionSourceGenerator;
 import org.burningwave.core.classes.GenericSourceGenerator;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
+import org.burningwave.core.classes.VariableSourceGenerator;
 
 public class RuntimeClassExtender {
 
@@ -27,14 +28,15 @@ public class RuntimeClassExtender {
                 TypeDeclarationSourceGenerator.create("MyExtendedClass")
             ).addModifier(
                 Modifier.PUBLIC
-            //generating new method that override MyInterface.now()
+            //generating new method that override MyInterface.convert(LocalDateTime)
             ).addMethod(
-                FunctionSourceGenerator.create("now")
+                FunctionSourceGenerator.create("convert")
                 .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create(Date.class)))
+                .addParameter(VariableSourceGenerator.create(LocalDateTime.class, "localDateTime"))
                 .addModifier(Modifier.PUBLIC)
                 .addAnnotation(AnnotationSourceGenerator.create(Override.class))
-                .addBodyCodeRow("return Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());")
-                .useType(ZoneId.class, LocalDateTime.class)
+                .addBodyCodeRow("return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());")
+                .useType(ZoneId.class)
             ).addConcretizedType(
                 MyInterface.class
             ).expands(ToBeExtended.class)
@@ -58,7 +60,7 @@ public class RuntimeClassExtender {
             ConstructorHelper.newInstanceOf(generatedClass);
         generatedClassObject.printSomeThing();
         System.out.println(
-            ((MyInterface)generatedClassObject).now().toString()
+            ((MyInterface)generatedClassObject).convert(LocalDateTime.now()).toString()
         );
         //You can also invoke methods by casting to Virtual (an interface offered by the
         //library for faciliate use of runtime generated classes)
@@ -68,7 +70,7 @@ public class RuntimeClassExtender {
         //Invoke by using MethodHandle
         virtualObject.invokeDirect("printSomeThing");
         System.out.println(
-            ((Date)virtualObject.invokeDirect("now")).toString()
+            ((Date)virtualObject.invokeDirect("convert", LocalDateTime.now())).toString()
         );
     }   
 
@@ -82,7 +84,7 @@ public class RuntimeClassExtender {
 
     public static interface MyInterface {
 
-        public Comparable<Date> now();
+        public Comparable<Date> convert(LocalDateTime localDateTime);
 
     }
 
