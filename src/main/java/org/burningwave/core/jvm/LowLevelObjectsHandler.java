@@ -28,12 +28,19 @@
  */
 package org.burningwave.core.jvm;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
 import static org.burningwave.core.assembler.StaticComponentContainer.MemberFinder;
 import static org.burningwave.core.assembler.StaticComponentContainer.MethodHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
+import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
+import java.io.InputStream;
+import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -41,8 +48,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.Buffer;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
@@ -52,6 +62,7 @@ import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingFunction;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.function.ThrowingTriFunction;
+import org.burningwave.core.io.ByteBufferOutputStream;
 
 import sun.misc.Unsafe;
 
@@ -82,7 +93,7 @@ public class LowLevelObjectsHandler implements Component {
 	Long loadedClassesVectorMemoryOffset;	
 
 	private LowLevelObjectsHandler() {
-		LowLevelObjectsHandlerInitializer.build(this);
+		Initializer.build(this);
 	}
 	
 	public static LowLevelObjectsHandler create() {
@@ -304,5 +315,292 @@ public class LowLevelObjectsHandler implements Component {
 		}
 		
 	}
+	
+	@SuppressWarnings("restriction")
+	private abstract static class Initializer implements Component {
+		LowLevelObjectsHandler lowLevelObjectsHandler;
+		
+		Initializer(LowLevelObjectsHandler lowLevelObjectsHandler) {
+			this.lowLevelObjectsHandler = lowLevelObjectsHandler;
+			try {
+				Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+				theUnsafeField.setAccessible(true);
+				this.lowLevelObjectsHandler.unsafe = (Unsafe)theUnsafeField.get(null);
+			} catch (Throwable exc) {
+				logInfo("Exception while retrieving unsafe");
+				throw Throwables.toRuntimeException(exc);
+			}
+		}	
+		
+		void init() {
+			CavyForRetrievingElementsOfClassLoaderClass cavy = new CavyForRetrievingElementsOfClassLoaderClass();
+			iterateClassLoaderFields(
+				cavy, getLoadedClassesVectorMemoryOffsetInitializator(cavy.clsForTest)
+			);
+			iterateClassLoaderFields(
+				cavy, getLoadedPackageMapMemoryOffsetInitializator(cavy.packageForTest)
+			);
+			initEmptyMembersArrays();
+			initMembersRetrievers();
+			initSpecificElements();
+		}
 
+
+		private void initEmptyMembersArrays() {
+			lowLevelObjectsHandler.emtpyFieldsArray = new Field[]{};
+			lowLevelObjectsHandler.emptyMethodsArray = new Method[]{};
+			lowLevelObjectsHandler.emptyConstructorsArray = new Constructor<?>[]{};
+		}
+		
+		public static void build(LowLevelObjectsHandler lowLevelObjectsHandler) {
+			try (Initializer initializer =
+					JVMInfo.getVersion() > 8 ?
+					new ForJava9(lowLevelObjectsHandler):
+					new ForJava8(lowLevelObjectsHandler)) {
+				initializer.init();
+			}
+		}
+		
+		private void initMembersRetrievers() {
+			try {
+				Lookup consulter = lowLevelObjectsHandler.consulterRetriever.apply(Class.class);
+				lowLevelObjectsHandler.getDeclaredFieldsRetriever = consulter.findSpecial(
+					Class.class, "getDeclaredFields0",
+					MethodType.methodType(Field[].class, boolean.class),
+					Class.class
+				);
+				
+				lowLevelObjectsHandler.getDeclaredMethodsRetriever = consulter.findSpecial(
+					Class.class,
+					"getDeclaredMethods0",
+					MethodType.methodType(Method[].class, boolean.class),
+					Class.class
+				);
+
+				lowLevelObjectsHandler.getDeclaredConstructorsRetriever = consulter.findSpecial(
+					Class.class,
+					"getDeclaredConstructors0",
+					MethodType.methodType(Constructor[].class, boolean.class),
+					Class.class
+				);
+				lowLevelObjectsHandler.parentClassLoaderFields = new HashMap<>();
+			} catch (Throwable exc) {
+				throw Throwables.toRuntimeException(exc);
+			}
+		}
+		
+		private BiPredicate<Object, Long> getLoadedClassesVectorMemoryOffsetInitializator(Class<?> definedClass) {
+			return (object, offset) -> {
+				if (object != null && object instanceof Vector) {
+					Vector<?> vector = (Vector<?>)object;
+					if (vector.contains(definedClass)) {
+						lowLevelObjectsHandler.loadedClassesVectorMemoryOffset = offset;
+						return true;
+					}
+				}
+				return false;
+			};
+		}
+		
+		private BiPredicate<Object, Long> getLoadedPackageMapMemoryOffsetInitializator(Object pckg) {
+			return (object, offset) -> {
+				if (object != null && object instanceof Map) {
+					Map<?, ?> map = (Map<?, ?>)object;
+					if (map.containsValue(pckg)) {
+						lowLevelObjectsHandler.loadedPackagesMapMemoryOffset = offset;
+						return true;
+					}
+				}
+				return false;
+			};
+		}
+		
+		protected Object iterateClassLoaderFields(ClassLoader classLoader, BiPredicate<Object, Long> predicate) {
+			long offset;
+			long step;
+			if (JVMInfo.is32Bit()) {
+				logInfo("JVM is 32 bit");
+				offset = 8;
+				step = 4;
+			} else if (!JVMInfo.isCompressedOopsOffOn64BitHotspot()) {
+				logInfo("JVM is 64 bit Hotspot and Compressed Oops is enabled");
+				offset = 12;
+				step = 4;
+			} else {
+				logInfo("JVM is 64 bit but is not Hotspot or Compressed Oops is disabled");
+				offset = 16;
+				step = 8;
+			}
+			logInfo("Iterating by unsafe over fields of classLoader {}", classLoader);
+			while (true) {
+				logInfo("Evaluating offset {}", offset);
+				Object object = lowLevelObjectsHandler.unsafe.getObject(classLoader, offset);
+				//logDebug(offset + " " + object);
+				if (predicate.test(object, offset)) {
+					return object;
+				}
+				offset+=step;
+			}
+		}
+		
+		abstract void initSpecificElements();
+		
+		@Override
+		public void close() {
+			this.lowLevelObjectsHandler = null;
+		}
+		
+		private static class CavyForRetrievingElementsOfClassLoaderClass extends ClassLoader {
+			Class<?> clsForTest;
+			Object packageForTest;
+			
+			CavyForRetrievingElementsOfClassLoaderClass() {
+				clsForTest = super.defineClass(
+					CavyForRetrievingElementsOfClassLoaderClass.class.getName(),
+					Streams.toByteBuffer(
+						Resources.getAsInputStream(
+							this.getClass().getClassLoader(), CavyForRetrievingElementsOfClassLoaderClass.class.getName().replace(".", "/") + ".class"
+						)
+					),	
+					null
+				);
+				packageForTest = super.definePackage(
+					"lowlevelobjectshandler.cavyforretrievingelementsofclassloaderclass", 
+					null, null, null, null, null, null, null
+				);
+			}
+			
+		}
+		
+		private static class ForJava8 extends Initializer {
+
+			ForJava8(LowLevelObjectsHandler lowLevelObjectsHandler) {
+				super(lowLevelObjectsHandler);
+				Field modes;
+				try {
+					modes = Lookup.class.getDeclaredField("allowedModes");
+				} catch (NoSuchFieldException | SecurityException exc) {
+					throw Throwables.toRuntimeException(exc);
+				}
+				modes.setAccessible(true);
+				lowLevelObjectsHandler.consulterRetriever = (cls) -> {
+					Lookup consulter = MethodHandles.lookup().in(cls);
+					modes.setInt(consulter, -1);
+					return consulter;
+				};
+			}
+
+			@Override
+			void initSpecificElements() {
+				lowLevelObjectsHandler.packageRetriever = (classLoader, object, packageName) -> (Package)object;
+				try {
+					final Method accessibleSetterMethod = AccessibleObject.class.getDeclaredMethod("setAccessible0", AccessibleObject.class, boolean.class);
+					accessibleSetterMethod.setAccessible(true);
+					lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) ->
+						accessibleSetterMethod.invoke(null, accessibleObject, flag);
+				} catch (Throwable exc) {
+					logInfo("method setAccessible0 class not detected on " + AccessibleObject.class.getName());
+					throw Throwables.toRuntimeException(exc);
+				}
+				try {
+					lowLevelObjectsHandler.methodInvoker = Class.forName("sun.reflect.NativeMethodAccessorImpl").getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
+					lowLevelObjectsHandler.setAccessible(lowLevelObjectsHandler.methodInvoker, true);
+				} catch (Throwable exc2) {
+					logError("method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
+					throw Throwables.toRuntimeException(exc2);
+				}		
+			}
+		}
+		
+		@SuppressWarnings("restriction")
+		private static class ForJava9 extends Initializer {
+			
+			ForJava9(LowLevelObjectsHandler lowLevelObjectsHandler) {
+				super(lowLevelObjectsHandler);
+				try {
+			        Class<?> cls = Class.forName("jdk.internal.module.IllegalAccessLogger");
+			        Field logger = cls.getDeclaredField("logger");
+			        final long loggerFieldOffset = lowLevelObjectsHandler.unsafe.staticFieldOffset(logger);
+			        final Object illegalAccessLogger = lowLevelObjectsHandler.unsafe.getObjectVolatile(cls, loggerFieldOffset);
+			        lowLevelObjectsHandler.illegalAccessLoggerDisabler = () ->
+			        	lowLevelObjectsHandler.unsafe.putObjectVolatile(cls, loggerFieldOffset, null);
+			        lowLevelObjectsHandler.illegalAccessLoggerEnabler = () ->
+			        	lowLevelObjectsHandler.unsafe.putObjectVolatile(cls, loggerFieldOffset, illegalAccessLogger);
+			    } catch (Throwable e) {
+			    	
+			    }
+				lowLevelObjectsHandler.disableIllegalAccessLogger();
+				try {
+					MethodHandles.Lookup consulter = MethodHandles.lookup();
+					MethodHandle consulterRetrieverMethod = consulter.findStatic(MethodHandles.class, "privateLookupIn", MethodType.methodType(Lookup.class, Class.class, Lookup.class));
+					lowLevelObjectsHandler.consulterRetriever = cls ->
+						(Lookup)consulterRetrieverMethod.invoke(cls, MethodHandles.lookup());
+				} catch (IllegalArgumentException | NoSuchMethodException
+						| SecurityException | IllegalAccessException exc) {
+					logError("Could not initialize consulter", exc);
+					throw Throwables.toRuntimeException(exc);
+				}
+			}
+
+			
+			@Override
+			void initSpecificElements() {
+				try {
+					final Method accessibleSetterMethod = AccessibleObject.class.getDeclaredMethod("setAccessible0", boolean.class);
+					accessibleSetterMethod.setAccessible(true);
+					lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) ->
+						accessibleSetterMethod.invoke(accessibleObject, flag);
+				} catch (Throwable exc) {
+					logInfo("method setAccessible0 class not detected on " + AccessibleObject.class.getName());
+					throw Throwables.toRuntimeException(exc);
+				}
+				try {
+					Lookup classLoaderConsulter = lowLevelObjectsHandler.consulterRetriever.apply(ClassLoader.class);
+					MethodType methodType = MethodType.methodType(Package.class, String.class);
+					MethodHandle methodHandle = classLoaderConsulter.findSpecial(ClassLoader.class, "getDefinedPackage", methodType, ClassLoader.class);
+					BiFunction<ClassLoader, String, Package> packageRetriever = (BiFunction<ClassLoader, String, Package>)LambdaMetafactory.metafactory(
+						classLoaderConsulter, "apply",
+						MethodType.methodType(BiFunction.class),
+						methodHandle.type().generic(),
+						methodHandle,
+						methodHandle.type()
+					).getTarget().invokeExact();
+					lowLevelObjectsHandler.packageRetriever = (classLoader, object, packageName) ->
+						packageRetriever.apply(classLoader, packageName);
+				} catch (Throwable exc) {
+					throw Throwables.toRuntimeException(exc);
+				}
+				try {
+					lowLevelObjectsHandler.builtinClassLoaderClass = Class.forName("jdk.internal.loader.BuiltinClassLoader");
+					try {
+						lowLevelObjectsHandler.methodInvoker = Class.forName("jdk.internal.reflect.NativeMethodAccessorImpl").getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
+						lowLevelObjectsHandler.setAccessible(lowLevelObjectsHandler.methodInvoker, true);
+					} catch (Throwable exc) {
+						logInfo("method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
+						throw Throwables.toRuntimeException(exc);
+					}
+					try (
+						InputStream inputStream =
+							Resources.getAsInputStream(this.getClass().getClassLoader(), "org/burningwave/core/classes/ClassLoaderDelegate.bwc"
+						);
+						ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
+					) {
+						Streams.copy(inputStream, bBOS);
+						lowLevelObjectsHandler.classLoaderDelegateClass = lowLevelObjectsHandler.unsafe.defineAnonymousClass(lowLevelObjectsHandler.builtinClassLoaderClass, bBOS.toByteArray(), null);
+					} catch (Throwable exc) {
+						throw Throwables.toRuntimeException(exc);
+					}
+				} catch (Throwable exc) {
+					logInfo("jdk.internal.loader.BuiltinClassLoader class not detected");
+					throw Throwables.toRuntimeException(exc);
+				}
+			}
+			
+			@Override
+			public void close() {
+				super.close();
+			}
+		}
+
+	}
 }
