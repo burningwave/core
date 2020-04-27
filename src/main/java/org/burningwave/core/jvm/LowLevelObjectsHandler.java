@@ -316,7 +316,6 @@ public class LowLevelObjectsHandler implements Component {
 		
 	}
 	
-	@SuppressWarnings("restriction")
 	private abstract static class Initializer implements Component {
 		LowLevelObjectsHandler lowLevelObjectsHandler;
 		
@@ -512,7 +511,6 @@ public class LowLevelObjectsHandler implements Component {
 			}
 		}
 		
-		@SuppressWarnings("restriction")
 		private static class ForJava9 extends Initializer {
 			
 			ForJava9(LowLevelObjectsHandler lowLevelObjectsHandler) {
