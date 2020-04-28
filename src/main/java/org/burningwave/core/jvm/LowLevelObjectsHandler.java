@@ -364,7 +364,8 @@ public class LowLevelObjectsHandler implements Component {
 			try {
 				Lookup consulter = lowLevelObjectsHandler.consulterRetriever.apply(Class.class);
 				lowLevelObjectsHandler.getDeclaredFieldsRetriever = consulter.findSpecial(
-					Class.class, "getDeclaredFields0",
+					Class.class,
+					"getDeclaredFields0",
 					MethodType.methodType(Field[].class, boolean.class),
 					Class.class
 				);
