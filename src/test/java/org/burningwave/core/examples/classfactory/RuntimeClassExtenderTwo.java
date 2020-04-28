@@ -34,7 +34,7 @@ public class RuntimeClassExtenderTwo {
             		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
             			VariableSourceGenerator.create("message").setValue("\"Person name should not be empty\"")
             		).addParameter(
-            			VariableSourceGenerator.create("groups").setValue("MyExtendedClass.class")
+            			VariableSourceGenerator.create("groups").setValue("MyExtendedClassTwo.class")
             		),
             		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
             			VariableSourceGenerator.create("message").setValue("\"Company name should not be empty\"")
