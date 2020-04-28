@@ -319,7 +319,7 @@ public class LowLevelObjectsHandler implements Component {
 	private abstract static class Initializer implements Component {
 		LowLevelObjectsHandler lowLevelObjectsHandler;
 		
-		Initializer(LowLevelObjectsHandler lowLevelObjectsHandler) {
+		private Initializer(LowLevelObjectsHandler lowLevelObjectsHandler) {
 			this.lowLevelObjectsHandler = lowLevelObjectsHandler;
 			try {
 				Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
@@ -332,7 +332,7 @@ public class LowLevelObjectsHandler implements Component {
 		}	
 		
 		void init() {
-			CavyForRetrievingElementsOfClassLoaderClass cavy = new CavyForRetrievingElementsOfClassLoaderClass();
+			CavyClassLoader cavy = new CavyClassLoader();
 			iterateClassLoaderFields(
 				cavy, getLoadedClassesVectorMemoryOffsetInitializator(cavy.clsForTest)
 			);
@@ -351,7 +351,7 @@ public class LowLevelObjectsHandler implements Component {
 			lowLevelObjectsHandler.emptyConstructorsArray = new Constructor<?>[]{};
 		}
 		
-		public static void build(LowLevelObjectsHandler lowLevelObjectsHandler) {
+		private static void build(LowLevelObjectsHandler lowLevelObjectsHandler) {
 			try (Initializer initializer =
 					JVMInfo.getVersion() > 8 ?
 					new ForJava9(lowLevelObjectsHandler):
@@ -414,7 +414,7 @@ public class LowLevelObjectsHandler implements Component {
 			};
 		}
 		
-		protected Object iterateClassLoaderFields(ClassLoader classLoader, BiPredicate<Object, Long> predicate) {
+		private Object iterateClassLoaderFields(ClassLoader classLoader, BiPredicate<Object, Long> predicate) {
 			long offset;
 			long step;
 			if (JVMInfo.is32Bit()) {
@@ -449,22 +449,22 @@ public class LowLevelObjectsHandler implements Component {
 			this.lowLevelObjectsHandler = null;
 		}
 		
-		private static class CavyForRetrievingElementsOfClassLoaderClass extends ClassLoader {
+		private static class CavyClassLoader extends ClassLoader {
 			Class<?> clsForTest;
 			Object packageForTest;
 			
-			CavyForRetrievingElementsOfClassLoaderClass() {
+			CavyClassLoader() {
 				clsForTest = super.defineClass(
-					CavyForRetrievingElementsOfClassLoaderClass.class.getName(),
+					CavyClassLoader.class.getName(),
 					Streams.toByteBuffer(
 						Resources.getAsInputStream(
-							this.getClass().getClassLoader(), CavyForRetrievingElementsOfClassLoaderClass.class.getName().replace(".", "/") + ".class"
+							this.getClass().getClassLoader(), CavyClassLoader.class.getName().replace(".", "/") + ".class"
 						)
 					),	
 					null
 				);
 				packageForTest = super.definePackage(
-					"lowlevelobjectshandler.cavyforretrievingelementsofclassloaderclass", 
+					"lowlevelobjectshandler.cavyclassloader", 
 					null, null, null, null, null, null, null
 				);
 			}
@@ -473,7 +473,7 @@ public class LowLevelObjectsHandler implements Component {
 		
 		private static class ForJava8 extends Initializer {
 
-			ForJava8(LowLevelObjectsHandler lowLevelObjectsHandler) {
+			private ForJava8(LowLevelObjectsHandler lowLevelObjectsHandler) {
 				super(lowLevelObjectsHandler);
 				Field modes;
 				try {
@@ -513,7 +513,7 @@ public class LowLevelObjectsHandler implements Component {
 		
 		private static class ForJava9 extends Initializer {
 			
-			ForJava9(LowLevelObjectsHandler lowLevelObjectsHandler) {
+			private ForJava9(LowLevelObjectsHandler lowLevelObjectsHandler) {
 				super(lowLevelObjectsHandler);
 				try {
 			        Class<?> cls = Class.forName("jdk.internal.module.IllegalAccessLogger");
