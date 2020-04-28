@@ -1,6 +1,6 @@
 package org.burningwave.core.examples.classfactory;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 
 import java.io.Serializable;
 import java.lang.reflect.Modifier;
@@ -93,7 +93,7 @@ public class RuntimeClassExtenderTwo {
             "org.burningwave.core.examples.classfactory.MyExtendedClassTwo"
         );
         ToBeExtended generatedClassObject =
-            ConstructorHelper.newInstanceOf(generatedClass);
+            Constructors.newInstanceOf(generatedClass);
         generatedClassObject.printSomeThing("print something call 1");
         System.out.println(
             ((MyInterface)generatedClassObject).now().toString()

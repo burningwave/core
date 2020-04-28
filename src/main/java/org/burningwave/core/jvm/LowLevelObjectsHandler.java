@@ -29,8 +29,8 @@
 package org.burningwave.core.jvm;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
-import static org.burningwave.core.assembler.StaticComponentContainer.MemberFinder;
-import static org.burningwave.core.assembler.StaticComponentContainer.MethodHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Members;
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -142,7 +142,7 @@ public class LowLevelObjectsHandler implements Component {
 			synchronized (parentClassLoaderFields) {
 				field = parentClassLoaderFields.get(classLoaderClass);
 				if (field == null) {
-					field = MemberFinder.findOne(
+					field = Members.findOne(
 						FieldCriteria.on(classLoaderClass).name("parent"::equals), classLoaderClass
 					);
 					setAccessible(field, true);
@@ -170,7 +170,7 @@ public class LowLevelObjectsHandler implements Component {
 		Class<?> classLoaderBaseClass = builtinClassLoaderClass;
 		if (builtinClassLoaderClass != null && builtinClassLoaderClass.isAssignableFrom(classLoader.getClass())) {
 			try {
-				Collection<Method> methods = MemberFinder.findAll(
+				Collection<Method> methods = Members.findAll(
 					MethodCriteria.byScanUpTo(
 						cls -> cls.getName().equals(ClassLoader.class.getName())
 					).name(
@@ -181,10 +181,10 @@ public class LowLevelObjectsHandler implements Component {
 				);
 				Object classLoaderDelegate = unsafe.allocateInstance(classLoaderDelegateClass);
 				invoke(classLoaderDelegate,
-					MemberFinder.findOne(
+					Members.findOne(
 						MethodCriteria.on(classLoaderDelegateClass).name("init"::equals), classLoaderDelegateClass
 					), futureParent,
-					MethodHelper.convertToMethodHandle(
+					Methods.convertToMethodHandle(
 						methods.stream().skip(methods.size() - 1).findFirst().get()
 					)
 				);

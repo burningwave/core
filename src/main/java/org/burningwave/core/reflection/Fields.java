@@ -28,47 +28,47 @@
  */
 package org.burningwave.core.reflection;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 
-import java.lang.reflect.Constructor;
-import java.util.Optional;
+import java.lang.reflect.Field;
+import org.burningwave.core.classes.FieldCriteria;
 
-import org.burningwave.core.classes.ConstructorCriteria;
-import org.burningwave.core.function.ThrowingSupplier;
+public class Fields extends MemberHelper<Field> {
 
-
-public class ConstructorHelper extends MemberHelper<Constructor<?>>  {
-
-	private ConstructorHelper() {
+	private Fields() {
 		super();
 	}
 	
-	public static ConstructorHelper create() {
-		return new ConstructorHelper();
+	public static Fields create() {
+		return new Fields();
+	}
+	
+	public Field findOneAndMakeItAccessible(Object target, String fieldName) {
+		return findOneAndMakeItAccessible(target, fieldName, true);
 	}
 	
 	
-	@SuppressWarnings("unchecked")
-	public <T> T newInstanceOf(
-			Object object,
-			Object... arguments) {
-		return ThrowingSupplier.get(() -> 
-			(T)findOneAndMakeItAccessible(object, arguments).newInstance(arguments)
-		);
-	}
-
-	@SuppressWarnings("unchecked")
-	public <T> Constructor<T> findOneAndMakeItAccessible(Object object, Object... arguments) {
-		ConstructorCriteria criteria = ConstructorCriteria.byScanUpTo(object).parameterTypesAreAssignableFrom(
-			arguments
-		);
-		Constructor<T> member = (Constructor<T>)findOneAndApply(
-			criteria, object, (mmb) ->	mmb.setAccessible(true)
-		);
-		Optional.ofNullable(member).orElseThrow(() ->
-			Throwables.toRuntimeException("Constructor not found for class " + Classes.retrieveFrom(object))
-		);
+	public Field findOneAndMakeItAccessible(
+		Object target,
+		String fieldName,
+		boolean cacheField
+	) {
+		String cacheKey = getCacheKey(target, "equals " + fieldName, (Object[])null);
+		Field member = Cache.uniqueKeyForField.get(cacheKey);
+		if (member == null) {
+			member = Members.findOne(
+				FieldCriteria.forName(
+					fieldName::equals
+				),
+				target				
+			);
+			member.setAccessible(true);
+			if (cacheField) {
+				final Field toUpload = member;
+				Cache.uniqueKeyForField.upload(cacheKey, () -> toUpload);
+			}
+		}
 		return member;
 	}
 

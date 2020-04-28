@@ -28,7 +28,7 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Optional;
@@ -97,7 +97,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 	
 	protected C newInstance() {
 		return ThrowingSupplier.get(() -> {
-			return (C)ConstructorHelper.newInstanceOf(this);
+			return (C)Constructors.newInstanceOf(this);
 		});
 	}
 	

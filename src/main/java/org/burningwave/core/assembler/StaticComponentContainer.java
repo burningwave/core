@@ -19,15 +19,15 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Cache Cache;
 	public static final org.burningwave.core.classes.Classes Classes;
 	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
-	public static final org.burningwave.core.reflection.ConstructorHelper ConstructorHelper;
+	public static final org.burningwave.core.reflection.Constructors Constructors;
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
-	public static final org.burningwave.core.reflection.FieldHelper FieldHelper;
+	public static final org.burningwave.core.reflection.Fields Fields;
 	public static final org.burningwave.core.iterable.Properties GlobalProperties;
 	public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;
 	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
-	public static final org.burningwave.core.classes.MemberFinder MemberFinder;
-	public static final org.burningwave.core.reflection.MethodHelper MethodHelper;
+	public static final org.burningwave.core.classes.Members Members;
+	public static final org.burningwave.core.reflection.Methods Methods;
 	public static final org.burningwave.core.Strings.Paths Paths;
 	public static final org.burningwave.core.io.Resources Resources;
 	public static final org.burningwave.core.io.Streams Streams;
@@ -72,10 +72,10 @@ public class StaticComponentContainer {
 			Classes = org.burningwave.core.classes.Classes.create();
 			ClassLoaders = org.burningwave.core.classes.Classes.Loaders.create();
 			Cache = org.burningwave.core.Cache.create();
-			MemberFinder = org.burningwave.core.classes.MemberFinder.create();
-			ConstructorHelper = org.burningwave.core.reflection.ConstructorHelper.create();
-			FieldHelper = org.burningwave.core.reflection.FieldHelper.create();
-			MethodHelper = org.burningwave.core.reflection.MethodHelper.create();
+			Members = org.burningwave.core.classes.Members.create();
+			Constructors = org.burningwave.core.reflection.Constructors.create();
+			Fields = org.burningwave.core.reflection.Fields.create();
+			Methods = org.burningwave.core.reflection.Methods.create();
 		} catch (Throwable exc){
 			ManagedLoggersRepository.logError(StaticComponentContainer.class, "Exception occurred", exc);
 			throw Throwables.toRuntimeException(exc);

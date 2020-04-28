@@ -29,9 +29,9 @@
  */
 package org.burningwave.core.reflection;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.FieldHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.MemberFinder;
-import static org.burningwave.core.assembler.StaticComponentContainer.MethodHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
+import static org.burningwave.core.assembler.StaticComponentContainer.Members;
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -174,7 +174,7 @@ public abstract class PropertyAccessor implements Component {
 	public <T> Map<String, T> getAll(Object obj)
 			throws IllegalArgumentException, IllegalAccessException {
 		Map<String, T> propertyValues = new LinkedHashMap<>();
-		Collection<Field> fields = MemberFinder.findAll(
+		Collection<Field> fields = Members.findAll(
 			FieldCriteria.create(),
 			obj
 		);
@@ -210,7 +210,7 @@ public abstract class PropertyAccessor implements Component {
 
 	Object retrievePropertyByField(Object obj, String propertyName) throws IllegalAccessException {
 		Object objToReturn;
-		Field field = FieldHelper.findOneAndMakeItAccessible(obj,
+		Field field = Fields.findOneAndMakeItAccessible(obj,
 			propertyName
 		);
 		objToReturn = field.get(obj);
@@ -219,9 +219,9 @@ public abstract class PropertyAccessor implements Component {
 
 	Object retrievePropertyByGetterMethod(Object obj, String propertyName) {
 		Object objToReturn;
-		objToReturn = MethodHelper.invoke(
+		objToReturn = Methods.invoke(
 			obj, 
-			MethodHelper.createGetterMethodNameByPropertyName(propertyName), 
+			Methods.createGetterMethodNameByPropertyName(propertyName), 
 			(Object[])null
 		);
 		return objToReturn;
@@ -251,7 +251,7 @@ public abstract class PropertyAccessor implements Component {
 	Boolean setPropertyByField(Object target, String propertyPath, Object value) throws IllegalAccessException {
 		Matcher matcher = Pattern.compile(REG_EXP_FOR_JAVA_PROPERTIES).matcher(propertyPath);
 		matcher.find();
-		Field field = FieldHelper.findOneAndMakeItAccessible(target.getClass(),
+		Field field = Fields.findOneAndMakeItAccessible(target.getClass(),
 				matcher.group(1));
 		if (matcher.group(2).isEmpty()) {
 			field.set(target, value);
@@ -265,12 +265,12 @@ public abstract class PropertyAccessor implements Component {
 		Matcher matcher = Pattern.compile(REG_EXP_FOR_JAVA_PROPERTIES).matcher(propertyPath);
 		matcher.find();
 		if (matcher.group(2).isEmpty()) {
-			MethodHelper.invoke(
-				target, MethodHelper.createSetterMethodNameByPropertyName(matcher.group(1)), value
+			Methods.invoke(
+				target, Methods.createSetterMethodNameByPropertyName(matcher.group(1)), value
 			);
 		} else {
-			setInIndexedProperty(MethodHelper.invoke(
-				target, MethodHelper.createGetterMethodNameByPropertyName(matcher.group(1))
+			setInIndexedProperty(Methods.invoke(
+				target, Methods.createGetterMethodNameByPropertyName(matcher.group(1))
 			), matcher.group(2), value);
 		}
 		return Boolean.TRUE;

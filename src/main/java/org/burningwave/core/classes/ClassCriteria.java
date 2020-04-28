@@ -30,7 +30,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.MemberFinder;
+import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -199,7 +199,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		String key, 
 		Class<?> cls
 	) {
-		return MemberFinder.match(criteria.memberCriterias.get(key), cls);
+		return Members.match(criteria.memberCriterias.get(key), cls);
 	}
 	
 	private boolean testAndCollectMembers( 
@@ -209,7 +209,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		String key, 
 		Class<?> cls
 	) {
-		Collection<Member> members = (Collection<Member>)MemberFinder.findAll(criteria.memberCriterias.get(key), cls);
+		Collection<Member> members = (Collection<Member>)Members.findAll(criteria.memberCriterias.get(key), cls);
 		context.addMembersFound(memberCriteria, members);
 		return !members.isEmpty();
 	}

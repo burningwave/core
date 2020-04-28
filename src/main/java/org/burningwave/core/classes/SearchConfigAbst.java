@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import org.burningwave.core.Component;
@@ -115,7 +115,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Compon
 	
 	protected S newInstance() {
 		return ThrowingSupplier.get(() -> {
-			return (S)ConstructorHelper.newInstanceOf(this);
+			return (S)Constructors.newInstanceOf(this);
 		});
 	}
 	

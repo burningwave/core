@@ -28,25 +28,25 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.MethodHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 
 public interface Virtual extends Component {
 	
 	default <T> T invoke(String methodName, Object... parameters) {
-		return MethodHelper.invoke(this, methodName, parameters);
+		return Methods.invoke(this, methodName, parameters);
 	}
 	
 	default <T> T invokeDirect(String methodName, Object... parameters) {
-		return MethodHelper.invokeDirect(this, methodName, parameters);
+		return Methods.invokeDirect(this, methodName, parameters);
 	}
 	
 	default <T> T invokeWithoutCachingMethod(String methodName, Object... parameters) {
-		return MethodHelper.invoke(this, methodName, false, parameters);
+		return Methods.invoke(this, methodName, false, parameters);
 	}
 	
 	default <T> T invokeDirectWithoutCachingMethod(String methodName, Object... parameters) {
-		return MethodHelper.invokeDirect(this, methodName, false, parameters);
+		return Methods.invokeDirect(this, methodName, false, parameters);
 	}
 
 }

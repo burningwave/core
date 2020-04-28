@@ -1,7 +1,7 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -112,7 +112,7 @@ public class ClassFactoryTest extends BaseTest {
 				Service.class,
 				PojoInterface.class
 			);
-			Virtual virtual = (Virtual)ConstructorHelper.newInstanceOf(virtualClass);
+			Virtual virtual = (Virtual)Constructors.newInstanceOf(virtualClass);
 			virtual.invokeDirect("setList", new ArrayList<>());
 			virtual.invoke("setList", new ArrayList<>());
 			virtual.invokeDirect("setList", new ArrayList<>());

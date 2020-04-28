@@ -29,7 +29,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
-import static org.burningwave.core.assembler.StaticComponentContainer.MethodHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
@@ -181,7 +181,7 @@ public class FunctionalInterfaceFactory implements Component {
 		ThrowingSupplier<Map.Entry<Class<?>, String>, Throwable> functionalInterfaceBagSupplier,
 		Function<MethodHandle, MethodType> functionalInterfaceSignatureSupplier
 	) throws Throwable {
-		Map.Entry<Lookup, MethodHandle> methodHandleBag = MethodHelper.convertToMethodHandleBag(targetMethod);
+		Map.Entry<Lookup, MethodHandle> methodHandleBag = Methods.convertToMethodHandleBag(targetMethod);
 		MethodHandle methodHandle = methodHandleBag.getValue();
 		Map.Entry<Class<?>, String> functionalInterfaceBag = functionalInterfaceBagSupplier.get();
 		return (F)LambdaMetafactory.metafactory(

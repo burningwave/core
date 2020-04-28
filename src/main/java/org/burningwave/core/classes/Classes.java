@@ -31,8 +31,8 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
-import static org.burningwave.core.assembler.StaticComponentContainer.MemberFinder;
-import static org.burningwave.core.assembler.StaticComponentContainer.MethodHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Members;
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -483,7 +483,7 @@ public class Classes implements Component {
 		}	
 		
 		private MethodHandle findDefinePackageMethodAndMakeItAccesible(ClassLoader classLoader) {
-			Method method = MemberFinder.findAll(
+			Method method = Members.findAll(
 				MethodCriteria.byScanUpTo((cls) -> 
 					cls.getName().equals(ClassLoader.class.getName())
 				).name(
@@ -494,7 +494,7 @@ public class Classes implements Component {
 				),
 				classLoader
 			).stream().findFirst().orElse(null);
-			return MethodHelper.convertToMethodHandleBag(method).getValue();
+			return Methods.convertToMethodHandleBag(method).getValue();
 		}
 		
 		public MethodHandle getDefineClassMethod(ClassLoader classLoader) {
@@ -506,7 +506,7 @@ public class Classes implements Component {
 		}
 		
 		private MethodHandle findDefineClassMethodAndMakeItAccesible(ClassLoader classLoader) {
-			Method method = MemberFinder.findAll(
+			Method method = Members.findAll(
 				MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
 					(classLoader instanceof MemoryClassLoader? "_defineClass" : "defineClass")::equals
 				).and().parameterTypes(params -> 
@@ -516,7 +516,7 @@ public class Classes implements Component {
 				).and().returnType((cls) -> cls.getName().equals(Class.class.getName())),
 				classLoader
 			).stream().findFirst().orElse(null);
-			return MethodHelper.convertToMethodHandleBag(method).getValue();
+			return Methods.convertToMethodHandleBag(method).getValue();
 		}
 		
 		private MethodHandle getMethod(ClassLoader classLoader, String key, Supplier<MethodHandle> methodSupplier) {

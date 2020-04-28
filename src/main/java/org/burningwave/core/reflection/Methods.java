@@ -51,14 +51,14 @@ import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.ThrowingSupplier;
 
 
-public class MethodHelper extends MemberHelper<Method> {
+public class Methods extends MemberHelper<Method> {
 	
-	private MethodHelper() {
+	private Methods() {
 		super();
 	}
 	
-	public static MethodHelper create() {
-		return new MethodHelper();
+	public static Methods create() {
+		return new Methods();
 	}
 
 	public String createGetterMethodNameByPropertyName(String property) {

@@ -29,7 +29,7 @@
 package org.burningwave.core.reflection;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.MemberFinder;
+import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 
 import java.lang.reflect.Member;
 import java.util.Collection;
@@ -47,7 +47,7 @@ public abstract class MemberHelper<M extends Member> implements Component {
 
 	@SuppressWarnings("unchecked")
 	<C extends MemberCriteria<M, C, ?>> Collection<M> findAllAndApply(C criteria, Object target, Consumer<M>... consumers) {
-		Collection<M> members = MemberFinder.findAll(criteria, target);
+		Collection<M> members = Members.findAll(criteria, target);
 		Optional.ofNullable(consumers).ifPresent(cnsms -> 
 			members.stream().forEach(member -> 
 				Stream.of(cnsms).filter(consumer -> 
@@ -62,7 +62,7 @@ public abstract class MemberHelper<M extends Member> implements Component {
 	
 	@SuppressWarnings("unchecked")
 	<C extends MemberCriteria<M, C, ?>> M findOneAndApply(C criteria, Object target, Consumer<M>... consumers) {
-		M member = MemberFinder.findOne(criteria, target);
+		M member = Members.findOne(criteria, target);
 		Optional.ofNullable(consumers).ifPresent(cnsms -> 
 			Optional.ofNullable(member).ifPresent(mmb -> 
 				Stream.of(cnsms).filter(consumer -> 

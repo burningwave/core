@@ -43,12 +43,12 @@ import java.util.stream.Stream;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 import org.burningwave.core.Component;
 
-public class MemberFinder implements Component {
+public class Members implements Component {
 
-	private MemberFinder() {}
+	private Members() {}
 	
-	public static MemberFinder create() {
-		return new MemberFinder();
+	public static Members create() {
+		return new Members();
 	}
 	
 	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {

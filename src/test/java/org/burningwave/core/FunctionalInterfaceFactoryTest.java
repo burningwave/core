@@ -1,6 +1,6 @@
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.MemberFinder;
+import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 
 import java.lang.reflect.Method;
 import java.util.function.BiConsumer;
@@ -23,7 +23,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	public void getOrBuildFunctionClassTestOne() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
-			Method mth = MemberFinder.findOne(
+			Method mth = Members.findOne(
 				MethodCriteria.create()
 				.name((name) -> name.matches("apply"))
 				.and().parameterType((params, idx) -> idx == 0 && params[idx].equals(Object.class))
@@ -40,7 +40,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	public void getOrBuildPredicateClassTestOne() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
-			Method mth = MemberFinder.findOne(
+			Method mth = Members.findOne(
 				MethodCriteria.create()
 				.name((name) -> name.matches("test"))
 				.and().parameterType((params, idx) -> idx == 0 && params[idx].equals(Object.class))
@@ -57,7 +57,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	public void getOrBuildFunctionClassTestTwo() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
-			Method mth = MemberFinder.findOne(
+			Method mth = Members.findOne(
 				MethodCriteria.create()
 				.name((name) -> name.matches("apply"))
 				.and().parameterType((params, idx) -> idx == 0 && params[idx].equals(String.class))
@@ -75,7 +75,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	public void getOrBuildFunctionClassTestThree() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
-			Method mth = MemberFinder.findOne(
+			Method mth = Members.findOne(
 				MethodCriteria.create()
 				.name((name) -> name.matches("staticApply"))
 				.and().parameterType((params, idx) -> idx == 0 && params[idx].equals(Object.class))
@@ -92,7 +92,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	public void getOrBuildSupplierClassTestOne() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
-			Method mth = MemberFinder.findOne(
+			Method mth = Members.findOne(
 				MethodCriteria.create()
 				.name((name) -> name.matches("retrieve")).and().parameterTypes(params -> params.length == 0),
 				Service.class				
@@ -106,7 +106,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	public void getOrBuildSupplierClassTestTwo() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
-			Method mth = MemberFinder.findOne(
+			Method mth = Members.findOne(
 				MethodCriteria.create()
 				.name((name) -> name.matches("supply")).and().parameterTypes(params -> params.length == 0),
 				Service.class				
@@ -121,7 +121,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	public void getOrBuildConsumerClassTestOne() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
-			Method mth = MemberFinder.findOne(
+			Method mth = Members.findOne(
 				MethodCriteria.create()
 				.name((name) -> name.matches("accept"))
 				.and().parameterType((params, idx) -> idx == 0 && params[idx].equals(String.class))
@@ -138,7 +138,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	public void getOrBuildConsumerClassTestTwo() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
-			Method mth = MemberFinder.findOne(
+			Method mth = Members.findOne(
 				MethodCriteria.create()
 				.name((name) -> name.matches("accept")).and().parameterTypes(params -> params.length == 1),
 				Service.class				
@@ -152,7 +152,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	public void getOrBuildConsumerClassTestThree() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
-			Method mth = MemberFinder.findOne(
+			Method mth = Members.findOne(
 				MethodCriteria.create()
 				.name((name) -> name.matches("staticAccept")).and().parameterTypes(params -> params.length == 4),
 				Service.class				
@@ -166,7 +166,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	public void getOrBuildRunnableClassTestOne() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
-			Method mth = MemberFinder.findOne(
+			Method mth = Members.findOne(
 				MethodCriteria.create()
 				.name((name) -> name.matches("run")).and().parameterTypes(params -> params.length == 0),
 				Service.class				
@@ -180,7 +180,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	public void getOrBuildRunnableClassTestTwo() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
-			Method mth = MemberFinder.findOne(
+			Method mth = Members.findOne(
 				MethodCriteria.create()
 				.name((name) -> name.matches("staticRun")).and().parameterTypes(params -> params.length == 0),
 				Service.class				

@@ -1,6 +1,6 @@
 package org.burningwave.core.examples.classfactory;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 
 import java.lang.reflect.Modifier;
 import java.time.LocalDateTime;
@@ -57,7 +57,7 @@ public class RuntimeClassExtender {
             "packagename.MyExtendedClass"
         );
         ToBeExtended generatedClassObject =
-            ConstructorHelper.newInstanceOf(generatedClass);
+            Constructors.newInstanceOf(generatedClass);
         generatedClassObject.printSomeThing();
         System.out.println(
             ((MyInterface)generatedClassObject).convert(LocalDateTime.now()).toString()

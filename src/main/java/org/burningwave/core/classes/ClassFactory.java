@@ -29,7 +29,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
-import static org.burningwave.core.assembler.StaticComponentContainer.ConstructorHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.nio.ByteBuffer;
@@ -251,7 +251,7 @@ public class ClassFactory implements Component {
 				Class<? extends CodeExecutor> executableClass = buildCodeExecutorSubTypeAndLoadOrUploadTo(
 					memoryClassLoader, packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""), statement
 				);
-				CodeExecutor executor = ConstructorHelper.newInstanceOf(executableClass);
+				CodeExecutor executor = Constructors.newInstanceOf(executableClass);
 				ComponentSupplier componentSupplier = null;
 				if (parameters != null && parameters.length > 0) {
 					for (Object param : parameters) {
