@@ -33,8 +33,9 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class GenericSourceGenerator extends SourceGenerator.Abst {
-	private TypeDeclarationSourceGenerator type;
 	private Collection<String> outerCode;
+	private Collection<AnnotationSourceGenerator> annotations;
+	private TypeDeclarationSourceGenerator type;
 	private String name;
 	private String hirearchyOperator;
 	private Collection<TypeDeclarationSourceGenerator> hirearchyElements;
@@ -45,8 +46,7 @@ public class GenericSourceGenerator extends SourceGenerator.Abst {
 	
 	public static GenericSourceGenerator create(String name) {
 		return new GenericSourceGenerator(name);		
-	}
-	
+	}	
 
 	public static GenericSourceGenerator create(Class<?> cls) {
 		GenericSourceGenerator generic = new GenericSourceGenerator(cls.getSimpleName());
@@ -61,6 +61,12 @@ public class GenericSourceGenerator extends SourceGenerator.Abst {
 	public GenericSourceGenerator addOuterCode(String code) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
 		this.outerCode.add(code);
+		return this;
+	}
+	
+	public GenericSourceGenerator addAnnotation(AnnotationSourceGenerator annotation) {
+		this.annotations = Optional.ofNullable(this.annotations).orElseGet(ArrayList::new);
+		this.annotations.add(annotation);
 		return this;
 	}
 	
@@ -82,6 +88,11 @@ public class GenericSourceGenerator extends SourceGenerator.Abst {
 	
 	Collection<TypeDeclarationSourceGenerator> getTypesDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
+		Optional.ofNullable(annotations).ifPresent(innerClasses -> {
+			for (AnnotationSourceGenerator annotation : annotations) {
+				types.addAll(annotation.getTypeDeclarations());
+			}
+		});	
 		Optional.ofNullable(hirearchyElements).ifPresent(hirearchyElements -> {
 			hirearchyElements.forEach(hirearchyElement -> {
 				types.addAll(hirearchyElement.getTypeDeclarations());
@@ -93,9 +104,13 @@ public class GenericSourceGenerator extends SourceGenerator.Abst {
 		return types;
 	}
 	
+	private String getAnnotations() {
+		return Optional.ofNullable(annotations).map(annts -> getOrEmpty(annts)).orElseGet(() -> null);
+	}
+	
 	@Override
 	public String make() {
-		return getOrEmpty(outerCode, name, hirearchyOperator, getOrEmpty(hirearchyElements, " & "));
+		return getOrEmpty(outerCode, getAnnotations(), name, hirearchyOperator, getOrEmpty(hirearchyElements, " & "));
 	}
 
 }

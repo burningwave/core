@@ -137,7 +137,7 @@ public class ClassFactory implements Component {
 					return ClassLoaders.loadOrUploadClasses(build(unitsCode), classLoader);
 				}
 			}
-			logInfo("Classes {} loaded without bulding by classloader {} ", String.join(", ", classes.keySet()), classLoader);
+			logInfo("Classes {} loaded without building by classloader {} ", String.join(", ", classes.keySet()), classLoader);
 			return classes;
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);

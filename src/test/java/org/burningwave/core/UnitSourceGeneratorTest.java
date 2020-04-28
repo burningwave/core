@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -163,10 +164,23 @@ public class UnitSourceGeneratorTest extends BaseTest {
             ).addAnnotation(
                 	AnnotationSourceGenerator.create(NotNull.class)
             ).addAnnotation(
-                	AnnotationSourceGenerator.create(SuppressWarnings.class).addParameter(VariableSourceGenerator.create("\"resource\""))
+                	AnnotationSourceGenerator.create(SuppressWarnings.class).addParameter(VariableSourceGenerator.create("\"unchecked\""))
             ).addModifier(
                 Modifier.PUBLIC
             //generating new method that override MyInterface.now()
+            ).addField(
+            	VariableSourceGenerator.create(
+            		TypeDeclarationSourceGenerator.create(
+            			Map.class
+            		).addGeneric(
+            			GenericSourceGenerator.create(String.class).addAnnotation(
+            				AnnotationSourceGenerator.create(NotEmpty.class)
+            			)
+            		).addGeneric(
+            			GenericSourceGenerator.create(String.class)
+                	),
+            		"map"
+            	).addAnnotation(AnnotationSourceGenerator.create(NotEmpty.class))
             ).addMethod(
                 FunctionSourceGenerator.create("now")
                 .setTypeDeclaration(
@@ -186,7 +200,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
                 MyInterface.class
             ).expands(ToBeExtended.class)
         );
-		//unitSG.storeToClassPath("F:\\Shared\\Dati\\Workspaces\\Eclipse\\Projects\\Java\\BurningWave\\core\\src\\test\\java");
+		unitSG.storeToClassPath(System.getProperty("user.home") + "/Desktop/bw-tests");
         System.out.println("\nGenerated code:\n" + unitSG.make());
 	}
 }

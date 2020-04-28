@@ -5,27 +5,61 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Constructo
 import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.util.Date;
+import java.util.Map;
+
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
 import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.AnnotationSourceGenerator;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassSourceGenerator;
 import org.burningwave.core.classes.FunctionSourceGenerator;
 import org.burningwave.core.classes.GenericSourceGenerator;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
+import org.burningwave.core.classes.VariableSourceGenerator;
 
 public class RuntimeClassExtenderTwo {
 	
     @SuppressWarnings("resource")
 	public static void execute() throws Throwable {
-        UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
+    	UnitSourceGenerator unitSG = UnitSourceGenerator.create("org.burningwave.core.examples.classfactory").addClass(
             ClassSourceGenerator.create(
-                TypeDeclarationSourceGenerator.create("MyExtendedClass")
+                TypeDeclarationSourceGenerator.create("MyExtendedClassTwo")
+            ).addAnnotation(
+            	AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameters(
+            		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
+            			VariableSourceGenerator.create("message").setValue("\"Person name should not be empty\"")
+            		).addParameter(
+            			VariableSourceGenerator.create("groups").setValue("MyExtendedClass.class")
+            		),
+            		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
+            			VariableSourceGenerator.create("message").setValue("\"Company name should not be empty\"")
+            		)
+            	)
+            ).addAnnotation(
+                	AnnotationSourceGenerator.create(NotNull.class)
+            ).addAnnotation(
+                	AnnotationSourceGenerator.create(SuppressWarnings.class).addParameter(VariableSourceGenerator.create("\"unchecked\""))
             ).addModifier(
                 Modifier.PUBLIC
             //generating new method that override MyInterface.now()
+            ).addField(
+            	VariableSourceGenerator.create(
+            		TypeDeclarationSourceGenerator.create(
+            			Map.class
+            		).addGeneric(
+            			GenericSourceGenerator.create(String.class).addAnnotation(
+            				AnnotationSourceGenerator.create(NotEmpty.class)
+            			)
+            		).addGeneric(
+            			GenericSourceGenerator.create(String.class)
+                	),
+            		"map"
+            	).addAnnotation(AnnotationSourceGenerator.create(NotEmpty.class))
             ).addMethod(
                 FunctionSourceGenerator.create("now")
                 .setTypeDeclaration(
@@ -56,7 +90,7 @@ public class RuntimeClassExtenderTwo {
         Class<?> generatedClass = classFactory.buildAndLoadOrUpload(
             unitSG
         ).get(
-            "packagename.MyExtendedClass"
+            "org.burningwave.core.examples.classfactory.MyExtendedClassTwo"
         );
         ToBeExtended generatedClassObject =
             ConstructorHelper.newInstanceOf(generatedClass);
