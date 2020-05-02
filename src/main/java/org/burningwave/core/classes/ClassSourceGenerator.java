@@ -137,7 +137,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		return this;		
 	}
 	
-	boolean isAlreadyAdded(String className) {
+	private boolean isAlreadyAdded(String className) {
 		boolean isAlreadyAdded = false;
 		for (TypeDeclarationSourceGenerator typeDeclarationSG : this.concretizedTypes) {
 			if ((typeDeclarationSG.getName() != null && typeDeclarationSG.getName().equals(className))) {
@@ -148,49 +148,61 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		return isAlreadyAdded;
 	}
 	
-	public ClassSourceGenerator addOuterCodeRow(String code) {
+	public ClassSourceGenerator addOuterCodeRow(String... codes) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
-		if (!this.outerCode.isEmpty()) {
-			this.outerCode.add("\n" + code);
-		} else {
-			this.outerCode.add(code);
+		for (String code : codes) {
+			if (!this.outerCode.isEmpty()) {
+				this.outerCode.add("\n" + code);
+			} else {
+				this.outerCode.add(code);
+			}
 		}
 		return this;
 	}
 	
-	public ClassSourceGenerator addAnnotation(AnnotationSourceGenerator annotation) {
+	public ClassSourceGenerator addAnnotation(AnnotationSourceGenerator... annotations) {
 		this.annotations = Optional.ofNullable(this.annotations).orElseGet(ArrayList::new);
-		this.annotations.add(annotation);
-		return this;
-	}
-	
-	public ClassSourceGenerator addField(VariableSourceGenerator field) {
-		this.fields = Optional.ofNullable(this.fields).orElseGet(ArrayList::new);
-		this.fields.add(field);
-		if (classType.equals("enum")) {
-			field.setAssignementOperator(null);
-			field.setDelimiter(COMMA);
+		for (AnnotationSourceGenerator annotation : annotations) {
+			this.annotations.add(annotation);
 		}
 		return this;
 	}
 	
-	public ClassSourceGenerator addConstructor(FunctionSourceGenerator constructor) {
+	public ClassSourceGenerator addField(VariableSourceGenerator... fields) {
+		this.fields = Optional.ofNullable(this.fields).orElseGet(ArrayList::new);
+		for (VariableSourceGenerator field : fields) {
+			this.fields.add(field);
+			if (classType.equals("enum")) {
+				field.setAssignementOperator(null);
+				field.setDelimiter(COMMA);
+			}
+		}
+		return this;
+	}
+	
+	public ClassSourceGenerator addConstructor(FunctionSourceGenerator... constructors) {
 		this.constructors = Optional.ofNullable(this.constructors).orElseGet(ArrayList::new);
-		this.constructors.add(constructor);
-		constructor.setName(this.typeDeclaration.getSimpleName());
-		constructor.setReturnType((TypeDeclarationSourceGenerator)null);
+		for (FunctionSourceGenerator constructor : constructors) {
+			this.constructors.add(constructor);
+			constructor.setName(this.typeDeclaration.getSimpleName());
+			constructor.setReturnType((TypeDeclarationSourceGenerator)null);
+		}
 		return this;
 	}
 	
-	public ClassSourceGenerator addMethod(FunctionSourceGenerator method) {
+	public ClassSourceGenerator addMethod(FunctionSourceGenerator... methods) {
 		this.methods = Optional.ofNullable(this.methods).orElseGet(ArrayList::new);
-		this.methods.add(method);
+		for (FunctionSourceGenerator method : methods) {
+			this.methods.add(method);
+		}
 		return this;
 	}
 	
-	public ClassSourceGenerator addInnerClass(ClassSourceGenerator cls) {
+	public ClassSourceGenerator addInnerClass(ClassSourceGenerator... classes) {
 		this.innerClasses = Optional.ofNullable(this.innerClasses).orElseGet(ArrayList::new);
-		this.innerClasses.add(cls);
+		for (ClassSourceGenerator cls : classes) {
+			this.innerClasses.add(cls);
+		}
 		return this;
 	}
 	
@@ -265,7 +277,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	
 	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = typeDeclaration.getTypeDeclarations();
-		Optional.ofNullable(annotations).ifPresent(innerClasses -> {
+		Optional.ofNullable(annotations).ifPresent(annotations -> {
 			for (AnnotationSourceGenerator annotation : annotations) {
 				types.addAll(annotation.getTypeDeclarations());
 			}

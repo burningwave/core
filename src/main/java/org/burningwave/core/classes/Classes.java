@@ -597,25 +597,25 @@ public class Classes implements Component {
 			);
 		}
 		
-		public <T> Class<T> loadOrUploadClass(
+		public <T> Class<T> loadOrUploadJavaClass(
 			JavaClass javaClass,
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
-			return loadOrUploadClass(
+			return loadOrUploadJavaClass(
 				javaClass, classLoader,
 				getDefineClassMethod(classLoader),
 				getDefinePackageMethod(classLoader)
 			);
 		}
 		
-		public Map<String, Class<?>> loadOrUploadClasses(
+		public Map<String, Class<?>> loadOrUploadByteCodes(
 			Map<String, ByteBuffer> byteCodes,
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
 			Map<String, Class<?>> classes = new HashMap<>();
 			if (!(classLoader instanceof MemoryClassLoader)) {
 				for (Map.Entry<String, ByteBuffer> classNameForByteCode : byteCodes.entrySet()) {
-					classes.put(classNameForByteCode.getKey(),loadOrUploadClass(classNameForByteCode.getKey(), byteCodes, classLoader));
+					classes.put(classNameForByteCode.getKey(),loadOrUploadByteCode(classNameForByteCode.getKey(), byteCodes, classLoader));
 				}
 			} else {
 				for (Map.Entry<String, ByteBuffer> clazz : byteCodes.entrySet()) {
@@ -629,18 +629,18 @@ public class Classes implements Component {
 		}
 		
 		@SuppressWarnings("unchecked")
-		public <T> Class<T> loadOrUploadClass(
+		public <T> Class<T> loadOrUploadByteCode(
 			String className,
 			Map<String, ByteBuffer> byteCodes,
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
 			if (!(classLoader instanceof MemoryClassLoader)) {
 				try {
-					return loadOrUploadClass(byteCodes.get(className), classLoader);
+					return loadOrUploadByteCode(byteCodes.get(className), classLoader);
 				} catch (ClassNotFoundException exc) {
 					String newNotFoundClassName = Classes.retrieveNames(exc).stream().findFirst().orElseGet(() -> null);
-					loadOrUploadClass(newNotFoundClassName, byteCodes, classLoader);
-					return loadOrUploadClass(byteCodes.get(className), classLoader);
+					loadOrUploadByteCode(newNotFoundClassName, byteCodes, classLoader);
+					return loadOrUploadByteCode(byteCodes.get(className), classLoader);
 				}
 			} else {
 				for (Map.Entry<String, ByteBuffer> clazz : byteCodes.entrySet()) {
@@ -652,11 +652,35 @@ public class Classes implements Component {
 			}
 		}
 		
-		public <T> Class<T> loadOrUploadClass(
+		@SuppressWarnings("unchecked")
+		public <T> Class<T> loadOrUploadJavaClass(
+			String className,
+			Map<String, JavaClass> byteCodes,
+			ClassLoader classLoader
+		) throws ClassNotFoundException {
+			if (!(classLoader instanceof MemoryClassLoader)) {
+				try {
+					return loadOrUploadJavaClass(byteCodes.get(className), classLoader);
+				} catch (ClassNotFoundException exc) {
+					String newNotFoundClassName = Classes.retrieveNames(exc).stream().findFirst().orElseGet(() -> null);
+					loadOrUploadJavaClass(newNotFoundClassName, byteCodes, classLoader);
+					return loadOrUploadJavaClass(byteCodes.get(className), classLoader);
+				}
+			} else {
+				for (Map.Entry<String, JavaClass> clazz : byteCodes.entrySet()) {
+					((MemoryClassLoader)classLoader).addCompiledClass(
+						clazz.getKey(), clazz.getValue().getByteCode()
+					);
+				}
+				return (Class<T>) classLoader.loadClass(className);
+			}
+		}
+		
+		public <T> Class<T> loadOrUploadByteCode(
 			ByteBuffer byteCode,
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
-			return loadOrUploadClass(
+			return loadOrUploadJavaClass(
 				JavaClass.create(byteCode), classLoader,
 				getDefineClassMethod(classLoader),
 				getDefinePackageMethod(classLoader)
@@ -664,7 +688,7 @@ public class Classes implements Component {
 		}
 		
 		@SuppressWarnings("unchecked")
-		private <T> Class<T> loadOrUploadClass(
+		private <T> Class<T> loadOrUploadJavaClass(
 			JavaClass javaClass, 
 			ClassLoader classLoader, 
 			MethodHandle defineClassMethod, 
@@ -685,7 +709,7 @@ public class Classes implements Component {
 	        			),
 	        			classLoader, defineClassMethod, definePackageMethod
 	        		);
-					return loadOrUploadClass(javaClass, classLoader,
+					return loadOrUploadJavaClass(javaClass, classLoader,
 						defineClassMethod, definePackageMethod
 	        		);
 				}

@@ -105,7 +105,7 @@ public class JavaMemoryCompiler implements Component {
 		Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
 		sourcesToMemorySources(sources, memorySources);
 		try (Compilation.Context context = Compilation.Context.create(this, classPathHunter, memorySources, new ArrayList<>(classPaths), new ArrayList<>(classRepositoriesPaths))) {
-			Map<String, ByteBuffer> compiledFiles = _compile(context);
+			Map<String, ByteBuffer> compiledFiles = _compile(context, null);
 			if (!compiledFiles.isEmpty()) {
 				compiledFiles.forEach((className, byteCode) -> {
 					JavaClass javaClass = JavaClass.create(byteCode);
@@ -130,7 +130,7 @@ public class JavaMemoryCompiler implements Component {
 	}
 
 
-	private Map<String, ByteBuffer> _compile(Compilation.Context context) {
+	private Map<String, ByteBuffer> _compile(Compilation.Context context, Throwable thr) {
 		List<String> options = new ArrayList<String>();
 		if (!context.options.isEmpty()) {
 			context.options.forEach((key, val) -> {
@@ -147,9 +147,18 @@ public class JavaMemoryCompiler implements Component {
 				new MemoryDiagnosticListener(context), options, null,
 				new ArrayList<>(context.sources)
 			);
-			boolean done = task.call();
+			boolean done = false;
+			Throwable exception = null;
+			try {
+				done = task.call();
+			} catch (Throwable exc) {
+				if (thr != null && thr.getMessage().equals(exc.getMessage())) {
+					throw exc;
+				}
+				exception = exc;
+			}
 			if (!done) {
-				return _compile(context);
+				return _compile(context, exception);
 			} else {
 				return memoryFileManager.getCompiledFiles().stream().collect(
 					Collectors.toMap(compiledFile -> 

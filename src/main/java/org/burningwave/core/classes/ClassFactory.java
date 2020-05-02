@@ -40,6 +40,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -55,21 +56,26 @@ import org.burningwave.core.io.PathHelper;
 
 public class ClassFactory implements Component {
 	public static final String DEFAULT_CLASS_LOADER_CONFIG_KEY = "class-factory.default-class-loader";
-	public static final String CLASS_REPOSITORIES = "class-factory.class-repositories";
+	public static final String CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY = "class-factory.java-memory-compiler.class-repositories";
+	public static final String CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY = "class-factory.default-class-loader.class-repositories";
+
 	
 	private SourceCodeHandler sourceCodeHandler;
 	private PathHelper pathHelper;
 	private JavaMemoryCompiler javaMemoryCompiler;
 	private PojoSubTypeRetriever pojoSubTypeRetriever;	
 	private ClassLoader defaultClassLoader;
+	private ByteCodeHunter byteCodeHunter;
 	private Supplier<ClassLoader> defaultClassLoaderSupplier;
 	
 	private ClassFactory(
+		ByteCodeHunter byteCodeHunter,
 		SourceCodeHandler sourceCodeHandler,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		Supplier<ClassLoader> defaultClassLoaderSupplier
 	) {	
+		this.byteCodeHunter = byteCodeHunter;
 		this.sourceCodeHandler = sourceCodeHandler;
 		this.javaMemoryCompiler = javaMemoryCompiler;
 		this.pathHelper = pathHelper;
@@ -78,12 +84,14 @@ public class ClassFactory implements Component {
 	}
 	
 	public static ClassFactory create(
+		ByteCodeHunter byteCodeHunter,
 		SourceCodeHandler sourceCodeHandler,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		Supplier<ClassLoader> defaultClassLoaderSupplier
 	) {
 		return new ClassFactory(
+			byteCodeHunter,
 			sourceCodeHandler, 
 			javaMemoryCompiler, pathHelper, defaultClassLoaderSupplier
 		);
@@ -94,33 +102,46 @@ public class ClassFactory implements Component {
 			(defaultClassLoader = defaultClassLoaderSupplier.get());
 	}
 	
-	public Map<String, ByteBuffer> build(UnitSourceGenerator... unitsCode) {
-		return build(Arrays.asList(unitsCode).stream().map(unitCode -> unitCode.make()).collect(Collectors.toList()));
+	public Map<String, ByteBuffer> build(Collection<String> mainClassPaths, Collection<String> extraClassPaths, UnitSourceGenerator... unitsCode) {
+		return build(mainClassPaths, extraClassPaths, Arrays.asList(unitsCode).stream().map(unitCode -> unitCode.make()).collect(Collectors.toList()));
 	}
 	
-	public Map<String, ByteBuffer> build(Collection<String> unitsCode) {
+	public Map<String, ByteBuffer> build(Collection<String> mainClassPaths, Collection<String> extraClassPaths, Collection<String> unitsCode) {
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", unitsCode));
 		return javaMemoryCompiler.compile(
-			unitsCode, 
-			pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
-			pathHelper.getPaths(CLASS_REPOSITORIES)
+			unitsCode,
+			mainClassPaths, 
+			extraClassPaths
 		);
 	}
 	
-	public Map<String, ByteBuffer> build(String... unitsCode) {
+	public Map<String, ByteBuffer> build(Collection<String> mainClassPaths, Collection<String> extraClassPaths, String... unitsCode) {
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", unitsCode));
 		return javaMemoryCompiler.compile(
-			Arrays.asList(unitsCode), 
-			pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
-			pathHelper.getPaths(CLASS_REPOSITORIES)
+			Arrays.asList(unitsCode),
+			mainClassPaths, 
+			extraClassPaths
 		);
 	}
 	
-	public Map<String, Class<?>> buildAndLoadOrUpload(UnitSourceGenerator... unitsCode) {
+	public ClassRetriever buildAndLoadOrUpload(UnitSourceGenerator... unitsCode) {
 		return buildAndLoadOrUploadTo(getDefaultClassLoader(), unitsCode);
 	}
 	
-	public Map<String, Class<?>> buildAndLoadOrUploadTo(ClassLoader classLoader, UnitSourceGenerator... unitsCode) {
+	public ClassRetriever buildAndLoadOrUploadTo(ClassLoader classLoader, UnitSourceGenerator... unitsCode) {
+		return buildAndLoadOrUploadTo(
+			pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
+			pathHelper.getPaths(CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY), 
+			pathHelper.getPaths(CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY), classLoader, unitsCode);
+	}
+	
+	public ClassRetriever buildAndLoadOrUploadTo(
+		Collection<String> compilationClassPaths,
+		Collection<String> compilationClassPathsForNotFoundClasses,
+		Collection<String> classLoaderClassPaths,
+		ClassLoader classLoader,
+		UnitSourceGenerator... unitsCode
+	) {
 		try {
 			Set<String> classesName = new HashSet<>();
 			Arrays.stream(unitsCode).forEach(unitCode -> 
@@ -130,15 +151,56 @@ public class ClassFactory implements Component {
 				})
 			);
 			Map<String, Class<?>> classes = new HashMap<>();
+			AtomicReference<Map<String, ByteBuffer>> extraClassPathsForClassLoaderByteCodesAR = new AtomicReference<>();
 			for (String className : classesName) {
 				try {
 					classes.put(className, classLoader.loadClass(className));
 				} catch (Throwable exc) {
-					return ClassLoaders.loadOrUploadClasses(build(unitsCode), classLoader);
+					Map<String, ByteBuffer> compiledByteCodes = build(compilationClassPaths, compilationClassPathsForNotFoundClasses, unitsCode);
+					return (clsName, additionalByteCodes) -> {
+						try {
+							Map<String, ByteBuffer> finalByteCodes = compiledByteCodes;
+							if (additionalByteCodes != null) {
+								finalByteCodes = new HashMap<>(compiledByteCodes);
+								finalByteCodes.putAll(additionalByteCodes);
+							}
+							return ClassLoaders.loadOrUploadByteCode(clsName, finalByteCodes, classLoader);
+						} catch (Throwable innExc) {
+							if (extraClassPathsForClassLoaderByteCodesAR.get() == null) {
+								synchronized (extraClassPathsForClassLoaderByteCodesAR) {
+									if (extraClassPathsForClassLoaderByteCodesAR.get() == null) {
+										try(ByteCodeHunter.SearchResult result = byteCodeHunter.findBy(
+											SearchConfig.forPaths(
+												classLoaderClassPaths
+											).useSharedClassLoaderAsMain(
+												true
+											).deleteFoundItemsOnClose(false)
+										)) {
+											Map<String, ByteBuffer> extraClassPathsForClassLoaderByteCodes = new HashMap<>();
+											result.getItemsFoundFlatMap().values().forEach(javaClass -> {
+												extraClassPathsForClassLoaderByteCodes.put(javaClass.getName(), javaClass.getByteCode());
+											});
+											extraClassPathsForClassLoaderByteCodes.putAll(compiledByteCodes);
+											extraClassPathsForClassLoaderByteCodesAR.set(extraClassPathsForClassLoaderByteCodes);
+										}
+									}
+								}
+							}
+							return ThrowingSupplier.get(() -> {
+								Map<String, ByteBuffer> finalByteCodes = extraClassPathsForClassLoaderByteCodesAR.get();
+								if (additionalByteCodes != null) {
+									finalByteCodes = new HashMap<>(extraClassPathsForClassLoaderByteCodesAR.get());
+									finalByteCodes.putAll(additionalByteCodes);
+								}
+								return ClassLoaders.loadOrUploadByteCode(clsName, extraClassPathsForClassLoaderByteCodesAR.get(), classLoader);
+							});
+						}
+					};
+					
 				}
 			}
 			logInfo("Classes {} loaded without building by classloader {} ", String.join(", ", classes.keySet()), classLoader);
-			return classes;
+			return (clsName, additionalByteCodes) -> classes.get(clsName);
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
@@ -321,5 +383,16 @@ public class ClassFactory implements Component {
 				className
 			);
 		}
+	}
+	
+	@FunctionalInterface
+	public static interface ClassRetriever {
+		
+		public Class<?> get(String className, Map<String, ByteBuffer> additionalByteCodes);
+		
+		public default Class<?> get(String className) {
+			return get(className, null);
+		}
+		
 	}
 }

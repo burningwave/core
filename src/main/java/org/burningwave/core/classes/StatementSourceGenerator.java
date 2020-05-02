@@ -66,25 +66,32 @@ public class StatementSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
-	public StatementSourceGenerator addElement(SourceGenerator generator) {
+	public StatementSourceGenerator addElement(SourceGenerator... generators) {
 		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
-		this.bodyGenerators.add(generator);
+		for (SourceGenerator generator : generators) {
+			this.bodyGenerators.add(generator);
+		}
 		return this;		
 	}
 	
-	public StatementSourceGenerator addCode(String element) {
+	public StatementSourceGenerator addCode(String... elements) {
 		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
-		this.bodyGenerators.add(new SourceGenerator() {
-			@Override
-			public String make() {
-				return element;
-			}
-		});
+		for (String element : elements) {
+			this.bodyGenerators.add(new SourceGenerator() {
+				@Override
+				public String make() {
+					return element;
+				}
+			});
+		}
 		return this;
 	}
 
-	public StatementSourceGenerator addCodeRow(String code) {
-		return addCode("\n" + Optional.ofNullable(elementPrefix).orElseGet(() -> "") + code);		
+	public StatementSourceGenerator addCodeRow(String... codes) {
+		for (String code : codes) {
+			addCode("\n" + Optional.ofNullable(elementPrefix).orElseGet(() -> "") + code);	
+		}
+		return this;	
 	}
 	
 	public StatementSourceGenerator addAllElements(Collection<? extends SourceGenerator> generators) {

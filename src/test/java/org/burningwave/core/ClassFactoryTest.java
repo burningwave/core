@@ -3,6 +3,7 @@ package org.burningwave.core;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -11,11 +12,14 @@ import java.util.List;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.bean.Complex;
 import org.burningwave.core.bean.PojoInterface;
+import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassSourceGenerator;
+import org.burningwave.core.classes.FunctionSourceGenerator;
 import org.burningwave.core.classes.PojoSourceGenerator;
 import org.burningwave.core.classes.StatementSourceGenerator;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
+import org.burningwave.core.classes.VariableSourceGenerator;
 import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
 
@@ -75,7 +79,7 @@ public class ClassFactoryTest extends BaseTest {
 	}
 	
 	@Test
-	public void getOrBuildClassTestOne() throws ClassNotFoundException {
+	public void getOrBuildClassTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		ClassSourceGenerator ClassSG = ClassSourceGenerator.create(
 			TypeDeclarationSourceGenerator.create("ReTry")
@@ -101,6 +105,38 @@ public class ClassFactoryTest extends BaseTest {
 		testNotNull(() -> 
 			componentSupplier.getClassFactory().buildAndLoadOrUpload(unitSG).get("tryyy.ReTry$ReReTry")
 		);
+	}
+	
+	
+	@Test
+	public void getOrBuildClassTestTwo() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		ClassSourceGenerator ClassSG = ClassSourceGenerator.create(
+			TypeDeclarationSourceGenerator.create("ComplexExample")
+		).addModifier(
+			Modifier.PUBLIC
+		).expands(
+			TypeDeclarationSourceGenerator.create("SOAPPartImpl")
+		).addConstructor(
+			FunctionSourceGenerator.create().addParameter(
+				VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("SOAPMessageImpl"), "parentSoapMsg"),
+				VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(InputStream.class), "inputStream")
+			).addThrowable(
+				TypeDeclarationSourceGenerator.create("SOAPException")				
+			).addBodyCodeRow("super(parentSoapMsg, inputStream);")
+		);
+		UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
+			ClassSG
+		).addImport(
+			"org.apache.axis2.saaj.SOAPPartImpl",
+			"org.apache.axis2.saaj.SOAPMessageImpl",
+			"javax.xml.soap.SOAPException"
+		);
+		testNotNull(() -> {
+			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory()
+			.buildAndLoadOrUpload(unitSG);
+			return classRetriever.get("packagename.ComplexExample");
+		});
 	}
 
 	@Test

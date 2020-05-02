@@ -37,6 +37,7 @@ import java.util.Optional;
 public class FunctionSourceGenerator extends SourceGenerator.Abst {
 	private Collection<String> outerCode;
 	private Collection<AnnotationSourceGenerator> annotations;
+	private Collection<TypeDeclarationSourceGenerator> throwables;
 	private Integer modifier;
 	private boolean defaultFunction;
 	private TypeDeclarationSourceGenerator typesDeclaration;
@@ -104,9 +105,19 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
-	public FunctionSourceGenerator addParameter(VariableSourceGenerator parameter) {
+	public FunctionSourceGenerator addParameter(VariableSourceGenerator... parameters) {
 		this.parameters = Optional.ofNullable(this.parameters).orElseGet(ArrayList::new);
-		this.parameters.add(parameter.setDelimiter(null));
+		for (VariableSourceGenerator parameter : parameters) {
+			this.parameters.add(parameter.setDelimiter(null));
+		}
+		return this;
+	}
+	
+	public FunctionSourceGenerator addThrowable(TypeDeclarationSourceGenerator... throwables) {
+		this.throwables = Optional.ofNullable(this.throwables).orElseGet(ArrayList::new);
+		for (TypeDeclarationSourceGenerator throwable : throwables) {
+			this.throwables.add(throwable);
+		}
 		return this;
 	}
 	
@@ -114,37 +125,43 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		return this.parameters;
 	}
 	
-	public FunctionSourceGenerator addOuterCodeRow(String code) {
+	public FunctionSourceGenerator addOuterCodeRow(String... codes) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
-		if (!this.outerCode.isEmpty()) {
-			this.outerCode.add("\n" + code);
-		} else {
-			this.outerCode.add(code);
+		for (String code : codes) {
+			if (!this.outerCode.isEmpty()) {
+				this.outerCode.add("\n" + code);
+			} else {
+				this.outerCode.add(code);
+			}
 		}
 		return this;
 	}
 	
-	public FunctionSourceGenerator addAnnotation(AnnotationSourceGenerator annotation) {
+	public FunctionSourceGenerator addAnnotation(AnnotationSourceGenerator... annotations) {
 		this.annotations = Optional.ofNullable(this.annotations).orElseGet(ArrayList::new);
-		this.annotations.add(annotation);
+		for (AnnotationSourceGenerator annotation : annotations) {
+			this.annotations.add(annotation);
+		}
 		return this;
 	}
 	
-	public FunctionSourceGenerator addBodyCode(String code) {
+	public FunctionSourceGenerator addBodyCode(String... codes) {
 		this.body = Optional.ofNullable(this.body).orElseGet(StatementSourceGenerator::create);
-		this.body.addCode(code);
+		this.body.addCode(codes);
 		return this;
 	}
 	
-	public FunctionSourceGenerator addBodyCodeRow(String code) {
+	public FunctionSourceGenerator addBodyCodeRow(String... code) {
 		this.body = Optional.ofNullable(this.body).orElseGet(StatementSourceGenerator::create);
 		this.body.addCodeRow(code);
 		return this;
 	}
 	
-	public FunctionSourceGenerator addBodyElement(SourceGenerator generator) {
+	public FunctionSourceGenerator addBodyElement(SourceGenerator... generators) {
 		this.body = Optional.ofNullable(this.body).orElseGet(StatementSourceGenerator::create);
-		this.body.addElement(generator);
+		for (SourceGenerator generator : generators) {
+			this.body.addElement(generator);
+		}
 		return this;
 	}
 	
@@ -194,11 +211,16 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		Optional.ofNullable(body).ifPresent(body -> {
 			types.addAll(body.getTypeDeclarations());
 		});
-		Optional.ofNullable(annotations).ifPresent(innerClasses -> {
+		Optional.ofNullable(annotations).ifPresent(annotations -> {
 			for (AnnotationSourceGenerator annotation : annotations) {
 				types.addAll(annotation.getTypeDeclarations());
 			}
-		});	
+		});
+		Optional.ofNullable(throwables).ifPresent(exceptions -> {
+			for (TypeDeclarationSourceGenerator annotation : exceptions) {
+				types.addAll(annotation.getTypeDeclarations());
+			}
+		});
 		return types;
 	}
 	
@@ -206,18 +228,31 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		return Optional.ofNullable(annotations).map(annts -> getOrEmpty(annts, "\n") +"\n").orElseGet(() -> null);
 	}
 	
+	private String getThrowables() {
+		return Optional.ofNullable(throwables).map(thrws -> "throws "  + getOrEmpty(thrws, ", ")).orElseGet(() -> null);
+	}
+	
+	private String getModifier() {
+		return Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null);
+	}
+
+	private String getOuterCode() {
+		return Optional.ofNullable(outerCode).map(outerCode ->
+			getOrEmpty(outerCode) + "\n"
+		).orElseGet(() -> null);
+	}
+	
 	@Override
 	public String make() {
 		return getOrEmpty(
-			Optional.ofNullable(outerCode).map(outerCode ->
-				getOrEmpty(outerCode) + "\n"
-			).orElseGet(() -> null),
+			getOuterCode(),
 			getAnnotations(),
-			Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
+			getModifier(),
 			defaultFunction ? "default" : null,
 			typesDeclaration,
 			returnType,
 			name + getParametersCode(),
+			getThrowables(),
 			body,
 			Optional.ofNullable(modifier).map(mod -> Modifier.isAbstract(mod)? ";" : null).orElseGet(() -> null)
 		);

@@ -44,7 +44,7 @@ import org.burningwave.core.reflection.PropertyAccessor;
 public class IterableObjectHelper implements Component {
 	private PropertyAccessor propertyAccessor;
 	
-	private Pattern PLACE_HOLDER_FOR_PROPERTIES_PATTERN = Pattern.compile("\\$\\{([\\w\\d\\.\\:]*)\\}");
+	private Pattern PLACE_HOLDER_FOR_PROPERTIES_PATTERN = Pattern.compile("\\$\\{([\\w\\d\\.\\:\\-]*)\\}");
 	
 	
 	private IterableObjectHelper(PropertyAccessor propertyAccessor) {

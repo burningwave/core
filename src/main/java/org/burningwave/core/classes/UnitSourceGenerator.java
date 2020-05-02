@@ -58,9 +58,11 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		return new UnitSourceGenerator(packageName);
 	}
 	
-	public UnitSourceGenerator addImport(String imprt) {
+	public UnitSourceGenerator addImport(String... imports) {
 		this.imports = Optional.ofNullable(this.imports).orElseGet(ArrayList::new);
-		this.imports.add(imprt);
+		for (String imprt : imports) {
+			this.imports.add(imprt);
+		}
 		return this;
 	}
 	

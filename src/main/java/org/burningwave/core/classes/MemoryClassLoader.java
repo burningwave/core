@@ -172,11 +172,11 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     }
     
     public Class<?> loadOrUploadClass(JavaClass toLoad) throws ClassNotFoundException {
-    	return ClassLoaders.loadOrUploadClass(toLoad, this);
+    	return ClassLoaders.loadOrUploadJavaClass(toLoad, this);
     }
     
     public Class<?> loadOrUploadClass(ByteBuffer byteCode) throws ClassNotFoundException {
-    	return ClassLoaders.loadOrUploadClass(byteCode, this);
+    	return ClassLoaders.loadOrUploadByteCode(byteCode, this);
     }
     
     
