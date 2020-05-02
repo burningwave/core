@@ -34,7 +34,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -90,17 +89,15 @@ public class IterableObjectHelper implements Component {
 		if (!Strings.isEmpty(propertyValue)) {
 			Map<Integer, List<String>> subProperties = Strings.extractAllGroups(PLACE_HOLDER_FOR_PROPERTIES_PATTERN, propertyValue);		
 			if (!subProperties.isEmpty()) {
-				AtomicReference<String> propertyValueWrapper = new AtomicReference<String>(propertyValue);
-				subProperties.forEach((group, propertiesNames) -> {
-					propertiesNames.forEach((propName) -> {
+				for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
+					for (String propName : entry.getValue()) {
 						if (!propName.startsWith("system.properties:")) {
-							propertyValueWrapper.set(propertyValueWrapper.get().replace("${" + propName + "}", get(properties, propName, defaultValues)));
+							propertyValue = propertyValue.replace("${" + propName + "}", get(properties, propName, defaultValues));
 						} else {
-							propertyValueWrapper.set(propertyValueWrapper.get().replace("${" + propName + "}", System.getProperty(propName.split(":")[1])));
+							propertyValue = propertyValue.replace("${" + propName + "}", System.getProperty(propName.split(":")[1]));
 						}
-					});				
-				});
-				propertyValue = propertyValueWrapper.get();
+					}
+				}
 			}
 			
 		}
