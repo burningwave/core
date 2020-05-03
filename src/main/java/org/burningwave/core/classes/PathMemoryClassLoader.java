@@ -82,8 +82,6 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 					try(ByteCodeHunter.SearchResult result = getByteCodeHunter().findBy(
 						SearchConfig.forPaths(
 							checkPathsResult.getNotContainedPaths()
-						).useSharedClassLoaderAsMain(
-							true
 						).considerURLClassLoaderPathsAsScanned(
 							considerURLClassLoaderPathsAsLoadedPaths
 						).maxParallelTasksForUnit(maxParallelTasksForUnit)
