@@ -105,14 +105,17 @@ public class ComponentContainer implements ComponentSupplier {
 
 	
 	private ComponentContainer init() {
-		config.put(PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY, "${classPaths}");
-		config.put(
-			PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY, 
-			"${classPaths};" + 
-			"${" + PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY + "}"
-		);
 		config.put(PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION, PathHelper.MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE);
 		config.put(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
+		config.put(
+			PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY, 
+			"${classPaths};" +
+			"${" + PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION + "};"
+		);
+		config.put(
+			PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY, 
+			"${" + PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY + "};"
+		);
 		config.put(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
 		
 		Properties customConfig = propertySupplier.get();
