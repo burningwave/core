@@ -53,8 +53,8 @@ import org.burningwave.core.io.ByteBufferInputStream;
 
 public class MemoryClassLoader extends ClassLoader implements Component {
 
-	protected Map<String, ByteBuffer> notLoadedCompiledClasses;
-	protected Map<String, ByteBuffer> loadedCompiledClasses;
+	protected Map<String, ByteBuffer> notLoadedByteCodes;
+	protected Map<String, ByteBuffer> loadedByteCodes;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -64,26 +64,26 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		ClassLoader parentClassLoader
 	) {
 		super(parentClassLoader);
-		this.notLoadedCompiledClasses = new HashMap<>();
-		this.loadedCompiledClasses = new HashMap<>();
+		this.notLoadedByteCodes = new HashMap<>();
+		this.loadedByteCodes = new HashMap<>();
 	}
 	
 	public static MemoryClassLoader create(ClassLoader parentClassLoader) {
 		return new MemoryClassLoader(parentClassLoader);
 	}
 
-	public void addCompiledClass(String className, ByteBuffer byteCode) {
+	public void addByteCode(String className, ByteBuffer byteCode) {
     	if (ClassLoaders.retrieveLoadedClass(this, className) == null) {
-    		synchronized (Classes.getId(notLoadedCompiledClasses, className)) {
-    			notLoadedCompiledClasses.put(className, byteCode);
+    		synchronized (Classes.getId(notLoadedByteCodes, className)) {
+    			notLoadedByteCodes.put(className, byteCode);
     		}
 		} else {
 			logDebug("Could not add compiled class {} cause it's already defined", className);
 		}
     }
     
-    public Map.Entry<String, ByteBuffer> getNotLoadedCompiledClass(String name) {
-    	for (Map.Entry<String, ByteBuffer> entry : notLoadedCompiledClasses.entrySet()){
+    public Map.Entry<String, ByteBuffer> getNotLoadedByteCodes(String name) {
+    	for (Map.Entry<String, ByteBuffer> entry : notLoadedByteCodes.entrySet()){
     	    if (entry.getKey().equals(name)) {
     	    	return entry;
     	    }
@@ -92,26 +92,26 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     }
     
     public ByteBuffer getByteCodeOf(String name) {
-    	return Optional.ofNullable(getNotLoadedCompiledClass(name)).map(entry -> entry.getValue()).orElse(null);
+    	return Optional.ofNullable(getNotLoadedByteCodes(name)).map(entry -> entry.getValue()).orElse(null);
     }
     
-    void addCompiledClasses(Map<String, ByteBuffer> classes) {
+    void addByteCodes(Map<String, ByteBuffer> classes) {
 		Set<String> clsNames = classes.keySet();
 		Iterator<String> clsNamesItr = clsNames.iterator();
 		while (clsNamesItr.hasNext()) {
 			String clsName = clsNamesItr.next();
-			addCompiledClass(clsName, classes.get(clsName));
+			addByteCode(clsName, classes.get(clsName));
 		}
     }
     
-    public void addCompiledClasses(Collection<Entry<String, ByteBuffer>> classes) {
-    	classes.forEach(classObject -> addCompiledClass(classObject.getKey(), classObject.getValue()));	
+    public void addByteCodes(Collection<Entry<String, ByteBuffer>> classes) {
+    	classes.forEach(classObject -> addByteCode(classObject.getKey(), classObject.getValue()));	
 	} 
 
     
     @SuppressWarnings("unchecked")
-	public void addCompiledClasses(Entry<String, ByteBuffer>... classes) {
-    	Stream.of(classes).forEach(classObject -> addCompiledClass(classObject.getKey(), classObject.getValue()));	
+	public void addByteCodes(Entry<String, ByteBuffer>... classes) {
+    	Stream.of(classes).forEach(classObject -> addByteCode(classObject.getKey(), classObject.getValue()));	
 	} 
     
 	public boolean hasPackageBeenDefined(String packageName) {
@@ -184,17 +184,17 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     public InputStream getResourceAsStream(String name) {
     	InputStream inputStream = super.getResourceAsStream(name);
     	if (inputStream == null && name.endsWith(".class")) {
-    		inputStream = getCompiledClassAsInputStream(name);
+    		inputStream = getByteCodeAsInputStream(name);
     	}
     	return inputStream;
     }
 
-	protected InputStream getCompiledClassAsInputStream(String classRelativePath) {
+	protected InputStream getByteCodeAsInputStream(String classRelativePath) {
 		if (classRelativePath.endsWith(".class")) {
 			String className = classRelativePath.substring(0, classRelativePath.lastIndexOf(".class")).replace("/", ".");
-    		ByteBuffer byteCode = loadedCompiledClasses.get(className);
+    		ByteBuffer byteCode = loadedByteCodes.get(className);
     		if (byteCode == null) {
-    			byteCode = notLoadedCompiledClasses.get(className);
+    			byteCode = notLoadedByteCodes.get(className);
     		}
     		if (byteCode != null) {
 	    		return new ByteBufferInputStream(
@@ -206,9 +206,9 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
     
     
-    protected void addLoadedCompiledClass(String className, ByteBuffer byteCode) {
-    	synchronized (Classes.getId(loadedCompiledClasses, className)) {
-    		loadedCompiledClasses.put(className, byteCode);
+    protected void addLoadedByteCode(String className, ByteBuffer byteCode) {
+    	synchronized (Classes.getId(loadedByteCodes, className)) {
+    		loadedByteCodes.put(className, byteCode);
 		}
     }
     
@@ -216,7 +216,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	@Override
     protected Class<?> findClass(String className) throws ClassNotFoundException {
 		Class<?> cls = null;
-		ByteBuffer byteCode = notLoadedCompiledClasses.get(className);
+		ByteBuffer byteCode = notLoadedByteCodes.get(className);
 		if (byteCode != null) {
 			try {
 				cls = _defineClass(className, byteCode, null);
@@ -259,14 +259,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 
 	protected Class<?> _defineClass(String className, java.nio.ByteBuffer byteCode, ProtectionDomain protectionDomain) {
 		Class<?> cls = super.defineClass(className, byteCode, protectionDomain);
-		addLoadedCompiledClass(className, byteCode);
+		addLoadedByteCode(className, byteCode);
 		removeNotLoadedCompiledClass(className);
 		return cls;
 	}
 
 	public void removeNotLoadedCompiledClass(String className) {
-		synchronized (Classes.getId(notLoadedCompiledClasses, className)) {
-			notLoadedCompiledClasses.remove(className);
+		synchronized (Classes.getId(notLoadedByteCodes, className)) {
+			notLoadedByteCodes.remove(className);
 		}
 	}
 	
@@ -276,7 +276,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	Map<String, ByteBuffer> getLoadedCompiledClasses() {
-		return loadedCompiledClasses;
+		return loadedByteCodes;
 	}
 		
 	public void forceCompiledClassesLoading() {
@@ -290,19 +290,19 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	public Set<String> loadCompiledClassesNotLoaded() {
-		for (Map.Entry<String, ByteBuffer> entry : notLoadedCompiledClasses.entrySet()){
+		for (Map.Entry<String, ByteBuffer> entry : notLoadedByteCodes.entrySet()){
 			try {
 				loadClass(entry.getKey());
 			} catch (Throwable exc) {
 				logWarn("Could not load class " + entry.getKey(), exc.getMessage());
 			}
 		}
-		return notLoadedCompiledClasses.keySet();
+		return notLoadedByteCodes.keySet();
 	}
 	
 	public void clear () {
-		notLoadedCompiledClasses.clear();
-		loadedCompiledClasses.clear();
+		notLoadedByteCodes.clear();
+		loadedByteCodes.clear();
 	}
 	
 	protected void unregister() {
@@ -315,7 +315,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	@Override
 	public void close() {
 		clear();
-		notLoadedCompiledClasses = null;
-		loadedCompiledClasses = null;
+		notLoadedByteCodes = null;
+		loadedByteCodes = null;
 	}
 }

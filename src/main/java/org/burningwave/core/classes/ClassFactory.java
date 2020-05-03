@@ -58,7 +58,7 @@ public class ClassFactory implements Component {
 	public static final String DEFAULT_CLASS_LOADER_CONFIG_KEY = "class-factory.default-class-loader";
 	public static final String CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY = "class-factory.java-memory-compiler.class-repositories";
 	public static final String CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY = "class-factory.default-class-loader.class-repositories";
-
+	public static final String BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY = "class-factory.byte-code-hunter.search-config.check-file-options";
 	
 	private SourceCodeHandler sourceCodeHandler;
 	private PathHelper pathHelper;
@@ -67,13 +67,15 @@ public class ClassFactory implements Component {
 	private ClassLoader defaultClassLoader;
 	private ByteCodeHunter byteCodeHunter;
 	private Supplier<ClassLoader> defaultClassLoaderSupplier;
+	private int byteCodeHunterSearchConfigCheckFileOptions;
 	
 	private ClassFactory(
 		ByteCodeHunter byteCodeHunter,
 		SourceCodeHandler sourceCodeHandler,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
-		Supplier<ClassLoader> defaultClassLoaderSupplier
+		Supplier<ClassLoader> defaultClassLoaderSupplier,
+		int byteCodeHunterSearchConfigCheckFileOptions
 	) {	
 		this.byteCodeHunter = byteCodeHunter;
 		this.sourceCodeHandler = sourceCodeHandler;
@@ -81,6 +83,7 @@ public class ClassFactory implements Component {
 		this.pathHelper = pathHelper;
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
 		this.defaultClassLoaderSupplier = defaultClassLoaderSupplier;
+		this.byteCodeHunterSearchConfigCheckFileOptions = byteCodeHunterSearchConfigCheckFileOptions;
 	}
 	
 	public static ClassFactory create(
@@ -88,12 +91,13 @@ public class ClassFactory implements Component {
 		SourceCodeHandler sourceCodeHandler,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
-		Supplier<ClassLoader> defaultClassLoaderSupplier
+		Supplier<ClassLoader> defaultClassLoaderSupplier,
+		int byteCodeHunterSearchConfigCheckFileOptions
 	) {
 		return new ClassFactory(
 			byteCodeHunter,
 			sourceCodeHandler, 
-			javaMemoryCompiler, pathHelper, defaultClassLoaderSupplier
+			javaMemoryCompiler, pathHelper, defaultClassLoaderSupplier, byteCodeHunterSearchConfigCheckFileOptions
 		);
 	}
 	
@@ -172,9 +176,11 @@ public class ClassFactory implements Component {
 										try(ByteCodeHunter.SearchResult result = byteCodeHunter.findBy(
 											SearchConfig.forPaths(
 												classLoaderClassPaths
-											).useSharedClassLoaderAsMain(
-												true
-											).deleteFoundItemsOnClose(false)
+											).deleteFoundItemsOnClose(
+												false
+											).checkFileOptions(
+												byteCodeHunterSearchConfigCheckFileOptions
+											)
 										)) {
 											Map<String, ByteBuffer> extraClassPathsForClassLoaderByteCodes = new HashMap<>();
 											result.getItemsFoundFlatMap().values().forEach(javaClass -> {

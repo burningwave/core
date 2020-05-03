@@ -179,7 +179,7 @@ public class SearchContext<T> implements Component {
 			
 	
 	public void addByteCodeClassesToClassLoader(String className, ByteBuffer byteCode) {
-		pathMemoryClassLoader.addCompiledClass(className, byteCode);			
+		pathMemoryClassLoader.addByteCode(className, byteCode);			
 	}
 	
 	protected <O> O execute(ThrowingSupplier<O, Throwable> supplier, Supplier<O> defaultValueSupplier, Supplier<String> classNameSupplier) {
@@ -193,7 +193,7 @@ public class SearchContext<T> implements Component {
 						if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
 							synchronized(this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
 								if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
-									pathMemoryClassLoader.scanPathsAndLoadAllFoundClasses(
+									pathMemoryClassLoader.scanPathsAndAddAllByteCodesFound(
 										getPathsToBeScanned(), searchConfig.considerURLClassLoaderPathsAsScanned, classFileScanConfiguration.getMaxParallelTasksForUnit()
 									);
 									this.classLoaderHaveBeenUploadedWithCriteriaPaths = true;

@@ -46,7 +46,12 @@ import org.burningwave.core.io.IterableZipContainer.Entry;
 
 @SuppressWarnings({"unchecked"})
 public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
-
+	public static Integer CHECK_FILE_EXTENSION = 0b00000001;
+	public static Integer CHECK_FILE_SIGNATURE = 0b00000100;
+	public static Integer CHECK_FILE_EXTENSION_AND_SIGNATURE = 0b00000111;
+	public static Integer CHECK_FILE_EXTENSION_OR_SIGNATURE = 0b00000101;
+	public static Integer CHECK_FILE_OPTIONS_DEFAULT_VALUE = CHECK_FILE_EXTENSION;
+		
 	PathHelper pathHelper;
 	Collection<String> paths;
 	FileCriteria directoryCriteriaForFileSystemEntry;
@@ -57,7 +62,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	int maxParallelTasksForUnit;
 	boolean recursiveOnDirectoryOfFileSystemEntry;
 	boolean recursiveOnArchiveOfZipEntry;
-	boolean deepFilesCheck; 
+	Integer checkFileOptions; 
 	
 	FileScanConfigAbst() {
 		paths = ConcurrentHashMap.newKeySet();
@@ -68,6 +73,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		archiveCriteriaForZipEntry = ZipContainerEntryCriteria.create();
 		recursiveOnDirectoryOfFileSystemEntry = true;
 		recursiveOnArchiveOfZipEntry = true;
+		checkFileOptions = CHECK_FILE_OPTIONS_DEFAULT_VALUE;
 	}
 	
 	void init() {
@@ -84,42 +90,60 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	}
 	
 	Predicate<File> getArchivePredicateForFileSystemEntry(){
-		if (deepFilesCheck) {
-			return entry -> ThrowingSupplier.get(() -> Streams.isArchive(entry));
-		} else {
-			return entry -> {
-				String name = entry.getName();
-				return name.endsWith(".jar") ||
-					name.endsWith(".war") ||
-					name.endsWith(".ear") ||
-					name.endsWith(".zip") ||
-					name.endsWith(".jmod");
-			};
-		}	
+		Predicate<File> checkFileExtension = entry -> {
+			String name = entry.getName();
+			return name.endsWith(".jar") ||
+				name.endsWith(".war") ||
+				name.endsWith(".ear") ||
+				name.endsWith(".zip") ||
+				name.endsWith(".jmod");
+		};		
+		Predicate<File> checkFileSignature = entry -> ThrowingSupplier.get(() -> Streams.isArchive(entry));
+		if (checkFileOptions == CHECK_FILE_SIGNATURE) {
+			return checkFileSignature;
+		} else if (checkFileOptions == CHECK_FILE_EXTENSION_AND_SIGNATURE) {
+			return checkFileExtension.and(checkFileSignature);
+		} else if (checkFileOptions == CHECK_FILE_EXTENSION_OR_SIGNATURE) {
+			return checkFileExtension.or(checkFileSignature);
+		} else if (checkFileOptions == CHECK_FILE_EXTENSION) {
+			return checkFileExtension;
+		}
+		return null;
 	}
 	
 	abstract Predicate<File> getFilePredicateForFileSystemEntry();
-	
+
 	Predicate<Entry> getArchivePredicateForZipEntry() {
-		if (deepFilesCheck) {
-			return entry -> ThrowingSupplier.get(() -> Streams.isArchive(entry.toByteBuffer()));
-		} else {
-			return entry -> {
-				String name = entry.getName();
-				return name.endsWith(".jar") ||
-					name.endsWith(".war") ||
-					name.endsWith(".ear") ||
-					name.endsWith(".zip") ||
-					name.endsWith(".jmod");
-			};
+		Predicate<Entry> checkFileExtension = entry -> {
+			String name = entry.getName();
+			return name.endsWith(".jar") ||
+				name.endsWith(".war") ||
+				name.endsWith(".ear") ||
+				name.endsWith(".zip") ||
+				name.endsWith(".jmod");
+		};
+		Predicate<Entry> checkFileSignature = entry -> ThrowingSupplier.get(() -> Streams.isArchive(entry.toByteBuffer()));
+		if (checkFileOptions == CHECK_FILE_SIGNATURE) {
+			return checkFileSignature;
+		} else if (checkFileOptions == CHECK_FILE_EXTENSION_AND_SIGNATURE) {
+			return checkFileExtension.and(checkFileSignature);
+		} else if (checkFileOptions == CHECK_FILE_EXTENSION_OR_SIGNATURE) {
+			return checkFileExtension.or(checkFileSignature);
+		} else if (checkFileOptions == CHECK_FILE_EXTENSION) {
+			return checkFileExtension;
 		}
+		return null;
 	}
 	
 	abstract Predicate<Entry> getFilePredicateForZipEntry();	
 	
-	public F deepFilesCheck(boolean flag) {
-		this.deepFilesCheck = flag;
+	public F checkFileOptions(Integer options) {
+		this.checkFileOptions = options;
 		return (F)this;
+	}
+	
+	public Integer getCheckFileOptions() {
+		return checkFileOptions;
 	}
 	
 	public F setPaths(Collection<String> newPaths) {
@@ -238,7 +262,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	
 	public  F createCopy() {
 		F copy = create();
-		copy.deepFilesCheck = this.deepFilesCheck;
+		copy.checkFileOptions = this.checkFileOptions;
 		copy.directoryCriteriaForFileSystemEntry = 
 			this.directoryCriteriaForFileSystemEntry != null?	
 				this.directoryCriteriaForFileSystemEntry.createCopy()

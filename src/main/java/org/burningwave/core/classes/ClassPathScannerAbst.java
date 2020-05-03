@@ -116,7 +116,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 					sharedClassLoader :
 					PathMemoryClassLoader.create(
 						searchConfig.parentClassLoaderForMainClassLoader, 
-						pathHelper, byteCodeHunterSupplier
+						pathHelper, byteCodeHunterSupplier, scanConfig.getCheckFileOptions()
 					),
 				scanConfig,
 				searchConfig

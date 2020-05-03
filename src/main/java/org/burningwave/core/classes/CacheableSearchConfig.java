@@ -35,17 +35,19 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.burningwave.core.io.FileScanConfigAbst;
+
 public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfig> {
 	
 	int maxParallelTasksForUnit;
-	boolean deepFilesCheck;
-	Collection<String> paths;
-	
+	Integer checkFileOptions;
+	Collection<String> paths;	
 	
 	CacheableSearchConfig() {
 		super();
 		paths = ConcurrentHashMap.newKeySet();
 		maxParallelTasksForUnit = Runtime.getRuntime().availableProcessors();
+		this.checkFileOptions = FileScanConfigAbst.CHECK_FILE_OPTIONS_DEFAULT_VALUE;
 	}
 	
 	void init(PathMemoryClassLoader classSupplier) {
@@ -72,19 +74,19 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 		return paths;
 	}	
 	
-	public CacheableSearchConfig deepFilesCheck(boolean value) {
-		this.deepFilesCheck = value;
+	public CacheableSearchConfig checkFileOptions(int value) {
+		this.checkFileOptions = value;
 		return this;
 	}
 	
-	public boolean isDeepFilesCheckEnabled() {
-		return deepFilesCheck;
+	public int getCheckFileOptions() {
+		return checkFileOptions;
 	}
 	
 	@Override
 	public CacheableSearchConfig createCopy() {
 		CacheableSearchConfig copy = super.createCopy();
-		copy.deepFilesCheck = this.deepFilesCheck;
+		copy.checkFileOptions = this.checkFileOptions;
 		copy.paths.addAll(this.getPaths());
 		copy.maxParallelTasksForUnit = this.maxParallelTasksForUnit;
 		return copy;

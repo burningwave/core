@@ -49,6 +49,7 @@ import org.burningwave.core.reflection.PropertyAccessor;
 
 public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, ClassHunter.SearchContext, ClassHunter.SearchResult> {
 	public final static String PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY = "class-hunter.path-memory-class-loader.parent";
+	public final static String PATH_MEMORY_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY = "class-hunter.path-memory-class-loader.byte-code-hunter.search-config.check-file-options";
 	public final static Map<String, String> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
 
 	PathMemoryClassLoader pathMemoryClassLoader;
@@ -58,7 +59,8 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		Supplier<ClassHunter> classHunterSupplier,
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
-		ClassLoader parentClassLoader
+		ClassLoader parentClassLoader,
+		int pathMemoryClassLoaderByteCodeHunterSearchConfigCheckFileOptions
 	) {
 		super(
 			byteCodeHunterSupplier,
@@ -71,7 +73,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			(context) -> new ClassHunter.SearchResult(context)
 		);
 		this.pathMemoryClassLoader = PathMemoryClassLoader.create(
-			parentClassLoader, pathHelper, byteCodeHunterSupplier
+			parentClassLoader, pathHelper, byteCodeHunterSupplier, pathMemoryClassLoaderByteCodeHunterSearchConfigCheckFileOptions
 		);
 	}
 	
@@ -85,10 +87,11 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		Supplier<ClassHunter> classHunterSupplier, 
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
-		ClassLoader parentClassLoader
+		ClassLoader parentClassLoader,
+		int byteCodeHunterSearchConfigCheckFileOptions
 	) {
 		return new ClassHunter(
-			byteCodeHunterSupplier, classHunterSupplier, fileSystemScanner, pathHelper, parentClassLoader
+			byteCodeHunterSupplier, classHunterSupplier, fileSystemScanner, pathHelper, parentClassLoader, byteCodeHunterSearchConfigCheckFileOptions
 		);
 	}
 	

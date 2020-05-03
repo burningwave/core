@@ -619,7 +619,7 @@ public class Classes implements Component {
 				}
 			} else {
 				for (Map.Entry<String, ByteBuffer> clazz : byteCodes.entrySet()) {
-					((MemoryClassLoader)classLoader).addCompiledClass(
+					((MemoryClassLoader)classLoader).addByteCode(
 						clazz.getKey(), clazz.getValue()
 					);
 					classes.put(clazz.getKey(), classLoader.loadClass(clazz.getKey()));
@@ -644,7 +644,7 @@ public class Classes implements Component {
 				}
 			} else {
 				for (Map.Entry<String, ByteBuffer> clazz : byteCodes.entrySet()) {
-					((MemoryClassLoader)classLoader).addCompiledClass(
+					((MemoryClassLoader)classLoader).addByteCode(
 						clazz.getKey(), clazz.getValue()
 					);
 				}
@@ -668,7 +668,7 @@ public class Classes implements Component {
 				}
 			} else {
 				for (Map.Entry<String, JavaClass> clazz : byteCodes.entrySet()) {
-					((MemoryClassLoader)classLoader).addCompiledClass(
+					((MemoryClassLoader)classLoader).addByteCode(
 						clazz.getKey(), clazz.getValue().getByteCode()
 					);
 				}

@@ -48,6 +48,7 @@ import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.concurrent.ConcurrentHelper;
+import org.burningwave.core.io.FileScanConfigAbst;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
@@ -102,7 +103,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public final static ComponentContainer create() {
 		return create((Properties)null);
 	}
-
 	
 	private ComponentContainer init() {
 		config.put(PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION, PathHelper.MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE);
@@ -117,6 +117,9 @@ public class ComponentContainer implements ComponentSupplier {
 			"${" + PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY + "};"
 		);
 		config.put(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
+		config.put(ClassHunter.PATH_MEMORY_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY, "checkFileExtension");
+		config.put(ClassFactory.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY, "checkFileExtension");
+		config.put(JavaMemoryCompiler.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY, "checkFileExtension");
 		
 		Properties customConfig = propertySupplier.get();
 		if (customConfig != null) {
@@ -174,6 +177,20 @@ public class ComponentContainer implements ComponentSupplier {
 		return getIterableObjectHelper().get(config, propertyName, defaultValues);
 	}
 	
+	public Integer parseCheckFileOptionsValue(String propertyName) {
+		String property = getConfigProperty(propertyName);
+		if (property.contains("checkFileExtension") && property.contains("checkFileSignature") && property.contains("|")) {
+			return FileScanConfigAbst.CHECK_FILE_EXTENSION_OR_SIGNATURE;
+		} else if (property.contains("checkFileExtension") && property.contains("checkFileSignature") && property.contains("&")) {
+			return FileScanConfigAbst.CHECK_FILE_EXTENSION_AND_SIGNATURE;
+		} else if (property.contains("checkFileExtension")) {
+			return FileScanConfigAbst.CHECK_FILE_EXTENSION;
+		} else if (property.contains("checkFileSignature")) {
+			return FileScanConfigAbst.CHECK_FILE_SIGNATURE;
+		} 
+		return null;
+	}
+	
 	@SuppressWarnings("unchecked")
 	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
 		T component = (T)components.get(componentType);
@@ -197,7 +214,8 @@ public class ComponentContainer implements ComponentSupplier {
 				getSourceCodeHandler(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
-				() -> retrieveClassLoader(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, null)
+				() -> retrieveClassLoader(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, null),
+				parseCheckFileOptionsValue(ClassFactory.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY)
 			)
 		);	
 	}
@@ -208,7 +226,8 @@ public class ComponentContainer implements ComponentSupplier {
 			JavaMemoryCompiler.create(
 				getPathHelper(),
 				getSourceCodeHandler(),
-				getClassPathHunter()
+				getClassPathHunter(),
+				parseCheckFileOptionsValue(JavaMemoryCompiler.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY)
 			)
 		);
 	}
@@ -221,7 +240,8 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getClassHunter(),
 				getFileSystemScanner(),
 				getPathHelper(),
-				retrieveClassLoader(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, ClassHunter.DEFAULT_CONFIG_VALUES)
+				retrieveClassLoader(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, ClassHunter.DEFAULT_CONFIG_VALUES),
+				parseCheckFileOptionsValue(ClassHunter.PATH_MEMORY_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY)
 			);
 		});
 	}
