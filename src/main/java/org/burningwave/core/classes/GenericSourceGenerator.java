@@ -58,15 +58,19 @@ public class GenericSourceGenerator extends SourceGenerator.Abst {
 		return name;
 	}	
 	
-	public GenericSourceGenerator addOuterCode(String code) {
+	public GenericSourceGenerator addOuterCode(String... codes) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
-		this.outerCode.add(code);
+		for (String code : codes) {
+			this.outerCode.add(code);
+		}
 		return this;
 	}
 	
-	public GenericSourceGenerator addAnnotation(AnnotationSourceGenerator annotation) {
+	public GenericSourceGenerator addAnnotation(AnnotationSourceGenerator... annotations) {
 		this.annotations = Optional.ofNullable(this.annotations).orElseGet(ArrayList::new);
-		this.annotations.add(annotation);
+		for (AnnotationSourceGenerator annotation : annotations) {
+			this.annotations.add(annotation);
+		}
 		return this;
 	}
 	
