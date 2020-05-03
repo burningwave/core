@@ -81,6 +81,29 @@ public class IterableObjectHelper implements Component {
 		return get(properties, propertyName, null);
 	}
 	
+	public boolean containsValue(Properties properties, String propertyName, Map<String, String> defaultValues, String toBeTested) {
+		String propertyValue = (String)properties.get(propertyName);
+		if (Strings.isEmpty(propertyValue) && defaultValues != null) {
+			propertyValue = defaultValues.get(propertyName);
+		}
+		if (!Strings.isEmpty(propertyValue)) {
+			if (propertyValue.contains(toBeTested)) {
+				return true;
+			}
+			Map<Integer, List<String>> subProperties = Strings.extractAllGroups(PLACE_HOLDER_FOR_PROPERTIES_PATTERN, propertyValue);		
+			if (!subProperties.isEmpty()) {
+				for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
+					for (String propName : entry.getValue()) {
+						if (!propName.startsWith("system.properties:") && containsValue(properties, propName, defaultValues, toBeTested)) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
 	public String get(Properties properties, String propertyName, Map<String, String> defaultValues) {
 		String propertyValue = (String)properties.get(propertyName);
 		if (Strings.isEmpty(propertyValue) && defaultValues != null) {

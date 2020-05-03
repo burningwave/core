@@ -211,7 +211,7 @@ public class PathHelper implements Component {
 			paths = currentPropertyPaths;
 			
 			if (paths != null) {
-				if (paths.contains("${classPaths}")) {
+				if (iterableObjectHelper.containsValue(config, pathGroupPropertyName, null, "${classPaths}")) {
 					Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
 					for (String mainClassPath : mainClassPaths) {
 						Map<String, String> defaultValues = new LinkedHashMap<>();
