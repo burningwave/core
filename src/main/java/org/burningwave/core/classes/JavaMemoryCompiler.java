@@ -44,6 +44,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
@@ -426,7 +427,7 @@ public class JavaMemoryCompiler implements Component {
 				SearchResult result = classPathHunter.findBy(
 					SearchConfig.forPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 						ClassCriteria.create().packageName((iteratedClassPackageName) ->
-							iteratedClassPackageName.equals(packageName)
+							Objects.equals(iteratedClassPackageName, packageName)
 						)
 					)
 				);
@@ -435,7 +436,7 @@ public class JavaMemoryCompiler implements Component {
 					result = classPathHunter.findBy(
 						SearchConfig.forPaths(classRepositoriesPaths).by(
 							ClassCriteria.create().packageName((iteratedClassPackageName) ->
-								iteratedClassPackageName.equals(packageName)
+								Objects.equals(iteratedClassPackageName, packageName)									
 							)
 						)
 					);
