@@ -93,7 +93,7 @@ public class FileSystemItem implements ManagedLogger {
 	static FileSystemItem ofPath(String realAbsolutePath, String conventionedAbsolutePath) {
 		final String realAbsolutePathCleaned = Paths.normalizeAndClean(realAbsolutePath);
 		FileSystemItem fileSystemItem = Cache.pathForFileSystemItems.getOrUploadIfAbsent(
-			realAbsolutePath, () -> {
+			realAbsolutePathCleaned, () -> {
 				if (Strings.isNotEmpty(realAbsolutePathCleaned)) {
 					return new FileSystemItem(realAbsolutePathCleaned, conventionedAbsolutePath);
 				}
