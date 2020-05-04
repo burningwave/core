@@ -128,6 +128,21 @@ public class ClassFactory implements Component {
 		);
 	}
 	
+	public ClassRetriever buildAndLoadOrUpload(
+		Collection<String> compilationClassPaths,
+		Collection<String> compilationClassPathsForNotFoundClasses,
+		Collection<String> classLoaderClassPaths,
+		UnitSourceGenerator... unitsCode
+	) {
+		return buildAndLoadOrUploadTo(
+			compilationClassPaths,
+			compilationClassPathsForNotFoundClasses,
+			classLoaderClassPaths,
+			getDefaultClassLoader(),
+			unitsCode
+		);
+	}
+	
 	public ClassRetriever buildAndLoadOrUpload(UnitSourceGenerator... unitsCode) {
 		return buildAndLoadOrUploadTo(getDefaultClassLoader(), unitsCode);
 	}
@@ -136,7 +151,8 @@ public class ClassFactory implements Component {
 		return buildAndLoadOrUploadTo(
 			pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
 			pathHelper.getPaths(CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY), 
-			pathHelper.getPaths(CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY), classLoader, unitsCode);
+			pathHelper.getPaths(CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY), classLoader, unitsCode
+		);
 	}
 	
 	public ClassRetriever buildAndLoadOrUploadTo(
