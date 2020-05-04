@@ -45,12 +45,12 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 	
 	@SafeVarargs
 	public static CacheableSearchConfig forPaths(Collection<String>... pathsColl) {
-		CacheableSearchConfig criteria = new CacheableSearchConfig();
+		CacheableSearchConfig searchConfig = new CacheableSearchConfig();
 		for (Collection<String> paths : pathsColl) {
-			criteria.paths.addAll(paths);
+			searchConfig.addPaths(paths);
 		}
-		criteria.useSharedClassLoaderAsMain = true;
-		return criteria;
+		searchConfig.useSharedClassLoaderAsMain = true;
+		return searchConfig;
 	}
 	@SafeVarargs
 	public static CacheableSearchConfig forPaths(String... paths) {

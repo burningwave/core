@@ -68,7 +68,9 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 	}
 	
 	public CacheableSearchConfig addPaths(Collection<String> paths) {
-		this.paths.addAll(paths);
+		for (String path : paths) {
+			this.paths.add(Paths.normalizeAndClean(path));
+		}
 		return this;
 	}
 	

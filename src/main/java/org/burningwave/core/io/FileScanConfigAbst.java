@@ -88,7 +88,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		Set<String> temp = new LinkedHashSet<String>(paths);
 		paths.clear();
 		for(String path : temp) {
-			paths.add(Paths.clean(path));
+			paths.add(Paths.normalizeAndClean(path));
 		}
 		temp.clear();
 		fileCriteriaForFileSystemEntry = FileCriteria.create().allThat(getFilePredicateForFileSystemEntry()).and(fileCriteriaForFileSystemEntry);
