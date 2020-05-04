@@ -70,6 +70,19 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		this.cache = new HashMap<>();
 	}
 	
+	public R cacheAndFindBy(CacheableSearchConfig searchConfig) {
+		findBy(SearchConfig.forPaths(
+			searchConfig.getPaths()
+		).optimizePaths(
+			searchConfig.isOptimizePathsEnabled()
+		).checkFileOptions(
+			searchConfig.getCheckFileOptions()
+		).maxParallelTasksForUnit(
+			searchConfig.maxParallelTasksForUnit)
+		);
+		return findBy(searchConfig);
+	}
+	
 	//Cached search
 	public R findBy(CacheableSearchConfig searchConfig) {
 		searchConfig = searchConfig.createCopy();

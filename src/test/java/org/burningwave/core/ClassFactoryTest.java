@@ -134,6 +134,26 @@ public class ClassFactoryTest extends BaseTest {
 			"org.apache.axis2.saaj.SOAPMessageImpl",
 			"javax.xml.soap.SOAPException"
 		);
+		UnitSourceGenerator unitSG2= UnitSourceGenerator.create("packagename").addClass(
+				ClassSourceGenerator.create(
+					TypeDeclarationSourceGenerator.create("ComplexExample2")
+				).addModifier(
+					Modifier.PUBLIC
+				).expands(
+					TypeDeclarationSourceGenerator.create("SOAPPartImpl")
+				).addConstructor(
+					FunctionSourceGenerator.create().addParameter(
+						VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("SOAPMessageImpl"), "parentSoapMsg"),
+						VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(InputStream.class), "inputStream")
+					).addThrowable(
+						TypeDeclarationSourceGenerator.create("SOAPException")				
+					).addBodyCodeRow("super(parentSoapMsg, inputStream);")
+				)
+			).addImport(
+				"org.apache.axis2.saaj.SOAPPartImpl",
+				"org.apache.axis2.saaj.SOAPMessageImpl",
+				"javax.xml.soap.SOAPException"
+			);
 		testNotNull(() -> {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory()
 			.buildAndLoadOrUpload(
@@ -142,7 +162,15 @@ public class ClassFactoryTest extends BaseTest {
 				Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")),	
 				unitSG
 			);
-			return classRetriever.get("packagename.ComplexExample");
+			classRetriever.get("packagename.ComplexExample");
+			classRetriever = componentSupplier.getClassFactory()
+				.buildAndLoadOrUpload(
+					pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
+					Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")),
+					Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")),	
+					unitSG2
+			);
+			return classRetriever.get("packagename.ComplexExample2");
 		});
 	}
 	

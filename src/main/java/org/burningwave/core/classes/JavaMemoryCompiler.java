@@ -429,7 +429,7 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForPackageName(String packageName) throws Exception {
-				SearchResult result = classPathHunter.findBy(
+				SearchResult result = classPathHunter.cacheAndFindBy(
 					SearchConfig.forPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 						ClassCriteria.create().packageName((iteratedClassPackageName) ->
 							Objects.equals(iteratedClassPackageName, packageName)
@@ -442,7 +442,7 @@ public class JavaMemoryCompiler implements Component {
 				);
 				classPathsSearchResults.add(result);
 				if (result.getClassPaths().isEmpty()) {
-					result = classPathHunter.findBy(
+					result = classPathHunter.cacheAndFindBy(
 						SearchConfig.forPaths(classRepositoriesPaths).by(
 							ClassCriteria.create().packageName((iteratedClassPackageName) ->
 								Objects.equals(iteratedClassPackageName, packageName)									
@@ -459,7 +459,7 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
-				SearchResult result = classPathHunter.findBy(
+				SearchResult result = classPathHunter.cacheAndFindBy(
 					SearchConfig.forPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 						ClassCriteria.create().allThat(classPredicate)
 					).checkFileOptions(
@@ -470,7 +470,7 @@ public class JavaMemoryCompiler implements Component {
 				);
 				classPathsSearchResults.add(result);
 				if (result.getClassPaths().isEmpty()) {
-					result = classPathHunter.findBy(
+					result = classPathHunter.cacheAndFindBy(
 						SearchConfig.forPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 							ClassCriteria.create().allThat(classPredicate)
 						).checkFileOptions(
