@@ -74,12 +74,12 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 		return paths;
 	}	
 	
-	public CacheableSearchConfig checkFileOptions(int value) {
+	public CacheableSearchConfig checkFileOptions(Integer value) {
 		this.checkFileOptions = value;
 		return this;
 	}
 	
-	public int getCheckFileOptions() {
+	public Integer getCheckFileOptions() {
 		return checkFileOptions;
 	}
 	
