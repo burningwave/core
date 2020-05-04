@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
@@ -46,11 +47,16 @@ import org.burningwave.core.io.IterableZipContainer.Entry;
 
 @SuppressWarnings({"unchecked"})
 public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
-	public static Integer CHECK_FILE_EXTENSION = 0b00000001;
-	public static Integer CHECK_FILE_SIGNATURE = 0b00000100;
-	public static Integer CHECK_FILE_EXTENSION_AND_SIGNATURE = 0b00000111;
-	public static Integer CHECK_FILE_EXTENSION_OR_SIGNATURE = 0b00000101;
-	public static Integer CHECK_FILE_OPTIONS_DEFAULT_VALUE = CHECK_FILE_EXTENSION;
+	private final static String DEFAULT_CHECK_FILE_OPTIONS_CONFIG_KEY = "file-system-scanner.default-scan-config.check-file-options";
+	
+	public final static Integer CHECK_FILE_EXTENSION = 0b00000001;
+	public final static Integer CHECK_FILE_SIGNATURE = 0b00000100;
+	public final static Integer CHECK_FILE_EXTENSION_AND_SIGNATURE = 0b00000111;
+	public final static Integer CHECK_FILE_EXTENSION_OR_SIGNATURE = 0b00000101;
+	public final static Integer CHECK_FILE_OPTIONS_DEFAULT_VALUE = parseCheckFileOptionsValue(
+		GlobalProperties.getProperty(DEFAULT_CHECK_FILE_OPTIONS_CONFIG_KEY),
+		CHECK_FILE_EXTENSION
+	);
 		
 	PathHelper pathHelper;
 	Collection<String> paths;
@@ -87,6 +93,21 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		archiveCriteriaForFileSystemEntry = FileCriteria.create().allThat(getArchivePredicateForFileSystemEntry()).and(archiveCriteriaForFileSystemEntry);
 		fileCriteriaForZipEntry = ZipContainerEntryCriteria.create().allThat(getFilePredicateForZipEntry()).and(fileCriteriaForZipEntry);
 		archiveCriteriaForZipEntry = ZipContainerEntryCriteria.create().allThat(getArchivePredicateForZipEntry()).and(archiveCriteriaForZipEntry);
+	}
+	
+	public static final Integer parseCheckFileOptionsValue(String property, Integer defaultValue) {
+		if (property != null) {
+			if (property.contains("checkFileExtension") && property.contains("checkFileSignature") && property.contains("|")) {
+				return FileScanConfigAbst.CHECK_FILE_EXTENSION_OR_SIGNATURE;
+			} else if (property.contains("checkFileExtension") && property.contains("checkFileSignature") && property.contains("&")) {
+				return FileScanConfigAbst.CHECK_FILE_EXTENSION_AND_SIGNATURE;
+			} else if (property.contains("checkFileExtension")) {
+				return FileScanConfigAbst.CHECK_FILE_EXTENSION;
+			} else if (property.contains("checkFileSignature")) {
+				return FileScanConfigAbst.CHECK_FILE_SIGNATURE;
+			}
+		}
+		return defaultValue;
 	}
 	
 	Predicate<File> getArchivePredicateForFileSystemEntry(){

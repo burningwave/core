@@ -60,7 +60,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		ClassLoader parentClassLoader,
-		int pathMemoryClassLoaderByteCodeHunterSearchConfigCheckFileOptions
+		Integer pathMemoryClassLoaderByteCodeHunterSearchConfigCheckFileOptions
 	) {
 		super(
 			byteCodeHunterSupplier,

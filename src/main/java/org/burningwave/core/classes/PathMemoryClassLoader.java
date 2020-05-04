@@ -47,7 +47,7 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 	Collection<String> loadedPaths;
 	private ByteCodeHunter byteCodeHunter;
 	private PathHelper pathHelper;
-	private int byteCodeHunterSearchConfigCheckFileOptions;
+	private Integer byteCodeHunterSearchConfigCheckFileOptions;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -57,7 +57,7 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 		ClassLoader parentClassLoader,
 		PathHelper pathHelper,
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
-		int byteCodeHunterSearchConfigCheckFileOptions
+		Integer byteCodeHunterSearchConfigCheckFileOptions
 	) {
 		super(parentClassLoader);
 		this.pathHelper = pathHelper;

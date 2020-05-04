@@ -92,7 +92,7 @@ public class ClassFactory implements Component {
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		Supplier<ClassLoader> defaultClassLoaderSupplier,
-		int byteCodeHunterSearchConfigCheckFileOptions
+		Integer byteCodeHunterSearchConfigCheckFileOptions
 	) {
 		return new ClassFactory(
 			byteCodeHunter,

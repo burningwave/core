@@ -77,7 +77,7 @@ public class JavaMemoryCompiler implements Component {
 	private FileSystemItem compiledClassesClassPath;
 	private FileSystemItem classPathHunterBasePathForCompressedLibs;
 	private FileSystemItem classPathHunterBasePathForCompressedClasses;
-	private int classPathHunterSearchConfigCheckFileOptions;
+	private Integer classPathHunterSearchConfigCheckFileOptions;
 	
 	private JavaMemoryCompiler(
 		PathHelper pathHelper,
@@ -98,7 +98,7 @@ public class JavaMemoryCompiler implements Component {
 		PathHelper pathHelper,
 		SourceCodeHandler sourceCodeExecutor,
 		ClassPathHunter classPathHunter,
-		int classPathHunterSearchConfigCheckFileOptions
+		Integer classPathHunterSearchConfigCheckFileOptions
 	) {
 		return new JavaMemoryCompiler(pathHelper, sourceCodeExecutor, classPathHunter, classPathHunterSearchConfigCheckFileOptions);
 	}
