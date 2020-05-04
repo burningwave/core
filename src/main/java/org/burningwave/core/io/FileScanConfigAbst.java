@@ -68,7 +68,8 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	int maxParallelTasksForUnit;
 	boolean recursiveOnDirectoryOfFileSystemEntry;
 	boolean recursiveOnArchiveOfZipEntry;
-	Integer checkFileOptions; 
+	Integer checkFileOptions;
+	boolean optimizePaths;
 	
 	FileScanConfigAbst() {
 		paths = ConcurrentHashMap.newKeySet();
@@ -79,6 +80,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		archiveCriteriaForZipEntry = ZipContainerEntryCriteria.create();
 		recursiveOnDirectoryOfFileSystemEntry = true;
 		recursiveOnArchiveOfZipEntry = true;
+		optimizePaths = false;
 		checkFileOptions = CHECK_FILE_OPTIONS_DEFAULT_VALUE;
 	}
 	
@@ -173,6 +175,11 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return (F)this;
 	}
 	
+	public F optimizePaths(boolean flag) {
+		this.optimizePaths = flag;
+		return (F)this;
+	}
+	
 	public F maxParallelTasksForUnit(int value) {
 		this.maxParallelTasksForUnit = value;
 		return (F)this;
@@ -259,6 +266,8 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 			zipEntryConsumer
 		).setMaxParallelTasks(
 			maxParallelTasksForUnit
+		).optimizePaths(
+			optimizePaths
 		);
 		if (recursiveOnDirectoryOfFileSystemEntry && directoryCriteriaForFileSystemEntry == null) {
 			config.scanRecursivelyAllDirectory();
@@ -296,6 +305,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		copy.recursiveOnDirectoryOfFileSystemEntry = this.recursiveOnDirectoryOfFileSystemEntry;
 		copy.recursiveOnArchiveOfZipEntry = this.recursiveOnArchiveOfZipEntry;
 		copy.maxParallelTasksForUnit = this.maxParallelTasksForUnit;
+		copy.optimizePaths = this.optimizePaths;
 		return copy;
 	}
 }

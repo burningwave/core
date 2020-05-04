@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.burningwave.core.assembler.ComponentSupplier;
@@ -20,6 +21,7 @@ import org.burningwave.core.classes.StatementSourceGenerator;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
 import org.burningwave.core.classes.VariableSourceGenerator;
+import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
 
@@ -109,24 +111,23 @@ public class ClassFactoryTest extends BaseTest {
 	
 	
 	@Test
-	public void getOrBuildClassTestTwo() {
+	public void getOrBuildClassWithExternalClassOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		ClassSourceGenerator ClassSG = ClassSourceGenerator.create(
-			TypeDeclarationSourceGenerator.create("ComplexExample")
-		).addModifier(
-			Modifier.PUBLIC
-		).expands(
-			TypeDeclarationSourceGenerator.create("SOAPPartImpl")
-		).addConstructor(
-			FunctionSourceGenerator.create().addParameter(
-				VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("SOAPMessageImpl"), "parentSoapMsg"),
-				VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(InputStream.class), "inputStream")
-			).addThrowable(
-				TypeDeclarationSourceGenerator.create("SOAPException")				
-			).addBodyCodeRow("super(parentSoapMsg, inputStream);")
-		);
 		UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
-			ClassSG
+			ClassSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("ComplexExample")
+			).addModifier(
+				Modifier.PUBLIC
+			).expands(
+				TypeDeclarationSourceGenerator.create("SOAPPartImpl")
+			).addConstructor(
+				FunctionSourceGenerator.create().addParameter(
+					VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("SOAPMessageImpl"), "parentSoapMsg"),
+					VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(InputStream.class), "inputStream")
+				).addThrowable(
+					TypeDeclarationSourceGenerator.create("SOAPException")				
+				).addBodyCodeRow("super(parentSoapMsg, inputStream);")
+			)
 		).addImport(
 			"org.apache.axis2.saaj.SOAPPartImpl",
 			"org.apache.axis2.saaj.SOAPMessageImpl",
@@ -136,6 +137,33 @@ public class ClassFactoryTest extends BaseTest {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory()
 			.buildAndLoadOrUpload(unitSG);
 			return classRetriever.get("packagename.ComplexExample");
+		});
+	}
+	
+	@Test
+	public void getOrBuildClassWithExternalClassTwo() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
+		UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
+			ClassSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("ExternalClassReferenceTest")
+			).addModifier(
+				Modifier.PUBLIC
+			).expands(
+				TypeDeclarationSourceGenerator.create("DefaultSerializer")
+			)
+		).addImport(
+			"org.springframework.core.serializer.DefaultSerializer"
+		);
+		testNotNull(() -> {
+			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory()
+			.buildAndLoadOrUpload(
+				pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
+				Arrays.asList("F:/Shared/Programmi/Apache/Maven/Repositories/BurningWave/org/springframework/spring-core/4.3.4.RELEASE"),
+				Arrays.asList("F:/Shared/Programmi/Apache/Maven/Repositories/BurningWave/org/springframework/spring-core/4.3.4.RELEASE"),
+				unitSG
+			);
+			return classRetriever.get("packagename.ExternalClassReferenceTest");
 		});
 	}
 

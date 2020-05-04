@@ -377,7 +377,7 @@ public class FileSystemScanner implements Component {
 				filterAndMapperForDirectory = new HashMap<>(); 
 				filterAndMapperForFile = new HashMap<>();
 				filterAndMapperForZipEntry = new HashMap<>();
-				optimizePaths = true;
+				optimizePaths = false;
 				paths = new ArrayList<>();
 			}
 

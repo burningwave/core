@@ -411,23 +411,23 @@ public class PathHelper implements Component {
 		int i = 0;
 		while (pathsItr.hasNext()) {
 			String path = pathsItr.next();
-			File pathAsFile = new File(path);
+			FileSystemItem pathAsFile = FileSystemItem.ofPath(path);
 			Iterator<String> pathsItrNested = copyOfPaths.iterator();
 			int j = 0;
 			while (pathsItrNested.hasNext()) {
 				String nestedPath = pathsItrNested.next();
 				if (i != j) {					
-					File nestedPathAsFile = new File(nestedPath);
-					if (!nestedPathAsFile.isDirectory() && !pathAsFile.isDirectory()) {
-						if (Paths.clean(nestedPathAsFile.getAbsolutePath()).equals(Paths.clean(pathAsFile.getAbsolutePath()))) {
+					FileSystemItem nestedPathAsFile = FileSystemItem.ofPath(nestedPath);
+					if (!nestedPathAsFile.isFolder() && !pathAsFile.isFolder()) {
+						if (nestedPathAsFile.getAbsolutePath().equals(pathAsFile.getAbsolutePath())) {
 							toBeRemoved.add(path);
 						}
-					} else if (nestedPathAsFile.isDirectory() && !pathAsFile.isDirectory()) {
-						if (Paths.clean(pathAsFile.getAbsolutePath()).startsWith(Paths.clean(nestedPathAsFile.getAbsolutePath()) + "/")) {
+					} else if (nestedPathAsFile.isFolder() && !pathAsFile.isFolder()) {
+						if (pathAsFile.getAbsolutePath().startsWith(nestedPathAsFile.getAbsolutePath() + "/")) {
 							toBeRemoved.add(path);
 						}
 					} else {
-						if ((Paths.clean(pathAsFile.getAbsolutePath()) + "/").startsWith(Paths.clean(nestedPathAsFile.getAbsolutePath()) + "/")) {
+						if ((pathAsFile.getAbsolutePath() + "/").startsWith((nestedPathAsFile.getAbsolutePath()) + "/")) {
 							toBeRemoved.add(path);
 						}
 					}
