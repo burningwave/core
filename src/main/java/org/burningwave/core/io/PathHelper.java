@@ -34,7 +34,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URLClassLoader;
@@ -356,28 +355,28 @@ public class PathHelper implements Component {
 	public ComparePathsResult comparePaths(Collection<String> pathCollection1, Collection<String> pathCollection2) {
 		ComparePathsResult checkPathsResult = new ComparePathsResult();
 		for (String path2 : pathCollection2) {
-			File path2AsFile = new File(path2);
-			String path2Normalized = Paths.clean(path2AsFile.getAbsolutePath());
+			FileSystemItem path2AsFile = FileSystemItem.ofPath(path2);
+			String path2Normalized = Paths.normalizeAndClean(path2AsFile.getAbsolutePath());
 			int result = -1;
 			for (String path1 : pathCollection1) {
-				File pathAsFile1 = new File(path1);
-				String path1Normalized = Paths.clean(pathAsFile1.getAbsolutePath());
+				FileSystemItem pathAsFile1 = FileSystemItem.ofPath(path1);
+				String path1Normalized = Paths.normalizeAndClean(pathAsFile1.getAbsolutePath());
 				if (//If path 1 and path 2 are the same file or path 2 is contained in path 1
-					(!pathAsFile1.isDirectory() && !path2AsFile.isDirectory() && 
+					(!pathAsFile1.isFolder() && !path2AsFile.isFolder() && 
 						path1Normalized.equals(path2Normalized)) ||
-					(pathAsFile1.isDirectory() && !path2AsFile.isDirectory() &&
+					(pathAsFile1.isFolder() && !path2AsFile.isFolder() &&
 						path2Normalized.startsWith(path1Normalized + "/"))
 				) {	
 					checkPathsResult.addContainedPath(path1, path2);
 					result = 0;
 				} else if (
 					//If path 1 is a file contained in path 2 that is a directory
-					!pathAsFile1.isDirectory() && path2AsFile.isDirectory() && 
+					!pathAsFile1.isFolder() && path2AsFile.isFolder() && 
 						path1Normalized.startsWith(path2Normalized + "/")) {
 					checkPathsResult.addPartialContainedFile(path2, path1);
 					result = 1;
 					//If path 1 and path 2 are directories
-				} else if (pathAsFile1.isDirectory() && path2AsFile.isDirectory()) {
+				} else if (pathAsFile1.isFolder() && path2AsFile.isFolder()) {
 					//If path 2 is contained in path 1
 					if ((path2Normalized + "/").startsWith(path1Normalized + "/")) {
 						checkPathsResult.addContainedPath(path1, path2);

@@ -72,25 +72,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 
 	//Cached search
 	public R findBy(CacheableSearchConfig searchConfig) {
-		if (searchConfig.useSharedClassLoaderAsMain || searchConfig.useSharedClassLoaderAsParent) {
-			find(SearchConfig.forPaths(
-				searchConfig.getPaths()
-			).optimizePaths(
-				searchConfig.isOptimizePathsEnabled()
-			).checkFileOptions(
-				searchConfig.getCheckFileOptions()
-			).maxParallelTasksForUnit(
-				searchConfig.maxParallelTasksForUnit)
-			);
-		}
-		return find(searchConfig);
-	}
-	
-	private R find(CacheableSearchConfig searchConfig) {
 		searchConfig = searchConfig.createCopy();
-		if (searchConfig.isOptimizePathsEnabled()) {
-			searchConfig.paths = pathHelper.optimize(searchConfig.getPaths());
-		}
 		C context = createContext(
 			ClassFileScanConfig.forPaths(searchConfig.getPaths()).checkFileOptions(searchConfig.getCheckFileOptions()).maxParallelTasksForUnit(
 				searchConfig.maxParallelTasksForUnit
