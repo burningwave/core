@@ -41,6 +41,7 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -399,9 +400,19 @@ public class PathHelper implements Component {
 		return checkPathsResult;
 	}
 	
-	public void optimize(Collection<String> paths) {
-		Collection<String> copyOfPaths = new LinkedHashSet<>(paths);
-		Collection<String> toBeRemoved = new LinkedHashSet<>();
+	public Collection<String> optimize(Collection<String> paths) {
+		Collection<String> copyOfPaths = new HashSet<>();
+		for (String path : paths) {
+			if (path.contains("..") ||
+				path.contains(".\\") ||
+				path.contains(".//")
+			) {
+				path = java.nio.file.Paths.get(path).normalize().toString();
+			}
+			copyOfPaths.add(Paths.clean(path));
+		}
+		paths = new HashSet<>(copyOfPaths);
+		Collection<String> toBeRemoved = new HashSet<>();
 		Iterator<String> pathsItr = copyOfPaths.iterator();
 		int i = 0;
 		while (pathsItr.hasNext()) {
@@ -436,6 +447,7 @@ public class PathHelper implements Component {
 			paths.clear();
 			paths.addAll(copyOfPaths);
 		}
+		return paths;
 	}
 	
 	
