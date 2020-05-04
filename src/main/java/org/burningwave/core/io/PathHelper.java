@@ -155,7 +155,7 @@ public class PathHelper implements Component {
 	}
 	
 	public Collection<String> getPaths(String... names) {
-		Collection<String> pathGroup = ConcurrentHashMap.newKeySet();
+		Collection<String> pathGroup = new HashSet<>();
 		if (names != null && names.length > 0) {
 			for (String name : names) {
 				Collection<String> pathsFound = this.pathGroups.get(name);

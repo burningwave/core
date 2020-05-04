@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.AbstractList;
+import java.util.Arrays;
 import java.util.Date;
 
 import org.burningwave.core.assembler.ComponentSupplier;
@@ -197,10 +198,12 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllSubtypeOfWithMethodsTestThree() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getMainClassPaths()
+					componentSupplier.getPathHelper().getMainClassPaths(),
+					Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip"))
 				).by(
 					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
@@ -371,6 +374,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllSubtypeOfWithConstructorTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
 		ConstructorCriteria constructorCriteria = ConstructorCriteria.create().parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(Date.class))
@@ -381,7 +385,8 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getMainClassPaths()
+					componentSupplier.getPathHelper().getMainClassPaths(),
+					Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip"))
 				).by(
 					ClassCriteria.create().byMembers(
 						constructorCriteria
@@ -711,10 +716,12 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllSubtypeOfWithMethodsTestThreeByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getMainClassPaths()
+					componentSupplier.getPathHelper().getMainClassPaths(),
+					Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip"))
 				).by(
 					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> {
 							return uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass);
@@ -889,17 +896,18 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllSubtypeOfWithConstructorTestOneByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
 		ConstructorCriteria constructorCriteria = ConstructorCriteria.create().parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(Date.class))
 		).skip((classes, initialClass, examinedClass) -> 
 			classes.get(Object.class) == examinedClass
 		);
-		
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getMainClassPaths()
+					componentSupplier.getPathHelper().getMainClassPaths(),
+					Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip"))
 				).by(
 					ClassCriteria.create().byMembers(
 						constructorCriteria

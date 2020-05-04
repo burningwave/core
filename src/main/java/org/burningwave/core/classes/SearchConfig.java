@@ -42,14 +42,17 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 	public static SearchConfig create() {
 		return new SearchConfig();
 	}
-
-	public static CacheableSearchConfig forPaths(Collection<String> paths) {
+	
+	@SafeVarargs
+	public static CacheableSearchConfig forPaths(Collection<String>... pathsColl) {
 		CacheableSearchConfig criteria = new CacheableSearchConfig();
-		criteria.paths.addAll(paths);
+		for (Collection<String> paths : pathsColl) {
+			criteria.paths.addAll(paths);
+		}
 		criteria.useSharedClassLoaderAsMain = true;
 		return criteria;
 	}
-	
+	@SafeVarargs
 	public static CacheableSearchConfig forPaths(String... paths) {
 		return SearchConfig.forPaths(Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
 	}
