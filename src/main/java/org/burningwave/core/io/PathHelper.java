@@ -38,7 +38,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -217,7 +216,7 @@ public class PathHelper implements Component {
 					for (String mainClassPath : mainClassPaths) {
 						Map<String, String> defaultValues = new LinkedHashMap<>();
 						defaultValues.put("classPaths", mainClassPath);
-						paths = Paths.clean(iterableObjectHelper.get(config, pathGroupPropertyName, defaultValues));
+						paths = Paths.clean(iterableObjectHelper.get(config, pathGroupPropertyName, defaultValues)).replaceAll(";{2,}", ";");
 						for (String path : paths.split(";")) {
 							groupPaths.addAll(addPath(pathGroupName, path));
 						}
@@ -240,7 +239,7 @@ public class PathHelper implements Component {
 		if (paths != null) {
 			Collection<String> pathGroup = getOrCreatePathGroup(groupName);
 			FileSystemItem.disableLog();
-			paths.forEach((path) -> {
+			for (String path : paths) {
 				if (path.matches(PATH_REGEX.pattern())) {
 					Map<Integer, List<String>> groupMap = Strings.extractAllGroups(PATH_REGEX, path);
 					FileSystemItem fileSystemItemParent = FileSystemItem.ofPath(groupMap.get(1).get(0));
@@ -267,7 +266,7 @@ public class PathHelper implements Component {
 						allPaths.add(fileSystemItem.getAbsolutePath());
 					}
 				}
-			});
+			}
 			FileSystemItem.enableLog();
 			return pathGroup;
 		} else {
@@ -305,7 +304,7 @@ public class PathHelper implements Component {
 		BiConsumer<Collection<T>, FileSystemItem> fileConsumer,
 		String... resourcesRelativePaths
 	) {
-		Collection<T> files = new ArrayList<>();
+		Collection<T> files = new HashSet<>();
 		if (resourcesRelativePaths != null && resourcesRelativePaths.length > 0) {
 			FileSystemItem.disableLog();
 			for (String resourceRelativePath : resourcesRelativePaths) {
