@@ -138,8 +138,8 @@ public class ClassFactoryTest extends BaseTest {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory()
 			.buildAndLoadOrUpload(
 				pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
-				Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")),
-				Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")),	
+				Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")),
+				Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")),	
 				unitSG
 			);
 			return classRetriever.get("packagename.ComplexExample");
