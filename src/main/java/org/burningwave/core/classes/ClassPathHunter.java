@@ -98,7 +98,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		String classPath = scanItemContext.getScannedItem().getAbsolutePath();
 		classPath = classPath.substring(
 			0, classPath.lastIndexOf(
-				javaClass.getPath(), classPath.length()
+				javaClass.getName().replace(".", "/"), classPath.length()
 			)
 		);	
 		context.addItemFound(
@@ -121,7 +121,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 			fsObject = zipEntry.getParentContainer().getAbsolutePath();
 		} else {
 			String zipEntryAbsolutePath = zipEntry.getAbsolutePath();
-			zipEntryAbsolutePath = zipEntryAbsolutePath.substring(0, zipEntryAbsolutePath.lastIndexOf(javaClass.getPath()));
+			zipEntryAbsolutePath = zipEntryAbsolutePath.substring(0, zipEntryAbsolutePath.lastIndexOf(javaClass.getName().replace(".", "/")));
 			fsObject = zipEntryAbsolutePath;
 		}
 		context.addItemFound(scanItemContext.getBasePathAsString(), fsObject, context.loadClass(javaClass.getName()));
