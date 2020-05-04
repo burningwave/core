@@ -196,6 +196,8 @@ public class ClassFactory implements Component {
 												false
 											).checkFileOptions(
 												byteCodeHunterSearchConfigCheckFileOptions
+											).optimizePaths(
+												true
 											)
 										)) {
 											Map<String, ByteBuffer> extraClassPathsForClassLoaderByteCodes = new HashMap<>();

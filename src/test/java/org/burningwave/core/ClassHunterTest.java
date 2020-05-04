@@ -24,7 +24,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAbsolutePath("libs-for-test.zip")
+					componentSupplier.getPathHelper().getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")
 				)
 			),
 			(result) ->
@@ -533,7 +533,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAbsolutePath("libs-for-test.zip")
+					componentSupplier.getPathHelper().getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")
 				)
 			),
 			(result) ->

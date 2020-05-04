@@ -41,13 +41,15 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 	
 	int maxParallelTasksForUnit;
 	Integer checkFileOptions;
-	Collection<String> paths;	
+	Collection<String> paths;
+	private boolean optimizePaths;
 	
 	CacheableSearchConfig() {
 		super();
 		paths = ConcurrentHashMap.newKeySet();
 		maxParallelTasksForUnit = Runtime.getRuntime().availableProcessors();
 		this.checkFileOptions = FileScanConfigAbst.CHECK_FILE_OPTIONS_DEFAULT_VALUE;
+		this.optimizePaths = false;
 	}
 	
 	void init(PathMemoryClassLoader classSupplier) {
@@ -68,6 +70,15 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 	public CacheableSearchConfig addPaths(Collection<String> paths) {
 		this.paths.addAll(paths);
 		return this;
+	}
+	
+	public CacheableSearchConfig optimizePaths(boolean flag) {
+		this.optimizePaths = flag;
+		return this;
+	}
+	
+	public boolean isOptimizePathsEnabled() {
+		return optimizePaths;
 	}
 	
 	public Collection<String> getPaths() {

@@ -39,7 +39,7 @@ import java.util.Map.Entry;
 import java.util.function.Supplier;
 
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.io.PathHelper.CheckResult;
+import org.burningwave.core.io.PathHelper.ComparePathsResult;
 
 
 public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryClassLoader {
@@ -77,10 +77,10 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 	}
 	
 	void scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths, int maxParallelTasksForUnit) {
-		CheckResult checkPathsResult = checkPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
+		ComparePathsResult checkPathsResult = compareWithAllLoadedPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
 		if (!checkPathsResult.getNotContainedPaths().isEmpty()) {
 			synchronized (loadedPaths) {
-				checkPathsResult = checkPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
+				checkPathsResult = compareWithAllLoadedPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
 				if (!checkPathsResult.getNotContainedPaths().isEmpty()) {
 					try(ByteCodeHunter.SearchResult result = getByteCodeHunter().findBy(
 						SearchConfig.forPaths(
@@ -91,6 +91,8 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 							maxParallelTasksForUnit
 						).checkFileOptions(
 							byteCodeHunterSearchConfigCheckFileOptions
+						).optimizePaths(
+							true
 						)
 					)) {
 						if (checkPathsResult.getPartialContainedDirectories().isEmpty() && checkPathsResult.getPartialContainedFiles().isEmpty()) {
@@ -113,7 +115,7 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 		}
 	}
 
-	private boolean check(CheckResult checkPathsResult, String key) {
+	private boolean check(ComparePathsResult checkPathsResult, String key) {
 		for (Collection<String> filePaths : checkPathsResult.getPartialContainedFiles().values()) {
 			for (String filePath : filePaths) {
 				if (key.startsWith(Paths.clean(filePath))) {
@@ -131,8 +133,8 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 		return true;
 	}
 
-	CheckResult checkPaths(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths) {
-		return pathHelper.check(getAllLoadedPaths(considerURLClassLoaderPathsAsLoadedPaths), paths);
+	ComparePathsResult compareWithAllLoadedPaths(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths) {
+		return pathHelper.comparePaths(getAllLoadedPaths(considerURLClassLoaderPathsAsLoadedPaths), paths);
 	}
 	
 	@SuppressWarnings("resource")

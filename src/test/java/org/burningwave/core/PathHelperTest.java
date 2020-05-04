@@ -3,6 +3,7 @@ package org.burningwave.core;
 import java.io.InputStream;
 
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.io.PathHelper;
 import org.junit.jupiter.api.Test;
 
 public class PathHelperTest extends BaseTest {
@@ -16,4 +17,16 @@ public class PathHelperTest extends BaseTest {
 			}
 		});
 	}
+	
+	@Test
+	public void getResourceCustomClassPath() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
+		testNotEmpty(() ->{ 
+			return pathHelper.getPaths("custom-class-path");
+		});
+	}
+	
+	
+	
 }

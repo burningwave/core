@@ -436,6 +436,8 @@ public class JavaMemoryCompiler implements Component {
 						)
 					).checkFileOptions(
 						javaMemoryCompiler.classPathHunterSearchConfigCheckFileOptions
+					).optimizePaths(
+						true
 					)
 				);
 				classPathsSearchResults.add(result);
@@ -447,6 +449,8 @@ public class JavaMemoryCompiler implements Component {
 							)
 						).checkFileOptions(
 							javaMemoryCompiler.classPathHunterSearchConfigCheckFileOptions
+						).optimizePaths(
+							true
 						)
 					);
 					classPathsSearchResults.add(result);
@@ -460,6 +464,8 @@ public class JavaMemoryCompiler implements Component {
 						ClassCriteria.create().allThat(classPredicate)
 					).checkFileOptions(
 						javaMemoryCompiler.classPathHunterSearchConfigCheckFileOptions
+					).optimizePaths(
+						true
 					)
 				);
 				classPathsSearchResults.add(result);
@@ -469,6 +475,8 @@ public class JavaMemoryCompiler implements Component {
 							ClassCriteria.create().allThat(classPredicate)
 						).checkFileOptions(
 							javaMemoryCompiler.classPathHunterSearchConfigCheckFileOptions
+						).optimizePaths(
+							true
 						)
 					);
 					classPathsSearchResults.add(result);

@@ -113,6 +113,7 @@ public class ClassFactoryTest extends BaseTest {
 	@Test
 	public void getOrBuildClassWithExternalClassOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
 		UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
 			ClassSourceGenerator.create(
 				TypeDeclarationSourceGenerator.create("ComplexExample")
@@ -135,7 +136,12 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		testNotNull(() -> {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory()
-			.buildAndLoadOrUpload(unitSG);
+			.buildAndLoadOrUpload(
+				pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
+				Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")),
+				Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")),	
+				unitSG
+			);
 			return classRetriever.get("packagename.ComplexExample");
 		});
 	}
@@ -159,8 +165,8 @@ public class ClassFactoryTest extends BaseTest {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory()
 			.buildAndLoadOrUpload(
 				pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
-				Arrays.asList("F:/Shared/Programmi/Apache/Maven/Repositories/BurningWave/org/springframework/spring-core/4.3.4.RELEASE"),
-				Arrays.asList("F:/Shared/Programmi/Apache/Maven/Repositories/BurningWave/org/springframework/spring-core/4.3.4.RELEASE"),
+				Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")),
+				Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")),
 				unitSG
 			);
 			return classRetriever.get("packagename.ExternalClassReferenceTest");

@@ -353,8 +353,8 @@ public class PathHelper implements Component {
 		});
 	}
 	
-	public CheckResult check(Collection<String> pathCollection1, Collection<String> pathCollection2) {
-		CheckResult checkPathsResult = new CheckResult();
+	public ComparePathsResult comparePaths(Collection<String> pathCollection1, Collection<String> pathCollection2) {
+		ComparePathsResult checkPathsResult = new ComparePathsResult();
 		for (String path2 : pathCollection2) {
 			File path2AsFile = new File(path2);
 			String path2Normalized = Paths.clean(path2AsFile.getAbsolutePath());
@@ -444,12 +444,12 @@ public class PathHelper implements Component {
 	}
 	
 	
-	public Collection<String> getAllClassPathThat(Predicate<String> pathPredicate) {
+	public Collection<String> getPaths(Predicate<String> pathPredicate) {
 		return getAllPaths().stream().filter(pathPredicate).collect(Collectors.toSet());
 	}
 	
 	public String getPath(Predicate<String> pathPredicate) {
-		Collection<String> classPathsFound = getAllClassPathThat(pathPredicate);
+		Collection<String> classPathsFound = getPaths(pathPredicate);
 		if (classPathsFound.size() > 1) {
 			throw Throwables.toRuntimeException("Found more than one class path for predicate " + pathPredicate);
 		}
@@ -471,13 +471,13 @@ public class PathHelper implements Component {
 	}
 	
 	
-	public static class CheckResult {
+	public static class ComparePathsResult {
 		private final Collection<String> notContainedPaths;
 		private final Map<String, Collection<String>> partialContainedDirectories;
 		private final Map<String, Collection<String>> partialContainedFiles;
 		private final Map<String, Collection<String>> containedPaths;
 
-		private CheckResult() {
+		private ComparePathsResult() {
 			notContainedPaths = new LinkedHashSet<>();
 			containedPaths = new LinkedHashMap<>();
 			partialContainedDirectories = new LinkedHashMap<>();

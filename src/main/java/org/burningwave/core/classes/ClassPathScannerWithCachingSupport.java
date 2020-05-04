@@ -46,7 +46,7 @@ import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.io.PathHelper.CheckResult;
+import org.burningwave.core.io.PathHelper.ComparePathsResult;
 
 
 abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>, R extends SearchResult<I>> extends ClassPathScannerAbst<I, C, R> {
@@ -166,7 +166,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 	}
 
 	void loadCache(C context, Collection<String> paths) {
-		CheckResult checkPathsResult = pathHelper.check(cache.keySet(), paths);
+		ComparePathsResult checkPathsResult = pathHelper.comparePaths(cache.keySet(), paths);
 		ClassFileScanConfig classFileScanConfiguration = context.classFileScanConfiguration.createCopy().setPaths(checkPathsResult.getNotContainedPaths());
 		Map<String, Map<String, I>> tempCache = new LinkedHashMap<>();
 		if (!checkPathsResult.getPartialContainedDirectories().isEmpty()) {

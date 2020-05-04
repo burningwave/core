@@ -74,7 +74,7 @@ public class SearchContext<T> implements Component {
 		this.pathMemoryClassLoader = initContext.getPathMemoryClassLoader();
 		this.classFileScanConfiguration = initContext.getClassFileScanConfiguration();
 		this.searchConfig = initContext.getSearchCriteria();
-		this.classLoaderHaveBeenUploadedWithCriteriaPaths = pathMemoryClassLoader.checkPaths(
+		this.classLoaderHaveBeenUploadedWithCriteriaPaths = pathMemoryClassLoader.compareWithAllLoadedPaths(
 			classFileScanConfiguration.getPaths(), searchConfig.considerURLClassLoaderPathsAsScanned
 		).getNotContainedPaths().isEmpty();
 	}
