@@ -91,13 +91,7 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	static FileSystemItem ofPath(String realAbsolutePath, String conventionedAbsolutePath) {
-		if (realAbsolutePath.contains("..") ||
-			realAbsolutePath.contains(".\\") ||
-			realAbsolutePath.contains(".//")
-		) {
-			realAbsolutePath = java.nio.file.Paths.get(realAbsolutePath).normalize().toString();
-		}
-		final String realAbsolutePathCleaned = Paths.clean(realAbsolutePath);
+		final String realAbsolutePathCleaned = Paths.normalizeAndClean(realAbsolutePath);
 		FileSystemItem fileSystemItem = Cache.pathForFileSystemItems.getOrUploadIfAbsent(
 			realAbsolutePath, () -> {
 				if (Strings.isNotEmpty(realAbsolutePathCleaned)) {

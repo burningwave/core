@@ -210,6 +210,16 @@ public class Strings implements Component {
 			return pathCleaner.apply(path);
 		}
 		
+		public String normalizeAndClean(String path) {
+			if (path.contains("..") ||
+				path.contains(".\\") ||
+				path.contains(".//")
+			) {
+				path = java.nio.file.Paths.get(path).normalize().toString();
+			}
+			return clean(path);
+		}
+		
 		public String getExtension(String path) {
 			if (path.endsWith("/")) {
 				return null;

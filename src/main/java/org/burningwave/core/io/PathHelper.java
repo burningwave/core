@@ -403,13 +403,7 @@ public class PathHelper implements Component {
 	public Collection<String> optimize(Collection<String> paths) {
 		Collection<String> copyOfPaths = new HashSet<>();
 		for (String path : paths) {
-			if (path.contains("..") ||
-				path.contains(".\\") ||
-				path.contains(".//")
-			) {
-				path = java.nio.file.Paths.get(path).normalize().toString();
-			}
-			copyOfPaths.add(Paths.clean(path));
+			copyOfPaths.add(Paths.normalizeAndClean(path));
 		}
 		paths = new HashSet<>(copyOfPaths);
 		Collection<String> toBeRemoved = new HashSet<>();
