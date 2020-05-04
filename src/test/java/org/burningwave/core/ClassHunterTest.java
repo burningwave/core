@@ -11,6 +11,7 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.bean.Complex;
 import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
+import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.classes.SearchConfig;
@@ -135,8 +136,9 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllSubtypeOfWithMethodsTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
+		ClassHunter classHunter = componentSupplier.getClassHunter();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> classHunter.findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
