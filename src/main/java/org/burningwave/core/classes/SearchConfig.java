@@ -49,7 +49,6 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 		for (Collection<String> paths : pathsColl) {
 			searchConfig.addPaths(paths);
 		}
-		searchConfig.useSharedClassLoaderAsMain = true;
 		return searchConfig;
 	}
 	@SafeVarargs
