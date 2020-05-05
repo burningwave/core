@@ -51,6 +51,7 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 		}
 		return searchConfig;
 	}
+	
 	@SafeVarargs
 	public static CacheableSearchConfig forPaths(String... paths) {
 		return SearchConfig.forPaths((Collection<String>)Stream.of(paths).collect(Collectors.toCollection(HashSet::new)));
