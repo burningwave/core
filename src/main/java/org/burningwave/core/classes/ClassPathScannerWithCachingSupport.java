@@ -70,7 +70,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		this.cache = new HashMap<>();
 	}
 	
-	public Hunter<I, R> loadCache(CacheableSearchConfig searchConfig) {
+	public CacheScanner<I, R> loadCache(CacheableSearchConfig searchConfig) {
 		if (searchConfig.useSharedClassLoaderAsMain || searchConfig.useSharedClassLoaderAsParent) {
 			findBy(SearchConfig.forPaths(
 				searchConfig.getPaths()
@@ -267,9 +267,9 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 	}
 	
 	@FunctionalInterface
-	public static interface Hunter<I, R extends SearchResult<I>> {
+	public static interface CacheScanner<I, R extends SearchResult<I>> {
 		
-		R findBy();
+		R find();
 		
 	}
 }

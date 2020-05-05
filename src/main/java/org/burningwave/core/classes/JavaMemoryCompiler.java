@@ -439,7 +439,7 @@ public class JavaMemoryCompiler implements Component {
 					).optimizePaths(
 						true
 					)
-				).findBy();
+				).find();
 				classPathsSearchResults.add(result);
 				if (result.getClassPaths().isEmpty()) {
 					result = classPathHunter.loadCache(
@@ -452,7 +452,7 @@ public class JavaMemoryCompiler implements Component {
 						).optimizePaths(
 							true
 						)
-					).findBy();
+					).find();
 					classPathsSearchResults.add(result);
 				}
 				return result.getClassPaths();
@@ -467,7 +467,7 @@ public class JavaMemoryCompiler implements Component {
 					).optimizePaths(
 						true
 					)
-				).findBy();
+				).find();
 				classPathsSearchResults.add(result);
 				if (result.getClassPaths().isEmpty()) {
 					result = classPathHunter.loadCache(
@@ -478,7 +478,7 @@ public class JavaMemoryCompiler implements Component {
 						).optimizePaths(
 							true
 						)
-					).findBy();
+					).find();
 					classPathsSearchResults.add(result);
 				}
 				return result.getClassPaths();

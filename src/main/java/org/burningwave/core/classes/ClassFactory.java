@@ -199,7 +199,7 @@ public class ClassFactory implements Component {
 											).optimizePaths(
 												true
 											)
-										).findBy()) {
+										).find()) {
 											Map<String, ByteBuffer> extraClassPathsForClassLoaderByteCodes = new HashMap<>();
 											result.getItemsFoundFlatMap().values().forEach(javaClass -> {
 												extraClassPathsForClassLoaderByteCodes.put(javaClass.getName(), javaClass.getByteCode());
