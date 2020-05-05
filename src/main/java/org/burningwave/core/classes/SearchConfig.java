@@ -29,7 +29,7 @@
 package org.burningwave.core.classes;
 
 import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -54,6 +54,6 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 	}
 	@SafeVarargs
 	public static CacheableSearchConfig forPaths(String... paths) {
-		return SearchConfig.forPaths(Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
+		return SearchConfig.forPaths((Collection<String>)Stream.of(paths).collect(Collectors.toCollection(HashSet::new)));
 	}
 }
