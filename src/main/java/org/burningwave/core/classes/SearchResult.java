@@ -83,7 +83,7 @@ public class SearchResult<E> implements Component {
 	
 	@SuppressWarnings("unchecked")
 	<C extends ClassLoader> C getUsedClassLoader() {
-		return (C) context.pathMemoryClassLoader;
+		return (C) context.pathScannerClassLoader;
 	}
 	
 	public void waitForSearchEnding() {

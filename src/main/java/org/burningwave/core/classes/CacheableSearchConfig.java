@@ -52,7 +52,7 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 		this.optimizePaths = false;
 	}
 	
-	void init(PathMemoryClassLoader classSupplier) {
+	void init(PathScannerClassLoader classSupplier) {
 		super.init(classSupplier);
 		Set<String> temp = new LinkedHashSet<String>(paths);
 		paths.clear();

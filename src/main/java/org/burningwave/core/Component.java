@@ -46,6 +46,11 @@ public interface Component extends AutoCloseable, ManagedLogger, Properties.List
 		return FileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix() + "/" + folderName);
 	}
 	
+	default public File getOrCreateTemporaryFolder() {
+		//Register main temporary folder for deleting on FileSystemHelper closing 
+		return FileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix());
+	}
+	
 	@Override
 	default public void close() {
 			

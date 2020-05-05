@@ -87,7 +87,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 		final ClassFileScanConfig scanConfigCopy = scanConfig.createCopy();
 		searchConfig = searchConfig.createCopy();
 		C context = createContext(scanConfigCopy, searchConfig);
-		searchConfig.init(context.pathMemoryClassLoader);
+		searchConfig.init(context.pathScannerClassLoader);
 		context.executeSearch(() -> {
 			fileSystemScanner.scan(
 				scanConfigCopy.toScanConfiguration(
@@ -105,7 +105,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	
 	@SuppressWarnings("resource")
 	C createContext(ClassFileScanConfig scanConfig, SearchConfigAbst<?> searchConfig) {
-		PathMemoryClassLoader sharedClassLoader = getClassHunter().pathMemoryClassLoader;
+		PathScannerClassLoader sharedClassLoader = getClassHunter().pathScannerClassLoader;
 		if (searchConfig.useSharedClassLoaderAsParent) {
 			searchConfig.parentClassLoaderForMainClassLoader = sharedClassLoader;
 		}
@@ -114,7 +114,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 				sharedClassLoader,
 				searchConfig.useSharedClassLoaderAsMain ?
 					sharedClassLoader :
-					PathMemoryClassLoader.create(
+					PathScannerClassLoader.create(
 						searchConfig.parentClassLoaderForMainClassLoader, 
 						pathHelper, byteCodeHunterSupplier, scanConfig.getCheckFileOptions()
 					),

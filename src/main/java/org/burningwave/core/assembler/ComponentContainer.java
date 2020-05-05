@@ -116,7 +116,7 @@ public class ComponentContainer implements ComponentSupplier {
 			PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY, 
 			"${" + PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY + "};"
 		);
-		config.put(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
+		config.put(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
 		
 		Properties customConfig = propertySupplier.get();
 		if (customConfig != null) {
@@ -229,9 +229,9 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getClassHunter(),
 				getFileSystemScanner(),
 				getPathHelper(),
-				retrieveClassLoader(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, ClassHunter.DEFAULT_CONFIG_VALUES),
+				retrieveClassLoader(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY, ClassHunter.DEFAULT_CONFIG_VALUES),
 				FileScanConfigAbst.parseCheckFileOptionsValue(
-					getConfigProperty(ClassHunter.PATH_MEMORY_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY),
+					getConfigProperty(ClassHunter.PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY),
 					FileScanConfigAbst.CHECK_FILE_OPTIONS_DEFAULT_VALUE
 				)
 			);

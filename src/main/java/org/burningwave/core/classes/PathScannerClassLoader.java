@@ -42,7 +42,7 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.PathHelper.ComparePathsResult;
 
 
-public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryClassLoader {
+public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryClassLoader {
 	Supplier<ByteCodeHunter> byteCodeHunterSupplier;
 	Collection<String> loadedPaths;
 	private ByteCodeHunter byteCodeHunter;
@@ -53,7 +53,7 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
         ClassLoader.registerAsParallelCapable();
     }
 	
-	protected PathMemoryClassLoader(
+	protected PathScannerClassLoader(
 		ClassLoader parentClassLoader,
 		PathHelper pathHelper,
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
@@ -66,8 +66,8 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 		this.byteCodeHunterSearchConfigCheckFileOptions = byteCodeHunterSearchConfigCheckFileOptions;
 	}
 	
-	public static PathMemoryClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, Supplier<ByteCodeHunter> byteCodeHunterSupplier, int byteCodeHunterSearchConfigCheckFileOptions) {
-		return new PathMemoryClassLoader(parentClassLoader, pathHelper, byteCodeHunterSupplier, byteCodeHunterSearchConfigCheckFileOptions);
+	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, Supplier<ByteCodeHunter> byteCodeHunterSupplier, int byteCodeHunterSearchConfigCheckFileOptions) {
+		return new PathScannerClassLoader(parentClassLoader, pathHelper, byteCodeHunterSupplier, byteCodeHunterSearchConfigCheckFileOptions);
 	}
 	
 	ByteCodeHunter getByteCodeHunter() {
@@ -76,7 +76,7 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 			(byteCodeHunter = byteCodeHunterSupplier.get());	
 	}
 	
-	void scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths, int maxParallelTasksForUnit) {
+	public void scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths, int maxParallelTasksForUnit) {
 		ComparePathsResult checkPathsResult = compareWithAllLoadedPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
 		if (!checkPathsResult.getNotContainedPaths().isEmpty()) {
 			synchronized (loadedPaths) {
@@ -142,8 +142,8 @@ public class PathMemoryClassLoader extends org.burningwave.core.classes.MemoryCl
 		Collection<String> allLoadedPaths = new LinkedHashSet<>(loadedPaths);
 		ClassLoader classLoader = this;
 		while((classLoader = classLoader.getParent()) != null) {
-			if (classLoader instanceof PathMemoryClassLoader) {
-				allLoadedPaths.addAll(((PathMemoryClassLoader)classLoader).loadedPaths);
+			if (classLoader instanceof PathScannerClassLoader) {
+				allLoadedPaths.addAll(((PathScannerClassLoader)classLoader).loadedPaths);
 			} else if (considerURLClassLoaderPathsAsLoadedPaths && classLoader instanceof URLClassLoader) {
 				URL[] resUrl = ((URLClassLoader)classLoader).getURLs();
 				for (int i = 0; i < resUrl.length; i++) {

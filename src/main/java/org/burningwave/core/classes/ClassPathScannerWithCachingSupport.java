@@ -92,7 +92,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 			), 
 			searchConfig
 		);
-		searchConfig.init(context.pathMemoryClassLoader);
+		searchConfig.init(context.pathScannerClassLoader);
 		context.executeSearch(() ->
 			scan(context)
 		);

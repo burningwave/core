@@ -51,8 +51,8 @@ public class SearchContext<T> implements Component {
 	SearchConfigAbst<?> searchConfig;
 	Map<String, T> itemsFoundFlatMap;
 	Map<String, Map<String, T>> itemsFoundMap;
-	PathMemoryClassLoader sharedPathMemoryClassLoader;
-	PathMemoryClassLoader pathMemoryClassLoader;
+	PathScannerClassLoader sharedPathMemoryClassLoader;
+	PathScannerClassLoader pathScannerClassLoader;
 	Collection<String> skippedClassNames;
 	Boolean classLoaderHaveBeenUploadedWithCriteriaPaths;
 	CompletableFuture<Void> searchTask;
@@ -71,10 +71,10 @@ public class SearchContext<T> implements Component {
 		this.itemsFoundMap = new HashMap<>();
 		this.skippedClassNames = ConcurrentHashMap.newKeySet();
 		this.sharedPathMemoryClassLoader = initContext.getSharedPathMemoryClassLoader();
-		this.pathMemoryClassLoader = initContext.getPathMemoryClassLoader();
+		this.pathScannerClassLoader = initContext.getPathMemoryClassLoader();
 		this.classFileScanConfiguration = initContext.getClassFileScanConfiguration();
 		this.searchConfig = initContext.getSearchCriteria();
-		this.classLoaderHaveBeenUploadedWithCriteriaPaths = pathMemoryClassLoader.compareWithAllLoadedPaths(
+		this.classLoaderHaveBeenUploadedWithCriteriaPaths = pathScannerClassLoader.compareWithAllLoadedPaths(
 			classFileScanConfiguration.getPaths(), searchConfig.considerURLClassLoaderPathsAsScanned
 		).getNotContainedPaths().isEmpty();
 	}
@@ -179,7 +179,7 @@ public class SearchContext<T> implements Component {
 			
 	
 	public void addByteCodeClassesToClassLoader(String className, ByteBuffer byteCode) {
-		pathMemoryClassLoader.addByteCode(className, byteCode);			
+		pathScannerClassLoader.addByteCode(className, byteCode);			
 	}
 	
 	protected <O> O execute(ThrowingSupplier<O, Throwable> supplier, Supplier<O> defaultValueSupplier, Supplier<String> classNameSupplier) {
@@ -193,7 +193,7 @@ public class SearchContext<T> implements Component {
 						if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
 							synchronized(this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
 								if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
-									pathMemoryClassLoader.scanPathsAndAddAllByteCodesFound(
+									pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
 										getPathsToBeScanned(), searchConfig.considerURLClassLoaderPathsAsScanned, classFileScanConfiguration.getMaxParallelTasksForUnit()
 									);
 									this.classLoaderHaveBeenUploadedWithCriteriaPaths = true;
@@ -218,7 +218,7 @@ public class SearchContext<T> implements Component {
 	
 	protected Class<?> loadClass(String className) {
 		return execute(
-			() -> pathMemoryClassLoader.loadClass(className), 
+			() -> pathScannerClassLoader.loadClass(className), 
 			() -> null, 
 			() -> className
 		);
@@ -226,7 +226,7 @@ public class SearchContext<T> implements Component {
 	
 	protected Class<?> loadClass(Class<?> cls) {
 		return execute(
-			() -> pathMemoryClassLoader.loadOrUploadClass(cls), 
+			() -> pathScannerClassLoader.loadOrUploadClass(cls), 
 			() -> null, 
 			() -> cls.getName()
 		);
@@ -234,14 +234,14 @@ public class SearchContext<T> implements Component {
 	
 	protected Class<?> loadClass(JavaClass cls) {
 		return execute(
-			() -> pathMemoryClassLoader.loadOrUploadClass(cls), 
+			() -> pathScannerClassLoader.loadOrUploadClass(cls), 
 			() -> null, 
 			() -> cls.getName()
 		);
 	}
 	
 	protected Class<?> retrieveClass(Class<?> cls) {
-		return Classes.isLoadedBy(cls, pathMemoryClassLoader) ?
+		return Classes.isLoadedBy(cls, pathScannerClassLoader) ?
 			cls : 
 			loadClass(cls.getName());
 	}
@@ -265,10 +265,10 @@ public class SearchContext<T> implements Component {
 		itemsFoundFlatMap = null;
 		itemsFoundMap = null;
 		searchConfig = null;
-		if (pathMemoryClassLoader != sharedPathMemoryClassLoader) {
-			pathMemoryClassLoader.close();
+		if (pathScannerClassLoader != sharedPathMemoryClassLoader) {
+			pathScannerClassLoader.close();
 		}
-		pathMemoryClassLoader = null;
+		pathScannerClassLoader = null;
 		sharedPathMemoryClassLoader = null;
 		skippedClassNames.clear();
 		skippedClassNames = null;
@@ -284,32 +284,32 @@ public class SearchContext<T> implements Component {
 		}
 		
 		InitContext(
-			PathMemoryClassLoader sharedPathMemoryClassLoader, 
-			PathMemoryClassLoader pathMemoryClassLoader,
+			PathScannerClassLoader sharedPathMemoryClassLoader, 
+			PathScannerClassLoader pathScannerClassLoader,
 			ClassFileScanConfig classFileScanConfiguration,
 			SearchConfigAbst<?> criteria
 		) {
 			super();
 			put(Elements.SHARED_PATH_MEMORY_CLASS_LOADER, sharedPathMemoryClassLoader);
-			put(Elements.PATH_MEMORY_CLASS_LOADER, pathMemoryClassLoader);
+			put(Elements.PATH_MEMORY_CLASS_LOADER, pathScannerClassLoader);
 			put(Elements.CLASS_FILE_SCAN_CONFIGURATION, classFileScanConfiguration);
 			put(Elements.SEARCH_CRITERIA, criteria);			
 		}
 		
 		static InitContext create(
-			PathMemoryClassLoader sharedPathMemoryClassLoader, 
-			PathMemoryClassLoader pathMemoryClassLoader,
+			PathScannerClassLoader sharedPathMemoryClassLoader, 
+			PathScannerClassLoader pathScannerClassLoader,
 			ClassFileScanConfig classFileScanConfiguration,
 			SearchConfigAbst<?> criteria
 		) {
-			return new InitContext(sharedPathMemoryClassLoader, pathMemoryClassLoader, classFileScanConfiguration, criteria);
+			return new InitContext(sharedPathMemoryClassLoader, pathScannerClassLoader, classFileScanConfiguration, criteria);
 		}
 		
-		PathMemoryClassLoader getSharedPathMemoryClassLoader() {
+		PathScannerClassLoader getSharedPathMemoryClassLoader() {
 			return get(Elements.SHARED_PATH_MEMORY_CLASS_LOADER);
 		}
 		
-		PathMemoryClassLoader getPathMemoryClassLoader() {
+		PathScannerClassLoader getPathMemoryClassLoader() {
 			return get(Elements.PATH_MEMORY_CLASS_LOADER);
 		}
 		

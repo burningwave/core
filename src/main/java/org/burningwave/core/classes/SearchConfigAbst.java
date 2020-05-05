@@ -52,7 +52,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Compon
 		classCriteria = ClassCriteria.create();
 	}
 	
-	void init(PathMemoryClassLoader classSupplier) {
+	void init(PathScannerClassLoader classSupplier) {
 		classCriteria.init(classSupplier);
 	}
 	

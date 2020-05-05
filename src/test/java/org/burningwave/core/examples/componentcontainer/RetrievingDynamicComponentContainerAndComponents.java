@@ -20,7 +20,7 @@ public class RetrievingDynamicComponentContainerAndComponents {
         //In this case we are creating a component container programmatically by using a custom properties object
         Properties configProps = new Properties();
         configProps.put(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, Thread.currentThread().getContextClassLoader());
-        configProps.put(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, Thread.currentThread().getContextClassLoader());
+        configProps.put(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY, Thread.currentThread().getContextClassLoader());
         ComponentSupplier customComponentSupplier2 = ComponentContainer.create(configProps);
         
         PathHelper pathHelper = componentSupplier.getPathHelper();
