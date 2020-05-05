@@ -70,7 +70,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		this.cache = new HashMap<>();
 	}
 	
-	public R loadCacheAndFindBy(CacheableSearchConfig searchConfig) {
+	public Hunter<I, R> loadCache(CacheableSearchConfig searchConfig) {
 		if (searchConfig.useSharedClassLoaderAsMain || searchConfig.useSharedClassLoaderAsParent) {
 			findBy(SearchConfig.forPaths(
 				searchConfig.getPaths()
@@ -82,7 +82,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 				searchConfig.maxParallelTasksForUnit)
 			);
 		}
-		return findBy(searchConfig);
+		return () -> findBy(searchConfig);
 	}
 	
 	//Cached search
@@ -164,14 +164,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		}
 		return pathsNotScanned;
 	}
-	
-	public void loadCache(Collection<String> paths) {
-		try (SearchResult<I> result = 
-			findBy(
-				SearchConfig.forPaths(paths)
-			)
-		) {}
-	}
+
 	
 	public void clearCache() {
 		cache.entrySet().stream().forEach(entry -> {
@@ -271,5 +264,12 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		byteCodeHunterSupplier = null;
 		pathHelper = null;
 		contextSupplier = null;
+	}
+	
+	@FunctionalInterface
+	public static interface Hunter<I, R extends SearchResult<I>> {
+		
+		R findBy();
+		
 	}
 }

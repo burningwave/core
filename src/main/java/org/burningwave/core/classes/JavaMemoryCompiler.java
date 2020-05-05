@@ -429,7 +429,7 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForPackageName(String packageName) throws Exception {
-				SearchResult result = classPathHunter.loadCacheAndFindBy(
+				SearchResult result = classPathHunter.loadCache(
 					SearchConfig.forPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 						ClassCriteria.create().packageName((iteratedClassPackageName) ->
 							Objects.equals(iteratedClassPackageName, packageName)
@@ -439,10 +439,10 @@ public class JavaMemoryCompiler implements Component {
 					).optimizePaths(
 						true
 					)
-				);
+				).findBy();
 				classPathsSearchResults.add(result);
 				if (result.getClassPaths().isEmpty()) {
-					result = classPathHunter.loadCacheAndFindBy(
+					result = classPathHunter.loadCache(
 						SearchConfig.forPaths(classRepositoriesPaths).by(
 							ClassCriteria.create().packageName((iteratedClassPackageName) ->
 								Objects.equals(iteratedClassPackageName, packageName)									
@@ -452,14 +452,14 @@ public class JavaMemoryCompiler implements Component {
 						).optimizePaths(
 							true
 						)
-					);
+					).findBy();
 					classPathsSearchResults.add(result);
 				}
 				return result.getClassPaths();
 			}
 			
 			public Collection<FileSystemItem> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
-				SearchResult result = classPathHunter.loadCacheAndFindBy(
+				SearchResult result = classPathHunter.loadCache(
 					SearchConfig.forPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 						ClassCriteria.create().allThat(classPredicate)
 					).checkFileOptions(
@@ -467,10 +467,10 @@ public class JavaMemoryCompiler implements Component {
 					).optimizePaths(
 						true
 					)
-				);
+				).findBy();
 				classPathsSearchResults.add(result);
 				if (result.getClassPaths().isEmpty()) {
-					result = classPathHunter.loadCacheAndFindBy(
+					result = classPathHunter.loadCache(
 						SearchConfig.forPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 							ClassCriteria.create().allThat(classPredicate)
 						).checkFileOptions(
@@ -478,7 +478,7 @@ public class JavaMemoryCompiler implements Component {
 						).optimizePaths(
 							true
 						)
-					);
+					).findBy();
 					classPathsSearchResults.add(result);
 				}
 				return result.getClassPaths();

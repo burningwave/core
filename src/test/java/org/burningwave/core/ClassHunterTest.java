@@ -471,11 +471,8 @@ public class ClassHunterTest extends BaseTest {
 		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
-		componentSupplier.getClassHunter().loadCache(
-			componentSupplier.getPathHelper().getMainClassPaths()
-		);
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(searchConfig),
+			() -> componentSupplier.getClassHunter().loadCache(searchConfig).findBy(),
 			(result) -> result.getClasses()
 		);
 		searchConfig.by(
@@ -994,23 +991,20 @@ public class ClassHunterTest extends BaseTest {
 		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
-		componentSupplier.getClassHunter().loadCache(
-			componentSupplier.getPathHelper().getMainClassPaths()
-		);
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(searchConfig),
+			() -> componentSupplier.getClassHunter().loadCache(searchConfig).findBy(),
 			(result) -> result.getClasses()
 		);
-		searchConfig.by(
-			ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> 
-				uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
-			).useClasses(
-				Closeable.class
-			)
-		).isolateClassLoader();
-		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(searchConfig),
-			(result) ->
+		testNotEmpty(() -> 
+			componentSupplier.getClassHunter().findBy(
+				searchConfig.by(
+					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> 
+						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
+					).useClasses(
+						Closeable.class
+					)
+				).isolateClassLoader()
+			),(result) ->
 				result.getClasses()
 		);
 	}

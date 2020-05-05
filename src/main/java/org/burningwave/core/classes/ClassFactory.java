@@ -189,7 +189,7 @@ public class ClassFactory implements Component {
 							if (extraClassPathsForClassLoaderByteCodesAR.get() == null) {
 								synchronized (extraClassPathsForClassLoaderByteCodesAR) {
 									if (extraClassPathsForClassLoaderByteCodesAR.get() == null) {
-										try(ByteCodeHunter.SearchResult result = byteCodeHunter.findBy(
+										try(ByteCodeHunter.SearchResult result = byteCodeHunter.loadCache(
 											SearchConfig.forPaths(
 												classLoaderClassPaths
 											).deleteFoundItemsOnClose(
@@ -199,7 +199,7 @@ public class ClassFactory implements Component {
 											).optimizePaths(
 												true
 											)
-										)) {
+										).findBy()) {
 											Map<String, ByteBuffer> extraClassPathsForClassLoaderByteCodes = new HashMap<>();
 											result.getItemsFoundFlatMap().values().forEach(javaClass -> {
 												extraClassPathsForClassLoaderByteCodes.put(javaClass.getName(), javaClass.getByteCode());
