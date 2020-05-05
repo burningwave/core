@@ -32,15 +32,11 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoade
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -52,9 +48,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.ByteBufferInputStream;
-import org.burningwave.core.io.FileSystemItem;
 
 
 public class MemoryClassLoader extends ClassLoader implements Component {
@@ -195,46 +189,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     	return inputStream;
     }
     
-	@Override
-	public URL getResource(String resourceName) {
-		Enumeration<URL> urls = getResources(resourceName, true);
-		if (urls.hasMoreElements()) {
-			return urls.nextElement();
-		}
-		return null;
-	}
-	
-	@Override
-	public Enumeration<URL> getResources(String resourceName) throws IOException {
-		return getResources(resourceName, false);
-	}
-    
-	private Enumeration<URL> getResources(String resourceName, boolean findFirst) {
-		Collection<URL> resources = new LinkedHashSet<>();
-		Enumeration<URL> resourceEnum = ThrowingSupplier.get(() -> super.getResources(resourceName));
-		while (resourceEnum.hasMoreElements()) {
-			resources.add(resourceEnum.nextElement());
-		}
-		if (resourceName.endsWith(".class")) {
-			File temporaryFolder = getOrCreateTemporaryFolder();
-			File compiledClass = new File(temporaryFolder.getAbsolutePath() + "/" + resourceName);
-			if (compiledClass.exists()) {
-				resources.add(FileSystemItem.ofPath(compiledClass.getAbsolutePath()).getURL());
-			} else {
-				Optional.ofNullable(getByteCode(resourceName)).ifPresent(byteCode -> 
-					resources.add(
-						JavaClass.create(
-							byteCode
-						).storeToClassPath(
-							temporaryFolder.getAbsolutePath()
-						).getURL()
-					)
-				);
-			}			
-		}
-		return Collections.enumeration(resources);
-	}
-
 	protected InputStream getByteCodeAsInputStream(String classRelativePath) {
 		if (classRelativePath.endsWith(".class")) {
 			ByteBuffer byteCode = getByteCode(classRelativePath);
@@ -246,6 +200,44 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     	}
 		return null;
 	}
+    
+//	@Override
+//	public URL getResource(String resourceName) {
+//		Enumeration<URL> urls = getResources(resourceName, true);
+//		if (urls.hasMoreElements()) {
+//			return urls.nextElement();
+//		}
+//		return null;
+//	}
+//	
+//	@Override
+//	public Enumeration<URL> getResources(String resourceName) throws IOException {
+//		return getResources(resourceName, false);
+//	}
+//    
+//	private Enumeration<URL> getResources(String resourceName, boolean findFirst) {
+//		Enumeration<URL> resourceEnum = ThrowingSupplier.get(() -> super.getResources(resourceName));
+//		if (!resourceEnum.hasMoreElements() && resourceName.endsWith(".class")) {
+//			Collection<URL> resources = new LinkedHashSet<>();
+//			File temporaryFolder = getOrCreateTemporaryFolder();
+//			File compiledClass = new File(temporaryFolder.getAbsolutePath() + "/" + resourceName);
+//			if (compiledClass.exists()) {
+//				resources.add(FileSystemItem.ofPath(compiledClass.getAbsolutePath()).getURL());
+//			} else {
+//				Optional.ofNullable(getByteCode(resourceName)).ifPresent(byteCode -> 
+//					resources.add(
+//						JavaClass.create(
+//							byteCode
+//						).storeToClassPath(
+//							temporaryFolder.getAbsolutePath()
+//						).getURL()
+//					)
+//				);
+//			}
+//			return Collections.enumeration(resources);
+//		}
+//		return resourceEnum;
+//	}
 
 	ByteBuffer getByteCode(String classRelativePath) {
 		String className = classRelativePath.substring(0, classRelativePath.lastIndexOf(".class")).replace("/", ".");
