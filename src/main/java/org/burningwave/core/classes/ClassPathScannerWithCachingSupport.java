@@ -44,7 +44,6 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.io.ClassFileScanConfig;
-import org.burningwave.core.io.FileScanConfigAbst;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.PathHelper.ComparePathsResult;
@@ -72,17 +71,15 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 	}
 	
 	public CacheScanner<I, R> loadCache(CacheableSearchConfig searchConfig) {
-		if (searchConfig.useSharedClassLoaderAsMain || searchConfig.useSharedClassLoaderAsParent) {
-			findBy(
-				SearchConfig.forPaths(
-					searchConfig.getPaths()
-				).optimizePaths(
-					true
-				).checkFileOptions(
-					FileScanConfigAbst.CHECK_FILE_EXTENSION_OR_SIGNATURE
-				)
-			);
-		}
+		try (R result = findBy(
+			SearchConfig.forPaths(
+				searchConfig.getPaths()
+			).optimizePaths(
+				true
+			).checkFileOptions(
+				searchConfig.getCheckFileOptions()
+			)
+		)){};
 		return () -> findBy(searchConfig);
 	}
 	
