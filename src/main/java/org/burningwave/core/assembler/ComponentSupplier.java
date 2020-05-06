@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.assembler;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+
 import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
@@ -80,4 +82,11 @@ public interface ComponentSupplier extends Component {
 		
 	public PathHelper getPathHelper();
 	
+	public default void clearCache() {
+		getClassHunter().clearCache();
+		getClassPathHunter().clearCache();
+		getByteCodeHunter().clearCache();
+		Cache.clear();
+		System.gc();
+	}
 }

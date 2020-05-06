@@ -107,7 +107,10 @@ public class Cache implements Component {
 				return resources.put(object, resource);
 			}				
 		}
-
+		
+		public void clear() {
+			resources.clear();
+		}
 	}
 
 	
@@ -146,7 +149,10 @@ public class Cache implements Component {
 			}
 			return null;
 		}
-			
+		
+		public void clear() {
+			resources.clear();
+		}
 	}
 	
 	public static class PathForResources<R> implements Component  {
@@ -269,5 +275,27 @@ public class Cache implements Component {
 			}
 			return count;
 		}
+		
+		public void clear() {
+			resources.clear();
+		}
+	}
+	
+	public void clear() {
+		pathForContents.clear();
+		pathForFileSystemItems.clear();
+		pathForZipFiles.clear();
+		classLoaderForFields.clear();
+		classLoaderForMethods.clear();
+		classLoaderForConstructors.clear();
+		bindedFunctionalInterfaces.clear();
+		uniqueKeyForField.clear();
+		uniqueKeyForMethods.clear();
+		uniqueKeyForMethodHandle.clear();
+	}
+	
+	@Override
+	public void close() {
+		clear();
 	}
 }
