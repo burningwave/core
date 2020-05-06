@@ -143,6 +143,16 @@ public class ClassFactory implements Component {
 		);
 	}
 	
+	public ClassRetriever buildAndLoadOrUpload(
+		Collection<String> compilationClassPaths,
+		Collection<String> compilationClassPathsForNotFoundClasses,
+		Collection<String> classLoaderClassPaths,
+		ClassLoader classLoader,
+		UnitSourceGenerator... unitsCode
+	) {
+		return buildAndLoadOrUploadTo(compilationClassPaths, compilationClassPathsForNotFoundClasses, classLoaderClassPaths, getDefaultClassLoader(), unitsCode);
+	}
+	
 	public ClassRetriever buildAndLoadOrUpload(UnitSourceGenerator... unitsCode) {
 		return buildAndLoadOrUploadTo(getDefaultClassLoader(), unitsCode);
 	}
@@ -407,6 +417,7 @@ public class ClassFactory implements Component {
 				className
 			);
 		}
+			
 	}
 	
 	@FunctionalInterface
