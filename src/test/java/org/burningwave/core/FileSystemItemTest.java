@@ -86,12 +86,10 @@ public class FileSystemItemTest extends BaseTest {
 	}
 	
 	@Test
-	@Tag("Heavy")
 	public void readTestNine() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
-		testNotEmpty(() -> FileSystemItem.ofPath(
-			basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar"
+		testNotEmpty(() -> componentSupplier.getPathHelper().getResource(
+			"/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar"
 		).getAllChildren());
 	}
 	

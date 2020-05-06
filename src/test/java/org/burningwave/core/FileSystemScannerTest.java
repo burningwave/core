@@ -140,7 +140,7 @@ public class FileSystemScannerTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		Collection<String> allFilesFound = ConcurrentHashMap.newKeySet();
 		Configuration config = Configuration.forPaths(
-			componentSupplier.getPathHelper().getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")
+			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		).scanAllZipFileThat(file ->
 			file.getName().endsWith(".zip")
 		).whenFindZipEntryApply(  
@@ -162,7 +162,7 @@ public class FileSystemScannerTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		Collection<String> allFilesFound = ConcurrentHashMap.newKeySet();
 		Configuration config = Configuration.forPaths(
-			componentSupplier.getPathHelper().getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")
+			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		).scanAllZipFileThat(file ->
 			file.getName().endsWith(".zip")
 		).whenFindZipEntryApply(  

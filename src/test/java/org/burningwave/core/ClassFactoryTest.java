@@ -159,8 +159,8 @@ public class ClassFactoryTest extends BaseTest {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory()
 			.buildAndLoadOrUpload(
 				pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
-				Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")),
-				Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")),	
+				Arrays.asList(pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")),
+				Arrays.asList(pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")),	
 				unitSG
 			);
 			classRetriever.get("packagename.ComplexExample");
@@ -168,8 +168,8 @@ public class ClassFactoryTest extends BaseTest {
 			classRetriever = componentSupplier.getClassFactory()
 				.buildAndLoadOrUpload(
 					pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
-					Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")),
-					Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")),	
+					Arrays.asList(pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")),
+					Arrays.asList(pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")),	
 					unitSG2
 			);
 			return classRetriever.get("packagename.ComplexExampleTwo");
@@ -195,8 +195,8 @@ public class ClassFactoryTest extends BaseTest {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory()
 			.buildAndLoadOrUpload(
 				pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
-				Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")),
-				Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")),
+				Arrays.asList(pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")),
+				Arrays.asList(pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")),
 				unitSG
 			);
 			return classRetriever.get("packagename.ExternalClassReferenceTest");

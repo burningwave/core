@@ -26,7 +26,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")
+					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				)
 			),
 			(result) ->
@@ -205,7 +205,7 @@ public class ClassHunterTest extends BaseTest {
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths(),
-					Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip"))
+					Arrays.asList(pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip"))
 				).by(
 					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
@@ -388,7 +388,7 @@ public class ClassHunterTest extends BaseTest {
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths(),
-					Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip"))
+					Arrays.asList(pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip"))
 				).by(
 					ClassCriteria.create().byMembers(
 						constructorCriteria
@@ -537,7 +537,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")
+					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				)
 			),
 			(result) ->
@@ -720,7 +720,7 @@ public class ClassHunterTest extends BaseTest {
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths(),
-					Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip"))
+					Arrays.asList(pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip"))
 				).by(
 					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> {
 							return uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass);
@@ -906,7 +906,7 @@ public class ClassHunterTest extends BaseTest {
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths(),
-					Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip"))
+					Arrays.asList(pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip"))
 				).by(
 					ClassCriteria.create().byMembers(
 						constructorCriteria

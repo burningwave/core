@@ -24,7 +24,7 @@ public class ByteCodeHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getByteCodeHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAbsolutePath("../../src/test/external-resources/libs-for-test.zip") + ""
+					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip") + ""
 				).by(
 					ClassCriteria.create().byClasses((uploadedClasses, targetClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
@@ -46,7 +46,7 @@ public class ByteCodeHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getByteCodeHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")
+					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				).by(
 					ClassCriteria.create().className((iteratedClassName) ->
 						iteratedClassName.startsWith("com")
@@ -61,7 +61,7 @@ public class ByteCodeHunterTest extends BaseTest {
 	public void cacheTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
-			componentSupplier.getPathHelper().getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")
+			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		).by(
 			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 
 				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
@@ -91,7 +91,7 @@ public class ByteCodeHunterTest extends BaseTest {
 			)
 		);
 		ClassFileScanConfig scanConfig = ClassFileScanConfig.forPaths(
-			componentSupplier.getPathHelper().getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")
+			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		);
 		testNotEmpty(
 			() ->
@@ -106,7 +106,7 @@ public class ByteCodeHunterTest extends BaseTest {
 	public void parallelTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
-			componentSupplier.getPathHelper().getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")
+			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		).by(
 			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 
 				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)

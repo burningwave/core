@@ -45,7 +45,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
@@ -273,19 +273,15 @@ public class PathHelper implements Component {
 		}
 	}
 	
-	public String getAbsolutePath(String resourceRelativePath) {
-		String path = Objects.requireNonNull(
-			getResource(resourceRelativePath), 
-			"Could not find file " + resourceRelativePath
-		).getAbsolutePath();
-		if (System.getProperty("os.name").toLowerCase().contains("windows")) {
-			if (path.startsWith("/")) {
-				path = path.replaceFirst("/", "");
-			}
-		} else {
-			path = path.replace("\\", "/");
-		}
-		return path;
+	public String getAbsolutePathOfResource(String resourceRelativePath) {
+		return Optional.ofNullable(
+			getResource(resourceRelativePath)
+		).map(resource -> {
+			return resource.getAbsolutePath();
+		}).orElseGet(() -> {
+			logInfo("Could not find file {}", resourceRelativePath);
+			return null;
+		});
 	}
 	
 	public Collection<FileSystemItem> getResources(String... resourcesRelativePaths) {
