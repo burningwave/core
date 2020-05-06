@@ -322,5 +322,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		clear();
 		notLoadedByteCodes = null;
 		loadedByteCodes = null;
+		unregister();
 	}
 }
