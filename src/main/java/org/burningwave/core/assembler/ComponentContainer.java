@@ -391,6 +391,7 @@ public class ComponentContainer implements ComponentSupplier {
 			componentContainer.clearCache();
 		}
 		Cache.clear();
+		System.gc();
 	}
 	
 	private static class LazyHolder {

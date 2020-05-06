@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.bean.Complex;
 import org.burningwave.core.bean.PojoInterface;
@@ -163,7 +164,7 @@ public class ClassFactoryTest extends BaseTest {
 				unitSG
 			);
 			classRetriever.get("packagename.ComplexExample");
-			componentSupplier.clearCache();
+			ComponentContainer.clearAllCaches();
 			classRetriever = componentSupplier.getClassFactory()
 				.buildAndLoadOrUpload(
 					pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
