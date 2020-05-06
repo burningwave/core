@@ -94,8 +94,10 @@ public class ByteCodeHunterTest extends BaseTest {
 			componentSupplier.getPathHelper().getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")
 		);
 		testNotEmpty(
-			() -> componentSupplier.getByteCodeHunter().findBy(scanConfig, searchConfig),
-			(result) -> result.getClasses()
+			() ->
+				componentSupplier.getByteCodeHunter().findBy(scanConfig, searchConfig),
+			(result) ->
+				result.getClasses()
 		);
 	}
 	
@@ -115,12 +117,16 @@ public class ByteCodeHunterTest extends BaseTest {
 			false
 		);
 		Stream.of(
-			CompletableFuture.runAsync(() -> componentSupplier.getByteCodeHunter().findBy(
-				searchConfig
-			)),
-			CompletableFuture.runAsync(() -> componentSupplier.getByteCodeHunter().findBy(
-				searchConfig
-			))
+			CompletableFuture.runAsync(() -> 
+				componentSupplier.getByteCodeHunter().findBy(
+					searchConfig
+				)
+			),
+			CompletableFuture.runAsync(() ->
+				componentSupplier.getByteCodeHunter().findBy(
+					searchConfig
+				)
+			)
 		).forEach(cF -> cF.join());
 	}
 	
