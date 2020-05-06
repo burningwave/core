@@ -51,7 +51,9 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	public final static String PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY = "class-hunter.path-scanner-class-loader.parent";
 	public final static String PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY = "class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options";
 	public final static Map<String, String> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
-
+	
+	Supplier<PathScannerClassLoader> pathScannerClassLoaderSupplier;
+	
 	PathScannerClassLoader pathScannerClassLoader;
 	
 	ClassHunter(
@@ -72,9 +74,10 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			),
 			(context) -> new ClassHunter.SearchResult(context)
 		);
-		this.pathScannerClassLoader = PathScannerClassLoader.create(
+		pathScannerClassLoaderSupplier = () -> PathScannerClassLoader.create(
 			parentClassLoader, pathHelper, byteCodeHunterSupplier, pathScannerClassLoaderByteCodeHunterSearchConfigCheckFileOptions
 		);
+		this.pathScannerClassLoader = pathScannerClassLoaderSupplier.get();
 	}
 	
 	static {
@@ -249,6 +252,12 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 				return membersFoundByCriteriaFinal;
 			}
 		}
+	}
+	
+	@Override
+	public void clearCache() {
+		super.clearCache();
+		pathScannerClassLoader = pathScannerClassLoaderSupplier.get();
 	}
 	
 	@Override

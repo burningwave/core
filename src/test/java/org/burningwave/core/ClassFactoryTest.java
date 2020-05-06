@@ -163,6 +163,7 @@ public class ClassFactoryTest extends BaseTest {
 				unitSG
 			);
 			classRetriever.get("packagename.ComplexExample");
+			componentSupplier.clearCache();
 			classRetriever = componentSupplier.getClassFactory()
 				.buildAndLoadOrUpload(
 					pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
