@@ -99,6 +99,12 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	}
 	
 	@Override
+	public CacheScanner<Class<?>, SearchResult> loadCache(CacheableSearchConfig searchConfig) {
+		searchConfig.getClassCriteria().collectMembers(true);
+		return super.loadCache(searchConfig);
+	}
+	
+	@Override
 	public ClassHunter.SearchResult findBy(ClassFileScanConfig scanConfig, SearchConfig searchConfig) {
 		searchConfig.getClassCriteria().collectMembers(true);
 		return super.findBy(scanConfig, searchConfig);
