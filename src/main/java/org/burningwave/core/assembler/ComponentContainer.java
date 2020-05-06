@@ -59,21 +59,21 @@ import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.reflection.PropertyAccessor;
 
 public class ComponentContainer implements ComponentSupplier {
-	private static Collection<ComponentContainer> componentContainers;
+	private static Collection<ComponentContainer> instances;
 	protected Map<Class<? extends Component>, Component> components;
 	private Supplier<Properties> propertySupplier;
 	private Properties config;
 	private Thread initializerTask;
 	
 	static {
-		componentContainers = ConcurrentHashMap.newKeySet();
+		instances = ConcurrentHashMap.newKeySet();
 	}
 	
 	ComponentContainer(Supplier<Properties> propertySupplier) {
 		this.propertySupplier = propertySupplier;
 		this.components = new HashMap<>();
 		this.config = new Properties();
-		componentContainers.add(this);
+		instances.add(this);
 	}
 	
 	@SuppressWarnings("resource")
@@ -380,14 +380,14 @@ public class ComponentContainer implements ComponentSupplier {
 			config = null;
 			propertySupplier = null;
 			initializerTask = null;
-			componentContainers.remove(this);
+			instances.remove(this);
 		} else {
 			throw Throwables.toRuntimeException("Could not close singleton instance " + LazyHolder.COMPONENT_CONTAINER_INSTANCE);
 		}
 	}
 	
 	public static void clearAllCaches() {
-		for (ComponentContainer componentContainer : componentContainers) {
+		for (ComponentContainer componentContainer : instances) {
 			componentContainer.clearCache();
 		}
 		Cache.clear();
