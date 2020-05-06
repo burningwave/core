@@ -136,7 +136,7 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		UnitSourceGenerator unitSG2= UnitSourceGenerator.create("packagename").addClass(
 				ClassSourceGenerator.create(
-					TypeDeclarationSourceGenerator.create("ComplexExample2")
+					TypeDeclarationSourceGenerator.create("ComplexExampleTwo")
 				).addModifier(
 					Modifier.PUBLIC
 				).expands(
@@ -170,7 +170,7 @@ public class ClassFactoryTest extends BaseTest {
 					Arrays.asList(pathHelper.getAbsolutePath("../../src/test/external-resources/libs-for-test.zip")),	
 					unitSG2
 			);
-			return classRetriever.get("packagename.ComplexExample2");
+			return classRetriever.get("packagename.ComplexExampleTwo");
 		});
 	}
 	
