@@ -360,6 +360,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public ComponentSupplier clear() {
+		clearCache();
 		components.forEach((type, instance) -> { 
 			try {
 				instance.close();
