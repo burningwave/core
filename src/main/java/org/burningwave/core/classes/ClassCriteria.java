@@ -188,7 +188,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 	}
 	
 	public ClassCriteria collectMembers(boolean collectMembers) {
-		this.collectMembers =collectMembers;
+		this.collectMembers = collectMembers;
 		return this;
 	}
 	
