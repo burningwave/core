@@ -41,6 +41,10 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 		super(pathsColl);
 	}
 	
+	public static SearchConfig withoutCaching() {
+		return new SearchConfig(new HashSet<>());
+	}
+	
 	@SafeVarargs
 	public static CacheableSearchConfig forPaths(Collection<String>... pathsColl) {
 		return new CacheableSearchConfig(pathsColl);
@@ -50,9 +54,7 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 	public static CacheableSearchConfig forPaths(String... paths) {
 		return SearchConfig.forPaths((Collection<String>)Stream.of(paths).collect(Collectors.toCollection(HashSet::new)));
 	}
-	
-	
-	
+		
 	@Override
 	protected SearchConfig newInstance() {
 		return new SearchConfig(scanConfig.getPaths());
