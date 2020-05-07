@@ -31,9 +31,10 @@ public class Finder {
         //the findBy method. In addition to the loadCache method, loading data into the cache can also
         //take place via the findBy method if the latter receives a SearchConfig without ClassCriteria
         //as input. It is possible to clear the cache individually for every hunter (ClassHunter, 
-        //ByteCodeHunter and ClassPathHunter) but to avoid inconsistencies it is recommended to perform
-        //this cleaning using the clearHuntersCache method of the ComponentSupplier.
-        //To perform searches that do not use the cache use method findBy(ClassFileScanConfig, SearchConfig) 
+        //ByteCodeHunter and ClassPathHunter) with clearCache method but to avoid inconsistencies 
+        //it is recommended to perform this cleaning using the clearHuntersCache method of the ComponentSupplier.
+        //To perform searches that do not use the cache you must intantiate the search configuration with 
+        //SearchConfig.withoutUsingCache() method
         SearchResult searchResult = classHunter.loadInCache(searchConfig).find();
         
         return searchResult.getClasses();
