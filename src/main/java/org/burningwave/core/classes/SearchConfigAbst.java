@@ -60,7 +60,8 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Compon
 		classCriteria.init(classSupplier);
 	}
 	
-	public S addPaths(Collection<String>... pathColls) {
+	@SafeVarargs
+	public final S addPaths(Collection<String>... pathColls) {
 		scanConfig.addPaths(pathColls);
 		return (S)this;
 	}
