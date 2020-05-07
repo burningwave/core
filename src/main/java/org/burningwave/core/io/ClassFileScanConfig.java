@@ -32,7 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashSet;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -53,7 +53,7 @@ public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig>
 	}	
 	
 	public static ClassFileScanConfig forPaths(String... paths) {
-		return forPaths(Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
+		return forPaths((Collection<String>)Stream.of(paths).collect(Collectors.toCollection(HashSet::new)));
 	}
 	
 	@Override

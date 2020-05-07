@@ -50,7 +50,7 @@ public class FileScanConfig extends FileScanConfigAbst<FileScanConfig> {
 	}			
 	
 	public static FileScanConfig forPaths(String... paths) {
-		return forPaths(Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
+		return forPaths((Collection<String>)Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
 	}
 	
 	@Override
