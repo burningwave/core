@@ -146,7 +146,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Compon
 		return (S)this;
 	}
 	
-	abstract protected S newInstance();
+	abstract S newInstance();
 	
 	public <T extends SearchConfigAbst<T>> T copyTo(T destConfig) {
 		destConfig.classCriteria = this.classCriteria.createCopy();

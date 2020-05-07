@@ -53,7 +53,7 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 	}
 
 	@Override
-	protected CacheableSearchConfig newInstance() {
+	CacheableSearchConfig newInstance() {
 		return new CacheableSearchConfig(scanConfig.getPaths());
 	}
 }
