@@ -80,10 +80,14 @@ public interface ComponentSupplier extends Component {
 		
 	public PathHelper getPathHelper();
 	
-	public default void clearCache() {
+	public default void clearHuntersCache() {
 		getClassHunter().clearCache();
 		getClassPathHunter().clearCache();
 		getByteCodeHunter().clearCache();
+	}
+	
+	public default void clearCache() {
+		clearHuntersCache();
 	}
 	
 }
