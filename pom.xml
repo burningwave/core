@@ -280,7 +280,7 @@
 		<url>https://github.com/burningwave/core</url>
 		<connection>scm:git:git://github.com/burningwave/core.git</connection>
 		<developerConnection>scm:git:git@github.com:burningwave/core.git</developerConnection>
-		<tag>core-5.13.0</tag>
+		<tag>core-5.16.0</tag>
 	</scm>
 
 	<profiles>
