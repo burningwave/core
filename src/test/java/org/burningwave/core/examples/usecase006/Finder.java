@@ -26,7 +26,7 @@ public class Finder {
         );
         
         //The loadInCache method loads all classes in the paths of the SearchConfig received as input
-        //and then execute the queries of the ClassCriteria on the cache data. Once the data has been 
+        //and then execute the queries of the ClassCriteria on the cached data. Once the data has been 
         //cached, it is possible to take advantage of faster searches for the loaded paths also through 
         //the findBy method. In addition to the loadCache method, loading data into the cache can also
         //take place via the findBy method if the latter receives a SearchConfig without ClassCriteria
