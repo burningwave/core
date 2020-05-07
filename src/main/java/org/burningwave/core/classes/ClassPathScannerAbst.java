@@ -83,10 +83,10 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	}
 	
 	//Not cached search
-	public R findBy(ClassFileScanConfig scanConfig, SearchConfig searchConfig) {
-		final ClassFileScanConfig scanConfigCopy = scanConfig.createCopy();
+	public R findBy(SearchConfig searchConfig) {
 		searchConfig = searchConfig.createCopy();
-		C context = createContext(scanConfigCopy, searchConfig);
+		final ClassFileScanConfig scanConfigCopy = searchConfig.getClassFileScanConfiguration();
+		C context = createContext(searchConfig);
 		searchConfig.init(context.pathScannerClassLoader);
 		context.executeSearch(() -> {
 			fileSystemScanner.scan(
@@ -104,7 +104,7 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	}
 	
 	@SuppressWarnings("resource")
-	C createContext(ClassFileScanConfig scanConfig, SearchConfigAbst<?> searchConfig) {
+	C createContext(SearchConfigAbst<?> searchConfig) {
 		PathScannerClassLoader sharedClassLoader = getClassHunter().pathScannerClassLoader;
 		if (searchConfig.useSharedClassLoaderAsParent) {
 			searchConfig.parentClassLoaderForMainClassLoader = sharedClassLoader;
@@ -116,9 +116,8 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 					sharedClassLoader :
 					PathScannerClassLoader.create(
 						searchConfig.parentClassLoaderForMainClassLoader, 
-						pathHelper, byteCodeHunterSupplier, scanConfig.getCheckFileOptions()
+						pathHelper, byteCodeHunterSupplier, searchConfig.getClassFileScanConfiguration().getCheckFileOptions()
 					),
-				scanConfig,
 				searchConfig
 			)		
 		);

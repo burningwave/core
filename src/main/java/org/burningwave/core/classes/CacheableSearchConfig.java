@@ -28,87 +28,34 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
-
 import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.burningwave.core.io.FileScanConfigAbst;
 
 public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfig> {
 	
-	int maxParallelTasksForUnit;
-	Integer checkFileOptions;
-	Collection<String> paths;
-	private boolean optimizePaths;
-	
-	CacheableSearchConfig() {
-		super();
-		paths = ConcurrentHashMap.newKeySet();
-		maxParallelTasksForUnit = Runtime.getRuntime().availableProcessors();
-		this.checkFileOptions = FileScanConfigAbst.CHECK_FILE_OPTIONS_DEFAULT_VALUE;
-		this.optimizePaths = false;
-	}
-	
-	void init(PathScannerClassLoader classSupplier) {
-		super.init(classSupplier);
-		Set<String> temp = new LinkedHashSet<String>(paths);
-		paths.clear();
-		for(String path : temp) {
-			paths.add(Paths.clean(path));
-		}
-		temp.clear();
-	}
-	
-	public CacheableSearchConfig maxParallelTasksForUnit(int value) {
-		this.maxParallelTasksForUnit = value;
-		return this;
-	}
-	
-	public CacheableSearchConfig addPaths(Collection<String> paths) {
-		for (String path : paths) {
-			this.paths.add(Paths.normalizeAndClean(path));
-		}
-		return this;
-	}
-	
-	public CacheableSearchConfig optimizePaths(boolean flag) {
-		this.optimizePaths = flag;
-		return this;
-	}
-	
-	public boolean isOptimizePathsEnabled() {
-		return optimizePaths;
-	}
-	
-	public Collection<String> getPaths() {
-		return paths;
-	}	
-	
-	public CacheableSearchConfig checkFileOptions(Integer value) {
-		this.checkFileOptions = value;
-		return this;
-	}
-	
-	public Integer getCheckFileOptions() {
-		return checkFileOptions;
+	@SafeVarargs
+	CacheableSearchConfig(Collection<String>... pathsColl) {
+		super(pathsColl);
 	}
 	
 	@Override
 	public CacheableSearchConfig createCopy() {
 		CacheableSearchConfig copy = super.createCopy();
-		copy.checkFileOptions = this.checkFileOptions;
-		copy.paths.addAll(this.getPaths());
-		copy.maxParallelTasksForUnit = this.maxParallelTasksForUnit;
 		return copy;
+	}
+	
+	public SearchConfig withoutCaching() {
+		SearchConfig searchConfig = new SearchConfig(scanConfig.getPaths());
+		copyTo(searchConfig);
+		return searchConfig;
 	}
 	
 	@Override
 	public void close() {
-		paths.clear();
-		paths = null;
 		super.close();
+	}
+
+	@Override
+	protected CacheableSearchConfig newInstance() {
+		return new CacheableSearchConfig(scanConfig.getPaths());
 	}
 }

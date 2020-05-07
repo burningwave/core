@@ -40,7 +40,6 @@ import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.io.ClassFileScanConfig;
@@ -73,11 +72,11 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 	public CacheScanner<I, R> loadInCache(CacheableSearchConfig searchConfig) {
 		try (R result = findBy(
 			SearchConfig.forPaths(
-				searchConfig.getPaths()
+				searchConfig.getClassFileScanConfiguration().getPaths()
 			).optimizePaths(
 				true
 			).checkFileOptions(
-				searchConfig.getCheckFileOptions()
+				searchConfig.getClassFileScanConfiguration().getCheckFileOptions()
 			)
 		)){};
 		return () -> findBy(searchConfig);
@@ -87,9 +86,6 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 	public R findBy(CacheableSearchConfig searchConfig) {
 		searchConfig = searchConfig.createCopy();
 		C context = createContext(
-			ClassFileScanConfig.forPaths(searchConfig.getPaths()).checkFileOptions(searchConfig.getCheckFileOptions()).maxParallelTasksForUnit(
-				searchConfig.maxParallelTasksForUnit
-			), 
 			searchConfig
 		);
 		searchConfig.init(context.pathScannerClassLoader);
@@ -104,6 +100,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	void scan(C context) {
 		Collection<String> pathsNotScanned = scanCache(context);
 		if (!pathsNotScanned.isEmpty()) {
@@ -138,7 +135,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		Collection<String> pathsNotScanned = new LinkedHashSet<>();
 		CacheableSearchConfig searchConfig = context.getSearchConfig();
 		if (!context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
-			for (String path : searchConfig.getPaths()) {
+			for (String path : searchConfig.getClassFileScanConfiguration().getPaths()) {
 				Map<String, I> classesForPath = cache.get(path);
 				if (classesForPath != null) {
 					if (!classesForPath.isEmpty()) {	
@@ -149,7 +146,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 				}
 			}
 		} else {
-			for (String path : searchConfig.getPaths()) {
+			for (String path : searchConfig.getClassFileScanConfiguration().getPaths()) {
 				Map<String, I> classesForPath = cache.get(path);
 				if (classesForPath != null) {
 					if (!classesForPath.isEmpty()) {
@@ -171,6 +168,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		cache.clear();
 	}
 
+	@SuppressWarnings("unchecked")
 	void loadCache(C context, Collection<String> paths) {
 		ComparePathsResult checkPathsResult = pathHelper.comparePaths(cache.keySet(), paths);
 		ClassFileScanConfig classFileScanConfiguration = context.classFileScanConfiguration.createCopy().setPaths(checkPathsResult.getNotContainedPaths());
@@ -210,7 +208,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		}
 		if (!checkPathsResult.getContainedPaths().isEmpty()) {
 			for (Entry<String, Collection<String>> entry : checkPathsResult.getContainedPaths().entrySet()) {
-				classFileScanConfiguration.addPaths(entry.getValue().stream().map(path -> Paths.clean(path)).collect(Collectors.toList()));
+				classFileScanConfiguration.addPaths(entry.getValue());
 			}
 		}
 		

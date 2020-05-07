@@ -35,25 +35,26 @@ import java.util.stream.Stream;
 
 public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 	
-	private SearchConfig() {
-		super();
-	}
-	
-	public static SearchConfig create() {
-		return new SearchConfig();
+		
+	@SafeVarargs
+	SearchConfig(Collection<String>... pathsColl) {
+		super(pathsColl);
 	}
 	
 	@SafeVarargs
 	public static CacheableSearchConfig forPaths(Collection<String>... pathsColl) {
-		CacheableSearchConfig searchConfig = new CacheableSearchConfig();
-		for (Collection<String> paths : pathsColl) {
-			searchConfig.addPaths(paths);
-		}
-		return searchConfig;
+		return new CacheableSearchConfig(pathsColl);
 	}
 	
 	@SafeVarargs
 	public static CacheableSearchConfig forPaths(String... paths) {
 		return SearchConfig.forPaths((Collection<String>)Stream.of(paths).collect(Collectors.toCollection(HashSet::new)));
+	}
+	
+	
+	
+	@Override
+	protected SearchConfig newInstance() {
+		return new SearchConfig(scanConfig.getPaths());
 	}
 }

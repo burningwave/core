@@ -28,15 +28,17 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
+import java.util.Collection;
+
 import org.burningwave.core.Component;
-import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.io.ClassFileScanConfig;
 
 @SuppressWarnings("unchecked")
 abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Component {
 	ClassCriteria classCriteria;
+	ClassFileScanConfig scanConfig;
 	ClassLoader parentClassLoaderForMainClassLoader;
 	boolean useSharedClassLoaderAsMain;
 	boolean deleteFoundItemsOnClose;
@@ -45,15 +47,21 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Compon
 	boolean waitForSearchEnding;
 	
 
-	SearchConfigAbst() {
+	SearchConfigAbst(Collection<String>... pathsColl) {
 		useSharedClassLoaderAsMain(true);
 		deleteFoundItemsOnClose = true;
 		waitForSearchEnding = true;
+		scanConfig = ClassFileScanConfig.forPaths(pathsColl);
 		classCriteria = ClassCriteria.create();
 	}
 	
 	void init(PathScannerClassLoader classSupplier) {
 		classCriteria.init(classSupplier);
+	}
+	
+	public S addPaths(Collection<String>... pathColls) {
+		scanConfig.addPaths(pathColls);
+		return (S)this;
 	}
 	
 	public S by(ClassCriteria classCriteria) {
@@ -113,15 +121,42 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Compon
 		return (S)this;
 	}
 	
-	protected S newInstance() {
-		return ThrowingSupplier.get(() -> {
-			return (S)Constructors.newInstanceOf(this);
-		});
+	ClassFileScanConfig getClassFileScanConfiguration() {
+		return this.scanConfig;
+	}
+	
+	public S maxParallelTasksForUnit(int value) {
+		scanConfig.maxParallelTasksForUnit(value);
+		return (S)this;
+	}
+	
+	public S optimizePaths(boolean flag) {
+		scanConfig.optimizePaths(flag);
+		return (S)this;
+	}
+	
+	public S checkFileOptions(Integer value) {
+		scanConfig.checkFileOptions(value);
+		return (S)this;
+	}
+	
+	abstract protected S newInstance();
+	
+	public void copyTo(SearchConfigAbst<?> copy) {
+		copy.classCriteria = this.classCriteria.createCopy();
+		copy.scanConfig = this.scanConfig.createCopy();
+		copy.useSharedClassLoaderAsMain = this.useSharedClassLoaderAsMain;
+		copy.parentClassLoaderForMainClassLoader = this.parentClassLoaderForMainClassLoader;
+		copy.useSharedClassLoaderAsParent = this.useSharedClassLoaderAsParent;
+		copy.deleteFoundItemsOnClose = this.deleteFoundItemsOnClose;
+		copy.considerURLClassLoaderPathsAsScanned = this.considerURLClassLoaderPathsAsScanned;
+		copy.waitForSearchEnding = this.waitForSearchEnding;
 	}
 	
 	public S createCopy() {
 		S copy = newInstance();
 		copy.classCriteria = this.classCriteria.createCopy();
+		copy.scanConfig = this.scanConfig.createCopy();
 		copy.useSharedClassLoaderAsMain = this.useSharedClassLoaderAsMain;
 		copy.parentClassLoaderForMainClassLoader = this.parentClassLoaderForMainClassLoader;
 		copy.useSharedClassLoaderAsParent = this.useSharedClassLoaderAsParent;

@@ -11,7 +11,6 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.SearchConfig;
-import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileScanConfigAbst;
 import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
@@ -83,19 +82,18 @@ public class ByteCodeHunterTest extends BaseTest {
 	@Test
 	public void uncachedTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchConfig searchConfig = SearchConfig.create().by(
+		SearchConfig searchConfig = SearchConfig.forPaths(
+		componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+		).by(
 			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 
 				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
 			).useClasses(
 				Closeable.class
 			)
-		);
-		ClassFileScanConfig scanConfig = ClassFileScanConfig.forPaths(
-			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
-		);
+		).withoutCaching();
 		testNotEmpty(
 			() ->
-				componentSupplier.getByteCodeHunter().findBy(scanConfig, searchConfig),
+				componentSupplier.getByteCodeHunter().findBy(searchConfig),
 			(result) ->
 				result.getClasses()
 		);

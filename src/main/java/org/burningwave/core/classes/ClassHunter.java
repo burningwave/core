@@ -40,7 +40,6 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.Criteria;
 import org.burningwave.core.Criteria.TestContext;
-import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.PathHelper;
@@ -105,9 +104,9 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	}
 	
 	@Override
-	public ClassHunter.SearchResult findBy(ClassFileScanConfig scanConfig, SearchConfig searchConfig) {
+	public ClassHunter.SearchResult findBy(SearchConfig searchConfig) {
 		searchConfig.getClassCriteria().collectMembers(true);
-		return super.findBy(scanConfig, searchConfig);
+		return super.findBy(searchConfig);
 	}
 	
 	@Override

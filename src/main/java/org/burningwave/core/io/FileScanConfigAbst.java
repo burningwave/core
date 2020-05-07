@@ -34,8 +34,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -85,12 +83,6 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	}
 	
 	void init() {
-		Set<String> temp = new LinkedHashSet<String>(paths);
-		paths.clear();
-		for(String path : temp) {
-			paths.add(Paths.normalizeAndClean(path));
-		}
-		temp.clear();
 		fileCriteriaForFileSystemEntry = FileCriteria.create().allThat(getFilePredicateForFileSystemEntry()).and(fileCriteriaForFileSystemEntry);
 		archiveCriteriaForFileSystemEntry = FileCriteria.create().allThat(getArchivePredicateForFileSystemEntry()).and(archiveCriteriaForFileSystemEntry);
 		fileCriteriaForZipEntry = ZipContainerEntryCriteria.create().allThat(getFilePredicateForZipEntry()).and(fileCriteriaForZipEntry);
@@ -169,10 +161,9 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return checkFileOptions;
 	}
 	
-	public F setPaths(Collection<String> newPaths) {
+	public F setPaths(Collection<String>... newPaths) {
 		this.paths.clear();
-		this.paths.addAll(newPaths);
-		return (F)this;
+		return addPaths(newPaths);
 	}
 	
 	public F optimizePaths(boolean flag) {
@@ -195,8 +186,12 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return (F)this;
 	}
 	
-	public F addPaths(Collection<String> paths) {
-		this.paths.addAll(paths);
+	public F addPaths(Collection<String>... pathColls) {
+		for(Collection<String> pathColl : pathColls) {
+			for (String path : pathColl) {
+				paths.add(Paths.normalizeAndClean(path));
+			}
+		}
 		return (F)this;
 	}
 	
@@ -292,7 +287,6 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	
 	public  F createCopy() {
 		F copy = create();
-		copy.checkFileOptions = this.checkFileOptions;
 		copy.directoryCriteriaForFileSystemEntry = 
 			this.directoryCriteriaForFileSystemEntry != null?	
 				this.directoryCriteriaForFileSystemEntry.createCopy()
@@ -306,6 +300,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		copy.recursiveOnArchiveOfZipEntry = this.recursiveOnArchiveOfZipEntry;
 		copy.maxParallelTasksForUnit = this.maxParallelTasksForUnit;
 		copy.optimizePaths = this.optimizePaths;
+		copy.checkFileOptions = this.checkFileOptions;
 		return copy;
 	}
 }

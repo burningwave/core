@@ -65,7 +65,6 @@ import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassPathHunter.SearchResult;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferOutputStream;
-import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 
@@ -431,22 +430,18 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForPackageName(String packageName) throws Exception {
-				SearchConfig searchConfig = SearchConfig.create().by(
-					ClassCriteria.create().packageName((iteratedClassPackageName) ->
-						Objects.equals(iteratedClassPackageName, packageName)
-					)
-				);
-				
-				ClassFileScanConfig scanConfig = ClassFileScanConfig.forPaths(
-					javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()
-				).checkFileOptions(
-					javaMemoryCompiler.classPathHunterSearchConfigCheckFileOptions
-				).optimizePaths(
-					true
-				);
-				
 				SearchResult result = classPathHunter.findBy(
-					scanConfig, searchConfig
+					SearchConfig.forPaths(
+						javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()
+					).by(
+						ClassCriteria.create().packageName((iteratedClassPackageName) ->
+							Objects.equals(iteratedClassPackageName, packageName)
+						)
+					).checkFileOptions(
+						javaMemoryCompiler.classPathHunterSearchConfigCheckFileOptions
+					).optimizePaths(
+						true
+					).withoutCaching()
 				);
 				
 				classPathsSearchResults.add(result);
@@ -468,20 +463,14 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
-				SearchConfig searchConfig = SearchConfig.create().by(
-					ClassCriteria.create().allThat(classPredicate)
-				);
-				
-				ClassFileScanConfig scanConfig = ClassFileScanConfig.forPaths(
-					javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()
-				).checkFileOptions(
-					javaMemoryCompiler.classPathHunterSearchConfigCheckFileOptions
-				).optimizePaths(
-					true
-				);
-				
 				SearchResult result = classPathHunter.findBy(
-					scanConfig, searchConfig
+					SearchConfig.forPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
+						ClassCriteria.create().allThat(classPredicate)
+					).checkFileOptions(
+						javaMemoryCompiler.classPathHunterSearchConfigCheckFileOptions
+					).optimizePaths(
+						true
+					).withoutCaching()
 				);
 				classPathsSearchResults.add(result);
 				if (result.getClassPaths().isEmpty()) {

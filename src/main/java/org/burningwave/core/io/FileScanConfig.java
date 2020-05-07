@@ -44,8 +44,9 @@ public class FileScanConfig extends FileScanConfigAbst<FileScanConfig> {
 		return new FileScanConfig();
 	}
 	
-	public static FileScanConfig forPaths(Collection<String> paths) {
-		return new FileScanConfig().addPaths(paths);
+	@SafeVarargs
+	public static FileScanConfig forPaths(Collection<String>... pathColls) {
+		return new FileScanConfig().addPaths(pathColls);
 	}			
 	
 	public static FileScanConfig forPaths(String... paths) {

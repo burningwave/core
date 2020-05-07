@@ -47,9 +47,10 @@ public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig>
 		return new ClassFileScanConfig();
 	}
 	
-	public static ClassFileScanConfig forPaths(Collection<String> paths) {
-		return new ClassFileScanConfig().addPaths(paths);
-	}			
+	@SafeVarargs
+	public static ClassFileScanConfig forPaths(Collection<String>... pathsColl) {
+		return new ClassFileScanConfig().addPaths(pathsColl);
+	}	
 	
 	public static ClassFileScanConfig forPaths(String... paths) {
 		return forPaths(Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));

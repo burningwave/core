@@ -73,7 +73,7 @@ public class SearchContext<T> implements Component {
 		this.sharedPathMemoryClassLoader = initContext.getSharedPathMemoryClassLoader();
 		this.pathScannerClassLoader = initContext.getPathMemoryClassLoader();
 		this.classFileScanConfiguration = initContext.getClassFileScanConfiguration();
-		this.searchConfig = initContext.getSearchCriteria();
+		this.searchConfig = initContext.getSearchConfig();
 		this.classLoaderHaveBeenUploadedWithCriteriaPaths = pathScannerClassLoader.compareWithAllLoadedPaths(
 			classFileScanConfiguration.getPaths(), searchConfig.considerURLClassLoaderPathsAsScanned
 		).getNotContainedPaths().isEmpty();
@@ -286,23 +286,21 @@ public class SearchContext<T> implements Component {
 		InitContext(
 			PathScannerClassLoader sharedPathMemoryClassLoader, 
 			PathScannerClassLoader pathScannerClassLoader,
-			ClassFileScanConfig classFileScanConfiguration,
-			SearchConfigAbst<?> criteria
+			SearchConfigAbst<?> searchConfig
 		) {
 			super();
 			put(Elements.SHARED_PATH_MEMORY_CLASS_LOADER, sharedPathMemoryClassLoader);
 			put(Elements.PATH_MEMORY_CLASS_LOADER, pathScannerClassLoader);
-			put(Elements.CLASS_FILE_SCAN_CONFIGURATION, classFileScanConfiguration);
-			put(Elements.SEARCH_CRITERIA, criteria);			
+			put(Elements.CLASS_FILE_SCAN_CONFIGURATION, searchConfig.getClassFileScanConfiguration());
+			put(Elements.SEARCH_CRITERIA, searchConfig);			
 		}
 		
 		static InitContext create(
 			PathScannerClassLoader sharedPathMemoryClassLoader, 
 			PathScannerClassLoader pathScannerClassLoader,
-			ClassFileScanConfig classFileScanConfiguration,
-			SearchConfigAbst<?> criteria
+			SearchConfigAbst<?> searchConfig
 		) {
-			return new InitContext(sharedPathMemoryClassLoader, pathScannerClassLoader, classFileScanConfiguration, criteria);
+			return new InitContext(sharedPathMemoryClassLoader, pathScannerClassLoader, searchConfig);
 		}
 		
 		PathScannerClassLoader getSharedPathMemoryClassLoader() {
@@ -317,7 +315,7 @@ public class SearchContext<T> implements Component {
 			return get(Elements.CLASS_FILE_SCAN_CONFIGURATION);
 		}
 		
-		<C extends SearchConfigAbst<C>> C getSearchCriteria() {
+		<C extends SearchConfigAbst<C>> C getSearchConfig() {
 			return get(Elements.SEARCH_CRITERIA);
 		}
 	}
