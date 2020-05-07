@@ -199,7 +199,7 @@ public class ClassFactory implements Component {
 							if (extraClassPathsForClassLoaderByteCodesAR.get() == null) {
 								synchronized (extraClassPathsForClassLoaderByteCodesAR) {
 									if (extraClassPathsForClassLoaderByteCodesAR.get() == null) {
-										try(ByteCodeHunter.SearchResult result = byteCodeHunter.loadCache(
+										try(ByteCodeHunter.SearchResult result = byteCodeHunter.loadInCache(
 											SearchConfig.forPaths(
 												classLoaderClassPaths
 											).deleteFoundItemsOnClose(

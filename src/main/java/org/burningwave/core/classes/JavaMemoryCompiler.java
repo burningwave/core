@@ -451,7 +451,7 @@ public class JavaMemoryCompiler implements Component {
 				
 				classPathsSearchResults.add(result);
 				if (result.getClassPaths().isEmpty()) {
-					result = classPathHunter.loadCache(
+					result = classPathHunter.loadInCache(
 						SearchConfig.forPaths(classRepositoriesPaths).by(
 							ClassCriteria.create().packageName((iteratedClassPackageName) ->
 								Objects.equals(iteratedClassPackageName, packageName)									
@@ -485,7 +485,7 @@ public class JavaMemoryCompiler implements Component {
 				);
 				classPathsSearchResults.add(result);
 				if (result.getClassPaths().isEmpty()) {
-					result = classPathHunter.loadCache(
+					result = classPathHunter.loadInCache(
 						SearchConfig.forPaths(classRepositoriesPaths).by(
 							ClassCriteria.create().allThat(classPredicate)
 						).checkFileOptions(

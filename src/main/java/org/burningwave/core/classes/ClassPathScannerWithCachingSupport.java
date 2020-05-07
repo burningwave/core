@@ -70,7 +70,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		this.cache = new HashMap<>();
 	}
 	
-	public CacheScanner<I, R> loadCache(CacheableSearchConfig searchConfig) {
+	public CacheScanner<I, R> loadInCache(CacheableSearchConfig searchConfig) {
 		try (R result = findBy(
 			SearchConfig.forPaths(
 				searchConfig.getPaths()

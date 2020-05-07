@@ -472,7 +472,7 @@ public class ClassHunterTest extends BaseTest {
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().loadCache(searchConfig).find(),
+			() -> componentSupplier.getClassHunter().loadInCache(searchConfig).find(),
 			(result) -> result.getClasses()
 		);
 		searchConfig.by(
@@ -992,7 +992,7 @@ public class ClassHunterTest extends BaseTest {
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().loadCache(searchConfig).find(),
+			() -> componentSupplier.getClassHunter().loadInCache(searchConfig).find(),
 			(result) -> result.getClasses()
 		);
 		testNotEmpty(() -> 
