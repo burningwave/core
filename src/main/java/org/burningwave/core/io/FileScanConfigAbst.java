@@ -161,6 +161,15 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return checkFileOptions;
 	}
 	
+	public F addPaths(Collection<String>... pathColls) {
+		for(Collection<String> pathColl : pathColls) {
+			for (String path : pathColl) {
+				paths.add(Paths.normalizeAndClean(path));
+			}
+		}
+		return (F)this;
+	}
+	
 	public F setPaths(Collection<String>... newPaths) {
 		this.paths.clear();
 		return addPaths(newPaths);
@@ -183,15 +192,6 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 
 	public F recursiveOnArchiveOfZipEntry(boolean recursiveOnArchiveOfZipEntry) {
 		this.recursiveOnArchiveOfZipEntry = recursiveOnArchiveOfZipEntry;
-		return (F)this;
-	}
-	
-	public F addPaths(Collection<String>... pathColls) {
-		for(Collection<String> pathColl : pathColls) {
-			for (String path : pathColl) {
-				paths.add(Paths.normalizeAndClean(path));
-			}
-		}
 		return (F)this;
 	}
 	

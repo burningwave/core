@@ -44,9 +44,7 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 	}
 	
 	public SearchConfig withoutCaching() {
-		SearchConfig searchConfig = new SearchConfig(scanConfig.getPaths());
-		copyTo(searchConfig);
-		return searchConfig;
+		return copyTo(SearchConfig.withoutCaching());
 	}
 	
 	@Override

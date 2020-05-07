@@ -82,15 +82,15 @@ public class ByteCodeHunterTest extends BaseTest {
 	@Test
 	public void uncachedTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchConfig searchConfig = SearchConfig.forPaths(
-		componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+		SearchConfig searchConfig = SearchConfig.withoutCaching().addPaths(
+			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		).by(
 			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 
 				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
 			).useClasses(
 				Closeable.class
 			)
-		).withoutCaching();
+		);
 		testNotEmpty(
 			() ->
 				componentSupplier.getByteCodeHunter().findBy(searchConfig),

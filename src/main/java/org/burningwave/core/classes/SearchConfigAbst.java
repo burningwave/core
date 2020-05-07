@@ -30,6 +30,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.burningwave.core.Component;
@@ -62,6 +63,10 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Compon
 	public S addPaths(Collection<String>... pathColls) {
 		scanConfig.addPaths(pathColls);
 		return (S)this;
+	}
+	
+	public S addPaths(String... paths) {
+		return addPaths(Arrays.asList(paths));
 	}
 	
 	public S by(ClassCriteria classCriteria) {
@@ -142,15 +147,16 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Compon
 	
 	abstract protected S newInstance();
 	
-	public void copyTo(SearchConfigAbst<?> copy) {
-		copy.classCriteria = this.classCriteria.createCopy();
-		copy.scanConfig = this.scanConfig.createCopy();
-		copy.useSharedClassLoaderAsMain = this.useSharedClassLoaderAsMain;
-		copy.parentClassLoaderForMainClassLoader = this.parentClassLoaderForMainClassLoader;
-		copy.useSharedClassLoaderAsParent = this.useSharedClassLoaderAsParent;
-		copy.deleteFoundItemsOnClose = this.deleteFoundItemsOnClose;
-		copy.considerURLClassLoaderPathsAsScanned = this.considerURLClassLoaderPathsAsScanned;
-		copy.waitForSearchEnding = this.waitForSearchEnding;
+	public <T extends SearchConfigAbst<T>> T copyTo(T destConfig) {
+		destConfig.classCriteria = this.classCriteria.createCopy();
+		destConfig.scanConfig = this.scanConfig.createCopy();
+		destConfig.useSharedClassLoaderAsMain = this.useSharedClassLoaderAsMain;
+		destConfig.parentClassLoaderForMainClassLoader = this.parentClassLoaderForMainClassLoader;
+		destConfig.useSharedClassLoaderAsParent = this.useSharedClassLoaderAsParent;
+		destConfig.deleteFoundItemsOnClose = this.deleteFoundItemsOnClose;
+		destConfig.considerURLClassLoaderPathsAsScanned = this.considerURLClassLoaderPathsAsScanned;
+		destConfig.waitForSearchEnding = this.waitForSearchEnding;
+		return destConfig;
 	}
 	
 	public S createCopy() {
