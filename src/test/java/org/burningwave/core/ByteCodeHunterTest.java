@@ -82,7 +82,7 @@ public class ByteCodeHunterTest extends BaseTest {
 	@Test
 	public void uncachedTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchConfig searchConfig = SearchConfig.withoutCaching().addPaths(
+		SearchConfig searchConfig = SearchConfig.withoutUsingCache().addPaths(
 			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		).by(
 			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 

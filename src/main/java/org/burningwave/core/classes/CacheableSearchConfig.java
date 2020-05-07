@@ -43,8 +43,8 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 		return copy;
 	}
 	
-	public SearchConfig withoutCaching() {
-		return copyTo(SearchConfig.withoutCaching());
+	public SearchConfig withoutUsingCache() {
+		return copyTo(SearchConfig.withoutUsingCache());
 	}
 	
 	@Override

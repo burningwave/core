@@ -431,7 +431,7 @@ public class JavaMemoryCompiler implements Component {
 			
 			public Collection<FileSystemItem> findForPackageName(String packageName) throws Exception {
 				SearchResult result = classPathHunter.findBy(
-					SearchConfig.withoutCaching().addPaths(
+					SearchConfig.withoutUsingCache().addPaths(
 						javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()
 					).by(
 						ClassCriteria.create().packageName((iteratedClassPackageName) ->
@@ -464,7 +464,7 @@ public class JavaMemoryCompiler implements Component {
 			
 			public Collection<FileSystemItem> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
 				SearchResult result = classPathHunter.findBy(
-					SearchConfig.withoutCaching().addPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
+					SearchConfig.withoutUsingCache().addPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 						ClassCriteria.create().allThat(classPredicate)
 					).checkFileOptions(
 						javaMemoryCompiler.classPathHunterSearchConfigCheckFileOptions
