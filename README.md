@@ -135,8 +135,8 @@ It’s possible to search classes by every criteria that your immagination can m
 	<summary><b>PropertyAccessor</b></summary>
 	<ul>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/Getting-property-of-a-Java-bean-through-address">
-			<b>USE CASE</b>: getting property of a Java bean through address
+			<a href="https://github.com/burningwave/core/wiki/Getting-property-of-a-Java-bean-through-path">
+			<b>USE CASE</b>: getting property of a Java bean through path
 			</a>
 		</li>
 	</ul>
