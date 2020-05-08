@@ -47,7 +47,6 @@ It’s possible to search classes by every criteria that your immagination can m
 	<ul><li><b>PURL</b>:</li></ul>
 	<pre>pkg:maven/org.burningwave/core@5.16.2</pre>
 </details>
-<br/>
 
 ### [**Get started**](https://github.com/burningwave/core/wiki)
 ### [Overview and configuration](https://github.com/burningwave/core/wiki/Overview-and-configuration)
