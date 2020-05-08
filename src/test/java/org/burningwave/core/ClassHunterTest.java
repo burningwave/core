@@ -160,7 +160,8 @@ public class ClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getClasses()
+			(result) ->
+				result.getClasses()
 		);
 	}
 	
