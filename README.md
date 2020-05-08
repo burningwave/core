@@ -5,6 +5,50 @@ It’s possible to search classes by every criteria that your immagination can m
 
 **Tested on Java versions ranging from 8 to 14, Burningwave Core is also useful for creating classes during runtime, facilitate the use of reflection and much more...**
 
+**To include Burningwave Core library in your projects simply use with**:
+
+* **Apache Maven**:
+```xml
+<dependency>
+    <groupId>org.burningwave</groupId>
+    <artifactId>core</artifactId>
+    <version>5.16.2</version>
+</dependency>
+```
+
+<details>
+	<summary><b>... And with (click to expand)</b>:</summary>
+	<br/>
+	<ul><li><b>Gradle Groovy</b>:</li></ul>
+	<pre>implementation 'org.burningwave:core:5.16.2'</pre>
+	<br/>
+	<ul><li><b>Gradle Kotlin</b>:</li></ul>
+	<pre>implementation("org.burningwave:core:5.16.2")</pre>
+	<br/>
+	<ul><li><b>Scala</b>:</li></ul>
+	<pre>libraryDependencies += "org.burningwave" % "core" % "5.16.2"</pre>
+	<br/>
+	<ul><li><b>Apache Ivy</b>:</li></ul>
+	<pre>&lt;dependency org="org.burningwave" name="core" rev="5.16.2" /&gt;</pre>
+	<br/>
+	<ul><li><b>Groovy Grape</b>:</li></ul>
+	<pre>
+@Grapes(
+  	@Grab(group='org.burningwave', module='core', version='5.16.2')
+)
+	</pre>
+	<br/>
+	<ul><li><b>Leiningen</b>:</li></ul>
+	<pre>[org.burningwave/core "5.16.2"]</pre>
+	<br/>
+	<ul><li><b>Apache Buildr</b>:</li></ul>
+	<pre>'org.burningwave:core:jar:5.16.2'</pre>
+	<br/>
+	<ul><li><b>PURL</b>:</li></ul>
+	<pre>pkg:maven/org.burningwave/core@5.16.2</pre>
+</details>
+<br/>
+
 ### [**Get started**](https://github.com/burningwave/core/wiki)
 ### [Overview and configuration](https://github.com/burningwave/core/wiki/Overview-and-configuration)
 ### Examples of use of some components:
