@@ -52,11 +52,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.FieldCriteria;
+import org.burningwave.core.classes.MembersRetriever;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingFunction;
@@ -67,7 +67,7 @@ import org.burningwave.core.io.ByteBufferOutputStream;
 import sun.misc.Unsafe;
 
 @SuppressWarnings("restriction")
-public class LowLevelObjectsHandler implements Component {
+public class LowLevelObjectsHandler implements Component, MembersRetriever {
 
 	Unsafe unsafe;
 	Runnable illegalAccessLoggerEnabler;
@@ -86,11 +86,11 @@ public class LowLevelObjectsHandler implements Component {
 	ThrowingFunction<Class<?>, Lookup, Throwable> consulterRetriever;
 	
 	Map<Class<?>, Field> parentClassLoaderFields;
-	Class<?> classLoaderDelegateClass;
-	Class<?> builtinClassLoaderClass;
-	
 	Long loadedPackagesMapMemoryOffset;
 	Long loadedClassesVectorMemoryOffset;	
+	
+	Class<?> classLoaderDelegateClass;
+	Class<?> builtinClassLoaderClass;
 
 	private LowLevelObjectsHandler() {
 		Initializer.build(this);
@@ -123,9 +123,7 @@ public class LowLevelObjectsHandler implements Component {
 	public Package retrieveLoadedPackage(ClassLoader classLoader, Object packageToFind, String packageName) throws Throwable {
 		return packageRetriever.apply(classLoader, packageToFind, packageName);
 	}
-	
-
-	
+		
 	@SuppressWarnings("unchecked")
 	public Vector<Class<?>> retrieveLoadedClasses(ClassLoader classLoader) {
 		return (Vector<Class<?>>)unsafe.getObject(classLoader, loadedClassesVectorMemoryOffset);
@@ -134,7 +132,7 @@ public class LowLevelObjectsHandler implements Component {
 	@SuppressWarnings("unchecked")
 	public Map<String, ?> retrieveLoadedPackages(ClassLoader classLoader) {
 		return (Map<String, ?>)unsafe.getObject(classLoader, loadedPackagesMapMemoryOffset);
-	}	
+	}
 	
 	private Field getParentClassLoaderField(Class<?> classLoaderClass) {
 		Field field = parentClassLoaderFields.get(classLoaderClass);
@@ -156,11 +154,7 @@ public class LowLevelObjectsHandler implements Component {
 	public ClassLoader getParent(ClassLoader classLoader) {
 		if (builtinClassLoaderClass != null && builtinClassLoaderClass.isAssignableFrom(classLoader.getClass())) {
 			Field builtinClassLoaderClassParentField = getParentClassLoaderField(builtinClassLoaderClass);
-			try {
-				return (ClassLoader) builtinClassLoaderClassParentField.get(classLoader);
-			} catch (IllegalArgumentException | IllegalAccessException exc) {
-				throw Throwables.toRuntimeException(exc);
-			}
+			return ThrowingSupplier.get(() ->(ClassLoader) builtinClassLoaderClassParentField.get(classLoader));
 		} else {
 			return classLoader.getParent();
 		}
@@ -231,21 +225,21 @@ public class LowLevelObjectsHandler implements Component {
 		}		
 	}
 	
-	public Method[] getDeclaredMethods(Class<?> cls)  {
-		try {
-			return (Method[]) getDeclaredMethodsRetriever.invoke(cls, false);
-		} catch (Throwable exc) {
-			logWarn("Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
-			return emptyMethodsArray;
-		}
-	}
-	
 	public Constructor<?>[] getDeclaredConstructors(Class<?> cls) {
 		try {
 			return (Constructor<?>[])getDeclaredConstructorsRetriever.invoke(cls, false);
 		} catch (Throwable exc) {
 			logWarn("Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return emptyConstructorsArray;
+		}
+	}
+	
+	public Method[] getDeclaredMethods(Class<?> cls)  {
+		try {
+			return (Method[])getDeclaredMethodsRetriever.invoke(cls, false);
+		} catch (Throwable exc) {
+			logWarn("Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
+			return emptyMethodsArray;
 		}
 	}
 	
@@ -332,18 +326,31 @@ public class LowLevelObjectsHandler implements Component {
 		}	
 		
 		void init() {
-			CavyClassLoader cavy = new CavyClassLoader();
-			iterateClassLoaderFields(
-				cavy, getLoadedClassesVectorMemoryOffsetInitializator(cavy.clsForTest)
-			);
-			iterateClassLoaderFields(
-				cavy, getLoadedPackageMapMemoryOffsetInitializator(cavy.packageForTest)
-			);
 			initEmptyMembersArrays();
 			initMembersRetrievers();
-			initSpecificElements();
+			initSpecificElements();			
+			initClassesVectorField();
+			initPackagesMapField();
 		}
 
+
+		private void initPackagesMapField() {
+			this.lowLevelObjectsHandler.loadedClassesVectorMemoryOffset = lowLevelObjectsHandler.unsafe.objectFieldOffset(
+				lowLevelObjectsHandler.getDeclaredField(
+					ClassLoader.class, (field) ->
+					"classes".equals(field.getName())
+				)
+			);
+		}
+
+		private void initClassesVectorField() {
+			this.lowLevelObjectsHandler.loadedPackagesMapMemoryOffset = lowLevelObjectsHandler.unsafe.objectFieldOffset(
+				lowLevelObjectsHandler.getDeclaredField(
+					ClassLoader.class, (field) ->
+					"packages".equals(field.getName())
+				)
+			);
+		}
 
 		private void initEmptyMembersArrays() {
 			lowLevelObjectsHandler.emtpyFieldsArray = new Field[]{};
@@ -389,87 +396,11 @@ public class LowLevelObjectsHandler implements Component {
 			}
 		}
 		
-		private BiPredicate<Object, Long> getLoadedClassesVectorMemoryOffsetInitializator(Class<?> definedClass) {
-			return (object, offset) -> {
-				if (object != null && object instanceof Vector) {
-					Vector<?> vector = (Vector<?>)object;
-					if (vector.contains(definedClass)) {
-						lowLevelObjectsHandler.loadedClassesVectorMemoryOffset = offset;
-						return true;
-					}
-				}
-				return false;
-			};
-		}
-		
-		private BiPredicate<Object, Long> getLoadedPackageMapMemoryOffsetInitializator(Object pckg) {
-			return (object, offset) -> {
-				if (object != null && object instanceof Map) {
-					Map<?, ?> map = (Map<?, ?>)object;
-					if (map.containsValue(pckg)) {
-						lowLevelObjectsHandler.loadedPackagesMapMemoryOffset = offset;
-						return true;
-					}
-				}
-				return false;
-			};
-		}
-		
-		private Object iterateClassLoaderFields(ClassLoader classLoader, BiPredicate<Object, Long> predicate) {
-			long offset;
-			long step;
-			if (JVMInfo.is32Bit()) {
-				logInfo("JVM is 32 bit");
-				offset = 8;
-				step = 4;
-			} else if (!JVMInfo.isCompressedOopsOffOn64BitHotspot()) {
-				logInfo("JVM is 64 bit Hotspot and Compressed Oops is enabled");
-				offset = 12;
-				step = 4;
-			} else {
-				logInfo("JVM is 64 bit but is not Hotspot or Compressed Oops is disabled");
-				offset = 16;
-				step = 8;
-			}
-			logInfo("Iterating by unsafe over fields of classLoader {}", classLoader);
-			while (true) {
-				logInfo("Evaluating offset {}", offset);
-				Object object = lowLevelObjectsHandler.unsafe.getObject(classLoader, offset);
-				//logDebug(offset + " " + object);
-				if (predicate.test(object, offset)) {
-					return object;
-				}
-				offset+=step;
-			}
-		}
-		
 		abstract void initSpecificElements();
 		
 		@Override
 		public void close() {
 			this.lowLevelObjectsHandler = null;
-		}
-		
-		private static class CavyClassLoader extends ClassLoader {
-			Class<?> clsForTest;
-			Object packageForTest;
-			
-			CavyClassLoader() {
-				clsForTest = super.defineClass(
-					CavyClassLoader.class.getName(),
-					Streams.toByteBuffer(
-						Resources.getAsInputStream(
-							this.getClass().getClassLoader(), CavyClassLoader.class.getName().replace(".", "/") + ".class"
-						)
-					),	
-					null
-				);
-				packageForTest = super.definePackage(
-					"lowlevelobjectshandler.cavyclassloader", 
-					null, null, null, null, null, null, null
-				);
-			}
-			
 		}
 		
 		private static class ForJava8 extends Initializer {
@@ -531,7 +462,10 @@ public class LowLevelObjectsHandler implements Component {
 				lowLevelObjectsHandler.disableIllegalAccessLogger();
 				try {
 					MethodHandles.Lookup consulter = MethodHandles.lookup();
-					MethodHandle consulterRetrieverMethod = consulter.findStatic(MethodHandles.class, "privateLookupIn", MethodType.methodType(Lookup.class, Class.class, Lookup.class));
+					MethodHandle consulterRetrieverMethod = consulter.findStatic(
+						MethodHandles.class, "privateLookupIn",
+						MethodType.methodType(Lookup.class, Class.class, Lookup.class)
+					);
 					lowLevelObjectsHandler.consulterRetriever = cls ->
 						(Lookup)consulterRetrieverMethod.invoke(cls, MethodHandles.lookup());
 				} catch (IllegalArgumentException | NoSuchMethodException
@@ -572,7 +506,11 @@ public class LowLevelObjectsHandler implements Component {
 				try {
 					lowLevelObjectsHandler.builtinClassLoaderClass = Class.forName("jdk.internal.loader.BuiltinClassLoader");
 					try {
-						lowLevelObjectsHandler.methodInvoker = Class.forName("jdk.internal.reflect.NativeMethodAccessorImpl").getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
+						lowLevelObjectsHandler.methodInvoker = Class.forName(
+							"jdk.internal.reflect.NativeMethodAccessorImpl"
+						).getDeclaredMethod(
+							"invoke0", Method.class, Object.class, Object[].class
+						);
 						lowLevelObjectsHandler.setAccessible(lowLevelObjectsHandler.methodInvoker, true);
 					} catch (Throwable exc) {
 						logInfo("method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
@@ -585,7 +523,9 @@ public class LowLevelObjectsHandler implements Component {
 						ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 					) {
 						Streams.copy(inputStream, bBOS);
-						lowLevelObjectsHandler.classLoaderDelegateClass = lowLevelObjectsHandler.unsafe.defineAnonymousClass(lowLevelObjectsHandler.builtinClassLoaderClass, bBOS.toByteArray(), null);
+						lowLevelObjectsHandler.classLoaderDelegateClass = lowLevelObjectsHandler.unsafe.defineAnonymousClass(
+							lowLevelObjectsHandler.builtinClassLoaderClass, bBOS.toByteArray(), null
+						);
 					} catch (Throwable exc) {
 						throw Throwables.toRuntimeException(exc);
 					}
