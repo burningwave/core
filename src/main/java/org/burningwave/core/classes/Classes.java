@@ -63,7 +63,7 @@ import java.util.function.Supplier;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingSupplier;
 
-public class Classes implements Component {
+public class Classes implements Component, MembersRetriever {
 	public static class Symbol{
 		public static class Tag {
 			static final byte UTF8 = 1;
@@ -306,16 +306,6 @@ public class Classes implements Component {
 		return (short) (((byteSupplier.apply(offset) & 0xFF) << 8) | (byteSupplier.apply(offset + 1) & 0xFF));
 	}
 	
-	public Collection<Field> getDeclaredFields(Class<?> cls, Predicate<Field> fieldPredicate) {
-		Collection<Field> members = new LinkedHashSet<>();
-		for (Field member : getDeclaredFields(cls)) {
-			if (fieldPredicate.test(member)) {
-				members.add(member);
-			}
-		}
-		return members;
-	}
-	
 	public ClassLoader getClassLoader(Class<?> cls) {
 		ClassLoader clsLoader = cls.getClassLoader();
 		if (clsLoader == null) {
@@ -334,14 +324,6 @@ public class Classes implements Component {
 		);
 	}
 	
-	public Field getDeclaredField(Class<?> cls, Predicate<Field> predicate) {
-		Collection<Field> members = getDeclaredFields(cls, predicate);
-		if (members.size() > 1) {
-			throw Throwables.toRuntimeException("More than one member found for class " + cls.getName());
-		}
-		return members.stream().findFirst().orElse(null);
-	}
-	
 	public Field[] getDeclaredFields(Class<?> cls)  {
 		return Cache.classLoaderForFields.getOrUploadIfAbsent(
 			getClassLoader(cls), cls.getName().replace(".", "/"),
@@ -349,53 +331,17 @@ public class Classes implements Component {
 		);
 	}
 	
-	public Method getDeclaredMethod(Class<?> cls, Predicate<Method> predicate) {
-		Collection<Method> members = getDeclaredMethods(cls, predicate);
-		if (members.size() > 1) {
-			throw Throwables.toRuntimeException("More than one member found for class " + cls.getName());
-		}
-		return members.stream().findFirst().orElse(null);
-	}
-	
-	public Collection<Method> getDeclaredMethods(Class<?> cls, Predicate<Method> predicate) {
-		Collection<Method> members = new LinkedHashSet<>();
-		for (Method member : getDeclaredMethods(cls)) {
-			if (predicate.test(member)) {
-				members.add(member);
-			}
-		}
-		return members;
+	public Constructor<?>[] getDeclaredConstructors(Class<?> cls)  {
+		return Cache.classLoaderForConstructors.getOrUploadIfAbsent(
+			getClassLoader(cls), cls.getName().replace(".", "/"),
+			() -> LowLevelObjectsHandler.getDeclaredConstructors(cls)
+		);
 	}
 	
 	public Method[] getDeclaredMethods(Class<?> cls)  {
 		return Cache.classLoaderForMethods.getOrUploadIfAbsent(
 			getClassLoader(cls), cls.getName().replace(".", "/"),
 			() -> LowLevelObjectsHandler.getDeclaredMethods(cls)
-		);
-	}
-	
-	public Constructor<?> getDeclaredConstructor(Class<?> cls, Predicate<Constructor<?>> predicate) {
-		Collection<Constructor<?>> members = getDeclaredConstructors(cls, predicate);
-		if (members.size() > 1) {
-			throw Throwables.toRuntimeException("More than one member found for class " + cls.getName());
-		}
-		return members.stream().findFirst().orElse(null);
-	}
-	
-	public Collection<Constructor<?>> getDeclaredConstructors(Class<?> cls, Predicate<Constructor<?>> predicate) {
-		Collection<Constructor<?>> members = new LinkedHashSet<>();
-		for (Constructor<?> member : getDeclaredConstructors(cls)) {
-			if (predicate.test(member)) {
-				members.add(member);
-			}
-		}
-		return members;
-	}
-	
-	public Constructor<?>[] getDeclaredConstructors(Class<?> cls)  {
-		return Cache.classLoaderForConstructors.getOrUploadIfAbsent(
-			getClassLoader(cls), cls.getName().replace(".", "/"),
-			() -> LowLevelObjectsHandler.getDeclaredConstructors(cls)
 		);
 	}	
 
