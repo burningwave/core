@@ -79,7 +79,8 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 				searchConfig.getClassFileScanConfiguration().getCheckFileOptions()
 			)
 		)){};
-		return () -> findBy(searchConfig);
+		return (srcCfg) -> 
+			findBy(srcCfg == null? searchConfig : srcCfg);
 	}
 	
 	//Cached search
@@ -116,7 +117,7 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 							}
 						}
 						if (!pathsNotScanned.isEmpty()) {
-							loadCache(context, pathsNotScanned);
+							loadInCache(context, pathsNotScanned);
 						}
 					}
 				}
@@ -160,22 +161,14 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 		return pathsNotScanned;
 	}
 
-	
-	public void clearCache() {
-		cache.entrySet().stream().forEach(entry -> {
-			entry.getValue().clear();
-		});
-		cache.clear();
-	}
-
 	@SuppressWarnings("unchecked")
-	void loadCache(C context, Collection<String> paths) {
-		ComparePathsResult checkPathsResult = pathHelper.comparePaths(cache.keySet(), paths);
-		ClassFileScanConfig classFileScanConfiguration = context.classFileScanConfiguration.createCopy().setPaths(checkPathsResult.getNotContainedPaths());
+	void loadInCache(C context, Collection<String> paths) {
+		ComparePathsResult comparePathsResult = pathHelper.comparePaths(cache.keySet(), paths);
+		ClassFileScanConfig classFileScanConfiguration = context.classFileScanConfiguration.createCopy().setPaths(comparePathsResult.getNotContainedPaths());
 		Map<String, Map<String, I>> tempCache = new LinkedHashMap<>();
-		if (!checkPathsResult.getPartialContainedDirectories().isEmpty()) {
+		if (!comparePathsResult.getPartialContainedDirectories().isEmpty()) {
 			Predicate<File> directoryPredicate = null;
-			for (Entry<String, Collection<String>> entry : checkPathsResult.getPartialContainedDirectories().entrySet()) {
+			for (Entry<String, Collection<String>> entry : comparePathsResult.getPartialContainedDirectories().entrySet()) {
 				for (String path : entry.getValue()) {
 					tempCache.put(entry.getKey(), cache.get(path));
 					if (directoryPredicate != null) {
@@ -189,9 +182,9 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 				classFileScanConfiguration.scanRecursivelyAllDirectoryThat(directoryPredicate);
 			}
 		}
-		if (!checkPathsResult.getPartialContainedFiles().isEmpty()) {
+		if (!comparePathsResult.getPartialContainedFiles().isEmpty()) {
 			Predicate<File> filePredicate = null;
-			for (Entry<String, Collection<String>> entry : checkPathsResult.getPartialContainedFiles().entrySet()) {
+			for (Entry<String, Collection<String>> entry : comparePathsResult.getPartialContainedFiles().entrySet()) {
 				for (String path : entry.getValue()) {
 					tempCache.put(Paths.clean(entry.getKey()), cache.get(path));
 					if (filePredicate != null) {
@@ -206,8 +199,8 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 				classFileScanConfiguration.scanAllFileThat(filePredicate);
 			}
 		}
-		if (!checkPathsResult.getContainedPaths().isEmpty()) {
-			for (Entry<String, Collection<String>> entry : checkPathsResult.getContainedPaths().entrySet()) {
+		if (!comparePathsResult.getContainedPaths().isEmpty()) {
+			for (Entry<String, Collection<String>> entry : comparePathsResult.getContainedPaths().entrySet()) {
 				classFileScanConfiguration.addPaths(entry.getValue());
 			}
 		}
@@ -253,6 +246,13 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 
 	abstract <S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(C context, String path, String key, I value);
 	
+	public void clearCache() {
+		cache.entrySet().stream().forEach(entry -> {
+			entry.getValue().clear();
+		});
+		cache.clear();
+	}
+	
 	@Override
 	public void close() {
 		clearCache();
@@ -265,7 +265,10 @@ abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>,
 	@FunctionalInterface
 	public static interface CacheScanner<I, R extends SearchResult<I>> {
 		
-		R find();
+		public R findBy(CacheableSearchConfig srcCfg);
 		
+		public default R find() {
+			return findBy(null);
+		}
 	}
 }
