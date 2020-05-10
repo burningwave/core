@@ -13,9 +13,9 @@ Burningwave Core [![Tweet](https://img.shields.io/twitter/url/http/shields.io.sv
 [![Tested on Java 10](https://img.shields.io/badge/Tested%20on-Java%2010-orange)](https://www.java.com/it/download/)
 [![Tested on Java 11](https://img.shields.io/badge/Tested%20on-Java%2011-red)](https://www.java.com/it/download/)
 
-[![Tested on Java 12](https://img.shields.io/badge/Tested%20on-Java%2012-critical)](https://www.java.com/it/download/)
-[![Tested on Java 13](https://img.shields.io/badge/Tested%20on-Java%2013-brightgreen)](https://www.java.com/it/download/)
-[![Tested on Java 14](https://img.shields.io/badge/Tested%20on-Java%2014-brightgreen)](https://www.java.com/it/download/)
+[![Tested on Java 12](https://img.shields.io/badge/Tested%20on-Java%2012-ff69b4)](https://www.java.com/it/download/)
+[![Tested on Java 13](https://img.shields.io/badge/Tested%20on-Java%2013-blueviolet)](https://www.java.com/it/download/)
+[![Tested on Java 14](https://img.shields.io/badge/Tested%20on-Java%2014-blue)](https://www.java.com/it/download/)
 
 **Burningwave Core** is a fully indipendent, advanced, free and open source Java frameworks building library useful for scanning class paths, generating classes at runtime, facilitating the use of reflection, scanning the filesystem, executing stringified code and much more...
 This library also contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria based classes search.
