@@ -3,7 +3,7 @@ Burningwave Core [![Tweet](https://img.shields.io/twitter/url/http/shields.io.sv
 
 
 <a href="https://www.burningwave.org/">
-<img src="https://raw.githubusercontent.com/burningwave/core/master/Burningwave-logo.jpg" alt="Burningwave-logo.jpg" height="180px" align="right" valign="top"/>
+<img src="https://raw.githubusercontent.com/burningwave/core/master/Burningwave-logo.jpg" alt="Burningwave-logo.jpg" height="180px" align="right"/>
 </a>
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/badge.svg#)](https://search.maven.org/artifact/org.burningwave/core)
