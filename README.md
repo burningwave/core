@@ -1,5 +1,7 @@
 [![logo](Burningwave-logo.jpg "Burningwave")](https://www.burningwave.org/)
 
+[![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Burningwave%20Core%3A%20a%20%23Java%20frameworks%20building%20library%20with%20an%20original%20classpath%20scan%20engine%20(works%20on%20%23Java8%20%23Java9%20%23Java10%20%23Java11%20%23Java12%20%23Java13%20%23Java14)&url=https://github.com/burningwave/core/wiki)
+
 **Burningwave Core** is a fully indipendent, advanced, free and open source Java frameworks building library that contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria based classes search.
 It’s possible to search classes by every criteria that your immagination can made by using lambda expressions. **Scan engine is highly optimized using direct allocated ByteBuffers to avoid heap saturation; searches are executed in multithreading context and are not affected by “_the issue of the same class loaded by different classloaders_”** (normally if you try to execute "isAssignableFrom" method on a same class loaded from different classloader it returns false).
 
