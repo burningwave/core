@@ -11,9 +11,9 @@ Burningwave Core [![Tweet](https://img.shields.io/twitter/url/http/shields.io.sv
 [![Tested on Java 8](https://img.shields.io/badge/Tested%20on-Java%208-yellowgreen)](https://www.java.com/it/download/)
 [![Tested on Java 9](https://img.shields.io/badge/Tested%20on-Java%209-yellow)](https://www.oracle.com/java/technologies/javase/javase9-archive-downloads.html)
 [![Tested on Java 10](https://img.shields.io/badge/Tested%20on-Java%2010-orange)](https://www.oracle.com/java/technologies/java-archive-javase10-downloads.html)
-[![Tested on Java 11](https://img.shields.io/badge/Tested%20on-Java%2011-red)](https://www.oracle.com/java/technologies/java-archive-javase11-downloads.html)
+[![Tested on Java 11](https://img.shields.io/badge/Tested%20on-Java%2011-red)](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html)
 
-[![Tested on Java 12](https://img.shields.io/badge/Tested%20on-Java%2012-ff69b4)](https://www.java.com/it/download/)
+[![Tested on Java 12](https://img.shields.io/badge/Tested%20on-Java%2012-ff69b4)](https://www.oracle.com/java/technologies/javase-jdk12-downloads.html)
 [![Tested on Java 13](https://img.shields.io/badge/Tested%20on-Java%2013-blueviolet)](https://www.java.com/it/download/)
 [![Tested on Java 14](https://img.shields.io/badge/Tested%20on-Java%2014-blue)](https://www.java.com/it/download/)
 
