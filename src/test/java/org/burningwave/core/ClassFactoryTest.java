@@ -136,25 +136,25 @@ public class ClassFactoryTest extends BaseTest {
 			"javax.xml.soap.SOAPException"
 		);
 		UnitSourceGenerator unitSG2= UnitSourceGenerator.create("packagename").addClass(
-				ClassSourceGenerator.create(
-					TypeDeclarationSourceGenerator.create("ComplexExampleTwo")
-				).addModifier(
-					Modifier.PUBLIC
-				).expands(
-					TypeDeclarationSourceGenerator.create("SOAPPartImpl")
-				).addConstructor(
-					FunctionSourceGenerator.create().addParameter(
-						VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("SOAPMessageImpl"), "parentSoapMsg"),
-						VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(InputStream.class), "inputStream")
-					).addThrowable(
-						TypeDeclarationSourceGenerator.create("SOAPException")				
-					).addBodyCodeRow("super(parentSoapMsg, inputStream);")
-				)
-			).addImport(
-				"org.apache.axis2.saaj.SOAPPartImpl",
-				"org.apache.axis2.saaj.SOAPMessageImpl",
-				"javax.xml.soap.SOAPException"
-			);
+			ClassSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("ComplexExampleTwo")
+			).addModifier(
+				Modifier.PUBLIC
+			).expands(
+				TypeDeclarationSourceGenerator.create("SOAPPartImpl")
+			).addConstructor(
+				FunctionSourceGenerator.create().addParameter(
+					VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("SOAPMessageImpl"), "parentSoapMsg"),
+					VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(InputStream.class), "inputStream")
+				).addThrowable(
+					TypeDeclarationSourceGenerator.create("SOAPException")				
+				).addBodyCodeRow("super(parentSoapMsg, inputStream);")
+			)
+		).addImport(
+			"org.apache.axis2.saaj.SOAPPartImpl",
+			"org.apache.axis2.saaj.SOAPMessageImpl",
+			"javax.xml.soap.SOAPException"
+		);
 		testNotNull(() -> {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory()
 			.buildAndLoadOrUpload(

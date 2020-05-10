@@ -38,6 +38,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -181,7 +182,7 @@ public class ClassFactory implements Component {
 				})
 			);
 			Map<String, Class<?>> classes = new HashMap<>();
-			AtomicReference<Map<String, ByteBuffer>> extraClassPathsForClassLoaderByteCodesAR = new AtomicReference<>();
+			AtomicReference<Map<String, ByteBuffer>> retrievedBytecodes = new AtomicReference<>();
 			for (String className : classesName) {
 				try {
 					classes.put(className, classLoader.loadClass(className));
@@ -196,48 +197,87 @@ public class ClassFactory implements Component {
 							}
 							return ClassLoaders.loadOrUploadByteCode(clsName, finalByteCodes, classLoader);
 						} catch (Throwable innExc) {
-							if (extraClassPathsForClassLoaderByteCodesAR.get() == null) {
-								synchronized (extraClassPathsForClassLoaderByteCodesAR) {
-									if (extraClassPathsForClassLoaderByteCodesAR.get() == null) {
-										try(ByteCodeHunter.SearchResult result = byteCodeHunter.loadInCache(
-											SearchConfig.forPaths(
-												classLoaderClassPaths
-											).deleteFoundItemsOnClose(
-												false
-											).checkFileOptions(
-												byteCodeHunterSearchConfigCheckFileOptions
-											).optimizePaths(
-												true
-											)
-										).find()) {
-											Map<String, ByteBuffer> extraClassPathsForClassLoaderByteCodes = new HashMap<>();
-											result.getItemsFoundFlatMap().values().forEach(javaClass -> {
-												extraClassPathsForClassLoaderByteCodes.put(javaClass.getName(), javaClass.getByteCode());
-											});
-											extraClassPathsForClassLoaderByteCodes.putAll(compiledByteCodes);
-											extraClassPathsForClassLoaderByteCodesAR.set(extraClassPathsForClassLoaderByteCodes);
-										}
-									}
-								}
-							}
 							return ThrowingSupplier.get(() -> {
-								Map<String, ByteBuffer> finalByteCodes = extraClassPathsForClassLoaderByteCodesAR.get();
-								if (additionalByteCodes != null) {
-									finalByteCodes = new HashMap<>(extraClassPathsForClassLoaderByteCodesAR.get());
-									finalByteCodes.putAll(additionalByteCodes);
-								}
-								return ClassLoaders.loadOrUploadByteCode(clsName, extraClassPathsForClassLoaderByteCodesAR.get(), classLoader);
+								return ClassLoaders.loadOrUploadByteCode(clsName, 
+									loadBytecodesFromClassPaths(
+										retrievedBytecodes,
+										classLoaderClassPaths,
+										compiledByteCodes,
+										additionalByteCodes
+									).get(), classLoader
+								);
 							});
 						}
 					};
 					
 				}
 			}
-			logInfo("Classes {} loaded without building by classloader {} ", String.join(", ", classes.keySet()), classLoader);
-			return (clsName, additionalByteCodes) -> classes.get(clsName);
+			logInfo("Classes {} loaded by classloader {} without building", String.join(", ", classes.keySet()), classLoader);
+			return (clsName, additionalByteCodes) -> {
+				try {
+					return classLoader.loadClass(clsName);
+				} catch (Throwable exc) {
+					try {
+						return ClassLoaders.loadOrUploadByteCode(clsName, Optional.ofNullable(additionalByteCodes).orElseGet(HashMap::new), classLoader);
+					} catch (Throwable exc2) {
+						return ThrowingSupplier.get(() -> 
+							ClassLoaders.loadOrUploadByteCode(
+								clsName,
+								loadBytecodesFromClassPaths(
+									retrievedBytecodes, 
+									classLoaderClassPaths,
+									additionalByteCodes
+								).get(), 
+								classLoader
+							)
+						);
+					}
+				}
+			};
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
+	}
+	
+	@SafeVarargs
+	private final AtomicReference<Map<String, ByteBuffer>> loadBytecodesFromClassPaths(
+		AtomicReference<Map<String, ByteBuffer>> retrievedBytecodes,
+		Collection<String> classPaths,
+		Map<String, ByteBuffer>... extraBytecodes
+	) {
+		if (retrievedBytecodes.get() == null) {
+			synchronized (retrievedBytecodes) {
+				if (retrievedBytecodes.get() == null) {
+					try(ByteCodeHunter.SearchResult result = byteCodeHunter.loadInCache(
+						SearchConfig.forPaths(
+							classPaths
+						).deleteFoundItemsOnClose(
+							false
+						).checkFileOptions(
+							byteCodeHunterSearchConfigCheckFileOptions
+						).optimizePaths(
+							true
+						)
+					).find()) {
+						Map<String, ByteBuffer> extraClassPathsForClassLoaderByteCodes = new HashMap<>();
+						result.getItemsFoundFlatMap().values().forEach(javaClass -> {
+							extraClassPathsForClassLoaderByteCodes.put(javaClass.getName(), javaClass.getByteCode());
+						});
+						retrievedBytecodes.set(extraClassPathsForClassLoaderByteCodes);
+					}
+				}
+			}
+		}
+		if (extraBytecodes != null && extraBytecodes.length > 0) {
+			for (Map<String, ByteBuffer> extraBytecode : extraBytecodes) {
+				if (extraBytecode != null) {
+					synchronized(retrievedBytecodes) {
+						retrievedBytecodes.get().putAll(extraBytecode);
+					}
+				}
+			}
+		}
+		return retrievedBytecodes;
 	}
 	
 	public PojoSubTypeRetriever createPojoSubTypeRetriever(PojoSourceGenerator sourceGenerator) {
