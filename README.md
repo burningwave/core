@@ -29,7 +29,7 @@ It’s possible to search classes by every criteria that your immagination can m
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>5.16.3</version>
+    <version>5.16.4</version>
 </dependency>
 ```
 
@@ -37,32 +37,32 @@ It’s possible to search classes by every criteria that your immagination can m
 	<summary><b>... And with (click to expand)</b>:</summary>
 	<br/>
 	<ul><li><b>Gradle Groovy</b>:</li></ul>
-	<pre>implementation 'org.burningwave:core:5.16.3'</pre>
+	<pre>implementation 'org.burningwave:core:5.16.4'</pre>
 	<br/>
 	<ul><li><b>Gradle Kotlin</b>:</li></ul>
-	<pre>implementation("org.burningwave:core:5.16.3")</pre>
+	<pre>implementation("org.burningwave:core:5.16.4")</pre>
 	<br/>
 	<ul><li><b>Scala</b>:</li></ul>
-	<pre>libraryDependencies += "org.burningwave" % "core" % "5.16.3"</pre>
+	<pre>libraryDependencies += "org.burningwave" % "core" % "5.16.4"</pre>
 	<br/>
 	<ul><li><b>Apache Ivy</b>:</li></ul>
-	<pre>&lt;dependency org="org.burningwave" name="core" rev="5.16.3" /&gt;</pre>
+	<pre>&lt;dependency org="org.burningwave" name="core" rev="5.16.4" /&gt;</pre>
 	<br/>
 	<ul><li><b>Groovy Grape</b>:</li></ul>
 	<pre>
 @Grapes(
-  	@Grab(group='org.burningwave', module='core', version='5.16.3')
+  	@Grab(group='org.burningwave', module='core', version='5.16.4')
 )
 	</pre>
 	<br/>
 	<ul><li><b>Leiningen</b>:</li></ul>
-	<pre>[org.burningwave/core "5.16.3"]</pre>
+	<pre>[org.burningwave/core "5.16.4"]</pre>
 	<br/>
 	<ul><li><b>Apache Buildr</b>:</li></ul>
-	<pre>'org.burningwave:core:jar:5.16.3'</pre>
+	<pre>'org.burningwave:core:jar:5.16.4'</pre>
 	<br/>
 	<ul><li><b>PURL</b>:</li></ul>
-	<pre>pkg:maven/org.burningwave/core@5.16.3</pre>
+	<pre>pkg:maven/org.burningwave/core@5.16.4</pre>
 </details>
 
 ### [**Get started**](https://github.com/burningwave/core/wiki)
