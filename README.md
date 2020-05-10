@@ -1,5 +1,5 @@
 <a href="https://www.burningwave.org/">
-<img src="https://www.burningwave.org/" alt="Burningwave logo" height="180px" align="right" />
+<img src="https://www.burningwave.org/" alt="Burningwave-logo.jpg" height="180px" align="right" />
 </a>
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/badge.svg#)](https://search.maven.org/artifact/org.burningwave/core)
