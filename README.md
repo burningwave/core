@@ -24,7 +24,7 @@ It’s possible to search classes by every criteria that your immagination can m
 
 **To include Burningwave Core library in your projects simply use with**:
 
-* **Apache Maven**:
+**Apache Maven**:
 
 ```xml
 <dependency>
