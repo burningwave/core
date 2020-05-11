@@ -135,7 +135,6 @@
 				</excludes>
 			</resource>
 		</resources>
-		<!--
 		<testResources>
 			<testResource>
 				<directory>${project.basedir}/src/test/java</directory>
@@ -147,7 +146,6 @@
 				<directory>${project.basedir}/src/test/resources</directory>
 			</testResource>
 		</testResources>
-		  -->
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
