@@ -252,6 +252,7 @@
 					<javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
 					<encoding>UTF-8</encoding>
 					<source>${project.jdk.version}</source>
+					<failOnError>false</failOnError>
 				</configuration>
 				<executions>
 					<execution>
