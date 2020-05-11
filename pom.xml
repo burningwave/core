@@ -263,6 +263,17 @@
 					</execution>
 				</executions>
 			</plugin>
+			<!-- Generate coveralls reports from CI server. -->
+            <plugin>
+                <groupId>org.eluder.coveralls</groupId>
+                <artifactId>coveralls-maven-plugin</artifactId>
+                <version>4.1.0</version>
+                <configuration>
+                    <sourceDirectories>
+                        <sourceDirectory>${project.basedir}/burningwave-core-dep/src/precompiled/java</sourceDirectory>
+                    </sourceDirectories>
+                </configuration>
+            </plugin>
 		</plugins>
 	</build>
 	<distributionManagement>
