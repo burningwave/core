@@ -46,8 +46,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- Can be changed with one of this values: 9, 10, 11, 12, 13, 14 -->
 		<project.jdk.version>8</project.jdk.version>
-		<skipTests>false</skipTests>
-		<project.test.includes>**/*Test.java</project.test.includes>
+		<!-- <skipTests>false</skipTests> -->
+		<project.test.includes>**/AllExceptHeavyTestsSuite.java</project.test.includes>
 		<!-- 
 		<project.test.excludes>**/*Test.java</project.test.excludes>
 		 -->
@@ -164,11 +164,9 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.9</version>
 				<configuration>
-					<!-- 
-					<excludes>
+<!-- 					<excludes>
 						<exclude>${project.test.excludes}</exclude>
-					</excludes>
-					 -->
+					</excludes> -->
 					<includes>
 						<include>${project.test.includes}</include>
 					</includes>
