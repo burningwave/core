@@ -6,7 +6,7 @@ Burningwave Core [![Tweet](https://img.shields.io/twitter/url/http/shields.io.sv
 <img src="https://raw.githubusercontent.com/burningwave/core/master/Burningwave-logo.jpg" alt="Burningwave-logo.jpg" height="180px" align="right"/>
 </a>
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/badge.svg#)](https://search.maven.org/artifact/org.burningwave/core)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/badge.svg#)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![Supported JVM](https://img.shields.io/badge/Supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014-red)](https://openjdk.java.net/)
 
 **Tested on Java versions ranging from 8 to 14, Burningwave Core** is a fully indipendent, advanced, free and open source Java frameworks building library useful for scanning class paths, generating classes at runtime, facilitating the use of reflection, scanning the filesystem, executing stringified code and much more...
