@@ -46,11 +46,9 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- Can be changed with one of this values: 9, 10, 11, 12, 13, 14 -->
 		<project.jdk.version>8</project.jdk.version>
-		<!-- <skipTests>false</skipTests> -->
-		<project.test.includes>**/AllExceptHeavyTestsSuite.java</project.test.includes>
-		<!-- 
+		<skipTests>true</skipTests>
+		<project.test.includes />
 		<project.test.excludes>**/*Test.java</project.test.excludes>
-		 -->
 		<project.generated.artifacts.prefix>bw</project.generated.artifacts.prefix>
 	</properties>
 
@@ -162,9 +160,9 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.9</version>
 				<configuration>
-<!-- 					<excludes>
+					<excludes>
 						<exclude>${project.test.excludes}</exclude>
-					</excludes> -->
+					</excludes>
 					<includes>
 						<include>${project.test.includes}</include>
 					</includes>
@@ -254,7 +252,6 @@
 					<javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
 					<encoding>UTF-8</encoding>
 					<source>${project.jdk.version}</source>
-					<failOnError>false</failOnError>
 				</configuration>
 				<executions>
 					<execution>
@@ -265,17 +262,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- Generate coveralls reports from CI server. -->
-            <plugin>
-                <groupId>org.eluder.coveralls</groupId>
-                <artifactId>coveralls-maven-plugin</artifactId>
-                <version>4.1.0</version>
-                <configuration>
-                    <sourceDirectories>
-                        <sourceDirectory>${project.basedir}/burningwave-core-dep/src/precompiled/java</sourceDirectory>
-                    </sourceDirectories>
-                </configuration>
-            </plugin>
 		</plugins>
 	</build>
 	<distributionManagement>
