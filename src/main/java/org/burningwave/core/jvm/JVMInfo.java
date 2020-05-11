@@ -59,8 +59,15 @@ public class JVMInfo implements Component {
         if(version.startsWith("1.")) {
         	version = version.substring(2, 3);
         } else {
-        	int dot = version.indexOf(".");
-        	if(dot != -1) { version = version.substring(0, dot); }
+        	int separatorIdx = version.indexOf(".");
+        	if(separatorIdx != -1) {
+        		version = version.substring(0, separatorIdx);
+        	} else {
+        		separatorIdx = version.indexOf("-");
+        		if(separatorIdx != -1) {
+            		version = version.substring(0, separatorIdx);
+            	}
+        	}
         }
         this.version = Integer.parseInt(version);
         boolean is64Bit = false;
