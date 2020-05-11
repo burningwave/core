@@ -160,9 +160,11 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.9</version>
 				<configuration>
+					<!-- 
 					<excludes>
 						<exclude>${project.test.excludes}</exclude>
 					</excludes>
+					 -->
 					<includes>
 						<include>${project.test.includes}</include>
 					</includes>
