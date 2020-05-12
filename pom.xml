@@ -325,12 +325,9 @@
 			</build>
 		</profile>
 		<profile>
-			<id>release-sign-artifacts</id>
+			<id>run-coveralls</id>
 			<activation>
-				<property>
-					<name>runCoveralls</name>
-					<value>true</value>
-				</property>
+				<activeByDefault>false</activeByDefault>
 			</activation>
 			<build>
 				<plugins>
