@@ -34,4 +34,4 @@ jobs:
         java-version: 14
         java-package: jdk  
     - name: Build & test
-      run: mvn -B package -DskipTests=false --file pom.xml
+      run: mvn -B package -Dproject.jdk.version=14 -DskipTests=false --file pom.xml
