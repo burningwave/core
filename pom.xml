@@ -265,31 +265,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- Generate coveralls reports from CI server. -->
-            <plugin>
-                <groupId>org.eluder.coveralls</groupId>
-                <artifactId>coveralls-maven-plugin</artifactId>
-                <version>4.3.0</version>
-                <configuration>
-                    <sourceDirectories>
-                        <sourceDirectory>${project.basedir}/src/test/java</sourceDirectory>
-                        <sourceDirectory>${project.basedir}/src/test/resources</sourceDirectory>
-                    </sourceDirectories>
-                </configuration>
-            </plugin>
-            <plugin>
-			    <groupId>org.jacoco</groupId>
-			    <artifactId>jacoco-maven-plugin</artifactId>
-			    <version>0.7.6.201602180812</version>
-			    <executions>
-			        <execution>
-			            <id>prepare-agent</id>
-			            <goals>
-			                <goal>prepare-agent</goal>
-			            </goals>
-			        </execution>
-			    </executions>
-			</plugin>
 		</plugins>
 	</build>
 	
@@ -349,5 +324,43 @@
 				</plugins>
 			</build>
 		</profile>
+		<profile>
+			<id>release-sign-artifacts</id>
+			<activation>
+				<property>
+					<name>runCoveralls</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<!-- Generate coveralls reports from CI server. -->
+		            <plugin>
+		                <groupId>org.eluder.coveralls</groupId>
+		                <artifactId>coveralls-maven-plugin</artifactId>
+		                <version>4.3.0</version>
+		                <configuration>
+		                    <sourceDirectories>
+		                        <sourceDirectory>${project.basedir}/src/test/java</sourceDirectory>
+		                        <sourceDirectory>${project.basedir}/src/test/resources</sourceDirectory>
+		                    </sourceDirectories>
+		                </configuration>
+		            </plugin>
+					<plugin>
+					    <groupId>org.jacoco</groupId>
+					    <artifactId>jacoco-maven-plugin</artifactId>
+					    <version>0.7.6.201602180812</version>
+					    <executions>
+					        <execution>
+					            <id>prepare-agent</id>
+					            <goals>
+					                <goal>prepare-agent</goal>
+					            </goals>
+					        </execution>
+					    </executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>		
 	</profiles>
 </project>
