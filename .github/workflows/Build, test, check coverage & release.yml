@@ -18,4 +18,4 @@ jobs:
         java-version: 1.8
         java-package: jdk  
     - name: Build & test
-      run: mvn -B package -DskipTests=false -DjavadocExecutable.relativePath=../bin/javadoc --file pom.xml
+      run: mvn -B package -DskipTests=true -DjavadocExecutable.relativePath=../bin/javadoc --file pom.xml
