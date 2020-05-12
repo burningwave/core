@@ -40,7 +40,7 @@ jobs:
         java-version: 9
         java-package: jdk  
     - name: Build & test
-      run: mvn -B package -Dproject.jdk.version=9 -DskipTests=false --file pom.xml
+      run: mvn -B package test -Dproject.jdk.version=9 -DskipTests=false --file pom.xml
 
   build-and-test-with-Java-10:
     needs: [authorize]
@@ -53,7 +53,7 @@ jobs:
         java-version: 10
         java-package: jdk  
     - name: Build & test
-      run: mvn -B package -Dproject.jdk.version=10 -DskipTests=false --file pom.xml
+      run: mvn -B package test -Dproject.jdk.version=10 -DskipTests=false --file pom.xml
   
   build-and-test-with-Java-11:
     needs: [authorize]
@@ -66,7 +66,7 @@ jobs:
         java-version: 11
         java-package: jdk  
     - name: Build & test
-      run: mvn -B package -Dproject.jdk.version=11 -DskipTests=false --file pom.xml
+      run: mvn -B package test -Dproject.jdk.version=11 -DskipTests=false --file pom.xml
   
   build-and-test-with-Java-12:
     needs: [authorize]
@@ -79,7 +79,7 @@ jobs:
         java-version: 12
         java-package: jdk  
     - name: Build & test
-      run: mvn -B package -Dproject.jdk.version=10 -DskipTests=false --file pom.xml
+      run: mvn -B package test -Dproject.jdk.version=10 -DskipTests=false --file pom.xml
   
   build-and-test-with-Java-13:
     needs: [authorize]
@@ -92,7 +92,7 @@ jobs:
         java-version: 13
         java-package: jdk  
     - name: Build & test
-      run: mvn -B package -Dproject.jdk.version=13 -DskipTests=false --file pom.xml
+      run: mvn -B package test -Dproject.jdk.version=13 -DskipTests=false --file pom.xml
   
   build-and-test-with-Java-14:
     needs: [authorize]
@@ -105,7 +105,7 @@ jobs:
         java-version: 14
         java-package: jdk  
     - name: Build & test
-      run: mvn -B package -Dproject.jdk.version=14 -DskipTests=false --file pom.xml
+      run: mvn -B package test -Dproject.jdk.version=14 -DskipTests=false --file pom.xml
  
   coverage:
     name: Coverage
