@@ -42,8 +42,8 @@ jobs:
           server-password: MAVEN_PASSWORD
       - name: Publish to the Maven Central Repository
         run: |
-          mvn -B release:prepare -DskipTests=true -DjavadocExecutable.relativePath=../bin/javadoc -Dgpg.passphrase=${{ secrets.gpg_passphrase }}
-          mvn -B release:perform -DskipTests=true -DjavadocExecutable.relativePath=../bin/javadoc -Dgpg.passphrase=${{ secrets.gpg_passphrase }}
+          mvn -B -DjavadocExecutable.relativePath=../bin/javadoc -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} release:prepare
+          mvn -B -DjavadocExecutable.relativePath=../bin/javadoc -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} release:perform
         env:
           MAVEN_USERNAME: ${{ secrets.mvn_server_user }}
           MAVEN_PASSWORD: ${{ secrets.mvn_server_psw }}
