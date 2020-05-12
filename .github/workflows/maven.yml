@@ -1,0 +1,55 @@
+name: Build, test & check coverage 
+
+on:
+  watch:
+    types: [started]
+
+jobs:
+  authorize: 
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: octokit/request-action@v2.0.0
+      with:
+        route: GET /repos/:repository/collaborators/${{ github.actor }}
+        repository: ${{ github.repository }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+  build-and-test-with-Java-8:
+    needs: [authorize]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK 8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+        java-package: jdk  
+    - name: Build & test
+      run: mvn -B package -DskipTests=false -DjavadocExecutable.relativePath=../bin/javadoc --file pom.xml
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Java for publishing to Maven Central Repository
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+      - name: Publish to the Maven Central Repository
+        run: mvn -B deploy
+        env:
+          MAVEN_USERNAME: ${{ secrets.mvn_server_user }}
+          MAVEN_PASSWORD: ${{ secrets.mvn_server_psw }}
+      - name: Set up Java for publishing to GitHub Packages
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Publish to GitHub Packages
+        run: mvn -B deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
