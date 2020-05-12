@@ -104,4 +104,4 @@ jobs:
           java-version: 8
           architecture: x64
       - name: Build project
-        run: mvn clean test -DskipTests=false jacoco:report coveralls:report -DrepoToken=XUX72WtTy4yJme33nIKqC4rfHXjhk9wrE
+        run: mvn clean test -DskipTests=false jacoco:report coveralls:report -DrepoToken=${{ secrets.coveralls }}
