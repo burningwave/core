@@ -36,7 +36,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.InputStream;
-import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
@@ -51,7 +50,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
@@ -491,15 +489,8 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 					Lookup classLoaderConsulter = lowLevelObjectsHandler.consulterRetriever.apply(ClassLoader.class);
 					MethodType methodType = MethodType.methodType(Package.class, String.class);
 					MethodHandle methodHandle = classLoaderConsulter.findSpecial(ClassLoader.class, "getDefinedPackage", methodType, ClassLoader.class);
-					BiFunction<ClassLoader, String, Package> packageRetriever = (BiFunction<ClassLoader, String, Package>)LambdaMetafactory.metafactory(
-						classLoaderConsulter, "apply",
-						MethodType.methodType(BiFunction.class),
-						methodHandle.type().generic(),
-						methodHandle,
-						methodHandle.type()
-					).getTarget().invokeExact();
 					lowLevelObjectsHandler.packageRetriever = (classLoader, object, packageName) ->
-						packageRetriever.apply(classLoader, packageName);
+						(Package)methodHandle.invokeExact(classLoader, packageName);
 				} catch (Throwable exc) {
 					throw Throwables.toRuntimeException(exc);
 				}
