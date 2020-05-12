@@ -64,7 +64,7 @@ public class FileSystemScannerTest extends BaseTest {
 		testNotEmpty(() -> {
 			componentSupplier.getFileSystemScanner().scan(config);
 			return allClassesByteCodeFounds;
-		}, true);
+		});
 		logInfo("class file founds: " + classFileFounds.size());
 		logInfo("class zip entry founds: " + classZipEntryFounds.size());
 		
