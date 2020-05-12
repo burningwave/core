@@ -42,11 +42,12 @@ jobs:
           server-password: MAVEN_PASSWORD
       - name: Publish to the Maven Central Repository
         run: |
-          mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} release:prepare
+          mvn -B -Dproject.jdk.version=8 -DskipTests=true release:prepare
           mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} release:perform
         env:
           MAVEN_USERNAME: ${{ secrets.mvn_server_user }}
           MAVEN_PASSWORD: ${{ secrets.mvn_server_psw }}
+          GPG_PASSPHRASE: ${{ secrets.gpg_passphrase }}
       - name: Set up Java for publishing to GitHub Packages
         uses: actions/setup-java@v1
         with:
