@@ -18,3 +18,26 @@ jobs:
         java-package: jdk  
     - name: Build & test
       run: mvn -B package -DskipTests=true -DjavadocExecutable.relativePath=../bin/javadoc --file pom.xml
+ 
+  release:
+    runs-on: ubuntu-latest
+    if: github.actor == github.event.repository.owner.login
+    steps:
+    - uses: qcastel/github-actions-maven/actions/release@master
+      with:
+        release-branch-name: "master"
+
+        gpg-enabled: "true"
+        gpg-key-id: ${{ secrets.GITHUB_GPG_KEY_ID }}
+        gpg-key: ${{ secrets.GITHUB_GPG_KEY }}
+
+        maven-repo-server-id: ${{ secrets.mvn_server_id }}
+        maven-repo-server-username: ${{ secrets.mvn_server_user }}
+        maven-repo-server-password: ${{ secrets.mvn_server_psw }}
+
+        maven-args: "-DskipTests=true -DjavadocExecutable.relativePath=../bin/javadoc
+
+        git-release-bot-name: "roberto.gentili"
+        git-release-bot-email: "roberto.gentili.1980@gmail.com"
+        
+        access-token: ${{ secrets.GITHUB_ACCESS_TOKEN }}
