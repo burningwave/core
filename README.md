@@ -8,7 +8,7 @@ Burningwave Core [![Tweet](https://img.shields.io/twitter/url/http/shields.io.sv
 
 
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/5)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
-[![Supported JVM](https://img.shields.io/badge/Supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014-green)](https://github.com/burningwave/core/actions/runs/102346857)
+[![Supported JVM](https://img.shields.io/badge/Supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014-green)](https://github.com/burningwave/core/actions/runs/102467904)
 
 [![Coverage Status](https://coveralls.io/repos/github/burningwave/core/badge.svg?branch=master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
