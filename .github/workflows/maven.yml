@@ -36,14 +36,14 @@ jobs:
       - name: Set up Java for publishing to Maven Central Repository
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: 14
           server-id: ossrh
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
       - name: Publish to the Maven Central Repository
         run: |
-          mvn -B -DjavadocExecutable.relativePath=../bin/javadoc -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} release:prepare
-          mvn -B -DjavadocExecutable.relativePath=../bin/javadoc -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} release:perform
+          mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} release:prepare
+          mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} release:perform
         env:
           MAVEN_USERNAME: ${{ secrets.mvn_server_user }}
           MAVEN_PASSWORD: ${{ secrets.mvn_server_psw }}
