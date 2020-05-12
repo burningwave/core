@@ -92,7 +92,7 @@ jobs:
     - name: Build & test
       run: mvn -B package -Dproject.jdk.version=14 -DskipTests=true --file pom.xml
  
-   coverage:
+  coverage:
     name: Coverage
     runs-on: ubuntu-18.04
     needs: [build-and-test-on-Java-8, build-and-test-on-Java-9, build-and-test-on-Java-10, build-and-test-on-Java-11, build-and-test-on-Java-12, build-and-test-on-Java-13, build-and-test-on-Java-14]
