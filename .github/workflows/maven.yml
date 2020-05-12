@@ -1,4 +1,4 @@
-name: Build, test & check coverage 
+name: Build, test & check coverage 2
 
 on:
   watch:
@@ -28,7 +28,7 @@ jobs:
         java-package: jdk  
     - name: Build & test
       run: mvn -B package -DskipTests=false -DjavadocExecutable.relativePath=../bin/javadoc --file pom.xml
-jobs:
+
   publish:
     runs-on: ubuntu-latest
     steps:
