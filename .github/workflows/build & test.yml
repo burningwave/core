@@ -17,6 +17,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install JDK and build project
-      run: |
-        . ./.github/scripts/install-jdk.sh --feature 14 --os linux-x64
-        ./mvnw -B package --file pom.xml
+      run: . ./.github/scripts/install-jdk.sh --feature 14 --os linux-x64
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml
