@@ -1,0 +1,21 @@
+name: Build, test, check coverage & release
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+    
+  build-and-test-with-Java-8:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK 8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+        java-package: jdk  
+    - name: Build & test
+      run: mvn -B package -DskipTests=false -DjavadocExecutable.relativePath=../bin/javadoc --file pom.xml
