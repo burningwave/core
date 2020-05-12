@@ -23,6 +23,16 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 	}
 	
 	@Override
+	public void setLoggingLevelFlags(Class<?> cls, Integer flags) {
+		getLoggerEntry(cls.getName()).getValue().set(flags);
+	}
+
+	@Override
+	public Integer getLoggingLevelFlags(Class<?> cls) {
+		return getLoggerEntry(cls.getName()).getValue().flags;
+	}
+	
+	@Override
 	public void addLoggingLevelFor(LoggingLevel logLevel, String... classNames) {
 		for (String className : classNames) {
 			getLoggerEntry(className).getValue().add(logLevel.flags);

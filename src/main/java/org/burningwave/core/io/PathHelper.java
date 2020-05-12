@@ -29,6 +29,7 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -237,7 +238,8 @@ public class PathHelper implements Component {
 	private Collection<String> addPaths(String groupName, Collection<String> paths) {
 		if (paths != null) {
 			Collection<String> pathGroup = getOrCreatePathGroup(groupName);
-			FileSystemItem.disableLog();
+			Integer loggingLevelFlags = ManagedLoggersRepository.getLoggingLevelFlags(FileSystemItem.class);
+			ManagedLoggersRepository.disableLogging(FileSystemItem.class);
 			for (String path : paths) {
 				if (path.matches(PATH_REGEX.pattern())) {
 					Map<Integer, List<String>> groupMap = Strings.extractAllGroups(PATH_REGEX, path);
@@ -266,7 +268,7 @@ public class PathHelper implements Component {
 					}
 				}
 			}
-			FileSystemItem.enableLog();
+			ManagedLoggersRepository.setLoggingLevelFlags(FileSystemItem.class, loggingLevelFlags);
 			return pathGroup;
 		} else {
 			throw Throwables.toRuntimeException("classPaths parameter is null");
@@ -301,7 +303,8 @@ public class PathHelper implements Component {
 	) {
 		Collection<T> files = new HashSet<>();
 		if (resourcesRelativePaths != null && resourcesRelativePaths.length > 0) {
-			FileSystemItem.disableLog();
+			Integer loggingLevelFlags = ManagedLoggersRepository.getLoggingLevelFlags(FileSystemItem.class);
+			ManagedLoggersRepository.disableLogging(FileSystemItem.class);
 			for (String resourceRelativePath : resourcesRelativePaths) {
 				getAllPaths().stream().forEach((path) -> {
 					FileSystemItem fileSystemItem = FileSystemItem.ofPath(path + "/" + resourceRelativePath);
@@ -310,7 +313,7 @@ public class PathHelper implements Component {
 					}
 				});
 			}
-			FileSystemItem.enableLog();
+			ManagedLoggersRepository.setLoggingLevelFlags(FileSystemItem.class, loggingLevelFlags);
 		}
 		return files;
 	}

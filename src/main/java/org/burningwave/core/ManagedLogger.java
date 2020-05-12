@@ -46,6 +46,14 @@ public interface ManagedLogger {
 		return (T) this;
 	}
 	
+	public default Integer getLoggingLevelValue() {
+		return ManagedLoggersRepository.getLoggingLevelFlags(this.getClass());
+	}
+	
+	public default void setLoggingLevelValue(Integer flag) {
+		ManagedLoggersRepository.setLoggingLevelFlags(this.getClass(), flag);
+	}
+	
 	default void logError(String message, Throwable exc) {
 		ManagedLoggersRepository.logError(this.getClass(), message, exc);
 	}
@@ -91,6 +99,10 @@ public interface ManagedLogger {
 		
 		public void setLoggingLevelFor(LoggingLevel logLevel, String... classNames);
 		
+		public void setLoggingLevelFlags(Class<?> cls, Integer flag);
+
+		public Integer getLoggingLevelFlags(Class<?> cls);
+
 		public void addLoggingLevelFor(LoggingLevel logLevel, String... classNames);
 		
 		public void removeLoggingLevelFor(LoggingLevel logLevel, String... classNames);

@@ -34,6 +34,16 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	}
 	
 	@Override
+	public void setLoggingLevelFlags(Class<?> cls, Integer flags) {
+		getLoggerEnabledFlag(cls.getName()).set(flags);
+	}
+
+	@Override
+	public Integer getLoggingLevelFlags(Class<?> cls) {
+		return getLoggerEnabledFlag(cls.getName()).flags;
+	}
+	
+	@Override
 	public void addLoggingLevelFor(LoggingLevel logLevel, String... classNames) {
 		for (String className : classNames) {
 			getLoggerEnabledFlag(className).add(logLevel.flags);
