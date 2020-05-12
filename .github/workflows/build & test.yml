@@ -8,7 +8,7 @@ on:
 
 jobs:
     
-  build-and-test-on-Java-8:
+  build-and-test-with-Java-8:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -20,7 +20,7 @@ jobs:
     - name: Build & test
       run: mvn -B package -DskipTests=false -DjavadocExecutable.relativePath=../bin/javadoc --file pom.xml
 
-  build-and-test-on-Java-9:
+  build-and-test-with-Java-9:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -32,7 +32,7 @@ jobs:
     - name: Build & test
       run: mvn -B package -Dproject.jdk.version=9 -DskipTests=false --file pom.xml
 
-  build-and-test-on-Java-10:
+  build-and-test-with-Java-10:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -44,7 +44,7 @@ jobs:
     - name: Build & test
       run: mvn -B package -Dproject.jdk.version=10 -DskipTests=false --file pom.xml
   
-  build-and-test-on-Java-11:
+  build-and-test-with-Java-11:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -56,7 +56,7 @@ jobs:
     - name: Build & test
       run: mvn -B package -Dproject.jdk.version=11 -DskipTests=false --file pom.xml
   
-  build-and-test-on-Java-12:
+  build-and-test-with-Java-12:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -68,7 +68,7 @@ jobs:
     - name: Build & test
       run: mvn -B package -Dproject.jdk.version=10 -DskipTests=false --file pom.xml
   
-  build-and-test-on-Java-13:
+  build-and-test-with-Java-13:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -80,7 +80,7 @@ jobs:
     - name: Build & test
       run: mvn -B package -Dproject.jdk.version=13 -DskipTests=false --file pom.xml
   
-  build-and-test-on-Java-14:
+  build-and-test-with-Java-14:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -95,7 +95,7 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
-    needs: [build-and-test-on-Java-8, build-and-test-on-Java-9, build-and-test-on-Java-10, build-and-test-on-Java-11, build-and-test-on-Java-12, build-and-test-on-Java-13, build-and-test-on-Java-14]
+    needs: [build-and-test-with-Java-8, build-and-test-with-Java-9, build-and-test-with-Java-10, build-and-test-with-Java-11, build-and-test-with-Java-12, build-and-test-with-Java-13, build-and-test-with-Java-14]
     if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v2
