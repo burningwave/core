@@ -47,7 +47,7 @@
 		<!-- Can be changed with one of this values: 9, 10, 11, 12, 13, 14 -->
 		<project.jdk.version>8</project.jdk.version>
 		<skipTests>true</skipTests>
-		<project.test.includes />
+		<project.test.includes>**/AllExceptHeavyTestsSuite.java</project.test.includes>
 		<project.test.excludes>**/*Test.java</project.test.excludes>
 		<project.generated.artifacts.prefix>bw</project.generated.artifacts.prefix>
 	</properties>
@@ -249,9 +249,9 @@
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>3.1.1</version>
 				<configuration>
-					<!--
-					<javadocExecutable>${java.home}/../bin/javadoc</javadocExecutable>
-					-->
+					<!-- 
+					<javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
+					 -->
 					<encoding>UTF-8</encoding>
 					<source>${project.jdk.version}</source>
 				</configuration>
