@@ -504,8 +504,9 @@ public class ClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getClasses(),
-			true
+			(result) ->
+				result.getClasses(),
+			false
 		);
 	}
 	
@@ -747,7 +748,7 @@ public class ClassHunterTest extends BaseTest {
 			),
 			(result) ->
 				result.getClasses(),
-			true
+			false
 		);
 	}
 	
@@ -1025,8 +1026,9 @@ public class ClassHunterTest extends BaseTest {
 					)
 				).isolateClassLoader()
 			),
-			(result) -> result.getClasses(),
-			true
+			(result) ->
+				result.getClasses(),
+			false
 		);
 	}
 	
@@ -1046,7 +1048,7 @@ public class ClassHunterTest extends BaseTest {
 //			),
 //			(result) ->
 //				result.getItemsFound(),
-//			true
+//			false
 //		);
 //	}
 	

@@ -128,7 +128,7 @@ public class FileSystemItemTest extends BaseTest {
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/../../src/test/external-resources/libs-for-test.zip"
 		).getAllChildren((fileSystemItem) -> fileSystemItem.getName().endsWith(".class")),
-		true);
+		false);
 	}
 	
 	@Test
