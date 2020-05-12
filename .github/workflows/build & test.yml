@@ -17,6 +17,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install JDK and build project
-      run:
+      run: |
         . ./.github/scripts/install-jdk.sh --feature ea --os linux-x64
         ./mvnw -B package --file pom.xml
