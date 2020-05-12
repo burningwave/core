@@ -27,7 +27,7 @@ jobs:
         java-version: 1.8
         java-package: jdk  
     - name: Build & test
-      run: mvn -B package -DskipTests=false -DjavadocExecutable.relativePath=../bin/javadoc --file pom.xml
+      run: mvn -B package -DskipTests=true -DjavadocExecutable.relativePath=../bin/javadoc --file pom.xml
 
   publish:
     runs-on: ubuntu-latest
@@ -41,7 +41,7 @@ jobs:
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
       - name: Publish to the Maven Central Repository
-        run: mvn -B deploy -DskipTests=false -DjavadocExecutable.relativePath=../bin/javadoc
+        run: mvn -B deploy -DskipTests=true -DjavadocExecutable.relativePath=../bin/javadoc
         env:
           MAVEN_USERNAME: ${{ secrets.mvn_server_user }}
           MAVEN_PASSWORD: ${{ secrets.mvn_server_psw }}
