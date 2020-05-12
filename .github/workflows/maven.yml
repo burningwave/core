@@ -42,6 +42,8 @@ jobs:
           server-password: MAVEN_PASSWORD
       - name: Publish to the Maven Central Repository
         run: |
+          git config user.name "${{ github.actor.login }}"
+          git config user.email "info@burningwave.org"
           mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} release:prepare
           mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} release:perform
         env:
