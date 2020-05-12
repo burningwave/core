@@ -1,15 +1,14 @@
 name: Build, test, check coverage & release
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  watch:
+    types: [started]
 
 jobs:
     
   build-and-test-with-Java-8:
     runs-on: ubuntu-latest
+    if: github.actor == github.event.repository.owner.login
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 8
