@@ -16,7 +16,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
-  with-Java-8:
+  execute-with-Java-8:
     needs: [ask-for-authorization]
     runs-on: ubuntu-latest
     steps:
@@ -29,8 +29,8 @@ jobs:
     - name: Build & test
       run: mvn -B clean package -DskipTests=false -DjavadocExecutable.relativePath=../bin/javadoc --file pom.xml
 
-  with-Java-9:
-    needs: [with-Java-8]
+  execute-with-Java-9:
+    needs: [execute-with-Java-8]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -42,8 +42,8 @@ jobs:
     - name: Build & test
       run: mvn -B clean package -Dproject.jdk.version=9 -DskipTests=false --file pom.xml
 
-  with-Java-10:
-    needs: [with-Java-9]
+  execute-with-Java-10:
+    needs: [execute-with-Java-9]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -55,8 +55,8 @@ jobs:
     - name: Build & test
       run: mvn -B clean package -Dproject.jdk.version=10 -DskipTests=false --file pom.xml
   
-  with-Java-11:
-    needs: [with-Java-10]
+  execute-with-Java-11:
+    needs: [execute-with-Java-10]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -68,8 +68,8 @@ jobs:
     - name: Build & test
       run: mvn -B clean package -Dproject.jdk.version=11 -DskipTests=false --file pom.xml
   
-  with-Java-12:
-    needs: [with-Java-11]
+  execute-with-Java-12:
+    needs: [execute-with-Java-11]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -81,8 +81,8 @@ jobs:
     - name: Build & test
       run: mvn -B clean package -Dproject.jdk.version=12 -DskipTests=false --file pom.xml
   
-  with-Java-13:
-    needs: [with-Java-12]
+  execute-with-Java-13:
+    needs: [execute-with-Java-12]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -94,8 +94,8 @@ jobs:
     - name: Build & test
       run: mvn -B clean package -Dproject.jdk.version=13 -DskipTests=false --file pom.xml
   
-  with-Java-14:
-    needs: [with-Java-13]
+  execute-with-Java-14:
+    needs: [execute-with-Java-13]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -110,7 +110,7 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
-    needs: [with-Java-14]
+    needs: [execute-with-Java-14]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v1
