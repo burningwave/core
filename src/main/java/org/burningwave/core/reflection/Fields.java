@@ -32,7 +32,9 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 
 import java.lang.reflect.Field;
+
 import org.burningwave.core.classes.FieldCriteria;
+import org.burningwave.core.function.ThrowingSupplier;
 
 public class Fields extends MemberHelper<Field> {
 
@@ -42,6 +44,11 @@ public class Fields extends MemberHelper<Field> {
 	
 	public static Fields create() {
 		return new Fields();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T> T get(Object target, String fieldName) {
+		return ThrowingSupplier.get(() -> (T)findOneAndMakeItAccessible(target, fieldName, true).get(target));
 	}
 	
 	public Field findOneAndMakeItAccessible(Object target, String fieldName) {
