@@ -19,4 +19,4 @@ jobs:
     - name: Install JDK and build project
       run:
         . ./.github/scripts/install-jdk.sh --feature ea --os linux-x64
-        mvn -B package --file pom.xml
+        ./mvnw -B package --file pom.xml
