@@ -66,4 +66,3 @@ jobs:
         env:
           MAVEN_USERNAME: ${{ secrets.nexus_username }}
           MAVEN_PASSWORD: ${{ secrets.nexus_password }}
-
