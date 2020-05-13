@@ -1,4 +1,4 @@
-name: Build, test & check coverage 2
+name: release
 
 #on:
   #watch:
