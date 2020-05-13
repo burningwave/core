@@ -12,7 +12,6 @@ jobs:
     
   build-and-test-with-Java-8:
     name: Build and test with Java 8
-    needs: [ask-for-authorization]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
