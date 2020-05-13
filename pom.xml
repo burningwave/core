@@ -208,7 +208,7 @@
 					<pushChanges>false</pushChanges>
 					<mavenExecutorId>forked-path</mavenExecutorId>
 					<arguments>-Dgpg.passphrase=${gpg.passphrase}</arguments>
-					<tagNameFormat>${project.artifactId}-${project.version}-@{project.version}</tagNameFormat>
+					<tagNameFormat>${project.artifactId}-${project.version}</tagNameFormat>
 				</configuration>
 				<dependencies>
 					<dependency>
