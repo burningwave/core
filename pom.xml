@@ -4,7 +4,7 @@
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
 
-	<version>5.16.8-SNAPSHOT</version>
+	<version>5.16.9-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>Burningwave Core</name>
 	<url>https://www.burningwave.org/</url>
@@ -208,6 +208,7 @@
 					<pushChanges>false</pushChanges>
 					<mavenExecutorId>forked-path</mavenExecutorId>
 					<arguments>-Dgpg.passphrase=${gpg.passphrase}</arguments>
+					<tagNameFormat>${project.artifactId}-${project.version}-@{project.version}</tagNameFormat>
 				</configuration>
 				<dependencies>
 					<dependency>
