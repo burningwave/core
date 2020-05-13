@@ -34,16 +34,16 @@ jobs:
         with:
           java-version: 14
           server-id: ossrh
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
+          server-username: ${{ secrets.nexus_username }}
+          server-password: ${{ secrets.nexus_password }}
       - name: Publish to the Maven Central Repository
         run: |
           export GPG_TTY=$(tty)
           echo "${{ secrets.gpg_private_key }}" | gpg --batch --import
           git config user.name "Roberto Gentili"
           git config user.email "roberto.gentili.1980@gmail.com"
-          mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} -Dgpg.keyname=${{ secrets.gpg_key_name}} release:prepare
-          mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} -Dgpg.keyname=${{ secrets.gpg_key_name}} release:perform
+          mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} -Dgpg.keyname=${{ secrets.gpg_key_id }} release:prepare
+          mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} -Dgpg.keyname=${{ secrets.gpg_key_id }} release:perform
         env:
           MAVEN_USERNAME: ${{ secrets.mvn_server_user }}
           MAVEN_PASSWORD: ${{ secrets.mvn_server_psw }}
