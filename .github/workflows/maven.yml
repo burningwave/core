@@ -45,9 +45,9 @@ jobs:
         run: |
           git config user.name "Roberto Gentili"
           git config user.email "roberto.gentili.1980@gmail.com"
-          gpg --import < ${{ secrets.gpg_private_key }}
-          mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} release:prepare
-          mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} release:perform
+          #gpg --import < ${{ secrets.gpg_private_key }}
+          mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphras }} release:prepare
+          mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphras }} release:perform
         env:
           MAVEN_USERNAME: ${{ secrets.mvn_server_user }}
           MAVEN_PASSWORD: ${{ secrets.mvn_server_psw }}
