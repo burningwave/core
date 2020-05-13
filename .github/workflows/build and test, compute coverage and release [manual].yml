@@ -18,14 +18,13 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-and-test-with-Java-8-and-later:
-    name: Build and test (Java ${{ matrix.java }} ${{ matrix.architecture }})
+    name: Build and test (Java ${{ matrix.java }} ${{ matrix.architecture }} on ${{ matrix.os }})
     strategy:
       fail-fast: true
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         java: [8, 9, 10, 11, 12, 13, 14]
         architecture: [x32, x64]
-    needs: [ask-for-authorization]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
