@@ -11,7 +11,7 @@ on:
 jobs:
     
   build-and-test-with-Java-8-and-later:
-    name: Build and test (Java ${{ matrix.java }} ${{ matrix.architecture }})
+    name: Build and test (Java ${{ matrix.java }} ${{ matrix.architecture }} on ${{ matrix.os }})
     strategy:
       fail-fast: true
       matrix:
