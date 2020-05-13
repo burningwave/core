@@ -4,7 +4,7 @@
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
 
-	<version>5.16.14</version>
+	<version>5.16.14-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>Burningwave Core</name>
 	<url>https://www.burningwave.org/</url>
@@ -51,7 +51,7 @@
 		<project.test.includes>**/AllExceptHeavyTestsSuite.java</project.test.includes>
 		<project.test.excludes>**/*Test.java</project.test.excludes>
 		<project.generated.artifacts.prefix>bw</project.generated.artifacts.prefix>
-		<repository.url>https://git@github.com:burningwave/core.git</repository.url>
+		<repository.url>https://burningwave@github.com/burningwave/core.git</repository.url>
 	</properties>
 
 	<dependencies>
@@ -209,7 +209,9 @@
 					<pushChanges>true</pushChanges>
 					<mavenExecutorId>forked-path</mavenExecutorId>
 					<arguments>-Dgpg.passphrase=${gpg.passphrase}</arguments>
+					<!--
 					<tagNameFormat>${project.artifactId}-${project.version}</tagNameFormat>
+					 -->
 				</configuration>
 				<dependencies>
 					<dependency>
@@ -296,7 +298,7 @@
         <connection>scm:git:${repository.url}</connection>
         <developerConnection>scm:git:${repository.url}</developerConnection>
         <url>${repository.url}</url>
-        <tag>core-5.16.14-SNAPSHOT</tag>
+        <tag>HEAD</tag>
     </scm>
 
 	<profiles>
