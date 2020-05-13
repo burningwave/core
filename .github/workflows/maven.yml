@@ -55,3 +55,4 @@ jobs:
         run: mvn -B -Dproject.jdk.version=8 deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
