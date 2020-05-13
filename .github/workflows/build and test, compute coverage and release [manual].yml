@@ -35,7 +35,7 @@ jobs:
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.architecture }}  
       - name: Build and test
-        run: mvn -B clean test -Dproject.jdk.version=${{ matrix.java }} -DskipTests=false --file pom.xml
+        run: mvn -B clean test -Dproject_jdk_version=${{ matrix.java }} -DskipTests=false --file pom.xml
  
   test-and-compute-coverage:
     name: Test and compute coverage
@@ -69,7 +69,7 @@ jobs:
           echo "${{ secrets.gpg_private_key }}" | gpg --batch --import
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "info@burningwave.org"
-          mvn -B release:prepare release:perform -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} -Dgpg.keyname=${{ secrets.gpg_key_id }} -Drepository.url=https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git
+          mvn -B release:prepare release:perform -Dproject_jdk_version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} -Dgpg.keyname=${{ secrets.gpg_key_id }} -Drepository.url=https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git
         env:
           MAVEN_USERNAME: ${{ secrets.nexus_username }}
           MAVEN_PASSWORD: ${{ secrets.nexus_password }}

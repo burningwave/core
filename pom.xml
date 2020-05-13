@@ -46,7 +46,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- Can be changed with one of this values: 9, 10, 11, 12, 13, 14 -->
 		<javadocExecutable.relativePath>bin/javadoc</javadocExecutable.relativePath>
-		<project.jdk.version>8</project.jdk.version>
+		<project_jdk_version>8</project_jdk_version>
 		<skipTests>true</skipTests>
 		<project.test.includes>**/AllExceptHeavyTestsSuite.java</project.test.includes>
 		<project.test.excludes>**/*Test.java</project.test.excludes>
@@ -152,8 +152,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.1</version>
 				<configuration>
-					<source>${project.jdk.version}</source>
-        			<target>${project.jdk.version}</target>
+					<source>${project_jdk_version}</source>
+        			<target>${project_jdk_version}</target>
         			<verbose>true</verbose>
 				</configuration>
 			</plugin>
@@ -259,7 +259,7 @@
 				<configuration>
 					<javadocExecutable>${java.home}/${javadocExecutable.relativePath}</javadocExecutable>
 					<encoding>UTF-8</encoding>
-					<source>${project.jdk.version}</source>
+					<source>${project_jdk_version}</source>
 				</configuration>
 				<executions>
 					<execution>
