@@ -38,8 +38,7 @@ jobs:
           server-password: MAVEN_PASSWORD
       - name: Publish to the Maven Central Repository
         run: |
-          echo "${{ secrets.gpg_secret }}"
-          echo "${{ secrets.gpg_secret }}" | gpg --batch --import
+          echo "${{ secrets.gpg_private_key }}" | gpg --batch --import
           git config user.name "Roberto Gentili"
           git config user.email "roberto.gentili.1980@gmail.com"
           #mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} -Dgpg.keyname=${{ secrets.gpg_key_name}} release:prepare
