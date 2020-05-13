@@ -52,7 +52,7 @@ jobs:
   
   release:
     name: Release
-    needs: [build-and-test-with-Java-9-and-later]
+    needs: [build-and-test-with-Java-8-and-later]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
