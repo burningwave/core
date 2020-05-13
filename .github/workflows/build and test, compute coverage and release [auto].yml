@@ -24,7 +24,7 @@ jobs:
         run: mvn -B clean test -DskipTests=false -DjavadocExecutable.relativePath=../bin/javadoc --file pom.xml
 
   build-and-test-with-Java-9-and-later:
-    name: Build and test with Java 9 and later
+    name: Build and test with Java ${{ matrix.java }} ${{ matrix.architecture }}
     strategy:
       fail-fast: true
       matrix:
