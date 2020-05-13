@@ -34,19 +34,19 @@ jobs:
         with:
           java-version: 14
           server-id: ossrh
-          server-username: ${{ secrets.nexus_username }}
-          server-password: ${{ secrets.nexus_password }}
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
       - name: Publish to the Maven Central Repository
         run: |
           export GPG_TTY=$(tty)
           echo "${{ secrets.gpg_private_key }}" | gpg --batch --import
-          git config user.name "Roberto Gentili"
-          git config user.email "roberto.gentili.1980@gmail.com"
+          git config user.name "${{ github.event.head_commit.committer.name }}"
+          git config user.email "${{ github.event.head_commit.committer.email }}"
           mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} -Dgpg.keyname=${{ secrets.gpg_key_id }} release:prepare
           mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} -Dgpg.keyname=${{ secrets.gpg_key_id }} release:perform
         env:
-          MAVEN_USERNAME: ${{ secrets.mvn_server_user }}
-          MAVEN_PASSWORD: ${{ secrets.mvn_server_psw }}
+          MAVEN_USERNAME: ${{ secrets.nexus_username }}
+          MAVEN_PASSWORD: ${{ secrets.nexus_password }}
       - name: Set up Java for publishing to GitHub Packages
         uses: actions/setup-java@v1
         with:
@@ -55,3 +55,4 @@ jobs:
         run: mvn -B -Dproject.jdk.version=8 deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
