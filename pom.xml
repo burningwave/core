@@ -289,12 +289,13 @@
 			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
 	</distributionManagement>
-	<scm>
-		<url>https://github.com/burningwave/core</url>
-		<connection>scm:git:git://github.com/burningwave/core.git</connection>
-		<developerConnection>scm:git:git@github.com:burningwave/core.git</developerConnection>
-		<tag>core-5.16.0</tag>
-	</scm>
+	
+    <scm>
+        <connection>scm:git:${repository.url}</connection>
+        <developerConnection>scm:git:${repository.url}</developerConnection>
+        <url>${repository.url}</url>
+        <tag>HEAD</tag>
+    </scm>
 
 	<profiles>
 		<!-- GPG Signature on release -->
