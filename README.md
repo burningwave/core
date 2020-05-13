@@ -25,7 +25,7 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>5.16.13</version>
+    <version>5.16.16</version>
 </dependency>
 ```
 
@@ -33,32 +33,32 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 	<summary><b>... And with (click to expand)</b>:</summary>
 	<br/>
 	<ul><li><b>Gradle Groovy</b>:</li></ul>
-	<pre>implementation 'org.burningwave:core:5.16.13'</pre>
+	<pre>implementation 'org.burningwave:core:5.16.16'</pre>
 	<br/>
 	<ul><li><b>Gradle Kotlin</b>:</li></ul>
-	<pre>implementation("org.burningwave:core:5.16.13")</pre>
+	<pre>implementation("org.burningwave:core:5.16.16")</pre>
 	<br/>
 	<ul><li><b>Scala</b>:</li></ul>
-	<pre>libraryDependencies += "org.burningwave" % "core" % "5.16.13"</pre>
+	<pre>libraryDependencies += "org.burningwave" % "core" % "5.16.16"</pre>
 	<br/>
 	<ul><li><b>Apache Ivy</b>:</li></ul>
-	<pre>&lt;dependency org="org.burningwave" name="core" rev="5.16.13" /&gt;</pre>
+	<pre>&lt;dependency org="org.burningwave" name="core" rev="5.16.16" /&gt;</pre>
 	<br/>
 	<ul><li><b>Groovy Grape</b>:</li></ul>
 	<pre>
 @Grapes(
-  	@Grab(group='org.burningwave', module='core', version='5.16.13')
+  	@Grab(group='org.burningwave', module='core', version='5.16.16')
 )
 	</pre>
 	<br/>
 	<ul><li><b>Leiningen</b>:</li></ul>
-	<pre>[org.burningwave/core "5.16.13"]</pre>
+	<pre>[org.burningwave/core "5.16.16"]</pre>
 	<br/>
 	<ul><li><b>Apache Buildr</b>:</li></ul>
-	<pre>'org.burningwave:core:jar:5.16.13'</pre>
+	<pre>'org.burningwave:core:jar:5.16.16'</pre>
 	<br/>
 	<ul><li><b>PURL</b>:</li></ul>
-	<pre>pkg:maven/org.burningwave/core@5.16.13</pre>
+	<pre>pkg:maven/org.burningwave/core@5.16.16</pre>
 </details>
 
 ### [**Get started**](https://github.com/burningwave/core/wiki)
