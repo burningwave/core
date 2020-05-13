@@ -13,20 +13,9 @@ on:
       - master
 
 jobs:
-  authorize: 
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: octokit/request-action@v2.0.0
-      with:
-        route: GET /repos/:repository/collaborators/${{ github.actor }}
-        repository: ${{ github.repository }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   publish:
-    needs: [authorize]
     runs-on: ubuntu-latest
+	if: github.event_name == 'push' && startsWith(github.event.head_commit.message, 'Releasing new version')
     steps:
       - uses: actions/checkout@v2
       - name: Set up Java for publishing to Maven Central Repository
@@ -46,12 +35,3 @@ jobs:
         env:
           MAVEN_USERNAME: ${{ secrets.nexus_username }}
           MAVEN_PASSWORD: ${{ secrets.nexus_password }}
-      - name: Set up Java for publishing to GitHub Packages
-        uses: actions/setup-java@v1
-        with:
-          java-version: 14
-      - name: Publish to GitHub Packages
-        run: mvn -B -Dproject.jdk.version=8 deploy
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
