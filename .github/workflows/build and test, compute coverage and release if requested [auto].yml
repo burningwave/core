@@ -1,13 +1,13 @@
 name: Build and Test -> Compute coverage -> Release if requested
 
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
-
+#on:
+#  push:
+#    branches:
+#      - master
+#  pull_request:
+#    branches:
+#      - master
+#
 jobs:
     
   build-and-test-with-Java-8:
