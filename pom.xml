@@ -51,6 +51,7 @@
 		<project.test.includes>**/AllExceptHeavyTestsSuite.java</project.test.includes>
 		<project.test.excludes>**/*Test.java</project.test.excludes>
 		<project.generated.artifacts.prefix>bw</project.generated.artifacts.prefix>
+		<repository.url>https://git@github.com:burningwave/core.git</repository.url>
 	</properties>
 
 	<dependencies>
