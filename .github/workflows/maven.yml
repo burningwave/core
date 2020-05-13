@@ -51,11 +51,11 @@ jobs:
           server-password: MAVEN_PASSWORD
       - name: Publish to the Maven Central Repository
         run: |
+          export GPG_TTY=$(tty)
           git config user.name "Roberto Gentili"
           git config user.email "roberto.gentili.1980@gmail.com"
-          #gpg --import < ${{ secrets.gpg_private_key }}
-          mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphras }} release:prepare
-          mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphras }} release:perform
+          mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} -Dgpg.keyname=${{ secrets.gpg_key_name}} release:prepare
+          mvn -B -Dproject.jdk.version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} -Dgpg.keyname=${{ secrets.gpg_key_name}} release:perform
         env:
           MAVEN_USERNAME: ${{ secrets.mvn_server_user }}
           MAVEN_PASSWORD: ${{ secrets.mvn_server_psw }}
