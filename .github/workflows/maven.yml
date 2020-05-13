@@ -1,8 +1,16 @@
 name: Build, test & check coverage 2
 
+#on:
+  #watch:
+    #types: [started]
+
 on:
-  watch:
-    types: [started]
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
   authorize: 
