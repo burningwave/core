@@ -23,29 +23,29 @@ jobs:
       - name: Build and test
         run: mvn -B clean test -DskipTests=false -DjavadocExecutable.relativePath=../bin/javadoc --file pom.xml
 
-#  build-and-test-with-Java-9-and-later:
-#    name: Build and test with Java 9 and later
-#    strategy:
-#      fail-fast: true
-#      matrix:
-#        os: [ubuntu-latest]
-#        java: [9, 10, 11, 12, 13, 14]
-#        architecture: [x32, x64]
-#    needs: [build-and-test-with-Java-8]
-#    runs-on: ${{ matrix.os }}
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Set up JDK ${{ matrix.java }}
-#      - uses: actions/setup-java@v1
-#        with:
-#          java-version: ${{ matrix.java }}
-#          architecture: ${{ matrix.architecture }}  
-#      - name: Build and test
-#        run: mvn -B clean test -Dproject.jdk.version=${{ matrix.java }} -DskipTests=false --file pom.xml
+  build-and-test-with-Java-9-and-later:
+    name: Build and test with Java 9 and later
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest]
+        java: [9, 10, 11, 12, 13, 14]
+        architecture: [x32, x64]
+    needs: [build-and-test-with-Java-8]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK ${{ matrix.java }}
+      - uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+          architecture: ${{ matrix.architecture }}  
+      - name: Build and test
+        run: mvn -B clean test -Dproject.jdk.version=${{ matrix.java }} -DskipTests=false --file pom.xml
  
   test-and-compute-coverage:
     name: Test and compute coverage
-    needs: [build-and-test-with-Java-8]
+    needs: [build-and-test-with-Java-9-and-later]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
