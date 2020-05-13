@@ -17,8 +17,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-and-test-with-Java-9-and-later:
-    name: Build and test with Java ${{ matrix.java }} ${{ matrix.architecture }}
+  build-and-test-with-Java-8-and-later:
+    name: Build and test (Java ${{ matrix.java }} ${{ matrix.architecture }})
     strategy:
       fail-fast: true
       matrix:
@@ -39,7 +39,7 @@ jobs:
  
   test-and-compute-coverage:
     name: Test and compute coverage
-    needs: [build-and-test-with-Java-9-and-later]
+    needs: [build-and-test-with-Java-8-and-later]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
