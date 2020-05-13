@@ -38,7 +38,7 @@ jobs:
           server-password: MAVEN_PASSWORD
       - name: Publish to the Maven Central Repository
         run: |
-          export GPG_TTY=$(tty)
+          echo "${{ secrets.gpg_secret }}"
           echo "${{ secrets.gpg_secret }}" | gpg --batch --import
           git config user.name "Roberto Gentili"
           git config user.email "roberto.gentili.1980@gmail.com"
