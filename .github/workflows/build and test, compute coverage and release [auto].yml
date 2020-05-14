@@ -10,7 +10,7 @@ on:
 jobs:
     
   build-and-test-with-Java-8-and-later:
-    name: Build and test (Java ${{ matrix.java }} ${{ matrix.architecture }} on ${{ matrix.os }})
+    name: Build -> Test (Java ${{ matrix.java }} ${{ matrix.architecture }} on ${{ matrix.os }})
     strategy:
       fail-fast: true
       matrix:
@@ -29,7 +29,7 @@ jobs:
         run: mvn -B clean test -Dproject_jdk_version=${{ matrix.java }} -DskipTests=false --file pom.xml
  
   test-and-compute-coverage:
-    name: Test and compute coverage
+    name: Test -> Compute coverage
     needs: [build-and-test-with-Java-8-and-later]
     runs-on: ubuntu-latest
     steps:
