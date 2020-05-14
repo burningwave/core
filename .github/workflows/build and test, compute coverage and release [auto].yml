@@ -6,6 +6,8 @@ on:
       - master
     paths: 
       - "**.java"
+      - "**.pom"
+      - "**.properties"
 
 jobs:
     
@@ -45,7 +47,7 @@ jobs:
     name: Release
     needs: [build-and-test-with-Java-8-and-later]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.event.head_commit.message, 'Releasing new version')
+    if: github.event_name == 'push' && endsWith(github.event.head_commit.message, 'Releasing new version')
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 14
