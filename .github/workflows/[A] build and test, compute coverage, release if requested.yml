@@ -18,7 +18,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        java: [8, 9, 10, 11, 12, 13, 14, 15-ea]
+        java: [8, 9, 10, 11, 12, 13, 14]
         architecture: [x32, x64]
     runs-on: ${{ matrix.os }}
     steps:
@@ -29,7 +29,26 @@ jobs:
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.architecture }}  
       - name: Build and test
-        run: mvn -B clean test -Dproject_jdk_version=${{ replace(matrix.java, 'ea', '') }} -DskipTests=false --file pom.xml
+        run: mvn -B clean test -Dproject_jdk_version=${{ matrix.java }} -DskipTests=false --file pom.xml
+   
+  build-and-test-with-Java-15-ea:
+    name: Build -> Test (JVM ${{ matrix.java }}, ${{ matrix.architecture }}, ${{ matrix.os }})
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        java: [15-ea]
+        architecture: [x32, x64]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+          architecture: ${{ matrix.architecture }}  
+      - name: Build and test
+        run: mvn -B clean test -Dproject_jdk_version=15 -DskipTests=false --file pom.xml
  
   test-and-compute-coverage:
     name: Test -> Compute coverage
