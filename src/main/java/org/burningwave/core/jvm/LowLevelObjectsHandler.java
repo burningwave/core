@@ -49,7 +49,6 @@ import java.nio.Buffer;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Vector;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
@@ -123,8 +122,8 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 	}
 		
 	@SuppressWarnings("unchecked")
-	public Vector<Class<?>> retrieveLoadedClasses(ClassLoader classLoader) {
-		return (Vector<Class<?>>)unsafe.getObject(classLoader, loadedClassesVectorMemoryOffset);
+	public Collection<Class<?>> retrieveLoadedClasses(ClassLoader classLoader) {
+		return (Collection<Class<?>>)unsafe.getObject(classLoader, loadedClassesVectorMemoryOffset);
 	}
 	
 	@SuppressWarnings("unchecked")

@@ -55,7 +55,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Vector;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -368,7 +367,7 @@ public class Classes implements Component, MembersRetriever {
 	}
 	
 	public static class Loaders implements Component {
-		protected Map<ClassLoader, Vector<Class<?>>> classLoadersClasses;
+		protected Map<ClassLoader, Collection<Class<?>>> classLoadersClasses;
 		protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 		protected Map<String, MethodHandle> classLoadersMethods;
 		
@@ -478,8 +477,8 @@ public class Classes implements Component, MembersRetriever {
 			return method;
 		}
 		
-		public Vector<Class<?>> retrieveLoadedClasses(ClassLoader classLoader) {
-			Vector<Class<?>> classes = classLoadersClasses.get(classLoader);
+		public Collection<Class<?>> retrieveLoadedClasses(ClassLoader classLoader) {
+			Collection<Class<?>> classes = classLoadersClasses.get(classLoader);
 			if (classes != null) {
 				return classes;
 			} else {
@@ -751,7 +750,7 @@ public class Classes implements Component, MembersRetriever {
 		
 		@SuppressWarnings("unchecked")
 		public <T> Class<T> retrieveLoadedClass(ClassLoader classLoader, String className) {
-			Vector<Class<?>> definedClasses = retrieveLoadedClasses(classLoader);
+			Collection<Class<?>> definedClasses = retrieveLoadedClasses(classLoader);
 			synchronized(definedClasses) {
 				Iterator<?> itr = definedClasses.iterator();
 				while(itr.hasNext()) {
@@ -769,7 +768,7 @@ public class Classes implements Component, MembersRetriever {
 		
 		public Set<Class<?>> retrieveLoadedClassesForPackage(ClassLoader classLoader, Predicate<Package> packagePredicate) {
 			Set<Class<?>> classesFound = new HashSet<>();
-			Vector<Class<?>> definedClasses = retrieveLoadedClasses(classLoader);
+			Collection<Class<?>> definedClasses = retrieveLoadedClasses(classLoader);
 			synchronized(definedClasses) {
 				Iterator<?> itr = definedClasses.iterator();
 				while(itr.hasNext()) {
