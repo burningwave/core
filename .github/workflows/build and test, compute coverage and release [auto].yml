@@ -6,8 +6,8 @@ on:
       - master
     paths: 
       - "**.java"
-      - "**.pom"
       - "**.properties"
+      - "pom.xml"
 
 jobs:
     
