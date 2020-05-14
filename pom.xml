@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.burningwave</groupId>
@@ -8,7 +10,7 @@
 	<packaging>jar</packaging>
 	<name>Burningwave Core</name>
 	<url>https://www.burningwave.org/</url>
-	
+
 	<licenses>
 		<license>
 			<name>MIT License</name>
@@ -16,18 +18,18 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
-	
+
 	<organization>
 		<name>Burningwave</name>
 		<url>https://www.burningwave.org/</url>
 	</organization>
-	
+
 	<description>
 		An advanced and highly optimized Java library to build frameworks useful for scanning class paths, 
 		generating classes at run time, facilitating the use of reflection, scanning the filesystem, 
 		executing stringified code and much more...
 	</description>
-	
+
 	<developers>
 		<developer>
 			<name>Roberto Gentili</name>
@@ -62,14 +64,14 @@
 			<scope>provided</scope>
 			<optional>true</optional>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-core</artifactId>
 			<version>1.2.3</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
@@ -83,31 +85,31 @@
 			<version>5.6.2</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
-		    <groupId>org.junit.platform</groupId>
-		    <artifactId>junit-platform-engine</artifactId>
-		    <version>1.6.2</version>
-		    <scope>test</scope>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-engine</artifactId>
+			<version>1.6.2</version>
+			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
-		    <groupId>org.junit.platform</groupId>
-		    <artifactId>junit-platform-commons</artifactId>
-		    <version>1.6.2</version>
-		    <scope>test</scope>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-commons</artifactId>
+			<version>1.6.2</version>
+			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
-		    <groupId>org.junit.platform</groupId>
-		    <artifactId>junit-platform-runner</artifactId>
-		    <version>1.6.2</version>
-		    <scope>test</scope>
-		</dependency>		
-		
-		<dependency>		
-		    <groupId>jakarta.validation</groupId>
-    		<artifactId>jakarta.validation-api</artifactId>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-runner</artifactId>
+			<version>1.6.2</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
 			<version>2.0.2</version>
 			<scope>test</scope>
 		</dependency>
@@ -153,8 +155,8 @@
 				<version>3.8.1</version>
 				<configuration>
 					<source>${project_jdk_version}</source>
-        			<target>${project_jdk_version}</target>
-        			<verbose>true</verbose>
+					<target>${project_jdk_version}</target>
+					<verbose>true</verbose>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -209,9 +211,7 @@
 					<pushChanges>true</pushChanges>
 					<mavenExecutorId>forked-path</mavenExecutorId>
 					<arguments>-Dgpg.passphrase=${gpg.passphrase}</arguments>
-					<!--
-					<tagNameFormat>${project.artifactId}-${project.version}</tagNameFormat>
-					 -->
+					<!-- <tagNameFormat>${project.artifactId}-${project.version}</tagNameFormat> -->
 				</configuration>
 				<dependencies>
 					<dependency>
@@ -272,17 +272,17 @@
 			</plugin>
 		</plugins>
 	</build>
-	
+
 	<reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jxr-plugin</artifactId>
-                <version>2.5</version>
-            </plugin>
-        </plugins>
-    </reporting>
-	
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jxr-plugin</artifactId>
+				<version>2.5</version>
+			</plugin>
+		</plugins>
+	</reporting>
+
 	<distributionManagement>
 		<snapshotRepository>
 			<id>ossrh</id>
@@ -293,13 +293,13 @@
 			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
 	</distributionManagement>
-	
-    <scm>
-        <connection>scm:git:${repository.url}</connection>
-        <developerConnection>scm:git:${repository.url}</developerConnection>
-        <url>${repository.url}</url>
-        <tag>HEAD</tag>
-    </scm>
+
+	<scm>
+		<connection>scm:git:${repository.url}</connection>
+		<developerConnection>scm:git:${repository.url}</developerConnection>
+		<url>${repository.url}</url>
+		<tag>HEAD</tag>
+	</scm>
 
 	<profiles>
 		<!-- GPG Signature on release -->
@@ -324,11 +324,11 @@
 									<goal>sign</goal>
 								</goals>
 								<configuration>
-                                    <gpgArguments>
-                                        <arg>--pinentry-mode</arg>
-                                        <arg>loopback</arg>
-                                    </gpgArguments>
-                                </configuration>
+									<gpgArguments>
+										<arg>--pinentry-mode</arg>
+										<arg>loopback</arg>
+									</gpgArguments>
+								</configuration>
 							</execution>
 						</executions>
 					</plugin>
@@ -343,34 +343,32 @@
 			<build>
 				<plugins>
 					<!-- Generate coveralls reports from CI server. -->
-		            <plugin>
-		                <groupId>org.eluder.coveralls</groupId>
-		                <artifactId>coveralls-maven-plugin</artifactId>
-		                <version>4.3.0</version>
-		                <configuration>
-		                    <sourceDirectories>
-		                        <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
-		                        <!-- 
-		                        	<sourceDirectory>${project.basedir}/src/test/resources</sourceDirectory>
-		                         -->
-		                    </sourceDirectories>
-		                </configuration>
-		            </plugin>
 					<plugin>
-					    <groupId>org.jacoco</groupId>
-					    <artifactId>jacoco-maven-plugin</artifactId>
-					    <version>0.7.6.201602180812</version>
-					    <executions>
-					        <execution>
-					            <id>prepare-agent</id>
-					            <goals>
-					                <goal>prepare-agent</goal>
-					            </goals>
-					        </execution>
-					    </executions>
+						<groupId>org.eluder.coveralls</groupId>
+						<artifactId>coveralls-maven-plugin</artifactId>
+						<version>4.3.0</version>
+						<configuration>
+							<sourceDirectories>
+								<sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+								<!-- <sourceDirectory>${project.basedir}/src/test/resources</sourceDirectory> -->
+							</sourceDirectories>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<version>0.7.6.201602180812</version>
+						<executions>
+							<execution>
+								<id>prepare-agent</id>
+								<goals>
+									<goal>prepare-agent</goal>
+								</goals>
+							</execution>
+						</executions>
 					</plugin>
 				</plugins>
 			</build>
-		</profile>		
+		</profile>
 	</profiles>
 </project>
