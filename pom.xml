@@ -349,8 +349,10 @@
 		                <version>4.3.0</version>
 		                <configuration>
 		                    <sourceDirectories>
-		                        <sourceDirectory>${project.basedir}/src/test/java</sourceDirectory>
-		                        <sourceDirectory>${project.basedir}/src/test/resources</sourceDirectory>
+		                        <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+		                        <!-- 
+		                        	<sourceDirectory>${project.basedir}/src/test/resources</sourceDirectory>
+		                         -->
 		                    </sourceDirectories>
 		                </configuration>
 		            </plugin>
