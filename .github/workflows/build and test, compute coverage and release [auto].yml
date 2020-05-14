@@ -10,7 +10,7 @@ on:
 jobs:
     
   build-and-test-with-Java-8-and-later:
-    name: Build -> Test (Java ${{ matrix.java }}, ${{ matrix.architecture }}, ${{ matrix.os }})
+    name: Build -> Test (JVM ${{ matrix.java }}, ${{ matrix.architecture }}, ${{ matrix.os }})
     strategy:
       fail-fast: true
       matrix:
