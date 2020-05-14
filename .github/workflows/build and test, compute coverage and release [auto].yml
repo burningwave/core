@@ -1,4 +1,4 @@
-name: Build and Test -> Compute coverage -> Release 
+name: Build and Test -> Compute coverage -> Release if requested
 
 on:
   push:
