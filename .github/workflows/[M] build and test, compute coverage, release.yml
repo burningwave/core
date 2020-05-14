@@ -34,7 +34,7 @@ jobs:
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.architecture }}  
       - name: Build and test
-        run: mvn -B clean test -Dproject_jdk_version=${{ matrix.java }} -DskipTests=false --file pom.xml
+        run: mvn -B clean test -Dproject_jdk_version=${{ replace(matrix.java, 'ea', '') }} -DskipTests=false --file pom.xml
  
   test-and-compute-coverage:
     name: Test -> Compute coverage
