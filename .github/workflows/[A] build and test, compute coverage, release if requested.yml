@@ -45,7 +45,7 @@ jobs:
         run: mvn clean test -DskipTests=false -P run-coveralls jacoco:report coveralls:report -DrepoToken=${{ secrets.coveralls_repo_token }}
   
   release:
-    name: Release
+    name: Release if requested
     needs: [build-and-test-with-Java-8-and-later]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && endsWith(github.event.head_commit.message, 'Releasing new version')
