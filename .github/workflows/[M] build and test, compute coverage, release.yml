@@ -55,7 +55,7 @@ jobs:
         run: mvn clean test -DskipTests=false -P run-coveralls jacoco:report coveralls:report -DrepoToken=${{ secrets.coveralls_repo_token }}
        
   release:
-    name: Release if requested
+    name: Release
     needs: [build-and-test-with-Java-8-and-later]
     runs-on: ubuntu-latest
     steps:
