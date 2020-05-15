@@ -211,7 +211,7 @@ public class Finder {
 }
 ```
 
-## Architectural overview and configuration
+# Architectural overview and configuration
 
 **Burningwave Core** is based on the concept of component and component container. A **component** is a dynamic object that perform functionality related to the domain it belong to.
 A **component container** contains a set of dynamic components and could be of two types:
@@ -221,8 +221,7 @@ A **component container** contains a set of dynamic components and could be of t
 More than one dynamic container can be created, while only one static container can exists.
 <br/>
 
-### Static component container
-===========
+## Static component container
 It is represented by the **org.burningwave.core.assembler.StaticComponentContainer** class that provides the following fields for each component supplied:
 ```java
 public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
