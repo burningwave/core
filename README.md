@@ -9,7 +9,7 @@ Burningwave Core [![Tweet](https://img.shields.io/twitter/url/http/shields.io.sv
 
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/5)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 
-[![Supported JVM](https://img.shields.io/badge/Supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-green)](https://github.com/burningwave/core/actions/runs/105024228)
+[![Supported JVM](https://img.shields.io/badge/Supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-green)](https://github.com/burningwave/core/actions/runs/105614244)
 [![Coverage Status](https://coveralls.io/repos/github/burningwave/core/badge.svg?branch=master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
 
@@ -25,7 +25,7 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>5.17.1</version>
+    <version>5.17.2</version>
 </dependency>
 ```
 
@@ -33,32 +33,32 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 	<summary><b>... And with (click to expand)</b>:</summary>
 	<br/>
 	<ul><li><b>Gradle Groovy</b>:</li></ul>
-	<pre>implementation 'org.burningwave:core:5.17.1'</pre>
+	<pre>implementation 'org.burningwave:core:5.17.2'</pre>
 	<br/>
 	<ul><li><b>Gradle Kotlin</b>:</li></ul>
-	<pre>implementation("org.burningwave:core:5.17.1")</pre>
+	<pre>implementation("org.burningwave:core:5.17.2")</pre>
 	<br/>
 	<ul><li><b>Scala</b>:</li></ul>
-	<pre>libraryDependencies += "org.burningwave" % "core" % "5.17.1"</pre>
+	<pre>libraryDependencies += "org.burningwave" % "core" % "5.17.2"</pre>
 	<br/>
 	<ul><li><b>Apache Ivy</b>:</li></ul>
-	<pre>&lt;dependency org="org.burningwave" name="core" rev="5.17.1" /&gt;</pre>
+	<pre>&lt;dependency org="org.burningwave" name="core" rev="5.17.2" /&gt;</pre>
 	<br/>
 	<ul><li><b>Groovy Grape</b>:</li></ul>
 	<pre>
 @Grapes(
-  	@Grab(group='org.burningwave', module='core', version='5.17.1')
+  	@Grab(group='org.burningwave', module='core', version='5.17.2')
 )
 	</pre>
 	<br/>
 	<ul><li><b>Leiningen</b>:</li></ul>
-	<pre>[org.burningwave/core "5.17.1"]</pre>
+	<pre>[org.burningwave/core "5.17.2"]</pre>
 	<br/>
 	<ul><li><b>Apache Buildr</b>:</li></ul>
-	<pre>'org.burningwave:core:jar:5.17.1'</pre>
+	<pre>'org.burningwave:core:jar:5.17.2'</pre>
 	<br/>
 	<ul><li><b>PURL</b>:</li></ul>
-	<pre>pkg:maven/org.burningwave/core@5.17.1</pre>
+	<pre>pkg:maven/org.burningwave/core@5.17.2</pre>
 </details>
 
 ### [**Get started**](https://github.com/burningwave/core/wiki)
