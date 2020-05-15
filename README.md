@@ -62,7 +62,106 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 	<pre>pkg:maven/org.burningwave/core@5.17.2</pre>
 </details>
 
-### [**Get started**](https://github.com/burningwave/core/wiki)
+## ... And now the code: generating classes at runtime and invoking their methods with and without the use of reflection
+
+For this purpose is necessary the use of **ClassFactory** component and of the **sources generating components**. Once the sources have been set in **UnitSourceGenerator** objects, they must be passed to **buildAndLoadOrUpload** method of ClassFactory with the ClassLoader where you want to define new generated classes. This method performs the following operations: tries to load all the classes present in the UnitSourceGenerator through the class loader, if at least one of these is not found it proceeds to compiling all the UnitSourceGenerators and uploading their classes on class loader: in this case, keep in mind that if a class with the same name was previously loaded by the class loader, the compiled class will not be uploaded. Once the classes have been compiled and loaded, it is possible to invoke their methods in severals ways as shown at the end of the example below. **For more examples you can go [here](https://github.com/burningwave/core/tree/master/src/test/java/org/burningwave/core/examples/classfactory) and for assistance you can [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to/)**.
+```java
+package org.burningwave.core.examples.classfactory;
+
+import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
+
+import java.lang.reflect.Modifier;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
+
+import org.burningwave.core.Virtual;
+import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.AnnotationSourceGenerator;
+import org.burningwave.core.classes.ClassFactory;
+import org.burningwave.core.classes.ClassSourceGenerator;
+import org.burningwave.core.classes.FunctionSourceGenerator;
+import org.burningwave.core.classes.GenericSourceGenerator;
+import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
+import org.burningwave.core.classes.UnitSourceGenerator;
+import org.burningwave.core.classes.VariableSourceGenerator;
+
+public class RuntimeClassExtender {
+
+    @SuppressWarnings("resource")
+    public static void execute() throws Throwable {
+        UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
+            ClassSourceGenerator.create(
+                TypeDeclarationSourceGenerator.create("MyExtendedClass")
+            ).addModifier(
+                Modifier.PUBLIC
+            //generating new method that override MyInterface.convert(LocalDateTime)
+            ).addMethod(
+                FunctionSourceGenerator.create("convert")
+                .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create(Date.class)))
+                .addParameter(VariableSourceGenerator.create(LocalDateTime.class, "localDateTime"))
+                .addModifier(Modifier.PUBLIC)
+                .addAnnotation(AnnotationSourceGenerator.create(Override.class))
+                .addBodyCodeRow("return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());")
+                .useType(ZoneId.class)
+            ).addConcretizedType(
+                MyInterface.class
+            ).expands(ToBeExtended.class)
+        );
+        System.out.println("\nGenerated code:\n" + unitSG.make());
+        //With this we store the generated source to a path
+        unitSG.storeToClassPath(System.getProperty("user.home") + "/Desktop/bw-tests");
+        ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+        ClassFactory classFactory = componentSupplier.getClassFactory();
+        //this method compile all compilation units and upload the generated classes to default
+        //class loader declared with property "class-factory.default-class-loader" in 
+        //burningwave.properties file (see "Overview and configuration").
+        //If you need to upload the class to another class loader use
+        //buildAndLoadOrUploadTo(ClassLoader classLoader, UnitSourceGenerator... unitsCode) method
+        Class<?> generatedClass = classFactory.buildAndLoadOrUpload(
+            unitSG
+        ).get(
+            "packagename.MyExtendedClass"
+        );
+        ToBeExtended generatedClassObject =
+            Constructors.newInstanceOf(generatedClass);
+        generatedClassObject.printSomeThing();
+        System.out.println(
+            ((MyInterface)generatedClassObject).convert(LocalDateTime.now()).toString()
+        );
+        //You can also invoke methods by casting to Virtual (an interface offered by the
+        //library for faciliate use of runtime generated classes)
+        Virtual virtualObject = (Virtual)generatedClassObject;
+        //Invoke by using reflection
+        virtualObject.invoke("printSomeThing");
+        //Invoke by using MethodHandle
+        virtualObject.invokeDirect("printSomeThing");
+        System.out.println(
+            ((Date)virtualObject.invokeDirect("convert", LocalDateTime.now())).toString()
+        );
+    }   
+
+    public static class ToBeExtended {
+
+        public void printSomeThing() {
+            System.out.println("Called method printSomeThing");
+        }
+
+    }
+
+    public static interface MyInterface {
+
+        public Comparable<Date> convert(LocalDateTime localDateTime);
+
+    }
+
+    public static void main(String[] args) throws Throwable {
+        execute();
+    }
+}
+```
+
 ### [Overview and configuration](https://github.com/burningwave/core/wiki/Overview-and-configuration)
 ### Examples of use of some components:
 <details open>
@@ -155,50 +254,6 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 		</li>
 	</ul>
 </details>
-
-## ... And now the code: let's retrieve all classes of the runtime classpath!
-```java
-import java.util.Collection;
-
-import org.burningwave.core.assembler.ComponentContainer;
-import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.CacheableSearchConfig;
-import org.burningwave.core.classes.ClassHunter;
-import org.burningwave.core.classes.SearchConfig;
-import org.burningwave.core.classes.ClassHunter.SearchResult;
-import org.burningwave.core.io.PathHelper;
-
-public class Finder {
-
-    public Collection<Class<?>> find() {
-        ComponentSupplier componentSupplier = ComponentContainer.getInstance();
-        PathHelper pathHelper = componentSupplier.getPathHelper();
-        ClassHunter classHunter = componentSupplier.getClassHunter();
-
-        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
-            //Here you can add all absolute path you want:
-            //both folders, zip and jar will be recursively scanned.
-            //For example you can add: "C:\\Users\\user\\.m2"
-            //With the row below the search will be executed on runtime Classpaths
-            pathHelper.getMainClassPaths()
-        );
-        
-        //The loadInCache method loads all classes in the paths of the SearchConfig received as input
-        //and then execute the queries of the ClassCriteria on the cached data. Once the data has been 
-        //cached, it is possible to take advantage of faster searches for the loaded paths also through 
-        //the findBy method. In addition to the loadCache method, loading data into the cache can also
-        //take place via the findBy method if the latter receives a SearchConfig without ClassCriteria
-        //as input. It is possible to clear the cache individually for every hunter (ClassHunter, 
-        //ByteCodeHunter and ClassPathHunter) with clearCache method but to avoid inconsistencies 
-        //it is recommended to perform this cleaning using the clearHuntersCache method of the ComponentSupplier.
-        //To perform searches that do not use the cache you must intantiate the search configuration with 
-        //SearchConfig.withoutUsingCache() method
-        SearchResult searchResult = classHunter.loadInCache(searchConfig).find();
-        
-        return searchResult.getClasses();
-    }
-
-}
 
 ### [**Official site**](https://www.burningwave.org/)
 ### [**Help guide**](https://www.burningwave.org/forum/topic/help-guide/)
