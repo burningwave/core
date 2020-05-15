@@ -61,7 +61,7 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 	<pre>pkg:maven/org.burningwave/core@5.17.2</pre>
 </details>
 
-## ... And now let's look at the code: generating classes at runtime and invoking their methods with and without the use of reflection
+## Generating classes at runtime and invoking their methods with and without the use of reflection
 
 For this purpose is necessary the use of **ClassFactory** component and of the **sources generating components**. Once the sources have been set in **UnitSourceGenerator** objects, they must be passed to **buildAndLoadOrUpload** method of ClassFactory with the ClassLoader where you want to define new generated classes. This method performs the following operations: tries to load all the classes present in the UnitSourceGenerator through the class loader, if at least one of these is not found it proceeds to compiling all the UnitSourceGenerators and uploading their classes on class loader: in this case, keep in mind that if a class with the same name was previously loaded by the class loader, the compiled class will not be uploaded. Once the classes have been compiled and loaded, it is possible to invoke their methods in severals ways as shown at the end of the example below. **For more examples you can go [here](https://github.com/burningwave/core/tree/master/src/test/java/org/burningwave/core/examples/classfactory) and for assistance you can [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to/)**.
 ```java
@@ -161,7 +161,7 @@ public class RuntimeClassExtender {
 }
 ```
 
-## ...And now let's take a look at the class path scanner: let's search all classes that have package name that matches a regex!
+## Let's take a look at the class path scanner: searching all classes that have package name that matches a regex
 In this case we're looking for all classes whose package name contains "springframework" string
 ```java
 import java.util.Collection;
@@ -221,7 +221,8 @@ A **component container** contains a set of dynamic components and could be of t
 More than one dynamic container can be created, while only one static container can exists.
 <br/>
 
-## Static component container
+### Static component container
+===========
 It is represented by the **org.burningwave.core.assembler.StaticComponentContainer** class that provides the following fields for each component supplied:
 ```java
 public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
