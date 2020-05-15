@@ -72,7 +72,6 @@ jobs:
     name: Release if requested
     needs: [build-and-test-with-Java-8-and-later, build-and-test-with-Java-15-ea]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && endsWith(github.event.head_commit.message, 'Releasing new version')
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 14
