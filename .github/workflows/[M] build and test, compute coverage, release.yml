@@ -27,6 +27,7 @@ jobs:
         java: [8, 9, 10, 11, 12, 13, 14, 15-ea]
         architecture: [x32, x64]
     runs-on: ${{ matrix.os }}
+    if: ${{ matrix.java }} != '15-ea'
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK ${{ matrix.java }}
@@ -34,13 +35,13 @@ jobs:
         with:
           java-version: if${{ matrix.java }}
           architecture: ${{ matrix.architecture }}
+      - name: Build and test
         if: ${{ matrix.java }} != '15-ea' 
-      - name: Build and test
         run: mvn -B clean test -Dproject_jdk_version=${{ matrix.java }} -DskipTests=false --file pom.xml
-        if: ${{ matrix.java }} == '15-ea' 
       - name: Build and test
+        if: ${{ matrix.java }} == '15-ea' 
         run: mvn -B clean test -Dproject_jdk_version=15 -DskipTests=false --file pom.xml
- 
+        
   test-and-compute-coverage:
     name: Test -> Compute coverage
     needs: [build-and-test-with-Java-8-and-later]
