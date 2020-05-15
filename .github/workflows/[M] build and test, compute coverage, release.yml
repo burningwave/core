@@ -34,11 +34,11 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.architecture }}
-      - name: Build and test
-        if: matrix.java != '15-ea' 
+      - if: matrix.java != '15-ea' 
+        name: Build and test
         run: echo ${{ matrix.java }}
-      - name: Build and test
-        if: matrix.java == '15-ea' 
+      - if: matrix.java == '15-ea' 
+        name: Build and test
         run: mvn -B clean test -Dproject_jdk_version=15 -DskipTests=false --file pom.xml
         
   test-and-compute-coverage:
