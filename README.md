@@ -213,6 +213,8 @@ public class Finder {
 }
 ```
 
+<br/>
+
 # Architectural overview and configuration
 
 **Burningwave Core** is based on the concept of component and component container. A **component** is a dynamic object that perform functionality related to the domain it belong to.
