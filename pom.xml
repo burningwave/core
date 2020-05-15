@@ -24,7 +24,7 @@
 
 	<description>
 		An advanced and highly optimized Java building frameworks library: it is useful for scanning 
-		class paths, generating classes at run time, facilitating the use of reflection, scanning 
+		class paths, generating classes at runtime, facilitating the use of reflection, scanning 
 		the filesystem, executing stringified code and much more...
 	</description>
 
