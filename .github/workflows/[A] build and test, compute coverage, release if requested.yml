@@ -52,7 +52,7 @@ jobs:
  
   test-and-compute-coverage:
     name: Test -> Compute coverage
-    needs: [build-and-test-with-Java-8-and-later]
+    needs: [build-and-test-with-Java-8-and-later, build-and-test-with-Java-15-ea]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -62,10 +62,10 @@ jobs:
           architecture: x64
       - name: Build and test
         run: mvn clean test -DskipTests=false -P run-coveralls jacoco:report coveralls:report -DrepoToken=${{ secrets.coveralls_repo_token }}
-  
+       
   release:
     name: Release if requested
-    needs: [build-and-test-with-Java-8-and-later]
+    needs: [build-and-test-with-Java-8-and-later, build-and-test-with-Java-15-ea]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && endsWith(github.event.head_commit.message, 'Releasing new version')
     steps:

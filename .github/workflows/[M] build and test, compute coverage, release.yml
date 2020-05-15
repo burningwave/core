@@ -57,7 +57,7 @@ jobs:
  
   test-and-compute-coverage:
     name: Test -> Compute coverage
-    needs: [build-and-test-with-Java-8-and-later]
+    needs: [build-and-test-with-Java-8-and-later, build-and-test-with-Java-15-ea]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -67,11 +67,12 @@ jobs:
           architecture: x64
       - name: Build and test
         run: mvn clean test -DskipTests=false -P run-coveralls jacoco:report coveralls:report -DrepoToken=${{ secrets.coveralls_repo_token }}
-  
+       
   release:
-    name: Release
-    needs: [build-and-test-with-Java-8-and-later]
+    name: Release if requested
+    needs: [build-and-test-with-Java-8-and-later, build-and-test-with-Java-15-ea]
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && endsWith(github.event.head_commit.message, 'Releasing new version')
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 14
@@ -85,8 +86,8 @@ jobs:
         run: |
           export GPG_TTY=$(tty)
           echo "${{ secrets.gpg_private_key }}" | gpg --batch --import
-          git config user.name "${GITHUB_ACTOR}"
-          git config user.email "info@burningwave.org"
+          git config user.name "${{ github.event.head_commit.committer.name }}"
+          git config user.email "${{ github.event.head_commit.committer.email }}"
           mvn -B release:prepare release:perform -Dproject_jdk_version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} -Dgpg.keyname=${{ secrets.gpg_key_id }} -Drepository.url=https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git
         env:
           MAVEN_USERNAME: ${{ secrets.nexus_username }}
