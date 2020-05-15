@@ -163,7 +163,7 @@ public class RuntimeClassExtender {
 ```
 
 ## ...And now let's take a look at the class path scanner: let's search all classes that have package name that matches a regex!
-(In this case we're looking for all classes whose package name contains "springframework" string)
+In this case we're looking for all classes whose package name contains "springframework" string
 ```java
 import java.util.Collection;
 
