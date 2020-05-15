@@ -204,7 +204,6 @@ public class Finder {
         //it is recommended to perform this cleaning using the clearHuntersCache method of the ComponentSupplier.
         //To perform searches that do not use the cache you must intantiate the search configuration with 
         //SearchConfig.withoutUsingCache() method
-
         SearchResult searchResult = classHunter.loadInCache(searchConfig).find();
         
         return searchResult.getClasses();
@@ -212,6 +211,177 @@ public class Finder {
     
 }
 ```
+
+## Architectural overview and configuration
+
+**Burningwave Core** is based on the concept of component and component container. A **component** is a dynamic object that perform functionality related to the domain it belong to.
+A **component container** contains a set of dynamic components and could be of two types:
+* **static component container**
+* **dynamic component container**
+
+More than one dynamic container can be created, while only one static container can exists.
+<br/>
+
+## Static component container
+It is represented by the **org.burningwave.core.assembler.StaticComponentContainer** class that provides the following fields for each component supplied:
+```java
+public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
+public static final org.burningwave.core.Cache Cache;
+public static final org.burningwave.core.classes.Classes Classes;
+public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
+public static final org.burningwave.core.reflection.Constructors Constructors;
+public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
+public static final org.burningwave.core.reflection.Fields Fields;
+public static final org.burningwave.core.iterable.Properties GlobalProperties;
+public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
+public static final org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;
+public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
+public static final org.burningwave.core.classes.Members Members;
+public static final org.burningwave.core.reflection.Methods Methods;
+public static final org.burningwave.core.Strings.Paths Paths;
+public static final org.burningwave.core.io.Resources Resources;
+public static final org.burningwave.core.io.Streams Streams;
+public static final org.burningwave.core.Strings Strings;
+public static final org.burningwave.core.Throwables Throwables;
+```
+
+... That can be used within your application, simply adding a static import to your compilation unit, i.e.:
+```java
+package org.burningwave.core.examples.staticcomponents;
+
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+
+public class UseOfStaticComponentsExample {
+    
+    public void yourMethod(){
+        ManagedLoggersRepository.logInfo(UseOfStaticComponentsExample.class, Classes.getId(this));
+    }
+
+}
+```
+### Configuration
+The configuration of this type of container is done via **burningwave.static.properties** file or via **burningwave.static.default.properties** file: the library searches for the first file and if it does not find it, then it searches for the second file and if neither this one is found then the library sets the default configuration programmatically. **The default configuration loaded programmatically if no configuration file is found is the following**:
+```properties
+#With this value the library will search if org.slf4j.Logger is present and, in this case,
+#the SLF4JManagedLoggerRepository will be instantiated, otherwise the SimpleManagedLoggerRepository will be instantiated
+managed-logger.repository=autodetect
+managed-logger.repository.enabled=false
+streams.default-buffer-size=1024
+streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
+static-component-container.clear-temporary-folder-on-init=false
+static-component-container.hide-banner-on-init=false
+file-system-scanner.default-scan-config.check-file-options=checkFileExtension
+```
+Here an example of a **burningwave.static.properties** file with all configurable properties:
+```properties
+#other possible values are: autodetect, org.burningwave.core.SimpleManagedLoggerRepository
+managed-logger.repository=org.burningwave.core.SLF4JManagedLoggerRepository
+managed-logger.repository.enabled=true
+managed-logger.repository.logging.debug.disabled-for=\
+	org.burningwave.core.io.FileSystemScanner;\
+	org.burningwave.core.io.FileSystemItem;\
+	org.burningwave.core.classes.PathMemoryClassLoader;\
+	org.burningwave.core.classes.MemoryClassLoader;
+streams.default-buffer-size=0.5Kb
+#other possible value is ByteBuffer::allocate
+streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
+static-component-container.clear-temporary-folder-on-init=true
+static-component-container.hide-banner-on-init=false
+#other possible values are: checkFileExtension, checkFileSignature|checkFileSignature, checkFileSignature&checkFileSignature
+file-system-scanner.default-scan-config.check-file-options=checkFileSignature
+```
+<br/>
+
+## Dynamic component container
+It is represented by the **org.burningwave.core.assembler.ComponentContainer** class that provides the following methods for each component supplied:
+```java
+public PropertyAccessor.ByFieldOrByMethod getByFieldOrByMethodPropertyAccessor();
+public PropertyAccessor.ByMethodOrByField getByMethodOrByFieldPropertyAccessor();
+public ByteCodeHunter getByteCodeHunter();
+public ClassFactory getClassFactory();
+public SourceCodeHandler getSourceCodeHandler();
+public ClassHunter getClassHunter();
+public ClassPathHunter getClassPathHunter();
+public ConcurrentHelper getConcurrentHelper();
+public FileSystemScanner getFileSystemScanner();
+public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
+public IterableObjectHelper getIterableObjectHelper();
+public JavaMemoryCompiler getJavaMemoryCompiler();
+public PathHelper getPathHelper();
+```
+... That can be used within your application, simply as follow:
+```java
+package org.burningwave.core.examples.componentcontainer;
+
+import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.ClassFactory;
+import org.burningwave.core.classes.ClassHunter;
+import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.iterable.Properties;
+
+public class RetrievingDynamicComponentContainerAndComponents {
+
+    public static void execute() throws Throwable {
+        //In this case we are retrieving the singleton component container instance
+        ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+        
+        //In this case we are creating a component container by using a custom configuration file
+        ComponentSupplier customComponentSupplier = ComponentContainer.create("your-custom-properties-file.properties");
+        
+        //In this case we are creating a component container programmatically by using a custom properties object
+        Properties configProps = new Properties();
+        configProps.put(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, Thread.currentThread().getContextClassLoader());
+        configProps.put(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_MEMORY_CLASS_LOADER_CONFIG_KEY, Thread.currentThread().getContextClassLoader());
+        ComponentSupplier customComponentSupplier2 = ComponentContainer.create(configProps);
+        
+        PathHelper pathHelper = componentSupplier.getPathHelper();
+        ClassFactory classFactory = customComponentSupplier.getClassFactory();
+        ClassHunter classHunter = customComponentSupplier2.getClassHunter();
+       
+    }   
+    
+}
+```
+### Configuration
+The configuration of this type of container can be done via Properties file or programmatically via a Properties object.
+If you use the singleton instance obtained via ComponentContainer.getInstance() method, you must create a **burningwave.properties** file and put it on base path of your classpath project.
+**The default configuration automatically loaded if no configuration file is found is the following**:
+```properties
+paths.main-class-paths.extension=//${system.properties:java.home}/lib//children:.*\.jar|.*\.jmod;//${system.properties:java.home}/lib/ext//children:.*\.jar|.*\.jmod;//${system.properties:java.home}/jmods//children:.*\.jar|.*\.jmod;
+paths.class-factory.java-memory-compiler.class-repositories=${classPaths};${paths.main-class-paths.extension};
+paths.class-factory.default-class-loader.class-repositories=${paths.class-factory.java-memory-compiler.class-repositories};
+class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
+class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
+```
+**If in your custom burningwave.properties file one of this four default properties is not found, the relative default value is assumed**.
+
+If you create a component container instance through method ComponentContainer.create(String relativeConfigFileName), you can specify the file name of your properties file and you can locate it everywhere in your classpath project but remember to use a relative path in this case, i.e.: if you name your file "custom-config-file.properties" and put it in package "org.burningwave" you must create the component container as follow: 
+```
+ComponentContainer.create("org/burningwave/custom-config-file.properties")
+```
+Here an example of a **burningwave.properties** file with all settable properties with all configurable properties:
+```properties
+paths.main-class-paths.extension=//${system.properties:java.home}/lib//children:.*\.jar|.*\.jmod;//${system.properties:java.home}/lib/ext//children:.*\.jar|.*\.jmod;//${system.properties:java.home}/jmods//children:.*\.jar|.*\.jmod;
+class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
+#this is the default class loader used by method
+#org.burningwave.core.classes.ClassFactory.buildAndLoadOrUpload(UnitSourceGenerator... unitsCode)
+#(see ClassFactory example "extending classes at runtime and invoking its methods with and without use of the reflection")
+class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
+paths.class-factory.java-memory-compiler.class-repositories=${classPaths};${paths.main-class-paths.extension};
+paths.class-factory.default-class-loader.class-repositories=${paths.class-factory.java-memory-compiler.class-repositories};
+#other possible values are: checkFileSignature, checkFileSignature|checkFileSignature, checkFileSignature&checkFileSignature
+java-memory-compiler.class-path-hunter.search-config.check-file-options=checkFileExtension
+#other possible values are: checkFileSignature, checkFileSignature|checkFileSignature, checkFileSignature&checkFileSignature
+class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=checkFileExtension
+#other possible values are: checkFileSignature, checkFileSignature|checkFileSignature, checkFileSignature&checkFileSignature
+class-factory.byte-code-hunter.search-config.check-file-options=checkFileExtension
+#The resources below can be retrieved through PathHelper component getPaths method. In this case you must call
+#ComponentContainer.getInstance().getPathHelper().getPaths("your-custom-path1")
+paths.your-custom-path1=C:/some-folder;C:/another-folder;
+```
+##
 
 ### Other examples of use of some components:
 <details open>
