@@ -6,7 +6,13 @@
 
 	<version>5.17.4-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	
 	<name>Burningwave Core</name>
+	<description>
+		An advanced and highly optimized Java building frameworks library: it is useful for scanning 
+		class paths, generating classes at runtime, facilitating the use of reflection, scanning 
+		the filesystem, executing stringified code and much more...
+	</description>
 	<url>https://www.burningwave.org/</url>
 
 	<licenses>
@@ -21,12 +27,6 @@
 		<name>Burningwave</name>
 		<url>https://www.burningwave.org/</url>
 	</organization>
-	
-	<description>
-		An advanced and highly optimized Java building frameworks library: it is useful for scanning 
-		class paths, generating classes at runtime, facilitating the use of reflection, scanning 
-		the filesystem, executing stringified code and much more...
-	</description>
 	
 	<developers>
 		<developer>
@@ -43,6 +43,7 @@
 	</developers>
 	
 	<properties>
+		<copyright.holder>Roberto Gentili</copyright.holder>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- Can be changed with one of this values: 9, 10, 11, 12, 13, 14 -->
 		<project_jdk_version>8</project_jdk_version>
@@ -73,7 +74,7 @@
 	<scm>
 		<connection>scm:git:${repository.url}</connection>
 		<developerConnection>scm:git:${repository.url}</developerConnection>
-		<url>${repository.url}</url>
+		<url>https://github.com/burningwave/core</url>
 		<tag>HEAD</tag>
 	</scm>
 	
