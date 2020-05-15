@@ -37,8 +37,9 @@ jobs:
         if: ${{ matrix.java }} != '15-ea' 
       - name: Build and test
         run: mvn -B clean test -Dproject_jdk_version=${{ matrix.java }} -DskipTests=false --file pom.xml
-        
- 
+        if: ${{ matrix.java }} == '15-ea' 
+      - name: Build and test
+        run: mvn -B clean test -Dproject_jdk_version=15 -DskipTests=false --file pom.xml
  
   test-and-compute-coverage:
     name: Test -> Compute coverage
