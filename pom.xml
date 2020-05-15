@@ -9,25 +9,25 @@
 	<name>Burningwave Core</name>
 	<url>https://www.burningwave.org/</url>
 
-	<licenses>
+		<licenses>
 		<license>
 			<name>MIT License</name>
 			<url>https://github.com/burningwave/core/blob/master/LICENSE</url>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
-
+	
 	<organization>
 		<name>Burningwave</name>
 		<url>https://www.burningwave.org/</url>
 	</organization>
-
+	
 	<description>
 		An advanced and highly optimized Java building frameworks library: it is useful for scanning 
 		class paths, generating classes at runtime, facilitating the use of reflection, scanning 
 		the filesystem, executing stringified code and much more...
 	</description>
-
+	
 	<developers>
 		<developer>
 			<name>Roberto Gentili</name>
@@ -41,7 +41,7 @@
 			</roles>
 		</developer>
 	</developers>
-
+	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- Can be changed with one of this values: 9, 10, 11, 12, 13, 14 -->
@@ -53,7 +53,30 @@
 		<project.generated.artifacts.prefix>bw</project.generated.artifacts.prefix>
 		<repository.url>https://burningwave@github.com/burningwave/core.git</repository.url>
 	</properties>
+	
+	<issueManagement>
+        <system>github.com</system>
+        <url>https://github.com/burningwave/core/issues</url>
+    </issueManagement>
+	
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
 
+	<scm>
+		<connection>scm:git:${repository.url}</connection>
+		<developerConnection>scm:git:${repository.url}</developerConnection>
+		<url>${repository.url}</url>
+		<tag>HEAD</tag>
+	</scm>
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -281,24 +304,6 @@
 			</plugin>
 		</plugins>
 	</reporting>
-
-	<distributionManagement>
-		<snapshotRepository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-		</snapshotRepository>
-		<repository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-		</repository>
-	</distributionManagement>
-
-	<scm>
-		<connection>scm:git:${repository.url}</connection>
-		<developerConnection>scm:git:${repository.url}</developerConnection>
-		<url>${repository.url}</url>
-		<tag>HEAD</tag>
-	</scm>
 
 	<profiles>
 		<!-- GPG Signature on release -->
