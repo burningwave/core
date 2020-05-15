@@ -19,6 +19,7 @@ jobs:
 
   build-and-test-with-Java-8-and-later:
     name: Build -> Test (JVM ${{ matrix.java }}, ${{ matrix.architecture }}, ${{ matrix.os }})
+    needs: [ask-for-authorization]
     strategy:
       fail-fast: true
       max-parallel: 10
