@@ -9,7 +9,7 @@
 	<name>Burningwave Core</name>
 	<url>https://www.burningwave.org/</url>
 
-		<licenses>
+	<licenses>
 		<license>
 			<name>MIT License</name>
 			<url>https://github.com/burningwave/core/blob/master/LICENSE</url>
