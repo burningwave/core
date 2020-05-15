@@ -35,10 +35,10 @@ jobs:
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.architecture }}
       - if: endsWith(matrix.java, '-ea') != true 
-        name: Build and test for 
+        name: Build and test for final JDK version
         run: mvn -B clean test -Dproject_jdk_version=${{ matrix.java }} -DskipTests=false --file pom.xml
       - if: endsWith(matrix.java, '-ea') == true 
-        name: Build and test for Early Ac
+        name: Build and test for Early Access JDK version
         run: mvn -B clean test -Dproject_jdk_version=15 -DskipTests=false --file pom.xml
         
   test-and-compute-coverage:
