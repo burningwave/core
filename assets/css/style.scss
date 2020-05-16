@@ -2,8 +2,7 @@
 ---
 
 @import "{{ site.theme }}";
-.main-content {
-  h1 {
-   color: #ff0000;
- }
-}
+.page-header {
+  color: #cf0e0e;
+  text-align: center;
+  background-color: #cf0e0e;
