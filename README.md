@@ -370,7 +370,7 @@ paths.main-class-paths.extension=//${system.properties:java.home}/lib//children:
 class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
 #this is the default class loader used by method
 #org.burningwave.core.classes.ClassFactory.buildAndLoadOrUpload(UnitSourceGenerator... unitsCode)
-#(see ClassFactory example "extending classes at runtime and invoking its methods with and without use of the reflection")
+#(see ClassFactory example "generating classes at runtime and invoking their methods with and without use of the reflection")
 class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
 paths.class-factory.java-memory-compiler.class-repositories=${classPaths};${paths.main-class-paths.extension};
 paths.class-factory.default-class-loader.class-repositories=${paths.class-factory.java-memory-compiler.class-repositories};
