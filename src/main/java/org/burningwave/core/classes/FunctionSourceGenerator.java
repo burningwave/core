@@ -35,6 +35,7 @@ import java.util.Iterator;
 import java.util.Optional;
 
 public class FunctionSourceGenerator extends SourceGenerator.Abst {
+	private Collection<TypeDeclarationSourceGenerator> usedTypes;
 	private Collection<String> outerCode;
 	private Collection<AnnotationSourceGenerator> annotations;
 	private Collection<TypeDeclarationSourceGenerator> throwables;
@@ -166,15 +167,11 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public FunctionSourceGenerator useType(java.lang.Class<?>... classes) {
-		this.body = Optional.ofNullable(this.body).orElseGet(StatementSourceGenerator::create);
-		body.useType(classes);
+		this.usedTypes = Optional.ofNullable(this.usedTypes).orElseGet(ArrayList::new);
+		for (Class<?> cls : classes) {
+			usedTypes.add(TypeDeclarationSourceGenerator.create(cls));
+		}
 		return this;		
-	}
-	
-	public FunctionSourceGenerator useType(String... classes) {
-		this.body = Optional.ofNullable(this.body).orElseGet(StatementSourceGenerator::create);
-		body.useType(classes);
-		return this;	
 	}
 
 	private String getParametersCode() {
@@ -197,6 +194,9 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 	
 	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
+		Optional.ofNullable(usedTypes).ifPresent(usedTypes -> {
+			types.addAll(usedTypes);
+		});
 		Optional.ofNullable(typesDeclaration).ifPresent(typesDeclaration -> {
 			types.addAll(typesDeclaration.getTypeDeclarations());
 		});
