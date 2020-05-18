@@ -51,9 +51,7 @@ public class ClassFileScannerBasedOnFileSignature {
             )
         );
         System.out.println("Files found: " + files.size());
-    }
-    
-    
+    }    
     
     public static void main(String[] args) throws Throwable {
         execute();
