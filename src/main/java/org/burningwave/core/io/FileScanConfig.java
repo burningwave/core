@@ -49,22 +49,22 @@ public class FileScanConfig extends FileScanConfigAbst<FileScanConfig> {
 	}	
 	
 	@Override
-	protected Predicate<File> getFileNameChecker() {
+	protected Predicate<File> getFileNameCheckerForFileSystemEntry() {
 		return getArchivePredicateForFileSystemEntry().negate();
 	}
 	
 	@Override
-	protected Predicate<File> getFileContentChecker() {
+	protected Predicate<File> getFileContentCheckerForFileSystemEntry() {
 		return entry -> true;
 	}
 	
 	@Override
-	protected Predicate<Entry> getZipEntryNameChecker() {
+	protected Predicate<Entry> getFileNameCheckerForZipEntry() {
 		return getArchivePredicateForZipEntry().negate().and(entry -> !entry.getName().endsWith("/"));
 	}
 	
 	@Override
-	protected Predicate<Entry> getZipEntryContentChecker() {
+	protected Predicate<Entry> getFileContentCheckerForZipEntry() {
 		return entry -> true;
 	}
 	

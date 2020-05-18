@@ -52,7 +52,7 @@ public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig>
 	}
 	
 	@Override
-	protected Predicate<File> getFileNameChecker() {
+	protected Predicate<File> getFileNameCheckerForFileSystemEntry() {
 		return entry -> {
 			String name = entry.getName();
 			return name.endsWith(".class") && 
@@ -62,12 +62,12 @@ public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig>
 	}
 	
 	@Override
-	protected Predicate<File> getFileContentChecker() {
+	protected Predicate<File> getFileContentCheckerForFileSystemEntry() {
 		return entry -> ThrowingSupplier.get(() -> Streams.isClass(entry));
 	}
 	
 	@Override
-	protected Predicate<Entry> getZipEntryNameChecker() {
+	protected Predicate<Entry> getFileNameCheckerForZipEntry() {
 		return entry -> {
 			String name = entry.getName();
 			return name.endsWith(".class") && 
@@ -77,7 +77,7 @@ public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig>
 	}
 	
 	@Override
-	protected Predicate<Entry> getZipEntryContentChecker() {
+	protected Predicate<Entry> getFileContentCheckerForZipEntry() {
 		return entry -> ThrowingSupplier.get(() -> Streams.isClass(entry.toByteBuffer()));
 	}
 	

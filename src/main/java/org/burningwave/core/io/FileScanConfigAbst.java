@@ -105,31 +105,9 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return defaultValue;
 	}
 	
-	Predicate<File> getArchivePredicateForFileSystemEntry(){
-		Predicate<File> checkFileName = entry -> {
-			String name = entry.getName();
-			return name.endsWith(".jar") ||
-				name.endsWith(".war") ||
-				name.endsWith(".ear") ||
-				name.endsWith(".zip") ||
-				name.endsWith(".jmod");
-		};		
-		Predicate<File> checkFileSignature = entry -> ThrowingSupplier.get(() -> Streams.isArchive(entry));
-		if (checkFileOptions == CHECK_FILE_SIGNATURE) {
-			return checkFileSignature;
-		} else if (checkFileOptions == CHECK_FILE_NAME_AND_SIGNATURE) {
-			return checkFileName.and(checkFileSignature);
-		} else if (checkFileOptions == CHECK_FILE_NAME_OR_SIGNATURE) {
-			return checkFileName.or(checkFileSignature);
-		} else if (checkFileOptions == CHECK_FILE_NAME) {
-			return checkFileName;
-		}
-		return null;
-	}
-	
-	Predicate<File> getFilePredicateForFileSystemEntry() {
-		Predicate<File> checkFileName = getFileNameChecker();
-		Predicate<File> checkFileSignature = getFileContentChecker();
+	protected final Predicate<File> getArchivePredicateForFileSystemEntry(){
+		Predicate<File> checkFileName = getArchiveNameCheckerForFileSystemEntry();		
+		Predicate<File> checkFileSignature = getArchiveContentCheckerForFileSystemEntry();
 		if (checkFileOptions == CHECK_FILE_SIGNATURE) {
 			return checkFileSignature;
 		} else if (checkFileOptions == CHECK_FILE_NAME_AND_SIGNATURE) {
@@ -142,12 +120,8 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return null;
 	}
 
-	protected abstract Predicate<File> getFileContentChecker();
-
-	protected abstract Predicate<File> getFileNameChecker();
-
-	Predicate<Entry> getArchivePredicateForZipEntry() {
-		Predicate<Entry> checkFileName = entry -> {
+	protected Predicate<File> getArchiveNameCheckerForFileSystemEntry() {
+		return entry -> {
 			String name = entry.getName();
 			return name.endsWith(".jar") ||
 				name.endsWith(".war") ||
@@ -155,22 +129,15 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 				name.endsWith(".zip") ||
 				name.endsWith(".jmod");
 		};
-		Predicate<Entry> checkFileSignature = entry -> ThrowingSupplier.get(() -> Streams.isArchive(entry.toByteBuffer()));
-		if (checkFileOptions == CHECK_FILE_SIGNATURE) {
-			return checkFileSignature;
-		} else if (checkFileOptions == CHECK_FILE_NAME_AND_SIGNATURE) {
-			return checkFileName.and(checkFileSignature);
-		} else if (checkFileOptions == CHECK_FILE_NAME_OR_SIGNATURE) {
-			return checkFileName.or(checkFileSignature);
-		} else if (checkFileOptions == CHECK_FILE_NAME) {
-			return checkFileName;
-		}
-		return null;
 	}
-
-	Predicate<Entry> getFilePredicateForZipEntry() {
-		Predicate<Entry> checkFileName = getZipEntryNameChecker();
-		Predicate<Entry> checkFileSignature = getZipEntryContentChecker();
+	
+	protected Predicate<File> getArchiveContentCheckerForFileSystemEntry() {
+		return entry -> ThrowingSupplier.get(() -> Streams.isArchive(entry));
+	}	
+	
+	protected final Predicate<File> getFilePredicateForFileSystemEntry() {
+		Predicate<File> checkFileName = getFileNameCheckerForFileSystemEntry();
+		Predicate<File> checkFileSignature = getFileContentCheckerForFileSystemEntry();
 		if (checkFileOptions == CHECK_FILE_SIGNATURE) {
 			return checkFileSignature;
 		} else if (checkFileOptions == CHECK_FILE_NAME_AND_SIGNATURE) {
@@ -183,9 +150,58 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return null;
 	}
 	
-	protected abstract Predicate<Entry> getZipEntryContentChecker();
+	protected abstract Predicate<File> getFileNameCheckerForFileSystemEntry();
+	
+	protected abstract Predicate<File> getFileContentCheckerForFileSystemEntry();
 
-	protected abstract Predicate<Entry> getZipEntryNameChecker();
+	protected final Predicate<Entry> getArchivePredicateForZipEntry() {
+		Predicate<Entry> checkFileName = getArchiveNameCheckerForZipEntry();
+		Predicate<Entry> checkFileSignature = getArchiveContentCheckerForZipEntry();
+		if (checkFileOptions == CHECK_FILE_SIGNATURE) {
+			return checkFileSignature;
+		} else if (checkFileOptions == CHECK_FILE_NAME_AND_SIGNATURE) {
+			return checkFileName.and(checkFileSignature);
+		} else if (checkFileOptions == CHECK_FILE_NAME_OR_SIGNATURE) {
+			return checkFileName.or(checkFileSignature);
+		} else if (checkFileOptions == CHECK_FILE_NAME) {
+			return checkFileName;
+		}
+		return null;
+	}
+
+	protected Predicate<Entry> getArchiveContentCheckerForZipEntry() {
+		return entry -> ThrowingSupplier.get(() -> Streams.isArchive(entry.toByteBuffer()));
+	}
+
+	protected Predicate<Entry> getArchiveNameCheckerForZipEntry() {
+		return entry -> {
+			String name = entry.getName();
+			return name.endsWith(".jar") ||
+				name.endsWith(".war") ||
+				name.endsWith(".ear") ||
+				name.endsWith(".zip") ||
+				name.endsWith(".jmod");
+		};
+	}
+	
+	protected final Predicate<Entry> getFilePredicateForZipEntry() {
+		Predicate<Entry> checkFileName = getFileNameCheckerForZipEntry();
+		Predicate<Entry> checkFileSignature = getFileContentCheckerForZipEntry();
+		if (checkFileOptions == CHECK_FILE_SIGNATURE) {
+			return checkFileSignature;
+		} else if (checkFileOptions == CHECK_FILE_NAME_AND_SIGNATURE) {
+			return checkFileName.and(checkFileSignature);
+		} else if (checkFileOptions == CHECK_FILE_NAME_OR_SIGNATURE) {
+			return checkFileName.or(checkFileSignature);
+		} else if (checkFileOptions == CHECK_FILE_NAME) {
+			return checkFileName;
+		}
+		return null;
+	}
+	
+	protected abstract Predicate<Entry> getFileContentCheckerForZipEntry();
+
+	protected abstract Predicate<Entry> getFileNameCheckerForZipEntry();
 	
 	public F checkFileOptions(Integer options) {
 		this.checkFileOptions = options;
