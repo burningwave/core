@@ -62,7 +62,7 @@ public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig>
 	}
 	
 	@Override
-	protected Predicate<File> getFileContentCheckerForFileSystemEntry() {
+	protected Predicate<File> getFileSignatureCheckerForFileSystemEntry() {
 		return entry -> ThrowingSupplier.get(() -> Streams.isClass(entry));
 	}
 	
@@ -77,7 +77,7 @@ public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig>
 	}
 	
 	@Override
-	protected Predicate<Entry> getFileContentCheckerForZipEntry() {
+	protected Predicate<Entry> getFileSignatureCheckerForZipEntry() {
 		return entry -> ThrowingSupplier.get(() -> Streams.isClass(entry.toByteBuffer()));
 	}
 	

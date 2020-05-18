@@ -137,7 +137,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	
 	protected final Predicate<File> getFilePredicateForFileSystemEntry() {
 		Predicate<File> checkFileName = getFileNameCheckerForFileSystemEntry();
-		Predicate<File> checkFileSignature = getFileContentCheckerForFileSystemEntry();
+		Predicate<File> checkFileSignature = getFileSignatureCheckerForFileSystemEntry();
 		if (checkFileOptions == CHECK_FILE_SIGNATURE) {
 			return checkFileSignature;
 		} else if (checkFileOptions == CHECK_FILE_NAME_AND_SIGNATURE) {
@@ -152,7 +152,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	
 	protected abstract Predicate<File> getFileNameCheckerForFileSystemEntry();
 	
-	protected abstract Predicate<File> getFileContentCheckerForFileSystemEntry();
+	protected abstract Predicate<File> getFileSignatureCheckerForFileSystemEntry();
 
 	protected final Predicate<Entry> getArchivePredicateForZipEntry() {
 		Predicate<Entry> checkFileName = getArchiveNameCheckerForZipEntry();
@@ -186,7 +186,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 	
 	protected final Predicate<Entry> getFilePredicateForZipEntry() {
 		Predicate<Entry> checkFileName = getFileNameCheckerForZipEntry();
-		Predicate<Entry> checkFileSignature = getFileContentCheckerForZipEntry();
+		Predicate<Entry> checkFileSignature = getFileSignatureCheckerForZipEntry();
 		if (checkFileOptions == CHECK_FILE_SIGNATURE) {
 			return checkFileSignature;
 		} else if (checkFileOptions == CHECK_FILE_NAME_AND_SIGNATURE) {
@@ -199,7 +199,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return null;
 	}
 	
-	protected abstract Predicate<Entry> getFileContentCheckerForZipEntry();
+	protected abstract Predicate<Entry> getFileSignatureCheckerForZipEntry();
 
 	protected abstract Predicate<Entry> getFileNameCheckerForZipEntry();
 	

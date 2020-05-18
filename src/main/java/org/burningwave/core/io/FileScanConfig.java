@@ -54,7 +54,7 @@ public class FileScanConfig extends FileScanConfigAbst<FileScanConfig> {
 	}
 	
 	@Override
-	protected Predicate<File> getFileContentCheckerForFileSystemEntry() {
+	protected Predicate<File> getFileSignatureCheckerForFileSystemEntry() {
 		return entry -> true;
 	}
 	
@@ -64,7 +64,7 @@ public class FileScanConfig extends FileScanConfigAbst<FileScanConfig> {
 	}
 	
 	@Override
-	protected Predicate<Entry> getFileContentCheckerForZipEntry() {
+	protected Predicate<Entry> getFileSignatureCheckerForZipEntry() {
 		return entry -> true;
 	}
 	
