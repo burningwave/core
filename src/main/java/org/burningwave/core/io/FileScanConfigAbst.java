@@ -212,7 +212,8 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return checkFileOptions;
 	}
 	
-	public F addPaths(Collection<String>... pathColls) {
+	@SafeVarargs
+	public final F addPaths(Collection<String>... pathColls) {
 		for(Collection<String> pathColl : pathColls) {
 			for (String path : pathColl) {
 				paths.add(Paths.normalizeAndClean(path));
