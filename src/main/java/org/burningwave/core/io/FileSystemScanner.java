@@ -158,6 +158,10 @@ public class FileSystemScanner implements Component {
 			
 			public ByteBuffer toByteBuffer();
 			
+			public default FileSystemItem toFileSystemItem() {
+				return FileSystemItem.ofPath(getAbsolutePath());
+			}
+			
 			public String getAbsolutePath();
 			
 			public <W> W getWrappedItem();
