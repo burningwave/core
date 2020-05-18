@@ -25,7 +25,7 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>5.17.4</version>
+    <version>5.18.0</version>
 </dependency>
 ```
 
@@ -33,32 +33,32 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 	<summary><b>... And with (click to expand)</b>:</summary>
 	<br/>
 	<ul><li><b>Gradle Groovy</b>:</li></ul>
-	<pre>implementation 'org.burningwave:core:5.17.4'</pre>
+	<pre>implementation 'org.burningwave:core:5.18.0'</pre>
 	<br/>
 	<ul><li><b>Gradle Kotlin</b>:</li></ul>
-	<pre>implementation("org.burningwave:core:5.17.4")</pre>
+	<pre>implementation("org.burningwave:core:5.18.0")</pre>
 	<br/>
 	<ul><li><b>Scala</b>:</li></ul>
-	<pre>libraryDependencies += "org.burningwave" % "core" % "5.17.4"</pre>
+	<pre>libraryDependencies += "org.burningwave" % "core" % "5.18.0"</pre>
 	<br/>
 	<ul><li><b>Apache Ivy</b>:</li></ul>
-	<pre>&lt;dependency org="org.burningwave" name="core" rev="5.17.4" /&gt;</pre>
+	<pre>&lt;dependency org="org.burningwave" name="core" rev="5.18.0" /&gt;</pre>
 	<br/>
 	<ul><li><b>Groovy Grape</b>:</li></ul>
 	<pre>
 @Grapes(
-  	@Grab(group='org.burningwave', module='core', version='5.17.4')
+  	@Grab(group='org.burningwave', module='core', version='5.18.0')
 )
 	</pre>
 	<br/>
 	<ul><li><b>Leiningen</b>:</li></ul>
-	<pre>[org.burningwave/core "5.17.4"]</pre>
+	<pre>[org.burningwave/core "5.18.0"]</pre>
 	<br/>
 	<ul><li><b>Apache Buildr</b>:</li></ul>
-	<pre>'org.burningwave:core:jar:5.17.4'</pre>
+	<pre>'org.burningwave:core:jar:5.18.0'</pre>
 	<br/>
 	<ul><li><b>PURL</b>:</li></ul>
-	<pre>pkg:maven/org.burningwave/core@5.17.4</pre>
+	<pre>pkg:maven/org.burningwave/core@5.18.0</pre>
 </details>
 
 ## Generating classes at runtime and invoking their methods with and without the use of reflection
@@ -274,7 +274,7 @@ streams.default-buffer-size=1024
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
 static-component-container.clear-temporary-folder-on-init=false
 static-component-container.hide-banner-on-init=false
-file-system-scanner.default-scan-config.check-file-options=checkFileExtension
+file-system-scanner.default-scan-config.check-file-options=checkFileName
 ```
 Here an example of a **burningwave.static.properties** file with all configurable properties:
 ```properties
@@ -291,7 +291,7 @@ streams.default-buffer-size=0.5Kb
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
 static-component-container.clear-temporary-folder-on-init=true
 static-component-container.hide-banner-on-init=false
-#other possible values are: checkFileExtension, checkFileSignature|checkFileSignature, checkFileSignature&checkFileSignature
+#other possible values are: checkFileName, checkFileName|checkFileSignature, checkFileName&checkFileSignature
 file-system-scanner.default-scan-config.check-file-options=checkFileSignature
 ```
 <br/>
@@ -374,12 +374,12 @@ class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextC
 class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
 paths.class-factory.java-memory-compiler.class-repositories=${classPaths};${paths.main-class-paths.extension};
 paths.class-factory.default-class-loader.class-repositories=${paths.class-factory.java-memory-compiler.class-repositories};
-#other possible values are: checkFileSignature, checkFileSignature|checkFileSignature, checkFileSignature&checkFileSignature
-java-memory-compiler.class-path-hunter.search-config.check-file-options=checkFileExtension
-#other possible values are: checkFileSignature, checkFileSignature|checkFileSignature, checkFileSignature&checkFileSignature
-class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=checkFileExtension
-#other possible values are: checkFileSignature, checkFileSignature|checkFileSignature, checkFileSignature&checkFileSignature
-class-factory.byte-code-hunter.search-config.check-file-options=checkFileExtension
+#other possible values are: checkFileSignature, checkFileName|checkFileSignature, checkFileName&checkFileSignature
+java-memory-compiler.class-path-hunter.search-config.check-file-options=checkFileName
+#other possible values are: checkFileSignature, checkFileName|checkFileSignature, checkFileName&checkFileSignature
+class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=checkFileName
+#other possible values are: checkFileSignature, checkFileName|checkFileSignature, checkFileName&checkFileSignature
+class-factory.byte-code-hunter.search-config.check-file-options=checkFileName
 #The resources below can be retrieved through PathHelper component getPaths method. In this case you must call
 #ComponentContainer.getInstance().getPathHelper().getPaths("your-custom-path1")
 paths.your-custom-path1=C:/some-folder;C:/another-folder;
@@ -453,6 +453,16 @@ paths.your-custom-path1=C:/some-folder;C:/another-folder;
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Finding-where-a-class-is-loaded-from">
 			<b>USE CASE</b>: finding where a class is loaded from
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
+	<summary><b>FileSystemScanner</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/How-to-scan-file-system-paths,-apply-a-filter-and-a-lamda-to-all-filtered-elements">
+			<b>USE CASE</b>: how to scan file system paths, apply a filter and a lamda to all filtered elements
 			</a>
 		</li>
 	</ul>
