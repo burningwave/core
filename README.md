@@ -2,7 +2,7 @@
 
 
 <a href="https://www.burningwave.org/">
-<img src="https://raw.githubusercontent.com/burningwave/core/master/Burningwave-logo.png" alt="Burningwave-logo.jpg" height="180px" align="right"/>
+<img src="https://raw.githubusercontent.com/burningwave/core/master/Burningwave-logo.png" alt="Burningwave-logo.png" height="180px" align="right"/>
 </a>
 
 
