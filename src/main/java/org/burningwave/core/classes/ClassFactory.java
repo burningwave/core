@@ -30,6 +30,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.nio.ByteBuffer;
@@ -53,6 +54,8 @@ import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.MultiParamsPredicate;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.iterable.IterableObjectHelper;
+import org.burningwave.core.iterable.Properties;
 
 
 public class ClassFactory implements Component {
@@ -60,6 +63,7 @@ public class ClassFactory implements Component {
 	public static final String CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY = "class-factory.java-memory-compiler.class-repositories";
 	public static final String CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY = "class-factory.default-class-loader.class-repositories";
 	public static final String BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY = "class-factory.byte-code-hunter.search-config.check-file-options";
+	public final static String SUPPLIER_IMPORTS_KEY_SUFFIX = ".supplier.imports";
 	
 	private SourceCodeHandler sourceCodeHandler;
 	private PathHelper pathHelper;
@@ -68,6 +72,9 @@ public class ClassFactory implements Component {
 	private ClassLoader defaultClassLoader;
 	private ByteCodeHunter byteCodeHunter;
 	private Supplier<ClassLoader> defaultClassLoaderSupplier;
+	private IterableObjectHelper iterableObjectHelper;	
+	private Supplier<IterableObjectHelper> iterableObjectHelperSupplier;
+	
 	private int byteCodeHunterSearchConfigCheckFileOptions;
 	
 	private ClassFactory(
@@ -76,6 +83,7 @@ public class ClassFactory implements Component {
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		Supplier<ClassLoader> defaultClassLoaderSupplier,
+		Supplier<IterableObjectHelper> iterableObjectHelperSupplier,
 		int byteCodeHunterSearchConfigCheckFileOptions
 	) {	
 		this.byteCodeHunter = byteCodeHunter;
@@ -84,6 +92,7 @@ public class ClassFactory implements Component {
 		this.pathHelper = pathHelper;
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
 		this.defaultClassLoaderSupplier = defaultClassLoaderSupplier;
+		this.iterableObjectHelperSupplier = iterableObjectHelperSupplier;
 		this.byteCodeHunterSearchConfigCheckFileOptions = byteCodeHunterSearchConfigCheckFileOptions;
 	}
 	
@@ -93,13 +102,24 @@ public class ClassFactory implements Component {
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		Supplier<ClassLoader> defaultClassLoaderSupplier,
+		Supplier<IterableObjectHelper> iterableObjectHelperSupplier,
 		Integer byteCodeHunterSearchConfigCheckFileOptions
 	) {
 		return new ClassFactory(
 			byteCodeHunter,
 			sourceCodeHandler, 
-			javaMemoryCompiler, pathHelper, defaultClassLoaderSupplier, byteCodeHunterSearchConfigCheckFileOptions
+			javaMemoryCompiler, 
+			pathHelper,
+			defaultClassLoaderSupplier,
+			iterableObjectHelperSupplier,
+			byteCodeHunterSearchConfigCheckFileOptions
 		);
+	}
+	
+	protected IterableObjectHelper getIterableObjectHelper() {
+		return iterableObjectHelper != null ?
+			iterableObjectHelper :
+			(iterableObjectHelper = iterableObjectHelperSupplier.get());
 	}
 	
 	private ClassLoader getDefaultClassLoader() {
@@ -401,6 +421,34 @@ public class ClassFactory implements Component {
 				return retrievedElement;
 			}
 		});
+	}
+	
+	public <T> T execute(
+		Properties properties, 
+		String key,
+		Map<String, String> defaultValues,
+		Object... params
+	) {	
+		StatementSourceGenerator statement = StatementSourceGenerator.createSimple().setElementPrefix("\t");
+		if (params != null && params.length > 0) {
+			for (Object param : params) {
+				statement.useType(ComponentSupplier.class, param.getClass());
+			}
+		}
+		String importFromConfig = getIterableObjectHelper().get(properties, key + SUPPLIER_IMPORTS_KEY_SUFFIX, defaultValues);
+		if (Strings.isNotEmpty(importFromConfig)) {
+			Arrays.stream(importFromConfig.split(";")).forEach(imp -> {
+				statement.useType(imp);
+			});
+		}
+		String supplierCode = getIterableObjectHelper().get(properties, key, defaultValues);
+		statement.addCodeRow(supplierCode.contains("return")?
+			supplierCode:
+			"return (T)" + supplierCode + ";"
+		);
+		return execute(
+			CodeExecutor.class.getClassLoader(), statement, params
+		);
 	}
 	
 	public static class PojoSubTypeRetriever {

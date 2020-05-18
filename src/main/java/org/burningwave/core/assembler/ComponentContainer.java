@@ -207,6 +207,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getJavaMemoryCompiler(),
 				getPathHelper(),
 				() -> retrieveClassLoader(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, null),
+				() -> getIterableObjectHelper(),
 				FileScanConfigAbst.parseCheckFileOptionsValue(
 					getConfigProperty(ClassFactory.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY),
 					FileScanConfigAbst.CHECK_FILE_OPTIONS_DEFAULT_VALUE
@@ -276,8 +277,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public PropertyAccessor.ByFieldOrByMethod getByFieldOrByMethodPropertyAccessor() {
 		return getOrCreate(PropertyAccessor.ByFieldOrByMethod.class, () ->  
 			PropertyAccessor.ByFieldOrByMethod.create(
-				() -> getClassFactory(),
-				() -> getIterableObjectHelper()
+				() -> getClassFactory()
 			)
 		);
 	}
@@ -286,8 +286,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public PropertyAccessor.ByMethodOrByField getByMethodOrByFieldPropertyAccessor() {
 		return getOrCreate(PropertyAccessor.ByMethodOrByField.class, () ->  
 			PropertyAccessor.ByMethodOrByField.create(
-				() -> getClassFactory(),
-				() -> getIterableObjectHelper()
+				() -> getClassFactory()
 			)
 		);
 	}
@@ -346,7 +345,7 @@ public class ComponentContainer implements ComponentSupplier {
 		if (object instanceof ClassLoader) {
 			return (ClassLoader)object;
 		} else if (object instanceof String) {
-			return getByFieldOrByMethodPropertyAccessor().retrieveFrom(
+			return getClassFactory().execute(
 				config,
 				configKey,
 				defaultValues,
