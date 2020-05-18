@@ -411,8 +411,8 @@ paths.your-custom-path1=C:/some-folder;C:/another-folder;
 			</a>
 		</li>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/Finding-all-annotated-class">
-			<b>USE CASE</b>: finding all annotated class
+			<a href="https://github.com/burningwave/core/wiki/Finding-all-annotated-classes">
+			<b>USE CASE</b>: finding all annotated classes
 			</a>
 		</li>
 		<li>
