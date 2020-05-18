@@ -33,6 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Constructo
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
@@ -52,6 +53,7 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.function.MultiParamsConsumer;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.MultiParamsPredicate;
+import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
@@ -388,8 +390,51 @@ public class ClassFactory implements Component {
 	public <T> T execute(
 		StatementSourceGenerator statement,
 		Object... parameters
-	) {
+	) {	
 		return execute(getDefaultClassLoader(), statement, parameters);
+	}
+	
+	public <T> T execute(
+		ThrowingSupplier<InputStream, Throwable> propertiesAsInputStreamSupplier, 
+		String key,
+		Map<String, String> defaultValues,
+		Object... params
+	) {
+		Properties properties = new Properties();
+		ThrowingRunnable.run(() -> 
+			properties.load(
+					propertiesAsInputStreamSupplier.get()
+			)
+		);
+		return execute(properties, key, defaultValues, params);
+	}		
+	
+	public <T> T execute(
+		Properties properties, 
+		String key,
+		Map<String, String> defaultValues,
+		Object... params
+	) {	
+		StatementSourceGenerator statement = StatementSourceGenerator.createSimple().setElementPrefix("\t");
+		if (params != null && params.length > 0) {
+			for (Object param : params) {
+				statement.useType(ComponentSupplier.class, param.getClass());
+			}
+		}
+		String importFromConfig = getIterableObjectHelper().get(properties, key + SUPPLIER_IMPORTS_KEY_SUFFIX, defaultValues);
+		if (Strings.isNotEmpty(importFromConfig)) {
+			Arrays.stream(importFromConfig.split(";")).forEach(imp -> {
+				statement.useType(imp);
+			});
+		}
+		String supplierCode = getIterableObjectHelper().get(properties, key, defaultValues);
+		statement.addCodeRow(supplierCode.contains("return")?
+			supplierCode:
+			"return (T)" + supplierCode + ";"
+		);
+		return execute(
+			CodeExecutor.class.getClassLoader(), statement, params
+		);
 	}
 	
 	public <T> T execute(
@@ -421,34 +466,6 @@ public class ClassFactory implements Component {
 				return retrievedElement;
 			}
 		});
-	}
-	
-	public <T> T execute(
-		Properties properties, 
-		String key,
-		Map<String, String> defaultValues,
-		Object... params
-	) {	
-		StatementSourceGenerator statement = StatementSourceGenerator.createSimple().setElementPrefix("\t");
-		if (params != null && params.length > 0) {
-			for (Object param : params) {
-				statement.useType(ComponentSupplier.class, param.getClass());
-			}
-		}
-		String importFromConfig = getIterableObjectHelper().get(properties, key + SUPPLIER_IMPORTS_KEY_SUFFIX, defaultValues);
-		if (Strings.isNotEmpty(importFromConfig)) {
-			Arrays.stream(importFromConfig.split(";")).forEach(imp -> {
-				statement.useType(imp);
-			});
-		}
-		String supplierCode = getIterableObjectHelper().get(properties, key, defaultValues);
-		statement.addCodeRow(supplierCode.contains("return")?
-			supplierCode:
-			"return (T)" + supplierCode + ";"
-		);
-		return execute(
-			CodeExecutor.class.getClassLoader(), statement, params
-		);
 	}
 	
 	public static class PojoSubTypeRetriever {
