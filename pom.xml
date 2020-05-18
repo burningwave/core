@@ -75,7 +75,7 @@
 		<connection>scm:git:${repository.url}</connection>
 		<developerConnection>scm:git:${repository.url}</developerConnection>
 		<url>https://github.com/burningwave/core</url>
-		<tag>core-5.17.5</tag>
+		<tag>HEAD</tag>
 	</scm>
 	
 	<dependencies>
