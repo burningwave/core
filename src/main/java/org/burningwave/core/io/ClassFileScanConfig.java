@@ -41,11 +41,6 @@ import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.IterableZipContainer.Entry;
 
 public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig> {
-
-	@Override
-	ClassFileScanConfig create() {
-		return new ClassFileScanConfig();
-	}
 	
 	@SafeVarargs
 	public static ClassFileScanConfig forPaths(Collection<String>... pathsColl) {
@@ -57,44 +52,33 @@ public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig>
 	}
 	
 	@Override
-	Predicate<File> getFilePredicateForFileSystemEntry() {
-		Predicate<File> checkFileExtension = entry -> {
+	protected Predicate<File> getFileNameChecker() {
+		return entry -> {
 			String name = entry.getName();
 			return name.endsWith(".class") && 
 				!name.endsWith("module-info.class") &&
 				!name.endsWith("package-info.class");
 		};
-		Predicate<File> checkFileSignature = entry -> ThrowingSupplier.get(() -> Streams.isClass(entry));
-		if (checkFileOptions == CHECK_FILE_SIGNATURE) {
-			return checkFileSignature;
-		} else if (checkFileOptions == CHECK_FILE_EXTENSION_AND_SIGNATURE) {
-			return checkFileExtension.and(checkFileSignature);
-		} else if (checkFileOptions == CHECK_FILE_EXTENSION_OR_SIGNATURE) {
-			return checkFileExtension.or(checkFileSignature);
-		} else if (checkFileOptions == CHECK_FILE_EXTENSION) {
-			return checkFileExtension;
-		}
-		return null;
 	}
-
+	
 	@Override
-	Predicate<Entry> getFilePredicateForZipEntry() {
-		Predicate<Entry> checkFileExtension = entry -> {
+	protected Predicate<File> getFileContentChecker() {
+		return entry -> ThrowingSupplier.get(() -> Streams.isClass(entry));
+	}
+	
+	@Override
+	protected Predicate<Entry> getZipEntryNameChecker() {
+		return entry -> {
 			String name = entry.getName();
 			return name.endsWith(".class") && 
 				!name.endsWith("module-info.class") &&
 				!name.endsWith("package-info.class");
 		};
-		Predicate<Entry> checkFileSignature = entry -> ThrowingSupplier.get(() -> Streams.isClass(entry.toByteBuffer()));
-		if (checkFileOptions == CHECK_FILE_SIGNATURE) {
-			return checkFileSignature;
-		} else if (checkFileOptions == CHECK_FILE_EXTENSION_AND_SIGNATURE) {
-			return checkFileExtension.and(checkFileSignature);
-		} else if (checkFileOptions == CHECK_FILE_EXTENSION_OR_SIGNATURE) {
-			return checkFileExtension.or(checkFileSignature);
-		} else if (checkFileOptions == CHECK_FILE_EXTENSION) {
-			return checkFileExtension;
-		}
-		return null;
 	}
+	
+	@Override
+	protected Predicate<Entry> getZipEntryContentChecker() {
+		return entry -> ThrowingSupplier.get(() -> Streams.isClass(entry.toByteBuffer()));
+	}
+	
 }

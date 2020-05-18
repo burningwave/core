@@ -38,11 +38,6 @@ import java.util.stream.Stream;
 import org.burningwave.core.io.IterableZipContainer.Entry;
 
 public class FileScanConfig extends FileScanConfigAbst<FileScanConfig> {
-
-	@Override
-	FileScanConfig create() {
-		return new FileScanConfig();
-	}
 	
 	@SafeVarargs
 	public static FileScanConfig forPaths(Collection<String>... pathColls) {
@@ -51,15 +46,26 @@ public class FileScanConfig extends FileScanConfigAbst<FileScanConfig> {
 	
 	public static FileScanConfig forPaths(String... paths) {
 		return forPaths((Collection<String>)Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
+	}	
+	
+	@Override
+	protected Predicate<File> getFileNameChecker() {
+		return getArchivePredicateForFileSystemEntry().negate();
 	}
 	
 	@Override
-	Predicate<File> getFilePredicateForFileSystemEntry() {
-		return getArchivePredicateForFileSystemEntry().negate();
+	protected Predicate<File> getFileContentChecker() {
+		return entry -> true;
 	}
-
+	
 	@Override
-	Predicate<Entry> getFilePredicateForZipEntry() {
+	protected Predicate<Entry> getZipEntryNameChecker() {
 		return getArchivePredicateForZipEntry().negate().and(entry -> !entry.getName().endsWith("/"));
 	}
+	
+	@Override
+	protected Predicate<Entry> getZipEntryContentChecker() {
+		return entry -> true;
+	}
+	
 }
