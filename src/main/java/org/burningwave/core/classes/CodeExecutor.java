@@ -82,8 +82,8 @@ public interface CodeExecutor {
     		return fromProperties;
     	}
     	
-    	public static ForStatementSourceGenerator forStatementSourceGenerator(StatementSourceGenerator statement) {
-    		return new ForStatementSourceGenerator(statement);
+    	public static ForStatementSourceGenerator forStatementSourceGenerator() {
+    		return new ForStatementSourceGenerator();
     	}
     	
     	
@@ -155,14 +155,33 @@ public interface CodeExecutor {
     	public static class ForStatementSourceGenerator extends Config<ForStatementSourceGenerator> {
     		StatementSourceGenerator statement;
     		
-    		private ForStatementSourceGenerator(StatementSourceGenerator statement) {
-    			this.statement = statement;
+    		private ForStatementSourceGenerator() {
+    			this.statement = StatementSourceGenerator.createSimple().setElementPrefix("\t");
     		}
 
 			StatementSourceGenerator getStatement() {
 				return statement;
-			}    		
+			}
+			
+			public ForStatementSourceGenerator addCodeRow(String... codeRow) {
+				statement.addCodeRow(codeRow);
+				return this;
+			}
+			
+			public ForStatementSourceGenerator addCode(String... code) {
+				statement.addCode(code);
+				return this;
+			}
     		
+			public ForStatementSourceGenerator addCode(SourceGenerator... generators) {
+				statement.addElement(generators);
+				return this;
+			}
+
+			public ForStatementSourceGenerator useType(Class<?>... classes) {
+				statement.useType(classes);
+				return this;
+			}
     	}
     }
 }
