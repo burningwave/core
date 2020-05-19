@@ -401,13 +401,13 @@ paths.your-custom-path1=C:/some-folder;C:/another-folder;
 	<summary><b>ClassHunter</b></summary>
 	<ul>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/How-retrieve-all-classes-that-implement-one-or-more-interfaces">
-			<b>USE CASE</b>: how retrieve all classes that implement one or more interfaces
+			<a href="https://github.com/burningwave/core/wiki/How-to-retrieve-all-classes-that-implement-one-or-more-interfaces">
+			<b>USE CASE</b>: how to retrieve all classes that implement one or more interfaces
 			</a>
 		</li>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/How-search-for-all-classes-with-methods-whose-name-begins-for-a-given-string-and-that-takes-a-specific-type-as-its-first-parameter">
-			<b>USE CASE</b>: how search for all classes with methods whose name begins for a given string and that takes a specific type as its first parameter
+			<a href="https://github.com/burningwave/core/wiki/How-to-search-for-all-classes-with-methods-whose-name-begins-for-a-given-string-and-that-takes-a-specific-type-as-its-first-parameter">
+			<b>USE CASE</b>: how to search for all classes with methods whose name begins for a given string and that takes a specific type as its first parameter
 			</a>
 		</li>
 		<li>
@@ -421,8 +421,8 @@ paths.your-custom-path1=C:/some-folder;C:/another-folder;
 			</a>
 		</li>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/How-retrieve-all-classes-of-the-classpath">
-			<b>USE CASE</b>: how retrieve all classes of the classpath
+			<a href="https://github.com/burningwave/core/wiki/How-to-retrieve-all-classes-of-the-classpath">
+			<b>USE CASE</b>: how to retrieve all classes of the classpath
 			</a>
 		</li>
 		<li>
@@ -436,8 +436,8 @@ paths.your-custom-path1=C:/some-folder;C:/another-folder;
 			</a>
 		</li>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/How-search-for-all-classes-with-a-constructor-that-takes-a-specific-type-as-first-parameter-and-with-at-least-2-methods-that-begin-for-a-given-string">
-			<b>USE CASE</b>: how search for all classes with a constructor that takes a specific type as first parameter and with at least 2 methods that begin for a given string
+			<a href="https://github.com/burningwave/core/wiki/How-to-search-for-all-classes-with-a-constructor-that-takes-a-specific-type-as-first-parameter-and-with-at-least-2-methods-that-begin-for-a-given-string">
+			<b>USE CASE</b>: how to search for all classes with a constructor that takes a specific type as first parameter and with at least 2 methods that begin for a given string
 			</a>
 		</li>
 		<li>
@@ -471,8 +471,8 @@ paths.your-custom-path1=C:/some-folder;C:/another-folder;
 	<summary><b>PropertyAccessor</b></summary>
 	<ul>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/Getting-property-of-a-Java-bean-through-path">
-			<b>USE CASE</b>: getting property of a Java bean through path
+			<a href="https://github.com/burningwave/core/wiki/Getting-a-property-of-a-Java-bean-through-path">
+			<b>USE CASE</b>: getting a property of a Java bean through path
 			</a>
 		</li>
 	</ul>
