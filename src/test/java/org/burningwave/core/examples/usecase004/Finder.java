@@ -54,7 +54,7 @@ public class Finder {
 		SearchResult searchResult = classHunter.findBy(searchConfig);
 
 		//If you need all annotaded methods unconment this
-		//searchResult.getMembersFoundFlatMap().values();
+		//searchResult.getMembersFlatMap().values();
 
 		return searchResult.getClasses();
 	}
