@@ -4,7 +4,7 @@
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
 
-	<version>5.19.0-SNAPSHOT</version>
+	<version>5.19.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	
 	<name>Burningwave Core</name>
