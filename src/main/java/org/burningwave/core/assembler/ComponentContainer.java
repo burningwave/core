@@ -47,6 +47,7 @@ import org.burningwave.core.classes.ByteCodeHunter;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHunter;
+import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.SourceCodeHandler;
@@ -208,10 +209,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getPathHelper(),
 				() -> retrieveClassLoader(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, null),
 				() -> getIterableObjectHelper(),
-				FileScanConfigAbst.parseCheckFileOptionsValue(
-					getConfigProperty(ClassFactory.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY),
-					FileScanConfigAbst.CHECK_FILE_OPTIONS_DEFAULT_VALUE
-				)
+				config
 			)
 		);	
 	}
@@ -346,10 +344,11 @@ public class ComponentContainer implements ComponentSupplier {
 			return (ClassLoader)object;
 		} else if (object instanceof String) {
 			return getClassFactory().execute(
-				config,
-				configKey,
-				defaultValues,
-				this
+				CodeExecutor.Config.forDefaultProperties()
+				.setPropertyName(configKey)
+				.withParameter(this)
+				.withDefaultPropertyValues(defaultValues)
+				.useAsParentClassLoader(Classes.getClassLoader(CodeExecutor.class))
 			);
 		} else {
 			throw Throwables.toRuntimeException("Value " + object + " of configuration property" + 

@@ -33,7 +33,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Constructo
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,6 +54,8 @@ import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.MultiParamsPredicate;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.io.FileScanConfigAbst;
+import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
@@ -65,7 +66,7 @@ public class ClassFactory implements Component {
 	public static final String CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY = "class-factory.java-memory-compiler.class-repositories";
 	public static final String CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY = "class-factory.default-class-loader.class-repositories";
 	public static final String BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY = "class-factory.byte-code-hunter.search-config.check-file-options";
-	public final static String SUPPLIER_IMPORTS_KEY_SUFFIX = ".supplier.imports";
+	public final static String PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX = ".imports";
 	
 	private SourceCodeHandler sourceCodeHandler;
 	private PathHelper pathHelper;
@@ -76,8 +77,7 @@ public class ClassFactory implements Component {
 	private Supplier<ClassLoader> defaultClassLoaderSupplier;
 	private IterableObjectHelper iterableObjectHelper;	
 	private Supplier<IterableObjectHelper> iterableObjectHelperSupplier;
-	
-	private int byteCodeHunterSearchConfigCheckFileOptions;
+	private Properties config;
 	
 	private ClassFactory(
 		ByteCodeHunter byteCodeHunter,
@@ -86,7 +86,7 @@ public class ClassFactory implements Component {
 		PathHelper pathHelper,
 		Supplier<ClassLoader> defaultClassLoaderSupplier,
 		Supplier<IterableObjectHelper> iterableObjectHelperSupplier,
-		int byteCodeHunterSearchConfigCheckFileOptions
+		Properties config
 	) {	
 		this.byteCodeHunter = byteCodeHunter;
 		this.sourceCodeHandler = sourceCodeHandler;
@@ -95,7 +95,8 @@ public class ClassFactory implements Component {
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
 		this.defaultClassLoaderSupplier = defaultClassLoaderSupplier;
 		this.iterableObjectHelperSupplier = iterableObjectHelperSupplier;
-		this.byteCodeHunterSearchConfigCheckFileOptions = byteCodeHunterSearchConfigCheckFileOptions;
+		this.config = config;
+		listenTo(config);
 	}
 	
 	public static ClassFactory create(
@@ -105,7 +106,7 @@ public class ClassFactory implements Component {
 		PathHelper pathHelper,
 		Supplier<ClassLoader> defaultClassLoaderSupplier,
 		Supplier<IterableObjectHelper> iterableObjectHelperSupplier,
-		Integer byteCodeHunterSearchConfigCheckFileOptions
+		Properties config
 	) {
 		return new ClassFactory(
 			byteCodeHunter,
@@ -114,7 +115,7 @@ public class ClassFactory implements Component {
 			pathHelper,
 			defaultClassLoaderSupplier,
 			iterableObjectHelperSupplier,
-			byteCodeHunterSearchConfigCheckFileOptions
+			config
 		);
 	}
 	
@@ -276,7 +277,10 @@ public class ClassFactory implements Component {
 						).deleteFoundItemsOnClose(
 							false
 						).checkFileOptions(
-							byteCodeHunterSearchConfigCheckFileOptions
+							FileScanConfigAbst.parseCheckFileOptionsValue(
+								(String)config.get(ClassFactory.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY),
+								FileScanConfigAbst.CHECK_FILE_OPTIONS_DEFAULT_VALUE
+							)
 						).optimizePaths(
 							true
 						)
@@ -387,30 +391,37 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	public <T> T execute(
-		StatementSourceGenerator statement,
-		Object... parameters
-	) {	
-		return execute(getDefaultClassLoader(), statement, parameters);
-	}
-	
-	public <T> T execute(
-		ThrowingSupplier<InputStream, Throwable> propertiesAsInputStreamSupplier, 
-		String key,
-		Map<String, String> defaultValues,
-		Object... params
-	) {
-		Properties properties = new Properties();
-		ThrowingRunnable.run(() -> 
-			properties.load(
-					propertiesAsInputStreamSupplier.get()
-			)
-		);
-		return execute(properties, key, defaultValues, params);
+	public <T> T execute(CodeExecutor.Config.ForProperties config) {
+		ClassLoader parentClassLoader = config.getParentClassLoader();
+		if (parentClassLoader == null && config.isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull()) {
+			parentClassLoader = getDefaultClassLoader();
+		}
+		
+		java.util.Properties properties = config.getProperties();
+		if (properties == null) {
+			if (config.getFilePath() == null) {
+				properties = this.config; 
+			} else {
+				Properties tempProperties = new Properties();
+				if (config.isAbsoluteFilePath()) {
+					ThrowingRunnable.run(() -> 
+						tempProperties.load(FileSystemItem.ofPath(config.getFilePath()).toInputStream())
+					);
+				} else {
+					ThrowingRunnable.run(() ->
+						tempProperties.load(pathHelper.getResourceAsStream(config.getFilePath()))
+					);
+				}
+				properties = tempProperties;
+			}
+			
+		}
+		return execute(parentClassLoader, properties, config.getPropertyName(), config.getDefaultValues(), config.getParams());
 	}		
 	
-	public <T> T execute(
-		Properties properties, 
+	private <T> T execute(
+		ClassLoader classLoaderParent,
+		java.util.Properties properties, 
 		String key,
 		Map<String, String> defaultValues,
 		Object... params
@@ -418,26 +429,42 @@ public class ClassFactory implements Component {
 		StatementSourceGenerator statement = StatementSourceGenerator.createSimple().setElementPrefix("\t");
 		if (params != null && params.length > 0) {
 			for (Object param : params) {
-				statement.useType(ComponentSupplier.class, param.getClass());
+				statement.useType(param.getClass());
 			}
 		}
-		String importFromConfig = getIterableObjectHelper().get(properties, key + SUPPLIER_IMPORTS_KEY_SUFFIX, defaultValues);
+		String importFromConfig = getIterableObjectHelper().get(properties, key + PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, defaultValues);
 		if (Strings.isNotEmpty(importFromConfig)) {
 			Arrays.stream(importFromConfig.split(";")).forEach(imp -> {
 				statement.useType(imp);
 			});
 		}
-		String supplierCode = getIterableObjectHelper().get(properties, key, defaultValues);
-		statement.addCodeRow(supplierCode.contains("return")?
-			supplierCode:
-			"return (T)" + supplierCode + ";"
-		);
+		String code = getIterableObjectHelper().get(properties, key, defaultValues);
+		if (code.contains(";")) {
+			for (String codeRow : code.split(";")) {
+				statement.addCodeRow(codeRow + ";");
+			}
+		} else {
+			statement.addCodeRow(code.contains("return")?
+				code:
+				"return (T)" + code + ";"
+			);
+		}
 		return execute(
-			CodeExecutor.class.getClassLoader(), statement, params
+			classLoaderParent, statement, params
 		);
 	}
 	
 	public <T> T execute(
+		CodeExecutor.Config.ForStatementSourceGenerator config
+	) {	
+		ClassLoader parentClassLoader = config.getParentClassLoader();
+		if (parentClassLoader == null && config.isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull()) {
+			parentClassLoader = getDefaultClassLoader();
+		}
+		return execute(parentClassLoader, config.getStatement(), config.getParams());
+	}
+	
+	private <T> T execute(
 		ClassLoader classLoaderParentOfOneShotClassLoader,
 		StatementSourceGenerator statement,
 		Object... parameters

@@ -16,6 +16,7 @@ import org.burningwave.core.bean.Complex;
 import org.burningwave.core.bean.PojoInterface;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassSourceGenerator;
+import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.FunctionSourceGenerator;
 import org.burningwave.core.classes.PojoSourceGenerator;
 import org.burningwave.core.classes.StatementSourceGenerator;
@@ -227,17 +228,30 @@ public class ClassFactoryTest extends BaseTest {
 	public void executeCodeTest() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> {
-			StatementSourceGenerator statementSG = StatementSourceGenerator.createSimple().setElementPrefix("\t");
-			statementSG.useType(ArrayList.class);
-			statementSG.useType(List.class);
-			statementSG.addCodeRow("System.out.println(\"number to add: \" + parameter[0]);");
-			statementSG.addCodeRow("List<Integer> numbers = new ArrayList<>();");
-			statementSG.addCodeRow("numbers.add((Integer)parameter[0]);");
-			statementSG.addCodeRow("System.out.println(\"number list size: \" + numbers.size());");
-			statementSG.addCodeRow("System.out.println(\"number in the list: \" + numbers.get(0));");
-			statementSG.addCodeRow("Integer inputNumber = (Integer)parameter[0];");
-			statementSG.addCodeRow("return (T)inputNumber++;");
-			return componentSupplier.getClassFactory().execute(statementSG, Integer.valueOf(5));
+			return componentSupplier.getClassFactory().execute(
+				CodeExecutor.Config.forStatementSourceGenerator(
+					StatementSourceGenerator.createSimple().setElementPrefix("\t")
+					.useType(ArrayList.class)
+					.useType(List.class)
+					.addCodeRow("System.out.println(\"number to add: \" + parameter[0]);")
+					.addCodeRow("List<Integer> numbers = new ArrayList<>();")
+					.addCodeRow("numbers.add((Integer)parameter[0]);")
+					.addCodeRow("System.out.println(\"number list size: \" + numbers.size());")
+					.addCodeRow("System.out.println(\"number in the list: \" + numbers.get(0));")
+					.addCodeRow("Integer inputNumber = (Integer)parameter[0];")
+					.addCodeRow("return (T)inputNumber++;")		
+				).withParameter(Integer.valueOf(5))
+			);
+		});
+	}
+	
+	@Test
+	public void executeCodeOfPropertiesFileTest() throws Exception {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotNull(() -> {
+			return componentSupplier.getClassFactory().execute(
+				CodeExecutor.Config.forPropertiesFile("code.properties").setPropertyName("code-block-1")
+			);
 		});
 	}
 }
