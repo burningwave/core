@@ -401,7 +401,7 @@ paths.your-custom-path1=C:/some-folder;C:/another-folder;
 	<summary><b>ClassHunter</b></summary>
 	<ul>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/How-to-retrieve-all-classes-that-implement-one-or-more-interfaces">
+			<a href="https://github.com/burningwave/core/wiki/How-retrieve-all-classes-that-implement-one-or-more-interfaces">
 			<b>USE CASE</b>: how to retrieve all classes that implement one or more interfaces
 			</a>
 		</li>
