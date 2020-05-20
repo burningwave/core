@@ -74,6 +74,8 @@ public class ClassFactory implements Component {
 	private PojoSubTypeRetriever pojoSubTypeRetriever;	
 	private ClassLoader defaultClassLoader;
 	private ByteCodeHunter byteCodeHunter;
+	private ClassPathHunter classPathHunter;
+	private Supplier<ClassPathHunter> classPathHunterSupplier;
 	private Supplier<ClassLoader> defaultClassLoaderSupplier;
 	private IterableObjectHelper iterableObjectHelper;	
 	private Supplier<IterableObjectHelper> iterableObjectHelperSupplier;
@@ -81,6 +83,7 @@ public class ClassFactory implements Component {
 	
 	private ClassFactory(
 		ByteCodeHunter byteCodeHunter,
+		Supplier<ClassPathHunter> classPathHunterSupplier,
 		SourceCodeHandler sourceCodeHandler,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
@@ -89,6 +92,7 @@ public class ClassFactory implements Component {
 		Properties config
 	) {	
 		this.byteCodeHunter = byteCodeHunter;
+		this.classPathHunterSupplier = classPathHunterSupplier;
 		this.sourceCodeHandler = sourceCodeHandler;
 		this.javaMemoryCompiler = javaMemoryCompiler;
 		this.pathHelper = pathHelper;
@@ -101,6 +105,7 @@ public class ClassFactory implements Component {
 	
 	public static ClassFactory create(
 		ByteCodeHunter byteCodeHunter,
+		Supplier<ClassPathHunter> classPathHunterSupplier,
 		SourceCodeHandler sourceCodeHandler,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
@@ -110,6 +115,7 @@ public class ClassFactory implements Component {
 	) {
 		return new ClassFactory(
 			byteCodeHunter,
+			classPathHunterSupplier,
 			sourceCodeHandler, 
 			javaMemoryCompiler, 
 			pathHelper,
@@ -130,22 +136,45 @@ public class ClassFactory implements Component {
 			(defaultClassLoader = defaultClassLoaderSupplier.get());
 	}
 	
-	public Map<String, ByteBuffer> build(Collection<String> mainClassPaths, Collection<String> extraClassPaths, UnitSourceGenerator... unitsCode) {
-		return build(mainClassPaths, extraClassPaths, Arrays.asList(unitsCode).stream().map(unitCode -> unitCode.make()).collect(Collectors.toList()));
+	private ClassPathHunter getClassPathHunter() {
+		return classPathHunter != null? classPathHunter :
+			(classPathHunter = classPathHunterSupplier.get());
 	}
 	
-	public Map<String, ByteBuffer> build(Collection<String> mainClassPaths, Collection<String> extraClassPaths, Collection<String> unitsCode) {
+	public Map<String, ByteBuffer> build(boolean useOneShotCompiler, Collection<String> mainClassPaths, Collection<String> extraClassPaths, UnitSourceGenerator... unitsCode) {
+		return build(useOneShotCompiler, mainClassPaths, extraClassPaths, Arrays.asList(unitsCode).stream().map(unitCode -> unitCode.make()).collect(Collectors.toList()));
+	}
+	
+	public Map<String, ByteBuffer> build(boolean useOneShotCompiler, Collection<String> mainClassPaths, Collection<String> extraClassPaths, Collection<String> unitsCode) {
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", unitsCode));
-		return javaMemoryCompiler.compile(
+		JavaMemoryCompiler compiler = this.javaMemoryCompiler;
+		if (useOneShotCompiler) {
+			compiler = JavaMemoryCompiler.create(
+				pathHelper,
+				sourceCodeHandler,
+				getClassPathHunter(),
+				config
+			);
+		}
+		return compiler.compile(
 			unitsCode,
 			mainClassPaths, 
 			extraClassPaths
 		);
 	}
 	
-	public Map<String, ByteBuffer> build(Collection<String> mainClassPaths, Collection<String> extraClassPaths, String... unitsCode) {
+	public Map<String, ByteBuffer> build(boolean useOneShotCompiler, Collection<String> mainClassPaths, Collection<String> extraClassPaths, String... unitsCode) {
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", unitsCode));
-		return javaMemoryCompiler.compile(
+		JavaMemoryCompiler compiler = this.javaMemoryCompiler;
+		if (useOneShotCompiler) {
+			compiler = JavaMemoryCompiler.create(
+				pathHelper,
+				sourceCodeHandler,
+				getClassPathHunter(),
+				config
+			);
+		}
+		return compiler.compile(
 			Arrays.asList(unitsCode),
 			mainClassPaths, 
 			extraClassPaths
@@ -159,6 +188,7 @@ public class ClassFactory implements Component {
 		UnitSourceGenerator... unitsCode
 	) {
 		return buildAndLoadOrUploadTo(
+			false,
 			compilationClassPaths,
 			compilationClassPathsForNotFoundClasses,
 			classLoaderClassPaths,
@@ -167,22 +197,13 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	public ClassRetriever buildAndLoadOrUpload(
-		Collection<String> compilationClassPaths,
-		Collection<String> compilationClassPathsForNotFoundClasses,
-		Collection<String> classLoaderClassPaths,
-		ClassLoader classLoader,
-		UnitSourceGenerator... unitsCode
-	) {
-		return buildAndLoadOrUploadTo(compilationClassPaths, compilationClassPathsForNotFoundClasses, classLoaderClassPaths, getDefaultClassLoader(), unitsCode);
-	}
-	
 	public ClassRetriever buildAndLoadOrUpload(UnitSourceGenerator... unitsCode) {
 		return buildAndLoadOrUploadTo(getDefaultClassLoader(), unitsCode);
 	}
 	
 	public ClassRetriever buildAndLoadOrUploadTo(ClassLoader classLoader, UnitSourceGenerator... unitsCode) {
 		return buildAndLoadOrUploadTo(
+			false,
 			pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
 			pathHelper.getPaths(CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY), 
 			pathHelper.getPaths(CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY), classLoader, unitsCode
@@ -190,6 +211,7 @@ public class ClassFactory implements Component {
 	}
 	
 	public ClassRetriever buildAndLoadOrUploadTo(
+		boolean useOneShotJavaCompiler,
 		Collection<String> compilationClassPaths,
 		Collection<String> compilationClassPathsForNotFoundClasses,
 		Collection<String> classLoaderClassPaths,
@@ -210,7 +232,7 @@ public class ClassFactory implements Component {
 				try {
 					classes.put(className, classLoader.loadClass(className));
 				} catch (Throwable exc) {
-					Map<String, ByteBuffer> compiledByteCodes = build(compilationClassPaths, compilationClassPathsForNotFoundClasses, unitsCode);
+					Map<String, ByteBuffer> compiledByteCodes = build(useOneShotJavaCompiler, compilationClassPaths, compilationClassPathsForNotFoundClasses, unitsCode);
 					return (clsName, additionalByteCodes) -> {
 						try {
 							Map<String, ByteBuffer> finalByteCodes = compiledByteCodes;

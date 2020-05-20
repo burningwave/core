@@ -204,6 +204,7 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(ClassFactory.class, () -> 
 			ClassFactory.create(
 				getByteCodeHunter(),
+				() -> getClassPathHunter(),
 				getSourceCodeHandler(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
@@ -221,10 +222,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getPathHelper(),
 				getSourceCodeHandler(),
 				getClassPathHunter(),
-				FileScanConfigAbst.parseCheckFileOptionsValue(
-					getConfigProperty(JavaMemoryCompiler.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY),
-					FileScanConfigAbst.CHECK_FILE_OPTIONS_DEFAULT_VALUE
-				)
+				config
 			)
 		);
 	}

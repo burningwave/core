@@ -65,42 +65,45 @@ import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassPathHunter.SearchResult;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferOutputStream;
+import org.burningwave.core.io.FileScanConfigAbst;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.iterable.Properties;
 
 public class JavaMemoryCompiler implements Component {
 	public static final String CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY = "java-memory-compiler.class-path-hunter.search-config.check-file-options";
 	
-	private SourceCodeHandler sourceCodeExecutor;
+	private SourceCodeHandler sourceCodeHandler;
 	private ClassPathHunter classPathHunter;
 	private JavaCompiler compiler;
 	private FileSystemItem compiledClassesClassPath;
 	private FileSystemItem classPathHunterBasePathForCompressedLibs;
 	private FileSystemItem classPathHunterBasePathForCompressedClasses;
-	private Integer classPathHunterSearchConfigCheckFileOptions;
+	private Properties config;
 	
 	private JavaMemoryCompiler(
 		PathHelper pathHelper,
-		SourceCodeHandler sourceCodeExecutor,
+		SourceCodeHandler sourceCodeHandler,
 		ClassPathHunter classPathHunter,
-		int classPathHunterSearchConfigCheckFileOptions
+		Properties config
 	) {
 		this.classPathHunter = classPathHunter;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
-		this.sourceCodeExecutor = sourceCodeExecutor;
+		this.sourceCodeHandler = sourceCodeHandler;
 		this.compiledClassesClassPath = FileSystemItem.of(getOrCreateTemporaryFolder("compiled"));
 		this.classPathHunterBasePathForCompressedLibs = FileSystemItem.of(getOrCreateTemporaryFolder("lib"));
 		this.classPathHunterBasePathForCompressedClasses = FileSystemItem.of(getOrCreateTemporaryFolder("classes"));
-		this.classPathHunterSearchConfigCheckFileOptions = classPathHunterSearchConfigCheckFileOptions;
+		this.config = config;
+		listenTo(config);
 	}	
 	
 	public static JavaMemoryCompiler create(
 		PathHelper pathHelper,
 		SourceCodeHandler sourceCodeExecutor,
 		ClassPathHunter classPathHunter,
-		Integer classPathHunterSearchConfigCheckFileOptions
+		Properties config
 	) {
-		return new JavaMemoryCompiler(pathHelper, sourceCodeExecutor, classPathHunter, classPathHunterSearchConfigCheckFileOptions);
+		return new JavaMemoryCompiler(pathHelper, sourceCodeExecutor, classPathHunter, config);
 	}
 	
 	
@@ -126,7 +129,7 @@ public class JavaMemoryCompiler implements Component {
 	
 	private void sourcesToMemorySources(Collection<String> sources, Collection<MemorySource> memorySources) {
 		for (String source : sources) {
-			String className = sourceCodeExecutor.extractClassName(source);
+			String className = sourceCodeHandler.extractClassName(source);
 			try {
 				memorySources.add(new MemorySource(Kind.SOURCE, className, source));
 			} catch (URISyntaxException eXC) {
@@ -430,6 +433,10 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForPackageName(String packageName) throws Exception {
+				int checkFileOptions = FileScanConfigAbst.parseCheckFileOptionsValue(
+					(String)javaMemoryCompiler.config.get(JavaMemoryCompiler.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY),
+					FileScanConfigAbst.CHECK_FILE_OPTIONS_DEFAULT_VALUE
+				);
 				SearchResult result = classPathHunter.findBy(
 					SearchConfig.withoutUsingCache().addPaths(
 						javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()
@@ -438,7 +445,7 @@ public class JavaMemoryCompiler implements Component {
 							Objects.equals(iteratedClassPackageName, packageName)
 						)
 					).checkFileOptions(
-						javaMemoryCompiler.classPathHunterSearchConfigCheckFileOptions
+						checkFileOptions
 					).optimizePaths(
 						true
 					)
@@ -452,7 +459,7 @@ public class JavaMemoryCompiler implements Component {
 								Objects.equals(iteratedClassPackageName, packageName)									
 							)
 						).checkFileOptions(
-							javaMemoryCompiler.classPathHunterSearchConfigCheckFileOptions
+							checkFileOptions
 						).optimizePaths(
 							true
 						)
@@ -463,11 +470,15 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
+				int checkFileOptions = FileScanConfigAbst.parseCheckFileOptionsValue(
+					(String)javaMemoryCompiler.config.get(JavaMemoryCompiler.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY),
+					FileScanConfigAbst.CHECK_FILE_OPTIONS_DEFAULT_VALUE
+				);
 				SearchResult result = classPathHunter.findBy(
 					SearchConfig.withoutUsingCache().addPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 						ClassCriteria.create().allThat(classPredicate)
 					).checkFileOptions(
-						javaMemoryCompiler.classPathHunterSearchConfigCheckFileOptions
+						checkFileOptions
 					).optimizePaths(
 						true
 					)
@@ -478,7 +489,7 @@ public class JavaMemoryCompiler implements Component {
 						SearchConfig.forPaths(classRepositoriesPaths).by(
 							ClassCriteria.create().allThat(classPredicate)
 						).checkFileOptions(
-							javaMemoryCompiler.classPathHunterSearchConfigCheckFileOptions
+							checkFileOptions
 						).optimizePaths(
 							true
 						)
@@ -509,6 +520,6 @@ public class JavaMemoryCompiler implements Component {
 	public void close() {
 		compiler = null;
 		classPathHunter = null;
-		sourceCodeExecutor = null;
+		sourceCodeHandler = null;
 	}
 }
