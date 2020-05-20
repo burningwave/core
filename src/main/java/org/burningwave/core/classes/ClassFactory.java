@@ -218,10 +218,10 @@ public class ClassFactory implements Component {
 								finalByteCodes = new HashMap<>(compiledByteCodes);
 								finalByteCodes.putAll(additionalByteCodes);
 							}
-							return ClassLoaders.loadOrUploadByteCode(clsName, finalByteCodes, classLoader);
+							return ClassLoaders.loadOrDefineByByteCode(clsName, finalByteCodes, classLoader);
 						} catch (Throwable innExc) {
 							return ThrowingSupplier.get(() -> {
-								return ClassLoaders.loadOrUploadByteCode(clsName, 
+								return ClassLoaders.loadOrDefineByByteCode(clsName, 
 									loadBytecodesFromClassPaths(
 										retrievedBytecodes,
 										classLoaderClassPaths,
@@ -241,10 +241,10 @@ public class ClassFactory implements Component {
 					return classLoader.loadClass(clsName);
 				} catch (Throwable exc) {
 					try {
-						return ClassLoaders.loadOrUploadByteCode(clsName, Optional.ofNullable(additionalByteCodes).orElseGet(HashMap::new), classLoader);
+						return ClassLoaders.loadOrDefineByByteCode(clsName, Optional.ofNullable(additionalByteCodes).orElseGet(HashMap::new), classLoader);
 					} catch (Throwable exc2) {
 						return ThrowingSupplier.get(() -> 
-							ClassLoaders.loadOrUploadByteCode(
+							ClassLoaders.loadOrDefineByByteCode(
 								clsName,
 								loadBytecodesFromClassPaths(
 									retrievedBytecodes, 

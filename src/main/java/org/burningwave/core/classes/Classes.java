@@ -531,36 +531,36 @@ public class Classes implements Component, MembersRetriever {
 			}
 		}
 		
-		public <T> Class<T> loadOrUploadClass(
+		public <T> Class<T> loadOrDefine(
 			Class<T> toLoad, 
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
-			return loadOrUploadClass(
+			return loadOrDefine(
 				toLoad, classLoader,
 				getDefineClassMethod(classLoader),
 				getDefinePackageMethod(classLoader)
 			);
 		}
 		
-		public <T> Class<T> loadOrUploadJavaClass(
+		public <T> Class<T> loadOrDefineByJavaClass(
 			JavaClass javaClass,
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
-			return loadOrUploadJavaClass(
+			return loadOrDefineByJavaClass(
 				javaClass, classLoader,
 				getDefineClassMethod(classLoader),
 				getDefinePackageMethod(classLoader)
 			);
 		}
 		
-		public Map<String, Class<?>> loadOrUploadByteCodes(
+		public Map<String, Class<?>> loadOrDefineByByteCodes(
 			Map<String, ByteBuffer> byteCodes,
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
 			Map<String, Class<?>> classes = new HashMap<>();
 			if (!(classLoader instanceof MemoryClassLoader)) {
 				for (Map.Entry<String, ByteBuffer> classNameForByteCode : byteCodes.entrySet()) {
-					classes.put(classNameForByteCode.getKey(),loadOrUploadByteCode(classNameForByteCode.getKey(), byteCodes, classLoader));
+					classes.put(classNameForByteCode.getKey(),loadOrDefineByByteCode(classNameForByteCode.getKey(), byteCodes, classLoader));
 				}
 			} else {
 				for (Map.Entry<String, ByteBuffer> clazz : byteCodes.entrySet()) {
@@ -574,18 +574,18 @@ public class Classes implements Component, MembersRetriever {
 		}
 		
 		@SuppressWarnings("unchecked")
-		public <T> Class<T> loadOrUploadByteCode(
+		public <T> Class<T> loadOrDefineByByteCode(
 			String className,
 			Map<String, ByteBuffer> byteCodes,
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
 			if (!(classLoader instanceof MemoryClassLoader)) {
 				try {
-					return loadOrUploadByteCode(byteCodes.get(className), classLoader);
+					return loadOrDefineByByteCode(byteCodes.get(className), classLoader);
 				} catch (ClassNotFoundException exc) {
 					String newNotFoundClassName = Classes.retrieveNames(exc).stream().findFirst().orElseGet(() -> null);
-					loadOrUploadByteCode(newNotFoundClassName, byteCodes, classLoader);
-					return loadOrUploadByteCode(byteCodes.get(className), classLoader);
+					loadOrDefineByByteCode(newNotFoundClassName, byteCodes, classLoader);
+					return loadOrDefineByByteCode(byteCodes.get(className), classLoader);
 				}
 			} else {
 				for (Map.Entry<String, ByteBuffer> clazz : byteCodes.entrySet()) {
@@ -598,18 +598,18 @@ public class Classes implements Component, MembersRetriever {
 		}
 		
 		@SuppressWarnings("unchecked")
-		public <T> Class<T> loadOrUploadJavaClass(
+		public <T> Class<T> loadOrDefineByJavaClass(
 			String className,
 			Map<String, JavaClass> byteCodes,
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
 			if (!(classLoader instanceof MemoryClassLoader)) {
 				try {
-					return loadOrUploadJavaClass(byteCodes.get(className), classLoader);
+					return loadOrDefineByJavaClass(byteCodes.get(className), classLoader);
 				} catch (ClassNotFoundException exc) {
 					String newNotFoundClassName = Classes.retrieveNames(exc).stream().findFirst().orElseGet(() -> null);
-					loadOrUploadJavaClass(newNotFoundClassName, byteCodes, classLoader);
-					return loadOrUploadJavaClass(byteCodes.get(className), classLoader);
+					loadOrDefineByJavaClass(newNotFoundClassName, byteCodes, classLoader);
+					return loadOrDefineByJavaClass(byteCodes.get(className), classLoader);
 				}
 			} else {
 				for (Map.Entry<String, JavaClass> clazz : byteCodes.entrySet()) {
@@ -621,11 +621,11 @@ public class Classes implements Component, MembersRetriever {
 			}
 		}
 		
-		public <T> Class<T> loadOrUploadByteCode(
+		public <T> Class<T> loadOrDefineByByteCode(
 			ByteBuffer byteCode,
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
-			return loadOrUploadJavaClass(
+			return loadOrDefineByJavaClass(
 				JavaClass.create(byteCode), classLoader,
 				getDefineClassMethod(classLoader),
 				getDefinePackageMethod(classLoader)
@@ -633,7 +633,7 @@ public class Classes implements Component, MembersRetriever {
 		}
 		
 		@SuppressWarnings("unchecked")
-		private <T> Class<T> loadOrUploadJavaClass(
+		private <T> Class<T> loadOrDefineByJavaClass(
 			JavaClass javaClass, 
 			ClassLoader classLoader, 
 			MethodHandle defineClassMethod, 
@@ -648,13 +648,13 @@ public class Classes implements Component, MembersRetriever {
 	    			return cls;
 				} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException outerExc) {
 					String newNotFoundClassName = Classes.retrieveNames(outerExc).stream().findFirst().orElseGet(() -> null);
-					loadOrUploadClass(
+					loadOrDefine(
 	        			Class.forName(
 	        				newNotFoundClassName, false, classLoader
 	        			),
 	        			classLoader, defineClassMethod, definePackageMethod
 	        		);
-					return loadOrUploadJavaClass(javaClass, classLoader,
+					return loadOrDefineByJavaClass(javaClass, classLoader,
 						defineClassMethod, definePackageMethod
 	        		);
 				}
@@ -662,7 +662,7 @@ public class Classes implements Component, MembersRetriever {
 	    }
 		
 		@SuppressWarnings("unchecked")
-		private <T> Class<T> loadOrUploadClass(
+		private <T> Class<T> loadOrDefine(
 			Class<T> toLoad, 
 			ClassLoader classLoader, 
 			MethodHandle defineClassMethod, 
@@ -677,13 +677,13 @@ public class Classes implements Component, MembersRetriever {
 	    			return cls;
 				} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException outerExc) {
 					String newNotFoundClassName = Classes.retrieveNames(outerExc).stream().findFirst().orElseGet(() -> null);
-					loadOrUploadClass(
+					loadOrDefine(
 	        			Class.forName(
 	        				newNotFoundClassName, false, toLoad.getClassLoader()
 	        			),
 	        			classLoader, defineClassMethod, definePackageMethod
 	        		);
-					return (Class<T>)loadOrUploadClass(
+					return (Class<T>)loadOrDefine(
 	        			Class.forName(
 	        					toLoad.getName(), false, toLoad.getClassLoader()
 	        			),
@@ -693,7 +693,7 @@ public class Classes implements Component, MembersRetriever {
 	    	}
 	    }
 		
-		public <T> Class<T> upload(ClassLoader classLoader, JavaClass javaClass) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
+		public <T> Class<T> defineClass(ClassLoader classLoader, JavaClass javaClass) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
 			Class<T> definedClass = defineClass(classLoader, getDefineClassMethod(classLoader), javaClass.getName(), javaClass.getByteCode());
 			definePackageFor(definedClass, classLoader, getDefinePackageMethod(classLoader));
 			return definedClass;

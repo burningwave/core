@@ -67,7 +67,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 	void init(ClassLoader classSupplier) {
 		this.classSupplier = cls -> {
 			try {
-				return ClassLoaders.loadOrUploadClass(cls, classSupplier);
+				return ClassLoaders.loadOrDefine(cls, classSupplier);
 			} catch (ClassNotFoundException exc) {
 				throw Throwables.toRuntimeException(exc);
 			}
