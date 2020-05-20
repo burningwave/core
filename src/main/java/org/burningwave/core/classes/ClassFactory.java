@@ -145,6 +145,10 @@ public class ClassFactory implements Component {
 		return build(useOneShotCompiler, mainClassPaths, extraClassPaths, Arrays.asList(unitsCode).stream().map(unitCode -> unitCode.make()).collect(Collectors.toList()));
 	}
 	
+	public Map<String, ByteBuffer> build(boolean useOneShotCompiler, Collection<String> mainClassPaths, Collection<String> extraClassPaths, String... unitsCode) {
+		return build(useOneShotCompiler, mainClassPaths, extraClassPaths, unitsCode);
+	}
+	
 	public Map<String, ByteBuffer> build(boolean useOneShotCompiler, Collection<String> mainClassPaths, Collection<String> extraClassPaths, Collection<String> unitsCode) {
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", unitsCode));
 		JavaMemoryCompiler compiler = this.javaMemoryCompiler;
@@ -158,24 +162,6 @@ public class ClassFactory implements Component {
 		}
 		return compiler.compile(
 			unitsCode,
-			mainClassPaths, 
-			extraClassPaths
-		);
-	}
-	
-	public Map<String, ByteBuffer> build(boolean useOneShotCompiler, Collection<String> mainClassPaths, Collection<String> extraClassPaths, String... unitsCode) {
-		logInfo("Try to compile: \n\n{}\n",String.join("\n", unitsCode));
-		JavaMemoryCompiler compiler = this.javaMemoryCompiler;
-		if (useOneShotCompiler) {
-			compiler = JavaMemoryCompiler.create(
-				pathHelper,
-				sourceCodeHandler,
-				getClassPathHunter(),
-				config
-			);
-		}
-		return compiler.compile(
-			Arrays.asList(unitsCode),
 			mainClassPaths, 
 			extraClassPaths
 		);
