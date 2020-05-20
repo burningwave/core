@@ -48,6 +48,7 @@ import org.burningwave.core.classes.ByteCodeHunter;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHunter;
+import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.SourceCodeHandler;
@@ -342,7 +343,7 @@ public class ComponentContainer implements ComponentSupplier {
 			return (ClassLoader)object;
 		} else if (object instanceof String) {
 			return getClassFactory().execute(
-				ClassFactory.ExecuteConfig.forDefaultProperties()
+				ExecuteConfig.forDefaultProperties()
 				.setPropertyName(configKey)
 				.withParameter(this)
 				.withDefaultPropertyValues(defaultValues)
