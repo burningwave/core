@@ -53,7 +53,7 @@ public class UseFunctionalInterface {
         //class loader declared with property "class-factory.default-class-loader" in 
         //burningwave.properties file (see "Overview and configuration").
         //If you need to upload the class to another class loader use
-        //buildAndLoadOrUploadTo(ClassLoader classLoader, UnitSourceGenerator... unitsCode) method
+        //loadOrBuildAndDefine(LoadOrBuildAndDefineConfig) method
         Class<?> generatedClass = classFactory.loadOrBuildAndDefine(
             unitSG
         ).get(

@@ -50,7 +50,7 @@ public class RuntimeClassExtender {
         //class loader declared with property "class-factory.default-class-loader" in 
         //burningwave.properties file (see "Overview and configuration").
         //If you need to upload the class to another class loader use
-        //buildAndLoadOrUploadTo(ClassLoader classLoader, UnitSourceGenerator... unitsCode) method
+        //loadOrBuildAndDefineTo(ClassLoader classLoader, UnitSourceGenerator... unitsCode) method
         Class<?> generatedClass = classFactory.loadOrBuildAndDefine(
             unitSG
         ).get(
