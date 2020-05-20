@@ -7,7 +7,7 @@ import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassFactory;
 
-public class SourceCodeRunner {
+public class SourceCodeExecutor {
     
     public static Integer execute() {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
