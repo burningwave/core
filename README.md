@@ -9,7 +9,7 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/5)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Supported JVM](https://img.shields.io/badge/Supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/110215806)
+[![Supported JVM](https://img.shields.io/badge/Supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/110565905)
 [![Coverage Status](https://coveralls.io/repos/github/burningwave/core/badge.svg?branch=master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
 
@@ -25,7 +25,7 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>5.22.0</version>
+    <version>5.23.0</version>
 </dependency>
 ```
 
@@ -33,37 +33,37 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 	<summary><b>... And with (click to expand)</b>:</summary>
 	<br/>
 	<ul><li><b>Gradle Groovy</b>:</li></ul>
-	<pre>implementation 'org.burningwave:core:5.22.0'</pre>
+	<pre>implementation 'org.burningwave:core:5.23.0'</pre>
 	<br/>
 	<ul><li><b>Gradle Kotlin</b>:</li></ul>
-	<pre>implementation("org.burningwave:core:5.22.0")</pre>
+	<pre>implementation("org.burningwave:core:5.23.0")</pre>
 	<br/>
 	<ul><li><b>Scala</b>:</li></ul>
-	<pre>libraryDependencies += "org.burningwave" % "core" % "5.22.0"</pre>
+	<pre>libraryDependencies += "org.burningwave" % "core" % "5.23.0"</pre>
 	<br/>
 	<ul><li><b>Apache Ivy</b>:</li></ul>
-	<pre>&lt;dependency org="org.burningwave" name="core" rev="5.22.0" /&gt;</pre>
+	<pre>&lt;dependency org="org.burningwave" name="core" rev="5.23.0" /&gt;</pre>
 	<br/>
 	<ul><li><b>Groovy Grape</b>:</li></ul>
 	<pre>
 @Grapes(
-  	@Grab(group='org.burningwave', module='core', version='5.22.0')
+  	@Grab(group='org.burningwave', module='core', version='5.23.0')
 )
 	</pre>
 	<br/>
 	<ul><li><b>Leiningen</b>:</li></ul>
-	<pre>[org.burningwave/core "5.22.0"]</pre>
+	<pre>[org.burningwave/core "5.23.0"]</pre>
 	<br/>
 	<ul><li><b>Apache Buildr</b>:</li></ul>
-	<pre>'org.burningwave:core:jar:5.22.0'</pre>
+	<pre>'org.burningwave:core:jar:5.23.0'</pre>
 	<br/>
 	<ul><li><b>PURL</b>:</li></ul>
-	<pre>pkg:maven/org.burningwave/core@5.22.0</pre>
+	<pre>pkg:maven/org.burningwave/core@5.23.0</pre>
 </details>
 
 ## Generating classes at runtime and invoking their methods with and without the use of reflection
 
-For this purpose is necessary the use of **ClassFactory** component and of the **sources generating components**. Once the sources have been set in **UnitSourceGenerator** objects, they must be passed to **buildAndLoadOrUpload** method of ClassFactory with the ClassLoader where you want to define new generated classes. This method performs the following operations: tries to load all the classes present in the UnitSourceGenerator through the class loader, if at least one of these is not found it proceeds to compiling all the UnitSourceGenerators and uploading their classes on class loader: in this case, keep in mind that if a class with the same name was previously loaded by the class loader, the compiled class will not be uploaded. Once the classes have been compiled and loaded, it is possible to invoke their methods in severals ways as shown at the end of the example below. **For more examples you can go [here](https://github.com/burningwave/core/tree/master/src/test/java/org/burningwave/core/examples/classfactory) and for assistance you can [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to/)**.
+For this purpose is necessary the use of **ClassFactory** component and of the **sources generating components**. Once the sources have been set in **UnitSourceGenerator** objects, they must be passed to **loadOrBuildAndDefine** method of ClassFactory with the ClassLoader where you want to define new generated classes. This method performs the following operations: tries to load all the classes present in the UnitSourceGenerator through the class loader, if at least one of these is not found it proceeds to compiling all the UnitSourceGenerators and uploading their classes on class loader: in this case, keep in mind that if a class with the same name was previously loaded by the class loader, the compiled class will not be uploaded. Once the classes have been compiled and loaded, it is possible to invoke their methods in severals ways as shown at the end of the example below. **For more examples you can go [here](https://github.com/burningwave/core/tree/master/src/test/java/org/burningwave/core/examples/classfactory) and for assistance you can [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to/)**.
 ```java
 package org.burningwave.core.examples.classfactory;
 
@@ -117,8 +117,8 @@ public class RuntimeClassExtender {
         //class loader declared with property "class-factory.default-class-loader" in 
         //burningwave.properties file (see "Overview and configuration").
         //If you need to upload the class to another class loader use
-        //buildAndLoadOrUploadTo(ClassLoader classLoader, UnitSourceGenerator... unitsCode) method
-        Class<?> generatedClass = classFactory.buildAndLoadOrUpload(
+        //loadOrBuildAndDefine(LoadOrBuildAndDefineConfig) method
+        Class<?> generatedClass = classFactory.loadOrBuildAndDefine(
             unitSG
         ).get(
             "packagename.MyExtendedClass"
@@ -369,7 +369,7 @@ Here an example of a **burningwave.properties** file with all settable propertie
 paths.main-class-paths.extension=//${system.properties:java.home}/lib//children:.*\.jar|.*\.jmod;//${system.properties:java.home}/lib/ext//children:.*\.jar|.*\.jmod;//${system.properties:java.home}/jmods//children:.*\.jar|.*\.jmod;
 class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
 #this is the default class loader used by method
-#org.burningwave.core.classes.ClassFactory.buildAndLoadOrUpload(UnitSourceGenerator... unitsCode)
+#org.burningwave.core.classes.ClassFactory.loadOrBuildAndDefine(UnitSourceGenerator... unitsCode)
 #(see "Generating classes at runtime and invoking their methods with and without use of the reflection" example)
 class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
 paths.class-factory.java-memory-compiler.class-repositories=${classPaths};${paths.main-class-paths.extension};
