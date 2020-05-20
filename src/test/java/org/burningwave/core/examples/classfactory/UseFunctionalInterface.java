@@ -54,7 +54,7 @@ public class UseFunctionalInterface {
         //burningwave.properties file (see "Overview and configuration").
         //If you need to upload the class to another class loader use
         //buildAndLoadOrUploadTo(ClassLoader classLoader, UnitSourceGenerator... unitsCode) method
-        Class<?> generatedClass = classFactory.buildAndLoadOrUpload(
+        Class<?> generatedClass = classFactory.loadOrBuildAndDefine(
             unitSG
         ).get(
             "packagename.MyExtendedClass"

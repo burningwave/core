@@ -45,6 +45,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -52,9 +53,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.Executor;
 import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.function.MultiParamsConsumer;
 import org.burningwave.core.function.MultiParamsFunction;
-import org.burningwave.core.function.MultiParamsPredicate;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileScanConfigAbst;
@@ -144,71 +143,69 @@ public class ClassFactory implements Component {
 			(classPathHunter = classPathHunterSupplier.get());
 	}
 	
-	public Map<String, ByteBuffer> build(boolean useOneShotCompiler, Collection<String> mainClassPaths, Collection<String> extraClassPaths, UnitSourceGenerator... unitsCode) {
-		return build(useOneShotCompiler, mainClassPaths, extraClassPaths, Arrays.asList(unitsCode).stream().map(unitCode -> unitCode.make()).collect(Collectors.toList()));
-	}
-	
-	public Map<String, ByteBuffer> build(boolean useOneShotCompiler, Collection<String> mainClassPaths, Collection<String> extraClassPaths, String... unitsCode) {
-		return build(useOneShotCompiler, mainClassPaths, extraClassPaths, unitsCode);
-	}
-	
-	public Map<String, ByteBuffer> build(boolean useOneShotCompiler, Collection<String> mainClassPaths, Collection<String> extraClassPaths, Collection<String> unitsCode) {
-		logInfo("Try to compile: \n\n{}\n",String.join("\n", unitsCode));
-		return (useOneShotCompiler ?
-			JavaMemoryCompiler.create(
-				pathHelper,
-				sourceCodeHandler,
-				getClassPathHunter(),
-				config
-			) :
-			this.javaMemoryCompiler
-		).compile(
-			unitsCode,
-			mainClassPaths, 
-			extraClassPaths
-		);
-	}
-	
-	public ClassRetriever buildAndLoadOrUpload(
-		Collection<String> compilationClassPaths,
-		Collection<String> compilationClassPathsForNotFoundClasses,
-		Collection<String> classLoaderClassPaths,
-		UnitSourceGenerator... unitsCode
-	) {
-		return buildAndLoadOrUploadTo(
-			false,
-			compilationClassPaths,
-			compilationClassPathsForNotFoundClasses,
-			classLoaderClassPaths,
-			getDefaultClassLoader(),
-			unitsCode
-		);
-	}
-	
+    /**
+     * @deprecated
+     * <p> Use {@link ClassFactory#loadOrBuildAndDefine(UnitSourceGenerator...)} instead.
+     */
+    @Deprecated
 	public ClassRetriever buildAndLoadOrUpload(UnitSourceGenerator... unitsCode) {
-		return buildAndLoadOrUploadTo(getDefaultClassLoader(), unitsCode);
+		return loadOrBuildAndDefine(LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitsCode));
 	}
 	
-	public ClassRetriever buildAndLoadOrUploadTo(ClassLoader classLoader, UnitSourceGenerator... unitsCode) {
-		return buildAndLoadOrUploadTo(
-			false,
-			pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
-			pathHelper.getPaths(CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY), 
-			pathHelper.getPaths(CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY), classLoader, unitsCode
+	
+	public ClassRetriever loadOrBuildAndDefine(UnitSourceGenerator... unitsCode) {
+		return loadOrBuildAndDefine(LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitsCode));
+	}
+	
+	public ClassRetriever loadOrBuildAndDefine(LoadOrBuildAndDefineConfig config) {
+		Collection<String> compilationClassPaths = 
+			Optional.ofNullable(
+				config.getCompilationClassPaths()
+			).orElseGet(() -> 
+				pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION)
+			);
+		
+		Collection<String> classPathsForNotFoundClassesDuringCompilantion = 
+			Optional.ofNullable(
+				config.getClassPathsWhereToSearchNotFoundClassesDuringCompilation()
+			).orElseGet(() -> 
+				pathHelper.getPaths(CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY)
+			);
+		
+		Collection<String> classPathsForNotFoundClassesDuringLoading = 
+			Optional.ofNullable(
+				config.getClassPathsWhereToSearchNotFoundClassesDuringLoading()
+			).orElseGet(() -> 
+				pathHelper.getPaths(CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY)
+			);
+		
+		ClassLoader classLoader = Optional.ofNullable(
+			config.getClassLoader()
+		).orElseGet(() -> 
+			getDefaultClassLoader()
+		);
+		
+		return loadOrBuildAndDefine(
+			config.isUseOneShotJavaCompiler(),
+			compilationClassPaths,
+			classPathsForNotFoundClassesDuringCompilantion, 
+			classPathsForNotFoundClassesDuringLoading,
+			classLoader,
+			config.getUnitSourceGenerators()
 		);
 	}
 	
-	public ClassRetriever buildAndLoadOrUploadTo(
+	private ClassRetriever loadOrBuildAndDefine(
 		boolean useOneShotJavaCompiler,
 		Collection<String> compilationClassPaths,
-		Collection<String> compilationClassPathsForNotFoundClasses,
-		Collection<String> classLoaderClassPaths,
+		Collection<String> classPathsForNotFoundClassesDuringCompilantion,
+		Collection<String> classPathsForNotFoundClassesDuringLoading,
 		ClassLoader classLoader,
-		UnitSourceGenerator... unitsCode
+		Collection<UnitSourceGenerator> unitsCode
 	) {
 		try {
 			Set<String> classesName = new HashSet<>();
-			Arrays.stream(unitsCode).forEach(unitCode -> 
+			unitsCode.forEach(unitCode -> 
 				unitCode.getAllClasses().entrySet().forEach(entry -> {
 					entry.getValue().addConcretizedType(TypeDeclarationSourceGenerator.create(Virtual.class));
 					classesName.add(entry.getKey());
@@ -220,7 +217,12 @@ public class ClassFactory implements Component {
 				try {
 					classes.put(className, classLoader.loadClass(className));
 				} catch (Throwable exc) {
-					Map<String, ByteBuffer> compiledByteCodes = build(useOneShotJavaCompiler, compilationClassPaths, compilationClassPathsForNotFoundClasses, unitsCode);
+					Map<String, ByteBuffer> compiledByteCodes = build(
+						useOneShotJavaCompiler,
+						compilationClassPaths,
+						classPathsForNotFoundClassesDuringCompilantion, 
+						unitsCode
+					);
 					return (clsName, additionalByteCodes) -> {
 						try {
 							Map<String, ByteBuffer> finalByteCodes = compiledByteCodes;
@@ -234,7 +236,7 @@ public class ClassFactory implements Component {
 								return ClassLoaders.loadOrDefineByByteCode(clsName, 
 									loadBytecodesFromClassPaths(
 										retrievedBytecodes,
-										classLoaderClassPaths,
+										classPathsForNotFoundClassesDuringLoading,
 										compiledByteCodes,
 										additionalByteCodes
 									).get(), classLoader
@@ -258,7 +260,7 @@ public class ClassFactory implements Component {
 								clsName,
 								loadBytecodesFromClassPaths(
 									retrievedBytecodes, 
-									classLoaderClassPaths,
+									classPathsForNotFoundClassesDuringLoading,
 									additionalByteCodes
 								).get(), 
 								classLoader
@@ -316,86 +318,129 @@ public class ClassFactory implements Component {
 		return retrievedBytecodes;
 	}
 	
+	private Map<String, ByteBuffer> build(
+		boolean useOneShotCompiler,
+		Collection<String> mainClassPaths,
+		Collection<String> extraClassPaths,
+		Collection<UnitSourceGenerator> unitsCode
+	) {
+		return build0(
+			useOneShotCompiler,
+			mainClassPaths,
+			extraClassPaths,
+			unitsCode.stream().map(unitCode -> unitCode.make()).collect(Collectors.toList())
+		);
+	}
+	
+	private Map<String, ByteBuffer> build0(
+		boolean useOneShotCompiler,
+		Collection<String> compilationClassPaths,
+		Collection<String> classPathsForNotFoundClassesDuringCompilantion,
+		Collection<String> unitsCode
+	) {
+		logInfo("Try to compile: \n\n{}\n",String.join("\n", unitsCode));
+		return (useOneShotCompiler ?
+			JavaMemoryCompiler.create(
+				pathHelper,
+				sourceCodeHandler,
+				getClassPathHunter(),
+				config
+			) :
+			this.javaMemoryCompiler
+		).compile(
+			unitsCode,
+			compilationClassPaths, 
+			classPathsForNotFoundClassesDuringCompilantion
+		);
+	}
+	
 	public PojoSubTypeRetriever createPojoSubTypeRetriever(PojoSourceGenerator sourceGenerator) {
 		return PojoSubTypeRetriever.create(this, sourceGenerator);
 	}
 	
-	public <T> Class<T> buildPojoSubTypeAndLoadOrUpload(String className, Class<?>... superClasses) {
-		return buildPojoSubTypeAndLoadOrUploadTo(getDefaultClassLoader(), className, superClasses);
+	public <T> Class<T> loadOrBuildAndDefinePojoSubType(String className, Class<?>... superClasses) {
+		return loadOrBuildAndDefinePojoSubType(getDefaultClassLoader(), className, superClasses);
 	}
 	
-	public <T> Class<T> buildPojoSubTypeAndLoadOrUploadTo(ClassLoader classLoader, String className, Class<?>... superClasses) {
-		return pojoSubTypeRetriever.buildAndLoadOrUploadTo(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
+	public <T> Class<T> loadOrBuildAndDefinePojoSubType(String className, int options, Class<?>... superClasses) {
+		return loadOrBuildAndDefinePojoSubType(getDefaultClassLoader(), className, options, superClasses);
 	}
 	
-	public <T> Class<T> buildPojoSubTypeAndLoadOrUpload(String className, int options, Class<?>... superClasses) {
-		return buildPojoSubTypeAndLoadOrUploadTo(getDefaultClassLoader(), className, options, superClasses);
+	public <T> Class<T> loadOrBuildAndDefinePojoSubType(ClassLoader classLoader, String className, int options, Class<?>... superClasses) {
+		return pojoSubTypeRetriever.loadOrBuildAndDefine(classLoader, className, options, superClasses);
 	}
 	
-	public <T> Class<T> buildPojoSubTypeAndLoadOrUploadTo(ClassLoader classLoader, String className, int options, Class<?>... superClasses) {
-		return pojoSubTypeRetriever.buildAndLoadOrUploadTo(classLoader, className, options, superClasses);
+	public <T> Class<T> loadOrBuildAndDefinePojoSubType(ClassLoader classLoader, String className, Class<?>... superClasses) {
+		return pojoSubTypeRetriever.loadOrBuildAndDefine(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
 	}
 	
-	public <T> Class<T> buildFunctionSubTypeAndLoadOrUpload(int parametersLength) {
-		return buildFunctionSubTypeAndLoadOrUploadTo(getDefaultClassLoader(), parametersLength);
+	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(int parametersLength) {
+		return loadOrBuildAndDefineFunctionSubType(getDefaultClassLoader(), parametersLength);
+	}
+	
+	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(ClassLoader classLoader, int parametersLength) {
+		return loadOrBuildAndDefineFunctionInterfaceSubType(
+			classLoader, "FunctionFor", "Parameters", parametersLength,
+			(className, paramsL) -> sourceCodeHandler.generateFunction(className, paramsL)
+		);
+	}
+	
+	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(int parametersLength) {
+		return loadOrBuildAndDefineConsumerSubType(getDefaultClassLoader(), parametersLength);
+	}
+	
+	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(ClassLoader classLoader, int parametersLength) {
+		return loadOrBuildAndDefineFunctionInterfaceSubType(
+			classLoader, "ConsumerFor", "Parameters", parametersLength,
+			(className, paramsL) -> sourceCodeHandler.generateConsumer(className, paramsL)
+		);
+	}
+	
+	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(int parametersLength) {
+		return loadOrBuildAndDefinePredicateSubType(getDefaultClassLoader(), parametersLength);
+	}
+	
+	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(ClassLoader classLoader, int parametersLength) {
+		return loadOrBuildAndDefineFunctionInterfaceSubType(
+			classLoader, "PredicateFor", "Parameters", parametersLength,
+			(className, paramsL) -> sourceCodeHandler.generatePredicate(className, paramsL)
+		);
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <T> Class<T> buildFunctionSubTypeAndLoadOrUploadTo(ClassLoader classLoader, int parametersLength) {
-		String functionalInterfaceName = "FunctionFor" + parametersLength +	"Parameters";
+	private <T> Class<T> loadOrBuildAndDefineFunctionInterfaceSubType(
+		ClassLoader classLoader,
+		String classNamePrefix, 
+		String classNameSuffix,
+		int parametersLength,
+		BiFunction<String, Integer, UnitSourceGenerator> unitSourceGeneratorSupplier
+	) {
+		String functionalInterfaceName = classNamePrefix + parametersLength +	classNameSuffix;
 		String packageName = MultiParamsFunction.class.getPackage().getName();
 		String className = packageName + "." + functionalInterfaceName;
-		return (Class<T>) buildAndLoadOrUploadTo(
-			classLoader,
-			sourceCodeHandler.generateFunction(className, parametersLength)
+		return (Class<T>) loadOrBuildAndDefine(
+			LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+				unitSourceGeneratorSupplier.apply(className, parametersLength)
+			).useClassLoader(
+				classLoader
+			)
 		).get(
 			className
 		);
 	}
 	
-	public <T> Class<T> buildConsumerSubTypeAndLoadOrUpload(int parametersLength) {
-		return buildConsumerSubTypeAndLoadOrUploadTo(getDefaultClassLoader(), parametersLength);
+	public <T extends Executor> Class<T> loadOrBuildAndDefineExecutorSubType(String className, StatementSourceGenerator statement) {
+		return loadOrBuildAndDefineExecutorSubType(getDefaultClassLoader(), className, statement);
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <T> Class<T> buildConsumerSubTypeAndLoadOrUploadTo(ClassLoader classLoader, int parametersLength) {
-		String functionalInterfaceName = "ConsumerFor" + parametersLength + "Parameters";
-		String packageName = MultiParamsConsumer.class.getPackage().getName();
-		String className = packageName + "." + functionalInterfaceName;
-		return (Class<T>) buildAndLoadOrUploadTo(
-			classLoader,
-			sourceCodeHandler.generateConsumer(className, parametersLength)
-		).get(
-			className
-		);
-	}
-	
-	public <T> Class<T> buildPredicateSubTypeAndLoadOrUpload(int parametersLength) {
-		return buildPredicateSubTypeAndLoadOrUploadTo(getDefaultClassLoader(), parametersLength);
-	}
-	
-	@SuppressWarnings("unchecked")
-	public <T> Class<T> buildPredicateSubTypeAndLoadOrUploadTo(ClassLoader classLoader, int parametersLength) {
-		String functionalInterfaceName = "PredicateFor" + parametersLength + "Parameters";
-		String packageName = MultiParamsPredicate.class.getPackage().getName();
-		String className = packageName + "." + functionalInterfaceName;
-		return (Class<T>) buildAndLoadOrUploadTo(
-			classLoader,
-			sourceCodeHandler.generatePredicate(className, parametersLength)
-		).get(
-			className
-		);
-	}
-	
-	public <T extends Executor> Class<T> buildCodeExecutorSubTypeAndLoadOrUpload(String className, StatementSourceGenerator statement) {
-		return buildCodeExecutorSubTypeAndLoadOrUploadTo(getDefaultClassLoader(), className, statement);
-	}
-	
-	@SuppressWarnings("unchecked")
-	public <T extends Executor> Class<T> buildCodeExecutorSubTypeAndLoadOrUploadTo(ClassLoader classLoader, String className, StatementSourceGenerator statement) {
-		return (Class<T>) buildAndLoadOrUploadTo(
-			classLoader,
-			sourceCodeHandler.generateExecutor(className, statement)
+	public <T extends Executor> Class<T> loadOrBuildAndDefineExecutorSubType(ClassLoader classLoader, String className, StatementSourceGenerator statement) {
+		return (Class<T>) loadOrBuildAndDefine(
+			LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+				sourceCodeHandler.generateExecutor(className, statement)
+			).useClassLoader(
+				classLoader
+			)
 		).get(
 			className
 		);
@@ -486,7 +531,7 @@ public class ClassFactory implements Component {
 				)
 			) {
 				String packageName = Executor.class.getPackage().getName();
-				Class<? extends Executor> executableClass = buildCodeExecutorSubTypeAndLoadOrUploadTo(
+				Class<? extends Executor> executableClass = loadOrBuildAndDefineExecutorSubType(
 					memoryClassLoader, packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""), statement
 				);
 				Executor executor = Constructors.newInstanceOf(executableClass);
@@ -530,31 +575,34 @@ public class ClassFactory implements Component {
 			String className,
 			Class<?>... superClasses
 		) {
-			return buildAndLoadOrUploadTo(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
+			return loadOrBuildAndDefine(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
 		}	
 		
-		public Class<?> buildAndLoadOrUpload(
+		public Class<?> loadOrBuildAndDefine(
 			String className,
 			int options, 
 			Class<?>... superClasses
 		) {
-			return classFactory.buildAndLoadOrUpload(
-				sourceGenerator.create(className, options, superClasses)
+			return classFactory.loadOrBuildAndDefine(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+					sourceGenerator.create(className, options, superClasses)
+				)
 			).get(
 				className
 			);
 		}
 		
 		@SuppressWarnings("unchecked")
-		public <T> Class<T> buildAndLoadOrUploadTo(
+		public <T> Class<T> loadOrBuildAndDefine(
 			ClassLoader classLoader,
 			String className,
 			int options, 
 			Class<?>... superClasses
 		) {
-			return (Class<T>) classFactory.buildAndLoadOrUploadTo(
-				classLoader, 
-				sourceGenerator.create(className, options, superClasses)
+			return (Class<T>) classFactory.loadOrBuildAndDefine(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+					sourceGenerator.create(className, options, superClasses)
+				).useClassLoader(classLoader)
 			).get(
 				className
 			);
@@ -569,6 +617,14 @@ public class ClassFactory implements Component {
 		
 		public default Class<?> get(String className) {
 			return get(className, null);
+		}
+		
+		public default Collection<Class<?>> get(String... classesName) {
+			Collection<Class<?>> classes = new HashSet<>();
+			for(String className : classesName) {
+				classes.add(get(className, null));
+			}
+			return classes;
 		}
 		
 	}
@@ -749,19 +805,33 @@ public class ClassFactory implements Component {
 	
 	public static class LoadOrBuildAndDefineConfig {
 		private Collection<String> compilationClassPaths;
-		private Collection<String> classPathsForNotFoundClassesDuringCompilantion;
-		private Collection<String> classPathsForNotFoundClassesDuringLoading;
+		private Collection<String> classPathsWhereToSearchNotFoundClassesDuringCompilation;
+		private Collection<String> classPathsWhereToSearchNotFoundClassesDuringLoading;
 		private Collection<UnitSourceGenerator> unitSourceGenerators;
 		private ClassLoader classLoader;
 		private boolean useOneShotJavaCompiler;
 		
+		@SafeVarargs
 		private LoadOrBuildAndDefineConfig(UnitSourceGenerator... unitsCode) {
-			unitSourceGenerators = Arrays.asList(unitsCode);
+			this(Arrays.asList(unitsCode));
 		}
 		
-		public static LoadOrBuildAndDefineConfig forUnitSourceGeneratoror(UnitSourceGenerator... unitsCode) {
-			LoadOrBuildAndDefineConfig config = new LoadOrBuildAndDefineConfig(unitsCode);
-			return config;
+		@SafeVarargs
+		private LoadOrBuildAndDefineConfig(Collection<UnitSourceGenerator>... unitCodeCollections) {
+			unitSourceGenerators = new HashSet<>();
+			for (Collection<UnitSourceGenerator> unitsCode : unitCodeCollections) {
+				unitSourceGenerators.addAll(unitsCode);
+			}
+		}
+		
+		@SafeVarargs
+		public final static LoadOrBuildAndDefineConfig forUnitSourceGenerator(UnitSourceGenerator... unitsCode) {
+			return new LoadOrBuildAndDefineConfig(unitsCode);
+		}
+		
+		@SafeVarargs
+		public final static LoadOrBuildAndDefineConfig forUnitSourceGenerator(Collection<UnitSourceGenerator>... unitsCode) {
+			return new LoadOrBuildAndDefineConfig(unitsCode);
 		}
 		
 		@SafeVarargs
@@ -787,35 +857,47 @@ public class ClassFactory implements Component {
 		}
 		
 		@SafeVarargs
-		public final LoadOrBuildAndDefineConfig addClassPathForNotFoundClassesDuringCompilantion(Collection<String>... classPathCollections) {
-			if (classPathsForNotFoundClassesDuringCompilantion == null) {
-				classPathsForNotFoundClassesDuringCompilantion = new HashSet<>();
+		public final LoadOrBuildAndDefineConfig addClassPathsWhereToSearchNotFoundClassesDuringCompilation(Collection<String>... classPathCollections) {
+			if (classPathsWhereToSearchNotFoundClassesDuringCompilation == null) {
+				classPathsWhereToSearchNotFoundClassesDuringCompilation = new HashSet<>();
 			}
 			for (Collection<String> classPathCollection : classPathCollections) {
-				classPathsForNotFoundClassesDuringCompilantion.addAll(classPathCollection);
+				classPathsWhereToSearchNotFoundClassesDuringCompilation.addAll(classPathCollection);
 			}
 			return this;
 		}
 		
 		@SafeVarargs
-		public final LoadOrBuildAndDefineConfig addClassPathForNotFoundClassesDuringCompilantion(String... classPaths) {
-			return addClassPathForNotFoundClassesDuringCompilantion(Arrays.asList(classPaths));
+		public final LoadOrBuildAndDefineConfig addClassPathsWhereToSearchNotFoundClassesDuringCompilation(String... classPaths) {
+			return addClassPathsWhereToSearchNotFoundClassesDuringCompilation(Arrays.asList(classPaths));
 		}
 		
 		@SafeVarargs
-		public final LoadOrBuildAndDefineConfig addClassPathForNotFoundClassesDuringLoading(Collection<String>... classPathCollections) {
-			if (classPathsForNotFoundClassesDuringLoading == null) {
-				classPathsForNotFoundClassesDuringLoading = new HashSet<>();
+		public final LoadOrBuildAndDefineConfig addClassPathsWhereToSearchNotFoundClasses(String... classPaths) {
+			return addClassPathsWhereToSearchNotFoundClassesDuringCompilation(classPaths)
+				.addClassPathsWhereToSearchNotFoundClassesDuringLoading(classPaths);		
+		}
+		
+		@SafeVarargs
+		public final LoadOrBuildAndDefineConfig addClassPathsWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
+			return addClassPathsWhereToSearchNotFoundClassesDuringCompilation(classPathCollections)
+				.addClassPathsWhereToSearchNotFoundClassesDuringLoading(classPathCollections);		
+		}
+		
+		@SafeVarargs
+		public final LoadOrBuildAndDefineConfig addClassPathsWhereToSearchNotFoundClassesDuringLoading(Collection<String>... classPathCollections) {
+			if (classPathsWhereToSearchNotFoundClassesDuringLoading == null) {
+				classPathsWhereToSearchNotFoundClassesDuringLoading = new HashSet<>();
 			}
 			for (Collection<String> classPathCollection : classPathCollections) {
-				classPathsForNotFoundClassesDuringLoading.addAll(classPathCollection);
+				classPathsWhereToSearchNotFoundClassesDuringLoading.addAll(classPathCollection);
 			}
 			return this;
 		}
 		
 		@SafeVarargs
-		public final LoadOrBuildAndDefineConfig addClassPathForNotFoundClassesDuringLoading(String... classPaths) {
-			return addClassPathForNotFoundClassesDuringLoading(Arrays.asList(classPaths));
+		public final LoadOrBuildAndDefineConfig addClassPathsWhereToSearchNotFoundClassesDuringLoading(String... classPaths) {
+			return addClassPathsWhereToSearchNotFoundClassesDuringLoading(Arrays.asList(classPaths));
 		}
 		
 		public LoadOrBuildAndDefineConfig useClassLoader(ClassLoader classLoader) {
@@ -832,14 +914,14 @@ public class ClassFactory implements Component {
 			return compilationClassPaths;
 		}
 
-		Collection<String> getClassPathsForNotFoundClassesDuringCompilantion() {
-			return classPathsForNotFoundClassesDuringCompilantion;
+		Collection<String> getClassPathsWhereToSearchNotFoundClassesDuringCompilation() {
+			return classPathsWhereToSearchNotFoundClassesDuringCompilation;
 		}
 
-		Collection<String> getClassPathsForNotFoundClassesDuringLoading() {
-			return classPathsForNotFoundClassesDuringLoading;
+		Collection<String> getClassPathsWhereToSearchNotFoundClassesDuringLoading() {
+			return classPathsWhereToSearchNotFoundClassesDuringLoading;
 		}
-
+		
 		Collection<UnitSourceGenerator> getUnitSourceGenerators() {
 			return unitSourceGenerators;
 		}

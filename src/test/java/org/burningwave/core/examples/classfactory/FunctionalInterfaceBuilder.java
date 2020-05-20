@@ -37,7 +37,7 @@ public class FunctionalInterfaceBuilder {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         ClassFactory classFactory = componentSupplier.getClassFactory();
         @SuppressWarnings("unused")
-		Class<?> generatedClass = classFactory.buildAndLoadOrUpload(
+		Class<?> generatedClass = classFactory.loadOrBuildAndDefine(
             unitSG
         ).get(
             "packagename.MyFunctionalInterface"

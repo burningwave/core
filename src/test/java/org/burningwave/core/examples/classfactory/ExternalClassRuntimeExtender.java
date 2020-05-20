@@ -2,11 +2,11 @@ package org.burningwave.core.examples.classfactory;
 
 import java.io.InputStream;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassFactory;
+import org.burningwave.core.classes.ClassFactory.LoadOrBuildAndDefineConfig;
 import org.burningwave.core.classes.ClassSourceGenerator;
 import org.burningwave.core.classes.FunctionSourceGenerator;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
@@ -42,12 +42,12 @@ public class ExternalClassRuntimeExtender {
 			"javax.xml.soap.SOAPException"
 		);
 
-		ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory()
-		.buildAndLoadOrUpload(
-			pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION),
-			Arrays.asList(pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")),
-			Arrays.asList(pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")),	
-			unitSG
+		ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
+			LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).addCompilationClassPaths(
+				pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION)
+			).addClassPathsWhereToSearchNotFoundClasses(
+				pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+			)
 		);
 		classRetriever.get("packagename.ComplexExample");
 	}
