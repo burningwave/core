@@ -5,14 +5,14 @@ import java.util.List;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.CodeExecutor;
+import org.burningwave.core.classes.ClassFactory;
 
 public class SourceCodeRunner {
     
     public static Integer execute() {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         return componentSupplier.getClassFactory().execute(
-            CodeExecutor.Config.forStatementSourceGenerator()
+            ClassFactory.ExecuteConfig.forStatementSourceGenerator()
             .useType(ArrayList.class, List.class)
             .addCodeRow("System.out.println(\"number to add: \" + parameter[0]);")
             .addCodeRow("List<Integer> numbers = new ArrayList<>();")

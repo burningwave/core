@@ -91,7 +91,7 @@ public class SourceCodeHandler implements Component {
 		).addModifier(
 			Modifier.PUBLIC
 		).addConcretizedType(
-			CodeExecutor.class
+			Executor.class
 		).addMethod(
 			executeMethod
 		);

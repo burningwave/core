@@ -16,7 +16,6 @@ import org.burningwave.core.bean.Complex;
 import org.burningwave.core.bean.PojoInterface;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassSourceGenerator;
-import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.FunctionSourceGenerator;
 import org.burningwave.core.classes.PojoSourceGenerator;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
@@ -228,7 +227,7 @@ public class ClassFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> {
 			return componentSupplier.getClassFactory().execute(
-				CodeExecutor.Config.forStatementSourceGenerator()
+				ClassFactory.ExecuteConfig.forStatementSourceGenerator()
 				.useType(ArrayList.class, List.class)
 				.addCodeRow("System.out.println(\"number to add: \" + parameter[0]);")
 				.addCodeRow("List<Integer> numbers = new ArrayList<>();")
@@ -247,7 +246,7 @@ public class ClassFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> {
 			return componentSupplier.getClassFactory().execute(
-				CodeExecutor.Config.forPropertiesFile("code.properties").setPropertyName("code-block-1")
+				ClassFactory.ExecuteConfig.forPropertiesFile("code.properties").setPropertyName("code-block-1")
 			);
 		});
 	}
