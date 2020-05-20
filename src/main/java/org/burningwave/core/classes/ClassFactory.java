@@ -374,8 +374,8 @@ public class ClassFactory implements Component {
 		return pojoSubTypeRetriever.loadOrBuildAndDefine(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
 	}
 	
-	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(int parametersLength) {
-		return loadOrBuildAndDefineFunctionSubType(getDefaultClassLoader(), parametersLength);
+	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(int parametersCount) {
+		return loadOrBuildAndDefineFunctionSubType(getDefaultClassLoader(), parametersCount);
 	}
 	
 	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(ClassLoader classLoader, int parametersLength) {
@@ -385,8 +385,8 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(int parametersLength) {
-		return loadOrBuildAndDefineConsumerSubType(getDefaultClassLoader(), parametersLength);
+	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(int parametersCount) {
+		return loadOrBuildAndDefineConsumerSubType(getDefaultClassLoader(), parametersCount);
 	}
 	
 	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(ClassLoader classLoader, int parametersLength) {
