@@ -151,16 +151,15 @@ public class ClassFactory implements Component {
 	
 	public Map<String, ByteBuffer> build(boolean useOneShotCompiler, Collection<String> mainClassPaths, Collection<String> extraClassPaths, Collection<String> unitsCode) {
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", unitsCode));
-		JavaMemoryCompiler compiler = this.javaMemoryCompiler;
-		if (useOneShotCompiler) {
-			compiler = JavaMemoryCompiler.create(
+		return (useOneShotCompiler ?
+			JavaMemoryCompiler.create(
 				pathHelper,
 				sourceCodeHandler,
 				getClassPathHunter(),
 				config
-			);
-		}
-		return compiler.compile(
+			) :
+			this.javaMemoryCompiler
+		).compile(
 			unitsCode,
 			mainClassPaths, 
 			extraClassPaths
