@@ -745,4 +745,112 @@ public class ClassFactory implements Component {
 			}
     	}
     }
+	
+	
+	public static class LoadOrBuildAndDefineConfig {
+		private Collection<String> compilationClassPaths;
+		private Collection<String> classPathsForNotFoundClassesDuringCompilantion;
+		private Collection<String> classPathsForNotFoundClassesDuringLoading;
+		private Collection<UnitSourceGenerator> unitSourceGenerators;
+		private ClassLoader classLoader;
+		private boolean useOneShotJavaCompiler;
+		
+		private LoadOrBuildAndDefineConfig(UnitSourceGenerator... unitsCode) {
+			unitSourceGenerators = Arrays.asList(unitsCode);
+		}
+		
+		public static LoadOrBuildAndDefineConfig forUnitSourceGeneratoror(UnitSourceGenerator... unitsCode) {
+			LoadOrBuildAndDefineConfig config = new LoadOrBuildAndDefineConfig(unitsCode);
+			return config;
+		}
+		
+		@SafeVarargs
+		public final LoadOrBuildAndDefineConfig add(UnitSourceGenerator... unitsCode) {
+			unitSourceGenerators.addAll(Arrays.asList(unitsCode));
+			return this;
+		}
+		
+		@SafeVarargs
+		public final LoadOrBuildAndDefineConfig addCompilationClassPaths(Collection<String>... classPathCollections) {
+			if (compilationClassPaths == null) {
+				compilationClassPaths = new HashSet<>();
+			}
+			for (Collection<String> classPathCollection : classPathCollections) {
+				compilationClassPaths.addAll(classPathCollection);
+			}
+			return this;
+		}
+		
+		@SafeVarargs
+		public final LoadOrBuildAndDefineConfig addCompilationClassPaths(String... classPaths) {
+			return addCompilationClassPaths(Arrays.asList(classPaths));
+		}
+		
+		@SafeVarargs
+		public final LoadOrBuildAndDefineConfig addClassPathForNotFoundClassesDuringCompilantion(Collection<String>... classPathCollections) {
+			if (classPathsForNotFoundClassesDuringCompilantion == null) {
+				classPathsForNotFoundClassesDuringCompilantion = new HashSet<>();
+			}
+			for (Collection<String> classPathCollection : classPathCollections) {
+				classPathsForNotFoundClassesDuringCompilantion.addAll(classPathCollection);
+			}
+			return this;
+		}
+		
+		@SafeVarargs
+		public final LoadOrBuildAndDefineConfig addClassPathForNotFoundClassesDuringCompilantion(String... classPaths) {
+			return addClassPathForNotFoundClassesDuringCompilantion(Arrays.asList(classPaths));
+		}
+		
+		@SafeVarargs
+		public final LoadOrBuildAndDefineConfig addClassPathForNotFoundClassesDuringLoading(Collection<String>... classPathCollections) {
+			if (classPathsForNotFoundClassesDuringLoading == null) {
+				classPathsForNotFoundClassesDuringLoading = new HashSet<>();
+			}
+			for (Collection<String> classPathCollection : classPathCollections) {
+				classPathsForNotFoundClassesDuringLoading.addAll(classPathCollection);
+			}
+			return this;
+		}
+		
+		@SafeVarargs
+		public final LoadOrBuildAndDefineConfig addClassPathForNotFoundClassesDuringLoading(String... classPaths) {
+			return addClassPathForNotFoundClassesDuringLoading(Arrays.asList(classPaths));
+		}
+		
+		public LoadOrBuildAndDefineConfig useClassLoader(ClassLoader classLoader) {
+			this.classLoader = classLoader;
+			return this;
+		}
+		
+		public LoadOrBuildAndDefineConfig useOneShotJavaCompiler(boolean flag) {
+			this.useOneShotJavaCompiler = flag;
+			return this;
+		}
+
+		Collection<String> getCompilationClassPaths() {
+			return compilationClassPaths;
+		}
+
+		Collection<String> getClassPathsForNotFoundClassesDuringCompilantion() {
+			return classPathsForNotFoundClassesDuringCompilantion;
+		}
+
+		Collection<String> getClassPathsForNotFoundClassesDuringLoading() {
+			return classPathsForNotFoundClassesDuringLoading;
+		}
+
+		Collection<UnitSourceGenerator> getUnitSourceGenerators() {
+			return unitSourceGenerators;
+		}
+
+		ClassLoader getClassLoader() {
+			return classLoader;
+		}
+
+		boolean isUseOneShotJavaCompiler() {
+			return useOneShotJavaCompiler;
+		}
+		
+	}
 }
