@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.Executor;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.function.MultiParamsConsumer;
 import org.burningwave.core.function.MultiParamsFunction;

@@ -43,11 +43,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.Executor;
 import org.burningwave.core.classes.ByteCodeHunter;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHunter;
-import org.burningwave.core.classes.Executor;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.SourceCodeHandler;

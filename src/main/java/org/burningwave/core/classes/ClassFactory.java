@@ -49,6 +49,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.Executor;
 import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.function.MultiParamsConsumer;

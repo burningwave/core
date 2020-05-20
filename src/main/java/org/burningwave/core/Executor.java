@@ -1,4 +1,4 @@
-package org.burningwave.core.classes;
+package org.burningwave.core;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 
