@@ -143,7 +143,7 @@ public interface ManagedLogger {
 			Abst(Properties properties) {
 				init(properties);
 				String enabledFlag = (String)properties.getProperty(Repository.ENABLED_FLAG_CONFIG_KEY);
-				if (enabledFlag != null && Boolean.parseBoolean(enabledFlag)) {
+				if (enabledFlag == null || Boolean.parseBoolean(enabledFlag)) {
 					enableLogging();
 				}
 				removeLoggingLevelFor(properties, TRACE_LOGGING_DISABLED_FOR_CONFIG_KEY, LoggingLevel.TRACE);
