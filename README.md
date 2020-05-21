@@ -269,7 +269,8 @@ The configuration of this type of container is done via **burningwave.static.pro
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
 #the SLF4JManagedLoggerRepository will be instantiated, otherwise the SimpleManagedLoggerRepository will be instantiated
 managed-logger.repository=autodetect
-managed-logger.repository.enabled=false
+#to increase performance set it to false
+managed-logger.repository.enabled=true
 streams.default-buffer-size=1024
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
 static-component-container.clear-temporary-folder-on-init=false
@@ -280,6 +281,7 @@ Here an example of a **burningwave.static.properties** file with all configurabl
 ```properties
 #other possible values are: autodetect, org.burningwave.core.SimpleManagedLoggerRepository
 managed-logger.repository=org.burningwave.core.SLF4JManagedLoggerRepository
+#to increase performance set it to false
 managed-logger.repository.enabled=true
 managed-logger.repository.logging.debug.disabled-for=\
 	org.burningwave.core.io.FileSystemScanner;\
