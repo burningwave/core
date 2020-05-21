@@ -99,15 +99,15 @@ public class CodeExecutor implements Component {
 			(iterableObjectHelper = iterableObjectHelperSupplier.get());
 	}
 	
-	public <T extends Executor> Class<T> loadOrBuildAndDefineExecutorSubType(String className, StatementSourceGenerator statement) {
-		return loadOrBuildAndDefineExecutorSubType(getClassFactory().getDefaultClassLoader(), className, statement);
+	public <T extends Executor> Class<T> loadOrBuildAndDefineExecutorSubType(String className, BodySourceGenerator body) {
+		return loadOrBuildAndDefineExecutorSubType(getClassFactory().getDefaultClassLoader(), className, body);
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <T extends Executor> Class<T> loadOrBuildAndDefineExecutorSubType(ClassLoader classLoader, String className, StatementSourceGenerator statement) {
+	public <T extends Executor> Class<T> loadOrBuildAndDefineExecutorSubType(ClassLoader classLoader, String className, BodySourceGenerator body) {
 		return (Class<T>) getClassFactory().loadOrBuildAndDefine(
 			LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
-				sourceCodeHandler.generateExecutor(className, statement)
+				sourceCodeHandler.generateExecutor(className, body)
 			).useClassLoader(
 				classLoader
 			)
@@ -155,51 +155,51 @@ public class CodeExecutor implements Component {
 		Map<String, String> defaultValues,
 		Object... params
 	) {	
-		StatementSourceGenerator statement = StatementSourceGenerator.createSimple().setElementPrefix("\t");
+		BodySourceGenerator body = BodySourceGenerator.createSimple().setElementPrefix("\t");
 		if (params != null && params.length > 0) {
 			for (Object param : params) {
-				statement.useType(param.getClass());
+				body.useType(param.getClass());
 			}
 		}
 		String importFromConfig = getIterableObjectHelper().get(properties, key + PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, defaultValues);
 		if (Strings.isNotEmpty(importFromConfig)) {
 			Arrays.stream(importFromConfig.split(";")).forEach(imp -> {
-				statement.useType(imp);
+				body.useType(imp);
 			});
 		}
 		String code = getIterableObjectHelper().get(properties, key, defaultValues);
 		if (code.contains(";")) {
 			for (String codeRow : code.split(";")) {
-				statement.addCodeRow(codeRow + ";");
+				body.addCodeRow(codeRow + ";");
 			}
 		} else {
-			statement.addCodeRow(code.contains("return")?
+			body.addCodeRow(code.contains("return")?
 				code:
 				"return (T)" + code + ";"
 			);
 		}
 		return execute(
-			classLoaderParent, statement, params
+			classLoaderParent, body, params
 		);
 	}
 	
-	public <T> T execute(StatementSourceGenerator statement) {
-		return execute(ExecuteConfig.forStatementSourceGenerator(statement));
+	public <T> T execute(BodySourceGenerator body) {
+		return execute(ExecuteConfig.forBodySourceGenerator(body));
 	}
 	
 	public <T> T execute(
-		ExecuteConfig.ForStatementSourceGenerator config
+		ExecuteConfig.ForBodySourceGenerator config
 	) {	
 		ClassLoader parentClassLoader = config.getParentClassLoader();
 		if (parentClassLoader == null && config.isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull()) {
 			parentClassLoader = getClassFactory().getDefaultClassLoader();
 		}
-		return execute(parentClassLoader, config.getStatement(), config.getParams());
+		return execute(parentClassLoader, config.getBody(), config.getParams());
 	}
 	
 	private <T> T execute(
 		ClassLoader classLoaderParentOfOneShotClassLoader,
-		StatementSourceGenerator statement,
+		BodySourceGenerator body,
 		Object... parameters
 	) {	
 		return ThrowingSupplier.get(() -> {
@@ -210,7 +210,7 @@ public class CodeExecutor implements Component {
 			) {
 				String packageName = Executor.class.getPackage().getName();
 				Class<? extends Executor> executableClass = loadOrBuildAndDefineExecutorSubType(
-					memoryClassLoader, packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""), statement
+					memoryClassLoader, packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""), body
 				);
 				Executor executor = Constructors.newInstanceOf(executableClass);
 				ComponentSupplier componentSupplier = null;

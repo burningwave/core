@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 
-public class StatementSourceGenerator extends SourceGenerator.Abst {
+public class BodySourceGenerator extends SourceGenerator.Abst {
 	private Collection<TypeDeclarationSourceGenerator> usedTypes;
 	private String startingDelimiter;
 	private String endingDelimiter;
@@ -40,33 +40,33 @@ public class StatementSourceGenerator extends SourceGenerator.Abst {
 	private String elementSeparator;
 	private Collection<SourceGenerator> bodyGenerators;
 		
-	StatementSourceGenerator() {}
+	BodySourceGenerator() {}
 	
-	public static StatementSourceGenerator create() {
-		return new StatementSourceGenerator().setDelimiters("{", "\n}").setElementPrefix("\t");
+	public static BodySourceGenerator create() {
+		return new BodySourceGenerator().setDelimiters("{", "\n}").setElementPrefix("\t");
 	}
 	
-	public static StatementSourceGenerator createSimple() {
-		return new StatementSourceGenerator().setDelimiters(null, null).setElementPrefix(null); 
+	public static BodySourceGenerator createSimple() {
+		return new BodySourceGenerator().setDelimiters(null, null).setElementPrefix(null); 
 	}
 	
-	public StatementSourceGenerator setBodyElementSeparator(String elementSeparator) {
+	public BodySourceGenerator setBodyElementSeparator(String elementSeparator) {
 		this.elementSeparator = elementSeparator;
 		return this;
 	}
 	
-	public StatementSourceGenerator setElementPrefix(String elementPrefix) {
+	public BodySourceGenerator setElementPrefix(String elementPrefix) {
 		this.elementPrefix = elementPrefix;
 		return this;
 	}
 	
-	public StatementSourceGenerator setDelimiters(String startingDelimiter, String endingDelimiter) {
+	public BodySourceGenerator setDelimiters(String startingDelimiter, String endingDelimiter) {
 		this.startingDelimiter = startingDelimiter;
 		this.endingDelimiter = endingDelimiter;
 		return this;
 	}
 	
-	public StatementSourceGenerator addElement(SourceGenerator... generators) {
+	public BodySourceGenerator addElement(SourceGenerator... generators) {
 		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
 		for (SourceGenerator generator : generators) {
 			this.bodyGenerators.add(generator);
@@ -74,7 +74,7 @@ public class StatementSourceGenerator extends SourceGenerator.Abst {
 		return this;		
 	}
 	
-	public StatementSourceGenerator addCode(String... elements) {
+	public BodySourceGenerator addCode(String... elements) {
 		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
 		for (String element : elements) {
 			this.bodyGenerators.add(new SourceGenerator() {
@@ -87,14 +87,14 @@ public class StatementSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 
-	public StatementSourceGenerator addCodeRow(String... codes) {
+	public BodySourceGenerator addCodeRow(String... codes) {
 		for (String code : codes) {
 			addCode("\n" + Optional.ofNullable(elementPrefix).orElseGet(() -> "") + code);	
 		}
 		return this;	
 	}
 	
-	public StatementSourceGenerator addAllElements(Collection<? extends SourceGenerator> generators) {
+	public BodySourceGenerator addAllElements(Collection<? extends SourceGenerator> generators) {
 		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
 		generators.forEach(generator -> {
 			addElement(generator);
@@ -107,8 +107,8 @@ public class StatementSourceGenerator extends SourceGenerator.Abst {
 		Optional.ofNullable(usedTypes).ifPresent(usedTypes -> types.addAll(usedTypes));
 		Optional.ofNullable(bodyGenerators).ifPresent(bodyGenerators -> {
 			for (SourceGenerator generator : bodyGenerators) {
-				if (generator instanceof StatementSourceGenerator) {
-					types.addAll(((StatementSourceGenerator)generator).getTypeDeclarations());
+				if (generator instanceof BodySourceGenerator) {
+					types.addAll(((BodySourceGenerator)generator).getTypeDeclarations());
 				}
 				if (generator instanceof VariableSourceGenerator) {
 					types.addAll(((VariableSourceGenerator)generator).getTypeDeclarations());
@@ -121,7 +121,7 @@ public class StatementSourceGenerator extends SourceGenerator.Abst {
 		return types;
 	}
 	
-	public StatementSourceGenerator useType(java.lang.Class<?>... classes) {
+	public BodySourceGenerator useType(java.lang.Class<?>... classes) {
 		this.usedTypes = Optional.ofNullable(this.usedTypes).orElseGet(ArrayList::new);
 		for (java.lang.Class<?> cls : classes) {			
 			this.usedTypes.add(TypeDeclarationSourceGenerator.create(cls));
@@ -129,7 +129,7 @@ public class StatementSourceGenerator extends SourceGenerator.Abst {
 		return this;		
 	}
 	
-	public StatementSourceGenerator useType(String... classes) {
+	public BodySourceGenerator useType(String... classes) {
 		this.usedTypes = Optional.ofNullable(this.usedTypes).orElseGet(ArrayList::new);
 		for (String cls : classes) {			
 			this.usedTypes.add(TypeDeclarationSourceGenerator.create(cls, null));

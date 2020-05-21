@@ -14,7 +14,7 @@ public class CodeExecutorTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> {
 			return componentSupplier.getCodeExecutor().execute(
-				ExecuteConfig.forStatementSourceGenerator()
+				ExecuteConfig.forBodySourceGenerator()
 				.useType(ArrayList.class, List.class)
 				.addCodeRow("System.out.println(\"number to add: \" + parameter[0]);")
 				.addCodeRow("List<Integer> numbers = new ArrayList<>();")

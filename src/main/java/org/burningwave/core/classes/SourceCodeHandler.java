@@ -65,7 +65,7 @@ public class SourceCodeHandler implements Component {
 			).get(2).get(0);
 	}
 
-	public UnitSourceGenerator generateExecutor(String className, StatementSourceGenerator statement) {
+	public UnitSourceGenerator generateExecutor(String className, BodySourceGenerator body) {
 		if (className.contains("$")) {
 			throw Throwables.toRuntimeException(className + " CodeExecutor could not be a inner class");
 		}
@@ -85,7 +85,7 @@ public class SourceCodeHandler implements Component {
 			VariableSourceGenerator.create(
 				TypeDeclarationSourceGenerator.create("Object... "), "parameter"
 			)
-		).addOuterCodeRow("@Override").addBodyElement(statement);
+		).addOuterCodeRow("@Override").addBodyElement(body);
 		typeDeclaration.addGeneric(returnType);		
 		ClassSourceGenerator cls = ClassSourceGenerator.create(
 			typeDeclaration
@@ -115,7 +115,7 @@ public class SourceCodeHandler implements Component {
 			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("Object..."), "params")
 		).addOuterCodeRow("@Override");
 		varArgsAcceptMethod.addBodyCodeRow("accept(");
-		StatementSourceGenerator applyMethodCodeOne = StatementSourceGenerator.createSimple().setBodyElementSeparator(", ");
+		BodySourceGenerator applyMethodCodeOne = BodySourceGenerator.createSimple().setBodyElementSeparator(", ");
 		for (int i = 0; i < parametersLength; i++) {
 			typeDeclaration.addGeneric(GenericSourceGenerator.create("P" + i));
 			acceptMethod.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("P" + i), "p" + i));
@@ -153,7 +153,7 @@ public class SourceCodeHandler implements Component {
 			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("Object..."), "params")
 		).addOuterCodeRow("@Override");
 		varArgsTestMethod.addBodyCodeRow("return test(");
-		StatementSourceGenerator applyMethodCodeOne = StatementSourceGenerator.createSimple().setBodyElementSeparator(", ");
+		BodySourceGenerator applyMethodCodeOne = BodySourceGenerator.createSimple().setBodyElementSeparator(", ");
 		for (int i = 0; i < parametersLength; i++) {
 			typeDeclaration.addGeneric(GenericSourceGenerator.create("P" + i));
 			testMethod.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("P" + i), "p" + i));
@@ -192,7 +192,7 @@ public class SourceCodeHandler implements Component {
 			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("Object..."), "params")
 		).addOuterCodeRow("@Override");
 		varArgsApplyMethod.addBodyCodeRow("return apply(");
-		StatementSourceGenerator applyMethodCodeOne = StatementSourceGenerator.createSimple().setBodyElementSeparator(", ");
+		BodySourceGenerator applyMethodCodeOne = BodySourceGenerator.createSimple().setBodyElementSeparator(", ");
 		for (int i = 0; i < parametersLength; i++) {
 			typeDeclaration.addGeneric(GenericSourceGenerator.create("P" + i));
 			applyMethod.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("P" + i), "p" + i));

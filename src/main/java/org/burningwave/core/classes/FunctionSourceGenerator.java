@@ -45,7 +45,7 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 	private TypeDeclarationSourceGenerator returnType;
 	private String name;
 	private Collection<VariableSourceGenerator> parameters;
-	private StatementSourceGenerator body;
+	private BodySourceGenerator body;
 	
 	private FunctionSourceGenerator(String name) {
 		this.name = name;
@@ -147,19 +147,19 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public FunctionSourceGenerator addBodyCode(String... codes) {
-		this.body = Optional.ofNullable(this.body).orElseGet(StatementSourceGenerator::create);
+		this.body = Optional.ofNullable(this.body).orElseGet(BodySourceGenerator::create);
 		this.body.addCode(codes);
 		return this;
 	}
 	
 	public FunctionSourceGenerator addBodyCodeRow(String... code) {
-		this.body = Optional.ofNullable(this.body).orElseGet(StatementSourceGenerator::create);
+		this.body = Optional.ofNullable(this.body).orElseGet(BodySourceGenerator::create);
 		this.body.addCodeRow(code);
 		return this;
 	}
 	
 	public FunctionSourceGenerator addBodyElement(SourceGenerator... generators) {
-		this.body = Optional.ofNullable(this.body).orElseGet(StatementSourceGenerator::create);
+		this.body = Optional.ofNullable(this.body).orElseGet(BodySourceGenerator::create);
 		for (SourceGenerator generator : generators) {
 			this.body.addElement(generator);
 		}

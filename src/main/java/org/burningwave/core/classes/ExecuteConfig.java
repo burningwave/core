@@ -105,12 +105,12 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
 		return fromProperties;
 	}
 	
-	public static ExecuteConfig.ForStatementSourceGenerator forStatementSourceGenerator() {
-		return new ForStatementSourceGenerator(StatementSourceGenerator.createSimple());
+	public static ExecuteConfig.ForBodySourceGenerator forBodySourceGenerator() {
+		return new ForBodySourceGenerator(BodySourceGenerator.createSimple());
 	}
 	
-	public static ExecuteConfig.ForStatementSourceGenerator forStatementSourceGenerator(StatementSourceGenerator statement) {
-		return new ForStatementSourceGenerator(statement);
+	public static ExecuteConfig.ForBodySourceGenerator forBodySourceGenerator(BodySourceGenerator body) {
+		return new ForBodySourceGenerator(body);
 	}
 	
 	
@@ -179,34 +179,34 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
 	}
 	
 	
-	public static class ForStatementSourceGenerator extends ExecuteConfig<ExecuteConfig.ForStatementSourceGenerator> {
-		StatementSourceGenerator statement;
+	public static class ForBodySourceGenerator extends ExecuteConfig<ExecuteConfig.ForBodySourceGenerator> {
+		BodySourceGenerator body;
 		
-		private ForStatementSourceGenerator(StatementSourceGenerator statement) {
-			this.statement = statement.setElementPrefix("\t");
+		private ForBodySourceGenerator(BodySourceGenerator body) {
+			this.body = body.setElementPrefix("\t");
 		}
 
-		StatementSourceGenerator getStatement() {
-			return statement;
+		BodySourceGenerator getBody() {
+			return body;
 		}
 		
-		public ExecuteConfig.ForStatementSourceGenerator addCodeRow(String... codeRow) {
-			statement.addCodeRow(codeRow);
+		public ExecuteConfig.ForBodySourceGenerator addCodeRow(String... codeRow) {
+			body.addCodeRow(codeRow);
 			return this;
 		}
 		
-		public ExecuteConfig.ForStatementSourceGenerator addCode(String... code) {
-			statement.addCode(code);
+		public ExecuteConfig.ForBodySourceGenerator addCode(String... code) {
+			body.addCode(code);
 			return this;
 		}
 		
-		public ExecuteConfig.ForStatementSourceGenerator addCode(SourceGenerator... generators) {
-			statement.addElement(generators);
+		public ExecuteConfig.ForBodySourceGenerator addCode(SourceGenerator... generators) {
+			body.addElement(generators);
 			return this;
 		}
 
-		public ExecuteConfig.ForStatementSourceGenerator useType(Class<?>... classes) {
-			statement.useType(classes);
+		public ExecuteConfig.ForBodySourceGenerator useType(Class<?>... classes) {
+			body.useType(classes);
 			return this;
 		}
 	}

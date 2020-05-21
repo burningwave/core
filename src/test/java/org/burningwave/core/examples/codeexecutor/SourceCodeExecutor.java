@@ -6,15 +6,15 @@ import java.util.List;
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ExecuteConfig;
-import org.burningwave.core.classes.StatementSourceGenerator;
+import org.burningwave.core.classes.BodySourceGenerator;
 
 public class SourceCodeExecutor {
     
     public static Integer execute() {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         return componentSupplier.getCodeExecutor().execute(
-            ExecuteConfig.forStatementSourceGenerator(
-                StatementSourceGenerator.createSimple().useType(ArrayList.class, List.class)
+            ExecuteConfig.forBodySourceGenerator(
+                BodySourceGenerator.createSimple().useType(ArrayList.class, List.class)
                 .addCodeRow("System.out.println(\"number to add: \" + parameter[0]);")
                 .addCodeRow("List<Integer> numbers = new ArrayList<>();")
                 .addCodeRow("numbers.add((Integer)parameter[0]);")

@@ -41,7 +41,7 @@ public class VariableSourceGenerator extends SourceGenerator.Abst {
 	private Integer modifier;
 	private TypeDeclarationSourceGenerator type;
 	private String name;
-	private StatementSourceGenerator valueBody;
+	private BodySourceGenerator valueBody;
 	private Collection<TypeDeclarationSourceGenerator> usedTypes;
 	
 	private VariableSourceGenerator(TypeDeclarationSourceGenerator type, String name) {
@@ -114,10 +114,10 @@ public class VariableSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public VariableSourceGenerator setValue(String value) {
-		return setValue(StatementSourceGenerator.createSimple().addCode(value));
+		return setValue(BodySourceGenerator.createSimple().addCode(value));
 	}
 	
-	public VariableSourceGenerator setValue(StatementSourceGenerator valueGenerator) {
+	public VariableSourceGenerator setValue(BodySourceGenerator valueGenerator) {
 		this.valueBody = valueGenerator;
 		return this;
 	}

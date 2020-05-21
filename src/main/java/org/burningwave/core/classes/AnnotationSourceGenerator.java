@@ -7,7 +7,7 @@ import java.util.Optional;
 public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 	private TypeDeclarationSourceGenerator type;
 	private String name;
-	private StatementSourceGenerator statement;
+	private BodySourceGenerator body;
 	
 	public AnnotationSourceGenerator(String simpleName) {
 		this.name = simpleName;
@@ -26,8 +26,8 @@ public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 	
 	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
-		Optional.ofNullable(statement).ifPresent(hirearchyElements -> {
-			types.addAll(statement.getTypeDeclarations());
+		Optional.ofNullable(body).ifPresent(hirearchyElements -> {
+			types.addAll(body.getTypeDeclarations());
 		});
 		Optional.ofNullable(type).ifPresent(hirearchyElement -> {
 			types.add(type);
@@ -40,34 +40,34 @@ public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public AnnotationSourceGenerator addParameters(String name, VariableSourceGenerator... parameters) {
-		this.statement = Optional.ofNullable(this.statement).orElseGet(() ->
-			StatementSourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
+		this.body = Optional.ofNullable(this.body).orElseGet(() ->
+			BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
 		);
-		StatementSourceGenerator innStatement = StatementSourceGenerator.createSimple().setBodyElementSeparator(", ");
+		BodySourceGenerator innBody = BodySourceGenerator.createSimple().setBodyElementSeparator(", ");
 		if (name != null) {
-			innStatement.setDelimiters(name + " = {", "}");
+			innBody.setDelimiters(name + " = {", "}");
 		} else {
-			innStatement.setDelimiters("{", "}");
+			innBody.setDelimiters("{", "}");
 		}
 		for (VariableSourceGenerator parameter : parameters) {
-			innStatement.addElement(parameter.setDelimiter(null));
+			innBody.addElement(parameter.setDelimiter(null));
 		}
-		this.statement.addElement(innStatement);
+		this.body.addElement(innBody);
 		return this;
 	}
 	
 	public AnnotationSourceGenerator addParameter(VariableSourceGenerator parameter) {
-		this.statement = Optional.ofNullable(this.statement).orElseGet(() -> 
-			StatementSourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
+		this.body = Optional.ofNullable(this.body).orElseGet(() -> 
+			BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
 		).addElement(parameter.setDelimiter(null));
 		return this;
 	}
 	
 	public AnnotationSourceGenerator addParameter(AnnotationSourceGenerator parameter) {
-		this.statement = Optional.ofNullable(this.statement).orElseGet(() ->
-			StatementSourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
+		this.body = Optional.ofNullable(this.body).orElseGet(() ->
+			BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
 		);
-		this.statement.addElement(parameter);
+		this.body.addElement(parameter);
 		return this;
 	}
 	
@@ -76,32 +76,32 @@ public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public AnnotationSourceGenerator addParameters(String name, AnnotationSourceGenerator... parameters) {
-		this.statement = Optional.ofNullable(this.statement).orElseGet(() ->
-			StatementSourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
+		this.body = Optional.ofNullable(this.body).orElseGet(() ->
+			BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
 		);
-		StatementSourceGenerator innStatement = StatementSourceGenerator.createSimple().setBodyElementSeparator(", ");
+		BodySourceGenerator innBody = BodySourceGenerator.createSimple().setBodyElementSeparator(", ");
 		if (name != null) {
-			innStatement.setDelimiters(name + " = {", "}");
+			innBody.setDelimiters(name + " = {", "}");
 		} else {
-			innStatement.setDelimiters("{", "}");
+			innBody.setDelimiters("{", "}");
 		}
 		for (AnnotationSourceGenerator parameter : parameters) {
-			innStatement.addElement(parameter);
+			innBody.addElement(parameter);
 		}
-		this.statement.addElement(innStatement);
+		this.body.addElement(innBody);
 		return this;
 	}
 	
 	public AnnotationSourceGenerator useType(java.lang.Class<?>... classes) {
-		this.statement = Optional.ofNullable(this.statement).orElseGet(() ->
-			StatementSourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
+		this.body = Optional.ofNullable(this.body).orElseGet(() ->
+			BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
 		);
-		statement.useType(classes);
+		body.useType(classes);
 		return this;	
 	}
 	
 	@Override
 	public String make() {
-		return getOrEmpty("@" + name, statement);
+		return getOrEmpty("@" + name, body);
 	}
 }
