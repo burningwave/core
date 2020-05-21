@@ -40,9 +40,11 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.Criteria;
 import org.burningwave.core.Criteria.TestContext;
+import org.burningwave.core.io.FileScanConfigAbst;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.iterable.Properties;
 
 
 public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, ClassHunter.SearchContext, ClassHunter.SearchResult> {
@@ -60,7 +62,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		ClassLoader parentClassLoader,
-		Integer pathScannerClassLoaderByteCodeHunterSearchConfigCheckFileOptions
+		Properties config
 	) {
 		super(
 			byteCodeHunterSupplier,
@@ -73,13 +75,16 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			(context) -> new ClassHunter.SearchResult(context)
 		);
 		pathScannerClassLoaderSupplier = () -> PathScannerClassLoader.create(
-			parentClassLoader, pathHelper, byteCodeHunterSupplier, pathScannerClassLoaderByteCodeHunterSearchConfigCheckFileOptions
+			parentClassLoader, pathHelper, byteCodeHunterSupplier, FileScanConfigAbst.parseCheckFileOptionsValue(
+				(String)config.get(ClassHunter.PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY),
+				FileScanConfigAbst.CHECK_FILE_OPTIONS_DEFAULT_VALUE
+			)
 		);
 		this.pathScannerClassLoader = pathScannerClassLoaderSupplier.get();
 	}
 	
 	static {
-		DEFAULT_CONFIG_VALUES.put(PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY + ClassFactory.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, "");
+		DEFAULT_CONFIG_VALUES.put(PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, "");
 		DEFAULT_CONFIG_VALUES.put(PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY, "null");
 	}
 	
@@ -89,10 +94,10 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		ClassLoader parentClassLoader,
-		int byteCodeHunterSearchConfigCheckFileOptions
+		Properties config
 	) {
 		return new ClassHunter(
-			byteCodeHunterSupplier, classHunterSupplier, fileSystemScanner, pathHelper, parentClassLoader, byteCodeHunterSearchConfigCheckFileOptions
+			byteCodeHunterSupplier, classHunterSupplier, fileSystemScanner, pathHelper, parentClassLoader, config
 		);
 	}
 	

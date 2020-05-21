@@ -83,30 +83,34 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
 	
 	
 	
-	public static ExecuteConfig.ForProperties forDefaultProperties() {
+	public static ExecuteConfig.ForProperties fromDefaultProperties() {
 		return new ForProperties();
 	}
 	
-	public static ExecuteConfig.ForProperties forProperties(Properties properties) {
+	public static ExecuteConfig.ForProperties from(Properties properties) {
 		ExecuteConfig.ForProperties fromProperties = new ForProperties();
 		fromProperties.properties = properties;
 		return fromProperties;
 	}
 	
-	public static ExecuteConfig.ForProperties forProperty(String propertyName) {
+	public static ExecuteConfig.ForProperties fromProperty(String propertyName) {
 		ExecuteConfig.ForProperties fromProperties = new ForProperties();
 		fromProperties.propertyName = propertyName;
 		return fromProperties;
 	}
 	
-	public static ExecuteConfig.ForProperties forPropertiesFile(String filePath) {
+	public static ExecuteConfig.ForProperties fromPropertiesFile(String filePath) {
 		ExecuteConfig.ForProperties fromProperties = new ForProperties();
 		fromProperties.filePath = filePath;
 		return fromProperties;
 	}
 	
-	public static ExecuteConfig.ForStatementSourceGenerator forStatementSourceGenerator() {
-		return new ForStatementSourceGenerator();
+	public static ExecuteConfig.ForStatementSourceGenerator fromStatementSourceGenerator() {
+		return new ForStatementSourceGenerator(StatementSourceGenerator.createSimple());
+	}
+	
+	public static ExecuteConfig.ForStatementSourceGenerator from(StatementSourceGenerator statement) {
+		return new ForStatementSourceGenerator(statement);
 	}
 	
 	
@@ -178,8 +182,8 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
 	public static class ForStatementSourceGenerator extends ExecuteConfig<ExecuteConfig.ForStatementSourceGenerator> {
 		StatementSourceGenerator statement;
 		
-		private ForStatementSourceGenerator() {
-			this.statement = StatementSourceGenerator.createSimple().setElementPrefix("\t");
+		private ForStatementSourceGenerator(StatementSourceGenerator statement) {
+			this.statement = statement.setElementPrefix("\t");
 		}
 
 		StatementSourceGenerator getStatement() {

@@ -11,8 +11,8 @@ public class SourceCodeExecutor {
     
     public static Integer execute() {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
-        return componentSupplier.getClassFactory().execute(
-            ExecuteConfig.forStatementSourceGenerator()
+        return componentSupplier.getCodeExecutor().execute(
+            ExecuteConfig.fromStatementSourceGenerator()
             .useType(ArrayList.class, List.class)
             .addCodeRow("System.out.println(\"number to add: \" + parameter[0]);")
             .addCodeRow("List<Integer> numbers = new ArrayList<>();")

@@ -48,12 +48,12 @@ import org.burningwave.core.classes.ByteCodeHunter;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHunter;
+import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.concurrent.ConcurrentHelper;
-import org.burningwave.core.io.FileScanConfigAbst;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.IterableObjectHelper;
@@ -215,7 +215,19 @@ public class ComponentContainer implements ComponentSupplier {
 			)
 		);	
 	}
-
+	
+	public CodeExecutor getCodeExecutor() {
+		return getOrCreate(CodeExecutor.class, () -> 
+			CodeExecutor.create(
+				() -> getClassFactory(),
+				getSourceCodeHandler(),
+				getPathHelper(),
+				() -> getIterableObjectHelper(),
+				config
+			)
+		);	
+	}
+	
 	@Override
 	public JavaMemoryCompiler getJavaMemoryCompiler() {
 		return getOrCreate(JavaMemoryCompiler.class, () ->
@@ -237,10 +249,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getFileSystemScanner(),
 				getPathHelper(),
 				retrieveClassLoader(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY, ClassHunter.DEFAULT_CONFIG_VALUES),
-				FileScanConfigAbst.parseCheckFileOptionsValue(
-					getConfigProperty(ClassHunter.PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY),
-					FileScanConfigAbst.CHECK_FILE_OPTIONS_DEFAULT_VALUE
-				)
+				config
 			);
 		});
 	}
@@ -342,8 +351,8 @@ public class ComponentContainer implements ComponentSupplier {
 		if (object instanceof ClassLoader) {
 			return (ClassLoader)object;
 		} else if (object instanceof String) {
-			return getClassFactory().execute(
-				ExecuteConfig.forDefaultProperties()
+			return getCodeExecutor().execute(
+				ExecuteConfig.fromDefaultProperties()
 				.setPropertyName(configKey)
 				.withParameter(this)
 				.withDefaultPropertyValues(defaultValues)
@@ -355,7 +364,7 @@ public class ComponentContainer implements ComponentSupplier {
 			);
 		}
 	}
-	
+
 	public ComponentSupplier clear() {
 		components.forEach((type, instance) -> { 
 			try {

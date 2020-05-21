@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
@@ -15,7 +14,6 @@ import org.burningwave.core.bean.Complex;
 import org.burningwave.core.bean.PojoInterface;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassSourceGenerator;
-import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionSourceGenerator;
 import org.burningwave.core.classes.LoadOrBuildAndDefineConfig;
 import org.burningwave.core.classes.PojoSourceGenerator;
@@ -224,32 +222,4 @@ public class ClassFactoryTest extends BaseTest {
 		);
 	}
 	
-	@Test
-	public void executeCodeTest() throws Exception {
-		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> {
-			return componentSupplier.getClassFactory().execute(
-				ExecuteConfig.forStatementSourceGenerator()
-				.useType(ArrayList.class, List.class)
-				.addCodeRow("System.out.println(\"number to add: \" + parameter[0]);")
-				.addCodeRow("List<Integer> numbers = new ArrayList<>();")
-				.addCodeRow("numbers.add((Integer)parameter[0]);")
-				.addCodeRow("System.out.println(\"number list size: \" + numbers.size());")
-				.addCodeRow("System.out.println(\"number in the list: \" + numbers.get(0));")
-				.addCodeRow("Integer inputNumber = (Integer)parameter[0];")
-				.addCodeRow("return (T)inputNumber++;")		
-				.withParameter(Integer.valueOf(5))
-			);
-		});
-	}
-	
-	@Test
-	public void executeCodeOfPropertiesFileTest() throws Exception {
-		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> {
-			return componentSupplier.getClassFactory().execute(
-				ExecuteConfig.forPropertiesFile("code.properties").setPropertyName("code-block-1")
-			);
-		});
-	}
 }
