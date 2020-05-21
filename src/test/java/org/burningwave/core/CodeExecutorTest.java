@@ -42,9 +42,7 @@ public class CodeExecutorTest extends BaseTest {
 	public void executeCodeOfPropertiesTest() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> {
-			return componentSupplier.getCodeExecutor().execute(
-				ExecuteConfig.forProperty("code-block-1")
-			);
+			return componentSupplier.getCodeExecutor().execute("code-block-1");
 		});
 	}
 }
