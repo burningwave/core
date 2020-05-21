@@ -25,7 +25,7 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>5.23.0</version>
+    <version>5.24.0</version>
 </dependency>
 ```
 
@@ -33,32 +33,32 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 	<summary><b>... And with (click to expand)</b>:</summary>
 	<br/>
 	<ul><li><b>Gradle Groovy</b>:</li></ul>
-	<pre>implementation 'org.burningwave:core:5.23.0'</pre>
+	<pre>implementation 'org.burningwave:core:5.24.0'</pre>
 	<br/>
 	<ul><li><b>Gradle Kotlin</b>:</li></ul>
-	<pre>implementation("org.burningwave:core:5.23.0")</pre>
+	<pre>implementation("org.burningwave:core:5.24.0")</pre>
 	<br/>
 	<ul><li><b>Scala</b>:</li></ul>
-	<pre>libraryDependencies += "org.burningwave" % "core" % "5.23.0"</pre>
+	<pre>libraryDependencies += "org.burningwave" % "core" % "5.24.0"</pre>
 	<br/>
 	<ul><li><b>Apache Ivy</b>:</li></ul>
-	<pre>&lt;dependency org="org.burningwave" name="core" rev="5.23.0" /&gt;</pre>
+	<pre>&lt;dependency org="org.burningwave" name="core" rev="5.24.0" /&gt;</pre>
 	<br/>
 	<ul><li><b>Groovy Grape</b>:</li></ul>
 	<pre>
 @Grapes(
-  	@Grab(group='org.burningwave', module='core', version='5.23.0')
+  	@Grab(group='org.burningwave', module='core', version='5.24.0')
 )
 	</pre>
 	<br/>
 	<ul><li><b>Leiningen</b>:</li></ul>
-	<pre>[org.burningwave/core "5.23.0"]</pre>
+	<pre>[org.burningwave/core "5.24.0"]</pre>
 	<br/>
 	<ul><li><b>Apache Buildr</b>:</li></ul>
-	<pre>'org.burningwave:core:jar:5.23.0'</pre>
+	<pre>'org.burningwave:core:jar:5.24.0'</pre>
 	<br/>
 	<ul><li><b>PURL</b>:</li></ul>
-	<pre>pkg:maven/org.burningwave/core@5.23.0</pre>
+	<pre>pkg:maven/org.burningwave/core@5.24.0</pre>
 </details>
 
 ## Generating classes at runtime and invoking their methods with and without the use of reflection
@@ -303,15 +303,16 @@ public PropertyAccessor.ByFieldOrByMethod getByFieldOrByMethodPropertyAccessor()
 public PropertyAccessor.ByMethodOrByField getByMethodOrByFieldPropertyAccessor();
 public ByteCodeHunter getByteCodeHunter();
 public ClassFactory getClassFactory();
-public SourceCodeHandler getSourceCodeHandler();
 public ClassHunter getClassHunter();
 public ClassPathHunter getClassPathHunter();
+public CodeExecutor getCodeExecutor();
 public ConcurrentHelper getConcurrentHelper();
 public FileSystemScanner getFileSystemScanner();
 public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
 public IterableObjectHelper getIterableObjectHelper();
 public JavaMemoryCompiler getJavaMemoryCompiler();
 public PathHelper getPathHelper();
+public SourceCodeHandler getSourceCodeHandler();
 ```
 ... That can be used within your application, simply as follow:
 ```java
@@ -391,8 +392,8 @@ paths.your-custom-path1=C:/some-folder;C:/another-folder;
 	<summary><b>ClassFactory</b></summary>
 	<ul>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/Executing-stringified-source-code-at-runtime">
-			<b>USE CASE</b>: executing stringified source code at runtime
+			<a href="https://github.com/burningwave/core/wiki/Generating-classes-at-runtime-and-invoking-their-methods-with-and-without-the-use-of-reflection">
+			<b>USE CASE</b>: generating classes at runtime and invoking their methods with and without the use of the reflection
 			</a>
 		</li>
 	</ul>
@@ -453,6 +454,16 @@ paths.your-custom-path1=C:/some-folder;C:/another-folder;
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Finding-where-a-class-is-loaded-from">
 			<b>USE CASE</b>: finding where a class is loaded from
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
+	<summary><b>CodeExecutor</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Executing-stringified-source-code-at-runtime">
+			<b>USE CASE</b>: executing stringified source code at runtime
 			</a>
 		</li>
 	</ul>
