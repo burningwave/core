@@ -117,7 +117,7 @@ public class CodeExecutor implements Component {
 	}
 	
 	public <T> T execute(String propertyName) {
-		return execute(ExecuteConfig.ForProperties.fromProperty(propertyName));
+		return execute(ExecuteConfig.ForProperties.forProperty(propertyName));
 	}
 	
 	public <T> T execute(ExecuteConfig.ForProperties config) {
@@ -184,7 +184,7 @@ public class CodeExecutor implements Component {
 	}
 	
 	public <T> T execute(StatementSourceGenerator statement) {
-		return execute(ExecuteConfig.from(statement));
+		return execute(ExecuteConfig.forStatementSourceGenerator(statement));
 	}
 	
 	public <T> T execute(

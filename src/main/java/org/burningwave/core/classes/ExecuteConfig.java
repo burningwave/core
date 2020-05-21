@@ -87,29 +87,29 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
 		return new ForProperties();
 	}
 	
-	public static ExecuteConfig.ForProperties from(Properties properties) {
+	public static ExecuteConfig.ForProperties forProperties(Properties properties) {
 		ExecuteConfig.ForProperties fromProperties = new ForProperties();
 		fromProperties.properties = properties;
 		return fromProperties;
 	}
 	
-	public static ExecuteConfig.ForProperties fromProperty(String propertyName) {
+	public static ExecuteConfig.ForProperties forProperty(String propertyName) {
 		ExecuteConfig.ForProperties fromProperties = new ForProperties();
 		fromProperties.propertyName = propertyName;
 		return fromProperties;
 	}
 	
-	public static ExecuteConfig.ForProperties fromPropertiesFile(String filePath) {
+	public static ExecuteConfig.ForProperties forPropertiesFile(String filePath) {
 		ExecuteConfig.ForProperties fromProperties = new ForProperties();
 		fromProperties.filePath = filePath;
 		return fromProperties;
 	}
 	
-	public static ExecuteConfig.ForStatementSourceGenerator fromStatementSourceGenerator() {
+	public static ExecuteConfig.ForStatementSourceGenerator forStatementSourceGenerator() {
 		return new ForStatementSourceGenerator(StatementSourceGenerator.createSimple());
 	}
 	
-	public static ExecuteConfig.ForStatementSourceGenerator from(StatementSourceGenerator statement) {
+	public static ExecuteConfig.ForStatementSourceGenerator forStatementSourceGenerator(StatementSourceGenerator statement) {
 		return new ForStatementSourceGenerator(statement);
 	}
 	

@@ -14,7 +14,7 @@ public class CodeExecutorTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> {
 			return componentSupplier.getCodeExecutor().execute(
-				ExecuteConfig.fromStatementSourceGenerator()
+				ExecuteConfig.forStatementSourceGenerator()
 				.useType(ArrayList.class, List.class)
 				.addCodeRow("System.out.println(\"number to add: \" + parameter[0]);")
 				.addCodeRow("List<Integer> numbers = new ArrayList<>();")
@@ -33,7 +33,7 @@ public class CodeExecutorTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> {
 			return componentSupplier.getCodeExecutor().execute(
-				ExecuteConfig.fromPropertiesFile("code.properties").setPropertyName("code-block-1")
+				ExecuteConfig.forPropertiesFile("code.properties").setPropertyName("code-block-1")
 			);
 		});
 	}
