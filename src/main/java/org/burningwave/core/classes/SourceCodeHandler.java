@@ -38,7 +38,6 @@ import java.util.regex.Pattern;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Executor;
-import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.function.MultiParamsConsumer;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.MultiParamsPredicate;
@@ -77,10 +76,6 @@ public class SourceCodeHandler implements Component {
 			returnType
 		).addModifier(
 			Modifier.PUBLIC
-		).addParameter(
-			VariableSourceGenerator.create(
-				TypeDeclarationSourceGenerator.create(ComponentSupplier.class), "componentSupplier"
-			)
 		).addParameter(
 			VariableSourceGenerator.create(
 				TypeDeclarationSourceGenerator.create("Object... "), "parameter"

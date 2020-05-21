@@ -37,4 +37,14 @@ public class CodeExecutorTest extends BaseTest {
 			);
 		});
 	}
+	
+	@Test
+	public void executeCodeOfPropertiesTest() throws Exception {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotNull(() -> {
+			return componentSupplier.getCodeExecutor().execute(
+				ExecuteConfig.forProperty("code-block-1")
+			);
+		});
+	}
 }

@@ -32,13 +32,11 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Constructo
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.util.Arrays;
-import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Executor;
-import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemItem;
@@ -145,29 +143,20 @@ public class CodeExecutor implements Component {
 			}
 			
 		}
-		return execute(parentClassLoader, properties, config.getPropertyName(), config.getDefaultValues(), config.getParams());
-	}		
-	
-	private <T> T execute(
-		ClassLoader classLoaderParent,
-		java.util.Properties properties, 
-		String key,
-		Map<String, String> defaultValues,
-		Object... params
-	) {	
+		
 		BodySourceGenerator body = BodySourceGenerator.createSimple().setElementPrefix("\t");
-		if (params != null && params.length > 0) {
-			for (Object param : params) {
+		if (config.getParams() != null && config.getParams().length > 0) {
+			for (Object param : config.getParams()) {
 				body.useType(param.getClass());
 			}
 		}
-		String importFromConfig = getIterableObjectHelper().get(properties, key + PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, defaultValues);
+		String importFromConfig = getIterableObjectHelper().get(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, config.getDefaultValues());
 		if (Strings.isNotEmpty(importFromConfig)) {
 			Arrays.stream(importFromConfig.split(";")).forEach(imp -> {
 				body.useType(imp);
 			});
 		}
-		String code = getIterableObjectHelper().get(properties, key, defaultValues);
+		String code = getIterableObjectHelper().get(properties, config.getPropertyName(), config.getDefaultValues());
 		if (code.contains(";")) {
 			for (String codeRow : code.split(";")) {
 				body.addCodeRow(codeRow + ";");
@@ -179,9 +168,9 @@ public class CodeExecutor implements Component {
 			);
 		}
 		return execute(
-			classLoaderParent, body, params
+			parentClassLoader, body, config.getParams()
 		);
-	}
+	}		
 	
 	public <T> T execute(BodySourceGenerator body) {
 		return execute(ExecuteConfig.forBodySourceGenerator(body));
@@ -213,16 +202,7 @@ public class CodeExecutor implements Component {
 					memoryClassLoader, packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""), body
 				);
 				Executor executor = Constructors.newInstanceOf(executableClass);
-				ComponentSupplier componentSupplier = null;
-				if (parameters != null && parameters.length > 0) {
-					for (Object param : parameters) {
-						if (param instanceof ComponentSupplier) {
-							componentSupplier = (ComponentSupplier) param;
-							break;
-						}
-					}
-				}
-				T retrievedElement = executor.execute(componentSupplier, parameters);
+				T retrievedElement = executor.execute(parameters);
 				return retrievedElement;
 			}
 		});

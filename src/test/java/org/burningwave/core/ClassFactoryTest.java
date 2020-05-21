@@ -10,6 +10,7 @@ import java.util.ArrayList;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.bean.Complex;
 import org.burningwave.core.bean.PojoInterface;
 import org.burningwave.core.classes.ClassFactory;
@@ -95,7 +96,7 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		UnitSourceGenerator unitSG = UnitSourceGenerator.create("tryyy").addClass(
 			ClassSG
-		);
+		).addStaticImport(StaticComponentContainer.class, "Streams", "Classes");
 		testNotNull(() -> {
 			return componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				unitSG

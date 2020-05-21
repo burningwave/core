@@ -66,6 +66,21 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
+	public UnitSourceGenerator addStaticImport(java.lang.Class<?> cls, String... innerElements) {
+		for (String innerElement : innerElements) {
+			addStaticImport(cls.getName() + "." + innerElement);
+		}
+		return this;
+	}
+	
+	public UnitSourceGenerator addStaticImport(String... imports) {
+		this.imports = Optional.ofNullable(this.imports).orElseGet(ArrayList::new);
+		for (String imprt : imports) {
+			this.imports.add("static " + imprt);
+		}
+		return this;
+	}
+	
 	public UnitSourceGenerator addImport(java.lang.Class<?>... classes) {
 		for (java.lang.Class<?> cls : classes) {
 			this.addImport(cls.getName());
