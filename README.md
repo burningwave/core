@@ -20,7 +20,7 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 And now we will see:
 * [**including Burningwave Core in your project**](#Including-Burningwave-Core-in-your-project)
 * [**generating classes at runtime and invoking their methods with and without the use of reflection**](#Generating-classes-at-runtime-and-invoking-their-methods-with-and-without-the-use-of-reflection)
-* [**executing stringified source code at runtime**](#Executing-stringified-source-code-at-runtime)
+* [**executing stringified source code**](#Executing-stringified-source-code)
 * [**using a component of the class paths scanning engine: the ClassHunter**](#Using-a-component-of-the-class-paths-scanning-engine)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 
@@ -143,11 +143,11 @@ public class RuntimeClassExtender {
 
 <br/>
 
-# Executing stringified source code at runtime
+# Executing stringified source code
 It is possible to execute stringified code by calling the method **execute** of **CodeExecutor** component and we can do this in three three different ways:
 * [through **BodySourceGenerator**](#Executing-code-with-BodySourceGenerator)
-* [through a custom property in Burningwave configuration file](#Executing-code-of-a-property-in-Burningwave-configuration-file)
-* [through a custom property in a custom Properties file](#Executing-code-of-a-property-located-in-a-custom-properties-file)
+* [through a property located in Burningwave configuration file](#Executing-code-of-a-property-in-Burningwave-configuration-file)
+* [through a property located in a custom Properties file](#Executing-code-of-a-property-located-in-a-custom-properties-file)
 
 <br/>
 
@@ -192,7 +192,7 @@ public class SourceCodeExecutor {
 <br/>
 
 ## Executing code of a property in Burningwave configuration file
-To execute code from Burningwave configuration file (**burningwave.properties** or other file that you have used to create the ComponentContainer) you must add to it a  property that contains the code and, if it is necessary to import classes, you must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
+To execute code from Burningwave configuration file (**burningwave.properties** or other file that we have used to create the ComponentContainer) we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
 ```properties
 code-block-1=\
 	Date now= new Date();\
@@ -216,7 +216,7 @@ code-block-2.imports=\
 	java.time.ZonedDateTime;\
 	java.time.ZoneId;
 ```
-After that, for executing the code of the property you must call the execute method of CodeExecutor and passing to it the property name to be executed and parameters used in the property code:
+After that, for executing the code of the property we must call the execute method of CodeExecutor and passing to it the property name to be executed and parameters used in the property code:
 ```java
 package org.burningwave.core.examples.codeexecutor;
 
@@ -243,7 +243,7 @@ public class SourceCodeExecutor {
 <br/>
 
 ## Executing code of a property located in a custom properties file
-To execute code from a custom properties file you must add to it a  property that contains the code and, if it is necessary to import classes, you must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
+To execute code from a custom properties file we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
 ```properties
 code-block-1=\
 	Date now= new Date();\
@@ -267,12 +267,12 @@ code-block-2.imports=\
 	java.time.ZonedDateTime;\
 	java.time.ZoneId;
 ```
-After that, for executing the code of the property you must create an **ExecuteConfig** object and set on it:
-*  the path (relative or absolute) of your custom properties file 
+After that, for executing the code of the property we must create an **ExecuteConfig** object and set on it:
+* the path (relative or absolute) of our custom properties file 
 * the property name to be executed 
 * the parameters used in the property code
 
-Then you must call the execute method of CodeExecutor with the created ExecuteConfig object:
+Then we must call the execute method of CodeExecutor with the created ExecuteConfig object:
 ```java
 package org.burningwave.core.examples.codeexecutor;
 
