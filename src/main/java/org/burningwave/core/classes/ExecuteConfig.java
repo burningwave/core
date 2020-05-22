@@ -131,8 +131,8 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
 			return this;
 		}
 		
-		public ExecuteConfig.ForProperties setFilePathAsAbsolute() {
-			this.isAbsoluteFilePath = true;
+		public ExecuteConfig.ForProperties setFilePathAsAbsolute(boolean flag) {
+			this.isAbsoluteFilePath = flag;
 			return this;
 		}
 		

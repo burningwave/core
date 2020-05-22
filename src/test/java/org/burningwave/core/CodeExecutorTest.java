@@ -34,7 +34,7 @@ public class CodeExecutorTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> {
 			return componentSupplier.getCodeExecutor().execute(
-				ExecuteConfig.forPropertiesFile("code.properties")
+				ExecuteConfig.forPropertiesFile("custom-folder/code.properties")
 				.setPropertyName("code-block-1")
 				.withParameter(LocalDateTime.now())
 			);
