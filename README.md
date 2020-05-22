@@ -63,7 +63,7 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 
 ... And now we will see some functionality:
 * **Generating classes at runtime and invoking their methods with and without the use of reflection**
-* [**Using ClassHunter**](#using-class-hunter)
+* [**Using ClassHunter**](#Searching-for-all-classes-that-have-package-name-that-matches-a-regex)
 
 ## Generating classes at runtime and invoking their methods with and without the use of reflection
 
@@ -167,7 +167,7 @@ public class RuntimeClassExtender {
 
 <br/>
 
-## [Let's take a look at the class path scanner: searching for all classes that have package name that matches a regex](#using-class-hunter)
+## Let's take a look at the class path scanner: searching for all classes that have package name that matches a regex
 In this case we're looking for all classes whose package name contains "springframework" string
 ```java
 import java.util.Collection;
