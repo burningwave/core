@@ -269,7 +269,7 @@ public class UseOfStaticComponentsExample {
 }
 ```
 ### Configuration
----------------------
+----------------------------------
 The configuration of this type of container is done via **burningwave.static.properties** file or via **burningwave.static.default.properties** file: the library searches for the first file and if it does not find it, then it searches for the second file and if neither this one is found then the library sets the default configuration programmatically. **The default configuration loaded programmatically if no configuration file is found is the following**:
 ```properties
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
