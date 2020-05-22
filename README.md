@@ -23,7 +23,7 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 * [**using a component of the class paths scanning engine: the ClassHunter**](#Using-a-component-of-the-class-paths-scanning-engine)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 
-### Including Burningwave Core in your Project 
+## Including Burningwave Core in your Project 
 To include Burningwave Core library in your projects simply use with**:
 
 * **Apache Maven**:
