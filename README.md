@@ -23,6 +23,8 @@ And now we will see:
 * [**using a component of the class paths scanning engine: the ClassHunter**](#Using-a-component-of-the-class-paths-scanning-engine)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 
+<br/>
+
 ## Including Burningwave Core in your project 
 To include Burningwave Core library in your projects simply use with**:
 
@@ -35,6 +37,8 @@ To include Burningwave Core library in your projects simply use with**:
     <version>5.27.0</version>
 </dependency>
 ```
+
+<br/>
 
 ## Generating classes at runtime and invoking their methods with and without the use of reflection
 
