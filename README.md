@@ -146,7 +146,7 @@ public class RuntimeClassExtender {
 # Executing stringified source code
 It is possible to execute stringified code by calling the method **execute** of **CodeExecutor** component and we can do this in three three different ways:
 * [through **BodySourceGenerator**](#Executing-code-with-BodySourceGenerator)
-* [through a property located in Burningwave configuration file](#Executing-code-of-a-property-in-Burningwave-configuration-file)
+* [through a property located in Burningwave configuration file](#Executing-code-of-a-property-located-in-Burningwave-configuration-file)
 * [through a property located in a custom Properties file](#Executing-code-of-a-property-located-in-a-custom-properties-file)
 
 <br/>
@@ -191,7 +191,7 @@ public class SourceCodeExecutor {
 
 <br/>
 
-## Executing code of a property in Burningwave configuration file
+## Executing code of a property located in Burningwave configuration file
 To execute code from Burningwave configuration file (**burningwave.properties** or other file that we have used to create the ComponentContainer) we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
 ```properties
 code-block-1=\
