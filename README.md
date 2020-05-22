@@ -216,7 +216,7 @@ code-block-2.imports=\
 	java.time.ZonedDateTime;\
 	java.time.ZoneId;
 ```
-After that, for executing the code of the property we must call the execute method of CodeExecutor and passing to it the property name to be executed and parameters used in the property code:
+After that, for executing the code of the property we must call the execute method of CodeExecutor and passing to it the property name to be executed and the parameters used in the property code:
 ```java
 package org.burningwave.core.examples.codeexecutor;
 
