@@ -1,5 +1,6 @@
 package org.burningwave.core;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,7 +43,7 @@ public class CodeExecutorTest extends BaseTest {
 	public void executeCodeOfPropertiesTest() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> {
-			return componentSupplier.getCodeExecutor().execute("code-block-1");
+			return componentSupplier.getCodeExecutor().execute("code-block-1", LocalDateTime.now());
 		});
 	}
 }
