@@ -62,7 +62,7 @@ Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria b
 </details>
 
 ... And now we will see some functionality:
-* **generating classes at runtime and invoking their methods with and without the use of reflection**
+* [**generating classes at runtime and invoking their methods with and without the use of reflection**](#Generating-classes-at-runtime-and-invoking-their-methods-with-and-without-the-use-of-reflection)
 * [**using a component of the class paths scanning engine: the ClassHunter**](#Using-a-component-of-the-class-paths-scanning-engine)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 
