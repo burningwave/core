@@ -142,6 +142,167 @@ public class RuntimeClassExtender {
 
 <br/>
 
+It is possible to execute stringified code by calling the method **execute** of **CodeExecutor** component and we can do this in three three different ways:
+* [through **BodySourceGenerator**](#Executing-code-with-BodySourceGenerator)
+* [through a custom property in Burningwave configuration file](#Executing-code-of-a-property-in-Burningwave-configuration-file)
+* [through a custom property in a custom Properties file](#Executing-code-of-a-property-located-in-a-custom-properties-file)
+
+<br/>
+
+## Executing code with BodySourceGenerator
+For first way we must create a **ExecuteConfig** by using the within static method **forBodySourceGenerator** to which must be passed the **BodySourceGenerator** that contains the source code: after that we must pass the created configuration to the execute method of CodeExecutor as shown below:
+```java
+package org.burningwave.core.examples.codeexecutor;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.ExecuteConfig;
+import org.burningwave.core.classes.BodySourceGenerator;
+
+public class SourceCodeExecutor {
+    
+    public static Integer execute() {
+        ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+        return componentSupplier.getCodeExecutor().execute(
+            ExecuteConfig.forBodySourceGenerator(
+                BodySourceGenerator.createSimple().useType(ArrayList.class, List.class)
+                .addCodeRow("System.out.println(\"number to add: \" + parameter[0]);")
+                .addCodeRow("List<Integer> numbers = new ArrayList<>();")
+                .addCodeRow("numbers.add((Integer)parameter[0]);")
+                .addCodeRow("System.out.println(\"number list size: \" + numbers.size());")
+                .addCodeRow("System.out.println(\"number in the list: \" + numbers.get(0));")
+                .addCodeRow("Integer inputNumber = (Integer)parameter[0];")
+                .addCodeRow("return (T)new Integer(inputNumber + (Integer)parameter[1]);")
+            ).withParameter(Integer.valueOf(5), Integer.valueOf(3))
+        );
+        
+    }
+    
+    public static void main(String[] args) {
+        System.out.println("Total is: " + execute());
+    }
+}
+```
+
+<br/>
+
+## Executing code of a property in Burningwave configuration file
+To execute code from Burningwave configuration file (**burningwave.properties** or other file that you have used to create the ComponentContainer) you must add to it a  property that contains the code and, if it is necessary to import classes, you must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
+```properties
+code-block-1=\
+	Date now= new Date();\
+	return (T)now;
+code-block-1.imports=java.util.Date;
+```
+It is also possible to include the code of a property in another property:
+```properties
+code-block-1=\
+	${code-block-2}\
+	return (T)Date.from(zonedDateTime.toInstant());
+code-block-1.imports=\
+	${code-block-2.imports}\
+	java.util.Date;
+code-block-2=\
+	LocalDateTime localDateTime = (LocalDateTime)parameter[0];\
+	ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
+code-block-2.imports=\
+	static org.burningwave.core.assembler.StaticComponentContainer.Strings;\
+	java.time.LocalDateTime;\
+	java.time.ZonedDateTime;\
+	java.time.ZoneId;
+```
+After that, for executing the code of the property you must call the execute method of CodeExecutor and passing to it the property name to be executed and parameters used in the property code:
+```java
+package org.burningwave.core.examples.codeexecutor;
+
+import java.time.LocalDateTime;
+
+import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.ComponentSupplier;
+
+public class SourceCodeExecutor {
+    
+    public static void execute() {
+        ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+        System.out.println("Time is: " +
+            componentSupplier.getCodeExecutor().execute("code-block-1", LocalDateTime.now())    
+        );
+    }
+    
+    public static void main(String[] args) {
+        execute();
+    }
+}
+```
+
+<br/>
+
+## Executing code of a property located in a custom properties file
+To execute code from a custom properties file you must add to it a  property that contains the code and, if it is necessary to import classes, you must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
+```properties
+code-block-1=\
+	Date now= new Date();\
+	return (T)now;
+code-block-1.imports=java.util.Date;
+```
+It is also possible to include the code of a property in another property:
+```properties
+code-block-1=\
+	${code-block-2}\
+	return (T)Date.from(zonedDateTime.toInstant());
+code-block-1.imports=\
+	${code-block-2.imports}\
+	java.util.Date;
+code-block-2=\
+	LocalDateTime localDateTime = (LocalDateTime)parameter[0];\
+	ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
+code-block-2.imports=\
+	static org.burningwave.core.assembler.StaticComponentContainer.Strings;\
+	java.time.LocalDateTime;\
+	java.time.ZonedDateTime;\
+	java.time.ZoneId;
+```
+After that, for executing the code of the property you must create an **ExecuteConfig** object and set on it:
+*  the path (relative or absolute) of your custom properties file 
+* the property name to be executed 
+* the parameters used in the property code
+
+Then you must call the execute method of CodeExecutor with the created ExecuteConfig object:
+```java
+package org.burningwave.core.examples.codeexecutor;
+
+import java.time.LocalDateTime;
+
+import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.ExecuteConfig;
+
+public class SourceCodeExecutor {
+    
+    public static void execute() {
+        ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+        System.out.println("Time is: " +
+            componentSupplier.getCodeExecutor().execute(
+                ExecuteConfig.forPropertiesFile("custom-folder/code.properties")
+                //Uncomment the line below if the path you have supplied is an absolute path
+                //.setFilePathAsAbsolute(true)
+                .setPropertyName("code-block-1")
+                .withParameter(LocalDateTime.now())
+            )    
+        );
+    }
+    
+    public static void main(String[] args) {
+        execute();
+    }
+}
+```
+
+<br/>
+
 ## Using a component of the class paths scanning engine
 Now we are going to search for all classes that have package name that matches a regex, so in the example below we're looking for all classes whose package name contains "springframework" string
 ```java
