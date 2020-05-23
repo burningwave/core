@@ -546,13 +546,28 @@ paths.your-custom-path1=C:/some-folder;C:/another-folder;
 	<summary><b>ClassHunter</b></summary>
 	<ul>
 		<li>
+			<a href="https://github.com/burningwave/core/wiki/How-to-retrieve-all-classes-of-the-classpath">
+			<b>USE CASE</b>: how to retrieve all classes of the classpath
+			</a>
+		</li>
+		<li>
 			<a href="https://github.com/burningwave/core/wiki/How-retrieve-all-classes-that-implement-one-or-more-interfaces">
 			<b>USE CASE</b>: how to retrieve all classes that implement one or more interfaces
 			</a>
 		</li>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/How-to-search-for-all-classes-with-methods-whose-name-begins-for-a-given-string-and-that-takes-a-specific-type-as-its-first-parameter">
-			<b>USE CASE</b>: how to search for all classes with methods whose name begins for a given string and that takes a specific type as its first parameter
+			<a href="https://github.com/burningwave/core/wiki/Finding-all-classes-that-extend-a-base-class">
+			<b>USE CASE</b>: finding all classes that extend a base class
+			</a>
+		</li>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/How-to-search-for-all-classes-that-have-package-name-that-matches-a-regex">
+			<b>USE CASE</b>: how to search for all classes that have package name that matches a regex
+			</a>
+		</li>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Finding-all-classes-for-module-name-(Java-9-and-later)">
+			<b>USE CASE</b>: finding all classes for module name (Java 9 and later)
 			</a>
 		</li>
 		<li>
@@ -566,28 +581,18 @@ paths.your-custom-path1=C:/some-folder;C:/another-folder;
 			</a>
 		</li>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/How-to-retrieve-all-classes-of-the-classpath">
-			<b>USE CASE</b>: how to retrieve all classes of the classpath
-			</a>
-		</li>
-		<li>
-			<a href="https://github.com/burningwave/core/wiki/Finding-all-classes-that-extend-a-base-class">
-			<b>USE CASE</b>: finding all classes that extend a base class
-			</a>
-		</li>
-		<li>
-			<a href="https://github.com/burningwave/core/wiki/Finding-all-classes-that-have-at-least-2-protected-fields">
-			<b>USE CASE</b>: finding all classes that have at least 2 protected fields
-			</a>
-		</li>
-		<li>
 			<a href="https://github.com/burningwave/core/wiki/How-to-search-for-all-classes-with-a-constructor-that-takes-a-specific-type-as-first-parameter-and-with-at-least-2-methods-that-begin-for-a-given-string">
 			<b>USE CASE</b>: how to search for all classes with a constructor that takes a specific type as first parameter and with at least 2 methods that begin for a given string
 			</a>
 		</li>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/Finding-all-classes-for-module-name-(Java-9-and-later)">
-			<b>USE CASE</b>: finding all classes for module name (Java 9 and later)
+			<a href="https://github.com/burningwave/core/wiki/How-to-search-for-all-classes-with-methods-whose-name-begins-for-a-given-string-and-that-takes-a-specific-type-as-its-first-parameter">
+			<b>USE CASE</b>: how to search for all classes with methods whose name begins for a given string and that takes a specific type as its first parameter
+			</a>
+		</li>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Finding-all-classes-that-have-at-least-2-protected-fields">
+			<b>USE CASE</b>: finding all classes that have at least 2 protected fields
 			</a>
 		</li>
 	</ul>
