@@ -45,7 +45,7 @@ public class CodeExecutorTest extends BaseTest {
 	public void executeCodeOfPropertiesTest() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> {
-			return componentSupplier.getCodeExecutor().execute("code-block-1", LocalDateTime.now());
+			return componentSupplier.getCodeExecutor().executeProperty("code-block-1", LocalDateTime.now());
 		});
 	}
 }

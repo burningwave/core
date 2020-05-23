@@ -144,7 +144,7 @@ public class RuntimeClassExtender {
 <br/>
 
 # Executing stringified source code
-It is possible to execute stringified code by calling the method **execute** of **CodeExecutor** component and we can do this in three three different ways:
+It is possible to execute stringified code by using the **CodeExecutor** in three three different ways:
 * [through **BodySourceGenerator**](#Executing-code-with-BodySourceGenerator)
 * [through a property located in Burningwave configuration file](#Executing-code-of-a-property-located-in-Burningwave-configuration-file)
 * [through a property located in a custom Properties file](#Executing-code-of-a-property-located-in-a-custom-properties-file)
@@ -152,7 +152,7 @@ It is possible to execute stringified code by calling the method **execute** of 
 <br/>
 
 ## Executing code with BodySourceGenerator
-For first way we must create a **ExecuteConfig** by using the within static method **forBodySourceGenerator** to which must be passed the **BodySourceGenerator** that contains the source code: after that we must pass the created configuration to the execute method of CodeExecutor as shown below:
+For first way we must create a **ExecuteConfig** by using the within static method **forBodySourceGenerator** to which must be passed the **BodySourceGenerator** that contains the source code: after that we must pass the created configuration to the **execute** method of CodeExecutor as shown below:
 ```java
 package org.burningwave.core.examples.codeexecutor;
 
@@ -216,7 +216,7 @@ code-block-2.imports=\
 	java.time.ZonedDateTime;\
 	java.time.ZoneId;
 ```
-After that, for executing the code of the property we must call the execute method of CodeExecutor and passing to it the property name to be executed and the parameters used in the property code:
+After that, for executing the code of the property we must call the **executeProperty** method of CodeExecutor and passing to it the property name to be executed and the parameters used in the property code:
 ```java
 package org.burningwave.core.examples.codeexecutor;
 
@@ -272,7 +272,7 @@ After that, for executing the code of the property we must create an **ExecuteCo
 * the property name to be executed 
 * the parameters used in the property code
 
-Then we must call the execute method of CodeExecutor with the created ExecuteConfig object:
+Then we must call the **execute** method of CodeExecutor with the created ExecuteConfig object:
 ```java
 package org.burningwave.core.examples.codeexecutor;
 

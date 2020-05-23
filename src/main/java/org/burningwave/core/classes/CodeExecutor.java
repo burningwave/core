@@ -114,7 +114,7 @@ public class CodeExecutor implements Component {
 		);
 	}
 	
-	public <T> T execute(String propertyName, Object... params) {
+	public <T> T executeProperty(String propertyName, Object... params) {
 		return execute(ExecuteConfig.ForProperties.forProperty(propertyName).withParameter(params));
 	}
 	
