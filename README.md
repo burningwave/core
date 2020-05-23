@@ -21,7 +21,7 @@ And now we will see:
 * [**including Burningwave Core in your project**](#Including-Burningwave-Core-in-your-project)
 * [**generating classes at runtime and invoking their methods with and without the use of reflection**](#Generating-classes-at-runtime-and-invoking-their-methods-with-and-without-the-use-of-reflection)
 * [**executing stringified source code**](#Executing-stringified-source-code)
-* [**scanning class paths with the ClassHunter**](#Scanning-class-paths-with-the-ClassHunter)
+* [**scanning class paths with a component of class paths scanning engine: the ClassHunter**](#Scanning-class-paths-with-ClassHunter)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 
 <br/>
@@ -305,7 +305,7 @@ public class SourceCodeExecutor {
 
 <br/>
 
-## Scanning class paths with the ClassHunter
+## Scanning class paths with ClassHunter
 The compononents of the class paths scanning engine are: **ByteCodeHunter**, **ClassHunter** and the **ClassPathHunter**. Now we are going to use the ClassHunter to search for all classes that have package name that matches a regex. So in this example we're looking for all classes whose package name contains "springframework" string
 ```java
 import java.util.Collection;
