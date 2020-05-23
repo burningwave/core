@@ -26,7 +26,7 @@ And now we will see:
 
 <br/>
 
-## Including Burningwave Core in your project 
+# Including Burningwave Core in your project 
 To include Burningwave Core library in your projects simply use with**:
 
 * **Apache Maven**:
@@ -41,7 +41,7 @@ To include Burningwave Core library in your projects simply use with**:
 
 <br/>
 
-## Generating classes at runtime and invoking their methods with and without the use of reflection
+# Generating classes at runtime and invoking their methods with and without the use of reflection
 
 For this purpose is necessary the use of **ClassFactory** component and of the **sources generating components**. Once the sources have been set in **UnitSourceGenerator** objects, they must be passed to **loadOrBuildAndDefine** method of ClassFactory with the ClassLoader where you want to define new generated classes. This method performs the following operations: tries to load all the classes present in the UnitSourceGenerator through the class loader, if at least one of these is not found it proceeds to compiling all the UnitSourceGenerators and uploading their classes on class loader: in this case, keep in mind that if a class with the same name was previously loaded by the class loader, the compiled class will not be uploaded. Once the classes have been compiled and loaded, it is possible to invoke their methods in severals ways as shown at the end of the example below. **For more examples you can go [here](https://github.com/burningwave/core/tree/master/src/test/java/org/burningwave/core/examples/classfactory) and for assistance you can [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to/)**.
 ```java
@@ -305,7 +305,7 @@ public class SourceCodeExecutor {
 
 <br/>
 
-## Scanning class paths with ClassHunter
+# Scanning class paths with ClassHunter
 The compononents of the class paths scanning engine are: **ByteCodeHunter**, **ClassHunter** and the **ClassPathHunter**. Now we are going to use the ClassHunter to search for all classes that have package name that matches a regex. So in this example we're looking for all classes whose package name contains "springframework" string
 ```java
 import java.util.Collection;
@@ -529,7 +529,6 @@ class-factory.byte-code-hunter.search-config.check-file-options=checkFileName
 #ComponentContainer.getInstance().getPathHelper().getPaths("your-custom-path1")
 paths.your-custom-path1=C:/some-folder;C:/another-folder;
 ```
-##
 
 ### Other examples of use of some components:
 <details open>
