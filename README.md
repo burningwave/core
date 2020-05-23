@@ -606,8 +606,8 @@ paths.your-custom-path1=C:/some-folder;C:/another-folder;
 	<summary><b>CodeExecutor</b></summary>
 	<ul>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/Executing-stringified-source-code-at-runtime">
-			<b>USE CASE</b>: executing stringified source code at runtime
+			<a href="https://github.com/burningwave/core/wiki/Executing-stringified-source-code">
+			<b>USE CASE</b>: executing stringified source code
 			</a>
 		</li>
 	</ul>
