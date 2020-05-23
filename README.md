@@ -21,7 +21,7 @@ And now we will see:
 * [**including Burningwave Core in your project**](#Including-Burningwave-Core-in-your-project)
 * [**generating classes at runtime and invoking their methods with and without the use of reflection**](#Generating-classes-at-runtime-and-invoking-their-methods-with-and-without-the-use-of-reflection)
 * [**executing stringified source code**](#Executing-stringified-source-code)
-* [**Scanning class paths with the ClassHunter**](#Scanning-class-paths-with-the-ClassHunter)
+* [**scanning class paths with the ClassHunter**](#Scanning-class-paths-with-the-ClassHunter)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 
 <br/>
