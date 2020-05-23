@@ -144,7 +144,7 @@ public class RuntimeClassExtender {
 <br/>
 
 # Executing stringified source code
-It is possible to execute stringified code by using the **CodeExecutor** in three three different ways:
+It is possible to execute stringified source code by using the **CodeExecutor** in three three different ways:
 * [through **BodySourceGenerator**](#Executing-code-with-BodySourceGenerator)
 * [through a property located in Burningwave configuration file](#Executing-code-of-a-property-located-in-Burningwave-configuration-file)
 * [through a property located in a custom Properties file](#Executing-code-of-a-property-located-in-a-custom-properties-file)
