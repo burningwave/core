@@ -586,19 +586,19 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public synchronized boolean isContainer() {
-		String conventionedAbsolutePath = getConventionedAbsolutePath();
-		return conventionedAbsolutePath.endsWith("/");
+		return Optional.ofNullable(getConventionedAbsolutePath()).map(conventionedAbsolutePath -> 
+			conventionedAbsolutePath.endsWith("/")
+		).orElseGet(() -> false);
 	}
 	
 	public synchronized boolean isCompressed() {
-		String conventionedAbsolutePath = getConventionedAbsolutePath();
-		return 
+		return Optional.ofNullable(getConventionedAbsolutePath()).map(conventionedAbsolutePath -> 
 			(conventionedAbsolutePath.contains(IterableZipContainer.ZIP_PATH_SEPARATOR) && 
-				!conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR)) ||
-			(conventionedAbsolutePath.contains(IterableZipContainer.ZIP_PATH_SEPARATOR) && 
-				conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR) && 
-					conventionedAbsolutePath.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR) != conventionedAbsolutePath.lastIndexOf(IterableZipContainer.ZIP_PATH_SEPARATOR))
-		;
+					!conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR)) ||
+				(conventionedAbsolutePath.contains(IterableZipContainer.ZIP_PATH_SEPARATOR) && 
+					conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR) && 
+						conventionedAbsolutePath.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR) != conventionedAbsolutePath.lastIndexOf(IterableZipContainer.ZIP_PATH_SEPARATOR))
+		).orElseGet(() -> false);
 	}
 	
 	public boolean isFile() {
@@ -606,18 +606,15 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public synchronized boolean isArchive() {
-		try {
-			String conventionedAbsolutePath = getConventionedAbsolutePath();
-			return conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR);
-		} catch (Exception e) {
-			logError("path" + getAbsolutePath());
-			throw e;
-		}
+		return Optional.ofNullable(getConventionedAbsolutePath()).map(conventionedAbsolutePath -> 
+			conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR)
+		).orElseGet(() -> false);
 	}
 	
 	public synchronized boolean isFolder() {
-		String conventionedAbsolutePath = getConventionedAbsolutePath();
-		return conventionedAbsolutePath.endsWith("/") && !conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR);
+		return Optional.ofNullable(getConventionedAbsolutePath()).map(conventionedAbsolutePath -> 
+		conventionedAbsolutePath.endsWith("/") && !conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR)
+		).orElseGet(() -> false);
 	}
 	
 	public ByteBuffer toByteBuffer() {
