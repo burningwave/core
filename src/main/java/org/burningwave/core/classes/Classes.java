@@ -705,6 +705,7 @@ public class Classes implements Component, MembersRetriever {
 			return definedClass;
 		}
 		
+		@SuppressWarnings("unchecked")
 		private <T> Class<T> defineClass(
 			ClassLoader classLoader, 
 			MethodHandle method, 
@@ -715,6 +716,9 @@ public class Classes implements Component, MembersRetriever {
 				return (Class<T>)method.invoke(classLoader, className, byteCode, null);
 			} catch (InvocationTargetException | ClassNotFoundException | NoClassDefFoundError exc) {
 				throw exc;
+			} catch (java.lang.LinkageError exc) {
+				logError("Exception occurred", exc);
+				return (Class<T>)classLoader.loadClass(className);
 			} catch (Throwable exc) {
 				throw Throwables.toRuntimeException(exc);
 			}

@@ -40,7 +40,6 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -178,7 +177,7 @@ public class Cache implements Component {
 				synchronized (Classes.getId(partion, partitionKey)) {
 					innerPartion = partion.get(partitionKey);
 					if (innerPartion == null) {
-						partion.put(partitionKey, innerPartion = new ConcurrentHashMap<>());
+						partion.put(partitionKey, innerPartion = new HashMap<>());
 					}
 				}
 			}
@@ -224,7 +223,7 @@ public class Cache implements Component {
 				synchronized (Classes.getId(resourcesPartitioned, partitionIndex)) {
 					resources = resourcesPartitioned.get(partitionIndex);
 					if (resources == null) {
-						resourcesPartitioned.put(partitionIndex, resources = new ConcurrentHashMap<>());
+						resourcesPartitioned.put(partitionIndex, resources = new HashMap<>());
 					}
 				}
 			}

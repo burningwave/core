@@ -117,9 +117,9 @@ public class FileSystemItem implements ManagedLogger {
 			} else {
 				absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
 			}
-			if (!exists) {
-				removeFromCache(this);
-			}
+		}
+		if (exists == null || !exists) {
+			removeFromCache();
 		}
 		return absolutePath.getValue();
 	}
@@ -335,10 +335,43 @@ public class FileSystemItem implements ManagedLogger {
 		parentContainer = null;
 		absolutePath.setValue(null);
 		parent = null;
+		clear();
 		getConventionedAbsolutePath();
 		return this;
 	}
-
+	
+	private synchronized FileSystemItem clear() {
+		if (allChildren != null) {
+			for (FileSystemItem child : allChildren) {
+				removeFromCache(child);
+			}
+			allChildren.clear();
+			allChildren = null;
+			if (children != null) {
+				children.clear();
+				children = null;
+			}			
+		} else if (children != null) {
+			for (FileSystemItem child : children) {
+				removeFromCache(child);
+			}
+			children.clear();
+			children = null;
+		}		
+		exists = null;
+		parentContainer = null;
+		absolutePath.setValue(null);
+		parent = null;
+		return this;
+	}
+	
+	private void removeFromCache() {
+		clear();
+		Cache.pathForContents.remove(this.getAbsolutePath());
+		Cache.pathForFileSystemItems.remove(this.getAbsolutePath());
+		Cache.pathForZipFiles.remove(this.getAbsolutePath());
+	}
+	
 	private void removeFromCache(FileSystemItem fileSystemItem) {
 		Cache.pathForContents.remove(fileSystemItem.getAbsolutePath());
 		Cache.pathForFileSystemItems.remove(fileSystemItem.getAbsolutePath());
@@ -549,7 +582,7 @@ public class FileSystemItem implements ManagedLogger {
 		if (exists == null) {
 			getConventionedAbsolutePath();
 		}
-		return exists;
+		return exists != null ? exists : false;
 	}
 	
 	public boolean isContainer() {
