@@ -606,8 +606,13 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public synchronized boolean isArchive() {
-		String conventionedAbsolutePath = getConventionedAbsolutePath();
-		return conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR);
+		try {
+			String conventionedAbsolutePath = getConventionedAbsolutePath();
+			return conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR);
+		} catch (Exception e) {
+			logError("path" + getAbsolutePath());
+			throw e;
+		}
 	}
 	
 	public synchronized boolean isFolder() {
