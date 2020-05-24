@@ -309,7 +309,6 @@ public class PathHelper implements Component {
 				getAllPaths().stream().forEach((path) -> {
 					FileSystemItem fileSystemItem = FileSystemItem.ofPath(path + "/" + resourceRelativePath);
 					if (fileSystemItem.exists()) {
-						System.out.println(fileSystemItem);
 						fileConsumer.accept(files, fileSystemItem);
 					}
 				});
