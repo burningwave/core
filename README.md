@@ -192,7 +192,7 @@ public class SourceCodeExecutor {
 <br/>
 
 ## Executing code of a property located in Burningwave configuration file
-To execute code from Burningwave configuration file (**burningwave.properties** or other file that we have used to create the ComponentContainer (see [**architectural overview and configuration**](#Architectural-overview-and-configuration))) we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
+To execute code from Burningwave configuration file (**burningwave.properties** or other file that we have used to create the ComponentContainer: [**see architectural overview and configuration**](#Architectural-overview-and-configuration)) we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
 ```properties
 code-block-1=\
 	Date now= new Date();\
