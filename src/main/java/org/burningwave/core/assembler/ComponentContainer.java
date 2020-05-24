@@ -52,7 +52,6 @@ import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
-import org.burningwave.core.classes.SourceCodeHandler;
 import org.burningwave.core.concurrent.ConcurrentHelper;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
@@ -206,7 +205,6 @@ public class ComponentContainer implements ComponentSupplier {
 			ClassFactory.create(
 				getByteCodeHunter(),
 				() -> getClassPathHunter(),
-				getSourceCodeHandler(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
 				() -> retrieveClassLoader(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, null),
@@ -220,7 +218,6 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(CodeExecutor.class, () -> 
 			CodeExecutor.create(
 				() -> getClassFactory(),
-				getSourceCodeHandler(),
 				getPathHelper(),
 				() -> getIterableObjectHelper(),
 				config
@@ -233,7 +230,6 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(JavaMemoryCompiler.class, () ->
 			JavaMemoryCompiler.create(
 				getPathHelper(),
-				getSourceCodeHandler(),
 				getClassPathHunter(),
 				config
 			)
@@ -336,13 +332,6 @@ public class ComponentContainer implements ComponentSupplier {
 			IterableObjectHelper.create(
 				getByFieldOrByMethodPropertyAccessor()
 			)
-		);
-	}
-
-	@Override
-	public SourceCodeHandler getSourceCodeHandler() {
-		return getOrCreate(SourceCodeHandler.class, () ->
-			SourceCodeHandler.create()
 		);
 	}
 	

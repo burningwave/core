@@ -28,31 +28,24 @@
  */
 package org.burningwave.core.classes;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
+import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 
-public class LoadOrBuildAndDefineConfig {
-	private Collection<String> compilationClassPaths;
-	private Collection<String> classPathsWhereToSearchNotFoundClassesDuringCompilation;
-	private Collection<String> classPathsWhereToSearchNotFoundClassesDuringLoading;
-	private Collection<UnitSourceGenerator> unitSourceGenerators;
-	private ClassLoader classLoader;
-	private boolean useOneShotJavaCompiler;
+import java.util.Collection;
+import java.util.UUID;
+
+import org.burningwave.core.Executor;
+
+public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<LoadOrBuildAndDefineConfig> {
 	
-	@SafeVarargs
-	private LoadOrBuildAndDefineConfig(UnitSourceGenerator... unitsCode) {
-		this(Arrays.asList(unitsCode));
+	public LoadOrBuildAndDefineConfig(UnitSourceGenerator... unitsCode) {
+		super(unitsCode);
 	}
-	
-	@SafeVarargs
-	private LoadOrBuildAndDefineConfig(Collection<UnitSourceGenerator>... unitCodeCollections) {
-		unitSourceGenerators = new HashSet<>();
-		for (Collection<UnitSourceGenerator> unitsCode : unitCodeCollections) {
-			unitSourceGenerators.addAll(unitsCode);
-		}
+
+	@SuppressWarnings("unchecked")
+	public LoadOrBuildAndDefineConfig(Collection<UnitSourceGenerator>... unitsCodeCollections) {
+		super(unitsCodeCollections);
 	}
-	
+
 	@SafeVarargs
 	public final static LoadOrBuildAndDefineConfig forUnitSourceGenerator(UnitSourceGenerator... unitsCode) {
 		return new LoadOrBuildAndDefineConfig(unitsCode);
@@ -63,104 +56,28 @@ public class LoadOrBuildAndDefineConfig {
 		return new LoadOrBuildAndDefineConfig(unitsCode);
 	}
 	
-	@SafeVarargs
-	public final LoadOrBuildAndDefineConfig add(UnitSourceGenerator... unitsCode) {
-		unitSourceGenerators.addAll(Arrays.asList(unitsCode));
-		return this;
-	}
-	
-	@SafeVarargs
-	public final LoadOrBuildAndDefineConfig addCompilationClassPaths(Collection<String>... classPathCollections) {
-		if (compilationClassPaths == null) {
-			compilationClassPaths = new HashSet<>();
+	public static class ForCodeExecutor extends LoadOrBuildAndDefineConfigAbst<ForCodeExecutor> {
+		private String executorName;
+		
+		private ForCodeExecutor(String executorName, BodySourceGenerator bodySG) {
+			super(SourceCodeHandler.generateExecutor(executorName, bodySG));
+			storeCompiledClasses(false);
+			this.executorName = executorName;
 		}
-		for (Collection<String> classPathCollection : classPathCollections) {
-			compilationClassPaths.addAll(classPathCollection);
+		
+		public static ForCodeExecutor withCode(String executorName, BodySourceGenerator bodySG) {
+			return new ForCodeExecutor(executorName, bodySG);
 		}
-		return this;
-	}
-	
-	@SafeVarargs
-	public final LoadOrBuildAndDefineConfig addCompilationClassPaths(String... classPaths) {
-		return addCompilationClassPaths(Arrays.asList(classPaths));
-	}
-	
-	@SafeVarargs
-	public final LoadOrBuildAndDefineConfig addClassPathsWhereToSearchNotFoundClassesDuringCompilation(Collection<String>... classPathCollections) {
-		if (classPathsWhereToSearchNotFoundClassesDuringCompilation == null) {
-			classPathsWhereToSearchNotFoundClassesDuringCompilation = new HashSet<>();
+		
+		public static ForCodeExecutor withCode(BodySourceGenerator bodySG) {
+			String packageName = Executor.class.getPackage().getName();
+			String className = packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", "");
+			return withCode(className, bodySG);
 		}
-		for (Collection<String> classPathCollection : classPathCollections) {
-			classPathsWhereToSearchNotFoundClassesDuringCompilation.addAll(classPathCollection);
-		}
-		return this;
-	}
-	
-	@SafeVarargs
-	public final LoadOrBuildAndDefineConfig addClassPathsWhereToSearchNotFoundClassesDuringCompilation(String... classPaths) {
-		return addClassPathsWhereToSearchNotFoundClassesDuringCompilation(Arrays.asList(classPaths));
-	}
-	
-	@SafeVarargs
-	public final LoadOrBuildAndDefineConfig addClassPathsWhereToSearchNotFoundClasses(String... classPaths) {
-		return addClassPathsWhereToSearchNotFoundClassesDuringCompilation(classPaths)
-			.addClassPathsWhereToSearchNotFoundClassesDuringLoading(classPaths);		
-	}
-	
-	@SafeVarargs
-	public final LoadOrBuildAndDefineConfig addClassPathsWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
-		return addClassPathsWhereToSearchNotFoundClassesDuringCompilation(classPathCollections)
-			.addClassPathsWhereToSearchNotFoundClassesDuringLoading(classPathCollections);		
-	}
-	
-	@SafeVarargs
-	public final LoadOrBuildAndDefineConfig addClassPathsWhereToSearchNotFoundClassesDuringLoading(Collection<String>... classPathCollections) {
-		if (classPathsWhereToSearchNotFoundClassesDuringLoading == null) {
-			classPathsWhereToSearchNotFoundClassesDuringLoading = new HashSet<>();
-		}
-		for (Collection<String> classPathCollection : classPathCollections) {
-			classPathsWhereToSearchNotFoundClassesDuringLoading.addAll(classPathCollection);
-		}
-		return this;
-	}
-	
-	@SafeVarargs
-	public final LoadOrBuildAndDefineConfig addClassPathsWhereToSearchNotFoundClassesDuringLoading(String... classPaths) {
-		return addClassPathsWhereToSearchNotFoundClassesDuringLoading(Arrays.asList(classPaths));
-	}
-	
-	public LoadOrBuildAndDefineConfig useClassLoader(ClassLoader classLoader) {
-		this.classLoader = classLoader;
-		return this;
-	}
-	
-	public LoadOrBuildAndDefineConfig useOneShotJavaCompiler(boolean flag) {
-		this.useOneShotJavaCompiler = flag;
-		return this;
-	}
 
-	Collection<String> getCompilationClassPaths() {
-		return compilationClassPaths;
+		String getExecutorName() {
+			return executorName;
+		}		
+		
 	}
-
-	Collection<String> getClassPathsWhereToSearchNotFoundClassesDuringCompilation() {
-		return classPathsWhereToSearchNotFoundClassesDuringCompilation;
-	}
-
-	Collection<String> getClassPathsWhereToSearchNotFoundClassesDuringLoading() {
-		return classPathsWhereToSearchNotFoundClassesDuringLoading;
-	}
-	
-	Collection<UnitSourceGenerator> getUnitSourceGenerators() {
-		return unitSourceGenerators;
-	}
-
-	ClassLoader getClassLoader() {
-		return classLoader;
-	}
-
-	boolean isUseOneShotJavaCompiler() {
-		return useOneShotJavaCompiler;
-	}
-	
 }

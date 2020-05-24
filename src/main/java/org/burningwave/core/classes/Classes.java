@@ -351,7 +351,13 @@ public class Classes implements Component, MembersRetriever {
 	public String getId(Object... objects) {
 		String id = "_";
 		for (Object object : objects) {
-			id += System.identityHashCode(object) + "_";
+			if (object instanceof String) {
+				id += (String)object  + "_";
+			} else if (object instanceof Long) {
+				id += (long)object  + "_";
+			} else {
+				id += System.identityHashCode(object) + "_";
+			}
 		}
 		return id;
 	}

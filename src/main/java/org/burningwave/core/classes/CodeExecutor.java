@@ -32,7 +32,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Constructo
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.util.Arrays;
-import java.util.UUID;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
@@ -47,7 +46,6 @@ import org.burningwave.core.iterable.Properties;
 public class CodeExecutor implements Component {
 	public final static String PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX = ".imports";
 	
-	private SourceCodeHandler sourceCodeHandler;
 	private ClassFactory classFactory;
 	private PathHelper pathHelper;
 	private Supplier<ClassFactory> classFactorySupplier;
@@ -57,13 +55,11 @@ public class CodeExecutor implements Component {
 	
 	private CodeExecutor(
 		Supplier<ClassFactory> classFactorySupplier,
-		SourceCodeHandler sourceCodeHandler,
 		PathHelper pathHelper,
 		Supplier<IterableObjectHelper> iterableObjectHelperSupplier,
 		Properties config
 	) {	
 		this.classFactorySupplier = classFactorySupplier;
-		this.sourceCodeHandler = sourceCodeHandler;
 		this.pathHelper = pathHelper;
 		this.iterableObjectHelperSupplier = iterableObjectHelperSupplier;
 		this.config = config;
@@ -72,14 +68,12 @@ public class CodeExecutor implements Component {
 		
 	public static CodeExecutor create(
 		Supplier<ClassFactory> classFactorySupplier,
-		SourceCodeHandler sourceCodeHandler,
 		PathHelper pathHelper,
 		Supplier<IterableObjectHelper> iterableObjectHelperSupplier,
 		Properties config
 	) {
 		return new CodeExecutor(
 			classFactorySupplier,
-			sourceCodeHandler, 
 			pathHelper,
 			iterableObjectHelperSupplier,
 			config
@@ -97,20 +91,14 @@ public class CodeExecutor implements Component {
 			(iterableObjectHelper = iterableObjectHelperSupplier.get());
 	}
 	
-	public <T extends Executor> Class<T> loadOrBuildAndDefineExecutorSubType(String className, BodySourceGenerator body) {
-		return loadOrBuildAndDefineExecutorSubType(getClassFactory().getDefaultClassLoader(), className, body);
-	}
-	
 	@SuppressWarnings("unchecked")
-	public <T extends Executor> Class<T> loadOrBuildAndDefineExecutorSubType(ClassLoader classLoader, String className, BodySourceGenerator body) {
+	public <T extends Executor> Class<T> loadOrBuildAndDefineExecutorSubType(
+		LoadOrBuildAndDefineConfig.ForCodeExecutor config
+	) {
 		return (Class<T>) getClassFactory().loadOrBuildAndDefine(
-			LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
-				sourceCodeHandler.generateExecutor(className, body)
-			).useClassLoader(
-				classLoader
-			)
+			config
 		).get(
-			className
+			config.getExecutorName()
 		);
 	}
 	
@@ -197,9 +185,8 @@ public class CodeExecutor implements Component {
 					classLoaderParentOfOneShotClassLoader
 				)
 			) {
-				String packageName = Executor.class.getPackage().getName();
 				Class<? extends Executor> executableClass = loadOrBuildAndDefineExecutorSubType(
-					memoryClassLoader, packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""), body
+					LoadOrBuildAndDefineConfig.ForCodeExecutor.withCode(body).useClassLoader(memoryClassLoader)
 				);
 				Executor executor = Constructors.newInstanceOf(executableClass);
 				T retrievedElement = executor.execute(parameters);

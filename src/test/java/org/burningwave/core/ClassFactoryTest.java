@@ -111,6 +111,22 @@ public class ClassFactoryTest extends BaseTest {
 	
 	
 	@Test
+	public void getOrBuildClassWithExternalClassOneParallelized() {
+		Thread thr_01 = new Thread( () -> getOrBuildClassWithExternalClassOne());
+		Thread thr_02 = new Thread( () -> getOrBuildClassWithExternalClassOne());
+		thr_01.start();
+		thr_02.start();
+		try {
+			thr_01.join();
+			thr_02.join();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	
+	@Test
 	public void getOrBuildClassWithExternalClassOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();

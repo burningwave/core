@@ -29,6 +29,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.nio.ByteBuffer;
@@ -59,7 +60,6 @@ public class ClassFactory implements Component {
 	public static final String CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY = "class-factory.default-class-loader.class-repositories";
 	public static final String BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY = "class-factory.byte-code-hunter.search-config.check-file-options";
 	
-	private SourceCodeHandler sourceCodeHandler;
 	private PathHelper pathHelper;
 	private JavaMemoryCompiler javaMemoryCompiler;
 	private PojoSubTypeRetriever pojoSubTypeRetriever;	
@@ -75,7 +75,6 @@ public class ClassFactory implements Component {
 	private ClassFactory(
 		ByteCodeHunter byteCodeHunter,
 		Supplier<ClassPathHunter> classPathHunterSupplier,
-		SourceCodeHandler sourceCodeHandler,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		Supplier<ClassLoader> defaultClassLoaderSupplier,
@@ -84,7 +83,6 @@ public class ClassFactory implements Component {
 	) {	
 		this.byteCodeHunter = byteCodeHunter;
 		this.classPathHunterSupplier = classPathHunterSupplier;
-		this.sourceCodeHandler = sourceCodeHandler;
 		this.javaMemoryCompiler = javaMemoryCompiler;
 		this.pathHelper = pathHelper;
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
@@ -97,7 +95,6 @@ public class ClassFactory implements Component {
 	public static ClassFactory create(
 		ByteCodeHunter byteCodeHunter,
 		Supplier<ClassPathHunter> classPathHunterSupplier,
-		SourceCodeHandler sourceCodeHandler,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		Supplier<ClassLoader> defaultClassLoaderSupplier,
@@ -107,7 +104,6 @@ public class ClassFactory implements Component {
 		return new ClassFactory(
 			byteCodeHunter,
 			classPathHunterSupplier,
-			sourceCodeHandler, 
 			javaMemoryCompiler, 
 			pathHelper,
 			defaultClassLoaderSupplier,
@@ -123,8 +119,16 @@ public class ClassFactory implements Component {
 	}
 	
 	ClassLoader getDefaultClassLoader() {
-		return defaultClassLoader != null? defaultClassLoader :
-			(defaultClassLoader = defaultClassLoaderSupplier.get());
+		if (defaultClassLoader == null) {
+			synchronized (this) {
+				if (defaultClassLoader == null) {
+					return defaultClassLoader = defaultClassLoaderSupplier.get();
+				} else { 
+					return defaultClassLoader;
+				}
+			}
+		}
+		return defaultClassLoader;
 	}
 	
 	private ClassPathHunter getClassPathHunter() {
@@ -132,21 +136,11 @@ public class ClassFactory implements Component {
 			(classPathHunter = classPathHunterSupplier.get());
 	}
 	
-    /**
-     * @deprecated
-     * <p> Use {@link ClassFactory#loadOrBuildAndDefine(UnitSourceGenerator...)} instead.
-     */
-    @Deprecated
-	public ClassRetriever buildAndLoadOrUpload(UnitSourceGenerator... unitsCode) {
-		return loadOrBuildAndDefine(LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitsCode));
-	}
-	
-	
 	public ClassRetriever loadOrBuildAndDefine(UnitSourceGenerator... unitsCode) {
 		return loadOrBuildAndDefine(LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitsCode));
 	}
 	
-	public ClassRetriever loadOrBuildAndDefine(LoadOrBuildAndDefineConfig config) {
+	public <L extends LoadOrBuildAndDefineConfigAbst<L>> ClassRetriever loadOrBuildAndDefine(L config) {
 		Collection<String> compilationClassPaths = 
 			Optional.ofNullable(
 				config.getCompilationClassPaths()
@@ -179,6 +173,7 @@ public class ClassFactory implements Component {
 			compilationClassPaths,
 			classPathsForNotFoundClassesDuringCompilantion, 
 			classPathsForNotFoundClassesDuringLoading,
+			config.isStoreCompiledClasses(),
 			classLoader,
 			config.getUnitSourceGenerators()
 		);
@@ -189,6 +184,7 @@ public class ClassFactory implements Component {
 		Collection<String> compilationClassPaths,
 		Collection<String> classPathsForNotFoundClassesDuringCompilantion,
 		Collection<String> classPathsForNotFoundClassesDuringLoading,
+		boolean storeCompiledClasses,
 		ClassLoader classLoader,
 		Collection<UnitSourceGenerator> unitsCode
 	) {
@@ -210,7 +206,7 @@ public class ClassFactory implements Component {
 						useOneShotJavaCompiler,
 						compilationClassPaths,
 						classPathsForNotFoundClassesDuringCompilantion, 
-						unitsCode
+						unitsCode, storeCompiledClasses
 					);
 					return (clsName, additionalByteCodes) -> {
 						try {
@@ -311,13 +307,15 @@ public class ClassFactory implements Component {
 		boolean useOneShotCompiler,
 		Collection<String> mainClassPaths,
 		Collection<String> extraClassPaths,
-		Collection<UnitSourceGenerator> unitsCode
+		Collection<UnitSourceGenerator> unitsCode,
+		boolean storeCompiledClasses
 	) {
 		return build0(
 			useOneShotCompiler,
 			mainClassPaths,
 			extraClassPaths,
-			unitsCode.stream().map(unitCode -> unitCode.make()).collect(Collectors.toList())
+			unitsCode.stream().map(unitCode -> unitCode.make()).collect(Collectors.toList()),
+			storeCompiledClasses
 		);
 	}
 	
@@ -325,22 +323,31 @@ public class ClassFactory implements Component {
 		boolean useOneShotCompiler,
 		Collection<String> compilationClassPaths,
 		Collection<String> classPathsForNotFoundClassesDuringCompilantion,
-		Collection<String> unitsCode
+		Collection<String> unitsCode,
+		boolean storeCompiledClasses
 	) {
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", unitsCode));
-		return (useOneShotCompiler ?
-			JavaMemoryCompiler.create(
+		if (useOneShotCompiler) {
+			try (JavaMemoryCompiler compiler = JavaMemoryCompiler.create(
 				pathHelper,
-				sourceCodeHandler,
 				getClassPathHunter(),
 				config
-			) :
-			this.javaMemoryCompiler
-		).compile(
-			unitsCode,
-			compilationClassPaths, 
-			classPathsForNotFoundClassesDuringCompilantion
-		);
+			)) {
+				return compiler.compile(
+					unitsCode,
+					compilationClassPaths, 
+					classPathsForNotFoundClassesDuringCompilantion,
+					storeCompiledClasses
+				);
+			}
+		} else {
+			return this.javaMemoryCompiler.compile(
+				unitsCode,
+				compilationClassPaths, 
+				classPathsForNotFoundClassesDuringCompilantion,
+				storeCompiledClasses
+			);
+		}
 	}
 	
 	public PojoSubTypeRetriever createPojoSubTypeRetriever(PojoSourceGenerator sourceGenerator) {
@@ -370,7 +377,7 @@ public class ClassFactory implements Component {
 	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(ClassLoader classLoader, int parametersLength) {
 		return loadOrBuildAndDefineFunctionInterfaceSubType(
 			classLoader, "FunctionFor", "Parameters", parametersLength,
-			(className, paramsL) -> sourceCodeHandler.generateFunction(className, paramsL)
+			(className, paramsL) -> SourceCodeHandler.generateFunction(className, paramsL)
 		);
 	}
 	
@@ -381,7 +388,7 @@ public class ClassFactory implements Component {
 	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(ClassLoader classLoader, int parametersLength) {
 		return loadOrBuildAndDefineFunctionInterfaceSubType(
 			classLoader, "ConsumerFor", "Parameters", parametersLength,
-			(className, paramsL) -> sourceCodeHandler.generateConsumer(className, paramsL)
+			(className, paramsL) -> SourceCodeHandler.generateConsumer(className, paramsL)
 		);
 	}
 	
@@ -392,7 +399,7 @@ public class ClassFactory implements Component {
 	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(ClassLoader classLoader, int parametersLength) {
 		return loadOrBuildAndDefineFunctionInterfaceSubType(
 			classLoader, "PredicateFor", "Parameters", parametersLength,
-			(className, paramsL) -> sourceCodeHandler.generatePredicate(className, paramsL)
+			(className, paramsL) -> SourceCodeHandler.generatePredicate(className, paramsL)
 		);
 	}
 	

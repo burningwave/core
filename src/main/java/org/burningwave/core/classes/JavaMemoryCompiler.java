@@ -29,6 +29,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
+import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -73,7 +74,6 @@ import org.burningwave.core.iterable.Properties;
 public class JavaMemoryCompiler implements Component {
 	public static final String CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY = "java-memory-compiler.class-path-hunter.search-config.check-file-options";
 	
-	private SourceCodeHandler sourceCodeHandler;
 	private ClassPathHunter classPathHunter;
 	private JavaCompiler compiler;
 	private FileSystemItem compiledClassesClassPath;
@@ -83,13 +83,11 @@ public class JavaMemoryCompiler implements Component {
 	
 	private JavaMemoryCompiler(
 		PathHelper pathHelper,
-		SourceCodeHandler sourceCodeHandler,
 		ClassPathHunter classPathHunter,
 		Properties config
 	) {
 		this.classPathHunter = classPathHunter;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
-		this.sourceCodeHandler = sourceCodeHandler;
 		this.compiledClassesClassPath = FileSystemItem.of(getOrCreateTemporaryFolder("compiled"));
 		this.classPathHunterBasePathForCompressedLibs = FileSystemItem.of(getOrCreateTemporaryFolder("lib"));
 		this.classPathHunterBasePathForCompressedClasses = FileSystemItem.of(getOrCreateTemporaryFolder("classes"));
@@ -99,24 +97,24 @@ public class JavaMemoryCompiler implements Component {
 	
 	public static JavaMemoryCompiler create(
 		PathHelper pathHelper,
-		SourceCodeHandler sourceCodeExecutor,
 		ClassPathHunter classPathHunter,
 		Properties config
 	) {
-		return new JavaMemoryCompiler(pathHelper, sourceCodeExecutor, classPathHunter, config);
+		return new JavaMemoryCompiler(pathHelper, classPathHunter, config);
 	}
 	
 	
 	public Map<String, ByteBuffer> compile(
 		Collection<String> sources, 
 		Collection<String> classPaths, 
-		Collection<String> classRepositoriesPaths
+		Collection<String> classRepositoriesPaths,
+		boolean storeCompiledClasses
 	) {
 		Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
 		sourcesToMemorySources(sources, memorySources);
 		try (Compilation.Context context = Compilation.Context.create(this, classPathHunter, memorySources, new ArrayList<>(classPaths), new ArrayList<>(classRepositoriesPaths))) {
 			Map<String, ByteBuffer> compiledFiles = _compile(context, null);
-			if (!compiledFiles.isEmpty()) {
+			if (!compiledFiles.isEmpty() && storeCompiledClasses) {
 				compiledFiles.forEach((className, byteCode) -> {
 					JavaClass javaClass = JavaClass.create(byteCode);
 					javaClass.storeToClassPath(compiledClassesClassPath.getAbsolutePath());
@@ -129,7 +127,7 @@ public class JavaMemoryCompiler implements Component {
 	
 	private void sourcesToMemorySources(Collection<String> sources, Collection<MemorySource> memorySources) {
 		for (String source : sources) {
-			String className = sourceCodeHandler.extractClassName(source);
+			String className = SourceCodeHandler.extractClassName(source);
 			try {
 				memorySources.add(new MemorySource(Kind.SOURCE, className, source));
 			} catch (URISyntaxException eXC) {
@@ -223,8 +221,18 @@ public class JavaMemoryCompiler implements Component {
 				if (fsObject.isCompressed()) {					
 					ThrowingRunnable.run(() -> {
 							if (fsObject.isArchive()) {
+								FileSystemItem archive = FileSystemItem.ofPath(
+									context.javaMemoryCompiler.classPathHunterBasePathForCompressedLibs.getAbsolutePath() + "/" + fsObject.getName()
+								);
+								if (!archive.exists()) {
+									synchronized (archive) {
+										if (!archive.exists()) {
+											fsObject.copyTo(context.javaMemoryCompiler.classPathHunterBasePathForCompressedLibs.getAbsolutePath());
+										}
+									}
+								}
 								context.addToClassPath(
-									fsObject.copyTo(context.javaMemoryCompiler.classPathHunterBasePathForCompressedLibs.getAbsolutePath()).getAbsolutePath()
+									archive.getAbsolutePath()
 								);
 							} else {
 								context.addToClassPath(
@@ -520,6 +528,5 @@ public class JavaMemoryCompiler implements Component {
 	public void close() {
 		compiler = null;
 		classPathHunter = null;
-		sourceCodeHandler = null;
 	}
 }

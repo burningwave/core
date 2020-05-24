@@ -183,21 +183,23 @@ public class Streams implements Component {
 	public FileSystemItem store(String fileAbsolutePath, ByteBuffer bytes) {
 		ByteBuffer content = shareContent(bytes);
 		File file = new File(fileAbsolutePath);
-		if (!file.exists()) {
-			new File(file.getParent()).mkdirs();
-		} else {
-			file.delete();
-		}
-		ThrowingRunnable.run(() -> {					
-			try(ByteBufferInputStream inputStream = new ByteBufferInputStream(content); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
-				copy(inputStream, fileOutputStream);
-				//ManagedLogger.Repository.logDebug(this.getClass(), "Class " + getName() + " WRITTEN to "+ Strings.Paths.clean(fileClass.getAbsolutePath()));
+		synchronized (fileAbsolutePath) {
+			if (!file.exists()) {
+				new File(file.getParent()).mkdirs();
+			} else {
+				file.delete();
 			}
-		});
-		Cache.pathForContents.getOrUploadIfAbsent(
-			file.getAbsolutePath(), () ->
-			content
-		);		
+			ThrowingRunnable.run(() -> {					
+				try(ByteBufferInputStream inputStream = new ByteBufferInputStream(content); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
+					copy(inputStream, fileOutputStream);
+					//ManagedLogger.Repository.logDebug(this.getClass(), "Class " + getName() + " WRITTEN to "+ Strings.Paths.clean(fileClass.getAbsolutePath()));
+				}
+			});
+			Cache.pathForContents.getOrUploadIfAbsent(
+				file.getAbsolutePath(), () ->
+				content
+			);
+		}
 		return FileSystemItem.ofPath(file.getAbsolutePath());
 	}
 	
