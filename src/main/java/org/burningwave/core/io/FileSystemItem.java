@@ -106,7 +106,7 @@ public class FileSystemItem implements ManagedLogger {
 		return fileSystemItem;
 	}
 	
-	private String getConventionedAbsolutePath() {
+	private synchronized String getConventionedAbsolutePath() {
 		if ((absolutePath.getValue() == null && exists == null) || parentContainer == null) {
 			if (parentContainer != null && parentContainer.isArchive()) {
 				ByteBuffer par = parentContainer.toByteBuffer();
@@ -578,19 +578,19 @@ public class FileSystemItem implements ManagedLogger {
 		}
 	}
 	
-	public boolean exists() {
+	public synchronized boolean exists() {
 		if (exists == null) {
 			getConventionedAbsolutePath();
 		}
 		return exists != null ? exists : false;
 	}
 	
-	public boolean isContainer() {
+	public synchronized boolean isContainer() {
 		String conventionedAbsolutePath = getConventionedAbsolutePath();
 		return conventionedAbsolutePath.endsWith("/");
 	}
 	
-	public boolean isCompressed() {
+	public synchronized boolean isCompressed() {
 		String conventionedAbsolutePath = getConventionedAbsolutePath();
 		return 
 			(conventionedAbsolutePath.contains(IterableZipContainer.ZIP_PATH_SEPARATOR) && 
@@ -605,12 +605,12 @@ public class FileSystemItem implements ManagedLogger {
 		return !isContainer() || isArchive();
 	}
 	
-	public boolean isArchive() {
+	public synchronized boolean isArchive() {
 		String conventionedAbsolutePath = getConventionedAbsolutePath();
 		return conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR);
 	}
 	
-	public boolean isFolder() {
+	public synchronized boolean isFolder() {
 		String conventionedAbsolutePath = getConventionedAbsolutePath();
 		return conventionedAbsolutePath.endsWith("/") && !conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR);
 	}

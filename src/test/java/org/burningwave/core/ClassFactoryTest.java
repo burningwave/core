@@ -112,8 +112,8 @@ public class ClassFactoryTest extends BaseTest {
 	
 	@Test
 	public void getOrBuildClassWithExternalClassOneParallelized() {
-		Thread thr_01 = new Thread( () -> getOrBuildClassWithExternalClassOne());
-		Thread thr_02 = new Thread( () -> getOrBuildClassWithExternalClassOne());
+		Thread thr_01 = new Thread( () -> getOrBuildClassWithExternalClassOne(false));
+		Thread thr_02 = new Thread( () -> getOrBuildClassWithExternalClassOne(false));
 		thr_01.start();
 		thr_02.start();
 		try {
@@ -125,9 +125,12 @@ public class ClassFactoryTest extends BaseTest {
 		}
 	}
 	
-	
 	@Test
 	public void getOrBuildClassWithExternalClassOne() {
+		getOrBuildClassWithExternalClassOne(true);
+	}
+	
+	public void getOrBuildClassWithExternalClassOne(boolean clearCache) {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
 		UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
@@ -180,7 +183,9 @@ public class ClassFactoryTest extends BaseTest {
 				)
 			);
 			classRetriever.get("packagename.ComplexExample");
-			ComponentContainer.clearAllCaches();
+			if (clearCache) {
+				ComponentContainer.clearAllCaches();
+			}
 			classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).addCompilationClassPaths(
 					pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION)

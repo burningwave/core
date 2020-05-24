@@ -717,7 +717,7 @@ public class Classes implements Component, MembersRetriever {
 			} catch (InvocationTargetException | ClassNotFoundException | NoClassDefFoundError exc) {
 				throw exc;
 			} catch (java.lang.LinkageError exc) {
-				logError("Exception occurred", exc);
+				logWarn("Class {} is already defined", className);
 				return (Class<T>)classLoader.loadClass(className);
 			} catch (Throwable exc) {
 				throw Throwables.toRuntimeException(exc);
