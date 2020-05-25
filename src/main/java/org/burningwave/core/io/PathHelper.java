@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -179,7 +178,7 @@ public class PathHelper implements Component {
 	private Collection<String> getOrCreatePathGroup(String name) {
 		Collection<String> classPathsGroup = null;
 		if ((classPathsGroup = this.pathGroups.get(name)) == null) {
-			synchronized(Classes.getId(this.pathGroups, name)) {
+			synchronized(this.pathGroups) {
 				if ((classPathsGroup = this.pathGroups.get(name)) == null) {
 					classPathsGroup = ConcurrentHashMap.newKeySet();
 					this.pathGroups.put(name, classPathsGroup);
@@ -196,7 +195,7 @@ public class PathHelper implements Component {
 	public Collection<String> loadPaths(String pathGroupName, String paths) {
 		String pathGroupPropertyName = PATHS_KEY_PREFIX + pathGroupName;
 		Collection<String> groupPaths = ConcurrentHashMap.newKeySet();
-		synchronized(Classes.getId(pathGroups, pathGroupName)) {
+		synchronized(this) {
 			String currentPropertyPaths = config.getProperty(pathGroupPropertyName);
 			if (Strings.isNotEmpty(currentPropertyPaths) && Strings.isNotEmpty(paths)) {
 				if (!currentPropertyPaths.endsWith(";")) {

@@ -487,7 +487,7 @@ public class Classes implements Component, MembersRetriever {
 		private MethodHandle getMethod(ClassLoader classLoader, String key, Supplier<MethodHandle> methodSupplier) {
 			MethodHandle method = classLoadersMethods.get(key);
 			if (method == null) {
-				synchronized (Classes.getId(classLoadersMethods, key)) {
+				synchronized (classLoadersMethods) {
 					method = classLoadersMethods.get(key);
 					if (method == null) {
 						classLoadersMethods.put(key, method = methodSupplier.get());

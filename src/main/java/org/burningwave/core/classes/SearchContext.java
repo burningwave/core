@@ -110,7 +110,7 @@ public class SearchContext<T> implements Component {
 			itemsFoundMap,
 			HashMap::new, path
 		).put(key, item);
-		synchronized(Classes.getId(itemsFoundFlatMap, key)) {
+		synchronized(itemsFoundFlatMap) {
 			itemsFoundFlatMap.put(key, item);
 		}		
 	}
@@ -121,7 +121,7 @@ public class SearchContext<T> implements Component {
 			HashMap::new, path
 		).putAll(items);
 		for (Map.Entry<String, T> item : items.entrySet()) {
-			synchronized(Classes.getId(itemsFoundFlatMap, item.getKey())) {
+			synchronized(itemsFoundFlatMap) {
 				itemsFoundFlatMap.put(item.getKey(), item.getValue());
 			}
 		}
@@ -133,7 +133,7 @@ public class SearchContext<T> implements Component {
 			if (allItems != null) {
 				items = allItems.get(path);
 				if (items == null) {
-					synchronized(Classes.getId(allItems, path)) {
+					synchronized(allItems) {
 						items = allItems.get(path);
 						if (items == null) {
 							items = mapForPathSupplier.get();
@@ -163,7 +163,7 @@ public class SearchContext<T> implements Component {
 	
 	Collection<T> getItemsFound() {
 		if (itemsFound == null) {
-			synchronized(Classes.getId(itemsFoundFlatMap,  "itemsFound")) {
+			synchronized(itemsFoundFlatMap) {
 				if (itemsFound == null) {
 					this.itemsFound = new HashSet<>();
 					this.itemsFound.addAll(this.itemsFoundFlatMap.values());

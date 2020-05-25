@@ -28,8 +28,6 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -155,7 +153,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 			);
 			Collection<Class<?>> testedClassesForClassPath = testedClassesForClassPathMap.get(classPathAsFile);
 			if (testedClassesForClassPath == null) {
-				synchronized (Classes.getId(testedClassesForClassPathMap, classPathAsFile)) {
+				synchronized (testedClassesForClassPathMap) {
 					testedClassesForClassPath = testedClassesForClassPathMap.get(classPathAsFile);
 					if (testedClassesForClassPath == null) {
 						testedClassesForClassPathMap.put(classPathAsFile, testedClassesForClassPath = ConcurrentHashMap.newKeySet());

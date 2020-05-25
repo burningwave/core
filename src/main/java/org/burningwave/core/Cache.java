@@ -28,7 +28,6 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
@@ -91,7 +90,7 @@ public class Cache implements Component {
 		public R getOrUploadIfAbsent(T object, Supplier<R> resourceSupplier) {
 			R resource = resources.get(object);
 			if (resource == null) {
-				synchronized(Classes.getId(resources,object)) {
+				synchronized(resources) {
 					resource = resources.get(object);
 					if (resource == null) {
 						resources.put(object, (resource = resourceSupplier.get()));
@@ -102,7 +101,7 @@ public class Cache implements Component {
 		}
 		
 		public R upload(T object, R resource) {
-			synchronized(Classes.getId(resources, object)) {
+			synchronized(resources) {
 				return resources.put(object, resource);
 			}				
 		}
@@ -126,7 +125,7 @@ public class Cache implements Component {
 		public R getOrUploadIfAbsent(T object, String path, Supplier<R> resourceSupplier) {
 			PathForResources<R> pathForResources = resources.get(object);
 			if (pathForResources == null) {
-				synchronized (Classes.getId(resources, object)) {
+				synchronized (resources) {
 					pathForResources = resources.get(object);
 					if (pathForResources == null) {
 						pathForResources = pathForResourcesSupplier.get();
@@ -174,7 +173,7 @@ public class Cache implements Component {
 			}
 			Map<String, R> innerPartion = partion.get(partitionKey);
 			if (innerPartion == null) {
-				synchronized (Classes.getId(partion, partitionKey)) {
+				synchronized (partion) {
 					innerPartion = partion.get(partitionKey);
 					if (innerPartion == null) {
 						partion.put(partitionKey, innerPartion = new HashMap<>());
@@ -187,7 +186,7 @@ public class Cache implements Component {
 		R getOrUploadIfAbsent(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
 			R resource = loadedResources.get(path);
 			if (resource == null) {
-				synchronized (Classes.getId(loadedResources, path)) {
+				synchronized (loadedResources) {
 					resource = loadedResources.get(path);
 					if (resource == null && resourceSupplier != null) {
 						resource = resourceSupplier.get();
@@ -204,7 +203,7 @@ public class Cache implements Component {
 		
 		public R upload(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
 			R resource = null;
-			synchronized (Classes.getId(loadedResources,path)) {
+			synchronized (loadedResources) {
 				if (resourceSupplier != null) {
 					resource = resourceSupplier.get();
 					if (resource != null) {
@@ -220,7 +219,7 @@ public class Cache implements Component {
 		Map<String, Map<String, R>> retrievePartition(Map<Long, Map<String, Map<String, R>>> resourcesPartitioned, Long partitionIndex) {
 			Map<String, Map<String, R>> resources = resourcesPartitioned.get(partitionIndex);
 			if (resources == null) {
-				synchronized (Classes.getId(resourcesPartitioned, partitionIndex)) {
+				synchronized (resourcesPartitioned) {
 					resources = resourcesPartitioned.get(partitionIndex);
 					if (resources == null) {
 						resourcesPartitioned.put(partitionIndex, resources = new HashMap<>());

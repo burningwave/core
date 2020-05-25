@@ -85,7 +85,7 @@ public abstract class MemberHelper<M extends Member> implements Component {
 			argumentsKey = argumentsKeyStringBuffer.toString();
 		}
 		Class<?> targetClass = Classes.retrieveFrom(target);
-		String cacheKey = "/" + Classes.getId(targetClass.getClassLoader()) + "/" + targetClass.getName() + "@" + targetClass.hashCode() +
+		String cacheKey = "/" + targetClass.getClassLoader() + "/" + targetClass.getName() + "@" + targetClass.hashCode() +
 			"/" + memberName +
 			argumentsKey;
 		return cacheKey;		

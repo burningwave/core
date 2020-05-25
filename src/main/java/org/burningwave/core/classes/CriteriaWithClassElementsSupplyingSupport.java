@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.nio.ByteBuffer;
@@ -106,7 +105,7 @@ public abstract class CriteriaWithClassElementsSupplyingSupport<
 	
 	protected Map<Class<?>, Class<?>> getUploadedClasses() {
 		if (uploadedClasses == null) {
-			synchronized (Classes.getId(this, "uploadedClasses")) {
+			synchronized (this) {
 				if (uploadedClasses == null) {
 					Map<Class<?>, Class<?>> uploadedClasses = new HashMap<>();
 					for (Class<?> cls : classesToBeUploaded) {
