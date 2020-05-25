@@ -660,7 +660,7 @@ public class Classes implements Component, MembersRetriever {
 	    		return (Class<T>) classLoader.loadClass(javaClass.getName());
 	    	} catch (ClassNotFoundException | NoClassDefFoundError outerEx) {
 	    		try {
-	    			Class<T> cls = defineClass(classLoader, defineClassMethod, javaClass.getName(), javaClass.getByteCode());
+	    			Class<T> cls = defineOrLoad(classLoader, defineClassMethod, javaClass.getName(), javaClass.getByteCode());
 	    			definePackageFor(cls, classLoader, definePackageMethod);
 	    			return cls;
 				} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException outerExc) {
@@ -688,7 +688,7 @@ public class Classes implements Component, MembersRetriever {
 	    		return (Class<T>)classLoader.loadClass(toLoad.getName());
 	    	} catch (ClassNotFoundException | NoClassDefFoundError outerEx) {
 	    		try {
-	    			Class<T> cls = defineClass(classLoader, defineClassMethod, toLoad.getName(), Streams.shareContent(Classes.getByteCode(toLoad)));
+	    			Class<T> cls = defineOrLoad(classLoader, defineClassMethod, toLoad.getName(), Streams.shareContent(Classes.getByteCode(toLoad)));
 	    			definePackageFor(cls, classLoader, definePackageMethod);
 	    			return cls;
 				} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException outerExc) {
@@ -709,14 +709,14 @@ public class Classes implements Component, MembersRetriever {
 	    	}
 	    }
 		
-		public <T> Class<T> defineClass(ClassLoader classLoader, JavaClass javaClass) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
-			Class<T> definedClass = defineClass(classLoader, getDefineClassMethod(classLoader), javaClass.getName(), javaClass.getByteCode());
+		public <T> Class<T> defineOrLoad(ClassLoader classLoader, JavaClass javaClass) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
+			Class<T> definedClass = defineOrLoad(classLoader, getDefineClassMethod(classLoader), javaClass.getName(), javaClass.getByteCode());
 			definePackageFor(definedClass, classLoader, getDefinePackageMethod(classLoader));
 			return definedClass;
 		}
 		
 
-		private <T> Class<T> defineClass(
+		private <T> Class<T> defineOrLoad(
 			ClassLoader classLoader, 
 			MethodHandle method, 
 			String className,
@@ -726,6 +726,9 @@ public class Classes implements Component, MembersRetriever {
 				return (Class<T>)method.invoke(classLoader, className, byteCode, null);
 			} catch (InvocationTargetException | ClassNotFoundException | NoClassDefFoundError exc) {
 				throw exc;
+			} catch (java.lang.LinkageError exc) {
+				logWarn("Class {} is already defined", className);
+				return (Class<T>)classLoader.loadClass(className);
 			} catch (Throwable exc) {
 				throw Throwables.toRuntimeException(exc);
 			}
