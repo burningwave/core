@@ -171,7 +171,7 @@ public class ComponentContainer implements ComponentSupplier {
 		return getIterableObjectHelper().get(config, propertyName);
 	}
 	
-	public String getConfigProperty(String propertyName, Map<String, String> defaultValues) {
+	public String getConfigProperty(String propertyName, Map<String, Object> defaultValues) {
 		return getIterableObjectHelper().get(config, propertyName, defaultValues);
 	}
 	
@@ -198,7 +198,7 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getClassPathHunter(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
-				() -> retrieveFromConfig(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, null),
+				() -> retrieveFromConfig(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY),
 				() -> getIterableObjectHelper(),
 				config
 			)
@@ -236,8 +236,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getFileSystemScanner(),
 				getPathHelper(),
 				retrieveFromConfig(
-					ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY,
-					ClassHunter.DEFAULT_CONFIG_VALUES
+					ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY
 				),
 				config
 			);
@@ -330,14 +329,13 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private <T> T retrieveFromConfig(String configKey, Map<String, String> defaultValues) {
-		Object object = getIterableObjectHelper().get(config, configKey, defaultValues);
+	private <T> T retrieveFromConfig(String configKey) {
+		Object object = getIterableObjectHelper().get(config, configKey);
 		if (object instanceof String) {
 			return getCodeExecutor().execute(
 				ExecuteConfig.fromDefaultProperties()
 				.setPropertyName(configKey)
 				.withParameter(this)
-				.withDefaultPropertyValues(defaultValues)
 				.useAsParentClassLoader(Classes.getClassLoader(Executor.class))
 			);
 		} else {

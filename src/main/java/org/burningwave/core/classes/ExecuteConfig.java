@@ -134,7 +134,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
 		private String propertyName;
 		private String filePath;
 		private boolean isAbsoluteFilePath;
-		private Map<String, String> defaultValues;
+		private Map<String, Object> defaultValues;
 		    		
 		private ForProperties() {
 			super(Executor.class.getPackage().getName() + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""));
@@ -164,9 +164,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
 			if (this.defaultValues == null && defaultValues != null) {
 				this.defaultValues = new HashMap<>();
 			}
-			if (defaultValues != null) {
-				this.defaultValues.putAll(defaultValues);
-			}
+			this.defaultValues.putAll(defaultValues);
 			return this;
 		}
 
@@ -190,7 +188,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
 		}
 
 
-		Map<String, String> getDefaultValues() {
+		Map<String, Object> getDefaultValues() {
 			return defaultValues;
 		}   		
 		

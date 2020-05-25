@@ -40,6 +40,7 @@ import java.util.stream.Stream;
 import org.burningwave.core.Component;
 import org.burningwave.core.reflection.PropertyAccessor;
 
+@SuppressWarnings("unchecked")
 public class IterableObjectHelper implements Component {
 	private PropertyAccessor propertyAccessor;
 	
@@ -58,7 +59,6 @@ public class IterableObjectHelper implements Component {
 		return retrieveStream(propertyAccessor.get(object, propertyPath));
 	}
 	
-	@SuppressWarnings("unchecked")
 	public <T> Stream<T> retrieveStream(Object object) {
 		Stream<T> stream = null;
 		if (object != null) {
@@ -77,16 +77,17 @@ public class IterableObjectHelper implements Component {
 		return retrieveStream(object).count();
 	}
 	
-	public String get(Properties properties, String propertyName) {
+	public <T> T get(Properties properties, String propertyName) {
 		return get(properties, propertyName, null);
 	}
 	
-	public boolean containsValue(Properties properties, String propertyName, Map<String, String> defaultValues, String toBeTested) {
-		String propertyValue = (String)properties.get(propertyName);
-		if (Strings.isEmpty(propertyValue) && defaultValues != null) {
-			propertyValue = defaultValues.get(propertyName);
+	public <T> boolean containsValue(Properties properties, String propertyName, Map<String, Object> defaultValues, String toBeTested) {
+		T propertyValueObject = (T)properties.get(propertyName);
+		if (propertyValueObject == null && defaultValues != null) {
+			propertyValueObject = (T)defaultValues.get(propertyName);
 		}
-		if (!Strings.isEmpty(propertyValue)) {
+		if (propertyValueObject instanceof String && !Strings.isEmpty((String)propertyValueObject)) {
+			String propertyValue = (String)propertyValueObject;
 			if (propertyValue.contains(toBeTested)) {
 				return true;
 			}
@@ -101,15 +102,17 @@ public class IterableObjectHelper implements Component {
 				}
 			}
 		}
-		return false;
+		return propertyValueObject != null;
 	}
 	
-	public String get(Properties properties, String propertyName, Map<String, String> defaultValues) {
-		String propertyValue = (String)properties.get(propertyName);
-		if (Strings.isEmpty(propertyValue) && defaultValues != null) {
-			propertyValue = defaultValues.get(propertyName);
+	
+	public <T> T get(Properties properties, String propertyName, Map<String, Object> defaultValues) {
+		T propertyValueObject = (T)properties.get(propertyName);
+		if (propertyValueObject == null && defaultValues != null) {
+			propertyValueObject = (T)defaultValues.get(propertyName);
 		}
-		if (!Strings.isEmpty(propertyValue)) {
+		if (propertyValueObject instanceof String && !Strings.isEmpty((String)propertyValueObject)) {
+			String propertyValue = (String)propertyValueObject;
 			Map<Integer, List<String>> subProperties = Strings.extractAllGroups(PLACE_HOLDER_FOR_PROPERTIES_PATTERN, propertyValue);		
 			if (!subProperties.isEmpty()) {
 				for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
@@ -122,8 +125,10 @@ public class IterableObjectHelper implements Component {
 					}
 				}
 			}
-			
+			return (T)propertyValue;
+		} else {
+			return propertyValueObject;
 		}
-		return propertyValue;
+		
 	}
 }

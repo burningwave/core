@@ -213,7 +213,7 @@ public class PathHelper implements Component {
 				if (iterableObjectHelper.containsValue(config, pathGroupPropertyName, null, "${classPaths}")) {
 					Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
 					for (String mainClassPath : mainClassPaths) {
-						Map<String, String> defaultValues = new LinkedHashMap<>();
+						Map<String, Object> defaultValues = new LinkedHashMap<>();
 						defaultValues.put("classPaths", mainClassPath);
 						paths = Paths.clean(iterableObjectHelper.get(config, pathGroupPropertyName, defaultValues)).replaceAll(";{2,}", ";");
 						for (String path : paths.split(";")) {
@@ -221,7 +221,7 @@ public class PathHelper implements Component {
 						}
 					}	
 				} else {
-					for (String path : iterableObjectHelper.get(config, pathGroupPropertyName, null).split(";")) {
+					for (String path : ((String)iterableObjectHelper.get(config, pathGroupPropertyName, null)).split(";")) {
 						groupPaths.addAll(addPath(pathGroupName, path));
 					}
 				}

@@ -50,7 +50,7 @@ import org.burningwave.core.iterable.Properties;
 public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, ClassHunter.SearchContext, ClassHunter.SearchResult> {
 	public final static String PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY = "class-hunter.path-scanner-class-loader.parent";
 	public final static String PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY = "class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options";
-	public final static Map<String, String> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
+	public final static Map<String, Object> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
 	
 	Supplier<PathScannerClassLoader> pathScannerClassLoaderSupplier;
 	
@@ -85,8 +85,8 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	
 	static {
 		//DEFAULT_CONFIG_VALUES.put(PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, "");
-		DEFAULT_CONFIG_VALUES.put(PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, "DefaultParentClassLoaderRetrieverForPathScannerClassLoaderParentOfClassHunter");
-		DEFAULT_CONFIG_VALUES.put(PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
+		//DEFAULT_CONFIG_VALUES.put(PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, "DefaultParentClassLoaderRetrieverForPathScannerClassLoaderParentOfClassHunter");
+		DEFAULT_CONFIG_VALUES.put(PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY, Thread.currentThread().getContextClassLoader());
 	}
 	
 	public static ClassHunter create(
