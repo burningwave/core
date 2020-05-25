@@ -64,7 +64,7 @@ public class IterableObjectHelper implements Component {
 			} else if (object.getClass().isArray()) {
 				return Stream.of((T[])object);
 			} else if (object instanceof Map) {
-				return ((Map<T, ?>)object).keySet().stream();
+				return (Stream<T>) ((Map<T, ?>)object).entrySet().stream();
 			}
 		}
 		return stream;
