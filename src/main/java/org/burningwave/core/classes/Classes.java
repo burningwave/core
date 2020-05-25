@@ -465,7 +465,7 @@ public class Classes implements Component, MembersRetriever {
 		public MethodHandle getDefineClassMethod(ClassLoader classLoader) {
 			return getMethod(
 				classLoader,
-				Classes.getId(Classes.getClassLoader(classLoader.getClass()), classLoader, "defineClass"),
+				Classes.getClassLoader(classLoader.getClass()) + "_" + classLoader + "_" +  "defineClass",
 				() -> findDefineClassMethodAndMakeItAccesible(classLoader)
 			);
 		}

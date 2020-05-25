@@ -36,6 +36,7 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -59,6 +60,7 @@ public class ClassFactory implements Component {
 	public static final String CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY = "class-factory.java-memory-compiler.class-repositories";
 	public static final String CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY = "class-factory.default-class-loader.class-repositories";
 	public static final String BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY = "class-factory.byte-code-hunter.search-config.check-file-options";
+	public final static Map<String, String> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
 	
 	private PathHelper pathHelper;
 	private JavaMemoryCompiler javaMemoryCompiler;
@@ -109,6 +111,21 @@ public class ClassFactory implements Component {
 			defaultClassLoaderSupplier,
 			iterableObjectHelperSupplier,
 			config
+		);
+	}
+	
+	static {
+		//DEFAULT_CONFIG_VALUES.put(DEFAULT_CLASS_LOADER_CONFIG_KEY + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, "");
+		DEFAULT_CONFIG_VALUES.put(DEFAULT_CLASS_LOADER_CONFIG_KEY + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, "DefaultClassLoaderRetrieverForClassFactory");
+		DEFAULT_CONFIG_VALUES.put(DEFAULT_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
+		DEFAULT_CONFIG_VALUES.put(
+			PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY, 
+			"${classPaths};" +
+			"${" + PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION + "};"
+		);
+		DEFAULT_CONFIG_VALUES.put(
+			PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY, 
+			"${" + PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY + "};"
 		);
 	}
 	

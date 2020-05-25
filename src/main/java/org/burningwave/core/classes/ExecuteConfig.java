@@ -32,31 +32,33 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
+import org.burningwave.core.Executor;
 import org.burningwave.core.iterable.Properties;
 
+@SuppressWarnings("unchecked")
 public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
+	private String executorName;
 	ClassLoader parentClassLoader;
 	boolean useDefaultClassLoaderAsParentIfParentClassLoaderIsNull;
 	List<Object> params;
 	
-	ExecuteConfig() {
-		useDefaultClassLoaderAsParentIfParentClassLoaderIsNull = true;
+	ExecuteConfig(String name) {
+		this.executorName = name;
+		this.useDefaultClassLoaderAsParentIfParentClassLoaderIsNull = true;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public C useAsParentClassLoader(ClassLoader parentClassLoader) {
 		this.parentClassLoader = parentClassLoader;
 		return (C)this;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public C useDefaultClassLoaderAsParent(boolean flag) {
 		this.useDefaultClassLoaderAsParentIfParentClassLoaderIsNull = flag;
 		return (C)this; 
 	}
 	
-	@SuppressWarnings("unchecked")
 	public C withParameter(Object... parameters) {
 		if (params == null) {
 			params = new ArrayList<>();
@@ -81,6 +83,19 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
 			null;
 	}
 	
+	String getName() {
+		return this.executorName;
+	}
+	
+	public C setSimpleName(String simpleName) {
+		this.executorName = Executor.class.getPackage().getName() + "." + simpleName;
+		return (C)this;					
+	}
+	
+	public C setName(String name) {
+		this.executorName = name;
+		return (C)this;					
+	}
 	
 	
 	public static ExecuteConfig.ForProperties fromDefaultProperties() {
@@ -122,6 +137,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
 		private Map<String, String> defaultValues;
 		    		
 		private ForProperties() {
+			super(Executor.class.getPackage().getName() + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""));
 			isAbsoluteFilePath = false;
 		}
 		
@@ -145,10 +161,12 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
 		}
 		
 		public ExecuteConfig.ForProperties withDefaultPropertyValues(Map<String, String> defaultValues) {
-			if (defaultValues == null) {
-				defaultValues = new HashMap<>();
+			if (this.defaultValues == null && defaultValues != null) {
+				this.defaultValues = new HashMap<>();
 			}
-			defaultValues.putAll(defaultValues);
+			if (defaultValues != null) {
+				this.defaultValues.putAll(defaultValues);
+			}
 			return this;
 		}
 
@@ -183,6 +201,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
 		BodySourceGenerator body;
 		
 		private ForBodySourceGenerator(BodySourceGenerator body) {
+			super(Executor.class.getPackage().getName() + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""));
 			this.body = body.setElementPrefix("\t");
 		}
 

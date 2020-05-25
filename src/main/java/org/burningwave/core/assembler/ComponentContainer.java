@@ -116,17 +116,8 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	private ComponentContainer init() {
 		config.put(PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION, PathHelper.MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE);
-		config.put(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
-		config.put(
-			PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY, 
-			"${classPaths};" +
-			"${" + PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION + "};"
-		);
-		config.put(
-			PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY, 
-			"${" + PathHelper.PATHS_KEY_PREFIX + ClassFactory.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY + "};"
-		);
-		config.put(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY, "Thread.currentThread().getContextClassLoader()");
+		config.putAll(ClassFactory.DEFAULT_CONFIG_VALUES);
+		config.putAll(ClassHunter.DEFAULT_CONFIG_VALUES);
 		
 		Properties customConfig = propertySupplier.get();
 		if (customConfig != null) {
@@ -207,7 +198,7 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getClassPathHunter(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
-				() -> retrieveClassLoader(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, null),
+				() -> retrieveFromConfig(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY, null),
 				() -> getIterableObjectHelper(),
 				config
 			)
@@ -244,7 +235,10 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getClassHunter(),
 				getFileSystemScanner(),
 				getPathHelper(),
-				retrieveClassLoader(ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY, ClassHunter.DEFAULT_CONFIG_VALUES),
+				retrieveFromConfig(
+					ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY,
+					ClassHunter.DEFAULT_CONFIG_VALUES
+				),
 				config
 			);
 		});
@@ -335,11 +329,10 @@ public class ComponentContainer implements ComponentSupplier {
 		);
 	}
 	
-	private ClassLoader retrieveClassLoader(String configKey, Map<String, String> defaultValues) {
-		Object object = config.get(configKey);
-		if (object instanceof ClassLoader) {
-			return (ClassLoader)object;
-		} else if (object instanceof String) {
+	@SuppressWarnings("unchecked")
+	private <T> T retrieveFromConfig(String configKey, Map<String, String> defaultValues) {
+		Object object = getIterableObjectHelper().get(config, configKey, defaultValues);
+		if (object instanceof String) {
 			return getCodeExecutor().execute(
 				ExecuteConfig.fromDefaultProperties()
 				.setPropertyName(configKey)
@@ -348,9 +341,7 @@ public class ComponentContainer implements ComponentSupplier {
 				.useAsParentClassLoader(Classes.getClassLoader(Executor.class))
 			);
 		} else {
-			throw Throwables.toRuntimeException("Value " + object + " of configuration property" + 
-				configKey + " is not valid"
-			);
+			return (T)object;
 		}
 	}
 

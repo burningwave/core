@@ -44,7 +44,9 @@ import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
 
 public class CodeExecutor implements Component {
-	public final static String PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX = ".imports";
+	static final String PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX = ".imports";
+	static final String PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX = ".name";
+	static final String PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX = ".simple-name";
 	
 	private ClassFactory classFactory;
 	private PathHelper pathHelper;
@@ -144,6 +146,14 @@ public class CodeExecutor implements Component {
 				body.useType(imp);
 			});
 		}
+		String executorName = getIterableObjectHelper().get(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, config.getDefaultValues());
+		String executorSimpleName = getIterableObjectHelper().get(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, config.getDefaultValues());
+
+		if (Strings.isNotEmpty(executorName)) {
+			config.setName(executorName);
+		} else if (Strings.isNotEmpty(executorSimpleName)) {
+			config.setSimpleName(executorSimpleName);
+		}
 		String code = getIterableObjectHelper().get(properties, config.getPropertyName(), config.getDefaultValues());
 		if (code.contains(";")) {
 			for (String codeRow : code.split(";")) {
@@ -156,7 +166,7 @@ public class CodeExecutor implements Component {
 			);
 		}
 		return execute(
-			parentClassLoader, body, config.getParams()
+			parentClassLoader, config.getName(), body, config.getParams()
 		);
 	}		
 	
@@ -171,11 +181,12 @@ public class CodeExecutor implements Component {
 		if (parentClassLoader == null && config.isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull()) {
 			parentClassLoader = getClassFactory().getDefaultClassLoader();
 		}
-		return execute(parentClassLoader, config.getBody(), config.getParams());
+		return execute(parentClassLoader, config.getName(), config.getBody(), config.getParams());
 	}
 	
 	private <T> T execute(
 		ClassLoader classLoaderParentOfOneShotClassLoader,
+		String executorName,
 		BodySourceGenerator body,
 		Object... parameters
 	) {	
@@ -186,7 +197,7 @@ public class CodeExecutor implements Component {
 				)
 			) {
 				Class<? extends Executor> executableClass = loadOrBuildAndDefineExecutorSubType(
-					LoadOrBuildAndDefineConfig.ForCodeExecutor.withCode(body).useClassLoader(memoryClassLoader)
+					LoadOrBuildAndDefineConfig.ForCodeExecutor.withCode(executorName, body).useClassLoader(memoryClassLoader)
 				);
 				Executor executor = Constructors.newInstanceOf(executableClass);
 				T retrievedElement = executor.execute(parameters);

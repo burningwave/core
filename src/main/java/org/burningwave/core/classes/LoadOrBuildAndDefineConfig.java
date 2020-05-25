@@ -74,7 +74,17 @@ public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<L
 			String className = packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", "");
 			return withCode(className, bodySG);
 		}
-
+		
+		public ForCodeExecutor setSimpleName(String simpleName) {
+			this.executorName = Executor.class.getPackage().getName() + "." + simpleName;
+			return this;					
+		}
+		
+		public ForCodeExecutor setName(String name) {
+			this.executorName = name;
+			return this;					
+		}
+		
 		String getExecutorName() {
 			return executorName;
 		}		
