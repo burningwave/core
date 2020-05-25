@@ -230,7 +230,7 @@ public class SourceCodeExecutor {
     public static void execute() {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         System.out.println("Time is: " +
-            componentSupplier.getCodeExecutor().execute("code-block-1", LocalDateTime.now())    
+            componentSupplier.getCodeExecutor().executeProperty("code-block-1", LocalDateTime.now())    
         );
     }
     
