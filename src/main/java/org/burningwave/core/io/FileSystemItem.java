@@ -107,7 +107,7 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	private synchronized String getConventionedAbsolutePath() {
-		if ((absolutePath.getValue() == null && exists != false) || parentContainer == null) {
+		if ((absolutePath.getValue() == null && exists != Boolean.FALSE) || parentContainer == null) {
 			if (parentContainer != null && parentContainer.isArchive()) {
 				ByteBuffer par = parentContainer.toByteBuffer();
 				String relativePath = absolutePath.getKey().replace(parentContainer.getAbsolutePath() + "/", "");
