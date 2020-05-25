@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
@@ -113,12 +114,17 @@ public class ClassFactoryTest extends BaseTest {
 	@Test
 	public void getOrBuildClassWithExternalClassOneParallelized() {
 		testDoesNotThrow(() -> {
-			Thread thr_01 = new Thread( () -> getOrBuildClassWithExternalClassOne(false));
-			Thread thr_02 = new Thread( () -> getOrBuildClassWithExternalClassOne(false));
-			thr_01.start();
-			thr_02.start();
-			thr_01.join();
-			thr_02.join();
+			int threadCount = 6;
+			Collection<Thread> threads = new ArrayList<>();
+			for (int i = 0; i < threadCount; i++) {
+				threads.add(new Thread( () -> getOrBuildClassWithExternalClassOne(false)));
+			}
+			for (Thread thread : threads) {
+				thread.start();
+			}
+			for (Thread thread : threads) {
+				thread.join();
+			}
 		});
 	}
 	

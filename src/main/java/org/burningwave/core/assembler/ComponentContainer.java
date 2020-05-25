@@ -53,7 +53,6 @@ import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
-import org.burningwave.core.concurrent.ConcurrentHelper;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
@@ -290,11 +289,6 @@ public class ComponentContainer implements ComponentSupplier {
 				getPathHelper()::optimize
 			)
 		);
-	}
-	
-	@Override
-	public ConcurrentHelper getConcurrentHelper() {
-		return getOrCreate(ConcurrentHelper.class, ConcurrentHelper::create);
 	}
 	
 	@SuppressWarnings("unchecked")
