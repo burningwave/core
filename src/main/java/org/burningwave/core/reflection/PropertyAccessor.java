@@ -55,24 +55,13 @@ public abstract class PropertyAccessor implements Component {
 	public final static String REG_EXP_FOR_JAVA_PROPERTIES = "([a-zA-Z\\$\\_\\-0-9]*)(\\[*.*)";
 	public final static String REG_EXP_FOR_INDEXES_OF_JAVA_INDEXED_PROPERTIES = "\\[([a-zA-Z0-9]*)\\]";
 
-	private ClassFactory classFactory;
 	private List<ThrowingBiFunction<Object, String, Object, Throwable>> propertyRetrievers;
 	private List<ThrowingFunction<Object[], Boolean, Throwable>> propertySetters;
-	private Supplier<ClassFactory> classFactorySupplier;
 
 	
-	PropertyAccessor(
-		Supplier<ClassFactory> classFactorySupplier
-	) {
-		this.classFactorySupplier = classFactorySupplier;
+	PropertyAccessor() {
 		this.propertyRetrievers = getPropertyRetrievers();
 		this.propertySetters= getPropertySetters();
-	}
-	
-	protected ClassFactory getClassFactory() {
-		return classFactory != null ?
-			classFactory :
-			(classFactory = classFactorySupplier.get());
 	}
 	
 	abstract List<ThrowingFunction<Object[], Boolean, Throwable>> getPropertySetters();
@@ -261,12 +250,12 @@ public abstract class PropertyAccessor implements Component {
 	
 	public static class ByFieldOrByMethod extends PropertyAccessor {
 
-		private ByFieldOrByMethod(Supplier<ClassFactory> sourceCodeHandlerSupplier) {
-			super(sourceCodeHandlerSupplier);
+		private ByFieldOrByMethod() {
+			super();
 		}
 		
-		public static ByFieldOrByMethod create(Supplier<ClassFactory> sourceCodeHandlerSupplier) {
-			return new ByFieldOrByMethod(sourceCodeHandlerSupplier);
+		public static ByFieldOrByMethod create() {
+			return new ByFieldOrByMethod();
 		}
 
 		List<ThrowingBiFunction<Object, String, Object, Throwable>> getPropertyRetrievers() {
@@ -287,12 +276,12 @@ public abstract class PropertyAccessor implements Component {
 	
 	public static class ByMethodOrByField extends PropertyAccessor {
 
-		private ByMethodOrByField(Supplier<ClassFactory> sourceCodeHandlerSupplier) {
-			super(sourceCodeHandlerSupplier);
+		private ByMethodOrByField() {
+			super();
 		}
 		
 		public static ByMethodOrByField create(Supplier<ClassFactory> sourceCodeHandlerSupplier) {
-			return new ByMethodOrByField(sourceCodeHandlerSupplier);
+			return new ByMethodOrByField();
 		}
 
 		List<ThrowingBiFunction<Object, String, Object, Throwable>> getPropertyRetrievers() {

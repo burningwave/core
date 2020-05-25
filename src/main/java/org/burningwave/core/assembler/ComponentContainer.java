@@ -271,9 +271,7 @@ public class ComponentContainer implements ComponentSupplier {
 	@Override
 	public PropertyAccessor.ByFieldOrByMethod getByFieldOrByMethodPropertyAccessor() {
 		return getOrCreate(PropertyAccessor.ByFieldOrByMethod.class, () ->  
-			PropertyAccessor.ByFieldOrByMethod.create(
-				() -> getClassFactory()
-			)
+			PropertyAccessor.ByFieldOrByMethod.create()
 		);
 	}
 	
