@@ -385,6 +385,7 @@ public static final org.burningwave.core.classes.Members Members;
 public static final org.burningwave.core.reflection.Methods Methods;
 public static final org.burningwave.core.Strings.Paths Paths;
 public static final org.burningwave.core.io.Resources Resources;
+public static final org.burningwave.core.SourceCodeHandler SourceCodeHandler;
 public static final org.burningwave.core.io.Streams Streams;
 public static final org.burningwave.core.Strings Strings;
 public static final org.burningwave.core.Throwables Throwables;
@@ -456,7 +457,6 @@ public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
 public IterableObjectHelper getIterableObjectHelper();
 public JavaMemoryCompiler getJavaMemoryCompiler();
 public PathHelper getPathHelper();
-public SourceCodeHandler getSourceCodeHandler();
 ```
 ... That can be used within your application, simply as follow:
 ```java
