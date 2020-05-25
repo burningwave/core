@@ -35,7 +35,7 @@ To include Burningwave Core library in your projects simply use with**:
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>5.32.0</version>
+    <version>5.33.0</version>
 </dependency>
 ```
 
@@ -452,7 +452,6 @@ public ClassFactory getClassFactory();
 public ClassHunter getClassHunter();
 public ClassPathHunter getClassPathHunter();
 public CodeExecutor getCodeExecutor();
-public ConcurrentHelper getConcurrentHelper();
 public FileSystemScanner getFileSystemScanner();
 public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
 public JavaMemoryCompiler getJavaMemoryCompiler();
