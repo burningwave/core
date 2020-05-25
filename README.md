@@ -416,7 +416,7 @@ managed-logger.repository=autodetect
 managed-logger.repository.enabled=true
 streams.default-buffer-size=1024
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
-static-component-container.clear-temporary-folder-on-init=true
+static-component-container.clear-temporary-folder-on-init=false
 static-component-container.hide-banner-on-init=false
 file-system-scanner.default-scan-config.check-file-options=checkFileName
 ```
