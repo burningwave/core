@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.iterable;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ByFieldOrByMethodPropertyAccessor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.util.Collection;
@@ -38,25 +39,21 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.reflection.PropertyAccessor;
 
 @SuppressWarnings("unchecked")
 public class IterableObjectHelper implements Component {
-	private PropertyAccessor propertyAccessor;
 	
 	private Pattern PLACE_HOLDER_FOR_PROPERTIES_PATTERN = Pattern.compile("\\$\\{([\\w\\d\\.\\:\\-]*)\\}");
 	
 	
-	private IterableObjectHelper(PropertyAccessor propertyAccessor) {
-		this.propertyAccessor = propertyAccessor;
-	}
+	private IterableObjectHelper() {}
 	
-	public static IterableObjectHelper create(PropertyAccessor propertyAccessor) {
-		return new IterableObjectHelper(propertyAccessor);
+	public static IterableObjectHelper create() {
+		return new IterableObjectHelper();
 	}
 	
 	public <T> Stream<T> retrieveStream(Object object, String propertyPath) {
-		return retrieveStream(propertyAccessor.get(object, propertyPath));
+		return retrieveStream(ByFieldOrByMethodPropertyAccessor.get(object, propertyPath));
 	}
 	
 	public <T> Stream<T> retrieveStream(Object object) {
@@ -81,7 +78,7 @@ public class IterableObjectHelper implements Component {
 		return get(properties, propertyName, null);
 	}
 	
-	public <T> boolean containsValue(Properties properties, String propertyName, Map<String, Object> defaultValues, String toBeTested) {
+	public <T> boolean containsValue(Properties properties, String propertyName, Map<String, ?> defaultValues, String toBeTested) {
 		T propertyValueObject = (T)properties.get(propertyName);
 		if (propertyValueObject == null && defaultValues != null) {
 			propertyValueObject = (T)defaultValues.get(propertyName);
@@ -106,7 +103,7 @@ public class IterableObjectHelper implements Component {
 	}
 	
 	
-	public <T> T get(Properties properties, String propertyName, Map<String, Object> defaultValues) {
+	public <T> T get(Properties properties, String propertyName, Map<String, ?> defaultValues) {
 		T propertyValueObject = (T)properties.get(propertyName);
 		if (propertyValueObject == null && defaultValues != null) {
 			propertyValueObject = (T)defaultValues.get(propertyName);

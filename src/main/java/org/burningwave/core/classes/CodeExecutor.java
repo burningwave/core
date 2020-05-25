@@ -29,6 +29,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.util.Arrays;
@@ -40,7 +41,6 @@ import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
 
 public class CodeExecutor implements Component {
@@ -51,19 +51,15 @@ public class CodeExecutor implements Component {
 	private ClassFactory classFactory;
 	private PathHelper pathHelper;
 	private Supplier<ClassFactory> classFactorySupplier;
-	private IterableObjectHelper iterableObjectHelper;	
-	private Supplier<IterableObjectHelper> iterableObjectHelperSupplier;
 	private Properties config;
 	
 	private CodeExecutor(
 		Supplier<ClassFactory> classFactorySupplier,
 		PathHelper pathHelper,
-		Supplier<IterableObjectHelper> iterableObjectHelperSupplier,
 		Properties config
 	) {	
 		this.classFactorySupplier = classFactorySupplier;
 		this.pathHelper = pathHelper;
-		this.iterableObjectHelperSupplier = iterableObjectHelperSupplier;
 		this.config = config;
 		listenTo(config);
 	}
@@ -71,13 +67,11 @@ public class CodeExecutor implements Component {
 	public static CodeExecutor create(
 		Supplier<ClassFactory> classFactorySupplier,
 		PathHelper pathHelper,
-		Supplier<IterableObjectHelper> iterableObjectHelperSupplier,
 		Properties config
 	) {
 		return new CodeExecutor(
 			classFactorySupplier,
 			pathHelper,
-			iterableObjectHelperSupplier,
 			config
 		);
 	}
@@ -85,12 +79,6 @@ public class CodeExecutor implements Component {
 	private ClassFactory getClassFactory() {
 		return classFactory != null? classFactory :
 			(classFactory = classFactorySupplier.get());
-	}
-	
-	protected IterableObjectHelper getIterableObjectHelper() {
-		return iterableObjectHelper != null ?
-			iterableObjectHelper :
-			(iterableObjectHelper = iterableObjectHelperSupplier.get());
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -140,21 +128,21 @@ public class CodeExecutor implements Component {
 				body.useType(param.getClass());
 			}
 		}
-		String importFromConfig = getIterableObjectHelper().get(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, config.getDefaultValues());
+		String importFromConfig = IterableObjectHelper.get(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, config.getDefaultValues());
 		if (Strings.isNotEmpty(importFromConfig)) {
 			Arrays.stream(importFromConfig.split(";")).forEach(imp -> {
 				body.useType(imp);
 			});
 		}
-		String executorName = getIterableObjectHelper().get(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, config.getDefaultValues());
-		String executorSimpleName = getIterableObjectHelper().get(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, config.getDefaultValues());
+		String executorName = IterableObjectHelper.get(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, config.getDefaultValues());
+		String executorSimpleName = IterableObjectHelper.get(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, config.getDefaultValues());
 
 		if (Strings.isNotEmpty(executorName)) {
 			config.setName(executorName);
 		} else if (Strings.isNotEmpty(executorSimpleName)) {
 			config.setSimpleName(executorSimpleName);
 		}
-		String code = getIterableObjectHelper().get(properties, config.getPropertyName(), config.getDefaultValues());
+		String code = IterableObjectHelper.get(properties, config.getPropertyName(), config.getDefaultValues());
 		if (code.contains(";")) {
 			for (String codeRow : code.split(";")) {
 				body.addCodeRow(codeRow + ";");

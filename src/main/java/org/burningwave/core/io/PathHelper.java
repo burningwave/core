@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -57,7 +58,6 @@ import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingSupplier;
-import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
@@ -68,13 +68,11 @@ public class PathHelper implements Component {
 	public static String MAIN_CLASS_PATHS = "main-class-paths";
 	public static String MAIN_CLASS_PATHS_EXTENSION = MAIN_CLASS_PATHS + ".extension";
 	private static Pattern PATH_REGEX = Pattern.compile("\\/\\/(.*)\\/\\/(children|allChildren):(.*)");
-	private IterableObjectHelper iterableObjectHelper;
 	private Map<String, Collection<String>> pathGroups;
 	private Collection<String> allPaths;
 	private Properties config;
 		
-	private PathHelper(IterableObjectHelper iterableObjectHelper, Properties config) {
-		this.iterableObjectHelper = iterableObjectHelper;
+	private PathHelper(Properties config) {
 		pathGroups = new ConcurrentHashMap<>();
 		allPaths = ConcurrentHashMap.newKeySet();
 		loadMainClassPaths();
@@ -94,8 +92,8 @@ public class PathHelper implements Component {
 		Component.super.receiveNotification(properties, event, key, value);
 	}
 	
-	public static PathHelper create(IterableObjectHelper iterableObjectHelper, Properties config) {
-		return new PathHelper(iterableObjectHelper, config);
+	public static PathHelper create(Properties config) {
+		return new PathHelper(config);
 	}
 	
 	private void loadMainClassPaths() {
@@ -210,18 +208,18 @@ public class PathHelper implements Component {
 			paths = currentPropertyPaths;
 			
 			if (paths != null) {
-				if (iterableObjectHelper.containsValue(config, pathGroupPropertyName, null, "${classPaths}")) {
+				if (IterableObjectHelper.containsValue(config, pathGroupPropertyName, null, "${classPaths}")) {
 					Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
 					for (String mainClassPath : mainClassPaths) {
 						Map<String, Object> defaultValues = new LinkedHashMap<>();
 						defaultValues.put("classPaths", mainClassPath);
-						paths = Paths.clean(iterableObjectHelper.get(config, pathGroupPropertyName, defaultValues)).replaceAll(";{2,}", ";");
+						paths = Paths.clean(IterableObjectHelper.get(config, pathGroupPropertyName, defaultValues)).replaceAll(";{2,}", ";");
 						for (String path : paths.split(";")) {
 							groupPaths.addAll(addPath(pathGroupName, path));
 						}
 					}	
 				} else {
-					for (String path : ((String)iterableObjectHelper.get(config, pathGroupPropertyName, null)).split(";")) {
+					for (String path : ((String)IterableObjectHelper.get(config, pathGroupPropertyName, null)).split(";")) {
 						groupPaths.addAll(addPath(pathGroupName, path));
 					}
 				}
@@ -455,7 +453,6 @@ public class PathHelper implements Component {
 	
 	@Override
 	public void close() {
-		iterableObjectHelper = null;
 		pathGroups.forEach((key, value) -> {
 			value.clear();
 			pathGroups.remove(key);

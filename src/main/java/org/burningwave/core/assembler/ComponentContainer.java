@@ -30,6 +30,7 @@ package org.burningwave.core.assembler;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -55,9 +56,7 @@ import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.concurrent.ConcurrentHelper;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
-import org.burningwave.core.reflection.PropertyAccessor;
 
 public class ComponentContainer implements ComponentSupplier {
 	private static Collection<ComponentContainer> instances;
@@ -168,11 +167,11 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public String getConfigProperty(String propertyName) {
-		return getIterableObjectHelper().get(config, propertyName);
+		return IterableObjectHelper.get(config, propertyName);
 	}
 	
 	public String getConfigProperty(String propertyName, Map<String, Object> defaultValues) {
-		return getIterableObjectHelper().get(config, propertyName, defaultValues);
+		return IterableObjectHelper.get(config, propertyName, defaultValues);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -199,7 +198,6 @@ public class ComponentContainer implements ComponentSupplier {
 				getJavaMemoryCompiler(),
 				getPathHelper(),
 				() -> retrieveFromConfig(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY),
-				() -> getIterableObjectHelper(),
 				config
 			)
 		);	
@@ -210,7 +208,6 @@ public class ComponentContainer implements ComponentSupplier {
 			CodeExecutor.create(
 				() -> getClassFactory(),
 				getPathHelper(),
-				() -> getIterableObjectHelper(),
 				config
 			)
 		);	
@@ -269,22 +266,6 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 
 	@Override
-	public PropertyAccessor.ByFieldOrByMethod getByFieldOrByMethodPropertyAccessor() {
-		return getOrCreate(PropertyAccessor.ByFieldOrByMethod.class, () ->  
-			PropertyAccessor.ByFieldOrByMethod.create()
-		);
-	}
-	
-	@Override
-	public PropertyAccessor.ByMethodOrByField getByMethodOrByFieldPropertyAccessor() {
-		return getOrCreate(PropertyAccessor.ByMethodOrByField.class, () ->  
-			PropertyAccessor.ByMethodOrByField.create(
-				() -> getClassFactory()
-			)
-		);
-	}
-
-	@Override
 	public FunctionalInterfaceFactory getFunctionalInterfaceFactory() {
 		return getOrCreate(FunctionalInterfaceFactory.class, () -> 
 			FunctionalInterfaceFactory.create(
@@ -297,7 +278,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public PathHelper getPathHelper() {
 		return getOrCreate(PathHelper.class, () ->
 			PathHelper.create(
-				getIterableObjectHelper(),
 				config
 			)
 		);
@@ -316,19 +296,10 @@ public class ComponentContainer implements ComponentSupplier {
 	public ConcurrentHelper getConcurrentHelper() {
 		return getOrCreate(ConcurrentHelper.class, ConcurrentHelper::create);
 	}
-
-	@Override
-	public IterableObjectHelper getIterableObjectHelper() {
-		return getOrCreate(IterableObjectHelper.class, () ->
-			IterableObjectHelper.create(
-				getByFieldOrByMethodPropertyAccessor()
-			)
-		);
-	}
 	
 	@SuppressWarnings("unchecked")
 	private <T> T retrieveFromConfig(String configKey) {
-		Object object = getIterableObjectHelper().get(config, configKey);
+		Object object = IterableObjectHelper.get(config, configKey);
 		if (object instanceof String) {
 			return getCodeExecutor().execute(
 				ExecuteConfig.fromDefaultProperties()

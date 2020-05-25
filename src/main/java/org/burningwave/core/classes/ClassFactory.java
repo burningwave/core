@@ -51,7 +51,6 @@ import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileScanConfigAbst;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.iterable.IterableObjectHelper;
 import org.burningwave.core.iterable.Properties;
 
 
@@ -70,8 +69,6 @@ public class ClassFactory implements Component {
 	private ClassPathHunter classPathHunter;
 	private Supplier<ClassPathHunter> classPathHunterSupplier;
 	private Supplier<ClassLoader> defaultClassLoaderSupplier;
-	private IterableObjectHelper iterableObjectHelper;	
-	private Supplier<IterableObjectHelper> iterableObjectHelperSupplier;
 	private Properties config;
 	
 	private ClassFactory(
@@ -80,7 +77,6 @@ public class ClassFactory implements Component {
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		Supplier<ClassLoader> defaultClassLoaderSupplier,
-		Supplier<IterableObjectHelper> iterableObjectHelperSupplier,
 		Properties config
 	) {	
 		this.byteCodeHunter = byteCodeHunter;
@@ -89,7 +85,6 @@ public class ClassFactory implements Component {
 		this.pathHelper = pathHelper;
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
 		this.defaultClassLoaderSupplier = defaultClassLoaderSupplier;
-		this.iterableObjectHelperSupplier = iterableObjectHelperSupplier;
 		this.config = config;
 		listenTo(config);
 	}
@@ -100,7 +95,6 @@ public class ClassFactory implements Component {
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		Supplier<ClassLoader> defaultClassLoaderSupplier,
-		Supplier<IterableObjectHelper> iterableObjectHelperSupplier,
 		Properties config
 	) {
 		return new ClassFactory(
@@ -109,7 +103,6 @@ public class ClassFactory implements Component {
 			javaMemoryCompiler, 
 			pathHelper,
 			defaultClassLoaderSupplier,
-			iterableObjectHelperSupplier,
 			config
 		);
 	}
@@ -127,12 +120,6 @@ public class ClassFactory implements Component {
 			PathHelper.PATHS_KEY_PREFIX + CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY, 
 			"${" + PathHelper.PATHS_KEY_PREFIX +CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY + "};"
 		);
-	}
-	
-	protected IterableObjectHelper getIterableObjectHelper() {
-		return iterableObjectHelper != null ?
-			iterableObjectHelper :
-			(iterableObjectHelper = iterableObjectHelperSupplier.get());
 	}
 	
 	ClassLoader getDefaultClassLoader() {

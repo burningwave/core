@@ -41,8 +41,6 @@ import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.concurrent.ConcurrentHelper;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.iterable.IterableObjectHelper;
-import org.burningwave.core.reflection.PropertyAccessor;
 
 public interface ComponentSupplier extends Component {
 	
@@ -54,10 +52,6 @@ public interface ComponentSupplier extends Component {
 
 	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier);
 	
-	public PropertyAccessor.ByFieldOrByMethod getByFieldOrByMethodPropertyAccessor();
-
-	public PropertyAccessor.ByMethodOrByField getByMethodOrByFieldPropertyAccessor();
-
 	public ByteCodeHunter getByteCodeHunter();
 
 	public ClassFactory getClassFactory();
@@ -73,8 +67,6 @@ public interface ComponentSupplier extends Component {
 	public FileSystemScanner getFileSystemScanner();
 
 	public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
-
-	public IterableObjectHelper getIterableObjectHelper();
 
 	public JavaMemoryCompiler getJavaMemoryCompiler();
 		

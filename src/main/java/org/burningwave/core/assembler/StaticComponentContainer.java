@@ -15,6 +15,8 @@ public class StaticComponentContainer {
 	private static final String CLEAR_TEMPORARY_FOLDER_ON_INIT_CONFIG_KEY = "static-component-container.clear-temporary-folder-on-init";
 	private static final String HIDE_BANNER_ON_INIT_CONFIG_KEY = "static-component-container.hide-banner-on-init";
 	
+	public static final org.burningwave.core.reflection.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
+	public static final org.burningwave.core.reflection.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
 	public static final org.burningwave.core.Cache Cache;
 	public static final org.burningwave.core.classes.Classes Classes;
@@ -23,6 +25,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.reflection.Fields Fields;
 	public static final org.burningwave.core.iterable.Properties GlobalProperties;
+	public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
 	public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;
 	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
@@ -78,6 +81,9 @@ public class StaticComponentContainer {
 			Constructors = org.burningwave.core.reflection.Constructors.create();
 			Fields = org.burningwave.core.reflection.Fields.create();
 			Methods = org.burningwave.core.reflection.Methods.create();
+			ByFieldOrByMethodPropertyAccessor = org.burningwave.core.reflection. PropertyAccessor.ByFieldOrByMethod.create();
+			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.reflection.PropertyAccessor.ByMethodOrByField.create();
+			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create();
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
 		} catch (Throwable exc){
 			ManagedLoggersRepository.logError(StaticComponentContainer.class, "Exception occurred", exc);

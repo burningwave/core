@@ -46,7 +46,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.function.ThrowingBiFunction;
 import org.burningwave.core.function.ThrowingFunction;
@@ -280,7 +279,7 @@ public abstract class PropertyAccessor implements Component {
 			super();
 		}
 		
-		public static ByMethodOrByField create(Supplier<ClassFactory> sourceCodeHandlerSupplier) {
+		public static ByMethodOrByField create() {
 			return new ByMethodOrByField();
 		}
 
