@@ -169,7 +169,7 @@ public class ComponentContainer implements ComponentSupplier {
 		return IterableObjectHelper.get(config, propertyName);
 	}
 	
-	public String getConfigProperty(String propertyName, Map<String, Object> defaultValues) {
+	public String getConfigProperty(String propertyName, Map<String, String> defaultValues) {
 		return IterableObjectHelper.get(config, propertyName, defaultValues);
 	}
 	
@@ -293,7 +293,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@SuppressWarnings("unchecked")
 	private <T> T retrieveFromConfig(String configKey) {
-		Object object = IterableObjectHelper.get(config, configKey);
+		Object object = config.get(configKey);
 		if (object instanceof String) {
 			return getCodeExecutor().execute(
 				ExecuteConfig.fromDefaultProperties()

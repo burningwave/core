@@ -74,17 +74,16 @@ public class IterableObjectHelper implements Component {
 		return retrieveStream(object).count();
 	}
 	
-	public <T> T get(Properties properties, String propertyName) {
+	public String get(Properties properties, String propertyName) {
 		return get(properties, propertyName, null);
 	}
 	
-	public <T> boolean containsValue(Properties properties, String propertyName, Map<String, ?> defaultValues, String toBeTested) {
-		T propertyValueObject = (T)properties.get(propertyName);
-		if (propertyValueObject == null && defaultValues != null) {
-			propertyValueObject = (T)defaultValues.get(propertyName);
+	public boolean containsValue(Properties properties, String propertyName, Map<String, String> defaultValues, String toBeTested) {
+		String propertyValue = (String)properties.get(propertyName);
+		if (Strings.isEmpty(propertyValue) && defaultValues != null) {
+			propertyValue = defaultValues.get(propertyName);
 		}
-		if (propertyValueObject instanceof String && !Strings.isEmpty((String)propertyValueObject)) {
-			String propertyValue = (String)propertyValueObject;
+		if (!Strings.isEmpty(propertyValue)) {
 			if (propertyValue.contains(toBeTested)) {
 				return true;
 			}
@@ -99,17 +98,15 @@ public class IterableObjectHelper implements Component {
 				}
 			}
 		}
-		return propertyValueObject != null;
+		return false;
 	}
 	
-	
-	public <T> T get(Properties properties, String propertyName, Map<String, ?> defaultValues) {
-		T propertyValueObject = (T)properties.get(propertyName);
-		if (propertyValueObject == null && defaultValues != null) {
-			propertyValueObject = (T)defaultValues.get(propertyName);
+	public String get(Properties properties, String propertyName, Map<String, String> defaultValues) {
+		String propertyValue = (String)properties.get(propertyName);
+		if (Strings.isEmpty(propertyValue) && defaultValues != null) {
+			propertyValue = defaultValues.get(propertyName);
 		}
-		if (propertyValueObject instanceof String && !Strings.isEmpty((String)propertyValueObject)) {
-			String propertyValue = (String)propertyValueObject;
+		if (!Strings.isEmpty(propertyValue)) {
 			Map<Integer, List<String>> subProperties = Strings.extractAllGroups(PLACE_HOLDER_FOR_PROPERTIES_PATTERN, propertyValue);		
 			if (!subProperties.isEmpty()) {
 				for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
@@ -122,10 +119,8 @@ public class IterableObjectHelper implements Component {
 					}
 				}
 			}
-			return (T)propertyValue;
-		} else {
-			return propertyValueObject;
+			
 		}
-		
+		return propertyValue;
 	}
 }

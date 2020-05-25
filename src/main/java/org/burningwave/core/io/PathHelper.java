@@ -211,7 +211,7 @@ public class PathHelper implements Component {
 				if (IterableObjectHelper.containsValue(config, pathGroupPropertyName, null, "${classPaths}")) {
 					Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
 					for (String mainClassPath : mainClassPaths) {
-						Map<String, Object> defaultValues = new LinkedHashMap<>();
+						Map<String, String> defaultValues = new LinkedHashMap<>();
 						defaultValues.put("classPaths", mainClassPath);
 						paths = Paths.clean(IterableObjectHelper.get(config, pathGroupPropertyName, defaultValues)).replaceAll(";{2,}", ";");
 						for (String path : paths.split(";")) {
@@ -258,7 +258,13 @@ public class PathHelper implements Component {
 						}
 					}
 				} else {
-					FileSystemItem fileSystemItem = FileSystemItem.ofPath(path);
+					FileSystemItem fileSystemItem = null;
+					try {
+						fileSystemItem = FileSystemItem.ofPath(path);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 					if (fileSystemItem.exists()) {
 						pathGroup.add(fileSystemItem.getAbsolutePath());
 						allPaths.add(fileSystemItem.getAbsolutePath());
