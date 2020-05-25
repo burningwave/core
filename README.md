@@ -35,7 +35,7 @@ To include Burningwave Core library in your projects simply use with**:
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>5.31.0</version>
+    <version>5.32.0</version>
 </dependency>
 ```
 
@@ -370,6 +370,8 @@ More than one dynamic container can be created, while only one static container 
 ## Static component container
 It is represented by the **org.burningwave.core.assembler.StaticComponentContainer** class that provides the following fields for each component supplied:
 ```java
+public static final org.burningwave.core.reflection.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
+public static final org.burningwave.core.reflection.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
 public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
 public static final org.burningwave.core.Cache Cache;
 public static final org.burningwave.core.classes.Classes Classes;
@@ -378,6 +380,7 @@ public static final org.burningwave.core.reflection.Constructors Constructors;
 public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 public static final org.burningwave.core.reflection.Fields Fields;
 public static final org.burningwave.core.iterable.Properties GlobalProperties;
+public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
 public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
 public static final org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;
 public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
@@ -385,8 +388,8 @@ public static final org.burningwave.core.classes.Members Members;
 public static final org.burningwave.core.reflection.Methods Methods;
 public static final org.burningwave.core.Strings.Paths Paths;
 public static final org.burningwave.core.io.Resources Resources;
-public static final org.burningwave.core.SourceCodeHandler SourceCodeHandler;
 public static final org.burningwave.core.io.Streams Streams;
+public static final org.burningwave.core.classes.SourceCodeHandler SourceCodeHandler ;
 public static final org.burningwave.core.Strings Strings;
 public static final org.burningwave.core.Throwables Throwables;
 ```
@@ -444,8 +447,6 @@ file-system-scanner.default-scan-config.check-file-options=checkFileSignature
 ## Dynamic component container
 It is represented by the **org.burningwave.core.assembler.ComponentContainer** class that provides the following methods for each component supplied:
 ```java
-public PropertyAccessor.ByFieldOrByMethod getByFieldOrByMethodPropertyAccessor();
-public PropertyAccessor.ByMethodOrByField getByMethodOrByFieldPropertyAccessor();
 public ByteCodeHunter getByteCodeHunter();
 public ClassFactory getClassFactory();
 public ClassHunter getClassHunter();
@@ -454,7 +455,6 @@ public CodeExecutor getCodeExecutor();
 public ConcurrentHelper getConcurrentHelper();
 public FileSystemScanner getFileSystemScanner();
 public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
-public IterableObjectHelper getIterableObjectHelper();
 public JavaMemoryCompiler getJavaMemoryCompiler();
 public PathHelper getPathHelper();
 ```
