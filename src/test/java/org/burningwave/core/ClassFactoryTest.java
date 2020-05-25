@@ -112,17 +112,14 @@ public class ClassFactoryTest extends BaseTest {
 	
 	@Test
 	public void getOrBuildClassWithExternalClassOneParallelized() {
-		Thread thr_01 = new Thread( () -> getOrBuildClassWithExternalClassOne(false));
-		Thread thr_02 = new Thread( () -> getOrBuildClassWithExternalClassOne(false));
-		thr_01.start();
-		thr_02.start();
-		try {
+		testDoesNotThrow(() -> {
+			Thread thr_01 = new Thread( () -> getOrBuildClassWithExternalClassOne(false));
+			Thread thr_02 = new Thread( () -> getOrBuildClassWithExternalClassOne(false));
+			thr_01.start();
+			thr_02.start();
 			thr_01.join();
 			thr_02.join();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		});
 	}
 	
 	@Test

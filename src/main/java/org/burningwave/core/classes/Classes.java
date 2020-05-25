@@ -62,6 +62,7 @@ import java.util.function.Supplier;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingSupplier;
 
+@SuppressWarnings("unchecked")
 public class Classes implements Component, MembersRetriever {
 	public static class Symbol{
 		public static class Tag {
@@ -98,7 +99,6 @@ public class Classes implements Component, MembersRetriever {
 		return new Classes();
 	}
 	
-	@SuppressWarnings({ "unchecked"})
 	public <T> Class<T> retrieveFrom(Object object) {
 		return (Class<T>)(object instanceof Class? object : object.getClass());
 	}
@@ -353,8 +353,22 @@ public class Classes implements Component, MembersRetriever {
 		for (Object object : objects) {
 			if (object instanceof String) {
 				id += (String)object  + "_";
-			} else if (object instanceof Long) {
-				id += (long)object  + "_";
+			} else if (object instanceof Number) {
+				if (object instanceof Byte) {
+					id += (int)object  + "_";
+				} else if (object instanceof Short) {
+					id += (short)object  + "_";
+				} else if (object instanceof Integer) {
+					id += (int)object  + "_";
+				} else if (object instanceof Float) {
+					id += (float)object  + "_";
+				} else if (object instanceof Double) {
+					id += (double)object  + "_";
+				}
+			} else if (object instanceof Boolean) {
+				id += (boolean)object  + "_";
+			} else if (object instanceof Character) {
+				id += (char)object  + "_";
 			} else {
 				id += System.identityHashCode(object) + "_";
 			}
@@ -579,7 +593,6 @@ public class Classes implements Component, MembersRetriever {
 			return classes;
 		}
 		
-		@SuppressWarnings("unchecked")
 		public <T> Class<T> loadOrDefineByByteCode(
 			String className,
 			Map<String, ByteBuffer> byteCodes,
@@ -603,7 +616,6 @@ public class Classes implements Component, MembersRetriever {
 			}
 		}
 		
-		@SuppressWarnings("unchecked")
 		public <T> Class<T> loadOrDefineByJavaClass(
 			String className,
 			Map<String, JavaClass> byteCodes,
@@ -638,7 +650,6 @@ public class Classes implements Component, MembersRetriever {
 			);
 		}
 		
-		@SuppressWarnings("unchecked")
 		private <T> Class<T> loadOrDefineByJavaClass(
 			JavaClass javaClass, 
 			ClassLoader classLoader, 
@@ -667,7 +678,6 @@ public class Classes implements Component, MembersRetriever {
 	    	}
 	    }
 		
-		@SuppressWarnings("unchecked")
 		private <T> Class<T> loadOrDefine(
 			Class<T> toLoad, 
 			ClassLoader classLoader, 
@@ -705,7 +715,7 @@ public class Classes implements Component, MembersRetriever {
 			return definedClass;
 		}
 		
-		@SuppressWarnings("unchecked")
+
 		private <T> Class<T> defineClass(
 			ClassLoader classLoader, 
 			MethodHandle method, 
@@ -716,14 +726,10 @@ public class Classes implements Component, MembersRetriever {
 				return (Class<T>)method.invoke(classLoader, className, byteCode, null);
 			} catch (InvocationTargetException | ClassNotFoundException | NoClassDefFoundError exc) {
 				throw exc;
-			} catch (java.lang.LinkageError exc) {
-				logWarn("Class {} is already defined", className);
-				return (Class<T>)classLoader.loadClass(className);
 			} catch (Throwable exc) {
 				throw Throwables.toRuntimeException(exc);
 			}
 		}
-		
 		
 	    private Package definePackage(
 			ClassLoader classLoader, MethodHandle definePackageMethod,
@@ -758,7 +764,6 @@ public class Classes implements Component, MembersRetriever {
 			}
 		}
 		
-		@SuppressWarnings("unchecked")
 		public <T> Class<T> retrieveLoadedClass(ClassLoader classLoader, String className) {
 			Collection<Class<?>> definedClasses = retrieveLoadedClasses(classLoader);
 			synchronized(definedClasses) {
