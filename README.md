@@ -9,7 +9,8 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/5)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Supported JVM](https://img.shields.io/badge/Supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/115952643)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-blue)]
+[![Supported JVM](https://github.com/burningwave/core/actions/runs/115952643)(https://img.shields.io/badge/Supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/115952643)
 [![Coverage Status](https://coveralls.io/repos/github/burningwave/core/badge.svg?branch=master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
 
@@ -497,7 +498,7 @@ The configuration of this type of container can be done via Properties file or p
 If you use the singleton instance obtained via ComponentContainer.getInstance() method, you must create a **burningwave.properties** file and put it on base path of your classpath project.
 **The default configuration automatically loaded if no configuration file is found is the following**:
 ```properties
-class-factory.byte-code-hunter.search-config.check-file-options=
+class-factory.byte-code-hunter.search-config.check-file-options=\
     ${file-system-scanner.default-scan-config.check-file-options}
 class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
 class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=\
@@ -523,9 +524,12 @@ If you create a component container instance through method ComponentContainer.c
 ```
 ComponentContainer.create("org/burningwave/custom-config-file.properties")
 ```
-Here an example of a **burningwave.properties** file with all settable properties with all configurable properties:
+Here an example of a **burningwave.properties** file with all configurable properties:
 ```properties
-paths.main-class-paths.extension=//${system.properties:java.home}/lib//children:.*\.jar|.*\.jmod;//${system.properties:java.home}/lib/ext//children:.*\.jar|.*\.jmod;//${system.properties:java.home}/jmods//children:.*\.jar|.*\.jmod;
+paths.main-class-paths.extension=\
+    //${system.properties:java.home}/lib//children:.*\.jar|.*\.jmod;\
+    //${system.properties:java.home}/lib/ext//children:.*\.jar|.*\.jmod;\
+    //${system.properties:java.home}/jmods//children:.*\.jar|.*\.jmod;
 class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
 #this is the default class loader used by method
 #org.burningwave.core.classes.ClassFactory.loadOrBuildAndDefine(UnitSourceGenerator... unitsCode)
