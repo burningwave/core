@@ -516,7 +516,6 @@ paths.main-class-paths.extension=\
     //${system.properties:java.home}/lib//children:.*\.jar|.*\.jmod;\
     //${system.properties:java.home}/lib/ext//children:.*\.jar|.*\.jmod;\
     //${system.properties:java.home}/jmods//children:.*\.jar|.*\.jmod;
-
 ```
 **If in your custom burningwave.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 
