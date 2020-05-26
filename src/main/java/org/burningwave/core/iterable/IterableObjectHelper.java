@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.iterable;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ByFieldOrByMethodPropertyAccessor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.util.Collection;
@@ -51,11 +50,7 @@ public class IterableObjectHelper implements Component {
 	public static IterableObjectHelper create() {
 		return new IterableObjectHelper();
 	}
-	
-	public <T> Stream<T> retrieveStream(Object object, String propertyPath) {
-		return retrieveStream(ByFieldOrByMethodPropertyAccessor.get(object, propertyPath));
-	}
-	
+
 	public <T> Stream<T> retrieveStream(Object object) {
 		Stream<T> stream = null;
 		if (object != null) {

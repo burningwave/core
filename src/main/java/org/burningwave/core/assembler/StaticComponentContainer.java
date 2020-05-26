@@ -68,6 +68,7 @@ public class StaticComponentContainer {
 	
 	static {
 		Throwables = org.burningwave.core.Throwables.create();
+
 		Resources = new org.burningwave.core.io.Resources();
 		Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
 			Resources.loadFirstOneFound("burningwave.static.properties", "burningwave.static.default.properties");
@@ -91,6 +92,7 @@ public class StaticComponentContainer {
 		ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Instantiated {}", ManagedLoggersRepository.getClass().getName());
 		try {			
 			Strings = org.burningwave.core.Strings.create();
+			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create();
 			Paths = org.burningwave.core.Strings.Paths.create();
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create();
 			Runtime.getRuntime().addShutdownHook(new Thread(FileSystemHelper::close));
@@ -111,7 +113,6 @@ public class StaticComponentContainer {
 			Methods = org.burningwave.core.reflection.Methods.create();
 			ByFieldOrByMethodPropertyAccessor = org.burningwave.core.reflection. PropertyAccessor.ByFieldOrByMethod.create();
 			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.reflection.PropertyAccessor.ByMethodOrByField.create();
-			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create();
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
 		} catch (Throwable exc){
 			ManagedLoggersRepository.logError(StaticComponentContainer.class, "Exception occurred", exc);
