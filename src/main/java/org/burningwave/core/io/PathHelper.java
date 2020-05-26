@@ -40,6 +40,7 @@ import java.io.InputStreamReader;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -63,10 +64,29 @@ import org.burningwave.core.iterable.Properties.Event;
 
 
 public class PathHelper implements Component {
-	public static final String MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE = "//${system.properties:java.home}/lib//children:.*\\.jar|.*\\.jmod;//${system.properties:java.home}/lib/ext//children:.*\\.jar|.*\\.jmod;//${system.properties:java.home}/jmods//children:.*\\.jar|.*\\.jmod;";
-	public static String PATHS_KEY_PREFIX = "paths.";
-	public static String MAIN_CLASS_PATHS = "main-class-paths";
-	public static String MAIN_CLASS_PATHS_EXTENSION = MAIN_CLASS_PATHS + ".extension";
+	
+	public static class Configuration {
+		
+		public static class Key {
+			public static String PATHS_PREFIX = "paths.";
+			public static String MAIN_CLASS_PATHS = "main-class-paths";
+			public static String MAIN_CLASS_PATHS_EXTENSION = MAIN_CLASS_PATHS + ".extension";			
+		}
+		
+		public final static Map<String, Object> DEFAULT_VALUES;
+		
+		static {
+			DEFAULT_VALUES = new HashMap<>();
+			DEFAULT_VALUES.put(
+				Key.PATHS_PREFIX + Key.MAIN_CLASS_PATHS_EXTENSION, 
+				"//${system.properties:java.home}/lib//children:.*\\.jar|.*\\.jmod;" +
+				"//${system.properties:java.home}/lib/ext//children:.*\\.jar|.*\\.jmod;" +
+				"//${system.properties:java.home}/jmods//children:.*\\.jar|.*\\.jmod;"	
+			);
+		}
+	}	
+	
+	
 	private static Pattern PATH_REGEX = Pattern.compile("\\/\\/(.*)\\/\\/(children|allChildren):(.*)");
 	private Map<String, Collection<String>> pathGroups;
 	private Collection<String> allPaths;
@@ -85,8 +105,8 @@ public class PathHelper implements Component {
 	public void receiveNotification(Properties properties, Event event, Object key, Object value) {
 		if (event == Event.PUT) {
 			String propertyKey = (String)key;
-			if (propertyKey.startsWith(PATHS_KEY_PREFIX)) {
-				loadPaths(((String)key).replaceFirst(PATHS_KEY_PREFIX, ""));	
+			if (propertyKey.startsWith(Configuration.Key.PATHS_PREFIX)) {
+				loadPaths(((String)key).replaceFirst(Configuration.Key.PATHS_PREFIX, ""));	
 			}
 		}
 		Component.super.receiveNotification(properties, event, key, value);
@@ -100,7 +120,7 @@ public class PathHelper implements Component {
 		String classPaths = System.getProperty("java.class.path");
 		if (Strings.isNotEmpty(classPaths)) {
 			addPaths(
-				MAIN_CLASS_PATHS,
+				Configuration.Key.MAIN_CLASS_PATHS,
 				Stream.of(
 					classPaths.split(System.getProperty("path.separator"))
 				).map(path ->
@@ -116,7 +136,7 @@ public class PathHelper implements Component {
 		while (classLoader != null) {
 			if (classLoader instanceof URLClassLoader) {
 				addPaths(
-					MAIN_CLASS_PATHS,
+					Configuration.Key.MAIN_CLASS_PATHS,
 					Stream.of(
 						((URLClassLoader)classLoader).getURLs()
 					).map(uRL -> 
@@ -134,15 +154,15 @@ public class PathHelper implements Component {
 	
 	private void loadAllPaths() {
 		config.forEach((key, value) -> {
-			if (((String)key).startsWith(PATHS_KEY_PREFIX)) {
-				String pathGroupName = ((String)key).substring(PATHS_KEY_PREFIX.length());
+			if (((String)key).startsWith(Configuration.Key.PATHS_PREFIX)) {
+				String pathGroupName = ((String)key).substring(Configuration.Key.PATHS_PREFIX.length());
 				loadPaths(pathGroupName);
 			}
 		});
 	}
 	
 	public Collection<String> getMainClassPaths() {
-		return getPaths(MAIN_CLASS_PATHS);
+		return getPaths(Configuration.Key.MAIN_CLASS_PATHS);
 	}
 	
 	public Collection<String> getAllPaths() {
@@ -191,7 +211,7 @@ public class PathHelper implements Component {
 	}
 	
 	public Collection<String> loadPaths(String pathGroupName, String paths) {
-		String pathGroupPropertyName = PATHS_KEY_PREFIX + pathGroupName;
+		String pathGroupPropertyName = Configuration.Key.PATHS_PREFIX + pathGroupName;
 		Collection<String> groupPaths = ConcurrentHashMap.newKeySet();
 		synchronized(this) {
 			String currentPropertyPaths = config.getProperty(pathGroupPropertyName);
@@ -209,7 +229,7 @@ public class PathHelper implements Component {
 			
 			if (paths != null) {
 				if (IterableObjectHelper.containsValue(config, pathGroupPropertyName, null, "${classPaths}")) {
-					Collection<String> mainClassPaths = getPaths(MAIN_CLASS_PATHS);
+					Collection<String> mainClassPaths = getPaths(Configuration.Key.MAIN_CLASS_PATHS);
 					for (String mainClassPath : mainClassPaths) {
 						Map<String, String> defaultValues = new LinkedHashMap<>();
 						defaultValues.put("classPaths", mainClassPath);

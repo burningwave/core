@@ -116,7 +116,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	private ComponentContainer init() {		
 		TreeMap<Object, Object> properties = new TreeMap<>();
-		properties.put(PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION, PathHelper.MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE);
+		properties.putAll(PathHelper.Configuration.DEFAULT_VALUES);
 		properties.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
 		properties.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
 		properties.putAll(JavaMemoryCompiler.Configuration.DEFAULT_VALUES);

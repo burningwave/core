@@ -72,17 +72,18 @@ public class ClassFactory implements Component {
 	
 		static {
 			DEFAULT_VALUES = new LinkedHashMap<>();
-			//DEFAULT_CONFIG_VALUES.put(DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, "");
-			//DEFAULT_CONFIG_VALUES.put(DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, "DefaultClassLoaderRetrieverForClassFactory");
+			//DEFAULT_VALUES.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, "");
+			//DEFAULT_VALUES.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, "DefaultClassLoaderRetrieverForClassFactory");
+			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
 			DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
 			DEFAULT_VALUES.put(
-				PathHelper.PATHS_KEY_PREFIX + Key.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER, 
+				PathHelper.Configuration.Key.PATHS_PREFIX + Key.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER, 
 				"${classPaths};" +
-				"${" + PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION + "};"
+				"${" + PathHelper.Configuration.Key.PATHS_PREFIX + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "};"
 			);
 			DEFAULT_VALUES.put(
-				PathHelper.PATHS_KEY_PREFIX + Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER, 
-				"${" + PathHelper.PATHS_KEY_PREFIX + Key.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER + "};"
+				PathHelper.Configuration.Key.PATHS_PREFIX + Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER, 
+				"${" + PathHelper.Configuration.Key.PATHS_PREFIX + Key.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER + "};"
 			);
 			DEFAULT_VALUES.put(
 				Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
@@ -165,7 +166,7 @@ public class ClassFactory implements Component {
 			Optional.ofNullable(
 				config.getCompilationClassPaths()
 			).orElseGet(() -> 
-				pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION)
+				pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
 			);
 		
 		Collection<String> classPathsForNotFoundClassesDuringCompilantion = 

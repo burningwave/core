@@ -180,7 +180,7 @@ public class ClassFactoryTest extends BaseTest {
 			ClassFactory.ClassRetriever classRetriever =  componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG)
 				.addCompilationClassPaths(
-					pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION)
+					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
 				).addClassPathsWhereToSearchNotFoundClasses(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				)
@@ -191,7 +191,7 @@ public class ClassFactoryTest extends BaseTest {
 			}
 			classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).addCompilationClassPaths(
-					pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION)
+					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
 				).addClassPathsWhereToSearchNotFoundClasses(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				)
@@ -218,7 +218,7 @@ public class ClassFactoryTest extends BaseTest {
 		testNotNull(() -> {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).addCompilationClassPaths(
-					pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION)
+					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
 				).addClassPathsWhereToSearchNotFoundClasses(
 						pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				)

@@ -44,7 +44,7 @@ public class ExternalClassRuntimeExtender {
 
 		ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
 			LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).addCompilationClassPaths(
-				pathHelper.getPaths(PathHelper.MAIN_CLASS_PATHS, PathHelper.MAIN_CLASS_PATHS_EXTENSION)
+				pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
 			).addClassPathsWhereToSearchNotFoundClasses(
 				pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 			)
