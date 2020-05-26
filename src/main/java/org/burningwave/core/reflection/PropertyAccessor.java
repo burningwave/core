@@ -38,7 +38,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -144,7 +144,7 @@ public abstract class PropertyAccessor implements Component {
 	@SuppressWarnings({"unchecked" })
 	public <T> Map<String, T> getAll(Object obj)
 			throws IllegalArgumentException, IllegalAccessException {
-		Map<String, T> propertyValues = new LinkedHashMap<>();
+		Map<String, T> propertyValues = new HashMap<>();
 		Collection<Field> fields = Members.findAll(
 			FieldCriteria.create(),
 			obj

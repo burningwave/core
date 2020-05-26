@@ -69,12 +69,15 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
-		Throwables = org.burningwave.core.Throwables.create();
-
-		Resources = new org.burningwave.core.io.Resources();
 		Properties properties = new Properties();
 		properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
 		properties.putAll(FileScanConfigAbst.Configuration.DEFAULT_VALUES);
+		properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
+		
+		Strings = org.burningwave.core.Strings.create();
+		IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create();
+		Throwables = org.burningwave.core.Throwables.create();
+		Resources = new org.burningwave.core.io.Resources();
 		Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
 			Resources.loadFirstOneFound(properties, "burningwave.static.properties", "burningwave.static.default.properties");
 		GlobalProperties = propBag.getKey();
@@ -96,8 +99,6 @@ public class StaticComponentContainer {
 		}
 		ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Instantiated {}", ManagedLoggersRepository.getClass().getName());
 		try {			
-			Strings = org.burningwave.core.Strings.create();
-			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create();
 			Paths = org.burningwave.core.Strings.Paths.create();
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create();
 			Runtime.getRuntime().addShutdownHook(new Thread(FileSystemHelper::close));
@@ -139,8 +140,12 @@ public class StaticComponentContainer {
 		org.burningwave.core.iterable.Properties properties
 	) {
 		try {
-			String className = (String)GlobalProperties.getProperty(org.burningwave.core.ManagedLogger.Repository.TYPE_CONFIG_KEY);
-			if (className == null || "autodetect".equalsIgnoreCase(className = className.trim())) {
+			String className = IterableObjectHelper.get(
+				GlobalProperties,
+				org.burningwave.core.ManagedLogger.Repository.Configuration.Key.TYPE,
+				org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES
+			);
+			if ("autodetect".equalsIgnoreCase(className = className.trim())) {
 				try {
 					Class.forName("org.slf4j.Logger");
 					return new org.burningwave.core.SLF4JManagedLoggerRepository(properties);

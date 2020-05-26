@@ -41,6 +41,7 @@ import java.nio.ByteBuffer;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -85,7 +86,7 @@ public class JavaMemoryCompiler implements Component {
 		public final static Map<String, Object> DEFAULT_VALUES;
 		
 		static {
-			DEFAULT_VALUES = new LinkedHashMap<>();
+			DEFAULT_VALUES = new HashMap<>();
 			DEFAULT_VALUES.put(
 				Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 				"${" + FileScanConfigAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"

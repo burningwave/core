@@ -34,7 +34,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -59,7 +59,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		public final static Map<String, Object> DEFAULT_VALUES;
 		
 		static {
-			DEFAULT_VALUES = new LinkedHashMap<>();
+			DEFAULT_VALUES = new HashMap<>();
 			DEFAULT_VALUES.put(
 				Key.DEFAULT_CHECK_FILE_OPTIONS,
 				"checkFileName"

@@ -28,8 +28,11 @@
  */
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;;
 
 public interface ManagedLogger {	
@@ -88,14 +91,28 @@ public interface ManagedLogger {
 	
 	
 	public static interface Repository {
-		public static final String TYPE_CONFIG_KEY = "managed-logger.repository";
-		public static final String ENABLED_FLAG_CONFIG_KEY = "managed-logger.repository.enabled";
-		public static final String ALL_LEVEL_LOGGING_DISABLED_FOR_CONFIG_KEY = "managed-logger.repository.logging.all-level.disabled-for";
-		public static final String TRACE_LOGGING_DISABLED_FOR_CONFIG_KEY = "managed-logger.repository.logging.trace.disabled-for";
-		public static final String DEBUG_LOGGING_DISABLED_FOR_CONFIG_KEY = "managed-logger.repository.logging.debug.disabled-for";
-		public static final String INFO_LOGGING_DISABLED_FOR_CONFIG_KEY = "managed-logger.repository.logging.info.disabled-for";
-		public static final String WARN_LOGGING_DISABLED_FOR_CONFIG_KEY = "managed-logger.repository.logging.warn.disabled-for";
-		public static final String ERROR_LOGGING_DISABLED_FOR_CONFIG_KEY = "managed-logger.repository.logging.error.disabled-for";
+		public static class Configuration {
+			
+			public static class Key {
+				
+				public static final String TYPE = "managed-logger.repository";
+				public static final String ENABLED_FLAG = "managed-logger.repository.enabled";
+				public static final String ALL_LEVEL_LOGGING_DISABLED_FOR = "managed-logger.repository.logging.all-level.disabled-for";
+				public static final String TRACE_LOGGING_DISABLED_FOR = "managed-logger.repository.logging.trace.disabled-for";
+				public static final String DEBUG_LOGGING_DISABLED_FOR = "managed-logger.repository.logging.debug.disabled-for";
+				public static final String INFO_LOGGING_DISABLED_FOR = "managed-logger.repository.logging.info.disabled-for";
+				public static final String WARN_LOGGING_DISABLED_FOR = "managed-logger.repository.logging.warn.disabled-for";
+				public static final String ERROR_LOGGING_DISABLED_FOR = "managed-logger.repository.logging.error.disabled-for";
+			}
+			
+			public final static Map<String, Object> DEFAULT_VALUES;
+			
+			static {
+				DEFAULT_VALUES = new HashMap<>();
+				DEFAULT_VALUES.put(Key.TYPE, "autodetect");
+				DEFAULT_VALUES.put(Key.ENABLED_FLAG, String.valueOf(true));
+			}
+		}
 		
 		public void setLoggingLevelFor(LoggingLevel logLevel, String... classNames);
 		
@@ -142,16 +159,20 @@ public interface ManagedLogger {
 			
 			Abst(Properties properties) {
 				init(properties);
-				String enabledFlag = (String)properties.getProperty(Repository.ENABLED_FLAG_CONFIG_KEY);
-				if (enabledFlag == null || Boolean.parseBoolean(enabledFlag)) {
+				String enabledFlag = IterableObjectHelper.get(
+					properties,
+					Repository.Configuration.Key.ENABLED_FLAG,
+					Configuration.DEFAULT_VALUES
+				);
+				if (Boolean.parseBoolean(enabledFlag)) {
 					enableLogging();
 				}
-				removeLoggingLevelFor(properties, TRACE_LOGGING_DISABLED_FOR_CONFIG_KEY, LoggingLevel.TRACE);
-				removeLoggingLevelFor(properties, DEBUG_LOGGING_DISABLED_FOR_CONFIG_KEY, LoggingLevel.DEBUG);
-				removeLoggingLevelFor(properties, INFO_LOGGING_DISABLED_FOR_CONFIG_KEY, LoggingLevel.INFO);
-				removeLoggingLevelFor(properties, WARN_LOGGING_DISABLED_FOR_CONFIG_KEY, LoggingLevel.WARN);
-				removeLoggingLevelFor(properties, ERROR_LOGGING_DISABLED_FOR_CONFIG_KEY, LoggingLevel.ERROR);
-				removeLoggingLevelFor(properties, ALL_LEVEL_LOGGING_DISABLED_FOR_CONFIG_KEY,
+				removeLoggingLevelFor(properties, Repository.Configuration.Key.TRACE_LOGGING_DISABLED_FOR, LoggingLevel.TRACE);
+				removeLoggingLevelFor(properties, Repository.Configuration.Key.DEBUG_LOGGING_DISABLED_FOR, LoggingLevel.DEBUG);
+				removeLoggingLevelFor(properties, Repository.Configuration.Key.INFO_LOGGING_DISABLED_FOR, LoggingLevel.INFO);
+				removeLoggingLevelFor(properties, Repository.Configuration.Key.WARN_LOGGING_DISABLED_FOR, LoggingLevel.WARN);
+				removeLoggingLevelFor(properties, Repository.Configuration.Key.ERROR_LOGGING_DISABLED_FOR, LoggingLevel.ERROR);
+				removeLoggingLevelFor(properties, Repository.Configuration.Key.ALL_LEVEL_LOGGING_DISABLED_FOR,
 					LoggingLevel.TRACE, LoggingLevel.DEBUG, LoggingLevel.INFO, LoggingLevel.WARN, LoggingLevel.ERROR
 				);	
 			}
