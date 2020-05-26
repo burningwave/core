@@ -38,6 +38,8 @@ import java.util.Map;
 import java.util.Random;
 
 import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.io.FileScanConfigAbst;
+import org.burningwave.core.iterable.Properties;
 
 public class StaticComponentContainer {
 	private static final String CLEAR_TEMPORARY_FOLDER_ON_INIT_CONFIG_KEY = "static-component-container.clear-temporary-folder-on-init";
@@ -70,8 +72,11 @@ public class StaticComponentContainer {
 		Throwables = org.burningwave.core.Throwables.create();
 
 		Resources = new org.burningwave.core.io.Resources();
+		Properties properties = new Properties();
+		properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
+		properties.putAll(FileScanConfigAbst.Configuration.DEFAULT_VALUES);
 		Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
-			Resources.loadFirstOneFound("burningwave.static.properties", "burningwave.static.default.properties");
+			Resources.loadFirstOneFound(properties, "burningwave.static.properties", "burningwave.static.default.properties");
 		GlobalProperties = propBag.getKey();
 		if (!Boolean.valueOf(GlobalProperties.getProperty(HIDE_BANNER_ON_INIT_CONFIG_KEY))) {
 			showBanner();

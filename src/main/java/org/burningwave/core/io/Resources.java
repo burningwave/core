@@ -46,6 +46,12 @@ public class Resources {
 	
 	public Map.Entry<Properties, URL> loadFirstOneFound(String... fileNames) {
 		Properties properties = new Properties();
+		properties.putAll(Streams.Configuration.DEFAULT_VALUES);
+		properties.putAll(FileScanConfigAbst.Configuration.DEFAULT_VALUES);
+		return loadFirstOneFound(properties, fileNames);
+	}
+	
+	public Map.Entry<Properties, URL> loadFirstOneFound(Properties properties, String... fileNames) {
 		Map.Entry<org.burningwave.core.iterable.Properties, URL> propertiesBag = new AbstractMap.SimpleEntry<>(properties, null);
 		for (String fileName : fileNames) {
 			ClassLoader classLoader = StaticComponentContainer.class.getClassLoader();

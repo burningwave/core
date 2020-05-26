@@ -49,7 +49,7 @@ import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.Properties;
 
-@SuppressWarnings("unchecked")
+
 public class Streams implements Component {
 	public static class Configuration {
 		
@@ -64,11 +64,10 @@ public class Streams implements Component {
 		
 		static {
 			DEFAULT_VALUES = new LinkedHashMap<>();
-			DEFAULT_VALUES.put(Key.BUFFER_SIZE, (int)BufferSize.KILO_BYTE.getValue());
-			Function<Integer, ByteBuffer> byteBufferAllocator = ByteBuffer::allocateDirect;
+			DEFAULT_VALUES.put(Key.BUFFER_SIZE, String.valueOf(BufferSize.KILO_BYTE.getValue()));
 			DEFAULT_VALUES.put(
 				Key.BYTE_BUFFER_ALLOCATION_MODE,
-				byteBufferAllocator
+				"ByteBuffer::allocateDirect"
 			);
 		}
 	}
@@ -77,34 +76,23 @@ public class Streams implements Component {
 	public Function<Integer, ByteBuffer> defaultByteBufferAllocationMode;
 	
 	private Streams(Properties properties) {
-		String defaultBufferSize = null;
-		try {
-			defaultBufferSize = IterableObjectHelper.get(properties, Configuration.Key.BUFFER_SIZE);
-			String unit = defaultBufferSize.substring(defaultBufferSize.length()-2);
-			String value = defaultBufferSize.substring(0, defaultBufferSize.length()-2);
-			if (unit.equalsIgnoreCase("KB")) {
-				this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(BufferSize.KILO_BYTE.getValue())).intValue();
-			} else if (unit.equalsIgnoreCase("MB")) {
-				this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(BufferSize.MEGA_BYTE.getValue())).intValue();
-			} else {
-				this.defaultBufferSize = Integer.valueOf(value);
-			}
-		} catch (Throwable exc) {
-			this.defaultBufferSize = (int)Configuration.DEFAULT_VALUES.get(Configuration.Key.BUFFER_SIZE);
-		}
+		String defaultBufferSize = IterableObjectHelper.get(properties, Configuration.Key.BUFFER_SIZE, Configuration.DEFAULT_VALUES);
+		String unit = defaultBufferSize.substring(defaultBufferSize.length()-2);
+		String value = defaultBufferSize.substring(0, defaultBufferSize.length()-2);
+		if (unit.equalsIgnoreCase("KB")) {
+			this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(BufferSize.KILO_BYTE.getValue())).intValue();
+		} else if (unit.equalsIgnoreCase("MB")) {
+			this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(BufferSize.MEGA_BYTE.getValue())).intValue();
+		} else {
+			this.defaultBufferSize = Integer.valueOf(value);
+		};
 		logInfo("default buffer size: {} bytes", defaultBufferSize);
-		try {
-			String defaultByteBufferAllocationMode = IterableObjectHelper.get(properties, Configuration.Key.BYTE_BUFFER_ALLOCATION_MODE);
-			if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
-				this.defaultByteBufferAllocationMode = ByteBuffer::allocate;
-				logInfo("default allocation mode: ByteBuffer::allocate");
-			} else {
-				this.defaultByteBufferAllocationMode = ByteBuffer::allocateDirect;
-				logInfo("default allocation mode: ByteBuffer::allocateDirect");
-			}
-		} catch (Throwable exc) {
-			defaultByteBufferAllocationMode = (Function<Integer, ByteBuffer>)
-				Configuration.DEFAULT_VALUES.get(Configuration.Key.BYTE_BUFFER_ALLOCATION_MODE);
+		String defaultByteBufferAllocationMode = IterableObjectHelper.get(properties, Configuration.Key.BYTE_BUFFER_ALLOCATION_MODE, Configuration.DEFAULT_VALUES);
+		if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
+			this.defaultByteBufferAllocationMode = ByteBuffer::allocate;
+			logInfo("default allocation mode: ByteBuffer::allocate");
+		} else {
+			this.defaultByteBufferAllocationMode = ByteBuffer::allocateDirect;
 			logInfo("default allocation mode: ByteBuffer::allocateDirect");
 		}
 	}

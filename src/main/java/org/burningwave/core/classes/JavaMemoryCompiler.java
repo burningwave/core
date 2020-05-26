@@ -85,7 +85,7 @@ public class JavaMemoryCompiler implements Component {
 		public final static Map<String, Object> DEFAULT_VALUES;
 		
 		static {
-			DEFAULT_VALUES = new LinkedHashMap<>(FileScanConfigAbst.Configuration.DEFAULT_VALUES);
+			DEFAULT_VALUES = new LinkedHashMap<>();
 			DEFAULT_VALUES.put(
 				Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 				"${" + FileScanConfigAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"

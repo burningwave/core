@@ -71,7 +71,7 @@ public class ClassFactory implements Component {
 		public final static Map<String, Object> DEFAULT_VALUES;
 	
 		static {
-			DEFAULT_VALUES = new LinkedHashMap<>(FileScanConfigAbst.Configuration.DEFAULT_VALUES);
+			DEFAULT_VALUES = new LinkedHashMap<>();
 			//DEFAULT_CONFIG_VALUES.put(DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, "");
 			//DEFAULT_CONFIG_VALUES.put(DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, "DefaultClassLoaderRetrieverForClassFactory");
 			DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
