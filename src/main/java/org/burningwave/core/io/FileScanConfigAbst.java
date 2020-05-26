@@ -29,34 +29,63 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
-import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemScanner.Scan;
-import org.burningwave.core.io.FileSystemScanner.Scan.Configuration;
 import org.burningwave.core.io.IterableZipContainer.Entry;
 
 @SuppressWarnings({"unchecked"})
 public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
-	private final static String DEFAULT_CHECK_FILE_OPTIONS_CONFIG_KEY = "file-system-scanner.default-scan-config.check-file-options";
-	
 	public final static Integer CHECK_FILE_NAME = 0b00000001;
 	public final static Integer CHECK_FILE_SIGNATURE = 0b00000100;
 	public final static Integer CHECK_FILE_NAME_AND_SIGNATURE = 0b00000111;
-	public final static Integer CHECK_FILE_NAME_OR_SIGNATURE = 0b00000101;
-	public final static Integer CHECK_FILE_OPTIONS_DEFAULT_VALUE = parseCheckFileOptionsValue(
-		GlobalProperties.getProperty(DEFAULT_CHECK_FILE_OPTIONS_CONFIG_KEY),
-		CHECK_FILE_NAME
-	);
+	public final static Integer CHECK_FILE_NAME_OR_SIGNATURE = 0b00000101;	
+	
+	public static class Configuration {
+		public static class Key {
+			public final static String DEFAULT_CHECK_FILE_OPTIONS = "file-system-scanner.default-scan-config.check-file-options";
+		}
 		
+		public final static Map<String, Object> DEFAULT_VALUES;
+		
+		static {
+			DEFAULT_VALUES = new LinkedHashMap<>();
+			DEFAULT_VALUES.put(
+				Key.DEFAULT_CHECK_FILE_OPTIONS,
+				"checkFileName"
+			);
+		}
+		
+		public static final Integer parseCheckFileOptionsValue(String property) {
+			return parseCheckFileOptionsValue(property, (String)DEFAULT_VALUES.get(Key.DEFAULT_CHECK_FILE_OPTIONS));
+		}
+		
+		public static final Integer parseCheckFileOptionsValue(String property, String defaultValue) {
+			if (property != null) {
+				if (property.contains("checkFileName") && property.contains("checkFileSignature") && property.contains("|")) {
+					return FileScanConfigAbst.CHECK_FILE_NAME_OR_SIGNATURE;
+				} else if (property.contains("checkFileName") && property.contains("checkFileSignature") && property.contains("&")) {
+					return FileScanConfigAbst.CHECK_FILE_NAME_AND_SIGNATURE;
+				} else if (property.contains("checkFileName")) {
+					return FileScanConfigAbst.CHECK_FILE_NAME;
+				} else if (property.contains("checkFileSignature")) {
+					return FileScanConfigAbst.CHECK_FILE_SIGNATURE;
+				}
+			}
+			return parseCheckFileOptionsValue(defaultValue, null);
+		}
+	}
+	
 	PathHelper pathHelper;
 	Collection<String> paths;
 	FileCriteria directoryCriteriaForFileSystemEntry;
@@ -80,7 +109,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		recursiveOnDirectoryOfFileSystemEntry = true;
 		recursiveOnArchiveOfZipEntry = true;
 		optimizePaths = false;
-		checkFileOptions = CHECK_FILE_OPTIONS_DEFAULT_VALUE;
+		checkFileOptions = Configuration.parseCheckFileOptionsValue((String)Configuration.DEFAULT_VALUES.get(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS));
 	}
 	
 	void init() {
@@ -88,21 +117,6 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		archiveCriteriaForFileSystemEntry = FileCriteria.create().allThat(getArchivePredicateForFileSystemEntry()).and(archiveCriteriaForFileSystemEntry);
 		fileCriteriaForZipEntry = ZipContainerEntryCriteria.create().allThat(getFilePredicateForZipEntry()).and(fileCriteriaForZipEntry);
 		archiveCriteriaForZipEntry = ZipContainerEntryCriteria.create().allThat(getArchivePredicateForZipEntry()).and(archiveCriteriaForZipEntry);
-	}
-	
-	public static final Integer parseCheckFileOptionsValue(String property, Integer defaultValue) {
-		if (property != null) {
-			if (property.contains("checkFileName") && property.contains("checkFileSignature") && property.contains("|")) {
-				return FileScanConfigAbst.CHECK_FILE_NAME_OR_SIGNATURE;
-			} else if (property.contains("checkFileName") && property.contains("checkFileSignature") && property.contains("&")) {
-				return FileScanConfigAbst.CHECK_FILE_NAME_AND_SIGNATURE;
-			} else if (property.contains("checkFileName")) {
-				return FileScanConfigAbst.CHECK_FILE_NAME;
-			} else if (property.contains("checkFileSignature")) {
-				return FileScanConfigAbst.CHECK_FILE_SIGNATURE;
-			}
-		}
-		return defaultValue;
 	}
 	
 	protected final Predicate<File> getArchivePredicateForFileSystemEntry(){
@@ -290,18 +304,18 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		return (F)this;
 	}
 	
-	public Configuration toScanConfiguration(
+	public org.burningwave.core.io.FileSystemScanner.Scan.Configuration toScanConfiguration(
 		Consumer<Scan.ItemContext> itemConsumer
 	) {
 		return toScanConfiguration(itemConsumer, itemConsumer);
 	}
 	
-	public Configuration toScanConfiguration(
+	public org.burningwave.core.io.FileSystemScanner.Scan.Configuration toScanConfiguration(
 		Consumer<Scan.ItemContext> fileConsumer,
 		Consumer<Scan.ItemContext> zipEntryConsumer
 	) {
 		init();
-		Configuration config = Configuration.forPaths(
+		org.burningwave.core.io.FileSystemScanner.Scan.Configuration config = org.burningwave.core.io.FileSystemScanner.Scan.Configuration.forPaths(
 			getPaths()
 		).whenFindFileTestAndApply(
 			fileCriteriaForFileSystemEntry.getPredicateOrTruePredicateIfNull(), 

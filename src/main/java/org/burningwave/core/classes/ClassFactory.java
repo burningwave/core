@@ -29,6 +29,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -55,11 +56,41 @@ import org.burningwave.core.iterable.Properties;
 
 
 public class ClassFactory implements Component {
-	public static final String DEFAULT_CLASS_LOADER_CONFIG_KEY = "class-factory.default-class-loader";
-	public static final String CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY = "class-factory.java-memory-compiler.class-repositories";
-	public static final String CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY = "class-factory.default-class-loader.class-repositories";
-	public static final String BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY = "class-factory.byte-code-hunter.search-config.check-file-options";
-	public final static Map<String, Object> DEFAULT_CONFIG_VALUES = new LinkedHashMap<>();
+	
+	public static class Configuration {
+		
+		public static class Key {
+			
+			public static final String DEFAULT_CLASS_LOADER = "class-factory.default-class-loader";
+			public static final String CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER = "class-factory.java-memory-compiler.class-repositories";
+			public static final String CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER = "class-factory.default-class-loader.class-repositories";
+			public static final String BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "class-factory.byte-code-hunter.search-config.check-file-options";
+		
+		}
+		
+		public final static Map<String, Object> DEFAULT_VALUES;
+	
+		static {
+			DEFAULT_VALUES = new LinkedHashMap<>(FileScanConfigAbst.Configuration.DEFAULT_VALUES);
+			//DEFAULT_CONFIG_VALUES.put(DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, "");
+			//DEFAULT_CONFIG_VALUES.put(DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, "DefaultClassLoaderRetrieverForClassFactory");
+			DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
+			DEFAULT_VALUES.put(
+				PathHelper.PATHS_KEY_PREFIX + Key.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER, 
+				"${classPaths};" +
+				"${" + PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION + "};"
+			);
+			DEFAULT_VALUES.put(
+				PathHelper.PATHS_KEY_PREFIX + Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER, 
+				"${" + PathHelper.PATHS_KEY_PREFIX + Key.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER + "};"
+			);
+			DEFAULT_VALUES.put(
+				Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+				"${" + FileScanConfigAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
+			);
+		}
+	}
+	
 	
 	private PathHelper pathHelper;
 	private JavaMemoryCompiler javaMemoryCompiler;
@@ -107,21 +138,6 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	static {
-		//DEFAULT_CONFIG_VALUES.put(DEFAULT_CLASS_LOADER_CONFIG_KEY + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, "");
-		//DEFAULT_CONFIG_VALUES.put(DEFAULT_CLASS_LOADER_CONFIG_KEY + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, "DefaultClassLoaderRetrieverForClassFactory");
-		DEFAULT_CONFIG_VALUES.put(DEFAULT_CLASS_LOADER_CONFIG_KEY, Thread.currentThread().getContextClassLoader());
-		DEFAULT_CONFIG_VALUES.put(
-			PathHelper.PATHS_KEY_PREFIX + CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY, 
-			"${classPaths};" +
-			"${" + PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION + "};"
-		);
-		DEFAULT_CONFIG_VALUES.put(
-			PathHelper.PATHS_KEY_PREFIX + CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY, 
-			"${" + PathHelper.PATHS_KEY_PREFIX +CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY + "};"
-		);
-	}
-	
 	ClassLoader getDefaultClassLoader() {
 		if (defaultClassLoader == null) {
 			synchronized (this) {
@@ -156,14 +172,14 @@ public class ClassFactory implements Component {
 			Optional.ofNullable(
 				config.getClassPathsWhereToSearchNotFoundClassesDuringCompilation()
 			).orElseGet(() -> 
-				pathHelper.getPaths(CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER_CONFIG_KEY)
+				pathHelper.getPaths(Configuration.Key.CLASS_REPOSITORIES_FOR_JAVA_MEMORY_COMPILER)
 			);
 		
 		Collection<String> classPathsForNotFoundClassesDuringLoading = 
 			Optional.ofNullable(
 				config.getClassPathsWhereToSearchNotFoundClassesDuringLoading()
 			).orElseGet(() -> 
-				pathHelper.getPaths(CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER_CONFIG_KEY)
+				pathHelper.getPaths(Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER)
 			);
 		
 		ClassLoader classLoader = Optional.ofNullable(
@@ -278,9 +294,12 @@ public class ClassFactory implements Component {
 						).deleteFoundItemsOnClose(
 							false
 						).checkFileOptions(
-							FileScanConfigAbst.parseCheckFileOptionsValue(
-								(String)config.get(ClassFactory.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY),
-								FileScanConfigAbst.CHECK_FILE_OPTIONS_DEFAULT_VALUE
+								FileScanConfigAbst.Configuration.parseCheckFileOptionsValue(
+								IterableObjectHelper.get(
+									config,
+									Configuration.Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+									Configuration.DEFAULT_VALUES
+								)
 							)
 						).optimizePaths(
 							true

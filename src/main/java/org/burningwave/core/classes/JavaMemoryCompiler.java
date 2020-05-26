@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -72,14 +73,33 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
 public class JavaMemoryCompiler implements Component {
-	public static final String CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY = "java-memory-compiler.class-path-hunter.search-config.check-file-options";
+	
+	public static class Configuration {
+		
+		public static class Key {
+			
+			public static final String CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "java-memory-compiler.class-path-hunter.search-config.check-file-options";
+		
+		}
+		
+		public final static Map<String, Object> DEFAULT_VALUES;
+		
+		static {
+			DEFAULT_VALUES = new LinkedHashMap<>(FileScanConfigAbst.Configuration.DEFAULT_VALUES);
+			DEFAULT_VALUES.put(
+				Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+				"${" + FileScanConfigAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
+			);
+		}
+	}
+	
 	
 	private ClassPathHunter classPathHunter;
 	private JavaCompiler compiler;
 	private FileSystemItem compiledClassesClassPath;
 	private FileSystemItem classPathHunterBasePathForCompressedLibs;
 	private FileSystemItem classPathHunterBasePathForCompressedClasses;
-	private Properties config;
+	private Properties config;	
 	
 	private JavaMemoryCompiler(
 		PathHelper pathHelper,
@@ -438,9 +458,12 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForPackageName(String packageName) throws Exception {
-				int checkFileOptions = FileScanConfigAbst.parseCheckFileOptionsValue(
-					(String)javaMemoryCompiler.config.get(JavaMemoryCompiler.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY),
-					FileScanConfigAbst.CHECK_FILE_OPTIONS_DEFAULT_VALUE
+				int checkFileOptions = FileScanConfigAbst.Configuration.parseCheckFileOptionsValue(
+					IterableObjectHelper.get(
+						javaMemoryCompiler.config,
+						JavaMemoryCompiler.Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+						JavaMemoryCompiler.Configuration.DEFAULT_VALUES
+					)
 				);
 				SearchResult result = classPathHunter.findBy(
 					SearchConfig.withoutUsingCache().addPaths(
@@ -475,9 +498,12 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
-				int checkFileOptions = FileScanConfigAbst.parseCheckFileOptionsValue(
-					(String)javaMemoryCompiler.config.get(JavaMemoryCompiler.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS_CONFIG_KEY),
-					FileScanConfigAbst.CHECK_FILE_OPTIONS_DEFAULT_VALUE
+				int checkFileOptions = FileScanConfigAbst.Configuration.parseCheckFileOptionsValue(
+					IterableObjectHelper.get(
+						javaMemoryCompiler.config,
+						JavaMemoryCompiler.Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+						JavaMemoryCompiler.Configuration.DEFAULT_VALUES
+					)
 				);
 				SearchResult result = classPathHunter.findBy(
 					SearchConfig.withoutUsingCache().addPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(

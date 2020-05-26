@@ -30,6 +30,7 @@ package org.burningwave.core.assembler;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
@@ -39,6 +40,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -72,6 +74,7 @@ public class ComponentContainer implements ComponentSupplier {
 		this.propertySupplier = propertySupplier;
 		this.components = new HashMap<>();
 		this.config = new Properties();
+		this.config.putAll(GlobalProperties);
 		instances.add(this);
 	}
 	
@@ -114,8 +117,8 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	private ComponentContainer init() {
 		config.put(PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION, PathHelper.MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE);
-		config.putAll(ClassFactory.DEFAULT_CONFIG_VALUES);
-		config.putAll(ClassHunter.DEFAULT_CONFIG_VALUES);
+		config.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
+		config.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
 		
 		Properties customConfig = propertySupplier.get();
 		if (customConfig != null) {
@@ -123,7 +126,7 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 		logInfo(
 			"Configuration values:\n\n{}\n\n... Are assumed",
-			config.entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
+			new TreeMap<>(config).entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
 		);
 		return this;
 	}
@@ -196,7 +199,7 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getClassPathHunter(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
-				() -> retrieveFromConfig(ClassFactory.DEFAULT_CLASS_LOADER_CONFIG_KEY),
+				() -> retrieveFromConfig(ClassFactory.Configuration.Key.DEFAULT_CLASS_LOADER, ClassFactory.Configuration.DEFAULT_VALUES),
 				config
 			)
 		);	
@@ -232,7 +235,8 @@ public class ComponentContainer implements ComponentSupplier {
 				getFileSystemScanner(),
 				getPathHelper(),
 				retrieveFromConfig(
-					ClassHunter.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER_CONFIG_KEY
+					ClassHunter.Configuration.Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER,
+					ClassHunter.Configuration.DEFAULT_VALUES
 				),
 				config
 			);
@@ -291,14 +295,14 @@ public class ComponentContainer implements ComponentSupplier {
 		);
 	}
 	
-	@SuppressWarnings("unchecked")
-	private <T> T retrieveFromConfig(String configKey) {
-		Object object = config.get(configKey);
+	private <T> T retrieveFromConfig(String configKey, Map<String, Object> defaultValues) {
+		T object = IterableObjectHelper.get(config, configKey);
 		if (object instanceof String) {
 			return getCodeExecutor().execute(
 				ExecuteConfig.fromDefaultProperties()
 				.setPropertyName(configKey)
 				.withParameter(this)
+				.withDefaultPropertyValues(defaultValues)
 				.useAsParentClassLoader(Classes.getClassLoader(Executor.class))
 			);
 		} else {

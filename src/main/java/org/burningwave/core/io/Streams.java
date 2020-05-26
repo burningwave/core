@@ -30,6 +30,7 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,6 +39,8 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -46,16 +49,37 @@ import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.Properties;
 
+@SuppressWarnings("unchecked")
 public class Streams implements Component {
-	private static final String DEFAULT_BUFFER_SIZE_CONFIG_KEY = "streams.default-buffer-size";
-	private static final String DEFAULT_BYTE_BUFFER_ALLOCATION_MODE_CONFIG_KEY = "streams.default-byte-buffer-allocation-mode";
+	public static class Configuration {
+		
+		public static class Key {
+		
+			private static final String BUFFER_SIZE = "streams.default-buffer-size";
+			private static final String BYTE_BUFFER_ALLOCATION_MODE = "streams.default-byte-buffer-allocation-mode";
+		
+		}
+		
+		public final static Map<String, Object> DEFAULT_VALUES;
+		
+		static {
+			DEFAULT_VALUES = new LinkedHashMap<>();
+			DEFAULT_VALUES.put(Key.BUFFER_SIZE, (int)BufferSize.KILO_BYTE.getValue());
+			Function<Integer, ByteBuffer> byteBufferAllocator = ByteBuffer::allocateDirect;
+			DEFAULT_VALUES.put(
+				Key.BYTE_BUFFER_ALLOCATION_MODE,
+				byteBufferAllocator
+			);
+		}
+	}
 	
 	public int defaultBufferSize;
 	public Function<Integer, ByteBuffer> defaultByteBufferAllocationMode;
 	
 	private Streams(Properties properties) {
+		String defaultBufferSize = null;
 		try {
-			String defaultBufferSize = (String)properties.getProperty(DEFAULT_BUFFER_SIZE_CONFIG_KEY);
+			defaultBufferSize = IterableObjectHelper.get(properties, Configuration.Key.BUFFER_SIZE);
 			String unit = defaultBufferSize.substring(defaultBufferSize.length()-2);
 			String value = defaultBufferSize.substring(0, defaultBufferSize.length()-2);
 			if (unit.equalsIgnoreCase("KB")) {
@@ -66,11 +90,11 @@ public class Streams implements Component {
 				this.defaultBufferSize = Integer.valueOf(value);
 			}
 		} catch (Throwable exc) {
-			defaultBufferSize = (int)BufferSize.KILO_BYTE.getValue();
+			this.defaultBufferSize = (int)Configuration.DEFAULT_VALUES.get(Configuration.Key.BUFFER_SIZE);
 		}
 		logInfo("default buffer size: {} bytes", defaultBufferSize);
 		try {
-			String defaultByteBufferAllocationMode = (String)properties.getProperty(DEFAULT_BYTE_BUFFER_ALLOCATION_MODE_CONFIG_KEY);
+			String defaultByteBufferAllocationMode = IterableObjectHelper.get(properties, Configuration.Key.BYTE_BUFFER_ALLOCATION_MODE);
 			if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
 				this.defaultByteBufferAllocationMode = ByteBuffer::allocate;
 				logInfo("default allocation mode: ByteBuffer::allocate");
@@ -79,7 +103,8 @@ public class Streams implements Component {
 				logInfo("default allocation mode: ByteBuffer::allocateDirect");
 			}
 		} catch (Throwable exc) {
-			defaultByteBufferAllocationMode = ByteBuffer::allocateDirect;
+			defaultByteBufferAllocationMode = (Function<Integer, ByteBuffer>)
+				Configuration.DEFAULT_VALUES.get(Configuration.Key.BYTE_BUFFER_ALLOCATION_MODE);
 			logInfo("default allocation mode: ByteBuffer::allocateDirect");
 		}
 	}
