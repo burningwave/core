@@ -423,6 +423,7 @@ static-component-container.hide-banner-on-init=false
 streams.default-buffer-size=1024
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
 ```
+**If in your custom burningwave.static.properties or burningwave.static.default.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 Here an example of a **burningwave.static.properties** file with all configurable properties:
 ```properties
 #other possible values are: autodetect, org.burningwave.core.SimpleManagedLoggerRepository
@@ -496,11 +497,14 @@ The configuration of this type of container can be done via Properties file or p
 If you use the singleton instance obtained via ComponentContainer.getInstance() method, you must create a **burningwave.properties** file and put it on base path of your classpath project.
 **The default configuration automatically loaded if no configuration file is found is the following**:
 ```properties
-class-factory.byte-code-hunter.search-config.check-file-options=${file-system-scanner.default-scan-config.check-file-options}
+class-factory.byte-code-hunter.search-config.check-file-options=
+    ${file-system-scanner.default-scan-config.check-file-options}
 class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
-class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=${file-system-scanner.default-scan-config.check-file-options}
+class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=\
+    ${file-system-scanner.default-scan-config.check-file-options}
 class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
-java-memory-compiler.class-path-hunter.search-config.check-file-options=${file-system-scanner.default-scan-config.check-file-options}
+java-memory-compiler.class-path-hunter.search-config.check-file-options=\
+    ${file-system-scanner.default-scan-config.check-file-options}
 paths.class-factory.default-class-loader.class-repositories=\
     ${paths.java-memory-compiler.class-repositories};\
     ${paths.class-factory.default-class-loader.custom-class-repositories};
@@ -514,7 +518,7 @@ paths.main-class-paths.extension=\
     //${system.properties:java.home}/jmods//children:.*\.jar|.*\.jmod;
 
 ```
-**If in your custom burningwave.properties file one of this four default properties is not found, the relative default value is assumed**.
+**If in your custom burningwave.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 
 If you create a component container instance through method ComponentContainer.create(String relativeConfigFileName), you can specify the file name of your properties file and you can locate it everywhere in your classpath project but remember to use a relative path in this case, i.e.: if you name your file "custom-config-file.properties" and put it in package "org.burningwave" you must create the component container as follow: 
 ```
