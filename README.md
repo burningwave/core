@@ -35,7 +35,7 @@ To include Burningwave Core library in your projects simply use with**:
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>5.34.0</version>
+    <version>5.35.0</version>
 </dependency>
 ```
 

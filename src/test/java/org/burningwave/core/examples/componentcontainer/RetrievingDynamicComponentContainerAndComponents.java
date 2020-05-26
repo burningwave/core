@@ -9,8 +9,7 @@ import org.burningwave.core.iterable.Properties;
 
 public class RetrievingDynamicComponentContainerAndComponents {
 
-    @SuppressWarnings("unused")
-	public static void execute() throws Throwable {
+    public static void execute() throws Throwable {
         //In this case we are retrieving the singleton component container instance
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         
