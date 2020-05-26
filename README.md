@@ -35,7 +35,7 @@ To include Burningwave Core library in your projects simply use with**:
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>5.35.0</version>
+    <version>5.36.0</version>
 </dependency>
 ```
 
@@ -412,16 +412,16 @@ public class UseOfStaticComponentsExample {
 ### Configuration
 The configuration of this type of container is done via **burningwave.static.properties** file or via **burningwave.static.default.properties** file: the library searches for the first file and if it does not find it, then it searches for the second file and if neither this one is found then the library sets the default configuration programmatically. **The default configuration loaded programmatically if no configuration file is found is the following**:
 ```properties
+file-system-scanner.default-scan-config.check-file-options=checkFileName
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
 #the SLF4JManagedLoggerRepository will be instantiated, otherwise the SimpleManagedLoggerRepository will be instantiated
 managed-logger.repository=autodetect
 #to increase performance set it to false
 managed-logger.repository.enabled=true
+static-component-container.clear-temporary-folder-on-init=true
+static-component-container.hide-banner-on-init=false
 streams.default-buffer-size=1024
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
-static-component-container.clear-temporary-folder-on-init=false
-static-component-container.hide-banner-on-init=false
-file-system-scanner.default-scan-config.check-file-options=checkFileName
 ```
 Here an example of a **burningwave.static.properties** file with all configurable properties:
 ```properties
@@ -496,11 +496,18 @@ The configuration of this type of container can be done via Properties file or p
 If you use the singleton instance obtained via ComponentContainer.getInstance() method, you must create a **burningwave.properties** file and put it on base path of your classpath project.
 **The default configuration automatically loaded if no configuration file is found is the following**:
 ```properties
-paths.main-class-paths.extension=//${system.properties:java.home}/lib//children:.*\.jar|.*\.jmod;//${system.properties:java.home}/lib/ext//children:.*\.jar|.*\.jmod;//${system.properties:java.home}/jmods//children:.*\.jar|.*\.jmod;
-paths.class-factory.java-memory-compiler.class-repositories=${classPaths};${paths.main-class-paths.extension};
-paths.class-factory.default-class-loader.class-repositories=${paths.class-factory.java-memory-compiler.class-repositories};
+class-factory.byte-code-hunter.search-config.check-file-options=${file-system-scanner.default-scan-config.check-file-options}
 class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
+class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=${file-system-scanner.default-scan-config.check-file-options}
 class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
+java-memory-compiler.class-path-hunter.search-config.check-file-options=${file-system-scanner.default-scan-config.check-file-options}
+paths.class-factory.default-class-loader.class-repositories=${paths.java-memory-compiler.class-repositories};${paths.class-factory.default-class-loader.custom-class-repositories};
+paths.java-memory-compiler.class-repositories=${classPaths};${paths.main-class-paths.extension};${paths.java-memory-compiler.custom-class-repositories};
+paths.main-class-paths.extension=\
+	//${system.properties:java.home}/lib//children:.*\.jar|.*\.jmod;\
+	//${system.properties:java.home}/lib/ext//children:.*\.jar|.*\.jmod;\
+	//${system.properties:java.home}/jmods//children:.*\.jar|.*\.jmod;
+
 ```
 **If in your custom burningwave.properties file one of this four default properties is not found, the relative default value is assumed**.
 
