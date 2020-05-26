@@ -33,6 +33,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -42,9 +43,20 @@ import org.burningwave.core.io.FileScanConfigAbst;
 import org.burningwave.core.iterable.Properties;
 
 public class StaticComponentContainer {
-	private static final String CLEAR_TEMPORARY_FOLDER_ON_INIT_CONFIG_KEY = "static-component-container.clear-temporary-folder-on-init";
-	private static final String HIDE_BANNER_ON_INIT_CONFIG_KEY = "static-component-container.hide-banner-on-init";
-	
+	public static class Configuration {
+		public static class Key {
+			private static final String CLEAR_TEMPORARY_FOLDER_ON_INIT = "static-component-container.clear-temporary-folder-on-init";
+			private static final String HIDE_BANNER_ON_INIT = "static-component-container.hide-banner-on-init";
+		}
+		
+		public final static Map<String, Object> DEFAULT_VALUES;
+		
+		static {
+			DEFAULT_VALUES = new HashMap<>();
+			DEFAULT_VALUES.put(Key.CLEAR_TEMPORARY_FOLDER_ON_INIT, "true");
+			DEFAULT_VALUES.put(Key.HIDE_BANNER_ON_INIT, "false");
+		}
+	}
 	public static final org.burningwave.core.reflection.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
 	public static final org.burningwave.core.reflection.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
@@ -70,6 +82,7 @@ public class StaticComponentContainer {
 	
 	static {
 		Properties properties = new Properties();
+		properties.putAll(Configuration.DEFAULT_VALUES);
 		properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
 		properties.putAll(FileScanConfigAbst.Configuration.DEFAULT_VALUES);
 		properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
@@ -81,7 +94,7 @@ public class StaticComponentContainer {
 		Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
 			Resources.loadFirstOneFound(properties, "burningwave.static.properties", "burningwave.static.default.properties");
 		GlobalProperties = propBag.getKey();
-		if (!Boolean.valueOf(GlobalProperties.getProperty(HIDE_BANNER_ON_INIT_CONFIG_KEY))) {
+		if (!Boolean.valueOf(GlobalProperties.getProperty(Configuration.Key.HIDE_BANNER_ON_INIT))) {
 			showBanner();
 		}
 		ManagedLoggersRepository = createManagedLoggersRepository(GlobalProperties);
@@ -102,8 +115,8 @@ public class StaticComponentContainer {
 			Paths = org.burningwave.core.Strings.Paths.create();
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create();
 			Runtime.getRuntime().addShutdownHook(new Thread(FileSystemHelper::close));
-			String clearTemporaryFolderFlag = GlobalProperties.getProperty(CLEAR_TEMPORARY_FOLDER_ON_INIT_CONFIG_KEY);
-			if (clearTemporaryFolderFlag == null || Boolean.valueOf(clearTemporaryFolderFlag)) {
+			String clearTemporaryFolderFlag = GlobalProperties.getProperty(Configuration.Key.CLEAR_TEMPORARY_FOLDER_ON_INIT);
+			if (Boolean.valueOf(clearTemporaryFolderFlag)) {
 				FileSystemHelper.clearMainTemporaryFolder();
 			}
 			ByteBufferDelegate = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate.create();
