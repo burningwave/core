@@ -130,7 +130,7 @@ public class CodeExecutor implements Component {
 		}
 		String importFromConfig = IterableObjectHelper.get(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, config.getDefaultValues());
 		if (Strings.isNotEmpty(importFromConfig)) {
-			Arrays.stream(importFromConfig.split(";")).forEach(imp -> {
+			Arrays.stream(importFromConfig.replaceAll(";{2,}", ";").split(";")).forEach(imp -> {
 				body.useType(imp);
 			});
 		}
@@ -144,6 +144,7 @@ public class CodeExecutor implements Component {
 		}
 		String code = IterableObjectHelper.get(properties, config.getPropertyName(), config.getDefaultValues());
 		if (code.contains(";")) {
+			code = code.replaceAll(";{2,}", ";");
 			for (String codeRow : code.split(";")) {
 				body.addCodeRow(codeRow + ";");
 			}

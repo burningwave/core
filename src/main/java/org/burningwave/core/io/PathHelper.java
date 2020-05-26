@@ -175,6 +175,9 @@ public class PathHelper implements Component {
 		Collection<String> pathGroup = new HashSet<>();
 		if (names != null && names.length > 0) {
 			for (String name : names) {
+				if (name.startsWith("paths.")) {
+					name = name.replaceFirst(Configuration.Key.PATHS_PREFIX.replace(".", "\\."), "");
+				}
 				Collection<String> pathsFound = this.pathGroups.get(name);
 				if (pathsFound != null) {
 					pathGroup.addAll(pathsFound);
@@ -233,9 +236,12 @@ public class PathHelper implements Component {
 					for (String mainClassPath : mainClassPaths) {
 						Map<String, String> defaultValues = new LinkedHashMap<>();
 						defaultValues.put("classPaths", mainClassPath);
-						paths = Paths.clean(IterableObjectHelper.get(config, pathGroupPropertyName, defaultValues)).replaceAll(";{2,}", ";");
-						for (String path : paths.split(";")) {
-							groupPaths.addAll(addPath(pathGroupName, path));
+						paths = IterableObjectHelper.get(config, pathGroupPropertyName, defaultValues);
+						if (paths != null) {
+							paths = Paths.clean(paths).replaceAll(";{2,}", ";");
+							for (String path : paths.split(";")) {
+								groupPaths.addAll(addPath(pathGroupName, path));
+							}
 						}
 					}	
 				} else {

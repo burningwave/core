@@ -109,7 +109,10 @@ public class IterableObjectHelper implements Component {
 					for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
 						for (String propName : entry.getValue()) {
 							if (!propName.startsWith("system.properties:")) {
-								propertyValue = propertyValue.replace("${" + propName + "}", get(properties, propName, defaultValues));
+								String replacement = get(properties, propName, defaultValues);
+								if (replacement != null) {
+									propertyValue = propertyValue.replace("${" + propName + "}", replacement);
+								}
 							} else {
 								propertyValue = propertyValue.replace("${" + propName + "}", System.getProperty(propName.split(":")[1]));
 							}

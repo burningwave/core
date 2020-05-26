@@ -80,7 +80,8 @@ public class JavaMemoryCompiler implements Component {
 		public static class Key {
 			
 			public static final String CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "java-memory-compiler.class-path-hunter.search-config.check-file-options";
-		
+			public static final String CLASS_REPOSITORIES = "java-memory-compiler.class-repositories";
+			public static final String CLASS_CUSTOM_REPOSITORIES = "java-memory-compiler.custom-class-repositories";
 		}
 		
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -91,10 +92,16 @@ public class JavaMemoryCompiler implements Component {
 				Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 				"${" + FileScanConfigAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
 			);
+			DEFAULT_VALUES.put(
+				PathHelper.Configuration.Key.PATHS_PREFIX + Key.CLASS_REPOSITORIES, 
+				"${classPaths};" +
+				"${" + PathHelper.Configuration.Key.PATHS_PREFIX + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "};" +
+				"${" + PathHelper.Configuration.Key.PATHS_PREFIX + Configuration.Key.CLASS_CUSTOM_REPOSITORIES + "};"
+			);
 		}
 	}
 	
-	
+	private PathHelper pathHelper;
 	private ClassPathHunter classPathHunter;
 	private JavaCompiler compiler;
 	private FileSystemItem compiledClassesClassPath;
@@ -107,6 +114,7 @@ public class JavaMemoryCompiler implements Component {
 		ClassPathHunter classPathHunter,
 		Properties config
 	) {
+		this.pathHelper = pathHelper;
 		this.classPathHunter = classPathHunter;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
 		this.compiledClassesClassPath = FileSystemItem.of(getOrCreateTemporaryFolder("compiled"));
@@ -124,6 +132,18 @@ public class JavaMemoryCompiler implements Component {
 		return new JavaMemoryCompiler(pathHelper, classPathHunter, config);
 	}
 	
+	public 	Map<String, ByteBuffer> compile(Collection<String> sources) {
+		return compile(sources, true);
+	}
+	
+	public 	Map<String, ByteBuffer> compile(Collection<String> sources, boolean storeCompiledClasses) {
+		return compile(
+			sources, 
+			pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS),
+			pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES),
+			storeCompiledClasses
+		);
+	}
 	
 	public Map<String, ByteBuffer> compile(
 		Collection<String> sources, 
