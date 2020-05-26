@@ -119,6 +119,7 @@ public class ComponentContainer implements ComponentSupplier {
 		config.put(PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION, PathHelper.MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE);
 		config.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
 		config.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
+		config.putAll(JavaMemoryCompiler.Configuration.DEFAULT_VALUES);
 		
 		Properties customConfig = propertySupplier.get();
 		if (customConfig != null) {
