@@ -531,8 +531,8 @@ class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextC
 #org.burningwave.core.classes.ClassFactory.loadOrBuildAndDefine(UnitSourceGenerator... unitsCode)
 #(see "Generating classes at runtime and invoking their methods with and without use of the reflection" example)
 class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
-paths.class-factory.java-memory-compiler.class-repositories=${classPaths};${paths.main-class-paths.extension};
-paths.class-factory.default-class-loader.class-repositories=${paths.class-factory.java-memory-compiler.class-repositories};
+paths.java-memory-compiler.class-repositories=${classPaths};${paths.main-class-paths.extension};
+paths.class-factory.default-class-loader.class-repositories=${paths.java-memory-compiler.class-repositories};
 #other possible values are: checkFileSignature, checkFileName|checkFileSignature, checkFileName&checkFileSignature
 java-memory-compiler.class-path-hunter.search-config.check-file-options=checkFileName
 #other possible values are: checkFileSignature, checkFileName|checkFileSignature, checkFileName&checkFileSignature
