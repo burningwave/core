@@ -69,10 +69,6 @@ public class IterableObjectHelper implements Component {
 		return retrieveStream(object).count();
 	}
 	
-	public String get(Properties properties, String propertyName) {
-		return get(properties, propertyName, null);
-	}
-	
 	public boolean containsValue(Properties properties, String propertyName, Map<String, String> defaultValues, String toBeTested) {
 		String propertyValue = (String)properties.get(propertyName);
 		if (Strings.isEmpty(propertyValue) && defaultValues != null) {
@@ -96,26 +92,39 @@ public class IterableObjectHelper implements Component {
 		return false;
 	}
 	
-	public String get(Properties properties, String propertyName, Map<String, String> defaultValues) {
-		String propertyValue = (String)properties.get(propertyName);
-		if (Strings.isEmpty(propertyValue) && defaultValues != null) {
-			propertyValue = defaultValues.get(propertyName);
+	public <T> T get(Properties properties, String propertyName) {
+		return get(properties, propertyName, null);
+	}
+		
+	public <T> T get(Properties properties, String propertyName, Map<String, ?> defaultValues) {
+		T value = (T) properties.get(propertyName);
+		if (value == null && defaultValues != null) {
+			value = (T) defaultValues.get(propertyName);
 		}
-		if (!Strings.isEmpty(propertyValue)) {
-			Map<Integer, List<String>> subProperties = Strings.extractAllGroups(PLACE_HOLDER_FOR_PROPERTIES_PATTERN, propertyValue);		
-			if (!subProperties.isEmpty()) {
-				for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
-					for (String propName : entry.getValue()) {
-						if (!propName.startsWith("system.properties:")) {
-							propertyValue = propertyValue.replace("${" + propName + "}", get(properties, propName, defaultValues));
-						} else {
-							propertyValue = propertyValue.replace("${" + propName + "}", System.getProperty(propName.split(":")[1]));
+		if (value != null && value instanceof String) {
+			String propertyValue = (String)value;
+			if (Strings.isEmpty(propertyValue) && defaultValues != null) {
+				propertyValue = (String)defaultValues.get(propertyName);
+			}
+			if (!Strings.isEmpty(propertyValue)) {
+				Map<Integer, List<String>> subProperties = Strings.extractAllGroups(PLACE_HOLDER_FOR_PROPERTIES_PATTERN, propertyValue);		
+				if (!subProperties.isEmpty()) {
+					for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
+						for (String propName : entry.getValue()) {
+							if (!propName.startsWith("system.properties:")) {
+								propertyValue = propertyValue.replace("${" + propName + "}", get(properties, propName, defaultValues));
+							} else {
+								propertyValue = propertyValue.replace("${" + propName + "}", System.getProperty(propName.split(":")[1]));
+							}
 						}
 					}
 				}
+				
 			}
-			
+			return (T)propertyValue;
+		} else {
+			return value;
 		}
-		return propertyValue;
+		
 	}
 }
