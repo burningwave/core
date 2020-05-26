@@ -501,12 +501,17 @@ class-factory.default-class-loader=Thread.currentThread().getContextClassLoader(
 class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=${file-system-scanner.default-scan-config.check-file-options}
 class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
 java-memory-compiler.class-path-hunter.search-config.check-file-options=${file-system-scanner.default-scan-config.check-file-options}
-paths.class-factory.default-class-loader.class-repositories=${paths.java-memory-compiler.class-repositories};${paths.class-factory.default-class-loader.custom-class-repositories};
-paths.java-memory-compiler.class-repositories=${classPaths};${paths.main-class-paths.extension};${paths.java-memory-compiler.custom-class-repositories};
+paths.class-factory.default-class-loader.class-repositories=\
+    ${paths.java-memory-compiler.class-repositories};\
+    ${paths.class-factory.default-class-loader.custom-class-repositories};
+paths.java-memory-compiler.class-repositories=\
+    ${classPaths};\
+    ${paths.main-class-paths.extension};\
+    ${paths.java-memory-compiler.custom-class-repositories};
 paths.main-class-paths.extension=\
-	//${system.properties:java.home}/lib//children:.*\.jar|.*\.jmod;\
-	//${system.properties:java.home}/lib/ext//children:.*\.jar|.*\.jmod;\
-	//${system.properties:java.home}/jmods//children:.*\.jar|.*\.jmod;
+    //${system.properties:java.home}/lib//children:.*\.jar|.*\.jmod;\
+    //${system.properties:java.home}/lib/ext//children:.*\.jar|.*\.jmod;\
+    //${system.properties:java.home}/jmods//children:.*\.jar|.*\.jmod;
 
 ```
 **If in your custom burningwave.properties file one of this four default properties is not found, the relative default value is assumed**.
