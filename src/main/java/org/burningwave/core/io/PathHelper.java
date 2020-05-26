@@ -63,7 +63,7 @@ import org.burningwave.core.iterable.Properties.Event;
 
 
 public class PathHelper implements Component {
-	public static final Object MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE = "//${system.properties:java.home}/lib//children:.*\\.jar|.*\\.jmod;//${system.properties:java.home}/lib/ext//children:.*\\.jar|.*\\.jmod;//${system.properties:java.home}/jmods//children:.*\\.jar|.*\\.jmod;";
+	public static final String MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE = "//${system.properties:java.home}/lib//children:.*\\.jar|.*\\.jmod;//${system.properties:java.home}/lib/ext//children:.*\\.jar|.*\\.jmod;//${system.properties:java.home}/jmods//children:.*\\.jar|.*\\.jmod;";
 	public static String PATHS_KEY_PREFIX = "paths.";
 	public static String MAIN_CLASS_PATHS = "main-class-paths";
 	public static String MAIN_CLASS_PATHS_EXTENSION = MAIN_CLASS_PATHS + ".extension";
@@ -258,13 +258,7 @@ public class PathHelper implements Component {
 						}
 					}
 				} else {
-					FileSystemItem fileSystemItem = null;
-					try {
-						fileSystemItem = FileSystemItem.ofPath(path);
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					FileSystemItem fileSystemItem = FileSystemItem.ofPath(path);
 					if (fileSystemItem.exists()) {
 						pathGroup.add(fileSystemItem.getAbsolutePath());
 						allPaths.add(fileSystemItem.getAbsolutePath());
