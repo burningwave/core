@@ -114,24 +114,23 @@ public class ComponentContainer implements ComponentSupplier {
 		return create((Properties)null);
 	}
 	
-	private ComponentContainer init() {
-		config.putAll(GlobalProperties);
-		
-		TreeMap<Object, Object> dynConfig = new TreeMap<>();
-		dynConfig.put(PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION, PathHelper.MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE);
-		dynConfig.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
-		dynConfig.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
-		dynConfig.putAll(JavaMemoryCompiler.Configuration.DEFAULT_VALUES);
+	private ComponentContainer init() {		
+		TreeMap<Object, Object> properties = new TreeMap<>();
+		properties.put(PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION, PathHelper.MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE);
+		properties.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
+		properties.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
+		properties.putAll(JavaMemoryCompiler.Configuration.DEFAULT_VALUES);
 				
 		Properties customConfig = propertySupplier.get();
 		if (customConfig != null) {
-			dynConfig.putAll(customConfig);
+			properties.putAll(customConfig);
 		}
-		config.putAll(dynConfig);
+		config.putAll(GlobalProperties);
+		config.putAll(properties);
 		logInfo(
 			"Configuration values:\n\n{}\n\n{}\n\n... Are assumed",
 			new TreeMap<>(GlobalProperties).entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n")),
-			new TreeMap<>(dynConfig).entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
+			new TreeMap<>(properties).entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
 		);
 		return this;
 	}
