@@ -103,9 +103,6 @@ public class IterableObjectHelper implements Component {
 		}
 		if (value != null && value instanceof String) {
 			String propertyValue = (String)value;
-			if (Strings.isEmpty(propertyValue) && defaultValues != null) {
-				propertyValue = (String)defaultValues.get(propertyName);
-			}
 			if (!Strings.isEmpty(propertyValue)) {
 				Map<Integer, List<String>> subProperties = Strings.extractAllGroups(PLACE_HOLDER_FOR_PROPERTIES_PATTERN, propertyValue);		
 				if (!subProperties.isEmpty()) {
