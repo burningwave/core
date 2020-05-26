@@ -74,7 +74,6 @@ public class ComponentContainer implements ComponentSupplier {
 		this.propertySupplier = propertySupplier;
 		this.components = new HashMap<>();
 		this.config = new Properties();
-		this.config.putAll(GlobalProperties);
 		instances.add(this);
 	}
 	
@@ -116,6 +115,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private ComponentContainer init() {
+		config.putAll(GlobalProperties);
 		config.put(PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION, PathHelper.MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE);
 		config.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
 		config.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
