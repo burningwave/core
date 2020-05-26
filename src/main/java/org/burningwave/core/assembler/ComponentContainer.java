@@ -116,18 +116,22 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	private ComponentContainer init() {
 		config.putAll(GlobalProperties);
-		config.put(PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION, PathHelper.MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE);
-		config.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
-		config.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
-		config.putAll(JavaMemoryCompiler.Configuration.DEFAULT_VALUES);
 		
+		TreeMap<Object, Object> dynConfig = new TreeMap<>();
+		dynConfig.put(PathHelper.PATHS_KEY_PREFIX + PathHelper.MAIN_CLASS_PATHS_EXTENSION, PathHelper.MAIN_CLASS_PATHS_EXTENSION_DEFAULT_VALUE);
+		dynConfig.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
+		dynConfig.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
+		dynConfig.putAll(JavaMemoryCompiler.Configuration.DEFAULT_VALUES);
+				
 		Properties customConfig = propertySupplier.get();
 		if (customConfig != null) {
-			config.putAll(customConfig);
+			dynConfig.putAll(customConfig);
 		}
+		config.putAll(dynConfig);
 		logInfo(
-			"Configuration values:\n\n{}\n\n... Are assumed",
-			new TreeMap<>(config).entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
+			"Configuration values:\n\n{}\n\n{}\n\n... Are assumed",
+			new TreeMap<>(GlobalProperties).entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n")),
+			new TreeMap<>(dynConfig).entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
 		);
 		return this;
 	}
