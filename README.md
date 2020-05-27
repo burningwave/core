@@ -499,18 +499,27 @@ If you use the singleton instance obtained via ComponentContainer.getInstance() 
 ```properties
 class-factory.byte-code-hunter.search-config.check-file-options=\
     ${file-system-scanner.default-scan-config.check-file-options}
+#default classloader used by the ClassFactory to load generated classes
 class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
 class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=\
     ${file-system-scanner.default-scan-config.check-file-options}
 class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
 java-memory-compiler.class-path-hunter.search-config.check-file-options=\
     ${file-system-scanner.default-scan-config.check-file-options}
+#this variable indicates all the paths from which the classes 
+#must be taken if during the definition of the compiled classes
+#on classloader there will be classes not found
 paths.class-factory.default-class-loader.class-repositories=\
     ${paths.java-memory-compiler.class-repositories};\
+    #This variable is empty by default and could be valorized by user
     ${paths.class-factory.default-class-loader.custom-class-repositories};
+#this variable indicates all the paths from which the classes 
+#must be taken if during the compilation there will be classes
+#not found
 paths.java-memory-compiler.class-repositories=\
     ${classPaths};\
     ${paths.main-class-paths.extension};\
+    #This variable is empty by default and could be valorized by user
     ${paths.java-memory-compiler.custom-class-repositories};
 paths.main-class-paths.extension=\
     //${system.properties:java.home}/lib//children:.*\.jar|.*\.jmod;\
