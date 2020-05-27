@@ -9,8 +9,8 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/5)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-blueviolet)](https://github.com/burningwave/core/actions/runs/116157411)
-[![Supported JVM](https://img.shields.io/badge/Supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/116157411)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-blueviolet)](https://github.com/burningwave/core/actions/runs/116553798)
+[![Supported JVM](https://img.shields.io/badge/Supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/116553798)
 
 [![Coverage Status](https://coveralls.io/repos/github/burningwave/core/badge.svg?branch=master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -35,7 +35,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>5.36.0</version>
+    <version>5.36.1</version>
 </dependency>
 ```
 
@@ -195,26 +195,26 @@ public class SourceCodeExecutor {
 To execute code from Burningwave configuration file (**burningwave.properties** or other file that we have used to create the ComponentContainer: [**see architectural overview and configuration**](#Architectural-overview-and-configuration)) we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
 ```properties
 code-block-1=\
-	Date now= new Date();\
-	return (T)now;
+    Date now= new Date();\
+    return (T)now;
 code-block-1.imports=java.util.Date;
 ```
 It is also possible to include the code of a property in another property:
 ```properties
 code-block-1=\
-	${code-block-2}\
-	return (T)Date.from(zonedDateTime.toInstant());
+    ${code-block-2}\
+    return (T)Date.from(zonedDateTime.toInstant());
 code-block-1.imports=\
-	${code-block-2.imports}\
-	java.util.Date;
+    ${code-block-2.imports}\
+    java.util.Date;
 code-block-2=\
-	LocalDateTime localDateTime = (LocalDateTime)parameter[0];\
-	ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
+    LocalDateTime localDateTime = (LocalDateTime)parameter[0];\
+    ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
 code-block-2.imports=\
-	static org.burningwave.core.assembler.StaticComponentContainer.Strings;\
-	java.time.LocalDateTime;\
-	java.time.ZonedDateTime;\
-	java.time.ZoneId;
+    static org.burningwave.core.assembler.StaticComponentContainer.Strings;\
+    java.time.LocalDateTime;\
+    java.time.ZonedDateTime;\
+    java.time.ZoneId;
 ```
 After that, for executing the code of the property we must call the **executeProperty** method of CodeExecutor and passing to it the property name to be executed and the parameters used in the property code:
 ```java
@@ -246,26 +246,26 @@ public class SourceCodeExecutor {
 To execute code from a custom properties file we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
 ```properties
 code-block-1=\
-	Date now= new Date();\
-	return (T)now;
+    Date now= new Date();\
+    return (T)now;
 code-block-1.imports=java.util.Date;
 ```
 It is also possible to include the code of a property in another property:
 ```properties
 code-block-1=\
-	${code-block-2}\
-	return (T)Date.from(zonedDateTime.toInstant());
+    ${code-block-2}\
+    return (T)Date.from(zonedDateTime.toInstant());
 code-block-1.imports=\
-	${code-block-2.imports}\
-	java.util.Date;
+    ${code-block-2.imports}\
+    java.util.Date;
 code-block-2=\
-	LocalDateTime localDateTime = (LocalDateTime)parameter[0];\
-	ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
+    LocalDateTime localDateTime = (LocalDateTime)parameter[0];\
+    ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
 code-block-2.imports=\
-	static org.burningwave.core.assembler.StaticComponentContainer.Strings;\
-	java.time.LocalDateTime;\
-	java.time.ZonedDateTime;\
-	java.time.ZoneId;
+    static org.burningwave.core.assembler.StaticComponentContainer.Strings;\
+    java.time.LocalDateTime;\
+    java.time.ZonedDateTime;\
+    java.time.ZoneId;
 ```
 After that, for executing the code of the property we must create an **ExecuteConfig** object and set on it:
 * the path (relative or absolute) of our custom properties file 
