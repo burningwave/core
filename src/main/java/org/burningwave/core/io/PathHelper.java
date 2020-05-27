@@ -165,6 +165,10 @@ public class PathHelper implements Component {
 		return getPaths(Configuration.Key.MAIN_CLASS_PATHS);
 	}
 	
+	public Collection<String> getAllMainClassPaths() {
+		return getPaths(Configuration.Key.MAIN_CLASS_PATHS, Configuration.Key.MAIN_CLASS_PATHS_EXTENSION);
+	}
+	
 	public Collection<String> getAllPaths() {
 		Collection<String> allPaths = ConcurrentHashMap.newKeySet();
 		allPaths.addAll(this.allPaths);
