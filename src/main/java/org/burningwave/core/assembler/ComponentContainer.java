@@ -40,6 +40,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -58,6 +59,7 @@ import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
+import org.burningwave.core.iterable.Properties.Event;
 
 public class ComponentContainer implements ComponentSupplier {
 	private static Collection<ComponentContainer> instances;
@@ -115,24 +117,32 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private ComponentContainer init() {		
-		TreeMap<Object, Object> properties = new TreeMap<>();
-		properties.putAll(PathHelper.Configuration.DEFAULT_VALUES);
-		properties.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
-		properties.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
-		properties.putAll(JavaMemoryCompiler.Configuration.DEFAULT_VALUES);
+		TreeMap<Object, Object> defaultProperties = new TreeMap<>();
+		defaultProperties.putAll(PathHelper.Configuration.DEFAULT_VALUES);
+		defaultProperties.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
+		defaultProperties.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
+		defaultProperties.putAll(JavaMemoryCompiler.Configuration.DEFAULT_VALUES);
 				
-		Properties customConfig = propertySupplier.get();
-		if (customConfig != null) {
-			properties.putAll(customConfig);
-		}
 		config.putAll(GlobalProperties);
-		config.putAll(properties);
+		Optional.ofNullable(propertySupplier.get()).ifPresent(customConfig -> config.putAll(customConfig));
+		for (Map.Entry<Object, Object> defVal : defaultProperties.entrySet()) {
+			config.putIfAbsent(defVal.getKey(), defVal.getValue());
+		}
 		logInfo(
-			"Configuration values:\n\n{}\n\n{}\n\n... Are assumed",
-			new TreeMap<>(GlobalProperties).entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n")),
-			new TreeMap<>(properties).entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
+			"Configuration values:\n\n{}\n\n... Are assumed",
+			new TreeMap<>(config).entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
 		);
+		listenTo(GlobalProperties);
 		return this;
+	}
+	
+	@Override
+	public void receiveNotification(Properties properties, Event event, Object key, Object value) {
+		if (event == Event.PUT) {
+			config.put(key, value);
+		} else if (event == Event.REMOVE) {
+			config.remove(key);
+		}
 	}
 	
 	private ComponentContainer launchInit() {

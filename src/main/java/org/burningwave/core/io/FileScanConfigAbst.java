@@ -29,6 +29,8 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
+import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
@@ -66,19 +68,23 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 			);
 		}
 		
-		public static final Integer parseCheckFileOptionsValue(String property) {
-			return parseCheckFileOptionsValue(property, (String)DEFAULT_VALUES.get(Key.DEFAULT_CHECK_FILE_OPTIONS));
+		public static final Integer parseCheckFileOptionsValue(String value) {
+			return parseCheckFileOptionsValue(value,
+				IterableObjectHelper.get(
+					GlobalProperties, Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES
+				)
+			);
 		}
 		
-		public static final Integer parseCheckFileOptionsValue(String property, String defaultValue) {
-			if (property != null) {
-				if (property.contains("checkFileName") && property.contains("checkFileSignature") && property.contains("|")) {
+		public static final Integer parseCheckFileOptionsValue(String value, String defaultValue) {
+			if (value != null) {
+				if (value.contains("checkFileName") && value.contains("checkFileSignature") && value.contains("|")) {
 					return FileScanConfigAbst.CHECK_FILE_NAME_OR_SIGNATURE;
-				} else if (property.contains("checkFileName") && property.contains("checkFileSignature") && property.contains("&")) {
+				} else if (value.contains("checkFileName") && value.contains("checkFileSignature") && value.contains("&")) {
 					return FileScanConfigAbst.CHECK_FILE_NAME_AND_SIGNATURE;
-				} else if (property.contains("checkFileName")) {
+				} else if (value.contains("checkFileName")) {
 					return FileScanConfigAbst.CHECK_FILE_NAME;
-				} else if (property.contains("checkFileSignature")) {
+				} else if (value.contains("checkFileSignature")) {
 					return FileScanConfigAbst.CHECK_FILE_SIGNATURE;
 				}
 			}
@@ -109,7 +115,11 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		recursiveOnDirectoryOfFileSystemEntry = true;
 		recursiveOnArchiveOfZipEntry = true;
 		optimizePaths = false;
-		checkFileOptions = Configuration.parseCheckFileOptionsValue((String)Configuration.DEFAULT_VALUES.get(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS));
+		checkFileOptions = Configuration.parseCheckFileOptionsValue(
+			IterableObjectHelper.get(
+				GlobalProperties, Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS,Configuration.DEFAULT_VALUES
+			)
+		);
 	}
 	
 	void init() {

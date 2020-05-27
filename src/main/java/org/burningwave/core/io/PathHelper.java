@@ -109,7 +109,6 @@ public class PathHelper implements Component {
 				loadPaths(((String)key).replaceFirst(Configuration.Key.PATHS_PREFIX, ""));	
 			}
 		}
-		Component.super.receiveNotification(properties, event, key, value);
 	}
 	
 	public static PathHelper create(Properties config) {
