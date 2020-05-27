@@ -261,24 +261,23 @@ public class JavaMemoryCompiler implements Component {
 			fsObjects.forEach((fsObject) -> {
 				if (fsObject.isCompressed()) {					
 					ThrowingRunnable.run(() -> {
-							synchronized (context.javaMemoryCompiler) {
-								FileSystemItem classPathBasePath = fsObject.isArchive() ?
-									context.javaMemoryCompiler.classPathHunterBasePathForCompressedLibs :
-									context.javaMemoryCompiler.classPathHunterBasePathForCompressedClasses
-								;
-								FileSystemItem classPath = FileSystemItem.ofPath(
-									classPathBasePath.getAbsolutePath() + "/" + fsObject.getName()
-								);
-								if (!classPath.refresh(true).exists()) {
-									fsObject.copyTo(classPathBasePath.getAbsolutePath());
-								}
-								context.addToClassPath(
-									classPath.getAbsolutePath()
-								);
-								
+						synchronized (context.javaMemoryCompiler) {
+							FileSystemItem classPathBasePath = fsObject.isArchive() ?
+								context.javaMemoryCompiler.classPathHunterBasePathForCompressedLibs :
+								context.javaMemoryCompiler.classPathHunterBasePathForCompressedClasses
+							;
+							FileSystemItem classPath = FileSystemItem.ofPath(
+								classPathBasePath.getAbsolutePath() + "/" + fsObject.getName()
+							);
+							if (!classPath.refresh(true).exists()) {
+								fsObject.copyTo(classPathBasePath.getAbsolutePath());
 							}
+							context.addToClassPath(
+								classPath.getAbsolutePath()
+							);
+							
 						}
-					);
+					});
 				} else {
 					context.addToClassPath(fsObject.getAbsolutePath());
 				}
