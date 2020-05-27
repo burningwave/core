@@ -9,8 +9,8 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/5)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-blueviolet)](https://github.com/burningwave/core/actions/runs/116553798)
-[![Supported JVM](https://img.shields.io/badge/Supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/116553798)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-blueviolet)](https://github.com/burningwave/core/actions/runs/116780008)
+[![Supported JVM](https://img.shields.io/badge/Supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/116780008)
 
 [![Coverage Status](https://coveralls.io/repos/github/burningwave/core/badge.svg?branch=master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -35,7 +35,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>5.36.1</version>
+    <version>5.36.2</version>
 </dependency>
 ```
 

@@ -293,7 +293,7 @@ public class ClassFactory implements Component {
 						).deleteFoundItemsOnClose(
 							false
 						).checkFileOptions(
-								FileScanConfigAbst.Configuration.parseCheckFileOptionsValue(
+							FileScanConfigAbst.Configuration.parseCheckFileOptionsValue(
 								IterableObjectHelper.get(
 									config,
 									Configuration.Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
