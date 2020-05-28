@@ -228,7 +228,8 @@ public class ClassFactory implements Component {
 						unitsCode, storeCompiledClasses
 					);
 					return new ClassRetriever() {
-						public <T> Class<T> get(String className, Map<String, ByteBuffer> additionalByteCodes) {
+						@Override
+						public Class<?> get(String className, Map<String, ByteBuffer> additionalByteCodes) {
 							try {
 								Map<String, ByteBuffer> finalByteCodes = compiledByteCodes;
 								if (additionalByteCodes != null) {
@@ -255,9 +256,10 @@ public class ClassFactory implements Component {
 			}
 			logInfo("Classes {} loaded by classloader {} without building", String.join(", ", classes.keySet()), classLoader);
 			return new ClassRetriever() {
-				public <T> Class<T> get(String className, Map<String, ByteBuffer> additionalByteCodes) {
+				@Override
+				public Class<?> get(String className, Map<String, ByteBuffer> additionalByteCodes) {
 					try {
-						return (Class<T>)classLoader.loadClass(className);
+						return classLoader.loadClass(className);
 					} catch (Throwable exc) {
 						try {
 							return ClassLoaders.loadOrDefineByByteCode(className, Optional.ofNullable(additionalByteCodes).orElseGet(HashMap::new), classLoader);
@@ -514,9 +516,9 @@ public class ClassFactory implements Component {
 
 	public static abstract class ClassRetriever {
 		
-		public abstract <T> Class<T> get(String className, Map<String, ByteBuffer> additionalByteCodes);
+		public abstract Class<?> get(String className, Map<String, ByteBuffer> additionalByteCodes);
 		
-		public <T> Class<T> get(String className) {
+		public Class<?> get(String className) {
 			return get(className, null);
 		}
 		
