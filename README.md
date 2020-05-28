@@ -35,7 +35,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>5.36.2</version>
+    <version>5.37.0</version>
 </dependency>
 ```
 
