@@ -54,7 +54,7 @@ import org.burningwave.core.io.FileScanConfigAbst;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
-
+@SuppressWarnings("unchecked")
 public class ClassFactory implements Component {
 	
 	public static class Configuration {
@@ -227,49 +227,53 @@ public class ClassFactory implements Component {
 						classPathsForNotFoundClassesDuringCompilantion, 
 						unitsCode, storeCompiledClasses
 					);
-					return (clsName, additionalByteCodes) -> {
-						try {
-							Map<String, ByteBuffer> finalByteCodes = compiledByteCodes;
-							if (additionalByteCodes != null) {
-								finalByteCodes = new HashMap<>(compiledByteCodes);
-								finalByteCodes.putAll(additionalByteCodes);
+					return new ClassRetriever() {
+						public <T> Class<T> get(String className, Map<String, ByteBuffer> additionalByteCodes) {
+							try {
+								Map<String, ByteBuffer> finalByteCodes = compiledByteCodes;
+								if (additionalByteCodes != null) {
+									finalByteCodes = new HashMap<>(compiledByteCodes);
+									finalByteCodes.putAll(additionalByteCodes);
+								}
+								return ClassLoaders.loadOrDefineByByteCode(className, finalByteCodes, classLoader);
+							} catch (Throwable innExc) {
+								return ThrowingSupplier.get(() -> {
+									return ClassLoaders.loadOrDefineByByteCode(className, 
+										loadBytecodesFromClassPaths(
+											retrievedBytecodes,
+											classPathsForNotFoundClassesDuringLoading,
+											compiledByteCodes,
+											additionalByteCodes
+										).get(), classLoader
+									);
+								});
 							}
-							return ClassLoaders.loadOrDefineByByteCode(clsName, finalByteCodes, classLoader);
-						} catch (Throwable innExc) {
-							return ThrowingSupplier.get(() -> {
-								return ClassLoaders.loadOrDefineByByteCode(clsName, 
-									loadBytecodesFromClassPaths(
-										retrievedBytecodes,
-										classPathsForNotFoundClassesDuringLoading,
-										compiledByteCodes,
-										additionalByteCodes
-									).get(), classLoader
-								);
-							});
 						}
 					};
 					
 				}
 			}
 			logInfo("Classes {} loaded by classloader {} without building", String.join(", ", classes.keySet()), classLoader);
-			return (clsName, additionalByteCodes) -> {
-				try {
-					return classLoader.loadClass(clsName);
-				} catch (Throwable exc) {
+			return new ClassRetriever() {
+				public <T> Class<T> get(String className, Map<String, ByteBuffer> additionalByteCodes) {
 					try {
-						return ClassLoaders.loadOrDefineByByteCode(clsName, Optional.ofNullable(additionalByteCodes).orElseGet(HashMap::new), classLoader);
-					} catch (Throwable exc2) {
-						return ThrowingSupplier.get(() -> 
-							ClassLoaders.loadOrDefineByByteCode(
-								clsName,
-								loadBytecodesFromClassPaths(
-									retrievedBytecodes, 
-									classPathsForNotFoundClassesDuringLoading,
-									additionalByteCodes
-								).get(), 
-								classLoader
-							)
-						);
+						return (Class<T>)classLoader.loadClass(className);
+					} catch (Throwable exc) {
+						try {
+							return ClassLoaders.loadOrDefineByByteCode(className, Optional.ofNullable(additionalByteCodes).orElseGet(HashMap::new), classLoader);
+						} catch (Throwable exc2) {
+							return ThrowingSupplier.get(() -> 
+								ClassLoaders.loadOrDefineByByteCode(
+									className,
+									loadBytecodesFromClassPaths(
+										retrievedBytecodes, 
+										classPathsForNotFoundClassesDuringLoading,
+										additionalByteCodes
+									).get(), 
+									classLoader
+								)
+							);
+						}
 					}
 				}
 			};
@@ -425,7 +429,6 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	@SuppressWarnings("unchecked")
 	private <T> Class<T> loadOrBuildAndDefineFunctionInterfaceSubType(
 		ClassLoader classLoader,
 		String classNamePrefix, 
@@ -491,7 +494,6 @@ public class ClassFactory implements Component {
 			);
 		}
 		
-		@SuppressWarnings("unchecked")
 		public <T> Class<T> loadOrBuildAndDefine(
 			ClassLoader classLoader,
 			String className,
@@ -509,16 +511,16 @@ public class ClassFactory implements Component {
 			
 	}
 	
-	@FunctionalInterface
-	public static interface ClassRetriever {
+
+	public static abstract class ClassRetriever {
 		
-		public Class<?> get(String className, Map<String, ByteBuffer> additionalByteCodes);
+		public abstract <T> Class<T> get(String className, Map<String, ByteBuffer> additionalByteCodes);
 		
-		public default Class<?> get(String className) {
+		public <T> Class<T> get(String className) {
 			return get(className, null);
 		}
 		
-		public default Collection<Class<?>> get(String... classesName) {
+		public Collection<Class<?>> get(String... classesName) {
 			Collection<Class<?>> classes = new HashSet<>();
 			for(String className : classesName) {
 				classes.add(get(className, null));
