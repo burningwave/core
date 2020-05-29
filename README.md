@@ -307,7 +307,7 @@ public class SourceCodeExecutor {
 <br/>
 
 # Retrieving classes of runtime class paths or of other paths through the ClassHunter
-The compononents of the class paths scanning engine are: **ByteCodeHunter**, **ClassHunter** and the **ClassPathHunter**. Now we are going to use the ClassHunter to search for all classes that have package name that matches a regex. So in this example we're looking for all classes whose package name contains "springframework" string
+The compononents of the class paths scanning engine are: **ByteCodeHunter**, **ClassHunter** and the **ClassPathHunter**. Now we are going to use the ClassHunter to search for all classes that have package name that matches a regex. So in this example we're looking for all classes in the runtime class paths whose package name contains "springframework" string
 ```java
 import java.util.Collection;
 
