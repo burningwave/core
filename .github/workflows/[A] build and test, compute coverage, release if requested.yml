@@ -5,12 +5,10 @@ on:
     branches:
       - master
     paths: 
-      - "**.java"
+      - "src/main/**.java"
       - "**.properties"
       - "**.xml"
       - "pom.xml"
-    paths-ignore:
-      - 'src/test/**'
 
 jobs:
     
