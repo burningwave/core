@@ -187,6 +187,37 @@ public class ClassHunterTest extends BaseTest {
 	}
 	
 	@Test
+	public void findAllSubtypeOfWithMethodsTestEight() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		ClassHunter classHunter = componentSupplier.getClassHunter();
+		testNotEmpty(
+			() -> classHunter.findBy(
+				SearchConfig.forPaths(
+					componentSupplier.getPathHelper().getMainClassPaths()
+				).by(
+					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass) ||
+						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
+					).and().byMembers(
+						MethodCriteria.byScanUpTo(
+							(uploadedClasses, initialClass, cls) -> cls.equals(uploadedClasses.get(Object.class))
+						).parameterTypesAreAssignableFrom(Integer.class)
+						.skip((classes, initialClass, examinedClass) -> 
+							classes.get(Object.class) == examinedClass
+						)
+					).useClasses(
+						Closeable.class,
+						Serializable.class,
+						Object.class
+					)
+				)
+			),
+			(result) ->
+				result.getClasses()
+		);
+	}
+	
+	@Test
 	public void findAllSubtypeOfWithMethodsTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
