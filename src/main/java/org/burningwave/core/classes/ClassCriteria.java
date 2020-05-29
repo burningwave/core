@@ -109,7 +109,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 	}	
 
 	
-	public Class<?> retrieveClass(Class<?> cls) {
+	Class<?> retrieveClass(Class<?> cls) {
 		if (classSupplier != null) {
 			return classSupplier.apply(cls);
 		}
@@ -228,14 +228,8 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 	
 	
 	@Override
-	public TestContext createTestContext() {
+	protected TestContext createTestContext() {
 		return TestContext.create(this);
-	}
-	
-	
-	@Override
-	public void close() {
-		super.close();
 	}
 
 
@@ -262,5 +256,14 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		void addMembersFound(MemberCriteria<?, ?, ?> criteria, Collection<Member> members) {
 			getMembersFound().put(criteria, members);
 		}
+	}
+	
+	
+	@Override
+	public void close() {
+		this.memberCriterias.clear();
+		this.memberCriterias = null;
+		this.membersPredicate = null;
+		super.close();
 	}
 }

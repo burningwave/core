@@ -41,7 +41,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.function.TriPredicate;
 
 @SuppressWarnings("unchecked")
-public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> implements Component {
+public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> implements AutoCloseable, ManagedLogger {
 	protected BiPredicate<T, E> predicate;
 	protected Function<BiPredicate<T, E>, BiPredicate<T, E>> logicalOperator;
 	
@@ -202,13 +202,13 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 		return getPredicateOrTruePredicateIfNull(createTestContext());
 	}
 	
-	public T getContextOfPredicateOrFalsePredicateIfNull() {
+	protected T getContextOfPredicateOrFalsePredicateIfNull() {
 		T context = createTestContext();
 		getPredicateOrFalsePredicateIfNull(context);
 		return context;
 	}	
 	
-	public T getContextOfPredicateOrTruePredicateIfNull() {
+	protected T getContextOfPredicateOrTruePredicateIfNull() {
 		T context = createTestContext();
 		getPredicateOrTruePredicateIfNull(context);
 		return context;
@@ -278,7 +278,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 	}
 	
 	
-	public T createTestContext() {
+	protected T createTestContext() {
 		return (T)TestContext.<E, C, T>create((C)this);
 	}
 	
@@ -330,5 +330,12 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 		public Boolean getResult() {
 			return super.get(Elements.TEST_RESULT);
 		}
+	}
+
+
+	@Override
+	public void close() {
+		this.predicate = null;
+		this.logicalOperator = null;
 	}
 }

@@ -88,22 +88,22 @@ public abstract class CriteriaWithClassElementsSupplyingSupport<
 		return newCriteria;
 	}
 	
-	public Function<Class<?>, Class<?>> getClassSupplier() {
+	Function<Class<?>, Class<?>> getClassSupplier() {
 		return classSupplier;
 	}
 	
-	public Function<Class<?>, ByteBuffer> getByteCodeSupplier() {
+	Function<Class<?>, ByteBuffer> getByteCodeSupplier() {
 		return byteCodeSupplier;
 	}
 	
-	public Class<?> retrieveClass(Class<?> cls) {
+	Class<?> retrieveClass(Class<?> cls) {
 		if (classSupplier != null) {
 			return classSupplier.apply(cls);
 		}
 		return cls;
 	}
 	
-	protected Map<Class<?>, Class<?>> getUploadedClasses() {
+	Map<Class<?>, Class<?>> getUploadedClasses() {
 		if (uploadedClasses == null) {
 			synchronized (this) {
 				if (uploadedClasses == null) {
@@ -118,7 +118,7 @@ public abstract class CriteriaWithClassElementsSupplyingSupport<
 		return uploadedClasses;
 	}
 	
-	public List<Class<?>> getClassesToBeUploaded() {
+	List<Class<?>> getClassesToBeUploaded() {
 		return classesToBeUploaded;
 	}
 	
@@ -141,7 +141,7 @@ public abstract class CriteriaWithClassElementsSupplyingSupport<
 		return (C)this;
 	}
 	
-	protected List<Class<?>> retrieveUploadedClasses(Class<?>... classes) {
+	List<Class<?>> retrieveUploadedClasses(Class<?>... classes) {
 		List<Class<?>> uploadedClasses = uploadedClassesMap.get(classes);
 		if (uploadedClasses == null) {
 			synchronized(uploadedClassesMap) {
@@ -159,7 +159,7 @@ public abstract class CriteriaWithClassElementsSupplyingSupport<
 		return uploadedClasses;
 	}
 	
-	protected Map<Class<?>, byte[]> getLoadedBytecode() {
+	Map<Class<?>, byte[]> getLoadedBytecode() {
 		if (loadedBytecode == null) {
 			synchronized (this) {
 				Map<Class<?>, byte[]> loadedBytecode = new HashMap<>();
@@ -172,7 +172,7 @@ public abstract class CriteriaWithClassElementsSupplyingSupport<
 		return loadedBytecode;
 	}
 	
-	protected List<ByteBuffer> retrieveByteCode(C criteria, Class<?>[] classes) {
+	List<ByteBuffer> retrieveByteCode(C criteria, Class<?>[] classes) {
 		List<ByteBuffer> byteCode = criteria.byteCodeForClasses.get(classes);
 		if (byteCode == null) {
 			synchronized (criteria.byteCodeForClasses) {
