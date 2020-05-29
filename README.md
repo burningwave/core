@@ -9,8 +9,8 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/5)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-blueviolet)](https://github.com/burningwave/core/actions/runs/118755047)
-[![Supported JVM](https://img.shields.io/badge/Supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/118755047)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-blueviolet)](https://github.com/burningwave/core/actions/runs/118944875)
+[![Supported JVM](https://img.shields.io/badge/Supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/118944875)
 
 [![Coverage Status](https://coveralls.io/repos/github/burningwave/core/badge.svg?branch=master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -37,7 +37,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>5.37.1</version>
+    <version>5.38.0</version>
 </dependency>
 ```
 
@@ -580,30 +580,33 @@ The configuration of this type of container can be done via Properties file or p
 If you use the singleton instance obtained via ComponentContainer.getInstance() method, you must create a **burningwave.properties** file and put it on base path of your classpath project.
 **The default configuration automatically loaded if no configuration file is found is the following**:
 ```properties
-class-factory.byte-code-hunter.search-config.check-file-options=\
-    ${file-system-scanner.default-scan-config.check-file-options}
+class-factory.byte-code-hunter.search-config.check-file-options=$\
+    {file-system-scanner.default-scan-config.check-file-options}
 #default classloader used by the ClassFactory to load generated classes
 class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
 class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=\
     ${file-system-scanner.default-scan-config.check-file-options}
 class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
-java-memory-compiler.class-path-hunter.search-config.check-file-options=\
-    ${file-system-scanner.default-scan-config.check-file-options}
 #this variable indicates all the paths from which the classes 
 #must be taken if during the definition of the compiled classes
 #on classloader there will be classes not found
 paths.class-factory.default-class-loader.class-repositories=\
     ${paths.java-memory-compiler.class-repositories};\
-    #This variable is empty by default and could be valorized by user
-    ${paths.class-factory.default-class-loader.custom-class-repositories};
+    #This variable is empty by default and could be valorized by developer
+    ${paths.class-factory.default-class-loader.additional-class-repositories};
+paths.java-memory-compiler.class-path-hunter.search-config.check-file-options=\
+    ${file-system-scanner.default-scan-config.check-file-options}
 #this variable indicates all the paths from which the classes 
 #must be taken if during the compilation there will be classes
 #not found
-paths.java-memory-compiler.class-repositories=\
-    ${classPaths};\
+paths.java-memory-compiler.class-repositories=${classPaths};\
+    ${paths.java-memory-compiler.additional-main-class-paths};\
     ${paths.main-class-paths.extension};\
-    #This variable is empty by default and could be valorized by user
-    ${paths.java-memory-compiler.custom-class-repositories};
+    #This variable is empty by default and could be valorized by developer
+    ${paths.java-memory-compiler.additional-class-repositories};
+paths.java-memory-compiler.main-class-paths=${classPaths};\
+    #This variable is empty by default and could be valorized by developer
+    ${paths.java-memory-compiler.additional-main-class-paths};
 paths.main-class-paths.extension=\
     //${system.properties:java.home}/lib//children:.*\.jar|.*\.jmod;\
     //${system.properties:java.home}/lib/ext//children:.*\.jar|.*\.jmod;\
@@ -617,26 +620,30 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 ```
 Here an example of a **burningwave.properties** file with all configurable properties:
 ```properties
+class-factory.byte-code-hunter.search-config.check-file-options=$\
+    {file-system-scanner.default-scan-config.check-file-options}
+class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
+class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=\
+    ${file-system-scanner.default-scan-config.check-file-options}
+class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
+paths.class-factory.default-class-loader.class-repositories=\
+    ${paths.java-memory-compiler.class-repositories};\
+    ${paths.class-factory.default-class-loader.additional-class-repositories};
+paths.java-memory-compiler.class-path-hunter.search-config.check-file-options=\
+    ${file-system-scanner.default-scan-config.check-file-options}
+paths.java-memory-compiler.class-repositories=${classPaths};\
+    ${paths.java-memory-compiler.additional-main-class-paths};\
+    ${paths.main-class-paths.extension};\
+    ${paths.java-memory-compiler.additional-class-repositories};
+paths.java-memory-compiler.main-class-paths=${classPaths};\
+    ${paths.java-memory-compiler.additional-main-class-paths};
 paths.main-class-paths.extension=\
     //${system.properties:java.home}/lib//children:.*\.jar|.*\.jmod;\
     //${system.properties:java.home}/lib/ext//children:.*\.jar|.*\.jmod;\
     //${system.properties:java.home}/jmods//children:.*\.jar|.*\.jmod;
-class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
-#this is the default class loader used by method
-#org.burningwave.core.classes.ClassFactory.loadOrBuildAndDefine(UnitSourceGenerator... unitsCode)
-#(see "Generating classes at runtime and invoking their methods with and without use of the reflection" example)
-class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
-paths.java-memory-compiler.class-repositories=${classPaths};${paths.main-class-paths.extension};
-paths.class-factory.default-class-loader.class-repositories=${paths.java-memory-compiler.class-repositories};
-#other possible values are: checkFileSignature, checkFileName|checkFileSignature, checkFileName&checkFileSignature
-java-memory-compiler.class-path-hunter.search-config.check-file-options=checkFileName
-#other possible values are: checkFileSignature, checkFileName|checkFileSignature, checkFileName&checkFileSignature
-class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=checkFileName
-#other possible values are: checkFileSignature, checkFileName|checkFileSignature, checkFileName&checkFileSignature
-class-factory.byte-code-hunter.search-config.check-file-options=checkFileName
-#The resources below can be retrieved through PathHelper component getPaths method. In this case you must call
-#ComponentContainer.getInstance().getPathHelper().getPaths("your-custom-path1")
-paths.your-custom-path1=C:/some-folder;C:/another-folder;
+paths.java-memory-compiler.additional-main-class-paths=C:/some paths 1;C:/some paths 2;
+paths.java-memory-compiler.additional-class-repositories=C:/some paths 3;C:/some paths 4;
+paths.class-factory.default-class-loader.additional-class-repositories=C:/some paths 5;C:/some paths 6;
 ```
 
 ### Other examples of using some components:
