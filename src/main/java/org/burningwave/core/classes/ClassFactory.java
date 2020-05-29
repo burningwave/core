@@ -63,10 +63,10 @@ public class ClassFactory implements Component {
 			
 			public static final String DEFAULT_CLASS_LOADER = "class-factory.default-class-loader";
 
-			public static final String CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER = "class-factory.default-class-loader.class-repositories";
+			public static final String CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER = PathHelper.Configuration.Key.PATHS_PREFIX + "class-factory.default-class-loader.class-repositories";
+			public static final String CLASS_ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER = PathHelper.Configuration.Key.PATHS_PREFIX + "class-factory.default-class-loader.additional-class-repositories";
 			public static final String BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "class-factory.byte-code-hunter.search-config.check-file-options";
-			public static final String CLASS_CUSTOM_REPOSITORIES = "class-factory.default-class-loader.custom-class-repositories";
-		
+					
 		}
 		
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -79,9 +79,9 @@ public class ClassFactory implements Component {
 			DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
 
 			DEFAULT_VALUES.put(
-				PathHelper.Configuration.Key.PATHS_PREFIX + Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER, 
-				"${" + PathHelper.Configuration.Key.PATHS_PREFIX + JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES + "};" +
-				"${" + PathHelper.Configuration.Key.PATHS_PREFIX + Configuration.Key.CLASS_CUSTOM_REPOSITORIES + "};"
+				Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER, 
+				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES + "};" +
+				"${" + PathHelper.Configuration.Key.PATHS_PREFIX + Configuration.Key.CLASS_ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER + "};"
 			);
 			DEFAULT_VALUES.put(
 				Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
@@ -164,7 +164,7 @@ public class ClassFactory implements Component {
 			Optional.ofNullable(
 				config.getCompilationClassPaths()
 			).orElseGet(() -> 
-				pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
+				pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.MAIN_CLASS_PATHS, JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES)
 			);
 		
 		Collection<String> classPathsForNotFoundClassesDuringCompilantion = 
@@ -178,7 +178,7 @@ public class ClassFactory implements Component {
 			Optional.ofNullable(
 				config.getClassPathsWhereToSearchNotFoundClassesDuringLoading()
 			).orElseGet(() -> 
-				pathHelper.getPaths(Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASSLOADER)
+				pathHelper.getPaths(Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER)
 			);
 		
 		ClassLoader classLoader = Optional.ofNullable(

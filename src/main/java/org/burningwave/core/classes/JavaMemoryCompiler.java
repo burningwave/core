@@ -79,11 +79,12 @@ public class JavaMemoryCompiler implements Component {
 		
 		public static class Key {
 			
-			public static final String CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "java-memory-compiler.class-path-hunter.search-config.check-file-options";
-			public static final String CLASS_REPOSITORIES = "java-memory-compiler.class-repositories";
-			public static final String CLASS_CUSTOM_REPOSITORIES = "java-memory-compiler.custom-class-repositories";
+			public static final String CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-path-hunter.search-config.check-file-options";
+			public static final String MAIN_CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.main-class-paths";
+			public static final String ADDITIONAL_MAIN_CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.additional-main-class-paths";
+			public static final String CLASS_REPOSITORIES =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-repositories";
+			public static final String ADDITIONAL_CLASS_REPOSITORIES = PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.additional-class-repositories";
 		}
-		
 		public final static Map<String, Object> DEFAULT_VALUES;
 		
 		static {
@@ -93,10 +94,15 @@ public class JavaMemoryCompiler implements Component {
 				"${" + FileScanConfigAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
 			);
 			DEFAULT_VALUES.put(
-				PathHelper.Configuration.Key.PATHS_PREFIX + Key.CLASS_REPOSITORIES, 
-				"${classPaths};" +
+				Key.MAIN_CLASS_PATHS, 
+				"${classPaths};"+
+				"${" + Configuration.Key.ADDITIONAL_MAIN_CLASS_PATHS + "};"
+			);
+			DEFAULT_VALUES.put(
+				Key.CLASS_REPOSITORIES, 
+				DEFAULT_VALUES.get(Key.MAIN_CLASS_PATHS) +
 				"${" + PathHelper.Configuration.Key.PATHS_PREFIX + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "};" +
-				"${" + PathHelper.Configuration.Key.PATHS_PREFIX + Configuration.Key.CLASS_CUSTOM_REPOSITORIES + "};"
+				"${" + Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES + "};"
 			);
 		}
 	}
@@ -139,7 +145,7 @@ public class JavaMemoryCompiler implements Component {
 	public 	Map<String, ByteBuffer> compile(Collection<String> sources, boolean storeCompiledClasses) {
 		return compile(
 			sources, 
-			pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS),
+			pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.MAIN_CLASS_PATHS),
 			pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES),
 			storeCompiledClasses
 		);
