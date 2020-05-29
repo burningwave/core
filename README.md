@@ -615,7 +615,7 @@ paths.main-class-paths.extension=\
 **If in your custom burningwave.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 
 If you create a component container instance through method ComponentContainer.create(String relativeConfigFileName), you can specify the file name of your properties file and you can locate it everywhere in your classpath project but remember to use a relative path in this case, i.e.: if you name your file "custom-config-file.properties" and put it in package "org.burningwave" you must create the component container as follow: 
-```
+```java
 ComponentContainer.create("org/burningwave/custom-config-file.properties")
 ```
 Here an example of a **burningwave.properties** file with all configurable properties:
