@@ -657,17 +657,17 @@ public class FileSystemItem implements ManagedLogger {
 		}
 	}
 	
-	public FileSystemItem copyTo(String folder) throws IOException {
+	public FileSystemItem copyTo(String folder) {
 		return copyTo(folder, null);
 	}
 	
-	public FileSystemItem copyAllChildrenTo(String folder) throws IOException {
+	public FileSystemItem copyAllChildrenTo(String folder) {
 		return copyAllChildrenTo(folder, null);
 	}
 	
-	public FileSystemItem copyAllChildrenTo(String folder, Predicate<FileSystemItem> filter) throws IOException {
+	public FileSystemItem copyAllChildrenTo(String folder, Predicate<FileSystemItem> filter){
 		Predicate<FileSystemItem> finalFilter = fileSystemItem -> !fileSystemItem.isArchive();
-		finalFilter = filter != null ? finalFilter.and(filter) : finalFilter;
+		finalFilter = filter != null ? finalFilter.and(filter) : finalFilter; 
 		Set<FileSystemItem> allChildren = getAllChildren(finalFilter);
 		for (FileSystemItem child : allChildren) {
 			FileSystemItem destFile = FileSystemItem.ofPath(folder + child.getAbsolutePath().replaceFirst(this.getAbsolutePath(), ""));
@@ -724,7 +724,7 @@ public class FileSystemItem implements ManagedLogger {
 		};
 	}
 	
-	public FileSystemItem copyTo(String folder, Predicate<FileSystemItem> filter) throws IOException {
+	public FileSystemItem copyTo(String folder, Predicate<FileSystemItem> filter) {
 		FileSystemItem destination = null;
 		if (isFile()) {
 			if (filter == null || filter.test(this)) {
