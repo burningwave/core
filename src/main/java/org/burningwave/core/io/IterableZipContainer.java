@@ -250,7 +250,8 @@ public interface IterableZipContainer extends Component {
 		}
 		
 		default public boolean isArchive() {
-			return Streams.isArchive(toByteBuffer());
+			ByteBuffer content = toByteBuffer();
+			return content != null ? Streams.isArchive(content) : false;
 		}
 		
 		default public InputStream toInputStream() {
