@@ -314,6 +314,9 @@ public class Classes implements Component, MembersRetriever {
 	}
 	
 	public ByteBuffer getByteCode(Class<?> cls) {
+		if (cls.isPrimitive()) {
+			return null;
+		}
 		ClassLoader clsLoader = getClassLoader(cls);
 		InputStream inputStream = clsLoader.getResourceAsStream(
 			cls.getName().replace(".", "/") + ".class"

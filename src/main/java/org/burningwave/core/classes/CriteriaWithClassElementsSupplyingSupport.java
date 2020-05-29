@@ -148,7 +148,7 @@ public abstract class CriteriaWithClassElementsSupplyingSupport<
 				if ((uploadedClasses = uploadedClassesMap.get(classes)) == null) {
 					uploadedClasses = new CopyOnWriteArrayList<>();
 					for (int i = 0; i < classes.length; i++) {
-						uploadedClasses.add(classSupplier.apply(classes[i]));
+						uploadedClasses.add(classes[i].isPrimitive()? classes[i] :classSupplier.apply(classes[i]));
 					}
 					uploadedClassesMap.put(
 						classes, uploadedClasses

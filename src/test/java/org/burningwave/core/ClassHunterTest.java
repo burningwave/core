@@ -201,7 +201,7 @@ public class ClassHunterTest extends BaseTest {
 					).and().byMembers(
 						MethodCriteria.byScanUpTo(
 							(uploadedClasses, initialClass, cls) -> cls.equals(uploadedClasses.get(Object.class))
-						).parameterTypesAreAssignableFrom(Integer.class)
+						).parameterTypesAreAssignableFrom(int.class)
 						.skip((classes, initialClass, examinedClass) -> 
 							classes.get(Object.class) == examinedClass
 						)
