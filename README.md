@@ -156,7 +156,7 @@ It is possible to execute stringified source code by using the **CodeExecutor** 
 <br/>
 
 ## Executing code with BodySourceGenerator
-For first way we must create a **ExecuteConfig** by using the within static method **forBodySourceGenerator** to which must be passed the **BodySourceGenerator** that contains the source code: after that we must pass the created configuration to the **execute** method of CodeExecutor as shown below:
+For first way we must create a **ExecuteConfig** by using the within static method **forBodySourceGenerator** to which must be passed the **BodySourceGenerator** that contains the source code with the parameters used within: after that we must pass the created configuration to the **execute** method of CodeExecutor as shown below:
 ```java
 package org.burningwave.core.examples.codeexecutor;
 
