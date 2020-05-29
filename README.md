@@ -389,7 +389,9 @@ public class ResourceReacher {
         }
         
         //Filtering all nested children for extension
-        for (FileSystemItem child : firstFolderFound.getAllChildren((fSIC) -> "txt".equals(fSIC.getExtension()) || "exe".equals(fSIC.getExtension()))) {
+        for (FileSystemItem child : firstFolderFound.getAllChildren((fSIC) -> 
+            "txt".equals(fSIC.getExtension()) || "exe".equals(fSIC.getExtension()))
+        ) {
             System.out.println("child name: " + child.getName() + " - child parent: " + child.getParent().getName());
             //copy the file to a folder
             child.copyTo(System.getProperty("user.home") + "/Desktop/copy");
@@ -422,7 +424,7 @@ public class ResourceReacher {
         
         //Obtaining all nested children
         for (FileSystemItem child : fSI.getAllChildren()) {
-            System.out.println("child name:" + child.getName());
+            System.out.println("child name:" + child.getAbsolutePath());
         }
         
         //Obtaining the content of the resource (once the content is loaded it will be cached)
