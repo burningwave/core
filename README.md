@@ -80,8 +80,10 @@ public class RuntimeClassExtender {
             //generating new method that override MyInterface.convert(LocalDateTime)
             ).addMethod(
                 FunctionSourceGenerator.create("convert")
-                .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create(Date.class)))
-                .addParameter(VariableSourceGenerator.create(LocalDateTime.class, "localDateTime"))
+                .setReturnType(
+                    TypeDeclarationSourceGenerator.create(Comparable.class)
+                    .addGeneric(GenericSourceGenerator.create(Date.class))
+                ).addParameter(VariableSourceGenerator.create(LocalDateTime.class, "localDateTime"))
                 .addModifier(Modifier.PUBLIC)
                 .addAnnotation(AnnotationSourceGenerator.create(Override.class))
                 .addBodyCodeRow("return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());")
