@@ -22,7 +22,7 @@ import org.burningwave.core.classes.VariableSourceGenerator;
 public class RuntimeClassExtender {
 
     @SuppressWarnings("resource")
-	public static void execute() throws Throwable {
+    public static void execute() throws Throwable {
         UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
             ClassSourceGenerator.create(
                 TypeDeclarationSourceGenerator.create("MyExtendedClass")
@@ -31,8 +31,10 @@ public class RuntimeClassExtender {
             //generating new method that override MyInterface.convert(LocalDateTime)
             ).addMethod(
                 FunctionSourceGenerator.create("convert")
-                .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create(Date.class)))
-                .addParameter(VariableSourceGenerator.create(LocalDateTime.class, "localDateTime"))
+                .setReturnType(
+                    TypeDeclarationSourceGenerator.create(Comparable.class)
+                    .addGeneric(GenericSourceGenerator.create(Date.class))
+                ).addParameter(VariableSourceGenerator.create(LocalDateTime.class, "localDateTime"))
                 .addModifier(Modifier.PUBLIC)
                 .addAnnotation(AnnotationSourceGenerator.create(Override.class))
                 .addBodyCodeRow("return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());")
@@ -50,7 +52,7 @@ public class RuntimeClassExtender {
         //class loader declared with property "class-factory.default-class-loader" in 
         //burningwave.properties file (see "Overview and configuration").
         //If you need to upload the class to another class loader use
-        //loadOrBuildAndDefineTo(ClassLoader classLoader, UnitSourceGenerator... unitsCode) method
+        //loadOrBuildAndDefine(LoadOrBuildAndDefineConfig) method
         Class<?> generatedClass = classFactory.loadOrBuildAndDefine(
             unitSG
         ).get(
