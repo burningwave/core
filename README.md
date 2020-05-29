@@ -24,6 +24,7 @@ And now we will see:
 * [**generating classes at runtime and invoking their methods with and without the use of reflection**](#Generating-classes-at-runtime-and-invoking-their-methods-with-and-without-the-use-of-reflection)
 * [**executing stringified source code**](#Executing-stringified-source-code)
 * [**retrieving classes of runtime class paths or of other paths through the ClassHunter**](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
+* [**reaching a resource of the file system**](#Reaching-a-resource-of-the-file-system)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 * [**other examples of using some components**](#Other-examples-of-using-some-components)
 
@@ -351,6 +352,83 @@ public class Finder {
         SearchResult searchResult = classHunter.loadInCache(searchConfig).find();
         
         return searchResult.getClasses();
+    }
+    
+}
+```
+
+<br/>
+
+# Reaching a resource of the file system
+Through **FileSystemItem** you can reach a resource of the file system even if it is contained in a nested supported (**zip, jar, war, ear, jmod**) compressed archive and obtain the content of it or other informations such as if it is a folder or a file or a compressed archive or if it is a compressed entry or obtain, if it is a folder or a compressed archive, the direct children or all children or a filtered collection of them. You can retrieve a FileSystemItem through an absolute path or through a relative path referred to your classpath by using the PathHelper. FileSystemItems are cached and **there will only be one instance of them for an absolute path** and you can also clear the cache e reload all informations of a FileSystemItem. In the example below we show how to retrieve and use a FileSystemItem.
+
+```java
+package org.burningwave.core.examples.filesystemitem;
+
+import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.io.FileSystemItem;
+
+public class ResourceReacher {
+    
+    private static void execute() {
+        //Obtaining FileSystemItem through absolute path
+        FileSystemItem fSI = FileSystemItem.ofPath("C:/Program Files (x86)");
+       
+        
+        FileSystemItem firstFolderFound = null;
+        
+        //Obtaining direct children
+        for (FileSystemItem child : fSI.getChildren()) {
+            System.out.println("child name:" + child.getAbsolutePath());
+            if (firstFolderFound == null && child.isFolder()) {
+                 System.out.println(child.getAbsolutePath() + " is a folder: " + child.isFolder());
+                 firstFolderFound = child;
+            }
+        }
+        
+        //Filtering all nested children for extension
+        for (FileSystemItem child : firstFolderFound.getAllChildren((fSIC) -> "txt".equals(fSIC.getExtension()) || "exe".equals(fSIC.getExtension()))) {
+            System.out.println("child name: " + child.getName() + " - child parent: " + child.getParent().getName());
+            //copy the file to a folder
+            child.copyTo(System.getProperty("user.home") + "/Desktop/copy");
+        }
+        
+        //Obtaining all nested children
+        for (FileSystemItem child : fSI.getAllChildren()) {
+            System.out.println("child name:" + child.getName());
+        }
+        
+        //Obtaining a FileSystemItem through a relative path (in this case we are obtaining a reference to a jar
+        //contained in an ear that is contained in a zip
+        fSI = FileSystemItem.ofPath(
+            ComponentContainer.getInstance().getPathHelper().getPath((path) -> path.endsWith("target/test-classes")) + 
+            "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar"
+        );
+        
+        System.out.println("is an archive:" + fSI.isArchive());
+        
+        //This method return true if the file or folder is located inside a compressed archive
+        System.out.println("is compressed:" + fSI.isCompressed());
+        
+        //this clear cache
+        fSI.refresh(true);
+        
+        //Obtaining direct children
+        for (FileSystemItem child : fSI.getChildren()) {
+            System.out.println("child name:" + child.getAbsolutePath());
+        }
+        
+        //Obtaining all nested children
+        for (FileSystemItem child : fSI.getAllChildren()) {
+            System.out.println("child name:" + child.getName());
+        }
+        
+        //Obtaining the content of the resource (once the content is loaded it will be cached)
+        fSI.toByteBuffer();
+    }
+    
+    public static void main(String[] args) {
+        execute();
     }
     
 }
