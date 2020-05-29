@@ -424,7 +424,7 @@ public class ResourceReacher {
         
         //Obtaining all nested children
         for (FileSystemItem child : fSI.getAllChildren()) {
-            System.out.println("child name:" + child.getName());
+            System.out.println("child name:" + child.getAbsolutePath());
         }
         
         //Obtaining the content of the resource (once the content is loaded it will be cached)
