@@ -25,7 +25,7 @@ And now we will see:
 * [**executing stringified source code**](#Executing-stringified-source-code)
 * [**scanning class paths with a component of class paths scanning engine: the ClassHunter**](#Scanning-class-paths-with-ClassHunter)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
-* [**Other examples of use of some components**](#Other-examples-of-use-of-some-components)
+* [**Other examples of using some components**](#Other-examples-of-using-some-components)
 
 <br/>
 
@@ -557,7 +557,7 @@ class-factory.byte-code-hunter.search-config.check-file-options=checkFileName
 paths.your-custom-path1=C:/some-folder;C:/another-folder;
 ```
 
-### Other examples of use of some components:
+### Other examples of using some components:
 <details open>
 	<summary><b>ClassFactory</b></summary>
 	<ul>
