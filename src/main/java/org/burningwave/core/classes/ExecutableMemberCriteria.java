@@ -65,14 +65,11 @@ public abstract class ExecutableMemberCriteria<
 				this.predicate = concat(
 					this.predicate,
 					(context, member) -> {
-						if (member.getName().equals("execute")) {
-							logDebug("Entered");
-						}
 						Class<?>[] memberParameters = member.getParameterTypes();
 						if (argumentsClassesAsList.size() == memberParameters.length) {							
 							TriPredicate<List<Class<?>>, Class<?>[], Integer> predicate = (argClasses, paramTypes, innerIdx) -> 
 								(argClasses.get(innerIdx) == null || paramTypes[innerIdx].isAssignableFrom(argClasses.get(innerIdx)));
-							if (this.classSupplier == null) {
+							if (context.getCriteria().getClassSupplier() == null) {
 								return predicate.test(argumentsClassesAsList, memberParameters, index);
 							} else {
 								return predicate.test(context.getCriteria().retrieveUploadedClasses(argumentsClasses), memberParameters, index);
