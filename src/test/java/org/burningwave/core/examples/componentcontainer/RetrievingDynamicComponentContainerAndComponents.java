@@ -7,6 +7,7 @@ import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
+@SuppressWarnings("unused")
 public class RetrievingDynamicComponentContainerAndComponents {
 
     public static void execute() throws Throwable {
