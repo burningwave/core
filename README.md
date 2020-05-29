@@ -25,6 +25,7 @@ And now we will see:
 * [**executing stringified source code**](#Executing-stringified-source-code)
 * [**scanning class paths with a component of class paths scanning engine: the ClassHunter**](#Scanning-class-paths-with-ClassHunter)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
+* [**Other examples of use of some components**](#Other-examples-of-use-of-some-components)
 
 <br/>
 
@@ -35,7 +36,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>5.37.0</version>
+    <version>5.37.1</version>
 </dependency>
 ```
 
@@ -638,6 +639,16 @@ paths.your-custom-path1=C:/some-folder;C:/another-folder;
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Executing-stringified-source-code">
 			<b>USE CASE</b>: executing stringified source code
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
+	<summary><b>FileSystemItem</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Reaching-a-resource-of-the-file-system">
+			<b>USE CASE</b>: Reaching a resource of the file system
 			</a>
 		</li>
 	</ul>
