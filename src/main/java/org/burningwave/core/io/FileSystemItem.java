@@ -616,7 +616,7 @@ public class FileSystemItem implements ManagedLogger {
 					}
 				}
 			} else {
-				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
+				try (FileInputStream fIS = FileInputStream.create(absolutePath)) {
 					return Cache.pathForContents.getOrUploadIfAbsent(
 						absolutePath, () ->
 						fIS.toByteBuffer()

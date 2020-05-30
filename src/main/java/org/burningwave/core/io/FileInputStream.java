@@ -63,9 +63,9 @@ public class FileInputStream extends java.io.FileInputStream implements Componen
 		}
 	}
 	
-	public static FileInputStream create(String name) {
+	public static FileInputStream create(String absolutePath) {
 		try {
-			return new FileInputStream(name);
+			return new FileInputStream(absolutePath);
 		} catch (java.io.FileNotFoundException exc) {
 			throw new FileSystemItemNotFoundException(exc);
 		}
