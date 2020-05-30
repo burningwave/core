@@ -48,7 +48,7 @@ import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.IterableZipContainer.Entry;
 
 @SuppressWarnings({"unchecked"})
-public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> implements AutoCloseable, ManagedLogger  {
+public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> implements ManagedLogger  {
 	public final static Integer CHECK_FILE_NAME = 0b00000001;
 	public final static Integer CHECK_FILE_SIGNATURE = 0b00000100;
 	public final static Integer CHECK_FILE_NAME_AND_SIGNATURE = 0b00000111;
@@ -383,7 +383,7 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> implem
 		return copy;
 	}
 	
-	@Override
+	
 	public void close() {
 		paths.clear();
 		paths = null;
