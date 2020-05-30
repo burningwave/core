@@ -15,7 +15,8 @@ import org.burningwave.core.io.IterableZipContainer.Entry;
 
 public class ClassFileScannerBasedOnFileName {
     
-    public static void execute() {
+    @SuppressWarnings("resource")
+	public static void execute() {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         Collection<FileSystemItem> files = new HashSet<>();
         componentSupplier.getFileSystemScanner().scan(

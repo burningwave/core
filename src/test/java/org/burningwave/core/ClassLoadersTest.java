@@ -44,4 +44,11 @@ public class ClassLoadersTest extends BaseTest {
 			return ClassLoaders.retrieveLoadedClasses(Thread.currentThread().getContextClassLoader());
 		});
 	}
+	
+	@Test
+	public void retrieveLoadedAllClassesTest() {
+		testNotEmpty(() -> {
+			return ClassLoaders.retrieveAllLoadedClasses(Thread.currentThread().getContextClassLoader());
+		});
+	}
 }
