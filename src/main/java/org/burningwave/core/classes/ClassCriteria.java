@@ -87,7 +87,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 	}
 
 	@Override
-	public ClassCriteria logicOperation(
+	protected ClassCriteria logicOperation(
 		ClassCriteria leftCriteria, ClassCriteria rightCriteria,
 		Function<BiPredicate<TestContext, Class<?>>, Function<BiPredicate<? super TestContext, ? super Class<?>>, BiPredicate<TestContext, Class<?>>>> binaryOperator,
 		ClassCriteria targetCriteria
