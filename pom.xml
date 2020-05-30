@@ -4,7 +4,7 @@
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
 
-	<version>5.41.1-SNAPSHOT</version>
+	<version>5.41.1</version>
 	<packaging>jar</packaging>
 	
 	<name>Burningwave Core</name>
@@ -75,7 +75,7 @@
 		<connection>scm:git:${repository.url}</connection>
 		<developerConnection>scm:git:${repository.url}</developerConnection>
 		<url>https://github.com/burningwave/core</url>
-		<tag>HEAD</tag>
+		<tag>core-5.41.1</tag>
 	</scm>
 	
 	<dependencies>
