@@ -7,25 +7,37 @@ import org.junit.jupiter.api.Test;
 
 public class ClassLoadersTest extends BaseTest {
 	
-	protected MemoryClassLoader getMemoryClassLoader() {
+	protected MemoryClassLoader getMemoryClassLoader(ClassLoader parent) {
 		return MemoryClassLoader.create(
-			null
+			parent
 		);
 	}
 	
 	@Test
 	public void setAsParentClassLoader() {
 		testNotNull(() -> {
-			ClassLoader classLoader = getMemoryClassLoader();
+			ClassLoader classLoader = getMemoryClassLoader(Thread.currentThread().getContextClassLoader());
 			ClassLoaders.setAsParent(classLoader, Thread.currentThread().getContextClassLoader(), true);
 			return ClassLoaders.getParent(classLoader);
 		});
 	}
 	
 	@Test
+	public void setAsMaster() {
+		testNotNull(() -> {
+			ClassLoader classLoader_1 = getMemoryClassLoader(null);
+			ClassLoader classLoader_2 = getMemoryClassLoader(classLoader_1);
+			ClassLoader classLoader_3 = getMemoryClassLoader(classLoader_2);
+			ClassLoader classLoader_4 = getMemoryClassLoader(null);
+			ClassLoaders.setAsMaster(classLoader_3, classLoader_4, true);
+			return ClassLoaders.getParent(classLoader_1);
+		});
+	}
+	
+	@Test
 	public void getAsParentClassLoader() {
 		testNotEmpty(() -> {
-			ClassLoader classLoader = getMemoryClassLoader();
+			ClassLoader classLoader = getMemoryClassLoader(null);
 			ClassLoaders.setAsParent(classLoader, Thread.currentThread().getContextClassLoader(), true);
 			return ClassLoaders.getAllParents(classLoader);
 		});
