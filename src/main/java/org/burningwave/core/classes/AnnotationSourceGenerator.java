@@ -84,14 +84,6 @@ public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
-	public AnnotationSourceGenerator addParameter(AnnotationSourceGenerator parameter) {
-		this.body = Optional.ofNullable(this.body).orElseGet(() ->
-			BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
-		);
-		this.body.addElement(parameter);
-		return this;
-	}
-	
 	public AnnotationSourceGenerator addParameter(AnnotationSourceGenerator... parameters) {
 		return addParameter(null, parameters);
 	}
