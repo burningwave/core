@@ -119,9 +119,10 @@ public class FileSystemItem implements ManagedLogger {
 			}
 		}
 		if (!exists) {
-			clear(true);
+			reset(true);
+			Cache.pathForFileSystemItems.remove(getAbsolutePath());
 			exists = false;
-		}
+		}	
 		return absolutePath.getValue();
 	}
 	
@@ -317,24 +318,20 @@ public class FileSystemItem implements ManagedLogger {
 		return refresh(false);
 	}
 	
-	public synchronized FileSystemItem reset() {
-		return reset(true);
-	}
-	
-	private synchronized FileSystemItem reset(boolean removeFromCache) {
-		return clear(removeFromCache);
-	}
-	
 	public synchronized FileSystemItem refresh(boolean removeFromCache) {
 		reset(removeFromCache);
 		computeConventionedAbsolutePath();
 		return this;
 	}
 	
-	private synchronized FileSystemItem clear(boolean removeFromCache) {
+	public synchronized FileSystemItem reset() {
+		return reset(true);
+	}
+	
+	public synchronized FileSystemItem reset(boolean removeFromCache) {
 		if (allChildren != null) {
 			for (FileSystemItem child : allChildren) {
-				child.clear(removeFromCache);
+				child.reset(removeFromCache);
 			}
 			allChildren.clear();
 			allChildren = null;
@@ -344,7 +341,7 @@ public class FileSystemItem implements ManagedLogger {
 			}			
 		} else if (children != null) {
 			for (FileSystemItem child : children) {
-				child.clear(removeFromCache);
+				child.reset(removeFromCache);
 			}
 			children.clear();
 			children = null;
@@ -361,7 +358,6 @@ public class FileSystemItem implements ManagedLogger {
 	
 	private void removeFromCache(FileSystemItem fileSystemItem) {
 		Cache.pathForContents.remove(fileSystemItem.getAbsolutePath());
-		Cache.pathForFileSystemItems.remove(fileSystemItem.getAbsolutePath());
 		Cache.pathForZipFiles.remove(fileSystemItem.getAbsolutePath());
 	}
 	
