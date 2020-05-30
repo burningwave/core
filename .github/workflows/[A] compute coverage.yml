@@ -6,6 +6,7 @@ on:
       - master
     paths: 
       - "src/test/**"
+      - ".github/workflows/**"
 
 jobs:
   compute-coverage:
@@ -15,8 +16,8 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v1
         with:
-          java-version: 9
+          java-version: 14
           architecture: x64
       - name: Build and test
-        run: mvn clean test -DskipTests=false -Dproject_jdk_version=9 -P run-coveralls jacoco:report coveralls:report -DrepoToken=${{ secrets.coveralls_repo_token }}
+        run: mvn clean test -DskipTests=false -Dproject_jdk_version=8 -P run-coveralls jacoco:report coveralls:report -DrepoToken=${{ secrets.coveralls_repo_token }}
 
