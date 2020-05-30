@@ -18,6 +18,7 @@ public class ClassesTest extends BaseTest {
 				Double.valueOf(3),
 				Float.valueOf(5),
 				Short.valueOf("1"),
+				Byte.valueOf((byte) 1),
 				Character.valueOf('c'),
 				true
 			);

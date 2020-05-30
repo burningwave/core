@@ -358,7 +358,7 @@ public class Classes implements Component, MembersRetriever {
 				id += (String)object  + "_";
 			} else if (object instanceof Number) {
 				if (object instanceof Byte) {
-					id += (int)object  + "_";
+					id += (byte)object  + "_";
 				} else if (object instanceof Short) {
 					id += (short)object  + "_";
 				} else if (object instanceof Integer) {
