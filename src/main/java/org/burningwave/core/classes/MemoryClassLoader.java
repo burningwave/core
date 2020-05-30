@@ -113,11 +113,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	} 
     
 	public boolean hasPackageBeenDefined(String packageName) {
-		if (Strings.isNotEmpty(packageName)) {
-			return ClassLoaders.retrieveLoadedPackage(this, packageName) != null;
-		} else {
-			return true;
-		}
+		return Strings.isEmpty(packageName) || ClassLoaders.retrieveLoadedPackage(this, packageName) != null;
 	}
     
     @Override
