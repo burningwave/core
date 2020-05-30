@@ -204,6 +204,16 @@ public class FileSystemItemTest extends BaseTest {
 	}
 	
 	@Test
+	public void copyAllChildrenTestTwo() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotEmpty(() -> 
+			componentSupplier.getPathHelper().getResource(
+				"/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar"
+			).copyAllChildrenTo(System.getProperty("user.home") + "/Desktop/bw-tests").getAllChildren()
+		);
+	}
+	
+	@Test
 	public void toUrlTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
