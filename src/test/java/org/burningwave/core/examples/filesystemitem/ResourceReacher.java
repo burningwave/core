@@ -38,7 +38,7 @@ public class ResourceReacher {
         //Obtaining a FileSystemItem through a relative path (in this case we are obtaining a reference to a jar
         //contained in an ear that is contained in a zip
         fSI = FileSystemItem.ofPath(
-            ComponentContainer.getInstance().getPathHelper().getPath((path) -> path.endsWith("target/test-classes")) + 
+            ComponentContainer.getInstance().getPathHelper().getAbsolutePathOfResource("target/test-classes") + 
             "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar"
         );
         
