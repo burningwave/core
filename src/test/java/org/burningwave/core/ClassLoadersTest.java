@@ -16,7 +16,7 @@ public class ClassLoadersTest extends BaseTest {
 	@Test
 	public void setAsParentClassLoader() {
 		testNotNull(() -> {
-			ClassLoader classLoader = getMemoryClassLoader(Thread.currentThread().getContextClassLoader());
+			ClassLoader classLoader = getMemoryClassLoader(null);
 			ClassLoaders.setAsParent(classLoader, Thread.currentThread().getContextClassLoader(), true);
 			return ClassLoaders.getParent(classLoader);
 		});
