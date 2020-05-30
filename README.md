@@ -395,15 +395,9 @@ public class ResourceReacher {
             child.copyTo(System.getProperty("user.home") + "/Desktop/copy");
         }
         
-        //Obtaining all nested children
-        for (FileSystemItem child : fSI.getAllChildren()) {
-            System.out.println("child name:" + child.getName());
-        }
-        
         //Obtaining a FileSystemItem through a relative path (in this case we are obtaining a reference to a jar
         //contained in an ear that is contained in a zip
-        fSI = FileSystemItem.ofPath(
-            ComponentContainer.getInstance().getPathHelper().getAbsolutePathOfResource("target/test-classes") + 
+        fSI = ComponentContainer.getInstance().getPathHelper().getResource(
             "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar"
         );
         
