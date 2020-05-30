@@ -1,6 +1,7 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+import static org.junit.Assert.assertTrue;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 
 import java.util.regex.Pattern;
@@ -22,5 +23,11 @@ public class StringsTest extends BaseTest {
 			Paths.convertURLPathToAbsolutePath(this.getClass().getClassLoader().getResource(java.util.regex.Pattern.class
 				.getName().replace(".", "/")+ ".class").toString())
 		);
+	}
+	
+	
+	@Test
+	public void stripTest() {
+		assertTrue(!Strings.contains(Strings.strip(" Hello! ", " "), ' '));
 	}
 }
