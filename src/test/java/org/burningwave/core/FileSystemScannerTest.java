@@ -6,6 +6,10 @@ import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.JavaClass;
+import org.burningwave.core.io.FileScanConfig;
+import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.FileSystemScanner.Scan.Configuration;
 import org.junit.jupiter.api.Test;
 
@@ -182,5 +186,27 @@ public class FileSystemScannerTest extends BaseTest {
 			return allFilesFound;
 		});
 		
+	}
+	
+	@Test
+	public void retrieveResources() {
+		testNotEmpty(() -> {
+			ComponentSupplier componentSupplier = getComponentSupplier();
+			FileSystemScanner fileSystemScanner = componentSupplier.getFileSystemScanner();
+			Collection<JavaClass> javaClasses = ConcurrentHashMap.newKeySet();
+			fileSystemScanner.scan(
+				FileScanConfig.forPaths(
+					componentSupplier.getPathHelper().getAllMainClassPaths()
+				).toScanConfiguration(
+					FileSystemItem.getFilteredConsumerForFileSystemScanner(
+						(fileSystemItem) -> "class".equals(fileSystemItem.getExtension()),
+						(fileSystemItem) -> {
+							javaClasses.add(JavaClass.create(fileSystemItem.toByteBuffer()));
+						}
+					)
+				)
+			);
+			return javaClasses;
+		});
 	}
 }
