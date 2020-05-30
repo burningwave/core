@@ -53,8 +53,7 @@ public class FileSystemItemTest extends BaseTest {
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/../../src/test/external-resources/libs-for-test.zip"
 		).getChildren());
-	}
-	
+	}	
 	
 	@Test
 	public void readTestSix() {
@@ -119,6 +118,14 @@ public class FileSystemItemTest extends BaseTest {
 		).getChildren());
 	}
 	
+	@Test
+	public void readTestThirteen() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
+		testNotEmpty(() -> FileSystemItem.ofPath(
+			basePath + "/../../src/test/external-resources/libs-for-test.zip"
+		).getAllChildren());
+	}
 	
 	@Test
 	@Tag("Heavy")
