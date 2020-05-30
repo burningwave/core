@@ -38,4 +38,10 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 	
+	@Test
+	public void retrieveLoadedClassesTest() {
+		testNotEmpty(() -> {
+			return ClassLoaders.retrieveLoadedClasses(Thread.currentThread().getContextClassLoader());
+		});
+	}
 }

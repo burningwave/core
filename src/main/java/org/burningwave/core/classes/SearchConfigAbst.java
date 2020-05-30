@@ -33,11 +33,11 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.burningwave.core.Component;
+import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.io.ClassFileScanConfig;
 
 @SuppressWarnings("unchecked")
-abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Component {
+abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCloseable, ManagedLogger {
 	ClassCriteria classCriteria;
 	ClassFileScanConfig scanConfig;
 	ClassLoader parentClassLoaderForMainClassLoader;
@@ -171,5 +171,14 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Compon
 		copy.considerURLClassLoaderPathsAsScanned = this.considerURLClassLoaderPathsAsScanned;
 		copy.waitForSearchEnding = this.waitForSearchEnding;
 		return copy;
+	}
+	
+	@Override
+	public void close() {
+		this.classCriteria.close();
+		this.classCriteria = null;
+		this.scanConfig.close();
+		this.scanConfig = null;
+		this.parentClassLoaderForMainClassLoader = null;
 	}
 }

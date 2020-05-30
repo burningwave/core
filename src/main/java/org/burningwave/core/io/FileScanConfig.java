@@ -37,6 +37,7 @@ import java.util.stream.Stream;
 
 import org.burningwave.core.io.IterableZipContainer.Entry;
 
+@SuppressWarnings("resource")
 public class FileScanConfig extends FileScanConfigAbst<FileScanConfig> {
 	
 	@SafeVarargs

@@ -42,12 +42,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.IterableZipContainer.Entry;
 
 @SuppressWarnings({"unchecked"})
-public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
+public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> implements AutoCloseable, ManagedLogger  {
 	public final static Integer CHECK_FILE_NAME = 0b00000001;
 	public final static Integer CHECK_FILE_SIGNATURE = 0b00000100;
 	public final static Integer CHECK_FILE_NAME_AND_SIGNATURE = 0b00000111;
@@ -380,5 +381,20 @@ public abstract class FileScanConfigAbst<F extends FileScanConfigAbst<F>> {
 		copy.optimizePaths = this.optimizePaths;
 		copy.checkFileOptions = this.checkFileOptions;
 		return copy;
+	}
+	
+	@Override
+	public void close() {
+		paths.clear();
+		paths = null;
+		fileCriteriaForFileSystemEntry.close();
+		fileCriteriaForFileSystemEntry = null;
+		archiveCriteriaForFileSystemEntry.close();
+		archiveCriteriaForFileSystemEntry = null;
+		fileCriteriaForZipEntry.close();
+		fileCriteriaForZipEntry = null;
+		archiveCriteriaForZipEntry.close();
+		archiveCriteriaForZipEntry = null;
+		checkFileOptions = null;		
 	}
 }

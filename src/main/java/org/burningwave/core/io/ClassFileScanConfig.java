@@ -40,6 +40,7 @@ import java.util.stream.Stream;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.IterableZipContainer.Entry;
 
+@SuppressWarnings("resource")
 public class ClassFileScanConfig extends FileScanConfigAbst<ClassFileScanConfig> {
 	
 	@SafeVarargs

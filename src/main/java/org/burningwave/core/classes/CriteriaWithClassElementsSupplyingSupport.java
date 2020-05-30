@@ -200,15 +200,21 @@ public abstract class CriteriaWithClassElementsSupplyingSupport<
 	
 	@Override
 	public void close() {
-		uploadedClassesMap.clear();
+		if (uploadedClassesMap != null) {
+			uploadedClassesMap.clear();
+		}
 		uploadedClassesMap = null;
-		classesToBeUploaded.clear();
+		if (classesToBeUploaded != null) {
+			classesToBeUploaded.clear();
+		}
 		classesToBeUploaded = null;
-		uploadedClasses.clear();
-		uploadedClasses = null;
-		byteCodeForClasses.clear();
+		if (byteCodeForClasses != null) {
+			byteCodeForClasses.clear();
+		}
 		byteCodeForClasses = null;
-		loadedBytecode.clear();
+		if (loadedBytecode != null) {
+			loadedBytecode.clear();
+		}
 		loadedBytecode = null;
 		classSupplier = null;
 		byteCodeSupplier = null;

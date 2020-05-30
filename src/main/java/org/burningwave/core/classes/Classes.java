@@ -547,11 +547,7 @@ public class Classes implements Component, MembersRetriever {
 		}
 		
 		public Package retrieveLoadedPackage(ClassLoader classLoader, Object packageToFind, String packageName) {
-			try {
-				return LowLevelObjectsHandler.retrieveLoadedPackage(classLoader, packageToFind, packageName);
-			} catch (Throwable exc) {
-				throw Throwables.toRuntimeException(exc);
-			}
+			return ThrowingSupplier.get(() -> LowLevelObjectsHandler.retrieveLoadedPackage(classLoader, packageToFind, packageName));
 		}
 		
 		public <T> Class<T> loadOrDefine(
