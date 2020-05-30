@@ -24,11 +24,20 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllTestOne() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
+			() -> componentSupplier.getClassHunter().loadInCache(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)
-			),
+			).find(),
+			(result) ->
+				result.getClasses()
+		);
+		testNotEmpty(
+			() -> componentSupplier.getClassHunter().loadInCache(
+				SearchConfig.forPaths(
+					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test")
+				)
+			).find(),
 			(result) ->
 				result.getClasses()
 		);

@@ -606,11 +606,7 @@ public class Classes implements Component, MembersRetriever {
 					return loadOrDefineByByteCode(byteCodes.get(className), classLoader);
 				}
 			} else {
-				for (Map.Entry<String, ByteBuffer> clazz : byteCodes.entrySet()) {
-					((MemoryClassLoader)classLoader).addByteCode(
-						clazz.getKey(), clazz.getValue()
-					);
-				}
+				((MemoryClassLoader)classLoader).addByteCodes(byteCodes);
 				return (Class<T>) classLoader.loadClass(className);
 			}
 		}

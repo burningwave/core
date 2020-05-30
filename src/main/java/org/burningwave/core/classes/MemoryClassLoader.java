@@ -38,7 +38,6 @@ import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -95,12 +94,11 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     	return Optional.ofNullable(getNotLoadedByteCodes(name)).map(entry -> entry.getValue()).orElse(null);
     }
     
-    void addByteCodes(Map<String, ByteBuffer> classes) {
-		Set<String> clsNames = classes.keySet();
-		Iterator<String> clsNamesItr = clsNames.iterator();
-		while (clsNamesItr.hasNext()) {
-			String clsName = clsNamesItr.next();
-			addByteCode(clsName, classes.get(clsName));
+    void addByteCodes(Map<String, ByteBuffer> byteCodes) {
+		for (Map.Entry<String, ByteBuffer> clazz : byteCodes.entrySet()) {
+			addByteCode(
+				clazz.getKey(), clazz.getValue()
+			);
 		}
     }
     
