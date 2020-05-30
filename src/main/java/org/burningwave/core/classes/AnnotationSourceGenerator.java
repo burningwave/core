@@ -63,11 +63,11 @@ public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 		return types;
 	}
 	
-	public AnnotationSourceGenerator addParameters(VariableSourceGenerator... parameters) {
-		return addParameters(null, parameters);
+	public AnnotationSourceGenerator addParameter(VariableSourceGenerator... parameters) {
+		return addParameter(null, parameters);
 	}
 	
-	public AnnotationSourceGenerator addParameters(String name, VariableSourceGenerator... parameters) {
+	public AnnotationSourceGenerator addParameter(String name, VariableSourceGenerator... parameters) {
 		this.body = Optional.ofNullable(this.body).orElseGet(() ->
 			BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
 		);
@@ -84,13 +84,6 @@ public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
-	public AnnotationSourceGenerator addParameter(VariableSourceGenerator parameter) {
-		this.body = Optional.ofNullable(this.body).orElseGet(() -> 
-			BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
-		).addElement(parameter.setDelimiter(null));
-		return this;
-	}
-	
 	public AnnotationSourceGenerator addParameter(AnnotationSourceGenerator parameter) {
 		this.body = Optional.ofNullable(this.body).orElseGet(() ->
 			BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
@@ -99,11 +92,11 @@ public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
-	public AnnotationSourceGenerator addParameters(AnnotationSourceGenerator... parameters) {
-		return addParameters(null, parameters);
+	public AnnotationSourceGenerator addParameter(AnnotationSourceGenerator... parameters) {
+		return addParameter(null, parameters);
 	}
 	
-	public AnnotationSourceGenerator addParameters(String name, AnnotationSourceGenerator... parameters) {
+	public AnnotationSourceGenerator addParameter(String name, AnnotationSourceGenerator... parameters) {
 		this.body = Optional.ofNullable(this.body).orElseGet(() ->
 			BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
 		);

@@ -94,7 +94,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 							.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Integer.class), "index2")
 									.addModifier(Modifier.PRIVATE))
 							.addAnnotation(
-					            	AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameters(
+					            	AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameter(
 					            		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
 					            			VariableSourceGenerator.create("message").setValue("\"Person name should not be empty\"")
 					            		).addParameter(
@@ -151,7 +151,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
             ClassSourceGenerator.create(
                 TypeDeclarationSourceGenerator.create("MyExtendedClass")
             ).addAnnotation(
-            	AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameters(
+            	AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameter(
             		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
             			VariableSourceGenerator.create("message").setValue("\"Person name should not be empty\"")
             		).addParameter(

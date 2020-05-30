@@ -30,7 +30,7 @@ public class RuntimeClassExtenderTwo {
             ClassSourceGenerator.create(
                 TypeDeclarationSourceGenerator.create("MyExtendedClassTwo")
             ).addAnnotation(
-            	AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameters(
+            	AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameter(
             		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
             			VariableSourceGenerator.create("message").setValue("\"Person name should not be empty\"")
             		).addParameter(
