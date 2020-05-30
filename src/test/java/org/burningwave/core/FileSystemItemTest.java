@@ -185,9 +185,12 @@ public class FileSystemItemTest extends BaseTest {
 	public void toByteBufferTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
-		testNotNull(() -> FileSystemItem.ofPath(
-			basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar"
-		).toByteBuffer());
+		testNotNull(() -> {
+			FileSystemItem fIS = FileSystemItem.ofPath(basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear");
+			fIS.toByteBuffer();
+			fIS.reset();
+			return fIS.toByteBuffer();
+		});
 	}
 	
 	@Test
