@@ -329,8 +329,6 @@ public class PathHelper implements Component {
 	) {
 		Collection<T> files = new HashSet<>();
 		if (resourcesRelativePaths != null && resourcesRelativePaths.length > 0) {
-			Integer loggingLevelFlags = ManagedLoggersRepository.getLoggingLevelFlags(FileSystemItem.class);
-			ManagedLoggersRepository.disableLogging(FileSystemItem.class);
 			for (String resourceRelativePath : resourcesRelativePaths) {
 				getAllPaths().stream().forEach((path) -> {
 					FileSystemItem fileSystemItem = FileSystemItem.ofPath(path + "/" + resourceRelativePath);
@@ -339,7 +337,6 @@ public class PathHelper implements Component {
 					}
 				});
 			}
-			ManagedLoggersRepository.setLoggingLevelFlags(FileSystemItem.class, loggingLevelFlags);
 		}
 		return files;
 	}

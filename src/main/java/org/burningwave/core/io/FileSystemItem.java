@@ -65,7 +65,6 @@ public class FileSystemItem implements ManagedLogger {
 	private FileSystemItem parentContainer;
 	private Set<FileSystemItem> children;
 	private Set<FileSystemItem> allChildren;
-	private Boolean exists;
 	
 	private FileSystemItem(String realAbsolutePath) {
 		realAbsolutePath = Paths.clean(realAbsolutePath);
@@ -101,27 +100,28 @@ public class FileSystemItem implements ManagedLogger {
 		);
 		if (fileSystemItem.absolutePath.getValue() == null && conventionedAbsolutePath != null) {
 			fileSystemItem.absolutePath.setValue(conventionedAbsolutePath);
-			fileSystemItem.exists = true;
 		}
 		return fileSystemItem;
 	}
 	
-	private synchronized String computeConventionedAbsolutePath() {
-		if ((absolutePath.getValue() == null && exists != Boolean.FALSE) || parentContainer == null) {
-			if (parentContainer != null && parentContainer.isArchive()) {
-				ByteBuffer par = parentContainer.toByteBuffer();
-				String relativePath = absolutePath.getKey().replace(parentContainer.getAbsolutePath() + "/", "");
-				String conventionedAbsolutePath = parentContainer.computeConventionedAbsolutePath() + retrieveConventionedRelativePath(par, parentContainer.getAbsolutePath(), relativePath);
-				absolutePath.setValue(conventionedAbsolutePath);
-				exists = true;
-			} else {
-				absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
+	private String computeConventionedAbsolutePath() {
+		if ((absolutePath.getValue() == null) || parentContainer == null) {
+			synchronized(this) {
+				if ((absolutePath.getValue() == null) || parentContainer == null) {
+					if (parentContainer != null && parentContainer.isArchive()) {
+						ByteBuffer par = parentContainer.toByteBuffer();
+						String relativePath = absolutePath.getKey().replace(parentContainer.getAbsolutePath() + "/", "");
+						String conventionedAbsolutePath = parentContainer.computeConventionedAbsolutePath() + retrieveConventionedRelativePath(par, parentContainer.getAbsolutePath(), relativePath);
+						absolutePath.setValue(conventionedAbsolutePath);
+					} else {
+						absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
+					}
+				}
 			}
 		}
-		if (!exists) {
+		if (absolutePath.getValue() == null) {
 			reset(true);
 			Cache.pathForFileSystemItems.remove(getAbsolutePath());
-			exists = false;
 		}	
 		return absolutePath.getValue();
 	}
@@ -129,7 +129,6 @@ public class FileSystemItem implements ManagedLogger {
 	private String retrieveConventionedAbsolutePath(String realAbsolutePath, String relativePath) {
 		File file = new File(realAbsolutePath);
 		if (file.exists()) {
-			exists = true;
 			if (relativePath.isEmpty()) {
 				if (file.isDirectory()) {
 					return realAbsolutePath + (realAbsolutePath.endsWith("/")? "" : "/");
@@ -147,13 +146,11 @@ public class FileSystemItem implements ManagedLogger {
 				}
 			} else {
 				try (FileInputStream fileInputStream = FileInputStream.create(file)) {
-					exists = true;
 					return fileInputStream.getAbsolutePath() + IterableZipContainer.ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
 						fileInputStream.toByteBuffer(), fileInputStream.getAbsolutePath(), relativePath
 					);
 				} catch (Exception exc) {
-					exists = false;
-					logWarn("File {}/{} does not exists", realAbsolutePath, relativePath);
+					//logWarn("File {}/{} does not exists", realAbsolutePath, relativePath);
 					return null;
 				} 
 			}		
@@ -162,7 +159,6 @@ public class FileSystemItem implements ManagedLogger {
 			relativePath = realAbsolutePath.replace(pathToTest + "/", "") + (relativePath.isEmpty()? "" : "/") + relativePath;
 			return retrieveConventionedAbsolutePath(pathToTest, relativePath);
 		} else {
-			exists = false;
 			return null;
 		}
 	}
@@ -346,7 +342,6 @@ public class FileSystemItem implements ManagedLogger {
 			children.clear();
 			children = null;
 		}
-		exists = null;
 		parentContainer = null;
 		absolutePath.setValue(null);
 		parent = null;
@@ -487,7 +482,6 @@ public class FileSystemItem implements ManagedLogger {
 								fileSystemItem, zEntry, zEntry.getName()
 							)
 						);
-						fileSystemItem.exists = true;
 						logDebug(fileSystemItem.getAbsolutePath());
 						if (fileSystemItem.isArchive()) {
 							Optional.ofNullable(
@@ -562,19 +556,19 @@ public class FileSystemItem implements ManagedLogger {
 		}
 	}
 	
-	public synchronized boolean exists() {
-		if (exists == null) {
+	public boolean exists() {
+		if (absolutePath.getValue() == null) {
 			computeConventionedAbsolutePath();
 		}
-		return exists;
+		return absolutePath.getValue() != null;
 	}
 	
-	public synchronized boolean isContainer() {
+	public boolean isContainer() {
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
 		return conventionedAbsolutePath.endsWith("/");
 	}
 	
-	public synchronized boolean isCompressed() {
+	public boolean isCompressed() {
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
 		return 
 			(conventionedAbsolutePath.contains(IterableZipContainer.ZIP_PATH_SEPARATOR) && 
@@ -585,16 +579,16 @@ public class FileSystemItem implements ManagedLogger {
 		;
 	}
 	
-	public synchronized boolean isFile() {
+	public boolean isFile() {
 		return !isContainer() || isArchive();
 	}
 	
-	public synchronized boolean isArchive() {
+	public boolean isArchive() {
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
 		return conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR);
 	}
 	
-	public synchronized boolean isFolder() {
+	public boolean isFolder() {
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
 		return conventionedAbsolutePath.endsWith("/") && !conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR);
 	}
@@ -606,7 +600,7 @@ public class FileSystemItem implements ManagedLogger {
 			return resource;
 		}
 		computeConventionedAbsolutePath();
-		if (exists && !isFolder()) {
+		if (exists() && !isFolder()) {
 			if (isCompressed()) {
 				return Cache.pathForContents.get(absolutePath);
 			} else {
