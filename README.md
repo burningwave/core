@@ -8,8 +8,6 @@
 
 [![Coverage Status](https://coveralls.io/repos/github/burningwave/core/badge.svg?branch=master)](https://coveralls.io/github/burningwave/core?branch=master)
 
-<a href='https://coveralls.io/github/burningwave/core'><img src='https://coveralls.io/repos/github/burningwave/core/badge.svg' alt='Coverage Status' /></a>
-
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
 
 **Tested on Java versions ranging from 8 to 15-ea, Burningwave Core** is a fully independent, advanced, free and open source Java frameworks building library and it is useful for scanning class paths, generating classes at runtime, facilitating the use of reflection, scanning the filesystem, executing stringified source code and much more...
