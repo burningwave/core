@@ -79,6 +79,10 @@ public class Properties extends java.util.Properties {
 			properties.listeners.add(this);
 		}
 		
+		public default void unregister(Properties properties) {
+			properties.listeners.remove(this);
+		} 
+		
 		public default void receiveNotification(Properties properties, Event event, Object key, Object value) {
 			
 		}

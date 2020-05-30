@@ -39,7 +39,9 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -325,14 +327,17 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 
 	public ComponentSupplier clear() {
-		components.forEach((type, instance) -> { 
+		Iterator<Entry<Class<? extends Component>, Component>> componentsItr =
+			components.entrySet().iterator();
+		while (componentsItr.hasNext()) {
+			Entry<Class<? extends Component>, Component> entry = componentsItr.next();
 			try {
-				instance.close();
+				entry.getValue().close();
 			} catch (Throwable exc) {
-				logError("Exception occurred while closing " + instance, exc);
+				logError("Exception occurred while closing " + entry.getValue(), exc);
 			}
-			components.remove(type);
-		});
+			componentsItr.remove();
+		}
 		return this;
 	}
 	

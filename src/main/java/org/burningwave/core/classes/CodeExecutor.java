@@ -194,4 +194,13 @@ public class CodeExecutor implements Component {
 			}
 		});
 	}
+	
+	@Override
+	public void close() {
+		unregister(config);
+		classFactory = null;
+		pathHelper = null;
+		classFactorySupplier = null;
+		config = null;
+	}
 }

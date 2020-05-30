@@ -513,6 +513,19 @@ public class ClassFactory implements Component {
 			
 	}
 	
+	@Override
+	public void close() {
+		unregister(config);
+		pathHelper = null;
+		javaMemoryCompiler = null;
+		pojoSubTypeRetriever = null;	
+		defaultClassLoader = null;
+		byteCodeHunter = null;
+		classPathHunter = null;
+		classPathHunterSupplier = null;
+		defaultClassLoaderSupplier = null;
+		config = null;
+	}
 
 	public static abstract class ClassRetriever {
 		

@@ -479,6 +479,7 @@ public class PathHelper implements Component {
 	
 	@Override
 	public void close() {
+		unregister(config);
 		pathGroups.forEach((key, value) -> {
 			value.clear();
 			pathGroups.remove(key);
