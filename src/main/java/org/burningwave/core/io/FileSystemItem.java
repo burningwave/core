@@ -351,12 +351,12 @@ public class FileSystemItem implements ManagedLogger {
 		absolutePath.setValue(null);
 		parent = null;
 		if (removeFromCache) {
-			removeFromCache(this);
+			removeLinkedResourcesFromCache(this);
 		}
 		return this;
 	}
 	
-	private void removeFromCache(FileSystemItem fileSystemItem) {
+	private void removeLinkedResourcesFromCache(FileSystemItem fileSystemItem) {
 		Cache.pathForContents.remove(fileSystemItem.getAbsolutePath());
 		Cache.pathForZipFiles.remove(fileSystemItem.getAbsolutePath());
 	}
