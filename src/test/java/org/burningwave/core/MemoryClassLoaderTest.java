@@ -71,4 +71,29 @@ public class MemoryClassLoaderTest extends BaseTest {
 		});
 	}
 	
+	@Test
+	public void forceCompiledClassesLoadingTestOne() throws ClassNotFoundException {
+		testNotEmpty(() -> {
+			ComponentSupplier componentSupplier = getComponentSupplier();
+			ClassSourceGenerator ClassSG = ClassSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("ReTry")
+			).addModifier(
+				Modifier.PUBLIC
+			).addInnerClass(
+				ClassSourceGenerator.create(
+					TypeDeclarationSourceGenerator.create("ReReTry")
+				).addModifier(
+					Modifier.PUBLIC | Modifier.STATIC
+				).expands(TypeDeclarationSourceGenerator.create("ReTry"))
+			);
+			UnitSourceGenerator unitSG = UnitSourceGenerator.create("tryyy").addClass(
+				ClassSG
+			).addStaticImport(StaticComponentContainer.class, "Streams", "Classes");
+			JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
+			MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
+			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(unitSG.make())).entrySet());
+			return memoryClassLoader.forceCompiledClassesLoading();
+		});
+	}
+	
 }

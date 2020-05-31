@@ -38,7 +38,7 @@ import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -238,8 +238,8 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		}
 	}
 	
-	/*
-	@Override Previous version changed since 5.43.2
+	/* This is the previous version of findClass method: it has changed since 5.43.2
+	@Override 
     protected Class<?> findClass(String className) throws ClassNotFoundException {
 		Class<?> cls = null;
 		ByteBuffer byteCode = notLoadedByteCodes.get(className);
@@ -306,25 +306,16 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		return loadedByteCodes;
 	}
 		
-	public void forceCompiledClassesLoading() {
-		Set<String> compiledClassesNotLoaded = new LinkedHashSet<>(loadCompiledClassesNotLoaded());
-		if (!compiledClassesNotLoaded.isEmpty()) {	
-			Set<String> compiledClassesNotLoaded2 = new LinkedHashSet<>(loadCompiledClassesNotLoaded());
-			if (!compiledClassesNotLoaded2.isEmpty() && !compiledClassesNotLoaded2.containsAll(compiledClassesNotLoaded)) {
-				forceCompiledClassesLoading();
-			}
-		}
-	}
-	
-	public Set<String> loadCompiledClassesNotLoaded() {
-		for (Map.Entry<String, ByteBuffer> entry : notLoadedByteCodes.entrySet()){
+	public Collection<Class<?>> forceCompiledClassesLoading() {
+		Collection<Class<?>> loadedClasses = new HashSet<>();
+		for (Map.Entry<String, ByteBuffer> entry : new HashMap<>(notLoadedByteCodes).entrySet()){
 			try {
-				loadClass(entry.getKey());
+				loadedClasses.add(loadClass(entry.getKey()));
 			} catch (Throwable exc) {
 				logWarn("Could not load class " + entry.getKey(), exc.getMessage());
 			}
 		}
-		return notLoadedByteCodes.keySet();
+		return loadedClasses;
 	}
 	
 	public void clear () {

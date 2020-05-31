@@ -45,7 +45,7 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	
 	private TypeDeclarationSourceGenerator() {}
 	
-	static TypeDeclarationSourceGenerator create(String name, String simpleName) {
+	public static TypeDeclarationSourceGenerator create(String name, String simpleName) {
 		return new TypeDeclarationSourceGenerator(name, simpleName);
 	}
 	
