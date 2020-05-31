@@ -228,6 +228,10 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 				);
     			throw exc;
         	}
+			if (cls == null){
+        		removeNotLoadedCompiledClass(className);
+        		logDebug("Could not load compiled class " + className + ", so it will be removed");
+        	}
 		} else {
 			logWarn("Compiled class " + className + " not found");
 		}
@@ -239,7 +243,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	/*
-	@Override Previous version changed from version 5.43.2
+	@Override Previous version changed since 5.43.2
     protected Class<?> findClass(String className) throws ClassNotFoundException {
 		Class<?> cls = null;
 		ByteBuffer byteCode = notLoadedByteCodes.get(className);
