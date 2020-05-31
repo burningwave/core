@@ -8,7 +8,6 @@ on:
       - "src/main/**"
       - "src/test/**"
       - ".github/workflows/**"
-      - "pom.xml"
       - "**.properties"
       - "**.xml"
 

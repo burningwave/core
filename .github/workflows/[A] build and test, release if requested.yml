@@ -8,7 +8,6 @@ on:
       - "src/main/**.java"
       - "**.properties"
       - "**.xml"
-      - "pom.xml"
 
 jobs:
     
