@@ -356,9 +356,6 @@
 							<sourceDirectories>
 								<sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
 							</sourceDirectories>
-							<excludes>
-        						<exclude>**/LowLevelObjectsHandler</exclude>
-    						</excludes>
 						</configuration>
 					</plugin>
 					<plugin>
