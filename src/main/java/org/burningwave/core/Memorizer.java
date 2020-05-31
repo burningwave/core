@@ -15,10 +15,5 @@ public interface Memorizer {
 		FileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix());
 		return FileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix() + "/" + folderName);
 	}
-	
-	default public File getOrCreateTemporaryFolder() {
-		//Register main temporary folder for deleting on FileSystemHelper closing 
-		return FileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix());
-	}
 
 }
