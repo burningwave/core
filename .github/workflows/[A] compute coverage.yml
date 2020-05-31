@@ -5,9 +5,12 @@ on:
     branches:
       - master
     paths: 
-      - "pom.xml"
+      - "src/main/**"
       - "src/test/**"
       - ".github/workflows/**"
+      - "pom.xml"
+      - "**.properties"
+      - "**.xml"
 
 jobs:
   compute-coverage:
