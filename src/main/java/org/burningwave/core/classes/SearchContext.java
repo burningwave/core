@@ -226,7 +226,7 @@ public class SearchContext<T> implements Component {
 	
 	protected Class<?> loadClass(Class<?> cls) {
 		return execute(
-			() -> pathScannerClassLoader.loadOrUploadClass(cls), 
+			() -> pathScannerClassLoader.loadOrDefineClass(cls), 
 			() -> null, 
 			() -> cls.getName()
 		);
@@ -234,7 +234,7 @@ public class SearchContext<T> implements Component {
 	
 	protected Class<?> loadClass(JavaClass cls) {
 		return execute(
-			() -> pathScannerClassLoader.loadOrUploadClass(cls), 
+			() -> pathScannerClassLoader.loadOrDefineClass(cls), 
 			() -> null, 
 			() -> cls.getName()
 		);

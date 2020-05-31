@@ -44,14 +44,14 @@ public class MemoryClassLoaderTest extends BaseTest {
 	@Test
 	public void loadClassTestOne() {
 		testNotNull(() ->
-			getMemoryClassLoader(null).loadOrUploadClass(PropertyAccessor.class)
+			getMemoryClassLoader(null).loadOrDefineClass(PropertyAccessor.class)
 		);
 	}
 	
 	@Test
 	public void getResourceAsStreamTestOne() throws ClassNotFoundException {
 		MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
-		memoryClassLoader.loadOrUploadClass(PropertyAccessor.class);
+		memoryClassLoader.loadOrDefineClass(PropertyAccessor.class);
 		testNotNull(() ->
 			memoryClassLoader.getResourceAsStream(PropertyAccessor.class.getName().replace(".", "/") + ".class")
 		);
@@ -60,7 +60,7 @@ public class MemoryClassLoaderTest extends BaseTest {
 	@Test
 	public void getResourceAsStreamTestTwo() throws ClassNotFoundException {
 		MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
-		memoryClassLoader.loadOrUploadClass(PropertyAccessor.class);
+		memoryClassLoader.loadOrDefineClass(PropertyAccessor.class);
 		assertTrue(memoryClassLoader.hasPackageBeenDefined(PropertyAccessor.class.getPackage().getName()));
 	}
 	
