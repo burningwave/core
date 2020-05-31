@@ -228,10 +228,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 				);
     			throw exc;
         	}
-			if (cls == null){
-        		removeNotLoadedCompiledClass(className);
-        		logDebug("Could not load compiled class " + className + ", so it will be removed");
-        	}
 		} else {
 			logWarn("Compiled class " + className + " not found");
 		}
