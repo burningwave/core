@@ -229,7 +229,7 @@ public class ClassFactory implements Component {
 					);
 					return new ClassRetriever() {
 						@Override
-						public Class<?> get(String className, Map<String, ByteBuffer> additionalByteCodes) {
+						public Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className) {
 							try {
 								Map<String, ByteBuffer> finalByteCodes = compiledByteCodes;
 								if (additionalByteCodes != null) {
@@ -257,7 +257,7 @@ public class ClassFactory implements Component {
 			logInfo("Classes {} loaded by classloader {} without building", String.join(", ", classes.keySet()), classLoader);
 			return new ClassRetriever() {
 				@Override
-				public Class<?> get(String className, Map<String, ByteBuffer> additionalByteCodes) {
+				public Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className) {
 					try {
 						return classLoader.loadClass(className);
 					} catch (Throwable exc) {
@@ -529,16 +529,24 @@ public class ClassFactory implements Component {
 
 	public static abstract class ClassRetriever {
 		
-		public abstract Class<?> get(String className, Map<String, ByteBuffer> additionalByteCodes);
+		public abstract Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className);
+		
+		public Collection<Class<?>> get(Map<String, ByteBuffer> additionalByteCodes, String... classNames) {
+			Collection<Class<?>> classes = new HashSet<>();
+			for(String className : classNames) {
+				classes.add(get(additionalByteCodes, className));
+			}
+			return classes;
+		}
 		
 		public Class<?> get(String className) {
-			return get(className, null);
+			return get(null, className);
 		}
 		
 		public Collection<Class<?>> get(String... classesName) {
 			Collection<Class<?>> classes = new HashSet<>();
 			for(String className : classesName) {
-				classes.add(get(className, null));
+				classes.add(get(null, className));
 			}
 			return classes;
 		}

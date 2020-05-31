@@ -28,9 +28,11 @@
  */
 package org.burningwave.core.classes;
 
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.FileSystemScanner.Scan;
@@ -112,6 +114,13 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 		
 		public Map<String, JavaClass> getClassesFlatMap() {
 			return context.getItemsFoundFlatMap();
+		}
+		
+		public Map<String, ByteBuffer> getByteCodesFlatMap() {
+			return getClassesFlatMap().entrySet().stream().collect(
+				Collectors.toMap(e ->
+					e.getValue().getName(), e -> e.getValue().getByteCode())
+			);
 		}
 	}
 }

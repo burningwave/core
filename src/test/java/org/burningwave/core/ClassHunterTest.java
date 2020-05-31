@@ -26,7 +26,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().loadInCache(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/org")
+					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
 				)
 			).find(),
 			(result) ->

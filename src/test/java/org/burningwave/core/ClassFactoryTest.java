@@ -14,11 +14,13 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.bean.Complex;
 import org.burningwave.core.bean.PojoInterface;
+import org.burningwave.core.classes.ByteCodeHunter.SearchResult;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassSourceGenerator;
 import org.burningwave.core.classes.FunctionSourceGenerator;
 import org.burningwave.core.classes.LoadOrBuildAndDefineConfig;
 import org.burningwave.core.classes.PojoSourceGenerator;
+import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
 import org.burningwave.core.classes.VariableSourceGenerator;
@@ -222,6 +224,43 @@ public class ClassFactoryTest extends BaseTest {
 				).addClassPathsWhereToSearchNotFoundClasses(
 						pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				)
+			);
+			return classRetriever.get("packagename.ExternalClassReferenceTest");
+		});
+	}
+	
+	@Test
+	public void getOrBuildClassWithExternalClassThree() {
+		getOrBuildClassWithExternalClassTwo();
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
+		UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
+			ClassSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("ExternalClassReferenceTest")
+			).addModifier(
+				Modifier.PUBLIC
+			).expands(
+				TypeDeclarationSourceGenerator.create("DefaultSerializer")
+			)
+		).addImport(
+			"org.springframework.core.serializer.DefaultSerializer"
+		);
+		testNotNull(() -> {
+			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).addCompilationClassPaths(
+					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
+				).addClassPathsWhereToSearchNotFoundClasses(
+					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
+				)
+			);
+			SearchResult searchResult = componentSupplier.getByteCodeHunter().loadInCache(SearchConfig.forPaths(
+					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
+				)
+			).find();
+			classRetriever.get(
+				searchResult.getByteCodesFlatMap(), 
+				"org.apache.commons.lang.ArrayUtils",
+				"org.springframework.util.TypeUtils"
 			);
 			return classRetriever.get("packagename.ExternalClassReferenceTest");
 		});
