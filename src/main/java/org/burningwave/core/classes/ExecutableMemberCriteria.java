@@ -68,7 +68,7 @@ public abstract class ExecutableMemberCriteria<
 						Class<?>[] memberParameters = member.getParameterTypes();
 						if (argumentsClassesAsList.size() == memberParameters.length) {							
 							TriPredicate<List<Class<?>>, Class<?>[], Integer> predicate = (argClasses, paramTypes, innerIdx) -> 
-								(argClasses.get(innerIdx) == null || paramTypes[innerIdx].isAssignableFrom(argClasses.get(innerIdx)));
+								(argClasses.get(innerIdx) == null || Classes.isAssignableFrom(paramTypes[innerIdx], argClasses.get(innerIdx)));
 							if (context.getCriteria().getClassSupplier() == null) {
 								return predicate.test(argumentsClassesAsList, memberParameters, index);
 							} else {

@@ -389,6 +389,29 @@ public class Classes implements Component, MembersRetriever {
 		}
 	}
 	
+	public boolean isAssignableFrom(Class<?> cls_01, Class<?> cls_02) {
+		return getTypeOrWrapperIfPrimitive(cls_01).isAssignableFrom(getTypeOrWrapperIfPrimitive(cls_02));
+	}
+	
+	public Class<?> getTypeOrWrapperIfPrimitive(Class<?> cls) {
+		if (cls == int.class) {
+			return Integer.class;
+		} else if (cls == long.class) {
+			return Long.class;
+		} else if (cls == float.class) {
+			return Float.class;
+		} else if (cls == double.class) {
+			return Double.class;
+		} else if (cls == boolean.class) {
+			return Boolean.class;
+		} else if (cls == byte.class) {
+			return Byte.class;
+		} else if (cls == char.class) {
+			return Character.class;
+		}
+		return cls;
+	}
+	
 	public static class Loaders implements Component {
 		protected Map<ClassLoader, Collection<Class<?>>> classLoadersClasses;
 		protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
