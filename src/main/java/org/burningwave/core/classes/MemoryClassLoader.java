@@ -220,6 +220,33 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			try {
 				cls = _defineClass(className, byteCode, null);
         		definePackageOf(cls);
+        	} catch (NoClassDefFoundError exc) {
+        		String notFoundClassName = Classes.retrieveName(exc);
+        		removeNotLoadedCompiledClass(className);
+				logWarn("Could not load compiled class " + className + " because class " + notFoundClassName + 
+					" could not be found, so it will be removed: " + exc.toString()
+				);
+    			throw exc;
+        	}
+		} else {
+			logWarn("Compiled class " + className + " not found");
+		}
+		if (cls != null) {
+			return cls;
+		} else {
+			throw new ClassNotFoundException(className);
+		}
+	}
+	
+	/*
+	@Override Previous version
+    protected Class<?> findClass(String className) throws ClassNotFoundException {
+		Class<?> cls = null;
+		ByteBuffer byteCode = notLoadedByteCodes.get(className);
+		if (byteCode != null) {
+			try {
+				cls = _defineClass(className, byteCode, null);
+        		definePackageOf(cls);
         	} catch (NoClassDefFoundError noClassDefFoundError) {
         		String notFoundClassName = Classes.retrieveName(noClassDefFoundError);
         		while (!notFoundClassName.equals(className)) {
@@ -255,7 +282,8 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			throw new ClassNotFoundException(className);
 		}
 	}
-
+	*/
+	
 	protected Class<?> _defineClass(String className, java.nio.ByteBuffer byteCode, ProtectionDomain protectionDomain) {
 		Class<?> cls = super.defineClass(className, byteCode, protectionDomain);
 		addLoadedByteCode(className, byteCode);
