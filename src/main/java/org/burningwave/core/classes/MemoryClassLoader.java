@@ -81,7 +81,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		}
     }
     
-    public Map.Entry<String, ByteBuffer> getNotLoadedByteCodes(String name) {
+    public Map.Entry<String, ByteBuffer> getNotLoadedByteCode(String name) {
     	for (Map.Entry<String, ByteBuffer> entry : notLoadedByteCodes.entrySet()){
     	    if (entry.getKey().equals(name)) {
     	    	return entry;
@@ -91,7 +91,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     }
     
     public ByteBuffer getByteCodeOf(String name) {
-    	return Optional.ofNullable(getNotLoadedByteCodes(name)).map(entry -> entry.getValue()).orElse(null);
+    	return Optional.ofNullable(notLoadedByteCodes.get(name)).orElseGet(() -> Optional.ofNullable(loadedByteCodes.get(name)).orElseGet(() -> null));
     }
     
     void addByteCodes(Map<String, ByteBuffer> byteCodes) {

@@ -23,6 +23,24 @@ public class MemoryClassLoaderTest extends BaseTest {
 		);
 	}
 	
+	UnitSourceGenerator generateSources() {
+		ClassSourceGenerator ClassSG = ClassSourceGenerator.create(
+			TypeDeclarationSourceGenerator.create("ReTry")
+		).addModifier(
+			Modifier.PUBLIC
+		).addInnerClass(
+			ClassSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("ReReTry")
+			).addModifier(
+				Modifier.PUBLIC | Modifier.STATIC
+			).expands(TypeDeclarationSourceGenerator.create("ReTry"))
+		);
+		UnitSourceGenerator unitSG = UnitSourceGenerator.create("tryyy").addClass(
+			ClassSG
+		).addStaticImport(StaticComponentContainer.class, "Streams", "Classes");
+		return unitSG;
+	}
+	
 	@Test
 	public void loadClassTestOne() {
 		testNotNull(() ->
@@ -50,23 +68,9 @@ public class MemoryClassLoaderTest extends BaseTest {
 	public void loadClassTestTwo() throws ClassNotFoundException {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
-			ClassSourceGenerator ClassSG = ClassSourceGenerator.create(
-				TypeDeclarationSourceGenerator.create("ReTry")
-			).addModifier(
-				Modifier.PUBLIC
-			).addInnerClass(
-				ClassSourceGenerator.create(
-					TypeDeclarationSourceGenerator.create("ReReTry")
-				).addModifier(
-					Modifier.PUBLIC | Modifier.STATIC
-				).expands(TypeDeclarationSourceGenerator.create("ReTry"))
-			);
-			UnitSourceGenerator unitSG = UnitSourceGenerator.create("tryyy").addClass(
-				ClassSG
-			).addStaticImport(StaticComponentContainer.class, "Streams", "Classes");
 			JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
 			MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
-			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(unitSG.make())).entrySet());
+			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).entrySet());
 			return memoryClassLoader.loadClass("tryyy.ReTry$ReReTry");
 		});
 	}
@@ -75,25 +79,32 @@ public class MemoryClassLoaderTest extends BaseTest {
 	public void forceCompiledClassesLoadingTestOne() throws ClassNotFoundException {
 		testNotEmpty(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
-			ClassSourceGenerator ClassSG = ClassSourceGenerator.create(
-				TypeDeclarationSourceGenerator.create("ReTry")
-			).addModifier(
-				Modifier.PUBLIC
-			).addInnerClass(
-				ClassSourceGenerator.create(
-					TypeDeclarationSourceGenerator.create("ReReTry")
-				).addModifier(
-					Modifier.PUBLIC | Modifier.STATIC
-				).expands(TypeDeclarationSourceGenerator.create("ReTry"))
-			);
-			UnitSourceGenerator unitSG = UnitSourceGenerator.create("tryyy").addClass(
-				ClassSG
-			).addStaticImport(StaticComponentContainer.class, "Streams", "Classes");
 			JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
 			MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
-			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(unitSG.make())).entrySet());
+			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).entrySet());
 			return memoryClassLoader.forceCompiledClassesLoading();
 		});
 	}
 	
+	@Test
+	public void getNotLoadedByteCodeTestOne() throws ClassNotFoundException {
+		testNotNull(() -> {
+			ComponentSupplier componentSupplier = getComponentSupplier();
+			JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
+			MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
+			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).entrySet());
+			return memoryClassLoader.getNotLoadedByteCode("tryyy.ReTry$ReReTry");
+		});
+	}
+	
+	@Test
+	public void getByteCodeOfTestOne() throws ClassNotFoundException {
+		testNotNull(() -> {
+			ComponentSupplier componentSupplier = getComponentSupplier();
+			JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
+			MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
+			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).entrySet());
+			return memoryClassLoader.getByteCodeOf("tryyy.ReTry$ReReTry");
+		});
+	}
 }
