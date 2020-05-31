@@ -23,6 +23,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllTestOne() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
+		componentSupplier.clearHuntersCache();
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().loadInCache(
 				SearchConfig.forPaths(
