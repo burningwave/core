@@ -55,7 +55,7 @@ public class Properties extends java.util.Properties {
 	@Override
 	public synchronized Object put(Object key, Object value) {
 		Object put = super.put(key, value);
-		notifyChange(Event.PUT, key, put);
+		notifyChange(Event.PUT, key, value);
 		return put;
 	}
 

@@ -275,7 +275,7 @@ public class JavaMemoryCompiler implements Component {
 							FileSystemItem classPath = FileSystemItem.ofPath(
 								classPathBasePath.getAbsolutePath() + "/" + fsObject.getName()
 							);
-							if (!classPath.refresh(true).exists()) {
+							if (!classPath.refresh().exists()) {
 								fsObject.copyTo(classPathBasePath.getAbsolutePath());
 							}
 							context.addToClassPath(

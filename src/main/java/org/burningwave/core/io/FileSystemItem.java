@@ -311,7 +311,7 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public synchronized FileSystemItem refresh() {
-		return refresh(false);
+		return refresh(true);
 	}
 	
 	public synchronized FileSystemItem refresh(boolean removeFromCache) {

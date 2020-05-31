@@ -1,5 +1,7 @@
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
+
 import org.burningwave.core.assembler.ComponentContainer;
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +17,7 @@ public class ComponentContainerTest extends BaseTest {
 			componentSupplier.getClassPathHunter();
 			componentSupplier.getCodeExecutor();
 			componentSupplier.getPathHelper();
+			GlobalProperties.put("newPropertyName", "newPropertyValue");
 			componentSupplier.reInit();
 			componentSupplier.getClassFactory();
 			componentSupplier.getClassHunter();
