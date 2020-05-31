@@ -357,7 +357,7 @@
 								<sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
 							</sourceDirectories>
 							<excludes>
-        						<exclude>**/*MyClass</exclude>
+        						<exclude>**/*LowLevelObjectsHandler</exclude>
     						</excludes>
 						</configuration>
 					</plugin>
