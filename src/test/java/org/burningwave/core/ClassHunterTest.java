@@ -43,6 +43,30 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
+	
+	@Test
+	public void findAllTestTwo() throws Exception {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		componentSupplier.clearHuntersCache();
+		testNotEmpty(
+			() -> componentSupplier.getClassHunter().loadInCache(
+				SearchConfig.forPaths(
+					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
+				)
+			).find(),
+			(result) ->
+				result.getClasses()
+		);
+		testNotEmpty(
+			() -> componentSupplier.getClassHunter().loadInCache(
+				SearchConfig.forPaths(
+					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
+				)
+			).find(),
+			(result) ->
+				result.getClasses()
+		);
+	}
 
 	@Test
 	public void findAllSubtypeOfTestOne() {
