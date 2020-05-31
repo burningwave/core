@@ -239,7 +239,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	/*
-	@Override Previous version
+	@Override Previous version changed from version 5.43.2
     protected Class<?> findClass(String className) throws ClassNotFoundException {
 		Class<?> cls = null;
 		ByteBuffer byteCode = notLoadedByteCodes.get(className);
