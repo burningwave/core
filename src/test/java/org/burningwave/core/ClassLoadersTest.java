@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ByteCodeHunter.SearchResult;
+import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.PathHelper;
@@ -73,7 +74,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 	
 	@Test
-	public void retrieveLoadedAllClassesTestTwo() {
+	public void loadOrDefineByByteCodesTestOne() {
 		testNotEmpty(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			PathHelper pathHelper = componentSupplier.getPathHelper();
@@ -86,6 +87,24 @@ public class ClassLoadersTest extends BaseTest {
 			Map<String, ByteBuffer> byteCodes = new HashMap<>();
 			byteCodes.put("org.apache.commons.lang.ArrayUtils", byteCodesFound.get("org.apache.commons.lang.ArrayUtils"));
 			return ClassLoaders.loadOrDefineByByteCodes(byteCodes, getMemoryClassLoader(null)).values();
+		});
+	}
+	
+	@Test
+	public void loadOrDefineByByteCodesTestTwo() {
+		testNotNull(() -> {
+			ComponentSupplier componentSupplier = getComponentSupplier();
+			PathHelper pathHelper = componentSupplier.getPathHelper();
+			SearchResult searchResult = componentSupplier.getByteCodeHunter().loadInCache(
+				SearchConfig.forPaths(
+						pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
+				)
+			).find();
+			Map<String, ByteBuffer> byteCodesFound = searchResult.getByteCodesFlatMap();
+			Map<String, JavaClass> byteCodes = new HashMap<>();
+			JavaClass javaClass = JavaClass.create(byteCodesFound.get("org.apache.commons.lang.ArrayUtils"));
+			byteCodes.put("org.apache.commons.lang.ArrayUtils", javaClass);
+			return ClassLoaders.loadOrDefineByJavaClass("org.apache.commons.lang.ArrayUtils", byteCodes, getMemoryClassLoader(null));
 		});
 	}
 
