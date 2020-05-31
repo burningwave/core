@@ -222,7 +222,7 @@ public class ClassFactoryTest extends BaseTest {
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).addCompilationClassPaths(
 					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
 				).addClassPathsWhereToSearchNotFoundClasses(
-						pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
+					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				)
 			);
 			return classRetriever.get("packagename.ExternalClassReferenceTest");
@@ -254,8 +254,8 @@ public class ClassFactoryTest extends BaseTest {
 				)
 			);
 			SearchResult searchResult = componentSupplier.getByteCodeHunter().loadInCache(SearchConfig.forPaths(
-					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
-				)
+				pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
+			)
 			).find();
 			classRetriever.get(
 				searchResult.getByteCodesFlatMap(), 
