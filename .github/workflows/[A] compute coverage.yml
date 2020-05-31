@@ -5,6 +5,7 @@ on:
     branches:
       - master
     paths: 
+      - "pom.xml"
       - "src/test/**"
       - ".github/workflows/**"
 
