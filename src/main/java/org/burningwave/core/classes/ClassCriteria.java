@@ -107,14 +107,6 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		targetCriteria.collectMembers = leftCriteria.collectMembers || rightCriteria.collectMembers;
 		return super.logicOperation((ClassCriteria)leftCriteria, rightCriteria, binaryOperator, targetCriteria);
 	}	
-
-	
-	Class<?> retrieveClass(Class<?> cls) {
-		if (classSupplier != null) {
-			return classSupplier.apply(cls);
-		}
-		return cls;
-	}	
 	
 	public ClassCriteria packageName(final Predicate<String> predicate) {
 		this.predicate = concat(
