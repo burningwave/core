@@ -86,6 +86,10 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	//Cached search
 	public R findBy(CacheableSearchConfig searchConfig) {
 		searchConfig = searchConfig.createCopy();
+		Collection<String> paths = searchConfig.getClassFileScanConfiguration().getPaths();
+		if (paths == null || paths.isEmpty()) {
+			searchConfig.addPaths(pathHelper.getPaths(Configuration.Key.DEFAULT_SEARCH_CONFIG_PATHS));
+		}
 		C context = createContext(
 			searchConfig
 		);

@@ -45,10 +45,7 @@ import org.burningwave.core.iterable.Properties;
 public class Resources {
 	
 	public Map.Entry<Properties, URL> loadFirstOneFound(String... fileNames) {
-		Properties properties = new Properties();
-		properties.putAll(Streams.Configuration.DEFAULT_VALUES);
-		properties.putAll(FileScanConfigAbst.Configuration.DEFAULT_VALUES);
-		return loadFirstOneFound(properties, fileNames);
+		return loadFirstOneFound(new Properties(), fileNames);
 	}
 	
 	public Map.Entry<Properties, URL> loadFirstOneFound(Properties properties, String... fileNames) {

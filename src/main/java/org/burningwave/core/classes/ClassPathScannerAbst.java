@@ -30,6 +30,8 @@ package org.burningwave.core.classes;
 
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -42,7 +44,27 @@ import org.burningwave.core.io.FileSystemScanner.Scan;
 import org.burningwave.core.io.PathHelper;
 
 
-abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends SearchResult<I>> implements Component {
+public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends SearchResult<I>> implements Component {
+	
+	public static class Configuration {
+		
+		public static class Key {
+
+			public static final String DEFAULT_SEARCH_CONFIG_PATHS = PathHelper.Configuration.Key.PATHS_PREFIX + "hunters.default-search-config.paths";
+						
+		}
+		
+		public final static Map<String, Object> DEFAULT_VALUES;
+	
+		static {
+			DEFAULT_VALUES = new LinkedHashMap<>();
+
+			DEFAULT_VALUES.put(
+				Key.DEFAULT_SEARCH_CONFIG_PATHS, 
+				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER
+			);
+		}
+	}
 	
 	Supplier<ByteCodeHunter> byteCodeHunterSupplier;
 	ByteCodeHunter byteCodeHunter;
@@ -85,6 +107,10 @@ abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends Sea
 	//Not cached search
 	public R findBy(SearchConfig searchConfig) {
 		searchConfig = searchConfig.createCopy();
+		Collection<String> paths = searchConfig.getClassFileScanConfiguration().getPaths();
+		if (paths == null || paths.isEmpty()) {
+			searchConfig.addPaths(pathHelper.getPaths(Configuration.Key.DEFAULT_SEARCH_CONFIG_PATHS));
+		}
 		final ClassFileScanConfig scanConfigCopy = searchConfig.getClassFileScanConfiguration();
 		C context = createContext(searchConfig);
 		searchConfig.init(context.pathScannerClassLoader);

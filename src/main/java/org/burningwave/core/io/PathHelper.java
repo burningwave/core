@@ -68,6 +68,7 @@ public class PathHelper implements Component {
 	public static class Configuration {
 		
 		public static class Key {
+			public static String MAIN_CLASS_PATHS_PLACE_HOLDER = "${mainClassPaths}";
 			public static String PATHS_PREFIX = "paths.";
 			public static String MAIN_CLASS_PATHS = "main-class-paths";
 			public static String MAIN_CLASS_PATHS_EXTENSION = MAIN_CLASS_PATHS + ".extension";			
@@ -234,11 +235,11 @@ public class PathHelper implements Component {
 			paths = currentPropertyPaths;
 			
 			if (paths != null) {
-				if (IterableObjectHelper.containsValue(config, pathGroupPropertyName, null, "${classPaths}")) {
+				if (IterableObjectHelper.containsValue(config, pathGroupPropertyName, null, Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER)) {
 					Collection<String> mainClassPaths = getPaths(Configuration.Key.MAIN_CLASS_PATHS);
 					for (String mainClassPath : mainClassPaths) {
 						Map<String, String> defaultValues = new LinkedHashMap<>();
-						defaultValues.put("classPaths", mainClassPath);
+						defaultValues.put(Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER.replaceAll("[\\$\\{\\}]", ""), mainClassPath);
 						paths = IterableObjectHelper.get(config, pathGroupPropertyName, defaultValues);
 						if (paths != null) {
 							paths = Paths.clean(paths).replaceAll(";{2,}", ";");

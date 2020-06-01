@@ -221,9 +221,7 @@ public class ClassHunterTest extends BaseTest {
 		ClassHunter classHunter = componentSupplier.getClassHunter();
 		testNotEmpty(
 			() -> classHunter.findBy(
-				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getMainClassPaths()
-				).by(
+				SearchConfig.byCriteria(
 					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass) ||
 						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
