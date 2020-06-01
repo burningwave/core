@@ -123,7 +123,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		return types;
 	}
 	
-	public Map<String, ClassSourceGenerator> getAllClasses() {
+	Map<String, ClassSourceGenerator> getAllClasses() {
 		Map<String, ClassSourceGenerator> allClasses = new HashMap<>();
 		Optional.ofNullable(classes).ifPresent(classes -> {
 			classes.forEach(cls -> {
@@ -136,7 +136,16 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		return allClasses;
 	}
 	
-	public ClassSourceGenerator getClass(String className) {
+	UnitSourceGenerator setPackageName(String packageName) {
+		this.packageName = packageName;
+		return this;
+	}
+	
+	String getPackageName() {
+		return this.packageName;
+	}
+	
+	ClassSourceGenerator getClass(String className) {
 		return getAllClasses().get(className);
 	}
 	

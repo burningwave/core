@@ -37,7 +37,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	private Collection<String> compilationClassPaths;
 	private Collection<String> classPathsWhereToSearchNotFoundClassesDuringCompilation;
 	private Collection<String> classPathsWhereToSearchNotFoundClassesDuringLoading;
-	private Collection<UnitSourceGenerator> unitSourceGenerators;
+	Collection<UnitSourceGenerator> unitSourceGenerators;
 	private ClassLoader classLoader;
 	private boolean useOneShotJavaCompiler;
 	private boolean storeCompiledClasses;

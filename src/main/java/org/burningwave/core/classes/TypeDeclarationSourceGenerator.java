@@ -61,7 +61,12 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		return new TypeDeclarationSourceGenerator().addGeneric(generics);
 	}
 	
-	public String getName() {
+	public TypeDeclarationSourceGenerator setSimpleName(String simpleName) {
+		this.simpleName = simpleName;
+		return this;
+	}
+	
+	String getName() {
 		return name;
 	}
 

@@ -38,14 +38,13 @@ import org.burningwave.core.Executor;
 import org.burningwave.core.iterable.Properties;
 
 @SuppressWarnings("unchecked")
-public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
-	private String executorName;
+public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBuildAndDefineConfig.ForCodeExecutor {
 	ClassLoader parentClassLoader;
 	boolean useDefaultClassLoaderAsParentIfParentClassLoaderIsNull;
 	List<Object> params;
 	
-	ExecuteConfig(String name) {
-		this.executorName = name;
+	ExecuteConfig(String name, BodySourceGenerator bodySG) {
+		super(name, bodySG);
 		this.useDefaultClassLoaderAsParentIfParentClassLoaderIsNull = true;
 	}
 	
@@ -82,21 +81,6 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
 			params.toArray(new Object[params.size()]) : 
 			null;
 	}
-	
-	String getName() {
-		return this.executorName;
-	}
-	
-	public C setSimpleName(String simpleName) {
-		this.executorName = Executor.class.getPackage().getName() + "." + simpleName;
-		return (C)this;					
-	}
-	
-	public C setName(String name) {
-		this.executorName = name;
-		return (C)this;					
-	}
-	
 	
 	public static ExecuteConfig.ForProperties fromDefaultProperties() {
 		return new ForProperties();
@@ -137,7 +121,10 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
 		private Map<String, Object> defaultValues;
 		    		
 		private ForProperties() {
-			super(Executor.class.getPackage().getName() + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""));
+			super(
+				Executor.class.getPackage().getName() + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""),
+				BodySourceGenerator.createSimple()
+			);
 			isAbsoluteFilePath = false;
 		}
 		
@@ -196,15 +183,12 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> {
 	
 	
 	public static class ForBodySourceGenerator extends ExecuteConfig<ExecuteConfig.ForBodySourceGenerator> {
-		BodySourceGenerator body;
-		
+	
 		private ForBodySourceGenerator(BodySourceGenerator body) {
-			super(Executor.class.getPackage().getName() + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""));
-			this.body = body.setElementPrefix("\t");
-		}
-
-		BodySourceGenerator getBody() {
-			return body;
+			super(
+				Executor.class.getPackage().getName() + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""),
+				body			
+			);
 		}
 		
 		public ExecuteConfig.ForBodySourceGenerator addCodeRow(String... codeRow) {

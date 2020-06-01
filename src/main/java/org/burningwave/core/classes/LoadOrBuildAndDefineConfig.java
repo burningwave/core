@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 
 import java.util.Collection;
@@ -57,12 +58,13 @@ public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<L
 	}
 	
 	public static class ForCodeExecutor extends LoadOrBuildAndDefineConfigAbst<ForCodeExecutor> {
-		private String executorName;
+		BodySourceGenerator body;
 		
-		private ForCodeExecutor(String executorName, BodySourceGenerator bodySG) {
+		ForCodeExecutor(String executorName, BodySourceGenerator bodySG) {
 			super(SourceCodeHandler.generateExecutor(executorName, bodySG));
+			this.body = bodySG;
+			body.setElementPrefix("\t");
 			storeCompiledClasses(false);
-			this.executorName = executorName;
 		}
 		
 		public static ForCodeExecutor withCode(String executorName, BodySourceGenerator bodySG) {
@@ -76,18 +78,29 @@ public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<L
 		}
 		
 		public ForCodeExecutor setSimpleName(String simpleName) {
-			this.executorName = Executor.class.getPackage().getName() + "." + simpleName;
+			UnitSourceGenerator uSG = unitSourceGenerators.iterator().next();
+			ClassSourceGenerator cSG = uSG.getAllClasses().values().iterator().next();
+			cSG.getTypeDeclaration().setSimpleName(simpleName);
 			return this;					
 		}
 		
 		public ForCodeExecutor setName(String name) {
-			this.executorName = name;
+			UnitSourceGenerator uSG = unitSourceGenerators.iterator().next();
+			uSG.setPackageName(Classes.retrievePackageName(name));
+			ClassSourceGenerator cSG = uSG.getAllClasses().values().iterator().next();
+			cSG.getTypeDeclaration().setSimpleName(Classes.retrieveSimpleName(name));
 			return this;					
 		}
 		
 		String getExecutorName() {
-			return executorName;
-		}		
+			UnitSourceGenerator uSG = unitSourceGenerators.iterator().next();
+			ClassSourceGenerator cSG = uSG.getAllClasses().values().iterator().next();
+			return uSG.getPackageName() + "." + cSG.getTypeDeclaration().getSimpleName();
+		}
+		
+		BodySourceGenerator getBody() {
+			return body;
+		}
 		
 	}
 }

@@ -81,27 +81,11 @@ public class CodeExecutor implements Component {
 			(classFactory = classFactorySupplier.get());
 	}
 	
-	@SuppressWarnings("unchecked")
-	public <T extends Executor> Class<T> loadOrBuildAndDefineExecutorSubType(
-		LoadOrBuildAndDefineConfig.ForCodeExecutor config
-	) {
-		return (Class<T>) getClassFactory().loadOrBuildAndDefine(
-			config
-		).get(
-			config.getExecutorName()
-		);
-	}
-	
 	public <T> T executeProperty(String propertyName, Object... params) {
 		return execute(ExecuteConfig.ForProperties.forProperty(propertyName).withParameter(params));
 	}
 	
 	public <T> T execute(ExecuteConfig.ForProperties config) {
-		ClassLoader parentClassLoader = config.getParentClassLoader();
-		if (parentClassLoader == null && config.isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull()) {
-			parentClassLoader = getClassFactory().getDefaultClassLoader();
-		}
-		
 		java.util.Properties properties = config.getProperties();
 		if (properties == null) {
 			if (config.getFilePath() == null) {
@@ -122,7 +106,7 @@ public class CodeExecutor implements Component {
 			
 		}
 		
-		BodySourceGenerator body = BodySourceGenerator.createSimple().setElementPrefix("\t");
+		BodySourceGenerator body = config.getBody();
 		if (config.getParams() != null && config.getParams().length > 0) {
 			for (Object param : config.getParams()) {
 				body.useType(param.getClass());
@@ -154,8 +138,9 @@ public class CodeExecutor implements Component {
 				"return (T)" + code + ";"
 			);
 		}
+
 		return execute(
-			parentClassLoader, config.getName(), body, config.getParams()
+			(ExecuteConfig<?>)config
 		);
 	}		
 	
@@ -164,35 +149,48 @@ public class CodeExecutor implements Component {
 	}
 	
 	public <T> T execute(
-		ExecuteConfig.ForBodySourceGenerator config
+		ExecuteConfig<?> config
 	) {	
-		ClassLoader parentClassLoader = config.getParentClassLoader();
-		if (parentClassLoader == null && config.isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull()) {
-			parentClassLoader = getClassFactory().getDefaultClassLoader();
-		}
-		return execute(parentClassLoader, config.getName(), config.getBody(), config.getParams());
-	}
-	
-	private <T> T execute(
-		ClassLoader classLoaderParentOfOneShotClassLoader,
-		String executorName,
-		BodySourceGenerator body,
-		Object... parameters
-	) {	
-		return ThrowingSupplier.get(() -> {
-			try (MemoryClassLoader memoryClassLoader = 
-				MemoryClassLoader.create(
-					classLoaderParentOfOneShotClassLoader
-				)
-			) {
+		if (config.getClassLoader() == null) {
+			return ThrowingSupplier.get(() -> {
+				ClassLoader parentClassLoader = config.getParentClassLoader();
+				if (parentClassLoader == null && config.isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull()) {
+					parentClassLoader = getClassFactory().getDefaultClassLoader();
+				}
+				try (MemoryClassLoader memoryClassLoader = 
+					MemoryClassLoader.create(
+						parentClassLoader
+					)
+				) {
+					Class<? extends Executor> executableClass = loadOrBuildAndDefineExecutorSubType(
+						config.useClassLoader(memoryClassLoader)
+					);
+					Executor executor = Constructors.newInstanceOf(executableClass);
+					T retrievedElement = executor.execute(config.getParams());
+					return retrievedElement;
+				}
+			});
+		} else {
+			return ThrowingSupplier.get(() -> {
 				Class<? extends Executor> executableClass = loadOrBuildAndDefineExecutorSubType(
-					LoadOrBuildAndDefineConfig.ForCodeExecutor.withCode(executorName, body).useClassLoader(memoryClassLoader)
+					config
 				);
 				Executor executor = Constructors.newInstanceOf(executableClass);
-				T retrievedElement = executor.execute(parameters);
+				T retrievedElement = executor.execute(config.getParams());
 				return retrievedElement;
-			}
-		});
+			});
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T extends Executor> Class<T> loadOrBuildAndDefineExecutorSubType(
+		LoadOrBuildAndDefineConfig.ForCodeExecutor config
+	) {
+		return (Class<T>) getClassFactory().loadOrBuildAndDefine(
+			config
+		).get(
+			config.getExecutorName()
+		);
 	}
 	
 	@Override
