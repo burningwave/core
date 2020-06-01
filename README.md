@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/5)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/120835433)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/121685923)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/120835433)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/121685923)
 
 [![Coverage Status](https://coveralls.io/repos/github/burningwave/core/badge.svg?branch=master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -36,7 +36,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>5.43.3</version>
+    <version>5.44.0</version>
 </dependency>
 ```
 
@@ -587,17 +587,18 @@ paths.class-factory.default-class-loader.class-repositories=\
     ${paths.java-memory-compiler.class-repositories};\
     #This variable is empty by default and could be valorized by developer
     ${paths.class-factory.default-class-loader.additional-class-repositories};
+paths.hunters.default-search-config.paths=${mainClassPaths};
 paths.java-memory-compiler.class-path-hunter.search-config.check-file-options=\
     ${file-system-scanner.default-scan-config.check-file-options}
 #this variable indicates all the paths from which the classes 
 #must be taken if during the compilation there will be classes
 #not found
-paths.java-memory-compiler.class-repositories=${classPaths};\
+paths.java-memory-compiler.class-repositories=${mainClassPaths};\
     ${paths.java-memory-compiler.additional-main-class-paths};\
     ${paths.main-class-paths.extension};\
     #This variable is empty by default and could be valorized by developer
     ${paths.java-memory-compiler.additional-class-repositories};
-paths.java-memory-compiler.main-class-paths=${classPaths};\
+paths.java-memory-compiler.main-class-paths=${mainClassPaths};\
     #This variable is empty by default and could be valorized by developer
     ${paths.java-memory-compiler.additional-main-class-paths};
 paths.main-class-paths.extension=\
@@ -622,13 +623,14 @@ class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextC
 paths.class-factory.default-class-loader.class-repositories=\
     ${paths.java-memory-compiler.class-repositories};\
     ${paths.class-factory.default-class-loader.additional-class-repositories};
+paths.hunters.default-search-config.paths=${mainClassPaths};
 paths.java-memory-compiler.class-path-hunter.search-config.check-file-options=\
     ${file-system-scanner.default-scan-config.check-file-options}
-paths.java-memory-compiler.class-repositories=${classPaths};\
+paths.java-memory-compiler.class-repositories=${mainClassPaths};\
     ${paths.java-memory-compiler.additional-main-class-paths};\
     ${paths.main-class-paths.extension};\
     ${paths.java-memory-compiler.additional-class-repositories};
-paths.java-memory-compiler.main-class-paths=${classPaths};\
+paths.java-memory-compiler.main-class-paths=${mainClassPaths};\
     ${paths.java-memory-compiler.additional-main-class-paths};
 paths.main-class-paths.extension=\
     //${system.properties:java.home}/lib//children:.*\.jar|.*\.jmod;\
@@ -758,6 +760,6 @@ paths.class-factory.default-class-loader.additional-class-repositories=C:/some p
 
 ### [**Official site**](https://www.burningwave.org/)
 ### [**Help guide**](https://www.burningwave.org/forum/topic/help-guide/)
-### [**Ask for assistance to Burningwave community**](https://www.burningwave.org/forum/forum/how-to/)
+### [**Ask the Burningwave community for assistance**](https://www.burningwave.org/forum/forum/how-to/)
 [![HitCount](http://hits.dwyl.com/burningwave/all.svg)](http://hits.dwyl.com/burningwave/all)
 <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=EY4TMTW8SWDAC&item_name=Support+maintenance+and+improvement+of+Burningwave&currency_code=EUR&source=url" rel="nofollow"><img src="https://camo.githubusercontent.com/e14c85b542e06215f7e56c0763333ef1e9b9f9b7/68747470733a2f2f7777772e70617970616c6f626a656374732e636f6d2f656e5f55532f692f62746e2f62746e5f646f6e6174655f534d2e676966" alt="Donate" data-canonical-src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" style="max-width:100%;"></a>
