@@ -42,6 +42,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 	ClassLoader parentClassLoader;
 	boolean useDefaultClassLoaderAsParentIfParentClassLoaderIsNull;
 	List<Object> params;
+	boolean useDefaultClassLoaderAsParentIfParentClassLoaderIsNullHasBeenCalled;
 	
 	ExecuteConfig(String name, BodySourceGenerator bodySG) {
 		super(name, bodySG);
@@ -55,6 +56,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 	
 	public C useDefaultClassLoaderAsParent(boolean flag) {
 		this.useDefaultClassLoaderAsParentIfParentClassLoaderIsNull = flag;
+		useDefaultClassLoaderAsParentIfParentClassLoaderIsNullHasBeenCalled = true;
 		return (C)this; 
 	}
 	
@@ -74,6 +76,14 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 
 	boolean isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull() {
 		return useDefaultClassLoaderAsParentIfParentClassLoaderIsNull;
+	}
+	
+	@Override
+	public C useClassLoader(ClassLoader classLoader) {
+		if (!useDefaultClassLoaderAsParentIfParentClassLoaderIsNullHasBeenCalled) {
+			useDefaultClassLoaderAsParentIfParentClassLoaderIsNull = false;
+		}
+		return (C) super.useClassLoader(classLoader);
 	}
 
 	Object[] getParams() {

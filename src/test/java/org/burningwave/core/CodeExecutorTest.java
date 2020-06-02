@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ExecuteConfig;
+import org.burningwave.core.classes.MemoryClassLoader;
 import org.junit.jupiter.api.Test;
 
 public class CodeExecutorTest extends BaseTest {
@@ -36,6 +37,34 @@ public class CodeExecutorTest extends BaseTest {
 			return componentSupplier.getCodeExecutor().execute(
 				ExecuteConfig.forPropertiesFile("custom-folder/code.properties")
 				.setPropertyName("code-block-1")
+				.withParameter(LocalDateTime.now())
+			);
+		});
+	}
+	
+	@Test
+	public void executeCodeOfPropertiesFilesTestTwo() throws Exception {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotNull(() -> {
+			return componentSupplier.getCodeExecutor().execute(
+				ExecuteConfig.forPropertiesFile("custom-folder/code.properties")
+				.setPropertyName("code-block-1")
+				.useClassLoader(MemoryClassLoader.create(null))
+				.useAsParentClassLoader(Thread.currentThread().getContextClassLoader())
+				.withParameter(LocalDateTime.now())
+			);
+		});
+	}
+	
+	@Test
+	public void executeCodeOfPropertiesFilesTestThree() throws Exception {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotNull(() -> {
+			return componentSupplier.getCodeExecutor().execute(
+				ExecuteConfig.forPropertiesFile("custom-folder/code.properties")
+				.setPropertyName("code-block-1")
+				.useClassLoader(MemoryClassLoader.create(null))
+				.useDefaultClassLoaderAsParent(true)
 				.withParameter(LocalDateTime.now())
 			);
 		});

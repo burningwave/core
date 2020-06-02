@@ -28,11 +28,13 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.util.Arrays;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
@@ -172,11 +174,22 @@ public class CodeExecutor implements Component {
 			});
 		} else {
 			return ThrowingSupplier.get(() -> {
+				Function<Boolean, ClassLoader> parentClassLoaderRestorer = null;
+				ClassLoader parentClassLoader = config.getParentClassLoader();
+				if (parentClassLoader == null && config.isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull()) {
+					parentClassLoader = getClassFactory().getDefaultClassLoader();
+				}
+				if (parentClassLoader != null) {
+					parentClassLoaderRestorer = ClassLoaders.setAsParent(config.getClassLoader(), getClassFactory().getDefaultClassLoader(), false);
+				}
 				Class<? extends Executor> executableClass = loadOrBuildAndDefineExecutorSubType(
 					config
 				);
 				Executor executor = Constructors.newInstanceOf(executableClass);
 				T retrievedElement = executor.execute(config.getParams());
+				if (parentClassLoaderRestorer != null) {
+					parentClassLoaderRestorer.apply(true);
+				}
 				return retrievedElement;
 			});
 		}
