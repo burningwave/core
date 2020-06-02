@@ -95,7 +95,7 @@ public class JavaMemoryCompiler implements Component {
 			);
 			DEFAULT_VALUES.put(
 				Key.MAIN_CLASS_PATHS, 
-				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER +
+				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + ";"+ 
 				"${" + Configuration.Key.ADDITIONAL_MAIN_CLASS_PATHS + "};"
 			);
 			DEFAULT_VALUES.put(
