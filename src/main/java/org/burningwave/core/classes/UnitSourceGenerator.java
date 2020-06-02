@@ -145,7 +145,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		return this.packageName;
 	}
 	
-	ClassSourceGenerator getClass(String className) {
+	public ClassSourceGenerator getClass(String className) {
 		return getAllClasses().get(className);
 	}
 	
