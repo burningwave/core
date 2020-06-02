@@ -37,6 +37,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.lang.reflect.Member;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -73,11 +74,19 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 			}
 		};
 		this.byteCodeSupplier = Classes::getByteCode;
+		Collection<Class<?>> usedClasses = this.getClassesToBeUploaded() != null ?
+			this.getClassesToBeUploaded() : new HashSet<>();
 		for (MemberCriteria<?, ?, ?> memberCriteria : memberCriterias.values()) {
 			memberCriteria.init(this.classSupplier, this.byteCodeSupplier);
-			if (this.classesToBeUploaded != null) {
-				memberCriteria.useClasses(this.classesToBeUploaded);
+			if (memberCriteria.getClassesToBeUploaded() != null) {
+				usedClasses.addAll(memberCriteria.getClassesToBeUploaded());
 			}
+		}
+		if (!usedClasses.isEmpty()) {
+			for (MemberCriteria<?, ?, ?> memberCriteria : memberCriterias.values()) {
+				memberCriteria.useClasses(usedClasses);
+			}
+			useClasses(usedClasses);
 		}
 		if (!collectMembers) {
 			membersPredicate = this::testMembers;

@@ -30,6 +30,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
+import java.lang.reflect.Member;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,33 +53,45 @@ public class SearchResult<E> implements Component {
 		return context.getItemsFoundFlatMap();
 	}
 	
-	public <C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> Map<String, E> getClasses(C criteria) {
-		Map<String, E> itemsFound = new HashMap<>();
-		final C criteriaCopy = createCriteriaCopy(criteria);
-		getItemsFoundFlatMap().forEach((path, javaClass) -> {
-			if (criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault(javaClass).getResult()) {
-				itemsFound.put(path, javaClass);
-			}
-		});
-		return itemsFound;
-	}
-	
-	public <C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> Map.Entry<String, E> getUnique(C criteria) {
-		Map<String, E> itemsFound = new HashMap<>();
-		final C criteriaCopy = createCriteriaCopy(criteria);
-		getItemsFoundFlatMap().forEach((path, javaClass) -> {
-			if (criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault(javaClass).getResult()) {
-				itemsFound.put(path, javaClass);
-			}
-		});
-		if (itemsFound.size() > 1) {
-			throw Throwables.toRuntimeException("Found more than one element");
+	public <C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends CriteriaWithClassElementsSupplyingSupport.TestContext<E, C>> Map<String, E> getClasses(C criteria) {
+		try (C criteriaCopy = createCriteriaCopy(criteria)) {
+			Map<String, E> itemsFound = new HashMap<>();
+			getItemsFoundFlatMap().forEach((path, javaClass) -> {
+				if (criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault(javaClass).getResult()) {
+					itemsFound.put(path, javaClass);
+				}
+			});
+			return itemsFound;
 		}
-		return itemsFound.entrySet().stream().findFirst().orElseGet(() -> null);
 	}
 	
-	protected <C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> C createCriteriaCopy(C criteria) {
-		return criteria.createCopy();
+	public <C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends Criteria.TestContext<E, C>> Map.Entry<String, E> getUnique(C criteria) {
+		Map<String, E> itemsFound = new HashMap<>();
+		try (C criteriaCopy = createCriteriaCopy(criteria)) {
+			getItemsFoundFlatMap().forEach((path, javaClass) -> {
+				if (criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault(javaClass).getResult()) {
+					itemsFound.put(path, javaClass);
+				}
+			});
+			if (itemsFound.size() > 1) {
+				throw Throwables.toRuntimeException("Found more than one element");
+			}
+			return itemsFound.entrySet().stream().findFirst().orElseGet(() -> null);
+		}
+	}
+	
+	<C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends Criteria.TestContext<E, C>> C createCriteriaCopy(C criteria) {
+		return criteria.createCopy().init(
+			context.getSearchConfig().getClassCriteria().getClassSupplier(),
+			context.getSearchConfig().getClassCriteria().getByteCodeSupplier()
+		).useClasses(context.getSearchConfig().getClassCriteria().getClassesToBeUploaded());
+	}
+	
+	<M extends Member, C extends MemberCriteria<M, C, T>, T extends Criteria.TestContext<M, C>> C createCriteriaCopy(C criteria) {
+		return criteria.createCopy().init(
+			context.getSearchConfig().getClassCriteria().getClassSupplier(),
+			context.getSearchConfig().getClassCriteria().getByteCodeSupplier()
+		).useClasses(context.getSearchConfig().getClassCriteria().getClassesToBeUploaded());
 	}
 	
 	@SuppressWarnings("unchecked")

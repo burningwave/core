@@ -33,6 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 import java.lang.reflect.Member;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,7 +42,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Criteria;
-import org.burningwave.core.Criteria.TestContext;
 import org.burningwave.core.io.FileScanConfigAbst;
 import org.burningwave.core.io.FileSystemScanner;
 import org.burningwave.core.io.FileSystemScanner.Scan;
@@ -250,38 +250,25 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			return context.getItemsFoundFlatMap();
 		}
 		
-		@Override
-		@SuppressWarnings("unchecked")
-		protected <C extends Criteria<Class<?>, C, T>, T extends TestContext<Class<?>, C>> C createCriteriaCopy(C criteria) {
-			if (criteria instanceof ClassCriteria) {
-				ClassCriteria criteriaCopy = ((ClassCriteria)criteria).createCopy();
-				criteriaCopy.init(
-					context.getSearchConfig().getClassCriteria().getClassSupplier(),
-					context.getSearchConfig().getClassCriteria().getByteCodeSupplier()
-				);
-				return (C)criteriaCopy;
-			} else {
-				return super.createCriteriaCopy(criteria);
-			}
-		}		
+	
 		@SuppressWarnings("unchecked")
 		public <M extends Member, C extends MemberCriteria<M, C, T>, T extends Criteria.TestContext<M, C>> Collection<Member> getMembersBy(C criteria) {
 			Collection<Member> membersFoundByCriteria = getMembersFlatMap().get(criteria);
 			if (membersFoundByCriteria != null && membersFoundByCriteria.size() > 0) {
 				return membersFoundByCriteria;
 			} else {
-				C criteriaCopy = criteria.createCopy();
-				criteriaCopy.init(context.getSearchConfig().getClassCriteria().getClassSupplier(), context.getSearchConfig().getClassCriteria().getByteCodeSupplier());
-				criteriaCopy.useClasses(context.getSearchConfig().getClassCriteria().getClassesToBeUploaded());
-				final Collection<Member> membersFoundByCriteriaFinal = new CopyOnWriteArrayList<>();
-				((SearchContext)this.context).getMembersFoundFlatMap().values().forEach((membersCollection) -> {
-					membersCollection.stream().filter(
-						(member) -> criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault((M)member).getResult()
-					).collect(
-						Collectors.toCollection(() -> membersFoundByCriteriaFinal)
-					);
-				});
-				return membersFoundByCriteriaFinal;
+				try (C criteriaCopy = createCriteriaCopy(criteria)) {
+					final Collection<Member> membersFoundByCriteriaFinal = new HashSet<>();
+					((SearchContext)this.context).getMembersFoundFlatMap().values().forEach((membersCollection) -> {
+						membersCollection.stream().filter(
+							(member) ->
+								criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault((M)member).getResult()
+						).collect(
+							Collectors.toCollection(() -> membersFoundByCriteriaFinal)
+						);
+					});
+					return membersFoundByCriteriaFinal;
+				}
 			}
 		}
 	}
