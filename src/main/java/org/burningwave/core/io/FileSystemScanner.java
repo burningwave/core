@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -19,6 +20,7 @@ import java.util.function.Predicate;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.concurrent.ParallelTasksManager;
+import org.burningwave.core.io.FileSystemScanner.Scan.ItemContext;
 
 
 
@@ -63,7 +65,9 @@ public class FileSystemScanner implements Component {
 		Scan.MainContext mainContext = scanItemContext.mainContext;
 		Scan.Configuration configuration = mainContext.configuration;
 		if (currentPath.isDirectory()) {
-			for (Entry<BiPredicate<File, File>, Consumer<Scan.ItemContext>> entry : configuration.filterAndMapperForDirectory.entrySet()) {
+			Set<Entry<BiPredicate<File, File>, Consumer<ItemContext>>> filterAndMapperForDirectory =
+				configuration.filterAndMapperForDirectory.entrySet();
+			for (Entry<BiPredicate<File, File>, Consumer<Scan.ItemContext>> entry : filterAndMapperForDirectory) {
 				if (entry.getKey().test(basePath, currentPath)) {
 					entry.getValue().accept(
 						new Scan.ItemContext(
@@ -74,7 +78,9 @@ public class FileSystemScanner implements Component {
 			}
 	    } else {
 	    	mainContext.tasksManager.addTask(() -> {
-	    		for (Entry<Predicate<File>, Consumer<Scan.ItemContext>> entry : configuration.filterAndMapperForFile.entrySet()) {
+	    		Set<Entry<Predicate<File>, Consumer<ItemContext>>> filterAndMapperForFileSet =
+	    			configuration.filterAndMapperForFile.entrySet();
+	    		for (Entry<Predicate<File>, Consumer<Scan.ItemContext>> entry : filterAndMapperForFileSet) {
 	    			if (entry.getKey().test(currentPath)) {
 	    				try (FileInputStream fileInputStream = FileInputStream.create(currentPath)) {	    						
 	    					entry.getValue().accept(
@@ -130,8 +136,10 @@ public class FileSystemScanner implements Component {
 		Scan.MainContext mainContext = currentScannedItemContext.mainContext;
 		Scan.Configuration configuration = mainContext.configuration;
 		IterableZipContainer.Entry zipEntry = null;
+		Set<Map.Entry<Predicate<IterableZipContainer.Entry>,Consumer<FileSystemScanner.Scan.ItemContext>>> filterAndMapperForZipEntrySet = 
+			configuration.filterAndMapperForZipEntry.entrySet();
 		while((zipEntry = currentZip.getNextEntry()) != null) {
-			for (Entry<Predicate<IterableZipContainer.Entry>, Consumer<Scan.ItemContext>> entry : configuration.filterAndMapperForZipEntry.entrySet()) {
+			for (Entry<Predicate<IterableZipContainer.Entry>, Consumer<Scan.ItemContext>> entry : filterAndMapperForZipEntrySet) {
 				if (entry.getKey().test(zipEntry)) {
 					try {
 						logDebug("scanning zip entry " + zipEntry.getAbsolutePath());
