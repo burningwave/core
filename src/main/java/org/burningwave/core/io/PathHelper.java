@@ -70,7 +70,8 @@ public class PathHelper implements Component {
 			public static String MAIN_CLASS_PATHS_PLACE_HOLDER = "${mainClassPaths}";
 			public static String PATHS_PREFIX = "paths.";
 			public static String MAIN_CLASS_PATHS = "main-class-paths";
-			public static String MAIN_CLASS_PATHS_EXTENSION = MAIN_CLASS_PATHS + ".extension";			
+			public static String MAIN_CLASS_PATHS_EXTENSION = MAIN_CLASS_PATHS + ".extension";
+			public static String PATHS_SEPARATOR = ";";
 		}
 		
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -79,9 +80,9 @@ public class PathHelper implements Component {
 			DEFAULT_VALUES = new HashMap<>();
 			DEFAULT_VALUES.put(
 				Key.PATHS_PREFIX + Key.MAIN_CLASS_PATHS_EXTENSION, 
-				"//${system.properties:java.home}/lib//children:.*\\.jar|.*\\.jmod;" +
-				"//${system.properties:java.home}/lib/ext//children:.*\\.jar|.*\\.jmod;" +
-				"//${system.properties:java.home}/jmods//children:.*\\.jar|.*\\.jmod;"	
+				"//${system.properties:java.home}/lib//children:.*\\.jar|.*\\.jmod" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
+				"//${system.properties:java.home}/lib/ext//children:.*\\.jar|.*\\.jmod" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
+				"//${system.properties:java.home}/jmods//children:.*\\.jar|.*\\.jmod" + PathHelper.Configuration.Key.PATHS_SEPARATOR
 			);
 		}
 	}	
@@ -222,8 +223,8 @@ public class PathHelper implements Component {
 		synchronized(this) {
 			String currentPropertyPaths = config.getProperty(pathGroupPropertyName);
 			if (Strings.isNotEmpty(currentPropertyPaths) && Strings.isNotEmpty(paths)) {
-				if (!currentPropertyPaths.endsWith(";")) {
-					currentPropertyPaths += ";";
+				if (!currentPropertyPaths.endsWith(Configuration.Key.PATHS_SEPARATOR)) {
+					currentPropertyPaths += Configuration.Key.PATHS_SEPARATOR;
 				}
 				currentPropertyPaths += paths;
 				config.put(pathGroupPropertyName, currentPropertyPaths);
@@ -241,14 +242,14 @@ public class PathHelper implements Component {
 						defaultValues.put(Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER.replaceAll("[\\$\\{\\}]", ""), mainClassPath);
 						paths = IterableObjectHelper.get(config, pathGroupPropertyName, defaultValues);
 						if (paths != null) {
-							paths = Paths.clean(paths).replaceAll(";{2,}", ";");
-							for (String path : paths.split(";")) {
+							paths = Paths.clean(paths).replaceAll(";{2,}", Configuration.Key.PATHS_SEPARATOR);
+							for (String path : paths.split(Configuration.Key.PATHS_SEPARATOR)) {
 								groupPaths.addAll(addPath(pathGroupName, path));
 							}
 						}
 					}	
 				} else {
-					for (String path : ((String)IterableObjectHelper.get(config, pathGroupPropertyName, null)).split(";")) {
+					for (String path : ((String)IterableObjectHelper.get(config, pathGroupPropertyName, null)).split(Configuration.Key.PATHS_SEPARATOR)) {
 						groupPaths.addAll(addPath(pathGroupName, path));
 					}
 				}

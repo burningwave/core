@@ -34,16 +34,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
 
 @SuppressWarnings("unchecked")
 public class IterableObjectHelper implements Component {
-	
-	private Pattern PLACE_HOLDER_FOR_PROPERTIES_PATTERN = Pattern.compile("\\$\\{([\\w\\d\\.\\:\\-]*)\\}");
-	
 	
 	private IterableObjectHelper() {}
 	
@@ -78,7 +74,7 @@ public class IterableObjectHelper implements Component {
 			if (propertyValue.contains(toBeTested)) {
 				return true;
 			}
-			Map<Integer, List<String>> subProperties = Strings.extractAllGroups(PLACE_HOLDER_FOR_PROPERTIES_PATTERN, propertyValue);		
+			Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, propertyValue);		
 			if (!subProperties.isEmpty()) {
 				for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
 					for (String propName : entry.getValue()) {
@@ -104,7 +100,7 @@ public class IterableObjectHelper implements Component {
 		if (value != null && value instanceof String) {
 			String propertyValue = (String)value;
 			if (!Strings.isEmpty(propertyValue)) {
-				Map<Integer, List<String>> subProperties = Strings.extractAllGroups(PLACE_HOLDER_FOR_PROPERTIES_PATTERN, propertyValue);		
+				Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, propertyValue);		
 				if (!subProperties.isEmpty()) {
 					for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
 						for (String propName : entry.getValue()) {

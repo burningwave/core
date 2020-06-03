@@ -43,6 +43,9 @@ import org.burningwave.core.function.ThrowingSupplier;
 
 public class Strings implements Component {
 	
+	public final Pattern PLACE_HOLDER_NAME_EXTRACTOR_PATTERN = Pattern.compile("\\$\\{([\\w\\d\\.\\:\\-]*)\\}");
+	public final Pattern PLACE_HOLDER_EXTRACTOR_PATTERN = Pattern.compile("(\\$\\{[\\w\\d\\.\\:\\-]*\\})");
+
 	private Strings() {}
 	
 	public static Strings create() {

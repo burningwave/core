@@ -95,14 +95,14 @@ public class JavaMemoryCompiler implements Component {
 			);
 			DEFAULT_VALUES.put(
 				Key.MAIN_CLASS_PATHS, 
-				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + ";"+ 
-				"${" + Configuration.Key.ADDITIONAL_MAIN_CLASS_PATHS + "};"
+				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
+				"${" + Configuration.Key.ADDITIONAL_MAIN_CLASS_PATHS + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR
 			);
 			DEFAULT_VALUES.put(
 				Key.CLASS_REPOSITORIES, 
 				DEFAULT_VALUES.get(Key.MAIN_CLASS_PATHS) +
-				"${" + PathHelper.Configuration.Key.PATHS_PREFIX + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "};" +
-				"${" + Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES + "};"
+				"${" + PathHelper.Configuration.Key.PATHS_PREFIX + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
+				"${" + Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR 
 			);
 		}
 	}
