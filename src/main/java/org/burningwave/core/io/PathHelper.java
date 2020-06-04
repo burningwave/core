@@ -240,7 +240,13 @@ public class PathHelper implements Component {
 					String placeHolderName = placeHolder.replaceAll("[\\$\\{\\}]",  "");
 					Collection<String> placeHolderPaths;
 					if (placeHolderName.contains("system.properties")) {
-						placeHolderPaths = Arrays.asList(System.getProperty(placeHolderName.split(":")[1]).split(";"));
+						placeHolderPaths = Arrays.asList(
+							System.getProperty(
+								placeHolderName.split(
+									System.getProperty("path.separator")
+								)[1]
+							).split(";")
+						);
 					} else {
 						placeHolderPaths = getPaths(placeHolderName);
 					}
