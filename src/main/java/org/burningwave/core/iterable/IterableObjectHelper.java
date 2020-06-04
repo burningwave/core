@@ -82,9 +82,7 @@ public class IterableObjectHelper implements Component {
 			if (!subProperties.isEmpty()) {
 				for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
 					for (String propName : entry.getValue()) {
-						if (!propName.startsWith("system.properties:") && containsValue(properties, propName, defaultValues, toBeTested)) {
-							return true;
-						}
+						return containsValue(properties, propName, defaultValues, toBeTested);
 					}
 				}
 			}
