@@ -234,9 +234,6 @@ public class PathHelper implements Component {
 			}
 			paths = currentPropertyPaths;
 			Collection<String> placeHolders = IterableObjectHelper.getAllPlaceHolders(config, pathGroupPropertyName);
-			if (pathGroupName.contains("custom-class-path2")) {
-				System.out.println(paths);
-			}
 			Map<String, String> defaultValues = new LinkedHashMap<>();
 			if (!placeHolders.isEmpty()) {
 				for (String placeHolder : placeHolders) {
