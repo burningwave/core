@@ -36,25 +36,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.concurrent.ParallelTasksManager;
-import org.burningwave.core.io.ClassFileScanConfig;
 import org.burningwave.core.io.FileSystemItem;
-import org.burningwave.core.io.FileSystemScanner;
-import org.burningwave.core.io.FileSystemScanner.Scan;
-import org.burningwave.core.io.IterableZipContainer;
 import org.burningwave.core.io.PathHelper;
 
 public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collection<Class<?>>, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
 	private ClassPathHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper
 	) {
 		super(
 			byteCodeHunterSupplier,
 			classHunterSupplier,
-			fileSystemScanner,
 			pathHelper,
 			(initContext) -> SearchContext._create(initContext),
 			(context) -> new ClassPathHunter.SearchResult(context)
@@ -64,13 +59,11 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 	public static ClassPathHunter create(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper
 	) {
 		return new ClassPathHunter(
 			byteCodeHunterSupplier,
 			classHunterSupplier,
-			fileSystemScanner,
 			pathHelper
 		);
 	}
@@ -87,44 +80,12 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 	}
 	
 	@Override
-	void retrieveItemFromFileInputStream(
-		SearchContext context, 
-		ClassCriteria.TestContext criteriaTestContext,
-		Scan.ItemContext scanItemContext,
-		JavaClass javaClass
-	) {	
-		String classPath = scanItemContext.getScannedItem().getAbsolutePath();
-		classPath = classPath.substring(
-			0, classPath.lastIndexOf(
-				javaClass.getName().replace(".", "/"), classPath.length()
-			)
-		);	
-		context.addItemFound(
-			scanItemContext.getBasePathAsString(),
-			classPath,
-			context.loadClass(javaClass.getName())
-		);
+	void retrieveItem(String basePath, SearchContext context, TestContext criteriaTestContext,
+			FileSystemItem fileSystemItem, JavaClass javaClass) {
+		String classPath = fileSystemItem.getAbsolutePath();
+		classPath = classPath.substring(0, classPath.lastIndexOf(javaClass.getName().replace(".", "/")));
+		context.addItemFound(basePath, classPath, context.loadClass(javaClass.getName()));		
 	}
-
-	@Override
-	void retrieveItemFromZipEntry(
-		SearchContext context,
-		ClassCriteria.TestContext criteriaTestContext,
-		Scan.ItemContext scanItemContext,
-		JavaClass javaClass
-	) {
-		String fsObject = null;
-		IterableZipContainer.Entry zipEntry = scanItemContext.getScannedItem().getWrappedItem();
-		if (zipEntry.getName().equals(javaClass.getPath())) {
-			fsObject = zipEntry.getParentContainer().getAbsolutePath();
-		} else {
-			String zipEntryAbsolutePath = zipEntry.getAbsolutePath();
-			zipEntryAbsolutePath = zipEntryAbsolutePath.substring(0, zipEntryAbsolutePath.lastIndexOf(javaClass.getName().replace(".", "/")));
-			fsObject = zipEntryAbsolutePath;
-		}
-		context.addItemFound(scanItemContext.getBasePathAsString(), fsObject, context.loadClass(javaClass.getName()));
-	}
-	
 	
 	@Override
 	public void close() {
@@ -136,8 +97,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		
 		SearchContext(InitContext initContext) {
 			super(initContext);
-			ClassFileScanConfig scanConfig = initContext.getClassFileScanConfiguration();
-			this.tasksManager = ParallelTasksManager.create(scanConfig.getMaxParallelTasksForUnit());
+			this.tasksManager = ParallelTasksManager.create(initContext.getSearchConfig().getMaxParallelTasksForUnit());
 		}		
 
 		static SearchContext _create(InitContext initContext) {
@@ -196,4 +156,5 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 			return classPaths;
 		}
 	}
+
 }

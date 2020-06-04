@@ -54,12 +54,11 @@ import org.burningwave.core.classes.ByteCodeHunter;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHunter;
-import org.burningwave.core.classes.ClassPathScannerAbst;
 import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
-import org.burningwave.core.io.FileSystemScanner;
+import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
@@ -124,7 +123,7 @@ public class ComponentContainer implements ComponentSupplier {
 		defaultProperties.putAll(PathHelper.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(JavaMemoryCompiler.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
-		defaultProperties.putAll(ClassPathScannerAbst.Configuration.DEFAULT_VALUES);
+		defaultProperties.putAll(SearchConfig.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
 		
 				
@@ -251,7 +250,6 @@ public class ComponentContainer implements ComponentSupplier {
 			return ClassHunter.create(
 				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
-				getFileSystemScanner(),
 				getPathHelper(),
 				retrieveFromConfig(
 					ClassHunter.Configuration.Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER,
@@ -269,7 +267,6 @@ public class ComponentContainer implements ComponentSupplier {
 			ClassPathHunter.create(
 				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
-				getFileSystemScanner(),
 				getPathHelper()
 			)
 		);
@@ -281,7 +278,6 @@ public class ComponentContainer implements ComponentSupplier {
 			ByteCodeHunter.create(
 				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
-				getFileSystemScanner(),
 				getPathHelper()
 			)
 		);
@@ -301,15 +297,6 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(PathHelper.class, () ->
 			PathHelper.create(
 				config
-			)
-		);
-	}
-	
-	@Override
-	public FileSystemScanner getFileSystemScanner() {
-		return getOrCreate(FileSystemScanner.class, () -> 
-			FileSystemScanner.create(
-				getPathHelper()::optimize
 			)
 		);
 	}

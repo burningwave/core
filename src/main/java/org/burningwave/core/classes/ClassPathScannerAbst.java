@@ -30,47 +30,23 @@ package org.burningwave.core.classes;
 
 
 import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.SearchContext.InitContext;
-import org.burningwave.core.io.ClassFileScanConfig;
-import org.burningwave.core.io.FileSystemScanner;
-import org.burningwave.core.io.FileSystemScanner.Scan;
+import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 
 
 public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends SearchResult<I>> implements Component {
 	
-	public static class Configuration {
-		
-		public static class Key {
-
-			public static final String DEFAULT_SEARCH_CONFIG_PATHS = PathHelper.Configuration.Key.PATHS_PREFIX + "hunters.default-search-config.paths";
-						
-		}
-		
-		public final static Map<String, Object> DEFAULT_VALUES;
-	
-		static {
-			DEFAULT_VALUES = new LinkedHashMap<>();
-
-			DEFAULT_VALUES.put(
-				Key.DEFAULT_SEARCH_CONFIG_PATHS, 
-				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + ";"
-			);
-		}
-	}
-	
 	Supplier<ByteCodeHunter> byteCodeHunterSupplier;
 	ByteCodeHunter byteCodeHunter;
 	Supplier<ClassHunter> classHunterSupplier;
 	ClassHunter classHunter;
-	FileSystemScanner fileSystemScanner;
 	PathHelper pathHelper;
 	Function<InitContext, C> contextSupplier;
 	Function<C, R> resultSupplier;
@@ -78,12 +54,10 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	ClassPathScannerAbst(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		Function<InitContext, C> contextSupplier,
 		Function<C, R> resultSupplier
 	) {
-		this.fileSystemScanner = fileSystemScanner;
 		this.pathHelper = pathHelper;
 		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
 		this.classHunterSupplier = classHunterSupplier;
@@ -105,28 +79,49 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 	
 	//Not cached search
-	public R findBy(SearchConfig searchConfig) {
-		searchConfig = searchConfig.createCopy();
-		Collection<String> paths = searchConfig.getClassFileScanConfiguration().getPaths();
+	public R findBy(SearchConfig input) {
+		SearchConfig searchConfig = input.createCopy();
+		Collection<String> paths = searchConfig.getPaths();
 		if (paths == null || paths.isEmpty()) {
-			searchConfig.addPaths(pathHelper.getPaths(Configuration.Key.DEFAULT_SEARCH_CONFIG_PATHS));
+			searchConfig.addPaths(pathHelper.getPaths(SearchConfigAbst.Key.DEFAULT_SEARCH_CONFIG_PATHS));
 		}
-		final ClassFileScanConfig scanConfigCopy = searchConfig.getClassFileScanConfiguration();
 		C context = createContext(searchConfig);
 		searchConfig.init(context.pathScannerClassLoader);
 		context.executeSearch(() -> {
-			fileSystemScanner.scan(
-				scanConfigCopy.toScanConfiguration(
-					getFileSystemEntryTransformer(context),
-					getZipEntryTransformer(context)
-				)
-			);
+			search(context, null, null);
 		});
 		Collection<String> skippedClassesNames = context.getSkippedClassNames();
 		if (!skippedClassesNames.isEmpty()) {
 			logWarn("Skipped classes count: {}", skippedClassesNames.size());
 		}
 		return resultSupplier.apply(context);
+	}
+
+	void search(C context, Collection<String> paths, Consumer<FileSystemItem> afterScanPath) {
+		final SearchConfigAbst<?> searchConfig = context.getSearchConfig();
+		for (String path : paths != null ? paths : searchConfig.getPaths()) {
+			FileSystemItem fileSystemItem = FileSystemItem.ofPath(path);
+			if (searchConfig instanceof SearchConfig) {
+				fileSystemItem.refresh();
+			}
+			Predicate<FileSystemItem> classPredicate = searchConfig.parseCheckFileOptionsValue();
+			fileSystemItem.getAllChildren(fIS -> {
+				if (classPredicate.test(fIS)) {
+					JavaClass javaClass = JavaClass.create(fIS.toByteBuffer());
+					ClassCriteria.TestContext criteriaTestContext = testCriteria(context, javaClass);
+					if (criteriaTestContext.getResult()) {
+						retrieveItem(
+							path, context, criteriaTestContext, fIS, javaClass
+						);
+					}
+					return true;
+				}
+				return false;
+			});
+			if (afterScanPath != null) {
+				afterScanPath.accept(fileSystemItem);
+			}
+		}
 	}
 	
 	@SuppressWarnings("resource")
@@ -142,53 +137,19 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 					sharedClassLoader :
 					PathScannerClassLoader.create(
 						searchConfig.parentClassLoaderForMainClassLoader, 
-						pathHelper, byteCodeHunterSupplier, searchConfig.getClassFileScanConfiguration().getCheckFileOptions()
+						pathHelper, byteCodeHunterSupplier, searchConfig.getCheckFileOptions()
 					),
 				searchConfig
 			)		
 		);
 		return context;
 	}
-
-	
-	Consumer<Scan.ItemContext> getFileSystemEntryTransformer(
-		C context
-	) {
-		return (scannedItemContext) -> {
-			JavaClass javaClass = JavaClass.create(scannedItemContext.getScannedItem().toByteBuffer());
-			ClassCriteria.TestContext criteriaTestContext = testCriteria(context, javaClass);
-			if (criteriaTestContext.getResult()) {
-				retrieveItemFromFileInputStream(
-					context, criteriaTestContext, scannedItemContext, javaClass
-				);
-			}
-		};
-	}
-	
-	
-	Consumer<Scan.ItemContext> getZipEntryTransformer(
-		C context
-	) {
-		return (scannedItemContext) -> {
-			JavaClass javaClass = JavaClass.create(scannedItemContext.getScannedItem().toByteBuffer());
-			ClassCriteria.TestContext criteriaTestContext = testCriteria(context, javaClass);
-			if (criteriaTestContext.getResult()) {
-				retrieveItemFromZipEntry(
-					context, criteriaTestContext, scannedItemContext, javaClass
-				);
-			}
-		};
-	}
 	
 	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCriteria(C context, JavaClass javaClass) {
 		return context.testCriteria(context.loadClass(javaClass.getName()));
 	}
-		
-	abstract void retrieveItemFromFileInputStream(C Context,ClassCriteria.TestContext criteriaTestContext, Scan.ItemContext scannedItem, JavaClass javaClass);
 	
-	
-	abstract void retrieveItemFromZipEntry(C Context, ClassCriteria.TestContext criteriaTestContext, Scan.ItemContext zipEntry, JavaClass javaClass);
-	
+	abstract void retrieveItem(String basePath, C context, ClassCriteria.TestContext criteriaTestContext, FileSystemItem fileSystemItem, JavaClass javaClass);
 	
 	@Override
 	public void close() {

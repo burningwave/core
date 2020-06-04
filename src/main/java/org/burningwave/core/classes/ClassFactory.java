@@ -50,7 +50,6 @@ import org.burningwave.core.Component;
 import org.burningwave.core.Virtual;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.ThrowingSupplier;
-import org.burningwave.core.io.FileScanConfigAbst;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
@@ -85,7 +84,7 @@ public class ClassFactory implements Component {
 			);
 			DEFAULT_VALUES.put(
 				Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-				"${" + FileScanConfigAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
+				"${" + SearchConfigAbst.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
 			);
 		}
 	}
@@ -299,12 +298,10 @@ public class ClassFactory implements Component {
 						).deleteFoundItemsOnClose(
 							false
 						).checkFileOptions(
-							FileScanConfigAbst.Configuration.parseCheckFileOptionsValue(
-								IterableObjectHelper.get(
-									config,
-									Configuration.Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-									Configuration.DEFAULT_VALUES
-								)
+							IterableObjectHelper.get(
+								config,
+								Configuration.Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+								Configuration.DEFAULT_VALUES
 							)
 						).optimizePaths(
 							true

@@ -50,14 +50,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingSupplier;
-import org.burningwave.core.io.FileSystemScanner.Scan;
 
 public class FileSystemItem implements ManagedLogger {
 	private Map.Entry<String, String> absolutePath;
@@ -423,9 +422,9 @@ public class FileSystemItem implements ManagedLogger {
 						FileSystemItem.ofPath(fl.getAbsolutePath())
 					).collect(
 						Collectors.toCollection(
-							HashSet::new
+							ConcurrentHashMap::newKeySet
 						)
-					)).orElseGet(HashSet::new);
+					)).orElseGet(ConcurrentHashMap::newKeySet);
 				}
 			}
 		}
@@ -469,7 +468,7 @@ public class FileSystemItem implements ManagedLogger {
 			}
 			final FileSystemItem parentContainer = parentContainerTemp;
 			try (IterableZipContainer zipInputStream = IterableZipContainer.create(parentContainer.getAbsolutePath(), parentContainer.toByteBuffer())) {					
-				Set<FileSystemItem> allChildren = new HashSet<>();
+				Set<FileSystemItem> allChildren = ConcurrentHashMap.newKeySet();
 				zipInputStream.findAllAndConvert(
 					() -> allChildren,
 					zipEntryPredicate,
@@ -500,7 +499,7 @@ public class FileSystemItem implements ManagedLogger {
 			logDebug("Retrieving all children of " + absolutePath.getKey());
 			Set<FileSystemItem> children = getChildren();
 			if (children != null) {
-				Set<FileSystemItem> allChildren = new HashSet<>();
+				Set<FileSystemItem> allChildren = ConcurrentHashMap.newKeySet();
 				allChildren.addAll(children);
 				children.forEach(
 					child -> {
@@ -642,46 +641,7 @@ public class FileSystemItem implements ManagedLogger {
 		return FileSystemItem.ofPath(folder);
 	}
 	
-	public static Consumer<Scan.ItemContext> getFilteredConsumerForFileSystemScanner(
-		Predicate<FileSystemItem> fileSystemItemFilter,
-		Consumer<FileSystemItem> fileSystemItemConsumer
-	) {
-		return (scannedItemContext) -> {
-			FileSystemItem fileSystemItem = null;
-			Scan.ItemWrapper itemWrapper = scannedItemContext.getScannedItem();
-			if (!(itemWrapper.getWrappedItem() instanceof FileInputStream || 
-				itemWrapper.getWrappedItem() instanceof File)) {
-				if (itemWrapper.getWrappedItem() instanceof IterableZipContainer.Entry) {
-					IterableZipContainer.Entry zipEntry = (IterableZipContainer.Entry)itemWrapper.getWrappedItem();
-					fileSystemItem = FileSystemItem.ofPath(
-						zipEntry.getAbsolutePath(),
-						zipEntry.getConventionedAbsolutePath()
-					);
-				} else {
-					IterableZipContainer zipContainer = (IterableZipContainer)itemWrapper.getWrappedItem();
-					fileSystemItem = FileSystemItem.ofPath(
-						zipContainer.getAbsolutePath(),
-						zipContainer.getConventionedAbsolutePath()
-					);					
-				}
-			} else {
-				File file = null;
-				if (itemWrapper.getWrappedItem() instanceof FileInputStream) {
-					file = ((FileInputStream)itemWrapper.getWrappedItem()).getFile();
-				} else {
-					file = ((File)itemWrapper.getWrappedItem());
-				}
-				String conventionedAbsolutePath = Paths.clean(file.getAbsolutePath());
-				conventionedAbsolutePath +=	file.isDirectory()? "/" : "";
-				fileSystemItem = FileSystemItem.ofPath(scannedItemContext.getScannedItem().getAbsolutePath(), conventionedAbsolutePath);
-			}
-			Cache.pathForContents.getOrUploadIfAbsent(fileSystemItem.getAbsolutePath(), () -> itemWrapper.toByteBuffer());
-			if (fileSystemItemFilter.test(fileSystemItem)) {
-				fileSystemItemConsumer.accept(fileSystemItem);
-			}
-		};
-	}
-	
+
 	public FileSystemItem copyTo(String folder, Predicate<FileSystemItem> filter) {
 		FileSystemItem destination = null;
 		if (isFile()) {

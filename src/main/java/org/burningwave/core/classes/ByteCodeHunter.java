@@ -34,8 +34,8 @@ import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.burningwave.core.io.FileSystemScanner;
-import org.burningwave.core.io.FileSystemScanner.Scan;
+import org.burningwave.core.classes.ClassCriteria.TestContext;
+import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 
 public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass, SearchContext<JavaClass>, ByteCodeHunter.SearchResult> {
@@ -43,13 +43,11 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 	private ByteCodeHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper
 	) {
 		super(
 			byteCodeHunterSupplier,
 			classHunterSupplier,
-			fileSystemScanner,
 			pathHelper,
 			(initContext) -> SearchContext.<JavaClass>create(
 				initContext
@@ -61,10 +59,9 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 	public static ByteCodeHunter create(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier, 
-		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper
 	) {
-		return new ByteCodeHunter(byteCodeHunterSupplier, classHunterSupplier, fileSystemScanner, pathHelper);
+		return new ByteCodeHunter(byteCodeHunterSupplier, classHunterSupplier, pathHelper);
 	}
 	
 	@Override
@@ -82,24 +79,9 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 	}
 	
 	@Override
-	void retrieveItemFromFileInputStream(
-		SearchContext<JavaClass> context, 
-		ClassCriteria.TestContext criteriaTestContext,
-		Scan.ItemContext scanItemContext,
-		JavaClass javaClass
-	) {
-		context.addItemFound(scanItemContext.getBasePathAsString(), scanItemContext.getScannedItem().getAbsolutePath(), javaClass);
-	}
-
-	
-	@Override
-	void retrieveItemFromZipEntry(
-		SearchContext<JavaClass> context,
-		ClassCriteria.TestContext criteriaTestContext,
-		Scan.ItemContext scanItemContext,
-		JavaClass javaClass
-	) {
-		context.addItemFound(scanItemContext.getBasePathAsString(), scanItemContext.getScannedItem().getAbsolutePath(), javaClass);
+	void retrieveItem(String basePath, SearchContext<JavaClass> context, TestContext criteriaTestContext,
+			FileSystemItem fileSystemItem, JavaClass javaClass) {
+		context.addItemFound(basePath, fileSystemItem.getAbsolutePath(), javaClass);		
 	}
 		
 	public static class SearchResult extends org.burningwave.core.classes.SearchResult<JavaClass> {

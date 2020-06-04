@@ -42,9 +42,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Criteria;
-import org.burningwave.core.io.FileScanConfigAbst;
-import org.burningwave.core.io.FileSystemScanner;
-import org.burningwave.core.io.FileSystemScanner.Scan;
+import org.burningwave.core.classes.ClassCriteria.TestContext;
+import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
@@ -71,7 +70,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
 			DEFAULT_VALUES.put(
 				Key.PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-				"${" + FileScanConfigAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
+				"${" + SearchConfigAbst.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
 			);
 		}
 	}
@@ -84,7 +83,6 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	ClassHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		ClassLoader parentClassLoader,
 		Properties config
@@ -92,7 +90,6 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		super(
 			byteCodeHunterSupplier,
 			classHunterSupplier,
-			fileSystemScanner,
 			pathHelper,
 			(initContext) -> ClassHunter.SearchContext._create(
 				initContext
@@ -101,11 +98,9 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		);
 		pathScannerClassLoaderSupplier = () -> PathScannerClassLoader.create(
 			parentClassLoader, pathHelper, byteCodeHunterSupplier, 
-			FileScanConfigAbst.Configuration.parseCheckFileOptionsValue(
-				IterableObjectHelper.get(
-					config, Configuration.Key.PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-					Configuration.DEFAULT_VALUES
-				)
+			IterableObjectHelper.get(
+				config, Configuration.Key.PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+				Configuration.DEFAULT_VALUES
 			)
 		);
 		this.pathScannerClassLoader = pathScannerClassLoaderSupplier.get();
@@ -114,13 +109,12 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	public static ClassHunter create(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier, 
 		Supplier<ClassHunter> classHunterSupplier, 
-		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		ClassLoader parentClassLoader,
 		Properties config
 	) {
 		return new ClassHunter(
-			byteCodeHunterSupplier, classHunterSupplier, fileSystemScanner, pathHelper, parentClassLoader, config
+			byteCodeHunterSupplier, classHunterSupplier, pathHelper, parentClassLoader, config
 		);
 	}
 	
@@ -155,28 +149,14 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	}
 	
 	@Override
-	void retrieveItemFromFileInputStream(
-		ClassHunter.SearchContext context, 
-		ClassCriteria.TestContext criteriaTestContext,
-		Scan.ItemContext scanItemContext, 
-		JavaClass javaClass
-	) {
+	void retrieveItem(String basePath, SearchContext context, TestContext criteriaTestContext,
+			FileSystemItem fileSystemItem, JavaClass javaClass) {
 		context.addItemFound(
-			scanItemContext.getBasePathAsString(),
-			scanItemContext.getScannedItem().getAbsolutePath(),
+			basePath,
+			fileSystemItem.getAbsolutePath(),
 			criteriaTestContext.getEntity(),
 			criteriaTestContext.getMembersFound()
-		);
-	}
-	
-	@Override
-	void retrieveItemFromZipEntry(ClassHunter.SearchContext context, ClassCriteria.TestContext criteriaTestContext, Scan.ItemContext scanItemContext, JavaClass javaClass) {
-		context.addItemFound(
-			scanItemContext.getBasePathAsString(),
-			scanItemContext.getScannedItem().getAbsolutePath(),
-			criteriaTestContext.getEntity(),
-			criteriaTestContext.getMembersFound()
-		);
+		);		
 	}
 	
 	public static class SearchContext extends org.burningwave.core.classes.SearchContext<Class<?>> {
