@@ -148,9 +148,9 @@ public class IterableObjectHelper implements Component {
 									propertyValue = propertyValue.replace("${" + propName + "}", replacement);
 								} else {
 									String finalPropertyValue = "";
-									for (String vl : replacement.split(propertyValuesSeparator)) {
-										finalPropertyValue += propertyValue.replace("${" + propName + "}", vl)+
-											(vl.endsWith(propertyValuesSeparator) ?
+									for (String replacementUnit : replacement.split(propertyValuesSeparator)) {
+										finalPropertyValue += propertyValue.replace("${" + propName + "}", replacementUnit)+
+											(replacementUnit.endsWith(propertyValuesSeparator) ?
 													"" : propertyValuesSeparator);
 									}
 									propertyValue = finalPropertyValue;
