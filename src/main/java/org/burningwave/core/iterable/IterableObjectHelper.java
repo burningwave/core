@@ -144,7 +144,7 @@ public class IterableObjectHelper implements Component {
 		return placeHolders;
 	}
 	
-	public Collection<String> getAllPlaceHolder(Properties properties, String propertyName) {
+	public Collection<String> getAllPlaceHolders(Properties properties, String propertyName) {
 		Collection<String> placeHolders = getAllPlaceHolders(properties);
 		Iterator<String> placeHoldersItr = placeHolders.iterator();
 		while (placeHoldersItr.hasNext()) {
