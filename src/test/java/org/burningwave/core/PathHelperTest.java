@@ -10,8 +10,8 @@ public class PathHelperTest extends BaseTest {
 	
 	@Test
 	public void getResourceAsStreamTestOne() {
-		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() ->{ 
+			ComponentSupplier componentSupplier = getComponentSupplier();
 			try(InputStream inputStream = componentSupplier.getPathHelper().getResourceAsStream("org/burningwave/core/classes/ClassLoaderDelegate.bwc")) {
 				return inputStream;
 			}
@@ -20,9 +20,9 @@ public class PathHelperTest extends BaseTest {
 	
 	@Test
 	public void getResourceCustomClassPath() {
-		ComponentSupplier componentSupplier = getComponentSupplier();
-		PathHelper pathHelper = componentSupplier.getPathHelper();
-		testNotEmpty(() ->{ 
+		testNotEmpty(() ->{
+			ComponentSupplier componentSupplier = getComponentSupplier();
+			PathHelper pathHelper = componentSupplier.getPathHelper();
 			return pathHelper.getPaths("custom-class-path");
 		});
 	}

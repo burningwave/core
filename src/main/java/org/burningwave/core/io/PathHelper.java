@@ -78,6 +78,7 @@ public class PathHelper implements Component {
 		
 		static {
 			DEFAULT_VALUES = new HashMap<>();
+			DEFAULT_VALUES.put(Key.PATHS_PREFIX + Key.MAIN_CLASS_PATHS, "${system.properties:java.class.path}");
 			DEFAULT_VALUES.put(
 				Key.PATHS_PREFIX + Key.MAIN_CLASS_PATHS_EXTENSION, 
 				"//${system.properties:java.home}/lib//children:.*?\\.jar|.*?\\.jmod" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
