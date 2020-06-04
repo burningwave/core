@@ -134,7 +134,9 @@ public class IterableObjectHelper implements Component {
 							if (!propName.startsWith("system.properties:")) {
 								replacement = get(properties, propName, propertyValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 							} else {
-								replacement = System.getProperty(propName.split(":")[1]);
+								replacement = System.getProperty(propName.split(":")[1]).replace(
+									System.getProperty("path.separator"), propertyValuesSeparator
+								);
 							}
 							if (deleteUnresolvedPlaceHolder && replacement == null) {
 								propertyValue = propertyValue.replaceAll(Strings.placeHolderToRegEx("${" + propName + "}") + ".*?" + propertyValuesSeparator, "");
