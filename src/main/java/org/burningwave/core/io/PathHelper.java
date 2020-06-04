@@ -243,9 +243,9 @@ public class PathHelper implements Component {
 						placeHolderPaths = Arrays.asList(
 							System.getProperty(
 								placeHolderName.split(
-									System.getProperty("path.separator")
+									":"
 								)[1]
-							).split(";")
+							).split(System.getProperty("path.separator"))
 						);
 					} else {
 						placeHolderPaths = getPaths(placeHolderName);
