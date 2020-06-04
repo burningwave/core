@@ -602,9 +602,9 @@ paths.java-memory-compiler.main-class-paths=${main-class-paths};\
     #This variable is empty by default and could be valorized by developer
     ${paths.java-memory-compiler.additional-main-class-paths};
 paths.main-class-paths.extension=\
-    //${system.properties:java.home}/lib//children:.*\.jar|.*\.jmod;\
-    //${system.properties:java.home}/lib/ext//children:.*\.jar|.*\.jmod;\
-    //${system.properties:java.home}/jmods//children:.*\.jar|.*\.jmod;
+    //${system.properties:java.home}/lib//children:.*?\.jar|.*?\.jmod;\
+    //${system.properties:java.home}/lib/ext//children:.*?\.jar|.*?\.jmod;\
+    //${system.properties:java.home}/jmods//children:.*?\.jar|.*?\.jmod;
 ```
 **If in your custom burningwave.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 
@@ -633,9 +633,9 @@ paths.java-memory-compiler.class-repositories=${main-class-paths};\
 paths.java-memory-compiler.main-class-paths=${main-class-paths};\
     ${paths.java-memory-compiler.additional-main-class-paths};
 paths.main-class-paths.extension=\
-    //${system.properties:java.home}/lib//children:.*\.jar|.*\.jmod;\
-    //${system.properties:java.home}/lib/ext//children:.*\.jar|.*\.jmod;\
-    //${system.properties:java.home}/jmods//children:.*\.jar|.*\.jmod;
+    //${system.properties:java.home}/lib//children:.*?\.jar|.*?\.jmod;\
+    //${system.properties:java.home}/lib/ext//children:.*?\.jar|.*?\.jmod;\
+    //${system.properties:java.home}/jmods//children:.*?\.jar|.*?\.jmod;
 paths.java-memory-compiler.additional-main-class-paths=C:/some paths 1;C:/some paths 2;
 paths.java-memory-compiler.additional-class-repositories=C:/some paths 3;C:/some paths 4;
 paths.class-factory.default-class-loader.additional-class-repositories=C:/some paths 5;C:/some paths 6;
