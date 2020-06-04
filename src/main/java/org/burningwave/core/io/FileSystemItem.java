@@ -456,7 +456,7 @@ public class FileSystemItem implements ManagedLogger {
 		return allChildren;
 	}
 
-	protected Set<FileSystemItem>  loadAllChildren() {
+	protected Set<FileSystemItem> loadAllChildren() {
 		if (isCompressed() || isArchive()) {
 			Predicate<IterableZipContainer.Entry> zipEntryPredicate = null;
 			FileSystemItem parentContainerTemp = this;

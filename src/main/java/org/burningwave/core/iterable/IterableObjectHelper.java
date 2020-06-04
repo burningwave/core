@@ -93,10 +93,32 @@ public class IterableObjectHelper implements Component {
 	}
 	
 	public <T> T get(Properties properties, String propertyName) {
-		return get(properties, propertyName, null);
+		return get(properties, propertyName, null, false, null);
 	}
-		
+	
 	public <T> T get(Properties properties, String propertyName, Map<String, ?> defaultValues) {
+		return get(properties, propertyName, null, false, defaultValues);
+	}
+	
+	public <T> T get(Properties properties, String propertyName, String propertyValuesSeparator) {
+		return get(properties, propertyName, propertyValuesSeparator, false, null);
+	}
+	
+
+	public String get(
+		Properties properties, String propertyName,
+		String propertyValuesSeparator, boolean deleteUnresolvedPlaceHolder
+	) {
+		return get(properties, propertyName, propertyValuesSeparator, deleteUnresolvedPlaceHolder, null);
+	}
+	
+	public <T> T get(
+		Properties properties,
+		String propertyName,
+		String propertyValuesSeparator,
+		boolean deleteUnresolvedPlaceHolder,
+		Map<String, ?> defaultValues
+	) {
 		T value = (T) properties.get(propertyName);
 		if (value == null && defaultValues != null) {
 			value = (T) defaultValues.get(propertyName);
@@ -110,12 +132,22 @@ public class IterableObjectHelper implements Component {
 						for (String propName : entry.getValue()) {
 							String replacement;
 							if (!propName.startsWith("system.properties:")) {
-								replacement = get(properties, propName, defaultValues);
+								replacement = get(properties, propName, propertyValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 							} else {
 								replacement = System.getProperty(propName.split(":")[1]);
 							}
-							if (replacement != null) {
-								propertyValue = propertyValue.replace("${" + propName + "}", replacement);
+							if (deleteUnresolvedPlaceHolder && replacement == null) {
+								propertyValue = propertyValue.replaceAll(Strings.placeHolderToRegEx("${" + propName + "}") + ".*?" + propertyValuesSeparator, "");
+							} else if (replacement != null) {
+								if (propertyValuesSeparator == null) {
+									propertyValue = propertyValue.replace("${" + propName + "}", replacement);
+								} else {
+									String finalPropertyValue = "";
+									for (String vl : replacement.split(propertyValuesSeparator)) {
+										finalPropertyValue += propertyValue.replace("${" + propName + "}", vl);
+									}
+									propertyValue = finalPropertyValue;
+								}
 							}
 						}
 					}
@@ -135,7 +167,7 @@ public class IterableObjectHelper implements Component {
 	
 	public Collection<String> getAllPlaceHolders(Properties properties, Predicate<String> propertyFilter) {
 		Collection<String> placeHolders = new HashSet<>();
-		for (Map.Entry<Object, Object> entry : properties.entrySet().stream().filter(entry -> propertyFilter.test((String) entry.getKey())).collect(Collectors.toSet())) {
+		for (Map.Entry<Object, Object> entry : properties.entrySet().stream().filter(entry -> (entry.getValue() == null || entry.getValue() instanceof String) && propertyFilter.test((String) entry.getKey())).collect(Collectors.toSet())) {
 			String value = (String)entry.getValue();
 			for(List<String> placeHoldersFound : Strings.extractAllGroups(Strings.PLACE_HOLDER_EXTRACTOR_PATTERN, value).values()) {
 				placeHolders.addAll(placeHoldersFound);
@@ -154,4 +186,5 @@ public class IterableObjectHelper implements Component {
 		}
 		return placeHolders;
 	}
+
 }

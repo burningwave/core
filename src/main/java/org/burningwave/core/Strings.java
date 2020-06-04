@@ -307,4 +307,8 @@ public class Strings implements Component {
 		return (isEmpty(string1) && isEmpty(string2)) || 
 			(isNotEmpty(string1) && isNotEmpty(string2) && string1.equals(string2));
 	}
+
+	public String placeHolderToRegEx(String value) {
+		return value.replace("$", "\\$").replace(".", "\\.").replace("{", "\\{").replace("}", "\\}");
+	}
 }

@@ -27,6 +27,13 @@ public class PathHelperTest extends BaseTest {
 		});
 	}
 	
-	
+	@Test
+	public void getResourceCustomClassPathTestTwo() {
+		testNotEmpty(() -> { 
+			ComponentSupplier componentSupplier = getComponentSupplier();
+			PathHelper pathHelper = componentSupplier.getPathHelper();
+			return pathHelper.getPaths("custom-class-path2");
+		});
+	}
 	
 }
