@@ -32,6 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -128,6 +129,9 @@ public class IterableObjectHelper implements Component {
 		
 	}
 	
+	public Collection<String> getAllPlaceHolders(Properties properties) {
+		return getAllPlaceHolders(properties, object -> true);
+	}
 	
 	public Collection<String> getAllPlaceHolders(Properties properties, Predicate<String> propertyFilter) {
 		Collection<String> placeHolders = new HashSet<>();
@@ -135,6 +139,17 @@ public class IterableObjectHelper implements Component {
 			String value = (String)entry.getValue();
 			for(List<String> placeHoldersFound : Strings.extractAllGroups(Strings.PLACE_HOLDER_EXTRACTOR_PATTERN, value).values()) {
 				placeHolders.addAll(placeHoldersFound);
+			}
+		}
+		return placeHolders;
+	}
+	
+	public Collection<String> getAllPlaceHolder(Properties properties, String propertyName) {
+		Collection<String> placeHolders = getAllPlaceHolders(properties);
+		Iterator<String> placeHoldersItr = placeHolders.iterator();
+		while (placeHoldersItr.hasNext()) {
+			if (!containsValue(properties, propertyName, null, placeHoldersItr.next())) {
+				placeHoldersItr.remove();
 			}
 		}
 		return placeHolders;
