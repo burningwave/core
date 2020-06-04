@@ -31,9 +31,12 @@ package org.burningwave.core.iterable;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
@@ -123,5 +126,17 @@ public class IterableObjectHelper implements Component {
 			return value;
 		}
 		
+	}
+	
+	
+	public Collection<String> getAllPlaceHolders(Properties properties, Predicate<String> propertyFilter) {
+		Collection<String> placeHolders = new HashSet<>();
+		for (Map.Entry<Object, Object> entry : properties.entrySet().stream().filter(entry -> propertyFilter.test((String) entry.getKey())).collect(Collectors.toSet())) {
+			String value = (String)entry.getValue();
+			for(List<String> placeHoldersFound : Strings.extractAllGroups(Strings.PLACE_HOLDER_EXTRACTOR_PATTERN, value).values()) {
+				placeHolders.addAll(placeHoldersFound);
+			}
+		}
+		return placeHolders;
 	}
 }
