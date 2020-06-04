@@ -104,13 +104,14 @@ public class IterableObjectHelper implements Component {
 				if (!subProperties.isEmpty()) {
 					for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
 						for (String propName : entry.getValue()) {
+							String replacement;
 							if (!propName.startsWith("system.properties:")) {
-								String replacement = get(properties, propName, defaultValues);
-								if (replacement != null) {
-									propertyValue = propertyValue.replace("${" + propName + "}", replacement);
-								}
+								replacement = get(properties, propName, defaultValues);
 							} else {
-								propertyValue = propertyValue.replace("${" + propName + "}", System.getProperty(propName.split(":")[1]));
+								replacement = System.getProperty(propName.split(":")[1]);
+							}
+							if (replacement != null) {
+								propertyValue = propertyValue.replace("${" + propName + "}", replacement);
 							}
 						}
 					}
