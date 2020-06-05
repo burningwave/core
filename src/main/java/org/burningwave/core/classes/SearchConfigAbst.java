@@ -97,7 +97,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	String checkFileOptions;
 	//TODO implementare
 	int maxParallelTasksForUnit;
-	//TODO implementare
 	boolean optimizePaths;
 	boolean useSharedClassLoaderAsMain;
 	boolean deleteFoundItemsOnClose;
@@ -247,6 +246,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		destConfig.paths = new HashSet<>();
 		destConfig.paths.addAll(this.paths);
 		destConfig.checkFileOptions = this.checkFileOptions;
+		destConfig.optimizePaths = this.optimizePaths;
 		destConfig.useSharedClassLoaderAsMain = this.useSharedClassLoaderAsMain;
 		destConfig.parentClassLoaderForMainClassLoader = this.parentClassLoaderForMainClassLoader;
 		destConfig.useSharedClassLoaderAsParent = this.useSharedClassLoaderAsParent;
@@ -262,6 +262,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		copy.paths = new HashSet<>();
 		copy.paths.addAll(this.paths);
 		copy.checkFileOptions = this.checkFileOptions;
+		copy.optimizePaths = this.optimizePaths;
 		copy.useSharedClassLoaderAsMain = this.useSharedClassLoaderAsMain;
 		copy.parentClassLoaderForMainClassLoader = this.parentClassLoaderForMainClassLoader;
 		copy.useSharedClassLoaderAsParent = this.useSharedClassLoaderAsParent;

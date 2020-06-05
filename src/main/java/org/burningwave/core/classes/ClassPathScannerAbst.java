@@ -81,8 +81,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	//Not cached search
 	public R findBy(SearchConfig input) {
 		SearchConfig searchConfig = input.createCopy();
-		Collection<String> paths = searchConfig.getPaths();
-		if (paths == null || paths.isEmpty()) {
+		if (searchConfig.getPaths().isEmpty()) {
 			searchConfig.addPaths(pathHelper.getPaths(SearchConfigAbst.Key.DEFAULT_SEARCH_CONFIG_PATHS));
 		}
 		C context = createContext(searchConfig);
@@ -99,6 +98,10 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 
 	void search(C context, Collection<String> paths, Consumer<FileSystemItem> afterScanPath) {
 		final SearchConfigAbst<?> searchConfig = context.getSearchConfig();
+		paths = paths != null ? paths : searchConfig.getPaths();
+		if (searchConfig.optimizePaths) {
+			pathHelper.optimize(paths);
+		}
 		for (String path : paths != null ? paths : searchConfig.getPaths()) {
 			FileSystemItem fileSystemItem = FileSystemItem.ofPath(path);
 			if (searchConfig instanceof SearchConfig) {
@@ -106,17 +109,22 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			}
 			Predicate<FileSystemItem> classPredicate = searchConfig.parseCheckFileOptionsValue();
 			fileSystemItem.getAllChildren(fIS -> {
-				if (classPredicate.test(fIS)) {
-					JavaClass javaClass = JavaClass.create(fIS.toByteBuffer());
-					ClassCriteria.TestContext criteriaTestContext = testCriteria(context, javaClass);
-					if (criteriaTestContext.getResult()) {
-						retrieveItem(
-							path, context, criteriaTestContext, fIS, javaClass
-						);
+				try {
+					if (classPredicate.test(fIS)) {
+						JavaClass javaClass = JavaClass.create(fIS.toByteBuffer());
+						ClassCriteria.TestContext criteriaTestContext = testCriteria(context, javaClass);
+						if (criteriaTestContext.getResult()) {
+							retrieveItem(
+								path, context, criteriaTestContext, fIS, javaClass
+							);
+						}
+						return true;
 					}
-					return true;
+					return false;
+				} catch (Throwable exc) {
+					logError("Could not scan " + fIS.getAbsolutePath(), exc);
+					return false;
 				}
-				return false;
 			});
 			if (afterScanPath != null) {
 				afterScanPath.accept(fileSystemItem);
