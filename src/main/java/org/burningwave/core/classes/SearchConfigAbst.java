@@ -95,8 +95,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	Collection<String> paths;
 	ClassLoader parentClassLoaderForMainClassLoader;
 	String checkFileOptions;
-	//TODO implementare
-	int maxParallelTasksForUnit;
 	boolean optimizePaths;
 	boolean useSharedClassLoaderAsMain;
 	boolean deleteFoundItemsOnClose;
@@ -163,10 +161,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return parseCheckFileOptionsValue(defaultValue, null);
 	}
 	
-	public int getMaxParallelTasksForUnit() {
-		return maxParallelTasksForUnit;
-	}
-	
 	public S by(ClassCriteria classCriteria) {
 		this.classCriteria = classCriteria;
 		return (S)this;
@@ -221,11 +215,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		boolean value
 	) {
 		this.considerURLClassLoaderPathsAsScanned = value;
-		return (S)this;
-	}
-	
-	public S maxParallelTasksForUnit(int value) {
-		this.maxParallelTasksForUnit = value;
 		return (S)this;
 	}
 	

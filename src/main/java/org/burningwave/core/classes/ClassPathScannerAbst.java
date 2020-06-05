@@ -102,12 +102,12 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		if (searchConfig.optimizePaths) {
 			pathHelper.optimize(paths);
 		}
+		Predicate<FileSystemItem> classPredicate = searchConfig.parseCheckFileOptionsValue();
 		for (String path : paths != null ? paths : searchConfig.getPaths()) {
 			FileSystemItem fileSystemItem = FileSystemItem.ofPath(path);
 			if (searchConfig instanceof SearchConfig) {
 				fileSystemItem.refresh();
 			}
-			Predicate<FileSystemItem> classPredicate = searchConfig.parseCheckFileOptionsValue();
 			fileSystemItem.getAllChildren(fIS -> {
 				try {
 					if (classPredicate.test(fIS)) {

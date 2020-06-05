@@ -37,7 +37,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.classes.ClassCriteria.TestContext;
-import org.burningwave.core.concurrent.ParallelTasksManager;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 
@@ -93,11 +92,9 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 	}
 	
 	public static class SearchContext extends org.burningwave.core.classes.SearchContext<Collection<Class<?>>> {
-		ParallelTasksManager tasksManager;
 		
 		SearchContext(InitContext initContext) {
 			super(initContext);
-			this.tasksManager = ParallelTasksManager.create(initContext.getSearchConfig().getMaxParallelTasksForUnit());
 		}		
 
 		static SearchContext _create(InitContext initContext) {
@@ -126,7 +123,6 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		
 		@Override
 		public void close() {
-			tasksManager.close();
 			super.close();
 		}
 	}

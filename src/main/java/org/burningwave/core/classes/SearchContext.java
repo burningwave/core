@@ -191,7 +191,7 @@ public class SearchContext<T> implements Component {
 							synchronized(this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
 								if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
 									pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
-										getPathsToBeScanned(), searchConfig.considerURLClassLoaderPathsAsScanned, searchConfig.getMaxParallelTasksForUnit()
+										getPathsToBeScanned(), searchConfig.considerURLClassLoaderPathsAsScanned
 									);
 									this.classLoaderHaveBeenUploadedWithCriteriaPaths = true;
 								}

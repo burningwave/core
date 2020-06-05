@@ -76,7 +76,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			(byteCodeHunter = byteCodeHunterSupplier.get());	
 	}
 	
-	public void scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths, int maxParallelTasksForUnit) {
+	public void scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths) {
 		ComparePathsResult checkPathsResult = compareWithAllLoadedPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
 		if (!checkPathsResult.getNotContainedPaths().isEmpty()) {
 			synchronized (loadedPaths) {
@@ -87,8 +87,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 							checkPathsResult.getNotContainedPaths()
 						).considerURLClassLoaderPathsAsScanned(
 							considerURLClassLoaderPathsAsLoadedPaths
-						).maxParallelTasksForUnit(
-							maxParallelTasksForUnit
 						).checkFileOptions(
 							byteCodeHunterSearchConfigCheckFileOptions
 						).optimizePaths(
