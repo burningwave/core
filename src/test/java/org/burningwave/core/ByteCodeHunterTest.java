@@ -11,7 +11,6 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.SearchConfig;
-import org.burningwave.core.io.FileScanConfigAbst;
 import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +31,7 @@ public class ByteCodeHunterTest extends BaseTest {
 					)
 				).deleteFoundItemsOnClose(
 					false
-				).checkFileOptions(FileScanConfigAbst.CHECK_FILE_SIGNATURE)					
+				).checkFileOptions(CacheableSearchConfig.Key.CheckFile.FOR_NAME)					
 			),
 			(result) -> result.getClasses()
 		);

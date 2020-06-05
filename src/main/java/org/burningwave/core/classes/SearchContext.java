@@ -33,8 +33,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,11 +41,9 @@ import java.util.function.Supplier;
 import org.burningwave.core.Component;
 import org.burningwave.core.Context;
 import org.burningwave.core.function.ThrowingSupplier;
-import org.burningwave.core.io.ClassFileScanConfig;
 
 public class SearchContext<T> implements Component {
 
-	ClassFileScanConfig classFileScanConfiguration;
 	SearchConfigAbst<?> searchConfig;
 	Map<String, T> itemsFoundFlatMap;
 	Map<String, Map<String, T>> itemsFoundMap;
@@ -67,15 +63,14 @@ public class SearchContext<T> implements Component {
 	SearchContext(
 		InitContext initContext
 	) {
-		this.itemsFoundFlatMap = new HashMap<>();
-		this.itemsFoundMap = new HashMap<>();
+		this.itemsFoundFlatMap = new ConcurrentHashMap<>();
+		this.itemsFoundMap = new ConcurrentHashMap<>();
 		this.skippedClassNames = ConcurrentHashMap.newKeySet();
 		this.sharedPathMemoryClassLoader = initContext.getSharedPathMemoryClassLoader();
 		this.pathScannerClassLoader = initContext.getPathMemoryClassLoader();
-		this.classFileScanConfiguration = initContext.getClassFileScanConfiguration();
 		this.searchConfig = initContext.getSearchConfig();
 		this.classLoaderHaveBeenUploadedWithCriteriaPaths = pathScannerClassLoader.compareWithAllLoadedPaths(
-			classFileScanConfiguration.getPaths(), searchConfig.considerURLClassLoaderPathsAsScanned
+				searchConfig.getPaths(), searchConfig.considerURLClassLoaderPathsAsScanned
 		).getNotContainedPaths().isEmpty();
 	}
 	
@@ -108,7 +103,7 @@ public class SearchContext<T> implements Component {
 	void addItemFound(String path, String key, T item) {
 		retrieveCollectionForPath(
 			itemsFoundMap,
-			HashMap::new, path
+			ConcurrentHashMap::new, path
 		).put(key, item);
 		synchronized(itemsFoundFlatMap) {
 			itemsFoundFlatMap.put(key, item);
@@ -118,7 +113,7 @@ public class SearchContext<T> implements Component {
 	void addAllItemsFound(String path, Map<String, T> items) {
 		retrieveCollectionForPath(
 			itemsFoundMap,
-			HashMap::new, path
+			ConcurrentHashMap::new, path
 		).putAll(items);
 		for (Map.Entry<String, T> item : items.entrySet()) {
 			synchronized(itemsFoundFlatMap) {
@@ -149,7 +144,7 @@ public class SearchContext<T> implements Component {
 	}
 	
 	Collection<String> getPathsToBeScanned() {
-		return classFileScanConfiguration.getPaths();
+		return searchConfig.getPaths();
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -165,7 +160,7 @@ public class SearchContext<T> implements Component {
 		if (itemsFound == null) {
 			synchronized(itemsFoundFlatMap) {
 				if (itemsFound == null) {
-					this.itemsFound = new HashSet<>();
+					this.itemsFound = ConcurrentHashMap.newKeySet();
 					this.itemsFound.addAll(this.itemsFoundFlatMap.values());
 				}
 			}
@@ -194,7 +189,7 @@ public class SearchContext<T> implements Component {
 							synchronized(this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
 								if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
 									pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
-										getPathsToBeScanned(), searchConfig.considerURLClassLoaderPathsAsScanned, classFileScanConfiguration.getMaxParallelTasksForUnit()
+										getPathsToBeScanned(), searchConfig.considerURLClassLoaderPathsAsScanned
 									);
 									this.classLoaderHaveBeenUploadedWithCriteriaPaths = true;
 								}
@@ -280,8 +275,7 @@ public class SearchContext<T> implements Component {
 		enum Elements {
 			SHARED_PATH_MEMORY_CLASS_LOADER,
 			PATH_MEMORY_CLASS_LOADER,
-			CLASS_FILE_SCAN_CONFIGURATION,
-			SEARCH_CRITERIA;
+			SEARCH_CONFIG;
 		}
 		
 		InitContext(
@@ -292,8 +286,7 @@ public class SearchContext<T> implements Component {
 			super();
 			put(Elements.SHARED_PATH_MEMORY_CLASS_LOADER, sharedPathMemoryClassLoader);
 			put(Elements.PATH_MEMORY_CLASS_LOADER, pathScannerClassLoader);
-			put(Elements.CLASS_FILE_SCAN_CONFIGURATION, searchConfig.getClassFileScanConfiguration());
-			put(Elements.SEARCH_CRITERIA, searchConfig);			
+			put(Elements.SEARCH_CONFIG, searchConfig);			
 		}
 		
 		static InitContext create(
@@ -312,12 +305,9 @@ public class SearchContext<T> implements Component {
 			return get(Elements.PATH_MEMORY_CLASS_LOADER);
 		}
 		
-		ClassFileScanConfig getClassFileScanConfiguration() {
-			return get(Elements.CLASS_FILE_SCAN_CONFIGURATION);
-		}
 		
 		<C extends SearchConfigAbst<C>> C getSearchConfig() {
-			return get(Elements.SEARCH_CRITERIA);
+			return get(Elements.SEARCH_CONFIG);
 		}
 	}
 }

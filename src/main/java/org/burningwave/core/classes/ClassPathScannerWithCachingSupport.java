@@ -28,24 +28,17 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
-
-import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.burningwave.core.classes.SearchContext.InitContext;
-import org.burningwave.core.io.ClassFileScanConfig;
-import org.burningwave.core.io.FileSystemScanner;
+import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.io.PathHelper.ComparePathsResult;
 
 
 public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>, R extends SearchResult<I>> extends ClassPathScannerAbst<I, C, R> {
@@ -54,14 +47,12 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	ClassPathScannerWithCachingSupport(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		FileSystemScanner fileSystemScanner,
 		PathHelper pathHelper,
 		Function<InitContext, C> contextSupplier,
 		Function<C, R> resultSupplier) {
 		super(
 			byteCodeHunterSupplier,
 			classHunterSupplier,
-			fileSystemScanner,
 			pathHelper,
 			contextSupplier,
 			resultSupplier
@@ -72,11 +63,11 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	public CacheScanner<I, R> loadInCache(CacheableSearchConfig searchConfig) {
 		try (R result = findBy(
 			SearchConfig.forPaths(
-				searchConfig.getClassFileScanConfiguration().getPaths()
+				searchConfig.getPaths()
 			).optimizePaths(
 				true
 			).checkFileOptions(
-				searchConfig.getClassFileScanConfiguration().getCheckFileOptions()
+				searchConfig.getCheckFileOptions()
 			)
 		)){};
 		return (srcCfg) -> 
@@ -86,9 +77,9 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	//Cached search
 	public R findBy(CacheableSearchConfig searchConfig) {
 		searchConfig = searchConfig.createCopy();
-		Collection<String> paths = searchConfig.getClassFileScanConfiguration().getPaths();
+		Collection<String> paths = searchConfig.getPaths();
 		if (paths == null || paths.isEmpty()) {
-			searchConfig.addPaths(pathHelper.getPaths(Configuration.Key.DEFAULT_SEARCH_CONFIG_PATHS));
+			searchConfig.addPaths(pathHelper.getPaths(SearchConfigAbst.Key.DEFAULT_SEARCH_CONFIG_PATHS));
 		}
 		C context = createContext(
 			searchConfig
@@ -103,9 +94,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		}
 		return resultSupplier.apply(context);
 	}
-	
-	
-	@SuppressWarnings("unchecked")
+		
 	void scan(C context) {
 		Collection<String> pathsNotScanned = scanCache(context);
 		if (!pathsNotScanned.isEmpty()) {
@@ -126,12 +115,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 					}
 				}
 			} else {
-				fileSystemScanner.scan(
-					context.classFileScanConfiguration.createCopy().setPaths(pathsNotScanned).toScanConfiguration(
-						getFileSystemEntryTransformer(context),
-						getZipEntryTransformer(context)
-					)				
-				);
+				search(context, pathsNotScanned, null);
 			}
 		}
 	}
@@ -140,7 +124,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		Collection<String> pathsNotScanned = new LinkedHashSet<>();
 		CacheableSearchConfig searchConfig = context.getSearchConfig();
 		if (!context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
-			for (String path : searchConfig.getClassFileScanConfiguration().getPaths()) {
+			for (String path : searchConfig.getPaths()) {
 				Map<String, I> classesForPath = cache.get(path);
 				if (classesForPath != null) {
 					if (!classesForPath.isEmpty()) {	
@@ -151,7 +135,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 				}
 			}
 		} else {
-			for (String path : searchConfig.getClassFileScanConfiguration().getPaths()) {
+			for (String path : searchConfig.getPaths()) {
 				Map<String, I> classesForPath = cache.get(path);
 				if (classesForPath != null) {
 					if (!classesForPath.isEmpty()) {
@@ -165,70 +149,16 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		return pathsNotScanned;
 	}
 
-	@SuppressWarnings("unchecked")
 	void loadInCache(C context, Collection<String> paths) {
-		ComparePathsResult comparePathsResult = pathHelper.comparePaths(cache.keySet(), paths);
-		ClassFileScanConfig classFileScanConfiguration = context.classFileScanConfiguration.createCopy().setPaths(comparePathsResult.getNotContainedPaths());
-		Map<String, Map<String, I>> tempCache = new LinkedHashMap<>();
-		if (!comparePathsResult.getPartialContainedDirectories().isEmpty()) {
-			Predicate<File> directoryPredicate = null;
-			for (Entry<String, Collection<String>> entry : comparePathsResult.getPartialContainedDirectories().entrySet()) {
-				for (String path : entry.getValue()) {
-					tempCache.put(entry.getKey(), cache.get(path));
-					if (directoryPredicate != null) {
-						directoryPredicate.and(file -> !(Paths.clean(file.getAbsolutePath()) + "/").startsWith(Paths.clean(path) + "/"));
-					} else {
-						directoryPredicate = file -> !(Paths.clean(file.getAbsolutePath()) + "/").startsWith(Paths.clean(path) + "/");
-					}
-				}
+		search(context, paths, currentBasePathScanned -> {
+			String absolutePath = currentBasePathScanned.getAbsolutePath();
+			Map<String, I> itemsForPath = new HashMap<>();
+			Map<String, I> itemsFound = context.getItemsFound(absolutePath);
+			if (itemsFound != null) {
+				itemsForPath.putAll(itemsFound);
 			}
-			if (directoryPredicate != null) {
-				classFileScanConfiguration.scanRecursivelyAllDirectoryThat(directoryPredicate);
-			}
-		}
-		if (!comparePathsResult.getPartialContainedFiles().isEmpty()) {
-			Predicate<File> filePredicate = null;
-			for (Entry<String, Collection<String>> entry : comparePathsResult.getPartialContainedFiles().entrySet()) {
-				for (String path : entry.getValue()) {
-					tempCache.put(Paths.clean(entry.getKey()), cache.get(path));
-					if (filePredicate != null) {
-						filePredicate.and(file -> !(Paths.clean(file.getAbsolutePath())).equals(Paths.clean(path)));
-					} else {
-						filePredicate = file -> !(Paths.clean(file.getAbsolutePath())).equals(Paths.clean(path));
-					}
-				}
-			}
-			if (filePredicate != null) {
-				classFileScanConfiguration.scanAllArchiveFileThat(filePredicate);
-				classFileScanConfiguration.scanAllFileThat(filePredicate);
-			}
-		}
-		if (!comparePathsResult.getContainedPaths().isEmpty()) {
-			for (Entry<String, Collection<String>> entry : comparePathsResult.getContainedPaths().entrySet()) {
-				classFileScanConfiguration.addPaths(entry.getValue());
-			}
-		}
-		
-		fileSystemScanner.scan(
-			classFileScanConfiguration.toScanConfiguration(
-				getFileSystemEntryTransformer(context),
-				getZipEntryTransformer(context)
-			).afterScanPath((mainScanContext, path) -> {
-				mainScanContext.waitForTasksEnding();
-				Map<String, I> itemsForPath = new HashMap<>();
-				Map<String, I> itemsFound = context.getItemsFound(path);
-				if (itemsFound != null) {
-					itemsForPath.putAll(itemsFound);
-				}
-				this.cache.put(path, itemsForPath);
-			})
-		);
-		if (!tempCache.isEmpty()) {
-			for (Entry<String, Map<String, I>> entry : tempCache.entrySet()) {
-				cache.get(entry.getKey()).putAll(entry.getValue());
-				context.addAllItemsFound(entry.getKey(), entry.getValue());
-			}
-		}
+			this.cache.put(absolutePath, itemsForPath);
+		});
 	}
 	
 
@@ -252,6 +182,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	
 	public void clearCache() {
 		cache.entrySet().stream().forEach(entry -> {
+			FileSystemItem.ofPath(entry.getKey()).reset();
 			entry.getValue().clear();
 		});
 		cache.clear();

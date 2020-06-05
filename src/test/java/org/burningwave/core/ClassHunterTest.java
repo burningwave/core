@@ -46,6 +46,7 @@ public class ClassHunterTest extends BaseTest {
 	
 	@Test
 	public void findAllTestTwo() throws Exception {
+		findAllTestOne();
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		componentSupplier.clearHuntersCache();
 		testNotEmpty(
