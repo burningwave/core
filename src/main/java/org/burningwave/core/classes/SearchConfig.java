@@ -28,10 +28,14 @@
  */
 package org.burningwave.core.classes;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.burningwave.core.io.IterableZipContainer;
 
 public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 	
@@ -63,8 +67,48 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 		
 	@Override
 	SearchConfig newInstance() {
-		return new SearchConfig(this.paths);
+		return new SearchConfig(scanConfig.getPaths());
 	}
 	
+	public SearchConfig loadAllFileThat(Predicate<File> predicate) {
+		scanConfig.loadAllFileThat(predicate);
+		return this;
+	}
+	
+	
+	public SearchConfig loadAllZipEntryThat(Predicate<IterableZipContainer.Entry> predicate) {
+		scanConfig.loadAllZipEntryThat(predicate);
+		return this;
+	}
+	
+	public SearchConfig recursiveOnArchiveOfZipEntry(boolean flag) {
+		scanConfig.recursiveOnArchiveOfZipEntry(flag);
+		return this;
+	}
+	
+	public SearchConfig recursiveOnDirectoryOfFileSystemEntry(boolean flag) {
+		scanConfig.recursiveOnDirectoryOfFileSystemEntry(flag);
+		return this;
+	}
+	
+	public SearchConfig scanAllArchiveFileThat(Predicate<File> predicate) {
+		scanConfig.scanAllArchiveFileThat(predicate);
+		return this;
+	}
+	
+	public SearchConfig scanAllFileThat(Predicate<File> predicate) {
+		scanConfig.scanAllFileThat(predicate);
+		return this;
+	}
+	
+	public SearchConfig scanRecursivelyAllDirectoryThat(Predicate<File> predicate) {
+		scanConfig.scanRecursivelyAllDirectoryThat(predicate);
+		return this;
+	}
+	
+	public SearchConfig scanStrictlyDirectory() {
+		scanConfig.scanStrictlyDirectory();
+		return this;
+	}
 	
 }

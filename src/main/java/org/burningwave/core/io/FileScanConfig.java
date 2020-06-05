@@ -26,34 +26,47 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.classes;
+package org.burningwave.core.io;
 
+import java.io.File;
 import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfig> {
+import org.burningwave.core.io.IterableZipContainer.Entry;
+
+@SuppressWarnings("resource")
+public class FileScanConfig extends FileScanConfigAbst<FileScanConfig> {
 	
 	@SafeVarargs
-	CacheableSearchConfig(Collection<String>... pathsColl) {
-		super(pathsColl);
+	public static FileScanConfig forPaths(Collection<String>... pathColls) {
+		return new FileScanConfig().addPaths(pathColls);
+	}			
+	
+	public static FileScanConfig forPaths(String... paths) {
+		return forPaths((Collection<String>)Stream.of(paths).collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
+	}	
+	
+	@Override
+	protected Predicate<File> getFileNameCheckerForFileSystemEntry() {
+		return getArchivePredicateForFileSystemEntry().negate();
 	}
 	
 	@Override
-	public CacheableSearchConfig createCopy() {
-		CacheableSearchConfig copy = super.createCopy();
-		return copy;
-	}
-	
-	public SearchConfig withoutUsingCache() {
-		return copyTo(SearchConfig.withoutUsingCache());
+	protected Predicate<File> getFileSignatureCheckerForFileSystemEntry() {
+		return entry -> true;
 	}
 	
 	@Override
-	public void close() {
-		super.close();
+	protected Predicate<Entry> getFileNameCheckerForZipEntry() {
+		return getArchivePredicateForZipEntry().negate().and(entry -> !entry.getName().endsWith("/"));
 	}
-
+	
 	@Override
-	CacheableSearchConfig newInstance() {
-		return new CacheableSearchConfig(scanConfig.getPaths());
+	protected Predicate<Entry> getFileSignatureCheckerForZipEntry() {
+		return entry -> true;
 	}
+	
 }

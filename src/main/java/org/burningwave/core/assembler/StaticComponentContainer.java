@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Random;
 
 import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.io.FileScanConfigAbst;
 import org.burningwave.core.iterable.Properties;
 
 public class StaticComponentContainer {
@@ -83,6 +84,7 @@ public class StaticComponentContainer {
 		Properties properties = new Properties();
 		properties.putAll(Configuration.DEFAULT_VALUES);
 		properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
+		properties.putAll(FileScanConfigAbst.Configuration.DEFAULT_VALUES);
 		properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
 		
 		Strings = org.burningwave.core.Strings.create();

@@ -68,6 +68,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassPathHunter.SearchResult;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferOutputStream;
+import org.burningwave.core.io.FileScanConfigAbst;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
@@ -90,7 +91,7 @@ public class JavaMemoryCompiler implements Component {
 			DEFAULT_VALUES = new HashMap<>();
 			DEFAULT_VALUES.put(
 				Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-				"${" + SearchConfigAbst.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
+				"${" + FileScanConfigAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
 			);
 			DEFAULT_VALUES.put(
 				Key.MAIN_CLASS_PATHS, 
@@ -483,10 +484,12 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForPackageName(String packageName) throws Exception {
-				String checkFileOptions = IterableObjectHelper.get(
-					javaMemoryCompiler.config,
-					Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-					JavaMemoryCompiler.Configuration.DEFAULT_VALUES
+				int checkFileOptions = FileScanConfigAbst.Configuration.parseCheckFileOptionsValue(
+					IterableObjectHelper.get(
+						javaMemoryCompiler.config,
+						JavaMemoryCompiler.Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+						JavaMemoryCompiler.Configuration.DEFAULT_VALUES
+					)
 				);
 				SearchResult result = classPathHunter.findBy(
 					SearchConfig.withoutUsingCache().addPaths(
@@ -521,10 +524,12 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
-				String checkFileOptions = IterableObjectHelper.get(
-					javaMemoryCompiler.config,
-					Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-					JavaMemoryCompiler.Configuration.DEFAULT_VALUES
+				int checkFileOptions = FileScanConfigAbst.Configuration.parseCheckFileOptionsValue(
+					IterableObjectHelper.get(
+						javaMemoryCompiler.config,
+						JavaMemoryCompiler.Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+						JavaMemoryCompiler.Configuration.DEFAULT_VALUES
+					)
 				);
 				SearchResult result = classPathHunter.findBy(
 					SearchConfig.withoutUsingCache().addPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
