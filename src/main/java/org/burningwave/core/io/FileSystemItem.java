@@ -360,7 +360,7 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getChildren(Predicate<FileSystemItem> filter, Supplier<C> setSupplier) {
-		return Optional.ofNullable(getChildren0()).map(children -> children.stream().filter(filter).collect(Collectors.toCollection(setSupplier))).orElseGet(() -> null);
+		return Optional.ofNullable(getChildren0()).map(children -> children.parallelStream().filter(filter).collect(Collectors.toCollection(setSupplier))).orElseGet(() -> null);
 	}
 	
 	public Set<FileSystemItem> getChildren() {
@@ -437,7 +437,7 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(Predicate<FileSystemItem> filter, Supplier<C> setSupplier) {
-		return Optional.ofNullable(getAllChildren0()).map(children -> children.stream().filter(filter).collect(Collectors.toCollection(setSupplier))).orElseGet(() -> null);
+		return Optional.ofNullable(getAllChildren0()).map(children -> children.parallelStream().filter(filter).collect(Collectors.toCollection(setSupplier))).orElseGet(() -> null);
 	}
 	
 	public Set<FileSystemItem> getAllChildren() {
