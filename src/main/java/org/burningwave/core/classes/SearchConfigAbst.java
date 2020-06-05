@@ -243,19 +243,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	}
 	
 	public S createCopy() {
-		S copy = newInstance();
-		copy.classCriteria = this.classCriteria.createCopy();
-		copy.paths = new HashSet<>();
-		copy.paths.addAll(this.paths);
-		copy.checkFileOptions = this.checkFileOptions;
-		copy.optimizePaths = this.optimizePaths;
-		copy.useSharedClassLoaderAsMain = this.useSharedClassLoaderAsMain;
-		copy.parentClassLoaderForMainClassLoader = this.parentClassLoaderForMainClassLoader;
-		copy.useSharedClassLoaderAsParent = this.useSharedClassLoaderAsParent;
-		copy.deleteFoundItemsOnClose = this.deleteFoundItemsOnClose;
-		copy.considerURLClassLoaderPathsAsScanned = this.considerURLClassLoaderPathsAsScanned;
-		copy.waitForSearchEnding = this.waitForSearchEnding;
-		return copy;
+		return copyTo(newInstance());
 	}
 	
 	@Override
