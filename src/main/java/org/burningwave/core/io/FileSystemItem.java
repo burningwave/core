@@ -59,6 +59,35 @@ import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingSupplier;
 
 public class FileSystemItem implements ManagedLogger {
+	
+	public static enum CheckFile {
+		FOR_NAME("checkFileName"),
+		FOR_SIGNATURE("checkFileSignature"),
+		FOR_NAME_AND_SIGNATURE(FOR_NAME.label + "&" + FOR_SIGNATURE.label),
+		FOR_NAME_OR_SIGNATURE(FOR_NAME.label + "|" + FOR_SIGNATURE.label),
+		FOR_SIGNATURE_OR_NAME(FOR_SIGNATURE.label + "|" + FOR_NAME.label);
+		
+		private String label;
+		
+		private CheckFile(String label) {
+			this.label = label;
+		}
+		
+		public String getLabel() {
+			return label;
+		}
+		
+		public static CheckFile forLabel(String label) {
+			for (CheckFile checkFile : CheckFile.values()) { 
+			    if(checkFile.label.equals(label)) {
+			    	return checkFile;
+			    }
+			}
+			return null;
+		}
+		
+	}
+	
 	private Map.Entry<String, String> absolutePath;
 	private FileSystemItem parent;
 	private FileSystemItem parentContainer;

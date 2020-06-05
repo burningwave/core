@@ -38,27 +38,20 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.io.FileSystemItem.CheckFile;
 import org.burningwave.core.io.PathHelper;
 
 @SuppressWarnings("unchecked")
 abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCloseable, ManagedLogger {
 	public static class Key {
 		
-		public final static String DEFAULT_CHECK_FILE_OPTIONS = "hunters.default-search-config.check-file-options";
-		
-		public static class CheckFile {
-			public final static String FOR_NAME = "checkFileName";
-			public final static String FOR_SIGNATURE = "checkFileSignature";
-			public final static String FOR_NAME_AND_SIGNATURE = FOR_NAME + "&" + FOR_SIGNATURE;
-			public final static String FOR_NAME_OR_SIGNATURE = FOR_NAME + "|" + FOR_SIGNATURE;
-			public final static String FOR_SIGNATURE_OR_NAME = FOR_SIGNATURE + "|" + FOR_NAME;
-		}
-		
+		public final static String DEFAULT_CHECK_FILE_OPTIONS = "hunters.default-search-config.check-file-options";		
 		public static final String DEFAULT_SEARCH_CONFIG_PATHS = PathHelper.Configuration.Key.PATHS_PREFIX + "hunters.default-search-config.paths";
 					
 	}
@@ -74,7 +67,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		);
 		DEFAULT_VALUES.put(
 			Key.DEFAULT_CHECK_FILE_OPTIONS,
-			Key.CheckFile.FOR_NAME
+			FileSystemItem.CheckFile.FOR_NAME.getLabel()
 		);
 	}
 	
@@ -94,7 +87,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	ClassCriteria classCriteria;
 	Collection<String> paths;
 	ClassLoader parentClassLoaderForMainClassLoader;
-	String checkFileOptions;
+	CheckFile checkFileOptions;
 	boolean optimizePaths;
 	boolean useSharedClassLoaderAsMain;
 	boolean deleteFoundItemsOnClose;
@@ -132,33 +125,37 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return paths;
 	}
 	
-	String getCheckFileOptions() {
+	CheckFile getCheckFileOptions() {
 		return checkFileOptions;
 	}
 	
 	final Predicate<FileSystemItem> parseCheckFileOptionsValue() {
-		return parseCheckFileOptionsValue(checkFileOptions,
+		return parseCheckFileOptionsValue(
+			Optional.ofNullable(checkFileOptions).map(checkFileOptions -> 
+				checkFileOptions.getLabel()
+			).orElseGet(() -> null),
 			IterableObjectHelper.get(
 				GlobalProperties, Key.DEFAULT_CHECK_FILE_OPTIONS, DEFAULT_VALUES
 			)
 		);
 	}
 	
-	final Predicate<FileSystemItem> parseCheckFileOptionsValue(String value, String defaultValue) {
-		if (value != null) {
-			if (value.equalsIgnoreCase(Key.CheckFile.FOR_NAME_OR_SIGNATURE)) {
+	final Predicate<FileSystemItem> parseCheckFileOptionsValue(String label, String defaultLabel) {
+		if (label != null) {
+			CheckFile checkFileOption = CheckFile.forLabel(label);
+			if (checkFileOption.equals(CheckFile.FOR_NAME_OR_SIGNATURE)) {
 				return getFileNameChecker().or(getFileSignatureChecker());
-			} else if (value.equalsIgnoreCase(Key.CheckFile.FOR_SIGNATURE_OR_NAME)) {
+			} else if (checkFileOption.equals(CheckFile.FOR_SIGNATURE_OR_NAME)) {
 				return getFileSignatureChecker().or(getFileNameChecker());
-			} else if (value.equalsIgnoreCase(Key.CheckFile.FOR_NAME_AND_SIGNATURE)) {
+			} else if (checkFileOption.equals(CheckFile.FOR_NAME_AND_SIGNATURE)) {
 				return getFileNameChecker().and(getFileSignatureChecker());
-			} else if (value.equalsIgnoreCase(Key.CheckFile.FOR_NAME)) {
+			} else if (checkFileOption.equals(CheckFile.FOR_NAME)) {
 				return getFileNameChecker();
-			} else if (value.equalsIgnoreCase(Key.CheckFile.FOR_SIGNATURE)) {
+			} else if (checkFileOption.equals(CheckFile.FOR_SIGNATURE)) {
 				return getFileSignatureChecker();
 			}
 		}
-		return parseCheckFileOptionsValue(defaultValue, null);
+		return parseCheckFileOptionsValue(defaultLabel, null);
 	}
 	
 	public S by(ClassCriteria classCriteria) {
@@ -223,7 +220,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return (S)this;
 	}
 	
-	public S checkFileOptions(String options) {
+	public S checkFileOptions(FileSystemItem.CheckFile options) {
 		this.checkFileOptions = options;
 		return (S)this;
 	}

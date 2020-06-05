@@ -483,10 +483,12 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForPackageName(String packageName) throws Exception {
-				String checkFileOptions = IterableObjectHelper.get(
-					javaMemoryCompiler.config,
-					Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-					JavaMemoryCompiler.Configuration.DEFAULT_VALUES
+				FileSystemItem.CheckFile checkFileOptions = 
+					FileSystemItem.CheckFile.forLabel(IterableObjectHelper.get(
+						javaMemoryCompiler.config,
+						Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+						JavaMemoryCompiler.Configuration.DEFAULT_VALUES
+					)
 				);
 				SearchResult result = classPathHunter.findBy(
 					SearchConfig.withoutUsingCache().addPaths(
@@ -521,10 +523,12 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
-				String checkFileOptions = IterableObjectHelper.get(
-					javaMemoryCompiler.config,
-					Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-					JavaMemoryCompiler.Configuration.DEFAULT_VALUES
+				FileSystemItem.CheckFile checkFileOptions = 
+					FileSystemItem.CheckFile.forLabel(IterableObjectHelper.get(
+						javaMemoryCompiler.config,
+						Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+						JavaMemoryCompiler.Configuration.DEFAULT_VALUES
+					)
 				);
 				SearchResult result = classPathHunter.findBy(
 					SearchConfig.withoutUsingCache().addPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(

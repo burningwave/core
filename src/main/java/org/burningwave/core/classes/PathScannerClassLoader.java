@@ -38,6 +38,7 @@ import java.util.LinkedHashSet;
 import java.util.Map.Entry;
 import java.util.function.Supplier;
 
+import org.burningwave.core.io.FileSystemItem.CheckFile;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.PathHelper.ComparePathsResult;
 
@@ -47,7 +48,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	Collection<String> loadedPaths;
 	private ByteCodeHunter byteCodeHunter;
 	private PathHelper pathHelper;
-	private String byteCodeHunterSearchConfigCheckFileOptions;
+	private CheckFile byteCodeHunterSearchConfigCheckFileOptions;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -57,7 +58,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		ClassLoader parentClassLoader,
 		PathHelper pathHelper,
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
-		String byteCodeHunterSearchConfigCheckFileOptions
+		CheckFile byteCodeHunterSearchConfigCheckFileOptions
 	) {
 		super(parentClassLoader);
 		this.pathHelper = pathHelper;
@@ -66,7 +67,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		this.byteCodeHunterSearchConfigCheckFileOptions = byteCodeHunterSearchConfigCheckFileOptions;
 	}
 	
-	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, Supplier<ByteCodeHunter> byteCodeHunterSupplier, String byteCodeHunterSearchConfigCheckFileOptions) {
+	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, Supplier<ByteCodeHunter> byteCodeHunterSupplier, CheckFile byteCodeHunterSearchConfigCheckFileOptions) {
 		return new PathScannerClassLoader(parentClassLoader, pathHelper, byteCodeHunterSupplier, byteCodeHunterSearchConfigCheckFileOptions);
 	}
 	

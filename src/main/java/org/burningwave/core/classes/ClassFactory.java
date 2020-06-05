@@ -51,6 +51,7 @@ import org.burningwave.core.Virtual;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.iterable.Properties;
 
 @SuppressWarnings("unchecked")
@@ -298,10 +299,12 @@ public class ClassFactory implements Component {
 						).deleteFoundItemsOnClose(
 							false
 						).checkFileOptions(
-							IterableObjectHelper.get(
-								config,
-								Configuration.Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-								Configuration.DEFAULT_VALUES
+							FileSystemItem.CheckFile.forLabel(
+								IterableObjectHelper.get(
+									config,
+									Configuration.Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+									Configuration.DEFAULT_VALUES
+								)
 							)
 						).optimizePaths(
 							true
