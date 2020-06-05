@@ -572,8 +572,8 @@ The configuration of this type of container can be done via Properties file or p
 If you use the singleton instance obtained via ComponentContainer.getInstance() method, you must create a **burningwave.properties** file and put it on base path of your classpath project.
 **The default configuration automatically loaded if no configuration file is found is the following**:
 ```properties
-class-factory.byte-code-hunter.search-config.check-file-options=$\
-    {hunters.default-search-config.check-file-options}
+class-factory.byte-code-hunter.search-config.check-file-options=\
+    ${hunters.default-search-config.check-file-options}
 #default classloader used by the ClassFactory to load generated classes
 class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
 class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=\
@@ -613,8 +613,8 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 ```
 Here an example of a **burningwave.properties** file with all configurable properties:
 ```properties
-class-factory.byte-code-hunter.search-config.check-file-options=$\
-    {hunters.default-search-config.check-file-options}
+class-factory.byte-code-hunter.search-config.check-file-options=\
+    ${hunters.default-search-config.check-file-options}
 class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
 class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=\
     ${hunters.default-search-config.check-file-options}
