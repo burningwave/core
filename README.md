@@ -488,7 +488,7 @@ public class UseOfStaticComponentsExample {
 ### Configuration
 The configuration of this type of container is done via **burningwave.static.properties** file or via **burningwave.static.default.properties** file: the library searches for the first file and if it does not find it, then it searches for the second file and if neither this one is found then the library sets the default configuration programmatically. **The default configuration loaded programmatically if no configuration file is found is the following**:
 ```properties
-file-system-scanner.default-scan-config.check-file-options=checkFileName
+hunters.default-search-config.check-file-options=checkFileName
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
 #the SLF4JManagedLoggerRepository will be instantiated, otherwise the SimpleManagedLoggerRepository will be instantiated
 managed-logger.repository=autodetect
@@ -507,17 +507,16 @@ managed-logger.repository=org.burningwave.core.SLF4JManagedLoggerRepository
 #to increase performance set it to false
 managed-logger.repository.enabled=true
 managed-logger.repository.logging.debug.disabled-for=\
-	org.burningwave.core.io.FileSystemScanner;\
-	org.burningwave.core.io.FileSystemItem;\
-	org.burningwave.core.classes.PathMemoryClassLoader;\
-	org.burningwave.core.classes.MemoryClassLoader;
+    org.burningwave.core.io.FileSystemItem;\
+    org.burningwave.core.classes.PathMemoryClassLoader;\
+    org.burningwave.core.classes.MemoryClassLoader;
 streams.default-buffer-size=0.5Kb
 #other possible value is ByteBuffer::allocate
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
 static-component-container.clear-temporary-folder-on-init=true
 static-component-container.hide-banner-on-init=false
 #other possible values are: checkFileName, checkFileName|checkFileSignature, checkFileName&checkFileSignature
-file-system-scanner.default-scan-config.check-file-options=checkFileSignature
+hunters.default-search-config.check-file-options=checkFileSignature
 ```
 <br/>
 
