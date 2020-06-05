@@ -200,7 +200,13 @@ public class Strings implements Component {
 				};
 				uRLPathConverter = this::convertURLPathToAbsolutePath0;
 			} else {
-				pathCleaner = (path) -> path.replace("\\", "/").replaceAll("\\/{2,}", "/");
+				pathCleaner = (path) -> {
+					path = path.replace("\\", "/").replaceAll("\\/{2,}", "/");
+					if (path.endsWith("/") && path.length() > 1) {
+						path = path.substring(0, path.length() - 1);
+					}
+					return path;
+				};
 				uRLPathConverter = this::convertURLPathToAbsolutePath1;
 			}
 		}
