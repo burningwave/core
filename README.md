@@ -573,17 +573,17 @@ If you use the singleton instance obtained via ComponentContainer.getInstance() 
 **The default configuration automatically loaded if no configuration file is found is the following**:
 ```properties
 class-factory.byte-code-hunter.search-config.check-file-options=$\
-    {file-system-scanner.default-scan-config.check-file-options}
+    {hunters.default-search-config.check-file-options}
 #default classloader used by the ClassFactory to load generated classes
 class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
 class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=\
-    ${file-system-scanner.default-scan-config.check-file-options}
+    ${hunters.default-search-config.check-file-options}
 class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
 #this variable indicates all the paths from which the classes 
 #must be taken if during the definition of the compiled classes
 #on classloader there will be classes not found
 java-memory-compiler.class-path-hunter.search-config.check-file-options=\
-    ${file-system-scanner.default-scan-config.check-file-options}
+    ${hunters.default-search-config.check-file-options}
 paths.class-factory.default-class-loader.class-repositories=\
     ${paths.java-memory-compiler.class-repositories};\
     #This variable is empty by default and could be valorized by developer
@@ -614,13 +614,13 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 Here an example of a **burningwave.properties** file with all configurable properties:
 ```properties
 class-factory.byte-code-hunter.search-config.check-file-options=$\
-    {file-system-scanner.default-scan-config.check-file-options}
+    {hunters.default-search-config.check-file-options}
 class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
 class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=\
-    ${file-system-scanner.default-scan-config.check-file-options}
+    ${hunters.default-search-config.check-file-options}
 class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
 java-memory-compiler.class-path-hunter.search-config.check-file-options=\
-    ${file-system-scanner.default-scan-config.check-file-options}
+    ${hunters.default-search-config.check-file-options}
 paths.class-factory.default-class-loader.class-repositories=\
     ${paths.java-memory-compiler.class-repositories};\
     ${paths.class-factory.default-class-loader.additional-class-repositories};
