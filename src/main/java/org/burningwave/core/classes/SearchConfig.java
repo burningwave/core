@@ -39,9 +39,7 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 	@SafeVarargs
 	SearchConfig(Collection<String>... pathsColl) {
 		super(pathsColl);
-	}
-	
-	
+	}	
 	
 	public static SearchConfig withoutUsingCache() {
 		return new SearchConfig(new HashSet<>());

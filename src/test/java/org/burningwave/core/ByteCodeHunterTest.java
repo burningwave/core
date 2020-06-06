@@ -89,7 +89,7 @@ public class ByteCodeHunterTest extends BaseTest {
 	public void cacheTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
-			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip/ESC")
+			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		).by(
 			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 
 				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
