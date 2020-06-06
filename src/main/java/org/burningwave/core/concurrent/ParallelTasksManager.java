@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.concurrent;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
@@ -36,6 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.function.ThrowingRunnable;
 
 public class ParallelTasksManager implements Component {
 
@@ -51,8 +53,12 @@ public class ParallelTasksManager implements Component {
 	public static ParallelTasksManager create(int maxParallelTasks) {
 		return new ParallelTasksManager(maxParallelTasks);
 	}
+	
+	public static ParallelTasksManager create() {
+		return new ParallelTasksManager(Runtime.getRuntime().availableProcessors());
+	}
 
-	public void addTask(Runnable task) {
+	public void execute(ThrowingRunnable<Throwable> task) {
 		if (executorService == null) {
 			this.executorService = Executors.newFixedThreadPool(maxParallelTasks);
 		}
@@ -67,10 +73,13 @@ public class ParallelTasksManager implements Component {
 
 	public void waitForTasksEnding() {
 		Iterator<CompletableFuture<Void>> iterator = tasks.iterator();
+		Collection<CompletableFuture<Void>> tasks = new ArrayList<>();
 		while (iterator.hasNext()) {
-			iterator.next().join();
-			//iterator.remove();
+			CompletableFuture<Void> task= iterator.next();
+			task.join();
+			tasks.add(task);
 		}
+		tasks.removeAll(tasks);
 	}
 	
 	@Override
