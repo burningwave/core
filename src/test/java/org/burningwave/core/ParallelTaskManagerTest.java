@@ -7,16 +7,18 @@ public class ParallelTaskManagerTest extends BaseTest{
 	
 	@Test
 	public void addAndWaitTest() {
-		ParallelTasksManager taskManager = ParallelTasksManager.create();
-		for (int i = 0; i < 1000; i++) {
-			final Integer idx = i + 1;
-			taskManager.execute(() -> {
-				Thread.sleep(25);
-				logInfo("task {} executed", idx);
-			});
-			logInfo("task {} launched", idx);
-		}
-		taskManager.waitForTasksEnding();
+		testDoesNotThrow(() -> {
+			ParallelTasksManager taskManager = ParallelTasksManager.create();
+			final Integer taskCount = 1000;
+			for (int i = 0; i < taskCount; i++) {
+				taskManager.execute(() -> {
+					Thread.sleep(25);
+				});
+			}
+			logInfo("Wait for {} tasks ending", taskCount);
+			taskManager.waitForTasksEnding();
+			logInfo("Tasks have ended execution", taskCount);
+		});
 	}
 	
 }
