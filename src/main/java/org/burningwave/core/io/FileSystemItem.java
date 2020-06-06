@@ -363,14 +363,12 @@ public class FileSystemItem implements ManagedLogger {
 			allChildren.clear();
 			allChildren = null;
 			if (children != null) {
-				children.clear();
 				children = null;
 			}			
 		} else if (children != null) {
 			for (FileSystemItem child : children) {
 				child.reset(removeFromCache);
 			}
-			children.clear();
 			children = null;
 		}
 		parentContainer = null;
@@ -400,10 +398,12 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	private Set<FileSystemItem> getChildren0() {
+		Set<FileSystemItem> children = this.children;
 		if (children == null) {
 			synchronized (this) {
+				children = this.children;
 				if (children == null) {
-					children = loadChildren();
+					children = this.children = loadChildren();
 				}
 			}
 		}
@@ -477,10 +477,12 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public Set<FileSystemItem> getAllChildren0() {
+		Set<FileSystemItem> allChildren = this.allChildren;
 		if (allChildren == null) {
 			synchronized (this) {
+				allChildren = this.allChildren;
 				if (allChildren == null) {
-					allChildren = loadAllChildren();
+					allChildren = this.allChildren = loadAllChildren();
 				}
 			}
 		}
