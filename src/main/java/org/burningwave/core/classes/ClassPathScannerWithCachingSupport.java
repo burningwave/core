@@ -128,7 +128,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 				Map<String, I> classesForPath = cache.get(path);
 				if (classesForPath != null) {
 					if (!classesForPath.isEmpty()) {	
-						iterateAndTestCachedItemsForPath(context, path, classesForPath);
+						iterateAndTestCachedItemsForPath(path, context, classesForPath);
 					}
 				} else {
 					pathsNotScanned.add(path);
@@ -162,7 +162,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	}
 	
 
-	<S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(C context, String path, Map<String, I> itemsForPath) {
+	<S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(String path, C context, Map<String, I> itemsForPath) {
 		for (Entry<String, I> cachedItemAsEntry : itemsForPath.entrySet()) {
 			ClassCriteria.TestContext testContext = testCachedItem(context, path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 			if(testContext.getResult()) {

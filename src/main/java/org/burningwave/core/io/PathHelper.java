@@ -402,23 +402,23 @@ public class PathHelper implements Component {
 			FileSystemItem path2AsFile = FileSystemItem.ofPath(path2);
 			int result = -1;
 			for (String path1 : pathCollection1) {
-				FileSystemItem pathAsFile1 = FileSystemItem.ofPath(path1);
+				FileSystemItem pathAs1File = FileSystemItem.ofPath(path1);
 				//If path 1 and path 2 are the same file or path 2 is contained in path 1
-				if (pathAsFile1.equals(path2AsFile) || path2AsFile.isChildOf(pathAsFile1)) {	
+				if (pathAs1File.equals(path2AsFile) || path2AsFile.isChildOf(pathAs1File)) {	
 					checkPathsResult.addContainedPath(path1, path2);
 					result = 0;
 				//If path 1 is a file contained in path 2 that is a directory or compressed archive
-				} else if (pathAsFile1.isFile() && path2AsFile.isContainer() && pathAsFile1.isChildOf(path2AsFile)) {
+				} else if (pathAs1File.isFile() && path2AsFile.isContainer() && pathAs1File.isChildOf(path2AsFile)) {
 					checkPathsResult.addPartialContainedFile(path2, path1);
 					result = 1;
-					//If path 1 and path 2 are directories or 2 compressed archive or 1 compressed archive and 1 folder
-				} else if (pathAsFile1.isContainer() && path2AsFile.isContainer()) {
+				//If path 1 and path 2 are directories or 2 compressed archive or 1 compressed archive and 1 folder
+				} else if (pathAs1File.isContainer() && path2AsFile.isContainer()) {
 					//If path 2 is contained in path 1
-					if (path2AsFile.isChildOf(pathAsFile1)) {
+					if (path2AsFile.isChildOf(pathAs1File)) {
 						checkPathsResult.addContainedPath(path1, path2);
 						result = 0;
 					//If path 1 is contained in path 2
-					} else if (pathAsFile1.isChildOf(path2AsFile)) {
+					} else if (pathAs1File.isChildOf(path2AsFile)) {
 						checkPathsResult.addPartialContainedDirectory(path2, path1);
 						result = 1;
 					}
@@ -434,6 +434,10 @@ public class PathHelper implements Component {
 		return checkPathsResult;
 	}
 	
+	public Collection<String> optimize(String... paths) {
+		return optimize(Arrays.asList(paths));
+	}
+	
 	public Collection<String> optimize(Collection<String> paths) {
 		Collection<String> copyOfPaths = new HashSet<>();
 		for (String path : paths) {
@@ -445,25 +449,15 @@ public class PathHelper implements Component {
 		int i = 0;
 		while (pathsItr.hasNext()) {
 			String path = pathsItr.next();
-			FileSystemItem pathAsFile = FileSystemItem.ofPath(path);
+			FileSystemItem path1AsFile = FileSystemItem.ofPath(path);
 			Iterator<String> pathsItrNested = copyOfPaths.iterator();
 			int j = 0;
 			while (pathsItrNested.hasNext()) {
 				String nestedPath = pathsItrNested.next();
 				if (i != j) {					
-					FileSystemItem nestedPathAsFile = FileSystemItem.ofPath(nestedPath);
-					if (!nestedPathAsFile.isFolder() && !pathAsFile.isFolder()) {
-						if (nestedPathAsFile.getAbsolutePath().equals(pathAsFile.getAbsolutePath())) {
-							toBeRemoved.add(path);
-						}
-					} else if (nestedPathAsFile.isFolder() && !pathAsFile.isFolder()) {
-						if (pathAsFile.getAbsolutePath().startsWith(nestedPathAsFile.getAbsolutePath() + "/")) {
-							toBeRemoved.add(path);
-						}
-					} else {
-						if ((pathAsFile.getAbsolutePath() + "/").startsWith((nestedPathAsFile.getAbsolutePath()) + "/")) {
-							toBeRemoved.add(path);
-						}
+					FileSystemItem path2AsFile = FileSystemItem.ofPath(nestedPath);
+					if (path2AsFile.equals(path1AsFile) || path1AsFile.isChildOf(path2AsFile)) {
+						toBeRemoved.add(path);
 					}
 				}
 				j++;
