@@ -646,6 +646,34 @@ public class ClassHunterTest extends BaseTest {
 	}
 	
 	@Test
+	public void findAllAnnotatedMethodsTwo() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotEmpty(
+			() -> componentSupplier.getClassHunter().findBy(
+				SearchConfig.forPaths(
+						componentSupplier.getPathHelper().getMainClassPaths()
+				).by(
+					ClassCriteria.create().allThat((cls) -> {
+						return cls.getAnnotations() != null && cls.getAnnotations().length > 0;
+					}).or().byMembers(
+						MethodCriteria.byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
+							return lastClassInHierarchy.equals(currentScannedClass);
+						}).allThat((method) -> {
+							return method.getAnnotations() != null && method.getAnnotations().length > 0;
+						})
+					)
+				)
+			),
+			(result) -> result.getMembersBy(MethodCriteria.byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
+					return lastClassInHierarchy.equals(currentScannedClass);
+				}).allThat((method) -> {
+					return method.getAnnotations() != null && method.getAnnotations().length > 0;
+				})
+			)
+		);
+	}
+	
+	@Test
 	public void findAllTestOneByIsolatedClassLoader() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(

@@ -34,6 +34,7 @@ import java.lang.reflect.Member;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Criteria;
@@ -81,17 +82,21 @@ public class SearchResult<E> implements Component {
 	}
 	
 	<C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends Criteria.TestContext<E, C>> C createCriteriaCopy(C criteria) {
-		return criteria.createCopy().init(
-			context.getSearchConfig().getClassCriteria().getClassSupplier(),
-			context.getSearchConfig().getClassCriteria().getByteCodeSupplier()
-		).useClasses(context.getSearchConfig().getClassCriteria().getClassesToBeUploaded());
+		C criteriaCopy = criteria.createCopy().init(
+				context.getSearchConfig().getClassCriteria().getClassSupplier(),
+				context.getSearchConfig().getClassCriteria().getByteCodeSupplier()
+			);
+			Optional.ofNullable(context.getSearchConfig().getClassCriteria().getClassesToBeUploaded()).ifPresent(classesToBeUploaded -> criteriaCopy.useClasses(classesToBeUploaded));
+			return criteriaCopy;
 	}
 	
 	<M extends Member, C extends MemberCriteria<M, C, T>, T extends Criteria.TestContext<M, C>> C createCriteriaCopy(C criteria) {
-		return criteria.createCopy().init(
+		C criteriaCopy = criteria.createCopy().init(
 			context.getSearchConfig().getClassCriteria().getClassSupplier(),
 			context.getSearchConfig().getClassCriteria().getByteCodeSupplier()
-		).useClasses(context.getSearchConfig().getClassCriteria().getClassesToBeUploaded());
+		);
+		Optional.ofNullable(context.getSearchConfig().getClassCriteria().getClassesToBeUploaded()).ifPresent(classesToBeUploaded -> criteriaCopy.useClasses(classesToBeUploaded));
+		return criteriaCopy;
 	}
 	
 	@SuppressWarnings("unchecked")
