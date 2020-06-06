@@ -23,7 +23,7 @@ public class ByteCodeHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getByteCodeHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip") + ""
+					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				).by(
 					ClassCriteria.create().byClasses((uploadedClasses, targetClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
@@ -57,10 +57,39 @@ public class ByteCodeHunterTest extends BaseTest {
 	}
 	
 	@Test
+	public void cacheTestOneTwo() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear")
+		).by(
+			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 
+				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
+			).useClasses(
+				Closeable.class
+			)
+		);
+		testNotEmpty(
+			() -> componentSupplier.getByteCodeHunter().findBy(searchConfig),
+			(result) -> result.getClasses()
+		);
+		testNotEmpty(
+			() -> componentSupplier.getByteCodeHunter().findBy(searchConfig),
+			(result) -> result.getClasses()
+		);
+		CacheableSearchConfig searchConfig2 = SearchConfig.forPaths(
+			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear")
+		);
+		testNotEmpty(
+			() -> componentSupplier.getByteCodeHunter().findBy(searchConfig2),
+			(result) -> result.getClasses()
+		);
+	}
+	
+	@Test
 	public void cacheTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
-			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip/ESC")
 		).by(
 			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 
 				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)

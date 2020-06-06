@@ -86,7 +86,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		);
 		searchConfig.init(context.pathScannerClassLoader);
 		context.executeSearch(() ->
-			scan(context)
+			search(context)
 		);
 		Collection<String> skippedClassesNames = context.getSkippedClassNames();
 		if (!skippedClassesNames.isEmpty()) {
@@ -95,12 +95,12 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		return resultSupplier.apply(context);
 	}
 		
-	void scan(C context) {
-		Collection<String> pathsNotScanned = scanCache(context);
+	void search(C context) {
+		Collection<String> pathsNotScanned = searchInCache(context);
 		if (!pathsNotScanned.isEmpty()) {
 			if (context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
 				synchronized (cache) {
-					pathsNotScanned = scanCache(context);
+					pathsNotScanned = searchInCache(context);
 					if (!pathsNotScanned.isEmpty()) {
 						for (String path : pathsNotScanned) {
 							Map<String, I> classesForPath = cache.get(path);
@@ -120,7 +120,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		}
 	}
 	
-	Collection<String> scanCache(C context) {
+	Collection<String> searchInCache(C context) {
 		Collection<String> pathsNotScanned = new LinkedHashSet<>();
 		CacheableSearchConfig searchConfig = context.getSearchConfig();
 		if (!context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
