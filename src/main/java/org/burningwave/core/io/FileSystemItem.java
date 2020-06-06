@@ -674,7 +674,7 @@ public class FileSystemItem implements ManagedLogger {
 				Streams.store(destFile.getParent().getAbsolutePath() + "/" + child.getName(), child.toByteBuffer());
 			}
 		}
-		return FileSystemItem.ofPath(folder);
+		return FileSystemItem.ofPath(folder).refresh();
 	}
 	
 
