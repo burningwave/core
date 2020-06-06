@@ -102,16 +102,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 				synchronized (cache) {
 					pathsNotScanned = searchInCache(context);
 					if (!pathsNotScanned.isEmpty()) {
-						for (String path : pathsNotScanned) {
-							Map<String, I> classesForPath = cache.get(path);
-							if (classesForPath != null && !classesForPath.isEmpty()) {
-								context.addAllItemsFound(path,classesForPath);
-								pathsNotScanned.remove(path);
-							}
-						}
-						if (!pathsNotScanned.isEmpty()) {
-							loadInCache(context, pathsNotScanned);
-						}
+						loadInCache(context, pathsNotScanned);
 					}
 				}
 			} else {
