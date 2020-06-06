@@ -579,11 +579,11 @@ class-factory.default-class-loader=Thread.currentThread().getContextClassLoader(
 class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=\
     ${hunters.default-search-config.check-file-options}
 class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
+java-memory-compiler.class-path-hunter.search-config.check-file-options=\
+    ${hunters.default-search-config.check-file-options}
 #this variable indicates all the paths from which the classes 
 #must be taken if during the definition of the compiled classes
 #on classloader there will be classes not found
-java-memory-compiler.class-path-hunter.search-config.check-file-options=\
-    ${hunters.default-search-config.check-file-options}
 paths.class-factory.default-class-loader.class-repositories=\
     ${paths.java-memory-compiler.class-repositories};\
     #This variable is empty by default and could be valorized by developer
