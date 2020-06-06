@@ -407,7 +407,7 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public boolean isFile() {
-		return !isContainer() || isArchive();
+		return !isFolder();
 	}
 
 	public boolean isFolder() {
@@ -729,5 +729,4 @@ public class FileSystemItem implements ManagedLogger {
 		url = prefix + url;
 		return url;
 	}
-
 }
