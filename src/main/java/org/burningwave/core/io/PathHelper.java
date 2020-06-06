@@ -400,33 +400,25 @@ public class PathHelper implements Component {
 		ComparePathsResult checkPathsResult = new ComparePathsResult();
 		for (String path2 : pathCollection2) {
 			FileSystemItem path2AsFile = FileSystemItem.ofPath(path2);
-			String path2Normalized = Paths.normalizeAndClean(path2AsFile.getAbsolutePath());
 			int result = -1;
 			for (String path1 : pathCollection1) {
 				FileSystemItem pathAsFile1 = FileSystemItem.ofPath(path1);
-				String path1Normalized = Paths.normalizeAndClean(pathAsFile1.getAbsolutePath());
-				if (//If path 1 and path 2 are the same file or path 2 is contained in path 1
-					(!pathAsFile1.isFolder() && !path2AsFile.isFolder() && 
-						path1Normalized.equals(path2Normalized)) ||
-					(pathAsFile1.isFolder() && !path2AsFile.isFolder() &&
-						path2Normalized.startsWith(path1Normalized + "/"))
-				) {	
+				//If path 1 and path 2 are the same file or path 2 is contained in path 1
+				if (pathAsFile1.equals(path2AsFile) || path2AsFile.isChildOf(pathAsFile1)) {	
 					checkPathsResult.addContainedPath(path1, path2);
 					result = 0;
-				} else if (
-					//If path 1 is a file contained in path 2 that is a directory
-					!pathAsFile1.isFolder() && path2AsFile.isFolder() && 
-						path1Normalized.startsWith(path2Normalized + "/")) {
+				//If path 1 is a file contained in path 2 that is a directory or compressed archive
+				} else if (pathAsFile1.isFile() && path2AsFile.isContainer() && pathAsFile1.isChildOf(path2AsFile)) {
 					checkPathsResult.addPartialContainedFile(path2, path1);
 					result = 1;
-					//If path 1 and path 2 are directories
-				} else if (pathAsFile1.isFolder() && path2AsFile.isFolder()) {
+					//If path 1 and path 2 are directories or 2 compressed archive or 1 compressed archive and 1 folder
+				} else if (pathAsFile1.isContainer() && path2AsFile.isContainer()) {
 					//If path 2 is contained in path 1
-					if ((path2Normalized + "/").startsWith(path1Normalized + "/")) {
+					if (path2AsFile.isChildOf(pathAsFile1)) {
 						checkPathsResult.addContainedPath(path1, path2);
 						result = 0;
 					//If path 1 is contained in path 2
-					} else if ((path1Normalized + "/").startsWith(path2Normalized + "/")) {
+					} else if (pathAsFile1.isChildOf(path2AsFile)) {
 						checkPathsResult.addPartialContainedDirectory(path2, path1);
 						result = 1;
 					}
