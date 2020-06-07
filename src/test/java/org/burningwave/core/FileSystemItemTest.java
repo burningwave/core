@@ -128,6 +128,14 @@ public class FileSystemItemTest extends BaseTest {
 	}
 	
 	@Test
+	public void readTestFourteen() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotEmpty(() -> componentSupplier.getPathHelper().getResource(
+			"/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
+		).getChildren(), true);
+	}
+	
+	@Test
 	public void readTestTestThirteen() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
@@ -181,10 +189,13 @@ public class FileSystemItemTest extends BaseTest {
 	@Test
 	public void copyFolderTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
-		testNotEmpty(() -> FileSystemItem.ofPath(
-			basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
-		).copyTo(System.getProperty("user.home") + "/Desktop/bw-tests").getChildren());
+		testNotEmpty(() -> 
+			componentSupplier.getPathHelper().getResource(
+				"/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
+			).copyTo(
+				System.getProperty("user.home") + "/Desktop/bw-tests"
+			).getChildren()
+		);
 	}
 	
 	@Test
