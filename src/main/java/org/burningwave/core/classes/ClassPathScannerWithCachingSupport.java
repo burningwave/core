@@ -85,7 +85,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	
 	void searchInCacheOrInFileSystem(C context) {
 		BiPredicate<FileSystemItem, FileSystemItem> filter = getTestItemPredicate(context);
-		for (String path : context.getSearchConfig().getPaths()) {
+		context.getSearchConfig().getPaths().parallelStream().forEach(path -> {
 			Map<String, I> classesForPath = cache.get(path);
 			if (classesForPath == null) {
 				if (context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
@@ -114,7 +114,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 					iterateAndTestCachedItemsForPath(context, path, classesForPath);
 				}
 			}
-		}
+		});
 	}
 
 	<S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(C context, String path, Map<String, I> itemsForPath) {
