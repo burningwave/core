@@ -29,6 +29,7 @@
 package org.burningwave.core.classes;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -99,7 +100,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 					synchronized(getPathLoadingLock(path)) {
 						classesForPath = cache.get(path);
 						if (classesForPath == null) {
-							FileSystemItem.ofPath(path).refresh().getAllChildren(filter);
+							FileSystemItem.ofPath(path).getAllChildren(filter);
 							Map<String, I> itemsForPath = new HashMap<>();
 							Map<String, I> itemsFound = context.getItemsFound(path);
 							if (itemsFound != null) {
@@ -111,7 +112,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 						}
 					}
 				} else {
-					FileSystemItem.ofPath(path).refresh().getAllChildren(filter);
+					FileSystemItem.ofPath(path).getAllChildren(filter);
 					context.getItemsFoundFlatMap();
 				}
 			} else if (context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
@@ -143,12 +144,15 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	abstract <S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(C context, String path, String key, I value);
 	
 	public void clearCache() {
-		synchronized (cache) {
-			cache.entrySet().stream().forEach(entry -> {
-				FileSystemItem.ofPath(entry.getKey()).reset();
+		Iterator<Entry<String, Map<String, I>>> cacheIterator = cache.entrySet().iterator();
+		while(cacheIterator.hasNext()) {
+			Entry<String, Map<String, I>> entry = cacheIterator.next();
+			String path = entry.getKey();
+			synchronized(getPathLoadingLock(path)) {
+				FileSystemItem.ofPath(path).reset();
 				entry.getValue().clear();
-			});
-			cache.clear();
+				cacheIterator.remove();
+			}
 		}
 	}
 	

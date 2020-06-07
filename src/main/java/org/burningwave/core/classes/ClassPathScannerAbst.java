@@ -42,6 +42,7 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 
 
+@SuppressWarnings("unchecked")
 public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends SearchResult<I>> implements Component {
 	
 	Supplier<ByteCodeHunter> byteCodeHunterSupplier;
@@ -97,9 +98,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			searchConfig
 		);
 		searchConfig.init(context.pathScannerClassLoader);
-		context.executeSearch(() -> {
-			searcher.accept(context);
-		});
+		context.executeSearch((Consumer<SearchContext<I>>)searcher);
 		Collection<String> skippedClassesNames = context.getSkippedClassNames();
 		if (!skippedClassesNames.isEmpty()) {
 			logWarn("Skipped classes count: {}", skippedClassesNames.size());

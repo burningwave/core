@@ -36,6 +36,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
@@ -50,7 +51,7 @@ public class SearchContext<T> implements Component {
 	PathScannerClassLoader sharedPathMemoryClassLoader;
 	PathScannerClassLoader pathScannerClassLoader;
 	Collection<String> skippedClassNames;
-	Boolean classLoaderHaveBeenUploadedWithCriteriaPaths;
+	Boolean classLoaderHaveBeenUploadedWithSearchConfigPaths;
 	CompletableFuture<Void> searchTask;
 	Collection<T> itemsFound;
 	boolean searchTaskFinished;
@@ -69,7 +70,7 @@ public class SearchContext<T> implements Component {
 		this.sharedPathMemoryClassLoader = initContext.getSharedPathMemoryClassLoader();
 		this.pathScannerClassLoader = initContext.getPathMemoryClassLoader();
 		this.searchConfig = initContext.getSearchConfig();
-		this.classLoaderHaveBeenUploadedWithCriteriaPaths = pathScannerClassLoader.compareWithAllLoadedPaths(
+		this.classLoaderHaveBeenUploadedWithSearchConfigPaths = pathScannerClassLoader.compareWithAllLoadedPaths(
 				searchConfig.getPaths(), searchConfig.considerURLClassLoaderPathsAsScanned
 		).getNotContainedPaths().isEmpty();
 	}
@@ -80,13 +81,13 @@ public class SearchContext<T> implements Component {
 		return new SearchContext<>(initContext);
 	}
 	
-	void executeSearch(Runnable searcher) {
+	void executeSearch(Consumer<SearchContext<T>> searcher) {
 		if (searchConfig.waitForSearchEnding) {
-			searcher.run();
+			searcher.accept(this);
 			searchTaskFinished = true;
 		} else {
 			searchTask = CompletableFuture.runAsync(() -> {
-				searcher.run();
+				searcher.accept(this);
 				searchTaskFinished = true;
 			});
 		}
@@ -185,13 +186,13 @@ public class SearchContext<T> implements Component {
 				String notFoundClassName = Classes.retrieveName(exc);
 				if (notFoundClassName != null) {
 					if (!skippedClassNames.contains(notFoundClassName)) {
-						if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
-							synchronized(this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
-								if (!this.classLoaderHaveBeenUploadedWithCriteriaPaths) {
+						if (!this.classLoaderHaveBeenUploadedWithSearchConfigPaths) {
+							synchronized(this.classLoaderHaveBeenUploadedWithSearchConfigPaths) {
+								if (!this.classLoaderHaveBeenUploadedWithSearchConfigPaths) {
 									pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
 										getPathsToBeScanned(), searchConfig.considerURLClassLoaderPathsAsScanned
 									);
-									this.classLoaderHaveBeenUploadedWithCriteriaPaths = true;
+									this.classLoaderHaveBeenUploadedWithSearchConfigPaths = true;
 								}
 							}
 							return execute(supplier, defaultValueSupplier, classNameSupplier);
