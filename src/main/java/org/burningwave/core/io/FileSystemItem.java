@@ -580,7 +580,6 @@ public class FileSystemItem implements ManagedLogger {
 			for (FileSystemItem child : allChildren) {
 				child.reset(removeFromCache);
 			}
-			allChildren.clear();
 			allChildren = null;
 			if (children != null) {
 				children = null;
