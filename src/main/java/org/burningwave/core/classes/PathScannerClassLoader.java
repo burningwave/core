@@ -156,8 +156,11 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	@Override
 	public void close() {
 		byteCodeHunterSupplier = null;
-		loadedPaths.clear();
-		loadedPaths = null;
+		Collection<String> loadedPaths = this.loadedPaths;
+		if (loadedPaths != null) {
+			loadedPaths.clear();
+		}
+		this.loadedPaths = null;
 		byteCodeHunter = null;
 		pathHelper = null;
 		super.close();

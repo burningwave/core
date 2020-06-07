@@ -28,23 +28,24 @@
  */
 package org.burningwave.core.classes;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.core.classes.SearchContext.InitContext;
+import org.burningwave.core.concurrent.Mutex;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 
 
 public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>, R extends SearchResult<I>> extends ClassPathScannerAbst<I, C, R> {
 	Map<String, Map<String, I>> cache;
-	Map<String, Object> parallelLockMap;
+	Mutex.Manager mutexManager;
 	
 	ClassPathScannerWithCachingSupport(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
@@ -60,18 +61,9 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			resultSupplier
 		);
 		this.cache = new HashMap<>();
-		this.parallelLockMap = new ConcurrentHashMap<>();
+		this.mutexManager = Mutex.Manager.create();
 	}
-	
-    Object getPathLoadingLock(String path) {
-        Object newLock = new Object();
-        Object lock = parallelLockMap.putIfAbsent(path, newLock);
-        if (lock == null) {
-            lock = newLock;
-        }
-        return lock;
-    }
-	
+
 	public CacheScanner<I, R> loadInCache(CacheableSearchConfig searchConfig) {
 		try (R result = findBy(
 			SearchConfig.forPaths(
@@ -97,7 +89,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			Map<String, I> classesForPath = cache.get(path);
 			if (classesForPath == null) {
 				if (context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
-					synchronized(getPathLoadingLock(path)) {
+					synchronized(mutexManager.getMutex(path)) {
 						classesForPath = cache.get(path);
 						if (classesForPath == null) {
 							FileSystemItem.ofPath(path).getAllChildren(filter);
@@ -144,14 +136,14 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	abstract <S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(C context, String path, String key, I value);
 	
 	public void clearCache() {
-		Iterator<Entry<String, Map<String, I>>> cacheIterator = cache.entrySet().iterator();
-		while(cacheIterator.hasNext()) {
-			Entry<String, Map<String, I>> entry = cacheIterator.next();
-			String path = entry.getKey();
-			synchronized(getPathLoadingLock(path)) {
+		Collection<String> pathsToBeRemoved = new HashSet<>(cache.keySet());
+		for (String path : pathsToBeRemoved) {
+			synchronized(mutexManager.getMutex(path)) {
 				FileSystemItem.ofPath(path).reset();
-				entry.getValue().clear();
-				cacheIterator.remove();
+				Map<String, I> items = cache.remove(path);
+				if (items != null) {
+					items.clear();
+				}
 			}
 		}
 	}

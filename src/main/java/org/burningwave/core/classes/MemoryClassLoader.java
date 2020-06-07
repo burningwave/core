@@ -319,8 +319,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	public void clear () {
-		notLoadedByteCodes.clear();
-		loadedByteCodes.clear();
+		Map<String, ByteBuffer> items = this.notLoadedByteCodes;
+		if (items != null) {
+			items.clear();
+		}
+		items = this.loadedByteCodes;
+		if (items != null) {
+			items.clear();
+		}
 	}
 	
 	protected void unregister() {

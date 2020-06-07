@@ -119,7 +119,7 @@ public class ClassFactoryTest extends BaseTest {
 			int threadCount = 6;
 			Collection<Thread> threads = new ArrayList<>();
 			for (int i = 0; i < threadCount; i++) {
-				threads.add(new Thread( () -> getOrBuildClassWithExternalClassOne(false)));
+				threads.add(new Thread( () -> getOrBuildClassWithExternalClassOne(true)));
 			}
 			for (Thread thread : threads) {
 				thread.start();

@@ -45,6 +45,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.concurrent.Mutex;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.Properties;
@@ -73,7 +74,8 @@ public class Streams implements Component {
 	}
 	
 	public int defaultBufferSize;
-	public Function<Integer, ByteBuffer> defaultByteBufferAllocationMode;
+	Function<Integer, ByteBuffer> defaultByteBufferAllocationMode;
+	private Mutex.Manager mutexManager;
 	
 	private Streams(Properties properties) {
 		String defaultBufferSize = IterableObjectHelper.get(properties, Configuration.Key.BUFFER_SIZE, Configuration.DEFAULT_VALUES);
@@ -95,6 +97,7 @@ public class Streams implements Component {
 			this.defaultByteBufferAllocationMode = ByteBuffer::allocateDirect;
 			logInfo("default allocation mode: ByteBuffer::allocateDirect");
 		}
+		this.mutexManager = Mutex.Manager.create();
 	}
 	
 	public static Streams create(Properties properties) {
@@ -196,7 +199,7 @@ public class Streams implements Component {
 	public FileSystemItem store(String fileAbsolutePath, ByteBuffer bytes) {
 		ByteBuffer content = shareContent(bytes);
 		File file = new File(fileAbsolutePath);
-		synchronized (fileAbsolutePath) {
+		synchronized (mutexManager.getMutex(fileAbsolutePath)) {
 			if (!file.exists()) {
 				new File(file.getParent()).mkdirs();
 			} else {
