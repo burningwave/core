@@ -30,6 +30,7 @@ package org.burningwave.core.classes;
 
 
 import java.util.Collection;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -102,35 +103,35 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		if (searchConfig.optimizePaths) {
 			pathHelper.optimize(paths);
 		}
-		Predicate<FileSystemItem> classPredicate = searchConfig.parseCheckFileOptionsValue();
+		BiPredicate<FileSystemItem, FileSystemItem> filter = getTestItemPredicate(context, searchConfig.parseCheckFileOptionsValue());
 		for (String path : paths != null ? paths : searchConfig.getPaths()) {
 			FileSystemItem fileSystemItem = FileSystemItem.ofPath(path);
 			if (searchConfig instanceof SearchConfig) {
 				fileSystemItem.refresh();
 			}
-			fileSystemItem.getAllChildren(getTestItemPredicate(context, classPredicate, path));
+			fileSystemItem.getAllChildren(filter);
 			if (afterScanPath != null) {
 				afterScanPath.accept(fileSystemItem);
 			}
 		}
 	}
 
-	Predicate<FileSystemItem> getTestItemPredicate(C context, Predicate<FileSystemItem> classPredicate, String path) {
-		return fIS -> {
+	BiPredicate<FileSystemItem, FileSystemItem> getTestItemPredicate(C context, Predicate<FileSystemItem> classPredicate) {
+		return (basePath, child) -> {
 			try {
-				if (classPredicate.test(fIS)) {
-					JavaClass javaClass = JavaClass.create(fIS.toByteBuffer());
+				if (classPredicate.test(child)) {
+					JavaClass javaClass = JavaClass.create(child.toByteBuffer());
 					ClassCriteria.TestContext criteriaTestContext = testCriteria(context, javaClass);
 					if (criteriaTestContext.getResult()) {
 						retrieveItem(
-							path, context, criteriaTestContext, fIS, javaClass
+							context, criteriaTestContext, basePath.getAbsolutePath(), child, javaClass
 						);
 					}
 					return true;
 				}
 				return false;
 			} catch (Throwable exc) {
-				logError("Could not scan " + fIS.getAbsolutePath(), exc);
+				logError("Could not scan " + child.getAbsolutePath(), exc);
 				return false;
 			}
 		};
@@ -161,7 +162,13 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		return context.testCriteria(context.loadClass(javaClass.getName()));
 	}
 	
-	abstract void retrieveItem(String basePath, C context, ClassCriteria.TestContext criteriaTestContext, FileSystemItem fileSystemItem, JavaClass javaClass);
+	abstract void retrieveItem(
+		C context,
+		ClassCriteria.TestContext criteriaTestContext,
+		String basePath,
+		FileSystemItem currentIteratedFile,
+		JavaClass javaClass
+	);
 	
 	@Override
 	public void close() {

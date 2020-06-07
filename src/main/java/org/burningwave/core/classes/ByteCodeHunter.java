@@ -79,8 +79,9 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 	}
 	
 	@Override
-	void retrieveItem(String basePath, SearchContext<JavaClass> context, TestContext criteriaTestContext,
-			FileSystemItem fileSystemItem, JavaClass javaClass) {
+	void retrieveItem(SearchContext<JavaClass> context, TestContext criteriaTestContext,
+		String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
+	) {
 		context.addItemFound(basePath, fileSystemItem.getAbsolutePath(), javaClass);		
 	}
 		

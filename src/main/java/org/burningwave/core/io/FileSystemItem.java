@@ -51,6 +51,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -220,6 +221,16 @@ public class FileSystemItem implements ManagedLogger {
 	
 	public Set<FileSystemItem> getAllChildren() {
 		return Optional.ofNullable(getAllChildren0()).map(children -> new HashSet<>(children)).orElseGet(() -> null);
+	}
+	
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(BiPredicate<FileSystemItem, FileSystemItem> filter) {
+		return getAllChildren(filter, HashSet::new);
+	}
+	
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(BiPredicate<FileSystemItem, FileSystemItem> filter, Supplier<C> setSupplier) {
+		return Optional.ofNullable(getAllChildren0()).map(children -> children.parallelStream().filter(child -> filter.test(this, child)).collect(
+			Collectors.toCollection(setSupplier))
+		).orElseGet(() -> null);
 	}
 	
 	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(Predicate<FileSystemItem> filter) {
