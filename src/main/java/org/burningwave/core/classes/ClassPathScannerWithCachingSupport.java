@@ -28,11 +28,11 @@
  */
 package org.burningwave.core.classes;
 
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -43,7 +43,8 @@ import org.burningwave.core.io.PathHelper;
 
 public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>, R extends SearchResult<I>> extends ClassPathScannerAbst<I, C, R> {
 	Map<String, Map<String, I>> cache;
-
+	Map<String, Object> parallelLockMap;
+	
 	ClassPathScannerWithCachingSupport(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
@@ -58,7 +59,17 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			resultSupplier
 		);
 		this.cache = new HashMap<>();
+		this.parallelLockMap = new ConcurrentHashMap<>();
 	}
+	
+    Object getPathLoadingLock(String path) {
+        Object newLock = new Object();
+        Object lock = parallelLockMap.putIfAbsent(path, newLock);
+        if (lock == null) {
+            lock = newLock;
+        }
+        return lock;
+    }
 	
 	public CacheScanner<I, R> loadInCache(CacheableSearchConfig searchConfig) {
 		try (R result = findBy(
@@ -76,84 +87,44 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	
 	//Cached search
 	public R findBy(CacheableSearchConfig searchConfig) {
-		searchConfig = searchConfig.createCopy();
-		Collection<String> paths = searchConfig.getPaths();
-		if (paths == null || paths.isEmpty()) {
-			searchConfig.addPaths(pathHelper.getPaths(SearchConfigAbst.Key.DEFAULT_SEARCH_CONFIG_PATHS));
-		}
-		C context = createContext(
-			searchConfig
-		);
-		searchConfig.init(context.pathScannerClassLoader);
-		context.executeSearch(() ->
-			search(context)
-		);
-		Collection<String> skippedClassesNames = context.getSkippedClassNames();
-		if (!skippedClassesNames.isEmpty()) {
-			logWarn("Skipped classes count: {}", skippedClassesNames.size());
-		}
-		return resultSupplier.apply(context);
+		return findBy(searchConfig, this::searchInCacheOrInFileSystem);
 	}
-		
-	void search(C context) {
-		Collection<String> pathsNotScanned = searchInCache(context);
-		if (!pathsNotScanned.isEmpty()) {
-			if (context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
-				synchronized (cache) {
-					pathsNotScanned = searchInCache(context);
-					if (!pathsNotScanned.isEmpty()) {
-						loadInCache(context, pathsNotScanned);
+	
+	void searchInCacheOrInFileSystem(C context) {
+		BiPredicate<FileSystemItem, FileSystemItem> filter = getTestItemPredicate(context);
+		for (String path : context.getSearchConfig().getPaths()) {
+			Map<String, I> classesForPath = cache.get(path);
+			if (classesForPath == null) {
+				if (context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
+					synchronized(getPathLoadingLock(path)) {
+						classesForPath = cache.get(path);
+						if (classesForPath == null) {
+							FileSystemItem.ofPath(path).refresh().getAllChildren(filter);
+							Map<String, I> itemsForPath = new HashMap<>();
+							Map<String, I> itemsFound = context.getItemsFound(path);
+							if (itemsFound != null) {
+								itemsForPath.putAll(itemsFound);
+							}
+							this.cache.put(path, itemsForPath);
+						} else {
+							context.addAllItemsFound(path, classesForPath);
+						}
 					}
+				} else {
+					FileSystemItem.ofPath(path).refresh().getAllChildren(filter);
+					context.getItemsFoundFlatMap();
 				}
+			} else if (context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
+				context.addAllItemsFound(path, classesForPath);
 			} else {
-				search(context, pathsNotScanned, null);
-			}
-		}
-	}
-	
-	Collection<String> searchInCache(C context) {
-		Collection<String> pathsNotScanned = new LinkedHashSet<>();
-		CacheableSearchConfig searchConfig = context.getSearchConfig();
-		if (!context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
-			for (String path : searchConfig.getPaths()) {
-				Map<String, I> classesForPath = cache.get(path);
-				if (classesForPath != null) {
-					if (!classesForPath.isEmpty()) {	
-						iterateAndTestCachedItemsForPath(path, context, classesForPath);
-					}
-				} else {
-					pathsNotScanned.add(path);
-				}
-			}
-		} else {
-			for (String path : searchConfig.getPaths()) {
-				Map<String, I> classesForPath = cache.get(path);
-				if (classesForPath != null) {
-					if (!classesForPath.isEmpty()) {
-						context.addAllItemsFound(path, classesForPath);
-					}
-				} else {
-					pathsNotScanned.add(path);
+				if (!classesForPath.isEmpty()) {	
+					iterateAndTestCachedItemsForPath(context, path, classesForPath);
 				}
 			}
 		}
-		return pathsNotScanned;
 	}
 
-	void loadInCache(C context, Collection<String> paths) {
-		search(context, paths, currentBasePathScanned -> {
-			String absolutePath = currentBasePathScanned.getAbsolutePath();
-			Map<String, I> itemsForPath = new HashMap<>();
-			Map<String, I> itemsFound = context.getItemsFound(absolutePath);
-			if (itemsFound != null) {
-				itemsForPath.putAll(itemsFound);
-			}
-			this.cache.put(absolutePath, itemsForPath);
-		});
-	}
-	
-
-	<S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(String path, C context, Map<String, I> itemsForPath) {
+	<S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(C context, String path, Map<String, I> itemsForPath) {
 		for (Entry<String, I> cachedItemAsEntry : itemsForPath.entrySet()) {
 			ClassCriteria.TestContext testContext = testCachedItem(context, path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 			if(testContext.getResult()) {
@@ -172,11 +143,13 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	abstract <S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(C context, String path, String key, I value);
 	
 	public void clearCache() {
-		cache.entrySet().stream().forEach(entry -> {
-			FileSystemItem.ofPath(entry.getKey()).reset();
-			entry.getValue().clear();
-		});
-		cache.clear();
+		synchronized (cache) {
+			cache.entrySet().stream().forEach(entry -> {
+				FileSystemItem.ofPath(entry.getKey()).reset();
+				entry.getValue().clear();
+			});
+			cache.clear();
+		}
 	}
 	
 	@Override

@@ -80,15 +80,25 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 	
 	//Not cached search
-	public R findBy(SearchConfig input) {
-		SearchConfig searchConfig = input.createCopy();
-		if (searchConfig.getPaths().isEmpty()) {
+	public R findBy(SearchConfig searchConfig) {
+		return findBy(searchConfig, this::searchInFileSystem);
+	}
+
+	R findBy(SearchConfigAbst<?> input, Consumer<C> searcher) {
+		SearchConfigAbst<?> searchConfig = input.createCopy();
+		Collection<String> paths = searchConfig.getPaths();
+		if (paths == null || paths.isEmpty()) {
 			searchConfig.addPaths(pathHelper.getPaths(SearchConfigAbst.Key.DEFAULT_SEARCH_CONFIG_PATHS));
 		}
-		C context = createContext(searchConfig);
+		if (searchConfig.optimizePaths) {
+			pathHelper.optimize(searchConfig.getPaths());
+		}
+		C context = createContext(
+			searchConfig
+		);
 		searchConfig.init(context.pathScannerClassLoader);
 		context.executeSearch(() -> {
-			search(context, null, null);
+			searcher.accept(context);
 		});
 		Collection<String> skippedClassesNames = context.getSkippedClassNames();
 		if (!skippedClassesNames.isEmpty()) {
@@ -97,43 +107,32 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		return resultSupplier.apply(context);
 	}
 
-	void search(C context, Collection<String> paths, Consumer<FileSystemItem> afterScanPath) {
+	void searchInFileSystem(C context) {
 		final SearchConfigAbst<?> searchConfig = context.getSearchConfig();
-		paths = paths != null ? paths : searchConfig.getPaths();
-		if (searchConfig.optimizePaths) {
-			pathHelper.optimize(paths);
-		}
-		BiPredicate<FileSystemItem, FileSystemItem> filter = getTestItemPredicate(context, searchConfig.parseCheckFileOptionsValue());
-		for (String path : paths != null ? paths : searchConfig.getPaths()) {
-			FileSystemItem fileSystemItem = FileSystemItem.ofPath(path);
-			if (searchConfig instanceof SearchConfig) {
-				fileSystemItem.refresh();
-			}
-			fileSystemItem.getAllChildren(filter);
-			if (afterScanPath != null) {
-				afterScanPath.accept(fileSystemItem);
-			}
+		BiPredicate<FileSystemItem, FileSystemItem> filter = getTestItemPredicate(context);
+		for (String path : searchConfig.getPaths()) {
+			FileSystemItem.ofPath(path).refresh().getAllChildren(filter);
 		}
 	}
 
-	BiPredicate<FileSystemItem, FileSystemItem> getTestItemPredicate(C context, Predicate<FileSystemItem> classPredicate) {
+	BiPredicate<FileSystemItem, FileSystemItem> getTestItemPredicate(C context) {
+		Predicate<FileSystemItem> classPredicate = context.getSearchConfig().parseCheckFileOptionsValue();
 		return (basePath, child) -> {
+			boolean isClass = false;
 			try {
-				if (classPredicate.test(child)) {
+				if (isClass = classPredicate.test(child)) {
 					JavaClass javaClass = JavaClass.create(child.toByteBuffer());
 					ClassCriteria.TestContext criteriaTestContext = testCriteria(context, javaClass);
 					if (criteriaTestContext.getResult()) {
-						retrieveItem(
+						addToContext(
 							context, criteriaTestContext, basePath.getAbsolutePath(), child, javaClass
 						);
 					}
-					return true;
 				}
-				return false;
 			} catch (Throwable exc) {
 				logError("Could not scan " + child.getAbsolutePath(), exc);
-				return false;
 			}
+			return isClass;
 		};
 	}
 	
@@ -162,7 +161,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		return context.testCriteria(context.loadClass(javaClass.getName()));
 	}
 	
-	abstract void retrieveItem(
+	abstract void addToContext(
 		C context,
 		ClassCriteria.TestContext criteriaTestContext,
 		String basePath,

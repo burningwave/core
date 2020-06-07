@@ -151,7 +151,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	}
 	
 	@Override
-	void retrieveItem(SearchContext context, TestContext criteriaTestContext,
+	void addToContext(SearchContext context, TestContext criteriaTestContext,
 		String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
 	) {
 		context.addItemFound(
