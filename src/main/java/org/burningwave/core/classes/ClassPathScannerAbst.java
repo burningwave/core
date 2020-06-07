@@ -108,28 +108,32 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			if (searchConfig instanceof SearchConfig) {
 				fileSystemItem.refresh();
 			}
-			fileSystemItem.getAllChildren(fIS -> {
-				try {
-					if (classPredicate.test(fIS)) {
-						JavaClass javaClass = JavaClass.create(fIS.toByteBuffer());
-						ClassCriteria.TestContext criteriaTestContext = testCriteria(context, javaClass);
-						if (criteriaTestContext.getResult()) {
-							retrieveItem(
-								path, context, criteriaTestContext, fIS, javaClass
-							);
-						}
-						return true;
-					}
-					return false;
-				} catch (Throwable exc) {
-					logError("Could not scan " + fIS.getAbsolutePath(), exc);
-					return false;
-				}
-			});
+			fileSystemItem.getAllChildren(getTestItemPredicate(context, classPredicate, path));
 			if (afterScanPath != null) {
 				afterScanPath.accept(fileSystemItem);
 			}
 		}
+	}
+
+	Predicate<FileSystemItem> getTestItemPredicate(C context, Predicate<FileSystemItem> classPredicate, String path) {
+		return fIS -> {
+			try {
+				if (classPredicate.test(fIS)) {
+					JavaClass javaClass = JavaClass.create(fIS.toByteBuffer());
+					ClassCriteria.TestContext criteriaTestContext = testCriteria(context, javaClass);
+					if (criteriaTestContext.getResult()) {
+						retrieveItem(
+							path, context, criteriaTestContext, fIS, javaClass
+						);
+					}
+					return true;
+				}
+				return false;
+			} catch (Throwable exc) {
+				logError("Could not scan " + fIS.getAbsolutePath(), exc);
+				return false;
+			}
+		};
 	}
 	
 	@SuppressWarnings("resource")
