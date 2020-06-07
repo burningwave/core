@@ -134,25 +134,27 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	private String computeConventionedAbsolutePath() {
-		if ((absolutePath.getValue() == null) || parentContainer == null) {
+		String conventionedAbsolutePath = absolutePath.getValue() ;
+		if ((conventionedAbsolutePath == null) || parentContainer == null) {
 			synchronized(this) {
 				if ((absolutePath.getValue() == null) || parentContainer == null) {
 					if (parentContainer != null && parentContainer.isArchive()) {
 						ByteBuffer par = parentContainer.toByteBuffer();
 						String relativePath = absolutePath.getKey().replace(parentContainer.getAbsolutePath() + "/", "");
-						String conventionedAbsolutePath = parentContainer.computeConventionedAbsolutePath() + retrieveConventionedRelativePath(par, parentContainer.getAbsolutePath(), relativePath);
+						conventionedAbsolutePath = parentContainer.computeConventionedAbsolutePath() + retrieveConventionedRelativePath(par, parentContainer.getAbsolutePath(), relativePath);
 						absolutePath.setValue(conventionedAbsolutePath);
 					} else {
-						absolutePath.setValue(retrieveConventionedAbsolutePath(absolutePath.getKey(), ""));
+						conventionedAbsolutePath = retrieveConventionedAbsolutePath(absolutePath.getKey(), "");
+						absolutePath.setValue(conventionedAbsolutePath);
 					}
 				}
 			}
 		}
-		if (absolutePath.getValue() == null) {
+		if (conventionedAbsolutePath == null) {
 			reset(true);
 			Cache.pathForFileSystemItems.remove(getAbsolutePath());
 		}	
-		return absolutePath.getValue();
+		return conventionedAbsolutePath;
 	}
 	
 	public FileSystemItem copyAllChildrenTo(String folder) {
