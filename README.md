@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/6)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/126924823)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/128492915)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/126924823)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/128492915)
 
 [![Coverage Status](https://coveralls.io/repos/github/burningwave/core/badge.svg?branch=master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -36,7 +36,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>6.1.1</version>
+    <version>6.2.0</version>
 </dependency>
 ```
 
@@ -488,7 +488,6 @@ public class UseOfStaticComponentsExample {
 ### Configuration
 The configuration of this type of container is done via **burningwave.static.properties** file or via **burningwave.static.default.properties** file: the library searches for the first file and if it does not find it, then it searches for the second file and if neither this one is found then the library sets the default configuration programmatically. **The default configuration loaded programmatically if no configuration file is found is the following**:
 ```properties
-hunters.default-search-config.check-file-options=checkFileName
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
 #the SLF4JManagedLoggerRepository will be instantiated, otherwise the SimpleManagedLoggerRepository will be instantiated
 managed-logger.repository=autodetect
@@ -515,8 +514,6 @@ streams.default-buffer-size=0.5Kb
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
 static-component-container.clear-temporary-folder-on-init=true
 static-component-container.hide-banner-on-init=false
-#other possible values are: checkFileName, checkFileName|checkFileSignature, checkFileName&checkFileSignature
-hunters.default-search-config.check-file-options=checkFileSignature
 ```
 <br/>
 
@@ -572,15 +569,18 @@ The configuration of this type of container can be done via Properties file or p
 If you use the singleton instance obtained via ComponentContainer.getInstance() method, you must create a **burningwave.properties** file and put it on base path of your classpath project.
 **The default configuration automatically loaded if no configuration file is found is the following**:
 ```properties
-class-factory.byte-code-hunter.search-config.check-file-options=\
-    ${hunters.default-search-config.check-file-options}
+class-factory.byte-code-hunter.search-config.check-file-option=\
+    ${hunters.default-search-config.check-file-option}
 #default classloader used by the ClassFactory to load generated classes
 class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
-class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=\
-    ${hunters.default-search-config.check-file-options}
+class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-option=\
+    ${hunters.default-search-config.check-file-option}
 class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
-java-memory-compiler.class-path-hunter.search-config.check-file-options=\
-    ${hunters.default-search-config.check-file-options}
+#other possible values are: checkFileName, checkFileName|checkFileSignature, checkFileName&checkFileSignature
+hunters.default-search-config.check-file-option=checkFileName
+hunters.path-loading-lock=forName
+java-memory-compiler.class-path-hunter.search-config.check-file-option=\
+    ${hunters.default-search-config.check-file-option}
 #this variable indicates all the paths from which the classes 
 #must be taken if during the definition of the compiled classes
 #on classloader there will be classes not found
@@ -613,14 +613,16 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 ```
 Here an example of a **burningwave.properties** file with all configurable properties:
 ```properties
-class-factory.byte-code-hunter.search-config.check-file-options=\
-    ${hunters.default-search-config.check-file-options}
+class-factory.byte-code-hunter.search-config.check-file-option=\
+    ${hunters.default-search-config.check-file-option}
 class-factory.default-class-loader=Thread.currentThread().getContextClassLoader()
-class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options=\
-    ${hunters.default-search-config.check-file-options}
+class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-option=\
+    ${hunters.default-search-config.check-file-option}
 class-hunter.path-scanner-class-loader.parent=Thread.currentThread().getContextClassLoader()
-java-memory-compiler.class-path-hunter.search-config.check-file-options=\
-    ${hunters.default-search-config.check-file-options}
+hunters.default-search-config.check-file-option=checkFileSignature
+hunters.path-loading-lock=forCache
+java-memory-compiler.class-path-hunter.search-config.check-file-option=\
+    ${hunters.default-search-config.check-file-option}
 paths.class-factory.default-class-loader.class-repositories=\
     ${paths.java-memory-compiler.class-repositories};\
     ${paths.class-factory.default-class-loader.additional-class-repositories};

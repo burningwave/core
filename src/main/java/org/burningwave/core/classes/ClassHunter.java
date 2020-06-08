@@ -55,7 +55,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		public static class Key {
 			
 			public final static String PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER = "class-hunter.path-scanner-class-loader.parent";
-			public final static String PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-options";
+			public final static String PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-option";
 			
 		}
 		

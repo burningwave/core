@@ -56,7 +56,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	public static class Configuration {
 		public static class Key {
 			
-			public final static String DEFAULT_CHECK_FILE_OPTIONS = "hunters.default-search-config.check-file-options";		
+			public final static String DEFAULT_CHECK_FILE_OPTIONS = "hunters.default-search-config.check-file-option";		
 			public static final String DEFAULT_SEARCH_CONFIG_PATHS = PathHelper.Configuration.Key.PATHS_PREFIX + "hunters.default-search-config.paths";
 						
 		}

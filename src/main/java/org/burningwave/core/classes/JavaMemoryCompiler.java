@@ -78,7 +78,7 @@ public class JavaMemoryCompiler implements Component {
 		
 		public static class Key {
 			
-			public static final String CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "java-memory-compiler.class-path-hunter.search-config.check-file-options";
+			public static final String CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "java-memory-compiler.class-path-hunter.search-config.check-file-option";
 			public static final String MAIN_CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.main-class-paths";
 			public static final String ADDITIONAL_MAIN_CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.additional-main-class-paths";
 			public static final String CLASS_REPOSITORIES =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-repositories";
