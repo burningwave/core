@@ -96,26 +96,27 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllSubtypeOfTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotEmpty(
+		ClassCriteria classCriteria = ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+			//[1]here you recall the uploaded class by "useClasses" method. In this case we're looking for all classes that extend com.github.burningwave.core.Item
+			uploadedClasses.get(Complex.Data.Item.class).isAssignableFrom(currentScannedClass)
+		).useClasses(
+			//With this directive we ask the library to load one or more classes to be used for comparisons:
+			//it serves to eliminate the problem that a class, loaded by different class loaders, 
+			//turns out to be different for the comparison operators (eg. The isAssignableFrom method).
+			//If you call this method, you must retrieve the uploaded class in all methods that support this feature like in the point[1]
+			Complex.Data.Item.class
+		);
+		testNotNull(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					//Search in the runtime Classpaths. Here you can add all absolute path you want:
 					//both folders, zip and jar will be scanned recursively
 					componentSupplier.getPathHelper().getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
-						//[1]here you recall the uploaded class by "useClasses" method. In this case we're looking for all classes that extend com.github.burningwave.core.Item
-						uploadedClasses.get(Complex.Data.Item.class).isAssignableFrom(currentScannedClass)
-					).useClasses(
-						//With this directive we ask the library to load one or more classes to be used for comparisons:
-						//it serves to eliminate the problem that a class, loaded by different class loaders, 
-						//turns out to be different for the comparison operators (eg. The isAssignableFrom method).
-						//If you call this method, you must retrieve the uploaded class in all methods that support this feature like in the point[1]
-						Complex.Data.Item.class
-					)
+					classCriteria
 				)
 			),
-			(result) -> result.getClasses()
+			(result) -> result.getUnique(classCriteria)
 		);
 	}
 	
