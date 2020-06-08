@@ -90,7 +90,7 @@ public class JavaMemoryCompiler implements Component {
 			DEFAULT_VALUES = new HashMap<>();
 			DEFAULT_VALUES.put(
 				Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-				"${" + SearchConfigAbst.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
+				"${" + ClassPathScannerAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
 			);
 			DEFAULT_VALUES.put(
 				Key.MAIN_CLASS_PATHS, 

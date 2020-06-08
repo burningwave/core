@@ -70,7 +70,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
 			DEFAULT_VALUES.put(
 				Key.PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-				"${" + SearchConfigAbst.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
+				"${" + ClassPathScannerAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
 			);
 		}
 	}

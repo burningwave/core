@@ -28,61 +28,18 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
-import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Predicate;
 
 import org.burningwave.core.ManagedLogger;
-import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.FileSystemItem.CheckFile;
-import org.burningwave.core.io.PathHelper;
 
 @SuppressWarnings("unchecked")
 abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCloseable, ManagedLogger {
-	public static class Key {
-		
-		public final static String DEFAULT_CHECK_FILE_OPTIONS = "hunters.default-search-config.check-file-options";		
-		public static final String DEFAULT_SEARCH_CONFIG_PATHS = PathHelper.Configuration.Key.PATHS_PREFIX + "hunters.default-search-config.paths";
-					
-	}
-	
-	public final static Map<String, Object> DEFAULT_VALUES;
-
-	static {
-		DEFAULT_VALUES = new LinkedHashMap<>();
-
-		DEFAULT_VALUES.put(
-			Key.DEFAULT_SEARCH_CONFIG_PATHS, 
-			PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + ";"
-		);
-		DEFAULT_VALUES.put(
-			Key.DEFAULT_CHECK_FILE_OPTIONS,
-			FileSystemItem.CheckFile.FOR_NAME.getLabel()
-		);
-	}
-	
-	private final static Predicate<FileSystemItem> getFileNameChecker() {
-		return file -> {
-			String name = file.getName();
-			return name.endsWith(".class") && 
-				!name.endsWith("module-info.class") &&
-				!name.endsWith("package-info.class");
-		};
-	}
-	
-	private final static Predicate<FileSystemItem> getFileSignatureChecker() {
-		return file -> ThrowingSupplier.get(() -> Streams.isClass(file.toByteBuffer()));
-	}
 	
 	ClassCriteria classCriteria;
 	Collection<String> paths;
@@ -127,35 +84,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	
 	CheckFile getCheckFileOptions() {
 		return checkFileOptions;
-	}
-	
-	final Predicate<FileSystemItem> parseCheckFileOptionsValue() {
-		return parseCheckFileOptionsValue(
-			Optional.ofNullable(checkFileOptions).map(checkFileOptions -> 
-				checkFileOptions.getLabel()
-			).orElseGet(() -> null),
-			IterableObjectHelper.get(
-				GlobalProperties, Key.DEFAULT_CHECK_FILE_OPTIONS, DEFAULT_VALUES
-			)
-		);
-	}
-	
-	final Predicate<FileSystemItem> parseCheckFileOptionsValue(String label, String defaultLabel) {
-		if (label != null) {
-			CheckFile checkFileOption = CheckFile.forLabel(label);
-			if (checkFileOption.equals(CheckFile.FOR_NAME_OR_SIGNATURE)) {
-				return getFileNameChecker().or(getFileSignatureChecker());
-			} else if (checkFileOption.equals(CheckFile.FOR_SIGNATURE_OR_NAME)) {
-				return getFileSignatureChecker().or(getFileNameChecker());
-			} else if (checkFileOption.equals(CheckFile.FOR_NAME_AND_SIGNATURE)) {
-				return getFileNameChecker().and(getFileSignatureChecker());
-			} else if (checkFileOption.equals(CheckFile.FOR_NAME)) {
-				return getFileNameChecker();
-			} else if (checkFileOption.equals(CheckFile.FOR_SIGNATURE)) {
-				return getFileSignatureChecker();
-			}
-		}
-		return parseCheckFileOptionsValue(defaultLabel, null);
 	}
 	
 	public S by(ClassCriteria classCriteria) {
