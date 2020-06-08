@@ -45,7 +45,7 @@ public class ClassHunterTest extends BaseTest {
 	}
 	
 	@Test
-	public void findAllTestTwo() throws Exception {
+	public void refreshCacheTestOne() throws Exception {
 		findAllTestOne();
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		componentSupplier.clearHuntersCache();
@@ -54,6 +54,30 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				)
+			).find(),
+			(result) ->
+				result.getClasses()
+		);
+		testNotEmpty(
+			() -> componentSupplier.getClassHunter().loadInCache(
+				SearchConfig.forPaths(
+					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
+				).refreshCache()
+			).find(),
+			(result) ->
+				result.getClasses()
+		);
+	}
+	
+	@Test
+	public void findAllTestThree() throws Exception {
+		findAllTestOne();
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotEmpty(
+			() -> componentSupplier.getClassHunter().loadInCache(
+				SearchConfig.forPaths(
+					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
+				).refreshCache()
 			).find(),
 			(result) ->
 				result.getClasses()
