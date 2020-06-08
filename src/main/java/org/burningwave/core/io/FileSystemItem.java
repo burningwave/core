@@ -742,7 +742,7 @@ public class FileSystemItem implements ManagedLogger {
 		return url;
 	}
 	
-	public static class Criteria extends org.burningwave.core.Criteria<FileSystemItem, Criteria, org.burningwave.core.Criteria.TestContext<FileSystemItem, Criteria>>{
+	public static class Criteria extends org.burningwave.core.Criteria.Simple<FileSystemItem, Criteria>{
 		
 		public static Criteria create() {
 			return new Criteria();

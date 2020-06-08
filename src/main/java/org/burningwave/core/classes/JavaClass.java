@@ -136,7 +136,7 @@ public class JavaClass {
 		return getName();
 	}
 	
-	public static class Criteria extends org.burningwave.core.Criteria<JavaClass, Criteria, org.burningwave.core.Criteria.TestContext<JavaClass, Criteria>>{
+	public static class Criteria extends org.burningwave.core.Criteria.Simple<JavaClass, Criteria>{
 		
 		public static Criteria create() {
 			return new Criteria();
