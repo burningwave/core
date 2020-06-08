@@ -37,13 +37,15 @@ import java.util.stream.Collectors;
 import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.iterable.Properties;
 
 public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass, SearchContext<JavaClass>, ByteCodeHunter.SearchResult> {
 	
 	private ByteCodeHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		PathHelper pathHelper
+		PathHelper pathHelper,
+		Properties config
 	) {
 		super(
 			byteCodeHunterSupplier,
@@ -52,16 +54,18 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 			(initContext) -> SearchContext.<JavaClass>create(
 				initContext
 			),
-			(context) -> new ByteCodeHunter.SearchResult(context)
+			(context) -> new ByteCodeHunter.SearchResult(context),
+			config
 		);
 	}
 	
 	public static ByteCodeHunter create(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier, 
-		PathHelper pathHelper
+		PathHelper pathHelper,
+		Properties config
 	) {
-		return new ByteCodeHunter(byteCodeHunterSupplier, classHunterSupplier, pathHelper);
+		return new ByteCodeHunter(byteCodeHunterSupplier, classHunterSupplier, pathHelper, config);
 	}
 	
 	@Override

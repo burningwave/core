@@ -31,6 +31,7 @@ package org.burningwave.core.classes;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiPredicate;
@@ -41,9 +42,54 @@ import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.concurrent.Mutex;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.iterable.Properties;
 
 
 public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>, R extends SearchResult<I>> extends ClassPathScannerAbst<I, C, R> {
+	
+	public static class Configuration {
+		public static class Key {
+			
+			public final static String PATH_LOADING_LOCK = "hunters.path-loading-lock";							
+		}
+		
+		public final static Map<String, Object> DEFAULT_VALUES;
+	
+		static {
+			DEFAULT_VALUES = new LinkedHashMap<>();
+	
+			DEFAULT_VALUES.put(
+				Key.PATH_LOADING_LOCK, 
+				PathLoadingLock.FOR_PATH.label
+			);
+		}
+	}
+	
+	public static enum PathLoadingLock {
+		FOR_CACHE("forCache"),
+		FOR_PATH("forPath");
+		
+		public static PathLoadingLock forLabel(String label) {
+			for (PathLoadingLock item : PathLoadingLock.values()) { 
+			    if(item.label.equals(label)) {
+			    	return item;
+			    }
+			}
+			return null;
+		}
+		
+		private String label;
+		
+		private PathLoadingLock(String label) {
+			this.label = label;
+		}
+		
+		public String getLabel() {
+			return label;
+		}
+		
+	}
+	
 	Map<String, Map<String, I>> cache;
 	Mutex.Manager mutexManager;
 	
@@ -52,13 +98,14 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
 		Function<InitContext, C> contextSupplier,
-		Function<C, R> resultSupplier) {
+		Function<C, R> resultSupplier, Properties config) {
 		super(
 			byteCodeHunterSupplier,
 			classHunterSupplier,
 			pathHelper,
 			contextSupplier,
-			resultSupplier
+			resultSupplier,
+			config
 		);
 		this.cache = new HashMap<>();
 		this.mutexManager = Mutex.Manager.create(cache);

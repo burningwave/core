@@ -38,31 +38,36 @@ import java.util.stream.Collectors;
 import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.iterable.Properties;
 
 public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collection<Class<?>>, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
 	private ClassPathHunter(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		PathHelper pathHelper
+		PathHelper pathHelper,
+		Properties config
 	) {
 		super(
 			byteCodeHunterSupplier,
 			classHunterSupplier,
 			pathHelper,
 			(initContext) -> SearchContext._create(initContext),
-			(context) -> new ClassPathHunter.SearchResult(context)
+			(context) -> new ClassPathHunter.SearchResult(context),
+			config
 		);
 	}
 	
 	public static ClassPathHunter create(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		PathHelper pathHelper
+		PathHelper pathHelper,
+		Properties config
 	) {
 		return new ClassPathHunter(
 			byteCodeHunterSupplier,
 			classHunterSupplier,
-			pathHelper
+			pathHelper,
+			config
 		);
 	}
 	

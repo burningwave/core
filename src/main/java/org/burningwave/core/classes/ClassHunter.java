@@ -94,7 +94,8 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			(initContext) -> ClassHunter.SearchContext._create(
 				initContext
 			),
-			(context) -> new ClassHunter.SearchResult(context)
+			(context) -> new ClassHunter.SearchResult(context),
+			config
 		);
 		pathScannerClassLoaderSupplier = () -> PathScannerClassLoader.create(
 			parentClassLoader, pathHelper, byteCodeHunterSupplier, 

@@ -48,6 +48,7 @@ import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.io.FileSystemItem.CheckFile;
 
 
@@ -85,19 +86,23 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	PathHelper pathHelper;
 	Function<InitContext, C> contextSupplier;
 	Function<C, R> resultSupplier;
+	Properties config;
 
 	ClassPathScannerAbst(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
 		Function<InitContext, C> contextSupplier,
-		Function<C, R> resultSupplier
+		Function<C, R> resultSupplier,
+		Properties config
 	) {
 		this.pathHelper = pathHelper;
 		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
 		this.classHunterSupplier = classHunterSupplier;
 		this.contextSupplier = contextSupplier;
 		this.resultSupplier = resultSupplier;
+		this.config = config;
+		listenTo(config);
 	}
 	
 	ClassHunter getClassHunter() {

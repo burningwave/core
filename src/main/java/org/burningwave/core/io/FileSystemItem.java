@@ -69,9 +69,9 @@ public class FileSystemItem implements ManagedLogger {
 		FOR_SIGNATURE_OR_NAME(FOR_SIGNATURE.label + "|" + FOR_NAME.label);
 		
 		public static CheckFile forLabel(String label) {
-			for (CheckFile checkFile : CheckFile.values()) { 
-			    if(checkFile.label.equals(label)) {
-			    	return checkFile;
+			for (CheckFile item : CheckFile.values()) { 
+			    if(item.label.equals(label)) {
+			    	return item;
 			    }
 			}
 			return null;

@@ -55,6 +55,7 @@ import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.ClassPathScannerAbst;
+import org.burningwave.core.classes.ClassPathScannerWithCachingSupport;
 import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
@@ -124,6 +125,7 @@ public class ComponentContainer implements ComponentSupplier {
 		defaultProperties.putAll(JavaMemoryCompiler.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassPathScannerAbst.Configuration.DEFAULT_VALUES);
+		defaultProperties.putAll(ClassPathScannerWithCachingSupport.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
 		
 				
@@ -267,7 +269,8 @@ public class ComponentContainer implements ComponentSupplier {
 			ClassPathHunter.create(
 				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
-				getPathHelper()
+				getPathHelper(),
+				config
 			)
 		);
 	}
@@ -278,7 +281,8 @@ public class ComponentContainer implements ComponentSupplier {
 			ByteCodeHunter.create(
 				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
-				getPathHelper()
+				getPathHelper(),
+				config
 			)
 		);
 	}
