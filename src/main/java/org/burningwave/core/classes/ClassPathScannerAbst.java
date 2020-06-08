@@ -183,7 +183,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 					sharedClassLoader :
 					PathScannerClassLoader.create(
 						searchConfig.parentClassLoaderForMainClassLoader, 
-						pathHelper, byteCodeHunterSupplier, searchConfig.getCheckFileOptions()
+						pathHelper, byteCodeHunterSupplier, searchConfig.getCheckFileOption()
 					),
 				searchConfig
 			)		
@@ -193,7 +193,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	
 	final Predicate<FileSystemItem> parseCheckFileOptionsValue(SearchConfigAbst<?> searchConfig) {
 		return parseCheckFileOptionsValue(
-			Optional.ofNullable(searchConfig.getCheckFileOptions()).map(checkFileOptions -> 
+			Optional.ofNullable(searchConfig.getCheckFileOption()).map(checkFileOptions -> 
 				checkFileOptions.getLabel()
 			).orElseGet(() -> null),
 				config.get(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES

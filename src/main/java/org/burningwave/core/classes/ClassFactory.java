@@ -297,7 +297,7 @@ public class ClassFactory implements Component {
 							classPaths
 						).deleteFoundItemsOnClose(
 							false
-						).checkFileOptions(
+						).checkFileOption(
 							FileSystemItem.CheckFile.forLabel(
 								config.get(
 									Configuration.Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,

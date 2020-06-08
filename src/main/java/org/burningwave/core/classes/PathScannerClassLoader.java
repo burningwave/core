@@ -88,7 +88,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 							checkPathsResult.getNotContainedPaths()
 						).considerURLClassLoaderPathsAsScanned(
 							considerURLClassLoaderPathsAsLoadedPaths
-						).checkFileOptions(
+						).checkFileOption(
 							byteCodeHunterSearchConfigCheckFileOptions
 						).optimizePaths(
 							true

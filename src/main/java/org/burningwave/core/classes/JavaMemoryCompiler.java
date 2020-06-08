@@ -497,7 +497,7 @@ public class JavaMemoryCompiler implements Component {
 						ClassCriteria.create().packageName((iteratedClassPackageName) ->
 							Objects.equals(iteratedClassPackageName, packageName)
 						)
-					).checkFileOptions(
+					).checkFileOption(
 						checkFileOptions
 					).optimizePaths(
 						true
@@ -511,7 +511,7 @@ public class JavaMemoryCompiler implements Component {
 							ClassCriteria.create().packageName((iteratedClassPackageName) ->
 								Objects.equals(iteratedClassPackageName, packageName)									
 							)
-						).checkFileOptions(
+						).checkFileOption(
 							checkFileOptions
 						).optimizePaths(
 							true
@@ -533,7 +533,7 @@ public class JavaMemoryCompiler implements Component {
 				SearchResult result = classPathHunter.findBy(
 					SearchConfig.withoutUsingCache().addPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 						ClassCriteria.create().allThat(classPredicate)
-					).checkFileOptions(
+					).checkFileOption(
 						checkFileOptions
 					).optimizePaths(
 						true
@@ -544,7 +544,7 @@ public class JavaMemoryCompiler implements Component {
 					result = classPathHunter.loadInCache(
 						SearchConfig.forPaths(classRepositoriesPaths).by(
 							ClassCriteria.create().allThat(classPredicate)
-						).checkFileOptions(
+						).checkFileOption(
 							checkFileOptions
 						).optimizePaths(
 							true

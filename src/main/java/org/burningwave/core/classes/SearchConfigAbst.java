@@ -44,7 +44,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	ClassCriteria classCriteria;
 	Collection<String> paths;
 	ClassLoader parentClassLoaderForMainClassLoader;
-	CheckFile checkFileOptions;
+	CheckFile checkFileOption;
 	boolean optimizePaths;
 	boolean useSharedClassLoaderAsMain;
 	boolean deleteFoundItemsOnClose;
@@ -82,8 +82,8 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return paths;
 	}
 	
-	CheckFile getCheckFileOptions() {
-		return checkFileOptions;
+	CheckFile getCheckFileOption() {
+		return checkFileOption;
 	}
 	
 	public S by(ClassCriteria classCriteria) {
@@ -148,8 +148,8 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return (S)this;
 	}
 	
-	public S checkFileOptions(FileSystemItem.CheckFile options) {
-		this.checkFileOptions = options;
+	public S checkFileOption(FileSystemItem.CheckFile option) {
+		this.checkFileOption = option;
 		return (S)this;
 	}
 	
@@ -159,7 +159,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		destConfig.classCriteria = this.classCriteria.createCopy();
 		destConfig.paths = new HashSet<>();
 		destConfig.paths.addAll(this.paths);
-		destConfig.checkFileOptions = this.checkFileOptions;
+		destConfig.checkFileOption = this.checkFileOption;
 		destConfig.optimizePaths = this.optimizePaths;
 		destConfig.useSharedClassLoaderAsMain = this.useSharedClassLoaderAsMain;
 		destConfig.parentClassLoaderForMainClassLoader = this.parentClassLoaderForMainClassLoader;
