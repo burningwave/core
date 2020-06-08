@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -272,7 +271,7 @@ public class PathHelper implements Component {
 			Properties configWithResolvedPaths = new Properties();
 			configWithResolvedPaths.putAll(config);
 			configWithResolvedPaths.putAll(defaultValues);
-			paths = IterableObjectHelper.get(configWithResolvedPaths, pathGroupPropertyName, Configuration.Key.PATHS_SEPARATOR, true);
+			paths = configWithResolvedPaths.get(pathGroupPropertyName, Configuration.Key.PATHS_SEPARATOR, true);
 			if (paths != null) {
 				for (String path : paths.split(Configuration.Key.PATHS_SEPARATOR)) {
 					if (Strings.isNotEmpty(path)) {
