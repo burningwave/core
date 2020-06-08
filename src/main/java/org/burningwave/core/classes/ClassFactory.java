@@ -29,7 +29,6 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
-import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -300,8 +299,7 @@ public class ClassFactory implements Component {
 							false
 						).checkFileOptions(
 							FileSystemItem.CheckFile.forLabel(
-								IterableObjectHelper.get(
-									config,
+								config.get(
 									Configuration.Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 									Configuration.DEFAULT_VALUES
 								)
