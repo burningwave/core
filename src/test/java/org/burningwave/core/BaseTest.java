@@ -93,7 +93,13 @@ public class BaseTest implements Component {
 	
 	private String getCallerMethod() {
 		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-		return stackTraceElements[4].getMethodName();
+		for (StackTraceElement stackTraceElement : stackTraceElements) {
+			String methodName = stackTraceElement.getMethodName();
+			if (stackTraceElement.getMethodName().contains("Test")) {
+				return methodName;
+			}
+		}
+		return null;
 	}
 
 	<T extends AutoCloseable> void testNotEmpty(Supplier<T> autoCloaseableSupplier, Function<T, Collection<?>> collSupplier) {

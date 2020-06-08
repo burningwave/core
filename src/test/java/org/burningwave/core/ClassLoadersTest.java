@@ -23,7 +23,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 	
 	@Test
-	public void setAsParentClassLoader() {
+	public void setAsParentClassLoaderTest() {
 		testNotNull(() -> {
 			ClassLoader classLoader = getMemoryClassLoader(null);
 			ClassLoaders.setAsParent(classLoader, Thread.currentThread().getContextClassLoader(), true);
@@ -32,7 +32,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 	
 	@Test
-	public void setAsMaster() {
+	public void setAsMasterTest() {
 		testNotNull(() -> {
 			ClassLoader classLoader_1 = getMemoryClassLoader(null);
 			ClassLoader classLoader_2 = getMemoryClassLoader(classLoader_1);
@@ -44,7 +44,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 	
 	@Test
-	public void getAsParentClassLoader() {
+	public void getAsParentClassLoaderTest() {
 		testNotEmpty(() -> {
 			ClassLoader classLoader = getMemoryClassLoader(null);
 			ClassLoaders.setAsParent(classLoader, Thread.currentThread().getContextClassLoader(), true);
@@ -53,7 +53,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 	
 	@Test
-	public void retrieveLoadedClassesForPackage() {
+	public void retrieveLoadedClassesForPackageTest() {
 		testNotEmpty(() -> {
 			return ClassLoaders.retrieveLoadedClassesForPackage(Thread.currentThread().getContextClassLoader(), (pckg) -> pckg != null);
 		});
