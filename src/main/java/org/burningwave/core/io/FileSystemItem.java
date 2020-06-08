@@ -749,36 +749,33 @@ public class FileSystemItem implements ManagedLogger {
 		
 		public static class OfClassType {
 			
+			private final static Predicate<FileSystemItem> fileNameChecker = file -> {
+				String name = file.getName();
+				return name.endsWith(".class") && 
+					!name.endsWith("module-info.class") &&
+					!name.endsWith("package-info.class");
+			};
+			
+			private final static Predicate<FileSystemItem> fileSignatureChecker =
+				file -> ThrowingSupplier.get(() -> Streams.isClass(file.toByteBuffer()));
+			
 			public static Predicate<FileSystemItem> toPredicate(CheckingOption checkFileOption) {
 				if (checkFileOption.equals(CheckingOption.FOR_NAME_OR_SIGNATURE)) {
-					return getFileNameChecker().or(getFileSignatureChecker());
+					return fileNameChecker.or(fileSignatureChecker);
 				} else if (checkFileOption.equals(CheckingOption.FOR_SIGNATURE_OR_NAME)) {
-					return getFileSignatureChecker().or(getFileNameChecker());
+					return fileSignatureChecker.or(fileNameChecker);
 				} else if (checkFileOption.equals(CheckingOption.FOR_NAME_AND_SIGNATURE)) {
-					return getFileNameChecker().and(getFileSignatureChecker());
+					return fileNameChecker.and(fileSignatureChecker);
 				} else if (checkFileOption.equals(CheckingOption.FOR_NAME)) {
-					return getFileNameChecker();
+					return fileNameChecker;
 				} else if (checkFileOption.equals(CheckingOption.FOR_SIGNATURE)) {
-					return getFileSignatureChecker();
+					return fileSignatureChecker;
 				}	
 				return null;
 			}
 			
 			public static final Predicate<FileSystemItem> toPredicate(String label) {
 				return toPredicate(CheckingOption.forLabel(label));
-			}
-			
-			static Predicate<FileSystemItem> getFileSignatureChecker() {
-				return file -> ThrowingSupplier.get(() -> Streams.isClass(file.toByteBuffer()));
-			}
-			
-			static Predicate<FileSystemItem> getFileNameChecker() {
-				return file -> {
-					String name = file.getName();
-					return name.endsWith(".class") && 
-						!name.endsWith("module-info.class") &&
-						!name.endsWith("package-info.class");
-				};
 			}
 		}
 	}
