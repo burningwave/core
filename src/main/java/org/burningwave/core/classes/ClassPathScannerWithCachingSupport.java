@@ -61,7 +61,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			resultSupplier
 		);
 		this.cache = new HashMap<>();
-		this.mutexManager = Mutex.Manager.create();
+		this.mutexManager = Mutex.Manager.create(cache);
 	}
 
 	public CacheScanner<I, R> loadInCache(CacheableSearchConfig searchConfig) {

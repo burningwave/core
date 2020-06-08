@@ -34,22 +34,43 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Mutex {
 	
 	public static class Manager {
-		Map<String, Mutex> parallelLockMap;
+		Map<String, Object> parallelLockMap;
+		private Object defaultMutex;
 		
-		private Manager() {
+		private Manager(Object defaultMutex) {
 			this.parallelLockMap = new ConcurrentHashMap<>();
+			this.defaultMutex = defaultMutex;
 		}
 		
-		public static Manager create() {
-			return new Manager();
+		public static Manager create(Object client) {
+			return new Manager(client);
 		}
 		
-		public Mutex getMutex(String path) {
-	    	Mutex newLock = new Mutex();
-	    	Mutex lock = parallelLockMap.putIfAbsent(path, newLock);
-	        if (lock == null) {
-	            lock = newLock;
-	        }
+		public void enableLockForName() {
+			Map<String, Object> parallelLockMap = this.parallelLockMap;
+			if (parallelLockMap == null) {
+				synchronized(this) {
+					if ((parallelLockMap = this.parallelLockMap) == null) {
+						this.parallelLockMap = new ConcurrentHashMap<>();
+					}
+				}
+			}
+		}
+		
+		public void disableLockForName() {
+			this.parallelLockMap = null;
+		}
+		
+		public Object getMutex(String name) {
+			Object lock = defaultMutex;
+			Map<String, Object> parallelLockMap = this.parallelLockMap;
+			if (parallelLockMap != null) {
+		    	Object newLock = new Mutex();
+		    	lock = parallelLockMap.putIfAbsent(name, newLock);
+		        if (lock == null) {
+		            lock = newLock;
+		        }
+			}
 	        return lock;
 	    }
 	}

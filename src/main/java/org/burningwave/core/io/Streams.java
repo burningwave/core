@@ -97,7 +97,7 @@ public class Streams implements Component {
 			this.defaultByteBufferAllocationMode = ByteBuffer::allocateDirect;
 			logInfo("default allocation mode: ByteBuffer::allocateDirect");
 		}
-		this.mutexManager = Mutex.Manager.create();
+		this.mutexManager = Mutex.Manager.create(this);
 	}
 	
 	public static Streams create(Properties properties) {
