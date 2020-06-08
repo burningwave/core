@@ -94,9 +94,9 @@ public class BaseTest implements Component {
 	private String getCallerMethod() {
 		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
 		for (StackTraceElement stackTraceElement : stackTraceElements) {
-			String methodName = stackTraceElement.getMethodName();
-			if (stackTraceElement.getMethodName().contains("Test")) {
-				return methodName;
+			String className = stackTraceElement.getClassName();
+			if (className.contains("Test") && !className.contains("BaseTest")) {
+				return stackTraceElement.getMethodName();
 			}
 		}
 		return null;

@@ -184,7 +184,7 @@ public class ByteCodeHunterTest extends BaseTest {
 	}
 	
 	@Test
-	public void findAllBurningWaveClasses() {
+	public void findAllBurningWaveClassesTest() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		AtomicReference<Long> bytesWrapper = new AtomicReference<>();
 		bytesWrapper.set(0L);

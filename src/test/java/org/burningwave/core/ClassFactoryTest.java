@@ -114,12 +114,12 @@ public class ClassFactoryTest extends BaseTest {
 	
 	
 	@Test
-	public void getOrBuildClassWithExternalClassOneParallelized() {
+	public void getOrBuildClassWithExternalClassOneParallelizedTest() {
 		testDoesNotThrow(() -> {
 			int threadCount = 6;
 			Collection<Thread> threads = new ArrayList<>();
 			for (int i = 0; i < threadCount; i++) {
-				threads.add(new Thread( () -> getOrBuildClassWithExternalClassOne(true)));
+				threads.add(new Thread( () -> getOrBuildClassWithExternalClassTestOne(true)));
 			}
 			for (Thread thread : threads) {
 				thread.start();
@@ -131,11 +131,11 @@ public class ClassFactoryTest extends BaseTest {
 	}
 	
 	@Test
-	public void getOrBuildClassWithExternalClassOne() {
-		getOrBuildClassWithExternalClassOne(true);
+	public void getOrBuildClassWithExternalClasTestOne() {
+		getOrBuildClassWithExternalClassTestOne(true);
 	}
 	
-	public void getOrBuildClassWithExternalClassOne(boolean clearCache) {
+	public void getOrBuildClassWithExternalClassTestOne(boolean clearCache) {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
 		UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
@@ -203,7 +203,7 @@ public class ClassFactoryTest extends BaseTest {
 	}
 	
 	@Test
-	public void getOrBuildClassWithExternalClassTwo() {
+	public void getOrBuildClassWithExternalClassTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
 		UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
@@ -230,8 +230,8 @@ public class ClassFactoryTest extends BaseTest {
 	}
 	
 	@Test
-	public void getOrBuildClassWithExternalClassThree() {
-		getOrBuildClassWithExternalClassTwo();
+	public void getOrBuildClassWithExternalClassTestThree() {
+		getOrBuildClassWithExternalClassTestTwo();
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
 		UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
