@@ -61,34 +61,6 @@ import org.burningwave.core.function.ThrowingSupplier;
 
 public class FileSystemItem implements ManagedLogger {
 	
-	public static enum CheckFile {
-		FOR_NAME("checkFileName"),
-		FOR_SIGNATURE("checkFileSignature"),
-		FOR_NAME_AND_SIGNATURE(FOR_NAME.label + "&" + FOR_SIGNATURE.label),
-		FOR_NAME_OR_SIGNATURE(FOR_NAME.label + "|" + FOR_SIGNATURE.label),
-		FOR_SIGNATURE_OR_NAME(FOR_SIGNATURE.label + "|" + FOR_NAME.label);
-		
-		public static CheckFile forLabel(String label) {
-			for (CheckFile item : CheckFile.values()) { 
-			    if(item.label.equals(label)) {
-			    	return item;
-			    }
-			}
-			return null;
-		}
-		
-		private String label;
-		
-		private CheckFile(String label) {
-			this.label = label;
-		}
-		
-		public String getLabel() {
-			return label;
-		}
-		
-	}
-	
 	public static FileSystemItem of(File file) {
 		return ofPath(file.getAbsolutePath());
 	}
@@ -746,6 +718,68 @@ public class FileSystemItem implements ManagedLogger {
 		
 		public static Criteria create() {
 			return new Criteria();
+		}
+	}
+	
+	public static enum CheckingOption {
+		FOR_NAME("checkFileName"),
+		FOR_SIGNATURE("checkFileSignature"),
+		FOR_NAME_AND_SIGNATURE(FOR_NAME.label + "&" + FOR_SIGNATURE.label),
+		FOR_NAME_OR_SIGNATURE(FOR_NAME.label + "|" + FOR_SIGNATURE.label),
+		FOR_SIGNATURE_OR_NAME(FOR_SIGNATURE.label + "|" + FOR_NAME.label);
+		
+		public static CheckingOption forLabel(String label) {
+			for (CheckingOption item : CheckingOption.values()) { 
+			    if(item.label.equals(label)) {
+			    	return item;
+			    }
+			}
+			return null;
+		}
+		
+		private String label;
+		
+		private CheckingOption(String label) {
+			this.label = label;
+		}
+		
+		public String getLabel() {
+			return label;
+		}
+		
+		public static class OfClassType {
+			
+			public static Predicate<FileSystemItem> toPredicate(CheckingOption checkFileOption) {
+				if (checkFileOption.equals(CheckingOption.FOR_NAME_OR_SIGNATURE)) {
+					return getFileNameChecker().or(getFileSignatureChecker());
+				} else if (checkFileOption.equals(CheckingOption.FOR_SIGNATURE_OR_NAME)) {
+					return getFileSignatureChecker().or(getFileNameChecker());
+				} else if (checkFileOption.equals(CheckingOption.FOR_NAME_AND_SIGNATURE)) {
+					return getFileNameChecker().and(getFileSignatureChecker());
+				} else if (checkFileOption.equals(CheckingOption.FOR_NAME)) {
+					return getFileNameChecker();
+				} else if (checkFileOption.equals(CheckingOption.FOR_SIGNATURE)) {
+					return getFileSignatureChecker();
+				}	
+				return null;
+			}
+			
+			public static final Predicate<FileSystemItem> toPredicate(String label) {
+				return toPredicate(CheckingOption.forLabel(label));
+			}
+			
+			static Predicate<FileSystemItem> getFileSignatureChecker() {
+				return file -> ThrowingSupplier.get(() -> Streams.isClass(file.toByteBuffer()));
+			}
+			
+			static Predicate<FileSystemItem> getFileNameChecker() {
+				return file -> {
+					String name = file.getName();
+					return name.endsWith(".class") && 
+						!name.endsWith("module-info.class") &&
+						!name.endsWith("package-info.class");
+				};
+			}
 		}
 	}
 }

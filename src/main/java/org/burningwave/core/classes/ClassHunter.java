@@ -99,7 +99,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		);
 		pathScannerClassLoaderSupplier = () -> PathScannerClassLoader.create(
 			parentClassLoader, pathHelper, byteCodeHunterSupplier, 
-			FileSystemItem.CheckFile.forLabel(
+			FileSystemItem.CheckingOption.forLabel(
 				IterableObjectHelper.get(
 					config, Configuration.Key.PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 					Configuration.DEFAULT_VALUES

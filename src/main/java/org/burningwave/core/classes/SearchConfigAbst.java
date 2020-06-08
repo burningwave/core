@@ -36,7 +36,7 @@ import java.util.HashSet;
 
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.io.FileSystemItem;
-import org.burningwave.core.io.FileSystemItem.CheckFile;
+import org.burningwave.core.io.FileSystemItem.CheckingOption;
 
 @SuppressWarnings("unchecked")
 abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCloseable, ManagedLogger {
@@ -44,7 +44,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	ClassCriteria classCriteria;
 	Collection<String> paths;
 	ClassLoader parentClassLoaderForMainClassLoader;
-	CheckFile checkFileOption;
+	FileSystemItem.CheckingOption checkFileOption;
 	boolean optimizePaths;
 	boolean useSharedClassLoaderAsMain;
 	boolean deleteFoundItemsOnClose;
@@ -82,7 +82,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return paths;
 	}
 	
-	CheckFile getCheckFileOption() {
+	CheckingOption getCheckFileOption() {
 		return checkFileOption;
 	}
 	
@@ -148,7 +148,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return (S)this;
 	}
 	
-	public S checkFileOption(FileSystemItem.CheckFile option) {
+	public S checkFileOption(FileSystemItem.CheckingOption option) {
 		this.checkFileOption = option;
 		return (S)this;
 	}

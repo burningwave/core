@@ -483,8 +483,8 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForPackageName(String packageName) throws Exception {
-				FileSystemItem.CheckFile checkFileOptions = 
-					FileSystemItem.CheckFile.forLabel(IterableObjectHelper.get(
+				FileSystemItem.CheckingOption checkFileOptions = 
+					FileSystemItem.CheckingOption.forLabel(IterableObjectHelper.get(
 						javaMemoryCompiler.config,
 						Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 						JavaMemoryCompiler.Configuration.DEFAULT_VALUES
@@ -523,8 +523,8 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
-				FileSystemItem.CheckFile checkFileOptions = 
-					FileSystemItem.CheckFile.forLabel(IterableObjectHelper.get(
+				FileSystemItem.CheckingOption checkFileOptions = 
+					FileSystemItem.CheckingOption.forLabel(IterableObjectHelper.get(
 						javaMemoryCompiler.config,
 						Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 						JavaMemoryCompiler.Configuration.DEFAULT_VALUES

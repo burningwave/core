@@ -29,8 +29,6 @@
 package org.burningwave.core.classes;
 
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
-
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -43,9 +41,7 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.SearchContext.InitContext;
-import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemItem;
-import org.burningwave.core.io.FileSystemItem.CheckFile;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
@@ -72,7 +68,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			);
 			DEFAULT_VALUES.put(
 				Key.DEFAULT_CHECK_FILE_OPTIONS,
-				FileSystemItem.CheckFile.FOR_NAME.getLabel()
+				FileSystemItem.CheckingOption.FOR_NAME.getLabel()
 			);
 		}
 	}
@@ -192,44 +188,13 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 	
 	final Predicate<FileSystemItem> parseCheckFileOptionsValue(SearchConfigAbst<?> searchConfig) {
-		return parseCheckFileOptionsValue(
+		return FileSystemItem.CheckingOption.OfClassType.toPredicate(
 			Optional.ofNullable(searchConfig.getCheckFileOption()).map(checkFileOptions -> 
 				checkFileOptions.getLabel()
-			).orElseGet(() -> null),
-				config.get(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES
+			).orElseGet(() -> 
+				config.get(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES)
 			)
 		);
-	}
-	
-	final Predicate<FileSystemItem> parseCheckFileOptionsValue(String label, String defaultLabel) {
-		if (label != null) {
-			CheckFile checkFileOption = CheckFile.forLabel(label);
-			if (checkFileOption.equals(CheckFile.FOR_NAME_OR_SIGNATURE)) {
-				return getFileNameChecker().or(getFileSignatureChecker());
-			} else if (checkFileOption.equals(CheckFile.FOR_SIGNATURE_OR_NAME)) {
-				return getFileSignatureChecker().or(getFileNameChecker());
-			} else if (checkFileOption.equals(CheckFile.FOR_NAME_AND_SIGNATURE)) {
-				return getFileNameChecker().and(getFileSignatureChecker());
-			} else if (checkFileOption.equals(CheckFile.FOR_NAME)) {
-				return getFileNameChecker();
-			} else if (checkFileOption.equals(CheckFile.FOR_SIGNATURE)) {
-				return getFileSignatureChecker();
-			}
-		}
-		return parseCheckFileOptionsValue(defaultLabel, null);
-	}
-	
-	private Predicate<FileSystemItem> getFileSignatureChecker() {
-		return file -> ThrowingSupplier.get(() -> Streams.isClass(file.toByteBuffer()));
-	}
-	
-	private Predicate<FileSystemItem> getFileNameChecker() {
-		return file -> {
-			String name = file.getName();
-			return name.endsWith(".class") && 
-				!name.endsWith("module-info.class") &&
-				!name.endsWith("package-info.class");
-		};
 	}
 	
 	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCriteria(C context, JavaClass javaClass) {
