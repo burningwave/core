@@ -28,7 +28,10 @@
  */
 package org.burningwave.core.iterable;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Properties extends java.util.Properties {
@@ -51,6 +54,34 @@ public class Properties extends java.util.Properties {
 		listeners = new CopyOnWriteArrayList<>();
 	}
 	
+	public Object get(String propertyName) {
+		return get(this, propertyName, null, false, null);
+	}
+	
+	public <T> T get(String propertyName, Map<String, ?> defaultValues) {
+		return get(this, propertyName, null, false, defaultValues);
+	}
+	
+	public <T> T get(String propertyName, String propertyValuesSeparator) {
+		return get(this, propertyName, propertyValuesSeparator, false, null);
+	}
+	
+
+	public <T> T get(String propertyName,
+		String propertyValuesSeparator, boolean deleteUnresolvedPlaceHolder
+	) {
+		return get(this, propertyName, propertyValuesSeparator, deleteUnresolvedPlaceHolder, null);
+	}
+	
+	public <T> T get(
+		Properties properties,
+		String propertyName,
+		String propertyValuesSeparator,
+		boolean deleteUnresolvedPlaceHolder,
+		Map<String, ?> defaultValues
+	) {
+		return IterableObjectHelper.get(properties, propertyName, propertyValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+	}
 	
 	@Override
 	public synchronized Object put(Object key, Object value) {

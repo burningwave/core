@@ -98,7 +98,9 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
 		Function<InitContext, C> contextSupplier,
-		Function<C, R> resultSupplier, Properties config) {
+		Function<C, R> resultSupplier, 
+		Properties config
+	) {
 		super(
 			byteCodeHunterSupplier,
 			classHunterSupplier,
@@ -109,6 +111,9 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		);
 		this.cache = new HashMap<>();
 		this.mutexManager = Mutex.Manager.create(cache);
+		if (this.config.get(Configuration.Key.PATH_LOADING_LOCK, Configuration.DEFAULT_VALUES).equals(PathLoadingLock.FOR_CACHE.label)) {
+			this.mutexManager.disableLockForName();
+		}
 	}
 
 	public CacheScanner<I, R> loadInCache(CacheableSearchConfig searchConfig) {

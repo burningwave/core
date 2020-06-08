@@ -29,8 +29,6 @@
 package org.burningwave.core.classes;
 
 
-import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
-import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.util.Collection;
@@ -47,9 +45,9 @@ import org.burningwave.core.Component;
 import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.io.FileSystemItem.CheckFile;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
-import org.burningwave.core.io.FileSystemItem.CheckFile;
 
 
 @SuppressWarnings("unchecked")
@@ -198,8 +196,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			Optional.ofNullable(searchConfig.getCheckFileOptions()).map(checkFileOptions -> 
 				checkFileOptions.getLabel()
 			).orElseGet(() -> null),
-			IterableObjectHelper.get(
-				GlobalProperties, Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES
+				config.get(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES
 			)
 		);
 	}
