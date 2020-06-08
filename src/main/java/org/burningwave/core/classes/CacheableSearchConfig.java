@@ -31,6 +31,16 @@ package org.burningwave.core.classes;
 import java.util.Collection;
 
 public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfig> {
+	boolean refreshCacheEnabled;
+	
+	public CacheableSearchConfig refreshCache() {
+		this.refreshCacheEnabled = true;
+		return this;
+	}
+	
+	boolean isRefreshCacheEnabled() {
+		return this.refreshCacheEnabled;
+	}
 	
 	@SafeVarargs
 	CacheableSearchConfig(Collection<String>... pathsColl) {

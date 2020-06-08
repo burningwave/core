@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Map.Entry;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
@@ -132,7 +133,29 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	
 	//Cached search
 	public R findBy(CacheableSearchConfig searchConfig) {
-		return findBy(searchConfig, this::searchInCacheOrInFileSystem);
+		return findBy(searchConfig, 
+			searchConfig.refreshCacheEnabled ?
+				this::searchInFileSystemAndRefreshCache :
+				this::searchInCacheOrInFileSystem
+		);
+	}
+	
+	void searchInFileSystemAndRefreshCache(C context) {
+		BiPredicate<FileSystemItem, FileSystemItem> filter = getTestItemPredicate(context);
+		context.getSearchConfig().getPaths().parallelStream().forEach(path -> {
+			synchronized(mutexManager.getMutex(path)) {
+				FileSystemItem.ofPath(path).refresh().getAllChildren(filter);
+				Map<String, I> itemsForPath = Optional.ofNullable(cache.get(path)).orElseGet(HashMap::new);
+				itemsForPath.clear();
+				Map<String, I> itemsFound = context.getItemsFound(path);
+				if (itemsFound != null) {
+					itemsForPath.putAll(itemsFound);
+				}
+				if (cache.get(path) == null) {
+					this.cache.put(path, itemsForPath);
+				}
+			}
+		});
 	}
 	
 	void searchInCacheOrInFileSystem(C context) {
