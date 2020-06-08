@@ -180,7 +180,7 @@ public class PathHelper implements Component {
 		Collection<String> pathGroup = new HashSet<>();
 		if (names != null && names.length > 0) {
 			for (String name : names) {
-				if (name.startsWith("paths.")) {
+				if (name.startsWith(Configuration.Key.PATHS_PREFIX)) {
 					name = name.replaceFirst(Configuration.Key.PATHS_PREFIX.replace(".", "\\."), "");
 				}
 				Collection<String> pathsFound = this.pathGroups.get(name);
@@ -219,7 +219,9 @@ public class PathHelper implements Component {
 	}
 	
 	public Collection<String> loadPaths(String pathGroupName, String paths) {
-		String pathGroupPropertyName = Configuration.Key.PATHS_PREFIX + pathGroupName;
+		String pathGroupPropertyName = pathGroupName.startsWith(Configuration.Key.PATHS_PREFIX) ?
+			pathGroupName :
+			Configuration.Key.PATHS_PREFIX + pathGroupName;
 		Collection<String> groupPaths = ConcurrentHashMap.newKeySet();
 		synchronized(this) {
 			String currentPropertyPaths = config.getProperty(pathGroupPropertyName);
@@ -234,7 +236,7 @@ public class PathHelper implements Component {
 				config.put(pathGroupPropertyName, currentPropertyPaths);
 			}
 			paths = currentPropertyPaths;
-			Collection<String> placeHolders = IterableObjectHelper.getAllPlaceHolders(config, pathGroupPropertyName);
+			Collection<String> placeHolders = config.getAllPlaceHolders(pathGroupPropertyName);
 			Map<String, String> defaultValues = new LinkedHashMap<>();
 			if (!placeHolders.isEmpty()) {
 				for (String placeHolder : placeHolders) {

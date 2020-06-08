@@ -83,6 +83,10 @@ public class Properties extends java.util.Properties {
 		return IterableObjectHelper.get(properties, propertyName, propertyValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 	}
 	
+	public Collection<String> getAllPlaceHolders(String propertyName) {
+		return IterableObjectHelper.getAllPlaceHolders(this, propertyName);
+	}
+	
 	@Override
 	public synchronized Object put(Object key, Object value) {
 		Object put = super.put(key, value);
