@@ -59,9 +59,11 @@ public class BaseTest implements Component {
 	void testNotNull(ThrowingSupplier<?> supplier) {
 		Object object = null;
 		try {
+			logInfo(getCallerMethod() + " - start execution");
 			object = supplier.get();
+			logInfo(getCallerMethod() + " - end execution");
 		} catch (Throwable exc) {
-			logError("Exception occurred", exc);
+			logError(getCallerMethod() + " - Exception occurred", exc);
 		}
 		assertNotNull(object);
 	}
@@ -76,7 +78,7 @@ public class BaseTest implements Component {
 		boolean isNotEmpty = false;
 		try {
 			coll = supplier.get();
-			logInfo("Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			logInfo(getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 			isNotEmpty = !coll.isEmpty();
 			if (isNotEmpty && printAllElements) {
 				coll.forEach(element -> logDebug(
@@ -84,11 +86,16 @@ public class BaseTest implements Component {
 				));
 			}
 		} catch (Throwable exc) {
-			logError("Exception occurred", exc);
+			logError(getCallerMethod() + " - Exception occurred", exc);
 		}
 		assertTrue(!coll.isEmpty());
 	}
 	
+	private String getCallerMethod() {
+		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+		return stackTraceElements[4].getMethodName();
+	}
+
 	<T extends AutoCloseable> void testNotEmpty(Supplier<T> autoCloaseableSupplier, Function<T, Collection<?>> collSupplier) {
 		testNotEmpty(autoCloaseableSupplier, collSupplier, false);
 	}
@@ -99,7 +106,7 @@ public class BaseTest implements Component {
 		boolean isNotEmpty = false;
 		try (T collectionSupplier = autoCloaseableSupplier.get()){
 			coll = collSupplier.apply(collectionSupplier);
-			logInfo("Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			logInfo(getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 			isNotEmpty = !coll.isEmpty();
 			if (isNotEmpty && printAllElements) {
 				coll.forEach(element -> logDebug(
@@ -107,7 +114,7 @@ public class BaseTest implements Component {
 				));
 			}
 		} catch (Throwable exc) {
-			logError("Exception occurred", exc);
+			logError(getCallerMethod() + " - Exception occurred", exc);
 		}
 		assertTrue(isNotEmpty);
 	}
@@ -120,9 +127,9 @@ public class BaseTest implements Component {
 		long initialTime = System.currentTimeMillis();
 		try (T autoCloseable = autoCloseableSupplier.get()) {
 			assertNotNull(objectSupplier.apply(autoCloseable));
-			logInfo("Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			logInfo(getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 		} catch (Throwable exc) {
-			logError("Exception occurred", exc);
+			logError(getCallerMethod() + " - Exception occurred", exc);
 		}		
 	}
 	
@@ -131,11 +138,11 @@ public class BaseTest implements Component {
 		Throwable throwable = null;
 		long initialTime = System.currentTimeMillis();
 		try {
-			logDebug("Initializing logger");
+			logDebug(getCallerMethod() + " - Initializing logger");
 			executable.execute();
-			logInfo("Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			logInfo(getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 		} catch (Throwable exc) {
-			logError("Exception occurred", exc);
+			logError(getCallerMethod() + " - Exception occurred", exc);
 			throwable = exc;
 		}
 		assertNull(throwable);
