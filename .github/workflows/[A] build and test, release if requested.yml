@@ -5,7 +5,8 @@ on:
     branches:
       - version_6_extreme_parallelization_of_hunters
     paths: 
-      - "src/main/**.java"
+      - "src/main/**"
+      - "src/test/**"
       - "**.properties"
       - "**.xml"
 
