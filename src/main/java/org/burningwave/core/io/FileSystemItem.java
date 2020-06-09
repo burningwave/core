@@ -207,6 +207,16 @@ public class FileSystemItem implements ManagedLogger {
 		).orElseGet(() -> null);
 	}
 	
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(FileSystemItem.Criteria filter) {
+		return getAllChildren(filter, HashSet::new);
+	}
+	
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
+		return Optional.ofNullable(getAllChildren0()).map(children ->
+			children.parallelStream().filter(child -> filter.testAndReturnTrueIfNullOrTrueByDefault(child).getResult()).collect(Collectors.toCollection(setSupplier))
+		).orElseGet(() -> null);
+	}
+	
 	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(Predicate<FileSystemItem> filter) {
 		return getAllChildren(filter, HashSet::new);
 	}
@@ -714,7 +724,7 @@ public class FileSystemItem implements ManagedLogger {
 		return url;
 	}
 	
-	public static class Criteria extends org.burningwave.core.Criteria.Simple<FileSystemItem, Criteria>{
+	public static class Criteria extends org.burningwave.core.Criteria<FileSystemItem, Criteria, org.burningwave.core.Criteria.TestContext<FileSystemItem, Criteria>> {
 		
 		public static Criteria create() {
 			return new Criteria();
