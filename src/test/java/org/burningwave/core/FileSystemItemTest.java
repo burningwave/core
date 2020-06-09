@@ -4,6 +4,7 @@ import java.net.URL;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.io.PathHelper;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -136,12 +137,26 @@ public class FileSystemItemTest extends BaseTest {
 	}
 	
 	@Test
-	public void readTestTestThirteen() {
+	public void readTestFifteen() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/../../src/test/external-resources/libs-for-test.zip"
 		).getAllChildren((fileSystemItem) -> fileSystemItem.getName().endsWith(".class")),
+		false);
+	}
+	
+	@Test
+	public void readWithFilterTestOne() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
+		testNotEmpty(() -> pathHelper.getResource(
+			"/../../src/test/external-resources/libs-for-test.zip"
+		).getAllChildren(
+			FileSystemItem.Criteria.forAllFileThat(
+				fileSystemItem -> "class".equals(fileSystemItem.getExtension())
+			)
+		),
 		false);
 	}
 	
@@ -214,10 +229,12 @@ public class FileSystemItemTest extends BaseTest {
 	@Tag("Heavy")
 	public void copyAllChildrenTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
-		testNotEmpty(() -> FileSystemItem.ofPath(
-			basePath + "/../../src/test/external-resources/libs-for-test.zip"
-		).copyAllChildrenTo(System.getProperty("user.home") + "/Desktop/bw-tests").getAllChildren());
+		PathHelper pathHelper = componentSupplier.getPathHelper();
+		testNotEmpty(() -> 
+			pathHelper.getResource(
+				"/../../src/test/external-resources/libs-for-test.zip"
+			).copyAllChildrenTo(System.getProperty("user.home") + "/Desktop/bw-tests").getAllChildren()
+		);
 	}
 	
 	@Test

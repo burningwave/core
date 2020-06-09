@@ -50,6 +50,11 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 		return new Criteria<E, C, T>().allThat(predicate);
 	}
 	
+	@SuppressWarnings("resource")
+	public final static <E, C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> Criteria<E, C, T> of(final Predicate<E> predicate) {
+		return new Criteria<E, C, T>().allThat(predicate);
+	}
+	
 	public C and(){
 		logicalOperator = (predicate) -> this.predicate.and(predicate);
 		return (C)this;

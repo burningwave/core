@@ -724,11 +724,22 @@ public class FileSystemItem implements ManagedLogger {
 		return url;
 	}
 	
+	@SuppressWarnings("resource")
 	public static class Criteria extends org.burningwave.core.Criteria<FileSystemItem, Criteria, org.burningwave.core.Criteria.TestContext<FileSystemItem, Criteria>> {
 		
 		public static Criteria create() {
 			return new Criteria();
 		}
+		
+		public final static Criteria forAllFileThat(final BiPredicate<org.burningwave.core.Criteria.TestContext<FileSystemItem, Criteria>, FileSystemItem> predicate) {
+			return new Criteria().allThat(predicate);
+		}
+		
+		public final static Criteria forAllFileThat(final Predicate<FileSystemItem> predicate) {
+			return new Criteria().allThat(predicate);
+		}
+		
+		
 	}
 	
 	public static enum CheckingOption {
