@@ -200,50 +200,50 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 	}
 	
 	public Predicate<E> getPredicateOrFalsePredicateIfNull() {
-		return getPredicateOrFalsePredicateIfNull(createTestContext());
+		return getPredicate(createTestContext(), false);
 	}	
 	
 	public Predicate<E> getPredicateOrTruePredicateIfNull() {
-		return getPredicateOrTruePredicateIfNull(createTestContext());
+		return getPredicate(createTestContext(), true);
 	}
 	
 	protected T getContextOfPredicateOrFalsePredicateIfNull() {
 		T context = createTestContext();
-		getPredicateOrFalsePredicateIfNull(context);
+		getPredicate(context, false);
 		return context;
 	}	
 	
 	protected T getContextOfPredicateOrTruePredicateIfNull() {
 		T context = createTestContext();
-		getPredicateOrTruePredicateIfNull(context);
+		getPredicate(context, true);
 		return context;
 	}
 	
 	private boolean testAndReturnFalseIfNullOrTrueByDefault(T context, E entity) {
-		return Optional.ofNullable(entity).map(ent -> getPredicateOrTruePredicateIfNull(context).test(ent)).orElseGet(() -> 
+		return Optional.ofNullable(entity).map(ent -> getPredicate(context, true).test(ent)).orElseGet(() -> 
 			context.setEntity(entity).setResult(false).getResult()
 		);
 	}
 	
 	private boolean testAndReturnTrueIfNullOrTrueByDefault(T context, E entity) {
-		return Optional.ofNullable(entity).map(ent -> getPredicateOrTruePredicateIfNull(context).test(ent)).orElseGet(() -> 
+		return Optional.ofNullable(entity).map(ent -> getPredicate(context, true).test(ent)).orElseGet(() -> 
 			context.setEntity(entity).setResult(true).getResult()
 		);
 	}
 	
 	private boolean testAndReturnFalseIfNullOrFalseByDefault(T context, E entity) {
-		return Optional.ofNullable(entity).map(ent -> getPredicateOrFalsePredicateIfNull(context).test(ent)).orElseGet(() -> 
+		return Optional.ofNullable(entity).map(ent -> getPredicate(context, false).test(ent)).orElseGet(() -> 
 			context.setEntity(entity).setResult(false).getResult()
 		);
 	}
 	
 	private boolean testAndReturnTrueIfNullOrFalseByDefault(T context, E entity) {
-		return Optional.ofNullable(entity).map(ent -> getPredicateOrFalsePredicateIfNull(context).test(ent)).orElseGet(() -> 
+		return Optional.ofNullable(entity).map(ent -> getPredicate(context, false).test(ent)).orElseGet(() -> 
 			context.setEntity(entity).setResult(true).getResult()
 		);
 	}
 	
-	private Predicate<E> getPredicateOrFalsePredicateIfNull(T context) {
+	private Predicate<E> getPredicate(T context, boolean defaultResult) {
 		return context.setPredicate(
 			this.predicate != null?
 				(entity) -> {
@@ -253,23 +253,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 				)).getResult();
 			} :
 			(entity) -> {
-				return context.setEntity(entity).setResult(false).getResult();
-			}
-		).getPredicate();
-	}
-	
-	
-	private Predicate<E> getPredicateOrTruePredicateIfNull(T context) {
-		return context.setPredicate(
-			this.predicate != null?
-			(entity) -> {
-				return context.setEntity(entity).setResult(this.predicate.test(
-					context, 
-					entity
-				)).getResult();
-			} :
-			(entity) -> {
-				return context.setEntity(entity).setResult(true).getResult();
+				return context.setEntity(entity).setResult(defaultResult).getResult();
 			}
 		).getPredicate();
 	}
