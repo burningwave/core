@@ -769,7 +769,7 @@ public class FileSystemItem implements ManagedLogger {
 			private final static Predicate<FileSystemItem> fileSignatureChecker =
 				file -> ThrowingSupplier.get(() -> Streams.isClass(file.toByteBuffer()));
 			
-			public static FileSystemItem.Criteria toPredicate(CheckingOption checkFileOption) {
+			public static FileSystemItem.Criteria toCriteria(CheckingOption checkFileOption) {
 				if (checkFileOption.equals(CheckingOption.FOR_NAME_OR_SIGNATURE)) {
 					return FileSystemItem.Criteria.forAllFileThat(fileNameChecker.or(fileSignatureChecker));
 				} else if (checkFileOption.equals(CheckingOption.FOR_SIGNATURE_OR_NAME)) {
@@ -782,12 +782,6 @@ public class FileSystemItem implements ManagedLogger {
 					return FileSystemItem.Criteria.forAllFileThat(fileSignatureChecker);
 				}	
 				return null;
-			}
-			
-			
-			
-			public static FileSystemItem.Criteria toPredicate(String label) {
-				return toPredicate(CheckingOption.forLabel(label));
 			}
 		}
 	}

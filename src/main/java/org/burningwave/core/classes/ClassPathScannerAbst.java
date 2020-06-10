@@ -42,6 +42,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.io.FileSystemItem.CheckingOption;
 import org.burningwave.core.iterable.Properties;
 
 
@@ -189,11 +190,13 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 	
 	final FileSystemItem.Criteria parseCheckFileOptionsValue(SearchConfigAbst<?> searchConfig) {
-		return FileSystemItem.CheckingOption.OfClassType.toPredicate(
-			Optional.ofNullable(searchConfig.getCheckFileOption()).map(checkFileOptions -> 
-				checkFileOptions.getLabel()
-			).orElseGet(() -> 
-				config.get(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES)
+		return FileSystemItem.CheckingOption.OfClassType.toCriteria(
+			CheckingOption.forLabel(
+				Optional.ofNullable(searchConfig.getCheckFileOption()).map(checkFileOptions -> 
+					checkFileOptions.getLabel()
+				).orElseGet(() -> 
+					config.get(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES)
+				)
 			)
 		);
 	}
