@@ -147,6 +147,16 @@ public class FileSystemItemTest extends BaseTest {
 	}
 	
 	@Test
+	public void readTestSixteen() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
+		testNotEmpty(() -> 
+			pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
+		.getAllChildren(),
+		true);
+	}
+	
+	@Test
 	public void readWithFilterTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();

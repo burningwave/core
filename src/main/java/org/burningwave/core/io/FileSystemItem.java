@@ -388,13 +388,7 @@ public class FileSystemItem implements ManagedLogger {
 	
 	public boolean isContainer() {
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
-		try {
-			return conventionedAbsolutePath.endsWith("/");
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return false;
+		return conventionedAbsolutePath.endsWith("/");
 	}
 	
 	public boolean isFile() {
@@ -446,7 +440,7 @@ public class FileSystemItem implements ManagedLogger {
 							);
 							fileSystemItem.absolutePath.setValue(
 								parentContainer.computeConventionedAbsolutePath() + retrieveConventionedRelativePath(
-									fileSystemItem, zEntry, zEntry.getName()
+									fileSystemItem, zipInputStream, zEntry, zEntry.getName()
 								)
 							);
 							logDebug(fileSystemItem.getAbsolutePath());
@@ -640,7 +634,15 @@ public class FileSystemItem implements ManagedLogger {
 				IterableZipContainer.Entry zipEntry = Collections.max(
 					zipEntries, Comparator.comparing(zipEntryW -> zipEntryW.getName().split("/").length)
 				);
-				return retrieveConventionedRelativePath(this, zipEntry, relativePath1);			
+				return retrieveConventionedRelativePath(this, zIS, zipEntry, relativePath1);			
+			} else if (Streams.isJModArchive(zipInputStreamAsBytes)) {
+				try (IterableZipContainer zIS2 = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes)){
+					if (zIS2.findFirst(zipEntry -> zipEntry.getName().startsWith(relativePath1 + "/") , zipEntry -> false) != null)  {
+						//in case of JMod files folder 
+						return retrieveConventionedRelativePath(this, zIS2, null, relativePath1 + "/");
+					};
+					throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
+				}				
 			} else {
 				throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
 			}
@@ -650,26 +652,36 @@ public class FileSystemItem implements ManagedLogger {
 
 	protected String retrieveConventionedRelativePath(
 		FileSystemItem fileSystemItem,
+		IterableZipContainer iZC,
 		IterableZipContainer.Entry zipEntry,
 		String relativePath1
-	) {
-		String relativePath2 = zipEntry.getName();
-		if (relativePath2.endsWith("/")) {
-			relativePath2 = relativePath2.substring(0, relativePath2.length() - 1);
-		}
-		relativePath2 = relativePath1.substring(relativePath2.length());
-		if (relativePath2.startsWith("/")) {
-			relativePath2 = relativePath2.replaceFirst("\\/", "");
-		}
-		if (relativePath2.isEmpty()) {
-			if (fileSystemItem.parentContainer == null) {
-				fileSystemItem.parentContainer = FileSystemItem.ofPath(zipEntry.getParentContainer().getAbsolutePath());
+	) {	
+		
+		if (zipEntry!= null) {
+			String relativePath2 = zipEntry.getName();
+			if (relativePath2.endsWith("/")) {
+				relativePath2 = relativePath2.substring(0, relativePath2.length() - 1);
 			}
-			return zipEntry.getName() + (!zipEntry.isDirectory() && zipEntry.isArchive() ? IterableZipContainer.ZIP_PATH_SEPARATOR : "");
+			relativePath2 = relativePath1.substring(relativePath2.length());
+			if (relativePath2.startsWith("/")) {
+				relativePath2 = relativePath2.replaceFirst("\\/", "");
+			}
+			if (relativePath2.isEmpty()) {
+				if (fileSystemItem.parentContainer == null) {
+					fileSystemItem.parentContainer = FileSystemItem.ofPath(zipEntry.getParentContainer().getAbsolutePath());
+				}
+				return zipEntry.getName() + (!zipEntry.isDirectory() && zipEntry.isArchive() ? IterableZipContainer.ZIP_PATH_SEPARATOR : "");
+			} else {
+				return zipEntry.getName() + IterableZipContainer.ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
+					zipEntry.toByteBuffer(), zipEntry.getAbsolutePath(), relativePath2
+				);
+			}
+		//in case of JMod files folder 
 		} else {
-			return zipEntry.getName() + IterableZipContainer.ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
-				zipEntry.toByteBuffer(), zipEntry.getAbsolutePath(), relativePath2
-			);
+			if (fileSystemItem.parentContainer == null) {
+				fileSystemItem.parentContainer = FileSystemItem.ofPath(iZC.getAbsolutePath());
+			}
+			return iZC.getAbsolutePath() + IterableZipContainer.ZIP_PATH_SEPARATOR + relativePath1 + "/";
 		}
 	}
 	
