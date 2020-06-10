@@ -185,10 +185,8 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 				}
 			} else if (context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
 				context.addAllItemsFound(path, classesForPath);
-			} else {
-				if (!classesForPath.isEmpty()) {	
-					iterateAndTestCachedItemsForPath(context, path, classesForPath);
-				}
+			} else if (!classesForPath.isEmpty()) {	
+				iterateAndTestCachedItemsForPath(context, path, classesForPath);
 			}
 		});
 	}

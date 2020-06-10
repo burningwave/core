@@ -157,7 +157,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			fileSystemItem.getAbsolutePath(),
 			criteriaTestContext.getEntity(),
 			criteriaTestContext.getMembersFound()
-		);		
+		);
 	}
 	
 	public static class SearchContext extends org.burningwave.core.classes.SearchContext<Class<?>> {

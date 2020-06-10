@@ -144,7 +144,16 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 	
 	FileSystemItem.Criteria getFileScanCriteria(C context) {
-		Predicate<FileSystemItem[]> classPredicate = parseCheckFileOptionsValue(context.getSearchConfig()).getPredicateOrTruePredicateIfPredicateIsNull();
+		SearchConfigAbst<?> searchConfig = context.getSearchConfig();
+		if (searchConfig.getScanFileCriteria().hasNoPredicate()) {
+			searchConfig.withScanFileCriteria(
+				FileSystemItem.CheckingOption.OfClassType.toCriteria(
+					(String)config.get(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES)
+				)
+			);
+		}
+
+		Predicate<FileSystemItem[]> classPredicate = searchConfig.getScanFileCriteria().getPredicateOrTruePredicateIfPredicateIsNull();
 		return FileSystemItem.Criteria.forAllFileThat(
 			(basePath, child) -> {
 				boolean isClass = false;
@@ -185,17 +194,6 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			)		
 		);
 		return context;
-	}
-	
-	final FileSystemItem.Criteria parseCheckFileOptionsValue(SearchConfigAbst<?> searchConfig) {
-		if (searchConfig.getScanFileCriteria().hasNoPredicate()) {
-			searchConfig.withScanFileCriteria(
-				FileSystemItem.CheckingOption.OfClassType.toCriteria(
-					(String)config.get(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES)
-				)
-			);
-		}
-		return searchConfig.getScanFileCriteria();
 	}
 	
 	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCriteria(C context, JavaClass javaClass) {
