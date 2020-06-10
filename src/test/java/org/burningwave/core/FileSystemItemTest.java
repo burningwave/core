@@ -153,7 +153,7 @@ public class FileSystemItemTest extends BaseTest {
 		testNotEmpty(() -> 
 			pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
 		.getAllChildren(),
-		true);
+		false);
 	}
 	
 	@Test
@@ -208,7 +208,7 @@ public class FileSystemItemTest extends BaseTest {
 		testNotEmpty(() -> 
 			pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
 		.getAllChildren(FileSystemItem.Criteria.forAllFileThat(FileSystemItem::isFolder)),
-		true);
+		false);
 	}
 	
 	@Test
