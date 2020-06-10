@@ -122,10 +122,6 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 				searchConfig.getPaths()
 			).optimizePaths(
 				true
-			).withScanFileCriteria(
-				FileSystemItem.CheckingOption.OfClassType.toCriteria(
-					(String)config.get(ClassPathScannerAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES)
-				)
 			)
 		)){};
 		return (srcCfg) -> 
@@ -160,11 +156,14 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	}
 	
 	void searchInCacheOrInFileSystem(C context) {
+		SearchConfigAbst<?> searchConfig = context.getSearchConfig();
+		boolean scanFileCriteriaHasNoPredicate = searchConfig.getScanFileCriteria().hasNoPredicate();
+		boolean classCriteriaHasNoPredicate = searchConfig.getClassCriteria().hasNoPredicate();
 		FileSystemItem.Criteria filter = getFileScanCriteria(context);
 		context.getSearchConfig().getPaths().parallelStream().forEach(path -> {
 			Map<String, I> classesForPath = cache.get(path);
 			if (classesForPath == null) {
-				if (context.getSearchConfig().getClassCriteria().hasNoPredicate()) {
+				if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate) {
 					synchronized(mutexManager.getMutex(path)) {
 						classesForPath = cache.get(path);
 						if (classesForPath == null) {

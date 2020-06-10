@@ -83,7 +83,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			synchronized (loadedPaths) {
 				checkPathsResult = compareWithAllLoadedPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
 				if (!checkPathsResult.getNotContainedPaths().isEmpty()) {
-					try(ByteCodeHunter.SearchResult result = getByteCodeHunter().findBy(
+					try(ByteCodeHunter.SearchResult result = getByteCodeHunter().loadInCache(
 						SearchConfig.forPaths(
 							checkPathsResult.getNotContainedPaths()
 						).considerURLClassLoaderPathsAsScanned(
@@ -93,7 +93,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 						).optimizePaths(
 							true
 						)
-					)) {
+					).find()) {
 						if (checkPathsResult.getPartialContainedDirectories().isEmpty() && checkPathsResult.getPartialContainedFiles().isEmpty()) {
 							for (Entry<String, JavaClass> entry : result.getClassesFlatMap().entrySet()) {
 								JavaClass javaClass = entry.getValue();
