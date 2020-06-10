@@ -4,7 +4,8 @@ on:
   push:
     branches:
       - improving_FileSystemItem.Criteria
-    paths: 
+    paths:
+      - "src/test/**.java" 
       - "src/main/**.java"
       - "**.properties"
       - "**.xml"
