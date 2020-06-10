@@ -388,7 +388,13 @@ public class FileSystemItem implements ManagedLogger {
 	
 	public boolean isContainer() {
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
-		return conventionedAbsolutePath.endsWith("/");
+		try {
+			return conventionedAbsolutePath.endsWith("/");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
 	}
 	
 	public boolean isFile() {
@@ -613,7 +619,9 @@ public class FileSystemItem implements ManagedLogger {
 			if (zIS == null) {
 				throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
 			}
-			Predicate<IterableZipContainer.Entry> zipEntryPredicate = zEntry -> zEntry.getName().equals(relativePath1) || zEntry.getName().equals(relativePath1 + "/");
+			Predicate<IterableZipContainer.Entry> zipEntryPredicate = zEntry -> {
+				return zEntry.getName().equals(relativePath1) || zEntry.getName().equals(relativePath1 + "/");
+			};
 			String temp = relativePath1;
 			while (temp != null) {
 				int lastIndexOfSlash = temp.lastIndexOf("/");
@@ -659,9 +667,6 @@ public class FileSystemItem implements ManagedLogger {
 			}
 			return zipEntry.getName() + (!zipEntry.isDirectory() && zipEntry.isArchive() ? IterableZipContainer.ZIP_PATH_SEPARATOR : "");
 		} else {
-			if (zipEntry.getName().contains("java.activation")) {
-				
-			}
 			return zipEntry.getName() + IterableZipContainer.ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
 				zipEntry.toByteBuffer(), zipEntry.getAbsolutePath(), relativePath2
 			);
