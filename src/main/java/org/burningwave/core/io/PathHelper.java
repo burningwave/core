@@ -191,7 +191,7 @@ public class PathHelper implements Component {
 					if (pathsFound != null) {
 						pathGroup.addAll(pathsFound);
 					} else {
-						logWarn("path group named " + name + " is not defined");
+						//logWarn("path group named " + name + " is not defined");
 					}
 				}
 				
