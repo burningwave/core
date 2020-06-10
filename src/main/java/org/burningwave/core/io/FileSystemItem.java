@@ -639,7 +639,7 @@ public class FileSystemItem implements ManagedLogger {
 				try (IterableZipContainer zIS2 = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes)){
 					if (zIS2.findFirst(zipEntry -> zipEntry.getName().startsWith(relativePath1 + "/") , zipEntry -> false) != null)  {
 						//in case of JMod files folder 
-						return retrieveConventionedRelativePath(this, zIS2, null, relativePath1 + "/");
+						return retrieveConventionedRelativePath(this, zIS2, null, relativePath1);
 					};
 					throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
 				}				
