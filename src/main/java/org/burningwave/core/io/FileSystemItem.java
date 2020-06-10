@@ -761,7 +761,7 @@ public class FileSystemItem implements ManagedLogger {
 			return label;
 		}
 		
-		public static class Of {
+		public static class For {
 			
 			public static FileSystemItem.Criteria toCriteria(
 				CheckingOption checkFileOption,
@@ -782,7 +782,7 @@ public class FileSystemItem implements ManagedLogger {
 				return null;
 			}
 			
-			public static class ClassType extends Of{
+			public static class ClassType extends For{
 				
 				private final static Predicate<FileSystemItem> fileNameChecker = file -> {
 					String name = file.getName();
@@ -803,7 +803,7 @@ public class FileSystemItem implements ManagedLogger {
 				}
 			}
 			
-			public static class ArchiveType extends Of {
+			public static class ArchiveType extends For {
 				
 				private final static Predicate<FileSystemItem> fileNameChecker = file -> {
 					String name = file.getName();
