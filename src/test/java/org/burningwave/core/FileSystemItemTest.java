@@ -1,6 +1,8 @@
 package org.burningwave.core;
 
 import java.net.URL;
+import java.util.Optional;
+import java.util.Set;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.io.FileSystemItem;
@@ -172,8 +174,19 @@ public class FileSystemItemTest extends BaseTest {
 		testNotEmpty(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			PathHelper pathHelper = componentSupplier.getPathHelper();
-			return pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
-				.getChildren().stream().findFirst().get().getChildren();
+			Set<FileSystemItem> fISs = pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes").getChildren();
+			FileSystemItem firstFis = null;
+			if (!fISs.isEmpty()) {
+				for (FileSystemItem child : fISs) {
+					if (firstFis == null) {
+						firstFis = child;
+					}
+					logError(Optional.ofNullable(child).map(ch -> ch.getAbsolutePath()).orElseGet(() -> null));
+				}
+			} else {
+				logError("collection empty");
+			}
+			return firstFis.getChildren();
 			},
 			true
 		);

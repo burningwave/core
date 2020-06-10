@@ -283,9 +283,6 @@ public class FileSystemItem implements ManagedLogger {
 				},
 				zEntry -> false
 			);
-			for (FileSystemItem child : children) {
-				logError(child.getAbsolutePath());
-			}
 			return children;
 		}
 	}
