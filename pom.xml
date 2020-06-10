@@ -49,8 +49,8 @@
 		<project_jdk_version>8</project_jdk_version>
 		<javadocExecutable.relativePath>bin/javadoc</javadocExecutable.relativePath>
 		<skipTests>true</skipTests>
-		<project.test.includes>**/FileSystemItemTest.java</project.test.includes>
-		<project.test.excludes>**/Nothing.java</project.test.excludes>
+		<project.test.includes>**/AllExceptHeavyTestsSuite.java</project.test.includes>
+		<project.test.excludes>**/*Test.java</project.test.excludes>
 		<project.generated.artifacts.prefix>bw</project.generated.artifacts.prefix>
 		<repository.url>https://burningwave@github.com/burningwave/core.git</repository.url>
 	</properties>
