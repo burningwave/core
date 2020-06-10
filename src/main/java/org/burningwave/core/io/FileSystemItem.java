@@ -250,30 +250,23 @@ public class FileSystemItem implements ManagedLogger {
 			Set<FileSystemItem> children = ConcurrentHashMap.newKeySet();
 			zipInputStream.findAllAndConvert(
 				() -> children,
-				!isJModArchive ?
-					(zEntry) -> {
-						String nameToTest = zEntry.getName();
-						nameToTest += nameToTest.endsWith("/") ? "" : "/";
-						//logDebug(nameToTest + " = " + nameToTest.matches(itemToSearchRegEx) + " " + (nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0) + " " + nameToTest.replaceFirst(itemToSearchRegEx, ""));
-						return nameToTest.matches(itemToSearchRegEx) && nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0;
-					} :
-					(zEntry) -> {
-						String nameToTest = zEntry.getName();
-						nameToTest += nameToTest.endsWith("/") ? "" : "/";
-						if (nameToTest.matches(itemToSearchRegEx)) {
-							String childRelPath = itemToSearch + Strings.extractAllGroups(itemToSearchRegExPattern, nameToTest).get(1).get(0) + "/";
-							if (!folderRelPaths.contains(childRelPath)) {
-								folderRelPaths.add(childRelPath);
-								FileSystemItem fileSystemItem = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath() + "/" + childRelPath);
-								if (fileSystemItem.parentContainer == null) {
-									fileSystemItem.parentContainer = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath());
-								}
-								children.add(fileSystemItem);									
+				(zEntry) -> {
+					String nameToTest = zEntry.getName();
+					nameToTest += nameToTest.endsWith("/") ? "" : "/";
+					if (isJModArchive && nameToTest.matches(itemToSearchRegEx)) {
+						String childRelPath = itemToSearch + Strings.extractAllGroups(itemToSearchRegExPattern, nameToTest).get(1).get(0) + "/";
+						if (!folderRelPaths.contains(childRelPath)) {
+							folderRelPaths.add(childRelPath);
+							FileSystemItem fileSystemItem = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath() + "/" + childRelPath);
+							if (fileSystemItem.parentContainer == null) {
+								fileSystemItem.parentContainer = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath());
 							}
+							children.add(fileSystemItem);									
 						}
-						//logDebug(nameToTest + " = " + nameToTest.matches(itemToSearchRegEx) + " " + (nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0) + " " + nameToTest.replaceFirst(itemToSearchRegEx, ""));
-						return nameToTest.matches(itemToSearchRegEx) && nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0;
-					},
+					}					
+					//logDebug(nameToTest + " = " + nameToTest.matches(itemToSearchRegEx) + " " + (nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0) + " " + nameToTest.replaceFirst(itemToSearchRegEx, ""));
+					return nameToTest.matches(itemToSearchRegEx) && nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0;
+				},
 				(zEntry) -> {
 					FileSystemItem fileSystemItem = FileSystemItem.ofPath(zEntry.getAbsolutePath());
 					if (fileSystemItem.parentContainer == null) {
@@ -440,46 +433,28 @@ public class FileSystemItem implements ManagedLogger {
 					zipInputStream.findAllAndConvert(
 						() -> allChildren,
 						zipEntryPredicate,
-						!isJModArchive ? 
-							zEntry -> {
-								FileSystemItem fileSystemItem = FileSystemItem.ofPath(
-									parentContainer.getAbsolutePath() + "/" +zEntry.getName()
+						zEntry -> {
+							FileSystemItem fileSystemItem = FileSystemItem.ofPath(
+								parentContainer.getAbsolutePath() + "/" +zEntry.getName()
+							);
+							fileSystemItem.absolutePath.setValue(
+								parentContainer.computeConventionedAbsolutePath() + retrieveConventionedRelativePath(
+									fileSystemItem, zipInputStream, zEntry, zEntry.getName()
+								)
+							);
+							//logDebug(fileSystemItem.getAbsolutePath());
+							if (fileSystemItem.isArchive()) {
+								Optional.ofNullable(
+									fileSystemItem.getAllChildren()
+								).ifPresent(fileSystemItemChildrens ->
+									allChildren.addAll(fileSystemItemChildrens)
 								);
-								fileSystemItem.absolutePath.setValue(
-									parentContainer.computeConventionedAbsolutePath() + retrieveConventionedRelativePath(
-										fileSystemItem, zipInputStream, zEntry, zEntry.getName()
-									)
-								);
-								//logDebug(fileSystemItem.getAbsolutePath());
-								if (fileSystemItem.isArchive()) {
-									Optional.ofNullable(
-										fileSystemItem.getAllChildren()
-									).ifPresent(fileSystemItemChildrens ->
-										allChildren.addAll(fileSystemItemChildrens)
-									);
-								}
-								return fileSystemItem;
-							} :
-								zEntry -> {
-									FileSystemItem fileSystemItem = FileSystemItem.ofPath(
-										parentContainer.getAbsolutePath() + "/" + zEntry.getName()
-									);
-									fileSystemItem.absolutePath.setValue(
-										parentContainer.computeConventionedAbsolutePath() + retrieveConventionedRelativePath(
-											fileSystemItem, zipInputStream, zEntry, zEntry.getName()
-										)
-									);
-									//logDebug(fileSystemItem.getAbsolutePath());
-									if (fileSystemItem.isArchive()) {
-										Optional.ofNullable(
-											fileSystemItem.getAllChildren()
-										).ifPresent(fileSystemItemChildrens ->
-											allChildren.addAll(fileSystemItemChildrens)
-										);
-									}
-									extractAndAddAllFoldersName(folderRelPaths, zEntry.getName());
-									return fileSystemItem;
-								},
+							}
+							if (isJModArchive) {
+								extractAndAddAllFoldersName(folderRelPaths, zEntry.getName());
+							}
+							return fileSystemItem;
+						},
 						zEntry -> true
 					);
 					for (String folderRelPath : folderRelPaths) {
