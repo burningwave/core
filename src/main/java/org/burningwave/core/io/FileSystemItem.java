@@ -247,7 +247,7 @@ public class FileSystemItem implements ManagedLogger {
 			Pattern itemToSearchRegExPattern = Pattern.compile(itemToSearchRegEx);
 			boolean isJModArchive = Streams.isJModArchive(zipInputStream.toByteBuffer());
 			Set<String> childrenRelPaths = new HashSet<>();
-			Set<FileSystemItem> children = new HashSet<>();
+			Set<FileSystemItem> children = ConcurrentHashMap.newKeySet();
 			zipInputStream.findAllAndConvert(
 				() -> children,
 				!isJModArchive ?
@@ -264,9 +264,9 @@ public class FileSystemItem implements ManagedLogger {
 							String childRelPath = itemToSearch + Strings.extractAllGroups(itemToSearchRegExPattern, nameToTest).get(1).get(0) + "/";
 							if (!childrenRelPaths.contains(childRelPath)) {
 								childrenRelPaths.add(childRelPath);
-								FileSystemItem fileSystemItem = FileSystemItem.ofPath(zipInputStream.getAbsolutePath() + "/" + childRelPath);
+								FileSystemItem fileSystemItem = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath() + "/" + childRelPath);
 								if (fileSystemItem.parentContainer == null) {
-									fileSystemItem.parentContainer = FileSystemItem.ofPath(zipInputStream.getAbsolutePath());
+									fileSystemItem.parentContainer = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath());
 								}
 								children.add(fileSystemItem);									
 							}
