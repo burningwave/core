@@ -122,8 +122,10 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 				searchConfig.getPaths()
 			).optimizePaths(
 				true
-			).checkFileOption(
-				searchConfig.getCheckFileOption()
+			).withScanFileCriteria(
+				FileSystemItem.CheckingOption.OfClassType.toCriteria(
+					(String)config.get(ClassPathScannerAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES)
+				)
 			)
 		)){};
 		return (srcCfg) -> 

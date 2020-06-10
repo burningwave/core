@@ -483,13 +483,14 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForPackageName(String packageName) throws Exception {
-				FileSystemItem.CheckingOption checkFileOptions = 
+				FileSystemItem.CheckingOption checkFileOption = 
 					FileSystemItem.CheckingOption.forLabel(IterableObjectHelper.get(
 						javaMemoryCompiler.config,
 						Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 						JavaMemoryCompiler.Configuration.DEFAULT_VALUES
 					)
 				);
+
 				SearchResult result = classPathHunter.findBy(
 					SearchConfig.withoutUsingCache().addPaths(
 						javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()
@@ -497,8 +498,8 @@ public class JavaMemoryCompiler implements Component {
 						ClassCriteria.create().packageName((iteratedClassPackageName) ->
 							Objects.equals(iteratedClassPackageName, packageName)
 						)
-					).checkFileOption(
-						checkFileOptions
+					).withScanFileCriteria(
+						FileSystemItem.CheckingOption.OfClassType.toCriteria(checkFileOption)
 					).optimizePaths(
 						true
 					)
@@ -511,8 +512,8 @@ public class JavaMemoryCompiler implements Component {
 							ClassCriteria.create().packageName((iteratedClassPackageName) ->
 								Objects.equals(iteratedClassPackageName, packageName)									
 							)
-						).checkFileOption(
-							checkFileOptions
+						).withScanFileCriteria(
+							FileSystemItem.CheckingOption.OfClassType.toCriteria(checkFileOption)
 						).optimizePaths(
 							true
 						)
@@ -523,7 +524,7 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<FileSystemItem> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
-				FileSystemItem.CheckingOption checkFileOptions = 
+				FileSystemItem.CheckingOption checkFileOption = 
 					FileSystemItem.CheckingOption.forLabel(IterableObjectHelper.get(
 						javaMemoryCompiler.config,
 						Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
@@ -533,8 +534,8 @@ public class JavaMemoryCompiler implements Component {
 				SearchResult result = classPathHunter.findBy(
 					SearchConfig.withoutUsingCache().addPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 						ClassCriteria.create().allThat(classPredicate)
-					).checkFileOption(
-						checkFileOptions
+					).withScanFileCriteria(
+						FileSystemItem.CheckingOption.OfClassType.toCriteria(checkFileOption)
 					).optimizePaths(
 						true
 					)
@@ -544,8 +545,8 @@ public class JavaMemoryCompiler implements Component {
 					result = classPathHunter.loadInCache(
 						SearchConfig.forPaths(classRepositoriesPaths).by(
 							ClassCriteria.create().allThat(classPredicate)
-						).checkFileOption(
-							checkFileOptions
+						).withScanFileCriteria(
+							FileSystemItem.CheckingOption.OfClassType.toCriteria(checkFileOption)
 						).optimizePaths(
 							true
 						)

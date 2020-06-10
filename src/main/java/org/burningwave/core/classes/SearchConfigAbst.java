@@ -36,7 +36,6 @@ import java.util.HashSet;
 
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.io.FileSystemItem;
-import org.burningwave.core.io.FileSystemItem.CheckingOption;
 
 @SuppressWarnings("unchecked")
 abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCloseable, ManagedLogger {
@@ -44,7 +43,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	ClassCriteria classCriteria;
 	Collection<String> paths;
 	ClassLoader parentClassLoaderForMainClassLoader;
-	FileSystemItem.CheckingOption checkFileOption;
+	FileSystemItem.Criteria scanFileCriteria;
 	boolean optimizePaths;
 	boolean useSharedClassLoaderAsMain;
 	boolean deleteFoundItemsOnClose;
@@ -60,6 +59,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		paths = new HashSet<>();
 		addPaths(pathsColl);
 		classCriteria = ClassCriteria.create();
+		scanFileCriteria = FileSystemItem.Criteria.create();
 	}
 	
 	void init(PathScannerClassLoader classSupplier) {
@@ -82,13 +82,18 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return paths;
 	}
 	
-	CheckingOption getCheckFileOption() {
-		return checkFileOption;
-	}
-	
 	public S by(ClassCriteria classCriteria) {
 		this.classCriteria = classCriteria;
 		return (S)this;
+	}
+	
+	public S withScanFileCriteria(FileSystemItem.Criteria scanFileCriteria) {
+		this.scanFileCriteria = scanFileCriteria;
+		return (S)this;
+	}
+	
+	FileSystemItem.Criteria getScanFileCriteria(){
+		return this.scanFileCriteria;
 	}
 	
 	ClassCriteria getClassCriteria() {
@@ -148,18 +153,13 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return (S)this;
 	}
 	
-	public S checkFileOption(FileSystemItem.CheckingOption option) {
-		this.checkFileOption = option;
-		return (S)this;
-	}
-	
 	abstract S newInstance();
 	
 	public <T extends SearchConfigAbst<T>> T copyTo(T destConfig) {
 		destConfig.classCriteria = this.classCriteria.createCopy();
 		destConfig.paths = new HashSet<>();
 		destConfig.paths.addAll(this.paths);
-		destConfig.checkFileOption = this.checkFileOption;
+		destConfig.scanFileCriteria = this.scanFileCriteria.createCopy();
 		destConfig.optimizePaths = this.optimizePaths;
 		destConfig.useSharedClassLoaderAsMain = this.useSharedClassLoaderAsMain;
 		destConfig.parentClassLoaderForMainClassLoader = this.parentClassLoaderForMainClassLoader;

@@ -32,7 +32,6 @@ package org.burningwave.core.classes;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -42,7 +41,6 @@ import org.burningwave.core.Component;
 import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.io.FileSystemItem.CheckingOption;
 import org.burningwave.core.iterable.Properties;
 
 
@@ -181,7 +179,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 					sharedClassLoader :
 					PathScannerClassLoader.create(
 						searchConfig.parentClassLoaderForMainClassLoader, 
-						pathHelper, byteCodeHunterSupplier, searchConfig.getCheckFileOption()
+						pathHelper, byteCodeHunterSupplier, searchConfig.getScanFileCriteria()
 					),
 				searchConfig
 			)		
@@ -190,15 +188,14 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 	
 	final FileSystemItem.Criteria parseCheckFileOptionsValue(SearchConfigAbst<?> searchConfig) {
-		return FileSystemItem.CheckingOption.OfClassType.toCriteria(
-			CheckingOption.forLabel(
-				Optional.ofNullable(searchConfig.getCheckFileOption()).map(checkFileOptions -> 
-					checkFileOptions.getLabel()
-				).orElseGet(() -> 
-					config.get(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES)
+		if (searchConfig.getScanFileCriteria().hasNoPredicate()) {
+			searchConfig.withScanFileCriteria(
+				FileSystemItem.CheckingOption.OfClassType.toCriteria(
+					(String)config.get(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES)
 				)
-			)
-		);
+			);
+		}
+		return searchConfig.getScanFileCriteria();
 	}
 	
 	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCriteria(C context, JavaClass javaClass) {

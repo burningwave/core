@@ -38,7 +38,7 @@ import java.util.LinkedHashSet;
 import java.util.Map.Entry;
 import java.util.function.Supplier;
 
-import org.burningwave.core.io.FileSystemItem.CheckingOption;
+import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.PathHelper.ComparePathsResult;
 
@@ -48,7 +48,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	Collection<String> loadedPaths;
 	private ByteCodeHunter byteCodeHunter;
 	private PathHelper pathHelper;
-	private CheckingOption byteCodeHunterSearchConfigCheckFileOptions;
+	private FileSystemItem.Criteria scanFileCriteria;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -58,17 +58,17 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		ClassLoader parentClassLoader,
 		PathHelper pathHelper,
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
-		CheckingOption byteCodeHunterSearchConfigCheckFileOptions
+		FileSystemItem.Criteria scanFileCriteria
 	) {
 		super(parentClassLoader);
 		this.pathHelper = pathHelper;
 		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
 		loadedPaths = new HashSet<>();
-		this.byteCodeHunterSearchConfigCheckFileOptions = byteCodeHunterSearchConfigCheckFileOptions;
+		this.scanFileCriteria = scanFileCriteria;
 	}
 	
-	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, Supplier<ByteCodeHunter> byteCodeHunterSupplier, CheckingOption byteCodeHunterSearchConfigCheckFileOptions) {
-		return new PathScannerClassLoader(parentClassLoader, pathHelper, byteCodeHunterSupplier, byteCodeHunterSearchConfigCheckFileOptions);
+	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, Supplier<ByteCodeHunter> byteCodeHunterSupplier, FileSystemItem.Criteria scanFileCriteria) {
+		return new PathScannerClassLoader(parentClassLoader, pathHelper, byteCodeHunterSupplier, scanFileCriteria);
 	}
 	
 	ByteCodeHunter getByteCodeHunter() {
@@ -88,8 +88,8 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 							checkPathsResult.getNotContainedPaths()
 						).considerURLClassLoaderPathsAsScanned(
 							considerURLClassLoaderPathsAsLoadedPaths
-						).checkFileOption(
-							byteCodeHunterSearchConfigCheckFileOptions
+						).withScanFileCriteria(
+							scanFileCriteria
 						).optimizePaths(
 							true
 						)

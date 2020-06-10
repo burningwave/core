@@ -28,8 +28,6 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-
 import java.lang.reflect.Member;
 import java.util.Collection;
 import java.util.HashMap;
@@ -99,9 +97,8 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		);
 		pathScannerClassLoaderSupplier = () -> PathScannerClassLoader.create(
 			parentClassLoader, pathHelper, byteCodeHunterSupplier, 
-			FileSystemItem.CheckingOption.forLabel(
-				IterableObjectHelper.get(
-					config, Configuration.Key.PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+			FileSystemItem.CheckingOption.OfClassType.toCriteria(
+				(String)config.get(Configuration.Key.PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 					Configuration.DEFAULT_VALUES
 				)
 			)

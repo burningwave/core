@@ -769,6 +769,10 @@ public class FileSystemItem implements ManagedLogger {
 			private final static Predicate<FileSystemItem> fileSignatureChecker =
 				file -> ThrowingSupplier.get(() -> Streams.isClass(file.toByteBuffer()));
 			
+			public static FileSystemItem.Criteria toCriteria(String checkFileOptionLabel) {
+				return toCriteria(CheckingOption.forLabel(checkFileOptionLabel));
+			}
+				
 			public static FileSystemItem.Criteria toCriteria(CheckingOption checkFileOption) {
 				if (checkFileOption.equals(CheckingOption.FOR_NAME_OR_SIGNATURE)) {
 					return FileSystemItem.Criteria.forAllFileThat(fileNameChecker.or(fileSignatureChecker));
