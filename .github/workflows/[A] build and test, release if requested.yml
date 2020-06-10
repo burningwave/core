@@ -20,8 +20,7 @@ jobs:
       max-parallel: 16
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        #java: [8, 9, 10, 11, 12, 13, 14, 15-ea]
-        java: [15-ea]
+        java: [8, 9, 10, 11, 12, 13, 14, 15-ea]
         architecture: [x32, x64]
     runs-on: ${{ matrix.os }}
     steps:
