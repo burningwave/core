@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.burningwave.core.classes.SearchContext.InitContext;
@@ -137,13 +138,16 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		boolean scanFileCriteriaHasNoPredicate = searchConfig.getScanFileCriteria().hasNoPredicate();
 		boolean classCriteriaHasNoPredicate = searchConfig.getClassCriteria().hasNoPredicate();		
 		FileSystemItem.Criteria filterAndExecutor = getFilterAndExecutor(context);
+		//scanFileCriteria in this point has been changed by the previous method call
 		FileSystemItem.Criteria fileFilter = searchConfig.getScanFileCriteria();
 		for (String path : context.getSearchConfig().getPaths()) {
+			FileSystemItem currentScannedPath = FileSystemItem.ofPath(path);
 			if (searchConfig.isRefreshCacheEnabled()) {
 				synchronized(mutexManager.getMutex(path)) {
 					Optional.ofNullable(cache.get(path)).ifPresent((classesForPath) -> {
 						cache.remove(path);
-						classesForPath.clear();						
+						classesForPath.clear();
+						currentScannedPath.refresh();
 					});
 				}
 			}
@@ -153,7 +157,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 					synchronized(mutexManager.getMutex(path)) {
 						classesForPath = cache.get(path);
 						if (classesForPath == null) {
-							FileSystemItem.ofPath(path).getAllChildren(filterAndExecutor);
+							currentScannedPath.getAllChildren(filterAndExecutor);
 							Map<String, I> itemsForPath = new HashMap<>();
 							Map<String, I> itemsFound = context.getItemsFound(path);
 							if (itemsFound != null) {
@@ -166,7 +170,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 					context.addAllItemsFound(path, classesForPath);
 					continue;
 				} else {
-					FileSystemItem.ofPath(path).getAllChildren(filterAndExecutor);
+					currentScannedPath.getAllChildren(filterAndExecutor);
 					continue;
 				}
 			}
@@ -199,9 +203,10 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			}
 		} else {
 			FileSystemItem basePathFSI = FileSystemItem.ofPath(basePath);
+			Predicate<FileSystemItem[]> fileFilterPredicate = fileFilter.getPredicateOrTruePredicateIfPredicateIsNull();
 			for (Entry<String, I> cachedItemAsEntry : itemsForPath.entrySet()) {
 				String itemAbsolutePath = cachedItemAsEntry.getKey();
-				if (fileFilter.getPredicateOrTruePredicateIfPredicateIsNull().test(
+				if (fileFilterPredicate.test(
 					new FileSystemItem[]{
 						FileSystemItem.ofPath(itemAbsolutePath),
 						basePathFSI
@@ -209,10 +214,12 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 				)) {
 					ClassCriteria.TestContext testContext = testCachedItem(context, basePath, itemAbsolutePath, cachedItemAsEntry.getValue());
 					if(testContext.getResult()) {
+						logDebug("added {}", itemAbsolutePath);
 						addCachedItemToContext(context, testContext, basePath, cachedItemAsEntry);
 					}
 				}
 			}
+			logDebug("");
 		}
 	}
 	
