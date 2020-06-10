@@ -137,13 +137,13 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 	
 	void searchInFileSystem(C context) {
-		FileSystemItem.Criteria filter = getFilterAndExecutor(context);
+		FileSystemItem.Criteria filter = getFileAndClassTesterAndExecutor(context);
 		for (String path : context.getSearchConfig().getPaths()) {
 			FileSystemItem.ofPath(path).refresh().getAllChildren(filter);
 		}
 	}
 	
-	FileSystemItem.Criteria getFilterAndExecutor(C context) {
+	FileSystemItem.Criteria getFileAndClassTesterAndExecutor(C context) {
 		SearchConfigAbst<?> searchConfig = context.getSearchConfig();
 		if (searchConfig.getScanFileCriteria().hasNoPredicate()) {
 			searchConfig.withScanFileCriteria(
@@ -153,14 +153,18 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			);
 		}
 
-		Predicate<FileSystemItem[]> classPredicate = searchConfig.getScanFileCriteria().getPredicateOrTruePredicateIfPredicateIsNull();
+		Predicate<FileSystemItem[]> classFilePredicate = searchConfig.getScanFileCriteria().getPredicateOrTruePredicateIfPredicateIsNull();
+		return getFileAndClassTesterAndExecutor(context, classFilePredicate);
+	}
+
+	FileSystemItem.Criteria getFileAndClassTesterAndExecutor(C context, Predicate<FileSystemItem[]> classFilePredicate) {
 		return FileSystemItem.Criteria.forAllFileThat(
 			(basePath, child) -> {
 				boolean isClass = false;
 				try {
-					if (isClass = classPredicate.test(new FileSystemItem[]{child, basePath})) {
+					if (isClass = classFilePredicate.test(new FileSystemItem[]{child, basePath})) {
 						JavaClass javaClass = JavaClass.create(child.toByteBuffer());
-						ClassCriteria.TestContext criteriaTestContext = testCriteria(context, javaClass);
+						ClassCriteria.TestContext criteriaTestContext = testClassCriteria(context, javaClass);
 						if (criteriaTestContext.getResult()) {
 							addToContext(
 								context, criteriaTestContext, basePath.getAbsolutePath(), child, javaClass
@@ -196,8 +200,8 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		return context;
 	}
 	
-	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCriteria(C context, JavaClass javaClass) {
-		return context.testCriteria(context.loadClass(javaClass.getName()));
+	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testClassCriteria(C context, JavaClass javaClass) {
+		return context.testClassCriteria(context.loadClass(javaClass.getName()));
 	}
 	
 	abstract void addToContext(

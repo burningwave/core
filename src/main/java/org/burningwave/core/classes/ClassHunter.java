@@ -138,7 +138,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	
 	@Override
 	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(ClassHunter.SearchContext context, String path, String key, Class<?> cls) {
-		return context.testCriteria(context.retrieveClass(cls));
+		return context.testClassCriteria(context.retrieveClass(cls));
 	}
 	
 	@Override

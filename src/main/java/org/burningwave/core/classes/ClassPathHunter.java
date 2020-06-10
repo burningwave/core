@@ -32,6 +32,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -72,14 +74,49 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 	}
 	
 	@Override
-	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext context, String baseAbsolutePath, String currentScannedItemAbsolutePath, Collection<Class<?>> classes) {
-		ClassCriteria.TestContext testContext = context.testCriteria(null);
+	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(
+		SearchContext context, String baseAbsolutePath, String currentScannedItemAbsolutePath, Collection<Class<?>> classes
+	) {
+		ClassCriteria.TestContext testContext = context.testClassCriteria(null);
 		for (Class<?> cls : classes) {
-			if ((testContext = context.testCriteria(context.retrieveClass(cls))).getResult()) {
+			if ((testContext = context.testClassCriteria(context.retrieveClass(cls))).getResult()) {
 				break;
 			}
 		}		
 		return testContext;
+	}
+	
+	@Override
+	TestContext testPathAndCachedItem(
+		SearchContext context,
+		FileSystemItem[] filesToBeTested, 
+		Collection<Class<?>> classes, 
+		Predicate<FileSystemItem[]> fileFilterPredicate
+	) {
+		AtomicReference<ClassCriteria.TestContext> criteriaTestContextAR = new AtomicReference<>(context.testClassCriteria(null));
+		filesToBeTested[0].getAllChildren(
+			FileSystemItem.Criteria.forAllFileThat(
+				(basePath, child) -> {
+					boolean isClass = false;
+					try {
+						if (isClass = fileFilterPredicate.test(new FileSystemItem[]{child, basePath})) {
+							JavaClass javaClass = JavaClass.create(child.toByteBuffer());
+							ClassCriteria.TestContext criteriaTestContext = testClassCriteria(context, javaClass);
+							if (criteriaTestContext.getResult()) {
+								addToContext(
+									context, criteriaTestContext, basePath.getAbsolutePath(), child, javaClass
+								);
+								criteriaTestContextAR.set(criteriaTestContext);
+							}
+						}
+					} catch (Throwable exc) {
+						logError("Could not scan " + child.getAbsolutePath(), exc);
+					}
+					return isClass;
+				}
+			)
+		);
+		return criteriaTestContextAR.get();
 	}
 	
 	@Override

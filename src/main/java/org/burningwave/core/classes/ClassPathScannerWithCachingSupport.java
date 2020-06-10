@@ -39,10 +39,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.concurrent.Mutex;
 import org.burningwave.core.io.FileSystemItem;
-import org.burningwave.core.io.FileSystemItem.Criteria;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
@@ -137,7 +137,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		CacheableSearchConfig searchConfig = context.getSearchConfig();
 		boolean scanFileCriteriaHasNoPredicate = searchConfig.getScanFileCriteria().hasNoPredicate();
 		boolean classCriteriaHasNoPredicate = searchConfig.getClassCriteria().hasNoPredicate();		
-		FileSystemItem.Criteria filterAndExecutor = getFilterAndExecutor(context);
+		FileSystemItem.Criteria filterAndExecutor = getFileAndClassTesterAndExecutor(context);
 		//scanFileCriteria in this point has been changed by the previous method call
 		FileSystemItem.Criteria fileFilter = searchConfig.getScanFileCriteria();
 		for (String path : context.getSearchConfig().getPaths()) {
@@ -187,12 +187,12 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		}
 	}
 	
-	<S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(
+	final <S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(
 		C context, 
 		String basePath,
 		Map<String, I>
 		itemsForPath,
-		Criteria fileFilter
+		FileSystemItem.Criteria fileFilter
 	) {
 		if (fileFilter == null) {
 			for (Entry<String, I> cachedItemAsEntry : itemsForPath.entrySet()) {
@@ -203,31 +203,43 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			}
 		} else {
 			FileSystemItem basePathFSI = FileSystemItem.ofPath(basePath);
+			FileSystemItem[] toBeTested = new FileSystemItem[]{
+				null,
+				basePathFSI
+			};
 			Predicate<FileSystemItem[]> fileFilterPredicate = fileFilter.getPredicateOrTruePredicateIfPredicateIsNull();
 			for (Entry<String, I> cachedItemAsEntry : itemsForPath.entrySet()) {
-				String itemAbsolutePath = cachedItemAsEntry.getKey();
-				if (fileFilterPredicate.test(
-					new FileSystemItem[]{
-						FileSystemItem.ofPath(itemAbsolutePath),
-						basePathFSI
-					}
-				)) {
-					ClassCriteria.TestContext testContext = testCachedItem(context, basePath, itemAbsolutePath, cachedItemAsEntry.getValue());
-					if(testContext.getResult()) {
-						addCachedItemToContext(context, testContext, basePath, cachedItemAsEntry);
-					}
+				String absolutePathOfItem = cachedItemAsEntry.getKey();
+				toBeTested[0] = FileSystemItem.ofPath(absolutePathOfItem);
+				ClassCriteria.TestContext testContext = testPathAndCachedItem(
+					context, toBeTested, cachedItemAsEntry.getValue(), fileFilterPredicate
+				);
+				if(testContext.getResult()) {
+					addCachedItemToContext(context, testContext, basePath, cachedItemAsEntry);
 				}
 			}
 		}
 	}
 	
+	TestContext testPathAndCachedItem(
+		C context, 
+		FileSystemItem[] filesToBeTested, 
+		I item,
+		Predicate<FileSystemItem[]> fileFilterPredicate
+	) {
+		if (fileFilterPredicate.test(filesToBeTested)) {
+			return testCachedItem(context, filesToBeTested[1].getAbsolutePath(), filesToBeTested[0].getAbsolutePath(), item);
+		}
+		return context.testClassCriteria(null);
+	}
+
 	<S extends SearchConfigAbst<S>> void addCachedItemToContext(
 		C context, ClassCriteria.TestContext testContext, String path, Entry<String, I> cachedItemAsEntry
 	) {
 		context.addItemFound(path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 	}
 
-	abstract <S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(C context, String path, String key, I value);
+	abstract <S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(C context, String basePath, String absolutePathOfItem, I item);
 	
 	public void clearCache() {
 		Collection<String> pathsToBeRemoved = new HashSet<>(cache.keySet());
