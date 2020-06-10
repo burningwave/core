@@ -71,14 +71,14 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 	@Override
 	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCriteria(SearchContext<JavaClass> context, JavaClass javaClass) {
 		return context.getSearchConfig().getClassCriteria().hasNoPredicate() ?
-			context.getSearchConfig().getClassCriteria().testAndReturnTrueIfNullOrTrueByDefault(null) :
+			context.getSearchConfig().getClassCriteria().testWithTrueResultForNullEntityOrTrueResultForNullPredicate(null) :
 			super.testCriteria(context, javaClass);
 	}
 	
 	@Override
 	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext<JavaClass> context, String path, String key, JavaClass javaClass) {
 		return context.getSearchConfig().getClassCriteria().hasNoPredicate() ?
-			context.getSearchConfig().getClassCriteria().testAndReturnTrueIfNullOrTrueByDefault(null) :				
+			context.getSearchConfig().getClassCriteria().testWithTrueResultForNullEntityOrTrueResultForNullPredicate(null) :				
 			super.testCriteria(context, javaClass);
 	}
 	

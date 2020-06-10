@@ -58,7 +58,7 @@ public class SearchResult<E> implements Component {
 		try (C criteriaCopy = createCriteriaCopy(criteria)) {
 			Map<String, E> itemsFound = new HashMap<>();
 			getItemsFoundFlatMap().forEach((path, javaClass) -> {
-				if (criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault(javaClass).getResult()) {
+				if (criteriaCopy.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(javaClass).getResult()) {
 					itemsFound.put(path, javaClass);
 				}
 			});
@@ -70,7 +70,7 @@ public class SearchResult<E> implements Component {
 		Map<String, E> itemsFound = new HashMap<>();
 		try (C criteriaCopy = createCriteriaCopy(criteria)) {
 			getItemsFoundFlatMap().forEach((path, javaClass) -> {
-				if (criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault(javaClass).getResult()) {
+				if (criteriaCopy.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(javaClass).getResult()) {
 					itemsFound.put(path, javaClass);
 				}
 			});

@@ -213,7 +213,7 @@ public class FileSystemItem implements ManagedLogger {
 	
 	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
 		return Optional.ofNullable(getAllChildren0()).map(children ->
-			children.parallelStream().filter(child -> filter.testAndReturnTrueIfNullOrTrueByDefault(child).getResult()).collect(Collectors.toCollection(setSupplier))
+			children.parallelStream().filter(child -> filter.testWithTrueResultForNullEntityOrTrueResultForNullPredicate(child).getResult()).collect(Collectors.toCollection(setSupplier))
 		).orElseGet(() -> null);
 	}
 	

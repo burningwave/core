@@ -246,7 +246,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 					((SearchContext)this.context).getMembersFoundFlatMap().values().forEach((membersCollection) -> {
 						membersCollection.stream().filter(
 							(member) ->
-								criteriaCopy.testAndReturnFalseIfNullOrTrueByDefault((M)member).getResult()
+								criteriaCopy.testWithFalseResultForNullEntityOrTrueResultForNullPredicate((M)member).getResult()
 						).collect(
 							Collectors.toCollection(() -> membersFoundByCriteriaFinal)
 						);

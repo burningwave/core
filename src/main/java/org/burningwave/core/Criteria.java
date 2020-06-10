@@ -175,69 +175,69 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 		return this.predicate == null;
 	}
 	
-	public T testAndReturnFalseIfNullOrTrueByDefault(E entity) {
+	public T testWithFalseResultForNullEntityOrTrueResultForNullPredicate(E entity) {
 		T context = createTestContext();
-		testAndReturnFalseIfNullOrTrueByDefault(context, entity);
+		testWithFalseResultForNullEntityOrTrueResultForNullPredicate(context, entity);
 		return (T)context;
 	}
 	
-	public T testAndReturnTrueIfNullOrTrueByDefault(E entity) {
+	public T testWithTrueResultForNullEntityOrTrueResultForNullPredicate(E entity) {
 		T context = createTestContext();
-		testAndReturnTrueIfNullOrTrueByDefault(context, entity);
+		testWithTrueResultForNullEntityOrTrueResultForNullPredicate(context, entity);
 		return (T)context;
 	}
 	
-	public T testAndReturnFalseIfNullOrFalseByDefault(E entity) {
+	public T testWithFalseResultForNullEntityOrFalseResultForNullPredicate(E entity) {
 		T context = createTestContext();
-		testAndReturnFalseIfNullOrFalseByDefault(context, entity);
+		testWithFalseResultForNullEntityOrFalseResultForNullPredicate(context, entity);
 		return (T)context;
 	}
 	
-	public T testAndReturnTrueIfNullOrFalseByDefault(E entity) {
+	public T testWithTrueResultForNullEntityOrFalseResultForNullPredicate(E entity) {
 		T context = createTestContext();
-		testAndReturnTrueIfNullOrFalseByDefault(context, entity);
+		testWithTrueResultForNullEntityOrFalseResultForNullPredicate(context, entity);
 		return (T)context;
 	}
 	
-	public Predicate<E> getPredicateOrFalsePredicateIfNull() {
+	public Predicate<E> getPredicateOrFalsePredicateIfPredicateIsNull() {
 		return getPredicate(createTestContext(), false);
 	}	
 	
-	public Predicate<E> getPredicateOrTruePredicateIfNull() {
+	public Predicate<E> getPredicateOrTruePredicateIfPredicateIsNull() {
 		return getPredicate(createTestContext(), true);
 	}
 	
-	protected T getContextOfPredicateOrFalsePredicateIfNull() {
+	protected T getContextWithFalsePredicateForNullPredicate() {
 		T context = createTestContext();
 		getPredicate(context, false);
 		return context;
 	}	
 	
-	protected T getContextOfPredicateOrTruePredicateIfNull() {
+	protected T getContextWithTruePredicateForNullPredicate() {
 		T context = createTestContext();
 		getPredicate(context, true);
 		return context;
 	}
 	
-	private boolean testAndReturnFalseIfNullOrTrueByDefault(T context, E entity) {
+	private boolean testWithFalseResultForNullEntityOrTrueResultForNullPredicate(T context, E entity) {
 		return Optional.ofNullable(entity).map(ent -> getPredicate(context, true).test(ent)).orElseGet(() -> 
 			context.setEntity(entity).setResult(false).getResult()
 		);
 	}
 	
-	private boolean testAndReturnTrueIfNullOrTrueByDefault(T context, E entity) {
+	private boolean testWithTrueResultForNullEntityOrTrueResultForNullPredicate(T context, E entity) {
 		return Optional.ofNullable(entity).map(ent -> getPredicate(context, true).test(ent)).orElseGet(() -> 
 			context.setEntity(entity).setResult(true).getResult()
 		);
 	}
 	
-	private boolean testAndReturnFalseIfNullOrFalseByDefault(T context, E entity) {
+	private boolean testWithFalseResultForNullEntityOrFalseResultForNullPredicate(T context, E entity) {
 		return Optional.ofNullable(entity).map(ent -> getPredicate(context, false).test(ent)).orElseGet(() -> 
 			context.setEntity(entity).setResult(false).getResult()
 		);
 	}
 	
-	private boolean testAndReturnTrueIfNullOrFalseByDefault(T context, E entity) {
+	private boolean testWithTrueResultForNullEntityOrFalseResultForNullPredicate(T context, E entity) {
 		return Optional.ofNullable(entity).map(ent -> getPredicate(context, false).test(ent)).orElseGet(() -> 
 			context.setEntity(entity).setResult(true).getResult()
 		);
@@ -327,5 +327,175 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 		this.predicate = null;
 		this.logicalOperator = null;
 	}
-
+	
+	
+	public static class Simple<E, C extends Simple<E, C>> {
+		protected Predicate<E> predicate;
+		protected Function<Predicate<E>, Predicate<E>> logicalOperator;
+		
+		public C and(){
+			logicalOperator = (predicate) -> this.predicate.and(predicate);
+			return (C)this;
+		}	
+		
+		public C or(){
+			logicalOperator = (predicate) -> this.predicate.or(predicate);
+			return (C)this;
+		}
+		
+		public C and(C criteria) {
+			return logicOperation((C)this.createCopy(), criteria.createCopy(), (predicate) -> predicate::and, newInstance());
+		}
+		
+		public C or(C criteria) {
+			return logicOperation((C)this.createCopy(), criteria.createCopy(), (predicate) -> predicate::or, newInstance());
+		}
+		
+		protected C logicOperation(C leftCriteria, C rightCriteria, 
+			Function<Predicate<E>, Function<Predicate< ? super E>, Predicate<E>>> binaryOperator, 
+			C targetCriteria
+		) {
+			targetCriteria.predicate = 
+				leftCriteria.predicate != null?
+					(rightCriteria.predicate != null?
+						binaryOperator.apply(leftCriteria.predicate).apply(rightCriteria.predicate) :
+						leftCriteria.predicate):
+					rightCriteria.predicate;
+			return targetCriteria;
+		}
+		
+		
+		public C allThat(final Predicate<E> predicate) {
+			this.predicate = concat(
+				this.predicate,
+				(entity) -> predicate.test(entity)
+			);
+			return (C)this;
+		}
+		
+		Predicate<E> getPredicateWrapper(
+			Predicate<E> function
+		) {
+			return Optional.ofNullable(function).map(innPredWrap ->
+				(Predicate<E>) (entity) -> innPredWrap.test(entity)
+			).orElse(null);
+		}
+		
+		protected <V> Predicate<E> getPredicateWrapper(
+			final Function<E, V[]> valueSupplier,
+			final BiPredicate<V[], Integer> predicate
+		) {
+			return getPredicateWrapper((entity) -> {
+				V[] array = valueSupplier.apply(entity);
+				boolean result = false;
+				for (int i = 0; i < array.length; i++) {
+					if (result = predicate.test(array, i)) {
+						break;
+					}				
+				}
+				//logDebug("test for {} return {}", entity, result);
+				return result;
+			});			
+		}
+		
+		protected Predicate<E> concat(
+			Predicate<E> mainPredicate,
+			Predicate<E> otherPredicate
+		) {
+			Predicate<E> predicate = concat(mainPredicate, this.logicalOperator, otherPredicate);
+			this.logicalOperator = null;
+			return predicate;
+		}
+		
+		@SuppressWarnings("hiding")
+		protected <E, C extends Simple<E, C>> Predicate<E> concat(
+			Predicate<E> mainPredicate,
+			Function<Predicate<E>, Predicate<E>> logicalOperator,
+			Predicate<E> otherPredicate
+		) {
+			return Optional.ofNullable(otherPredicate).map(othPred ->
+				Optional.ofNullable(mainPredicate).map(mainPred ->
+					consumeLogicalOperator(othPred, logicalOperator)			
+				).orElse(othPred)
+			).orElse(mainPredicate);
+		}
+		
+		
+		@SuppressWarnings("hiding")
+		<E, C extends Simple<E, C>> Predicate<E> consumeLogicalOperator(
+			Predicate<E> input,
+			Function<Predicate<E>, 
+			Predicate<E>> logicalOperator
+		) {
+			return Optional.ofNullable(logicalOperator).map(logOp -> {
+				return logicalOperator.apply(input);
+			}).orElseThrow(() -> 
+				Throwables.toRuntimeException(
+					"A call to and/or method is necessary before calling " +
+					Thread.currentThread().getStackTrace()[9].getMethodName() + " at " +
+					Thread.currentThread().getStackTrace()[10]
+				)
+			);
+		}
+		
+		public Predicate<E> getPredicateOrFalsePredicateIfPredicateIsNull() {
+			return getPredicate(false);
+		}	
+		
+		public Predicate<E> getPredicateOrTruePredicateIfPredicateIsNull() {
+			return getPredicate(true);
+		}
+		
+		
+		public boolean testWithFalseResultForNullEntityOrTrueResultForNullPredicate(E entity) {
+			return Optional.ofNullable(entity).map(ent -> getPredicate(true).test(ent)).orElseGet(() -> 
+				false
+			);
+		}
+		
+		public boolean testWithTrueResultForNullEntityOrTrueResultForNullPredicate(E entity) {
+			return Optional.ofNullable(entity).map(ent -> getPredicate(true).test(ent)).orElseGet(() -> 
+				true
+			);
+		}
+		
+		public boolean testWithFalseResultForNullEntityOrFalseResultForNullPredicate(E entity) {
+			return Optional.ofNullable(entity).map(ent -> getPredicate(false).test(ent)).orElseGet(() -> 
+				false
+			);
+		}
+		
+		public boolean testWithTrueResultForNullEntityOrFalseResultForNullPredicate(E entity) {
+			return Optional.ofNullable(entity).map(ent -> getPredicate(false).test(ent)).orElseGet(() -> 
+				true
+			);
+		}
+		
+		private Predicate<E> getPredicate(boolean defaultResult) {
+			return this.predicate != null?
+					(entity) -> {
+						return this.predicate.test(entity);
+				} :
+				(entity) -> {
+					return defaultResult;
+				};
+		}
+		
+		public boolean hasNoPredicate() {
+			return this.predicate == null;
+		}
+		
+		public C createCopy() {
+			C copy = newInstance();
+			copy.predicate = this.predicate;
+			copy.logicalOperator = this.logicalOperator;
+			return copy;
+		}
+		
+		protected C newInstance() {
+			return ThrowingSupplier.get(() -> {
+				return (C)Constructors.newInstanceOf(this);
+			});
+		}
+	}
 }

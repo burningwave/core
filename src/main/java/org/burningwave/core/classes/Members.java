@@ -73,7 +73,7 @@ public class Members implements Component {
 			classFrom,
 			criteria.getScanUpToPredicate(), 
 			criteria.getMembersSupplier(),
-			criteria.getPredicateOrTruePredicateIfNull()
+			criteria.getPredicateOrTruePredicateIfPredicateIsNull()
 		);
 		Predicate<Collection<M>> resultPredicate = criteria.getResultPredicate();
 		return resultPredicate == null?
@@ -117,7 +117,7 @@ public class Members implements Component {
 				classFrom,
 				criteria.getScanUpToPredicate(), 
 				criteria.getMembersSupplier(),
-				criteria.getPredicateOrTruePredicateIfNull()
+				criteria.getPredicateOrTruePredicateIfPredicateIsNull()
 			) :
 			resultPredicate.test(
 				findAll(
@@ -125,7 +125,7 @@ public class Members implements Component {
 					classFrom,
 					criteria.getScanUpToPredicate(), 
 					criteria.getMembersSupplier(),
-					criteria.getPredicateOrTruePredicateIfNull()
+					criteria.getPredicateOrTruePredicateIfPredicateIsNull()
 				)
 			);
 	}	
