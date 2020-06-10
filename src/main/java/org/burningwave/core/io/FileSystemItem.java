@@ -54,6 +54,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.ManagedLogger;
@@ -261,14 +262,37 @@ public class FileSystemItem implements ManagedLogger {
 					return null;
 				}
 			} else {
-				final String iTS = itemToSearch.replace("/", "\\/") + ".*?\\/";
+				final String itemToSearchRegEx = itemToSearch.replace("/", "\\/") + "(.*?)\\/";
+				Pattern itemToSearchRegExPattern = Pattern.compile(itemToSearchRegEx);
+				boolean isJModArchive = Streams.isJModArchive(zipInputStream.toByteBuffer());
+				Set<String> childrenRelPaths = new HashSet<>();
+				Set<FileSystemItem> children = new HashSet<>();
 				Set<FileSystemItem> toRet = zipInputStream.findAllAndConvert(
-					(zEntry) -> {
-						String nameToTest = zEntry.getName();
-						nameToTest += nameToTest.endsWith("/") ? "" : "/";
-						//logDebug(nameToTest + " = " + nameToTest.matches(iTS) + " " + (nameToTest.replaceFirst(iTS, "").length() == 0) + " " + nameToTest.replaceFirst(iTS, ""));
-						return nameToTest.matches(iTS) && nameToTest.replaceFirst(iTS, "").length() == 0;
-					},
+					() -> children,
+					!isJModArchive ?
+						(zEntry) -> {
+							String nameToTest = zEntry.getName();
+							nameToTest += nameToTest.endsWith("/") ? "" : "/";
+							logDebug(nameToTest + " = " + nameToTest.matches(itemToSearchRegEx) + " " + (nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0) + " " + nameToTest.replaceFirst(itemToSearchRegEx, ""));
+							return nameToTest.matches(itemToSearchRegEx) && nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0;
+						} :
+						(zEntry) -> {
+							String nameToTest = zEntry.getName();
+							nameToTest += nameToTest.endsWith("/") ? "" : "/";
+							if (nameToTest.matches(itemToSearchRegEx)) {
+								String childRelPath = itemToSearch + Strings.extractAllGroups(itemToSearchRegExPattern, nameToTest).get(1).get(0) + "/";
+								if (!childrenRelPaths.contains(childRelPath)) {
+									childrenRelPaths.add(childRelPath);
+									FileSystemItem fileSystemItem = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath() + "/" + childRelPath);
+									if (fileSystemItem.parentContainer == null) {
+										fileSystemItem.parentContainer = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath());
+									}
+									children.add(fileSystemItem);									
+								}
+							}
+							logDebug(nameToTest + " = " + nameToTest.matches(itemToSearchRegEx) + " " + (nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0) + " " + nameToTest.replaceFirst(itemToSearchRegEx, ""));
+							return nameToTest.matches(itemToSearchRegEx) && nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0;
+						},
 					(zEntry) -> {
 						FileSystemItem fileSystemItem = FileSystemItem.ofPath(zEntry.getAbsolutePath());
 						if (fileSystemItem.parentContainer == null) {
