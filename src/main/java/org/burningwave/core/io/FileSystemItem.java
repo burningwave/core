@@ -213,7 +213,11 @@ public class FileSystemItem implements ManagedLogger {
 	
 	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
 		return Optional.ofNullable(getAllChildren0()).map(children ->
-			children.parallelStream().filter(child -> filter.testWithTrueResultForNullEntityOrTrueResultForNullPredicate(child).getResult()).collect(Collectors.toCollection(setSupplier))
+			children.parallelStream().filter(child -> 
+				filter.testWithTrueResultForNullEntityOrTrueResultForNullPredicate(
+					new FileSystemItem[]{child, this}
+				)
+			).collect(Collectors.toCollection(setSupplier))
 		).orElseGet(() -> null);
 	}
 	
@@ -725,20 +729,15 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	@SuppressWarnings("resource")
-	public static class Criteria extends org.burningwave.core.Criteria<FileSystemItem, Criteria, org.burningwave.core.Criteria.TestContext<FileSystemItem, Criteria>> {
+	public static class Criteria extends org.burningwave.core.Criteria.Simple<FileSystemItem[], Criteria> {
 		
 		public static Criteria create() {
 			return new Criteria();
 		}
 		
-		public final static Criteria forAllFileThat(final BiPredicate<org.burningwave.core.Criteria.TestContext<FileSystemItem, Criteria>, FileSystemItem> predicate) {
+		public final static Criteria forAllFileThat(final Predicate<FileSystemItem[]> predicate) {
 			return new Criteria().allThat(predicate);
-		}
-		
-		public final static Criteria forAllFileThat(final Predicate<FileSystemItem> predicate) {
-			return new Criteria().allThat(predicate);
-		}
-		
+		}		
 		
 	}
 	

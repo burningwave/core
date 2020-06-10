@@ -3,7 +3,7 @@ name: Build and Test -> Release if requested
 on:
   push:
     branches:
-      - master
+      - improving_FileSystemItem.Criteria
     paths: 
       - "src/main/**.java"
       - "**.properties"

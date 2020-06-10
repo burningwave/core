@@ -33,7 +33,7 @@ import java.util.function.Predicate;
 
 import org.burningwave.core.Criteria;
 
-public class FileCriteria extends Criteria<File, FileCriteria, Criteria.TestContext<File, FileCriteria>> {
+public class FileCriteria extends Criteria.Simple<File, FileCriteria> {
 	
 	private FileCriteria() {}
 	
@@ -44,7 +44,7 @@ public class FileCriteria extends Criteria<File, FileCriteria, Criteria.TestCont
 	public FileCriteria absolutePath(Predicate<String> predicate) {
 		this.predicate = concat(
 			this.predicate,
-			(context, file) -> predicate.test(file.getAbsolutePath())
+			(file) -> predicate.test(file.getAbsolutePath())
 		);
 		return this;
 	}
@@ -53,7 +53,7 @@ public class FileCriteria extends Criteria<File, FileCriteria, Criteria.TestCont
 	public FileCriteria name(Predicate<String> predicate) {
 		this.predicate = concat(
 			this.predicate,
-			(context, file) -> predicate.test(file.getName())
+			(file) -> predicate.test(file.getName())
 		);
 		return this;
 	}
