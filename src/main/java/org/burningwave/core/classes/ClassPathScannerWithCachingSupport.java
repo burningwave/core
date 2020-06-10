@@ -214,12 +214,10 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 				)) {
 					ClassCriteria.TestContext testContext = testCachedItem(context, basePath, itemAbsolutePath, cachedItemAsEntry.getValue());
 					if(testContext.getResult()) {
-						logDebug("added {}", itemAbsolutePath);
 						addCachedItemToContext(context, testContext, basePath, cachedItemAsEntry);
 					}
 				}
 			}
-			logDebug("");
 		}
 	}
 	
