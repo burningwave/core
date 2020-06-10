@@ -172,7 +172,7 @@ public class FileSystemItemTest extends BaseTest {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			PathHelper pathHelper = componentSupplier.getPathHelper();
 			return pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
-				.getChildren();
+				.getChildren().stream().findFirst().get().getChildren();
 			},
 			true
 		);
