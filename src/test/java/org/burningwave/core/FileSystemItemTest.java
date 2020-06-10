@@ -154,7 +154,7 @@ public class FileSystemItemTest extends BaseTest {
 			"/../../src/test/external-resources/libs-for-test.zip"
 		).getAllChildren(
 			FileSystemItem.Criteria.forAllFileThat(
-				fileSystemItem -> "class".equals(fileSystemItem[0].getExtension())
+				fileSystemItem -> "class".equals(fileSystemItem.getExtension())
 			)
 		),
 		false);

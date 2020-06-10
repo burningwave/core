@@ -33,9 +33,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Map.Entry;
-import java.util.function.BiPredicate;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -141,7 +140,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	}
 	
 	void searchInFileSystemAndRefreshCache(C context) {
-		BiPredicate<FileSystemItem, FileSystemItem> filter = getTestItemPredicate(context);
+		FileSystemItem.Criteria filter = getFileScanCriteria(context);
 		context.getSearchConfig().getPaths().parallelStream().forEach(path -> {
 			synchronized(mutexManager.getMutex(path)) {
 				FileSystemItem.ofPath(path).refresh().getAllChildren(filter);
@@ -159,7 +158,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	}
 	
 	void searchInCacheOrInFileSystem(C context) {
-		BiPredicate<FileSystemItem, FileSystemItem> filter = getTestItemPredicate(context);
+		FileSystemItem.Criteria filter = getFileScanCriteria(context);
 		context.getSearchConfig().getPaths().parallelStream().forEach(path -> {
 			Map<String, I> classesForPath = cache.get(path);
 			if (classesForPath == null) {

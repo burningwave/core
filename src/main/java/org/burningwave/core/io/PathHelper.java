@@ -297,13 +297,17 @@ public class PathHelper implements Component {
 					if (fileSystemItemParent.exists()) {
 						String childrenSet = groupMap.get(2).get(0);
 						String childrenSetRegEx = groupMap.get(3).get(0);
-						Function<Predicate<FileSystemItem>, Set<FileSystemItem>> childrenSupplier =
+						Function<FileSystemItem.Criteria, Set<FileSystemItem>> childrenSupplier =
 							childrenSet.equalsIgnoreCase("children") ?
 								fileSystemItemParent::getChildren :
 								childrenSet.equalsIgnoreCase("allChildren") ?
 									fileSystemItemParent::getAllChildren : null;
 						if (childrenSupplier != null) {
-							Set<FileSystemItem> childrenFound = childrenSupplier.apply(fileSystemItem -> fileSystemItem.getAbsolutePath().matches(childrenSetRegEx));
+							Set<FileSystemItem> childrenFound = childrenSupplier.apply(
+								FileSystemItem.Criteria.forAllFileThat(
+									fileSystemItem -> fileSystemItem.getAbsolutePath().matches(childrenSetRegEx)
+								)
+							);
 							for (FileSystemItem fileSystemItem : childrenFound) {
 								pathGroup.add(fileSystemItem.getAbsolutePath());
 								allPaths.add(fileSystemItem.getAbsolutePath());

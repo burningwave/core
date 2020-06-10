@@ -134,8 +134,8 @@ public class FileSystemItem implements ManagedLogger {
 	}
 
 
-	public FileSystemItem copyAllChildrenTo(String folder, Predicate<FileSystemItem> filter){
-		Predicate<FileSystemItem> finalFilter = fileSystemItem -> !fileSystemItem.isArchive();
+	public FileSystemItem copyAllChildrenTo(String folder, FileSystemItem.Criteria filter){
+		FileSystemItem.Criteria finalFilter = FileSystemItem.Criteria.forAllFileThat(fileSystemItem -> !fileSystemItem.isArchive());
 		finalFilter = filter != null ? finalFilter.and(filter) : finalFilter; 
 		Set<FileSystemItem> allChildren = getAllChildren(finalFilter);
 		for (FileSystemItem child : allChildren) {
@@ -157,10 +157,10 @@ public class FileSystemItem implements ManagedLogger {
 		return copyTo(folder, null);
 	}
 	
-	public FileSystemItem copyTo(String folder, Predicate<FileSystemItem> filter) {
+	public FileSystemItem copyTo(String folder, FileSystemItem.Criteria filter) {
 		FileSystemItem destination = null;
 		if (isFile()) {
-			if (filter == null || filter.test(this)) {
+			if (filter == null || filter.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(new FileSystemItem[] {this, this})) {
 				destination = Streams.store(folder + "/" + getName(), toByteBuffer());
 			}
 		} else {
@@ -197,28 +197,8 @@ public class FileSystemItem implements ManagedLogger {
 		return Optional.ofNullable(getAllChildren0()).map(children -> new HashSet<>(children)).orElseGet(() -> null);
 	}
 	
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(BiPredicate<FileSystemItem, FileSystemItem> filter) {
-		return getAllChildren(filter, HashSet::new);
-	}
-	
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(BiPredicate<FileSystemItem, FileSystemItem> filter, Supplier<C> setSupplier) {
-		return Optional.ofNullable(getAllChildren0()).map(children -> children.parallelStream().filter(child -> filter.test(this, child)).collect(
-			Collectors.toCollection(setSupplier))
-		).orElseGet(() -> null);
-	}
-	
 	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(FileSystemItem.Criteria filter) {
-		return getAllChildren(filter, HashSet::new);
-	}
-	
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
-		return Optional.ofNullable(getAllChildren0()).map(children ->
-			children.parallelStream().filter(child -> 
-				filter.testWithTrueResultForNullEntityOrTrueResultForNullPredicate(
-					new FileSystemItem[]{child, this}
-				)
-			).collect(Collectors.toCollection(setSupplier))
-		).orElseGet(() -> null);
+		return getChildren(this::getAllChildren0, filter, HashSet::new);
 	}
 	
 	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(Predicate<FileSystemItem> filter) {
@@ -246,12 +226,18 @@ public class FileSystemItem implements ManagedLogger {
 		return Optional.ofNullable(getChildren0()).map(children -> new HashSet<>(children)).orElseGet(() -> null);
 	}
 	
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getChildren(Predicate<FileSystemItem> filter) {
-		return getChildren(filter, HashSet::new);
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getChildren(FileSystemItem.Criteria filter) {
+		return getChildren(this::getChildren, filter, HashSet::new);
 	}
 	
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getChildren(Predicate<FileSystemItem> filter, Supplier<C> setSupplier) {
-		return Optional.ofNullable(getChildren0()).map(children -> children.parallelStream().filter(filter).collect(Collectors.toCollection(setSupplier))).orElseGet(() -> null);
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getChildren(Supplier<Set<FileSystemItem>> childrenSupplier, FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
+		return Optional.ofNullable(childrenSupplier.get()).map(children ->
+			children.parallelStream().filter(child -> 
+				filter.testWithTrueResultForNullEntityOrTrueResultForNullPredicate(
+					new FileSystemItem[]{child, this}
+				)
+			).collect(Collectors.toCollection(setSupplier))
+		).orElseGet(() -> null);
 	}
 	
 	private Set<FileSystemItem> getChildren(Supplier<IterableZipContainer> zipInputStreamSupplier, String itemToSearch) {
@@ -735,9 +721,13 @@ public class FileSystemItem implements ManagedLogger {
 			return new Criteria();
 		}
 		
-		public final static Criteria forAllFileThat(final Predicate<FileSystemItem[]> predicate) {
-			return new Criteria().allThat(predicate);
-		}		
+		public final static Criteria forAllFileThat(final Predicate<FileSystemItem> predicate) {
+			return new Criteria().allThat(childAndSuperParent -> predicate.test(childAndSuperParent[0]));
+		}	
+		
+		public final static Criteria forAllFileThat(final BiPredicate<FileSystemItem, FileSystemItem> predicate) {
+			return new Criteria().allThat(childAndSuperParent -> predicate.test(childAndSuperParent[1], childAndSuperParent[0]));
+		}	
 		
 	}
 	
@@ -779,22 +769,24 @@ public class FileSystemItem implements ManagedLogger {
 			private final static Predicate<FileSystemItem> fileSignatureChecker =
 				file -> ThrowingSupplier.get(() -> Streams.isClass(file.toByteBuffer()));
 			
-			public static Predicate<FileSystemItem> toPredicate(CheckingOption checkFileOption) {
+			public static FileSystemItem.Criteria toPredicate(CheckingOption checkFileOption) {
 				if (checkFileOption.equals(CheckingOption.FOR_NAME_OR_SIGNATURE)) {
-					return fileNameChecker.or(fileSignatureChecker);
+					return FileSystemItem.Criteria.forAllFileThat(fileNameChecker.or(fileSignatureChecker));
 				} else if (checkFileOption.equals(CheckingOption.FOR_SIGNATURE_OR_NAME)) {
-					return fileSignatureChecker.or(fileNameChecker);
+					return FileSystemItem.Criteria.forAllFileThat(fileSignatureChecker.or(fileNameChecker));
 				} else if (checkFileOption.equals(CheckingOption.FOR_NAME_AND_SIGNATURE)) {
-					return fileNameChecker.and(fileSignatureChecker);
+					return FileSystemItem.Criteria.forAllFileThat(fileNameChecker.and(fileSignatureChecker));
 				} else if (checkFileOption.equals(CheckingOption.FOR_NAME)) {
-					return fileNameChecker;
+					return FileSystemItem.Criteria.forAllFileThat(fileNameChecker);
 				} else if (checkFileOption.equals(CheckingOption.FOR_SIGNATURE)) {
-					return fileSignatureChecker;
+					return FileSystemItem.Criteria.forAllFileThat(fileSignatureChecker);
 				}	
 				return null;
 			}
 			
-			public static final Predicate<FileSystemItem> toPredicate(String label) {
+			
+			
+			public static FileSystemItem.Criteria toPredicate(String label) {
 				return toPredicate(CheckingOption.forLabel(label));
 			}
 		}

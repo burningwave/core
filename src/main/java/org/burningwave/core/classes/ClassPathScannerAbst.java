@@ -33,7 +33,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -139,31 +138,33 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 	
 	void searchInFileSystem(C context) {
-		BiPredicate<FileSystemItem, FileSystemItem> filter = getTestItemPredicate(context);
+		FileSystemItem.Criteria filter = getFileScanCriteria(context);
 		context.getSearchConfig().getPaths().parallelStream().forEach(path -> {
 			FileSystemItem.ofPath(path).refresh().getAllChildren(filter);
 		});
 	}
 	
-	BiPredicate<FileSystemItem, FileSystemItem> getTestItemPredicate(C context) {
-		Predicate<FileSystemItem> classPredicate = parseCheckFileOptionsValue(context.getSearchConfig());
-		return (basePath, child) -> {
-			boolean isClass = false;
-			try {
-				if (isClass = classPredicate.test(child)) {
-					JavaClass javaClass = JavaClass.create(child.toByteBuffer());
-					ClassCriteria.TestContext criteriaTestContext = testCriteria(context, javaClass);
-					if (criteriaTestContext.getResult()) {
-						addToContext(
-							context, criteriaTestContext, basePath.getAbsolutePath(), child, javaClass
-						);
+	FileSystemItem.Criteria getFileScanCriteria(C context) {
+		Predicate<FileSystemItem[]> classPredicate = parseCheckFileOptionsValue(context.getSearchConfig()).getPredicateOrTruePredicateIfPredicateIsNull();
+		return FileSystemItem.Criteria.forAllFileThat(
+			(basePath, child) -> {
+				boolean isClass = false;
+				try {
+					if (isClass = classPredicate.test(new FileSystemItem[]{child, basePath})) {
+						JavaClass javaClass = JavaClass.create(child.toByteBuffer());
+						ClassCriteria.TestContext criteriaTestContext = testCriteria(context, javaClass);
+						if (criteriaTestContext.getResult()) {
+							addToContext(
+								context, criteriaTestContext, basePath.getAbsolutePath(), child, javaClass
+							);
+						}
 					}
+				} catch (Throwable exc) {
+					logError("Could not scan " + child.getAbsolutePath(), exc);
 				}
-			} catch (Throwable exc) {
-				logError("Could not scan " + child.getAbsolutePath(), exc);
+				return isClass;
 			}
-			return isClass;
-		};
+		);
 	}
 	
 	@SuppressWarnings("resource")
@@ -187,7 +188,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		return context;
 	}
 	
-	final Predicate<FileSystemItem> parseCheckFileOptionsValue(SearchConfigAbst<?> searchConfig) {
+	final FileSystemItem.Criteria parseCheckFileOptionsValue(SearchConfigAbst<?> searchConfig) {
 		return FileSystemItem.CheckingOption.OfClassType.toPredicate(
 			Optional.ofNullable(searchConfig.getCheckFileOption()).map(checkFileOptions -> 
 				checkFileOptions.getLabel()
