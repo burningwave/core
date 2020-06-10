@@ -5,9 +5,8 @@ import java.net.URL;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
-
+import org.junit.jupiter.api.Test;
 
 public class FileSystemItemTest extends BaseTest {
 	
