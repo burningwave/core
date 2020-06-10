@@ -172,21 +172,11 @@ public class FileSystemItemTest extends BaseTest {
 	@Test
 	public void readTestEighteen() {
 		testNotEmpty(() -> {
-			ComponentSupplier componentSupplier = getComponentSupplier();
-			PathHelper pathHelper = componentSupplier.getPathHelper();
-			Set<FileSystemItem> fISs = pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes").getChildren();
-			FileSystemItem firstFis = null;
-			if (!fISs.isEmpty()) {
-				for (FileSystemItem child : fISs) {
-					if (firstFis == null) {
-						firstFis = child;
-					}
-					logError(Optional.ofNullable(child).map(ch -> ch.getAbsolutePath()).orElseGet(() -> null));
-				}
-			} else {
-				logError("collection empty");
-			}
-			return firstFis.getChildren();
+				ComponentSupplier componentSupplier = getComponentSupplier();
+				PathHelper pathHelper = componentSupplier.getPathHelper();
+	
+				return pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
+					.getChildren().stream().filter(FileSystemItem::isFolder).findFirst().get().getChildren();
 			},
 			true
 		);
