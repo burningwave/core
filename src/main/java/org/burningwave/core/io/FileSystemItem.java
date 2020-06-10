@@ -243,67 +243,47 @@ public class FileSystemItem implements ManagedLogger {
 	
 	private Set<FileSystemItem> getChildren(Supplier<IterableZipContainer> zipInputStreamSupplier, String itemToSearch) {
 		try (IterableZipContainer zipInputStream = zipInputStreamSupplier.get()) {
-			if (itemToSearch.contains(IterableZipContainer.ZIP_PATH_SEPARATOR)) {
-				String zipEntryNameOfNestedZipFile = itemToSearch.substring(0, itemToSearch.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR));
-				IterableZipContainer.Entry zipEntryWrapper = zipInputStream.findFirst(
-					zEntry -> zEntry.getName().equals(zipEntryNameOfNestedZipFile),
-					zEntry -> false
-				);
-				if (zipEntryWrapper == null) {
-					return null;
-				}
-				try (InputStream iss = zipEntryWrapper.toInputStream()) {
-					return getChildren(
-						() -> IterableZipContainer.create(zipEntryWrapper.getAbsolutePath(), zipEntryWrapper.toInputStream()), 
-						itemToSearch.replaceFirst(zipEntryNameOfNestedZipFile + IterableZipContainer.ZIP_PATH_SEPARATOR, "")
-					);
-				} catch (IOException exc) {
-					logWarn("Exception occurred while opening input stream from zipEntry {}: {}", zipEntryWrapper.getAbsolutePath(), exc.getMessage());
-					return null;
-				}
-			} else {
-				final String itemToSearchRegEx = itemToSearch.replace("/", "\\/") + "(.*?)\\/";
-				Pattern itemToSearchRegExPattern = Pattern.compile(itemToSearchRegEx);
-				boolean isJModArchive = Streams.isJModArchive(zipInputStream.toByteBuffer());
-				Set<String> childrenRelPaths = new HashSet<>();
-				Set<FileSystemItem> children = new HashSet<>();
-				Set<FileSystemItem> toRet = zipInputStream.findAllAndConvert(
-					() -> children,
-					!isJModArchive ?
-						(zEntry) -> {
-							String nameToTest = zEntry.getName();
-							nameToTest += nameToTest.endsWith("/") ? "" : "/";
-							logDebug(nameToTest + " = " + nameToTest.matches(itemToSearchRegEx) + " " + (nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0) + " " + nameToTest.replaceFirst(itemToSearchRegEx, ""));
-							return nameToTest.matches(itemToSearchRegEx) && nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0;
-						} :
-						(zEntry) -> {
-							String nameToTest = zEntry.getName();
-							nameToTest += nameToTest.endsWith("/") ? "" : "/";
-							if (nameToTest.matches(itemToSearchRegEx)) {
-								String childRelPath = itemToSearch + Strings.extractAllGroups(itemToSearchRegExPattern, nameToTest).get(1).get(0) + "/";
-								if (!childrenRelPaths.contains(childRelPath)) {
-									childrenRelPaths.add(childRelPath);
-									FileSystemItem fileSystemItem = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath() + "/" + childRelPath);
-									if (fileSystemItem.parentContainer == null) {
-										fileSystemItem.parentContainer = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath());
-									}
-									children.add(fileSystemItem);									
-								}
-							}
-							logDebug(nameToTest + " = " + nameToTest.matches(itemToSearchRegEx) + " " + (nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0) + " " + nameToTest.replaceFirst(itemToSearchRegEx, ""));
-							return nameToTest.matches(itemToSearchRegEx) && nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0;
-						},
+			final String itemToSearchRegEx = itemToSearch.replace("/", "\\/") + "(.*?)\\/";
+			Pattern itemToSearchRegExPattern = Pattern.compile(itemToSearchRegEx);
+			boolean isJModArchive = Streams.isJModArchive(zipInputStream.toByteBuffer());
+			Set<String> childrenRelPaths = new HashSet<>();
+			Set<FileSystemItem> children = new HashSet<>();
+			zipInputStream.findAllAndConvert(
+				() -> children,
+				!isJModArchive ?
 					(zEntry) -> {
-						FileSystemItem fileSystemItem = FileSystemItem.ofPath(zEntry.getAbsolutePath());
-						if (fileSystemItem.parentContainer == null) {
-							fileSystemItem.parentContainer = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath());
+						String nameToTest = zEntry.getName();
+						nameToTest += nameToTest.endsWith("/") ? "" : "/";
+						logDebug(nameToTest + " = " + nameToTest.matches(itemToSearchRegEx) + " " + (nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0) + " " + nameToTest.replaceFirst(itemToSearchRegEx, ""));
+						return nameToTest.matches(itemToSearchRegEx) && nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0;
+					} :
+					(zEntry) -> {
+						String nameToTest = zEntry.getName();
+						nameToTest += nameToTest.endsWith("/") ? "" : "/";
+						if (nameToTest.matches(itemToSearchRegEx)) {
+							String childRelPath = itemToSearch + Strings.extractAllGroups(itemToSearchRegExPattern, nameToTest).get(1).get(0) + "/";
+							if (!childrenRelPaths.contains(childRelPath)) {
+								childrenRelPaths.add(childRelPath);
+								FileSystemItem fileSystemItem = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath() + "/" + childRelPath);
+								if (fileSystemItem.parentContainer == null) {
+									fileSystemItem.parentContainer = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath());
+								}
+								children.add(fileSystemItem);									
+							}
 						}
-						return fileSystemItem;
+						logDebug(nameToTest + " = " + nameToTest.matches(itemToSearchRegEx) + " " + (nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0) + " " + nameToTest.replaceFirst(itemToSearchRegEx, ""));
+						return nameToTest.matches(itemToSearchRegEx) && nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0;
 					},
-					zEntry -> false
-				);
-				return toRet;
-			}
+				(zEntry) -> {
+					FileSystemItem fileSystemItem = FileSystemItem.ofPath(zEntry.getAbsolutePath());
+					if (fileSystemItem.parentContainer == null) {
+						fileSystemItem.parentContainer = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath());
+					}
+					return fileSystemItem;
+				},
+				zEntry -> false
+			);
+			return children;
 		}
 	}
 	
