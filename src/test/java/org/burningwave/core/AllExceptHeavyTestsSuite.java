@@ -8,10 +8,10 @@ import org.junit.runner.RunWith;
 
 @RunWith(JUnitPlatform.class)
 @SelectPackages("org.burningwave.core")
-//@SelectClasses({
-//	ClassHunterTest.class, 
-//	FileSystemItemTest.class
-//})
+@SelectClasses({
+	//ClassHunterTest.class, 
+	FileSystemItemTest.class
+})
 @ExcludeTags("Heavy")
 public class AllExceptHeavyTestsSuite {
 

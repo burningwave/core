@@ -254,7 +254,8 @@ public class FileSystemItem implements ManagedLogger {
 					(zEntry) -> {
 						String nameToTest = zEntry.getName();
 						nameToTest += nameToTest.endsWith("/") ? "" : "/";
-						logDebug(nameToTest + " = " + nameToTest.matches(itemToSearchRegEx) + " " + (nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0) + " " + nameToTest.replaceFirst(itemToSearchRegEx, ""));
+						//logDebug(nameToTest + " = " + nameToTest.matches(itemToSearchRegEx) + " " + (nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0) + " " + nameToTest.replaceFirst(itemToSearchRegEx, ""));
+						logWarn(nameToTest);
 						return nameToTest.matches(itemToSearchRegEx) && nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0;
 					} :
 					(zEntry) -> {
@@ -263,15 +264,17 @@ public class FileSystemItem implements ManagedLogger {
 						if (nameToTest.matches(itemToSearchRegEx)) {
 							String childRelPath = itemToSearch + Strings.extractAllGroups(itemToSearchRegExPattern, nameToTest).get(1).get(0) + "/";
 							if (!childrenRelPaths.contains(childRelPath)) {
+								logError(nameToTest);
 								childrenRelPaths.add(childRelPath);
-								FileSystemItem fileSystemItem = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath() + "/" + childRelPath);
+								FileSystemItem fileSystemItem = FileSystemItem.ofPath(zipInputStream.getAbsolutePath() + "/" + childRelPath);
 								if (fileSystemItem.parentContainer == null) {
-									fileSystemItem.parentContainer = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath());
+									logError(fileSystemItem.getAbsolutePath());
+									fileSystemItem.parentContainer = FileSystemItem.ofPath(zipInputStream.getAbsolutePath());
 								}
 								children.add(fileSystemItem);									
 							}
 						}
-						logDebug(nameToTest + " = " + nameToTest.matches(itemToSearchRegEx) + " " + (nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0) + " " + nameToTest.replaceFirst(itemToSearchRegEx, ""));
+						//logDebug(nameToTest + " = " + nameToTest.matches(itemToSearchRegEx) + " " + (nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0) + " " + nameToTest.replaceFirst(itemToSearchRegEx, ""));
 						return nameToTest.matches(itemToSearchRegEx) && nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0;
 					},
 				(zEntry) -> {
