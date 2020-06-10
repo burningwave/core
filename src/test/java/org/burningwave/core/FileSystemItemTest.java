@@ -5,8 +5,9 @@ import java.net.URL;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
+import org.junit.Test;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+
 
 public class FileSystemItemTest extends BaseTest {
 	
@@ -174,6 +175,24 @@ public class FileSystemItemTest extends BaseTest {
 			pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
 		.getChildren().iterator().next().getChildren(),
 		true);
+	}
+	
+	@Test
+	public void readTestNineteen() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
+		testNotEmpty(() -> 
+			pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod")
+		.getChildren(),
+		true);
+	}
+	
+	@Test
+	public void readTestTwenty() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotEmpty(() -> componentSupplier.getPathHelper().getResource(
+			"/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar"
+		).getChildren(), true);
 	}
 	
 	@Test
