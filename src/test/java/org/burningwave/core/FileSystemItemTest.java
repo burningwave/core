@@ -153,17 +153,20 @@ public class FileSystemItemTest extends BaseTest {
 		testNotEmpty(() -> 
 			pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
 		.getAllChildren(),
-		false);
+		true);
 	}
 	
 	@Test
 	public void readTestSeventeen() {
-		ComponentSupplier componentSupplier = getComponentSupplier();
-		PathHelper pathHelper = componentSupplier.getPathHelper();
-		testNotEmpty(() -> 
-			pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
-		.getChildren(),
-		true);
+		testNotEmpty(() -> {
+				ComponentSupplier componentSupplier = getComponentSupplier();
+				PathHelper pathHelper = componentSupplier.getPathHelper();
+	
+				return pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
+					.getChildren();
+			},
+			true
+		);
 	}
 	
 	
@@ -196,6 +199,16 @@ public class FileSystemItemTest extends BaseTest {
 		testNotEmpty(() -> componentSupplier.getPathHelper().getResource(
 			"/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar"
 		).getChildren(), true);
+	}
+	
+	@Test
+	public void readTestTwentyOne() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
+		testNotEmpty(() -> 
+			pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
+		.getAllChildren(FileSystemItem.Criteria.forAllFileThat(FileSystemItem::isFolder)),
+		true);
 	}
 	
 	@Test
