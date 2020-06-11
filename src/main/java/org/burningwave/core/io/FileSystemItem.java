@@ -261,7 +261,9 @@ public class FileSystemItem implements ManagedLogger {
 							if (fileSystemItem.parentContainer == null) {
 								fileSystemItem.parentContainer = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath());
 							}
-							children.add(fileSystemItem);									
+							if (this.isParentOf(fileSystemItem)) {
+								children.add(fileSystemItem);		
+							}														
 						}
 					}					
 					//logDebug(nameToTest + " = " + nameToTest.matches(itemToSearchRegEx) + " " + (nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0) + " " + nameToTest.replaceFirst(itemToSearchRegEx, ""));
@@ -271,9 +273,6 @@ public class FileSystemItem implements ManagedLogger {
 					FileSystemItem fileSystemItem = FileSystemItem.ofPath(zEntry.getAbsolutePath());
 					if (fileSystemItem.parentContainer == null) {
 						fileSystemItem.parentContainer = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath());
-					}
-					if (this.isParentOf(fileSystemItem)) {
-						allChildren.add(fileSystemItem);
 					}
 					return fileSystemItem;
 				},
