@@ -240,6 +240,20 @@ public class FileSystemItemTest extends BaseTest {
 	}
 	
 	@Test
+	public void refreshTestTwo() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
+		testNotEmpty(() -> {
+			FileSystemItem fileSysteItem = FileSystemItem.ofPath(
+				basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
+			);
+			fileSysteItem.getChildren();
+			fileSysteItem.refresh();
+			return fileSysteItem.getChildren();
+		});
+	}
+	
+	@Test
 	public void copyFileTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
