@@ -499,7 +499,7 @@ public class JavaMemoryCompiler implements Component {
 							Objects.equals(iteratedClassPackageName, packageName)
 						)
 					).withScanFileCriteria(
-						FileSystemItem.CheckingOption.For.ClassType.toCriteria(checkFileOption)
+						new FileSystemItem.CheckingOption.For.ClassType().toCriteria(checkFileOption)
 					).optimizePaths(
 						true
 					)
@@ -513,7 +513,7 @@ public class JavaMemoryCompiler implements Component {
 								Objects.equals(iteratedClassPackageName, packageName)									
 							)
 						).withScanFileCriteria(
-							FileSystemItem.CheckingOption.For.ClassType.toCriteria(checkFileOption)
+							new FileSystemItem.CheckingOption.For.ClassType().toCriteria(checkFileOption)
 						).optimizePaths(
 							true
 						)
@@ -535,7 +535,7 @@ public class JavaMemoryCompiler implements Component {
 					SearchConfig.withoutUsingCache().addPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
 						ClassCriteria.create().allThat(classPredicate)
 					).withScanFileCriteria(
-						FileSystemItem.CheckingOption.For.ClassType.toCriteria(checkFileOption)
+						new FileSystemItem.CheckingOption.For.ClassType().toCriteria(checkFileOption)
 					).optimizePaths(
 						true
 					)
@@ -546,7 +546,7 @@ public class JavaMemoryCompiler implements Component {
 						SearchConfig.forPaths(classRepositoriesPaths).by(
 							ClassCriteria.create().allThat(classPredicate)
 						).withScanFileCriteria(
-							FileSystemItem.CheckingOption.For.ClassType.toCriteria(checkFileOption)
+							new FileSystemItem.CheckingOption.For.ClassType().toCriteria(checkFileOption)
 						).optimizePaths(
 							true
 						)

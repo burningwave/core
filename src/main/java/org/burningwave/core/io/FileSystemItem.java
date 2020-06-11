@@ -365,7 +365,7 @@ public class FileSystemItem implements ManagedLogger {
 		String conventionedAbsolutePath_01 = this.computeConventionedAbsolutePath();
 		String conventionedAbsolutePath_02 = fileSystemItem.computeConventionedAbsolutePath();
 		if (fileSystemItem.isContainer() && this.isContainer()) {
-			return conventionedAbsolutePath_01.startsWith(conventionedAbsolutePath_02);
+			return conventionedAbsolutePath_01.startsWith(conventionedAbsolutePath_02) && !conventionedAbsolutePath_02.equals(conventionedAbsolutePath_01);
 		} else if (fileSystemItem.isContainer() && !this.isContainer()) {
 			return conventionedAbsolutePath_01.startsWith(conventionedAbsolutePath_02); 
 		}
@@ -401,7 +401,7 @@ public class FileSystemItem implements ManagedLogger {
 		String conventionedAbsolutePath_01 = this.computeConventionedAbsolutePath();
 		String conventionedAbsolutePath_02 = fileSystemItem.computeConventionedAbsolutePath();
 		if (fileSystemItem.isContainer() && this.isContainer()) {
-			return conventionedAbsolutePath_02.startsWith(conventionedAbsolutePath_01);
+			return conventionedAbsolutePath_02.startsWith(conventionedAbsolutePath_01) && !conventionedAbsolutePath_02.equals(conventionedAbsolutePath_01);
 		} else if (!fileSystemItem.isContainer() && this.isContainer()) {
 			return conventionedAbsolutePath_02.startsWith(conventionedAbsolutePath_01); 
 		}
@@ -462,7 +462,11 @@ public class FileSystemItem implements ManagedLogger {
 						if (fileSystemItem.parentContainer == null) {
 							fileSystemItem.parentContainer = FileSystemItem.ofPath(zipInputStream.getAbsolutePath());
 						}
-						allChildren.add(fileSystemItem);
+						if (this.isParentOf(fileSystemItem)) {
+							allChildren.add(fileSystemItem);
+						} else  {
+							logError("not parent");
+						}
 					}
 					return allChildren;
 				}
@@ -799,12 +803,13 @@ public class FileSystemItem implements ManagedLogger {
 			return label;
 		}
 		
-		public static class For {
+		public abstract static class For {
 			
-			public static FileSystemItem.Criteria toCriteria(
-				CheckingOption checkFileOption,
-				Predicate<FileSystemItem> fileNameChecker,
-				Predicate<FileSystemItem> fileSignatureChecker
+			Predicate<FileSystemItem> fileNameChecker;
+			Predicate<FileSystemItem> fileSignatureChecker;
+			
+			public FileSystemItem.Criteria toCriteria(
+				CheckingOption checkFileOption
 			) {
 				if (checkFileOption.equals(CheckingOption.FOR_NAME_OR_SIGNATURE)) {
 					return FileSystemItem.Criteria.forAllFileThat(fileNameChecker.or(fileSignatureChecker));
@@ -820,58 +825,56 @@ public class FileSystemItem implements ManagedLogger {
 				return null;
 			}
 			
+			public FileSystemItem.Criteria toCriteria(String checkFileOptionLabel) {
+				return toCriteria(CheckingOption.forLabel(checkFileOptionLabel));
+			}
+			
 			public static class ClassType extends For{
 				
-				private final static Predicate<FileSystemItem> fileNameChecker = file -> {
-					String name = file.getName();
-					return name.endsWith(".class") && 
-						!name.endsWith("module-info.class") &&
-						!name.endsWith("package-info.class");
-				};
-				
-				private final static Predicate<FileSystemItem> fileSignatureChecker =
-					file -> ThrowingSupplier.get(() -> Streams.isClass(file.toByteBuffer()));
-				
-				public static FileSystemItem.Criteria toCriteria(String checkFileOptionLabel) {
-					return toCriteria(CheckingOption.forLabel(checkFileOptionLabel));
+				public ClassType() {
+					fileNameChecker = file -> {
+						String name = file.getName();
+						return name.endsWith(".class") && 
+							!name.endsWith("module-info.class") &&
+							!name.endsWith("package-info.class");
+					};
+					
+					fileSignatureChecker = file -> 
+						ThrowingSupplier.get(() -> Streams.isClass(file.toByteBuffer()));
+						
 				}
 				
-				public static FileSystemItem.Criteria toCriteria(CheckingOption checkFileOption) {
-					return toCriteria(checkFileOption, fileNameChecker, fileSignatureChecker);
-				}
 			}
 			
 			public static class ArchiveType extends For {
 				
-				private final static Predicate<FileSystemItem> fileNameChecker = file -> {
-					String name = file.getName();
-					return
-						name.endsWith(".zip") ||
-						name.endsWith(".jar") ||
-						name.endsWith("war") ||
-						name.endsWith("ear") ||
-						name.endsWith("jmod");
-				};
-				
-				private final static Predicate<FileSystemItem> fileSignatureChecker =
-					file -> ThrowingSupplier.get(() -> Streams.isArchive(file.toByteBuffer()));
-				
-				public static FileSystemItem.Criteria toCriteria(String checkFileOptionLabel) {
-					return toCriteria(CheckingOption.forLabel(checkFileOptionLabel));
-				}
+				public ArchiveType() {
+					fileNameChecker = file -> {
+						String name = file.getName();
+						return
+							name.endsWith(".zip") ||
+							name.endsWith(".jar") ||
+							name.endsWith("war") ||
+							name.endsWith("ear") ||
+							name.endsWith("jmod");
+					};
 					
-				public static FileSystemItem.Criteria toCriteria(CheckingOption checkFileOption) {
-					return toCriteria(checkFileOption, fileNameChecker, fileSignatureChecker);
+					fileSignatureChecker = file ->
+						ThrowingSupplier.get(() -> Streams.isArchive(file.toByteBuffer()));
+					
 				}
 			}
 			
 			public static class ClassPathType extends ArchiveType {
-				public static FileSystemItem.Criteria toCriteria(String checkFileOptionLabel) {
+					
+				@Override
+				public FileSystemItem.Criteria toCriteria(String checkFileOptionLabel) {
 					return toCriteria(CheckingOption.forLabel(checkFileOptionLabel));
 				}
-					
-				public static FileSystemItem.Criteria toCriteria(CheckingOption checkFileOption) {
-					return ArchiveType.toCriteria(checkFileOption).or().allFileThat(FileSystemItem::isFolder);
+				
+				@Override
+				public FileSystemItem.Criteria toCriteria(CheckingOption checkFileOption) {
+					return super.toCriteria(checkFileOption).or().allFileThat(FileSystemItem::isFolder);
 				}
 			}
 		}

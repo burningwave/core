@@ -131,7 +131,7 @@ public class ClassFactoryTest extends BaseTest {
 	}
 	
 	@Test
-	public void getOrBuildClassWithExternalClasTestOne() {
+	public void getOrBuildClassWithExternalClassTestOne() {
 		getOrBuildClassWithExternalClassTestOne(true);
 	}
 	

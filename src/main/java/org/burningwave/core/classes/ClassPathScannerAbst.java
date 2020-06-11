@@ -147,7 +147,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		SearchConfigAbst<?> searchConfig = context.getSearchConfig();
 		if (searchConfig.getScanFileCriteria().hasNoPredicate()) {
 			searchConfig.withScanFileCriteria(
-				FileSystemItem.CheckingOption.For.ClassType.toCriteria(
+				new FileSystemItem.CheckingOption.For.ClassType().toCriteria(
 					(String)config.get(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES)
 				)
 			);
