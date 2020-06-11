@@ -272,6 +272,9 @@ public class FileSystemItem implements ManagedLogger {
 					if (fileSystemItem.parentContainer == null) {
 						fileSystemItem.parentContainer = FileSystemItem.ofPath(zEntry.getParentContainer().getAbsolutePath());
 					}
+					if (this.isParentOf(fileSystemItem)) {
+						allChildren.add(fileSystemItem);
+					}
 					return fileSystemItem;
 				},
 				zEntry -> false
@@ -464,8 +467,6 @@ public class FileSystemItem implements ManagedLogger {
 						}
 						if (this.isParentOf(fileSystemItem)) {
 							allChildren.add(fileSystemItem);
-						} else  {
-							logError("not parent");
 						}
 					}
 					return allChildren;
