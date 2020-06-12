@@ -140,7 +140,7 @@ public class FileSystemItem implements ManagedLogger {
 	public FileSystemItem copyAllChildrenTo(String folder, FileSystemItem.Criteria filter){
 		FileSystemItem.Criteria finalFilter = FileSystemItem.Criteria.forAllFileThat(fileSystemItem -> !fileSystemItem.isArchive());
 		finalFilter = filter != null ? finalFilter.and(filter) : finalFilter; 
-		Set<FileSystemItem> allChildren = findAllChildren(finalFilter);
+		Set<FileSystemItem> allChildren = findInAllChildren(finalFilter);
 		for (FileSystemItem child : allChildren) {
 			FileSystemItem destFile = FileSystemItem.ofPath(folder + child.getAbsolutePath().replaceFirst(this.getAbsolutePath(), ""));
 			logDebug("Copying " + child.getAbsolutePath());
@@ -169,7 +169,7 @@ public class FileSystemItem implements ManagedLogger {
 		} else {
 			File file = new File(folder + "/" + getName());
 			file.mkdirs();
-			for (FileSystemItem fileSystemItem : (filter == null ? getChildren() : findChildren(filter))) {
+			for (FileSystemItem fileSystemItem : (filter == null ? getChildren() : findInChildren(filter))) {
 				fileSystemItem.copyTo(file.getAbsolutePath(), filter);
 			}
 			logDebug("Copied folder to " + file.getAbsolutePath());
@@ -203,23 +203,23 @@ public class FileSystemItem implements ManagedLogger {
 		}
 	}
 	
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findAllChildren(FileSystemItem.Criteria filter) {
-		return findChildren(this::getAllChildren0, filter, HashSet::new);
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter) {
+		return findIn(this::getAllChildren0, filter, HashSet::new);
 	}
 	
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findAllChildren(FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
-		return findChildren(this::getAllChildren0, filter, setSupplier);
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
+		return findIn(this::getAllChildren0, filter, setSupplier);
 	}
 	
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findChildren(FileSystemItem.Criteria filter) {
-		return findChildren(this::getChildren, filter, HashSet::new);
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findInChildren(FileSystemItem.Criteria filter) {
+		return findIn(this::getChildren, filter, HashSet::new);
 	}
 	
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findChildren(FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
-		return findChildren(this::getChildren, filter, setSupplier);
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findInChildren(FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
+		return findIn(this::getChildren, filter, setSupplier);
 	}
 	
-	private <C extends Set<FileSystemItem>> Set<FileSystemItem> findChildren(
+	private <C extends Set<FileSystemItem>> Set<FileSystemItem> findIn(
 		Supplier<Set<FileSystemItem>> childrenSupplier,
 		FileSystemItem.Criteria filter,
 		Supplier<C> setSupplier
@@ -233,23 +233,23 @@ public class FileSystemItem implements ManagedLogger {
 		).orElseGet(() -> null);
 	}
 	
-	public FileSystemItem findFirstOfAllChildren() {
-		return findFirstOfAllChildren(FileSystemItem.Criteria.create());
+	public FileSystemItem findFirstInAllChildren() {
+		return findFirstInAllChildren(FileSystemItem.Criteria.create());
 	}
 	
-	public FileSystemItem findFirstOfAllChildren(FileSystemItem.Criteria filter) {
-		return findFirstOfChildren(this::getAllChildren0, filter);
+	public FileSystemItem findFirstInAllChildren(FileSystemItem.Criteria filter) {
+		return findFirstInChildren(this::getAllChildren0, filter);
 	}
 	
-	public FileSystemItem findFirstOfChildren() {
-		return findFirstOfAllChildren(FileSystemItem.Criteria.create());
+	public FileSystemItem findFirstInChildren() {
+		return findFirstInAllChildren(FileSystemItem.Criteria.create());
 	}
 	
-	public FileSystemItem findFirstOfChildren(FileSystemItem.Criteria filter) {
-		return findFirstOfChildren(this::getChildren0, filter);
+	public FileSystemItem findFirstInChildren(FileSystemItem.Criteria filter) {
+		return findFirstInChildren(this::getChildren0, filter);
 	}
 	
-	private FileSystemItem findFirstOfChildren(Supplier<Set<FileSystemItem>> childrenSupplier, FileSystemItem.Criteria filter) {
+	private FileSystemItem findFirstInChildren(Supplier<Set<FileSystemItem>> childrenSupplier, FileSystemItem.Criteria filter) {
 		FileSystemItem[] thisAndChild = new FileSystemItem[] {null, this};
 		for (FileSystemItem fileSystemItem : childrenSupplier.get()) {
 			thisAndChild[0] = fileSystemItem;

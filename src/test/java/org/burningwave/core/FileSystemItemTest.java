@@ -142,7 +142,7 @@ public class FileSystemItemTest extends BaseTest {
 		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/../../src/test/external-resources/libs-for-test.zip"
-		).findAllChildren(FileSystemItem.Criteria.forAllFileThat((fileSystemItem) -> fileSystemItem.getName().endsWith(".class"))),
+		).findInAllChildren(FileSystemItem.Criteria.forAllFileThat((fileSystemItem) -> fileSystemItem.getName().endsWith(".class"))),
 		false);
 	}
 	
@@ -207,7 +207,7 @@ public class FileSystemItemTest extends BaseTest {
 		PathHelper pathHelper = componentSupplier.getPathHelper();
 		testNotEmpty(() -> 
 			pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
-		.findAllChildren(FileSystemItem.Criteria.forAllFileThat(FileSystemItem::isFolder)),
+		.findInAllChildren(FileSystemItem.Criteria.forAllFileThat(FileSystemItem::isFolder)),
 		false);
 	}
 	
@@ -217,7 +217,7 @@ public class FileSystemItemTest extends BaseTest {
 		PathHelper pathHelper = componentSupplier.getPathHelper();
 		testNotEmpty(() -> pathHelper.getResource(
 			"/../../src/test/external-resources/libs-for-test.zip"
-		).findAllChildren(
+		).findInAllChildren(
 			FileSystemItem.Criteria.forAllFileThat(
 				fileSystemItem -> "class".equals(fileSystemItem.getExtension())
 			)

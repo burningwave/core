@@ -94,7 +94,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		Predicate<FileSystemItem[]> fileFilterPredicate
 	) {
 		AtomicReference<ClassCriteria.TestContext> criteriaTestContextAR = new AtomicReference<>();
-		cachedItemPathAndBasePath[0].findFirstOfAllChildren(
+		cachedItemPathAndBasePath[0].findFirstInAllChildren(
 			FileSystemItem.Criteria.forAllFileThat(
 				(child, basePath) -> {
 					boolean matchPredicate = false;
