@@ -338,12 +338,13 @@ public class ComponentContainer implements ComponentSupplier {
 	@Override
 	public void close() {
 		if (LazyHolder.getComponentContainerInstance() != this) {
-			clear();
+			unregister(GlobalProperties);
+			unregister(config);
+			clear();			
 			components = null;
-			config.clear();
-			config = null;
 			propertySupplier = null;
 			initializerTask = null;
+			config = null;
 			instances.remove(this);
 		} else {
 			throw Throwables.toRuntimeException("Could not close singleton instance " + LazyHolder.COMPONENT_CONTAINER_INSTANCE);

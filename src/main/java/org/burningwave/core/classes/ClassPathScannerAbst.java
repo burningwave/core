@@ -214,8 +214,10 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	
 	@Override
 	public void close() {
+		unregister(config);
 		byteCodeHunterSupplier = null;
 		pathHelper = null;
 		contextSupplier = null;
+		config = null;
 	}
 }

@@ -575,7 +575,9 @@ public class JavaMemoryCompiler implements Component {
 	
 	@Override
 	public void close() {
+		unregister(config);
 		compiler = null;
 		classPathHunter = null;
+		config = null;
 	}
 }
