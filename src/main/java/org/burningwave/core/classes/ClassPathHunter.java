@@ -98,19 +98,12 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 			FileSystemItem.Criteria.forAllFileThat(
 				(basePath, child) -> {
 					boolean matchPredicate = false;
-					try {
-						if (matchPredicate = fileFilterPredicate.test(new FileSystemItem[]{child, basePath})) {
-							JavaClass javaClass = JavaClass.create(child.toByteBuffer());
-							ClassCriteria.TestContext criteriaTestContext = testClassCriteria(context, javaClass);
-							if (criteriaTestContext.getResult()) {
-								addToContext(
-									context, criteriaTestContext, basePath.getAbsolutePath(), child, javaClass
-								);
-								criteriaTestContextAR.set(criteriaTestContext);
-							}
-						}
-					} catch (Throwable exc) {
-						logError("Could not scan " + child.getAbsolutePath(), exc);
+					if (matchPredicate = child.isChildOf(filesToBeTested[1]) && fileFilterPredicate.test(new FileSystemItem[]{child, basePath})) {
+						criteriaTestContextAR.set(
+							testCachedItem(
+								context, filesToBeTested[1].getAbsolutePath(), filesToBeTested[0].getAbsolutePath(), classes
+							)
+						);
 					}
 					return matchPredicate;
 				}
