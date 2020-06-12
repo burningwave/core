@@ -766,6 +766,30 @@ public class FileSystemItem implements ManagedLogger {
 			return new Criteria();
 		}
 		
+		public final static Criteria forFileOfClassType(CheckingOption checkingOption) {
+			return new CheckingOption.ForFileOf.ClassType().toCriteria(checkingOption);
+		}
+		
+		public final static Criteria forFileOfClassType(String checkingOption) {
+			return new CheckingOption.ForFileOf.ClassType().toCriteria(checkingOption);
+		}
+		
+		public final static Criteria forFileOfArchiveType(CheckingOption checkingOption) {
+			return new CheckingOption.ForFileOf.ArchiveType().toCriteria(checkingOption);
+		}
+		
+		public final static Criteria forFileOfArchiveType(String checkingOption) {
+			return new CheckingOption.ForFileOf.ArchiveType().toCriteria(checkingOption);
+		}
+		
+		public final static Criteria forFileOfClassPathType(CheckingOption checkingOption) {
+			return new CheckingOption.ForFileOf.ClassPathType().toCriteria(checkingOption);
+		}
+		
+		public final static Criteria forFileOfClassPathType(String checkingOption) {
+			return new CheckingOption.ForFileOf.ClassPathType().toCriteria(checkingOption);
+		}
+		
 		public final static Criteria forAllFileThat(final Predicate<FileSystemItem> predicate) {
 			return new Criteria().allThat(childAndSuperParent -> predicate.test(childAndSuperParent[0]));
 		}	
@@ -806,12 +830,20 @@ public class FileSystemItem implements ManagedLogger {
 			return label;
 		}
 		
-		public abstract static class For {
+		abstract static class ForFileOf {
 			
 			Predicate<FileSystemItem> fileNameChecker;
 			Predicate<FileSystemItem> fileSignatureChecker;
 			
-			public FileSystemItem.Criteria toCriteria(
+			ForFileOf(
+				Predicate<FileSystemItem> fileNameChecker,
+				Predicate<FileSystemItem> fileSignatureChecker
+			) {
+				this.fileNameChecker = fileNameChecker;
+				this.fileSignatureChecker = fileSignatureChecker;
+			}
+			
+			FileSystemItem.Criteria toCriteria(
 				CheckingOption checkFileOption
 			) {
 				if (checkFileOption.equals(CheckingOption.FOR_NAME_OR_SIGNATURE)) {
@@ -828,55 +860,52 @@ public class FileSystemItem implements ManagedLogger {
 				return null;
 			}
 			
-			public FileSystemItem.Criteria toCriteria(String checkFileOptionLabel) {
+			FileSystemItem.Criteria toCriteria(String checkFileOptionLabel) {
 				return toCriteria(CheckingOption.forLabel(checkFileOptionLabel));
 			}
 			
-			public static class ClassType extends For{
+			static class ClassType extends ForFileOf {
 				
-				public ClassType() {
-					fileNameChecker = file -> {
+				ClassType() {
+					super(file -> {
 						String name = file.getName();
 						return name.endsWith(".class") && 
 							!name.endsWith("module-info.class") &&
 							!name.endsWith("package-info.class");
-					};
-					
-					fileSignatureChecker = file -> 
-						ThrowingSupplier.get(() -> Streams.isClass(file.toByteBuffer()));
+					}, file -> 
+						ThrowingSupplier.get(() -> Streams.isClass(file.toByteBuffer()))
+					);
 						
 				}
 				
 			}
 			
-			public static class ArchiveType extends For {
+			static class ArchiveType extends ForFileOf {
 				
-				public ArchiveType() {
-					fileNameChecker = file -> {
+				ArchiveType() {
+					super(file -> {
 						String name = file.getName();
 						return
 							name.endsWith(".zip") ||
 							name.endsWith(".jar") ||
-							name.endsWith("war") ||
-							name.endsWith("ear") ||
-							name.endsWith("jmod");
-					};
-					
-					fileSignatureChecker = file ->
-						ThrowingSupplier.get(() -> Streams.isArchive(file.toByteBuffer()));
-					
+							name.endsWith(".war") ||
+							name.endsWith(".ear") ||
+							name.endsWith(".jmod");
+					}, file ->
+						ThrowingSupplier.get(() -> Streams.isArchive(file.toByteBuffer()))
+					);					
 				}
 			}
 			
-			public static class ClassPathType extends ArchiveType {
+			static class ClassPathType extends ArchiveType {
 					
 				@Override
-				public FileSystemItem.Criteria toCriteria(String checkFileOptionLabel) {
+				FileSystemItem.Criteria toCriteria(String checkFileOptionLabel) {
 					return toCriteria(CheckingOption.forLabel(checkFileOptionLabel));
 				}
 				
 				@Override
-				public FileSystemItem.Criteria toCriteria(CheckingOption checkFileOption) {
+				FileSystemItem.Criteria toCriteria(CheckingOption checkFileOption) {
 					return super.toCriteria(checkFileOption).or().allFileThat(FileSystemItem::isFolder);
 				}
 			}
