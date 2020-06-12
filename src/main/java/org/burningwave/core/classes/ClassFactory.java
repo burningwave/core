@@ -298,7 +298,7 @@ public class ClassFactory implements Component {
 							false
 						).withScanFileCriteria(
 							FileSystemItem.Criteria.forClassTypeFiles(
-								(String)config.get(
+								(String)config.resolve(
 									Configuration.Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 									Configuration.DEFAULT_VALUES
 								)

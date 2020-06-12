@@ -54,33 +54,29 @@ public class Properties extends java.util.Properties {
 		listeners = new CopyOnWriteArrayList<>();
 	}
 	
-	public Object get(String propertyName) {
-		return get(this, propertyName, null, false, null);
+	public <T> T resolve(String propertyName) {
+		return resolve(propertyName, null, false, null);
 	}
 	
-	public <T> T get(String propertyName, Map<String, ?> defaultValues) {
-		return get(this, propertyName, null, false, defaultValues);
+	public <T> T resolve(String propertyName, Map<String, ?> defaultValues) {
+		return resolve(propertyName, null, false, defaultValues);
 	}
 	
-	public <T> T get(String propertyName, String propertyValuesSeparator) {
-		return get(this, propertyName, propertyValuesSeparator, false, null);
-	}
-	
+	public <T> T resolve(String propertyName, String propertyValuesSeparator) {
+		return resolve(propertyName, propertyValuesSeparator, false, null);
+	}	
 
-	public <T> T get(String propertyName,
-		String propertyValuesSeparator, boolean deleteUnresolvedPlaceHolder
-	) {
-		return get(this, propertyName, propertyValuesSeparator, deleteUnresolvedPlaceHolder, null);
+	public <T> T resolve(String propertyName, String propertyValuesSeparator, boolean deleteUnresolvedPlaceHolder) {
+		return resolve(propertyName, propertyValuesSeparator, deleteUnresolvedPlaceHolder, null);
 	}
 	
-	public <T> T get(
-		Properties properties,
+	public <T> T resolve(
 		String propertyName,
 		String propertyValuesSeparator,
 		boolean deleteUnresolvedPlaceHolder,
 		Map<String, ?> defaultValues
 	) {
-		return IterableObjectHelper.get(properties, propertyName, propertyValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+		return IterableObjectHelper.get(this, propertyName, propertyValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 	}
 	
 	public Collection<String> getAllPlaceHolders(String propertyName) {

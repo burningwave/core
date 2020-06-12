@@ -271,7 +271,7 @@ public class PathHelper implements Component {
 			Properties configWithResolvedPaths = new Properties();
 			configWithResolvedPaths.putAll(config);
 			configWithResolvedPaths.putAll(defaultValues);
-			paths = configWithResolvedPaths.get(pathGroupPropertyName, Configuration.Key.PATHS_SEPARATOR, true);
+			paths = configWithResolvedPaths.resolve(pathGroupPropertyName, Configuration.Key.PATHS_SEPARATOR, true);
 			if (paths != null) {
 				for (String path : paths.split(Configuration.Key.PATHS_SEPARATOR)) {
 					if (Strings.isNotEmpty(path)) {
