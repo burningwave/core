@@ -446,6 +446,13 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 			return getPredicate(true);
 		}
 		
+		public boolean testWithFalseResultForNullPredicate(E entity) {
+			return getPredicate(false).test(entity);
+		}		
+		
+		public boolean testWithTrueResultForNullPredicate(E entity) {
+			return getPredicate(true).test(entity);
+		}
 		
 		public boolean testWithFalseResultForNullEntityOrTrueResultForNullPredicate(E entity) {
 			return Optional.ofNullable(entity).map(ent -> getPredicate(true).test(ent)).orElseGet(() -> 

@@ -94,12 +94,12 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		Predicate<FileSystemItem[]> fileFilterPredicate
 	) {
 		AtomicReference<ClassCriteria.TestContext> criteriaTestContextAR = new AtomicReference<>(context.testClassCriteria(null));
-		filesToBeTested[0].findAllChildren(
+		filesToBeTested[0].findFirstOfAllChildren(
 			FileSystemItem.Criteria.forAllFileThat(
 				(basePath, child) -> {
-					boolean isClass = false;
+					boolean matchPredicate = false;
 					try {
-						if (isClass = fileFilterPredicate.test(new FileSystemItem[]{child, basePath})) {
+						if (matchPredicate = fileFilterPredicate.test(new FileSystemItem[]{child, basePath})) {
 							JavaClass javaClass = JavaClass.create(child.toByteBuffer());
 							ClassCriteria.TestContext criteriaTestContext = testClassCriteria(context, javaClass);
 							if (criteriaTestContext.getResult()) {
@@ -112,7 +112,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 					} catch (Throwable exc) {
 						logError("Could not scan " + child.getAbsolutePath(), exc);
 					}
-					return isClass;
+					return matchPredicate;
 				}
 			)
 		);
