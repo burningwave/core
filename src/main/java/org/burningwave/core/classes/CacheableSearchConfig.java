@@ -66,4 +66,13 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 	CacheableSearchConfig newInstance() {
 		return new CacheableSearchConfig(this.paths);
 	}
+	
+	@Override
+	public <T extends SearchConfigAbst<T>> T copyTo(T destConfig) {
+		super.copyTo(destConfig);
+		if (destConfig instanceof CacheableSearchConfig) {
+			((CacheableSearchConfig)destConfig).refreshCacheEnabled = this.refreshCacheEnabled;
+		}
+		return destConfig;
+	}
 }

@@ -152,6 +152,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		);
 	}
 	
+	@SuppressWarnings("resource")
 	public static class SearchContext extends org.burningwave.core.classes.SearchContext<Class<?>> {
 		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound;
 		Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap;
@@ -169,15 +170,16 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			this.membersFoundFlatMap.putAll(membersFound);
 		}
 		
+		
 		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> getMembersFound() {
-			if (membersFound == null && ! searchConfig.getClassCriteria().memberCriterias.isEmpty()) {
+			if (membersFound == null) {
 				loadMemberMaps();
 			}
 			return membersFound;
 		}
 		
 		public Map<MemberCriteria<?, ?, ?>, Collection<Member>> getMembersFoundFlatMap() {
-			if (membersFoundFlatMap == null && !searchConfig.getClassCriteria().memberCriterias.isEmpty()) {
+			if (membersFoundFlatMap == null) {
 				loadMemberMaps();
 			}
 			return membersFoundFlatMap;
@@ -185,26 +187,28 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 
 		private void loadMemberMaps() {
 			ClassCriteria classCriteria = searchConfig.getClassCriteria();
-			if ((membersFound == null || membersFoundFlatMap == null) && !classCriteria.memberCriterias.isEmpty()) {
+			if (!classCriteria.memberCriterias.isEmpty() && (membersFound == null || membersFoundFlatMap == null)) {
 				synchronized(this) {
-					Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound = new ConcurrentHashMap<>();
-					Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap = new ConcurrentHashMap<>();
-					for (Entry<String, Class<?>> pathAndItem : itemsFoundFlatMap.entrySet()) {
-						ClassCriteria.TestContext testContext = test(pathAndItem.getValue());
-						testContext.getMembersFound();
-						Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersForCriteria = testContext.getMembersFound();
-						membersFound.put(testContext.getEntity(), membersForCriteria);
-						membersForCriteria.forEach((criteria, memberList) -> {
-							Collection<Member> coll = membersFoundFlatMap.get(criteria);
-							if (coll == null) {								
-								coll = new CopyOnWriteArrayList<>();
-								membersFoundFlatMap.put(criteria, coll);
-							}
-							coll.addAll(memberList);
-						});
+					if (membersFound == null || membersFoundFlatMap == null) {
+						Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound = new ConcurrentHashMap<>();
+						Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap = new ConcurrentHashMap<>();
+						for (Entry<String, Class<?>> pathAndItem : itemsFoundFlatMap.entrySet()) {
+							ClassCriteria.TestContext testContext = test(pathAndItem.getValue());
+							testContext.getMembersFound();
+							Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersForCriteria = testContext.getMembersFound();
+							membersFound.put(testContext.getEntity(), membersForCriteria);
+							membersForCriteria.forEach((criteria, memberList) -> {
+								Collection<Member> coll = membersFoundFlatMap.get(criteria);
+								if (coll == null) {								
+									coll = new CopyOnWriteArrayList<>();
+									membersFoundFlatMap.put(criteria, coll);
+								}
+								coll.addAll(memberList);
+							});
+						}
+						this.membersFound = membersFound;
+						this.membersFoundFlatMap = membersFoundFlatMap;
 					}
-					this.membersFound = membersFound;
-					this.membersFoundFlatMap = membersFoundFlatMap;
 				}
 			}
 		}
