@@ -90,28 +90,28 @@ public class IterableObjectHelper implements Component {
 		return false;
 	}
 	
-	public <T> T get(Properties properties, String propertyName) {
+	public <T> T get(Map<?, ?> properties, String propertyName) {
 		return get(properties, propertyName, null, false, null);
 	}
 	
-	public <T> T get(Properties properties, String propertyName, Map<String, ?> defaultValues) {
+	public <T> T get(Map<?, ?> properties, String propertyName, Map<String, ?> defaultValues) {
 		return get(properties, propertyName, null, false, defaultValues);
 	}
 	
-	public <T> T get(Properties properties, String propertyName, String propertyValuesSeparator) {
+	public <T> T get(Map<?, ?> properties, String propertyName, String propertyValuesSeparator) {
 		return get(properties, propertyName, propertyValuesSeparator, false, null);
 	}
 	
 
 	public String get(
-		Properties properties, String propertyName,
+		Map<?, ?> properties, String propertyName,
 		String propertyValuesSeparator, boolean deleteUnresolvedPlaceHolder
 	) {
 		return get(properties, propertyName, propertyValuesSeparator, deleteUnresolvedPlaceHolder, null);
 	}
 	
 	public <T> T get(
-		Properties properties,
+		Map<?, ?> properties,
 		String propertyName,
 		String propertyValuesSeparator,
 		boolean deleteUnresolvedPlaceHolder,
