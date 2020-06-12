@@ -388,7 +388,7 @@ public class ResourceReacher {
         }
         
         //Filtering all nested children for extension
-        for (FileSystemItem child : firstFolderFound.findAllChildren(
+        for (FileSystemItem child : firstFolderFound.findInAllChildren(
             FileSystemItem.Criteria.forAllFileThat(fSIC -> 
                 "txt".equals(fSIC.getExtension()) || "exe".equals(fSIC.getExtension()))
             )
