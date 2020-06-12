@@ -138,7 +138,7 @@ public class FileSystemItem implements ManagedLogger {
 	public FileSystemItem copyAllChildrenTo(String folder, FileSystemItem.Criteria filter){
 		FileSystemItem.Criteria finalFilter = FileSystemItem.Criteria.forAllFileThat(fileSystemItem -> !fileSystemItem.isArchive());
 		finalFilter = filter != null ? finalFilter.and(filter) : finalFilter; 
-		Set<FileSystemItem> allChildren = getAllChildren(finalFilter);
+		Set<FileSystemItem> allChildren = findAllChildren(finalFilter);
 		for (FileSystemItem child : allChildren) {
 			FileSystemItem destFile = FileSystemItem.ofPath(folder + child.getAbsolutePath().replaceFirst(this.getAbsolutePath(), ""));
 			logDebug("Copying " + child.getAbsolutePath());
@@ -167,7 +167,7 @@ public class FileSystemItem implements ManagedLogger {
 		} else {
 			File file = new File(folder + "/" + getName());
 			file.mkdirs();
-			for (FileSystemItem fileSystemItem : (filter == null ? getChildren() : getChildren(filter))) {
+			for (FileSystemItem fileSystemItem : (filter == null ? getChildren() : findChildren(filter))) {
 				fileSystemItem.copyTo(file.getAbsolutePath(), filter);
 			}
 			logDebug("Copied folder to " + file.getAbsolutePath());
@@ -196,21 +196,17 @@ public class FileSystemItem implements ManagedLogger {
 	
 	public Set<FileSystemItem> getAllChildren() {
 		return Optional.ofNullable(getAllChildren0()).map(children -> new HashSet<>(children)).orElseGet(() -> null);
+	}	
+	
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findAllChildren(FileSystemItem.Criteria filter) {
+		return findChildren(this::getAllChildren0, filter, HashSet::new);
 	}
 	
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(FileSystemItem.Criteria filter) {
-		return getChildren(this::getAllChildren0, filter, HashSet::new);
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findAllChildren(FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
+		return findChildren(this::getAllChildren0, filter, setSupplier);
 	}
 	
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(Predicate<FileSystemItem> filter) {
-		return getAllChildren(filter, HashSet::new);
-	}
-	
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getAllChildren(Predicate<FileSystemItem> filter, Supplier<C> setSupplier) {
-		return Optional.ofNullable(getAllChildren0()).map(children -> children.parallelStream().filter(filter).collect(Collectors.toCollection(setSupplier))).orElseGet(() -> null);
-	}
-	
-	public Set<FileSystemItem> getAllChildren0() {
+	private Set<FileSystemItem> getAllChildren0() {
 		Set<FileSystemItem> allChildren = this.allChildren;
 		if (allChildren == null) {
 			synchronized (this) {
@@ -227,11 +223,19 @@ public class FileSystemItem implements ManagedLogger {
 		return Optional.ofNullable(getChildren0()).map(children -> new HashSet<>(children)).orElseGet(() -> null);
 	}
 	
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getChildren(FileSystemItem.Criteria filter) {
-		return getChildren(this::getChildren, filter, HashSet::new);
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findChildren(FileSystemItem.Criteria filter) {
+		return findChildren(this::getChildren, filter, HashSet::new);
 	}
 	
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> getChildren(Supplier<Set<FileSystemItem>> childrenSupplier, FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
+	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findChildren(FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
+		return findChildren(this::getChildren, filter, setSupplier);
+	}
+	
+	private <C extends Set<FileSystemItem>> Set<FileSystemItem> findChildren(
+		Supplier<Set<FileSystemItem>> childrenSupplier,
+		FileSystemItem.Criteria filter,
+		Supplier<C> setSupplier
+	) {
 		return Optional.ofNullable(childrenSupplier.get()).map(children ->
 			children.parallelStream().filter(child -> 
 				filter.testWithTrueResultForNullEntityOrTrueResultForNullPredicate(
@@ -756,7 +760,6 @@ public class FileSystemItem implements ManagedLogger {
 		return url;
 	}
 	
-	@SuppressWarnings("resource")
 	public static class Criteria extends org.burningwave.core.Criteria.Simple<FileSystemItem[], Criteria> {
 		
 		public static Criteria create() {

@@ -157,7 +157,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 					synchronized(mutexManager.getMutex(basePath)) {
 						classesForPath = cache.get(basePath);
 						if (classesForPath == null) {
-							currentScannedPath.getAllChildren(filterAndExecutor);
+							currentScannedPath.findAllChildren(filterAndExecutor);
 							Map<String, I> itemsForPath = new HashMap<>();
 							Map<String, I> itemsFound = context.getItemsFound(basePath);
 							if (itemsFound != null) {
@@ -170,7 +170,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 					context.addAllItemsFound(basePath, classesForPath);
 					continue;
 				} else {
-					currentScannedPath.getAllChildren(filterAndExecutor);
+					currentScannedPath.findAllChildren(filterAndExecutor);
 					continue;
 				}
 			}

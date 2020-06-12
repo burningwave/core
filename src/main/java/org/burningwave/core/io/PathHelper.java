@@ -299,9 +299,9 @@ public class PathHelper implements Component {
 						String childrenSetRegEx = groupMap.get(3).get(0);
 						Function<FileSystemItem.Criteria, Set<FileSystemItem>> childrenSupplier =
 							childrenSet.equalsIgnoreCase("children") ?
-								fileSystemItemParent::getChildren :
+								fileSystemItemParent::findChildren :
 								childrenSet.equalsIgnoreCase("allChildren") ?
-									fileSystemItemParent::getAllChildren : null;
+									fileSystemItemParent::findAllChildren : null;
 						if (childrenSupplier != null) {
 							Set<FileSystemItem> childrenFound = childrenSupplier.apply(
 								FileSystemItem.Criteria.forAllFileThat(
