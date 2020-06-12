@@ -89,19 +89,19 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 	@Override
 	TestContext testPathAndCachedItem(
 		SearchContext context,
-		FileSystemItem[] filesToBeTested, 
+		FileSystemItem[] cachedItemPathAndBasePath, 
 		Collection<Class<?>> classes, 
 		Predicate<FileSystemItem[]> fileFilterPredicate
 	) {
 		AtomicReference<ClassCriteria.TestContext> criteriaTestContextAR = new AtomicReference<>(context.testClassCriteria(null));
-		filesToBeTested[0].findFirstOfAllChildren(
+		cachedItemPathAndBasePath[0].findFirstOfAllChildren(
 			FileSystemItem.Criteria.forAllFileThat(
-				(basePath, child) -> {
+				(child, basePath) -> {
 					boolean matchPredicate = false;
-					if (matchPredicate = child.isChildOf(filesToBeTested[1]) && fileFilterPredicate.test(new FileSystemItem[]{child, basePath})) {
+					if (matchPredicate = fileFilterPredicate.test(new FileSystemItem[]{child, basePath})) {
 						criteriaTestContextAR.set(
 							testCachedItem(
-								context, filesToBeTested[1].getAbsolutePath(), filesToBeTested[0].getAbsolutePath(), classes
+								context, cachedItemPathAndBasePath[1].getAbsolutePath(), cachedItemPathAndBasePath[0].getAbsolutePath(), classes
 							)
 						);
 					}

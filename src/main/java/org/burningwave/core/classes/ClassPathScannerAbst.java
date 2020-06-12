@@ -159,7 +159,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 
 	FileSystemItem.Criteria getFileAndClassTesterAndExecutor(C context, Predicate<FileSystemItem[]> classFilePredicate) {
 		return FileSystemItem.Criteria.forAllFileThat(
-			(basePath, child) -> {
+			(child, basePath) -> {
 				boolean isClass = false;
 				try {
 					if (isClass = classFilePredicate.test(new FileSystemItem[]{child, basePath})) {

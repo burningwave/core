@@ -904,7 +904,7 @@ public class FileSystemItem implements ManagedLogger {
 		}
 		
 		public final static Criteria forAllFileThat(final BiPredicate<FileSystemItem, FileSystemItem> predicate) {
-			return new Criteria().allThat(childAndSuperParent -> predicate.test(childAndSuperParent[1], childAndSuperParent[0]));
+			return new Criteria().allThat(childAndSuperParent -> predicate.test(childAndSuperParent[0], childAndSuperParent[1]));
 		}
 		
 		public final static Criteria forAllFileThat(final Predicate<FileSystemItem> predicate) {
