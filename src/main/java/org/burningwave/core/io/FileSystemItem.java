@@ -796,7 +796,7 @@ public class FileSystemItem implements ManagedLogger {
 		FOR_NAME_OR_SIGNATURE(FOR_NAME.label + "|" + FOR_SIGNATURE.label),
 		FOR_SIGNATURE_OR_NAME(FOR_SIGNATURE.label + "|" + FOR_NAME.label);
 		
-		abstract static class ForFileOf {
+		public abstract static class ForFileOf {
 			
 			static class ArchiveType extends ForFileOf {
 				
