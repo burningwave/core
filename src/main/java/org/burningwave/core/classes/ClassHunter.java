@@ -138,14 +138,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	
 	@Override
 	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(ClassHunter.SearchContext context, String path, String key, Class<?> cls) {
-		return context.testClassCriteria(context.retrieveClass(cls));
-	}
-	
-	@Override
-	<S extends SearchConfigAbst<S>> void addCachedItemToContext(
-		ClassHunter.SearchContext context, ClassCriteria.TestContext testContext, String path, Entry<String, Class<?>> cachedItemAsEntry
-	) {
-		context.addItemFound(path, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue(), testContext.getMembersFound());
+		return context.test(context.retrieveClass(cls));
 	}
 	
 	@Override
@@ -155,14 +148,13 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		context.addItemFound(
 			basePath,
 			fileSystemItem.getAbsolutePath(),
-			criteriaTestContext.getEntity(),
-			criteriaTestContext.getMembersFound()
+			criteriaTestContext.getEntity()
 		);
 	}
 	
 	public static class SearchContext extends org.burningwave.core.classes.SearchContext<Class<?>> {
 		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound;
-		private Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap;
+		Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap;
 		
 		static SearchContext _create(InitContext initContext) {
 			return new SearchContext(initContext);
@@ -170,21 +162,6 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		
 		SearchContext(InitContext initContext) {
 			super(initContext);
-			membersFound = new ConcurrentHashMap<>();
-			membersFoundFlatMap = new ConcurrentHashMap<>();
-		}
-		
-		void addItemFound(String path, String key, Class<?> item, Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersForCriteria) {
-			super.addItemFound(path, key, item);
-			this.membersFound.put(item, membersForCriteria);
-			membersForCriteria.forEach((criteria, memberList) -> {
-				Collection<Member> coll = membersFoundFlatMap.get(criteria);
-				if (coll == null) {								
-					coll = new CopyOnWriteArrayList<>();
-					membersFoundFlatMap.put(criteria, coll);
-				}
-				coll.addAll(memberList);
-			});	
 		}
 		
 		void addAllMembersFound(Class<?> cls, Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFound) {
@@ -193,19 +170,55 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		}
 		
 		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> getMembersFound() {
+			if (membersFound == null && ! searchConfig.getClassCriteria().memberCriterias.isEmpty()) {
+				loadMemberMaps();
+			}
 			return membersFound;
 		}
 		
 		public Map<MemberCriteria<?, ?, ?>, Collection<Member>> getMembersFoundFlatMap() {
+			if (membersFoundFlatMap == null && !searchConfig.getClassCriteria().memberCriterias.isEmpty()) {
+				loadMemberMaps();
+			}
 			return membersFoundFlatMap;
+		}
+
+		private void loadMemberMaps() {
+			ClassCriteria classCriteria = searchConfig.getClassCriteria();
+			if ((membersFound == null || membersFoundFlatMap == null) && !classCriteria.memberCriterias.isEmpty()) {
+				synchronized(this) {
+					Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound = new ConcurrentHashMap<>();
+					Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap = new ConcurrentHashMap<>();
+					for (Entry<String, Class<?>> pathAndItem : itemsFoundFlatMap.entrySet()) {
+						ClassCriteria.TestContext testContext = test(pathAndItem.getValue());
+						testContext.getMembersFound();
+						Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersForCriteria = testContext.getMembersFound();
+						membersFound.put(testContext.getEntity(), membersForCriteria);
+						membersForCriteria.forEach((criteria, memberList) -> {
+							Collection<Member> coll = membersFoundFlatMap.get(criteria);
+							if (coll == null) {								
+								coll = new CopyOnWriteArrayList<>();
+								membersFoundFlatMap.put(criteria, coll);
+							}
+							coll.addAll(memberList);
+						});
+					}
+					this.membersFound = membersFound;
+					this.membersFoundFlatMap = membersFoundFlatMap;
+				}
+			}
 		}
 		
 		@Override
 		public void close() {
-			membersFound.clear();
-			membersFound = null;
-			membersFoundFlatMap.clear();
-			membersFoundFlatMap = null;
+			if (membersFound != null) {
+				membersFound.clear();
+				membersFound = null;
+			}
+			if (membersFoundFlatMap != null) {
+				membersFoundFlatMap.clear();
+				membersFoundFlatMap = null;
+			}			
 			super.close();
 		}
 	}

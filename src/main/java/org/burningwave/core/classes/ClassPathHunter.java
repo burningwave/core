@@ -77,13 +77,13 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(
 		SearchContext context, String baseAbsolutePath, String currentScannedItemAbsolutePath, Collection<Class<?>> classes
 	) {
-		ClassCriteria.TestContext testContext = context.testClassCriteria(null);
+		ClassCriteria.TestContext testContext;
 		for (Class<?> cls : classes) {
-			if ((testContext = context.testClassCriteria(context.retrieveClass(cls))).getResult()) {
-				break;
+			if ((testContext = context.test(context.retrieveClass(cls))).getResult()) {
+				return testContext;
 			}
 		}		
-		return testContext;
+		return testContext = context.test(null);
 	}
 	
 	@Override
@@ -93,7 +93,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		Collection<Class<?>> classes, 
 		Predicate<FileSystemItem[]> fileFilterPredicate
 	) {
-		AtomicReference<ClassCriteria.TestContext> criteriaTestContextAR = new AtomicReference<>(context.testClassCriteria(null));
+		AtomicReference<ClassCriteria.TestContext> criteriaTestContextAR = new AtomicReference<>();
 		cachedItemPathAndBasePath[0].findFirstOfAllChildren(
 			FileSystemItem.Criteria.forAllFileThat(
 				(child, basePath) -> {
@@ -109,7 +109,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 				}
 			)
 		);
-		return criteriaTestContextAR.get();
+		return criteriaTestContextAR.get() != null? criteriaTestContextAR.get() : context.test(null);
 	}
 	
 	@Override

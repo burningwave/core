@@ -175,7 +175,6 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			}
 			if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate) {
 				context.addAllItemsFound(basePath, classesForPath);
-				continue;
 			} else if (scanFileCriteriaHasNoPredicate) {
 				iterateAndTestCachedItems(context, basePath, classesForPath);
 			} else {
@@ -226,7 +225,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		if (fileFilterPredicate.test(filesToBeTested)) {
 			return testCachedItem(context, filesToBeTested[1].getAbsolutePath(), filesToBeTested[0].getAbsolutePath(), item);
 		}
-		return context.testClassCriteria(null);
+		return context.test(null);
 	}
 
 	<S extends SearchConfigAbst<S>> void addCachedItemToContext(

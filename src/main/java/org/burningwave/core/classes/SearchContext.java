@@ -242,7 +242,7 @@ public class SearchContext<T> implements Component {
 			loadClass(cls.getName());
 	}
 	
-	<C extends SearchConfigAbst<C>> ClassCriteria.TestContext testClassCriteria(Class<?> cls) {
+	<C extends SearchConfigAbst<C>> ClassCriteria.TestContext test(Class<?> cls) {
 		return (ClassCriteria.TestContext) execute(
 			() -> searchConfig.getClassCriteria().testWithFalseResultForNullEntityOrTrueResultForNullPredicate(cls), 
 			() -> searchConfig.getClassCriteria().testWithFalseResultForNullEntityOrFalseResultForNullPredicate(null), 

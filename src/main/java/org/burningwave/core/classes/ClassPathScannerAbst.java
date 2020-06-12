@@ -201,7 +201,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 	
 	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testClassCriteria(C context, JavaClass javaClass) {
-		return context.testClassCriteria(context.loadClass(javaClass.getName()));
+		return context.test(context.loadClass(javaClass.getName()));
 	}
 	
 	abstract void addToContext(
