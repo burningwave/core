@@ -766,27 +766,27 @@ public class FileSystemItem implements ManagedLogger {
 			return new Criteria();
 		}
 		
-		public final static Criteria forFileOfClassType(CheckingOption checkingOption) {
+		public final static Criteria forClassTypeFiles(CheckingOption checkingOption) {
 			return new CheckingOption.ForFileOf.ClassType().toCriteria(checkingOption);
 		}
 		
-		public final static Criteria forFileOfClassType(String checkingOption) {
+		public final static Criteria forClassTypeFiles(String checkingOption) {
 			return new CheckingOption.ForFileOf.ClassType().toCriteria(checkingOption);
 		}
 		
-		public final static Criteria forFileOfArchiveType(CheckingOption checkingOption) {
+		public final static Criteria forArchiveTypeFiles(CheckingOption checkingOption) {
 			return new CheckingOption.ForFileOf.ArchiveType().toCriteria(checkingOption);
 		}
 		
-		public final static Criteria forFileOfArchiveType(String checkingOption) {
+		public final static Criteria forArchiveTypeFiles(String checkingOption) {
 			return new CheckingOption.ForFileOf.ArchiveType().toCriteria(checkingOption);
 		}
 		
-		public final static Criteria forFileOfClassPathType(CheckingOption checkingOption) {
+		public final static Criteria forClassPathTypeFiles(CheckingOption checkingOption) {
 			return new CheckingOption.ForFileOf.ClassPathType().toCriteria(checkingOption);
 		}
 		
-		public final static Criteria forFileOfClassPathType(String checkingOption) {
+		public final static Criteria forClassPathTypeFiles(String checkingOption) {
 			return new CheckingOption.ForFileOf.ClassPathType().toCriteria(checkingOption);
 		}
 		

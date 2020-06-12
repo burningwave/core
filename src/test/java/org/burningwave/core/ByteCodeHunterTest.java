@@ -33,7 +33,7 @@ public class ByteCodeHunterTest extends BaseTest {
 				).deleteFoundItemsOnClose(
 					false
 				).withScanFileCriteria(
-					FileSystemItem.Criteria.forFileOfClassType(
+					FileSystemItem.Criteria.forClassTypeFiles(
 						FileSystemItem.CheckingOption.FOR_NAME
 					)
 				)					
