@@ -23,9 +23,9 @@ public class ResourceReacher {
         
         //Filtering all nested children for extension
         for (FileSystemItem child : firstFolderFound.findAllChildren(
-        	FileSystemItem.Criteria.forAllFileThat(fSIC -> 
-            	"txt".equals(fSIC.getExtension()) || "exe".equals(fSIC.getExtension()))
-        	)
+            FileSystemItem.Criteria.forAllFileThat(fSIC -> 
+                "txt".equals(fSIC.getExtension()) || "exe".equals(fSIC.getExtension()))
+            )
         ){
             System.out.println("child name: " + child.getName() + " - child parent: " + child.getParent().getName());
             //copy the file to a folder

@@ -199,10 +199,10 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		for (Entry<String, I> cachedItemAsEntry : itemsForPath.entrySet()) {
 			String absolutePathOfItem = cachedItemAsEntry.getKey();
 			toBeTested[0] = FileSystemItem.ofPath(absolutePathOfItem);
-			ClassCriteria.TestContext testContext = testPathAndCachedItem(
+			ClassCriteria.TestContext testContext;
+			if((testContext = testPathAndCachedItem(
 				context, toBeTested, cachedItemAsEntry.getValue(), fileFilterPredicate
-			);
-			if(testContext.getResult()) {
+			)).getResult()) {
 				addCachedItemToContext(context, testContext, basePath, cachedItemAsEntry);
 			}
 		}
