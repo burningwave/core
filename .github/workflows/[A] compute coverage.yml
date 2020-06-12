@@ -1,0 +1,26 @@
+name: Compute coverage
+
+on:
+  push:
+    branches:
+      - master
+    paths: 
+      - "src/main/**"
+      - "src/test/**"
+      - ".github/workflows/**"
+      - "**.properties"
+      - "**.xml"
+
+jobs:
+  compute-coverage:
+    name: Compute coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 8
+          architecture: x64
+      - name: Build and test
+        run: mvn clean test -DskipTests=false -Dproject_jdk_version=8 -P run-coveralls jacoco:report coveralls:report -DrepoToken=${{ secrets.coveralls_repo_token }}
+
