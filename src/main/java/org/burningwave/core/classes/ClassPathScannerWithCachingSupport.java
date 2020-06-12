@@ -140,34 +140,34 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		FileSystemItem.Criteria filterAndExecutor = getFileAndClassTesterAndExecutor(context);
 		//scanFileCriteria in this point has been changed by the previous method call
 		FileSystemItem.Criteria fileFilter = searchConfig.getScanFileCriteria();
-		for (String path : context.getSearchConfig().getPaths()) {
-			FileSystemItem currentScannedPath = FileSystemItem.ofPath(path);
+		for (String basePath : context.getSearchConfig().getPaths()) {
+			FileSystemItem currentScannedPath = FileSystemItem.ofPath(basePath);
 			if (searchConfig.isRefreshCacheEnabled()) {
-				synchronized(mutexManager.getMutex(path)) {
-					Optional.ofNullable(cache.get(path)).ifPresent((classesForPath) -> {
-						cache.remove(path);
+				synchronized(mutexManager.getMutex(basePath)) {
+					Optional.ofNullable(cache.get(basePath)).ifPresent((classesForPath) -> {
+						cache.remove(basePath);
 						classesForPath.clear();
 						currentScannedPath.refresh();
 					});
 				}
 			}
-			Map<String, I> classesForPath = cache.get(path);
+			Map<String, I> classesForPath = cache.get(basePath);
 			if (classesForPath == null) {
 				if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate) {
-					synchronized(mutexManager.getMutex(path)) {
-						classesForPath = cache.get(path);
+					synchronized(mutexManager.getMutex(basePath)) {
+						classesForPath = cache.get(basePath);
 						if (classesForPath == null) {
 							currentScannedPath.getAllChildren(filterAndExecutor);
 							Map<String, I> itemsForPath = new HashMap<>();
-							Map<String, I> itemsFound = context.getItemsFound(path);
+							Map<String, I> itemsFound = context.getItemsFound(basePath);
 							if (itemsFound != null) {
 								itemsForPath.putAll(itemsFound);
 							}
-							this.cache.put(path, itemsForPath);
+							this.cache.put(basePath, itemsForPath);
 							continue;
 						}
 					}
-					context.addAllItemsFound(path, classesForPath);
+					context.addAllItemsFound(basePath, classesForPath);
 					continue;
 				} else {
 					currentScannedPath.getAllChildren(filterAndExecutor);
@@ -175,48 +175,45 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 				}
 			}
 			if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate) {
-				context.addAllItemsFound(path, classesForPath);
+				context.addAllItemsFound(basePath, classesForPath);
 				continue;
 			} else if (scanFileCriteriaHasNoPredicate) {
-				iterateAndTestCachedItemsForPath(context, path, classesForPath, null);
-			} else if (classCriteriaHasNoPredicate) {
-				iterateAndTestCachedItemsForPath(context, path, classesForPath, fileFilter);
+				iterateAndTestCachedItems(context, basePath, classesForPath);
 			} else {
-				iterateAndTestCachedItemsForPath(context, path, classesForPath, fileFilter);
+				iterateAndTestCachedPathsAndItems(context, basePath, classesForPath, fileFilter);
 			}
 		}
 	}
 	
-	final <S extends SearchConfigAbst<S>> void iterateAndTestCachedItemsForPath(
+	final <S extends SearchConfigAbst<S>> void iterateAndTestCachedPathsAndItems(
 		C context, 
 		String basePath,
-		Map<String, I>
-		itemsForPath,
+		Map<String, I>itemsForPath,
 		FileSystemItem.Criteria fileFilter
 	) {
-		if (fileFilter == null) {
-			for (Entry<String, I> cachedItemAsEntry : itemsForPath.entrySet()) {
-				ClassCriteria.TestContext testContext = testCachedItem(context, basePath, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
-				if(testContext.getResult()) {
-					addCachedItemToContext(context, testContext, basePath, cachedItemAsEntry);
-				}
+		FileSystemItem basePathFSI = FileSystemItem.ofPath(basePath);
+		FileSystemItem[] toBeTested = new FileSystemItem[]{
+			null,
+			basePathFSI
+		};
+		Predicate<FileSystemItem[]> fileFilterPredicate = fileFilter.getPredicateOrTruePredicateIfPredicateIsNull();
+		for (Entry<String, I> cachedItemAsEntry : itemsForPath.entrySet()) {
+			String absolutePathOfItem = cachedItemAsEntry.getKey();
+			toBeTested[0] = FileSystemItem.ofPath(absolutePathOfItem);
+			ClassCriteria.TestContext testContext = testPathAndCachedItem(
+				context, toBeTested, cachedItemAsEntry.getValue(), fileFilterPredicate
+			);
+			if(testContext.getResult()) {
+				addCachedItemToContext(context, testContext, basePath, cachedItemAsEntry);
 			}
-		} else {
-			FileSystemItem basePathFSI = FileSystemItem.ofPath(basePath);
-			FileSystemItem[] toBeTested = new FileSystemItem[]{
-				null,
-				basePathFSI
-			};
-			Predicate<FileSystemItem[]> fileFilterPredicate = fileFilter.getPredicateOrTruePredicateIfPredicateIsNull();
-			for (Entry<String, I> cachedItemAsEntry : itemsForPath.entrySet()) {
-				String absolutePathOfItem = cachedItemAsEntry.getKey();
-				toBeTested[0] = FileSystemItem.ofPath(absolutePathOfItem);
-				ClassCriteria.TestContext testContext = testPathAndCachedItem(
-					context, toBeTested, cachedItemAsEntry.getValue(), fileFilterPredicate
-				);
-				if(testContext.getResult()) {
-					addCachedItemToContext(context, testContext, basePath, cachedItemAsEntry);
-				}
+		}
+	}
+
+	void iterateAndTestCachedItems(C context, String basePath, Map<String, I> itemsForPath) {
+		for (Entry<String, I> cachedItemAsEntry : itemsForPath.entrySet()) {
+			ClassCriteria.TestContext testContext = testCachedItem(context, basePath, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
+			if(testContext.getResult()) {
+				addCachedItemToContext(context, testContext, basePath, cachedItemAsEntry);
 			}
 		}
 	}
