@@ -30,7 +30,7 @@ package org.burningwave.core.classes;
 
 
 import java.util.Collection;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -58,7 +58,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		public final static Map<String, Object> DEFAULT_VALUES;
 	
 		static {
-			DEFAULT_VALUES = new LinkedHashMap<>();
+			DEFAULT_VALUES = new HashMap<>();
 	
 			DEFAULT_VALUES.put(
 				Key.DEFAULT_SEARCH_CONFIG_PATHS, 

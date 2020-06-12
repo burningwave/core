@@ -36,7 +36,6 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -49,8 +48,8 @@ import org.burningwave.core.Component;
 import org.burningwave.core.Virtual;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.ThrowingSupplier;
-import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
 @SuppressWarnings("unchecked")
@@ -71,7 +70,7 @@ public class ClassFactory implements Component {
 		public final static Map<String, Object> DEFAULT_VALUES;
 	
 		static {
-			DEFAULT_VALUES = new LinkedHashMap<>();
+			DEFAULT_VALUES = new HashMap<>();
 			//DEFAULT_VALUES.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, "");
 			//DEFAULT_VALUES.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, "DefaultClassLoaderRetrieverForClassFactory");
 			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");

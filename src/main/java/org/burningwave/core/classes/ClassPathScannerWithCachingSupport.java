@@ -31,7 +31,6 @@ package org.burningwave.core.classes;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -58,7 +57,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		public final static Map<String, Object> DEFAULT_VALUES;
 	
 		static {
-			DEFAULT_VALUES = new LinkedHashMap<>();
+			DEFAULT_VALUES = new HashMap<>();
 	
 			DEFAULT_VALUES.put(
 				Key.PATH_LOADING_LOCK, 
