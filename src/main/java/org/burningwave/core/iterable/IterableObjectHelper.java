@@ -90,36 +90,36 @@ public class IterableObjectHelper implements Component {
 		return false;
 	}
 	
-	public <T> T get(Properties properties, String propertyName) {
-		return get(properties, propertyName, null, false, null);
+	public <T> T resolve(Map<?,?> map, String key) {
+		return resolve(map, key, null, false, null);
 	}
 	
-	public <T> T get(Properties properties, String propertyName, Map<String, ?> defaultValues) {
-		return get(properties, propertyName, null, false, defaultValues);
+	public <T> T resolve(Map<?,?> map, String key, Map<String, ?> defaultValues) {
+		return resolve(map, key, null, false, defaultValues);
 	}
 	
-	public <T> T get(Properties properties, String propertyName, String propertyValuesSeparator) {
-		return get(properties, propertyName, propertyValuesSeparator, false, null);
+	public <T> T resolve(Map<?,?> map, Object key, String valuesSeparator) {
+		return resolve(map, key, valuesSeparator, false, null);
 	}
 	
 
-	public String get(
-		Properties properties, String propertyName,
-		String propertyValuesSeparator, boolean deleteUnresolvedPlaceHolder
+	public <T> T resolve(
+		Map<?,?> map, String key,
+		String valuesSeparator, boolean deleteUnresolvedPlaceHolder
 	) {
-		return get(properties, propertyName, propertyValuesSeparator, deleteUnresolvedPlaceHolder, null);
+		return resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, null);
 	}
 	
-	public <T> T get(
-		Properties properties,
-		String propertyName,
-		String propertyValuesSeparator,
+	public <T> T resolve(
+		Map<?,?> map,
+		Object key,
+		String valuesSeparator,
 		boolean deleteUnresolvedPlaceHolder,
-		Map<String, ?> defaultValues
+		Map<?,?> defaultValues
 	) {
-		T value = (T) properties.get(propertyName);
+		T value = (T) map.get(key);
 		if (value == null && defaultValues != null) {
-			value = (T) defaultValues.get(propertyName);
+			value = (T) defaultValues.get(key);
 		}
 		if (value != null && value instanceof String) {
 			String propertyValue = (String)value;
@@ -130,26 +130,26 @@ public class IterableObjectHelper implements Component {
 						for (String propName : entry.getValue()) {
 							String replacement;
 							if (!propName.startsWith("system.properties:")) {
-								replacement = get(properties, propName, propertyValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+								replacement = resolve(map, propName, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 							} else {
 								replacement = System.getProperty(propName.split(":")[1]);
-								if (propertyValuesSeparator != null) {
+								if (valuesSeparator != null) {
 									replacement = replacement.replace(
-										System.getProperty("path.separator"), propertyValuesSeparator
+										System.getProperty("path.separator"), valuesSeparator
 									);
 								}
 							}
 							if (deleteUnresolvedPlaceHolder && replacement == null) {
-								propertyValue = propertyValue.replaceAll(Strings.placeHolderToRegEx("${" + propName + "}") + ".*?" + propertyValuesSeparator, "");
+								propertyValue = propertyValue.replaceAll(Strings.placeHolderToRegEx("${" + propName + "}") + ".*?" + valuesSeparator, "");
 							} else if (replacement != null) {
-								if (propertyValuesSeparator == null) {
+								if (valuesSeparator == null) {
 									propertyValue = propertyValue.replace("${" + propName + "}", replacement);
 								} else {
 									String finalPropertyValue = "";
-									for (String replacementUnit : replacement.split(propertyValuesSeparator)) {
+									for (String replacementUnit : replacement.split(valuesSeparator)) {
 										finalPropertyValue += propertyValue.replace("${" + propName + "}", replacementUnit)+
-											(replacementUnit.endsWith(propertyValuesSeparator) ?
-													"" : propertyValuesSeparator);
+											(replacementUnit.endsWith(valuesSeparator) ?
+													"" : valuesSeparator);
 									}
 									propertyValue = finalPropertyValue;
 								}

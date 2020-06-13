@@ -159,7 +159,7 @@ public interface ManagedLogger {
 			
 			Abst(Properties properties) {
 				init(properties);
-				String enabledFlag = IterableObjectHelper.get(
+				String enabledFlag = IterableObjectHelper.resolve(
 					properties,
 					Repository.Configuration.Key.ENABLED_FLAG,
 					Configuration.DEFAULT_VALUES

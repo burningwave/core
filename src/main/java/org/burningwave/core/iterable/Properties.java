@@ -76,7 +76,7 @@ public class Properties extends java.util.Properties {
 		boolean deleteUnresolvedPlaceHolder,
 		Map<String, ?> defaultValues
 	) {
-		return IterableObjectHelper.get(this, propertyName, propertyValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+		return IterableObjectHelper.resolve(this, propertyName, propertyValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 	}
 	
 	public Collection<String> getAllPlaceHolders(String propertyName) {

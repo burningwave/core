@@ -78,7 +78,7 @@ public class Streams implements Component {
 	private Mutex.Manager mutexManager;
 	
 	private Streams(Properties properties) {
-		String defaultBufferSize = IterableObjectHelper.get(properties, Configuration.Key.BUFFER_SIZE, Configuration.DEFAULT_VALUES);
+		String defaultBufferSize = IterableObjectHelper.resolve(properties, Configuration.Key.BUFFER_SIZE, Configuration.DEFAULT_VALUES);
 		String unit = defaultBufferSize.substring(defaultBufferSize.length()-2);
 		String value = defaultBufferSize.substring(0, defaultBufferSize.length()-2);
 		if (unit.equalsIgnoreCase("KB")) {
@@ -89,7 +89,7 @@ public class Streams implements Component {
 			this.defaultBufferSize = Integer.valueOf(value);
 		};
 		logInfo("default buffer size: {} bytes", defaultBufferSize);
-		String defaultByteBufferAllocationMode = IterableObjectHelper.get(properties, Configuration.Key.BYTE_BUFFER_ALLOCATION_MODE, Configuration.DEFAULT_VALUES);
+		String defaultByteBufferAllocationMode = IterableObjectHelper.resolve(properties, Configuration.Key.BYTE_BUFFER_ALLOCATION_MODE, Configuration.DEFAULT_VALUES);
 		if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
 			this.defaultByteBufferAllocationMode = ByteBuffer::allocate;
 			logInfo("default allocation mode: ByteBuffer::allocate");
