@@ -114,7 +114,7 @@ public class Properties extends java.util.Properties {
 			properties.listeners.remove(this);
 		} 
 		
-		public default void receiveNotification(Properties properties, Event event, Object key, Object value) {
+		public default <K, V>void receiveNotification(Properties properties, Event event, K key, V value) {
 			
 		}
 		

@@ -103,11 +103,13 @@ public class PathHelper implements Component {
 	}
 	
 	@Override
-	public void receiveNotification(Properties properties, Event event, Object key, Object value) {
+	public <K, V>void receiveNotification(Properties properties, Event event, K key, V value) {
 		if (event == Event.PUT) {
-			String propertyKey = (String)key;
-			if (propertyKey.startsWith(Configuration.Key.PATHS_PREFIX)) {
-				loadPaths(((String)key).replaceFirst(Configuration.Key.PATHS_PREFIX, ""));	
+			if (key instanceof String) {
+				String propertyKey = (String)key;
+				if (propertyKey.startsWith(Configuration.Key.PATHS_PREFIX)) {
+					loadPaths(((String)key).replaceFirst(Configuration.Key.PATHS_PREFIX, ""));	
+				}
 			}
 		}
 	}
