@@ -219,29 +219,29 @@ public class IterableObjectHelper implements Component {
 				if (!subProperties.isEmpty()) {
 					for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
 						for (String propName : entry.getValue()) {
-							Object valueObject = null;
+							Object valueObjects = null;
 							if (!propName.startsWith("system.properties:")) {
-								valueObject = resolve(map, propName, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+								valueObjects = resolve(map, propName, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 							} else {
-								valueObject = System.getProperty(propName.split(":")[1]);
+								valueObjects = System.getProperty(propName.split(":")[1]);
 								if (valuesSeparator != null) {
-									valueObject = ((String)valueObject).replace(
+									valueObjects = ((String)valueObjects).replace(
 										System.getProperty("path.separator"), valuesSeparator
 									);
 								}
 							}
-							if (deleteUnresolvedPlaceHolder && valueObject == null) {
+							if (deleteUnresolvedPlaceHolder && valueObjects == null) {
 								stringValue = stringValue.replaceAll(Strings.placeHolderToRegEx("${" + propName + "}") + ".*?" + valuesSeparator, "");
-							} else if (valueObject != null) {
+							} else if (valueObjects != null) {
 								Collection<Object> replacements = new ArrayList<>();
-								if (valueObject instanceof String) {
-									replacements.add(valueObject);
-								} else if (valueObject instanceof Collection) {
-									replacements.addAll((Collection<?>)valueObject);
+								if (valueObjects instanceof String) {
+									replacements.add(valueObjects);
+								} else if (valueObjects instanceof Collection) {
+									replacements.addAll((Collection<?>)valueObjects);
 								}
-								for (Object repl : replacements) {
-									if (repl instanceof String) {
-										String replacement = (String)repl;
+								for (Object valueObject : replacements) {
+									if (valueObject instanceof String) {
+										String replacement = (String)valueObject;
 										if (valuesSeparator == null) {
 											values.add(stringValue.replace("${" + propName + "}", replacement));
 										} else {
@@ -257,7 +257,7 @@ public class IterableObjectHelper implements Component {
 											}
 										}
 									} else {
-										values.add(repl);
+										values.add(valueObject);
 									}
 								}
 							}
