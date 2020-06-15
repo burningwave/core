@@ -6,6 +6,7 @@ on:
       - master_experimental
     paths: 
       - "src/main/**.java"
+      - "src/test/**.java"
       - "**.properties"
       - "**.xml"
 
@@ -34,28 +35,3 @@ jobs:
       - if: endsWith(matrix.java, '-ea') == true 
         name: Build and test with early access version JDK
         run: mvn -B clean test -Dproject_jdk_version=15 -DskipTests=false --file pom.xml
-        
-  release:
-    name: Release if requested
-    needs: [build-and-test-with-Java-8-and-later]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && endsWith(github.event.head_commit.message, 'Releasing new version')
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 14
-        uses: actions/setup-java@v1
-        with:
-          java-version: 14
-          server-id: ossrh
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
-      - name: Publish to the Maven Central repository
-        run: |
-          export GPG_TTY=$(tty)
-          echo "${{ secrets.gpg_private_key }}" | gpg --batch --import
-          git config user.name "${{ github.event.head_commit.committer.name }}"
-          git config user.email "${{ github.event.head_commit.committer.email }}"
-          mvn -B release:prepare release:perform -Dproject_jdk_version=8 -DskipTests=true -Dgpg.passphrase=${{ secrets.gpg_passphrase }} -Dgpg.keyname=${{ secrets.gpg_key_id }} -Drepository.url=https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git
-        env:
-          MAVEN_USERNAME: ${{ secrets.nexus_username }}
-          MAVEN_PASSWORD: ${{ secrets.nexus_password }}
