@@ -29,7 +29,9 @@
 package org.burningwave.core.iterable;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -89,26 +91,114 @@ public class IterableObjectHelper implements Component {
 		}
 		return false;
 	}
+
+////////////////////	
 	
 	public <T> T resolve(Map<?,?> map, String key) {
 		return resolve(map, key, null, false, null);
 	}
 	
+	public <T> T resolveObjectValue(Map<?,?> map, String key) {
+		Object value = resolve(map, key);
+		if (value instanceof Collection) {
+			Collection<T> values = (Collection<T>)value;
+			if (values.size() > 1) {
+				throw Throwables.toRuntimeException("Found more than one item under key " + key);
+			}
+			return (T)values.stream().findFirst().orElseGet(() -> null);
+		} else {
+			return (T)value;
+		}		
+	}	
+	
+	public <T> Collection<T> resolveObjectValues(Map<?,?> map, String key) {
+		return resolve(map, key);
+	}	
+	
+	public Collection<String> resolveStringValues(Map<?,?> map, String key) {
+		return resolveObjectValues(map, key);
+	}
+	
+	public String resolveStringValue(Map<?,?> map, String key) {
+		return resolveObjectValue(map, key);
+	}
+
+////////////////////
+	
 	public <T> T resolve(Map<?,?> map, String key, Map<String, ?> defaultValues) {
 		return resolve(map, key, null, false, defaultValues);
 	}
+	
+	public <T> T resolveObjectValue(Map<?,?> map, String key, Map<String, ?> defaultValues) {
+		Object value = resolve(map, key, defaultValues);
+		if (value instanceof Collection) {
+			Collection<T> values = (Collection<T>)value;
+			if (values.size() > 1) {
+				throw Throwables.toRuntimeException("Found more than one item under key " + key);
+			}
+			return (T)values.stream().findFirst().orElseGet(() -> null);
+		} else {
+			return (T)value;
+		}	
+	}	
+	
+	public <T> Collection<T> resolveObjectValues(Map<?,?> map, String key, Map<String, ?> defaultValues) {
+		return resolve(map, key, defaultValues);
+	}
+	
+	public String resolveStringValue(Map<?,?> map, String key, Map<String, ?> defaultValues) {
+		return resolveObjectValue(map, key, defaultValues);
+	}
+	
+	public Collection<String> resolveStringValues(Map<?,?> map, String key, Map<String, ?> defaultValues) {
+		return resolveObjectValues(map, key, defaultValues);
+	}
+
+////////////////////
 	
 	public <T> T resolve(Map<?,?> map, Object key, String valuesSeparator) {
 		return resolve(map, key, valuesSeparator, false, null);
 	}
 	
-
+////////////////////
+	
 	public <T> T resolve(
 		Map<?,?> map, String key,
 		String valuesSeparator, boolean deleteUnresolvedPlaceHolder
 	) {
 		return resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, null);
 	}
+	
+	public <T> T resolveObjectValue(Map<?,?> map, String key, String valuesSeparator,
+			boolean deleteUnresolvedPlaceHolder) {
+		Object value = resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+		if (value instanceof Collection) {
+			Collection<T> values = (Collection<T>)value;
+			if (values.size() > 1) {
+				throw Throwables.toRuntimeException("Found more than one item under key " + key);
+			}
+			return (T)values.stream().findFirst().orElseGet(() -> null);
+		} else {
+			return (T)value;
+		}	
+	}
+
+	public <T> Collection<T> resolveObjectValues(Map<?,?> map, String key,
+			String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
+		return resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+	}
+
+	public String resolveStringValue(Map<?,?> map, String key,
+			String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
+		return resolveObjectValue(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+	}
+
+	public Collection<String> resolveStringValues(Map<?,?> map, String key,
+			String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
+		return resolveObjectValues(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+	}
+	
+////////////////////
 	
 	public <T> T resolve(
 		Map<?,?> map,
@@ -122,44 +212,64 @@ public class IterableObjectHelper implements Component {
 			value = (T) defaultValues.get(key);
 		}
 		if (value != null && value instanceof String) {
-			String propertyValue = (String)value;
-			if (!Strings.isEmpty(propertyValue)) {
-				Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, propertyValue);		
+			String stringValue = (String)value;
+			Collection<Object> values = new ArrayList<>();
+			if (!Strings.isEmpty(stringValue)) {
+				Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, stringValue);		
 				if (!subProperties.isEmpty()) {
 					for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
 						for (String propName : entry.getValue()) {
-							String replacement;
+							Object valueObject = null;
 							if (!propName.startsWith("system.properties:")) {
-								replacement = resolve(map, propName, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+								valueObject = resolve(map, propName, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 							} else {
-								replacement = System.getProperty(propName.split(":")[1]);
+								valueObject = System.getProperty(propName.split(":")[1]);
 								if (valuesSeparator != null) {
-									replacement = replacement.replace(
+									valueObject = ((String)valueObject).replace(
 										System.getProperty("path.separator"), valuesSeparator
 									);
 								}
 							}
-							if (deleteUnresolvedPlaceHolder && replacement == null) {
-								propertyValue = propertyValue.replaceAll(Strings.placeHolderToRegEx("${" + propName + "}") + ".*?" + valuesSeparator, "");
-							} else if (replacement != null) {
-								if (valuesSeparator == null) {
-									propertyValue = propertyValue.replace("${" + propName + "}", replacement);
-								} else {
-									String finalPropertyValue = "";
-									for (String replacementUnit : replacement.split(valuesSeparator)) {
-										finalPropertyValue += propertyValue.replace("${" + propName + "}", replacementUnit)+
-											(replacementUnit.endsWith(valuesSeparator) ?
-													"" : valuesSeparator);
+							if (deleteUnresolvedPlaceHolder && valueObject == null) {
+								stringValue = stringValue.replaceAll(Strings.placeHolderToRegEx("${" + propName + "}") + ".*?" + valuesSeparator, "");
+							} else if (valueObject != null) {
+								Collection<Object> replacements = new ArrayList<>();
+								if (valueObject instanceof String) {
+									replacements.add(valueObject);
+								} else if (valueObject instanceof Collection) {
+									replacements.addAll((Collection<?>)valueObject);
+								}
+								for (Object repl : replacements) {
+									if (repl instanceof String) {
+										String replacement = (String)repl;
+										if (valuesSeparator == null) {
+											values.add(stringValue.replace("${" + propName + "}", replacement));
+										} else {
+											for (String replacementUnit : replacement.split(valuesSeparator)) {
+												String valuesToAdd = stringValue.replace("${" + propName + "}", replacementUnit);
+												if (valuesToAdd.contains(valuesSeparator)) {
+													for (String valueToAdd : valuesToAdd.split(valuesSeparator)) {
+														values.add(valueToAdd);
+													}
+												} else {
+													values.add(valuesToAdd);
+												}
+											}
+										}
+									} else {
+										values.add(repl);
 									}
-									propertyValue = finalPropertyValue;
 								}
 							}
 						}
 					}
+				} else {
+					values.add(stringValue);
 				}
-				
+			} else {
+				values.add(stringValue);
 			}
-			return (T)propertyValue;
+			return (T)values;
 		} else {
 			return value;
 		}

@@ -33,7 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;;
+import java.util.Properties;
 
 public interface ManagedLogger {	
 	
@@ -159,7 +159,7 @@ public interface ManagedLogger {
 			
 			Abst(Properties properties) {
 				init(properties);
-				String enabledFlag = IterableObjectHelper.resolve(
+				String enabledFlag = IterableObjectHelper.resolveStringValue(
 					properties,
 					Repository.Configuration.Key.ENABLED_FLAG,
 					Configuration.DEFAULT_VALUES

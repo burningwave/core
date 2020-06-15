@@ -236,7 +236,6 @@ public class PathHelper implements Component {
 				currentPropertyPaths = paths;
 				config.put(pathGroupPropertyName, currentPropertyPaths);
 			}
-			paths = currentPropertyPaths;
 			Collection<String> placeHolders = config.getAllPlaceHolders(pathGroupPropertyName);
 			Map<String, String> defaultValues = new LinkedHashMap<>();
 			if (!placeHolders.isEmpty()) {
@@ -273,9 +272,9 @@ public class PathHelper implements Component {
 			Properties configWithResolvedPaths = new Properties();
 			configWithResolvedPaths.putAll(config);
 			configWithResolvedPaths.putAll(defaultValues);
-			paths = configWithResolvedPaths.resolve(pathGroupPropertyName, Configuration.Key.PATHS_SEPARATOR, true);
-			if (paths != null) {
-				for (String path : paths.split(Configuration.Key.PATHS_SEPARATOR)) {
+			Collection<String> computedPaths = configWithResolvedPaths.resolveStringValues(pathGroupPropertyName, Configuration.Key.PATHS_SEPARATOR, true);
+			if (computedPaths != null) {
+				for (String path : computedPaths) {
 					if (Strings.isNotEmpty(path)) {
 						groupPaths.addAll(addPath(pathGroupName, path));
 					}

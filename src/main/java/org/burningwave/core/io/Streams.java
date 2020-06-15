@@ -30,7 +30,6 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
-import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -77,8 +76,8 @@ public class Streams implements Component {
 	Function<Integer, ByteBuffer> defaultByteBufferAllocationMode;
 	private Mutex.Manager mutexManager;
 	
-	private Streams(Properties properties) {
-		String defaultBufferSize = IterableObjectHelper.resolve(properties, Configuration.Key.BUFFER_SIZE, Configuration.DEFAULT_VALUES);
+	private Streams(Properties config) {
+		String defaultBufferSize = config.resolveStringValue(Configuration.Key.BUFFER_SIZE, Configuration.DEFAULT_VALUES);
 		String unit = defaultBufferSize.substring(defaultBufferSize.length()-2);
 		String value = defaultBufferSize.substring(0, defaultBufferSize.length()-2);
 		if (unit.equalsIgnoreCase("KB")) {
@@ -89,7 +88,7 @@ public class Streams implements Component {
 			this.defaultBufferSize = Integer.valueOf(value);
 		};
 		logInfo("default buffer size: {} bytes", defaultBufferSize);
-		String defaultByteBufferAllocationMode = IterableObjectHelper.resolve(properties, Configuration.Key.BYTE_BUFFER_ALLOCATION_MODE, Configuration.DEFAULT_VALUES);
+		String defaultByteBufferAllocationMode = config.resolveStringValue(Configuration.Key.BYTE_BUFFER_ALLOCATION_MODE, Configuration.DEFAULT_VALUES);
 		if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
 			this.defaultByteBufferAllocationMode = ByteBuffer::allocate;
 			logInfo("default allocation mode: ByteBuffer::allocate");

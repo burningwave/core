@@ -189,11 +189,11 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public String getConfigProperty(String propertyName) {
-		return IterableObjectHelper.resolve(config, propertyName);
+		return IterableObjectHelper.resolveStringValue(config, propertyName);
 	}
 	
 	public String getConfigProperty(String propertyName, Map<String, String> defaultValues) {
-		return IterableObjectHelper.resolve(config, propertyName, defaultValues);
+		return IterableObjectHelper.resolveStringValue(config, propertyName, defaultValues);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -306,7 +306,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private <T> T retrieveFromConfig(String configKey, Map<String, Object> defaultValues) {
-		T object = config.resolve(configKey);
+		T object = config.resolveObjectValue(configKey);
 		if (object instanceof String) {
 			return getCodeExecutor().execute(
 				ExecuteConfig.fromDefaultProperties()

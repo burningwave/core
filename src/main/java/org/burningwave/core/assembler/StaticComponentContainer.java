@@ -151,8 +151,7 @@ public class StaticComponentContainer {
 		org.burningwave.core.iterable.Properties properties
 	) {
 		try {
-			String className = IterableObjectHelper.resolve(
-				GlobalProperties,
+			String className = GlobalProperties.resolveStringValue(
 				org.burningwave.core.ManagedLogger.Repository.Configuration.Key.TYPE,
 				org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES
 			);

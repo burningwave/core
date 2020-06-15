@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -484,8 +483,7 @@ public class JavaMemoryCompiler implements Component {
 			
 			public Collection<FileSystemItem> findForPackageName(String packageName) throws Exception {
 				FileSystemItem.CheckingOption checkFileOption = 
-					FileSystemItem.CheckingOption.forLabel(IterableObjectHelper.resolve(
-						javaMemoryCompiler.config,
+					FileSystemItem.CheckingOption.forLabel(javaMemoryCompiler.config.resolveStringValue(
 						Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 						JavaMemoryCompiler.Configuration.DEFAULT_VALUES
 					)
@@ -525,8 +523,7 @@ public class JavaMemoryCompiler implements Component {
 			
 			public Collection<FileSystemItem> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
 				FileSystemItem.CheckingOption checkFileOption = 
-					FileSystemItem.CheckingOption.forLabel(IterableObjectHelper.resolve(
-						javaMemoryCompiler.config,
+					FileSystemItem.CheckingOption.forLabel(javaMemoryCompiler.config.resolveStringValue(
 						Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 						JavaMemoryCompiler.Configuration.DEFAULT_VALUES
 					)
