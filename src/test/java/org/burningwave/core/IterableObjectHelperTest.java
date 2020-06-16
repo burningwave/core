@@ -18,4 +18,26 @@ public class IterableObjectHelperTest extends BaseTest {
 		});
 	}
 	
+	@Test
+	public void resolveTestTwo() {
+		testNotEmpty(() -> {
+			Properties properties = new Properties();
+			properties.put("class-loader-01", "${class-loader-02};${class-loader-03};");
+			properties.put("class-loader-02", Thread.currentThread().getContextClassLoader());
+			properties.put("class-loader-03", Thread.currentThread().getContextClassLoader().getParent());
+			return IterableObjectHelper.resolveObjectValues(properties, "class-loader-01", ";");
+		});
+	}
+	
+	@Test
+	public void resolveTestThree() {
+		testNotNull(() -> {
+			Properties properties = new Properties();
+			properties.put("class-loader-01", "${class-loader-02}");
+			properties.put("class-loader-02", "${class-loader-03}");
+			properties.put("class-loader-03", Thread.currentThread().getContextClassLoader().getParent());
+			return IterableObjectHelper.resolveObjectValue(properties, "class-loader-01");
+		});
+	}
+	
 }
