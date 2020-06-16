@@ -71,27 +71,6 @@ public class IterableObjectHelper implements Component {
 	public long getSize(Object object) {
 		return retrieveStream(object).count();
 	}
-	
-	public boolean containsValue(Properties properties, String propertyName, Map<String, String> defaultValues, String toBeTested) {
-		String propertyValue = (String)properties.get(propertyName);
-		if (Strings.isEmpty(propertyValue) && defaultValues != null) {
-			propertyValue = defaultValues.get(propertyName);
-		}
-		if (!Strings.isEmpty(propertyValue)) {
-			if (propertyValue.contains(toBeTested)) {
-				return true;
-			}
-			Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, propertyValue);		
-			if (!subProperties.isEmpty()) {
-				for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
-					for (String propName : entry.getValue()) {
-						return containsValue(properties, propName, defaultValues, toBeTested);
-					}
-				}
-			}
-		}
-		return false;
-	}
 
 ////////////////////	
 	
@@ -317,11 +296,32 @@ public class IterableObjectHelper implements Component {
 		Collection<String> placeHolders = getAllPlaceHolders(properties);
 		Iterator<String> placeHoldersItr = placeHolders.iterator();
 		while (placeHoldersItr.hasNext()) {
-			if (!containsValue(properties, propertyName, null, placeHoldersItr.next())) {
+			if (!containsValue(properties, propertyName, placeHoldersItr.next(), null)) {
 				placeHoldersItr.remove();
 			}
 		}
 		return placeHolders;
+	}
+	
+	public boolean containsValue(Properties properties, String propertyName, String placeHolder, Map<String, String> defaultValues) {
+		String propertyValue = (String)properties.get(propertyName);
+		if (Strings.isEmpty(propertyValue) && defaultValues != null) {
+			propertyValue = defaultValues.get(propertyName);
+		}
+		if (!Strings.isEmpty(propertyValue)) {
+			if (propertyValue.contains(placeHolder)) {
+				return true;
+			}
+			Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, propertyValue);		
+			if (!subProperties.isEmpty()) {
+				for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
+					for (String propName : entry.getValue()) {
+						return containsValue(properties, propName, placeHolder, defaultValues);
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 }
