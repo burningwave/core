@@ -112,7 +112,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		);
 		this.cache = new HashMap<>();
 		this.mutexManager = Mutex.Manager.create(cache);
-		if (this.config.resolve(Configuration.Key.PATH_LOADING_LOCK, Configuration.DEFAULT_VALUES).equals(PathLoadingLock.FOR_CACHE.label)) {
+		if (this.config.resolveStringValue(Configuration.Key.PATH_LOADING_LOCK, Configuration.DEFAULT_VALUES).equals(PathLoadingLock.FOR_CACHE.label)) {
 			this.mutexManager.disableLockForName();
 		}
 	}

@@ -114,21 +114,21 @@ public class CodeExecutor implements Component {
 				body.useType(param.getClass());
 			}
 		}
-		String importFromConfig = IterableObjectHelper.resolve(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, config.getDefaultValues());
+		String importFromConfig = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, config.getDefaultValues());
 		if (Strings.isNotEmpty(importFromConfig)) {
 			Arrays.stream(importFromConfig.replaceAll(";{2,}", ";").split(";")).forEach(imp -> {
 				body.useType(imp);
 			});
 		}
-		String executorName = IterableObjectHelper.resolve(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, config.getDefaultValues());
-		String executorSimpleName = IterableObjectHelper.resolve(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, config.getDefaultValues());
+		String executorName = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, config.getDefaultValues());
+		String executorSimpleName = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, config.getDefaultValues());
 
 		if (Strings.isNotEmpty(executorName)) {
 			config.setName(executorName);
 		} else if (Strings.isNotEmpty(executorSimpleName)) {
 			config.setSimpleName(executorSimpleName);
 		}
-		String code = IterableObjectHelper.resolve(properties, config.getPropertyName(), config.getDefaultValues());
+		String code = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName(), config.getDefaultValues());
 		if (code.contains(";")) {
 			code = code.replaceAll(";{2,}", ";");
 			for (String codeRow : code.split(";")) {
