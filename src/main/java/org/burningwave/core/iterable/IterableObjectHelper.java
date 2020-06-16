@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -99,16 +100,7 @@ public class IterableObjectHelper implements Component {
 	}
 	
 	public <T> T resolveObjectValue(Map<?,?> map, String key) {
-		Object value = resolve(map, key);
-		if (value instanceof Collection) {
-			Collection<T> values = (Collection<T>)value;
-			if (values.size() > 1) {
-				throw Throwables.toRuntimeException("Found more than one item under key " + key);
-			}
-			return (T)values.stream().findFirst().orElseGet(() -> null);
-		} else {
-			return (T)value;
-		}		
+		return resolveObjectValue(key, () -> resolve(map, key));
 	}	
 	
 	public <T> Collection<T> resolveObjectValues(Map<?,?> map, String key) {
@@ -130,16 +122,7 @@ public class IterableObjectHelper implements Component {
 	}
 	
 	public <T> T resolveObjectValue(Map<?,?> map, String key, Map<String, ?> defaultValues) {
-		Object value = resolve(map, key, defaultValues);
-		if (value instanceof Collection) {
-			Collection<T> values = (Collection<T>)value;
-			if (values.size() > 1) {
-				throw Throwables.toRuntimeException("Found more than one item under key " + key);
-			}
-			return (T)values.stream().findFirst().orElseGet(() -> null);
-		} else {
-			return (T)value;
-		}	
+		return resolveObjectValue(key, () -> resolve(map, key, defaultValues));
 	}	
 	
 	public <T> Collection<T> resolveObjectValues(Map<?,?> map, String key, Map<String, ?> defaultValues) {
@@ -160,18 +143,72 @@ public class IterableObjectHelper implements Component {
 		return resolve(map, key, valuesSeparator, false, null);
 	}
 	
+	public <T> T resolveObjectValue(Map<?,?> map, String key, String valuesSeparator) {
+		return resolveObjectValue(key, () -> resolve(map, key, valuesSeparator));
+	}	
+	
+	public <T> Collection<T> resolveObjectValues(Map<?,?> map, String key, String valuesSeparator) {
+		return resolve(map, key, valuesSeparator);
+	}
+	
+	public String resolveStringValue(Map<?,?> map, String key, String valuesSeparator) {
+		return resolveObjectValue(map, key, valuesSeparator);
+	}
+	
+	public Collection<String> resolveStringValues(Map<?,?> map, String key, String valuesSeparator) {
+		return resolveObjectValues(map, key, valuesSeparator);
+	}
+	
 ////////////////////
 	
 	public <T> T resolve(
-		Map<?,?> map, String key,
-		String valuesSeparator, boolean deleteUnresolvedPlaceHolder
+		Map<?,?> map,
+		String key,
+		String valuesSeparator, 
+		boolean deleteUnresolvedPlaceHolder
 	) {
 		return resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, null);
 	}
 	
-	public <T> T resolveObjectValue(Map<?,?> map, String key, String valuesSeparator,
-			boolean deleteUnresolvedPlaceHolder) {
-		Object value = resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+	public <T> T resolveObjectValue(
+		Map<?,?> map,
+		String key,
+		String valuesSeparator,
+		boolean deleteUnresolvedPlaceHolder
+	) {
+		return resolveObjectValue(key, () -> resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder));
+	}
+
+	public <T> Collection<T> resolveObjectValues(
+		Map<?,?> map, String key,
+		String valuesSeparator,
+		boolean deleteUnresolvedPlaceHolder
+	) {
+		return resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+	}
+
+	public String resolveStringValue(
+		Map<?,?> map,
+		String key,
+		String valuesSeparator,
+		boolean deleteUnresolvedPlaceHolder
+	) {
+		return resolveObjectValue(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+	}
+
+	public Collection<String> resolveStringValues(
+		Map<?,?> map,
+		String key,
+		String valuesSeparator,
+		boolean deleteUnresolvedPlaceHolder
+	) {
+		return resolveObjectValues(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+	}
+	
+////////////////////
+	
+	public <T> T resolveObjectValue(String key, Supplier<Object> valuesSupplier) {
+		Object value = valuesSupplier.get();
 		if (value instanceof Collection) {
 			Collection<T> values = (Collection<T>)value;
 			if (values.size() > 1) {
@@ -182,23 +219,6 @@ public class IterableObjectHelper implements Component {
 			return (T)value;
 		}	
 	}
-
-	public <T> Collection<T> resolveObjectValues(Map<?,?> map, String key,
-			String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
-	}
-
-	public String resolveStringValue(Map<?,?> map, String key,
-			String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return resolveObjectValue(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
-	}
-
-	public Collection<String> resolveStringValues(Map<?,?> map, String key,
-			String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return resolveObjectValues(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
-	}
-	
-////////////////////
 	
 	public <T> T resolve(
 		Map<?,?> map,
