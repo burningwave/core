@@ -67,10 +67,10 @@ public class PathHelper implements Component {
 		
 		public static class Key {
 			public static String PATHS_PREFIX = "paths.";
+			public static String PATHS_SEPARATOR = ";";
 			public static String MAIN_CLASS_PATHS = "main-class-paths";
 			public static String MAIN_CLASS_PATHS_PLACE_HOLDER = "${" + MAIN_CLASS_PATHS + "}";
 			public static String MAIN_CLASS_PATHS_EXTENSION = MAIN_CLASS_PATHS + ".extension";
-			public static String PATHS_SEPARATOR = ";";
 		}
 		
 		public final static Map<String, Object> DEFAULT_VALUES;
