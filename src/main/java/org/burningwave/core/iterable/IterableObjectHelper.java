@@ -238,6 +238,8 @@ public class IterableObjectHelper implements Component {
 									replacements.add(valueObjects);
 								} else if (valueObjects instanceof Collection) {
 									replacements.addAll((Collection<?>)valueObjects);
+								} else {
+									replacements.add(valueObjects);
 								}
 								for (Object valueObject : replacements) {
 									if (valueObject instanceof String) {
