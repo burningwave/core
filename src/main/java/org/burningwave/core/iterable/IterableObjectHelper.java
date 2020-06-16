@@ -37,9 +37,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -49,11 +46,7 @@ import org.burningwave.core.Component;
 
 @SuppressWarnings("unchecked")
 public class IterableObjectHelper implements Component {
-	private ExecutorService executorService;
-	private IterableObjectHelper() {
-		executorService = Executors.newFixedThreadPool(8);
-		
-	}
+	private IterableObjectHelper() {}
 	
 	public static IterableObjectHelper create() {
 		return new IterableObjectHelper();
@@ -344,23 +337,5 @@ public class IterableObjectHelper implements Component {
 			}
 		}		
 		return object != null && value != null && object.equals(value);
-	}
-	
-	public <O> Collection<O> filter(Collection<O> items, Predicate<O> predicate, Supplier<Collection<O>> filteredItemsCollectionSupplier) {
-		Collection<O> filteredCollection = filteredItemsCollectionSupplier.get();
-		Collection<CompletableFuture<Void>> tasks = new ArrayList<>();
-		for(O item : items) {
-			tasks.add(
-				CompletableFuture.runAsync(() -> {
-					if (predicate.test(item)) {
-						filteredCollection.add(item);
-					}
-				}, executorService)
-			);
-		}
-		for (CompletableFuture<Void> task : tasks) {
-			task.join();
-		}
-		return filteredCollection;
 	}
 }
