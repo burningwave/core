@@ -37,7 +37,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -47,8 +49,11 @@ import org.burningwave.core.Component;
 
 @SuppressWarnings("unchecked")
 public class IterableObjectHelper implements Component {
-	
-	private IterableObjectHelper() {}
+	private ExecutorService executorService;
+	private IterableObjectHelper() {
+		executorService = Executors.newFixedThreadPool(8);
+		
+	}
 	
 	public static IterableObjectHelper create() {
 		return new IterableObjectHelper();
@@ -277,13 +282,15 @@ public class IterableObjectHelper implements Component {
 		
 	}
 	
-	public Collection<String> getAllPlaceHolders(Properties properties) {
-		return getAllPlaceHolders(properties, object -> true);
+	public Collection<String> getAllPlaceHolders(Map<?, ?> map) {
+		return getAllPlaceHolders(map, object -> true);
 	}
 	
-	public Collection<String> getAllPlaceHolders(Properties properties, Predicate<String> propertyFilter) {
+	public Collection<String> getAllPlaceHolders(Map<?, ?> map, Predicate<String> propertyFilter) {
 		Collection<String> placeHolders = new HashSet<>();
-		for (Map.Entry<Object, Object> entry : properties.entrySet().stream().filter(entry -> (entry.getValue() == null || entry.getValue() instanceof String) && propertyFilter.test((String) entry.getKey())).collect(Collectors.toSet())) {
+		for (Map.Entry<?, ?> entry : map.entrySet().stream().filter(entry -> 
+				(entry.getValue() == null || entry.getValue() instanceof String) && (entry.getKey() instanceof String && propertyFilter.test((String)entry.getKey()))
+			).collect(Collectors.toSet())) {
 			String value = (String)entry.getValue();
 			for(List<String> placeHoldersFound : Strings.extractAllGroups(Strings.PLACE_HOLDER_EXTRACTOR_PATTERN, value).values()) {
 				placeHolders.addAll(placeHoldersFound);
@@ -292,36 +299,68 @@ public class IterableObjectHelper implements Component {
 		return placeHolders;
 	}
 	
-	public Collection<String> getAllPlaceHolders(Properties properties, String propertyName) {
-		Collection<String> placeHolders = getAllPlaceHolders(properties);
+	public Collection<String> getAllPlaceHolders(Map<?, ?> map, String propertyName) {
+		Collection<String> placeHolders = getAllPlaceHolders(map);
 		Iterator<String> placeHoldersItr = placeHolders.iterator();
 		while (placeHoldersItr.hasNext()) {
-			if (!containsValue(properties, propertyName, placeHoldersItr.next(), null)) {
+			if (!containsValue(map, propertyName, placeHoldersItr.next())) {
 				placeHoldersItr.remove();
 			}
 		}
 		return placeHolders;
 	}
 	
-	public boolean containsValue(Properties properties, String propertyName, String placeHolder, Map<String, String> defaultValues) {
-		String propertyValue = (String)properties.get(propertyName);
-		if (Strings.isEmpty(propertyValue) && defaultValues != null) {
-			propertyValue = defaultValues.get(propertyName);
+	public boolean containsValue(Map<?, ?> map, String key, Object object) {
+		return containsValue(map, key, object, null);		
+	}
+	
+	public boolean containsValue(Map<?, ?> map, String key, Object object, Map<?, ?> defaultValues) {
+		Object value = map.get(key);
+		if (value == null && defaultValues != null) {
+			value = defaultValues.get(key);
 		}
-		if (!Strings.isEmpty(propertyValue)) {
-			if (propertyValue.contains(placeHolder)) {
-				return true;
+		if (value != null && value instanceof String) {
+			if (Strings.isEmpty((String)value) && defaultValues != null) {
+				value = defaultValues.get(key);
 			}
-			Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, propertyValue);		
-			if (!subProperties.isEmpty()) {
-				for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
-					for (String propName : entry.getValue()) {
-						return containsValue(properties, propName, placeHolder, defaultValues);
+			if (value != null && value instanceof String) {
+				String stringValue = (String)value;
+				if (!Strings.isEmpty(stringValue)) {
+					if (object instanceof String) {
+						String objectString = (String)object;
+						if (stringValue.contains(objectString)) {
+							return true;
+						}
+					}
+					Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, stringValue);		
+					if (!subProperties.isEmpty()) {
+						for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
+							for (String propName : entry.getValue()) {
+								return containsValue(map, propName, object, defaultValues);
+							}
+						}
 					}
 				}
 			}
-		}
-		return false;
+		}		
+		return object != null && value != null && object.equals(value);
 	}
-
+	
+	public <O> Collection<O> filter(Collection<O> items, Predicate<O> predicate, Supplier<Collection<O>> filteredItemsCollectionSupplier) {
+		Collection<O> filteredCollection = filteredItemsCollectionSupplier.get();
+		Collection<CompletableFuture<Void>> tasks = new ArrayList<>();
+		for(O item : items) {
+			tasks.add(
+				CompletableFuture.runAsync(() -> {
+					if (predicate.test(item)) {
+						filteredCollection.add(item);
+					}
+				}, executorService)
+			);
+		}
+		for (CompletableFuture<Void> task : tasks) {
+			task.join();
+		}
+		return filteredCollection;
+	}
 }

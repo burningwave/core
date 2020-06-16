@@ -139,49 +139,62 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		FileSystemItem.Criteria filterAndExecutor = getFileAndClassTesterAndExecutor(context);
 		//scanFileCriteria in this point has been changed by the previous method call
 		FileSystemItem.Criteria fileFilter = searchConfig.getScanFileCriteria();
-		for (String basePath : context.getSearchConfig().getPaths()) {
-			FileSystemItem currentScannedPath = FileSystemItem.ofPath(basePath);
-			if (searchConfig.isRefreshCacheEnabled()) {
-				synchronized(mutexManager.getMutex(basePath)) {
-					Optional.ofNullable(cache.get(basePath)).ifPresent((classesForPath) -> {
-						cache.remove(basePath);
-						classesForPath.clear();
-						currentScannedPath.refresh();
-					});
-				}
+		context.getSearchConfig().getPaths().parallelStream().forEach(basePath -> {
+			searchInCacheOrInFileSystem(basePath, context,
+					scanFileCriteriaHasNoPredicate, classCriteriaHasNoPredicate, filterAndExecutor, fileFilter);
+		});
+	}
+
+	private void searchInCacheOrInFileSystem(
+		String basePath,
+		C context,
+		boolean scanFileCriteriaHasNoPredicate,
+		boolean classCriteriaHasNoPredicate,
+		FileSystemItem.Criteria filterAndExecutor,
+		FileSystemItem.Criteria fileFilter
+	) {
+		CacheableSearchConfig searchConfig = context.getSearchConfig();
+		FileSystemItem currentScannedPath = FileSystemItem.ofPath(basePath);
+		if (searchConfig.isRefreshCacheEnabled()) {
+			synchronized(mutexManager.getMutex(basePath)) {
+				Optional.ofNullable(cache.get(basePath)).ifPresent((classesForPath) -> {
+					cache.remove(basePath);
+					classesForPath.clear();
+					currentScannedPath.refresh();
+				});
 			}
-			Map<String, I> classesForPath = cache.get(basePath);
-			if (classesForPath == null) {
-				if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate) {
-					synchronized(mutexManager.getMutex(basePath)) {
-						classesForPath = cache.get(basePath);
-						if (classesForPath == null) {
-							currentScannedPath.findInAllChildren(filterAndExecutor);
-							Map<String, I> itemsForPath = new HashMap<>();
-							Map<String, I> itemsFound = context.getItemsFound(basePath);
-							if (itemsFound != null) {
-								itemsForPath.putAll(itemsFound);
-							}
-							this.cache.put(basePath, itemsForPath);
-							continue;
-						}
-					}
-					context.addAllItemsFound(basePath, classesForPath);
-					continue;
-				} else {
-					currentScannedPath.findInAllChildren(filterAndExecutor);
-					continue;
-				}
-			}
+		}
+		Map<String, I> classesForPath = cache.get(basePath);
+		if (classesForPath == null) {
 			if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate) {
+				synchronized(mutexManager.getMutex(basePath)) {
+					classesForPath = cache.get(basePath);
+					if (classesForPath == null) {
+						currentScannedPath.findInAllChildren(filterAndExecutor);
+						Map<String, I> itemsForPath = new HashMap<>();
+						Map<String, I> itemsFound = context.getItemsFound(basePath);
+						if (itemsFound != null) {
+							itemsForPath.putAll(itemsFound);
+						}
+						this.cache.put(basePath, itemsForPath);
+						return;
+					}
+				}
 				context.addAllItemsFound(basePath, classesForPath);
-			} else if (scanFileCriteriaHasNoPredicate) {
-				iterateAndTestCachedItems(context, basePath, classesForPath);
-			} else if (classCriteriaHasNoPredicate) {
-				iterateAndTestCachedPaths(context, basePath, classesForPath, fileFilter);
+				return;
 			} else {
-				iterateAndTestCachedPathsAndItems(context, basePath, classesForPath, fileFilter);
+				currentScannedPath.findInAllChildren(filterAndExecutor);
+				return;
 			}
+		}
+		if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate) {
+			context.addAllItemsFound(basePath, classesForPath);
+		} else if (scanFileCriteriaHasNoPredicate) {
+			iterateAndTestCachedItems(context, basePath, classesForPath);
+		} else if (classCriteriaHasNoPredicate) {
+			iterateAndTestCachedPaths(context, basePath, classesForPath, fileFilter);
+		} else {
+			iterateAndTestCachedPathsAndItems(context, basePath, classesForPath, fileFilter);
 		}
 	}
 	
