@@ -95,16 +95,18 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			(context) -> new ClassHunter.SearchResult(context),
 			config
 		);
-		pathScannerClassLoaderSupplier = () -> PathScannerClassLoader.create(
-			parentClassLoader, pathHelper, byteCodeHunterSupplier, 
-			FileSystemItem.Criteria.forClassTypeFiles(
-				config.resolveStringValue(Configuration.Key.PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-					Configuration.DEFAULT_VALUES
+		pathScannerClassLoaderSupplier = () ->
+			PathScannerClassLoader.create(
+				parentClassLoader, pathHelper, getByteCodeHunter(), 
+				FileSystemItem.Criteria.forClassTypeFiles(
+					config.resolveStringValue(Configuration.Key.PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+						Configuration.DEFAULT_VALUES
+					)
 				)
-			)
-		);
-		this.pathScannerClassLoader = pathScannerClassLoaderSupplier.get();
+			);
 	}
+	
+	
 	
 	public static ClassHunter create(
 		Supplier<ByteCodeHunter> byteCodeHunterSupplier, 
@@ -116,6 +118,17 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		return new ClassHunter(
 			byteCodeHunterSupplier, classHunterSupplier, pathHelper, parentClassLoader, config
 		);
+	}
+	
+	PathScannerClassLoader getPathScannerClassLoader() {
+		if (pathScannerClassLoader == null) {
+			synchronized (this) {
+				if (pathScannerClassLoader == null) {
+					pathScannerClassLoader = pathScannerClassLoaderSupplier.get();
+				}
+			}
+		}
+		return pathScannerClassLoader;
 	}
 	
 	@Override
@@ -274,8 +287,11 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	@Override
 	public void clearCache() {
 		super.clearCache();
-		pathScannerClassLoader.close();
-		pathScannerClassLoader = pathScannerClassLoaderSupplier.get();
+		PathScannerClassLoader pathScannerClassLoader = this.pathScannerClassLoader;
+		if (pathScannerClassLoader != null) {
+			pathScannerClassLoader.close();
+			this.pathScannerClassLoader = null;
+		}
 	}
 	
 	@Override
@@ -283,4 +299,5 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		super.close();
 		pathScannerClassLoader = null;
 	}
+
 }

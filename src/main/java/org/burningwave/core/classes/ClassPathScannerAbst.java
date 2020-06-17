@@ -181,7 +181,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	
 	@SuppressWarnings("resource")
 	C createContext(SearchConfigAbst<?> searchConfig) {
-		PathScannerClassLoader sharedClassLoader = getClassHunter().pathScannerClassLoader;
+		PathScannerClassLoader sharedClassLoader = getClassHunter().getPathScannerClassLoader();
 		if (searchConfig.useSharedClassLoaderAsParent) {
 			searchConfig.parentClassLoaderForMainClassLoader = sharedClassLoader;
 		}
@@ -192,7 +192,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 					sharedClassLoader :
 					PathScannerClassLoader.create(
 						searchConfig.parentClassLoaderForMainClassLoader, 
-						pathHelper, byteCodeHunterSupplier, searchConfig.getScanFileCriteria()
+						pathHelper, getByteCodeHunter(), searchConfig.getScanFileCriteria()
 					),
 				searchConfig
 			)		

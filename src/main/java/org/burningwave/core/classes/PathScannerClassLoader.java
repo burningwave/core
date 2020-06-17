@@ -36,7 +36,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map.Entry;
-import java.util.function.Supplier;
 
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
@@ -44,7 +43,6 @@ import org.burningwave.core.io.PathHelper.ComparePathsResult;
 
 
 public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryClassLoader {
-	Supplier<ByteCodeHunter> byteCodeHunterSupplier;
 	Collection<String> loadedPaths;
 	private ByteCodeHunter byteCodeHunter;
 	private PathHelper pathHelper;
@@ -57,24 +55,19 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	protected PathScannerClassLoader(
 		ClassLoader parentClassLoader,
 		PathHelper pathHelper,
-		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
+		ByteCodeHunter byteCodeHunter,
 		FileSystemItem.Criteria scanFileCriteria
 	) {
 		super(parentClassLoader);
 		this.pathHelper = pathHelper;
-		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
-		loadedPaths = new HashSet<>();
+		this.byteCodeHunter = byteCodeHunter;
+		this.loadedPaths = new HashSet<>();
 		this.scanFileCriteria = scanFileCriteria;
+		this.byteCodeHunter = byteCodeHunter;
 	}
 	
-	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, Supplier<ByteCodeHunter> byteCodeHunterSupplier, FileSystemItem.Criteria scanFileCriteria) {
-		return new PathScannerClassLoader(parentClassLoader, pathHelper, byteCodeHunterSupplier, scanFileCriteria);
-	}
-	
-	ByteCodeHunter getByteCodeHunter() {
-		return byteCodeHunter != null ?
-			byteCodeHunter :
-			(byteCodeHunter = byteCodeHunterSupplier.get());	
+	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, ByteCodeHunter byteCodeHunter, FileSystemItem.Criteria scanFileCriteria) {
+		return new PathScannerClassLoader(parentClassLoader, pathHelper, byteCodeHunter, scanFileCriteria);
 	}
 	
 	public void scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths) {
@@ -83,7 +76,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			synchronized (loadedPaths) {
 				checkPathsResult = compareWithAllLoadedPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
 				if (!checkPathsResult.getNotContainedPaths().isEmpty()) {
-					try(ByteCodeHunter.SearchResult result = getByteCodeHunter().loadInCache(
+					try(ByteCodeHunter.SearchResult result = byteCodeHunter.loadInCache(
 						SearchConfig.forPaths(
 							checkPathsResult.getNotContainedPaths()
 						).considerURLClassLoaderPathsAsScanned(
@@ -155,7 +148,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	
 	@Override
 	public void close() {
-		byteCodeHunterSupplier = null;
 		Collection<String> loadedPaths = this.loadedPaths;
 		if (loadedPaths != null) {
 			loadedPaths.clear();
