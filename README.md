@@ -527,7 +527,6 @@ public ClassFactory getClassFactory();
 public ClassHunter getClassHunter();
 public ClassPathHunter getClassPathHunter();
 public CodeExecutor getCodeExecutor();
-public FileSystemScanner getFileSystemScanner();
 public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
 public JavaMemoryCompiler getJavaMemoryCompiler();
 public PathHelper getPathHelper();
