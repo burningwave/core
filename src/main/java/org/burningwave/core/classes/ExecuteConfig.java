@@ -128,6 +128,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 		private String propertyName;
 		private String filePath;
 		private boolean isAbsoluteFilePath;
+		private boolean indentCodeActive;
 		private Map<String, Object> defaultValues;
 		    		
 		private ForProperties() {
@@ -136,6 +137,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 				BodySourceGenerator.createSimple()
 			);
 			isAbsoluteFilePath = false;
+			indentCodeActive = true;
 		}
 		
 		
@@ -187,6 +189,15 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 
 		Map<String, Object> getDefaultValues() {
 			return defaultValues;
+		}
+
+		public ExecuteConfig.ForProperties indentCodeActive(boolean flag) {
+			this.indentCodeActive = flag;
+			return this;
+		}
+		
+		boolean isIndentCodeActive() {
+			return indentCodeActive;
 		}   		
 		
 	}
