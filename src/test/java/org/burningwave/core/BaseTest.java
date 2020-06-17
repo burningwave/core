@@ -56,7 +56,7 @@ public class BaseTest implements Component {
 		return componentSupplier;
 	}
 		
-	void testNotNull(ThrowingSupplier<?> supplier) {
+	public void testNotNull(ThrowingSupplier<?> supplier) {
 		Object object = null;
 		try {
 			logInfo(getCallerMethod() + " - start execution");
@@ -102,11 +102,11 @@ public class BaseTest implements Component {
 		return null;
 	}
 
-	<T extends AutoCloseable> void testNotEmpty(Supplier<T> autoCloaseableSupplier, Function<T, Collection<?>> collSupplier) {
+	public <T extends AutoCloseable> void testNotEmpty(Supplier<T> autoCloaseableSupplier, Function<T, Collection<?>> collSupplier) {
 		testNotEmpty(autoCloaseableSupplier, collSupplier, false);
 	}
 	
-	<T extends AutoCloseable> void testNotEmpty(Supplier<T> autoCloaseableSupplier, Function<T, Collection<?>> collSupplier, boolean printAllElements) {
+	public <T extends AutoCloseable> void testNotEmpty(Supplier<T> autoCloaseableSupplier, Function<T, Collection<?>> collSupplier, boolean printAllElements) {
 		long initialTime = System.currentTimeMillis();
 		Collection<?> coll = null;
 		boolean isNotEmpty = false;
@@ -126,7 +126,7 @@ public class BaseTest implements Component {
 	}
 	
 	
-	<T extends AutoCloseable> void testNotNull(
+	public <T extends AutoCloseable> void testNotNull(
 		ThrowingSupplier<T> autoCloseableSupplier, 
 		Function<T, ?> objectSupplier
 	) {
@@ -140,7 +140,7 @@ public class BaseTest implements Component {
 	}
 	
 	
-	void testDoesNotThrow(Executable executable) {
+	public void testDoesNotThrow(Executable executable) {
 		Throwable throwable = null;
 		long initialTime = System.currentTimeMillis();
 		try {

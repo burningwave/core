@@ -40,4 +40,15 @@ public class IterableObjectHelperTest extends BaseTest {
 		});
 	}
 	
+	@Test
+	public void containsTestOne() {
+		testNotNull(() -> {
+			Properties properties = new Properties();
+			properties.put("class-loader-01", "${class-loader-02}");
+			properties.put("class-loader-02", "${class-loader-03}");
+			properties.put("class-loader-03", Thread.currentThread().getContextClassLoader().getParent());
+			return IterableObjectHelper.containsValue(properties, "class-loader-01", Thread.currentThread().getContextClassLoader().getParent());
+		});
+	}
+	
 }

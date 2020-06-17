@@ -37,7 +37,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -47,7 +46,6 @@ import org.burningwave.core.Component;
 
 @SuppressWarnings("unchecked")
 public class IterableObjectHelper implements Component {
-	
 	private IterableObjectHelper() {}
 	
 	public static IterableObjectHelper create() {
@@ -70,27 +68,6 @@ public class IterableObjectHelper implements Component {
 
 	public long getSize(Object object) {
 		return retrieveStream(object).count();
-	}
-	
-	public boolean containsValue(Properties properties, String propertyName, Map<String, String> defaultValues, String toBeTested) {
-		String propertyValue = (String)properties.get(propertyName);
-		if (Strings.isEmpty(propertyValue) && defaultValues != null) {
-			propertyValue = defaultValues.get(propertyName);
-		}
-		if (!Strings.isEmpty(propertyValue)) {
-			if (propertyValue.contains(toBeTested)) {
-				return true;
-			}
-			Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, propertyValue);		
-			if (!subProperties.isEmpty()) {
-				for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
-					for (String propName : entry.getValue()) {
-						return containsValue(properties, propName, defaultValues, toBeTested);
-					}
-				}
-			}
-		}
-		return false;
 	}
 
 ////////////////////	
@@ -298,13 +275,15 @@ public class IterableObjectHelper implements Component {
 		
 	}
 	
-	public Collection<String> getAllPlaceHolders(Properties properties) {
-		return getAllPlaceHolders(properties, object -> true);
+	public Collection<String> getAllPlaceHolders(Map<?, ?> map) {
+		return getAllPlaceHolders(map, object -> true);
 	}
 	
-	public Collection<String> getAllPlaceHolders(Properties properties, Predicate<String> propertyFilter) {
+	public Collection<String> getAllPlaceHolders(Map<?, ?> map, Predicate<String> propertyFilter) {
 		Collection<String> placeHolders = new HashSet<>();
-		for (Map.Entry<Object, Object> entry : properties.entrySet().stream().filter(entry -> (entry.getValue() == null || entry.getValue() instanceof String) && propertyFilter.test((String) entry.getKey())).collect(Collectors.toSet())) {
+		for (Map.Entry<?, ?> entry : map.entrySet().stream().filter(entry -> 
+				(entry.getValue() == null || entry.getValue() instanceof String) && (entry.getKey() instanceof String && propertyFilter.test((String)entry.getKey()))
+			).collect(Collectors.toSet())) {
 			String value = (String)entry.getValue();
 			for(List<String> placeHoldersFound : Strings.extractAllGroups(Strings.PLACE_HOLDER_EXTRACTOR_PATTERN, value).values()) {
 				placeHolders.addAll(placeHoldersFound);
@@ -313,15 +292,50 @@ public class IterableObjectHelper implements Component {
 		return placeHolders;
 	}
 	
-	public Collection<String> getAllPlaceHolders(Properties properties, String propertyName) {
-		Collection<String> placeHolders = getAllPlaceHolders(properties);
+	public Collection<String> getAllPlaceHolders(Map<?, ?> map, String propertyName) {
+		Collection<String> placeHolders = getAllPlaceHolders(map);
 		Iterator<String> placeHoldersItr = placeHolders.iterator();
 		while (placeHoldersItr.hasNext()) {
-			if (!containsValue(properties, propertyName, null, placeHoldersItr.next())) {
+			if (!containsValue(map, propertyName, placeHoldersItr.next())) {
 				placeHoldersItr.remove();
 			}
 		}
 		return placeHolders;
 	}
-
+	
+	public boolean containsValue(Map<?, ?> map, String key, Object object) {
+		return containsValue(map, key, object, null);		
+	}
+	
+	public boolean containsValue(Map<?, ?> map, String key, Object object, Map<?, ?> defaultValues) {
+		Object value = map.get(key);
+		if (value == null && defaultValues != null) {
+			value = defaultValues.get(key);
+		}
+		if (value != null && value instanceof String) {
+			if (Strings.isEmpty((String)value) && defaultValues != null) {
+				value = defaultValues.get(key);
+			}
+			if (value != null && value instanceof String) {
+				String stringValue = (String)value;
+				if (!Strings.isEmpty(stringValue)) {
+					if (object instanceof String) {
+						String objectString = (String)object;
+						if (stringValue.contains(objectString)) {
+							return true;
+						}
+					}
+					Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, stringValue);		
+					if (!subProperties.isEmpty()) {
+						for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
+							for (String propName : entry.getValue()) {
+								return containsValue(map, propName, object, defaultValues);
+							}
+						}
+					}
+				}
+			}
+		}		
+		return object != null && value != null && object.equals(value);
+	}
 }

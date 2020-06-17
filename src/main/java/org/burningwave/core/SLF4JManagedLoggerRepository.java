@@ -84,7 +84,7 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 	private Map.Entry<org.slf4j.Logger, LoggingLevel.Mutable> getLoggerEntry(String clientName) {
 		Map.Entry<org.slf4j.Logger, LoggingLevel.Mutable> loggerEntry = loggers.get(clientName);
 		if (loggerEntry == null) {
-			synchronized (System.identityHashCode(loggers) + "_" + System.identityHashCode(clientName)) {
+			synchronized (loggers) {
 				loggerEntry = loggers.get(clientName);
 				if (loggerEntry == null) {
 					loggers.put(clientName, loggerEntry = new AbstractMap.SimpleEntry<>(
