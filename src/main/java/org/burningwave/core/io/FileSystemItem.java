@@ -419,7 +419,7 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	
-	protected Set<FileSystemItem> loadAllChildren() {
+	Set<FileSystemItem> loadAllChildren() {
 		if (isContainer()) {
 			if (isCompressed() || isArchive()) {
 				Predicate<IterableZipContainer.Entry> zipEntryPredicate = null;
@@ -492,7 +492,7 @@ public class FileSystemItem implements ManagedLogger {
 		return null;
 	}
 	
-	protected Set<FileSystemItem> loadChildren() {
+	Set<FileSystemItem> loadChildren() {
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
 		if (isContainer()) {
 			if (isCompressed()) {
