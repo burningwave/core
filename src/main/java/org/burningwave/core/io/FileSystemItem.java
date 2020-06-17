@@ -708,7 +708,7 @@ public class FileSystemItem implements ManagedLogger {
 		}
 	}
 	
-	protected String retrieveConventionedRelativePath(
+	String retrieveConventionedRelativePath(
 		FileSystemItem fileSystemItem,
 		IterableZipContainer iZC,
 		IterableZipContainer.Entry zipEntry,
