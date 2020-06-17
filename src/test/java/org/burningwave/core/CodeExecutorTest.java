@@ -51,6 +51,7 @@ public class CodeExecutorTest extends BaseTest {
 				.setPropertyName("code-block-1")
 				.useClassLoader(MemoryClassLoader.create(null))
 				.useAsParentClassLoader(Thread.currentThread().getContextClassLoader())
+				.indentCodeActive(false)
 				.withParameter(LocalDateTime.now())
 			);
 		});

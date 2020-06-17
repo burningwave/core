@@ -130,9 +130,13 @@ public class CodeExecutor implements Component {
 		}
 		String code = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName(), config.getDefaultValues());
 		if (code.contains(";")) {
-			code = code.replaceAll(";{2,}", ";");
-			for (String codeRow : code.split(";")) {
-				body.addCodeRow(codeRow + ";");
+			if (config.isIndentCodeActive()) {
+				code = code.replaceAll(";{2,}", ";");
+				for (String codeRow : code.split(";")) {
+					body.addCodeRow(codeRow + ";");
+				}
+			} else {
+				body.addCodeRow(code);
 			}
 		} else {
 			body.addCodeRow(code.contains("return")?
