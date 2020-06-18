@@ -52,8 +52,8 @@ import org.burningwave.core.io.ByteBufferInputStream;
 
 public class MemoryClassLoader extends ClassLoader implements Component {
 
-	protected Map<String, ByteBuffer> notLoadedByteCodes;
-	protected Map<String, ByteBuffer> loadedByteCodes;
+	Map<String, ByteBuffer> notLoadedByteCodes;
+	Map<String, ByteBuffer> loadedByteCodes;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -137,7 +137,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     	return pkg;
     }
     
-	protected void definePackageOf(Class<?> cls) {
+	void definePackageOf(Class<?> cls) {
 		if (cls.getName().contains(".")) {
 			String pckgName = cls.getName().substring(
 		    	0, cls.getName().lastIndexOf(".")
@@ -284,7 +284,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	*/
 	
-	protected Class<?> _defineClass(String className, java.nio.ByteBuffer byteCode, ProtectionDomain protectionDomain) {
+	Class<?> _defineClass(String className, java.nio.ByteBuffer byteCode, ProtectionDomain protectionDomain) {
 		Class<?> cls = super.defineClass(className, byteCode, protectionDomain);
 		addLoadedByteCode(className, byteCode);
 		removeNotLoadedCompiledClass(className);

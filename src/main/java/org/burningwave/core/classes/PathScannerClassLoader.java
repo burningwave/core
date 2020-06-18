@@ -52,7 +52,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
         ClassLoader.registerAsParallelCapable();
     }
 	
-	protected PathScannerClassLoader(
+	PathScannerClassLoader(
 		ClassLoader parentClassLoader,
 		PathHelper pathHelper,
 		ByteCodeHunter byteCodeHunter,

@@ -178,7 +178,7 @@ public class SearchContext<T> implements Component {
 		pathScannerClassLoader.addByteCode(className, byteCode);			
 	}
 	
-	protected <O> O execute(ThrowingSupplier<O, Throwable> supplier, Supplier<O> defaultValueSupplier, Supplier<String> classNameSupplier) {
+	<O> O execute(ThrowingSupplier<O, Throwable> supplier, Supplier<O> defaultValueSupplier, Supplier<String> classNameSupplier) {
 		return ThrowingSupplier.get(() -> {
 			try {
 				return supplier.get();
@@ -212,7 +212,7 @@ public class SearchContext<T> implements Component {
 		});
 	}
 	
-	protected Class<?> loadClass(String className) {
+	Class<?> loadClass(String className) {
 		return execute(
 			() -> pathScannerClassLoader.loadClass(className), 
 			() -> null, 
@@ -220,7 +220,7 @@ public class SearchContext<T> implements Component {
 		);
 	}
 	
-	protected Class<?> loadClass(Class<?> cls) {
+	Class<?> loadClass(Class<?> cls) {
 		return execute(
 			() -> pathScannerClassLoader.loadOrDefineClass(cls), 
 			() -> null, 
@@ -228,7 +228,7 @@ public class SearchContext<T> implements Component {
 		);
 	}
 	
-	protected Class<?> loadClass(JavaClass cls) {
+	Class<?> loadClass(JavaClass cls) {
 		return execute(
 			() -> pathScannerClassLoader.loadOrDefineClass(cls), 
 			() -> null, 
@@ -236,7 +236,7 @@ public class SearchContext<T> implements Component {
 		);
 	}
 	
-	protected Class<?> retrieveClass(Class<?> cls) {
+	Class<?> retrieveClass(Class<?> cls) {
 		return Classes.isLoadedBy(cls, pathScannerClassLoader) ?
 			cls : 
 			loadClass(cls.getName());
