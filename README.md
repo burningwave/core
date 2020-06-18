@@ -5,13 +5,13 @@
 </a>
 
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/6)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
-[![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master_experimental/LICENSE)
+[![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/experimental/LICENSE)
 
 [![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/139821400)
 
 [![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/139821400)
 
-[![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master_experimental)](https://coveralls.io/github/burningwave/core?branch=master_experimental)
+[![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/experimental)](https://coveralls.io/github/burningwave/core?branch=experimental)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
 
 **Tested on Java versions ranging from 8 to 15-ea, Burningwave Core** is a fully independent, advanced, free and open source Java frameworks building library and it is useful for scanning class paths, generating classes at runtime, facilitating the use of reflection, scanning the filesystem, executing stringified source code and much more...
