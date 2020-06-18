@@ -12,11 +12,13 @@ public class FileSystemItemTest extends BaseTest {
 	
 	@Test
 	public void readTestOne() {
-		ComponentSupplier componentSupplier = getComponentSupplier();
-		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
-		testNotNull(() -> FileSystemItem.ofPath(
-			basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar/org/apache/bcel/generic/MethodGen$BranchTarget.class"
-		).toByteBuffer());
+		testNotNull(() -> {
+				ComponentSupplier componentSupplier = getComponentSupplier();
+				return componentSupplier.getPathHelper().getResource(
+					"/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar/org/apache/bcel/generic/MethodGen$BranchTarget.class"
+				).toByteBuffer();
+			}
+		);
 	}
 	
 	@Test
@@ -67,11 +69,12 @@ public class FileSystemItemTest extends BaseTest {
 	
 	@Test
 	public void readTestSeven() {
-		testNotEmpty(() -> 
-			FileSystemItem.ofPath(
-				System.getProperty("os.name").toLowerCase().contains("windows")?
-					"C:" : "/"
-			).getChildren(), 
+		testNotEmpty(() -> {
+				return FileSystemItem.ofPath(
+					System.getProperty("os.name").toLowerCase().contains("windows")?
+						"C:" : "/"
+				).getChildren();
+			}, 
 			true
 		);
 	}
@@ -209,6 +212,18 @@ public class FileSystemItemTest extends BaseTest {
 			pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
 		.findInAllChildren(FileSystemItem.Criteria.forAllFileThat(FileSystemItem::isFolder)),
 		false);
+	}
+	
+	@Test
+	public void readTestTwentyTwo() {
+		testNotEmpty(() -> {
+				ComponentSupplier componentSupplier = getComponentSupplier();
+				PathHelper pathHelper = componentSupplier.getPathHelper();
+				return pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip")
+					.findInAllChildren(FileSystemItem.Criteria.forArchiveTypeFiles(FileSystemItem.CheckingOption.FOR_NAME_AND_SIGNATURE));
+			},
+			true
+		);
 	}
 	
 	@Test
