@@ -126,7 +126,7 @@ public class ByteBufferOutputStream extends OutputStream {
     }
     
     
-    protected InputStream toBufferedInputStream() {
+    InputStream toBufferedInputStream() {
         return new ByteBufferInputStream(buffer);
     }
     
