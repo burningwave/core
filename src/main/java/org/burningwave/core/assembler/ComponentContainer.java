@@ -49,7 +49,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.Executor;
+import org.burningwave.core.Executable;
 import org.burningwave.core.classes.ByteCodeHunter;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
@@ -313,7 +313,7 @@ public class ComponentContainer implements ComponentSupplier {
 				.setPropertyName(configKey)
 				.withParameter(this)
 				.withDefaultPropertyValues(defaultValues)
-				.useAsParentClassLoader(Classes.getClassLoader(Executor.class))
+				.useAsParentClassLoader(Classes.getClassLoader(Executable.class))
 			);
 		} else {
 			return (T)object;

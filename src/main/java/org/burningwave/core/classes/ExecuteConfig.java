@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.burningwave.core.Executor;
+import org.burningwave.core.Executable;
 import org.burningwave.core.iterable.Properties;
 
 @SuppressWarnings("unchecked")
@@ -133,7 +133,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 		    		
 		private ForProperties() {
 			super(
-				Executor.class.getPackage().getName() + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""),
+				Executable.class.getPackage().getName() + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""),
 				BodySourceGenerator.createSimple()
 			);
 			isAbsoluteFilePath = false;
@@ -207,7 +207,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 	
 		private ForBodySourceGenerator(BodySourceGenerator body) {
 			super(
-				Executor.class.getPackage().getName() + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""),
+				Executable.class.getPackage().getName() + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""),
 				body			
 			);
 		}
