@@ -98,11 +98,6 @@ public class FileSystemItem implements ManagedLogger {
 		return fileSystemItem;
 	}
 	
-	private FileSystemItem(String realAbsolutePath) {
-		realAbsolutePath = Paths.clean(realAbsolutePath);
-		this.absolutePath = new AbstractMap.SimpleEntry<>(realAbsolutePath, null);
-	}
-	
 	private FileSystemItem(String realAbsolutePath, String conventionedAbsolutePath) {
 		realAbsolutePath = Paths.clean(realAbsolutePath);
 		this.absolutePath = new AbstractMap.SimpleEntry<>(realAbsolutePath, conventionedAbsolutePath);
