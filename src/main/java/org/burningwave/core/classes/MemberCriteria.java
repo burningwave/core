@@ -104,8 +104,8 @@ public abstract class MemberCriteria<M extends Member, C extends MemberCriteria<
 		this.resultPredicate = resultPredicate;
 		return (C)this;
 	}
-	
-	protected Predicate<Collection<M>> getResultPredicate() {
+
+	Predicate<Collection<M>> getResultPredicate() {
 		return this.resultPredicate;
 	}
 	

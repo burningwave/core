@@ -48,16 +48,16 @@ public abstract class CriteriaWithClassElementsSupplyingSupport<
 	C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>,
 	T extends Criteria.TestContext<E, C>
 > extends Criteria<E, C, T>  {
-	protected Map<Class<?>[], List<Class<?>>> uploadedClassesMap;
-	protected List<Class<?>> classesToBeUploaded;
-	protected Map<Class<?>, Class<?>> uploadedClasses;
-	protected Function<Class<?>, Class<?>> classSupplier;
+	Map<Class<?>[], List<Class<?>>> uploadedClassesMap;
+	List<Class<?>> classesToBeUploaded;
+	Map<Class<?>, Class<?>> uploadedClasses;
+	Function<Class<?>, Class<?>> classSupplier;
 	
-	protected Map<Class<?>[], List<ByteBuffer>> byteCodeForClasses;
-	protected Map<Class<?>, byte[]> loadedBytecode;
-	protected Function<Class<?>, ByteBuffer> byteCodeSupplier;
+	Map<Class<?>[], List<ByteBuffer>> byteCodeForClasses;
+	Map<Class<?>, byte[]> loadedBytecode;
+	Function<Class<?>, ByteBuffer> byteCodeSupplier;
 	
-	protected CriteriaWithClassElementsSupplyingSupport() {
+	CriteriaWithClassElementsSupplyingSupport() {
 		byteCodeForClasses = new ConcurrentHashMap<>();
 	}
 	

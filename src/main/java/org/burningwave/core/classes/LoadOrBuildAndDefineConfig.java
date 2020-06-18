@@ -34,7 +34,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.SourceCode
 import java.util.Collection;
 import java.util.UUID;
 
-import org.burningwave.core.Executor;
+import org.burningwave.core.Executable;
 
 public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<LoadOrBuildAndDefineConfig> {
 	
@@ -72,7 +72,7 @@ public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<L
 		}
 		
 		public static ForCodeExecutor withCode(BodySourceGenerator bodySG) {
-			String packageName = Executor.class.getPackage().getName();
+			String packageName = Executable.class.getPackage().getName();
 			String className = packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", "");
 			return withCode(className, bodySG);
 		}

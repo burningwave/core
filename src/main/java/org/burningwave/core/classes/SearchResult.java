@@ -40,17 +40,17 @@ import org.burningwave.core.Component;
 import org.burningwave.core.Criteria;
 
 public class SearchResult<E> implements Component {
-	protected SearchContext<E> context;
+	SearchContext<E> context;
 	
 	SearchResult(SearchContext<E> context) {
 		this.context = context;
 	}
 	
-	protected Collection<E> getItemsFound() {
+	Collection<E> getItemsFound() {
 		return context.getItemsFound();
 	}
 	
-	protected Map<String, E> getItemsFoundFlatMap() {
+	Map<String, E> getItemsFoundFlatMap() {
 		return context.getItemsFoundFlatMap();
 	}
 	

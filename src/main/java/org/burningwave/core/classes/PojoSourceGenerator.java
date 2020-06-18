@@ -218,7 +218,7 @@ public class PojoSourceGenerator {
 		return (options & BUILDING_METHODS_CREATION_ENABLED) != 0;
 	}
 	
-	protected TypeDeclarationSourceGenerator createTypeDeclaration(boolean useFullyQualifiedNames,
+	TypeDeclarationSourceGenerator createTypeDeclaration(boolean useFullyQualifiedNames,
 			Class<?> cls) {
 		if (useFullyQualifiedNames) {
 			return TypeDeclarationSourceGenerator.create(cls.getName().replace("$", "."));

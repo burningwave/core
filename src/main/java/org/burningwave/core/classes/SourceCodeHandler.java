@@ -37,7 +37,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.Executor;
+import org.burningwave.core.Executable;
 import org.burningwave.core.function.MultiParamsConsumer;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.MultiParamsPredicate;
@@ -87,7 +87,7 @@ public class SourceCodeHandler implements Component {
 		).addModifier(
 			Modifier.PUBLIC
 		).addConcretizedType(
-			Executor.class
+			Executable.class
 		).addMethod(
 			executeMethod
 		);

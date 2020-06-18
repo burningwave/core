@@ -38,7 +38,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.Executor;
+import org.burningwave.core.Executable;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemItem;
@@ -168,10 +168,10 @@ public class CodeExecutor implements Component {
 						parentClassLoader
 					)
 				) {
-					Class<? extends Executor> executableClass = loadOrBuildAndDefineExecutorSubType(
+					Class<? extends Executable> executableClass = loadOrBuildAndDefineExecutorSubType(
 						config.useClassLoader(memoryClassLoader)
 					);
-					Executor executor = Constructors.newInstanceOf(executableClass);
+					Executable executor = Constructors.newInstanceOf(executableClass);
 					T retrievedElement = executor.execute(config.getParams());
 					return retrievedElement;
 				}
@@ -186,10 +186,10 @@ public class CodeExecutor implements Component {
 				if (parentClassLoader != null) {
 					parentClassLoaderRestorer = ClassLoaders.setAsParent(config.getClassLoader(), getClassFactory().getDefaultClassLoader(), false);
 				}
-				Class<? extends Executor> executableClass = loadOrBuildAndDefineExecutorSubType(
+				Class<? extends Executable> executableClass = loadOrBuildAndDefineExecutorSubType(
 					config
 				);
-				Executor executor = Constructors.newInstanceOf(executableClass);
+				Executable executor = Constructors.newInstanceOf(executableClass);
 				T retrievedElement = executor.execute(config.getParams());
 				if (parentClassLoaderRestorer != null) {
 					parentClassLoaderRestorer.apply(true);
@@ -200,7 +200,7 @@ public class CodeExecutor implements Component {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <T extends Executor> Class<T> loadOrBuildAndDefineExecutorSubType(
+	public <T extends Executable> Class<T> loadOrBuildAndDefineExecutorSubType(
 		LoadOrBuildAndDefineConfig.ForCodeExecutor config
 	) {
 		return (Class<T>) getClassFactory().loadOrBuildAndDefine(
