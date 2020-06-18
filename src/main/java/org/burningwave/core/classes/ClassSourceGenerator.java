@@ -269,7 +269,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 			);
 	}
 
-	protected String getOuterCode() {
+	String getOuterCode() {
 		return Optional.ofNullable(outerCode).map(outerCode ->
 			getOrEmpty(outerCode) +"\n"
 		).orElseGet(() -> null);

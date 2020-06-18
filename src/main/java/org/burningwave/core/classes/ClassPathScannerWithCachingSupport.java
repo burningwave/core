@@ -198,7 +198,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		}
 	}
 	
-	protected void iterateAndTestCachedPaths(
+	void iterateAndTestCachedPaths(
 		C context,
 		String basePath,
 		Map<String, I> itemsForPath,
