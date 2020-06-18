@@ -47,6 +47,10 @@ public class FileSystemHelper implements Component {
 		temporaryFolders = ConcurrentHashMap.newKeySet();	
 	}
 	
+	public static FileSystemHelper create() {
+		return new FileSystemHelper();
+	}
+	
 	public void clearMainTemporaryFolder() {
 		delete(Arrays.asList(getOrCreateMainTemporaryFolder().listFiles()));
 	}
@@ -89,10 +93,6 @@ public class FileSystemHelper implements Component {
 			}
 			return tempFolder;
 		});
-	}
-	
-	public static FileSystemHelper create() {
-		return new FileSystemHelper();
 	}
 	
 	public void delete(Collection<File> files) {
