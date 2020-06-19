@@ -86,12 +86,6 @@ public class Classes implements Component, MembersRetriever {
 
 	    }		
 	}
-
-	private static final int V15;
-	
-	static {
-		V15 = 0 << 16 | 59;
-	}
 	
 	private Classes() {}
 	
@@ -163,37 +157,22 @@ public class Classes implements Component, MembersRetriever {
 		return classSimpleName;
 	}
 	
-	public String retrieveName(ByteBuffer classFileBuffer) {
-		return retrieveName(classFileBuffer, true);
-	}
-	
-	public String retrieveName(byte[] classFileBuffer) {
-		return retrieveName(classFileBuffer, true);
+	public String retrieveName(
+		final byte[] classFileBuffer
+	) {
+		return retrieveName((index) -> classFileBuffer[index]);
 	}
 	
 	public String retrieveName(
-		final byte[] classFileBuffer,
-		final boolean checkClassVersion
+		final ByteBuffer classFileBuffer
 	) {
-		return retrieveName((index) -> classFileBuffer[index], checkClassVersion);
-	}
-	
-	public String retrieveName(
-		final ByteBuffer classFileBuffer,
-		final boolean checkClassVersion
-	) {
-		return retrieveName(classFileBuffer::get, checkClassVersion);
+		return retrieveName(classFileBuffer::get);
 	}
 	
 	private String retrieveName(
-		final Function<Integer, Byte> byteSupplier,
-		final boolean checkClassVersion
+		final Function<Integer, Byte> byteSupplier
 	) {
 		int classFileOffset = 0;
-		if (checkClassVersion && readShort(byteSupplier, classFileOffset + 6) > V15) {
-			throw new IllegalArgumentException(
-					"Unsupported class file major version " + readShort(byteSupplier, classFileOffset + 6));
-		}
 		int constantPoolCount = readUnsignedShort(byteSupplier, classFileOffset + 8);
 		int[] cpInfoOffsets = new int[constantPoolCount];
 		String[] constantUtf8Values = new String[constantPoolCount];
@@ -301,10 +280,6 @@ public class Classes implements Component, MembersRetriever {
 		return new String(charBuffer, 0, strLength);
 	}
 
-	private short readShort(Function<Integer, Byte> byteSupplier, final int offset) {
-		return (short) (((byteSupplier.apply(offset) & 0xFF) << 8) | (byteSupplier.apply(offset + 1) & 0xFF));
-	}
-	
 	public ClassLoader getClassLoader(Class<?> cls) {
 		ClassLoader clsLoader = cls.getClassLoader();
 		if (clsLoader == null) {
