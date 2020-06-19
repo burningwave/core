@@ -5,7 +5,9 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.AbstractList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.bean.Complex;
@@ -70,8 +72,17 @@ public class ClassHunterTest extends BaseTest {
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)
 			).find(),
-			(result) ->
-				((PathScannerClassLoader)result.getClasses().stream().findFirst().get().getClassLoader()).getResourcesAsStream("/META-INF/MANIFEST.MF").values()
+			(result) -> {
+				Collection<Class<?>> classes = result.getClasses();
+				Iterator<Class<?>> itr = classes.iterator();
+				Class<?> cls = itr.next();
+				while(cls.getClassLoader() == null) {
+					logError(cls.getName());
+					cls = itr.next();
+				}
+				return ((PathScannerClassLoader)cls.getClassLoader()).getResourcesAsStream("/META-INF/MANIFEST.MF").values();
+				
+			}
 		);
 	}
 	
