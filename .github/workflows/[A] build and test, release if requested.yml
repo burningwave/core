@@ -15,10 +15,9 @@ jobs:
     name: Build -> Test (JVM ${{ matrix.java }}, ${{ matrix.architecture }}, ${{ matrix.os }})
     strategy:
       fail-fast: true
-      #max-parallel: 16
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        java: [8, 9, 10, 11, 12, 13, 14, 15-ea, 16-ea]
+        java: [8, 9, 10, 11, 12, 13, 14, 15-ea]
         architecture: [x32, x64]
     runs-on: ${{ matrix.os }}
     steps:
@@ -31,12 +30,9 @@ jobs:
       - if: endsWith(matrix.java, '-ea') != true 
         name: Build and test with final version JDK
         run: mvn -B clean test -Dproject_jdk_version=${{ matrix.java }} -DskipTests=false --file pom.xml
-      - if: endsWith(matrix.java, '15-ea') == true 
+      - if: endsWith(matrix.java, '-ea') == true 
         name: Build and test with early access version JDK
         run: mvn -B clean test -Dproject_jdk_version=15 -DskipTests=false --file pom.xml
-      - if: endsWith(matrix.java, '16-ea') == true 
-        name: Build and test with early access version JDK
-        run: mvn -B clean test -Dproject_jdk_version=16 -DskipTests=false --file pom.xml
         
         
   release:
