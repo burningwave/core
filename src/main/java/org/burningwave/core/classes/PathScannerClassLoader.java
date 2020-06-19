@@ -30,12 +30,16 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
@@ -124,7 +128,45 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		}
 		return true;
 	}
-
+	
+	@Override
+	public InputStream getResourceAsStream(String name) {
+		InputStream inputStream = super.getResourceAsStream(name);
+		if (inputStream != null) {
+			return inputStream;
+		}
+		AtomicReference<InputStream> inputStreamWrapper = new AtomicReference<>();
+		FileSystemItem.Criteria scanFileCriteria = FileSystemItem.Criteria.forAllFileThat(child -> {
+			if (child.getAbsolutePath().endsWith(name)) {
+				inputStreamWrapper.set(child.toInputStream());
+				return true;
+			}
+			return false;
+		});
+		for (String loadedPath : loadedPaths) {
+			FileSystemItem.ofPath(loadedPath).findFirstInAllChildren(scanFileCriteria);
+			if (inputStreamWrapper.get() != null) {
+				return inputStreamWrapper.get();
+			}
+		}
+		return null;
+	}
+	
+	public Map<String, InputStream> getResourcesAsStream(String name) {
+		Map<String, InputStream> inputStreams = new HashMap<>();
+		FileSystemItem.Criteria scanFileCriteria = FileSystemItem.Criteria.forAllFileThat(child -> {
+			if (child.getAbsolutePath().endsWith(name)) {
+				inputStreams.put(child.getAbsolutePath(), child.toInputStream());
+				return true;
+			}
+			return false;
+		});
+		for (String loadedPath : loadedPaths) {
+			FileSystemItem.ofPath(loadedPath).findInAllChildren(scanFileCriteria);
+		}
+		return inputStreams;
+	}
+	
 	ComparePathsResult compareWithAllLoadedPaths(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths) {
 		return pathHelper.comparePaths(getAllLoadedPaths(considerURLClassLoaderPathsAsLoadedPaths), paths);
 	}
