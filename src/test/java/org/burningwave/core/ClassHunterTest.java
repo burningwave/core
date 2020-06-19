@@ -14,6 +14,7 @@ import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.classes.MethodCriteria;
+import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.PathHelper;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,36 @@ public class ClassHunterTest extends BaseTest {
 			).find(),
 			(result) ->
 				result.getClasses()
+		);
+	}
+	
+	@Test
+	public void getResourceAsStreamTestOne() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		componentSupplier.clearHuntersCache();
+		testNotNull(
+			() -> componentSupplier.getClassHunter().loadInCache(
+				SearchConfig.forPaths(
+					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
+				)
+			).find(),
+			(result) ->
+				result.getClasses().stream().findFirst().get().getClassLoader().getResourceAsStream("/META-INF/MANIFEST.MF")
+		);
+	}
+	
+	@Test
+	public void getResourceAsStreamTestTwo() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		componentSupplier.clearHuntersCache();
+		testNotEmpty(
+			() -> componentSupplier.getClassHunter().loadInCache(
+				SearchConfig.forPaths(
+					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
+				)
+			).find(),
+			(result) ->
+				((PathScannerClassLoader)result.getClasses().stream().findFirst().get().getClassLoader()).getResourcesAsStream("/META-INF/MANIFEST.MF").values()
 		);
 	}
 	
