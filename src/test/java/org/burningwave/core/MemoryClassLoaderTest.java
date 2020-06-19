@@ -70,7 +70,7 @@ public class MemoryClassLoaderTest extends BaseTest {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
 			MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
-			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).entrySet());
+			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).getCompiledFiles().entrySet());
 			return memoryClassLoader.loadClass("tryyy.ReTry$ReReTry");
 		});
 	}
@@ -81,7 +81,7 @@ public class MemoryClassLoaderTest extends BaseTest {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
 			MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
-			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).entrySet());
+			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).getCompiledFiles().entrySet());
 			return memoryClassLoader.forceCompiledClassesLoading();
 		});
 	}
@@ -92,7 +92,7 @@ public class MemoryClassLoaderTest extends BaseTest {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
 			MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
-			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).entrySet());
+			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).getCompiledFiles().entrySet());
 			return memoryClassLoader.getNotLoadedByteCode("tryyy.ReTry$ReReTry");
 		});
 	}
@@ -103,7 +103,7 @@ public class MemoryClassLoaderTest extends BaseTest {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
 			MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
-			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).entrySet());
+			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).getCompiledFiles().entrySet());
 			return memoryClassLoader.getByteCodeOf("tryyy.ReTry$ReReTry");
 		});
 	}
