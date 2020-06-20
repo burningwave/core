@@ -75,7 +75,12 @@ public class ClassFactory implements Component {
 		static {
 			DEFAULT_VALUES = new HashMap<>();
 			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
-			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, Supplier.class.getName() + ";" + ComponentSupplier.class.getName() + ";");
+			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX,
+				ComponentSupplier.class.getName() + ";" +
+				FileSystemItem.class.getName() + ";" + 
+				PathScannerClassLoader.class.getName() + ";" +
+				Supplier.class.getName() + ";"
+			);
 			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, ClassFactory.class.getPackage().getName() + ".DefaultClassLoaderRetrieverForClassFactory");
 			DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, "(Supplier<?>)() -> ((ComponentSupplier)parameter[0]).getClassHunter().getPathScannerClassLoader()");
 
