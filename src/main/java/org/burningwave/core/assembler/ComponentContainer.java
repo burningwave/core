@@ -45,6 +45,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -64,6 +65,7 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
+@SuppressWarnings("unchecked")
 public class ComponentContainer implements ComponentSupplier {
 	private static Collection<ComponentContainer> instances;
 	protected Map<Class<? extends Component>, Component> components;
@@ -196,7 +198,6 @@ public class ComponentContainer implements ComponentSupplier {
 		return IterableObjectHelper.resolveStringValue(config, propertyName, defaultValues);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
 		T component = (T)components.get(componentType);
 		if (component == null) {	
@@ -305,6 +306,7 @@ public class ComponentContainer implements ComponentSupplier {
 		);
 	}
 	
+	
 	private <T> T retrieveFromConfig(String configKey, Map<String, Object> defaultValues) {
 		T object = config.resolveObjectValue(configKey);
 		if (object instanceof String) {
@@ -315,6 +317,8 @@ public class ComponentContainer implements ComponentSupplier {
 				.withDefaultPropertyValues(defaultValues)
 				.useAsParentClassLoader(Classes.getClassLoader(Executable.class))
 			);
+		} else if (object instanceof Function) {
+			return (T)(Supplier<?>)() -> ((Function<ComponentSupplier, ?>)object).apply(this);
 		} else {
 			return (T)object;
 		}

@@ -42,6 +42,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -82,7 +83,11 @@ public class ClassFactory implements Component {
 				Supplier.class.getName() + ";"
 			);
 			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, ClassFactory.class.getPackage().getName() + ".DefaultClassLoaderRetrieverForClassFactory");
-			DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, "(Supplier<?>)() -> ((ComponentSupplier)parameter[0]).getClassHunter().getPathScannerClassLoader()");
+			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, "(Supplier<?>)() -> ((ComponentSupplier)parameter[0]).getClassHunter().getPathScannerClassLoader()");
+			DEFAULT_VALUES.put(
+				Key.DEFAULT_CLASS_LOADER,
+				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) -> componentSupplier.getClassHunter().getPathScannerClassLoader()
+			);
 
 			DEFAULT_VALUES.put(
 				Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER, 
