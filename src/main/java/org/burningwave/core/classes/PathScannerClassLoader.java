@@ -75,37 +75,65 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	}
 	
 	public void scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths) {
-		ComparePathsResult checkPathsResult = compareWithAllLoadedPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
-		if (!checkPathsResult.getNotContainedPaths().isEmpty()) {
+		scanPathsAndAddAllByteCodesFound(paths, considerURLClassLoaderPathsAsLoadedPaths, false);
+	}
+	
+	public void scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths, boolean refreshCache) {
+		if (!refreshCache) {
+			ComparePathsResult checkPathsResult = compareWithAllLoadedPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
+			if (!checkPathsResult.getNotContainedPaths().isEmpty()) {
+				synchronized (loadedPaths) {
+					checkPathsResult = compareWithAllLoadedPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
+					if (!checkPathsResult.getNotContainedPaths().isEmpty()) {
+						try(ByteCodeHunter.SearchResult result = byteCodeHunter.loadInCache(
+							SearchConfig.forPaths(
+								checkPathsResult.getNotContainedPaths()
+							).considerURLClassLoaderPathsAsScanned(
+								considerURLClassLoaderPathsAsLoadedPaths
+							).withScanFileCriteria(
+								scanFileCriteria
+							).optimizePaths(
+								true
+							)
+						).find()) {
+							if (checkPathsResult.getPartialContainedDirectories().isEmpty() && checkPathsResult.getPartialContainedFiles().isEmpty()) {
+								for (Entry<String, JavaClass> entry : result.getClassesFlatMap().entrySet()) {
+									JavaClass javaClass = entry.getValue();
+									addByteCode(javaClass.getName(), javaClass.getByteCode());
+								}
+							} else {
+								for (Entry<String, JavaClass> entry : result.getClassesFlatMap().entrySet()) {
+									if (check(checkPathsResult, entry.getKey())) {
+										JavaClass javaClass = entry.getValue();
+										addByteCode(javaClass.getName(), javaClass.getByteCode());
+									}
+								}
+							}
+						};
+						loadedPaths.addAll(checkPathsResult.getNotContainedPaths());
+					}
+				}
+			}
+		} else {
 			synchronized (loadedPaths) {
-				checkPathsResult = compareWithAllLoadedPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
-				if (!checkPathsResult.getNotContainedPaths().isEmpty()) {
+				if (!paths.isEmpty()) {
 					try(ByteCodeHunter.SearchResult result = byteCodeHunter.loadInCache(
 						SearchConfig.forPaths(
-							checkPathsResult.getNotContainedPaths()
+							paths
 						).considerURLClassLoaderPathsAsScanned(
 							considerURLClassLoaderPathsAsLoadedPaths
 						).withScanFileCriteria(
 							scanFileCriteria
 						).optimizePaths(
 							true
-						)
+						).refreshCache()
 					).find()) {
-						if (checkPathsResult.getPartialContainedDirectories().isEmpty() && checkPathsResult.getPartialContainedFiles().isEmpty()) {
-							for (Entry<String, JavaClass> entry : result.getClassesFlatMap().entrySet()) {
-								JavaClass javaClass = entry.getValue();
-								addByteCode(javaClass.getName(), javaClass.getByteCode());
-							}
-						} else {
-							for (Entry<String, JavaClass> entry : result.getClassesFlatMap().entrySet()) {
-								if (check(checkPathsResult, entry.getKey())) {
-									JavaClass javaClass = entry.getValue();
-									addByteCode(javaClass.getName(), javaClass.getByteCode());
-								}
-							}
+						for (Entry<String, JavaClass> entry : result.getClassesFlatMap().entrySet()) {
+							JavaClass javaClass = entry.getValue();
+							addByteCode(javaClass.getName(), javaClass.getByteCode());
 						}
 					};
-					loadedPaths.addAll(checkPathsResult.getNotContainedPaths());
+					loadedPaths.addAll(paths);
 				}
 			}
 		}

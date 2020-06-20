@@ -33,6 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.SourceCode
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -225,19 +226,24 @@ public class ClassFactory implements Component {
 				try {
 					classes.put(className, classLoader.loadClass(className));
 				} catch (Throwable exc) {
-					Map<String, ByteBuffer> compiledByteCodes = build(
+					CompileResult compileResult = build(
 						useOneShotJavaCompiler,
 						compilationClassPaths,
 						classPathsForNotFoundClassesDuringCompilantion, 
 						unitsCode, storeCompiledClasses
-					).getCompiledFiles();
+					);
+					if (classLoader instanceof PathScannerClassLoader) {
+						((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(
+							Arrays.asList(compileResult.getClassPath().getAbsolutePath()), true, true
+						);
+					}
 					return new ClassRetriever() {
 						@Override
 						public Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className) {
 							try {
-								Map<String, ByteBuffer> finalByteCodes = compiledByteCodes;
+								Map<String, ByteBuffer> finalByteCodes = compileResult.getCompiledFiles();
 								if (additionalByteCodes != null) {
-									finalByteCodes = new HashMap<>(compiledByteCodes);
+									finalByteCodes = new HashMap<>(compileResult.getCompiledFiles());
 									finalByteCodes.putAll(additionalByteCodes);
 								}
 								return ClassLoaders.loadOrDefineByByteCode(className, finalByteCodes, classLoader);
@@ -247,7 +253,7 @@ public class ClassFactory implements Component {
 										loadBytecodesFromClassPaths(
 											retrievedBytecodes,
 											classPathsForNotFoundClassesDuringLoading,
-											compiledByteCodes,
+											compileResult.getCompiledFiles(),
 											additionalByteCodes
 										).get(), classLoader
 									);
