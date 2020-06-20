@@ -738,7 +738,7 @@ public class FileSystemItem implements ManagedLogger {
 		}
 	}
 	
-	public ByteBuffer toByteBuffer() {
+	public synchronized ByteBuffer toByteBuffer() {
 		String absolutePath = getAbsolutePath();
 		ByteBuffer resource = Cache.pathForContents.getOrUploadIfAbsent(absolutePath, null); 
 		if (resource != null) {
