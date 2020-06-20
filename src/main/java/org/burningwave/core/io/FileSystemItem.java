@@ -180,7 +180,7 @@ public class FileSystemItem implements ManagedLogger {
 			obj instanceof FileSystemItem && ((FileSystemItem)obj).getAbsolutePath().equals(this.getAbsolutePath());
 	}
 	
-	public boolean exists() {
+	public synchronized boolean exists() {
 		if (absolutePath.getValue() == null) {
 			computeConventionedAbsolutePath();
 		}
