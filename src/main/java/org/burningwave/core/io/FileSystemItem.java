@@ -180,7 +180,7 @@ public class FileSystemItem implements ManagedLogger {
 			obj instanceof FileSystemItem && ((FileSystemItem)obj).getAbsolutePath().equals(this.getAbsolutePath());
 	}
 	
-	public boolean exists() {
+	public synchronized boolean exists() {
 		if (absolutePath.getValue() == null) {
 			computeConventionedAbsolutePath();
 		}
@@ -738,18 +738,28 @@ public class FileSystemItem implements ManagedLogger {
 		}
 	}
 	
-	public ByteBuffer toByteBuffer() {
+	public synchronized ByteBuffer toByteBuffer() {
 		String absolutePath = getAbsolutePath();
 		ByteBuffer resource = Cache.pathForContents.getOrUploadIfAbsent(absolutePath, null); 
 		if (resource != null) {
 			return resource;
 		}
-		computeConventionedAbsolutePath();
+		String conventionedAbsolutePath = computeConventionedAbsolutePath();
 		if (exists() && !isFolder()) {
 			if (isCompressed()) {
-				return Cache.pathForContents.get(absolutePath);
+				String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR));
+				File file = new File(zipFilePath);
+				if (file.exists()) {
+					try (FileInputStream fIS = FileInputStream.create(file)) {
+						return Cache.pathForContents.getOrUploadIfAbsent(
+							absolutePath,
+							() ->
+								retrieveBytes(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + IterableZipContainer.ZIP_PATH_SEPARATOR, ""))
+						);
+					}
+				}
 			} else {
-				try (FileInputStream fIS = FileInputStream.create(absolutePath)) {
+				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
 					return Cache.pathForContents.getOrUploadIfAbsent(
 						absolutePath, () ->
 						fIS.toByteBuffer()
@@ -758,6 +768,36 @@ public class FileSystemItem implements ManagedLogger {
 			}
 		}
 		return null;
+	}
+	
+	
+	private ByteBuffer retrieveBytes(String zipFilePath, InputStream inputStream, String itemToSearch) {
+		try (IterableZipContainer zipInputStream = IterableZipContainer.create(zipFilePath, inputStream)) {
+			if (itemToSearch.contains(IterableZipContainer.ZIP_PATH_SEPARATOR)) {
+				String zipEntryNameOfNestedZipFile = itemToSearch.substring(0, itemToSearch.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR));
+				IterableZipContainer.Entry zipEntry = zipInputStream.findFirst(
+					zEntry -> zEntry.getName().equals(zipEntryNameOfNestedZipFile),
+					zEntry -> false
+				);
+				itemToSearch = itemToSearch.replaceFirst(zipEntryNameOfNestedZipFile + IterableZipContainer.ZIP_PATH_SEPARATOR, "");
+				if (Strings.isNotEmpty(itemToSearch)) {
+					try (InputStream iss = zipEntry.toInputStream()) {
+						return retrieveBytes(zipEntry.getAbsolutePath(), zipEntry.toInputStream(), itemToSearch);
+					} catch (IOException exc) {
+						throw Throwables.toRuntimeException(exc);
+					}
+				} else {
+					return zipEntry.toByteBuffer();
+				}
+			} else {
+				final String iTS = itemToSearch;
+				IterableZipContainer.Entry zipEntry = zipInputStream.findFirst(
+					zEntry -> zEntry.getName().equals(iTS),
+					zEntry -> false
+				);
+				return zipEntry.toByteBuffer();
+			}
+		}
 	}
 	
 	public InputStream toInputStream() {
