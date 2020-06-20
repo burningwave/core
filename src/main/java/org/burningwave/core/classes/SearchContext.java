@@ -33,6 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -116,7 +117,9 @@ public class SearchContext<T> implements Component {
 			itemsFoundMap,
 			ConcurrentHashMap::new, path
 		).putAll(items);
-		for (Map.Entry<String, T> item : items.entrySet()) {
+		Iterator<Map.Entry<String, T>> itemsItr = items.entrySet().iterator();
+		while (itemsItr.hasNext()) {
+			Map.Entry<String, T> item = itemsItr.next();
 			synchronized(itemsFoundFlatMap) {
 				itemsFoundFlatMap.put(item.getKey(), item.getValue());
 			}

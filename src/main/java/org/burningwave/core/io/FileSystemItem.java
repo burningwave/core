@@ -303,11 +303,16 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public String getName() {
-		FileSystemItem parent = getParent();
-		return getAbsolutePath().replace(parent.getAbsolutePath() + "/", "");
+		String absolutePath = getAbsolutePath();
+		if (!isRoot()) {
+			return absolutePath.substring(absolutePath.lastIndexOf("/") + 1);
+		} else {
+			return absolutePath.substring(0, absolutePath.lastIndexOf("/"));
+		}		
 	}
 	
 	public FileSystemItem getParent() {
+		FileSystemItem parent = this.parent;
 		if (parent != null) {
 			return parent;
 		} else if (isRoot()) {
@@ -328,7 +333,7 @@ public class FileSystemItem implements ManagedLogger {
 					conventionedPath
 				);
 			} else {
-				return parent = FileSystemItem.ofPath(
+				return this.parent = FileSystemItem.ofPath(
 					absolutePath.getKey().substring(0, absolutePath.getKey().lastIndexOf("/"))
 				);
 			}
