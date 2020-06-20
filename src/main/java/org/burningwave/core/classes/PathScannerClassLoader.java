@@ -227,4 +227,5 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		pathHelper = null;
 		super.close();
 	}
+
 }

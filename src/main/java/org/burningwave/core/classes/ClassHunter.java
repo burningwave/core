@@ -120,11 +120,12 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		);
 	}
 	
-	PathScannerClassLoader getPathScannerClassLoader() {
+	public PathScannerClassLoader getPathScannerClassLoader() {
 		if (pathScannerClassLoader == null) {
 			synchronized (this) {
 				if (pathScannerClassLoader == null) {
 					pathScannerClassLoader = pathScannerClassLoaderSupplier.get();
+					pathScannerClassLoader.register(this);
 				}
 			}
 		}
@@ -289,7 +290,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		super.clearCache();
 		PathScannerClassLoader pathScannerClassLoader = this.pathScannerClassLoader;
 		if (pathScannerClassLoader != null) {
-			pathScannerClassLoader.close();
+			pathScannerClassLoader.unregister(this, true);
 			this.pathScannerClassLoader = null;
 		}
 	}

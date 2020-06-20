@@ -47,6 +47,7 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Virtual;
+import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.JavaMemoryCompiler.CompileResult;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.ThrowingSupplier;
@@ -73,10 +74,10 @@ public class ClassFactory implements Component {
 	
 		static {
 			DEFAULT_VALUES = new HashMap<>();
-			//DEFAULT_VALUES.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, "");
-			//DEFAULT_VALUES.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, "DefaultClassLoaderRetrieverForClassFactory");
-			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
-			DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
+			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
+			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, Supplier.class.getName() + ";" + ComponentSupplier.class.getName() + ";");
+			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, ClassFactory.class.getPackage().getName() + ".DefaultClassLoaderRetrieverForClassFactory");
+			DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, "(Supplier<?>)() -> ((ComponentSupplier)parameter[0]).getClassHunter().getPathScannerClassLoader()");
 
 			DEFAULT_VALUES.put(
 				Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER, 
@@ -98,6 +99,7 @@ public class ClassFactory implements Component {
 	private ByteCodeHunter byteCodeHunter;
 	private ClassPathHunter classPathHunter;
 	private Supplier<ClassPathHunter> classPathHunterSupplier;
+	private Object defaultClassLoaderOrDefaultClassLoaderSupplier;
 	private Supplier<ClassLoader> defaultClassLoaderSupplier;
 	private Properties config;
 	
@@ -106,7 +108,7 @@ public class ClassFactory implements Component {
 		Supplier<ClassPathHunter> classPathHunterSupplier,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
-		Supplier<ClassLoader> defaultClassLoaderSupplier,
+		Object defaultClassLoaderSupplier,
 		Properties config
 	) {	
 		this.byteCodeHunter = byteCodeHunter;
@@ -114,7 +116,7 @@ public class ClassFactory implements Component {
 		this.javaMemoryCompiler = javaMemoryCompiler;
 		this.pathHelper = pathHelper;
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
-		this.defaultClassLoaderSupplier = defaultClassLoaderSupplier;
+		this.defaultClassLoaderOrDefaultClassLoaderSupplier = defaultClassLoaderSupplier;
 		this.config = config;
 		listenTo(config);
 	}
@@ -124,7 +126,7 @@ public class ClassFactory implements Component {
 		Supplier<ClassPathHunter> classPathHunterSupplier,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
-		Supplier<ClassLoader> defaultClassLoaderSupplier,
+		Object defaultClassLoaderSupplier,
 		Properties config
 	) {
 		return new ClassFactory(
@@ -138,10 +140,40 @@ public class ClassFactory implements Component {
 	}
 	
 	ClassLoader getDefaultClassLoader() {
+		if (defaultClassLoaderSupplier != null) {
+			ClassLoader classLoader = defaultClassLoaderSupplier.get();
+			if (defaultClassLoader != classLoader) {
+				synchronized(this) {
+					if (defaultClassLoader != classLoader) {
+						ClassLoader oldClassLoader = this.defaultClassLoader;
+						if (classLoader instanceof MemoryClassLoader) {
+							((MemoryClassLoader)classLoader).register(this);
+						}
+						if (oldClassLoader != null && oldClassLoader instanceof MemoryClassLoader) {
+							((MemoryClassLoader)oldClassLoader).unregister(this, true);
+						}
+						this.defaultClassLoader = classLoader;
+					}
+				}
+			}
+			return classLoader;
+		}
 		if (defaultClassLoader == null) {
 			synchronized (this) {
 				if (defaultClassLoader == null) {
-					return defaultClassLoader = defaultClassLoaderSupplier.get();
+					if (defaultClassLoaderOrDefaultClassLoaderSupplier instanceof Supplier) {
+						Object classLoaderOrClassLoaderSupplier = ((Supplier<?>)defaultClassLoaderOrDefaultClassLoaderSupplier).get();
+						if (classLoaderOrClassLoaderSupplier instanceof ClassLoader) {
+							this.defaultClassLoader = (ClassLoader)classLoaderOrClassLoaderSupplier;
+							if (defaultClassLoader instanceof MemoryClassLoader) {
+								((MemoryClassLoader)defaultClassLoader).register(this);
+							}
+							return defaultClassLoader;
+						} else if (classLoaderOrClassLoaderSupplier instanceof Supplier) {
+							this.defaultClassLoaderSupplier = (Supplier<ClassLoader>) classLoaderOrClassLoaderSupplier;
+							return getDefaultClassLoader();
+						}
+					}
 				} else { 
 					return defaultClassLoader;
 				}
@@ -528,11 +560,14 @@ public class ClassFactory implements Component {
 		pathHelper = null;
 		javaMemoryCompiler = null;
 		pojoSubTypeRetriever = null;	
+		if (defaultClassLoader instanceof MemoryClassLoader) {
+			((MemoryClassLoader)defaultClassLoader).unregister(this, true);
+		}
 		defaultClassLoader = null;
 		byteCodeHunter = null;
 		classPathHunter = null;
 		classPathHunterSupplier = null;
-		defaultClassLoaderSupplier = null;
+		defaultClassLoaderOrDefaultClassLoaderSupplier = null;
 		config = null;
 	}
 

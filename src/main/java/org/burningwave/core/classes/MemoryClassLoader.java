@@ -31,6 +31,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -54,6 +55,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 
 	Map<String, ByteBuffer> notLoadedByteCodes;
 	Map<String, ByteBuffer> loadedByteCodes;
+	HashSet<Object> clients;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -65,6 +67,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		super(parentClassLoader);
 		this.notLoadedByteCodes = new HashMap<>();
 		this.loadedByteCodes = new HashMap<>();
+		this.clients = new HashSet<>();
 	}
 	
 	public static MemoryClassLoader create(ClassLoader parentClassLoader) {
@@ -292,8 +295,11 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 
 	public void removeNotLoadedCompiledClass(String className) {
-		synchronized (notLoadedByteCodes) {
-			notLoadedByteCodes.remove(className);
+		Map<String, ByteBuffer> notLoadedByteCodes = this.notLoadedByteCodes;
+		if (notLoadedByteCodes != null) {
+			synchronized (notLoadedByteCodes) {
+				notLoadedByteCodes.remove(className);
+			}
 		}
 	}
 	
@@ -338,9 +344,41 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	@Override
 	public void close() {
+		HashSet<Object> clients = this.clients;
+		if (clients != null) {
+			synchronized (clients) {
+				if (!clients.isEmpty()) {
+					throw Throwables.toRuntimeException("Could not close " + this + " because there are " + clients.size() +" registered clients");
+				}
+			}
+		}		
+		this.clients = null;
 		clear();
 		notLoadedByteCodes = null;
 		loadedByteCodes = null;
 		unregister();
+	}
+	
+	public void register(Object client) {
+		HashSet<Object> clients = this.clients;
+		if (clients != null) {
+			synchronized(clients) {
+				clients.add(client);
+			}
+		}
+	}
+	
+	public boolean unregister(Object client, boolean close) {
+		HashSet<Object> clients = this.clients;
+		if (clients != null) {
+			synchronized(clients) {
+				clients.remove(client);
+				if (clients.isEmpty() && close) {
+					close();
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }
