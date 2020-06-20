@@ -274,11 +274,11 @@ public class ClassFactory implements Component {
 						classPathsForNotFoundClassesDuringCompilantion, 
 						unitsCode, storeCompiledClasses
 					);
-					//if (classLoader instanceof PathScannerClassLoader) {
-					//	((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(
-					//		Arrays.asList(compileResult.getClassPath().getAbsolutePath()), true, true
-					//	);
-					//}
+					if (classLoader instanceof PathScannerClassLoader) {
+						((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(
+							Arrays.asList(compileResult.getClassPath().getAbsolutePath()), true, true
+						);
+					}
 					return new ClassRetriever() {
 						@Override
 						public Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className) {
