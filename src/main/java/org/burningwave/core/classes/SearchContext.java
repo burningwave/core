@@ -113,10 +113,13 @@ public class SearchContext<T> implements Component {
 	}
 	
 	void addAllItemsFound(String path, Map<String, T> items) {
-		retrieveCollectionForPath(
+		Map<String, T> collectionForPath = retrieveCollectionForPath(
 			itemsFoundMap,
 			ConcurrentHashMap::new, path
-		).putAll(items);
+		);
+		synchronized (collectionForPath) {
+			collectionForPath.putAll(items);
+		}
 		Iterator<Map.Entry<String, T>> itemsItr = items.entrySet().iterator();
 		while (itemsItr.hasNext()) {
 			Map.Entry<String, T> item = itemsItr.next();
