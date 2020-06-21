@@ -104,11 +104,14 @@ public class FileSystemItem implements ManagedLogger {
 	}
 
 
-	private synchronized String computeConventionedAbsolutePath() {
+	private String computeConventionedAbsolutePath() {
 		String conventionedAbsolutePath = absolutePath.getValue() ;
+		FileSystemItem parentContainer = this.parentContainer;
 		if ((conventionedAbsolutePath == null) || parentContainer == null) {
 			synchronized(this) {
-				if ((absolutePath.getValue() == null) || parentContainer == null) {
+				parentContainer = this.parentContainer;
+				conventionedAbsolutePath = absolutePath.getValue();
+				if ((conventionedAbsolutePath == null) || parentContainer == null) {
 					if (parentContainer != null && parentContainer.isArchive()) {
 						ByteBuffer par = parentContainer.toByteBuffer();
 						String relativePath = absolutePath.getKey().replace(parentContainer.getAbsolutePath() + "/", "");
