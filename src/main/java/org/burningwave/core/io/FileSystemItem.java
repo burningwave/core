@@ -51,6 +51,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -752,10 +753,11 @@ public class FileSystemItem implements ManagedLogger {
 	
 	public ByteBuffer toByteBuffer() {
 		String absolutePath = getAbsolutePath();
-		ByteBuffer resource = Cache.pathForContents.getOrUploadIfAbsent(absolutePath, null); 
+		ByteBuffer resource = Cache.pathForContents.get(absolutePath); 
 		if (resource != null) {
 			return resource;
 		}
+		AtomicReference<ByteBuffer> resourceWrapper = new AtomicReference<>();
 		synchronized (this) {
 			String conventionedAbsolutePath = computeConventionedAbsolutePath();
 			if (exists() && !isFolder()) {
@@ -764,24 +766,28 @@ public class FileSystemItem implements ManagedLogger {
 					File file = new File(zipFilePath);
 					if (file.exists()) {
 						try (FileInputStream fIS = FileInputStream.create(file)) {
-							return Cache.pathForContents.getOrUploadIfAbsent(
+							Cache.pathForContents.getOrUploadIfAbsent(
 								absolutePath,
-								() ->
-									retrieveBytes(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + IterableZipContainer.ZIP_PATH_SEPARATOR, ""))
+								() -> {
+									resourceWrapper.set(retrieveBytes(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + IterableZipContainer.ZIP_PATH_SEPARATOR, "")));
+									return resourceWrapper.get();
+								}
 							);
 						}
 					}
 				} else {
 					try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
-						return Cache.pathForContents.getOrUploadIfAbsent(
-							absolutePath, () ->
-							fIS.toByteBuffer()
+						Cache.pathForContents.getOrUploadIfAbsent(
+							absolutePath, () -> {
+								resourceWrapper.set(fIS.toByteBuffer());
+								return resourceWrapper.get();
+							}
 						);
 					}
 				}
 			}
 		}
-		return null;
+		return resourceWrapper.get();
 	}
 	
 	
