@@ -25,9 +25,30 @@ public class FileSystemItemTest extends BaseTest {
 	public void resetTestOne() {
 		testNotNull(() -> {
 				ComponentSupplier componentSupplier = getComponentSupplier();
+				
 				FileSystemItem fIS = componentSupplier.getPathHelper().getResource(
 					"/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes/javax/swing/UIManager$1.class"
 				);
+				fIS.toByteBuffer();
+				fIS.reset();
+				return fIS.toByteBuffer();
+			}
+		);
+	}
+	
+	@Test
+	public void resetTestTwo() {
+		testNotNull(() -> {
+				ComponentSupplier componentSupplier = getComponentSupplier();
+				
+				FileSystemItem fIS = componentSupplier.getPathHelper().getResource(
+					"/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes/javax/swing/UIManager$1.class"
+				);
+				FileSystemItem parent = componentSupplier.getPathHelper().getResource(
+					"/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/"
+				);
+				fIS.reset();
+				parent.reset();
 				fIS.toByteBuffer();
 				fIS.reset();
 				return fIS.toByteBuffer();
