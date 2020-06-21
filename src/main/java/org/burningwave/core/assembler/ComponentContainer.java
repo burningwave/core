@@ -251,7 +251,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public ClassHunter getClassHunter() {
 		return getOrCreate(ClassHunter.class, () -> {
 			return ClassHunter.create(
-				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
 				getPathHelper(),
 				retrieveFromConfig(
@@ -280,7 +279,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public ByteCodeHunter getByteCodeHunter() {
 		return getOrCreate(ByteCodeHunter.class, () -> 
 			ByteCodeHunter.create(
-				() -> getByteCodeHunter(),
 				() -> getClassHunter(),
 				getPathHelper(),
 				config

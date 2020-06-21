@@ -96,7 +96,6 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	Mutex.Manager mutexManager;
 	
 	ClassPathScannerWithCachingSupport(
-		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
 		Function<InitContext, C> contextSupplier,
@@ -104,7 +103,6 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		Properties config
 	) {
 		super(
-			byteCodeHunterSupplier,
 			classHunterSupplier,
 			pathHelper,
 			contextSupplier,
@@ -290,7 +288,6 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	public void close() {
 		clearCache();
 		cache = null;
-		byteCodeHunterSupplier = null;
 		pathHelper = null;
 		contextSupplier = null;
 	}

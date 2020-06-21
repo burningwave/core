@@ -53,7 +53,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		public static class Key {
 			
 			public final static String PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER = "class-hunter.path-scanner-class-loader.parent";
-			public final static String PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "class-hunter.path-scanner-class-loader.byte-code-hunter.search-config.check-file-option";
+			public final static String PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "class-hunter.path-scanner-class-loader.search-config.check-file-option";
 			
 		}
 		
@@ -79,14 +79,12 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	PathScannerClassLoader pathScannerClassLoader;
 	
 	ClassHunter(
-		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
 		ClassLoader parentClassLoader,
 		Properties config
 	) {
 		super(
-			byteCodeHunterSupplier,
 			classHunterSupplier,
 			pathHelper,
 			(initContext) -> ClassHunter.SearchContext._create(
@@ -97,7 +95,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		);
 		pathScannerClassLoaderSupplier = () ->
 			PathScannerClassLoader.create(
-				parentClassLoader, pathHelper, getByteCodeHunter(), 
+				parentClassLoader, pathHelper,
 				FileSystemItem.Criteria.forClassTypeFiles(
 					config.resolveStringValue(Configuration.Key.PATH_SCANNER_CLASS_LOADER_BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 						Configuration.DEFAULT_VALUES
@@ -109,14 +107,13 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	
 	
 	public static ClassHunter create(
-		Supplier<ByteCodeHunter> byteCodeHunterSupplier, 
 		Supplier<ClassHunter> classHunterSupplier, 
 		PathHelper pathHelper,
 		ClassLoader parentClassLoader,
 		Properties config
 	) {
 		return new ClassHunter(
-			byteCodeHunterSupplier, classHunterSupplier, pathHelper, parentClassLoader, config
+			classHunterSupplier, pathHelper, parentClassLoader, config
 		);
 	}
 	

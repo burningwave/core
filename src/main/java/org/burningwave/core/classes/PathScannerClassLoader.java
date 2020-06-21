@@ -38,7 +38,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.burningwave.core.io.FileSystemItem;
@@ -48,9 +47,8 @@ import org.burningwave.core.io.PathHelper.ComparePathsResult;
 
 public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryClassLoader {
 	Collection<String> loadedPaths;
-	private ByteCodeHunter byteCodeHunter;
 	private PathHelper pathHelper;
-	private FileSystemItem.Criteria scanFileCriteria;
+	private FileSystemItem.Criteria scanFileCriteriaAndConsumer;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -59,19 +57,25 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	PathScannerClassLoader(
 		ClassLoader parentClassLoader,
 		PathHelper pathHelper,
-		ByteCodeHunter byteCodeHunter,
 		FileSystemItem.Criteria scanFileCriteria
 	) {
 		super(parentClassLoader);
 		this.pathHelper = pathHelper;
-		this.byteCodeHunter = byteCodeHunter;
 		this.loadedPaths = new HashSet<>();
-		this.scanFileCriteria = scanFileCriteria;
-		this.byteCodeHunter = byteCodeHunter;
+		this.scanFileCriteriaAndConsumer = scanFileCriteria.createCopy().and().allFileThat(classFile -> {
+			try {
+				JavaClass javaClass = JavaClass.create(classFile.toByteBuffer());
+				addByteCode(javaClass.getName(), javaClass.getByteCode());
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return true;
+		});
 	}
 	
-	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, ByteCodeHunter byteCodeHunter, FileSystemItem.Criteria scanFileCriteria) {
-		return new PathScannerClassLoader(parentClassLoader, pathHelper, byteCodeHunter, scanFileCriteria);
+	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, FileSystemItem.Criteria scanFileCriteria) {
+		return new PathScannerClassLoader(parentClassLoader, pathHelper, scanFileCriteria);
 	}
 	
 	public void scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths) {
@@ -79,82 +83,22 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	}
 	
 	public void scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths, boolean refreshCache) {
-		if (!refreshCache) {
-			ComparePathsResult checkPathsResult = compareWithAllLoadedPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
-			if (!checkPathsResult.getNotContainedPaths().isEmpty()) {
-				synchronized (loadedPaths) {
-					checkPathsResult = compareWithAllLoadedPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
-					if (!checkPathsResult.getNotContainedPaths().isEmpty()) {
-						try(ByteCodeHunter.SearchResult result = byteCodeHunter.loadInCache(
-							SearchConfig.forPaths(
-								checkPathsResult.getNotContainedPaths()
-							).considerURLClassLoaderPathsAsScanned(
-								considerURLClassLoaderPathsAsLoadedPaths
-							).withScanFileCriteria(
-								scanFileCriteria
-							).optimizePaths(
-								true
-							)
-						).find()) {
-							if (checkPathsResult.getPartialContainedDirectories().isEmpty() && checkPathsResult.getPartialContainedFiles().isEmpty()) {
-								for (Entry<String, JavaClass> entry : result.getClassesFlatMap().entrySet()) {
-									JavaClass javaClass = entry.getValue();
-									addByteCode(javaClass.getName(), javaClass.getByteCode());
-								}
-							} else {
-								for (Entry<String, JavaClass> entry : result.getClassesFlatMap().entrySet()) {
-									if (check(checkPathsResult, entry.getKey())) {
-										JavaClass javaClass = entry.getValue();
-										addByteCode(javaClass.getName(), javaClass.getByteCode());
-									}
-								}
-							}
-						};
-						loadedPaths.addAll(checkPathsResult.getNotContainedPaths());
-					}
-				}
-			}
-		} else {
-			synchronized (loadedPaths) {
-				if (!paths.isEmpty()) {
-					try(ByteCodeHunter.SearchResult result = byteCodeHunter.loadInCache(
-						SearchConfig.forPaths(
-							paths
-						).considerURLClassLoaderPathsAsScanned(
-							considerURLClassLoaderPathsAsLoadedPaths
-						).withScanFileCriteria(
-							scanFileCriteria
-						).optimizePaths(
-							true
-						).refreshCache()
-					).find()) {
-						for (Entry<String, JavaClass> entry : result.getClassesFlatMap().entrySet()) {
-							JavaClass javaClass = entry.getValue();
-							addByteCode(javaClass.getName(), javaClass.getByteCode());
+		ComparePathsResult checkPathsResult = compareWithAllLoadedPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
+		if (!checkPathsResult.getNotContainedPaths().isEmpty()) {
+			synchronized (this) {
+				checkPathsResult = compareWithAllLoadedPaths(paths, considerURLClassLoaderPathsAsLoadedPaths);
+				if (!checkPathsResult.getNotContainedPaths().isEmpty()) {
+					for (String path : checkPathsResult.getNotContainedPaths()) {
+						FileSystemItem pathFIS = FileSystemItem.ofPath(path);
+						if (refreshCache) {
+							pathFIS.refresh();
 						}
-					};
-					loadedPaths.addAll(paths);
+						pathFIS.findInAllChildren(scanFileCriteriaAndConsumer);
+					}
+					loadedPaths.addAll(checkPathsResult.getNotContainedPaths());
 				}
 			}
 		}
-	}
-
-	private boolean check(ComparePathsResult checkPathsResult, String key) {
-		for (Collection<String> filePaths : checkPathsResult.getPartialContainedFiles().values()) {
-			for (String filePath : filePaths) {
-				if (key.startsWith(Paths.clean(filePath))) {
-					return false;
-				}
-			}
-		}
-		for (Collection<String> filePaths : checkPathsResult.getPartialContainedDirectories().values()) {
-			for (String diretctoyPath : filePaths) {
-				if (key.startsWith(Paths.clean(diretctoyPath) + "/")) {
-					return false;
-				}
-			}
-		}
-		return true;
 	}
 	
 	@Override
@@ -223,7 +167,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			loadedPaths.clear();
 		}
 		this.loadedPaths = null;
-		byteCodeHunter = null;
 		pathHelper = null;
 		super.close();
 	}
