@@ -343,13 +343,11 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	@Override
-	public void close() {
+	public synchronized void close() {
 		HashSet<Object> clients = this.clients;
 		if (clients != null) {
-			synchronized (clients) {
-				if (!clients.isEmpty()) {
-					throw Throwables.toRuntimeException("Could not close " + this + " because there are " + clients.size() +" registered clients");
-				}
+			if (!clients.isEmpty()) {
+				throw Throwables.toRuntimeException("Could not close " + this + " because there are " + clients.size() +" registered clients");
 			}
 		}		
 		this.clients = null;
@@ -359,24 +357,22 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		unregister();
 	}
 	
-	public void register(Object client) {
+	public synchronized boolean register(Object client) {
 		HashSet<Object> clients = this.clients;
 		if (clients != null) {
-			synchronized(clients) {
-				clients.add(client);
-			}
+			clients.add(client);
+			return true;
 		}
+		return false;
 	}
 	
-	public boolean unregister(Object client, boolean close) {
+	public synchronized boolean unregister(Object client, boolean close) {
 		HashSet<Object> clients = this.clients;
 		if (clients != null) {
-			synchronized(clients) {
-				clients.remove(client);
-				if (clients.isEmpty() && close) {
-					close();
-					return true;
-				}
+			clients.remove(client);
+			if (clients.isEmpty() && close) {
+				close();
+				return true;
 			}
 		}
 		return false;

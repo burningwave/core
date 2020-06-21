@@ -156,11 +156,13 @@ public class ClassFactory implements Component {
 				synchronized(this) {
 					if (defaultClassLoader != classLoader) {
 						ClassLoader oldClassLoader = this.defaultClassLoader;
-						if (classLoader instanceof MemoryClassLoader) {
-							((MemoryClassLoader)classLoader).register(this);
-						}
 						if (oldClassLoader != null && oldClassLoader instanceof MemoryClassLoader) {
 							((MemoryClassLoader)oldClassLoader).unregister(this, true);
+						}
+						if (classLoader instanceof MemoryClassLoader) {
+							if (!((MemoryClassLoader)classLoader).register(this)) {
+								classLoader = getDefaultClassLoader();
+							}
 						}
 						this.defaultClassLoader = classLoader;
 					}
