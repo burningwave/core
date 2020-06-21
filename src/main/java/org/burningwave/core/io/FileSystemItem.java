@@ -104,7 +104,7 @@ public class FileSystemItem implements ManagedLogger {
 	}
 
 
-	private synchronized String computeConventionedAbsolutePath() {
+	private String computeConventionedAbsolutePath() {
 		String conventionedAbsolutePath = absolutePath.getValue() ;
 		if ((conventionedAbsolutePath == null) || parentContainer == null) {
 			synchronized(this) {
