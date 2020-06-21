@@ -192,7 +192,11 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 					sharedClassLoader :
 					PathScannerClassLoader.create(
 						searchConfig.parentClassLoaderForMainClassLoader, 
-						pathHelper, getByteCodeHunter(), searchConfig.getScanFileCriteria()
+						pathHelper, getByteCodeHunter(), searchConfig.getScanFileCriteria().hasNoPredicate() ? 
+								FileSystemItem.Criteria.forClassTypeFiles(
+										config.resolveStringValue(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES)
+									)	
+									: searchConfig.getScanFileCriteria()
 					),
 				searchConfig
 			)		

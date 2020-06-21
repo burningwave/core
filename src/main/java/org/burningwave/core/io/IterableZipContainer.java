@@ -228,7 +228,11 @@ public interface IterableZipContainer extends Component {
 			loadZipEntryData		
 		);
 	}
-
+	
+	public default void destroy() {
+		Cache.pathForZipFiles.remove(getAbsolutePath());
+	}
+	
 	public static interface Entry extends Component{
 		
 		public <C extends IterableZipContainer> C getParentContainer();

@@ -326,34 +326,6 @@ public class Classes implements Component, MembersRetriever {
 		LowLevelObjectsHandler.setAccessible(object, flag);
 	}
 	
-	public String getId(Object... objects) {
-		String id = "_";
-		for (Object object : objects) {
-			if (object instanceof String) {
-				id += (String)object  + "_";
-			} else if (object instanceof Number) {
-				if (object instanceof Byte) {
-					id += (byte)object  + "_";
-				} else if (object instanceof Short) {
-					id += (short)object  + "_";
-				} else if (object instanceof Integer) {
-					id += (int)object  + "_";
-				} else if (object instanceof Float) {
-					id += (float)object  + "_";
-				} else if (object instanceof Double) {
-					id += (double)object  + "_";
-				}
-			} else if (object instanceof Boolean) {
-				id += (boolean)object  + "_";
-			} else if (object instanceof Character) {
-				id += (char)object  + "_";
-			} else {
-				id += System.identityHashCode(object) + "_";
-			}
-		}
-		return id;
-	}
-	
 	public boolean isLoadedBy(Class<?> cls, ClassLoader classLoader) {
 		if (cls.getClassLoader() == classLoader) {
 			return true;

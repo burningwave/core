@@ -136,11 +136,11 @@ public class JavaMemoryCompiler implements Component {
 		return new JavaMemoryCompiler(pathHelper, classPathHunter, config);
 	}
 	
-	public 	Map<String, ByteBuffer> compile(Collection<String> sources) {
+	public 	CompileResult compile(Collection<String> sources) {
 		return compile(sources, true);
 	}
 	
-	public 	Map<String, ByteBuffer> compile(Collection<String> sources, boolean storeCompiledClasses) {
+	public 	CompileResult compile(Collection<String> sources, boolean storeCompiledClasses) {
 		return compile(
 			sources, 
 			pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.MAIN_CLASS_PATHS),
@@ -149,7 +149,7 @@ public class JavaMemoryCompiler implements Component {
 		);
 	}
 	
-	public Map<String, ByteBuffer> compile(
+	public CompileResult compile(
 		Collection<String> sources, 
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
@@ -165,10 +165,9 @@ public class JavaMemoryCompiler implements Component {
 					javaClass.storeToClassPath(compiledClassesClassPath.getAbsolutePath());
 				});
 			}			
-			return compiledFiles;
+			return new CompileResult(compiledClassesClassPath, compiledFiles);
 		}
 	}
-
 	
 	private void sourcesToMemorySources(Collection<String> sources, Collection<MemorySource> memorySources) {
 		for (String source : sources) {
@@ -576,5 +575,28 @@ public class JavaMemoryCompiler implements Component {
 		compiler = null;
 		classPathHunter = null;
 		config = null;
+	}
+	
+	
+	public static class CompileResult {
+		private FileSystemItem classPath;
+		private Map<String, ByteBuffer> compiledFiles;
+		
+		
+		private CompileResult (FileSystemItem classPath, Map<String, ByteBuffer> compiledFiles) {
+			this.classPath = classPath;
+			this.compiledFiles = compiledFiles;
+		}
+
+
+		public FileSystemItem getClassPath() {
+			return classPath;
+		}
+
+
+		public Map<String, ByteBuffer> getCompiledFiles() {
+			return compiledFiles;
+		}	
+		
 	}
 }

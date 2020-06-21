@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Virtual;
+import org.burningwave.core.classes.JavaMemoryCompiler.CompileResult;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemItem;
@@ -224,7 +225,7 @@ public class ClassFactory implements Component {
 						compilationClassPaths,
 						classPathsForNotFoundClassesDuringCompilantion, 
 						unitsCode, storeCompiledClasses
-					);
+					).getCompiledFiles();
 					return new ClassRetriever() {
 						@Override
 						public Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className) {
@@ -328,7 +329,7 @@ public class ClassFactory implements Component {
 		return retrievedBytecodes;
 	}
 	
-	private Map<String, ByteBuffer> build(
+	private CompileResult build(
 		boolean useOneShotCompiler,
 		Collection<String> mainClassPaths,
 		Collection<String> extraClassPaths,
@@ -344,7 +345,7 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	private Map<String, ByteBuffer> build0(
+	private CompileResult build0(
 		boolean useOneShotCompiler,
 		Collection<String> compilationClassPaths,
 		Collection<String> classPathsForNotFoundClassesDuringCompilantion,

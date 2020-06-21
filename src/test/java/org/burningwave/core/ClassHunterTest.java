@@ -57,8 +57,16 @@ public class ClassHunterTest extends BaseTest {
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)
 			).find(),
-			(result) ->
-				result.getClasses().stream().findFirst().get().getClassLoader().getResourceAsStream("/META-INF/MANIFEST.MF")
+			(result) ->{
+				Collection<Class<?>> classes = result.getClasses();
+				Iterator<Class<?>> itr = classes.iterator();
+				Class<?> cls = itr.next();
+				while(cls.getClassLoader() == null || !(cls.getClassLoader() instanceof PathScannerClassLoader)) {
+					cls = itr.next();
+				}
+				return ((PathScannerClassLoader)cls.getClassLoader()).getResourceAsStream("/META-INF/MANIFEST.MF");
+				
+			}
 		);
 	}
 	
@@ -76,8 +84,7 @@ public class ClassHunterTest extends BaseTest {
 				Collection<Class<?>> classes = result.getClasses();
 				Iterator<Class<?>> itr = classes.iterator();
 				Class<?> cls = itr.next();
-				while(cls.getClassLoader() == null) {
-					logError(cls.getName());
+				while(cls.getClassLoader() == null || !(cls.getClassLoader() instanceof PathScannerClassLoader)) {
 					cls = itr.next();
 				}
 				return ((PathScannerClassLoader)cls.getClassLoader()).getResourcesAsStream("/META-INF/MANIFEST.MF").values();
