@@ -68,7 +68,11 @@ class ZipFile implements IterableZipContainer {
 					new Entry(
 						this, 
 						zipEntry.getName(), () -> {
-							try (java.util.zip.ZipFile zipFileRef = new java.util.zip.ZipFile(retrieveFile(absolutePath, content)); InputStream zipEntryIS = zipFileRef.getInputStream(zipEntry); ByteBufferOutputStream bBOS = new ByteBufferOutputStream()){
+							try (
+								java.util.zip.ZipFile zipFileRef = new java.util.zip.ZipFile(retrieveFile(absolutePath, content));
+								InputStream zipEntryIS = zipFileRef.getInputStream(zipEntry);
+								ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
+							){
 								Streams.copy(zipEntryIS, bBOS);
 								 return bBOS.toByteBuffer();
 							} catch (Throwable exc) {
