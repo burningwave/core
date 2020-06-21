@@ -376,7 +376,7 @@ public class PathHelper implements Component {
 			StringBuffer fileNames = new StringBuffer();
 			for (T file : files) {
 				if (file instanceof FileSystemItem) {
-					fileNames.append(file.toString() + ": " + ((FileSystemItem)file).getAbsolutePath() + "\n");
+					fileNames.append(System.identityHashCode(file) + ": " + ((FileSystemItem)file).getAbsolutePath() + "\n");
 				}
 			}
 			throw Throwables.toRuntimeException("Found more than one resource under relative path " + resourceRelativePath + ":\n" + fileNames.toString());

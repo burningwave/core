@@ -4,9 +4,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.junit.jupiter.api.Test;
 
@@ -19,6 +21,30 @@ public class PathHelperTest extends BaseTest {
 			try(InputStream inputStream = componentSupplier.getPathHelper().getResourceAsStream("org/burningwave/core/classes/ClassLoaderDelegate.bwc")) {
 				return inputStream;
 			}
+		});
+	}
+	
+	@Test
+	public void getResourceAsStreamTestTwo() {
+		testNotNull(() ->{ 
+			ComponentSupplier componentSupplier = getComponentSupplier();
+			PathHelper pathHelper = componentSupplier.getPathHelper();
+			Collection<Thread> threads = new ArrayList<>();
+			for (int i = 0; i < 10; i++) {
+				for (int j = 0; j < 10; j++) {
+					Thread thread = new Thread(() -> {
+						FileSystemItem fIS = pathHelper.getResource("../../src/test/external-resources/libs-for-test.zip");
+						fIS.exists();
+						fIS.reset();
+					});
+					thread.start();
+					threads.add(thread);
+				}
+			}
+			for (Thread thread : threads) {
+				thread.join();
+			}
+			return pathHelper .getResource("../../src/test/external-resources/libs-for-test.zip");
 		});
 	}
 	

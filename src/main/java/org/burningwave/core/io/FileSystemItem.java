@@ -637,7 +637,7 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 
-	private String retrieveConventionedAbsolutePath(String realAbsolutePath, String relativePath) {
+	private synchronized String retrieveConventionedAbsolutePath(String realAbsolutePath, String relativePath) {
 		File file = new File(realAbsolutePath);
 		if (file.exists()) {
 			if (relativePath.isEmpty()) {

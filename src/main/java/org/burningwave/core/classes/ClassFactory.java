@@ -88,6 +88,10 @@ public class ClassFactory implements Component {
 				Key.DEFAULT_CLASS_LOADER,
 				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) -> componentSupplier.getClassHunter().getPathScannerClassLoader()
 			);
+//			DEFAULT_VALUES.put(
+//				Key.DEFAULT_CLASS_LOADER,
+//				Thread.currentThread().getContextClassLoader()
+//			);
 
 			DEFAULT_VALUES.put(
 				Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER, 
@@ -290,7 +294,11 @@ public class ClassFactory implements Component {
 									finalByteCodes = new HashMap<>(compileResult.getCompiledFiles());
 									finalByteCodes.putAll(additionalByteCodes);
 								}
-								return ClassLoaders.loadOrDefineByByteCode(className, finalByteCodes, classLoader);
+								if (classLoader instanceof PathScannerClassLoader) {
+									return classLoader.loadClass(className);
+								} else {
+									return ClassLoaders.loadOrDefineByByteCode(className, finalByteCodes, classLoader);
+								}
 							} catch (Throwable innExc) {
 								return ThrowingSupplier.get(() -> {
 									return ClassLoaders.loadOrDefineByByteCode(className, 
