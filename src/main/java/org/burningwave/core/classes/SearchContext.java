@@ -33,6 +33,8 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -65,9 +67,9 @@ public class SearchContext<T> implements Component {
 	SearchContext(
 		InitContext initContext
 	) {
-		this.itemsFoundFlatMap = new ConcurrentHashMap<>();
-		this.itemsFoundMap = new ConcurrentHashMap<>();
-		this.skippedClassNames = ConcurrentHashMap.newKeySet();
+		this.itemsFoundFlatMap = new HashMap<>();
+		this.itemsFoundMap = new HashMap<>();
+		this.skippedClassNames = new HashSet<>();
 		this.sharedPathMemoryClassLoader = initContext.getSharedPathMemoryClassLoader();
 		this.pathScannerClassLoader = initContext.getPathMemoryClassLoader();
 		this.searchConfig = initContext.getSearchConfig();
@@ -105,7 +107,7 @@ public class SearchContext<T> implements Component {
 	void addItemFound(String path, String key, T item) {
 		retrieveCollectionForPath(
 			itemsFoundMap,
-			ConcurrentHashMap::new, path
+			HashMap::new, path
 		).put(key, item);
 		synchronized(itemsFoundFlatMap) {
 			itemsFoundFlatMap.put(key, item);
@@ -167,7 +169,7 @@ public class SearchContext<T> implements Component {
 		if (itemsFound == null) {
 			synchronized(itemsFoundFlatMap) {
 				if (itemsFound == null) {
-					this.itemsFound = ConcurrentHashMap.newKeySet();
+					this.itemsFound = new HashSet<>();
 					this.itemsFound.addAll(this.itemsFoundFlatMap.values());
 				}
 			}
