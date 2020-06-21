@@ -561,7 +561,10 @@ public class FileSystemItem implements ManagedLogger {
 	
 	private void removeLinkedResourcesFromCache(FileSystemItem fileSystemItem) {
 		Cache.pathForContents.remove(fileSystemItem.getAbsolutePath());
-		Cache.pathForZipFiles.remove(fileSystemItem.getAbsolutePath());
+		IterableZipContainer iterableZipContainer = Cache.pathForZipFiles.get(fileSystemItem.getAbsolutePath()); 
+		if (iterableZipContainer != null) {
+			iterableZipContainer.destroy();
+		}
 	}
 	
 	public synchronized FileSystemItem reset() {

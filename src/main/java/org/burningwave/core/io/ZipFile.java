@@ -55,19 +55,12 @@ class ZipFile implements IterableZipContainer {
 	IterableZipContainer.Entry currentZipEntry;
 	Iterator<Entry> entriesIterator;
 	Collection<Entry> entries;
+	Runnable temporaryFileDeleter; 
 	
 	ZipFile(String absolutePath, ByteBuffer content) {
 		this.absolutePath = Paths.clean(absolutePath);
-		File file = new File(absolutePath);
-		if (!file.exists()) {
-			File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(toString());
-			FileSystemItem fileSystemItem = Streams.store(temporaryFolder.getAbsolutePath() + "/" + file.getName(), content);
-			Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> fileSystemItem.toByteBuffer());
-			file = new File(fileSystemItem.getAbsolutePath());
-		}
-		final File fileRef = file;
 		entries = ConcurrentHashMap.newKeySet();
-		try (java.util.zip.ZipFile zipFile = new java.util.zip.ZipFile(fileRef)) {
+		try (java.util.zip.ZipFile zipFile = new java.util.zip.ZipFile(retrieveFile(absolutePath, content))) {
 			Enumeration<? extends ZipEntry> entriesIterator = zipFile.entries();
 			while (entriesIterator.hasMoreElements()) {
 				ZipEntry zipEntry = entriesIterator.nextElement();
@@ -75,7 +68,7 @@ class ZipFile implements IterableZipContainer {
 					new Entry(
 						this, 
 						zipEntry.getName(), () -> {
-							try (java.util.zip.ZipFile zipFileRef = new java.util.zip.ZipFile(fileRef); InputStream zipEntryIS = zipFileRef.getInputStream(zipEntry); ByteBufferOutputStream bBOS = new ByteBufferOutputStream()){
+							try (java.util.zip.ZipFile zipFileRef = new java.util.zip.ZipFile(retrieveFile(absolutePath, content)); InputStream zipEntryIS = zipFileRef.getInputStream(zipEntry); ByteBufferOutputStream bBOS = new ByteBufferOutputStream()){
 								Streams.copy(zipEntryIS, bBOS);
 								 return bBOS.toByteBuffer();
 							} catch (Throwable exc) {
@@ -90,6 +83,23 @@ class ZipFile implements IterableZipContainer {
 			Throwables.toRuntimeException(exc);
 		}
 		entriesIterator = entries.iterator();
+	}
+
+	private File retrieveFile(String absolutePath, ByteBuffer content) {
+		File file = new File(absolutePath);
+		if (!file.exists()) {
+			File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(toString());
+			FileSystemItem fileSystemItem = FileSystemItem.ofPath(temporaryFolder.getAbsolutePath() + "/" + file.getName());
+			if (!fileSystemItem.exists()) {
+				fileSystemItem = Streams.store(temporaryFolder.getAbsolutePath() + "/" + file.getName(), content);
+				String temporaryFileAbsolutePath = fileSystemItem.getAbsolutePath();
+				temporaryFileDeleter = () -> {
+					FileSystemHelper.delete(new File(temporaryFileAbsolutePath));
+				};
+			}			
+			return new File(fileSystemItem.getAbsolutePath());
+		}
+		return file;
 	}
 	
 	private ZipFile(String absolutePath, Collection<Entry> entries) {
@@ -176,6 +186,16 @@ class ZipFile implements IterableZipContainer {
 		this.absolutePath = null;
 		this.entriesIterator = null;
 		this.entries = null;
+	}
+	
+	@Override
+	public void destroy() {
+		IterableZipContainer.super.destroy();
+		Runnable temporaryFileDeleter = this.temporaryFileDeleter;
+		if (temporaryFileDeleter != null) {
+			this.temporaryFileDeleter = null;
+			temporaryFileDeleter.run();			
+		}
 	}
 	
 	public static class Entry implements IterableZipContainer.Entry {
