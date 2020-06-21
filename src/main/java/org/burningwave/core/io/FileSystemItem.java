@@ -766,7 +766,7 @@ public class FileSystemItem implements ManagedLogger {
 					File file = new File(zipFilePath);
 					if (file.exists()) {
 						try (FileInputStream fIS = FileInputStream.create(file)) {
-							Cache.pathForContents.getOrUploadIfAbsent(
+							resource = Cache.pathForContents.getOrUploadIfAbsent(
 								absolutePath,
 								() -> {
 									resourceWrapper.set(retrieveBytes(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + IterableZipContainer.ZIP_PATH_SEPARATOR, "")));
@@ -777,7 +777,7 @@ public class FileSystemItem implements ManagedLogger {
 					}
 				} else {
 					try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
-						Cache.pathForContents.getOrUploadIfAbsent(
+						resource = Cache.pathForContents.getOrUploadIfAbsent(
 							absolutePath, () -> {
 								resourceWrapper.set(fIS.toByteBuffer());
 								return resourceWrapper.get();
@@ -787,7 +787,7 @@ public class FileSystemItem implements ManagedLogger {
 				}
 			}
 		}
-		return resourceWrapper.get();
+		return resource != null? resource : resourceWrapper.get();
 	}
 	
 	
