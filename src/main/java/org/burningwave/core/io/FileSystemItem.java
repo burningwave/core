@@ -678,9 +678,14 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	private synchronized String retrieveConventionedRelativePath(ByteBuffer zipInputStreamAsBytes, String zipInputStreamName, String relativePath1) {
-		try (IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes)){
+		IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);
+		try {
 			if (zIS == null) {
-				throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
+				Cache.pathForContents.remove(zipInputStreamName);
+				zIS = IterableZipContainer.create(zipInputStreamName, FileSystemItem.ofPath(zipInputStreamName).toByteBuffer());
+				if (zIS == null) {
+					throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
+				}
 			}
 			Predicate<IterableZipContainer.Entry> zipEntryPredicate = zEntry -> {
 				return zEntry.getName().equals(relativePath1) || zEntry.getName().equals(relativePath1 + "/");
@@ -714,6 +719,10 @@ public class FileSystemItem implements ManagedLogger {
 				}				
 			} else {
 				throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
+			}
+		} finally {
+			if (zIS != null) {
+				zIS.close();
 			}
 		}
 	}
