@@ -51,7 +51,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -763,48 +762,20 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public ByteBuffer toByteBuffer() {
-		return toByteBuffer(false);
-	}
-	
-	public ByteBuffer toByteBuffer(boolean reloadParent) {
 		String absolutePath = getAbsolutePath();
 		ByteBuffer resource = Cache.pathForContents.getOrUploadIfAbsent(absolutePath, null); 
 		if (resource != null) {
 			return resource;
 		}
-		AtomicReference<ByteBuffer> byteBufferWrapper = new AtomicReference<ByteBuffer>();
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
 		if (exists() && !isFolder()) {
 			if (isCompressed()) {
-				FileSystemItem parentContainer = this.parentContainer;
-				if (parentContainer == null) {
-					String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR));
-					File file = new File(zipFilePath);
-					if (file.exists()) {
-						try (FileInputStream fIS = FileInputStream.create(file)) {
-							Cache.pathForContents.getOrUploadIfAbsent(
-								absolutePath,
-								() -> {
-									byteBufferWrapper.set(retrieveBytes(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + IterableZipContainer.ZIP_PATH_SEPARATOR, "")));
-									return byteBufferWrapper.get();
-								}
-							);
-						}
-					}
-				} else {
-					return Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
-						if (reloadParent) {
-							FileSystemItem superParent = parentContainer;
-							while (parentContainer.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
-								superParent = superParent.getParentContainer();
-							}
-							superParent.getAllChildren();
-							return toByteBuffer(reloadParent);
-						}
-						return null;
-					});
-					
+				FileSystemItem superParent = getParentContainer();
+				while (superParent.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
+					superParent = superParent.getParentContainer();
 				}
+				superParent.getAllChildren();
+				return toByteBuffer();
 			} else {
 				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
 					return Cache.pathForContents.getOrUploadIfAbsent(
@@ -815,36 +786,6 @@ public class FileSystemItem implements ManagedLogger {
 			}
 		}
 		return resource;
-	}
-	
-	
-	private synchronized ByteBuffer retrieveBytes(String zipFilePath, InputStream inputStream, String itemToSearch) {
-		try (IterableZipContainer zipInputStream = IterableZipContainer.create(zipFilePath, inputStream)) {
-			if (itemToSearch.contains(IterableZipContainer.ZIP_PATH_SEPARATOR)) {
-				String zipEntryNameOfNestedZipFile = itemToSearch.substring(0, itemToSearch.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR));
-				IterableZipContainer.Entry zipEntry = zipInputStream.findFirst(
-					zEntry -> zEntry.getName().equals(zipEntryNameOfNestedZipFile),
-					zEntry -> false
-				);
-				itemToSearch = itemToSearch.replaceFirst(zipEntryNameOfNestedZipFile + IterableZipContainer.ZIP_PATH_SEPARATOR, "");
-				if (Strings.isNotEmpty(itemToSearch)) {
-					try (InputStream iss = zipEntry.toInputStream()) {
-						return retrieveBytes(zipEntry.getAbsolutePath(), zipEntry.toInputStream(), itemToSearch);
-					} catch (IOException exc) {
-						throw Throwables.toRuntimeException(exc);
-					}
-				} else {
-					return zipEntry.toByteBuffer();
-				}
-			} else {
-				final String iTS = itemToSearch;
-				IterableZipContainer.Entry zipEntry = zipInputStream.findFirst(
-					zEntry -> zEntry.getName().equals(iTS),
-					zEntry -> false
-				);
-				return zipEntry.toByteBuffer();
-			}
-		}
 	}
 	
 	public InputStream toInputStream() {
