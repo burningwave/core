@@ -752,6 +752,10 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public ByteBuffer toByteBuffer() {
+		return toByteBuffer(false);
+	}
+	
+	public ByteBuffer toByteBuffer(boolean reloadParent) {
 		String absolutePath = getAbsolutePath();
 		ByteBuffer resource = Cache.pathForContents.getOrUploadIfAbsent(absolutePath, null); 
 		if (resource != null) {
@@ -762,7 +766,7 @@ public class FileSystemItem implements ManagedLogger {
 		if (exists() && !isFolder()) {
 			if (isCompressed()) {
 				FileSystemItem parentContainer = this.parentContainer;
-				if (parentContainer == null) {
+				if (this.parentContainer == null) {
 					String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR));
 					File file = new File(zipFilePath);
 					if (file.exists()) {
@@ -777,31 +781,29 @@ public class FileSystemItem implements ManagedLogger {
 						}
 					}
 				} else {
-					byteBufferWrapper.set(Cache.pathForContents.get(absolutePath));
-					if (byteBufferWrapper.get() == null) {
-						Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
+					return Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
+						if (reloadParent) {
 							FileSystemItem superParent = parentContainer;
-							while (superParent.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
+							while (parentContainer.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
 								superParent = superParent.getParentContainer();
 							}
 							superParent.getAllChildren();
-							byteBufferWrapper.set(toByteBuffer());
-							return byteBufferWrapper.get();
-						});
-					}
+							return toByteBuffer(reloadParent);
+						}
+						return null;
+					});
+					
 				}
 			} else {
 				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
-					Cache.pathForContents.getOrUploadIfAbsent(
-						absolutePath, () -> {
-							byteBufferWrapper.set(fIS.toByteBuffer());
-							return byteBufferWrapper.get();
-						}
+					return Cache.pathForContents.getOrUploadIfAbsent(
+						absolutePath, () ->
+						fIS.toByteBuffer()
 					);
 				}
 			}
 		}
-		return byteBufferWrapper.get();
+		return resource;
 	}
 	
 	

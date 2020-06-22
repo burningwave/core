@@ -89,7 +89,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 										new FileSystemItem [] {child, pathFIS}
 									)){
 										try {
-											JavaClass javaClass = JavaClass.create(child.toByteBuffer());
+											JavaClass javaClass = JavaClass.create(child.toByteBuffer(true));
 											addByteCode(javaClass.getName(), javaClass.getByteCode());
 										} catch (Exception exc) {
 											logError("Exception occurred while scanning " + child.getAbsolutePath(), exc);
