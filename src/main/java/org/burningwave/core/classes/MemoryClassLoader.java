@@ -83,10 +83,10 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	    			notLoadedByteCodes.put(className, byteCode);
 	    		}
 			} else {
-				logInfo("Could not add compiled class {} cause it's already defined", className);
+				logWarn("Could not add compiled class {} cause it's already defined", className);
 			}
 		} else {
-			logInfo("Could not execute addByteCode: " + this.toString() + " has been closed", className);
+			logWarn("Could not execute addByteCode: " + this.toString() + " has been closed", className);
 		}
     }
     
