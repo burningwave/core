@@ -346,14 +346,21 @@ public class FileSystemItem implements ManagedLogger {
 	}
 
 	public FileSystemItem getParentContainer() {
+		FileSystemItem parentContainer = this.parentContainer;
 		if (parentContainer != null) {
 			return parentContainer;
 		} else {
-			computeConventionedAbsolutePath();
-			if (parentContainer == null) {
-				parentContainer = getParent();
+			synchronized(this) {
+				parentContainer = this.parentContainer;
+				if (parentContainer == null) {
+					computeConventionedAbsolutePath();
+					parentContainer = this.parentContainer;
+					if (parentContainer == null) {
+						parentContainer = getParent();
+					}
+				}
 			}
-		}
+		}		
 		return parentContainer;
 	}
 	
