@@ -752,7 +752,7 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public ByteBuffer toByteBuffer() {
-		return toByteBuffer(false);
+		return toByteBuffer(true);
 	}
 	
 	public ByteBuffer toByteBuffer(boolean reloadParent) {
@@ -781,19 +781,21 @@ public class FileSystemItem implements ManagedLogger {
 						}
 					}
 				} else {
-					Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
-						if (reloadParent) {
-							FileSystemItem superParent = parentContainer;
-							while (superParent.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
-								superParent = superParent.getParentContainer();
+					byteBufferWrapper.set(Cache.pathForContents.get(absolutePath));
+					if (byteBufferWrapper.get() == null) {
+						Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
+							if (reloadParent) {
+								FileSystemItem superParent = parentContainer;
+								while (superParent.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
+									superParent = superParent.getParentContainer();
+								}
+								superParent.getAllChildren();
+								byteBufferWrapper.set(toByteBuffer(reloadParent));
+								return byteBufferWrapper.get();
 							}
-							superParent.getAllChildren();
-							byteBufferWrapper.set(toByteBuffer(reloadParent));
-							return byteBufferWrapper.get();
-						}
-						return null;
-					});
-					
+							return null;
+						});
+					}
 				}
 			} else {
 				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
