@@ -65,15 +65,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		this.pathHelper = pathHelper;
 		this.loadedPaths = ConcurrentHashMap.newKeySet();
 		this.mutexManager = Mutex.Manager.create(this);
-		this.scanFileCriteriaAndConsumer = scanFileCriteria.createCopy().and().allFileThat(classFile -> {
-			try {
-				JavaClass javaClass = JavaClass.create(classFile.toByteBuffer(true));
-				addByteCode(javaClass.getName(), javaClass.getByteCode());
-			} catch (Exception exc) {
-				logError("Exception occurred while scanning " + classFile.getAbsolutePath(), exc);
-			}
-			return true;
-		});
+		this.scanFileCriteriaAndConsumer = scanFileCriteria.createCopy();
 	}
 	
 	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, FileSystemItem.Criteria scanFileCriteria) {
@@ -95,7 +87,22 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 								if (refreshCache) {
 									pathFIS.refresh();
 								}
-								pathFIS.findInAllChildren(scanFileCriteriaAndConsumer);
+								for (FileSystemItem child : pathFIS.getAllChildren()) {
+									if (!isClosed) {
+										if (scanFileCriteriaAndConsumer.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(
+											new FileSystemItem [] {child, pathFIS}
+										)){
+											try {
+												JavaClass javaClass = JavaClass.create(child.toByteBuffer(true));
+												addByteCode(javaClass.getName(), javaClass.getByteCode());
+											} catch (Exception exc) {
+												logError("Exception occurred while scanning " + child.getAbsolutePath(), exc);
+											}
+										}
+									} else {
+										break;
+									}
+								}
 								if (!isClosed) {
 									loadedPaths.add(path);
 								} else {
