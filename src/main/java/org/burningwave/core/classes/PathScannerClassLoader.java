@@ -78,33 +78,31 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			for (String path : paths) {
 				if (!isClosed) {
 					if (!hasBeenLoaded(path, considerURLClassLoaderPathsAsLoadedPaths)) {
-						synchronized(this) {
-							if (!hasBeenLoaded(path, considerURLClassLoaderPathsAsLoadedPaths)) {
-								FileSystemItem pathFIS = FileSystemItem.ofPath(path);
-								if (refreshCache) {
-									pathFIS.refresh();
-								}
-								for (FileSystemItem child : pathFIS.getAllChildren()) {
-									if (!isClosed) {
-										if (scanFileCriteriaAndConsumer.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(
-											new FileSystemItem [] {child, pathFIS}
-										)){
-											try {
-												JavaClass javaClass = JavaClass.create(child.toByteBuffer(true));
-												addByteCode(javaClass.getName(), javaClass.getByteCode());
-											} catch (Exception exc) {
-												logError("Exception occurred while scanning " + child.getAbsolutePath(), exc);
-											}
-										}
-									} else {
-										break;
-									}
-								}
+						if (!hasBeenLoaded(path, considerURLClassLoaderPathsAsLoadedPaths)) {
+							FileSystemItem pathFIS = FileSystemItem.ofPath(path);
+							if (refreshCache) {
+								pathFIS.refresh();
+							}
+							for (FileSystemItem child : pathFIS.getAllChildren()) {
 								if (!isClosed) {
-									loadedPaths.add(path);
+									if (scanFileCriteriaAndConsumer.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(
+										new FileSystemItem [] {child, pathFIS}
+									)){
+										try {
+											JavaClass javaClass = JavaClass.create(child.toByteBuffer());
+											addByteCode(javaClass.getName(), javaClass.getByteCode());
+										} catch (Exception exc) {
+											logError("Exception occurred while scanning " + child.getAbsolutePath(), exc);
+										}
+									}
 								} else {
 									break;
 								}
+							}
+							if (!isClosed) {
+								loadedPaths.add(path);
+							} else {
+								break;
 							}
 						}
 					}
