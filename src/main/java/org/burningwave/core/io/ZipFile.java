@@ -55,12 +55,13 @@ class ZipFile implements IterableZipContainer {
 	IterableZipContainer.Entry currentZipEntry;
 	Iterator<Entry> entriesIterator;
 	Collection<Entry> entries;
-	Runnable temporaryFileDeleter; 
+	Runnable temporaryFileDeleter;
+	java.util.zip.ZipFile originalZipFile;
 	
 	ZipFile(String absolutePath, ByteBuffer content) {
 		this.absolutePath = Paths.clean(absolutePath);
 		entries = ConcurrentHashMap.newKeySet();
-		try (java.util.zip.ZipFile zipFile = new java.util.zip.ZipFile(retrieveFile(absolutePath, content))) {
+		try (java.util.zip.ZipFile zipFile = retrieveFile(absolutePath, content)) {
 			Enumeration<? extends ZipEntry> entriesIterator = zipFile.entries();
 			while (entriesIterator.hasMoreElements()) {
 				ZipEntry zipEntry = entriesIterator.nextElement();
@@ -69,8 +70,7 @@ class ZipFile implements IterableZipContainer {
 						this, 
 						zipEntry.getName(), () -> {
 							try (
-								java.util.zip.ZipFile zipFileRef = new java.util.zip.ZipFile(retrieveFile(absolutePath, content));
-								InputStream zipEntryIS = zipFileRef.getInputStream(zipEntry);
+								InputStream zipEntryIS = retrieveFile(absolutePath, content).getInputStream(zipEntry);
 								ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 							){
 								Streams.copy(zipEntryIS, bBOS);
@@ -82,6 +82,7 @@ class ZipFile implements IterableZipContainer {
 						}
 					)
 				);
+				originalZipFile = null;
 			}
 		} catch (IOException exc) {
 			Throwables.toRuntimeException(exc);
@@ -89,21 +90,33 @@ class ZipFile implements IterableZipContainer {
 		entriesIterator = entries.iterator();
 	}
 
-	private File retrieveFile(String absolutePath, ByteBuffer content) {
-		File file = new File(absolutePath);
-		if (!file.exists()) {
-			File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(toString());
-			FileSystemItem fileSystemItem = FileSystemItem.ofPath(temporaryFolder.getAbsolutePath() + "/" + file.getName());
-			if (!fileSystemItem.exists()) {
-				fileSystemItem = Streams.store(temporaryFolder.getAbsolutePath() + "/" + file.getName(), content);
-				String temporaryFileAbsolutePath = fileSystemItem.getAbsolutePath();
-				temporaryFileDeleter = () -> {
-					FileSystemHelper.delete(new File(temporaryFileAbsolutePath));
-				};
-			}			
-			return new File(fileSystemItem.getAbsolutePath());
+	private java.util.zip.ZipFile retrieveFile(String absolutePath, ByteBuffer content) {
+		java.util.zip.ZipFile originalZipFile = this.originalZipFile;
+		if (originalZipFile == null) {
+			synchronized (this) {
+				if (originalZipFile == null) {
+					File file = new File(absolutePath);
+					if (!file.exists()) {
+						File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(toString());
+						FileSystemItem fileSystemItem = FileSystemItem.ofPath(temporaryFolder.getAbsolutePath() + "/" + file.getName());
+						if (!fileSystemItem.exists()) {
+							fileSystemItem = Streams.store(temporaryFolder.getAbsolutePath() + "/" + file.getName(), content);
+							String temporaryFileAbsolutePath = fileSystemItem.getAbsolutePath();
+							temporaryFileDeleter = () -> {
+								FileSystemHelper.delete(new File(temporaryFileAbsolutePath));
+							};
+						}			
+						file = new File(fileSystemItem.getAbsolutePath());
+					}
+					try {
+						originalZipFile = this.originalZipFile = new java.util.zip.ZipFile(file);
+					} catch (IOException exc) {
+						throw Throwables.toRuntimeException(exc);
+					}
+				}
+			}
 		}
-		return file;
+		return originalZipFile;
 	}
 	
 	private ZipFile(String absolutePath, Collection<Entry> entries) {
@@ -187,6 +200,14 @@ class ZipFile implements IterableZipContainer {
 	@Override
 	public void close() {
 		closeEntry();
+		java.util.zip.ZipFile originalZipFile = this.originalZipFile;
+		if (originalZipFile != null) {
+			try {
+				originalZipFile.close();
+			} catch (IOException exc) {
+				logError("Exception while closing " + getAbsolutePath(), exc);
+			}
+		}
 		this.absolutePath = null;
 		this.entriesIterator = null;
 		this.entries = null;
@@ -195,6 +216,7 @@ class ZipFile implements IterableZipContainer {
 	@Override
 	public void destroy() {
 		IterableZipContainer.super.destroy();
+		close();
 		Runnable temporaryFileDeleter = this.temporaryFileDeleter;
 		if (temporaryFileDeleter != null) {
 			this.temporaryFileDeleter = null;

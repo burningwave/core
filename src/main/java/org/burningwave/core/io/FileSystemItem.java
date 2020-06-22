@@ -781,8 +781,10 @@ public class FileSystemItem implements ManagedLogger {
 						while (superParent.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
 							superParent = superParent.getParentContainer();
 						}
-						superParent.getAllChildren();
-						return toByteBuffer(reloadParent);
+						synchronized(superParent) {
+							superParent.getAllChildren();
+							return toByteBuffer(reloadParent);
+						}
 					}
 				} else {
 					try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
