@@ -64,7 +64,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		this.loadedPaths = new HashSet<>();
 		this.scanFileCriteriaAndConsumer = scanFileCriteria.createCopy().and().allFileThat(classFile -> {
 			try {
-				JavaClass javaClass = JavaClass.create(classFile.toByteBuffer());
+				JavaClass javaClass = JavaClass.create(classFile.toByteBuffer(true));
 				addByteCode(javaClass.getName(), javaClass.getByteCode());
 			} catch (Exception exc) {
 				logError("Exception occurred while scanning " + classFile.getAbsolutePath(), exc);
