@@ -69,6 +69,8 @@ public class SearchContext<T> implements Component {
 		this.skippedClassNames = ConcurrentHashMap.newKeySet();
 		this.sharedPathMemoryClassLoader = initContext.getSharedPathMemoryClassLoader();
 		this.pathScannerClassLoader = initContext.getPathMemoryClassLoader();
+		this.pathScannerClassLoader.register(this);
+		this.sharedPathMemoryClassLoader.register(this);
 		this.searchConfig = initContext.getSearchConfig();
 		this.classLoaderHaveBeenUploadedWithSearchConfigPaths = pathScannerClassLoader.compareWithAllLoadedPaths(
 				searchConfig.getPaths(), searchConfig.considerURLClassLoaderPathsAsScanned
@@ -262,9 +264,7 @@ public class SearchContext<T> implements Component {
 		itemsFoundMap = null;
 		searchConfig.close();
 		searchConfig = null;
-		if (pathScannerClassLoader != sharedPathMemoryClassLoader) {
-			pathScannerClassLoader.close();
-		}
+		pathScannerClassLoader.unregister(this, true);
 		pathScannerClassLoader = null;
 		sharedPathMemoryClassLoader = null;
 		skippedClassNames.clear();
