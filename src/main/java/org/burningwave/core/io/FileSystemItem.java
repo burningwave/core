@@ -350,15 +350,10 @@ public class FileSystemItem implements ManagedLogger {
 		if (parentContainer != null) {
 			return parentContainer;
 		} else {
-			synchronized(this) {
-				parentContainer = this.parentContainer;
-				if (parentContainer == null) {
-					computeConventionedAbsolutePath();
-					parentContainer = this.parentContainer;
-					if (parentContainer == null) {
-						parentContainer = getParent();
-					}
-				}
+			computeConventionedAbsolutePath();
+			parentContainer = this.parentContainer;
+			if (parentContainer == null) {
+				parentContainer = getParent();
 			}
 		}		
 		return parentContainer;
