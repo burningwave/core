@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.burningwave.core.concurrent.Mutex;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.IterableZipContainer;
 
@@ -158,11 +159,17 @@ public class Cache implements Component {
 		Map<Long, Map<String, Map<String, R>>> resources;	
 		Long partitionStartLevel;
 		Function<R, R> sharer;
+		private Mutex.Manager mutexManagerForPartitions;
+		private Mutex.Manager mutexManagerForLoadedResources;
+		private Mutex.Manager mutexManagerForResourcesPartitioned;
 		
 		private PathForResources(Long partitionStartLevel, Function<R, R> sharer) {
 			this.partitionStartLevel = partitionStartLevel;
 			this.sharer = sharer;
 			resources = new HashMap<>();
+			mutexManagerForPartitions = Mutex.Manager.create(this);
+			mutexManagerForLoadedResources = Mutex.Manager.create(this);
+			mutexManagerForResourcesPartitioned = Mutex.Manager.create(this);
 		}
 		
 		Map<String, R> retrievePartition(Map<String, Map<String, R>> partion, Long partitionIndex, String path) {
@@ -173,7 +180,7 @@ public class Cache implements Component {
 			}
 			Map<String, R> innerPartion = partion.get(partitionKey);
 			if (innerPartion == null) {
-				synchronized (partion) {
+				synchronized (mutexManagerForPartitions.getMutex(partitionKey)) {
 					innerPartion = partion.get(partitionKey);
 					if (innerPartion == null) {
 						partion.put(partitionKey, innerPartion = new HashMap<>());
@@ -186,7 +193,7 @@ public class Cache implements Component {
 		R getOrUploadIfAbsent(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
 			R resource = loadedResources.get(path);
 			if (resource == null) {
-				synchronized (loadedResources) {
+				synchronized (mutexManagerForLoadedResources.getMutex(path)) {
 					resource = loadedResources.get(path);
 					if (resource == null && resourceSupplier != null) {
 						resource = resourceSupplier.get();
@@ -203,7 +210,7 @@ public class Cache implements Component {
 		
 		public R upload(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
 			R resource = null;
-			synchronized (loadedResources) {
+			synchronized (mutexManagerForLoadedResources.getMutex(path)) {
 				if (resourceSupplier != null) {
 					resource = resourceSupplier.get();
 					if (resource != null) {
@@ -219,7 +226,7 @@ public class Cache implements Component {
 		Map<String, Map<String, R>> retrievePartition(Map<Long, Map<String, Map<String, R>>> resourcesPartitioned, Long partitionIndex) {
 			Map<String, Map<String, R>> resources = resourcesPartitioned.get(partitionIndex);
 			if (resources == null) {
-				synchronized (resourcesPartitioned) {
+				synchronized (mutexManagerForResourcesPartitioned.getMutex(partitionIndex.toString())) {
 					resources = resourcesPartitioned.get(partitionIndex);
 					if (resources == null) {
 						resourcesPartitioned.put(partitionIndex, resources = new HashMap<>());
