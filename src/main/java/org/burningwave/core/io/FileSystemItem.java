@@ -573,7 +573,7 @@ public class FileSystemItem implements ManagedLogger {
 		return reset(true);
 	}
 	
-	public FileSystemItem reset(boolean removeFromCache) {
+	public synchronized FileSystemItem reset(boolean removeFromCache) {
 		if (allChildren != null) {
 			for (FileSystemItem child : allChildren) {
 				child.reset(removeFromCache);
@@ -684,6 +684,8 @@ public class FileSystemItem implements ManagedLogger {
 				zIS = IterableZipContainer.create(zipInputStreamName, FileSystemItem.ofPath(zipInputStreamName).toByteBuffer());
 				if (zIS == null) {
 					throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
+				} else {
+					logWarn("Removed and reloaded dirty cache entry for " + zIS.getAbsolutePath());
 				}
 			}
 			Predicate<IterableZipContainer.Entry> zipEntryPredicate = zEntry -> {

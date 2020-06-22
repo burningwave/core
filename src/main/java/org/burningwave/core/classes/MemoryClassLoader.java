@@ -86,7 +86,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 				logWarn("Could not add compiled class {} cause it's already defined", className);
 			}
 		} else {
-			logWarn("Could not execute addByteCode: " + this.toString() + " has been closed", className);
+			logWarn("Could not execute addByteCode on class named {} because {} has been closed", className, this.toString());
 		}
     }
     
@@ -223,75 +223,34 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
 	@Override
     protected Class<?> findClass(String className) throws ClassNotFoundException {
-		Class<?> cls = null;
-		ByteBuffer byteCode = notLoadedByteCodes.get(className);
-		if (byteCode != null) {
-			try {
-				cls = _defineClass(className, byteCode, null);
-        		definePackageOf(cls);
-        	} catch (NoClassDefFoundError exc) {
-        		String notFoundClassName = Classes.retrieveName(exc);
-        		removeNotLoadedCompiledClass(className);
-				logWarn("Could not load compiled class " + className + " because class " + notFoundClassName + 
-					" could not be found, so it will be removed: " + exc.toString()
-				);
-    			throw exc;
-        	}
+		if (!isClosed) {
+			Class<?> cls = null;
+			ByteBuffer byteCode = notLoadedByteCodes.get(className);
+			if (byteCode != null) {
+				try {
+					cls = _defineClass(className, byteCode, null);
+	        		definePackageOf(cls);
+	        	} catch (NoClassDefFoundError exc) {
+	        		String notFoundClassName = Classes.retrieveName(exc);
+	        		removeNotLoadedCompiledClass(className);
+					logWarn("Could not load compiled class " + className + " because class " + notFoundClassName + 
+						" could not be found, so it will be removed: " + exc.toString()
+					);
+	    			throw exc;
+	        	}
+			} else {
+				logWarn("Compiled class " + className + " not found");
+			}
+			if (cls != null) {
+				return cls;
+			} else {
+				throw new ClassNotFoundException(className);
+			}
 		} else {
-			logWarn("Compiled class " + className + " not found");
-		}
-		if (cls != null) {
-			return cls;
-		} else {
-			throw new ClassNotFoundException(className);
-		}
-	}
-	
-	/* This is the previous version of findClass method: it has changed since 5.43.2
-	@Override 
-    protected Class<?> findClass(String className) throws ClassNotFoundException {
-		Class<?> cls = null;
-		ByteBuffer byteCode = notLoadedByteCodes.get(className);
-		if (byteCode != null) {
-			try {
-				cls = _defineClass(className, byteCode, null);
-        		definePackageOf(cls);
-        	} catch (NoClassDefFoundError noClassDefFoundError) {
-        		String notFoundClassName = Classes.retrieveName(noClassDefFoundError);
-        		while (!notFoundClassName.equals(className)) {
-        			try {
-        				//This search over all ClassLoader Parents
-        				loadClass(notFoundClassName, false);
-        				cls = loadClass(className, false);
-        			} catch (ClassNotFoundException exc) {
-        				String newNotFoundClass = Classes.retrieveName(noClassDefFoundError);
-        				if (newNotFoundClass.equals(notFoundClassName)) {
-        					break;
-        				} else {
-        					notFoundClassName = newNotFoundClass;
-        				}
-        			}
-        		}
-        		if (cls == null) {
-        			removeNotLoadedCompiledClass(className);
-    				logWarn("Could not load compiled class " + className + ", so it will be removed: " + noClassDefFoundError.toString());
-        			throw noClassDefFoundError;
-        		}
-        	}
-			if (cls == null){
-        		removeNotLoadedCompiledClass(className);
-        		logDebug("Could not load compiled class " + className + ", so it will be removed");
-        	}
-		} else {
-			logDebug("Compiled class " + className + " not found");
-		}
-		if (cls != null) {
-			return cls;
-		} else {
-			throw new ClassNotFoundException(className);
+			logWarn("Could not load class {} because {} has been closed", className, this.toString());
+			return null;
 		}
 	}
-	*/
 	
 	Class<?> _defineClass(String className, java.nio.ByteBuffer byteCode, ProtectionDomain protectionDomain) {
 		Class<?> cls = super.defineClass(className, byteCode, protectionDomain);
@@ -307,7 +266,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 				notLoadedByteCodes.remove(className);
 			}
 		} else {
-			logInfo("Could not execute removeNotLoadedCompiledClass: " + this.toString() + " has been closed", className);
+			logWarn("Could not execute removeNotLoadedCompiledClass on class named {} because {} has been closed", className, this.toString());
 		}
 	}
 	
