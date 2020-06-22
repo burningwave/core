@@ -94,7 +94,7 @@ class ZipFile implements IterableZipContainer {
 		java.util.zip.ZipFile originalZipFile = this.originalZipFile;
 		if (originalZipFile == null) {
 			synchronized (this) {
-				if (originalZipFile == null) {
+				if ((originalZipFile = this.originalZipFile) == null) {
 					File file = new File(absolutePath);
 					if (!file.exists()) {
 						File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(toString());
