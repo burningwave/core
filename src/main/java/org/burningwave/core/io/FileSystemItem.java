@@ -552,11 +552,11 @@ public class FileSystemItem implements ManagedLogger {
 		return null;
 	}
 	
-	public synchronized FileSystemItem refresh() {
+	public FileSystemItem refresh() {
 		return refresh(true);
 	}
 	
-	public synchronized FileSystemItem refresh(boolean removeFromCache) {
+	public FileSystemItem refresh(boolean removeFromCache) {
 		reset(removeFromCache);
 		computeConventionedAbsolutePath();
 		return this;
@@ -570,11 +570,11 @@ public class FileSystemItem implements ManagedLogger {
 		}
 	}
 	
-	public synchronized FileSystemItem reset() {
+	public FileSystemItem reset() {
 		return reset(true);
 	}
 	
-	public synchronized FileSystemItem reset(boolean removeFromCache) {
+	public FileSystemItem reset(boolean removeFromCache) {
 		if (allChildren != null) {
 			for (FileSystemItem child : allChildren) {
 				child.reset(removeFromCache);
