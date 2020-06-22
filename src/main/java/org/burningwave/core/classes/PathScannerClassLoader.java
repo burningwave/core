@@ -95,7 +95,9 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 								pathFIS.refresh();
 							}
 							pathFIS.findInAllChildren(scanFileCriteriaAndConsumer);
-							loadedPaths.add(path);
+							if (!isClosed) {
+								loadedPaths.add(path);
+							}
 						}
 					}
 				}
