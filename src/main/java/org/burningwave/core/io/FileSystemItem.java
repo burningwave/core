@@ -775,13 +775,19 @@ public class FileSystemItem implements ManagedLogger {
 							);
 						}
 					}
-				} else if (reloadParent) {
-					FileSystemItem superParent = this.parentContainer;
-					while (superParent.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
-						superParent = superParent.getParentContainer();
-					}
-					superParent.getAllChildren();
-					return toByteBuffer(reloadParent);
+				} else {
+					return Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
+						if (reloadParent) {
+							FileSystemItem superParent = this.parentContainer;
+							while (superParent.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
+								superParent = superParent.getParentContainer();
+							}
+							superParent.getAllChildren();
+							return toByteBuffer(reloadParent);
+						}
+						return null;
+					});
+					
 				}
 			} else {
 				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
