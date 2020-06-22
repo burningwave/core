@@ -265,6 +265,9 @@ public class SearchContext<T> implements Component {
 		searchConfig.close();
 		searchConfig = null;
 		pathScannerClassLoader.unregister(this, true);
+		if (sharedPathMemoryClassLoader != null) {
+			sharedPathMemoryClassLoader.unregister(this, true);
+		}
 		pathScannerClassLoader = null;
 		sharedPathMemoryClassLoader = null;
 		skippedClassNames.clear();
