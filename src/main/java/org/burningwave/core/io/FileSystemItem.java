@@ -766,7 +766,7 @@ public class FileSystemItem implements ManagedLogger {
 		if (exists() && !isFolder()) {
 			if (isCompressed()) {
 				FileSystemItem parentContainer = this.parentContainer;
-				if (this.parentContainer == null) {
+				if (parentContainer == null) {
 					String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR));
 					File file = new File(zipFilePath);
 					if (file.exists()) {
