@@ -763,6 +763,7 @@ public class FileSystemItem implements ManagedLogger {
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
 		if (exists() && !isFolder()) {
 			if (isCompressed()) {
+				FileSystemItem parentContainer = this.parentContainer;
 				if (this.parentContainer == null) {
 					String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR));
 					File file = new File(zipFilePath);
@@ -778,8 +779,8 @@ public class FileSystemItem implements ManagedLogger {
 				} else {
 					return Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
 						if (reloadParent) {
-							FileSystemItem superParent = this.parentContainer;
-							while (superParent.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
+							FileSystemItem superParent = parentContainer;
+							while (parentContainer.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
 								superParent = superParent.getParentContainer();
 							}
 							superParent.getAllChildren();
