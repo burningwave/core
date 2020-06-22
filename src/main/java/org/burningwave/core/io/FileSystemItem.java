@@ -51,6 +51,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -760,6 +761,7 @@ public class FileSystemItem implements ManagedLogger {
 		if (resource != null) {
 			return resource;
 		}
+		AtomicReference<ByteBuffer> byteBufferWrapper = new AtomicReference<ByteBuffer>();
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
 		if (exists() && !isFolder()) {
 			if (isCompressed()) {
@@ -769,22 +771,25 @@ public class FileSystemItem implements ManagedLogger {
 					File file = new File(zipFilePath);
 					if (file.exists()) {
 						try (FileInputStream fIS = FileInputStream.create(file)) {
-							return Cache.pathForContents.getOrUploadIfAbsent(
+							Cache.pathForContents.getOrUploadIfAbsent(
 								absolutePath,
-								() ->
-									retrieveBytes(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + IterableZipContainer.ZIP_PATH_SEPARATOR, ""))
+								() -> {
+									byteBufferWrapper.set(retrieveBytes(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + IterableZipContainer.ZIP_PATH_SEPARATOR, "")));
+									return byteBufferWrapper.get();
+								}
 							);
 						}
 					}
 				} else {
-					return Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
+					Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
 						if (reloadParent) {
 							FileSystemItem superParent = parentContainer;
-							while (parentContainer.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
+							while (superParent.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
 								superParent = superParent.getParentContainer();
 							}
 							superParent.getAllChildren();
-							return toByteBuffer(reloadParent);
+							byteBufferWrapper.set(toByteBuffer(reloadParent));
+							return byteBufferWrapper.get();
 						}
 						return null;
 					});
@@ -792,14 +797,16 @@ public class FileSystemItem implements ManagedLogger {
 				}
 			} else {
 				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
-					return Cache.pathForContents.getOrUploadIfAbsent(
-						absolutePath, () ->
-						fIS.toByteBuffer()
+					Cache.pathForContents.getOrUploadIfAbsent(
+						absolutePath, () -> {
+							byteBufferWrapper.set(fIS.toByteBuffer());
+							return byteBufferWrapper.get();
+						}
 					);
 				}
 			}
 		}
-		return null;
+		return byteBufferWrapper.get();
 	}
 	
 	
