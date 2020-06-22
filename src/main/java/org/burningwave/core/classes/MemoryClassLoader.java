@@ -56,6 +56,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	Map<String, ByteBuffer> notLoadedByteCodes;
 	Map<String, ByteBuffer> loadedByteCodes;
 	HashSet<Object> clients;
+	boolean isClosed;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -75,12 +76,17 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 
 	public void addByteCode(String className, ByteBuffer byteCode) {
-    	if (ClassLoaders.retrieveLoadedClass(this, className) == null) {
-    		synchronized (notLoadedByteCodes) {
-    			notLoadedByteCodes.put(className, byteCode);
-    		}
+		Map<String, ByteBuffer> notLoadedByteCodes = this.notLoadedByteCodes;
+		if (!isClosed) {
+	    	if (ClassLoaders.retrieveLoadedClass(this, className) == null) {
+	    		synchronized (notLoadedByteCodes) {
+	    			notLoadedByteCodes.put(className, byteCode);
+	    		}
+			} else {
+				logInfo("Could not add compiled class {} cause it's already defined", className);
+			}
 		} else {
-			logDebug("Could not add compiled class {} cause it's already defined", className);
+			logInfo("Could not execute addByteCode: " + this.toString() + " has been closed", className);
 		}
     }
     
@@ -296,10 +302,12 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 
 	public void removeNotLoadedCompiledClass(String className) {
 		Map<String, ByteBuffer> notLoadedByteCodes = this.notLoadedByteCodes;
-		if (notLoadedByteCodes != null) {
+		if (!isClosed) {
 			synchronized (notLoadedByteCodes) {
 				notLoadedByteCodes.remove(className);
 			}
+		} else {
+			logInfo("Could not execute removeNotLoadedCompiledClass: " + this.toString() + " has been closed", className);
 		}
 	}
 	
@@ -344,6 +352,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	@Override
 	public synchronized void close() {
+		isClosed = true;
 		HashSet<Object> clients = this.clients;
 		if (clients != null) {
 			if (!clients.isEmpty()) {
@@ -359,7 +368,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	public synchronized boolean register(Object client) {
 		HashSet<Object> clients = this.clients;
-		if (clients != null) {
+		if (!isClosed) {
 			clients.add(client);
 			return true;
 		}
@@ -368,7 +377,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	public synchronized boolean unregister(Object client, boolean close) {
 		HashSet<Object> clients = this.clients;
-		if (clients != null) {
+		if (!isClosed) {
 			clients.remove(client);
 			if (clients.isEmpty() && close) {
 				close();
