@@ -311,7 +311,7 @@ public class FileSystemItem implements ManagedLogger {
 		if (!isRoot()) {
 			return absolutePath.substring(absolutePath.lastIndexOf("/") + 1);
 		} else {
-			return absolutePath;
+			return absolutePath.substring(0, absolutePath.lastIndexOf("/"));
 		}		
 	}
 	
@@ -345,14 +345,16 @@ public class FileSystemItem implements ManagedLogger {
 	}
 
 	public FileSystemItem getParentContainer() {
+		FileSystemItem parentContainer = this.parentContainer;
 		if (parentContainer != null) {
 			return parentContainer;
 		} else {
 			computeConventionedAbsolutePath();
+			parentContainer = this.parentContainer;
 			if (parentContainer == null) {
 				parentContainer = getParent();
 			}
-		}
+		}		
 		return parentContainer;
 	}
 	
@@ -549,11 +551,11 @@ public class FileSystemItem implements ManagedLogger {
 		return null;
 	}
 	
-	public synchronized FileSystemItem refresh() {
+	public FileSystemItem refresh() {
 		return refresh(true);
 	}
 	
-	public synchronized FileSystemItem refresh(boolean removeFromCache) {
+	public FileSystemItem refresh(boolean removeFromCache) {
 		reset(removeFromCache);
 		computeConventionedAbsolutePath();
 		return this;
@@ -567,7 +569,7 @@ public class FileSystemItem implements ManagedLogger {
 		}
 	}
 	
-	public synchronized FileSystemItem reset() {
+	public FileSystemItem reset() {
 		return reset(true);
 	}
 	
@@ -675,9 +677,16 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	private synchronized String retrieveConventionedRelativePath(ByteBuffer zipInputStreamAsBytes, String zipInputStreamName, String relativePath1) {
-		try (IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes)){
+		IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);
+		try {
 			if (zIS == null) {
-				throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
+				Cache.pathForContents.remove(zipInputStreamName);
+				zIS = IterableZipContainer.create(zipInputStreamName, FileSystemItem.ofPath(zipInputStreamName).toByteBuffer());
+				if (zIS == null) {
+					throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
+				} else {
+					logWarn("Removed and reloaded dirty cache entry for " + zIS.getAbsolutePath());
+				}
 			}
 			Predicate<IterableZipContainer.Entry> zipEntryPredicate = zEntry -> {
 				return zEntry.getName().equals(relativePath1) || zEntry.getName().equals(relativePath1 + "/");
@@ -711,6 +720,10 @@ public class FileSystemItem implements ManagedLogger {
 				}				
 			} else {
 				throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
+			}
+		} finally {
+			if (zIS != null) {
+				zIS.close();
 			}
 		}
 	}
@@ -751,67 +764,40 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public ByteBuffer toByteBuffer() {
+		return toByteBuffer(0);
+	}
+	
+	private ByteBuffer toByteBuffer(int call) {
 		String absolutePath = getAbsolutePath();
 		ByteBuffer resource = Cache.pathForContents.getOrUploadIfAbsent(absolutePath, null); 
 		if (resource != null) {
 			return resource;
 		}
-		synchronized (this) {
-			String conventionedAbsolutePath = computeConventionedAbsolutePath();
-			if (exists() && !isFolder()) {
-				if (isCompressed()) {
-					String zipFilePath = conventionedAbsolutePath.substring(0, conventionedAbsolutePath.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR));
-					File file = new File(zipFilePath);
-					if (file.exists()) {
-						try (FileInputStream fIS = FileInputStream.create(file)) {
-							return Cache.pathForContents.getOrUploadIfAbsent(
-								absolutePath,
-								() ->
-									retrieveBytes(zipFilePath, fIS, conventionedAbsolutePath.replaceFirst(zipFilePath + IterableZipContainer.ZIP_PATH_SEPARATOR, ""))
-							);
-						}
-					}
-				} else {
-					try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
-						return Cache.pathForContents.getOrUploadIfAbsent(
-							absolutePath, () ->
-							fIS.toByteBuffer()
-						);
-					}
+		String conventionedAbsolutePath = computeConventionedAbsolutePath();
+		if (exists() && !isFolder()) {
+			if (isCompressed()) {
+				FileSystemItem superParent = getParentContainer();
+				while (superParent.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
+					superParent = superParent.getParentContainer();
 				}
-			}
-		}
-		return null;
-	}
-	
-	
-	private synchronized ByteBuffer retrieveBytes(String zipFilePath, InputStream inputStream, String itemToSearch) {
-		try (IterableZipContainer zipInputStream = IterableZipContainer.create(zipFilePath, inputStream)) {
-			if (itemToSearch.contains(IterableZipContainer.ZIP_PATH_SEPARATOR)) {
-				String zipEntryNameOfNestedZipFile = itemToSearch.substring(0, itemToSearch.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR));
-				IterableZipContainer.Entry zipEntry = zipInputStream.findFirst(
-					zEntry -> zEntry.getName().equals(zipEntryNameOfNestedZipFile),
-					zEntry -> false
-				);
-				itemToSearch = itemToSearch.replaceFirst(zipEntryNameOfNestedZipFile + IterableZipContainer.ZIP_PATH_SEPARATOR, "");
-				if (Strings.isNotEmpty(itemToSearch)) {
-					try (InputStream iss = zipEntry.toInputStream()) {
-						return retrieveBytes(zipEntry.getAbsolutePath(), zipEntry.toInputStream(), itemToSearch);
-					} catch (IOException exc) {
-						throw Throwables.toRuntimeException(exc);
-					}
+				if (call == 0) {
+					superParent.getAllChildren();
+					return toByteBuffer(call++);
 				} else {
-					return zipEntry.toByteBuffer();
-				}
+					return superParent.refresh().findFirstInAllChildren(
+						FileSystemItem.Criteria.forAllFileThat(file -> file.getAbsolutePath().equals(absolutePath))
+					).toByteBuffer(call++);
+				}				
 			} else {
-				final String iTS = itemToSearch;
-				IterableZipContainer.Entry zipEntry = zipInputStream.findFirst(
-					zEntry -> zEntry.getName().equals(iTS),
-					zEntry -> false
-				);
-				return zipEntry.toByteBuffer();
+				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
+					return Cache.pathForContents.getOrUploadIfAbsent(
+						absolutePath, () ->
+						fIS.toByteBuffer()
+					);
+				}
 			}
 		}
+		return resource;
 	}
 	
 	public InputStream toInputStream() {
