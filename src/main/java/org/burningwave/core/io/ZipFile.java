@@ -73,7 +73,7 @@ class ZipFile implements IterableZipContainer {
 								InputStream zipEntryIS = retrieveFile(absolutePath, content).getInputStream(zipEntry);
 								ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 							){
-								Streams.copy(zipEntryIS, bBOS);
+								 Streams.copy(zipEntryIS, bBOS);
 								 return bBOS.toByteBuffer();
 							} catch (Throwable exc) {
 								ManagedLoggersRepository.logError(this.getClass(), "Could not load content of " + zipEntry.getName() + " of " + getAbsolutePath(), exc);
