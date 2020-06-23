@@ -44,13 +44,11 @@ import org.burningwave.core.iterable.Properties;
 
 public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collection<Class<?>>, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
 	private ClassPathHunter(
-		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
 		Properties config
 	) {
 		super(
-			byteCodeHunterSupplier,
 			classHunterSupplier,
 			pathHelper,
 			(initContext) -> SearchContext._create(initContext),
@@ -66,7 +64,6 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		Properties config
 	) {
 		return new ClassPathHunter(
-			byteCodeHunterSupplier,
 			classHunterSupplier,
 			pathHelper,
 			config

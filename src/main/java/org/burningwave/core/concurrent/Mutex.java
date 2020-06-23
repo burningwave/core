@@ -73,6 +73,12 @@ public class Mutex {
 			}
 	        return lock;
 	    }
+
+		public void clear() {
+			if (parallelLockMap != null) {
+				parallelLockMap.clear();
+			}
+		}
 	}
 	
 }

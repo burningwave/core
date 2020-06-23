@@ -373,7 +373,13 @@ public class PathHelper implements Component {
 	public <T> T getResource(BiConsumer<Collection<T>, FileSystemItem> fileConsumer, String resourceRelativePath) {
 		Collection<T> files = getResources(fileConsumer, resourceRelativePath);
 		if (files.size() > 1) {
-			throw Throwables.toRuntimeException("Found more than one resource under relative path " + resourceRelativePath);
+			StringBuffer fileNames = new StringBuffer();
+			for (T file : files) {
+				if (file instanceof FileSystemItem) {
+					fileNames.append(System.identityHashCode(file) + ": " + ((FileSystemItem)file).getAbsolutePath() + "\n");
+				}
+			}
+			throw Throwables.toRuntimeException("Found more than one resource under relative path " + resourceRelativePath + ":\n" + fileNames.toString());
 		}
 		return files.stream().findFirst().orElse(null);
 	}

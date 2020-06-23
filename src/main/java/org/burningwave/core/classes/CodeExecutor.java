@@ -159,9 +159,11 @@ public class CodeExecutor implements Component {
 	) {	
 		if (config.getClassLoader() == null) {
 			return ThrowingSupplier.get(() -> {
+				Object executeClient = new Object();
+				ClassLoader defaultClassLoader = null;
 				ClassLoader parentClassLoader = config.getParentClassLoader();
 				if (parentClassLoader == null && config.isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull()) {
-					parentClassLoader = getClassFactory().getDefaultClassLoader();
+					parentClassLoader = defaultClassLoader = getClassFactory().getDefaultClassLoader(executeClient);
 				}
 				try (MemoryClassLoader memoryClassLoader = 
 					MemoryClassLoader.create(
@@ -173,18 +175,23 @@ public class CodeExecutor implements Component {
 					);
 					Executable executor = Constructors.newInstanceOf(executableClass);
 					T retrievedElement = executor.execute(config.getParams());
+					if (defaultClassLoader instanceof MemoryClassLoader) {
+						((MemoryClassLoader)defaultClassLoader).unregister(executeClient, true);
+					}
 					return retrievedElement;
 				}
 			});
 		} else {
 			return ThrowingSupplier.get(() -> {
+				Object executeClient = new Object();
+				ClassLoader defaultClassLoader = null;
 				Function<Boolean, ClassLoader> parentClassLoaderRestorer = null;
 				ClassLoader parentClassLoader = config.getParentClassLoader();
 				if (parentClassLoader == null && config.isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull()) {
-					parentClassLoader = getClassFactory().getDefaultClassLoader();
+					parentClassLoader = defaultClassLoader = getClassFactory().getDefaultClassLoader(executeClient);
 				}
 				if (parentClassLoader != null) {
-					parentClassLoaderRestorer = ClassLoaders.setAsParent(config.getClassLoader(), getClassFactory().getDefaultClassLoader(), false);
+					parentClassLoaderRestorer = ClassLoaders.setAsParent(config.getClassLoader(), parentClassLoader, false);
 				}
 				Class<? extends Executable> executableClass = loadOrBuildAndDefineExecutorSubType(
 					config
@@ -194,6 +201,9 @@ public class CodeExecutor implements Component {
 				if (parentClassLoaderRestorer != null) {
 					parentClassLoaderRestorer.apply(true);
 				}
+				if (defaultClassLoader instanceof MemoryClassLoader) {
+					((MemoryClassLoader)defaultClassLoader).unregister(executeClient, true);
+				}
 				return retrievedElement;
 			});
 		}
@@ -202,12 +212,15 @@ public class CodeExecutor implements Component {
 	@SuppressWarnings("unchecked")
 	public <T extends Executable> Class<T> loadOrBuildAndDefineExecutorSubType(
 		LoadOrBuildAndDefineConfig.ForCodeExecutor config
-	) {
-		return (Class<T>) getClassFactory().loadOrBuildAndDefine(
+	) {	
+		ClassFactory.ClassRetriever classRetriever = getClassFactory().loadOrBuildAndDefine(
 			config
-		).get(
+		);
+		Class<T> executableClass = (Class<T>) classRetriever.get(
 			config.getExecutorName()
 		);
+		classRetriever.close();
+		return executableClass;
 	}
 	
 	@Override

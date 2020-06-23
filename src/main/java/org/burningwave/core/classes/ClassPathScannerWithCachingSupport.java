@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -95,7 +96,6 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	Mutex.Manager mutexManager;
 	
 	ClassPathScannerWithCachingSupport(
-		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
 		Function<InitContext, C> contextSupplier,
@@ -103,14 +103,13 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		Properties config
 	) {
 		super(
-			byteCodeHunterSupplier,
 			classHunterSupplier,
 			pathHelper,
 			contextSupplier,
 			resultSupplier,
 			config
 		);
-		this.cache = new HashMap<>();
+		this.cache = new ConcurrentHashMap<>();
 		this.mutexManager = Mutex.Manager.create(cache);
 		if (this.config.resolveStringValue(Configuration.Key.PATH_LOADING_LOCK, Configuration.DEFAULT_VALUES).equals(PathLoadingLock.FOR_CACHE.label)) {
 			this.mutexManager.disableLockForName();
@@ -171,7 +170,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 					classesForPath = cache.get(basePath);
 					if (classesForPath == null) {
 						currentScannedPath.findInAllChildren(filterAndExecutor);
-						Map<String, I> itemsForPath = new HashMap<>();
+						Map<String, I> itemsForPath = new ConcurrentHashMap<>();
 						Map<String, I> itemsFound = context.getItemsFound(basePath);
 						if (itemsFound != null) {
 							itemsForPath.putAll(itemsFound);
@@ -289,9 +288,13 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	public void close() {
 		clearCache();
 		cache = null;
-		byteCodeHunterSupplier = null;
 		pathHelper = null;
 		contextSupplier = null;
+		Mutex.Manager mutexManager = this.mutexManager;
+		if (mutexManager != null) {
+			mutexManager.clear();
+		}
+		this.mutexManager = null;
 	}
 	
 	@FunctionalInterface

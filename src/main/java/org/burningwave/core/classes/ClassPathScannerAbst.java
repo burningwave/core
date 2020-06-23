@@ -71,7 +71,6 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		}
 	}
 	
-	Supplier<ByteCodeHunter> byteCodeHunterSupplier;
 	ByteCodeHunter byteCodeHunter;
 	Supplier<ClassHunter> classHunterSupplier;
 	ClassHunter classHunter;
@@ -81,7 +80,6 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	Properties config;
 
 	ClassPathScannerAbst(
-		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
 		Function<InitContext, C> contextSupplier,
@@ -89,7 +87,6 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		Properties config
 	) {
 		this.pathHelper = pathHelper;
-		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
 		this.classHunterSupplier = classHunterSupplier;
 		this.contextSupplier = contextSupplier;
 		this.resultSupplier = resultSupplier;
@@ -101,13 +98,6 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		return classHunter != null ?
 			classHunter	:
 			(classHunter = classHunterSupplier.get());
-	}
-	
-	
-	ByteCodeHunter getByteCodeHunter() {
-		return byteCodeHunter != null ?
-			byteCodeHunter :
-			(byteCodeHunter = byteCodeHunterSupplier.get());	
 	}
 	
 	//Not cached search
@@ -192,11 +182,12 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 					sharedClassLoader :
 					PathScannerClassLoader.create(
 						searchConfig.parentClassLoaderForMainClassLoader, 
-						pathHelper, getByteCodeHunter(), searchConfig.getScanFileCriteria().hasNoPredicate() ? 
-								FileSystemItem.Criteria.forClassTypeFiles(
-										config.resolveStringValue(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES)
-									)	
-									: searchConfig.getScanFileCriteria()
+						pathHelper, 
+						searchConfig.getScanFileCriteria().hasNoPredicate() ? 
+							FileSystemItem.Criteria.forClassTypeFiles(
+								config.resolveStringValue(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES)
+							)	
+							: searchConfig.getScanFileCriteria()
 					),
 				searchConfig
 			)		
@@ -219,7 +210,6 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	@Override
 	public void close() {
 		unregister(config);
-		byteCodeHunterSupplier = null;
 		pathHelper = null;
 		contextSupplier = null;
 		config = null;
