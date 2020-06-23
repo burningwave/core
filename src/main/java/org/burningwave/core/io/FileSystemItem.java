@@ -764,6 +764,10 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public ByteBuffer toByteBuffer() {
+		return toByteBuffer(0);
+	}
+	
+	private ByteBuffer toByteBuffer(int call) {
 		String absolutePath = getAbsolutePath();
 		ByteBuffer resource = Cache.pathForContents.getOrUploadIfAbsent(absolutePath, null); 
 		if (resource != null) {
@@ -776,8 +780,12 @@ public class FileSystemItem implements ManagedLogger {
 				while (superParent.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
 					superParent = superParent.getParentContainer();
 				}
+				if (call > 0) {
+					superParent.refresh();
+				}
 				superParent.getAllChildren();
-				return toByteBuffer();
+				return toByteBuffer(call++);
+				
 			} else {
 				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
 					return Cache.pathForContents.getOrUploadIfAbsent(
