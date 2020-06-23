@@ -153,7 +153,7 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	ClassLoader getDefaultClassLoader() {
+	ClassLoader getDefaultClassLoader(Object client) {
 		if (defaultClassLoaderSupplier != null) {
 			ClassLoader classLoader = defaultClassLoaderSupplier.get();
 			if (defaultClassLoader != classLoader) {
@@ -165,7 +165,9 @@ public class ClassFactory implements Component {
 						}
 						if (classLoader instanceof MemoryClassLoader) {
 							if (!((MemoryClassLoader)classLoader).register(this)) {
-								classLoader = getDefaultClassLoader();
+								classLoader = getDefaultClassLoader(client);
+							} else {
+								((MemoryClassLoader)classLoader).register(client);
 							}
 						}
 						this.defaultClassLoader = classLoader;
@@ -183,11 +185,12 @@ public class ClassFactory implements Component {
 							this.defaultClassLoader = (ClassLoader)classLoaderOrClassLoaderSupplier;
 							if (defaultClassLoader instanceof MemoryClassLoader) {
 								((MemoryClassLoader)defaultClassLoader).register(this);
+								((MemoryClassLoader)defaultClassLoader).register(client);
 							}
 							return defaultClassLoader;
 						} else if (classLoaderOrClassLoaderSupplier instanceof Supplier) {
 							this.defaultClassLoaderSupplier = (Supplier<ClassLoader>) classLoaderOrClassLoaderSupplier;
-							return getDefaultClassLoader();
+							return getDefaultClassLoader(client);
 						}
 					}
 				} else { 
@@ -235,10 +238,10 @@ public class ClassFactory implements Component {
 			classPathsForNotFoundClassesDuringCompilantion, 
 			classPathsForNotFoundClassesDuringLoading,
 			config.isStoreCompiledClasses(),
-			() -> Optional.ofNullable(
+			(client) -> Optional.ofNullable(
 				config.getClassLoader()
 			).orElseGet(() -> 
-				getDefaultClassLoader()
+				getDefaultClassLoader(client)
 			),
 			config.getUnitSourceGenerators()
 		);
@@ -250,11 +253,19 @@ public class ClassFactory implements Component {
 		Collection<String> classPathsForNotFoundClassesDuringCompilantion,
 		Collection<String> classPathsForNotFoundClassesDuringLoading,
 		boolean storeCompiledClasses,
-		Supplier<ClassLoader> classLoaderSupplier,
+		Function<Object, ClassLoader> classLoaderSupplier,
 		Collection<UnitSourceGenerator> unitsCode
 	) {
 		try {
-			ClassLoader classLoader = classLoaderSupplier.get();
+			Object temporaryClient = new Object();
+			ClassLoader classLoader = classLoaderSupplier.apply(temporaryClient);
+			Function<ClassRetriever, ClassLoader> classLoaderSupplierForClassRetriever = (classRetriever) -> {
+				if (classLoader instanceof MemoryClassLoader) {
+					((MemoryClassLoader)classLoader).register(classRetriever);
+					((MemoryClassLoader)classLoader).unregister(temporaryClient, true);
+				}
+				return classLoader;
+			};
 			if (classLoader instanceof PathScannerClassLoader) {
 				((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(
 					classPathsForNotFoundClassesDuringLoading, true
@@ -284,7 +295,7 @@ public class ClassFactory implements Component {
 							Arrays.asList(compileResult.getClassPath().getAbsolutePath()), true, true
 						);
 					}
-					return new ClassRetriever() {
+					return new ClassRetriever(classLoaderSupplierForClassRetriever) {
 						@Override
 						public Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className) {
 							try {
@@ -316,7 +327,7 @@ public class ClassFactory implements Component {
 				}
 			}
 			logInfo("Classes {} loaded by classloader {} without building", String.join(", ", classes.keySet()), classLoader);
-			return new ClassRetriever() {
+			return new ClassRetriever(classLoaderSupplierForClassRetriever) {
 				@Override
 				public Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className) {
 					try {
@@ -443,11 +454,11 @@ public class ClassFactory implements Component {
 	}
 	
 	public <T> Class<T> loadOrBuildAndDefinePojoSubType(String className, Class<?>... superClasses) {
-		return loadOrBuildAndDefinePojoSubType(getDefaultClassLoader(), className, superClasses);
+		return loadOrBuildAndDefinePojoSubType(null, className, superClasses);
 	}
 	
 	public <T> Class<T> loadOrBuildAndDefinePojoSubType(String className, int options, Class<?>... superClasses) {
-		return loadOrBuildAndDefinePojoSubType(getDefaultClassLoader(), className, options, superClasses);
+		return loadOrBuildAndDefinePojoSubType(null, className, options, superClasses);
 	}
 	
 	public <T> Class<T> loadOrBuildAndDefinePojoSubType(ClassLoader classLoader, String className, int options, Class<?>... superClasses) {
@@ -459,7 +470,7 @@ public class ClassFactory implements Component {
 	}
 	
 	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(int parametersCount) {
-		return loadOrBuildAndDefineFunctionSubType(getDefaultClassLoader(), parametersCount);
+		return loadOrBuildAndDefineFunctionSubType(null, parametersCount);
 	}
 	
 	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(ClassLoader classLoader, int parametersLength) {
@@ -470,7 +481,7 @@ public class ClassFactory implements Component {
 	}
 	
 	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(int parametersCount) {
-		return loadOrBuildAndDefineConsumerSubType(getDefaultClassLoader(), parametersCount);
+		return loadOrBuildAndDefineConsumerSubType(null, parametersCount);
 	}
 	
 	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(ClassLoader classLoader, int parametersLength) {
@@ -481,7 +492,7 @@ public class ClassFactory implements Component {
 	}
 	
 	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(int parametersLength) {
-		return loadOrBuildAndDefinePredicateSubType(getDefaultClassLoader(), parametersLength);
+		return loadOrBuildAndDefinePredicateSubType(null, parametersLength);
 	}
 	
 	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(ClassLoader classLoader, int parametersLength) {
@@ -501,15 +512,16 @@ public class ClassFactory implements Component {
 		String functionalInterfaceName = classNamePrefix + parametersLength +	classNameSuffix;
 		String packageName = MultiParamsFunction.class.getPackage().getName();
 		String className = packageName + "." + functionalInterfaceName;
-		return (Class<T>) loadOrBuildAndDefine(
+		ClassRetriever classRetriever = loadOrBuildAndDefine(
 			LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
 				unitSourceGeneratorSupplier.apply(className, parametersLength)
 			).useClassLoader(
 				classLoader
 			)
-		).get(
-			className
 		);
+		Class<T> cls = (Class<T>)classRetriever.get(className);
+		classRetriever.close();
+		return cls;
 	}
 	
 	
@@ -542,18 +554,19 @@ public class ClassFactory implements Component {
 			return loadOrBuildAndDefine(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
 		}	
 		
-		public Class<?> loadOrBuildAndDefine(
+		public <T> Class<T> loadOrBuildAndDefine(
 			String className,
 			int options, 
 			Class<?>... superClasses
-		) {
-			return classFactory.loadOrBuildAndDefine(
+		) {	
+			ClassRetriever classRetriever = classFactory.loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
 					sourceGenerator.create(className, options, superClasses)
 				)
-			).get(
-				className
 			);
+			Class<T> cls = (Class<T>)classRetriever.get(className);
+			classRetriever.close();
+			return cls;
 		}
 		
 		public <T> Class<T> loadOrBuildAndDefine(
@@ -561,14 +574,15 @@ public class ClassFactory implements Component {
 			String className,
 			int options, 
 			Class<?>... superClasses
-		) {
-			return (Class<T>) classFactory.loadOrBuildAndDefine(
+		) {	
+			ClassRetriever classRetriever = classFactory.loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
 					sourceGenerator.create(className, options, superClasses)
 				).useClassLoader(classLoader)
-			).get(
-				className
 			);
+			Class<T> cls = (Class<T>)classRetriever.get(className);
+			classRetriever.close();
+			return cls;
 		}
 			
 	}
@@ -590,7 +604,12 @@ public class ClassFactory implements Component {
 		config = null;
 	}
 
-	public static abstract class ClassRetriever {
+	public static abstract class ClassRetriever implements Component {
+		private ClassLoader classLoader;
+		
+		private ClassRetriever(Function<ClassRetriever, ClassLoader> classLoaderSupplier) {
+			this.classLoader = classLoaderSupplier.apply(this);
+		}
 		
 		public abstract Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className);
 		
@@ -614,5 +633,11 @@ public class ClassFactory implements Component {
 			return classes;
 		}
 		
+		@Override
+		public void close() {
+			if (classLoader instanceof MemoryClassLoader) {
+				((MemoryClassLoader)classLoader).unregister(this, true);
+			}
+		}
 	}
 }
