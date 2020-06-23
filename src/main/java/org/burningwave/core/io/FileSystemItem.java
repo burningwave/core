@@ -780,12 +780,14 @@ public class FileSystemItem implements ManagedLogger {
 				while (superParent.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
 					superParent = superParent.getParentContainer();
 				}
-				if (call > 0) {
-					superParent.refresh();
-				}
-				superParent.getAllChildren();
-				return toByteBuffer(call++);
-				
+				if (call == 0) {
+					superParent.getAllChildren();
+					return toByteBuffer(call++);
+				} else {
+					return superParent.refresh().findFirstInAllChildren(
+						FileSystemItem.Criteria.forAllFileThat(file -> file.getAbsolutePath().equals(absolutePath))
+					).toByteBuffer();
+				}				
 			} else {
 				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
 					return Cache.pathForContents.getOrUploadIfAbsent(
