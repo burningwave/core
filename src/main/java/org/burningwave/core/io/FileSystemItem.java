@@ -170,7 +170,7 @@ public class FileSystemItem implements ManagedLogger {
 			for (FileSystemItem fileSystemItem : (filter == null ? getChildren() : findInChildren(filter))) {
 				fileSystemItem.copyTo(file.getAbsolutePath(), filter);
 			}
-			logDebug("Copied folder to " + file.getAbsolutePath());
+			//logDebug("Copied folder to " + file.getAbsolutePath());
 			destination = FileSystemItem.ofPath(file.getAbsolutePath());
 		}
 		return destination;
@@ -481,7 +481,7 @@ public class FileSystemItem implements ManagedLogger {
 					return allChildren;
 				}
 			} else if (isFolder()) {
-				logDebug("Retrieving all children of " + absolutePath.getKey());
+				//logDebug("Retrieving all children of " + absolutePath.getKey());
 				Set<FileSystemItem> children = getChildren();
 				if (children != null) {
 					Set<FileSystemItem> allChildren = ConcurrentHashMap.newKeySet();
