@@ -290,6 +290,11 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		cache = null;
 		pathHelper = null;
 		contextSupplier = null;
+		Mutex.Manager mutexManager = this.mutexManager;
+		if (mutexManager != null) {
+			mutexManager.clear();
+		}
+		this.mutexManager = null;
 	}
 	
 	@FunctionalInterface

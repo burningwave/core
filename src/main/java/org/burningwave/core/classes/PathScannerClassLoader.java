@@ -194,6 +194,11 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		if (loadedPaths != null) {
 			loadedPaths.clear();
 		}
+		Mutex.Manager mutexManager = this.mutexManager;
+		if (mutexManager != null) {
+			mutexManager.clear();
+		}
+		this.mutexManager = null;
 		this.loadedPaths = null;
 		pathHelper = null;
 		super.close();

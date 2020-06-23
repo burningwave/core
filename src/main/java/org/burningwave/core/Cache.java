@@ -79,9 +79,11 @@ public class Cache implements Component {
 	public static class ObjectForObject<T, R> implements Component {
 		
 		Map<T, R> resources;
+		Mutex.Manager mutexManagerForResources;
 		
 		public ObjectForObject() {
 			this.resources = new HashMap<>();
+			mutexManagerForResources = Mutex.Manager.create(this);
 		}
 		
 		public R get(T object) {
@@ -91,7 +93,7 @@ public class Cache implements Component {
 		public R getOrUploadIfAbsent(T object, Supplier<R> resourceSupplier) {
 			R resource = resources.get(object);
 			if (resource == null) {
-				synchronized(resources) {
+				synchronized(mutexManagerForResources.getMutex(object.toString())) {
 					resource = resources.get(object);
 					if (resource == null) {
 						resources.put(object, (resource = resourceSupplier.get()));
@@ -115,18 +117,20 @@ public class Cache implements Component {
 	
 	public static class ObjectAndPathForResources<T, R> implements Component  {
 		
-		private Map<T, PathForResources<R>> resources;
-		private Supplier<PathForResources<R>> pathForResourcesSupplier;
+		Map<T, PathForResources<R>> resources;
+		Supplier<PathForResources<R>> pathForResourcesSupplier;
+		Mutex.Manager mutexManagerForResources;
 		
 		public ObjectAndPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
 			this.resources = new HashMap<>();
 			this.pathForResourcesSupplier = () -> new PathForResources<>(partitionStartLevel, sharer);
+			mutexManagerForResources = Mutex.Manager.create(this);
 		}
 
 		public R getOrUploadIfAbsent(T object, String path, Supplier<R> resourceSupplier) {
 			PathForResources<R> pathForResources = resources.get(object);
 			if (pathForResources == null) {
-				synchronized (resources) {
+				synchronized (mutexManagerForResources.getMutex(object.toString())) {
 					pathForResources = resources.get(object);
 					if (pathForResources == null) {
 						pathForResources = pathForResourcesSupplier.get();
@@ -159,9 +163,9 @@ public class Cache implements Component {
 		Map<Long, Map<String, Map<String, R>>> resources;	
 		Long partitionStartLevel;
 		Function<R, R> sharer;
-		private Mutex.Manager mutexManagerForPartitions;
-		private Mutex.Manager mutexManagerForLoadedResources;
-		private Mutex.Manager mutexManagerForResourcesPartitioned;
+		Mutex.Manager mutexManagerForPartitions;
+		Mutex.Manager mutexManagerForLoadedResources;
+		Mutex.Manager mutexManagerForPartitionedResources;
 		
 		private PathForResources(Long partitionStartLevel, Function<R, R> sharer) {
 			this.partitionStartLevel = partitionStartLevel;
@@ -169,7 +173,7 @@ public class Cache implements Component {
 			resources = new HashMap<>();
 			mutexManagerForPartitions = Mutex.Manager.create(this);
 			mutexManagerForLoadedResources = Mutex.Manager.create(this);
-			mutexManagerForResourcesPartitioned = Mutex.Manager.create(this);
+			mutexManagerForPartitionedResources = Mutex.Manager.create(this);
 		}
 		
 		Map<String, R> retrievePartition(Map<String, Map<String, R>> partion, Long partitionIndex, String path) {
@@ -223,13 +227,13 @@ public class Cache implements Component {
 				resource;
 		}
 		
-		Map<String, Map<String, R>> retrievePartition(Map<Long, Map<String, Map<String, R>>> resourcesPartitioned, Long partitionIndex) {
-			Map<String, Map<String, R>> resources = resourcesPartitioned.get(partitionIndex);
+		Map<String, Map<String, R>> retrievePartition(Map<Long, Map<String, Map<String, R>>> partitionedResources, Long partitionIndex) {
+			Map<String, Map<String, R>> resources = partitionedResources.get(partitionIndex);
 			if (resources == null) {
-				synchronized (mutexManagerForResourcesPartitioned.getMutex(partitionIndex.toString())) {
-					resources = resourcesPartitioned.get(partitionIndex);
+				synchronized (mutexManagerForPartitionedResources.getMutex(partitionIndex.toString())) {
+					resources = partitionedResources.get(partitionIndex);
 					if (resources == null) {
-						resourcesPartitioned.put(partitionIndex, resources = new HashMap<>());
+						partitionedResources.put(partitionIndex, resources = new HashMap<>());
 					}
 				}
 			}
