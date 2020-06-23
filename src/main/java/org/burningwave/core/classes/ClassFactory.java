@@ -229,19 +229,17 @@ public class ClassFactory implements Component {
 				pathHelper.getPaths(Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER)
 			);
 		
-		ClassLoader classLoader = Optional.ofNullable(
-			config.getClassLoader()
-		).orElseGet(() -> 
-			getDefaultClassLoader()
-		);
-		
 		return loadOrBuildAndDefine(
 			config.isUseOneShotJavaCompiler(),
 			compilationClassPaths,
 			classPathsForNotFoundClassesDuringCompilantion, 
 			classPathsForNotFoundClassesDuringLoading,
 			config.isStoreCompiledClasses(),
-			classLoader,
+			() -> Optional.ofNullable(
+				config.getClassLoader()
+			).orElseGet(() -> 
+				getDefaultClassLoader()
+			),
 			config.getUnitSourceGenerators()
 		);
 	}
@@ -252,10 +250,11 @@ public class ClassFactory implements Component {
 		Collection<String> classPathsForNotFoundClassesDuringCompilantion,
 		Collection<String> classPathsForNotFoundClassesDuringLoading,
 		boolean storeCompiledClasses,
-		ClassLoader classLoader,
+		Supplier<ClassLoader> classLoaderSupplier,
 		Collection<UnitSourceGenerator> unitsCode
 	) {
 		try {
+			ClassLoader classLoader = classLoaderSupplier.get();
 			if (classLoader instanceof PathScannerClassLoader) {
 				((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(
 					classPathsForNotFoundClassesDuringLoading, true
