@@ -114,26 +114,30 @@ public class CodeExecutor implements Component {
 				body.useType(param.getClass());
 			}
 		}
-		String importFromConfig = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, config.getDefaultValues());
+		String importFromConfig = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, null, true, config.getDefaultValues());
 		if (Strings.isNotEmpty(importFromConfig)) {
 			Arrays.stream(importFromConfig.replaceAll(";{2,}", ";").split(";")).forEach(imp -> {
-				body.useType(imp);
+				if (Strings.isNotEmpty(imp)) {
+					body.useType(imp);
+				}
 			});
 		}
-		String executorName = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, config.getDefaultValues());
-		String executorSimpleName = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, config.getDefaultValues());
+		String executorName = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, null, true, config.getDefaultValues());
+		String executorSimpleName = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, null, true, config.getDefaultValues());
 
 		if (Strings.isNotEmpty(executorName)) {
 			config.setName(executorName);
 		} else if (Strings.isNotEmpty(executorSimpleName)) {
 			config.setSimpleName(executorSimpleName);
 		}
-		String code = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName(), config.getDefaultValues());
+		String code = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName(), null, true, config.getDefaultValues());
 		if (code.contains(";")) {
 			if (config.isIndentCodeActive()) {
 				code = code.replaceAll(";{2,}", ";");
 				for (String codeRow : code.split(";")) {
-					body.addCodeRow(codeRow + ";");
+					if (Strings.isNotEmpty(codeRow)) {
+						body.addCodeRow(codeRow + ";");
+					}
 				}
 			} else {
 				body.addCodeRow(code);

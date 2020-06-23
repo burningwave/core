@@ -37,6 +37,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -183,6 +184,49 @@ public class IterableObjectHelper implements Component {
 	}
 	
 ////////////////////
+
+		
+	public <T> T resolveObjectValue(
+		Map<?,?> map,
+		String key,
+		String valuesSeparator,
+		boolean deleteUnresolvedPlaceHolder,
+		Map<?,?> defaultValues
+	) {
+		return resolveObjectValue(key, () -> resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues));
+	}
+
+	public <T> Collection<T> resolveObjectValues(
+		Map<?,?> map, String key,
+		String valuesSeparator,
+		boolean deleteUnresolvedPlaceHolder,
+		Map<?,?> defaultValues
+	) {
+		return resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+	}
+
+	public String resolveStringValue(
+		Map<?,?> map,
+		String key,
+		String valuesSeparator,
+		boolean deleteUnresolvedPlaceHolder,
+		Map<?,?> defaultValues
+	) {
+		return resolveObjectValue(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+	}
+
+	public Collection<String> resolveStringValues(
+		Map<?,?> map,
+		String key,
+		String valuesSeparator,
+		boolean deleteUnresolvedPlaceHolder,
+		Map<?,?> defaultValues
+	) {
+		return resolveObjectValues(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+	}
+	
+////////////////////	
+	
 	
 	public <T> T resolveObjectValue(String key, Supplier<Object> valuesSupplier) {
 		Object value = valuesSupplier.get();
@@ -228,7 +272,8 @@ public class IterableObjectHelper implements Component {
 								}
 							}
 							if (deleteUnresolvedPlaceHolder && valueObjects == null) {
-								stringValue = stringValue.replaceAll(Strings.placeHolderToRegEx("${" + propName + "}") + ".*?" + valuesSeparator, "");
+								stringValue = stringValue.replaceAll(Strings.placeHolderToRegEx("${" + propName + "}") + ".*?" + Optional.ofNullable(valuesSeparator).orElseGet(() -> ""), "");
+								values.add(stringValue);
 							} else if (valueObjects != null) {
 								Collection<Object> replacements = new ArrayList<>();
 								if (valueObjects instanceof String) {
@@ -259,6 +304,8 @@ public class IterableObjectHelper implements Component {
 										values.add(valueObject);
 									}
 								}
+							} else {
+								values.add(stringValue);
 							}
 						}
 					}
