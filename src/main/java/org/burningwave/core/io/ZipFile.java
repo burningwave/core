@@ -105,7 +105,6 @@ class ZipFile implements IterableZipContainer {
 							temporaryFileDeleter = () -> {
 								FileSystemHelper.delete(new File(temporaryFileAbsolutePath));
 								Cache.pathForContents.remove(temporaryFileAbsolutePath);
-								Cache.pathForZipFiles.remove(temporaryFileAbsolutePath); 
 							};
 						}			
 						file = new File(fileSystemItem.getAbsolutePath());
