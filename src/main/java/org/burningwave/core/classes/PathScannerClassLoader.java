@@ -35,6 +35,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,10 +48,11 @@ import org.burningwave.core.io.PathHelper.ComparePathsResult;
 
 
 public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryClassLoader {
+	Collection<String> allLoadedPaths;
 	Collection<String> loadedPaths;
-	private PathHelper pathHelper;
-	private FileSystemItem.Criteria scanFileCriteriaAndConsumer;
-	private Mutex.Manager mutexManager;
+	PathHelper pathHelper;
+	FileSystemItem.Criteria scanFileCriteriaAndConsumer;
+	Mutex.Manager mutexManager;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -63,6 +65,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	) {
 		super(parentClassLoader);
 		this.pathHelper = pathHelper;
+		this.allLoadedPaths = ConcurrentHashMap.newKeySet();
 		this.loadedPaths = ConcurrentHashMap.newKeySet();
 		this.mutexManager = Mutex.Manager.create(this);
 		this.scanFileCriteriaAndConsumer = scanFileCriteria.createCopy();
@@ -72,11 +75,16 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		return new PathScannerClassLoader(parentClassLoader, pathHelper, scanFileCriteria);
 	}
 	
-	public void scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths) {
-		scanPathsAndAddAllByteCodesFound(paths, considerURLClassLoaderPathsAsLoadedPaths, false);
+	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths) {
+		return scanPathsAndAddAllByteCodesFound(paths, true, false);
 	}
 	
-	public void scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths, boolean refreshCache) {
+	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths) {
+		return scanPathsAndAddAllByteCodesFound(paths, considerURLClassLoaderPathsAsLoadedPaths, false);
+	}
+	
+	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths, boolean refreshCache) {
+		Collection<String> scannedPaths = new HashSet<>();
 		if (!isClosed) {
 			for (String path : paths) {
 				if (!isClosed) {
@@ -105,9 +113,11 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 								}
 								if (!isClosed) {
 									loadedPaths.add(path);
+									allLoadedPaths.add(path);
 								} else {
 									break;
 								}
+								scannedPaths.add(path);
 							}
 						}
 					}
@@ -116,6 +126,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 				}
 			}
 		}
+		return scannedPaths;
 	}
 	
 	@Override
@@ -157,10 +168,14 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	}
 	
 	public boolean hasBeenLoaded(String path, boolean considerURLClassLoaderPathsAsLoadedPaths) {
+		if (allLoadedPaths.contains(path)) {
+			return true;
+		}
 		FileSystemItem pathFIS = FileSystemItem.ofPath(path);
 		for (String loadedPath : getAllLoadedPaths(considerURLClassLoaderPathsAsLoadedPaths)) {
 			FileSystemItem loadedPathFIS = FileSystemItem.ofPath(loadedPath);
 			if (pathFIS.isChildOf(loadedPathFIS) || pathFIS.equals(loadedPathFIS)) {
+				allLoadedPaths.add(path);
 				return true;
 			}
 		}
@@ -194,6 +209,12 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		if (loadedPaths != null) {
 			loadedPaths.clear();
 		}
+		this.loadedPaths = null;
+		Collection<String> allLoadedPaths = this.allLoadedPaths;
+		if (allLoadedPaths != null) {
+			allLoadedPaths.clear();
+		}
+		this.allLoadedPaths = null;
 		Mutex.Manager mutexManager = this.mutexManager;
 		if (mutexManager != null) {
 			mutexManager.clear();

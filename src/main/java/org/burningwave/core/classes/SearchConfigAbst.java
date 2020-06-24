@@ -48,7 +48,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	boolean useSharedClassLoaderAsMain;
 	boolean deleteFoundItemsOnClose;
 	boolean useSharedClassLoaderAsParent;
-	boolean considerURLClassLoaderPathsAsScanned;
 	boolean waitForSearchEnding;
 	
 
@@ -140,13 +139,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		this.waitForSearchEnding = waitForSearchEnding;
 		return (S)this;
 	}
-
-	public S considerURLClassLoaderPathsAsScanned(
-		boolean value
-	) {
-		this.considerURLClassLoaderPathsAsScanned = value;
-		return (S)this;
-	}
 	
 	public S optimizePaths(boolean flag) {
 		this.optimizePaths = flag;
@@ -165,7 +157,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		destConfig.parentClassLoaderForMainClassLoader = this.parentClassLoaderForMainClassLoader;
 		destConfig.useSharedClassLoaderAsParent = this.useSharedClassLoaderAsParent;
 		destConfig.deleteFoundItemsOnClose = this.deleteFoundItemsOnClose;
-		destConfig.considerURLClassLoaderPathsAsScanned = this.considerURLClassLoaderPathsAsScanned;
 		destConfig.waitForSearchEnding = this.waitForSearchEnding;
 		return destConfig;
 	}
