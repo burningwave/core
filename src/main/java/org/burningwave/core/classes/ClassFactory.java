@@ -265,7 +265,7 @@ public class ClassFactory implements Component {
 			};
 			if (classLoader instanceof PathScannerClassLoader) {
 				((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(
-					classPathsForNotFoundClassesDuringLoading, true
+					classPathsForNotFoundClassesDuringLoading
 				);
 			}
 			Set<String> classesName = new HashSet<>();
