@@ -79,12 +79,13 @@ public class ClassFactory implements Component {
 			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX,
 				"${"+ Configuration.Key.DEFAULT_CLASS_LOADER + ".additional-imports}" +  ";" +
 				ComponentSupplier.class.getName() + ";" +
+				Function.class.getName() + ";" +
 				FileSystemItem.class.getName() + ";" + 
 				PathScannerClassLoader.class.getName() + ";" +
 				Supplier.class.getName() + ";"
 			);
 			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, ClassFactory.class.getPackage().getName() + ".DefaultClassLoaderRetrieverForClassFactory");
-			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, "(Supplier<?>)() -> ((ComponentSupplier)parameter[0]).getClassHunter().getPathScannerClassLoader()");
+			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, "(Supplier<ClassLoader>)() -> ((ComponentSupplier)parameter[0]).getClassHunter().getPathScannerClassLoader()");
 			DEFAULT_VALUES.put(
 				Key.DEFAULT_CLASS_LOADER,
 				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) -> componentSupplier.getClassHunter().getPathScannerClassLoader()
