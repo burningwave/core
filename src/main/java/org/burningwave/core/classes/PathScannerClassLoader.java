@@ -71,6 +71,10 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		this.scanFileCriteriaAndConsumer = scanFileCriteria.createCopy();
 	}
 	
+	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper) {
+		return new PathScannerClassLoader(parentClassLoader, pathHelper, FileSystemItem.Criteria.forClassTypeFiles(FileSystemItem.CheckingOption.FOR_NAME));
+	}
+	
 	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, FileSystemItem.Criteria scanFileCriteria) {
 		return new PathScannerClassLoader(parentClassLoader, pathHelper, scanFileCriteria);
 	}
