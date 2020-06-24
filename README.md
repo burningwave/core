@@ -571,7 +571,7 @@ If you use the singleton instance obtained via ComponentContainer.getInstance() 
 **The default configuration automatically loaded if no configuration file is found is the following**:
 ```properties
 #default classloader used by the ClassFactory to load generated classes
-class-factory.default-class-loader=(Supplier<?>)() -> ((ComponentSupplier)parameter[0]).getClassHunter().getPathScannerClassLoader()
+class-factory.default-class-loader=(Supplier<ClassLoader>)() -> ((ComponentSupplier)parameter[0]).getClassHunter().getPathScannerClassLoader()
 class-factory.byte-code-hunter.search-config.check-file-option=\
     ${hunters.default-search-config.check-file-option}
 class-hunter.path-scanner-class-loader.search-config.check-file-option=\
