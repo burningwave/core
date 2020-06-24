@@ -555,8 +555,8 @@ public class FileSystemItem implements ManagedLogger {
 		return refresh(true);
 	}
 	
-	public FileSystemItem refresh(boolean removeFromCache) {
-		reset(removeFromCache);
+	public FileSystemItem refresh(boolean removeLinkedResourcesFromCache) {
+		reset(removeLinkedResourcesFromCache);
 		computeConventionedAbsolutePath();
 		return this;
 	}
@@ -573,10 +573,10 @@ public class FileSystemItem implements ManagedLogger {
 		return reset(true);
 	}
 	
-	public synchronized FileSystemItem reset(boolean removeFromCache) {
+	public synchronized FileSystemItem reset(boolean removeLinkedResourcesFromCache) {
 		if (allChildren != null) {
 			for (FileSystemItem child : allChildren) {
-				child.reset(removeFromCache);
+				child.reset(removeLinkedResourcesFromCache);
 			}
 			allChildren = null;
 			if (children != null) {
@@ -584,14 +584,14 @@ public class FileSystemItem implements ManagedLogger {
 			}			
 		} else if (children != null) {
 			for (FileSystemItem child : children) {
-				child.reset(removeFromCache);
+				child.reset(removeLinkedResourcesFromCache);
 			}
 			children = null;
 		}
 		parentContainer = null;
 		absolutePath.setValue(null);
 		parent = null;
-		if (removeFromCache) {
+		if (removeLinkedResourcesFromCache) {
 			removeLinkedResourcesFromCache(this);
 		}
 		return this;
