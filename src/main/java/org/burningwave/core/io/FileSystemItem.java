@@ -782,11 +782,11 @@ public class FileSystemItem implements ManagedLogger {
 				}
 				if (call == 0) {
 					superParent.getAllChildren();
-					return toByteBuffer(call++);
+					return toByteBuffer(++call);
 				} else {
 					return superParent.refresh().findFirstInAllChildren(
 						FileSystemItem.Criteria.forAllFileThat(file -> file.getAbsolutePath().equals(absolutePath))
-					).toByteBuffer(call++);
+					).toByteBuffer(++call);
 				}				
 			} else {
 				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
