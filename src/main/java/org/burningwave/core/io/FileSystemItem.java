@@ -170,7 +170,7 @@ public class FileSystemItem implements ManagedLogger {
 			for (FileSystemItem fileSystemItem : (filter == null ? getChildren() : findInChildren(filter))) {
 				fileSystemItem.copyTo(file.getAbsolutePath(), filter);
 			}
-			logDebug("Copied folder to " + file.getAbsolutePath());
+			//logDebug("Copied folder to " + file.getAbsolutePath());
 			destination = FileSystemItem.ofPath(file.getAbsolutePath());
 		}
 		return destination;
@@ -481,7 +481,7 @@ public class FileSystemItem implements ManagedLogger {
 					return allChildren;
 				}
 			} else if (isFolder()) {
-				logDebug("Retrieving all children of " + absolutePath.getKey());
+				//logDebug("Retrieving all children of " + absolutePath.getKey());
 				Set<FileSystemItem> children = getChildren();
 				if (children != null) {
 					Set<FileSystemItem> allChildren = ConcurrentHashMap.newKeySet();
@@ -555,8 +555,8 @@ public class FileSystemItem implements ManagedLogger {
 		return refresh(true);
 	}
 	
-	public FileSystemItem refresh(boolean removeFromCache) {
-		reset(removeFromCache);
+	public FileSystemItem refresh(boolean removeLinkedResourcesFromCache) {
+		reset(removeLinkedResourcesFromCache);
 		computeConventionedAbsolutePath();
 		return this;
 	}
@@ -573,10 +573,10 @@ public class FileSystemItem implements ManagedLogger {
 		return reset(true);
 	}
 	
-	public synchronized FileSystemItem reset(boolean removeFromCache) {
+	public synchronized FileSystemItem reset(boolean removeLinkedResourcesFromCache) {
 		if (allChildren != null) {
 			for (FileSystemItem child : allChildren) {
-				child.reset(removeFromCache);
+				child.reset(removeLinkedResourcesFromCache);
 			}
 			allChildren = null;
 			if (children != null) {
@@ -584,14 +584,14 @@ public class FileSystemItem implements ManagedLogger {
 			}			
 		} else if (children != null) {
 			for (FileSystemItem child : children) {
-				child.reset(removeFromCache);
+				child.reset(removeLinkedResourcesFromCache);
 			}
 			children = null;
 		}
 		parentContainer = null;
 		absolutePath.setValue(null);
 		parent = null;
-		if (removeFromCache) {
+		if (removeLinkedResourcesFromCache) {
 			removeLinkedResourcesFromCache(this);
 		}
 		return this;
@@ -782,11 +782,11 @@ public class FileSystemItem implements ManagedLogger {
 				}
 				if (call == 0) {
 					superParent.getAllChildren();
-					return toByteBuffer(call++);
+					return toByteBuffer(++call);
 				} else {
 					return superParent.refresh().findFirstInAllChildren(
 						FileSystemItem.Criteria.forAllFileThat(file -> file.getAbsolutePath().equals(absolutePath))
-					).toByteBuffer(call++);
+					).toByteBuffer(++call);
 				}				
 			} else {
 				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {

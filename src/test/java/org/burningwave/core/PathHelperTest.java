@@ -49,6 +49,26 @@ public class PathHelperTest extends BaseTest {
 	}
 	
 	@Test
+	public void getResourceTestOne() {
+		testNotNull(() ->{ 
+			ComponentSupplier componentSupplier = getComponentSupplier();
+			PathHelper pathHelper = componentSupplier.getPathHelper();
+			return pathHelper.getResource("burningwave.properties");
+		});
+	}
+	
+	@Test
+	public void getResourceAsStringBufferTestOne() {
+		testNotNull(() ->{ 
+			ComponentSupplier componentSupplier = getComponentSupplier();
+			PathHelper pathHelper = componentSupplier.getPathHelper();
+			StringBuffer fileAsString = pathHelper.getResourceAsStringBuffer("burningwave.properties");
+			logDebug(fileAsString.toString());
+			return fileAsString;
+		});
+	}
+	
+	@Test
 	public void getResourceCustomClassPath() {
 		testNotEmpty(() ->{
 			ComponentSupplier componentSupplier = getComponentSupplier();

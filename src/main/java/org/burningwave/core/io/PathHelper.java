@@ -61,6 +61,7 @@ import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
 
+@SuppressWarnings("unchecked")
 public class PathHelper implements Component {
 	
 	public static class Configuration {
@@ -373,13 +374,26 @@ public class PathHelper implements Component {
 	public <T> T getResource(BiConsumer<Collection<T>, FileSystemItem> fileConsumer, String resourceRelativePath) {
 		Collection<T> files = getResources(fileConsumer, resourceRelativePath);
 		if (files.size() > 1) {
-			StringBuffer fileNames = new StringBuffer();
+			Map<String, FileSystemItem> filesFound = new HashMap<>();
+			StringBuffer filesInfo = new StringBuffer();
 			for (T file : files) {
 				if (file instanceof FileSystemItem) {
-					fileNames.append(System.identityHashCode(file) + ": " + ((FileSystemItem)file).getAbsolutePath() + "\n");
+					FileSystemItem fileSystemItem = (FileSystemItem)file;
+					filesFound.put(fileSystemItem.getAbsolutePath(), fileSystemItem);
+					filesInfo.append("\t" + System.identityHashCode(file) + ": " + fileSystemItem.getAbsolutePath() + "\n");
+				} else {
+					throw Throwables.toRuntimeException("Found more than one resource under relative path " + resourceRelativePath);
 				}
 			}
-			throw Throwables.toRuntimeException("Found more than one resource under relative path " + resourceRelativePath + ":\n" + fileNames.toString());
+			if (filesFound.size() > 1) {
+				throw Throwables.toRuntimeException("Found more than one resource under relative path " + resourceRelativePath + ":\n" + filesInfo.toString());
+			} else {
+				FileSystemItem fileSystemItem = FileSystemItem.ofPath(filesFound.keySet().stream().findFirst().get());
+				logWarn("Found more than one resource under relative path " + resourceRelativePath + ":\n" + filesInfo.toString() + "\t" +
+					System.identityHashCode(fileSystemItem) + ": " + fileSystemItem.getAbsolutePath() + "\twill be assumed\n"
+				);
+				return (T)fileSystemItem;
+			}			
 		}
 		return files.stream().findFirst().orElse(null);
 	}

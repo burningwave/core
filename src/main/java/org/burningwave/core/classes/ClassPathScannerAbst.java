@@ -185,7 +185,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 						pathHelper, 
 						searchConfig.getScanFileCriteria().hasNoPredicate() ? 
 							FileSystemItem.Criteria.forClassTypeFiles(
-								config.resolveStringValue(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES)
+								config.resolveStringValue(ClassHunter.Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS, ClassHunter.Configuration.DEFAULT_VALUES)
 							)	
 							: searchConfig.getScanFileCriteria()
 					),

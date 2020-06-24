@@ -51,7 +51,6 @@ public class SearchContext<T> implements Component {
 	PathScannerClassLoader sharedPathMemoryClassLoader;
 	PathScannerClassLoader pathScannerClassLoader;
 	Collection<String> skippedClassNames;
-	Boolean classLoaderHaveBeenUploadedWithSearchConfigPaths;
 	CompletableFuture<Void> searchTask;
 	Collection<T> itemsFound;
 	boolean searchTaskFinished;
@@ -72,9 +71,6 @@ public class SearchContext<T> implements Component {
 		this.pathScannerClassLoader.register(this);
 		this.sharedPathMemoryClassLoader.register(this);
 		this.searchConfig = initContext.getSearchConfig();
-		this.classLoaderHaveBeenUploadedWithSearchConfigPaths = pathScannerClassLoader.compareWithAllLoadedPaths(
-				searchConfig.getPaths(), searchConfig.considerURLClassLoaderPathsAsScanned
-		).getNotContainedPaths().isEmpty();
 	}
 	
 	public static <T> SearchContext<T> create(
@@ -188,15 +184,9 @@ public class SearchContext<T> implements Component {
 				String notFoundClassName = Classes.retrieveName(exc);
 				if (notFoundClassName != null) {
 					if (!skippedClassNames.contains(notFoundClassName)) {
-						if (!this.classLoaderHaveBeenUploadedWithSearchConfigPaths) {
-							synchronized(this.classLoaderHaveBeenUploadedWithSearchConfigPaths) {
-								if (!this.classLoaderHaveBeenUploadedWithSearchConfigPaths) {
-									pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
-										getPathsToBeScanned(), searchConfig.considerURLClassLoaderPathsAsScanned
-									);
-									this.classLoaderHaveBeenUploadedWithSearchConfigPaths = true;
-								}
-							}
+						if (!pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
+							getPathsToBeScanned()
+						).isEmpty()) {
 							return execute(supplier, defaultValueSupplier, classNameSupplier);
 						} else {
 							skippedClassNames.add(classNameSupplier.get());
