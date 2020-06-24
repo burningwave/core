@@ -18,6 +18,7 @@ import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchConfig;
+import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.junit.jupiter.api.Test;
 
@@ -348,6 +349,38 @@ public class ClassHunterTest extends BaseTest {
 			),
 			(result) ->
 				result.getClasses()
+		);
+	}
+	
+	@Test
+	public void findAllSubtypeOfTestNine() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotEmpty(
+			() -> componentSupplier.getClassHunter().loadInCache(
+				SearchConfig.forPaths(
+					componentSupplier.getPathHelper().getMainClassPaths()
+				).by(
+					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass) ||
+						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
+					).useClasses(
+						Closeable.class,
+						Serializable.class
+					)
+				).withScanFileCriteria(
+					FileSystemItem.Criteria.forClassTypeFiles(
+						FileSystemItem.CheckingOption.FOR_NAME).and().allFileThat(fileSystemItem -> 
+							fileSystemItem.getAbsolutePath().contains("/org/")
+					)
+				)
+			).find(),
+			(result) -> result.getClasses(
+				ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
+				).useClasses(
+					Serializable.class
+				)
+			).values()
 		);
 	}
 	
