@@ -259,7 +259,9 @@ public class JavaMemoryCompiler implements Component {
 				throw new UnknownCompilerErrorMessageException(message);
 			}
 			if (fsObjects == null || fsObjects.isEmpty()) {
-				throw Throwables.toRuntimeException("Class or package \"" + classNameAndClassPredicate.getKey() + "\" not found");
+				throw Throwables.toRuntimeException(
+					Optional.ofNullable(classNameAndClassPredicate).map(bag -> "Class or package \"" + bag.getKey() + "\" not found").orElseGet(() -> message)
+				);
 			}
 			fsObjects.forEach((fsObject) -> {
 				if (fsObject.isCompressed()) {					
