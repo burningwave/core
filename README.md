@@ -330,12 +330,12 @@ public class Finder {
         ClassHunter classHunter = componentSupplier.getClassHunter();
         
         CacheableSearchConfig searchConfig = SearchConfig.forPaths(
-            //Here you can add all absolute path you want:
-            //both folders, zip, jar, ear and war will be recursively scanned.
-            //For example you can add: "C:\\Users\\user\\.m2", or a path of
+        //Here you can add all absolute path you want:
+        //both folders, zip, jar, ear and war will be recursively scanned.
+        //For example you can add: "C:\\Users\\user\\.m2", or a path of
 	    //an ear file that contains nested war with nested jar files
-            //With the row below the search will be executed on runtime Classpaths
-            pathHelper.getMainClassPaths()
+        //With the row below the search will be executed on runtime Classpaths
+        pathHelper.getMainClassPaths()
 	    //If you want to scan only one jar or some certain jars you can use, for example,
 	    //this commented line of code instead "pathHelper.getMainClassPaths()":
 	    //pathHelper.getPaths(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
