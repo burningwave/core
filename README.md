@@ -335,6 +335,9 @@ public class Finder {
             //For example you can add: "C:\\Users\\user\\.m2"
             //With the row below the search will be executed on runtime Classpaths
             pathHelper.getMainClassPaths()
+	    //If you want to scan only one jar or some certain jars you can use, for example,
+	    //this commented line of code instead "pathHelper.getMainClassPaths()":
+	    //pathHelper.getPaths(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
         ).by(
             ClassCriteria.create().allThat((cls) -> {
                 return cls.getPackage().getName().matches(".*springframework.*");
