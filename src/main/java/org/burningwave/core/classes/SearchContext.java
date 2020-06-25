@@ -33,6 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,10 +49,11 @@ public class SearchContext<T> implements Component {
 	SearchConfigAbst<?> searchConfig;
 	Map<String, T> itemsFoundFlatMap;
 	Map<String, Map<String, T>> itemsFoundMap;
-	PathScannerClassLoader sharedPathMemoryClassLoader;
+	PathScannerClassLoader sharedPathScannerClassLoader;
 	PathScannerClassLoader pathScannerClassLoader;
 	Collection<String> skippedClassNames;
 	CompletableFuture<Void> searchTask;
+	Collection<String> pathScannerClassLoaderScannedPaths;
 	Collection<T> itemsFound;
 	boolean searchTaskFinished;
 	
@@ -66,10 +68,11 @@ public class SearchContext<T> implements Component {
 		this.itemsFoundFlatMap = new ConcurrentHashMap<>();
 		this.itemsFoundMap = new ConcurrentHashMap<>();
 		this.skippedClassNames = ConcurrentHashMap.newKeySet();
-		this.sharedPathMemoryClassLoader = initContext.getSharedPathMemoryClassLoader();
+		this.pathScannerClassLoaderScannedPaths = new HashSet<>();
+		this.sharedPathScannerClassLoader = initContext.getSharedPathMemoryClassLoader();
 		this.pathScannerClassLoader = initContext.getPathMemoryClassLoader();
 		this.pathScannerClassLoader.register(this);
-		this.sharedPathMemoryClassLoader.register(this);
+		this.sharedPathScannerClassLoader.register(this);
 		this.searchConfig = initContext.getSearchConfig();
 	}
 	
@@ -177,6 +180,10 @@ public class SearchContext<T> implements Component {
 	}
 	
 	<O> O execute(ThrowingSupplier<O, Throwable> supplier, Supplier<O> defaultValueSupplier, Supplier<String> classNameSupplier) {
+		return execute(supplier, defaultValueSupplier, classNameSupplier, false);
+	}
+	
+	<O> O execute(ThrowingSupplier<O, Throwable> supplier, Supplier<O> defaultValueSupplier, Supplier<String> classNameSupplier, boolean isARecursiveCall) {
 		return ThrowingSupplier.get(() -> {
 			try {
 				return supplier.get();
@@ -184,10 +191,21 @@ public class SearchContext<T> implements Component {
 				String notFoundClassName = Classes.retrieveName(exc);
 				if (notFoundClassName != null) {
 					if (!skippedClassNames.contains(notFoundClassName)) {
-						if (!pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
-							getPathsToBeScanned()
-						).isEmpty()) {
-							return execute(supplier, defaultValueSupplier, classNameSupplier);
+						if (!isARecursiveCall) {
+							if (pathScannerClassLoaderScannedPaths.isEmpty()) {
+								synchronized(pathScannerClassLoaderScannedPaths) {
+									if (pathScannerClassLoaderScannedPaths.isEmpty()) {
+										pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
+											getPathsToBeScanned(), true, 
+											searchConfig instanceof CacheableSearchConfig ? 
+												((CacheableSearchConfig)searchConfig).isRefreshCacheEnabled() && pathScannerClassLoaderScannedPaths.isEmpty()
+												: false
+										);
+										pathScannerClassLoaderScannedPaths.addAll(getPathsToBeScanned());
+									}
+								}
+							}
+							return execute(supplier, defaultValueSupplier, classNameSupplier, true);
 						} else {
 							skippedClassNames.add(classNameSupplier.get());
 							skippedClassNames.add(notFoundClassName);
@@ -255,11 +273,11 @@ public class SearchContext<T> implements Component {
 		searchConfig.close();
 		searchConfig = null;
 		pathScannerClassLoader.unregister(this, true);
-		if (sharedPathMemoryClassLoader != null) {
-			sharedPathMemoryClassLoader.unregister(this, true);
+		if (sharedPathScannerClassLoader != null) {
+			sharedPathScannerClassLoader.unregister(this, true);
 		}
 		pathScannerClassLoader = null;
-		sharedPathMemoryClassLoader = null;
+		sharedPathScannerClassLoader = null;
 		skippedClassNames.clear();
 		skippedClassNames = null;
 	}
