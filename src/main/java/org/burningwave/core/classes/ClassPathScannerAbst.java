@@ -169,7 +169,6 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		);
 	}
 	
-	@SuppressWarnings("resource")
 	C createContext(SearchConfigAbst<?> searchConfig) {
 		PathScannerClassLoader sharedClassLoader = getClassHunter().getPathScannerClassLoader();
 		if (searchConfig.useSharedClassLoaderAsParent) {

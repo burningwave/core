@@ -69,8 +69,8 @@ public class SearchContext<T> implements Component {
 		this.itemsFoundMap = new ConcurrentHashMap<>();
 		this.skippedClassNames = ConcurrentHashMap.newKeySet();
 		this.pathScannerClassLoaderScannedPaths = new HashSet<>();
-		this.sharedPathScannerClassLoader = initContext.getSharedPathMemoryClassLoader();
-		this.pathScannerClassLoader = initContext.getPathMemoryClassLoader();
+		this.sharedPathScannerClassLoader = initContext.getSharedPathScannerClassLoader();
+		this.pathScannerClassLoader = initContext.getPathScannerClassLoader();
 		this.pathScannerClassLoader.register(this);
 		this.sharedPathScannerClassLoader.register(this);
 		this.searchConfig = initContext.getSearchConfig();
@@ -285,8 +285,8 @@ public class SearchContext<T> implements Component {
 	
 	static class InitContext extends Context {
 		enum Elements {
-			SHARED_PATH_MEMORY_CLASS_LOADER,
-			PATH_MEMORY_CLASS_LOADER,
+			SHARED_PATH_SCANNER_CLASS_LOADER,
+			PATH_SCANNER_CLASS_LOADER,
 			SEARCH_CONFIG;
 		}
 		
@@ -296,8 +296,8 @@ public class SearchContext<T> implements Component {
 			SearchConfigAbst<?> searchConfig
 		) {
 			super();
-			put(Elements.SHARED_PATH_MEMORY_CLASS_LOADER, sharedPathMemoryClassLoader);
-			put(Elements.PATH_MEMORY_CLASS_LOADER, pathScannerClassLoader);
+			put(Elements.SHARED_PATH_SCANNER_CLASS_LOADER, sharedPathMemoryClassLoader);
+			put(Elements.PATH_SCANNER_CLASS_LOADER, pathScannerClassLoader);
 			put(Elements.SEARCH_CONFIG, searchConfig);			
 		}
 		
@@ -309,12 +309,12 @@ public class SearchContext<T> implements Component {
 			return new InitContext(sharedPathMemoryClassLoader, pathScannerClassLoader, searchConfig);
 		}
 		
-		PathScannerClassLoader getSharedPathMemoryClassLoader() {
-			return get(Elements.SHARED_PATH_MEMORY_CLASS_LOADER);
+		PathScannerClassLoader getSharedPathScannerClassLoader() {
+			return get(Elements.SHARED_PATH_SCANNER_CLASS_LOADER);
 		}
 		
-		PathScannerClassLoader getPathMemoryClassLoader() {
-			return get(Elements.PATH_MEMORY_CLASS_LOADER);
+		PathScannerClassLoader getPathScannerClassLoader() {
+			return get(Elements.PATH_SCANNER_CLASS_LOADER);
 		}
 		
 		
