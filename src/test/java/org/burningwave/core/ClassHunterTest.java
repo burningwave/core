@@ -815,7 +815,7 @@ public class ClassHunterTest extends BaseTest {
 						//If you call this method, you must retrieve the uploaded class in all methods that support this feature like in the point[1]
 						Complex.Data.Item.class
 					)
-				).isolateClassLoader()
+				).useNewIsolatedClassLoader()
 			),
 			(result) ->
 				result.getClasses()
@@ -835,7 +835,7 @@ public class ClassHunterTest extends BaseTest {
 					).useClasses(
 						Serializable.class
 					)
-				).isolateClassLoader()
+				).useNewIsolatedClassLoader()
 			),
 			(result) ->
 				result.getClasses()
@@ -864,7 +864,7 @@ public class ClassHunterTest extends BaseTest {
 						Closeable.class,
 						Serializable.class
 					)
-				).isolateClassLoader()
+				).useNewIsolatedClassLoader()
 			),
 			(result) ->
 				result.getClasses()
@@ -891,7 +891,7 @@ public class ClassHunterTest extends BaseTest {
 						//If you call this method, you must retrieve the uploaded class in all methods that support this feature like in the point[1]
 						AbstractList.class
 					)
-				).isolateClassLoader()
+				).useNewIsolatedClassLoader()
 			),
 			(result) -> result.getClasses()
 		);
@@ -921,7 +921,7 @@ public class ClassHunterTest extends BaseTest {
 						Serializable.class,
 						Object.class
 					)
-				).isolateClassLoader()
+				).useNewIsolatedClassLoader()
 			),
 			(result) ->
 				result.getClasses()
@@ -955,7 +955,7 @@ public class ClassHunterTest extends BaseTest {
 						Serializable.class,
 						Object.class
 					)
-				).isolateClassLoader()
+				).useNewIsolatedClassLoader()
 			),
 			(result) ->
 				result.getClasses()
@@ -992,7 +992,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				).useSharedClassLoaderAsParent(
 					true
-				).isolateClassLoader()
+				).useNewIsolatedClassLoader()
 			),
 			(result) ->
 				result.getClasses(),
@@ -1028,7 +1028,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				).useAsParentClassLoader(
 					Thread.currentThread().getContextClassLoader()
-				).isolateClassLoader()
+				).useNewIsolatedClassLoader()
 			),
 			(result) ->
 				result.getMembersBy(methodCriteria)
@@ -1062,7 +1062,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				).useAsParentClassLoader(
 					Thread.currentThread().getContextClassLoader()
-				).isolateClassLoader()
+				).useNewIsolatedClassLoader()
 			),
 			(result) ->
 				result.getMembersBy(methodCriteria)
@@ -1094,7 +1094,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				).useAsParentClassLoader(
 					Thread.currentThread().getContextClassLoader()
-				).isolateClassLoader()
+				).useNewIsolatedClassLoader()
 			),
 			(result) ->
 				result.getMembersBy(methodCriteria)
@@ -1166,7 +1166,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				).useAsParentClassLoader(
 					Thread.currentThread().getContextClassLoader()
-				).isolateClassLoader()
+				).useNewIsolatedClassLoader()
 			),
 			(result) ->
 				result.getMembersBy(constructorCriteria)
@@ -1201,7 +1201,7 @@ public class ClassHunterTest extends BaseTest {
 					Thread.currentThread().getContextClassLoader()
 				).waitForSearchEnding(
 					false
-				).isolateClassLoader()	
+				).useNewIsolatedClassLoader()	
 			),
 			(result) -> {
 				result.waitForSearchEnding();
@@ -1226,7 +1226,7 @@ public class ClassHunterTest extends BaseTest {
 			).useClasses(
 				Closeable.class
 			)
-		).isolateClassLoader();
+		).useNewIsolatedClassLoader();
 		testNotEmpty(
 			() ->
 				componentSupplier.getClassHunter().findBy(searchConfig),
@@ -1253,7 +1253,7 @@ public class ClassHunterTest extends BaseTest {
 					).useClasses(
 						Closeable.class
 					)
-				).isolateClassLoader()
+				).useNewIsolatedClassLoader()
 			),(result) ->
 				result.getClasses()
 		);
@@ -1272,7 +1272,7 @@ public class ClassHunterTest extends BaseTest {
 						currentScannedClass.getPackage() != null &&
 						currentScannedClass.getPackage().getName().startsWith("org.burningwave")
 					)
-				).isolateClassLoader()
+				).useNewIsolatedClassLoader()
 			),
 			(result) ->
 				result.getClasses(),
@@ -1317,7 +1317,7 @@ public class ClassHunterTest extends BaseTest {
 							return method.getAnnotations() != null && method.getAnnotations().length > 0;
 						})
 					)
-				).isolateClassLoader()
+				).useNewIsolatedClassLoader()
 			),
 			(result) ->
 				result.getClasses()

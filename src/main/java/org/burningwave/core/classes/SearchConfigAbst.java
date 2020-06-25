@@ -129,7 +129,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return (S)this;
 	}
 	
-	public S isolateClassLoader() {
+	public S useNewIsolatedClassLoader() {
 		useSharedClassLoaderAsParent = false;
 		useSharedClassLoaderAsMain = false;		
 		parentClassLoaderForMainClassLoader = null;
