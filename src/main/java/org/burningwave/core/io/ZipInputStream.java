@@ -74,12 +74,10 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 	
 	@Override
 	public IterableZipContainer getParent() {
+		if (conventionedAbsolutePath == null) {
+			getConventionedAbsolutePath();
+		}
 		return parent;
-	}
-
-	@Override
-	public void setParent(IterableZipContainer parent) {
-		this.parent = parent;		
 	}
 	
 	public String getAbsolutePath() {
@@ -90,15 +88,20 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 	@Override
 	public String getConventionedAbsolutePath() {
 		if (conventionedAbsolutePath == null) {
-			if (parent != null) {
-				conventionedAbsolutePath = parent.getConventionedAbsolutePath() + absolutePath.replace(parent.getAbsolutePath() + "/", "");
-			} else {
-				conventionedAbsolutePath = absolutePath;
+			synchronized (this) {
+				if (parent != null) {
+					conventionedAbsolutePath = parent.getConventionedAbsolutePath() + absolutePath.replace(parent.getAbsolutePath() + "/", "");
+				} else {
+					FileSystemItem zipFis = FileSystemItem.ofPath(absolutePath);
+					if (zipFis.getParentContainer().isArchive()) {
+						parent = IterableZipContainer.create(zipFis.getParentContainer().getAbsolutePath());
+						return getConventionedAbsolutePath();
+					} else {
+						conventionedAbsolutePath = absolutePath;
+					}
+				}
+				conventionedAbsolutePath += IterableZipContainer.ZIP_PATH_SEPARATOR;
 			}
-			conventionedAbsolutePath += IterableZipContainer.ZIP_PATH_SEPARATOR;
-		}
-		if (conventionedAbsolutePath == null) {
-			conventionedAbsolutePath = null;
 		}
 		return conventionedAbsolutePath;
 	}

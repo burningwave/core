@@ -4,9 +4,21 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("unused")
+
 public class ClassesTest extends BaseTest {
 
-
+	@Test
+	public void getDeclaredMethodTestOne() {
+		testNotNull(() ->
+			Classes.getDeclaredMethod(Classes.getClass(), method -> method.getName().equals("setAccessible"))
+		);
+	}
+	
+	@Test
+	public void getDeclaredConstructorTestOne() {
+		testNotNull(() ->
+			Classes.getDeclaredConstructor(Classes.getClass(), ctor -> ctor.getParameterCount() == 0)
+		);
+	}
 	
 }

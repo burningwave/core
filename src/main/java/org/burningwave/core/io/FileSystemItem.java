@@ -681,7 +681,7 @@ public class FileSystemItem implements ManagedLogger {
 		try {
 			if (zIS == null) {
 				Cache.pathForContents.remove(zipInputStreamName);
-				zIS = IterableZipContainer.create(zipInputStreamName, FileSystemItem.ofPath(zipInputStreamName).toByteBuffer());
+				zIS = IterableZipContainer.create(zipInputStreamName);
 				if (zIS == null) {
 					throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
 				} else {
@@ -769,7 +769,7 @@ public class FileSystemItem implements ManagedLogger {
 	
 	private ByteBuffer toByteBuffer(int call) {
 		String absolutePath = getAbsolutePath();
-		ByteBuffer resource = Cache.pathForContents.getOrUploadIfAbsent(absolutePath, null); 
+		ByteBuffer resource = Cache.pathForContents.get(absolutePath); 
 		if (resource != null) {
 			return resource;
 		}

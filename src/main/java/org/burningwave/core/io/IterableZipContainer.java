@@ -54,12 +54,13 @@ public interface IterableZipContainer extends Component {
 	}
 	
 	public static IterableZipContainer create(Entry zipEntry) {
-		IterableZipContainer zipContainer = create(zipEntry.getAbsolutePath(), zipEntry.toByteBuffer());
-		IterableZipContainer parentContainer = zipEntry.getParentContainer().duplicate();
-		zipContainer.setParent(parentContainer);
-		return zipContainer;
+		return create(zipEntry.getAbsolutePath(), zipEntry.toByteBuffer());
 	}
-
+	
+	public static IterableZipContainer create(String absolutePath) {
+		return create(absolutePath, FileSystemItem.ofPath(absolutePath).toByteBuffer());
+	}
+	
 	@SuppressWarnings("resource")
 	public static IterableZipContainer create(String absolutePath, ByteBuffer bytes) {
 		if (Streams.isJModArchive(bytes)) {
@@ -136,8 +137,6 @@ public interface IterableZipContainer extends Component {
 	
 	public IterableZipContainer getParent();
 	
-	public void setParent(IterableZipContainer parent);
-	
 	public ByteBuffer toByteBuffer();
 	
 	public <Z extends Entry> Z getNextEntry();
@@ -145,11 +144,7 @@ public interface IterableZipContainer extends Component {
 	public IterableZipContainer.Entry getNextEntry(Predicate<IterableZipContainer.Entry> loadZipEntryData);
 	
 	public default IterableZipContainer duplicate() {
-		IterableZipContainer zipContainer = IterableZipContainer.create(getAbsolutePath(), toByteBuffer());
-		if (getParent() != null) {
-			zipContainer.setParent(getParent().duplicate());
-		}
-		return zipContainer;
+		return IterableZipContainer.create(getAbsolutePath(), toByteBuffer());
 	}
 	
 	public Entry getCurrentZipEntry();

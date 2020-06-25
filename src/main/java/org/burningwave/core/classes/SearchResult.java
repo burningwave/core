@@ -67,18 +67,11 @@ public class SearchResult<E> implements Component {
 	}
 	
 	public <C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends Criteria.TestContext<E, C>> Map.Entry<String, E> getUnique(C criteria) {
-		Map<String, E> itemsFound = new HashMap<>();
-		try (C criteriaCopy = createCriteriaCopy(criteria)) {
-			getItemsFoundFlatMap().forEach((path, javaClass) -> {
-				if (criteriaCopy.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(javaClass).getResult()) {
-					itemsFound.put(path, javaClass);
-				}
-			});
-			if (itemsFound.size() > 1) {
-				throw Throwables.toRuntimeException("Found more than one element");
-			}
-			return itemsFound.entrySet().stream().findFirst().orElseGet(() -> null);
+		Map<String, E> itemsFound = getClasses(criteria);
+		if (itemsFound.size() > 1) {
+			throw Throwables.toRuntimeException("Found more than one element");
 		}
+		return itemsFound.entrySet().stream().findFirst().orElseGet(() -> null);
 	}
 	
 	<C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends Criteria.TestContext<E, C>> C createCriteriaCopy(C criteria) {
