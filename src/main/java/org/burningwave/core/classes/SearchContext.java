@@ -198,7 +198,7 @@ public class SearchContext<T> implements Component {
 										pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
 											getPathsToBeScanned(), true, 
 											searchConfig instanceof CacheableSearchConfig ? 
-												((CacheableSearchConfig)searchConfig).isRefreshCacheEnabled() && pathScannerClassLoaderScannedPaths.isEmpty()
+												searchConfig.isCheckForAddedClassesEnabled() && pathScannerClassLoaderScannedPaths.isEmpty()
 												: false
 										);
 										pathScannerClassLoaderScannedPaths.addAll(getPathsToBeScanned());

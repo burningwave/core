@@ -32,15 +32,14 @@ import java.util.Collection;
 import java.util.HashSet;
 
 public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfig> {
-	boolean refreshCacheEnabled;
 	
 	public CacheableSearchConfig refreshCache() {
-		this.refreshCacheEnabled = true;
+		this.checkForAddedClasses = true;
 		return this;
 	}
 	
 	boolean isRefreshCacheEnabled() {
-		return this.refreshCacheEnabled;
+		return this.checkForAddedClasses;
 	}
 	
 	@SafeVarargs
@@ -70,8 +69,6 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 	
 	@Override
 	public CacheableSearchConfig copyTo(CacheableSearchConfig destConfig) {
-		super.copyTo(destConfig);
-		destConfig.refreshCacheEnabled = this.refreshCacheEnabled;
-		return destConfig;
+		return super.copyTo(destConfig);
 	}
 }
