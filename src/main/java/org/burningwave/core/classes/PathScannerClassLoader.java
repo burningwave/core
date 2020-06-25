@@ -87,16 +87,16 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		return scanPathsAndAddAllByteCodesFound(paths, considerURLClassLoaderPathsAsLoadedPaths, false);
 	}
 	
-	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths, boolean refreshCache) {
+	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths, boolean checkForNewClasses) {
 		Collection<String> scannedPaths = new HashSet<>();
 		if (!isClosed) {
 			for (String path : paths) {
 				if (!isClosed) {
-					if (!hasBeenLoaded(path, considerURLClassLoaderPathsAsLoadedPaths)) {
+					if (checkForNewClasses || !hasBeenLoaded(path, considerURLClassLoaderPathsAsLoadedPaths)) {
 						synchronized(mutexManager.getMutex(path)) {
-							if (!hasBeenLoaded(path, considerURLClassLoaderPathsAsLoadedPaths)) {
+							if (checkForNewClasses || !hasBeenLoaded(path, considerURLClassLoaderPathsAsLoadedPaths)) {
 								FileSystemItem pathFIS = FileSystemItem.ofPath(path);
-								if (refreshCache) {
+								if (checkForNewClasses) {
 									pathFIS.refresh();
 								}
 								for (FileSystemItem child : pathFIS.getAllChildren()) {
