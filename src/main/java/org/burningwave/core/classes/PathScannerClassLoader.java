@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 
 import java.io.InputStream;
@@ -60,7 +61,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		public static class Key {
 			
 			public final static String PARENT_CLASS_LOADER = "path-scanner-class-loader.parent";
-			public final static String SEARCH_CONFIG_CHECK_FILE_OPTIONS = "path-scanner-class-loader.search-config.check-file-option";
+			public final static String SEARCH_CONFIG_CHECK_FILE_OPTION = "path-scanner-class-loader.search-config.check-file-option";
 			
 		}
 		
@@ -78,6 +79,8 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			DEFAULT_VALUES.put(Configuration.Key.PARENT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, PathScannerClassLoader.class.getPackage().getName() + ".PathScannerClassLoaderRetriever");
 			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
 			DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
+			DEFAULT_VALUES.put(Key.SEARCH_CONFIG_CHECK_FILE_OPTION, FileSystemItem.CheckingOption.FOR_NAME.getLabel());
+			
 		}
 	}
 	
@@ -99,7 +102,13 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	}
 	
 	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper) {
-		return new PathScannerClassLoader(parentClassLoader, pathHelper, FileSystemItem.Criteria.forClassTypeFiles(FileSystemItem.CheckingOption.FOR_NAME));
+		return new PathScannerClassLoader(parentClassLoader, pathHelper, FileSystemItem.Criteria.forClassTypeFiles(
+			IterableObjectHelper.resolveStringValue(
+					Configuration.DEFAULT_VALUES,
+					Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION
+				)
+			)
+		);
 	}
 	
 	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, FileSystemItem.Criteria scanFileCriteria) {

@@ -75,7 +75,6 @@ public class SearchContext<T> implements Component {
 		this.pathScannerClassLoader.register(this);
 		this.sharedPathScannerClassLoader.register(this);
 		this.sharedPathScannerClassLoader.unregister(searchConfig, true);
-		
 	}
 	
 	public static <T> SearchContext<T> create(

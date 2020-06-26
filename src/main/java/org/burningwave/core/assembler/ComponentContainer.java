@@ -62,6 +62,7 @@ import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.PathScannerClassLoader;
+import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
@@ -220,7 +221,12 @@ public class ComponentContainer implements ComponentSupplier {
 					retrieveFromConfig(
 						PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
 						PathScannerClassLoader.Configuration.DEFAULT_VALUES
-					), getPathHelper()
+					), getPathHelper(),
+					FileSystemItem.Criteria.forClassTypeFiles(
+						config.resolveStringValue(
+							PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION
+						)
+					)
 				);
 				classLoader.register(this);
 				return classLoader;
@@ -319,7 +325,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	
 	private <T> T retrieveFromConfig(String configKey, Map<String, Object> defaultValues) {
-		T object = config.resolveObjectValue(configKey);
+		T object = config.resolveObjectValue(configKey, defaultValues);
 		if (object instanceof String) {
 			return getCodeExecutor().execute(
 				ExecuteConfig.fromDefaultProperties()

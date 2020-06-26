@@ -55,7 +55,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		public static class Key {
 			
 			public final static String DEFAULT_PATH_SCANNER_CLASS_LOADER = "class-hunter.default-path-scanner-class-loader";
-			public final static String PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "class-hunter.path-scanner-class-loader.search-config.check-file-option";
+			public final static String PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "class-hunter.new-isolated-path-scanner-class-loader.search-config.check-file-option";
 			
 		}
 		
@@ -74,7 +74,8 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
 			DEFAULT_VALUES.put(
 				Key.DEFAULT_PATH_SCANNER_CLASS_LOADER, 
-				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) -> componentSupplier.getPathScannerClassLoader()
+				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) -> 
+					componentSupplier.getPathScannerClassLoader()
 			);
 			DEFAULT_VALUES.put(
 				Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,

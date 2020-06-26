@@ -88,7 +88,8 @@ public class ClassFactory implements Component {
 			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, "(Supplier<ClassLoader>)() -> ((ComponentSupplier)parameter[0]).getClassHunter().getPathScannerClassLoader()");
 			DEFAULT_VALUES.put(
 				Key.DEFAULT_CLASS_LOADER,
-				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) -> componentSupplier.getPathScannerClassLoader()
+				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) ->
+					componentSupplier.getPathScannerClassLoader()
 			);
 
 			DEFAULT_VALUES.put(
