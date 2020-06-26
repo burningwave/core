@@ -655,8 +655,14 @@ Here an example of a **burningwave.properties** file with all configurable prope
 ```properties
 class-factory.byte-code-hunter.search-config.check-file-option=\
     checkFileName&checkFileSignature
-class-factory.default-class-loader=\
-    Thread.currentThread().getContextClassLoader()
+class-factory.default-class-loader.parent=Thread.currentThread().getContextClassLoader()
+class-factory.default-class-loader=PathScannerClassLoader.create(\
+    ${class-factory.default-class-loader.parent},\
+    ((ComponentSupplier)parameter[0]).getPathHelper(),\
+    FileSystemItem.Criteria.forClassTypeFiles(\
+        FileSystemItem.CheckingOption.FOR_NAME\
+    )\
+)
 class-factory.default-class-loader.imports=\
     ${class-factory.default-class-loader.additional-imports};\
     org.burningwave.core.assembler.ComponentSupplier;\
