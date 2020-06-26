@@ -822,7 +822,8 @@ public class FileSystemItem implements ManagedLogger {
 				":" + prefix;
 		}
 		String uRLToRet = url.replace(IterableZipContainer.ZIP_PATH_SEPARATOR, "!/");
-		url = ThrowingSupplier.get(() -> URLEncoder.encode(uRLToRet, StandardCharsets.UTF_8.name())).replace("%3A", ":").replace("%21", "!").replace("%2F", "/");
+		url = ThrowingSupplier.get(() -> URLEncoder.encode(uRLToRet, StandardCharsets.UTF_8.name()))
+			.replace("%3A", ":").replace("%21", "!").replace("%2F", "/");
 		url = prefix + url;
 		return url;
 	}

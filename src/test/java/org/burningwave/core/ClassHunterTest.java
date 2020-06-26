@@ -65,7 +65,7 @@ public class ClassHunterTest extends BaseTest {
 				while(cls.getClassLoader() == null || !(cls.getClassLoader() instanceof PathScannerClassLoader)) {
 					cls = itr.next();
 				}
-				return ((PathScannerClassLoader)cls.getClassLoader()).getResourceAsStream("/META-INF/MANIFEST.MF");
+				return ((PathScannerClassLoader)cls.getClassLoader()).getResourceAsStream("META-INF/MANIFEST.MF");
 				
 			}
 		);
@@ -88,7 +88,7 @@ public class ClassHunterTest extends BaseTest {
 				while(cls.getClassLoader() == null || !(cls.getClassLoader() instanceof PathScannerClassLoader)) {
 					cls = itr.next();
 				}
-				return ((PathScannerClassLoader)cls.getClassLoader()).getResourcesAsStream("/META-INF/MANIFEST.MF").values();
+				return ((PathScannerClassLoader)cls.getClassLoader()).getResourcesAsStream("META-INF/MANIFEST.MF").values();
 				
 			}
 		);
