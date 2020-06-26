@@ -88,7 +88,8 @@ public class ClassFactory implements Component {
 			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, "(Supplier<ClassLoader>)() -> ((ComponentSupplier)parameter[0]).getClassHunter().getPathScannerClassLoader()");
 			DEFAULT_VALUES.put(
 				Key.DEFAULT_CLASS_LOADER,
-				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) -> componentSupplier.getClassHunter().getPathScannerClassLoader()
+				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) ->
+					componentSupplier.getPathScannerClassLoader()
 			);
 
 			DEFAULT_VALUES.put(
@@ -120,7 +121,7 @@ public class ClassFactory implements Component {
 		Supplier<ClassPathHunter> classPathHunterSupplier,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
-		Object defaultClassLoaderSupplier,
+		Object defaultClassLoaderOrDefaultClassLoaderSupplier,
 		Properties config
 	) {	
 		this.byteCodeHunter = byteCodeHunter;
@@ -128,7 +129,7 @@ public class ClassFactory implements Component {
 		this.javaMemoryCompiler = javaMemoryCompiler;
 		this.pathHelper = pathHelper;
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
-		this.defaultClassLoaderOrDefaultClassLoaderSupplier = defaultClassLoaderSupplier;
+		this.defaultClassLoaderOrDefaultClassLoaderSupplier = defaultClassLoaderOrDefaultClassLoaderSupplier;
 		this.config = config;
 		listenTo(config);
 	}
@@ -178,7 +179,7 @@ public class ClassFactory implements Component {
 			synchronized (this) {
 				if (defaultClassLoader == null) {
 					if (defaultClassLoaderOrDefaultClassLoaderSupplier instanceof Supplier) {
-						Object classLoaderOrClassLoaderSupplier = ((Supplier<?>)defaultClassLoaderOrDefaultClassLoaderSupplier).get();
+						Object classLoaderOrClassLoaderSupplier = ((Supplier<?>)this.defaultClassLoaderOrDefaultClassLoaderSupplier).get();
 						if (classLoaderOrClassLoaderSupplier instanceof ClassLoader) {
 							this.defaultClassLoader = (ClassLoader)classLoaderOrClassLoaderSupplier;
 							if (defaultClassLoader instanceof MemoryClassLoader) {
@@ -290,7 +291,7 @@ public class ClassFactory implements Component {
 					);
 					if (classLoader instanceof PathScannerClassLoader) {
 						((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(
-							Arrays.asList(compileResult.getClassPath().getAbsolutePath()), true, true
+							Arrays.asList(compileResult.getClassPath().getAbsolutePath()), true
 						);
 					}
 					return new ClassRetriever(classLoaderSupplierForClassRetriever) {

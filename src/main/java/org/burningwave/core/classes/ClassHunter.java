@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -46,15 +47,15 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
-
+@SuppressWarnings("unchecked")
 public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, ClassHunter.SearchContext, ClassHunter.SearchResult> {
 	
 	public static class Configuration {
 		
 		public static class Key {
 			
-			public final static String PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER = "class-hunter.path-scanner-class-loader.parent";
-			public final static String PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "class-hunter.path-scanner-class-loader.search-config.check-file-option";
+			public final static String DEFAULT_PATH_SCANNER_CLASS_LOADER = "class-hunter.default-path-scanner-class-loader";
+			public final static String PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "class-hunter.new-isolated-path-scanner-class-loader.search-config.check-file-option";
 			
 		}
 		
@@ -62,16 +63,20 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		
 		static {
 			DEFAULT_VALUES = new HashMap<>();
-			DEFAULT_VALUES.put(Configuration.Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX,
-				"${"+ Configuration.Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER + ".additional-imports}" +  ";" +
+			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX,
+				"${"+ Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + ".additional-imports}" +  ";" +
 				ComponentSupplier.class.getName() + ";" +
 				FileSystemItem.class.getName() + ";" + 
 				PathScannerClassLoader.class.getName() + ";" +
 				Supplier.class.getName() + ";"
 			);
-			DEFAULT_VALUES.put(Configuration.Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, ClassHunter.class.getPackage().getName() + ".ParentClassLoaderRetrieverForPathScannerClassLoaderOfClassHunter");
+			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, ClassHunter.class.getPackage().getName() + ".DefaultPathScannerClassLoaderRetrieverForClassHunter");
 			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
-			DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
+			DEFAULT_VALUES.put(
+				Key.DEFAULT_PATH_SCANNER_CLASS_LOADER, 
+				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) -> 
+					componentSupplier.getPathScannerClassLoader()
+			);
 			DEFAULT_VALUES.put(
 				Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 				"${" + ClassPathScannerAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
@@ -79,15 +84,14 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		}
 	}
 	
-	
-	Supplier<PathScannerClassLoader> pathScannerClassLoaderSupplier;
-	
-	PathScannerClassLoader pathScannerClassLoader;
+	private Supplier<PathScannerClassLoader> defaultPathScannerClassLoaderSupplier;
+	private Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier;
+	private PathScannerClassLoader defaultPathScannerClassLoader;
 	
 	ClassHunter(
 		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
-		ClassLoader parentClassLoader,
+		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 		Properties config
 	) {
 		super(
@@ -99,15 +103,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			(context) -> new ClassHunter.SearchResult(context),
 			config
 		);
-		pathScannerClassLoaderSupplier = () ->
-			PathScannerClassLoader.create(
-				parentClassLoader, pathHelper,
-				FileSystemItem.Criteria.forClassTypeFiles(
-					config.resolveStringValue(Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-						Configuration.DEFAULT_VALUES
-					)
-				)
-			);
+		this.defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier = defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier;
 	}
 	
 	
@@ -115,25 +111,61 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	public static ClassHunter create(
 		Supplier<ClassHunter> classHunterSupplier, 
 		PathHelper pathHelper,
-		ClassLoader parentClassLoader,
+		Object defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier,
 		Properties config
 	) {
 		return new ClassHunter(
-			classHunterSupplier, pathHelper, parentClassLoader, config
+			classHunterSupplier, pathHelper, defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier, config
 		);
 	}
 	
-	public PathScannerClassLoader getPathScannerClassLoader() {
-		if (pathScannerClassLoader == null) {
+	PathScannerClassLoader getDefaultPathScannerClassLoader(Object client) {
+		if (defaultPathScannerClassLoaderSupplier != null) {
+			PathScannerClassLoader classLoader = defaultPathScannerClassLoaderSupplier.get();
+			if (defaultPathScannerClassLoader != classLoader) {
+				synchronized(classLoader) {
+					if (defaultPathScannerClassLoader != classLoader) {
+						PathScannerClassLoader oldClassLoader = this.defaultPathScannerClassLoader;
+						if (oldClassLoader != null) {
+							oldClassLoader.unregister(this, true);
+						}
+						if (!classLoader.register(this)) {
+							classLoader = getDefaultPathScannerClassLoader(client);
+						} else {
+							classLoader.register(client);
+						}
+						this.defaultPathScannerClassLoader = classLoader;
+					}
+				}
+			}
+			return classLoader;
+		}
+		if (defaultPathScannerClassLoader == null) {
 			synchronized (this) {
-				if (pathScannerClassLoader == null) {
-					pathScannerClassLoader = pathScannerClassLoaderSupplier.get();
-					pathScannerClassLoader.register(this);
+				if (defaultPathScannerClassLoader == null) {
+					if (defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier instanceof Supplier) {
+						Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier =
+							((Supplier<?>)this.defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier).get();
+						if (defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier instanceof PathScannerClassLoader) {
+							this.defaultPathScannerClassLoader = (PathScannerClassLoader)defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier;
+							((MemoryClassLoader)defaultPathScannerClassLoader).register(this);
+							((MemoryClassLoader)defaultPathScannerClassLoader).register(client);
+							return defaultPathScannerClassLoader;
+						} else if (defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier instanceof Supplier) {
+							this.defaultPathScannerClassLoaderSupplier = (Supplier<PathScannerClassLoader>) defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier;
+							return getDefaultPathScannerClassLoader(client);
+						}
+					}
+				} else { 
+					return defaultPathScannerClassLoader;
 				}
 			}
 		}
-		return pathScannerClassLoader;
+		return defaultPathScannerClassLoader;
 	}
+	
+	
+	
 	
 	@Override
 	public CacheScanner<Class<?>, SearchResult> loadInCache(CacheableSearchConfig searchConfig) {
@@ -265,8 +297,6 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			return context.getItemsFoundFlatMap();
 		}
 		
-	
-		@SuppressWarnings("unchecked")
 		public <M extends Member, C extends MemberCriteria<M, C, T>, T extends Criteria.TestContext<M, C>> Collection<Member> getMembersBy(C criteria) {
 			Collection<Member> membersFoundByCriteria = getMembersFlatMap().get(criteria);
 			if (membersFoundByCriteria != null && membersFoundByCriteria.size() > 0) {
@@ -291,17 +321,17 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	@Override
 	public void clearCache() {
 		super.clearCache();
-		PathScannerClassLoader pathScannerClassLoader = this.pathScannerClassLoader;
+		PathScannerClassLoader pathScannerClassLoader = this.defaultPathScannerClassLoader;
 		if (pathScannerClassLoader != null) {
 			pathScannerClassLoader.unregister(this, true);
-			this.pathScannerClassLoader = null;
+			this.defaultPathScannerClassLoader = null;
 		}
 	}
 	
 	@Override
 	public void close() {
 		super.close();
-		pathScannerClassLoader = null;
+		defaultPathScannerClassLoader = null;
 	}
 
 }

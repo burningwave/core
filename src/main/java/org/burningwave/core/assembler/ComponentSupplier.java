@@ -38,6 +38,7 @@ import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
+import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.io.PathHelper;
 
 public interface ComponentSupplier extends Component {
@@ -59,6 +60,8 @@ public interface ComponentSupplier extends Component {
 	public ClassHunter getClassHunter();
 
 	public ClassPathHunter getClassPathHunter();
+	
+	public PathScannerClassLoader getPathScannerClassLoader();
 
 	public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
 
@@ -66,14 +69,14 @@ public interface ComponentSupplier extends Component {
 		
 	public PathHelper getPathHelper();
 	
+	public void removePathScannerClassLoader();
+	
 	public default void clearHuntersCache() {
 		getClassHunter().clearCache();
 		getClassPathHunter().clearCache();
 		getByteCodeHunter().clearCache();
 	}
 	
-	public default void clearCache() {
-		clearHuntersCache();
-	}
+	public void clearCache();
 	
 }

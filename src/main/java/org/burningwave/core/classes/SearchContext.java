@@ -71,9 +71,10 @@ public class SearchContext<T> implements Component {
 		this.pathScannerClassLoaderScannedPaths = new HashSet<>();
 		this.sharedPathScannerClassLoader = initContext.getSharedPathScannerClassLoader();
 		this.pathScannerClassLoader = initContext.getPathScannerClassLoader();
+		this.searchConfig = initContext.getSearchConfig();
 		this.pathScannerClassLoader.register(this);
 		this.sharedPathScannerClassLoader.register(this);
-		this.searchConfig = initContext.getSearchConfig();
+		this.sharedPathScannerClassLoader.unregister(searchConfig, true);
 	}
 	
 	public static <T> SearchContext<T> create(
@@ -196,10 +197,8 @@ public class SearchContext<T> implements Component {
 								synchronized(pathScannerClassLoaderScannedPaths) {
 									if (pathScannerClassLoaderScannedPaths.isEmpty()) {
 										pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
-											getPathsToBeScanned(), true, 
-											searchConfig instanceof CacheableSearchConfig ? 
-												searchConfig.isCheckForAddedClassesEnabled() && pathScannerClassLoaderScannedPaths.isEmpty()
-												: false
+											getPathsToBeScanned(),
+											searchConfig.isCheckForAddedClassesEnabled() && pathScannerClassLoaderScannedPaths.isEmpty()
 										);
 										pathScannerClassLoaderScannedPaths.addAll(getPathsToBeScanned());
 									}

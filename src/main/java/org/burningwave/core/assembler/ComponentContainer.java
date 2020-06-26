@@ -61,6 +61,8 @@ import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
+import org.burningwave.core.classes.PathScannerClassLoader;
+import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
@@ -129,7 +131,7 @@ public class ComponentContainer implements ComponentSupplier {
 		defaultProperties.putAll(ClassPathScannerAbst.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassPathScannerWithCachingSupport.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
-		
+		defaultProperties.putAll(PathScannerClassLoader.Configuration.DEFAULT_VALUES);
 				
 		config.putAll(GlobalProperties);
 		Optional.ofNullable(propertySupplier.get()).ifPresent(customConfig -> config.putAll(customConfig));
@@ -213,6 +215,26 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	@Override
+	public PathScannerClassLoader getPathScannerClassLoader() {
+		return getOrCreate(PathScannerClassLoader.class, () -> {
+				PathScannerClassLoader classLoader = PathScannerClassLoader.create(
+					retrieveFromConfig(
+						PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
+						PathScannerClassLoader.Configuration.DEFAULT_VALUES
+					), getPathHelper(),
+					FileSystemItem.Criteria.forClassTypeFiles(
+						config.resolveStringValue(
+							PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION
+						)
+					)
+				);
+				classLoader.register(this);
+				return classLoader;
+			}
+		);
+	}
+	
+	@Override
 	public ClassFactory getClassFactory() {
 		return getOrCreate(ClassFactory.class, () -> 
 			ClassFactory.create(
@@ -253,10 +275,7 @@ public class ComponentContainer implements ComponentSupplier {
 			return ClassHunter.create(
 				() -> getClassHunter(),
 				getPathHelper(),
-				retrieveFromConfig(
-					ClassHunter.Configuration.Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER,
-					ClassHunter.Configuration.DEFAULT_VALUES
-				),
+				(Supplier<?>)() -> retrieveFromConfig(ClassHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER, ClassHunter.Configuration.DEFAULT_VALUES),
 				config
 			);
 		});
@@ -306,7 +325,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	
 	private <T> T retrieveFromConfig(String configKey, Map<String, Object> defaultValues) {
-		T object = config.resolveObjectValue(configKey);
+		T object = config.resolveObjectValue(configKey, defaultValues);
 		if (object instanceof String) {
 			return getCodeExecutor().execute(
 				ExecuteConfig.fromDefaultProperties()
@@ -358,6 +377,21 @@ public class ComponentContainer implements ComponentSupplier {
 			componentContainer.clearCache();
 		}
 		Cache.clear();
+	}
+	
+	@Override
+	public void clearCache() {
+		clearHuntersCache();
+		removePathScannerClassLoader();
+	}
+	
+	public void removePathScannerClassLoader() {
+		synchronized(components) {
+			PathScannerClassLoader classLoader = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
+			if (classLoader != null) {
+				classLoader.unregister(this, true);
+			}
+		}
 	}
 	
 	private static class LazyHolder {

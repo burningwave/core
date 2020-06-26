@@ -445,7 +445,7 @@ public class ClassHunterTest extends BaseTest {
 						BigDecimal.class,
 						Object.class
 					)
-				).useSharedClassLoaderAsParent(
+				).useDefaultPathScannerClassLoaderAsParent(
 					true
 				)
 			),
@@ -990,7 +990,7 @@ public class ClassHunterTest extends BaseTest {
 						BigDecimal.class,
 						Object.class
 					)
-				).useSharedClassLoaderAsParent(
+				).useDefaultPathScannerClassLoaderAsParent(
 					true
 				).useNewIsolatedClassLoader()
 			),

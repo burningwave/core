@@ -66,7 +66,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			);
 			DEFAULT_VALUES.put(
 				Key.DEFAULT_CHECK_FILE_OPTIONS,
-				FileSystemItem.CheckingOption.FOR_NAME.getLabel()
+				"${" + PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION + "}"
 			);
 		}
 	}
@@ -170,21 +170,24 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 	
 	C createContext(SearchConfigAbst<?> searchConfig) {
-		PathScannerClassLoader sharedClassLoader = getClassHunter().getPathScannerClassLoader();
-		if (searchConfig.useSharedClassLoaderAsParent) {
-			searchConfig.parentClassLoaderForMainClassLoader = sharedClassLoader;
+		PathScannerClassLoader defaultPathScannerClassLoader = getClassHunter().getDefaultPathScannerClassLoader(searchConfig);
+		if (searchConfig.useDefaultPathScannerClassLoaderAsParent) {
+			searchConfig.parentClassLoaderForPathScannerClassLoader = defaultPathScannerClassLoader;
 		}
 		C context = contextSupplier.apply(
 			InitContext.create(
-				sharedClassLoader,
-				searchConfig.useSharedClassLoaderAsMain ?
-					sharedClassLoader :
+				defaultPathScannerClassLoader,
+				searchConfig.useDefaultPathScannerClassLoader ?
+					defaultPathScannerClassLoader :
 					PathScannerClassLoader.create(
-						searchConfig.parentClassLoaderForMainClassLoader, 
+						searchConfig.parentClassLoaderForPathScannerClassLoader, 
 						pathHelper, 
 						searchConfig.getScanFileCriteria().hasNoPredicate() ? 
 							FileSystemItem.Criteria.forClassTypeFiles(
-								config.resolveStringValue(ClassHunter.Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS, ClassHunter.Configuration.DEFAULT_VALUES)
+								config.resolveStringValue(
+									ClassHunter.Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS, 
+									ClassHunter.Configuration.DEFAULT_VALUES
+								)
 							)	
 							: searchConfig.getScanFileCriteria()
 					),

@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 
 import java.io.InputStream;
@@ -40,7 +41,9 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
+import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.concurrent.Mutex;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
@@ -53,6 +56,33 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	PathHelper pathHelper;
 	FileSystemItem.Criteria scanFileCriteriaAndConsumer;
 	Mutex.Manager mutexManager;
+	
+	public static class Configuration {
+		public static class Key {
+			
+			public final static String PARENT_CLASS_LOADER = "path-scanner-class-loader.parent";
+			public final static String SEARCH_CONFIG_CHECK_FILE_OPTION = "path-scanner-class-loader.search-config.check-file-option";
+			
+		}
+		
+		public final static Map<String, Object> DEFAULT_VALUES;
+		
+		static {
+			DEFAULT_VALUES = new HashMap<>();
+			DEFAULT_VALUES.put(Configuration.Key.PARENT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX,
+				"${"+ Configuration.Key.PARENT_CLASS_LOADER + ".additional-imports}" +  ";" +
+				ComponentSupplier.class.getName() + ";" +
+				FileSystemItem.class.getName() + ";" + 
+				PathScannerClassLoader.class.getName() + ";" +
+				Supplier.class.getName() + ";"
+			);
+			DEFAULT_VALUES.put(Configuration.Key.PARENT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, PathScannerClassLoader.class.getPackage().getName() + ".PathScannerClassLoaderRetriever");
+			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
+			DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
+			DEFAULT_VALUES.put(Key.SEARCH_CONFIG_CHECK_FILE_OPTION, FileSystemItem.CheckingOption.FOR_NAME.getLabel());
+			
+		}
+	}
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -72,7 +102,13 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	}
 	
 	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper) {
-		return new PathScannerClassLoader(parentClassLoader, pathHelper, FileSystemItem.Criteria.forClassTypeFiles(FileSystemItem.CheckingOption.FOR_NAME));
+		return new PathScannerClassLoader(parentClassLoader, pathHelper, FileSystemItem.Criteria.forClassTypeFiles(
+			IterableObjectHelper.resolveStringValue(
+					Configuration.DEFAULT_VALUES,
+					Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION
+				)
+			)
+		);
 	}
 	
 	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, FileSystemItem.Criteria scanFileCriteria) {
@@ -80,21 +116,17 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	}
 	
 	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths) {
-		return scanPathsAndAddAllByteCodesFound(paths, true, false);
+		return scanPathsAndAddAllByteCodesFound(paths, false);
 	}
 	
-	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths) {
-		return scanPathsAndAddAllByteCodesFound(paths, considerURLClassLoaderPathsAsLoadedPaths, false);
-	}
-	
-	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths, boolean checkForAddedClasses) {
+	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean checkForAddedClasses) {
 		Collection<String> scannedPaths = new HashSet<>();
 		if (!isClosed) {
 			for (String path : paths) {
 				if (!isClosed) {
-					if (checkForAddedClasses || !hasBeenLoaded(path, considerURLClassLoaderPathsAsLoadedPaths)) {
+					if (checkForAddedClasses || !hasBeenLoaded(path, !checkForAddedClasses)) {
 						synchronized(mutexManager.getMutex(path)) {
-							if (checkForAddedClasses || !hasBeenLoaded(path, considerURLClassLoaderPathsAsLoadedPaths)) {
+							if (checkForAddedClasses || !hasBeenLoaded(path, !checkForAddedClasses)) {
 								FileSystemItem pathFIS = FileSystemItem.ofPath(path);
 								if (checkForAddedClasses) {
 									pathFIS.refresh();
