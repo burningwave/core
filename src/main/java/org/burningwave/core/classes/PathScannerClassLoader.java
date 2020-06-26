@@ -40,7 +40,9 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
+import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.concurrent.Mutex;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
@@ -53,6 +55,31 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	PathHelper pathHelper;
 	FileSystemItem.Criteria scanFileCriteriaAndConsumer;
 	Mutex.Manager mutexManager;
+	
+	public static class Configuration {
+		public static class Key {
+			
+			public final static String PARENT_CLASS_LOADER = "path-scanner-class-loader.parent";
+			public final static String SEARCH_CONFIG_CHECK_FILE_OPTIONS = "path-scanner-class-loader.search-config.check-file-option";
+			
+		}
+		
+		public final static Map<String, Object> DEFAULT_VALUES;
+		
+		static {
+			DEFAULT_VALUES = new HashMap<>();
+			DEFAULT_VALUES.put(Configuration.Key.PARENT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX,
+				"${"+ Configuration.Key.PARENT_CLASS_LOADER + ".additional-imports}" +  ";" +
+				ComponentSupplier.class.getName() + ";" +
+				FileSystemItem.class.getName() + ";" + 
+				PathScannerClassLoader.class.getName() + ";" +
+				Supplier.class.getName() + ";"
+			);
+			DEFAULT_VALUES.put(Configuration.Key.PARENT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, PathScannerClassLoader.class.getPackage().getName() + ".PathScannerClassLoaderRetriever");
+			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
+			DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
+		}
+	}
 	
 	static {
         ClassLoader.registerAsParallelCapable();

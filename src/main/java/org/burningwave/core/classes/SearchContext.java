@@ -71,9 +71,11 @@ public class SearchContext<T> implements Component {
 		this.pathScannerClassLoaderScannedPaths = new HashSet<>();
 		this.sharedPathScannerClassLoader = initContext.getSharedPathScannerClassLoader();
 		this.pathScannerClassLoader = initContext.getPathScannerClassLoader();
+		this.searchConfig = initContext.getSearchConfig();
 		this.pathScannerClassLoader.register(this);
 		this.sharedPathScannerClassLoader.register(this);
-		this.searchConfig = initContext.getSearchConfig();
+		this.sharedPathScannerClassLoader.unregister(searchConfig, true);
+		
 	}
 	
 	public static <T> SearchContext<T> create(

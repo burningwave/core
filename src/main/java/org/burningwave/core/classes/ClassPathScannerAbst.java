@@ -170,17 +170,17 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 	
 	C createContext(SearchConfigAbst<?> searchConfig) {
-		PathScannerClassLoader sharedClassLoader = getClassHunter().getPathScannerClassLoader();
-		if (searchConfig.useSharedClassLoaderAsParent) {
-			searchConfig.parentClassLoaderForMainClassLoader = sharedClassLoader;
+		PathScannerClassLoader defaultPathScannerClassLoader = getClassHunter().getDefaultPathScannerClassLoader(searchConfig);
+		if (searchConfig.useDefaultPathScannerClassLoaderAsParent) {
+			searchConfig.parentClassLoaderForPathScannerClassLoader = defaultPathScannerClassLoader;
 		}
 		C context = contextSupplier.apply(
 			InitContext.create(
-				sharedClassLoader,
-				searchConfig.useSharedClassLoaderAsMain ?
-					sharedClassLoader :
+				defaultPathScannerClassLoader,
+				searchConfig.useDefaultPathScannerClassLoader ?
+					defaultPathScannerClassLoader :
 					PathScannerClassLoader.create(
-						searchConfig.parentClassLoaderForMainClassLoader, 
+						searchConfig.parentClassLoaderForPathScannerClassLoader, 
 						pathHelper, 
 						searchConfig.getScanFileCriteria().hasNoPredicate() ? 
 							FileSystemItem.Criteria.forClassTypeFiles(

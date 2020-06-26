@@ -42,18 +42,18 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	
 	ClassCriteria classCriteria;
 	Collection<String> paths;
-	ClassLoader parentClassLoaderForMainClassLoader;
+	ClassLoader parentClassLoaderForPathScannerClassLoader;
 	FileSystemItem.Criteria scanFileCriteria;
 	boolean optimizePaths;
-	boolean useSharedClassLoaderAsMain;
+	boolean useDefaultPathScannerClassLoader;
 	boolean deleteFoundItemsOnClose;
-	boolean useSharedClassLoaderAsParent;
+	boolean useDefaultPathScannerClassLoaderAsParent;
 	boolean waitForSearchEnding;
 	boolean checkForAddedClasses;
 	
 
 	SearchConfigAbst(Collection<String>... pathsColl) {
-		useSharedClassLoaderAsMain(true);
+		useDefaultPathScannerClassLoader(true);
 		deleteFoundItemsOnClose = true;
 		waitForSearchEnding = true;
 		paths = new HashSet<>();
@@ -105,10 +105,10 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return (S)this;
 	}	
 
-	public S useSharedClassLoaderAsMain(boolean value) {
-		useSharedClassLoaderAsMain = value;
-		useSharedClassLoaderAsParent = !useSharedClassLoaderAsMain;
-		parentClassLoaderForMainClassLoader = null;
+	public S useDefaultPathScannerClassLoader(boolean value) {
+		useDefaultPathScannerClassLoader = value;
+		useDefaultPathScannerClassLoaderAsParent = !useDefaultPathScannerClassLoader;
+		parentClassLoaderForPathScannerClassLoader = null;
 		return (S)this;
 	}
 	
@@ -116,23 +116,23 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		if (classLoader == null)  {
 			throw Throwables.toRuntimeException("Parent class loader could not be null");
 		}
-		useSharedClassLoaderAsMain = false;
-		useSharedClassLoaderAsParent = false;
-		parentClassLoaderForMainClassLoader = classLoader;
+		useDefaultPathScannerClassLoader = false;
+		useDefaultPathScannerClassLoaderAsParent = false;
+		parentClassLoaderForPathScannerClassLoader = classLoader;
 		return (S)this;
 	}
 	
-	public S useSharedClassLoaderAsParent(boolean value) {
-		useSharedClassLoaderAsParent = value;
-		useSharedClassLoaderAsMain = !useSharedClassLoaderAsParent;		
-		parentClassLoaderForMainClassLoader = null;
+	public S useDefaultPathScannerClassLoaderAsParent(boolean value) {
+		useDefaultPathScannerClassLoaderAsParent = value;
+		useDefaultPathScannerClassLoader = !useDefaultPathScannerClassLoaderAsParent;		
+		parentClassLoaderForPathScannerClassLoader = null;
 		return (S)this;
 	}
 	
 	public S useNewIsolatedClassLoader() {
-		useSharedClassLoaderAsParent = false;
-		useSharedClassLoaderAsMain = false;		
-		parentClassLoaderForMainClassLoader = null;
+		useDefaultPathScannerClassLoaderAsParent = false;
+		useDefaultPathScannerClassLoader = false;		
+		parentClassLoaderForPathScannerClassLoader = null;
 		return (S)this;
 	}
 	
@@ -163,9 +163,9 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		destConfig.paths.addAll(this.paths);
 		destConfig.scanFileCriteria = this.scanFileCriteria.createCopy();
 		destConfig.optimizePaths = this.optimizePaths;
-		destConfig.useSharedClassLoaderAsMain = this.useSharedClassLoaderAsMain;
-		destConfig.parentClassLoaderForMainClassLoader = this.parentClassLoaderForMainClassLoader;
-		destConfig.useSharedClassLoaderAsParent = this.useSharedClassLoaderAsParent;
+		destConfig.useDefaultPathScannerClassLoader = this.useDefaultPathScannerClassLoader;
+		destConfig.parentClassLoaderForPathScannerClassLoader = this.parentClassLoaderForPathScannerClassLoader;
+		destConfig.useDefaultPathScannerClassLoaderAsParent = this.useDefaultPathScannerClassLoaderAsParent;
 		destConfig.deleteFoundItemsOnClose = this.deleteFoundItemsOnClose;
 		destConfig.waitForSearchEnding = this.waitForSearchEnding;
 		destConfig.checkForAddedClasses = this.checkForAddedClasses;
@@ -182,7 +182,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		this.classCriteria = null;
 		this.paths.clear();
 		this.paths = null;
-		this.parentClassLoaderForMainClassLoader = null;
+		this.parentClassLoaderForPathScannerClassLoader = null;
 	}
 
 }
