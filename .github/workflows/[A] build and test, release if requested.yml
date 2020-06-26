@@ -6,7 +6,6 @@ on:
       - master
     paths: 
       - "src/main/**.java"
-      - "src/test/**.java"
       - "**.properties"
       - "**.xml"
 

@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/7)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/148613301)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/148679148)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/148613301)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/148679148)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -36,7 +36,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.5.0</version>
+    <version>7.5.1</version>
 </dependency>
 ```
 
@@ -575,7 +575,7 @@ If you use the singleton instance obtained via ComponentContainer.getInstance() 
 **The default configuration automatically loaded if no configuration file is found is the following**:
 ```properties
 class-factory.byte-code-hunter.search-config.check-file-option=\
-	${hunters.default-search-config.check-file-option}
+    ${hunters.default-search-config.check-file-option}
 #default classloader used by the ClassFactory to load generated classes
 class-factory.default-class-loader=\
     (Supplier<ClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
@@ -654,7 +654,7 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 Here an example of a **burningwave.properties** file with all configurable properties:
 ```properties
 class-factory.byte-code-hunter.search-config.check-file-option=\
-	checkFileName&checkFileSignature
+    checkFileName&checkFileSignature
 class-factory.default-class-loader=\
     Thread.currentThread().getContextClassLoader()
 class-factory.default-class-loader.imports=\
