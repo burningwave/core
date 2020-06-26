@@ -30,13 +30,18 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -155,6 +160,50 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	}
 	
 	@Override
+	public URL getResource(String name) {
+		URL url = super.getResource(name);
+		if (url != null) {
+			return url;
+		}
+		Enumeration<URL> urls = getResources(name, true);
+		if (urls.hasMoreElements()) {
+			return urls.nextElement();
+		}
+		return null;
+	}
+	
+	@Override
+	public Enumeration<URL> getResources(String name) throws IOException {
+		return getResources(name, false);
+	}
+    
+	private Enumeration<URL> getResources(String name, boolean findFirst) {
+		List<URL> resourcesFound = getResourcesFromSuperClassMethod(name);		
+		FileSystemItem.Criteria scanFileCriteria = FileSystemItem.Criteria.forAllFileThat(child -> {
+			if (child.getAbsolutePath().endsWith(name)) {
+				resourcesFound.add(child.getURL());
+				return true;
+			}
+			return false;
+		});
+		for (String loadedPath : loadedPaths) {
+			FileSystemItem.ofPath(loadedPath).findInAllChildren(scanFileCriteria);
+		}		
+		return Collections.enumeration(resourcesFound);
+	}
+
+	private List<URL> getResourcesFromSuperClassMethod(String name) {
+		List<URL> resourcesFound;
+		try {
+			resourcesFound = Collections.list(super.getResources(name));			
+		} catch (IOException exc) {
+			logError("Could not obtain Enumeration<URL> from super.getResources() method", exc);
+			resourcesFound = new ArrayList<>();
+		}
+		return resourcesFound;
+	}
+	
+	@Override
 	public InputStream getResourceAsStream(String name) {
 		InputStream inputStream = super.getResourceAsStream(name);
 		if (inputStream != null) {
@@ -190,6 +239,10 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			FileSystemItem.ofPath(loadedPath).findInAllChildren(scanFileCriteria);
 		}
 		return inputStreams;
+	}
+	
+	public boolean hasBeenLoaded(String path) {
+		return hasBeenLoaded(path, true);
 	}
 	
 	public boolean hasBeenLoaded(String path, boolean considerURLClassLoaderPathsAsLoadedPaths) {

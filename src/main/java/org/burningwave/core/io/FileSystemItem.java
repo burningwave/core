@@ -816,7 +816,10 @@ public class FileSystemItem implements ManagedLogger {
 			prefix = prefix + "/";
 		}
 		if (isCompressed()) {
-			prefix = getParentContainer().getExtension() + ":" + prefix;
+			prefix =
+				"jar" +
+				//getParentContainer().getExtension() + 
+				":" + prefix;
 		}
 		String uRLToRet = url.replace(IterableZipContainer.ZIP_PATH_SEPARATOR, "!/");
 		url = ThrowingSupplier.get(() -> URLEncoder.encode(uRLToRet, StandardCharsets.UTF_8.name())).replace("%3A", ":").replace("%21", "!").replace("%2F", "/");
