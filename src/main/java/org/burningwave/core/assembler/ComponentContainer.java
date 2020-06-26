@@ -347,7 +347,13 @@ public class ComponentContainer implements ComponentSupplier {
 		while (componentsItr.hasNext()) {
 			Entry<Class<? extends Component>, Component> entry = componentsItr.next();
 			try {
-				entry.getValue().close();
+				Component component = entry.getValue();
+				if (!(component instanceof PathScannerClassLoader)) {
+					entry.getValue().close();
+				} else {
+					((PathScannerClassLoader)component).unregister(this, true);
+				}
+				
 			} catch (Throwable exc) {
 				logError("Exception occurred while closing " + entry.getValue(), exc);
 			}
