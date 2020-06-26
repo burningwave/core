@@ -401,7 +401,7 @@ public class ComponentContainer implements ComponentSupplier {
 		removePathScannerClassLoader();
 	}
 	
-	public void removePathScannerClassLoader() {
+	void removePathScannerClassLoader() {
 		synchronized(components) {
 			PathScannerClassLoader classLoader = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
 			if (classLoader != null) {

@@ -60,8 +60,6 @@ public interface ComponentSupplier extends Component {
 	public ClassHunter getClassHunter();
 
 	public ClassPathHunter getClassPathHunter();
-	
-	public PathScannerClassLoader getPathScannerClassLoader();
 
 	public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
 
@@ -69,7 +67,7 @@ public interface ComponentSupplier extends Component {
 		
 	public PathHelper getPathHelper();
 	
-	public void removePathScannerClassLoader();
+	public PathScannerClassLoader getPathScannerClassLoader();
 	
 	public default void clearHuntersCache() {
 		getClassHunter().clearCache();
