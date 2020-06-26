@@ -21,11 +21,24 @@ import org.junit.jupiter.api.function.ThrowingSupplier;
 public class BaseTest implements Component {
 
 	Collection<ComponentSupplier> componentSuppliers = new CopyOnWriteArrayList<>();
+	private static ComponentContainer componentSupplier = ComponentContainer.create("burningwave.properties");
+	
+//	protected ComponentSupplier getComponentSupplier() {
+//		//Set<ComponentSupplier> componentSuppliers = getComponentSupplierSetForTest();
+//		//return getNewComponentSupplier();
+//		return ComponentSupplier.getInstance();
+//	}
 	
 	protected ComponentSupplier getComponentSupplier() {
-		//Set<ComponentSupplier> componentSuppliers = getComponentSupplierSetForTest();
-		//return getNewComponentSupplier();
-		return ComponentSupplier.getInstance();
+		if (componentSupplier == null) {
+			componentSupplier = ComponentContainer.create("burningwave.properties");
+		}
+		return componentSupplier;
+	}
+	
+	public void closeComponentContainer() {
+		componentSupplier.close(true);
+		componentSupplier = null;
 	}
 
 	protected Set<ComponentSupplier> getComponentSupplierSetForTest() {

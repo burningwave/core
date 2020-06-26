@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 
 import java.io.InputStream;
@@ -99,16 +98,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		this.loadedPaths = ConcurrentHashMap.newKeySet();
 		this.mutexManager = Mutex.Manager.create(this);
 		this.scanFileCriteriaAndConsumer = scanFileCriteria.createCopy();
-	}
-	
-	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper) {
-		return new PathScannerClassLoader(parentClassLoader, pathHelper, FileSystemItem.Criteria.forClassTypeFiles(
-			IterableObjectHelper.resolveStringValue(
-					Configuration.DEFAULT_VALUES,
-					Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION
-				)
-			)
-		);
 	}
 	
 	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, FileSystemItem.Criteria scanFileCriteria) {
