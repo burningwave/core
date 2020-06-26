@@ -1,7 +1,10 @@
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
+
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.PathScannerClassLoader;
@@ -19,7 +22,9 @@ public class PathScannerClassLoaderTest extends BaseTest {
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)
 			);
-			return Collections.list(classLoader.getResources("META-INF/MANIFEST.MF"));			
+			return Collections.list(classLoader.getResources("META-INF/MANIFEST.MF")).stream().map(url ->
+				Paths.convertURLPathToAbsolutePath(url.getPath())).collect(Collectors.toSet()
+			);			
 		}, true);
 	}
 	

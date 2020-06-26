@@ -268,8 +268,7 @@ public class Strings implements Component {
 				absolutePath = absolutePath.substring(0, absolutePath.length() - 1);
 			}
 			
-			return absolutePath.replace(".jar!/", ".jar/").replace(".ear!/", ".ear/")
-				.replace(".war!/", ".war/").replace(".zip!/", ".zip/").replace(".jmod!/", ".jmod/");
+			return absolutePath.replaceAll("\\.(.*?)!\\/", "\\.$1\\/");
 		}
 		
 		private String convertURLPathToAbsolutePath1(String inputURLPath) {
