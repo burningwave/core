@@ -107,17 +107,21 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	}
 	
 	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths) {
-		return scanPathsAndAddAllByteCodesFound(paths,false);
+		return scanPathsAndAddAllByteCodesFound(paths, true, false);
 	}
 	
-	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean checkForAddedClasses) {
+//	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths) {
+//		return scanPathsAndAddAllByteCodesFound(paths, considerURLClassLoaderPathsAsLoadedPaths, false);
+//	}
+	
+	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths, boolean checkForAddedClasses) {
 		Collection<String> scannedPaths = new HashSet<>();
 		if (!isClosed) {
 			for (String path : paths) {
 				if (!isClosed) {
-					if (checkForAddedClasses || !hasBeenLoaded(path, !checkForAddedClasses)) {
+					if (checkForAddedClasses || !hasBeenLoaded(path, considerURLClassLoaderPathsAsLoadedPaths)) {
 						synchronized(mutexManager.getMutex(path)) {
-							if (checkForAddedClasses || !hasBeenLoaded(path, !checkForAddedClasses)) {
+							if (checkForAddedClasses || !hasBeenLoaded(path, considerURLClassLoaderPathsAsLoadedPaths)) {
 								FileSystemItem pathFIS = FileSystemItem.ofPath(path);
 								if (checkForAddedClasses) {
 									pathFIS.refresh();

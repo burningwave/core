@@ -290,7 +290,7 @@ public class ClassFactory implements Component {
 					);
 					if (classLoader instanceof PathScannerClassLoader) {
 						((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(
-							Arrays.asList(compileResult.getClassPath().getAbsolutePath()), true
+							Arrays.asList(compileResult.getClassPath().getAbsolutePath()), true, true
 						);
 					}
 					return new ClassRetriever(classLoaderSupplierForClassRetriever) {
