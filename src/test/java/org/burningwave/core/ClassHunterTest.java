@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 
+import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.bean.Complex;
 import org.burningwave.core.classes.CacheableSearchConfig;
@@ -20,9 +21,20 @@ import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
+import org.junit.AfterClass;
 import org.junit.jupiter.api.Test;
 
 public class ClassHunterTest extends BaseTest {
+	private final static ComponentContainer componentSupplier = ComponentContainer.create("burningwave.properties");
+	
+	protected ComponentSupplier getComponentSupplier() {
+		return componentSupplier;
+	}
+	
+	@AfterClass
+	public void closeComponentContainer() {
+		componentSupplier.close(true);
+	}
 	
 	@Test
 	public void findAllTestOne() throws Exception {

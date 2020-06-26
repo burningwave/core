@@ -340,14 +340,26 @@ public class ComponentContainer implements ComponentSupplier {
 			return (T)object;
 		}
 	}
-
+	
 	public ComponentSupplier clear() {
+		return clear(false);
+	}
+	
+	public ComponentSupplier clear(boolean forcePathScannerClassLoaderClosing) {
 		Iterator<Entry<Class<? extends Component>, Component>> componentsItr =
 			components.entrySet().iterator();
 		while (componentsItr.hasNext()) {
 			Entry<Class<? extends Component>, Component> entry = componentsItr.next();
 			try {
-				entry.getValue().close();
+				Component component = entry.getValue();
+				if (!(component instanceof PathScannerClassLoader)) {
+					entry.getValue().close();
+				} else if (forcePathScannerClassLoaderClosing) {
+					((PathScannerClassLoader)component).close(true);
+				} else {
+					((PathScannerClassLoader)component).unregister(this, true);
+				}
+				
 			} catch (Throwable exc) {
 				logError("Exception occurred while closing " + entry.getValue(), exc);
 			}
@@ -358,10 +370,14 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public void close() {
+		close(false);
+	}
+	
+	public void close(boolean forcePathScannerClassLoaderClosing) {
 		if (LazyHolder.getComponentContainerInstance() != this) {
 			unregister(GlobalProperties);
 			unregister(config);
-			clear();			
+			clear(forcePathScannerClassLoaderClosing);			
 			components = null;
 			propertySupplier = null;
 			initializerTask = null;

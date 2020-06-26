@@ -311,13 +311,22 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	@Override
 	public synchronized void close() {
+		close(false);
+	}
+	
+	public synchronized void close(boolean forceClosing) {
 		isClosed = true;
 		HashSet<Object> clients = this.clients;
-		if (clients != null) {
-			if (!clients.isEmpty()) {
-				throw Throwables.toRuntimeException("Could not close " + this + " because there are " + clients.size() +" registered clients");
-			}
-		}		
+		if (!forceClosing) {
+			if (clients != null) {
+				if (!clients.isEmpty()) {
+					isClosed = false;
+					throw Throwables.toRuntimeException("Could not close " + this + " because there are " + clients.size() +" registered clients");
+				}
+			}	
+		} else {
+			clients.clear();
+		}
 		this.clients = null;
 		clear();
 		notLoadedByteCodes = null;
