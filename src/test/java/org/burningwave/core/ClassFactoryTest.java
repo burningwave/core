@@ -119,7 +119,7 @@ public class ClassFactoryTest extends BaseTest {
 			int threadCount = 6;
 			Collection<Thread> threads = new ArrayList<>();
 			for (int i = 0; i < threadCount; i++) {
-				threads.add(new Thread( () -> getOrBuildClassWithExternalClassTestOne(true)));
+				threads.add(new Thread( () -> getOrBuildClassWithExternalClassTestOne(true, null)));
 			}
 			for (Thread thread : threads) {
 				thread.start();
@@ -132,10 +132,15 @@ public class ClassFactoryTest extends BaseTest {
 	
 	@Test
 	public void getOrBuildClassWithExternalClassTestOne() {
-		getOrBuildClassWithExternalClassTestOne(true);
+		getOrBuildClassWithExternalClassTestOne(true, null);
 	}
 	
-	public void getOrBuildClassWithExternalClassTestOne(boolean clearCache) {
+	@Test
+	public void getOrBuildClassWithExternalClassTestFive() {
+		getOrBuildClassWithExternalClassTestOne(true, Thread.currentThread().getContextClassLoader());
+	}
+	
+	public void getOrBuildClassWithExternalClassTestOne(boolean clearCache, ClassLoader classLoader) {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
 		UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
@@ -185,7 +190,7 @@ public class ClassFactoryTest extends BaseTest {
 					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
 				).addClassPathsWhereToSearchNotFoundClasses(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
-				)
+				).useClassLoader(classLoader)
 			);
 			classRetriever.get("packagename.ComplexExample");
 			if (clearCache) {
@@ -196,7 +201,7 @@ public class ClassFactoryTest extends BaseTest {
 					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
 				).addClassPathsWhereToSearchNotFoundClasses(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
-				)
+				).useClassLoader(classLoader)
 			);
 			return classRetriever.get("packagename.ComplexExampleTwo");
 		});
