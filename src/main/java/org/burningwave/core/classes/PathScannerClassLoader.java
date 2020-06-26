@@ -162,7 +162,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		}
 		AtomicReference<InputStream> inputStreamWrapper = new AtomicReference<>();
 		FileSystemItem.Criteria scanFileCriteria = FileSystemItem.Criteria.forAllFileThat(child -> {
-			if (child.isFile() && child.getAbsolutePath().endsWith(name)) {
+			if (child.isFile() && child.getAbsolutePath().endsWith("/" + name)) {
 				inputStreamWrapper.set(child.toInputStream());
 				return true;
 			}
@@ -180,7 +180,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	public Map<String, InputStream> getResourcesAsStream(String name) {
 		Map<String, InputStream> inputStreams = new HashMap<>();
 		FileSystemItem.Criteria scanFileCriteria = FileSystemItem.Criteria.forAllFileThat(child -> {
-			if (child.isFile() && child.getAbsolutePath().endsWith(name)) {
+			if (child.isFile() && child.getAbsolutePath().endsWith("/" + name)) {
 				inputStreams.put(child.getAbsolutePath(), child.toInputStream());
 				return true;
 			}
