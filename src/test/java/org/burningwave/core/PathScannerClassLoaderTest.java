@@ -80,7 +80,7 @@ public class PathScannerClassLoaderTest extends BaseTest {
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)
 			);
-			return classLoader.getResource(".properties");			
+			return classLoader.getResource("burningwave.properties");			
 		});
 	}
 }
