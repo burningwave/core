@@ -192,6 +192,10 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		return inputStreams;
 	}
 	
+	public boolean hasBeenLoaded(String path) {
+		return hasBeenLoaded(path, true);
+	}
+	
 	public boolean hasBeenLoaded(String path, boolean considerURLClassLoaderPathsAsLoadedPaths) {
 		if (allLoadedPaths.contains(path)) {
 			return true;
