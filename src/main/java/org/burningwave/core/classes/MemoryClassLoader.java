@@ -309,14 +309,9 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		Cache.classLoaderForMethods.remove(this);
 	}
 	
-	@Override
 	public synchronized void close() {
-		close(false);
-	}
-	
-	public synchronized void close(boolean forceClosing) {
 		HashSet<Object> clients = this.clients;
-		if (!forceClosing && clients != null && !clients.isEmpty()) {
+		if (clients != null && !clients.isEmpty()) {
 			throw Throwables.toRuntimeException("Could not close " + this + " because there are " + clients.size() +" registered clients");
 		}
 		isClosed = true;
@@ -327,6 +322,10 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		clear();
 		notLoadedByteCodes = null;
 		loadedByteCodes = null;
+		Collection<Class<?>> loadedClasses = ClassLoaders.retrieveLoadedClasses(this);
+		if (loadedClasses != null) {
+			loadedClasses.clear();
+		}
 		unregister();
 	}
 	

@@ -272,6 +272,10 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	abstract <S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(C context, String basePath, String absolutePathOfItem, I item);
 	
 	public void clearCache() {
+		clearCache(false);
+	}
+	
+	public void clearCache(boolean deleteHuntersResults) {
 		Collection<String> pathsToBeRemoved = new HashSet<>(cache.keySet());
 		for (String path : pathsToBeRemoved) {
 			synchronized(mutexManager.getMutex(path)) {
@@ -282,11 +286,14 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 				}
 			}
 		}
+		if (deleteHuntersResults) {
+			deleteResults();
+		}
 	}
 	
 	@Override
 	public void close() {
-		clearCache();
+		clearCache(false);
 		cache = null;
 		pathHelper = null;
 		contextSupplier = null;
@@ -295,6 +302,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			mutexManager.clear();
 		}
 		this.mutexManager = null;
+		super.close();
 	}
 	
 	@FunctionalInterface

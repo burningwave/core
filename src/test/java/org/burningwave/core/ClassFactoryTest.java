@@ -194,7 +194,7 @@ public class ClassFactoryTest extends BaseTest {
 			);
 			classRetriever.get("packagename.ComplexExample");
 			if (clearCache) {
-				ComponentContainer.clearAllCaches();
+				ComponentContainer.clearAllCaches(false);
 			}
 			classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).addCompilationClassPaths(

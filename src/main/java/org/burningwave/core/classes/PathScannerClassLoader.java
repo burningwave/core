@@ -53,7 +53,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	Collection<String> allLoadedPaths;
 	Collection<String> loadedPaths;
 	PathHelper pathHelper;
-	FileSystemItem.Criteria scanFileCriteriaAndConsumer;
+	FileSystemItem.Criteria classFileCriteriaAndConsumer;
 	Mutex.Manager mutexManager;
 	
 	public static class Configuration {
@@ -97,7 +97,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		this.allLoadedPaths = ConcurrentHashMap.newKeySet();
 		this.loadedPaths = ConcurrentHashMap.newKeySet();
 		this.mutexManager = Mutex.Manager.create(this);
-		this.scanFileCriteriaAndConsumer = scanFileCriteria.createCopy();
+		this.classFileCriteriaAndConsumer = scanFileCriteria.createCopy();
 	}
 	
 	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, FileSystemItem.Criteria scanFileCriteria) {
@@ -122,7 +122,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 								}
 								for (FileSystemItem child : pathFIS.getAllChildren()) {
 									if (!isClosed) {
-										if (scanFileCriteriaAndConsumer.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(
+										if (classFileCriteriaAndConsumer.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(
 											new FileSystemItem [] {child, pathFIS}
 										)){
 											try {
@@ -252,6 +252,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		this.mutexManager = null;
 		this.loadedPaths = null;
 		pathHelper = null;
+		classFileCriteriaAndConsumer = null;
 	}
 
 }

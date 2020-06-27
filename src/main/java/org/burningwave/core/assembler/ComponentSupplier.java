@@ -70,11 +70,19 @@ public interface ComponentSupplier extends Component {
 	public PathScannerClassLoader getPathScannerClassLoader();
 	
 	public default void clearHuntersCache() {
-		getClassHunter().clearCache();
-		getClassPathHunter().clearCache();
-		getByteCodeHunter().clearCache();
+		clearHuntersCache(false);
 	}
 	
-	public void clearCache();
+	public default void clearHuntersCache(boolean deleteHuntersResults) {
+		getClassHunter().clearCache(deleteHuntersResults);
+		getClassPathHunter().clearCache(deleteHuntersResults);
+		getByteCodeHunter().clearCache(deleteHuntersResults);
+	}
+	
+	public void clearCache(boolean deleteHuntersResults);
+	
+	public default void clearCache() {
+		clearCache(false);
+	}
 	
 }

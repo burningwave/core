@@ -341,11 +341,8 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
-	public ComponentSupplier clear() {
-		return clear(false);
-	}
 	
-	public ComponentSupplier clear(boolean forcePathScannerClassLoaderClosing) {
+	public ComponentSupplier clear() {
 		Iterator<Entry<Class<? extends Component>, Component>> componentsItr =
 			components.entrySet().iterator();
 		while (componentsItr.hasNext()) {
@@ -354,8 +351,6 @@ public class ComponentContainer implements ComponentSupplier {
 				Component component = entry.getValue();
 				if (!(component instanceof PathScannerClassLoader)) {
 					entry.getValue().close();
-				} else if (forcePathScannerClassLoaderClosing) {
-					((PathScannerClassLoader)component).close(true);
 				} else {
 					((PathScannerClassLoader)component).unregister(this, true);
 				}
@@ -377,7 +372,7 @@ public class ComponentContainer implements ComponentSupplier {
 		if (LazyHolder.getComponentContainerInstance() != this) {
 			unregister(GlobalProperties);
 			unregister(config);
-			clear(forcePathScannerClassLoaderClosing);			
+			clear();			
 			components = null;
 			propertySupplier = null;
 			initializerTask = null;
@@ -388,16 +383,22 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
-	public static void clearAllCaches() {
+	public static void clearAll() {
 		for (ComponentContainer componentContainer : instances) {
-			componentContainer.clearCache();
+			componentContainer.clear();
 		}
 		Cache.clear();
 	}
 	
+	public static void clearAllCaches(boolean deleteHuntersResults) {
+		for (ComponentContainer componentContainer : instances) {
+			componentContainer.clearCache(deleteHuntersResults);
+		}
+	}
+	
 	@Override
-	public void clearCache() {
-		clearHuntersCache();
+	public void clearCache(boolean deleteHuntersResults) {
+		clearHuntersCache(deleteHuntersResults);
 		removePathScannerClassLoader();
 	}
 	
