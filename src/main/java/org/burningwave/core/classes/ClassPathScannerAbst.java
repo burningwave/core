@@ -31,7 +31,9 @@ package org.burningwave.core.classes;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -78,6 +80,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	Function<InitContext, C> contextSupplier;
 	Function<C, R> resultSupplier;
 	Properties config;
+	Collection<R> searchResults;
 
 	ClassPathScannerAbst(
 		Supplier<ClassHunter> classHunterSupplier,
@@ -91,6 +94,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		this.contextSupplier = contextSupplier;
 		this.resultSupplier = resultSupplier;
 		this.config = config;
+		this.searchResults = ConcurrentHashMap.newKeySet();
 		listenTo(config);
 	}
 	
@@ -123,7 +127,9 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		if (!skippedClassesNames.isEmpty()) {
 			logWarn("Skipped classes count: {}", skippedClassesNames.size());
 		}
-		return resultSupplier.apply(context);
+		R searchResult = resultSupplier.apply(context);
+		searchResults.add(searchResult);
+		return searchResult;
 	}
 	
 	void searchInFileSystem(C context) {
@@ -209,11 +215,25 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		JavaClass javaClass
 	);
 	
+	public synchronized void deleteResults() {
+		Collection<R> searchResults = this.searchResults;
+		if (searchResults != null) {
+			Iterator<R> searchResultsIterator = searchResults.iterator();		
+			while(searchResultsIterator.hasNext()) {
+				R searchResult = searchResultsIterator.next();
+				searchResult.close();
+				searchResultsIterator.remove();
+			}
+		}
+	}
+	
 	@Override
 	public void close() {
 		unregister(config);
 		pathHelper = null;
 		contextSupplier = null;
 		config = null;
+		deleteResults();
+		this.searchResults = null;
 	}
 }

@@ -27,7 +27,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllTestOne() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearHuntersCache();
+		componentSupplier.clearHuntersCache(false);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().loadInCache(
 				SearchConfig.forPaths(
@@ -51,7 +51,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void getResourceAsStreamTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearHuntersCache();
+		componentSupplier.clearHuntersCache(false);
 		testNotNull(
 			() -> componentSupplier.getClassHunter().loadInCache(
 				SearchConfig.forPaths(
@@ -74,7 +74,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void getResourceAsStreamTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearHuntersCache();
+		componentSupplier.clearHuntersCache(false);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().loadInCache(
 				SearchConfig.forPaths(
@@ -98,7 +98,7 @@ public class ClassHunterTest extends BaseTest {
 	public void refreshCacheTestOne() throws Exception {
 		findAllTestOne();
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearHuntersCache();
+		componentSupplier.clearHuntersCache(false);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().loadInCache(
 				SearchConfig.forPaths(
@@ -221,6 +221,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllSubtypeOfTestFour() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
+		componentSupplier.clearCache(true);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
