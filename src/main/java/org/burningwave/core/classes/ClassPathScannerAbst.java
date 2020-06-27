@@ -80,7 +80,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	Function<InitContext, C> contextSupplier;
 	Function<C, R> resultSupplier;
 	Properties config;
-	Collection<R> searchResults;
+	Collection<SearchResult<I>> searchResults;
 
 	ClassPathScannerAbst(
 		Supplier<ClassHunter> classHunterSupplier,
@@ -128,7 +128,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			logWarn("Skipped classes count: {}", skippedClassesNames.size());
 		}
 		R searchResult = resultSupplier.apply(context);
-		searchResults.add(searchResult);
+		searchResult.setClassPathScanner(this);
 		return searchResult;
 	}
 	
@@ -215,12 +215,22 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		JavaClass javaClass
 	);
 	
+	boolean register(SearchResult<I> searchResult) {
+		searchResults.add(searchResult);
+		return true;
+	}
+	
+	boolean unregister(SearchResult<I> searchResult) {
+		searchResults.remove(searchResult);
+		return true;
+	}
+	
 	public synchronized void deleteResults() {
-		Collection<R> searchResults = this.searchResults;
+		Collection<SearchResult<I>> searchResults = this.searchResults;
 		if (searchResults != null) {
-			Iterator<R> searchResultsIterator = searchResults.iterator();		
+			Iterator<SearchResult<I>> searchResultsIterator = searchResults.iterator();		
 			while(searchResultsIterator.hasNext()) {
-				R searchResult = searchResultsIterator.next();
+				SearchResult<I> searchResult = searchResultsIterator.next();
 				searchResult.close();
 				searchResultsIterator.remove();
 			}

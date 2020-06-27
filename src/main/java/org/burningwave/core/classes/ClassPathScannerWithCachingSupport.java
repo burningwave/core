@@ -271,6 +271,10 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 
 	abstract <S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(C context, String basePath, String absolutePathOfItem, I item);
 	
+	public void clearCache() {
+		clearCache(false);
+	}
+	
 	public void clearCache(boolean deleteHuntersResults) {
 		Collection<String> pathsToBeRemoved = new HashSet<>(cache.keySet());
 		for (String path : pathsToBeRemoved) {
@@ -281,6 +285,9 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 					items.clear();
 				}
 			}
+		}
+		if (deleteHuntersResults) {
+			deleteResults();
 		}
 	}
 	

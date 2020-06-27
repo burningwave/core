@@ -294,6 +294,8 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		this.mutexManager = null;
 		this.loadedPaths = null;
 		pathHelper = null;
+		this.classFileCriteriaAndConsumer = null;
+		this.fileCriteria = null;
 	}
 
 }

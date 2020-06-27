@@ -221,7 +221,6 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllSubtypeOfTestFour() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearCache(true);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
@@ -1264,6 +1263,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllBurningWaveClasses() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
+		componentSupplier.clearCache(true);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(

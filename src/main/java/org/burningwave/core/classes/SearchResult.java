@@ -41,9 +41,15 @@ import org.burningwave.core.Criteria;
 
 public class SearchResult<E> implements Component {
 	SearchContext<E> context;
+	ClassPathScannerAbst<E, ?, ?> classPathScanner;
 	
 	SearchResult(SearchContext<E> context) {
 		this.context = context;
+	}
+	
+	void setClassPathScanner(ClassPathScannerAbst<E, ?, ?> classPathScanner) {
+		this.classPathScanner = classPathScanner;
+		classPathScanner.register(this);
 	}
 	
 	Collection<E> getItemsFound() {
@@ -105,5 +111,7 @@ public class SearchResult<E> implements Component {
 	public void close() {
 		context.close();
 		context = null;
+		classPathScanner.unregister(this);
+		classPathScanner = null;
 	}
 }

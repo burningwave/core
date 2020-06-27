@@ -383,6 +383,13 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
+	public static void clearAll() {
+		for (ComponentContainer componentContainer : instances) {
+			componentContainer.clear();
+		}
+		Cache.clear();
+	}
+	
 	public static void clearAllCaches(boolean deleteHuntersResults) {
 		for (ComponentContainer componentContainer : instances) {
 			componentContainer.clearCache(deleteHuntersResults);
@@ -393,8 +400,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public void clearCache(boolean deleteHuntersResults) {
 		clearHuntersCache(deleteHuntersResults);
 		removePathScannerClassLoader();
-		Cache.clear();
-		System.gc();
 	}
 	
 	void removePathScannerClassLoader() {

@@ -11,7 +11,7 @@ public class MethodsTest extends BaseTest {
 	@Test
 	public void invokeAllTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearHuntersCache(true);
+		componentSupplier.clearHuntersCache(false);
 		testNotEmpty(
 			() -> {
 				return Methods.invokeAll(Integer.class, "valueOf", 1);
