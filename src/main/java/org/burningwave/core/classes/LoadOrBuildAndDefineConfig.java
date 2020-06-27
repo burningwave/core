@@ -36,13 +36,13 @@ import java.util.UUID;
 
 import org.burningwave.core.Executable;
 
+@SuppressWarnings("unchecked")
 public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<LoadOrBuildAndDefineConfig> {
 	
 	public LoadOrBuildAndDefineConfig(UnitSourceGenerator... unitsCode) {
 		super(unitsCode);
 	}
 
-	@SuppressWarnings("unchecked")
 	public LoadOrBuildAndDefineConfig(Collection<UnitSourceGenerator>... unitsCodeCollections) {
 		super(unitsCodeCollections);
 	}
@@ -57,11 +57,48 @@ public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<L
 		return new LoadOrBuildAndDefineConfig(unitsCode);
 	}
 	
-	public static class ForCodeExecutor extends LoadOrBuildAndDefineConfigAbst<ForCodeExecutor> {
+	public static class ForCodeExecutorAbst<C extends ForCodeExecutorAbst<C>> extends LoadOrBuildAndDefineConfigAbst<C> {
+		BodySourceGenerator body;
+		
+		ForCodeExecutorAbst(String executorName, BodySourceGenerator bodySG) {
+			super(SourceCodeHandler.generateExecutor(executorName, bodySG));
+			this.body = bodySG;
+			body.setElementPrefix("\t");
+			storeCompiledClasses(false);
+		}
+		
+		public C setSimpleName(String simpleName) {
+			UnitSourceGenerator uSG = unitSourceGenerators.iterator().next();
+			ClassSourceGenerator cSG = uSG.getAllClasses().values().iterator().next();
+			cSG.getTypeDeclaration().setSimpleName(simpleName);
+			return (C)this;					
+		}
+		
+		public C setName(String name) {
+			UnitSourceGenerator uSG = unitSourceGenerators.iterator().next();
+			uSG.setPackageName(Classes.retrievePackageName(name));
+			ClassSourceGenerator cSG = uSG.getAllClasses().values().iterator().next();
+			cSG.getTypeDeclaration().setSimpleName(Classes.retrieveSimpleName(name));
+			return (C)this;					
+		}
+		
+		String getExecutorName() {
+			UnitSourceGenerator uSG = unitSourceGenerators.iterator().next();
+			ClassSourceGenerator cSG = uSG.getAllClasses().values().iterator().next();
+			return uSG.getPackageName() + "." + cSG.getTypeDeclaration().getSimpleName();
+		}
+		
+		BodySourceGenerator getBody() {
+			return body;
+		}
+		
+	}
+	
+	public static class ForCodeExecutor extends ForCodeExecutorAbst<ForCodeExecutor> {
 		BodySourceGenerator body;
 		
 		ForCodeExecutor(String executorName, BodySourceGenerator bodySG) {
-			super(SourceCodeHandler.generateExecutor(executorName, bodySG));
+			super(executorName, bodySG);
 			this.body = bodySG;
 			body.setElementPrefix("\t");
 			storeCompiledClasses(false);
@@ -75,31 +112,6 @@ public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<L
 			String packageName = Executable.class.getPackage().getName();
 			String className = packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", "");
 			return withCode(className, bodySG);
-		}
-		
-		public ForCodeExecutor setSimpleName(String simpleName) {
-			UnitSourceGenerator uSG = unitSourceGenerators.iterator().next();
-			ClassSourceGenerator cSG = uSG.getAllClasses().values().iterator().next();
-			cSG.getTypeDeclaration().setSimpleName(simpleName);
-			return this;					
-		}
-		
-		public ForCodeExecutor setName(String name) {
-			UnitSourceGenerator uSG = unitSourceGenerators.iterator().next();
-			uSG.setPackageName(Classes.retrievePackageName(name));
-			ClassSourceGenerator cSG = uSG.getAllClasses().values().iterator().next();
-			cSG.getTypeDeclaration().setSimpleName(Classes.retrieveSimpleName(name));
-			return this;					
-		}
-		
-		String getExecutorName() {
-			UnitSourceGenerator uSG = unitSourceGenerators.iterator().next();
-			ClassSourceGenerator cSG = uSG.getAllClasses().values().iterator().next();
-			return uSG.getPackageName() + "." + cSG.getTypeDeclaration().getSimpleName();
-		}
-		
-		BodySourceGenerator getBody() {
-			return body;
 		}
 		
 	}

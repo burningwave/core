@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 import org.burningwave.core.Component;
 import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.JavaMemoryCompiler.CompileResult;
+import org.burningwave.core.classes.JavaMemoryCompiler.CompilationResult;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemItem;
@@ -283,7 +283,7 @@ public class ClassFactory implements Component {
 				try {
 					classes.put(className, classLoader.loadClass(className));
 				} catch (Throwable exc) {
-					CompileResult compileResult = build(
+					CompilationResult compilationResult = build(
 						useOneShotJavaCompiler,
 						compilationClassPaths,
 						classPathsForNotFoundClassesDuringCompilantion, 
@@ -291,16 +291,18 @@ public class ClassFactory implements Component {
 					);
 					if (classLoader instanceof PathScannerClassLoader) {
 						((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(
-							Arrays.asList(compileResult.getClassPath().getAbsolutePath()), true
+							Arrays.asList(compilationResult.getClassPath().getAbsolutePath()), true
 						);
+					} else if (classLoader instanceof MemoryClassLoader) {
+						((MemoryClassLoader)classLoader).addByteCodes(compilationResult.getCompiledFiles());
 					}
 					return new ClassRetriever(classLoaderSupplierForClassRetriever) {
 						@Override
 						public Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className) {
 							try {
-								Map<String, ByteBuffer> finalByteCodes = compileResult.getCompiledFiles();
+								Map<String, ByteBuffer> finalByteCodes = compilationResult.getCompiledFiles();
 								if (additionalByteCodes != null) {
-									finalByteCodes = new HashMap<>(compileResult.getCompiledFiles());
+									finalByteCodes = new HashMap<>(compilationResult.getCompiledFiles());
 									finalByteCodes.putAll(additionalByteCodes);
 								}
 								if (classLoader instanceof PathScannerClassLoader) {
@@ -314,7 +316,7 @@ public class ClassFactory implements Component {
 										loadBytecodesFromClassPaths(
 											retrievedBytecodes,
 											classPathsForNotFoundClassesDuringLoading,
-											compileResult.getCompiledFiles(),
+											compilationResult.getCompiledFiles(),
 											additionalByteCodes
 										).get(), classLoader
 									);
@@ -401,7 +403,7 @@ public class ClassFactory implements Component {
 		return retrievedBytecodes;
 	}
 	
-	private CompileResult build(
+	private CompilationResult build(
 		boolean useOneShotCompiler,
 		Collection<String> mainClassPaths,
 		Collection<String> extraClassPaths,
@@ -417,7 +419,7 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	private CompileResult build0(
+	private CompilationResult build0(
 		boolean useOneShotCompiler,
 		Collection<String> compilationClassPaths,
 		Collection<String> classPathsForNotFoundClassesDuringCompilantion,
