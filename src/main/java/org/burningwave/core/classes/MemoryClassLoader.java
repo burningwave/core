@@ -66,6 +66,9 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		ClassLoader parentClassLoader
 	) {
 		super(parentClassLoader);
+		if (parentClassLoader instanceof MemoryClassLoader) {
+			((MemoryClassLoader)parentClassLoader).register(this);
+		}
 		this.notLoadedByteCodes = new HashMap<>();
 		this.loadedByteCodes = new HashMap<>();
 		this.clients = new HashSet<>();
@@ -313,26 +316,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		Cache.classLoaderForMethods.remove(this);
 	}
 	
-	public synchronized void close() {
-		HashSet<Object> clients = this.clients;
-		if (clients != null && !clients.isEmpty()) {
-			throw Throwables.toRuntimeException("Could not close " + this + " because there are " + clients.size() +" registered clients");
-		}
-		isClosed = true;
-		if (clients != null) {
-			clients.clear();
-		}
-		this.clients = null;
-		clear();
-		notLoadedByteCodes = null;
-		loadedByteCodes = null;
-		Collection<Class<?>> loadedClasses = ClassLoaders.retrieveLoadedClasses(this);
-		if (loadedClasses != null) {
-			loadedClasses.clear();
-		}
-		unregister();
-	}
-	
 	public synchronized boolean register(Object client) {
 		HashSet<Object> clients = this.clients;
 		if (!isClosed) {
@@ -352,5 +335,29 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			}
 		}
 		return false;
+	}
+	
+	public synchronized void close() {
+		HashSet<Object> clients = this.clients;
+		if (clients != null && !clients.isEmpty()) {
+			throw Throwables.toRuntimeException("Could not close " + this + " because there are " + clients.size() +" registered clients");
+		}
+		isClosed = true;
+		ClassLoader parentClassLoader = getParent();
+		if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
+			((MemoryClassLoader)parentClassLoader).unregister(this,true);
+		}
+		if (clients != null) {
+			clients.clear();
+		}
+		this.clients = null;
+		clear();
+		notLoadedByteCodes = null;
+		loadedByteCodes = null;
+		Collection<Class<?>> loadedClasses = ClassLoaders.retrieveLoadedClasses(this);
+		if (loadedClasses != null) {
+			loadedClasses.clear();
+		}
+		unregister();
 	}
 }
