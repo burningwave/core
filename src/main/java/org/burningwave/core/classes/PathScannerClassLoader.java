@@ -29,14 +29,11 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
-import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.ByteBuffer;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -46,13 +43,12 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.concurrent.Mutex;
-import org.burningwave.core.io.ByteBufferInputStream;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.io.PathHelper.ComparePathsResult;
@@ -61,10 +57,8 @@ import org.burningwave.core.io.PathHelper.ComparePathsResult;
 public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryClassLoader {
 	Collection<String> allLoadedPaths;
 	Collection<String> loadedPaths;
-	Map<String, Map.Entry<URL, ByteBuffer>> resources;
 	PathHelper pathHelper;
 	FileSystemItem.Criteria classFileCriteriaAndConsumer;
-	FileSystemItem.Criteria fileCriteria;
 	Mutex.Manager mutexManager;
 	
 	public static class Configuration {
@@ -101,16 +95,14 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	PathScannerClassLoader(
 		ClassLoader parentClassLoader,
 		PathHelper pathHelper,
-		FileSystemItem.Criteria classFileCriteriaAndConsumer
+		FileSystemItem.Criteria scanFileCriteria
 	) {
 		super(parentClassLoader);
 		this.pathHelper = pathHelper;
 		this.allLoadedPaths = ConcurrentHashMap.newKeySet();
 		this.loadedPaths = ConcurrentHashMap.newKeySet();
 		this.mutexManager = Mutex.Manager.create(this);
-		this.resources = new ConcurrentHashMap<>();
-		this.classFileCriteriaAndConsumer = classFileCriteriaAndConsumer.createCopy();
-		this.fileCriteria = FileSystemItem.Criteria.forAllFileThat(FileSystemItem::isFile);
+		this.classFileCriteriaAndConsumer = scanFileCriteria.createCopy();
 	}
 	
 	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, FileSystemItem.Criteria scanFileCriteria) {
@@ -133,16 +125,14 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 								if (checkForAddedClasses) {
 									pathFIS.refresh();
 								}
-								for (FileSystemItem child : pathFIS.findInAllChildren(fileCriteria)) {
-									ByteBuffer childContent = child.toByteBuffer();
-									resources.put(child.getAbsolutePath(), new AbstractMap.SimpleEntry<>(child.getURL(), Streams.shareContent(childContent)));
+								for (FileSystemItem child : pathFIS.getAllChildren()) {
 									if (!isClosed) {
 										if (classFileCriteriaAndConsumer.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(
 											new FileSystemItem [] {child, pathFIS}
 										)){
 											try {
-												JavaClass javaClass = JavaClass.create(childContent);
-												addByteCode(javaClass.getName(), Streams.shareContent(childContent));
+												JavaClass javaClass = JavaClass.create(child.toByteBuffer());
+												addByteCode(javaClass.getName(), javaClass.getByteCode());
 											} catch (Exception exc) {
 												logError("Exception occurred while scanning " + child.getAbsolutePath(), exc);
 											}
@@ -171,13 +161,26 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	
 	@Override
 	public URL getResource(String name) {
-		URL url = super.getResource(name);
+		ClassLoader parentClassLoader = getParent();
+		URL url = null;
+		if (parentClassLoader != null) {
+			url = parentClassLoader.getResource(name);
+		}
 		if (url != null) {
 			return url;
 		}
-		for (Entry<String, Entry<URL, ByteBuffer>> resource : resources.entrySet()) {
-			if (resource.getKey().endsWith("/" + name)) {
-				return resource.getValue().getKey();
+		AtomicReference<URL> inputStreamWrapper = new AtomicReference<>();
+		FileSystemItem.Criteria scanFileCriteria = FileSystemItem.Criteria.forAllFileThat(child -> {
+			if (child.isFile() && child.getAbsolutePath().endsWith("/" + name)) {
+				inputStreamWrapper.set(child.getURL());
+				return true;
+			}
+			return false;
+		});
+		for (String loadedPath : loadedPaths) {
+			FileSystemItem.ofPath(loadedPath).findFirstInAllChildren(scanFileCriteria);
+			if (inputStreamWrapper.get() != null) {
+				return inputStreamWrapper.get();
 			}
 		}
 		return null;
@@ -185,22 +188,25 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	
 	@Override
 	public Enumeration<URL> getResources(String name) throws IOException {
-		List<URL> resourcesFound = getResourcesFromSuperClassMethod(name);
-		for (Entry<String, Entry<URL, ByteBuffer>> resource : resources.entrySet()) {
-			if (resource.getKey().endsWith("/" + name)) {
-				resourcesFound.add(resource.getValue().getKey());
+		List<URL> resourcesFound = getResourcesURLFromParent(name);
+		FileSystemItem.Criteria scanFileCriteria = FileSystemItem.Criteria.forAllFileThat(child -> {
+			if (child.isFile() && child.getAbsolutePath().endsWith("/" + name)) {
+				resourcesFound.add(child.getURL());
+				return true;
 			}
+			return false;
+		});
+		for (String loadedPath : loadedPaths) {
+			FileSystemItem.ofPath(loadedPath).findInAllChildren(scanFileCriteria);
 		}
 		return Collections.enumeration(resourcesFound);
 	}
 
-	private List<URL> getResourcesFromSuperClassMethod(String name) {
-		List<URL> resourcesFound;
-		try {
-			resourcesFound = Collections.list(super.getResources(name));			
-		} catch (IOException exc) {
-			logError("Could not obtain Enumeration<URL> from super.getResources() method", exc);
-			resourcesFound = new ArrayList<>();
+	List<URL> getResourcesURLFromParent(String name) throws IOException {
+		ClassLoader parentClassLoader = getParent();
+		List<URL> resourcesFound = new ArrayList<>();
+		if (parentClassLoader != null) {
+			resourcesFound = Collections.list(parentClassLoader.getResources(name));
 		}
 		return resourcesFound;
 	}
@@ -211,9 +217,18 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		if (inputStream != null) {
 			return inputStream;
 		}
-		for (Entry<String, Entry<URL, ByteBuffer>> resource : resources.entrySet()) {
-			if (resource.getKey().endsWith("/" + name)) {
-				return new ByteBufferInputStream(resource.getValue().getValue());
+		AtomicReference<InputStream> inputStreamWrapper = new AtomicReference<>();
+		FileSystemItem.Criteria scanFileCriteria = FileSystemItem.Criteria.forAllFileThat(child -> {
+			if (child.isFile() && child.getAbsolutePath().endsWith("/" + name)) {
+				inputStreamWrapper.set(child.toInputStream());
+				return true;
+			}
+			return false;
+		});
+		for (String loadedPath : loadedPaths) {
+			FileSystemItem.ofPath(loadedPath).findFirstInAllChildren(scanFileCriteria);
+			if (inputStreamWrapper.get() != null) {
+				return inputStreamWrapper.get();
 			}
 		}
 		return null;
@@ -221,10 +236,15 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	
 	public Map<String, InputStream> getResourcesAsStream(String name) {
 		Map<String, InputStream> inputStreams = new HashMap<>();
-		for (Entry<String, Entry<URL, ByteBuffer>> resource : resources.entrySet()) {
-			if (resource.getKey().endsWith("/" + name)) {
-				inputStreams.put(resource.getKey(), new ByteBufferInputStream(resource.getValue().getValue()));
+		FileSystemItem.Criteria scanFileCriteria = FileSystemItem.Criteria.forAllFileThat(child -> {
+			if (child.isFile() && child.getAbsolutePath().endsWith("/" + name)) {
+				inputStreams.put(child.getAbsolutePath(), child.toInputStream());
+				return true;
 			}
+			return false;
+		});
+		for (String loadedPath : loadedPaths) {
+			FileSystemItem.ofPath(loadedPath).findInAllChildren(scanFileCriteria);
 		}
 		return inputStreams;
 	}
@@ -272,11 +292,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	@Override
 	public void close() {
 		super.close();
-		Map<String, Map.Entry<URL, ByteBuffer>> resources = this.resources;
-		if (resources != null) {
-			resources.clear();
-		}
-		this.resources = null;
 		Collection<String> loadedPaths = this.loadedPaths;
 		if (loadedPaths != null) {
 			loadedPaths.clear();
@@ -294,8 +309,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		this.mutexManager = null;
 		this.loadedPaths = null;
 		pathHelper = null;
-		this.classFileCriteriaAndConsumer = null;
-		this.fileCriteria = null;
+		classFileCriteriaAndConsumer = null;
 	}
 
 }
