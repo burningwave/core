@@ -185,7 +185,11 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
     @Override
     public InputStream getResourceAsStream(String name) {
-    	InputStream inputStream = super.getResourceAsStream(name);
+    	ClassLoader parentClassLoader = getParent();
+    	InputStream inputStream = null;
+    	if (parentClassLoader != null) {
+    		inputStream = parentClassLoader.getResourceAsStream(name);
+    	}
     	if (inputStream == null && name.endsWith(".class")) {
     		inputStream = getByteCodeAsInputStream(name);
     	}

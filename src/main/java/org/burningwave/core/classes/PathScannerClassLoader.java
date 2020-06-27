@@ -30,13 +30,18 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -152,6 +157,58 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			}
 		}
 		return scannedPaths;
+	}
+	
+	@Override
+	public URL getResource(String name) {
+		ClassLoader parentClassLoader = getParent();
+		URL url = null;
+		if (parentClassLoader != null) {
+			url = parentClassLoader.getResource(name);
+		}
+		if (url != null) {
+			return url;
+		}
+		AtomicReference<URL> inputStreamWrapper = new AtomicReference<>();
+		FileSystemItem.Criteria scanFileCriteria = FileSystemItem.Criteria.forAllFileThat(child -> {
+			if (child.isFile() && child.getAbsolutePath().endsWith("/" + name)) {
+				inputStreamWrapper.set(child.getURL());
+				return true;
+			}
+			return false;
+		});
+		for (String loadedPath : loadedPaths) {
+			FileSystemItem.ofPath(loadedPath).findFirstInAllChildren(scanFileCriteria);
+			if (inputStreamWrapper.get() != null) {
+				return inputStreamWrapper.get();
+			}
+		}
+		return null;
+	}
+	
+	@Override
+	public Enumeration<URL> getResources(String name) throws IOException {
+		List<URL> resourcesFound = getResourcesURLFromParent(name);
+		FileSystemItem.Criteria scanFileCriteria = FileSystemItem.Criteria.forAllFileThat(child -> {
+			if (child.isFile() && child.getAbsolutePath().endsWith("/" + name)) {
+				resourcesFound.add(child.getURL());
+				return true;
+			}
+			return false;
+		});
+		for (String loadedPath : loadedPaths) {
+			FileSystemItem.ofPath(loadedPath).findInAllChildren(scanFileCriteria);
+		}
+		return Collections.enumeration(resourcesFound);
+	}
+
+	List<URL> getResourcesURLFromParent(String name) throws IOException {
+		ClassLoader parentClassLoader = getParent();
+		List<URL> resourcesFound = new ArrayList<>();
+		if (parentClassLoader != null) {
+			resourcesFound = Collections.list(parentClassLoader.getResources(name));
+		}
+		return resourcesFound;
 	}
 	
 	@Override
