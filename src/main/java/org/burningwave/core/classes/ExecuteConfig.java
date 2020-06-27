@@ -38,17 +38,26 @@ import org.burningwave.core.Executable;
 import org.burningwave.core.iterable.Properties;
 
 @SuppressWarnings("unchecked")
-public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBuildAndDefineConfig.ForCodeExecutorAbst<C> {
+public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBuildAndDefineConfig.ForCodeExecutor {
 	ClassLoader parentClassLoader;
+	boolean useDefaultClassLoaderAsParentIfParentClassLoaderIsNull;
 	List<Object> params;
+	boolean useDefaultClassLoaderAsParentIfParentClassLoaderIsNullHasBeenCalled;
 	
 	ExecuteConfig(String name, BodySourceGenerator bodySG) {
 		super(name, bodySG);
+		this.useDefaultClassLoaderAsParentIfParentClassLoaderIsNull = true;
 	}
 	
 	public C useAsParentClassLoader(ClassLoader parentClassLoader) {
 		this.parentClassLoader = parentClassLoader;
 		return (C)this;
+	}
+	
+	public C useDefaultClassLoaderAsParent(boolean flag) {
+		this.useDefaultClassLoaderAsParentIfParentClassLoaderIsNull = flag;
+		useDefaultClassLoaderAsParentIfParentClassLoaderIsNullHasBeenCalled = true;
+		return (C)this; 
 	}
 	
 	public C withParameter(Object... parameters) {
@@ -65,6 +74,17 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 		return parentClassLoader;
 	}
 
+	boolean isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull() {
+		return useDefaultClassLoaderAsParentIfParentClassLoaderIsNull;
+	}
+	
+	@Override
+	public C useClassLoader(ClassLoader classLoader) {
+		if (!useDefaultClassLoaderAsParentIfParentClassLoaderIsNullHasBeenCalled) {
+			useDefaultClassLoaderAsParentIfParentClassLoaderIsNull = false;
+		}
+		return (C) super.useClassLoader(classLoader);
+	}
 
 	Object[] getParams() {
 		return params != null ?

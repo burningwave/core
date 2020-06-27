@@ -45,6 +45,7 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
+@SuppressWarnings("unchecked")
 public class CodeExecutor implements Component {
 	static final String PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX = ".imports";
 	static final String PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX = ".name";
@@ -87,7 +88,7 @@ public class CodeExecutor implements Component {
 		return execute(ExecuteConfig.ForProperties.forProperty(propertyName).withParameter(params));
 	}
 	
-	public <T> T execute(ExecuteConfig.ForProperties config) {
+	public <E extends ExecuteConfig<E>, T> T execute(ExecuteConfig.ForProperties config) {
 		java.util.Properties properties = config.getProperties();
 		if (properties == null) {
 			if (config.getFilePath() == null) {
@@ -150,16 +151,16 @@ public class CodeExecutor implements Component {
 		}
 
 		return execute(
-			(ExecuteConfig<?>)config
+			(E)config
 		);
 	}		
 	
-	public <T> T execute(BodySourceGenerator body) {
-		return execute(ExecuteConfig.forBodySourceGenerator(body));
+	public <E extends ExecuteConfig<E>, T> T execute(BodySourceGenerator body) {
+		return execute((E)ExecuteConfig.forBodySourceGenerator(body));
 	}
 	
-	public <T> T execute(
-		ExecuteConfig<?> config
+	public <E extends ExecuteConfig<E>, T> T execute(
+		E config
 	) {	
 		if (config.getClassLoader() == null) {
 			return ThrowingSupplier.get(() -> {
@@ -213,7 +214,6 @@ public class CodeExecutor implements Component {
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	public <T extends Executable> Class<T> loadOrBuildAndDefineExecutorSubType(
 		LoadOrBuildAndDefineConfig.ForCodeExecutor config
 	) {	
