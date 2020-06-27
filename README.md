@@ -533,6 +533,7 @@ public ClassPathHunter getClassPathHunter();
 public CodeExecutor getCodeExecutor();
 public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
 public JavaMemoryCompiler getJavaMemoryCompiler();
+public PathScannerClassLoader getPathScannerClassLoader();
 public PathHelper getPathHelper();
 ```
 ... That can be used within your application, simply as follow:
