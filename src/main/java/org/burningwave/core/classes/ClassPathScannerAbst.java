@@ -225,7 +225,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		return true;
 	}
 	
-	public synchronized void deleteResults() {
+	public synchronized void deleteSearchResults() {
 		Collection<SearchResult<I>> searchResults = this.searchResults;
 		if (searchResults != null) {
 			Iterator<SearchResult<I>> searchResultsIterator = searchResults.iterator();		
@@ -243,7 +243,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		pathHelper = null;
 		contextSupplier = null;
 		config = null;
-		deleteResults();
+		deleteSearchResults();
 		this.searchResults = null;
 	}
 }

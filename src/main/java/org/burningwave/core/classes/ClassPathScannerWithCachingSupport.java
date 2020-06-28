@@ -287,7 +287,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			}
 		}
 		if (deleteHuntersResults) {
-			deleteResults();
+			deleteSearchResults();
 		}
 	}
 	

@@ -390,15 +390,37 @@ public class ComponentContainer implements ComponentSupplier {
 		Cache.clear();
 	}
 	
-	public static void clearAllCaches(boolean deleteHuntersResults) {
+	@Override
+	public void clearHuntersCache(boolean deleteHuntersResults) {
+		ByteCodeHunter byteCodeHunter = (ByteCodeHunter)components.get(ByteCodeHunter.class);
+		if (byteCodeHunter != null) {
+			byteCodeHunter.clearCache(deleteHuntersResults);
+		}
+		ClassHunter classHunter = (ClassHunter)components.get(ClassHunter.class);
+		if (classHunter != null) {
+			classHunter.clearCache(deleteHuntersResults);
+		}
+		ClassPathHunter classPathHunter = (ClassPathHunter)components.get(ClassPathHunter.class);
+		if (classPathHunter != null) {
+			classPathHunter.clearCache(deleteHuntersResults);
+		}
+	}
+	
+	public static void clearAllCaches(boolean deleteHuntersResults, boolean deleteClassRetrievers) {
 		for (ComponentContainer componentContainer : instances) {
-			componentContainer.clearCache(deleteHuntersResults);
+			componentContainer.clearCache(deleteHuntersResults, deleteClassRetrievers);
 		}
 	}
 	
 	@Override
-	public void clearCache(boolean deleteHuntersResults) {
+	public void clearCache(boolean deleteHuntersResults, boolean deleteClassRetrievers) {
 		clearHuntersCache(deleteHuntersResults);
+		if (deleteClassRetrievers) {
+			ClassFactory classFactory = (ClassFactory) components.get(ClassFactory.class);
+			if (classFactory != null) {
+				classFactory.deleteClassRetrievers();
+			}
+		}
 		removePathScannerClassLoader();
 	}
 	

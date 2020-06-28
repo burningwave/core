@@ -37,9 +37,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -114,6 +116,7 @@ public class ClassFactory implements Component {
 	private Supplier<ClassPathHunter> classPathHunterSupplier;
 	private Object defaultClassLoaderOrDefaultClassLoaderSupplier;
 	private Supplier<ClassLoader> defaultClassLoaderSupplier;
+	Collection<ClassRetriever> classRetrievers;
 	private Properties config;
 	
 	private ClassFactory(
@@ -130,6 +133,7 @@ public class ClassFactory implements Component {
 		this.pathHelper = pathHelper;
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
 		this.defaultClassLoaderOrDefaultClassLoaderSupplier = defaultClassLoaderOrDefaultClassLoaderSupplier;
+		this.classRetrievers = new CopyOnWriteArrayList<>();
 		this.config = config;
 		listenTo(config);
 	}
@@ -294,7 +298,7 @@ public class ClassFactory implements Component {
 							Arrays.asList(compileResult.getClassPath().getAbsolutePath()), true
 						);
 					}
-					return new ClassRetriever(classLoaderSupplierForClassRetriever) {
+					return new ClassRetriever(this, classLoaderSupplierForClassRetriever) {
 						@Override
 						public Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className) {
 							try {
@@ -326,7 +330,7 @@ public class ClassFactory implements Component {
 				}
 			}
 			logInfo("Classes {} loaded by classloader {} without building", String.join(", ", classes.keySet()), classLoader);
-			return new ClassRetriever(classLoaderSupplierForClassRetriever) {
+			return new ClassRetriever(this, classLoaderSupplierForClassRetriever) {
 				@Override
 				public Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className) {
 					try {
@@ -586,9 +590,33 @@ public class ClassFactory implements Component {
 			
 	}
 	
+	boolean register(ClassRetriever classRetriever) {
+		classRetrievers.add(classRetriever);
+		return true;
+	}
+	
+	boolean unregister(ClassRetriever classRetriever) {
+		classRetrievers.remove(classRetriever);
+		return true;
+	}
+	
+	public synchronized void deleteClassRetrievers() {
+		Collection<ClassRetriever> classRetrievers = this.classRetrievers;
+		if (classRetrievers != null) {
+			Iterator<ClassRetriever> classRetrieverIterator = classRetrievers.iterator();		
+			while(classRetrieverIterator.hasNext()) {
+				ClassRetriever classRetriever = classRetrieverIterator.next();
+				classRetriever.close();
+				classRetrieverIterator.remove();
+			}
+		}
+	}
+	
 	@Override
 	public void close() {
 		unregister(config);
+		deleteClassRetrievers();
+		this.classRetrievers = null;
 		pathHelper = null;
 		javaMemoryCompiler = null;
 		pojoSubTypeRetriever = null;	
@@ -605,9 +633,12 @@ public class ClassFactory implements Component {
 
 	public static abstract class ClassRetriever implements Component {
 		private ClassLoader classLoader;
+		private ClassFactory classFactory;
 		
-		private ClassRetriever(Function<ClassRetriever, ClassLoader> classLoaderSupplier) {
+		private ClassRetriever(ClassFactory classFactory, Function<ClassRetriever, ClassLoader> classLoaderSupplier) {
 			this.classLoader = classLoaderSupplier.apply(this);
+			this.classFactory = classFactory;
+			this.classFactory.register(this);
 		}
 		
 		public abstract Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className);
@@ -637,6 +668,8 @@ public class ClassFactory implements Component {
 			if (classLoader instanceof MemoryClassLoader) {
 				((MemoryClassLoader)classLoader).unregister(this, true);
 			}
+			this.classLoader = null;
+			this.classFactory.unregister(this);
 		}
 	}
 }
