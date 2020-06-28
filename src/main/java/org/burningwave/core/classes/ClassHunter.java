@@ -143,18 +143,16 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		if (defaultPathScannerClassLoader == null) {
 			synchronized (this) {
 				if (defaultPathScannerClassLoader == null) {
-					if (defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier instanceof Supplier) {
-						Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier =
-							((Supplier<?>)this.defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier).get();
-						if (defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier instanceof PathScannerClassLoader) {
-							this.defaultPathScannerClassLoader = (PathScannerClassLoader)defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier;
-							((MemoryClassLoader)defaultPathScannerClassLoader).register(this);
-							((MemoryClassLoader)defaultPathScannerClassLoader).register(client);
-							return defaultPathScannerClassLoader;
-						} else if (defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier instanceof Supplier) {
-							this.defaultPathScannerClassLoaderSupplier = (Supplier<PathScannerClassLoader>) defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier;
-							return getDefaultPathScannerClassLoader(client);
-						}
+					Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier =
+						((Supplier<?>)this.defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier).get();
+					if (defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier instanceof PathScannerClassLoader) {
+						this.defaultPathScannerClassLoader = (PathScannerClassLoader)defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier;
+						((MemoryClassLoader)defaultPathScannerClassLoader).register(this);
+						((MemoryClassLoader)defaultPathScannerClassLoader).register(client);
+						return defaultPathScannerClassLoader;
+					} else if (defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier instanceof Supplier) {
+						this.defaultPathScannerClassLoaderSupplier = (Supplier<PathScannerClassLoader>) defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier;
+						return getDefaultPathScannerClassLoader(client);
 					}
 				} else { 
 					return defaultPathScannerClassLoader;
@@ -201,7 +199,6 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		);
 	}
 	
-	@SuppressWarnings("resource")
 	public static class SearchContext extends org.burningwave.core.classes.SearchContext<Class<?>> {
 		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound;
 		Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap;

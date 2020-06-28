@@ -116,7 +116,7 @@ public class ClassFactory implements Component {
 	private Supplier<ClassPathHunter> classPathHunterSupplier;
 	private Object defaultClassLoaderOrDefaultClassLoaderSupplier;
 	private Supplier<ClassLoader> defaultClassLoaderSupplier;
-	Collection<ClassRetriever> classRetrievers;
+	private Collection<ClassRetriever> classRetrievers;
 	private Properties config;
 	
 	private ClassFactory(
@@ -182,19 +182,17 @@ public class ClassFactory implements Component {
 		if (defaultClassLoader == null) {
 			synchronized (this) {
 				if (defaultClassLoader == null) {
-					if (defaultClassLoaderOrDefaultClassLoaderSupplier instanceof Supplier) {
-						Object classLoaderOrClassLoaderSupplier = ((Supplier<?>)this.defaultClassLoaderOrDefaultClassLoaderSupplier).get();
-						if (classLoaderOrClassLoaderSupplier instanceof ClassLoader) {
-							this.defaultClassLoader = (ClassLoader)classLoaderOrClassLoaderSupplier;
-							if (defaultClassLoader instanceof MemoryClassLoader) {
-								((MemoryClassLoader)defaultClassLoader).register(this);
-								((MemoryClassLoader)defaultClassLoader).register(client);
-							}
-							return defaultClassLoader;
-						} else if (classLoaderOrClassLoaderSupplier instanceof Supplier) {
-							this.defaultClassLoaderSupplier = (Supplier<ClassLoader>) classLoaderOrClassLoaderSupplier;
-							return getDefaultClassLoader(client);
+					Object classLoaderOrClassLoaderSupplier = ((Supplier<?>)this.defaultClassLoaderOrDefaultClassLoaderSupplier).get();
+					if (classLoaderOrClassLoaderSupplier instanceof ClassLoader) {
+						this.defaultClassLoader = (ClassLoader)classLoaderOrClassLoaderSupplier;
+						if (defaultClassLoader instanceof MemoryClassLoader) {
+							((MemoryClassLoader)defaultClassLoader).register(this);
+							((MemoryClassLoader)defaultClassLoader).register(client);
 						}
+						return defaultClassLoader;
+					} else if (classLoaderOrClassLoaderSupplier instanceof Supplier) {
+						this.defaultClassLoaderSupplier = (Supplier<ClassLoader>) classLoaderOrClassLoaderSupplier;
+						return getDefaultClassLoader(client);
 					}
 				} else { 
 					return defaultClassLoader;
@@ -607,8 +605,18 @@ public class ClassFactory implements Component {
 			while(classRetrieverIterator.hasNext()) {
 				ClassRetriever classRetriever = classRetrieverIterator.next();
 				classRetriever.close();
-				classRetrieverIterator.remove();
 			}
+		}
+	}
+	
+	public void reset(boolean deleteClassRetrievers) {
+		if (deleteClassRetrievers) {
+			deleteClassRetrievers();
+		}
+		ClassLoader defaultClassLoader = this.defaultClassLoader;
+		this.defaultClassLoader = null;
+		if (defaultClassLoader != null && defaultClassLoader instanceof MemoryClassLoader) {
+			((MemoryClassLoader)defaultClassLoader).unregister(this, true);
 		}
 	}
 	
