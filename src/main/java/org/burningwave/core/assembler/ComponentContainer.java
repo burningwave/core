@@ -402,9 +402,7 @@ public class ComponentContainer implements ComponentSupplier {
 		clearHuntersCache(deleteHuntersResults);
 		ClassFactory classFactory = (ClassFactory)components.get(ClassFactory.class);
 		if (classFactory != null) {
-			if (deleteClassRetrievers) {
-				classFactory.reset(deleteClassRetrievers);
-			}
+			classFactory.reset(deleteClassRetrievers);
 		}		
 	}
 	
