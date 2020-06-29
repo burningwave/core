@@ -40,7 +40,7 @@ public class BaseTest implements Component {
 	}
 	
 	public void closeComponentContainer() {
-		componentSupplier.close(true);
+		componentSupplier.close();
 		componentSupplier = null;
 	}
 

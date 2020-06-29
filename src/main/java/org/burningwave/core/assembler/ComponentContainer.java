@@ -374,12 +374,7 @@ public class ComponentContainer implements ComponentSupplier {
 		return this;
 	}
 	
-	@Override
 	public void close() {
-		close(false);
-	}
-	
-	public void close(boolean forcePathScannerClassLoaderClosing) {
 		if (LazyHolder.getComponentContainerInstance() != this) {
 			unregister(GlobalProperties);
 			unregister(config);
