@@ -1,4 +1,4 @@
-name: Build and Test -> Release if requested
+name: Build and test
 
 on:
   push:
