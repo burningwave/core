@@ -24,7 +24,7 @@ import org.junit.runners.MethodSorters;
 public class BaseTest implements Component {
 
 	Collection<ComponentSupplier> componentSuppliers = new CopyOnWriteArrayList<>();
-	private static ComponentContainer componentSupplier = ComponentContainer.create("burningwave.properties");
+	private static ComponentContainer componentSupplier;
 	
 //	protected ComponentSupplier getComponentSupplier() {
 //		//Set<ComponentSupplier> componentSuppliers = getComponentSupplierSetForTest();
@@ -32,15 +32,15 @@ public class BaseTest implements Component {
 //		return ComponentSupplier.getInstance();
 //	}
 	
-	protected ComponentSupplier getComponentSupplier() {
+	protected synchronized ComponentSupplier getComponentSupplier() {
 		if (componentSupplier == null) {
-			componentSupplier = ComponentContainer.create("burningwave.properties");
+			return componentSupplier = ComponentContainer.create("burningwave.properties");
 		}
 		return componentSupplier;
 	}
 	
-	public void closeComponentContainer() {
-		componentSupplier.close(true);
+	public synchronized void closeComponentContainer() {
+		componentSupplier.close();
 		componentSupplier = null;
 	}
 
@@ -177,10 +177,4 @@ public class BaseTest implements Component {
 	}
 	
 	
-	@Override
-	protected void finalize() throws Throwable {
-		componentSuppliers.forEach(componentSupplier -> componentSupplier.close());
-		componentSuppliers.clear();
-	}
-
 }

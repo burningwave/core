@@ -356,30 +356,27 @@ public class ComponentContainer implements ComponentSupplier {
 	public ComponentSupplier clear() {
 		Iterator<Entry<Class<? extends Component>, Component>> componentsItr =
 			components.entrySet().iterator();
-		while (componentsItr.hasNext()) {
-			Entry<Class<? extends Component>, Component> entry = componentsItr.next();
-			try {
-				Component component = entry.getValue();
-				if (!(component instanceof PathScannerClassLoader)) {
-					entry.getValue().close();
-				} else {
-					((PathScannerClassLoader)component).unregister(this, true);
+		synchronized (components) {
+			while (componentsItr.hasNext()) {
+				Entry<Class<? extends Component>, Component> entry = componentsItr.next();
+				try {
+					Component component = entry.getValue();
+					if (!(component instanceof PathScannerClassLoader)) {
+						entry.getValue().close();
+					} else {
+						((PathScannerClassLoader)component).unregister(this, true);
+					}
+					
+				} catch (Throwable exc) {
+					logError("Exception occurred while closing " + entry.getValue(), exc);
 				}
-				
-			} catch (Throwable exc) {
-				logError("Exception occurred while closing " + entry.getValue(), exc);
 			}
-			componentsItr.remove();
+			components.clear();
 		}
 		return this;
 	}
 	
-	@Override
 	public void close() {
-		close(false);
-	}
-	
-	public void close(boolean forcePathScannerClassLoaderClosing) {
 		if (LazyHolder.getComponentContainerInstance() != this) {
 			unregister(GlobalProperties);
 			unregister(config);
@@ -409,7 +406,6 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public void clearCache(boolean closeHuntersResults, boolean closeClassRetrievers) {
-		resetPathScannerClassLoader();
 		clearHuntersCache(closeHuntersResults);
 		ClassFactory classFactory = (ClassFactory)components.get(ClassFactory.class);
 		if (classFactory != null) {

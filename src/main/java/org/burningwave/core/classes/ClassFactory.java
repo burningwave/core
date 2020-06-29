@@ -645,6 +645,9 @@ public class ClassFactory implements Component {
 		classPathHunter = null;
 		classPathHunterSupplier = null;
 		defaultClassLoaderOrDefaultClassLoaderSupplier = null;
+		defaultClassLoaderOrDefaultClassLoaderSupplier = null;
+		defaultClassLoaderSupplier = null;
+		classLoaderResetter = null;		
 		config = null;
 	}
 

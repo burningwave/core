@@ -334,6 +334,10 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	@Override
 	public void close() {
 		super.close();
+		this.defaultPathScannerClassLoaderSupplier = null;
+		this.defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier = null;
+		this.defaultPathScannerClassLoader = null;
+		this.pathScannerClassLoaderResetter = null;
 	}
 
 }
