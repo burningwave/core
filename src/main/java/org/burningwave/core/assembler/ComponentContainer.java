@@ -38,13 +38,13 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -81,7 +81,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	ComponentContainer(Supplier<Properties> propertySupplier) {
 		this.propertySupplier = propertySupplier;
-		this.components = new HashMap<>();
+		this.components = new ConcurrentHashMap<>();
 		this.config = new Properties();
 		instances.add(this);
 	}
@@ -243,6 +243,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getJavaMemoryCompiler(),
 				getPathHelper(),
 				(Supplier<?>)() -> retrieveFromConfig(ClassFactory.Configuration.Key.DEFAULT_CLASS_LOADER, ClassFactory.Configuration.DEFAULT_VALUES),
+				getClassLoaderResetter(),
 				config
 			)
 		);	
@@ -276,6 +277,7 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getClassHunter(),
 				getPathHelper(),
 				(Supplier<?>)() -> retrieveFromConfig(ClassHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER, ClassHunter.Configuration.DEFAULT_VALUES),
+				getClassLoaderResetter(),
 				config
 			);
 		});
@@ -341,34 +343,39 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
+	private Consumer<ClassLoader> getClassLoaderResetter() {
+		return classLoader -> {
+			PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class);
+			if (classLoader == pathScannerClassLoader) {
+				resetPathScannerClassLoader();
+			}
+		};
+	}
 	
 	public ComponentSupplier clear() {
 		Iterator<Entry<Class<? extends Component>, Component>> componentsItr =
 			components.entrySet().iterator();
-		while (componentsItr.hasNext()) {
-			Entry<Class<? extends Component>, Component> entry = componentsItr.next();
-			try {
-				Component component = entry.getValue();
-				if (!(component instanceof PathScannerClassLoader)) {
-					entry.getValue().close();
-				} else {
-					((PathScannerClassLoader)component).unregister(this, true);
+		synchronized (components) {
+			while (componentsItr.hasNext()) {
+				Entry<Class<? extends Component>, Component> entry = componentsItr.next();
+				try {
+					Component component = entry.getValue();
+					if (!(component instanceof PathScannerClassLoader)) {
+						entry.getValue().close();
+					} else {
+						((PathScannerClassLoader)component).unregister(this, true);
+					}
+					
+				} catch (Throwable exc) {
+					logError("Exception occurred while closing " + entry.getValue(), exc);
 				}
-				
-			} catch (Throwable exc) {
-				logError("Exception occurred while closing " + entry.getValue(), exc);
 			}
-			componentsItr.remove();
+			components.clear();
 		}
 		return this;
 	}
 	
-	@Override
 	public void close() {
-		close(false);
-	}
-	
-	public void close(boolean forcePathScannerClassLoaderClosing) {
 		if (LazyHolder.getComponentContainerInstance() != this) {
 			unregister(GlobalProperties);
 			unregister(config);
@@ -390,19 +397,38 @@ public class ComponentContainer implements ComponentSupplier {
 		Cache.clear();
 	}
 	
-	public static void clearAllCaches(boolean deleteHuntersResults) {
+	public static void clearAllCaches(boolean closeHuntersResults, boolean closeClassRetrievers) {
 		for (ComponentContainer componentContainer : instances) {
-			componentContainer.clearCache(deleteHuntersResults);
+			componentContainer.clearCache(closeHuntersResults, closeClassRetrievers);
 		}
 	}
 	
 	@Override
-	public void clearCache(boolean deleteHuntersResults) {
-		clearHuntersCache(deleteHuntersResults);
-		removePathScannerClassLoader();
+	public void clearCache(boolean closeHuntersResults, boolean closeClassRetrievers) {
+		clearHuntersCache(closeHuntersResults);
+		ClassFactory classFactory = (ClassFactory)components.get(ClassFactory.class);
+		if (classFactory != null) {
+			classFactory.reset(closeClassRetrievers);
+		}		
 	}
 	
-	void removePathScannerClassLoader() {
+	@Override
+	public void clearHuntersCache(boolean closeHuntersResults) {
+		ByteCodeHunter byteCodeHunter = (ByteCodeHunter)components.get(ByteCodeHunter.class);
+		if (byteCodeHunter != null) {
+			byteCodeHunter.clearCache(closeHuntersResults);
+		}
+		ClassHunter classHunter = (ClassHunter)components.get(ClassHunter.class);
+		if (classHunter != null) {
+			classHunter.clearCache(closeHuntersResults);
+		}
+		ClassPathHunter classPathHunter = (ClassPathHunter)components.get(ClassPathHunter.class);
+		if (classPathHunter != null) {
+			classPathHunter.clearCache(closeHuntersResults);
+		}
+	}
+	
+	private void resetPathScannerClassLoader() {
 		synchronized(components) {
 			PathScannerClassLoader classLoader = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
 			if (classLoader != null) {
