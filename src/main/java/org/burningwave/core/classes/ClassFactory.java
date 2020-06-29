@@ -136,6 +136,7 @@ public class ClassFactory implements Component {
 		this.pathHelper = pathHelper;
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
 		this.defaultClassLoaderOrDefaultClassLoaderSupplier = defaultClassLoaderOrDefaultClassLoaderSupplier;
+		this.classLoaderResetter = classLoaderResetter;
 		this.classRetrievers = new CopyOnWriteArrayList<>();
 		this.config = config;
 		listenTo(config);

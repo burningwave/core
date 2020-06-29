@@ -107,6 +107,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			config
 		);
 		this.defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier = defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier;
+		this.pathScannerClassLoaderResetter = pathScannerClassLoaderResetter;
 	}
 	
 	
