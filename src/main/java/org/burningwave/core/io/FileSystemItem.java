@@ -853,18 +853,6 @@ public class FileSystemItem implements ManagedLogger {
 					);					
 				}
 			}
-			static class ClassPathType extends ArchiveType {
-					
-				@Override
-				FileSystemItem.Criteria toCriteria(CheckingOption checkFileOption) {
-					return super.toCriteria(checkFileOption).or().allFileThat(FileSystemItem::isFolder);
-				}
-				
-				@Override
-				FileSystemItem.Criteria toCriteria(String checkFileOptionLabel) {
-					return toCriteria(CheckingOption.forLabel(checkFileOptionLabel));
-				}
-			}
 			
 			static class ClassType extends ForFileOf {
 				
@@ -956,14 +944,6 @@ public class FileSystemItem implements ManagedLogger {
 		
 		public final static Criteria forArchiveTypeFiles(String checkingOption) {
 			return new CheckingOption.ForFileOf.ArchiveType().toCriteria(checkingOption);
-		}
-		
-		public final static Criteria forClassPathTypeFiles(CheckingOption checkingOption) {
-			return new CheckingOption.ForFileOf.ClassPathType().toCriteria(checkingOption);
-		}
-		
-		public final static Criteria forClassPathTypeFiles(String checkingOption) {
-			return new CheckingOption.ForFileOf.ClassPathType().toCriteria(checkingOption);
 		}
 		
 		public final static Criteria forClassTypeFiles(CheckingOption checkingOption) {
