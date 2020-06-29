@@ -1,5 +1,3 @@
 package org.burningwave.core;
 
-public class RepeatedClassFactoryTest extends ClassFactoryTest {
-
-}
+public class RepeatedClassFactoryTest extends ClassFactoryTest {}
