@@ -34,7 +34,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -44,6 +43,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -204,9 +204,12 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 
 	List<URL> getResourcesURLFromParent(String name) throws IOException {
 		ClassLoader parentClassLoader = getParent();
-		List<URL> resourcesFound = new ArrayList<>();
+		List<URL> resourcesFound = new CopyOnWriteArrayList<>();
 		if (parentClassLoader != null) {
-			resourcesFound = Collections.list(parentClassLoader.getResources(name));
+			Enumeration<URL> urlEnum = parentClassLoader.getResources(name);
+			while (urlEnum.hasMoreElements()) {
+				resourcesFound.add(urlEnum.nextElement());
+			}
 		}
 		return resourcesFound;
 	}
@@ -235,7 +238,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	}
 	
 	public Map<String, InputStream> getResourcesAsStream(String name) {
-		Map<String, InputStream> inputStreams = new HashMap<>();
+		Map<String, InputStream> inputStreams = new ConcurrentHashMap<>();
 		FileSystemItem.Criteria scanFileCriteria = FileSystemItem.Criteria.forAllFileThat(child -> {
 			if (child.isFile() && child.getAbsolutePath().endsWith("/" + name)) {
 				inputStreams.put(child.getAbsolutePath(), child.toInputStream());
