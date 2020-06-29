@@ -356,20 +356,22 @@ public class ComponentContainer implements ComponentSupplier {
 	public ComponentSupplier clear() {
 		Iterator<Entry<Class<? extends Component>, Component>> componentsItr =
 			components.entrySet().iterator();
-		while (componentsItr.hasNext()) {
-			Entry<Class<? extends Component>, Component> entry = componentsItr.next();
-			try {
-				Component component = entry.getValue();
-				if (!(component instanceof PathScannerClassLoader)) {
-					entry.getValue().close();
-				} else {
-					((PathScannerClassLoader)component).unregister(this, true);
+		synchronized (components) {
+			while (componentsItr.hasNext()) {
+				Entry<Class<? extends Component>, Component> entry = componentsItr.next();
+				try {
+					Component component = entry.getValue();
+					if (!(component instanceof PathScannerClassLoader)) {
+						entry.getValue().close();
+					} else {
+						((PathScannerClassLoader)component).unregister(this, true);
+					}
+					
+				} catch (Throwable exc) {
+					logError("Exception occurred while closing " + entry.getValue(), exc);
 				}
-				
-			} catch (Throwable exc) {
-				logError("Exception occurred while closing " + entry.getValue(), exc);
+				componentsItr.remove();
 			}
-			componentsItr.remove();
 		}
 		return this;
 	}
