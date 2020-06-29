@@ -39,6 +39,7 @@ public class BaseTest implements Component {
 		return componentSupplier;
 	}
 	
+	
 	public synchronized void closeComponentContainer() {
 		componentSupplier.close();
 		componentSupplier = null;
