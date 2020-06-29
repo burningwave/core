@@ -404,7 +404,6 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public void clearCache(boolean closeHuntersResults, boolean closeClassRetrievers) {
-		resetPathScannerClassLoader();
 		clearHuntersCache(closeHuntersResults);
 		ClassFactory classFactory = (ClassFactory)components.get(ClassFactory.class);
 		if (classFactory != null) {
