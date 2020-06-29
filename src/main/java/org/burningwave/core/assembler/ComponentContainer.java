@@ -45,6 +45,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -243,6 +244,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getJavaMemoryCompiler(),
 				getPathHelper(),
 				(Supplier<?>)() -> retrieveFromConfig(ClassFactory.Configuration.Key.DEFAULT_CLASS_LOADER, ClassFactory.Configuration.DEFAULT_VALUES),
+				getClassLoaderResetter(),
 				config
 			)
 		);	
@@ -276,6 +278,7 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getClassHunter(),
 				getPathHelper(),
 				(Supplier<?>)() -> retrieveFromConfig(ClassHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER, ClassHunter.Configuration.DEFAULT_VALUES),
+				getClassLoaderResetter(),
 				config
 			);
 		});
@@ -341,6 +344,14 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
+	private Consumer<ClassLoader> getClassLoaderResetter() {
+		return classLoader -> {
+			PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class);
+			if (classLoader == pathScannerClassLoader) {
+				resetPathScannerClassLoader();
+			}
+		};
+	}
 	
 	public ComponentSupplier clear() {
 		Iterator<Entry<Class<? extends Component>, Component>> componentsItr =
@@ -398,7 +409,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public void clearCache(boolean closeHuntersResults, boolean closeClassRetrievers) {
-		removePathScannerClassLoader();
+		resetPathScannerClassLoader();
 		clearHuntersCache(closeHuntersResults);
 		ClassFactory classFactory = (ClassFactory)components.get(ClassFactory.class);
 		if (classFactory != null) {
@@ -422,7 +433,7 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
-	void removePathScannerClassLoader() {
+	private void resetPathScannerClassLoader() {
 		synchronized(components) {
 			PathScannerClassLoader classLoader = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
 			if (classLoader != null) {

@@ -44,6 +44,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -117,6 +118,7 @@ public class ClassFactory implements Component {
 	private Object defaultClassLoaderOrDefaultClassLoaderSupplier;
 	private Supplier<ClassLoader> defaultClassLoaderSupplier;
 	private Collection<ClassRetriever> classRetrievers;
+	private Consumer<ClassLoader> classLoaderResetter;
 	private Properties config;
 	
 	private ClassFactory(
@@ -125,6 +127,7 @@ public class ClassFactory implements Component {
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		Object defaultClassLoaderOrDefaultClassLoaderSupplier,
+		Consumer<ClassLoader> classLoaderResetter,
 		Properties config
 	) {	
 		this.byteCodeHunter = byteCodeHunter;
@@ -144,6 +147,7 @@ public class ClassFactory implements Component {
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		Object defaultClassLoaderSupplier,
+		Consumer<ClassLoader> classLoaderResetter,
 		Properties config
 	) {
 		return new ClassFactory(
@@ -152,6 +156,7 @@ public class ClassFactory implements Component {
 			javaMemoryCompiler, 
 			pathHelper,
 			defaultClassLoaderSupplier,
+			classLoaderResetter,
 			config
 		);
 	}
@@ -614,10 +619,13 @@ public class ClassFactory implements Component {
 			closeClassRetrievers();
 		}
 		ClassLoader defaultClassLoader = this.defaultClassLoader;
-		this.defaultClassLoader = null;
-		if (defaultClassLoader != null && defaultClassLoader instanceof MemoryClassLoader) {
-			((MemoryClassLoader)defaultClassLoader).unregister(this, true);
-		}
+		if (defaultClassLoader != null) {
+			this.defaultClassLoader = null;
+			classLoaderResetter.accept(defaultClassLoader);
+			if (defaultClassLoader instanceof MemoryClassLoader) {
+				((MemoryClassLoader)defaultClassLoader).unregister(this, true);
+			}
+		}		
 	}
 	
 	@Override

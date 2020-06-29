@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -87,11 +88,13 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	private Supplier<PathScannerClassLoader> defaultPathScannerClassLoaderSupplier;
 	private Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier;
 	private PathScannerClassLoader defaultPathScannerClassLoader;
+	private Consumer<ClassLoader> pathScannerClassLoaderResetter;
 	
 	ClassHunter(
 		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
+		Consumer<ClassLoader> pathScannerClassLoaderResetter,
 		Properties config
 	) {
 		super(
@@ -112,10 +115,11 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		Supplier<ClassHunter> classHunterSupplier, 
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier,
+		Consumer<ClassLoader> pathScannerClassLoaderResetter,
 		Properties config
 	) {
 		return new ClassHunter(
-			classHunterSupplier, pathHelper, defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier, config
+			classHunterSupplier, pathHelper, defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier, pathScannerClassLoaderResetter, config
 		);
 	}
 	
@@ -321,6 +325,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		PathScannerClassLoader pathScannerClassLoader = this.defaultPathScannerClassLoader;
 		if (pathScannerClassLoader != null) {
 			pathScannerClassLoader.unregister(this, true);
+			pathScannerClassLoaderResetter.accept(pathScannerClassLoader);
 			this.defaultPathScannerClassLoader = null;
 		}
 	}
