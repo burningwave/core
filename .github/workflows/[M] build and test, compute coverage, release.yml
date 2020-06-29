@@ -1,4 +1,4 @@
-name: Build and Test -> Compute coverage -> Release 
+name: Build and test -> Compute coverage -> Release 
 
 on:
   watch:
