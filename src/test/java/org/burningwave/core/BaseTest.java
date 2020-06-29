@@ -177,10 +177,4 @@ public class BaseTest implements Component {
 	}
 	
 	
-	@Override
-	protected void finalize() throws Throwable {
-		componentSuppliers.forEach(componentSupplier -> componentSupplier.close());
-		componentSuppliers.clear();
-	}
-
 }
