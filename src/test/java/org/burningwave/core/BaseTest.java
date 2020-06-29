@@ -15,16 +15,13 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.junit.FixMethodOrder;
 import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.api.function.ThrowingSupplier;
-import org.junit.runners.MethodSorters;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class BaseTest implements Component {
 
 	Collection<ComponentSupplier> componentSuppliers = new CopyOnWriteArrayList<>();
-	private static ComponentContainer componentSupplier;
+	private static ComponentContainer componentSupplier = ComponentContainer.create("burningwave.properties");
 	
 //	protected ComponentSupplier getComponentSupplier() {
 //		//Set<ComponentSupplier> componentSuppliers = getComponentSupplierSetForTest();
@@ -32,15 +29,15 @@ public class BaseTest implements Component {
 //		return ComponentSupplier.getInstance();
 //	}
 	
-	protected synchronized ComponentSupplier getComponentSupplier() {
+	protected ComponentSupplier getComponentSupplier() {
 		if (componentSupplier == null) {
-			return componentSupplier = ComponentContainer.create("burningwave.properties");
+			componentSupplier = ComponentContainer.create("burningwave.properties");
 		}
 		return componentSupplier;
 	}
 	
-	public synchronized void closeComponentContainer() {
-		componentSupplier.close();
+	public void closeComponentContainer() {
+		componentSupplier.close(true);
 		componentSupplier = null;
 	}
 
@@ -177,4 +174,10 @@ public class BaseTest implements Component {
 	}
 	
 	
+	@Override
+	protected void finalize() throws Throwable {
+		componentSuppliers.forEach(componentSupplier -> componentSupplier.close());
+		componentSuppliers.clear();
+	}
+
 }

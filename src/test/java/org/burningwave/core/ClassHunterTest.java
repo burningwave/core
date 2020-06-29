@@ -1263,7 +1263,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllBurningWaveClasses() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearCache(true, true);
+		componentSupplier.clearCache(true);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(

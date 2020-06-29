@@ -37,14 +37,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -117,8 +114,6 @@ public class ClassFactory implements Component {
 	private Supplier<ClassPathHunter> classPathHunterSupplier;
 	private Object defaultClassLoaderOrDefaultClassLoaderSupplier;
 	private Supplier<ClassLoader> defaultClassLoaderSupplier;
-	private Collection<ClassRetriever> classRetrievers;
-	private Consumer<ClassLoader> classLoaderResetter;
 	private Properties config;
 	
 	private ClassFactory(
@@ -127,7 +122,6 @@ public class ClassFactory implements Component {
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		Object defaultClassLoaderOrDefaultClassLoaderSupplier,
-		Consumer<ClassLoader> classLoaderResetter,
 		Properties config
 	) {	
 		this.byteCodeHunter = byteCodeHunter;
@@ -136,8 +130,6 @@ public class ClassFactory implements Component {
 		this.pathHelper = pathHelper;
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
 		this.defaultClassLoaderOrDefaultClassLoaderSupplier = defaultClassLoaderOrDefaultClassLoaderSupplier;
-		this.classLoaderResetter = classLoaderResetter;
-		this.classRetrievers = new CopyOnWriteArrayList<>();
 		this.config = config;
 		listenTo(config);
 	}
@@ -148,7 +140,6 @@ public class ClassFactory implements Component {
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
 		Object defaultClassLoaderSupplier,
-		Consumer<ClassLoader> classLoaderResetter,
 		Properties config
 	) {
 		return new ClassFactory(
@@ -157,7 +148,6 @@ public class ClassFactory implements Component {
 			javaMemoryCompiler, 
 			pathHelper,
 			defaultClassLoaderSupplier,
-			classLoaderResetter,
 			config
 		);
 	}
@@ -188,17 +178,19 @@ public class ClassFactory implements Component {
 		if (defaultClassLoader == null) {
 			synchronized (this) {
 				if (defaultClassLoader == null) {
-					Object classLoaderOrClassLoaderSupplier = ((Supplier<?>)this.defaultClassLoaderOrDefaultClassLoaderSupplier).get();
-					if (classLoaderOrClassLoaderSupplier instanceof ClassLoader) {
-						this.defaultClassLoader = (ClassLoader)classLoaderOrClassLoaderSupplier;
-						if (defaultClassLoader instanceof MemoryClassLoader) {
-							((MemoryClassLoader)defaultClassLoader).register(this);
-							((MemoryClassLoader)defaultClassLoader).register(client);
+					if (defaultClassLoaderOrDefaultClassLoaderSupplier instanceof Supplier) {
+						Object classLoaderOrClassLoaderSupplier = ((Supplier<?>)this.defaultClassLoaderOrDefaultClassLoaderSupplier).get();
+						if (classLoaderOrClassLoaderSupplier instanceof ClassLoader) {
+							this.defaultClassLoader = (ClassLoader)classLoaderOrClassLoaderSupplier;
+							if (defaultClassLoader instanceof MemoryClassLoader) {
+								((MemoryClassLoader)defaultClassLoader).register(this);
+								((MemoryClassLoader)defaultClassLoader).register(client);
+							}
+							return defaultClassLoader;
+						} else if (classLoaderOrClassLoaderSupplier instanceof Supplier) {
+							this.defaultClassLoaderSupplier = (Supplier<ClassLoader>) classLoaderOrClassLoaderSupplier;
+							return getDefaultClassLoader(client);
 						}
-						return defaultClassLoader;
-					} else if (classLoaderOrClassLoaderSupplier instanceof Supplier) {
-						this.defaultClassLoaderSupplier = (Supplier<ClassLoader>) classLoaderOrClassLoaderSupplier;
-						return getDefaultClassLoader(client);
 					}
 				} else { 
 					return defaultClassLoader;
@@ -301,8 +293,10 @@ public class ClassFactory implements Component {
 						((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(
 							Arrays.asList(compilationResult.getClassPath().getAbsolutePath()), true
 						);
+					} else if (classLoader instanceof MemoryClassLoader) {
+						((MemoryClassLoader)classLoader).addByteCodes(compilationResult.getCompiledFiles());
 					}
-					return new ClassRetriever(this, classLoaderSupplierForClassRetriever) {
+					return new ClassRetriever(classLoaderSupplierForClassRetriever) {
 						@Override
 						public Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className) {
 							try {
@@ -334,7 +328,7 @@ public class ClassFactory implements Component {
 				}
 			}
 			logInfo("Classes {} loaded by classloader {} without building", String.join(", ", classes.keySet()), classLoader);
-			return new ClassRetriever(this, classLoaderSupplierForClassRetriever) {
+			return new ClassRetriever(classLoaderSupplierForClassRetriever) {
 				@Override
 				public Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className) {
 					try {
@@ -594,46 +588,9 @@ public class ClassFactory implements Component {
 			
 	}
 	
-	boolean register(ClassRetriever classRetriever) {
-		classRetrievers.add(classRetriever);
-		return true;
-	}
-	
-	boolean unregister(ClassRetriever classRetriever) {
-		classRetrievers.remove(classRetriever);
-		return true;
-	}
-	
-	public synchronized void closeClassRetrievers() {
-		Collection<ClassRetriever> classRetrievers = this.classRetrievers;
-		if (classRetrievers != null) {
-			Iterator<ClassRetriever> classRetrieverIterator = classRetrievers.iterator();		
-			while(classRetrieverIterator.hasNext()) {
-				ClassRetriever classRetriever = classRetrieverIterator.next();
-				classRetriever.close();
-			}
-		}
-	}
-	
-	public void reset(boolean closeClassRetrievers) {
-		if (closeClassRetrievers) {
-			closeClassRetrievers();
-		}
-		ClassLoader defaultClassLoader = this.defaultClassLoader;
-		if (defaultClassLoader != null) {
-			this.defaultClassLoader = null;
-			classLoaderResetter.accept(defaultClassLoader);
-			if (defaultClassLoader instanceof MemoryClassLoader) {
-				((MemoryClassLoader)defaultClassLoader).unregister(this, true);
-			}
-		}		
-	}
-	
 	@Override
 	public void close() {
 		unregister(config);
-		closeClassRetrievers();
-		this.classRetrievers = null;
 		pathHelper = null;
 		javaMemoryCompiler = null;
 		pojoSubTypeRetriever = null;	
@@ -645,20 +602,14 @@ public class ClassFactory implements Component {
 		classPathHunter = null;
 		classPathHunterSupplier = null;
 		defaultClassLoaderOrDefaultClassLoaderSupplier = null;
-		defaultClassLoaderOrDefaultClassLoaderSupplier = null;
-		defaultClassLoaderSupplier = null;
-		classLoaderResetter = null;		
 		config = null;
 	}
 
 	public static abstract class ClassRetriever implements Component {
 		private ClassLoader classLoader;
-		private ClassFactory classFactory;
 		
-		private ClassRetriever(ClassFactory classFactory, Function<ClassRetriever, ClassLoader> classLoaderSupplier) {
+		private ClassRetriever(Function<ClassRetriever, ClassLoader> classLoaderSupplier) {
 			this.classLoader = classLoaderSupplier.apply(this);
-			this.classFactory = classFactory;
-			this.classFactory.register(this);
 		}
 		
 		public abstract Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className);
@@ -688,9 +639,6 @@ public class ClassFactory implements Component {
 			if (classLoader instanceof MemoryClassLoader) {
 				((MemoryClassLoader)classLoader).unregister(this, true);
 			}
-			this.classLoader = null;
-			this.classFactory.unregister(this);
-			classFactory = null;
 		}
 	}
 }

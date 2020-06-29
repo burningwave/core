@@ -194,7 +194,7 @@ public class ClassFactoryTest extends BaseTest {
 			);
 			classRetriever.get("packagename.ComplexExample");
 			if (clearCache) {
-				ComponentContainer.clearAllCaches(false, false);
+				ComponentContainer.clearAllCaches(false);
 			}
 			classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).addCompilationClassPaths(
@@ -316,10 +316,6 @@ public class ClassFactoryTest extends BaseTest {
 			return virtual;
 			}
 		);
-	}
-	
-	public static class Repeat extends ClassFactoryTest {
-		
 	}
 	
 }
