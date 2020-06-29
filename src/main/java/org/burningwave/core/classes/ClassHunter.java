@@ -89,7 +89,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	private Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier;
 	private PathScannerClassLoader defaultPathScannerClassLoader;
 	private Consumer<ClassLoader> pathScannerClassLoaderResetter;
-	private boolean closed;
+	
 	ClassHunter(
 		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
@@ -148,16 +148,8 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		if (defaultPathScannerClassLoader == null) {
 			synchronized (this) {
 				if (defaultPathScannerClassLoader == null) {
-					Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier = null;
-					try {
-						defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier = ((Supplier<?>)this.defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier).get();
-					} catch (NullPointerException exc) {
-						logWarn(this.toString() + " is closed: " + closed);
-						for (StackTraceElement stackTraceElement : Thread.currentThread().getStackTrace()) {
-							logError(stackTraceElement.toString());
-						}
-						throw exc;
-					}
+					Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier =
+						((Supplier<?>)this.defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier).get();
 					if (defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier instanceof PathScannerClassLoader) {
 						this.defaultPathScannerClassLoader = (PathScannerClassLoader)defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier;
 						((MemoryClassLoader)defaultPathScannerClassLoader).register(this);
@@ -341,11 +333,6 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	
 	@Override
 	public void close() {
-		closed = true;
-		logWarn(this.toString() + " closed by:");
-		for (StackTraceElement stackTraceElement : Thread.currentThread().getStackTrace()) {
-			logWarn(stackTraceElement.toString());
-		}
 		super.close();
 		this.defaultPathScannerClassLoaderSupplier = null;
 		this.defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier = null;

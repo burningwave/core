@@ -370,8 +370,8 @@ public class ComponentContainer implements ComponentSupplier {
 				} catch (Throwable exc) {
 					logError("Exception occurred while closing " + entry.getValue(), exc);
 				}
-				componentsItr.remove();
 			}
+			components.clear();
 		}
 		return this;
 	}
