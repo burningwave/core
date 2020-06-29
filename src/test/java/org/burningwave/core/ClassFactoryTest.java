@@ -318,4 +318,8 @@ public class ClassFactoryTest extends BaseTest {
 		);
 	}
 	
+	public static class Repeat extends ClassFactoryTest {
+		
+	}
+	
 }

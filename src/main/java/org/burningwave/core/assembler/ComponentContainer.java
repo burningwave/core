@@ -390,35 +390,35 @@ public class ComponentContainer implements ComponentSupplier {
 		Cache.clear();
 	}
 	
-	public static void clearAllCaches(boolean deleteHuntersResults, boolean deleteClassRetrievers) {
+	public static void clearAllCaches(boolean closeHuntersResults, boolean closeClassRetrievers) {
 		for (ComponentContainer componentContainer : instances) {
-			componentContainer.clearCache(deleteHuntersResults, deleteClassRetrievers);
+			componentContainer.clearCache(closeHuntersResults, closeClassRetrievers);
 		}
 	}
 	
 	@Override
-	public void clearCache(boolean deleteHuntersResults, boolean deleteClassRetrievers) {
+	public void clearCache(boolean closeHuntersResults, boolean closeClassRetrievers) {
 		removePathScannerClassLoader();
-		clearHuntersCache(deleteHuntersResults);
+		clearHuntersCache(closeHuntersResults);
 		ClassFactory classFactory = (ClassFactory)components.get(ClassFactory.class);
 		if (classFactory != null) {
-			classFactory.reset(deleteClassRetrievers);
+			classFactory.reset(closeClassRetrievers);
 		}		
 	}
 	
 	@Override
-	public void clearHuntersCache(boolean deleteHuntersResults) {
+	public void clearHuntersCache(boolean closeHuntersResults) {
 		ByteCodeHunter byteCodeHunter = (ByteCodeHunter)components.get(ByteCodeHunter.class);
 		if (byteCodeHunter != null) {
-			byteCodeHunter.clearCache(deleteHuntersResults);
+			byteCodeHunter.clearCache(closeHuntersResults);
 		}
 		ClassHunter classHunter = (ClassHunter)components.get(ClassHunter.class);
 		if (classHunter != null) {
-			classHunter.clearCache(deleteHuntersResults);
+			classHunter.clearCache(closeHuntersResults);
 		}
 		ClassPathHunter classPathHunter = (ClassPathHunter)components.get(ClassPathHunter.class);
 		if (classPathHunter != null) {
-			classPathHunter.clearCache(deleteHuntersResults);
+			classPathHunter.clearCache(closeHuntersResults);
 		}
 	}
 	

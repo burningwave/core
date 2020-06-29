@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 import org.burningwave.core.Component;
 import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.JavaMemoryCompiler.CompileResult;
+import org.burningwave.core.classes.JavaMemoryCompiler.CompilationResult;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemItem;
@@ -285,7 +285,7 @@ public class ClassFactory implements Component {
 				try {
 					classes.put(className, classLoader.loadClass(className));
 				} catch (Throwable exc) {
-					CompileResult compileResult = build(
+					CompilationResult compilationResult = build(
 						useOneShotJavaCompiler,
 						compilationClassPaths,
 						classPathsForNotFoundClassesDuringCompilantion, 
@@ -293,16 +293,16 @@ public class ClassFactory implements Component {
 					);
 					if (classLoader instanceof PathScannerClassLoader) {
 						((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(
-							Arrays.asList(compileResult.getClassPath().getAbsolutePath()), true
+							Arrays.asList(compilationResult.getClassPath().getAbsolutePath()), true
 						);
 					}
 					return new ClassRetriever(this, classLoaderSupplierForClassRetriever) {
 						@Override
 						public Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className) {
 							try {
-								Map<String, ByteBuffer> finalByteCodes = compileResult.getCompiledFiles();
+								Map<String, ByteBuffer> finalByteCodes = compilationResult.getCompiledFiles();
 								if (additionalByteCodes != null) {
-									finalByteCodes = new HashMap<>(compileResult.getCompiledFiles());
+									finalByteCodes = new HashMap<>(compilationResult.getCompiledFiles());
 									finalByteCodes.putAll(additionalByteCodes);
 								}
 								if (classLoader instanceof PathScannerClassLoader) {
@@ -316,7 +316,7 @@ public class ClassFactory implements Component {
 										loadBytecodesFromClassPaths(
 											retrievedBytecodes,
 											classPathsForNotFoundClassesDuringLoading,
-											compileResult.getCompiledFiles(),
+											compilationResult.getCompiledFiles(),
 											additionalByteCodes
 										).get(), classLoader
 									);
@@ -403,7 +403,7 @@ public class ClassFactory implements Component {
 		return retrievedBytecodes;
 	}
 	
-	private CompileResult build(
+	private CompilationResult build(
 		boolean useOneShotCompiler,
 		Collection<String> mainClassPaths,
 		Collection<String> extraClassPaths,
@@ -419,7 +419,7 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	private CompileResult build0(
+	private CompilationResult build0(
 		boolean useOneShotCompiler,
 		Collection<String> compilationClassPaths,
 		Collection<String> classPathsForNotFoundClassesDuringCompilantion,
@@ -598,7 +598,7 @@ public class ClassFactory implements Component {
 		return true;
 	}
 	
-	public synchronized void deleteClassRetrievers() {
+	public synchronized void closeClassRetrievers() {
 		Collection<ClassRetriever> classRetrievers = this.classRetrievers;
 		if (classRetrievers != null) {
 			Iterator<ClassRetriever> classRetrieverIterator = classRetrievers.iterator();		
@@ -609,9 +609,9 @@ public class ClassFactory implements Component {
 		}
 	}
 	
-	public void reset(boolean deleteClassRetrievers) {
-		if (deleteClassRetrievers) {
-			deleteClassRetrievers();
+	public void reset(boolean closeClassRetrievers) {
+		if (closeClassRetrievers) {
+			closeClassRetrievers();
 		}
 		ClassLoader defaultClassLoader = this.defaultClassLoader;
 		this.defaultClassLoader = null;
@@ -623,7 +623,7 @@ public class ClassFactory implements Component {
 	@Override
 	public void close() {
 		unregister(config);
-		deleteClassRetrievers();
+		closeClassRetrievers();
 		this.classRetrievers = null;
 		pathHelper = null;
 		javaMemoryCompiler = null;
@@ -678,6 +678,7 @@ public class ClassFactory implements Component {
 			}
 			this.classLoader = null;
 			this.classFactory.unregister(this);
+			classFactory = null;
 		}
 	}
 }

@@ -275,7 +275,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		clearCache(false);
 	}
 	
-	public void clearCache(boolean deleteHuntersResults) {
+	public void clearCache(boolean closeSearchResults) {
 		Collection<String> pathsToBeRemoved = new HashSet<>(cache.keySet());
 		for (String path : pathsToBeRemoved) {
 			synchronized(mutexManager.getMutex(path)) {
@@ -286,8 +286,8 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 				}
 			}
 		}
-		if (deleteHuntersResults) {
-			deleteSearchResults();
+		if (closeSearchResults) {
+			closeSearchResults();
 		}
 	}
 	

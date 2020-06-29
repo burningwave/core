@@ -73,9 +73,9 @@ public interface ComponentSupplier extends Component {
 		clearHuntersCache(false);
 	}
 	
-	public void clearHuntersCache(boolean deleteHuntersResults);
+	public void clearHuntersCache(boolean closeSearchResults);
 	
-	public void clearCache(boolean deleteHuntersResults, boolean deleteClassRetrievers);
+	public void clearCache(boolean closeSearchResults, boolean closeClassRetrievers);
 	
 	public default void clearCache() {
 		clearCache(false, false);
