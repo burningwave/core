@@ -38,7 +38,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -82,7 +81,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	ComponentContainer(Supplier<Properties> propertySupplier) {
 		this.propertySupplier = propertySupplier;
-		this.components = new HashMap<>();
+		this.components = new ConcurrentHashMap<>();
 		this.config = new Properties();
 		instances.add(this);
 	}
