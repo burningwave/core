@@ -565,7 +565,10 @@ public class JavaMemoryCompiler implements Component {
 				classPathHunter = null;
 				options.clear();
 				options = null;
-				sources = null;		
+				sources = null;
+				classRepositoriesPaths.clear();
+				classRepositoriesPaths = null;
+				javaMemoryCompiler = null;
 			}
 
 		}

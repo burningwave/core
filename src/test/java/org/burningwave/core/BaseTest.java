@@ -15,9 +15,12 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.junit.FixMethodOrder;
 import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.api.function.ThrowingSupplier;
+import org.junit.runners.MethodSorters;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class BaseTest implements Component {
 
 	Collection<ComponentSupplier> componentSuppliers = new CopyOnWriteArrayList<>();
