@@ -112,7 +112,7 @@ public class StaticComponentContainer {
 		try {			
 			Paths = org.burningwave.core.Strings.Paths.create();
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create();
-			Runtime.getRuntime().addShutdownHook(new Thread(FileSystemHelper::close));
+			Runtime.getRuntime().addShutdownHook(new Thread(FileSystemHelper::deleteTemporaryFolders));
 			String clearTemporaryFolderFlag = GlobalProperties.getProperty(Configuration.Key.CLEAR_TEMPORARY_FOLDER_ON_INIT);
 			if (Boolean.valueOf(clearTemporaryFolderFlag)) {
 				FileSystemHelper.clearMainTemporaryFolder();

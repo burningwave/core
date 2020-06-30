@@ -60,6 +60,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("unchecked")
@@ -789,12 +790,16 @@ public class Classes implements Component, MembersRetriever {
 		
 		@Override
 		public void close() {
-			this.classLoadersClasses.clear();
-			this.classLoadersClasses = null;
-			this.classLoadersMethods.clear();
-			this.classLoadersMethods = null;
-			this.classLoadersPackages.clear();
-			this.classLoadersPackages = null;
+			if (this != StaticComponentContainer.ClassLoaders) {
+				this.classLoadersClasses.clear();
+				this.classLoadersClasses = null;
+				this.classLoadersMethods.clear();
+				this.classLoadersMethods = null;
+				this.classLoadersPackages.clear();
+				this.classLoadersPackages = null;
+			} else {
+				throw Throwables.toRuntimeException("Could not close singleton instance " + this);
+			}
 		}
 	}
 }

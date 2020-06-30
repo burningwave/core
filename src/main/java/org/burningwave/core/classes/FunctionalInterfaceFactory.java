@@ -63,7 +63,6 @@ public class FunctionalInterfaceFactory implements Component {
 	}
 
 	public <F> F create(Method targetMethod) throws Throwable {
-		
 		if (targetMethod.getParameterTypes().length == 0 && targetMethod.getReturnType() == void.class) {
 			return getBindedRunnable(targetMethod);
 		} else if (targetMethod.getParameterTypes().length == 0 && targetMethod.getReturnType() != void.class) {
@@ -233,8 +232,8 @@ public class FunctionalInterfaceFactory implements Component {
 		String argumentsKey = "";
 		if (parameters != null && parameters.length > 0) {
 			StringBuffer argumentsKeyStringBuffer = new StringBuffer();
-			Stream.of(parameters.getClass()).forEach(cls ->
-				argumentsKeyStringBuffer.append("/" + cls != null ? cls.getName() : "null")
+			Stream.of(parameters).forEach(parameter ->
+				argumentsKeyStringBuffer.append("/" + parameter.getType().getName())
 			);
 			argumentsKey = argumentsKeyStringBuffer.toString();
 		}

@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,6 +38,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.function.ThrowingSupplier;
 
 
@@ -132,13 +135,21 @@ public class FileSystemHelper implements Component {
 	    }
 	    return folder.delete();
 	}
-
-	@Override
-	public void close() {
-		baseTemporaryFolder = null;
+	
+	public void deleteTemporaryFolders() {
 		delete(temporaryFolders);
 		temporaryFolders.clear();
-		temporaryFolders = null;
+	}
+	
+	@Override
+	public void close() {
+		if (this != StaticComponentContainer.FileSystemHelper) {
+			deleteTemporaryFolders();
+			baseTemporaryFolder = null;
+			temporaryFolders = null;
+		} else {
+			throw Throwables.toRuntimeException("Could not close singleton instance " + this);
+		}
 	}
 
 }
