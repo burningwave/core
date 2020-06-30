@@ -849,7 +849,7 @@ public class FileSystemItem implements ManagedLogger {
 							name.endsWith(".ear") ||
 							name.endsWith(".jmod");
 					}, file ->
-						ThrowingSupplier.get(() -> Streams.isArchive(file.toByteBuffer()))
+						ThrowingSupplier.get(() -> !file.isFolder() && Streams.isArchive(file.toByteBuffer()))
 					);					
 				}
 			}
@@ -863,7 +863,7 @@ public class FileSystemItem implements ManagedLogger {
 							!name.endsWith("module-info.class") &&
 							!name.endsWith("package-info.class");
 					}, file -> 
-						ThrowingSupplier.get(() -> Streams.isClass(file.toByteBuffer()))
+						ThrowingSupplier.get(() -> !file.isFolder() && Streams.isClass(file.toByteBuffer()))
 					);
 						
 				}
