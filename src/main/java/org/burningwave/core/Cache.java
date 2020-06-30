@@ -53,9 +53,9 @@ public class Cache implements Component {
 	public final ObjectAndPathForResources<ClassLoader, Field[]> classLoaderForFields;
 	public final ObjectAndPathForResources<ClassLoader, Method[]> classLoaderForMethods;
 	public final ObjectAndPathForResources<ClassLoader, Constructor<?>[]> classLoaderForConstructors;
+	public final ObjectAndPathForResources<ClassLoader, Field> uniqueKeyForField;
+	public final ObjectAndPathForResources<ClassLoader, Collection<Method>> uniqueKeyForMethods;
 	public final ObjectForObject<Method, Object> bindedFunctionalInterfaces;
-	public final PathForResources<Field> uniqueKeyForField;
-	public final PathForResources<Collection<Method>> uniqueKeyForMethods;
 	public final ObjectForObject<Method, MethodHandle> uniqueKeyForMethodHandle;
 	
 	private Cache() {
@@ -67,8 +67,8 @@ public class Cache implements Component {
 		classLoaderForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
 		classLoaderForConstructors = new ObjectAndPathForResources<>(1L, constructors -> constructors);
 		bindedFunctionalInterfaces = new ObjectForObject<>();
-		uniqueKeyForField = new PathForResources<>(1L, field -> field);
-		uniqueKeyForMethods = new PathForResources<>(1L, methods -> methods);
+		uniqueKeyForField = new ObjectAndPathForResources<>(1L, field -> field);
+		uniqueKeyForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
 		uniqueKeyForMethodHandle = new ObjectForObject<>();
 	}
 	
@@ -111,6 +111,7 @@ public class Cache implements Component {
 		
 		public void clear() {
 			resources.clear();
+			mutexManagerForResources.clear();
 		}
 	}
 
@@ -141,6 +142,20 @@ public class Cache implements Component {
 			return pathForResources.getOrUploadIfAbsent(path, resourceSupplier);
 		}
 		
+		public R get(T object, String path) {
+			PathForResources<R> pathForResources = resources.get(object);
+			if (pathForResources == null) {
+				synchronized (mutexManagerForResources.getMutex(object.toString())) {
+					pathForResources = resources.get(object);
+					if (pathForResources == null) {
+						pathForResources = pathForResourcesSupplier.get();
+						resources.put(object, pathForResources);
+					}					
+				}
+			}
+			return pathForResources.get(path);
+		}
+		
 		public PathForResources<R> remove(T object) {
 			return resources.remove(object);
 		}
@@ -155,6 +170,7 @@ public class Cache implements Component {
 		
 		public void clear() {
 			resources.clear();
+			mutexManagerForResources.clear();
 		}
 	}
 	
@@ -287,6 +303,9 @@ public class Cache implements Component {
 		
 		public void clear() {
 			resources.clear();
+			mutexManagerForPartitions.clear();         
+			mutexManagerForLoadedResources.clear();    
+			mutexManagerForPartitionedResources.clear(); 
 		}
 	}
 	

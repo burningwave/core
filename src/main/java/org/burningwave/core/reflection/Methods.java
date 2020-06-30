@@ -78,8 +78,10 @@ public class Methods extends MemberHelper<Method> {
 	}
 	
 	public Method findOneAndMakeItAccessible(Object target, String methodName, boolean cacheMethod, Object... arguments) {
-		String cacheKey = getCacheKey(target, "equals " + methodName, arguments);
-		Collection<Method> members = Cache.uniqueKeyForMethods.get(cacheKey);
+		Class<?> targetClass = Classes.retrieveFrom(target);
+		String cacheKey = getCacheKey(targetClass, "equals " + methodName, arguments);
+		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
+		Collection<Method> members = Cache.uniqueKeyForMethods.get(targetClassClassLoader, cacheKey);
 		if (members == null) {	
 			 members = findAllAndMakeThemAccessible(target, methodName::equals, arguments);
 			 if (members.size() != 1) {
@@ -89,7 +91,7 @@ public class Methods extends MemberHelper<Method> {
 			 }
 			 if (cacheMethod) {
 				final Collection<Method> toUpload = members;
-				Cache.uniqueKeyForMethods.upload(cacheKey, () -> toUpload);
+				Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> toUpload);
 			 }
 		}		
 		return members.stream().findFirst().get();
@@ -160,13 +162,15 @@ public class Methods extends MemberHelper<Method> {
 	@SuppressWarnings("unchecked")
 	public <T> Collection<T> invokeAll(Object target, String methodNameRegEx, boolean cacheMember, Object... arguments) {
 		return ThrowingSupplier.get(() -> {
-			String cacheKey = getCacheKey(target, "matches " + methodNameRegEx, arguments);
-			Collection<Method> members = Cache.uniqueKeyForMethods.get(cacheKey);
+			Class<?> targetClass = Classes.retrieveFrom(target);
+			String cacheKey = getCacheKey(targetClass, "matches " + methodNameRegEx, arguments);
+			ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
+			Collection<Method> members = Cache.uniqueKeyForMethods.get(targetClassClassLoader, cacheKey);
 			if (members == null) {	
 				members = findAllAndMakeThemAccessible(target, (name) -> name.matches(methodNameRegEx), arguments);
 				if (cacheMember) {
 					final Collection<Method> toUpload = members;
-					Cache.uniqueKeyForMethods.upload(cacheKey, () -> toUpload);
+					Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> toUpload);
 				}
 			}			
 			Collection<T> results = new ArrayList<>();

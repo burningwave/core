@@ -29,6 +29,7 @@
 package org.burningwave.core.reflection;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 
 import java.lang.reflect.Field;
@@ -60,9 +61,11 @@ public class Fields extends MemberHelper<Field> {
 		Object target,
 		String fieldName,
 		boolean cacheField
-	) {
-		String cacheKey = getCacheKey(target, "equals " + fieldName, (Object[])null);
-		Field member = Cache.uniqueKeyForField.get(cacheKey);
+	) {	
+		Class<?> targetClass = Classes.retrieveFrom(target);
+		String cacheKey = getCacheKey(targetClass, "equals " + fieldName, (Object[])null);
+		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
+		Field member = Cache.uniqueKeyForField.get(targetClassClassLoader, cacheKey);
 		if (member == null) {
 			member = Members.findOne(
 				FieldCriteria.forName(
@@ -73,7 +76,7 @@ public class Fields extends MemberHelper<Field> {
 			member.setAccessible(true);
 			if (cacheField) {
 				final Field toUpload = member;
-				Cache.uniqueKeyForField.upload(cacheKey, () -> toUpload);
+				Cache.uniqueKeyForField.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> toUpload);
 			}
 		}
 		return member;
