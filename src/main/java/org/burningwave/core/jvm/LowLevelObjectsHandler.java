@@ -52,6 +52,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.MembersRetriever;
 import org.burningwave.core.classes.MethodCriteria;
@@ -248,24 +249,29 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 	
 	@Override
 	public void close() {
-		loadedPackagesMapMemoryOffset = null;
-		loadedClassesVectorMemoryOffset = null;
-		unsafe = null;
-		illegalAccessLoggerEnabler = null;
-		illegalAccessLoggerDisabler = null;
-		emtpyFieldsArray = null;
-		emptyMethodsArray = null;
-		emptyConstructorsArray = null;
-		getDeclaredFieldsRetriever = null;
-		getDeclaredMethodsRetriever = null;
-		getDeclaredConstructorsRetriever = null;
-		packageRetriever = null;	
-		methodInvoker = null;
-		accessibleSetter = null;	
-		consulterRetriever = null;
-		parentClassLoaderFields = null;
-		classLoaderDelegateClass = null;
-		builtinClassLoaderClass = null;
+		if (this != StaticComponentContainer.LowLevelObjectsHandler) {
+			loadedPackagesMapMemoryOffset = null;
+			loadedClassesVectorMemoryOffset = null;
+			unsafe = null;
+			illegalAccessLoggerEnabler = null;
+			illegalAccessLoggerDisabler = null;
+			emtpyFieldsArray = null;
+			emptyMethodsArray = null;
+			emptyConstructorsArray = null;
+			getDeclaredFieldsRetriever = null;
+			getDeclaredMethodsRetriever = null;
+			getDeclaredConstructorsRetriever = null;
+			packageRetriever = null;	
+			methodInvoker = null;
+			accessibleSetter = null;	
+			consulterRetriever = null;
+			parentClassLoaderFields.clear();
+			parentClassLoaderFields = null;
+			classLoaderDelegateClass = null;
+			builtinClassLoaderClass = null;
+		} else {
+			throw Throwables.toRuntimeException("Could not close singleton instance " + this);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
