@@ -68,8 +68,8 @@ public class Cache implements Component {
 		uniqueKeyForField = new ObjectAndPathForResources<>(1L, field -> field);
 		uniqueKeyForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
 		classLoaderForConstructors = new ObjectAndPathForResources<>(1L, constructors -> constructors);
-		bindedFunctionalInterfaces = new ObjectAndPathForResources<>(1L, methods -> methods);	
-		uniqueKeyForMethodHandle = new ObjectAndPathForResources<>(1L, methods -> methods);
+		bindedFunctionalInterfaces = new ObjectAndPathForResources<>(1L, functionalInterface -> functionalInterface);	
+		uniqueKeyForMethodHandle = new ObjectAndPathForResources<>(1L, methodHandle -> methodHandle);
 	}
 	
 	public static Cache create() {
