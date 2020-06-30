@@ -29,6 +29,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 import java.lang.invoke.LambdaMetafactory;
@@ -37,6 +38,7 @@ import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
@@ -44,6 +46,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingSupplier;
@@ -60,7 +63,6 @@ public class FunctionalInterfaceFactory implements Component {
 	}
 
 	public <F> F create(Method targetMethod) throws Throwable {
-		
 		if (targetMethod.getParameterTypes().length == 0 && targetMethod.getReturnType() == void.class) {
 			return getBindedRunnable(targetMethod);
 		} else if (targetMethod.getParameterTypes().length == 0 && targetMethod.getReturnType() != void.class) {
@@ -77,7 +79,9 @@ public class FunctionalInterfaceFactory implements Component {
 
 	@SuppressWarnings("unchecked")
 	<F> F getBindedRunnable(Method targetMethod) {
-		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(targetMethod, () -> 
+		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
+			Classes.getClassLoader(targetMethod.getDeclaringClass()), 
+			getCacheKey(targetMethod), () -> 
 			ThrowingSupplier.get(() ->
 				bindTo(
 					targetMethod, () -> 
@@ -93,7 +97,9 @@ public class FunctionalInterfaceFactory implements Component {
 
 	@SuppressWarnings("unchecked")
 	<F> F getBindedSupplier(Method targetMethod) {
-		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(targetMethod, () -> 
+		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
+			Classes.getClassLoader(targetMethod.getDeclaringClass()),	
+			getCacheKey(targetMethod), () -> 
 			ThrowingSupplier.get(() -> 
 				bindTo(
 					targetMethod, () -> 
@@ -109,13 +115,18 @@ public class FunctionalInterfaceFactory implements Component {
 
 	@SuppressWarnings("unchecked")
 	<F> F getBindedFunction(Method targetMethod) {
-		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(targetMethod, () -> 
+		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
+			Classes.getClassLoader(targetMethod.getDeclaringClass()),
+			getCacheKey(targetMethod), () -> 
 			ThrowingSupplier.get(() -> bindTo(
 				targetMethod, () -> 
 					new AbstractMap.SimpleEntry<>(
 						retrieveClass(
 							Function.class,
-							(parameterCount) -> classFactory.loadOrBuildAndDefineFunctionSubType(targetMethod.getDeclaringClass().getClassLoader(), parameterCount),
+							(parameterCount) -> 
+								classFactory.loadOrBuildAndDefineFunctionSubType(
+									targetMethod.getDeclaringClass().getClassLoader(), parameterCount
+								),
 							Modifier.isStatic(targetMethod.getModifiers()) ?
 								targetMethod.getParameterCount() : 
 								targetMethod.getParameterCount() + 1
@@ -131,7 +142,9 @@ public class FunctionalInterfaceFactory implements Component {
 
 	@SuppressWarnings("unchecked")
 	<F> F getBindedConsumer(Method targetMethod) {
-		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(targetMethod, () -> 
+		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
+			Classes.getClassLoader(targetMethod.getDeclaringClass()),
+			getCacheKey(targetMethod), () -> 
 			ThrowingSupplier.get(() ->
 				bindTo(
 					targetMethod, () -> 
@@ -155,7 +168,9 @@ public class FunctionalInterfaceFactory implements Component {
 
 	@SuppressWarnings("unchecked")
 	<F> F getBindedPredicate(Method targetMethod) {
-		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(targetMethod, () -> 
+		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
+			Classes.getClassLoader(targetMethod.getDeclaringClass()),
+			getCacheKey(targetMethod), () -> 
 			ThrowingSupplier.get(() -> bindTo(
 					targetMethod, () -> 
 					new AbstractMap.SimpleEntry<>(
@@ -209,5 +224,22 @@ public class FunctionalInterfaceFactory implements Component {
         	default : 
         		return cls.getName();
 		}
+	}
+	
+	String getCacheKey(Method targetMethod) {
+		Class<?> targetMethodDeclaringClass = targetMethod.getDeclaringClass();
+		Parameter[] parameters = targetMethod.getParameters();
+		String argumentsKey = "";
+		if (parameters != null && parameters.length > 0) {
+			StringBuffer argumentsKeyStringBuffer = new StringBuffer();
+			Stream.of(parameters).forEach(parameter ->
+				argumentsKeyStringBuffer.append("/" + parameter.getType().getName())
+			);
+			argumentsKey = argumentsKeyStringBuffer.toString();
+		}
+		String cacheKey = "/" + targetMethodDeclaringClass.getName() + "@" + targetMethodDeclaringClass.hashCode() +
+			"/" + targetMethod.getName() +
+			argumentsKey;
+		return cacheKey;		
 	}
 }

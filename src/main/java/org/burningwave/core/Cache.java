@@ -53,10 +53,10 @@ public class Cache implements Component {
 	public final ObjectAndPathForResources<ClassLoader, Field[]> classLoaderForFields;
 	public final ObjectAndPathForResources<ClassLoader, Method[]> classLoaderForMethods;
 	public final ObjectAndPathForResources<ClassLoader, Constructor<?>[]> classLoaderForConstructors;
-	public final ObjectForObject<Method, Object> bindedFunctionalInterfaces;
-	public final PathForResources<Field> uniqueKeyForField;
-	public final PathForResources<Collection<Method>> uniqueKeyForMethods;
-	public final ObjectForObject<Method, MethodHandle> uniqueKeyForMethodHandle;
+	public final ObjectAndPathForResources<ClassLoader, Field> uniqueKeyForField;
+	public final ObjectAndPathForResources<ClassLoader, Collection<Method>> uniqueKeyForMethods;
+	public final ObjectAndPathForResources<ClassLoader, Object> bindedFunctionalInterfaces;
+	public final ObjectAndPathForResources<ClassLoader, MethodHandle> uniqueKeyForMethodHandle;
 	
 	private Cache() {
 		logInfo("Building cache");
@@ -65,55 +65,16 @@ public class Cache implements Component {
 		pathForZipFiles = new PathForResources<>(1L, zipFileContainer -> zipFileContainer);
 		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);
 		classLoaderForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
+		uniqueKeyForField = new ObjectAndPathForResources<>(1L, field -> field);
+		uniqueKeyForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
 		classLoaderForConstructors = new ObjectAndPathForResources<>(1L, constructors -> constructors);
-		bindedFunctionalInterfaces = new ObjectForObject<>();
-		uniqueKeyForField = new PathForResources<>(1L, field -> field);
-		uniqueKeyForMethods = new PathForResources<>(1L, methods -> methods);
-		uniqueKeyForMethodHandle = new ObjectForObject<>();
+		bindedFunctionalInterfaces = new ObjectAndPathForResources<>(1L, functionalInterface -> functionalInterface);	
+		uniqueKeyForMethodHandle = new ObjectAndPathForResources<>(1L, methodHandle -> methodHandle);
 	}
 	
 	public static Cache create() {
 		return new Cache();
 	}
-	
-	public static class ObjectForObject<T, R> implements Component {
-		
-		Map<T, R> resources;
-		Mutex.Manager mutexManagerForResources;
-		
-		public ObjectForObject() {
-			this.resources = new HashMap<>();
-			mutexManagerForResources = Mutex.Manager.create(this);
-		}
-		
-		public R get(T object) {
-			return resources.get(object);
-		}
-		
-		public R getOrUploadIfAbsent(T object, Supplier<R> resourceSupplier) {
-			R resource = resources.get(object);
-			if (resource == null) {
-				synchronized(mutexManagerForResources.getMutex(object.toString())) {
-					resource = resources.get(object);
-					if (resource == null) {
-						resources.put(object, (resource = resourceSupplier.get()));
-					}
-				}
-			}
-			return resource;
-		}
-		
-		public R upload(T object, R resource) {
-			synchronized(resources) {
-				return resources.put(object, resource);
-			}				
-		}
-		
-		public void clear() {
-			resources.clear();
-		}
-	}
-
 	
 	public static class ObjectAndPathForResources<T, R> implements Component  {
 		
@@ -141,6 +102,20 @@ public class Cache implements Component {
 			return pathForResources.getOrUploadIfAbsent(path, resourceSupplier);
 		}
 		
+		public R get(T object, String path) {
+			PathForResources<R> pathForResources = resources.get(object);
+			if (pathForResources == null) {
+				synchronized (mutexManagerForResources.getMutex(object.toString())) {
+					pathForResources = resources.get(object);
+					if (pathForResources == null) {
+						pathForResources = pathForResourcesSupplier.get();
+						resources.put(object, pathForResources);
+					}					
+				}
+			}
+			return pathForResources.get(path);
+		}
+		
 		public PathForResources<R> remove(T object) {
 			return resources.remove(object);
 		}
@@ -155,6 +130,7 @@ public class Cache implements Component {
 		
 		public void clear() {
 			resources.clear();
+			mutexManagerForResources.clear();
 		}
 	}
 	
@@ -287,6 +263,9 @@ public class Cache implements Component {
 		
 		public void clear() {
 			resources.clear();
+			mutexManagerForPartitions.clear();         
+			mutexManagerForLoadedResources.clear();    
+			mutexManagerForPartitionedResources.clear(); 
 		}
 	}
 	

@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ByteCodeHunter.SearchResult;
+import org.burningwave.core.classes.Classes;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.SearchConfig;
@@ -105,6 +106,13 @@ public class ClassLoadersTest extends BaseTest {
 			JavaClass javaClass = JavaClass.create(byteCodesFound.get("org.apache.commons.lang.ArrayUtils"));
 			byteCodes.put("org.apache.commons.lang.ArrayUtils", javaClass);
 			return ClassLoaders.loadOrDefineByJavaClass("org.apache.commons.lang.ArrayUtils", byteCodes, getMemoryClassLoader(null));
+		});
+	}
+	
+	@Test
+	public void createAndClose() {
+		testDoesNotThrow(() -> {
+			Classes.Loaders.create().close();
 		});
 	}
 
