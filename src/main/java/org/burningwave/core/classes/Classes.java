@@ -94,7 +94,7 @@ public class Classes implements Component, MembersRetriever {
 	}
 	
 	public <T> Class<T> retrieveFrom(Object object) {
-		return (Class<T>)(object instanceof Class? object : object.getClass());
+		return (Class<T>)(object != null ? object instanceof Class? object : object.getClass() : null);
 	}
 
 	public Class<?>[] retrieveFrom(Object... objects) {

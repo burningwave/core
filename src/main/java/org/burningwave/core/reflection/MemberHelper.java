@@ -80,7 +80,7 @@ public abstract class MemberHelper<M extends Member> implements Component {
 		if (arguments != null && arguments.length > 0) {
 			StringBuffer argumentsKeyStringBuffer = new StringBuffer();
 			Stream.of(Classes.retrieveFrom(arguments)).forEach(cls ->
-				argumentsKeyStringBuffer.append("/" + cls.getName())
+				argumentsKeyStringBuffer.append("/" + cls != null ? cls.getName() : "null")
 			);
 			argumentsKey = argumentsKeyStringBuffer.toString();
 		}

@@ -316,6 +316,8 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		Cache.classLoaderForMethods.remove(this);
 		Cache.uniqueKeyForField.remove(this);
 		Cache.uniqueKeyForMethods.remove(this);
+		Cache.bindedFunctionalInterfaces.remove(this);
+		Cache.uniqueKeyForMethodHandle.remove(this);
 	}
 	
 	public synchronized boolean register(Object client) {

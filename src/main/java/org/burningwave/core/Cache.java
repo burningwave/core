@@ -55,8 +55,8 @@ public class Cache implements Component {
 	public final ObjectAndPathForResources<ClassLoader, Constructor<?>[]> classLoaderForConstructors;
 	public final ObjectAndPathForResources<ClassLoader, Field> uniqueKeyForField;
 	public final ObjectAndPathForResources<ClassLoader, Collection<Method>> uniqueKeyForMethods;
-	public final ObjectForObject<Method, Object> bindedFunctionalInterfaces;
-	public final ObjectForObject<Method, MethodHandle> uniqueKeyForMethodHandle;
+	public final ObjectAndPathForResources<ClassLoader, Object> bindedFunctionalInterfaces;
+	public final ObjectAndPathForResources<ClassLoader, MethodHandle> uniqueKeyForMethodHandle;
 	
 	private Cache() {
 		logInfo("Building cache");
@@ -65,56 +65,16 @@ public class Cache implements Component {
 		pathForZipFiles = new PathForResources<>(1L, zipFileContainer -> zipFileContainer);
 		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);
 		classLoaderForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
-		classLoaderForConstructors = new ObjectAndPathForResources<>(1L, constructors -> constructors);
-		bindedFunctionalInterfaces = new ObjectForObject<>();
 		uniqueKeyForField = new ObjectAndPathForResources<>(1L, field -> field);
 		uniqueKeyForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
-		uniqueKeyForMethodHandle = new ObjectForObject<>();
+		classLoaderForConstructors = new ObjectAndPathForResources<>(1L, constructors -> constructors);
+		bindedFunctionalInterfaces = new ObjectAndPathForResources<>(1L, methods -> methods);	
+		uniqueKeyForMethodHandle = new ObjectAndPathForResources<>(1L, methods -> methods);
 	}
 	
 	public static Cache create() {
 		return new Cache();
 	}
-	
-	public static class ObjectForObject<T, R> implements Component {
-		
-		Map<T, R> resources;
-		Mutex.Manager mutexManagerForResources;
-		
-		public ObjectForObject() {
-			this.resources = new HashMap<>();
-			mutexManagerForResources = Mutex.Manager.create(this);
-		}
-		
-		public R get(T object) {
-			return resources.get(object);
-		}
-		
-		public R getOrUploadIfAbsent(T object, Supplier<R> resourceSupplier) {
-			R resource = resources.get(object);
-			if (resource == null) {
-				synchronized(mutexManagerForResources.getMutex(object.toString())) {
-					resource = resources.get(object);
-					if (resource == null) {
-						resources.put(object, (resource = resourceSupplier.get()));
-					}
-				}
-			}
-			return resource;
-		}
-		
-		public R upload(T object, R resource) {
-			synchronized(resources) {
-				return resources.put(object, resource);
-			}				
-		}
-		
-		public void clear() {
-			resources.clear();
-			mutexManagerForResources.clear();
-		}
-	}
-
 	
 	public static class ObjectAndPathForResources<T, R> implements Component  {
 		

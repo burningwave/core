@@ -14,8 +14,18 @@ public class MethodsTest extends BaseTest {
 		componentSupplier.clearHuntersCache(false);
 		testNotEmpty(
 			() -> {
-				return Methods.invokeAll(Integer.class, "valueOf", 1);
-					
+				return Methods.invokeAll(Integer.class, "valueOf", 1);	
+			}
+		);
+	}
+	
+	@Test
+	public void invokeAllByCacheLoadingTestOne() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		componentSupplier.clearHuntersCache(false);
+		testNotEmpty(
+			() -> {
+				return Methods.invokeAll(Integer.class, "valueOf", 1);	
 			}
 		);
 	}

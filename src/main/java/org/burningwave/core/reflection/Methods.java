@@ -77,7 +77,7 @@ public class Methods extends MemberHelper<Method> {
 		return findOneAndMakeItAccessible(target, methodName, true, arguments);
 	}
 	
-	public Method findOneAndMakeItAccessible(Object target, String methodName, boolean cacheMethod, Object... arguments) {
+	public Method findOneAndMakeItAccessible(Object target, String methodName, boolean cacheMember, Object... arguments) {
 		Class<?> targetClass = Classes.retrieveFrom(target);
 		String cacheKey = getCacheKey(targetClass, "equals " + methodName, arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
@@ -89,7 +89,7 @@ public class Methods extends MemberHelper<Method> {
 						+ " not found or found more than one methods in " + Classes.retrieveFrom(target).getName()
 						+ " hierarchy");
 			 }
-			 if (cacheMethod) {
+			 if (cacheMember) {
 				final Collection<Method> toUpload = members;
 				Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> toUpload);
 			 }
@@ -120,9 +120,9 @@ public class Methods extends MemberHelper<Method> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> T invoke(Object target, String methodName, boolean cacheMethod, Object... arguments) {
+	public <T> T invoke(Object target, String methodName, boolean cacheMember, Object... arguments) {
 		return ThrowingSupplier.get(() -> {
-			Method method = findOneAndMakeItAccessible(target, methodName, cacheMethod, arguments);
+			Method method = findOneAndMakeItAccessible(target, methodName, cacheMember, arguments);
 			return (T)method.invoke(Modifier.isStatic(method.getModifiers()) ? null : target, arguments);
 		});
 	}
@@ -132,17 +132,25 @@ public class Methods extends MemberHelper<Method> {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <T> T invokeDirect(Object target, String methodName, boolean cacheMethod, Object... arguments) {
-		Method method = findOneAndMakeItAccessible(target, methodName, arguments);
-		final AtomicReference<MethodHandle> methodHandleWrapper = new AtomicReference<>(Cache.uniqueKeyForMethodHandle.get(method));
+	public <T> T invokeDirect(Object target, String methodName, boolean cacheMember, Object... arguments) {
+		Class<?> targetClass = Classes.retrieveFrom(target);
+		Method method = findOneAndMakeItAccessible(targetClass, methodName, arguments);
+		String cacheKey = getCacheKey(targetClass, "equals " + methodName, arguments);
+		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
+		final AtomicReference<MethodHandle> methodHandleWrapper = new AtomicReference<>(
+			Cache.uniqueKeyForMethodHandle.get(targetClassClassLoader, cacheKey)
+		);
 		if (methodHandleWrapper.get() == null) {
 			methodHandleWrapper.set(
 				convertToMethodHandle(
 					method
 				)
 			);
-			if (cacheMethod) {
-				Cache.uniqueKeyForMethodHandle.upload(method, methodHandleWrapper.get());
+			if (cacheMember) {
+				Cache.uniqueKeyForMethodHandle.getOrUploadIfAbsent(
+					targetClassClassLoader, cacheKey, 
+					() -> methodHandleWrapper.get()
+				);
 			}
 		}
 		return ThrowingSupplier.get(() -> {
