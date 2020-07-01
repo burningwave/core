@@ -28,4 +28,12 @@ public class ComponentContainerTest extends BaseTest {
 		});
 	}
 	
+	@Test
+	public void clearAll() {
+		logWarn("Total memory before clearAll {}", Runtime.getRuntime().totalMemory());
+		ComponentContainer.clearAll();
+		System.gc();
+		logWarn("Total memory after clearAll {}", Runtime.getRuntime().totalMemory());
+	}
+	
 }
