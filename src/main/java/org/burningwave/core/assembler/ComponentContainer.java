@@ -394,6 +394,7 @@ public class ComponentContainer implements ComponentSupplier {
 		for (ComponentContainer componentContainer : instances) {
 			componentContainer.clear();
 		}
+		getInstance().clear();
 		Cache.clear();
 	}
 	
@@ -401,6 +402,8 @@ public class ComponentContainer implements ComponentSupplier {
 		for (ComponentContainer componentContainer : instances) {
 			componentContainer.clearCache(closeHuntersResults, closeClassRetrievers);
 		}
+		getInstance().clearCache(closeHuntersResults, closeClassRetrievers);
+		Cache.clear();
 	}
 	
 	@Override
