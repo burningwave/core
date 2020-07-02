@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/7)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/155404500)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/155482260)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/155404500)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/155482260)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -37,7 +37,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.10.3</version>
+    <version>7.11.0</version>
 </dependency>
 ```
 
@@ -450,9 +450,9 @@ With **IterableObjectHelper** component it is possible to retrieve items from ma
 code-block-1=\
     ${code-block-2}\
     return (T)Date.from(zonedDateTime.toInstant());
-code-block-1.imports=\
-    ${code-block-2.imports}\
-    java.util.Date;
+code-block-2=\
+    LocalDateTime localDateTime = (LocalDateTime)parameter[0];\
+    ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
 ...
 ```
 **Java code**:
@@ -873,21 +873,21 @@ paths.class-factory.default-class-loader.additional-class-repositories=C:/some p
 	</ul>
 </details>
 <details open>
-	<summary><b>IterableObjectHelper</b></summary>
-	<ul>
-		<li>
-			<a href="https://github.com/burningwave/core/wiki/Retrieving-placeholdered-items-from-map-and-properties-file">
-			<b>USE CASE</b>: Retrieving placeholdered items from map and properties file
-			</a>
-		</li>
-	</ul>
-</details>
-<details open>
 	<summary><b>FileSystemItem</b></summary>
 	<ul>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Reaching-a-resource-of-the-file-system">
 			<b>USE CASE</b>: Reaching a resource of the file system
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
+	<summary><b>IterableObjectHelper</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Retrieving-placeholdered-items-from-map-and-properties-file">
+			<b>USE CASE</b>: Retrieving placeholdered items from map and properties file
 			</a>
 		</li>
 	</ul>
