@@ -442,7 +442,7 @@ public class ResourceReacher {
 
 # Retrieving placeholdered items from map and properties file
 
-With **IterableObjectHelper** component it is possible to retrieve items from map by using place holder or not. In the following example we are going to show how to retrieve strings or objects from **[burningwave.properties](#configuration-1)** file and from maps.
+With **IterableObjectHelper** component it is possible to retrieve items from map by using placeholder or not. In the following example we are going to show how to retrieve strings or objects from **[burningwave.properties](#configuration-1)** file and from maps.
 
 **[burningwave.properties](#configuration-1)** file:
 ```properties
