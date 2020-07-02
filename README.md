@@ -439,6 +439,67 @@ public class ResourceReacher {
 
 <br/>
 
+# Retrieving placeholdered items from map and properties file
+
+With **IterableObjectHelper** component it is possible to retrieve items from map by using place holder or not. In the following example we are going to show how retrieve strings or objects from burningwave.properties file and from maps:
+```properties
+...
+code-block-1=\
+	${code-block-2}\
+	return (T)Date.from(zonedDateTime.toInstant());
+code-block-1.imports=\
+	${code-block-2.imports}\
+	java.util.Date;
+...
+```
+
+```java
+package org.burningwave.core.examples.iterableobjecthelper;
+
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.io.PathHelper;
+
+public class ItemFromMapRetriever {
+	
+	public void execute() throws IOException {
+		ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
+		Properties properties = new Properties();
+		properties.load(pathHelper.getResourceAsStream("burningwave.properties"));
+
+		String code = IterableObjectHelper.resolveStringValue(properties, "code-block-1");
+		
+		
+		Map<Object, Object> map = new HashMap<>();
+		map.put("class-loader-01", "${class-loader-02}");
+		map.put("class-loader-02", "${class-loader-03}");
+		map.put("class-loader-03", Thread.currentThread().getContextClassLoader().getParent());
+		ClassLoader parentClassLoader = IterableObjectHelper.resolveValue(map, "class-loader-01");
+		
+		map.clear();
+		map.put("class-loaders", "${class-loader-02};${class-loader-03};");
+		map.put("class-loader-02", Thread.currentThread().getContextClassLoader());
+		map.put("class-loader-03", Thread.currentThread().getContextClassLoader().getParent());
+		Collection<ClassLoader> classLoaders = IterableObjectHelper.resolveValues(map, "class-loaders", ";");
+	}
+	
+	public static void main(String[] args) throws IOException {
+		new ItemFromMapRetriever().execute();
+	}
+}
+```
+
+<br/>
+
 # Architectural overview and configuration
 
 **Burningwave Core** is based on the concept of component and component container. A **component** is a dynamic object that perform functionality related to the domain it belong to.
