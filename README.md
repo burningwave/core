@@ -617,7 +617,7 @@ path-scanner-class-loader.parent.imports=\
     org.burningwave.core.classes.PathScannerClassLoader;\
     java.util.function.Supplier;
 path-scanner-class-loader.parent.name=\
-    org.burningwave.core.classes.PathScannerClassLoaderRetriever
+    org.burningwave.core.classes.ParentClassLoaderRetrieverForPathScannerClassLoader
 #other possible values are: checkFileName, checkFileName|checkFileSignature, checkFileName&checkFileSignature
 path-scanner-class-loader.search-config.check-file-option=checkFileName
 #this variable indicates all the paths from which the classes 
@@ -699,7 +699,7 @@ path-scanner-class-loader.parent.imports=\
     org.burningwave.core.classes.PathScannerClassLoader;\
     java.util.function.Supplier;
 path-scanner-class-loader.parent.name=\
-    org.burningwave.core.classes.PathScannerClassLoaderRetriever
+    org.burningwave.core.classes.ParentClassLoaderRetrieverForPathScannerClassLoader
 path-scanner-class-loader.search-config.check-file-option=checkFileName
 paths.class-factory.default-class-loader.class-repositories=\
     ${paths.java-memory-compiler.class-repositories};\
