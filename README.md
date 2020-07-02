@@ -37,7 +37,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.11.0</version>
+    <version>7.10.3</version>
 </dependency>
 ```
 
@@ -448,11 +448,11 @@ With **IterableObjectHelper** component it is possible to retrieve items from ma
 ```properties
 ...
 code-block-1=\
-	${code-block-2}\
-	return (T)Date.from(zonedDateTime.toInstant());
+    ${code-block-2}\
+    return (T)Date.from(zonedDateTime.toInstant());
 code-block-1.imports=\
-	${code-block-2.imports}\
-	java.util.Date;
+    ${code-block-2.imports}\
+    java.util.Date;
 ...
 ```
 
@@ -472,32 +472,32 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.io.PathHelper;
 
 public class ItemFromMapRetriever {
-	
-	public void execute() throws IOException {
-		ComponentSupplier componentSupplier = ComponentContainer.getInstance();
-		PathHelper pathHelper = componentSupplier.getPathHelper();
-		Properties properties = new Properties();
-		properties.load(pathHelper.getResourceAsStream("burningwave.properties"));
+    
+    public void execute() throws IOException {
+        ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+        PathHelper pathHelper = componentSupplier.getPathHelper();
+        Properties properties = new Properties();
+        properties.load(pathHelper.getResourceAsStream("burningwave.properties"));
 
-		String code = IterableObjectHelper.resolveStringValue(properties, "code-block-1");
-		
-		
-		Map<Object, Object> map = new HashMap<>();
-		map.put("class-loader-01", "${class-loader-02}");
-		map.put("class-loader-02", "${class-loader-03}");
-		map.put("class-loader-03", Thread.currentThread().getContextClassLoader().getParent());
-		ClassLoader parentClassLoader = IterableObjectHelper.resolveValue(map, "class-loader-01");
-		
-		map.clear();
-		map.put("class-loaders", "${class-loader-02};${class-loader-03};");
-		map.put("class-loader-02", Thread.currentThread().getContextClassLoader());
-		map.put("class-loader-03", Thread.currentThread().getContextClassLoader().getParent());
-		Collection<ClassLoader> classLoaders = IterableObjectHelper.resolveValues(map, "class-loaders", ";");
-	}
-	
-	public static void main(String[] args) throws IOException {
-		new ItemFromMapRetriever().execute();
-	}
+        String code = IterableObjectHelper.resolveStringValue(properties, "code-block-1");
+        
+        
+        Map<Object, Object> map = new HashMap<>();
+        map.put("class-loader-01", "${class-loader-02}");
+        map.put("class-loader-02", "${class-loader-03}");
+        map.put("class-loader-03", Thread.currentThread().getContextClassLoader().getParent());
+        ClassLoader parentClassLoader = IterableObjectHelper.resolveValue(map, "class-loader-01");
+        
+        map.clear();
+        map.put("class-loaders", "${class-loader-02};${class-loader-03};");
+        map.put("class-loader-02", Thread.currentThread().getContextClassLoader());
+        map.put("class-loader-03", Thread.currentThread().getContextClassLoader().getParent());
+        Collection<ClassLoader> classLoaders = IterableObjectHelper.resolveValues(map, "class-loaders", ";");
+    }
+    
+    public static void main(String[] args) throws IOException {
+        new ItemFromMapRetriever().execute();
+    }
 }
 ```
 
