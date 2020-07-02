@@ -37,7 +37,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.11.0</version>
+    <version>7.10.3</version>
 </dependency>
 ```
 
@@ -442,9 +442,9 @@ public class ResourceReacher {
 
 # Retrieving placeholdered items from map and properties file
 
-With **IterableObjectHelper** component it is possible to retrieve items from map by using place holder or not. In the following example we are going to show to how retrieve strings or objects from **[burningwave.properties](#configuration-1)** file and from maps:
+With **IterableObjectHelper** component it is possible to retrieve items from map by using place holder or not. In the following example we are going to show how to retrieve strings or objects from **[burningwave.properties](#configuration-1)** file and from maps.
 
-**burningwave.properties**:
+**[burningwave.properties](#configuration-1)** file:
 ```properties
 ...
 code-block-1=\
@@ -455,7 +455,7 @@ code-block-1.imports=\
     java.util.Date;
 ...
 ```
-
+**Java code**:
 ```java
 package org.burningwave.core.examples.iterableobjecthelper;
 
@@ -868,6 +868,16 @@ paths.class-factory.default-class-loader.additional-class-repositories=C:/some p
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Executing-stringified-source-code">
 			<b>USE CASE</b>: executing stringified source code
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
+	<summary><b>IterableObjectHelper</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Retrieving-placeholdered-items-from-map-and-properties-file">
+			<b>USE CASE</b>: Retrieving placeholdered items from map and properties file
 			</a>
 		</li>
 	</ul>
