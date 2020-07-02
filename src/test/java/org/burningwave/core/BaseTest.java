@@ -39,6 +39,7 @@ public class BaseTest implements Component {
 			return componentSupplier = ComponentContainer.create("burningwave.properties");
 		}
 		return componentSupplier;
+		//return ComponentSupplier.getInstance();
 	}
 	
 	
