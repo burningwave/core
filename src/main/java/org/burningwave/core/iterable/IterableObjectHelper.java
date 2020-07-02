@@ -228,7 +228,7 @@ public class IterableObjectHelper implements Component {
 ////////////////////	
 	
 	
-	public <T> T resolveObjectValue(String key, Supplier<Object> valuesSupplier) {
+	private <T> T resolveObjectValue(String key, Supplier<Object> valuesSupplier) {
 		Object value = valuesSupplier.get();
 		if (value instanceof Collection) {
 			Collection<T> values = (Collection<T>)value;
