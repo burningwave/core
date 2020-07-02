@@ -12,6 +12,7 @@ import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.io.PathHelper;
 
+@SuppressWarnings("unused")
 public class ItemFromMapRetriever {
 	
 	public void execute() throws IOException {
