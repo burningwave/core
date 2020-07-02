@@ -241,7 +241,7 @@ public class IterableObjectHelper implements Component {
 		}	
 	}
 	
-	public <T> T resolve(
+	private <T> T resolve(
 		Map<?,?> map,
 		Object key,
 		String valuesSeparator,
