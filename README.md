@@ -24,6 +24,7 @@ And now we will see:
 * [**executing stringified source code**](#Executing-stringified-source-code)
 * [**retrieving classes of runtime class paths or of other paths through the ClassHunter**](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
 * [**reaching a resource of the file system**](#Reaching-a-resource-of-the-file-system)
+* [**retrieving placeholdered items from map and properties file**](#retrieving-placeholdered-items-from-map-and-properties-file)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 * [**other examples of using some components**](#Other-examples-of-using-some-components)
 
@@ -439,6 +440,68 @@ public class ResourceReacher {
 
 <br/>
 
+# Retrieving placeholdered items from map and properties file
+
+With **IterableObjectHelper** component it is possible to retrieve items from map by using place holder or not. In the following example we are going to show how to retrieve strings or objects from **[burningwave.properties](#configuration-1)** file and from maps.
+
+**[burningwave.properties](#configuration-1)** file:
+```properties
+...
+code-block-1=\
+    ${code-block-2}\
+    return (T)Date.from(zonedDateTime.toInstant());
+code-block-2=\
+    LocalDateTime localDateTime = (LocalDateTime)parameter[0];\
+    ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
+...
+```
+**Java code**:
+```java
+package org.burningwave.core.examples.iterableobjecthelper;
+
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.io.PathHelper;
+
+public class ItemFromMapRetriever {
+    
+    public void execute() throws IOException {
+        ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+        PathHelper pathHelper = componentSupplier.getPathHelper();
+        Properties properties = new Properties();
+        properties.load(pathHelper.getResourceAsStream("burningwave.properties"));
+
+        String code = IterableObjectHelper.resolveStringValue(properties, "code-block-1");        
+        
+        Map<Object, Object> map = new HashMap<>();
+        map.put("class-loader-01", "${class-loader-02}");
+        map.put("class-loader-02", "${class-loader-03}");
+        map.put("class-loader-03", Thread.currentThread().getContextClassLoader().getParent());
+        ClassLoader parentClassLoader = IterableObjectHelper.resolveValue(map, "class-loader-01");
+        
+        map.clear();
+        map.put("class-loaders", "${class-loader-02};${class-loader-03};");
+        map.put("class-loader-02", Thread.currentThread().getContextClassLoader());
+        map.put("class-loader-03", Thread.currentThread().getContextClassLoader().getParent());
+        Collection<ClassLoader> classLoaders = IterableObjectHelper.resolveValues(map, "class-loaders", ";");
+    }
+    
+    public static void main(String[] args) throws IOException {
+        new ItemFromMapRetriever().execute();
+    }
+}
+```
+
+<br/>
+
 # Architectural overview and configuration
 
 **Burningwave Core** is based on the concept of component and component container. A **component** is a dynamic object that perform functionality related to the domain it belong to.
@@ -815,6 +878,16 @@ paths.class-factory.default-class-loader.additional-class-repositories=C:/some p
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Reaching-a-resource-of-the-file-system">
 			<b>USE CASE</b>: Reaching a resource of the file system
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
+	<summary><b>IterableObjectHelper</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Retrieving-placeholdered-items-from-map-and-properties-file">
+			<b>USE CASE</b>: Retrieving placeholdered items from map and properties file
 			</a>
 		</li>
 	</ul>

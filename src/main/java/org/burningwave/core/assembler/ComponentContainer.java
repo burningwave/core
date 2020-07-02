@@ -327,7 +327,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	
 	private <T> T retrieveFromConfig(String configKey, Map<String, Object> defaultValues) {
-		T object = config.resolveObjectValue(configKey, defaultValues);
+		T object = config.resolveValue(configKey, defaultValues);
 		if (object instanceof String) {
 			return getCodeExecutor().execute(
 				ExecuteConfig.fromDefaultProperties()

@@ -14,7 +14,7 @@ public class IterableObjectHelperTest extends BaseTest {
 			Properties properties = new Properties();
 			properties.put("class-loader-01", "${class-loader-02}");
 			properties.put("class-loader-02", Thread.currentThread().getContextClassLoader());
-			return IterableObjectHelper.resolveObjectValue(properties, "class-loader-01");
+			return IterableObjectHelper.resolveValue(properties, "class-loader-01");
 		});
 	}
 	
@@ -22,10 +22,10 @@ public class IterableObjectHelperTest extends BaseTest {
 	public void resolveTestTwo() {
 		testNotEmpty(() -> {
 			Properties properties = new Properties();
-			properties.put("class-loader-01", "${class-loader-02};${class-loader-03};");
+			properties.put("class-loaders", "${class-loader-02};${class-loader-03};");
 			properties.put("class-loader-02", Thread.currentThread().getContextClassLoader());
 			properties.put("class-loader-03", Thread.currentThread().getContextClassLoader().getParent());
-			return IterableObjectHelper.resolveObjectValues(properties, "class-loader-01", ";");
+			return IterableObjectHelper.resolveValues(properties, "class-loaders", ";");
 		});
 	}
 	
@@ -36,7 +36,7 @@ public class IterableObjectHelperTest extends BaseTest {
 			properties.put("class-loader-01", "${class-loader-02}");
 			properties.put("class-loader-02", "${class-loader-03}");
 			properties.put("class-loader-03", Thread.currentThread().getContextClassLoader().getParent());
-			return IterableObjectHelper.resolveObjectValue(properties, "class-loader-01");
+			return IterableObjectHelper.resolveValue(properties, "class-loader-01");
 		});
 	}
 	

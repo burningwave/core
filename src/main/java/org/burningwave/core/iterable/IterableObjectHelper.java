@@ -73,73 +73,73 @@ public class IterableObjectHelper implements Component {
 
 ////////////////////	
 	
-	public <T> T resolve(Map<?,?> map, String key) {
+	private <T> T resolve(Map<?,?> map, String key) {
 		return resolve(map, key, null, false, null);
 	}
 	
-	public <T> T resolveObjectValue(Map<?,?> map, String key) {
-		return resolveObjectValue(key, () -> resolve(map, key));
+	public <T> T resolveValue(Map<?,?> map, String key) {
+		return resolveValue(key, () -> resolve(map, key));
 	}	
 	
-	public <T> Collection<T> resolveObjectValues(Map<?,?> map, String key) {
+	public <T> Collection<T> resolveValues(Map<?,?> map, String key) {
 		return resolve(map, key);
 	}	
 	
 	public Collection<String> resolveStringValues(Map<?,?> map, String key) {
-		return resolveObjectValues(map, key);
+		return resolveValues(map, key);
 	}
 	
 	public String resolveStringValue(Map<?,?> map, String key) {
-		return resolveObjectValue(map, key);
+		return resolveValue(map, key);
 	}
 
 ////////////////////
 	
-	public <T> T resolve(Map<?,?> map, String key, Map<String, ?> defaultValues) {
+	private <T> T resolve(Map<?,?> map, String key, Map<String, ?> defaultValues) {
 		return resolve(map, key, null, false, defaultValues);
 	}
 	
-	public <T> T resolveObjectValue(Map<?,?> map, String key, Map<String, ?> defaultValues) {
-		return resolveObjectValue(key, () -> resolve(map, key, defaultValues));
+	public <T> T resolveValue(Map<?,?> map, String key, Map<String, ?> defaultValues) {
+		return resolveValue(key, () -> resolve(map, key, defaultValues));
 	}	
 	
-	public <T> Collection<T> resolveObjectValues(Map<?,?> map, String key, Map<String, ?> defaultValues) {
+	public <T> Collection<T> resolveValues(Map<?,?> map, String key, Map<String, ?> defaultValues) {
 		return resolve(map, key, defaultValues);
 	}
 	
 	public String resolveStringValue(Map<?,?> map, String key, Map<String, ?> defaultValues) {
-		return resolveObjectValue(map, key, defaultValues);
+		return resolveValue(map, key, defaultValues);
 	}
 	
 	public Collection<String> resolveStringValues(Map<?,?> map, String key, Map<String, ?> defaultValues) {
-		return resolveObjectValues(map, key, defaultValues);
+		return resolveValues(map, key, defaultValues);
 	}
 
 ////////////////////
 	
-	public <T> T resolve(Map<?,?> map, Object key, String valuesSeparator) {
+	private <T> T resolve(Map<?,?> map, Object key, String valuesSeparator) {
 		return resolve(map, key, valuesSeparator, false, null);
 	}
 	
-	public <T> T resolveObjectValue(Map<?,?> map, String key, String valuesSeparator) {
-		return resolveObjectValue(key, () -> resolve(map, key, valuesSeparator));
+	public <T> T resolveValue(Map<?,?> map, String key, String valuesSeparator) {
+		return resolveValue(key, () -> resolve(map, key, valuesSeparator));
 	}	
 	
-	public <T> Collection<T> resolveObjectValues(Map<?,?> map, String key, String valuesSeparator) {
+	public <T> Collection<T> resolveValues(Map<?,?> map, String key, String valuesSeparator) {
 		return resolve(map, key, valuesSeparator);
 	}
 	
 	public String resolveStringValue(Map<?,?> map, String key, String valuesSeparator) {
-		return resolveObjectValue(map, key, valuesSeparator);
+		return resolveValue(map, key, valuesSeparator);
 	}
 	
 	public Collection<String> resolveStringValues(Map<?,?> map, String key, String valuesSeparator) {
-		return resolveObjectValues(map, key, valuesSeparator);
+		return resolveValues(map, key, valuesSeparator);
 	}
 	
 ////////////////////
 	
-	public <T> T resolve(
+	private <T> T resolve(
 		Map<?,?> map,
 		String key,
 		String valuesSeparator, 
@@ -154,7 +154,7 @@ public class IterableObjectHelper implements Component {
 		String valuesSeparator,
 		boolean deleteUnresolvedPlaceHolder
 	) {
-		return resolveObjectValue(key, () -> resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder));
+		return resolveValue(key, () -> resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder));
 	}
 
 	public <T> Collection<T> resolveObjectValues(
@@ -186,17 +186,17 @@ public class IterableObjectHelper implements Component {
 ////////////////////
 
 		
-	public <T> T resolveObjectValue(
+	public <T> T resolveValue(
 		Map<?,?> map,
 		String key,
 		String valuesSeparator,
 		boolean deleteUnresolvedPlaceHolder,
 		Map<?,?> defaultValues
 	) {
-		return resolveObjectValue(key, () -> resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues));
+		return resolveValue(key, () -> resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues));
 	}
 
-	public <T> Collection<T> resolveObjectValues(
+	public <T> Collection<T> resolveValues(
 		Map<?,?> map, String key,
 		String valuesSeparator,
 		boolean deleteUnresolvedPlaceHolder,
@@ -212,7 +212,7 @@ public class IterableObjectHelper implements Component {
 		boolean deleteUnresolvedPlaceHolder,
 		Map<?,?> defaultValues
 	) {
-		return resolveObjectValue(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+		return resolveValue(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 	}
 
 	public Collection<String> resolveStringValues(
@@ -222,13 +222,13 @@ public class IterableObjectHelper implements Component {
 		boolean deleteUnresolvedPlaceHolder,
 		Map<?,?> defaultValues
 	) {
-		return resolveObjectValues(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+		return resolveValues(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 	}
 	
 ////////////////////	
 	
 	
-	public <T> T resolveObjectValue(String key, Supplier<Object> valuesSupplier) {
+	private <T> T resolveValue(String key, Supplier<Object> valuesSupplier) {
 		Object value = valuesSupplier.get();
 		if (value instanceof Collection) {
 			Collection<T> values = (Collection<T>)value;
@@ -241,7 +241,7 @@ public class IterableObjectHelper implements Component {
 		}	
 	}
 	
-	public <T> T resolve(
+	private <T> T resolve(
 		Map<?,?> map,
 		Object key,
 		String valuesSeparator,
