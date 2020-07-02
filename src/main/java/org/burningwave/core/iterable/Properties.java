@@ -56,10 +56,6 @@ public class Properties extends java.util.Properties {
 
 ////////////////////
 	
-	public <T> T resolve(String key) {
-		return IterableObjectHelper.resolve(this, key);
-	}
-	
 	public <T> T resolveObjectValue(String key) {
 		return IterableObjectHelper.resolveObjectValue(this, key);
 	}
@@ -73,14 +69,10 @@ public class Properties extends java.util.Properties {
 	}
 	
 	public Collection<String> resolveStringValues(String key) {
-		return IterableObjectHelper.resolve(this, key);
+		return IterableObjectHelper.resolveStringValues(this, key);
 	}
 	
 ////////////////////
-	
-	public <T> T resolve(String key, Map<String, ?> defaultValues) {
-		return IterableObjectHelper.resolve(this, key, defaultValues);
-	}
 	
 	public <T> T resolveObjectValue(String key, Map<String, ?> defaultValues) {
 		return IterableObjectHelper.resolveObjectValue(this, key, defaultValues);
@@ -100,10 +92,6 @@ public class Properties extends java.util.Properties {
 
 ////////////////////
 	
-	public <T> T resolve(String key, String valuesSeparator) {
-		return IterableObjectHelper.resolve(this, key, valuesSeparator);
-	}
-	
 	public <T> T resolveObjectValue(String key, String valuesSeparator) {
 		return IterableObjectHelper.resolveObjectValue(this, key, valuesSeparator);
 	}
@@ -121,9 +109,6 @@ public class Properties extends java.util.Properties {
 	}
 
 ////////////////////
-	public <T> T resolve(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return IterableObjectHelper.resolve(this, key, valuesSeparator, deleteUnresolvedPlaceHolder);
-	}
 	
 	public <T> T resolveObjectValue(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
 		return IterableObjectHelper.resolveObjectValue(this, key, valuesSeparator, deleteUnresolvedPlaceHolder);

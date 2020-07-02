@@ -73,7 +73,7 @@ public class IterableObjectHelper implements Component {
 
 ////////////////////	
 	
-	public <T> T resolve(Map<?,?> map, String key) {
+	private <T> T resolve(Map<?,?> map, String key) {
 		return resolve(map, key, null, false, null);
 	}
 	
@@ -95,7 +95,7 @@ public class IterableObjectHelper implements Component {
 
 ////////////////////
 	
-	public <T> T resolve(Map<?,?> map, String key, Map<String, ?> defaultValues) {
+	private <T> T resolve(Map<?,?> map, String key, Map<String, ?> defaultValues) {
 		return resolve(map, key, null, false, defaultValues);
 	}
 	
@@ -117,7 +117,7 @@ public class IterableObjectHelper implements Component {
 
 ////////////////////
 	
-	public <T> T resolve(Map<?,?> map, Object key, String valuesSeparator) {
+	private <T> T resolve(Map<?,?> map, Object key, String valuesSeparator) {
 		return resolve(map, key, valuesSeparator, false, null);
 	}
 	
@@ -139,7 +139,7 @@ public class IterableObjectHelper implements Component {
 	
 ////////////////////
 	
-	public <T> T resolve(
+	private <T> T resolve(
 		Map<?,?> map,
 		String key,
 		String valuesSeparator, 
