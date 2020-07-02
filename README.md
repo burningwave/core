@@ -24,6 +24,7 @@ And now we will see:
 * [**executing stringified source code**](#Executing-stringified-source-code)
 * [**retrieving classes of runtime class paths or of other paths through the ClassHunter**](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
 * [**reaching a resource of the file system**](#Reaching-a-resource-of-the-file-system)
+* [**retrieving placeholdered items from map and properties file**](#retrieving-placeholdered-items-from-map-and-properties-file)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 * [**other examples of using some components**](#Other-examples-of-using-some-components)
 
@@ -441,7 +442,8 @@ public class ResourceReacher {
 
 # Retrieving placeholdered items from map and properties file
 
-With **IterableObjectHelper** component it is possible to retrieve items from map by using place holder or not. In the following example we are going to show how retrieve strings or objects from **[burningwave.properties](#configuration-1)** file and from maps:
+With **IterableObjectHelper** component it is possible to retrieve items from map by using place holder or not. In the following example we are going to show to how retrieve strings or objects from **[burningwave.properties](#configuration-1)** file and from maps:
+
 **burningwave.properties**:
 ```properties
 ...
