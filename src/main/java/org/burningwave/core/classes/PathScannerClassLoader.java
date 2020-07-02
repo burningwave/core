@@ -80,7 +80,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 				PathScannerClassLoader.class.getName() + ";" +
 				Supplier.class.getName() + ";"
 			);
-			DEFAULT_VALUES.put(Configuration.Key.PARENT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, PathScannerClassLoader.class.getPackage().getName() + ".PathScannerClassLoaderRetriever");
+			DEFAULT_VALUES.put(Configuration.Key.PARENT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, PathScannerClassLoader.class.getPackage().getName() + ".ParentClassLoaderRetrieverForPathScannerClassLoader");
 			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
 			DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
 			DEFAULT_VALUES.put(Key.SEARCH_CONFIG_CHECK_FILE_OPTION, FileSystemItem.CheckingOption.FOR_NAME.getLabel());
@@ -310,7 +310,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			mutexManager.clear();
 		}
 		this.mutexManager = null;
-		this.loadedPaths = null;
 		pathHelper = null;
 		classFileCriteriaAndConsumer = null;
 	}

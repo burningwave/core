@@ -15,7 +15,6 @@ import org.junit.runner.RunWith;
     ClassLoadersTest.class,
     ClassPathHunterTest.class,
     CodeExecutorTest.class,
-    ComponentContainerTest.class,
     ConstructorsTest.class,
     FileSystemHelperTest.class,
     FileSystemItemTest.class,
@@ -33,6 +32,7 @@ import org.junit.runner.RunWith;
     StringsTest.class,
     UnitSourceGeneratorTest.class,
     RepeatedClassFactoryTest.class,
+    ComponentContainerTest.class
 })
 @ExcludeTags("Heavy")
 public class AllExceptHeavyTestsSuite {
