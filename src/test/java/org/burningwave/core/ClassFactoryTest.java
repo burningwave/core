@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
@@ -313,9 +314,10 @@ public class ClassFactoryTest extends BaseTest {
 			virtual.invokeDirect("setList", new ArrayList<>());
 			virtual.invoke("consume", Integer.valueOf(1));
 			virtual.invokeDirect("consume", Integer.valueOf(1));
-			return virtual;
-			}
-		);
+			List<?> list = virtual.get("list");
+			list = virtual.getDirect("list");
+			return list;
+		});
 	}
 	
 	public static class Repeat extends ClassFactoryTest {
