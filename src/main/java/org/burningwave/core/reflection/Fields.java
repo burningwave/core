@@ -50,41 +50,31 @@ public class Fields extends MemberHelper<Field> {
 	}
 	
 	public <T> T get(Object target, String fieldName) {
-		return ThrowingSupplier.get(() -> (T)findOneAndMakeItAccessible(target, fieldName, true).get(target));
+		return ThrowingSupplier.get(() -> (T)findOneAndMakeItAccessible(target, fieldName).get(target));
 	}	
 	
 	public <T> T getDirect(Object target, String fieldName) {
-		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, findOneAndMakeItAccessible(target, fieldName, true)));
+		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, findOneAndMakeItAccessible(target, fieldName)));
 	}
-	
-	public Field findOneAndMakeItAccessible(Object target, String fieldName) {
-		return findOneAndMakeItAccessible(target, fieldName, true);
-	}
-	
 	
 	public Field findOneAndMakeItAccessible(
 		Object target,
-		String fieldName,
-		boolean cacheField
+		String fieldName
 	) {	
 		Class<?> targetClass = Classes.retrieveFrom(target);
 		String cacheKey = getCacheKey(targetClass, "equals " + fieldName, (Object[])null);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
-		Field member = Cache.uniqueKeyForField.get(targetClassClassLoader, cacheKey);
-		if (member == null) {
-			member = Members.findOne(
-				FieldCriteria.forName(
-					fieldName::equals
-				),
-				target				
-			);
-			member.setAccessible(true);
-			if (cacheField) {
-				final Field toUpload = member;
-				Cache.uniqueKeyForField.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> toUpload);
-			}
-		}
-		return member;
+		return Cache.uniqueKeyForField.getOrUploadIfAbsent(
+			targetClassClassLoader, 
+			cacheKey, 
+			() -> 
+				Members.findOne(
+					FieldCriteria.forName(
+						fieldName::equals
+					),
+					target				
+				)
+		);
 	}
 
 }
