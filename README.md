@@ -478,7 +478,6 @@ public class ItemFromMapRetriever {
         PathHelper pathHelper = componentSupplier.getPathHelper();
         Properties properties = new Properties();
         properties.load(pathHelper.getResourceAsStream("burningwave.properties"));
-
         String code = IterableObjectHelper.resolveStringValue(properties, "code-block-1");        
         
         Map<Object, Object> map = new HashMap<>();
