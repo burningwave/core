@@ -250,7 +250,7 @@ public class IterableObjectHelper implements Component {
 	) {
 		T value = (T) map.get(key);
 		if (value == null && defaultValues != null) {
-			value = (T) defaultValues.get(key);
+			value = (T) resolve(defaultValues, key, valuesSeparator, deleteUnresolvedPlaceHolder, null);
 		}
 		if (value != null && value instanceof String) {
 			String stringValue = (String)value;
