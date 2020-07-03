@@ -44,7 +44,6 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
 import org.burningwave.core.classes.MethodCriteria;
@@ -74,26 +73,36 @@ public class Methods extends MemberHelper<Method> {
 	}
 	
 	public Method findOneAndMakeItAccessible(Object target, String methodName, Object... arguments) {
-		return findOneAndMakeItAccessible(target, methodName, true, arguments);
-	}
-	
-	public Method findOneAndMakeItAccessible(Object target, String methodName, boolean cacheMember, Object... arguments) {
 		Class<?> targetClass = Classes.retrieveFrom(target);
 		String cacheKey = getCacheKey(targetClass, "equals " + methodName, arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
-		Collection<Method> members = Cache.uniqueKeyForMethods.get(targetClassClassLoader, cacheKey);
-		if (members == null) {	
-			 members = findAllAndMakeThemAccessible(target, methodName::equals, arguments);
-			 if (members.size() != 1) {
-					Throwables.toRuntimeException("Method " + methodName
-						+ " not found or found more than one methods in " + Classes.retrieveFrom(target).getName()
-						+ " hierarchy");
-			 }
-			 if (cacheMember) {
-				final Collection<Method> toUpload = members;
-				Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> toUpload);
-			 }
-		}		
+		Collection<Method> members = Cache.uniqueKeyForMethods.getOrUploadIfAbsent(
+			targetClassClassLoader, 
+			cacheKey, () -> 
+				findAllAndMakeThemAccessible(target, methodName::equals, arguments)
+		);
+		if (members.size() != 1) {
+			Throwables.toRuntimeException("Method " + methodName
+				+ " not found or found more than one methods in " + Classes.retrieveFrom(target).getName()
+				+ " hierarchy");
+		}
+		return members.stream().findFirst().get();
+	}
+	
+	public Method findFirstAndMakeItAccessible(Object target, String methodName, Object... arguments) {
+		Class<?> targetClass = Classes.retrieveFrom(target);
+		String cacheKey = getCacheKey(targetClass, "equals " + methodName, arguments);
+		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
+		Collection<Method> members = Cache.uniqueKeyForMethods.getOrUploadIfAbsent(
+			targetClassClassLoader, 
+			cacheKey, () -> 
+				findAllAndMakeThemAccessible(target, methodName::equals, arguments)
+		);
+		if (members.size() < 1) {
+			Throwables.toRuntimeException("Method " + methodName
+				+ " not found in " + Classes.retrieveFrom(target).getName()
+				+ " hierarchy");
+		}
 		return members.stream().findFirst().get();
 	}
 
@@ -114,73 +123,47 @@ public class Methods extends MemberHelper<Method> {
 		}
 		return members;
 	}
-	
-	public <T> T invoke(Object target, String methodName, Object... arguments) {
-		return invoke(target, methodName, true, arguments);
-	}
 
 	@SuppressWarnings("unchecked")
-	public <T> T invoke(Object target, String methodName, boolean cacheMember, Object... arguments) {
+	public <T> T invoke(Object target, String methodName, Object... arguments) {
 		return ThrowingSupplier.get(() -> {
-			Method method = findOneAndMakeItAccessible(target, methodName, cacheMember, arguments);
+			Method method = findFirstAndMakeItAccessible(target, methodName, arguments);
 			return (T)method.invoke(Modifier.isStatic(method.getModifiers()) ? null : target, arguments);
 		});
 	}
 	
-	public <T> T invokeDirect(Object target, String methodName, Object... arguments) {
-		return invokeDirect(target, methodName, true, arguments);
-	}
-	
 	@SuppressWarnings("unchecked")
-	public <T> T invokeDirect(Object target, String methodName, boolean cacheMember, Object... arguments) {
+	public <T> T invokeDirect(Object target, String methodName, Object... arguments) {
 		Class<?> targetClass = Classes.retrieveFrom(target);
-		Method method = findOneAndMakeItAccessible(targetClass, methodName, arguments);
+		Method method = findFirstAndMakeItAccessible(targetClass, methodName, arguments);
 		String cacheKey = getCacheKey(targetClass, "equals " + methodName, arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
-		final AtomicReference<MethodHandle> methodHandleWrapper = new AtomicReference<>(
-			Cache.uniqueKeyForMethodHandle.get(targetClassClassLoader, cacheKey)
-		);
-		if (methodHandleWrapper.get() == null) {
-			methodHandleWrapper.set(
+		MethodHandle methodHandle = Cache.uniqueKeyForMethodHandle.getOrUploadIfAbsent(
+			targetClassClassLoader, cacheKey, 
+			() -> 
 				convertToMethodHandle(
 					method
 				)
-			);
-			if (cacheMember) {
-				Cache.uniqueKeyForMethodHandle.getOrUploadIfAbsent(
-					targetClassClassLoader, cacheKey, 
-					() -> methodHandleWrapper.get()
-				);
-			}
-		}
+		);
 		return ThrowingSupplier.get(() -> {
-				MethodHandle methodHandle = methodHandleWrapper.get();
 				if (!Modifier.isStatic(method.getModifiers())) {
-					methodHandle = methodHandle.bindTo(target);
+					return (T)methodHandle.bindTo(target).invokeWithArguments(arguments);
 				}
 				return (T)methodHandle.invokeWithArguments(arguments);
 			}
 		);
 	}
 	
-	public <T> Collection<T> invokeAll(Object target, String methodNameRegEx, Object... arguments) {
-		return invokeAll(target, methodNameRegEx, true, arguments);
-	}
-	
 	@SuppressWarnings("unchecked")
-	public <T> Collection<T> invokeAll(Object target, String methodNameRegEx, boolean cacheMember, Object... arguments) {
+	public <T> Collection<T> invokeAll(Object target, String methodNameRegEx, Object... arguments) {
 		return ThrowingSupplier.get(() -> {
 			Class<?> targetClass = Classes.retrieveFrom(target);
 			String cacheKey = getCacheKey(targetClass, "matches " + methodNameRegEx, arguments);
 			ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
-			Collection<Method> members = Cache.uniqueKeyForMethods.get(targetClassClassLoader, cacheKey);
-			if (members == null) {	
-				members = findAllAndMakeThemAccessible(target, (name) -> name.matches(methodNameRegEx), arguments);
-				if (cacheMember) {
-					final Collection<Method> toUpload = members;
-					Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> toUpload);
-				}
-			}			
+			Collection<Method> members = Cache.uniqueKeyForMethods.getOrUploadIfAbsent(
+				targetClassClassLoader, cacheKey, () -> 
+					findAllAndMakeThemAccessible(target, (name) -> name.matches(methodNameRegEx), arguments)
+			);		
 			Collection<T> results = new ArrayList<>();
 			for (Method member : members) {
 				results.add((T)member.invoke(
