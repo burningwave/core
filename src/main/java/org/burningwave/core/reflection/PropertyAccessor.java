@@ -179,8 +179,13 @@ public abstract class PropertyAccessor implements Component {
 		return property;
 	}
 
-	Object retrievePropertyByField(Object target, String propertyName) throws IllegalAccessException {
-		return Fields.getDirect(target, propertyName);
+	Object retrievePropertyByField(Object obj, String propertyName) throws IllegalAccessException {
+		Object objToReturn;
+		Field field = Fields.findOneAndMakeItAccessible(obj,
+			propertyName
+		);
+		objToReturn = field.get(obj);
+		return objToReturn;
 	}
 
 	Object retrievePropertyByGetterMethod(Object obj, String propertyName) {

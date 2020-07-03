@@ -4,7 +4,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.burningwave.core.classes.MethodCriteria;
-import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.service.ExtendedService;
 import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
@@ -73,29 +72,5 @@ public class MembersTest extends BaseTest {
 				ExtendedService.class
 			)
 		);
-	}
-	
-	@Test
-	public void findAllTestOne() {
-		testNotEmpty(() ->
-			Members.findAll(
-				MethodCriteria.forName((name) ->
-					name.matches("loadClass")
-				),
-				PathScannerClassLoader.class
-			)
-		);
-	}
-	
-	@Test
-	public void findFirstTestOne() {
-		testNotNull(() ->
-			Members.findFirst(
-				MethodCriteria.forName((name) ->
-					name.matches("loadClass")
-				),
-				PathScannerClassLoader.class
-			)
-		);
-	}
+	}	
 }

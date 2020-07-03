@@ -30,7 +30,6 @@ package org.burningwave.core.reflection;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 
 import java.lang.reflect.Field;
@@ -38,9 +37,8 @@ import java.lang.reflect.Field;
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.function.ThrowingSupplier;
 
-@SuppressWarnings("unchecked")
 public class Fields extends MemberHelper<Field> {
-	
+
 	private Fields() {
 		super();
 	}
@@ -49,12 +47,9 @@ public class Fields extends MemberHelper<Field> {
 		return new Fields();
 	}
 	
+	@SuppressWarnings("unchecked")
 	public <T> T get(Object target, String fieldName) {
 		return ThrowingSupplier.get(() -> (T)findOneAndMakeItAccessible(target, fieldName, true).get(target));
-	}	
-	
-	public <T> T getDirect(Object target, String fieldName) {
-		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, findOneAndMakeItAccessible(target, fieldName, true)));
 	}
 	
 	public Field findOneAndMakeItAccessible(Object target, String fieldName) {

@@ -21,18 +21,11 @@ public class MethodsTest extends BaseTest {
 	
 	@Test
 	public void invokeAllByCacheLoadingTestOne() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		componentSupplier.clearHuntersCache(false);
 		testNotEmpty(
 			() -> {
 				return Methods.invokeAll(Integer.class, "valueOf", 1);	
-			}
-		);
-	}
-	
-	@Test
-	public void invokeVoidTestOne() {
-		testNotEmpty(
-			() -> {
-				return Methods.invokeAll(System.out, "println", "Hello");	
 			}
 		);
 	}

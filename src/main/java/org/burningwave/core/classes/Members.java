@@ -29,7 +29,6 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.reflect.Member;
 import java.util.Collection;
@@ -37,9 +36,11 @@ import java.util.LinkedHashSet;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 import org.burningwave.core.Component;
 
 public class Members implements Component {
@@ -72,8 +73,7 @@ public class Members implements Component {
 			classFrom,
 			criteria.getScanUpToPredicate(), 
 			criteria.getMembersSupplier(),
-			criteria.getPredicateOrTruePredicateIfPredicateIsNull(),
-			new LinkedHashSet<>()
+			criteria.getPredicateOrTruePredicateIfPredicateIsNull()
 		);
 		Predicate<Collection<M>> resultPredicate = criteria.getResultPredicate();
 		return resultPredicate == null?
@@ -83,24 +83,26 @@ public class Members implements Component {
 					new LinkedHashSet<M>();
 	}
 	
+	@SuppressWarnings("unchecked")
 	private <M extends Member> Collection<M> findAll(
 		Class<?> initialClsFrom, 
 		Class<?> clsFrom, 
 		BiPredicate<Class<?>, Class<?>> clsPredicate, 
 		BiFunction<Class<?>, Class<?>, M[]> memberSupplier, 
-		Predicate<M> predicate,
-		Collection<M> collection
-	) {	
-		Stream.of(
+		Predicate<M> predicate
+	) {
+		return Stream.of(
 			memberSupplier.apply(initialClsFrom, clsFrom)
 		).filter(
 			predicate
 		).collect(
-			Collectors.toCollection(() -> collection)
+			(Collector<M, ?, Collection<M>>)(clsPredicate.test(initialClsFrom, clsFrom) || clsFrom.getSuperclass() == null ? 
+				Collectors.toCollection(LinkedHashSet::new):
+				Collectors.toCollection(() -> 
+					findAll((Class<?>) initialClsFrom, clsFrom.getSuperclass(), clsPredicate, memberSupplier, predicate)
+				)
+			)
 		);
-		return clsFrom.getSuperclass() == null || clsPredicate.test(initialClsFrom, clsFrom) ?
-			collection :
-			findAll((Class<?>) initialClsFrom, clsFrom.getSuperclass(), clsPredicate, memberSupplier, predicate, collection);
 	}
 	
 	public <M extends Member> boolean match(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
@@ -108,32 +110,27 @@ public class Members implements Component {
 	}
 	
 	public <M extends Member> boolean match(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
-		return findFirst(criteria, classFrom) != null;
-	}	
-	
-	public <M extends Member> M findFirst(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
 		Predicate<Collection<M>> resultPredicate = criteria.getResultPredicate();
-		if (resultPredicate == null) {
-			return findFirst(
+		return resultPredicate == null?
+			 match(
 				classFrom,
 				classFrom,
 				criteria.getScanUpToPredicate(), 
 				criteria.getMembersSupplier(),
 				criteria.getPredicateOrTruePredicateIfPredicateIsNull()
+			) :
+			resultPredicate.test(
+				findAll(
+					classFrom,
+					classFrom,
+					criteria.getScanUpToPredicate(), 
+					criteria.getMembersSupplier(),
+					criteria.getPredicateOrTruePredicateIfPredicateIsNull()
+				)
 			);
-		} else {
-			return findAll(
-				classFrom,
-				classFrom,
-				criteria.getScanUpToPredicate(), 
-				criteria.getMembersSupplier(),
-				criteria.getPredicateOrTruePredicateIfPredicateIsNull(),
-				new LinkedHashSet<>()
-			).stream().findFirst().orElseGet(() -> null);
-		}
-	}
+	}	
 	
-	private <M extends Member> M findFirst(
+	private <M extends Member> boolean match(
 			Class<?> initialClsFrom,
 			Class<?> clsFrom,			
 			BiPredicate<Class<?>, Class<?>> clsPredicate,
@@ -144,9 +141,9 @@ public class Members implements Component {
 		).filter(
 			predicate
 		).findFirst().orElse(null);
-		return member != null? member :
+		return member != null? true :
 			(clsPredicate.test(initialClsFrom, clsFrom) || clsFrom.getSuperclass() == null) ?
-				null :
-				findFirst(initialClsFrom, clsFrom.getSuperclass(), clsPredicate, memberSupplier, predicate);
+				false :
+				match(initialClsFrom, clsFrom.getSuperclass(), clsPredicate, memberSupplier, predicate);
 	}
 }
