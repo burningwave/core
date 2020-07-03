@@ -128,6 +128,7 @@ public class Methods extends MemberHelper<Method> {
 	public <T> T invoke(Object target, String methodName, Object... arguments) {
 		return ThrowingSupplier.get(() -> {
 			Method method = findFirstAndMakeItAccessible(target, methodName, arguments);
+			logInfo("Invoking " + method);
 			return (T)method.invoke(Modifier.isStatic(method.getModifiers()) ? null : target, arguments);
 		});
 	}
@@ -136,6 +137,7 @@ public class Methods extends MemberHelper<Method> {
 	public <T> T invokeDirect(Object target, String methodName, Object... arguments) {
 		Class<?> targetClass = Classes.retrieveFrom(target);
 		Method method = findFirstAndMakeItAccessible(targetClass, methodName, arguments);
+		logInfo("Invoking " + method);
 		String cacheKey = getCacheKey(targetClass, "equals " + methodName, arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		MethodHandle methodHandle = Cache.uniqueKeyForMethodHandle.getOrUploadIfAbsent(

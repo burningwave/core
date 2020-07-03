@@ -10,10 +10,10 @@ public class MethodsTest extends BaseTest {
 	
 	@Test
 	public void invokeAllTestOne() {
-		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearHuntersCache(false);
 		testNotEmpty(
 			() -> {
+				ComponentSupplier componentSupplier = getComponentSupplier();
+				componentSupplier.clearHuntersCache(false);
 				return Methods.invokeAll(Integer.class, "valueOf", 1);	
 			}
 		);
@@ -23,6 +23,8 @@ public class MethodsTest extends BaseTest {
 	public void invokeAllByCacheLoadingTestOne() {
 		testNotEmpty(
 			() -> {
+				ComponentSupplier componentSupplier = getComponentSupplier();
+				componentSupplier.clearHuntersCache(false);
 				return Methods.invokeAll(Integer.class, "valueOf", 1);	
 			}
 		);
@@ -30,9 +32,18 @@ public class MethodsTest extends BaseTest {
 	
 	@Test
 	public void invokeVoidTestOne() {
-		testNotEmpty(
+		testDoesNotThrow(
 			() -> {
-				return Methods.invokeAll(System.out, "println", "Hello");	
+				Methods.invoke(System.out, "println", "Hello World");	
+			}
+		);
+	}
+	
+	@Test
+	public void invokeDirectVoidTestOne() {
+		testDoesNotThrow(
+			() -> {
+				Methods.invokeDirect(System.out, "println", "Hello World");	
 			}
 		);
 	}
