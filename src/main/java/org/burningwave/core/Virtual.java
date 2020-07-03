@@ -29,9 +29,17 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
-
+import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 
 public interface Virtual extends Component {
+	
+	default <T> T get(String fieldName) {
+		return Fields.get(this, fieldName);
+	}
+	
+	default <T> T getDirect(String fieldName) {
+		return Fields.getDirect(this, fieldName);
+	}
 	
 	default <T> T invoke(String methodName, Object... parameters) {
 		return Methods.invoke(this, methodName, parameters);

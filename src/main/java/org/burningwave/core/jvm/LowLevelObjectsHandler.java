@@ -64,7 +64,7 @@ import org.burningwave.core.io.ByteBufferOutputStream;
 
 import sun.misc.Unsafe;
 
-@SuppressWarnings("restriction")
+@SuppressWarnings({"restriction","unchecked"})
 public class LowLevelObjectsHandler implements Component, MembersRetriever {
 
 	Unsafe unsafe;
@@ -98,10 +98,6 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		return new LowLevelObjectsHandler();
 	}
 	
-	public Unsafe getUnsafe() {
-		return unsafe;
-	}
-	
 	public void disableIllegalAccessLogger() {
 	    if (illegalAccessLoggerDisabler != null) {
 	    	illegalAccessLoggerDisabler.run();
@@ -122,12 +118,10 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		return packageRetriever.apply(classLoader, packageToFind, packageName);
 	}
 		
-	@SuppressWarnings("unchecked")
 	public Collection<Class<?>> retrieveLoadedClasses(ClassLoader classLoader) {
 		return (Collection<Class<?>>)unsafe.getObject(classLoader, loadedClassesVectorMemoryOffset);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Map<String, ?> retrieveLoadedPackages(ClassLoader classLoader) {
 		return (Map<String, ?>)unsafe.getObject(classLoader, loadedPackagesMapMemoryOffset);
 	}
@@ -214,6 +208,10 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		return methodInvoker.invoke(null, method, target, params);
 	}
 	
+	public <T> T getFieldValue(Object target, Field field) {
+		return (T)unsafe.getObject(target, unsafe.objectFieldOffset(field));
+	}
+	
 	public Field[] getDeclaredFields(Class<?> cls)  {
 		try {
 			return (Field[])getDeclaredFieldsRetriever.invoke(cls, false);
@@ -274,7 +272,6 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public static class ByteBufferDelegate {
 		
 		private ByteBufferDelegate() {}

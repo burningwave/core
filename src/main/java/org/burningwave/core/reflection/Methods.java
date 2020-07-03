@@ -61,13 +61,13 @@ public class Methods extends MemberHelper<Method> {
 		return new Methods();
 	}
 
-	public String createGetterMethodNameByPropertyName(String property) {
+	String createGetterMethodNameByPropertyName(String property) {
 		String methodName = 
 			"get" + Strings.capitalizeFirstCharacter(property);
 		return methodName;
 	}
 
-	public String createSetterMethodNameByPropertyName(String property) {
+	String createSetterMethodNameByPropertyName(String property) {
 		String methodName = 
 			"set" + Strings.capitalizeFirstCharacter(property);
 		return methodName;
