@@ -31,7 +31,6 @@ package org.burningwave.core.reflection;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
-import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 
 import java.lang.reflect.Field;
 
@@ -67,16 +66,13 @@ public class Fields extends MemberHelper<Field> {
 		return Cache.uniqueKeyForField.getOrUploadIfAbsent(
 			targetClassClassLoader, 
 			cacheKey, 
-			() -> {
-				Field field = Members.findOne(
-					FieldCriteria.forName(
-						fieldName::equals
-					),
-					target				
-				);
-				field.setAccessible(true);
-				return field;
-			}
+			() -> 
+				findOneAndApply(
+					FieldCriteria.forName(fieldName::equals),
+				target,
+				(field) -> 
+					field.setAccessible(true))
+			
 		);
 	}
 
