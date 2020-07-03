@@ -67,13 +67,16 @@ public class Fields extends MemberHelper<Field> {
 		return Cache.uniqueKeyForField.getOrUploadIfAbsent(
 			targetClassClassLoader, 
 			cacheKey, 
-			() -> 
-				Members.findOne(
+			() -> {
+				Field field = Members.findOne(
 					FieldCriteria.forName(
 						fieldName::equals
 					),
 					target				
-				)
+				);
+				field.setAccessible(true);
+				return field;
+			}
 		);
 	}
 
