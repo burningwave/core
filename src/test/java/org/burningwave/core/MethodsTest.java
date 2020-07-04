@@ -31,6 +31,16 @@ public class MethodsTest extends BaseTest {
 	}
 	
 	@Test
+	public void findAllAndMakeThemAccessibleTestOne() {
+		testNotEmpty(
+			() -> {
+				Methods.findAllAndMakeThemAccessible(System.out);	
+				return Methods.findAllAndMakeThemAccessible(System.out);	
+			},
+		true);
+	}
+	
+	@Test
 	public void invokeVoidTestOne() {
 		testDoesNotThrow(
 			() -> {
