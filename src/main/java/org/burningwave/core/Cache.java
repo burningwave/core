@@ -57,7 +57,7 @@ public class Cache implements Component {
 	public final ObjectAndPathForResources<ClassLoader, Collection<Constructor<?>>> uniqueKeyForConstructors;
 	public final ObjectAndPathForResources<ClassLoader, Collection<Method>> uniqueKeyForMethods;
 	public final ObjectAndPathForResources<ClassLoader, Object> bindedFunctionalInterfaces;
-	public final ObjectAndPathForResources<ClassLoader, MethodHandle> uniqueKeyForMethodHandle;
+	public final ObjectAndPathForResources<ClassLoader, Map.Entry<java.lang.reflect.Executable, MethodHandle>> uniqueKeyForExecutableAndMethodHandle;
 	
 	private Cache() {
 		logInfo("Building cache");
@@ -71,7 +71,7 @@ public class Cache implements Component {
 		uniqueKeyForConstructors = new ObjectAndPathForResources<>(1L, methods -> methods);
 		classLoaderForConstructors = new ObjectAndPathForResources<>(1L, constructors -> constructors);
 		bindedFunctionalInterfaces = new ObjectAndPathForResources<>(1L, functionalInterface -> functionalInterface);	
-		uniqueKeyForMethodHandle = new ObjectAndPathForResources<>(1L, methodHandle -> methodHandle);
+		uniqueKeyForExecutableAndMethodHandle = new ObjectAndPathForResources<>(1L, methodHandle -> methodHandle);
 	}
 	
 	public static Cache create() {
@@ -282,7 +282,7 @@ public class Cache implements Component {
 		uniqueKeyForFields.clear();
 		uniqueKeyForConstructors.clear();
 		uniqueKeyForMethods.clear();
-		uniqueKeyForMethodHandle.clear();
+		uniqueKeyForExecutableAndMethodHandle.clear();
 	}
 	
 	@Override

@@ -38,6 +38,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.AbstractMap;
@@ -46,6 +47,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -162,21 +164,25 @@ public class Methods extends MemberHelper<Method> {
 	
 	public <T> T invokeDirect(Object target, String methodName, Object... arguments) {
 		Class<?> targetClass = Classes.retrieveFrom(target);
-		Method method = findFirstAndMakeItAccessible(targetClass, methodName, arguments);
 		String cacheKey = getCacheKey(targetClass, "equals " + methodName, arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
-		MethodHandle methodHandle = Cache.uniqueKeyForMethodHandle.getOrUploadIfAbsent(
+		Entry<Executable, MethodHandle> methodHandle = Cache.uniqueKeyForExecutableAndMethodHandle.getOrUploadIfAbsent(
 			targetClassClassLoader, cacheKey, 
-			() -> 
-				convertToMethodHandle(
-					method
-				)
+			() -> {
+				Method method = findFirstAndMakeItAccessible(targetClass, methodName, arguments);
+				return new AbstractMap.SimpleEntry<>(
+					method, 
+					convertToMethodHandle(
+						method
+					)
+				);
+			}
 		);
 		return ThrowingSupplier.get(() -> {
-				if (!Modifier.isStatic(method.getModifiers())) {
-					return (T)methodHandle.bindTo(target).invokeWithArguments(arguments);
+				if (!Modifier.isStatic(methodHandle.getKey().getModifiers())) {
+					return (T)methodHandle.getValue().bindTo(target).invokeWithArguments(arguments);
 				}
-				return (T)methodHandle.invokeWithArguments(arguments);
+				return (T)methodHandle.getValue().invokeWithArguments(arguments);
 			}
 		);
 	}

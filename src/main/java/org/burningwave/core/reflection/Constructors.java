@@ -76,16 +76,20 @@ public class Constructors extends MemberHelper<Constructor<?>>  {
 		Class<?> targetClass = Classes.retrieveFrom(target);
 		String cacheKey = getCacheKey(targetClass, "equals " + Classes.retrieveSimpleName(targetClass.getName()), arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
-		MethodHandle methodHandle = Cache.uniqueKeyForMethodHandle.getOrUploadIfAbsent(
+		Map.Entry<java.lang.reflect.Executable, MethodHandle> methodHandle = Cache.uniqueKeyForExecutableAndMethodHandle.getOrUploadIfAbsent(
 			targetClassClassLoader, cacheKey, 
 			() -> {
-				return convertToMethodHandle(
-					findFirstAndMakeItAccessible(targetClass, arguments)
+				Constructor<?> constructor = findFirstAndMakeItAccessible(targetClass, arguments);
+				return new AbstractMap.SimpleEntry<>(
+					constructor,
+					convertToMethodHandle(
+						constructor
+					)
 				);
 			}
 		);
 		return ThrowingSupplier.get(() -> {
-				return (T)methodHandle.invokeWithArguments(arguments);
+				return (T)methodHandle.getValue().invokeWithArguments(arguments);
 			}
 		);
 	}
