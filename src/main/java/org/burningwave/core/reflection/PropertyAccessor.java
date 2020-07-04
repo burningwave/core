@@ -165,7 +165,7 @@ public abstract class PropertyAccessor implements Component {
 
 	Object retrievePropertyByGetterMethod(Object obj, String propertyName) {
 		Object objToReturn;
-		objToReturn = Methods.invoke(
+		objToReturn = Methods.invokeDirect(
 			obj, 
 			Methods.createGetterMethodNameByPropertyName(propertyName), 
 			(Object[])null
