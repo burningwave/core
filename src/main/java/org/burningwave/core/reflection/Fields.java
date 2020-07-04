@@ -65,10 +65,10 @@ public class Fields extends MemberHelper<Field> {
 	}
 	
 	public <T> Map<String, T> getAll(Object target) {
-		Map<String, T> propertyValues = new HashMap<>();
+		Map<String, T> fieldValues = new HashMap<>();
 		Collection<Field> fields = findAllAndMakeThemAccessible(target);
 		for (Field field : fields) {
-			propertyValues.put(
+			fieldValues.put(
 				field.getDeclaringClass() + "." + field.getName(),
 				ThrowingSupplier.get(() ->
 					(T)field.get(
@@ -76,19 +76,19 @@ public class Fields extends MemberHelper<Field> {
 					)
 			);
 		}
-		return propertyValues;
+		return fieldValues;
 	}
 	
 	public <T> Map<String, T> getAllDirect(Object target) {
-		Map<String, T> propertyValues = new HashMap<>();
+		Map<String, T> fieldValues = new HashMap<>();
 		Collection<Field> fields = findAllAndMakeThemAccessible(target);
 		for (Field field : fields) {
-			propertyValues.put(
+			fieldValues.put(
 				field.getDeclaringClass() + "." + field.getName(),
 				ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, field))
 			);
 		}
-		return propertyValues;
+		return fieldValues;
 	}
 	
 	public Field findOneAndMakeItAccessible(Object target, String memberName, Object... arguments) {
