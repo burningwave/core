@@ -217,6 +217,14 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		);
 	}
 	
+	public void setFieldValue(Object target, Field field, Object value) {
+		unsafe.putObject(
+			Modifier.isStatic(field.getModifiers())? Classes.retrieveFrom(target) : target,
+			Modifier.isStatic(field.getModifiers())? unsafe.staticFieldOffset(field) : unsafe.objectFieldOffset(field),
+			value
+		);
+	}
+	
 	public Field[] getDeclaredFields(Class<?> cls)  {
 		try {
 			return (Field[])getDeclaredFieldsRetriever.invoke(cls, false);

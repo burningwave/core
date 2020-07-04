@@ -200,7 +200,7 @@ public abstract class PropertyAccessor implements Component {
 		Field field = Fields.findOneAndMakeItAccessible(target.getClass(),
 				matcher.group(1));
 		if (matcher.group(2).isEmpty()) {
-			field.set(target, value);
+			Fields.setDirect(target, field, value);
 		} else {
 			setInIndexedProperty(field.get(target), matcher.group(2), value);
 		}
@@ -211,11 +211,11 @@ public abstract class PropertyAccessor implements Component {
 		Matcher matcher = Pattern.compile(REG_EXP_FOR_JAVA_PROPERTIES).matcher(propertyPath);
 		matcher.find();
 		if (matcher.group(2).isEmpty()) {
-			Methods.invoke(
+			Methods.invokeDirect(
 				target, Methods.createSetterMethodNameByPropertyName(matcher.group(1)), value
 			);
 		} else {
-			setInIndexedProperty(Methods.invoke(
+			setInIndexedProperty(Methods.invokeDirect(
 				target, Methods.createGetterMethodNameByPropertyName(matcher.group(1))
 			), matcher.group(2), value);
 		}

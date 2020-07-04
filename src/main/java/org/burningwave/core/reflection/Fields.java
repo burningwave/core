@@ -64,6 +64,14 @@ public class Fields extends MemberHelper<Field> {
 		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, findFirstAndMakeItAccessible(target, fieldName)));
 	}
 	
+	public void setDirect(Object target, String fieldName, Object value) {
+		setDirect(target, findFirstAndMakeItAccessible(target, fieldName), value);
+	}
+	
+	void setDirect(Object target, Field field, Object value) {
+		LowLevelObjectsHandler.setFieldValue(target, field, value);
+	}
+	
 	public <T> Map<String, T> getAll(Object target) {
 		Map<String, T> fieldValues = new HashMap<>();
 		Collection<Field> fields = findAllAndMakeThemAccessible(target);
