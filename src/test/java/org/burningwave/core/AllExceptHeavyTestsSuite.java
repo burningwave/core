@@ -16,6 +16,7 @@ import org.junit.runner.RunWith;
     ClassPathHunterTest.class,
     CodeExecutorTest.class,
     ConstructorsTest.class,
+    FieldsTest.class,
     FileSystemHelperTest.class,
     FileSystemItemTest.class,
     FunctionalInterfaceFactoryTest.class,
