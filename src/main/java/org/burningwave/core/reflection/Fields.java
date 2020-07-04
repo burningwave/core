@@ -31,8 +31,16 @@ package org.burningwave.core.reflection;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
+import static org.burningwave.core.assembler.StaticComponentContainer.Members;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.function.ThrowingSupplier;
@@ -49,31 +57,82 @@ public class Fields extends MemberHelper<Field> {
 	}
 	
 	public <T> T get(Object target, String fieldName) {
-		return ThrowingSupplier.get(() -> (T)findOneAndMakeItAccessible(target, fieldName).get(target));
+		return ThrowingSupplier.get(() -> (T)findFirstAndMakeItAccessible(target, fieldName).get(target));
 	}	
 	
 	public <T> T getDirect(Object target, String fieldName) {
-		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, findOneAndMakeItAccessible(target, fieldName)));
+		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, findFirstAndMakeItAccessible(target, fieldName)));
 	}
 	
-	public Field findOneAndMakeItAccessible(
+	public Field findOneAndMakeItAccessible(Object target, String memberName, Object... arguments) {
+		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(target, memberName);
+		if (members.size() != 1) {
+			Throwables.toRuntimeException("Field " + memberName
+				+ " not found or found more than one fields in " + Classes.retrieveFrom(target).getName()
+				+ " hierarchy");
+		}
+		return members.stream().findFirst().get();
+	}
+	
+	public Field findFirstAndMakeItAccessible(Object target, String fieldName, Object... arguments) {
+		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(target, fieldName);
+		if (members.size() < 1) {
+			Throwables.toRuntimeException("Field " + fieldName
+				+ " not found in " + Classes.retrieveFrom(target).getName()
+				+ " hierarchy");
+		}
+		return members.stream().findFirst().get();
+	}
+
+	public Collection<Field> findAllByExactNameAndMakeThemAccessible(
 		Object target,
 		String fieldName
 	) {	
 		Class<?> targetClass = Classes.retrieveFrom(target);
 		String cacheKey = getCacheKey(targetClass, "equals " + fieldName, (Object[])null);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
-		return Cache.uniqueKeyForField.getOrUploadIfAbsent(
+		return Cache.uniqueKeyForFields.getOrUploadIfAbsent(
+			targetClassClassLoader,
+			cacheKey, 
+			() -> 
+				findAllAndMakeThemAccessible(target).stream().filter(field -> field.getName().equals(fieldName)).collect(Collectors.toCollection(LinkedHashSet::new))
+		);
+	}
+	
+	public Collection<Field> findAllAndMakeThemAccessible(
+		Object target
+	) {	
+		Class<?> targetClass = Classes.retrieveFrom(target);
+		String cacheKey = getCacheKey(targetClass, "all fields", (Object[])null);
+		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
+		return Cache.uniqueKeyForFields.getOrUploadIfAbsent(
 			targetClassClassLoader, 
 			cacheKey, 
 			() -> 
-				findOneAndApply(
-					FieldCriteria.forName(fieldName::equals),
-				target,
-				(field) -> 
-					field.setAccessible(true))
+				Collections.unmodifiableCollection(
+					findAllAndApply(
+						FieldCriteria.create(),
+						target,
+						(field) -> 
+							field.setAccessible(true)
+					)
+				)
 			
 		);
 	}
-
+	
+	public <T> Map<String, T> getAll(Object obj)
+			throws IllegalArgumentException, IllegalAccessException {
+		Map<String, T> propertyValues = new HashMap<>();
+		Collection<Field> fields = Members.findAll(
+			FieldCriteria.create(),
+			obj
+		);
+		for (Field field : fields) {
+			field.setAccessible(true);
+			propertyValues.put(field.getName(), (T)field.get(obj));
+		}
+		return propertyValues;
+	}
+	
 }

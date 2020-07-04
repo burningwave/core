@@ -53,7 +53,7 @@ public class Cache implements Component {
 	public final ObjectAndPathForResources<ClassLoader, Field[]> classLoaderForFields;
 	public final ObjectAndPathForResources<ClassLoader, Method[]> classLoaderForMethods;
 	public final ObjectAndPathForResources<ClassLoader, Constructor<?>[]> classLoaderForConstructors;
-	public final ObjectAndPathForResources<ClassLoader, Field> uniqueKeyForField;
+	public final ObjectAndPathForResources<ClassLoader, Collection<Field>> uniqueKeyForFields;
 	public final ObjectAndPathForResources<ClassLoader, Collection<Method>> uniqueKeyForMethods;
 	public final ObjectAndPathForResources<ClassLoader, Object> bindedFunctionalInterfaces;
 	public final ObjectAndPathForResources<ClassLoader, MethodHandle> uniqueKeyForMethodHandle;
@@ -65,7 +65,7 @@ public class Cache implements Component {
 		pathForZipFiles = new PathForResources<>(1L, zipFileContainer -> zipFileContainer);
 		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);
 		classLoaderForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
-		uniqueKeyForField = new ObjectAndPathForResources<>(1L, field -> field);
+		uniqueKeyForFields = new ObjectAndPathForResources<>(1L, field -> field);
 		uniqueKeyForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
 		classLoaderForConstructors = new ObjectAndPathForResources<>(1L, constructors -> constructors);
 		bindedFunctionalInterfaces = new ObjectAndPathForResources<>(1L, functionalInterface -> functionalInterface);	
@@ -277,7 +277,7 @@ public class Cache implements Component {
 		classLoaderForMethods.clear();
 		classLoaderForConstructors.clear();
 		bindedFunctionalInterfaces.clear();
-		uniqueKeyForField.clear();
+		uniqueKeyForFields.clear();
 		uniqueKeyForMethods.clear();
 		uniqueKeyForMethodHandle.clear();
 	}

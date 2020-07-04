@@ -43,6 +43,7 @@ import java.lang.reflect.Modifier;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -74,20 +75,20 @@ public class Methods extends MemberHelper<Method> {
 		return methodName;
 	}
 	
-	public Method findOneAndMakeItAccessible(Object target, String methodName, Object... arguments) {
-		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(methodName, methodName, arguments);
+	public Method findOneAndMakeItAccessible(Object target, String memberName, Object... arguments) {
+		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(target, memberName, arguments);
 		if (members.size() != 1) {
-			Throwables.toRuntimeException("Method " + methodName
+			Throwables.toRuntimeException("Method " + memberName
 				+ " not found or found more than one methods in " + Classes.retrieveFrom(target).getName()
 				+ " hierarchy");
 		}
 		return members.stream().findFirst().get();
 	}
 	
-	public Method findFirstAndMakeItAccessible(Object target, String methodName, Object... arguments) {
-		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(target, methodName, arguments);
+	public Method findFirstAndMakeItAccessible(Object target, String memberName, Object... arguments) {
+		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(target, memberName, arguments);
 		if (members.size() < 1) {
-			Throwables.toRuntimeException("Method " + methodName
+			Throwables.toRuntimeException("Method " + memberName
 				+ " not found in " + Classes.retrieveFrom(target).getName()
 				+ " hierarchy");
 		}
@@ -123,10 +124,12 @@ public class Methods extends MemberHelper<Method> {
 			.name(namePredicate)
 			.and().parameterTypesAreAssignableFrom(arguments);
 		return Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> 
-			findAllAndMakeThemAccessible(target).stream().filter(
-				criteria.getPredicateOrTruePredicateIfPredicateIsNull()
-			).collect(
-				Collectors.toCollection(LinkedHashSet::new)
+			Collections.unmodifiableCollection(
+				findAllAndMakeThemAccessible(target).stream().filter(
+					criteria.getPredicateOrTruePredicateIfPredicateIsNull()
+				).collect(
+					Collectors.toCollection(LinkedHashSet::new)
+				)
 			)
 		);
 	}
@@ -140,8 +143,10 @@ public class Methods extends MemberHelper<Method> {
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		Collection<Method> members = Cache.uniqueKeyForMethods.getOrUploadIfAbsent(
 			targetClassClassLoader, cacheKey, () -> {
-				return findAllAndApply(
-					MethodCriteria.create(), target, (member) -> member.setAccessible(true)
+				return Collections.unmodifiableCollection(
+					findAllAndApply(
+						MethodCriteria.create(), target, (member) -> member.setAccessible(true)
+					)
 				);
 			}
 		);
