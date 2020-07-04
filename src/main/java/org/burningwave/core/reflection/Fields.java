@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.classes.FieldCriteria;
+import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("unchecked")
@@ -70,6 +71,14 @@ public class Fields extends MemberHelper<Field> {
 	
 	public <T> T getDirect(Object target, String fieldName) {
 		return getDirect(target, findFirstAndMakeItAccessible(target, fieldName));
+	}
+	
+	public void set(Object target, String fieldName, Object value) {
+		set(target, findFirstAndMakeItAccessible(target, fieldName), value);
+	}
+	
+	public void set(Object target, Field field, Object value) {
+		ThrowingRunnable.run(() -> field.set(target, value));
 	}
 	
 	public void setDirect(Object target, String fieldName, Object value) {
