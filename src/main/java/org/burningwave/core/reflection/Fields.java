@@ -31,10 +31,10 @@ package org.burningwave.core.reflection;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
-import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -62,6 +62,33 @@ public class Fields extends MemberHelper<Field> {
 	
 	public <T> T getDirect(Object target, String fieldName) {
 		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, findFirstAndMakeItAccessible(target, fieldName)));
+	}
+	
+	public <T> Map<String, T> getAll(Object target) {
+		Map<String, T> propertyValues = new HashMap<>();
+		Collection<Field> fields = findAllAndMakeThemAccessible(target);
+		for (Field field : fields) {
+			propertyValues.put(
+				field.getDeclaringClass() + "." + field.getName(),
+				ThrowingSupplier.get(() ->
+					(T)field.get(
+						Modifier.isStatic(field.getModifiers()) ? null : target)
+					)
+			);
+		}
+		return propertyValues;
+	}
+	
+	public <T> Map<String, T> getAllDirect(Object target) {
+		Map<String, T> propertyValues = new HashMap<>();
+		Collection<Field> fields = findAllAndMakeThemAccessible(target);
+		for (Field field : fields) {
+			propertyValues.put(
+				field.getDeclaringClass() + "." + field.getName(),
+				ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, field))
+			);
+		}
+		return propertyValues;
 	}
 	
 	public Field findOneAndMakeItAccessible(Object target, String memberName, Object... arguments) {
@@ -95,7 +122,9 @@ public class Fields extends MemberHelper<Field> {
 			targetClassClassLoader,
 			cacheKey, 
 			() -> 
-				findAllAndMakeThemAccessible(target).stream().filter(field -> field.getName().equals(fieldName)).collect(Collectors.toCollection(LinkedHashSet::new))
+				Collections.unmodifiableCollection(
+					findAllAndMakeThemAccessible(target).stream().filter(field -> field.getName().equals(fieldName)).collect(Collectors.toCollection(LinkedHashSet::new))
+				)
 		);
 	}
 	
@@ -119,20 +148,5 @@ public class Fields extends MemberHelper<Field> {
 				)
 			
 		);
-	}
-	
-	public <T> Map<String, T> getAll(Object obj)
-			throws IllegalArgumentException, IllegalAccessException {
-		Map<String, T> propertyValues = new HashMap<>();
-		Collection<Field> fields = Members.findAll(
-			FieldCriteria.create(),
-			obj
-		);
-		for (Field field : fields) {
-			field.setAccessible(true);
-			propertyValues.put(field.getName(), (T)field.get(obj));
-		}
-		return propertyValues;
-	}
-	
+	}	
 }

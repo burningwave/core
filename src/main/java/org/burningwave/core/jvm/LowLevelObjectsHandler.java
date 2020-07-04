@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.jvm;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
@@ -45,6 +46,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.nio.Buffer;
 import java.util.Collection;
 import java.util.HashMap;
@@ -209,7 +211,10 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 	}
 	
 	public <T> T getFieldValue(Object target, Field field) {
-		return (T)unsafe.getObject(target, unsafe.objectFieldOffset(field));
+		return (T)unsafe.getObject(
+			Modifier.isStatic(field.getModifiers())? Classes.retrieveFrom(target) : target,
+			Modifier.isStatic(field.getModifiers())? unsafe.staticFieldOffset(field) : unsafe.objectFieldOffset(field)
+		);
 	}
 	
 	public Field[] getDeclaredFields(Class<?> cls)  {

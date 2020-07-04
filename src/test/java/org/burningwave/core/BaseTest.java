@@ -101,9 +101,11 @@ public class BaseTest implements Component {
 			logInfo(getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 			isNotEmpty = !coll.isEmpty();
 			if (isNotEmpty && printAllElements) {
-				coll.forEach(element -> logDebug(
-					Optional.ofNullable(element.toString()).orElseGet(() -> null)
-				));
+				for (Object obj : coll) {
+					if (obj != null) {
+						logDebug("{}", obj);
+					}
+				}
 			}
 		} catch (Throwable exc) {
 			logError(getCallerMethod() + " - Exception occurred", exc);
