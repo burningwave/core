@@ -24,4 +24,13 @@ public class ConstructorsTest extends BaseTest {
 			)
 		);
 	}
+	
+	@Test
+	public void convertToMethodHandleTestOne() {
+		testNotNull(() ->
+			Constructors.convertToMethodHandle(
+				Constructors.findOneAndMakeItAccessible(ExtendedService.class)
+			).invoke()			
+		);
+	}
 }

@@ -70,10 +70,12 @@ public class Fields extends MemberHelper<Field> {
 		for (Field field : fields) {
 			fieldValues.put(
 				field.getDeclaringClass() + "." + field.getName(),
-				ThrowingSupplier.get(() ->
-					(T)field.get(
-						Modifier.isStatic(field.getModifiers()) ? null : target)
-					)
+				ThrowingSupplier.get(
+					() ->
+						(T)field.get(
+							Modifier.isStatic(field.getModifiers()) ? null : target
+						)
+				)
 			);
 		}
 		return fieldValues;

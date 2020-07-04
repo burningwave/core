@@ -28,11 +28,22 @@
  */
 package org.burningwave.core.reflection;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
-import java.util.Optional;
+import java.util.AbstractMap;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.function.ThrowingSupplier;
@@ -51,25 +62,90 @@ public class Constructors extends MemberHelper<Constructor<?>>  {
 	
 	@SuppressWarnings("unchecked")
 	public <T> T newInstanceOf(
-			Object object,
-			Object... arguments) {
+		Object object,
+		Object... arguments
+	) {
 		return ThrowingSupplier.get(() -> 
-			(T)findOneAndMakeItAccessible(object, arguments).newInstance(arguments)
+			(T)findFirstAndMakeItAccessible(object, arguments).newInstance(arguments)
 		);
 	}
 
+	public Constructor<?> findOneAndMakeItAccessible(Object target, Object... arguments) {
+		Collection<Constructor<?>> members = findAllAndMakeThemAccessible(target, arguments);
+		if (members.size() != 1) {
+			Throwables.toRuntimeException("Constructor not found or found more than one constructor in " + Classes.retrieveFrom(target).getName());
+		}
+		return members.stream().findFirst().get();
+	}
+	
+	public Constructor<?> findFirstAndMakeItAccessible(Object target, Object... arguments) {
+		Collection<Constructor<?>> members = findAllAndMakeThemAccessible(target, arguments);
+		if (members.size() < 1) {
+			Throwables.toRuntimeException("Constructor not found in " + Classes.retrieveFrom(target).getName());
+		}
+		return members.stream().findFirst().get();
+	}
+	
+	public Collection<Constructor<?>> findAllAndMakeThemAccessible(
+		Object target,
+		Object... arguments
+	) {	
+		Class<?> targetClass = Classes.retrieveFrom(target);
+		String cacheKey = getCacheKey(targetClass, "all constructors with input parameters");
+		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
+		ConstructorCriteria criteria = ConstructorCriteria.create()
+			.and().parameterTypesAreAssignableFrom(arguments);
+		return Cache.uniqueKeyForConstructors.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> 
+			Collections.unmodifiableCollection(
+				findAllAndMakeThemAccessible(target).stream().filter(
+					criteria.getPredicateOrTruePredicateIfPredicateIsNull()
+				).collect(
+					Collectors.toCollection(LinkedHashSet::new)
+				)
+			)
+		);
+	}
+	
 	@SuppressWarnings("unchecked")
-	public <T> Constructor<T> findOneAndMakeItAccessible(Object object, Object... arguments) {
-		ConstructorCriteria criteria = ConstructorCriteria.byScanUpTo(object).parameterTypesAreAssignableFrom(
-			arguments
+	public Collection<Constructor<?>> findAllAndMakeThemAccessible(
+		Object target
+	) {
+		Class<?> targetClass = Classes.retrieveFrom(target);
+		String cacheKey = getCacheKey(targetClass, "all constructors");
+		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
+		Collection<Constructor<?>> members = Cache.uniqueKeyForConstructors.getOrUploadIfAbsent(
+			targetClassClassLoader, cacheKey, () -> {
+				return Collections.unmodifiableCollection(
+					findAllAndApply(
+						ConstructorCriteria.byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
+		                    return lastClassInHierarchy.equals(currentScannedClass);
+		                }), target, (member) -> 
+							member.setAccessible(true)
+					)
+				);
+			}
 		);
-		Constructor<T> member = (Constructor<T>)findOneAndApply(
-			criteria, object, (mmb) ->	mmb.setAccessible(true)
-		);
-		Optional.ofNullable(member).orElseThrow(() ->
-			Throwables.toRuntimeException("Constructor not found for class " + Classes.retrieveFrom(object))
-		);
-		return member;
+		return members;
+	}
+	
+	public MethodHandle convertToMethodHandle(Constructor<?> constructor) {
+		return convertToMethodHandleBag(constructor).getValue();
+	}
+	
+	public Map.Entry<Lookup, MethodHandle> convertToMethodHandleBag(Constructor<?> constructor) {
+		try {
+			Class<?> constructorDeclaringClass = constructor.getDeclaringClass();
+			MethodHandles.Lookup consulter = LowLevelObjectsHandler.getConsulter(constructorDeclaringClass);
+			return new AbstractMap.SimpleEntry<>(consulter,
+				consulter.findConstructor(
+					constructorDeclaringClass,
+					MethodType.methodType(void.class, constructor.getParameterTypes())
+				)
+					
+			);
+		} catch (NoSuchMethodException | IllegalAccessException exc) {
+			throw Throwables.toRuntimeException(exc);
+		}
 	}
 
 }

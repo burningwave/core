@@ -315,6 +315,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		Cache.classLoaderForFields.remove(this);
 		Cache.classLoaderForMethods.remove(this);
 		Cache.uniqueKeyForFields.remove(this);
+		Cache.uniqueKeyForConstructors.remove(this);
 		Cache.uniqueKeyForMethods.remove(this);
 		Cache.bindedFunctionalInterfaces.remove(this);
 		Cache.uniqueKeyForMethodHandle.remove(this);
