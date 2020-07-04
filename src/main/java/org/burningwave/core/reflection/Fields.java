@@ -56,19 +56,27 @@ public class Fields extends MemberHelper<Field> {
 		return new Fields();
 	}
 	
+	public <T> T get(Object target, Field field) {
+		return ThrowingSupplier.get(() -> (T)field.get(target));
+	}
+	
 	public <T> T get(Object target, String fieldName) {
-		return ThrowingSupplier.get(() -> (T)findFirstAndMakeItAccessible(target, fieldName).get(target));
+		return get(target, findFirstAndMakeItAccessible(target, fieldName));
 	}	
 	
+	public <T> T getDirect(Object target, Field field) {
+		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, field));
+	}
+	
 	public <T> T getDirect(Object target, String fieldName) {
-		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, findFirstAndMakeItAccessible(target, fieldName)));
+		return getDirect(target, findFirstAndMakeItAccessible(target, fieldName));
 	}
 	
 	public void setDirect(Object target, String fieldName, Object value) {
 		setDirect(target, findFirstAndMakeItAccessible(target, fieldName), value);
 	}
 	
-	void setDirect(Object target, Field field, Object value) {
+	public void setDirect(Object target, Field field, Object value) {
 		LowLevelObjectsHandler.setFieldValue(target, field, value);
 	}
 	
