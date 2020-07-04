@@ -68,7 +68,7 @@ public class Fields extends MemberHelper<Field> {
 		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(target, memberName);
 		if (members.size() != 1) {
 			Throwables.toRuntimeException("Field " + memberName
-				+ " not found or found more than one fields in " + Classes.retrieveFrom(target).getName()
+				+ " not found or found more than one field in " + Classes.retrieveFrom(target).getName()
 				+ " hierarchy");
 		}
 		return members.stream().findFirst().get();

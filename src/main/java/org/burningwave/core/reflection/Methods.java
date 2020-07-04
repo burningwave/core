@@ -79,7 +79,7 @@ public class Methods extends MemberHelper<Method> {
 		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(target, memberName, arguments);
 		if (members.size() != 1) {
 			Throwables.toRuntimeException("Method " + memberName
-				+ " not found or found more than one methods in " + Classes.retrieveFrom(target).getName()
+				+ " not found or found more than one method in " + Classes.retrieveFrom(target).getName()
 				+ " hierarchy");
 		}
 		return members.stream().findFirst().get();
