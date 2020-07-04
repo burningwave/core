@@ -60,7 +60,7 @@ public class UseFunctionalInterface {
             "packagename.MyExtendedClass"
         );
         ToBeExtended generatedClassObject =
-            Constructors.newInstanceOf(generatedClass);
+            Constructors.newInstanceOfDirect(generatedClass);
         generatedClassObject.printSomeThing();
         System.out.println(
             ((MyInterface)generatedClassObject).convert(LocalDateTime.now()).toString()

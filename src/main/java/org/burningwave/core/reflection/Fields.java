@@ -31,11 +31,19 @@ package org.burningwave.core.reflection;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
-import static org.burningwave.core.assembler.StaticComponentContainer.Members;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.classes.FieldCriteria;
+import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("unchecked")
@@ -49,42 +57,123 @@ public class Fields extends MemberHelper<Field> {
 		return new Fields();
 	}
 	
+	public <T> T get(Object target, Field field) {
+		return ThrowingSupplier.get(() -> (T)field.get(target));
+	}
+	
 	public <T> T get(Object target, String fieldName) {
-		return ThrowingSupplier.get(() -> (T)findOneAndMakeItAccessible(target, fieldName, true).get(target));
+		return get(target, findFirstAndMakeItAccessible(target, fieldName));
 	}	
 	
+	public <T> T getDirect(Object target, Field field) {
+		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, field));
+	}
+	
 	public <T> T getDirect(Object target, String fieldName) {
-		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, findOneAndMakeItAccessible(target, fieldName, true)));
+		return getDirect(target, findFirstAndMakeItAccessible(target, fieldName));
 	}
 	
-	public Field findOneAndMakeItAccessible(Object target, String fieldName) {
-		return findOneAndMakeItAccessible(target, fieldName, true);
+	public void set(Object target, String fieldName, Object value) {
+		set(target, findFirstAndMakeItAccessible(target, fieldName), value);
 	}
 	
+	public void set(Object target, Field field, Object value) {
+		ThrowingRunnable.run(() -> field.set(target, value));
+	}
 	
-	public Field findOneAndMakeItAccessible(
+	public void setDirect(Object target, String fieldName, Object value) {
+		setDirect(target, findFirstAndMakeItAccessible(target, fieldName), value);
+	}
+	
+	public void setDirect(Object target, Field field, Object value) {
+		LowLevelObjectsHandler.setFieldValue(target, field, value);
+	}
+	
+	public <T> Map<String, T> getAll(Object target) {
+		Map<String, T> fieldValues = new HashMap<>();
+		Collection<Field> fields = findAllAndMakeThemAccessible(target);
+		for (Field field : fields) {
+			fieldValues.put(
+				field.getDeclaringClass() + "." + field.getName(),
+				ThrowingSupplier.get(
+					() ->
+						(T)field.get(
+							Modifier.isStatic(field.getModifiers()) ? null : target
+						)
+				)
+			);
+		}
+		return fieldValues;
+	}
+	
+	public <T> Map<String, T> getAllDirect(Object target) {
+		Map<String, T> fieldValues = new HashMap<>();
+		Collection<Field> fields = findAllAndMakeThemAccessible(target);
+		for (Field field : fields) {
+			fieldValues.put(
+				field.getDeclaringClass() + "." + field.getName(),
+				ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, field))
+			);
+		}
+		return fieldValues;
+	}
+	
+	public Field findOneAndMakeItAccessible(Object target, String memberName, Object... arguments) {
+		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(target, memberName);
+		if (members.size() != 1) {
+			Throwables.toRuntimeException("Field " + memberName
+				+ " not found or found more than one field in " + Classes.retrieveFrom(target).getName()
+				+ " hierarchy");
+		}
+		return members.stream().findFirst().get();
+	}
+	
+	public Field findFirstAndMakeItAccessible(Object target, String fieldName, Object... arguments) {
+		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(target, fieldName);
+		if (members.size() < 1) {
+			Throwables.toRuntimeException("Field " + fieldName
+				+ " not found in " + Classes.retrieveFrom(target).getName()
+				+ " hierarchy");
+		}
+		return members.stream().findFirst().get();
+	}
+
+	public Collection<Field> findAllByExactNameAndMakeThemAccessible(
 		Object target,
-		String fieldName,
-		boolean cacheField
+		String fieldName
 	) {	
 		Class<?> targetClass = Classes.retrieveFrom(target);
 		String cacheKey = getCacheKey(targetClass, "equals " + fieldName, (Object[])null);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
-		Field member = Cache.uniqueKeyForField.get(targetClassClassLoader, cacheKey);
-		if (member == null) {
-			member = Members.findOne(
-				FieldCriteria.forName(
-					fieldName::equals
-				),
-				target				
-			);
-			member.setAccessible(true);
-			if (cacheField) {
-				final Field toUpload = member;
-				Cache.uniqueKeyForField.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> toUpload);
-			}
-		}
-		return member;
+		return Cache.uniqueKeyForFields.getOrUploadIfAbsent(
+			targetClassClassLoader,
+			cacheKey, 
+			() -> 
+				Collections.unmodifiableCollection(
+					findAllAndMakeThemAccessible(target).stream().filter(field -> field.getName().equals(fieldName)).collect(Collectors.toCollection(LinkedHashSet::new))
+				)
+		);
 	}
-
+	
+	public Collection<Field> findAllAndMakeThemAccessible(
+		Object target
+	) {	
+		Class<?> targetClass = Classes.retrieveFrom(target);
+		String cacheKey = getCacheKey(targetClass, "all fields", (Object[])null);
+		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
+		return Cache.uniqueKeyForFields.getOrUploadIfAbsent(
+			targetClassClassLoader, 
+			cacheKey, 
+			() -> 
+				Collections.unmodifiableCollection(
+					findAllAndApply(
+						FieldCriteria.create(),
+						target,
+						(field) -> 
+							field.setAccessible(true)
+					)
+				)
+			
+		);
+	}	
 }

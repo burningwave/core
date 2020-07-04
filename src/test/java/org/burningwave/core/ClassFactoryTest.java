@@ -308,7 +308,7 @@ public class ClassFactoryTest extends BaseTest {
 				Service.class,
 				PojoInterface.class
 			);
-			Virtual virtual = (Virtual)Constructors.newInstanceOf(virtualClass);
+			Virtual virtual = (Virtual)Constructors.newInstanceOfDirect(virtualClass);
 			virtual.invokeDirect("setList", new ArrayList<>());
 			virtual.invoke("setList", new ArrayList<>());
 			virtual.invokeDirect("setList", new ArrayList<>());
@@ -317,7 +317,8 @@ public class ClassFactoryTest extends BaseTest {
 			List<?> list = virtual.get("list");
 			list = virtual.getDirect("list");
 			return list;
-		});
+			}
+		);
 	}
 	
 	public static class Repeat extends ClassFactoryTest {

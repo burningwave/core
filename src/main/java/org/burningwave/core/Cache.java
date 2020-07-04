@@ -53,10 +53,11 @@ public class Cache implements Component {
 	public final ObjectAndPathForResources<ClassLoader, Field[]> classLoaderForFields;
 	public final ObjectAndPathForResources<ClassLoader, Method[]> classLoaderForMethods;
 	public final ObjectAndPathForResources<ClassLoader, Constructor<?>[]> classLoaderForConstructors;
-	public final ObjectAndPathForResources<ClassLoader, Field> uniqueKeyForField;
+	public final ObjectAndPathForResources<ClassLoader, Collection<Field>> uniqueKeyForFields;
+	public final ObjectAndPathForResources<ClassLoader, Collection<Constructor<?>>> uniqueKeyForConstructors;
 	public final ObjectAndPathForResources<ClassLoader, Collection<Method>> uniqueKeyForMethods;
 	public final ObjectAndPathForResources<ClassLoader, Object> bindedFunctionalInterfaces;
-	public final ObjectAndPathForResources<ClassLoader, MethodHandle> uniqueKeyForMethodHandle;
+	public final ObjectAndPathForResources<ClassLoader, Map.Entry<java.lang.reflect.Executable, MethodHandle>> uniqueKeyForExecutableAndMethodHandle;
 	
 	private Cache() {
 		logInfo("Building cache");
@@ -65,11 +66,12 @@ public class Cache implements Component {
 		pathForZipFiles = new PathForResources<>(1L, zipFileContainer -> zipFileContainer);
 		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);
 		classLoaderForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
-		uniqueKeyForField = new ObjectAndPathForResources<>(1L, field -> field);
-		uniqueKeyForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
+		uniqueKeyForFields = new ObjectAndPathForResources<>(1L, field -> field);
+		uniqueKeyForMethods = new ObjectAndPathForResources<>(1L, constructors -> constructors);
+		uniqueKeyForConstructors = new ObjectAndPathForResources<>(1L, methods -> methods);
 		classLoaderForConstructors = new ObjectAndPathForResources<>(1L, constructors -> constructors);
 		bindedFunctionalInterfaces = new ObjectAndPathForResources<>(1L, functionalInterface -> functionalInterface);	
-		uniqueKeyForMethodHandle = new ObjectAndPathForResources<>(1L, methodHandle -> methodHandle);
+		uniqueKeyForExecutableAndMethodHandle = new ObjectAndPathForResources<>(1L, methodHandle -> methodHandle);
 	}
 	
 	public static Cache create() {
@@ -277,9 +279,10 @@ public class Cache implements Component {
 		classLoaderForMethods.clear();
 		classLoaderForConstructors.clear();
 		bindedFunctionalInterfaces.clear();
-		uniqueKeyForField.clear();
+		uniqueKeyForFields.clear();
+		uniqueKeyForConstructors.clear();
 		uniqueKeyForMethods.clear();
-		uniqueKeyForMethodHandle.clear();
+		uniqueKeyForExecutableAndMethodHandle.clear();
 	}
 	
 	@Override

@@ -37,7 +37,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.11.0</version>
+    <version>7.13.0</version>
 </dependency>
 ```
 
@@ -478,7 +478,6 @@ public class ItemFromMapRetriever {
         PathHelper pathHelper = componentSupplier.getPathHelper();
         Properties properties = new Properties();
         properties.load(pathHelper.getResourceAsStream("burningwave.properties"));
-
         String code = IterableObjectHelper.resolveStringValue(properties, "code-block-1");        
         
         Map<Object, Object> map = new HashMap<>();
