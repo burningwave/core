@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.ThrowingSupplier;
 
-
+@SuppressWarnings("unchecked")
 public class Methods extends MemberHelper<Method> {
 	
 	private Methods() {
@@ -133,8 +133,7 @@ public class Methods extends MemberHelper<Method> {
 			)
 		);
 	}
-	
-	@SuppressWarnings("unchecked")
+
 	public Collection<Method> findAllAndMakeThemAccessible(
 		Object target
 	) {
@@ -153,7 +152,6 @@ public class Methods extends MemberHelper<Method> {
 		return members;
 	}
 
-	@SuppressWarnings("unchecked")
 	public <T> T invoke(Object target, String methodName, Object... arguments) {
 		return ThrowingSupplier.get(() -> {
 			Method method = findFirstAndMakeItAccessible(target, methodName, arguments);
@@ -162,7 +160,6 @@ public class Methods extends MemberHelper<Method> {
 		});
 	}
 	
-	@SuppressWarnings("unchecked")
 	public <T> T invokeDirect(Object target, String methodName, Object... arguments) {
 		Class<?> targetClass = Classes.retrieveFrom(target);
 		Method method = findFirstAndMakeItAccessible(targetClass, methodName, arguments);
@@ -175,7 +172,6 @@ public class Methods extends MemberHelper<Method> {
 					method
 				)
 		);
-		logInfo("Invoking " + method);
 		return ThrowingSupplier.get(() -> {
 				if (!Modifier.isStatic(method.getModifiers())) {
 					return (T)methodHandle.bindTo(target).invokeWithArguments(arguments);
@@ -185,7 +181,6 @@ public class Methods extends MemberHelper<Method> {
 		);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public <T> Collection<T> invokeAll(Object target, String methodNameRegEx, Object... arguments) {
 		return ThrowingSupplier.get(() -> {
 			Collection<Method> members = findAllByMatchedNameAndMakeThemAccessible(target, methodNameRegEx, arguments);		

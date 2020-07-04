@@ -93,7 +93,7 @@ public class RuntimeClassExtenderTwo {
             "org.burningwave.core.examples.classfactory.MyExtendedClassTwo"
         );
         ToBeExtended generatedClassObject =
-            Constructors.newInstanceOf(generatedClass);
+            Constructors.newInstanceOfDirect(generatedClass);
         generatedClassObject.printSomeThing("print something call 1");
         System.out.println(
             ((MyInterface)generatedClassObject).now().toString()

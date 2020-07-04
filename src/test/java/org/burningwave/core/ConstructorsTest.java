@@ -4,6 +4,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Constructo
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
+import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.service.ExtendedService;
 import org.junit.jupiter.api.Test;
 
@@ -12,13 +13,13 @@ public class ConstructorsTest extends BaseTest {
 	
 	@Test
 	public void newInstanceOfTestOne() {
-		testNotNull(() -> Constructors.newInstanceOf(ExtendedService.class));
+		testNotNull(() -> Constructors.newInstanceOfDirect(ExtendedService.class));
 	}
 	
 	@Test
 	public void newInstanceOfTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> Constructors.newInstanceOf(
+		testNotNull(() -> Constructors.newInstanceOfDirect(
 				FunctionalInterfaceFactory.class, 
 				componentSupplier.getClassFactory()
 			)
@@ -31,6 +32,13 @@ public class ConstructorsTest extends BaseTest {
 			Constructors.convertToMethodHandle(
 				Constructors.findOneAndMakeItAccessible(ExtendedService.class)
 			).invoke()			
+		);
+	}
+	
+	@Test
+	public void newInstanceOfDirectTestOne() {
+		testNotNull(() ->
+			Constructors.newInstanceOfDirect(MemoryClassLoader.class, Thread.currentThread().getContextClassLoader())
 		);
 	}
 }

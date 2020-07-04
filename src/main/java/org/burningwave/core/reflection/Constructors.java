@@ -49,6 +49,7 @@ import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.function.ThrowingSupplier;
 
 
+@SuppressWarnings("unchecked")
 public class Constructors extends MemberHelper<Constructor<?>>  {
 
 	private Constructors() {
@@ -57,16 +58,35 @@ public class Constructors extends MemberHelper<Constructor<?>>  {
 	
 	public static Constructors create() {
 		return new Constructors();
-	}
+	}	
 	
-	
-	@SuppressWarnings("unchecked")
 	public <T> T newInstanceOf(
 		Object object,
 		Object... arguments
 	) {
 		return ThrowingSupplier.get(() -> 
 			(T)findFirstAndMakeItAccessible(object, arguments).newInstance(arguments)
+		);
+	}
+	
+	public <T> T newInstanceOfDirect(
+		Object target,
+		Object... arguments
+	) {
+		Class<?> targetClass = Classes.retrieveFrom(target);
+		String cacheKey = getCacheKey(targetClass, "equals " + Classes.retrieveSimpleName(targetClass.getName()), arguments);
+		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
+		MethodHandle methodHandle = Cache.uniqueKeyForMethodHandle.getOrUploadIfAbsent(
+			targetClassClassLoader, cacheKey, 
+			() -> {
+				return convertToMethodHandle(
+					findFirstAndMakeItAccessible(targetClass, arguments)
+				);
+			}
+		);
+		return ThrowingSupplier.get(() -> {
+				return (T)methodHandle.invokeWithArguments(arguments);
+			}
 		);
 	}
 
@@ -106,7 +126,6 @@ public class Constructors extends MemberHelper<Constructor<?>>  {
 		);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Collection<Constructor<?>> findAllAndMakeThemAccessible(
 		Object target
 	) {

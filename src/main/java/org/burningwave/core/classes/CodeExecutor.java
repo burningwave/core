@@ -178,7 +178,7 @@ public class CodeExecutor implements Component {
 					Class<? extends Executable> executableClass = loadOrBuildAndDefineExecutorSubType(
 						config.useClassLoader(memoryClassLoader)
 					);
-					Executable executor = Constructors.newInstanceOf(executableClass);
+					Executable executor = Constructors.newInstanceOfDirect(executableClass);
 					T retrievedElement = executor.execute(config.getParams());
 					if (defaultClassLoader instanceof MemoryClassLoader) {
 						((MemoryClassLoader)defaultClassLoader).unregister(executeClient, true);
@@ -201,7 +201,7 @@ public class CodeExecutor implements Component {
 				Class<? extends Executable> executableClass = loadOrBuildAndDefineExecutorSubType(
 					config
 				);
-				Executable executor = Constructors.newInstanceOf(executableClass);
+				Executable executor = Constructors.newInstanceOfDirect(executableClass);
 				T retrievedElement = executor.execute(config.getParams());
 				if (parentClassLoaderRestorer != null) {
 					parentClassLoaderRestorer.apply(true);
