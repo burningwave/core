@@ -72,4 +72,45 @@ public class FieldsTest extends BaseTest {
 			assertTrue(charValue == 'a');
 		});
 	}
+	
+	@Test
+	public void setDirectVolatileTestOne() {
+		testDoesNotThrow(() -> {
+			Object obj = new Object() {
+				volatile List<Object> objectValue;
+				volatile int intValue;
+				volatile long longValue;
+				volatile float floatValue;
+				volatile double doubleValue;
+				volatile boolean booleanValue;
+				volatile byte byteValue;
+				volatile char charValue;
+			};
+			List<Object> objectValue = new ArrayList<>();
+			Fields.setDirect(obj, "objectValue", objectValue);
+			List<Object> objectValue2Var = Fields.getDirect(obj, "objectValue");
+			assertTrue(objectValue2Var == objectValue);
+			Fields.setDirect(obj, "intValue", 1);
+			int intValue = Fields.getDirect(obj, "intValue");
+			assertTrue(intValue == 1);
+			Fields.setDirect(obj, "longValue", 2l);
+			long longValue = Fields.getDirect(obj, "longValue");
+			assertTrue(longValue == 2l);
+			Fields.setDirect(obj, "floatValue", 3f);
+			float floatValue = Fields.getDirect(obj, "floatValue");
+			assertTrue(floatValue == 3f);
+			Fields.setDirect(obj, "doubleValue", 4.0d);
+			double doubleValue = Fields.getDirect(obj, "doubleValue");
+			assertTrue(doubleValue == 4.0);
+			Fields.setDirect(obj, "booleanValue", true);
+			boolean booleanValue = Fields.getDirect(obj, "booleanValue");
+			assertTrue(booleanValue);
+			Fields.setDirect(obj, "byteValue", (byte)5);
+			byte byteValue = Fields.getDirect(obj, "byteValue");
+			assertTrue(byteValue == 5);
+			Fields.setDirect(obj, "charValue", 'a');
+			char charValue = Fields.getDirect(obj, "charValue");
+			assertTrue(charValue == 'a');
+		});
+	}
 }
