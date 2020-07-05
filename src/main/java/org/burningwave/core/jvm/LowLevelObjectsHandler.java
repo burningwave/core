@@ -219,21 +219,53 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			unsafe.objectFieldOffset(field);
 		Class<?> cls = field.getType();
 		if(!cls.isPrimitive()) {
-			return (T)unsafe.getObject(target, fieldOffset);			
+			if (!Modifier.isVolatile(field.getModifiers())) {
+				return (T)unsafe.getObject(target, fieldOffset);
+			} else {
+				return (T)unsafe.getObjectVolatile(target, fieldOffset);
+			}
 		} else if (cls == int.class) {
-			return (T)new Integer(unsafe.getInt(target, fieldOffset));
+			if (!Modifier.isVolatile(field.getModifiers())) {
+				return (T)new Integer(unsafe.getInt(target, fieldOffset));
+			} else {
+				return (T)new Integer(unsafe.getIntVolatile(target, fieldOffset));
+			}
 		} else if (cls == long.class) {
-			return (T)new Long(unsafe.getLong(target, fieldOffset));
+			if (!Modifier.isVolatile(field.getModifiers())) {
+				return (T)new Long(unsafe.getLong(target, fieldOffset));
+			} else {
+				return (T)new Long(unsafe.getLongVolatile(target, fieldOffset));
+			}
 		} else if (cls == float.class) {
-			return (T)new Float(unsafe.getFloat(target, fieldOffset));
+			if (!Modifier.isVolatile(field.getModifiers())) {
+				return (T)new Float(unsafe.getFloat(target, fieldOffset));
+			} else {
+				return (T)new Float(unsafe.getFloatVolatile(target, fieldOffset));
+			}
 		} else if (cls == double.class) {
-			return (T)new Double(unsafe.getDouble(target, fieldOffset));
+			if (!Modifier.isVolatile(field.getModifiers())) {
+				return (T)new Double(unsafe.getDouble(target, fieldOffset));
+			} else {
+				return (T)new Double(unsafe.getDoubleVolatile(target, fieldOffset));
+			}
 		} else if (cls == boolean.class) {
-			return (T)new Boolean(unsafe.getBoolean(target, fieldOffset));
+			if (!Modifier.isVolatile(field.getModifiers())) {
+				return (T)new Boolean(unsafe.getBoolean(target, fieldOffset));
+			} else {
+				return (T)new Boolean(unsafe.getBooleanVolatile(target, fieldOffset));
+			}
 		} else if (cls == byte.class) {
-			return (T)new Byte(unsafe.getByte(target, fieldOffset));
+			if (!Modifier.isVolatile(field.getModifiers())) {
+				return (T)new Byte(unsafe.getByte(target, fieldOffset));
+			} else {
+				return (T)new Byte(unsafe.getByteVolatile(target, fieldOffset));
+			}
 		} else {
-			return (T)new Character(unsafe.getChar(target, fieldOffset));
+			if (!Modifier.isVolatile(field.getModifiers())) {
+				return (T)new Character(unsafe.getChar(target, fieldOffset));
+			} else {
+				return (T)new Character(unsafe.getCharVolatile(target, fieldOffset));
+			}
 		}
 	}
 	
@@ -249,21 +281,53 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			unsafe.objectFieldOffset(field);
 		Class<?> cls = field.getType();
 		if(!cls.isPrimitive()) {
-			unsafe.putObject(target, fieldOffset, value);
+			if (!Modifier.isVolatile(field.getModifiers())) {
+				unsafe.putObject(target, fieldOffset, value);
+			} else {
+				unsafe.putObjectVolatile(target, fieldOffset, value);
+			}			
 		} else if (cls == int.class) {
-			unsafe.putInt(target, fieldOffset, ((Integer)value).intValue());
+			if (!Modifier.isVolatile(field.getModifiers())) {
+				unsafe.putInt(target, fieldOffset, ((Integer)value).intValue());
+			} else {
+				unsafe.putIntVolatile(target, fieldOffset, ((Integer)value).intValue());
+			}
 		} else if (cls == long.class) {
-			unsafe.putLong(target, fieldOffset, ((Long)value).longValue());
+			if (!Modifier.isVolatile(field.getModifiers())) {
+				unsafe.putLong(target, fieldOffset, ((Long)value).longValue());
+			} else {
+				unsafe.putLongVolatile(target, fieldOffset, ((Long)value).longValue());
+			}
 		} else if (cls == float.class) {
-			unsafe.putFloat(target, fieldOffset, ((Float)value).floatValue());
+			if (!Modifier.isVolatile(field.getModifiers())) {
+				unsafe.putFloat(target, fieldOffset, ((Float)value).floatValue());
+			} else {
+				unsafe.putFloatVolatile(target, fieldOffset, ((Float)value).floatValue());
+			}
 		} else if (cls == double.class) {
-			unsafe.putDouble(target, fieldOffset, ((Double)value).doubleValue());
+			if (!Modifier.isVolatile(field.getModifiers())) {
+				unsafe.putDouble(target, fieldOffset, ((Double)value).doubleValue());
+			} else {
+				unsafe.putDoubleVolatile(target, fieldOffset, ((Double)value).doubleValue());
+			}
 		} else if (cls == boolean.class) {
-			unsafe.putBoolean(target, fieldOffset, ((Boolean)value).booleanValue());
+			if (!Modifier.isVolatile(field.getModifiers())) {
+				unsafe.putBoolean(target, fieldOffset, ((Boolean)value).booleanValue());
+			} else {
+				unsafe.putBooleanVolatile(target, fieldOffset, ((Boolean)value).booleanValue());
+			}
 		} else if (cls == byte.class) {
-			unsafe.putByte(target, fieldOffset, ((Byte)value).byteValue());
+			if (!Modifier.isVolatile(field.getModifiers())) {
+				unsafe.putByte(target, fieldOffset, ((Byte)value).byteValue());
+			} else {
+				unsafe.putByteVolatile(target, fieldOffset, ((Byte)value).byteValue());
+			}
 		} else if (cls == char.class) {
-			unsafe.putChar(target, fieldOffset, ((Character)value).charValue());
+			if (!Modifier.isVolatile(field.getModifiers())) {
+				unsafe.putChar(target, fieldOffset, ((Character)value).charValue());
+			} else {
+				unsafe.putCharVolatile(target, fieldOffset, ((Character)value).charValue());
+			}
 		}
 	}
 	
