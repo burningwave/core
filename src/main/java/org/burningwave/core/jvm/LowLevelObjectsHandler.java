@@ -211,21 +211,60 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 	}
 	
 	public <T> T getFieldValue(Object target, Field field) {
-		return (T)unsafe.getObject(
-			Modifier.isStatic(field.getModifiers())? Classes.retrieveFrom(target) : target,
-			Modifier.isStatic(field.getModifiers())? unsafe.staticFieldOffset(field) : unsafe.objectFieldOffset(field)
-		);
+		target = Modifier.isStatic(field.getModifiers())?
+			Classes.retrieveFrom(target) :
+			target;
+		long fieldOffset = Modifier.isStatic(field.getModifiers())?
+			unsafe.staticFieldOffset(field) :
+			unsafe.objectFieldOffset(field);
+		Class<?> cls = field.getType();
+		if(!cls.isPrimitive()) {
+			return (T)unsafe.getObject(target, fieldOffset);			
+		} else if (cls == int.class) {
+			return (T)new Integer(unsafe.getInt(target, fieldOffset));
+		} else if (cls == long.class) {
+			return (T)new Long(unsafe.getLong(target, fieldOffset));
+		} else if (cls == float.class) {
+			return (T)new Float(unsafe.getFloat(target, fieldOffset));
+		} else if (cls == double.class) {
+			return (T)new Double(unsafe.getDouble(target, fieldOffset));
+		} else if (cls == boolean.class) {
+			return (T)new Boolean(unsafe.getBoolean(target, fieldOffset));
+		} else if (cls == byte.class) {
+			return (T)new Byte(unsafe.getByte(target, fieldOffset));
+		} else {
+			return (T)new Character(unsafe.getChar(target, fieldOffset));
+		}
 	}
 	
 	public void setFieldValue(Object target, Field field, Object value) {
-		if(value != null && !field.getType().isAssignableFrom(value.getClass())) {
+		if(value != null && !Classes.isAssignableFrom(field.getType(), value.getClass())) {
 			throw Throwables.toRuntimeException("Value " + value + " is not assignable to " + field.getName());
 		}
-		unsafe.putObject(
-			Modifier.isStatic(field.getModifiers())? Classes.retrieveFrom(target) : target,
-			Modifier.isStatic(field.getModifiers())? unsafe.staticFieldOffset(field) : unsafe.objectFieldOffset(field),
-			value
-		);
+		target = Modifier.isStatic(field.getModifiers())?
+			Classes.retrieveFrom(target) :
+			target;
+		long fieldOffset = Modifier.isStatic(field.getModifiers())?
+			unsafe.staticFieldOffset(field) :
+			unsafe.objectFieldOffset(field);
+		Class<?> cls = field.getType();
+		if(!cls.isPrimitive()) {
+			unsafe.putObject(target, fieldOffset, value);
+		} else if (cls == int.class) {
+			unsafe.putInt(target, fieldOffset, ((Integer)value).intValue());
+		} else if (cls == long.class) {
+			unsafe.putLong(target, fieldOffset, ((Long)value).longValue());
+		} else if (cls == float.class) {
+			unsafe.putFloat(target, fieldOffset, ((Float)value).floatValue());
+		} else if (cls == double.class) {
+			unsafe.putDouble(target, fieldOffset, ((Double)value).doubleValue());
+		} else if (cls == boolean.class) {
+			unsafe.putBoolean(target, fieldOffset, ((Boolean)value).booleanValue());
+		} else if (cls == byte.class) {
+			unsafe.putByte(target, fieldOffset, ((Byte)value).byteValue());
+		} else if (cls == char.class) {
+			unsafe.putChar(target, fieldOffset, ((Character)value).charValue());
+		}
 	}
 	
 	public Field[] getDeclaredFields(Class<?> cls)  {
