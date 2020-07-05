@@ -86,6 +86,9 @@ public class Fields extends MemberHelper<Field> {
 	}
 	
 	public void setDirect(Object target, Field field, Object value) {
+		if(value != null && !field.getType().isAssignableFrom(value.getClass())) {
+			throw Throwables.toRuntimeException("Value " + value + " is not assignable to " + field.getName());
+		}
 		LowLevelObjectsHandler.setFieldValue(target, field, value);
 	}
 	
