@@ -24,9 +24,13 @@ And now we will see:
 * [**executing stringified source code**](#Executing-stringified-source-code)
 * [**retrieving classes of runtime class paths or of other paths through the ClassHunter**](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
 * [**reaching a resource of the file system**](#Reaching-a-resource-of-the-file-system)
-* [**retrieving placeholdered items from map and properties file**](#retrieving-placeholdered-items-from-map-and-properties-file)
+* [**configuring, resolving, collecting or retrieving paths**](#Resolving-collecting-or-retrieving-paths)
+* [**retrieving placeholdered items from map and properties file**](#Retrieving-placeholdered-items-from-map-and-properties-file)
+* [**getting and setting properties of a Java bean through path**](#Getting-and-setting-properties-of-a-Java-bean-through-path)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 * [**other examples of using some components**](#Other-examples-of-using-some-components)
+
+**For assistance you can [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to/) or you can ask on [Stack Overflow](https://stackoverflow.com/questions/tagged/burningwave)**.
 
 <br/>
 
@@ -45,7 +49,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 
 # Generating classes at runtime and invoking their methods with and without the use of reflection
 
-For this purpose is necessary the use of **ClassFactory** component and of the **sources generating components**. Once the sources have been set in **UnitSourceGenerator** objects, they must be passed to **loadOrBuildAndDefine** method of ClassFactory with the ClassLoader where you want to define new generated classes. This method performs the following operations: tries to load all the classes present in the UnitSourceGenerator through the class loader, if at least one of these is not found it proceeds to compiling all the UnitSourceGenerators and uploading their classes on class loader: in this case, keep in mind that if a class with the same name was previously loaded by the class loader, the compiled class will not be uploaded. Once the classes have been compiled and loaded, it is possible to invoke their methods in severals ways as shown at the end of the example below. **For more examples you can go [here](https://github.com/burningwave/core/tree/master/src/test/java/org/burningwave/core/examples/classfactory) and for assistance you can [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to/) or you can ask on [Stack Overflow](https://stackoverflow.com/questions/tagged/burningwave)**.
+For this purpose is necessary the use of **ClassFactory** component and of the **sources generating components**. Once the sources have been set in **UnitSourceGenerator** objects, they must be passed to **loadOrBuildAndDefine** method of ClassFactory with the ClassLoader where you want to define new generated classes. This method performs the following operations: tries to load all the classes present in the UnitSourceGenerator through the class loader, if at least one of these is not found it proceeds to compiling all the UnitSourceGenerators and uploading their classes on class loader: in this case, keep in mind that if a class with the same name was previously loaded by the class loader, the compiled class will not be uploaded. Once the classes have been compiled and loaded, it is possible to invoke their methods in severals ways as shown at the end of the example below. **For more examples you can go [here](https://github.com/burningwave/core/tree/master/src/test/java/org/burningwave/core/examples/classfactory) where you can also find an [example about the generation of classes by using libraries located outside the runtime class paths](https://github.com/burningwave/core/blob/master/src/test/java/org/burningwave/core/examples/classfactory/ExternalClassRuntimeExtender.java)**.
 ```java
 package org.burningwave.core.examples.classfactory;
 
@@ -440,6 +444,41 @@ public class ResourceReacher {
 
 <br/>
 
+# Resolving, collecting or retrieving paths
+
+Through **PathHelper** we can resolve or collect paths or retrieving resources even through supported archive files (zip, jar, jmod, ear and war).
+So we can create a path collection by adding an entry in **[burningwave.properties](#configuration-1)** file that starts with 'paths.' prefix, e.g.:
+```properties
+paths.my-collection=c:/some folder;C:/some folder 2/ some folder 3;
+paths.my-collection-2=c:/some folder 4;C:/some folder 6;
+```
+These paths could be retrieved through **PathHelper.getPaths** method and we can find a resource in all configured paths plus the runtime class paths (that is automatically loaded under the entry named **'paths.main-class-paths'**) by using **PathHelper.getResource** method, e.g.:
+```java
+ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+PathHelper pathHelper = componentSupplier.getPathHelper();
+Collection<String> paths = pathHelper.getPaths("paths.my-collection", "paths.my-collection-2"));
+//With the code below all configured paths plus runtime class paths will be iterated to search
+//the resource called some.jar
+FileSystemItem resource = pathHelper.getResource("/../some.jar");
+InputStream inputStream = resource.toInputStream();
+```
+We can also use placeholder and relative paths, e.g.:
+```properties
+paths.my-collection-3=C:/some folder 2/ some folder 3;
+paths.my-jar=${paths.my-collection-3}/../some.jar;
+```
+It is also possibile to obtain references to resources of the runtime class paths by using the pre-loaded entry 'paths.main-class-paths' (runtime class paths are automatically iterated for searching the path that match the entry), e.g.:
+```properties
+paths.my-jar=${paths.main-class-paths}/../some.jar;
+```
+We can also use a [**FileSystemItem**](#Reaching-a-resource-of-the-file-system) listing (**FSIL**) expression and, for example, create a path collection of all absolute path of all classes of the runtime class paths:
+```properties
+paths.all-runtime-classes=//${paths.main-class-paths}//allChildren:.*?\.classes;
+```
+A **FSIL** expression enclose in a couple of double slash an absolute path or a placeholdered path collection and that will be scanned; after the second double slash we have the listing type that could refear to direct children of scanned paths ('**children**') or to all nested children of scanned paths ('**allChildren**'); after that and colons we have the regular expression with we are going to filter the absolute paths iterated.
+
+<br/>
+
 # Retrieving placeholdered items from map and properties file
 
 With **IterableObjectHelper** component it is possible to retrieve items from map by using placeholder or not. In the following example we are going to show how to retrieve strings or objects from **[burningwave.properties](#configuration-1)** file and from maps.
@@ -498,6 +537,131 @@ public class ItemFromMapRetriever {
     }
 }
 ```
+<br>
+
+# Getting and setting properties of a Java bean through path
+Through **ByFieldOrByMethodPropertyAccessor** and **ByMethodOrByFieldPropertyAccessor** it is possible to get and set properties of a Java bean by using path. So for this example we will use these Java beans:
+
+```java
+package org.burningwave.core.bean;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Complex {
+    private Complex.Data data;
+    
+    public Complex() {
+        setData(new Data());
+    }
+    
+    
+    public Complex.Data getData() {
+        return data;
+    }
+    
+    public void setData(Complex.Data data) {
+        this.data = data;
+    }
+
+
+    public static class Data {
+        private Data.Item[][] items;
+        private List<Data.Item> itemsList;
+        private Map<String, Data.Item[][]> itemsMap;
+        
+        public Data() {
+            items = new Data.Item[][] {
+                new Data.Item[] {
+                    new Item("Hello"),
+                    new Item("World!"),
+                    new Item("How do you do?")
+                },
+                new Data.Item[] {
+                    new Item("How do you do?"),
+                    new Item("Hello"),
+                    new Item("Bye")
+                }
+            };
+            itemsMap = new LinkedHashMap<>();
+            itemsMap.put("items", items);
+        }
+        
+        public Data.Item[][] getItems() {
+            return items;
+        }
+        public void setItems(Data.Item[][] items) {
+            this.items = items;
+        }
+        
+        public List<Data.Item> getItemsList() {
+            return itemsList;
+        }
+        public void setItemsList(List<Data.Item> itemsList) {
+            this.itemsList = itemsList;
+        }
+        
+        public Map<String, Data.Item[][]> getItemsMap() {
+            return itemsMap;
+        }
+        public void setItemsMap(Map<String, Data.Item[][]> itemsMap) {
+            this.itemsMap = itemsMap;
+        }
+        
+        public static class Item {
+            private String name;
+            
+            public Item(String name) {
+                this.name = name;
+            }
+            
+            public String getName() {
+                return name;
+            }
+
+            public void setName(String name) {
+                this.name = name;
+            }
+        }
+    }
+}
+```
+... And now we are going to get and set some properties:
+```java
+import static org.burningwave.core.assembler.StaticComponentContainer.ByFieldOrByMethodPropertyAccessor;
+import static org.burningwave.core.assembler.StaticComponentContainer.ByMethodOrByFieldPropertyAccessor;
+
+import org.burningwave.core.bean.Complex;
+
+public class GetAndSetPropertiesThroughPath{
+    
+    public void execute() {
+        Complex complex = new Complex();
+        //This type of property accessor try to access by field introspection: if no field was found
+        //it will search getter method and invokes it
+        String nameFromObjectInArray = ByFieldOrByMethodPropertyAccessor.get(complex, "data.items[1][0].name");
+        String nameFromObjectMap = ByFieldOrByMethodPropertyAccessor.get(complex, "data.itemsMap[items][1][1].name");
+        System.out.println(nameFromObjectInArray);
+        System.out.println(nameFromObjectMap);
+        //This type of property accessor looks for getter method and invokes it: if no getter method was found
+        //it will search for field and try to retrieve it
+        nameFromObjectInArray = ByMethodOrByFieldPropertyAccessor.get(complex, "data.items[1][2].name");
+        nameFromObjectMap = ByMethodOrByFieldPropertyAccessor.get(complex, "data.itemsMap[items][1][1].name");
+        System.out.println(nameFromObjectInArray);
+        System.out.println(nameFromObjectMap);
+        ByMethodOrByFieldPropertyAccessor.set(complex, "data.itemsMap[items][1][1].name", "Good evening!");
+        nameFromObjectInArray = ByMethodOrByFieldPropertyAccessor.get(complex, "data.itemsMap[items][1][1].name");
+        System.out.println(nameFromObjectInArray);
+    }
+    
+    public static void main(String[] args) {
+        new GetAndSetPropertiesThroughPath().execute();
+    }
+    
+}
+```
+
 
 <br/>
 
@@ -892,11 +1056,21 @@ paths.class-factory.default-class-loader.additional-class-repositories=C:/some p
 	</ul>
 </details>
 <details open>
+	<summary><b>PathHelper</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Resolving,-collecting-or-retrieving-paths">
+			<b>USE CASE</b>: Resolving, collecting or retrieving paths
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
 	<summary><b>PropertyAccessor</b></summary>
 	<ul>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/Getting-a-property-of-a-Java-bean-through-path">
-			<b>USE CASE</b>: getting a property of a Java bean through path
+			<a href="https://github.com/burningwave/core/wiki/Getting-and-setting-properties-of-a-Java-bean-through-path">
+			<b>USE CASE</b>: getting and setting properties of a Java bean through path
 			</a>
 		</li>
 	</ul>
