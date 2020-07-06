@@ -468,7 +468,7 @@ It is also possibile to obtain references to resources of the runtime class path
 ```properties
 paths.my-jar=${paths.main-class-paths}/../some.jar;
 ```
-We can also use a [**FileSystemItem**](#Reaching-a-resource-of-the-file-system) listing (**FSIL**) expression and, for example, create a path collection of all classes path of the runtime class paths:
+We can also use a [**FileSystemItem**](#Reaching-a-resource-of-the-file-system) listing (**FSIL**) expression and, for example, create a path collection of all absolute path of all classes of the runtime class paths:
 ```properties
 paths.all-runtime-classes=//${paths.main-class-paths}//allChildren:.*?\.classes;
 ```
