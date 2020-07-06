@@ -422,44 +422,6 @@ public class PathHelper implements Component {
 		});
 	}
 	
-	public ComparePathsResult comparePaths(Collection<String> pathCollection1, Collection<String> pathCollection2) {
-		ComparePathsResult checkPathsResult = new ComparePathsResult();
-		for (String path2 : pathCollection2) {
-			FileSystemItem path2AsFile = FileSystemItem.ofPath(path2);
-			int result = -1;
-			for (String path1 : pathCollection1) {
-				FileSystemItem pathAs1File = FileSystemItem.ofPath(path1);
-				//If path 1 and path 2 are the same file or path 2 is contained in path 1
-				if (pathAs1File.equals(path2AsFile) || path2AsFile.isChildOf(pathAs1File)) {	
-					checkPathsResult.addContainedPath(path1, path2);
-					result = 0;
-				//If path 1 is a file contained in path 2 that is a directory or compressed archive
-				} else if (pathAs1File.isFile() && path2AsFile.isContainer() && pathAs1File.isChildOf(path2AsFile)) {
-					checkPathsResult.addPartialContainedFile(path2, path1);
-					result = 1;
-				//If path 1 and path 2 are directories or 2 compressed archive or 1 compressed archive and 1 folder
-				} else if (pathAs1File.isContainer() && path2AsFile.isContainer()) {
-					//If path 2 is contained in path 1
-					if (path2AsFile.isChildOf(pathAs1File)) {
-						checkPathsResult.addContainedPath(path1, path2);
-						result = 0;
-					//If path 1 is contained in path 2
-					} else if (pathAs1File.isChildOf(path2AsFile)) {
-						checkPathsResult.addPartialContainedDirectory(path2, path1);
-						result = 1;
-					}
-				}
-				if (result != -1) {
-					break;
-				}				
-			}
-			if (result != 0) {
-				checkPathsResult.addNotContainedPath(path2);
-			}
-		}
-		return checkPathsResult;
-	}
-	
 	public Collection<String> optimize(String... paths) {
 		return optimize(Arrays.asList(paths));
 	}
@@ -523,69 +485,5 @@ public class PathHelper implements Component {
 		allPaths.clear();
 		allPaths = null;
 		config = null;
-	}
-	
-	
-	public static class ComparePathsResult {
-		private final Collection<String> notContainedPaths;
-		private final Map<String, Collection<String>> partialContainedDirectories;
-		private final Map<String, Collection<String>> partialContainedFiles;
-		private final Map<String, Collection<String>> containedPaths;
-
-		private ComparePathsResult() {
-			notContainedPaths = new LinkedHashSet<>();
-			containedPaths = new LinkedHashMap<>();
-			partialContainedDirectories = new LinkedHashMap<>();
-			partialContainedFiles = new LinkedHashMap<>();
-		}
-		
-		
-		void addNotContainedPath(String path) {
-			notContainedPaths.add(path);
-		}
-		
-		void addPartialContainedDirectory(String path1, String path2) {
-			Collection<String> paths = partialContainedDirectories.get(path1);
-			if (paths == null) {
-				paths = new LinkedHashSet<>();
-				partialContainedDirectories.put(path1, paths);
-			}
-			paths.add(path2);
-		}
-		
-		void addPartialContainedFile(String path1, String path2) {
-			Collection<String> paths = partialContainedFiles.get(path1);
-			if (paths == null) {
-				paths = new LinkedHashSet<>();
-				partialContainedFiles.put(path1, paths);
-			}
-			paths.add(path2);
-		}
-		
-		void addContainedPath(String path1, String path2) {
-			Collection<String> paths = containedPaths.get(path1);
-			if (paths == null) {
-				paths = new LinkedHashSet<>();
-				containedPaths.put(path1, paths);
-			}
-			paths.add(path2);
-		}
-		
-		public Collection<String> getNotContainedPaths() {
-			return notContainedPaths;
-		}
-		
-		public Map<String, Collection<String>> getPartialContainedFiles() {
-			return partialContainedFiles;
-		}
-
-		public Map<String, Collection<String>> getPartialContainedDirectories() {
-			return partialContainedDirectories;
-		}
-
-
-		public Map<String, Collection<String>> getContainedPaths() {
-			return containedPaths;
-		}
 	}
 }
