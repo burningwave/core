@@ -24,10 +24,12 @@ And now we will see:
 * [**executing stringified source code**](#Executing-stringified-source-code)
 * [**retrieving classes of runtime class paths or of other paths through the ClassHunter**](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
 * [**reaching a resource of the file system**](#Reaching-a-resource-of-the-file-system)
-* [**configuring, resolving, collecting or retrieving paths**](#configuring-resolving-collecting-or-retrieving-paths)
+* [**configuring, resolving, collecting or retrieving paths**](#Resolving-collecting-or-retrieving-paths)
 * [**retrieving placeholdered items from map and properties file**](#retrieving-placeholdered-items-from-map-and-properties-file)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 * [**other examples of using some components**](#Other-examples-of-using-some-components)
+
+For assistance you can [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to/) or you can ask on [Stack Overflow](https://stackoverflow.com/questions/tagged/burningwave)**.
 
 <br/>
 
@@ -46,7 +48,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 
 # Generating classes at runtime and invoking their methods with and without the use of reflection
 
-For this purpose is necessary the use of **ClassFactory** component and of the **sources generating components**. Once the sources have been set in **UnitSourceGenerator** objects, they must be passed to **loadOrBuildAndDefine** method of ClassFactory with the ClassLoader where you want to define new generated classes. This method performs the following operations: tries to load all the classes present in the UnitSourceGenerator through the class loader, if at least one of these is not found it proceeds to compiling all the UnitSourceGenerators and uploading their classes on class loader: in this case, keep in mind that if a class with the same name was previously loaded by the class loader, the compiled class will not be uploaded. Once the classes have been compiled and loaded, it is possible to invoke their methods in severals ways as shown at the end of the example below. **For more examples you can go [here](https://github.com/burningwave/core/tree/master/src/test/java/org/burningwave/core/examples/classfactory) and for assistance you can [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to/) or you can ask on [Stack Overflow](https://stackoverflow.com/questions/tagged/burningwave)**.
+For this purpose is necessary the use of **ClassFactory** component and of the **sources generating components**. Once the sources have been set in **UnitSourceGenerator** objects, they must be passed to **loadOrBuildAndDefine** method of ClassFactory with the ClassLoader where you want to define new generated classes. This method performs the following operations: tries to load all the classes present in the UnitSourceGenerator through the class loader, if at least one of these is not found it proceeds to compiling all the UnitSourceGenerators and uploading their classes on class loader: in this case, keep in mind that if a class with the same name was previously loaded by the class loader, the compiled class will not be uploaded. Once the classes have been compiled and loaded, it is possible to invoke their methods in severals ways as shown at the end of the example below. **For more examples you can go [here](https://github.com/burningwave/core/tree/master/src/test/java/org/burningwave/core/examples/classfactory) where you can also find examples about the generation of classes by using libraries located outside the runtime class paths**.
 ```java
 package org.burningwave.core.examples.classfactory;
 
@@ -441,7 +443,7 @@ public class ResourceReacher {
 
 <br/>
 
-# Configuring, resolving, collecting or retrieving paths
+# Resolving, collecting or retrieving paths
 
 Through **PathHelper** we can resolve or collect paths or retrieving resources even through supported archive files (zip, jar, jmod, ear and war).
 So we can create a path collection by adding an entry in **[burningwave.properties](#configuration-1)** file that starts with 'paths.' prefix, e.g.:
@@ -923,6 +925,16 @@ paths.class-factory.default-class-loader.additional-class-repositories=C:/some p
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Retrieving-placeholdered-items-from-map-and-properties-file">
 			<b>USE CASE</b>: Retrieving placeholdered items from map and properties file
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
+	<summary><b>PathHelper</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Resolving,-collecting-or-retrieving-paths">
+			<b>USE CASE</b>: Resolving, collecting or retrieving paths
 			</a>
 		</li>
 	</ul>
