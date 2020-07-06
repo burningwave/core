@@ -24,7 +24,7 @@ And now we will see:
 * [**executing stringified source code**](#Executing-stringified-source-code)
 * [**retrieving classes of runtime class paths or of other paths through the ClassHunter**](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
 * [**reaching a resource of the file system**](#Reaching-a-resource-of-the-file-system)
-* [**Configuring, resolving, collecting or retrieving paths**](#Configuring,-resolving,-collecting-or-retrieving-paths)
+* [**configuring, resolving, collecting or retrieving paths**](#configuring-resolving-collecting-or-retrieving-paths)
 * [**retrieving placeholdered items from map and properties file**](#retrieving-placeholdered-items-from-map-and-properties-file)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 * [**other examples of using some components**](#Other-examples-of-using-some-components)
