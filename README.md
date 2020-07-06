@@ -24,6 +24,7 @@ And now we will see:
 * [**executing stringified source code**](#Executing-stringified-source-code)
 * [**retrieving classes of runtime class paths or of other paths through the ClassHunter**](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
 * [**reaching a resource of the file system**](#Reaching-a-resource-of-the-file-system)
+* [**Configuring, resolving, collecting or retrieving paths**](#Configuring,-resolving,-collecting-or-retrieving-paths)
 * [**retrieving placeholdered items from map and properties file**](#retrieving-placeholdered-items-from-map-and-properties-file)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 * [**other examples of using some components**](#Other-examples-of-using-some-components)
@@ -437,6 +438,41 @@ public class ResourceReacher {
     
 }
 ```
+
+<br/>
+
+# Configuring, resolving, collecting or retrieving paths
+
+Through **PathHelper** we can resolve or collect paths or retrieving resources even through supported archive files (zip, jar, jmod, ear and war).
+So we can create a path collection by adding an entry in **[burningwave.properties](#configuration-1)** file that starts with 'paths.' prefix, e.g.:
+```properties
+paths.my-collection=c:/some folder;C:/some folder 2/ some folder 3;
+paths.my-collection-2=c:/some folder 4;C:/some folder 6;
+```
+These paths could be retrieved through **PathHelper.getPaths** and we can find a resource in all configured paths plus the runtime class paths (that is automatically loaded under the entry named **'paths.main-class-paths'**) by using **PathHelper.getResource**, e.g.:
+```java
+ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+PathHelper pathHelper = componentSupplier.getPathHelper();
+Collection<String> paths = pathHelper.getPaths("paths.my-collection", "paths.my-collection-2"));
+//With the code below all configured paths plus runtime class paths will be iterated to search
+//the resource called some.jar
+FileSystemItem resource = pathHelper.getResource("/../some.jar");
+InputStream inputStream = resource.toInputStream();
+```
+We can also use placeholder and relative paths, e.g.:
+```properties
+paths.my-collection-3=C:/some folder 2/ some folder 3;
+paths.my-jar=${paths.my-collection-3}/../some.jar;
+```
+It is also possibile to obtain references to resources of the runtime class paths by using the pre-loaded entry 'paths.main-class-paths' (runtime class paths are automatically iterated for searching the path that match the entry), e.g.:
+```properties
+paths.my-jar=${paths.main-class-paths}/../some.jar;
+```
+We can also use a [**FileSystemItem**](#Reaching-a-resource-of-the-file-system) listing (**FSIL**) expression and, for example, create a path collection of all classes path of the runtime class paths:
+```properties
+paths.all-runtime-classes=//${paths.main-class-paths}//allChildren:.*?\.classes;
+```
+A **FSIL** expression enclose in a couple of double slash an absolute path or a placeholdered path collection and that will be scanned; after the second double slash we have the listing type that could refear to direct children of scanned paths ('**children**') or to all nested children of scanned paths ('**allChildren**'); after that and colons we have the regular expression with we are going to filter the absolute paths iterated.
 
 <br/>
 
