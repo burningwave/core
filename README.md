@@ -943,8 +943,8 @@ paths.class-factory.default-class-loader.additional-class-repositories=C:/some p
 	<summary><b>PropertyAccessor</b></summary>
 	<ul>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/Getting-a-property-of-a-Java-bean-through-path">
-			<b>USE CASE</b>: getting a property of a Java bean through path
+			<a href="https://github.com/burningwave/core/wiki/Getting-and-setting-properties-of-a-Java-bean-through-path">
+			<b>USE CASE</b>: getting and setting properties of a Java bean through path
 			</a>
 		</li>
 	</ul>
