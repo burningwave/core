@@ -449,7 +449,7 @@ So we can create a path collection by adding an entry in **[burningwave.properti
 paths.my-collection=c:/some folder;C:/some folder 2/ some folder 3;
 paths.my-collection-2=c:/some folder 4;C:/some folder 6;
 ```
-These paths could be retrieved through **PathHelper.getPaths** method and we can find a resource in all configured paths plus the runtime class paths (that is automatically loaded under the entry named **'paths.main-class-paths'**) by using **PathHelper.getResource**, e.g.:
+These paths could be retrieved through **PathHelper.getPaths** method and we can find a resource in all configured paths plus the runtime class paths (that is automatically loaded under the entry named **'paths.main-class-paths'**) by using **PathHelper.getResource** method, e.g.:
 ```java
 ComponentSupplier componentSupplier = ComponentContainer.getInstance();
 PathHelper pathHelper = componentSupplier.getPathHelper();
