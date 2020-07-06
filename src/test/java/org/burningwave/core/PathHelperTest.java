@@ -99,4 +99,21 @@ public class PathHelperTest extends BaseTest {
 		assertTrue(paths.iterator().next().endsWith("/src/test/external-resources"));
 	}
 	
+	@Test
+	public void getCustomPathsTestOne() {
+		testNotEmpty(() -> { 
+			ComponentSupplier componentSupplier = getComponentSupplier();
+			PathHelper pathHelper = componentSupplier.getPathHelper();
+			return pathHelper.getPaths("paths.custom-class-path4");
+		});
+	}
+	
+	@Test
+	public void getCustomPathsTestTwo() {
+		testNotEmpty(() -> { 
+			ComponentSupplier componentSupplier = getComponentSupplier();
+			PathHelper pathHelper = componentSupplier.getPathHelper();
+			return pathHelper.getPaths("paths.all-runtime-classes");
+		}, true);
+	}
 }
