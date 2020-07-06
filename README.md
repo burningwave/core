@@ -447,7 +447,7 @@ public class ResourceReacher {
 # Resolving, collecting or retrieving paths
 
 Through **PathHelper** we can resolve or collect paths or retrieving resources even through supported archive files (zip, jar, jmod, ear and war).
-So we can create a path collection by adding an entry in **[burningwave.properties](#configuration-1)** file that starts with 'paths.' prefix, e.g.:
+So we can create a path collection by adding an entry in **[burningwave.properties](#configuration-1)** file that **starts with 'paths.' prefix (this is a fundamental requirement to allow PathHelper to load the paths)**, e.g.:
 ```properties
 paths.my-collection=c:/some folder;C:/some folder 2/ some folder 3;
 paths.my-collection-2=c:/some folder 4;C:/some folder 6;
