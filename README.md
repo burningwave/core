@@ -540,7 +540,7 @@ public class ItemFromMapRetriever {
 <br>
 
 # Getting and setting properties of a Java bean through path
-Through **ByFieldOrByMethodPropertyAccessor** and **ByMethodOrByFieldPropertyAccessor** it is possible to get and set properties of a Java Bean by using path. So for this example we will use these Java beans:
+Through **ByFieldOrByMethodPropertyAccessor** and **ByMethodOrByFieldPropertyAccessor** it is possible to get and set properties of a Java bean by using path. So for this example we will use these Java beans:
 
 ```java
 package org.burningwave.core.bean;
