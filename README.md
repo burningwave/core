@@ -42,7 +42,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.15.0</version>
+    <version>7.14.0</version>
 </dependency>
 ```
 
@@ -604,7 +604,7 @@ public class ConstructorsHandler {
         MemoryClassLoader classLoader = Constructors.newInstanceOf(MemoryClassLoader.class, Thread.currentThread().getContextClassLoader());
         
         //Invoking constructor with a null parameter value by using MethodHandle
-        classLoader = Constructors.newInstanceDirectOf(MemoryClassLoader.class, new Object[] {null});
+        classLoader = Constructors.newInstanceDirectOf(MemoryClassLoader.class, null);
     }
     
     public static void main(String[] args) {
