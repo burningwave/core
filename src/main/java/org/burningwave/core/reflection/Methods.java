@@ -114,12 +114,12 @@ public class Methods extends MemberHelper<Method> {
 	
 	private Collection<Method> findAllByNamePredicateAndMakeThemAccessible(
 		Object target,
-		String cacheFirstKey,
+		String cacheKeyPrefix,
 		Predicate<String> namePredicate,
 		Object... arguments
 	) {	
 		Class<?> targetClass = Classes.retrieveFrom(target);
-		String cacheKey = getCacheKey(targetClass, cacheFirstKey);
+		String cacheKey = getCacheKey(targetClass, cacheKeyPrefix, arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		MethodCriteria criteria = MethodCriteria.create()
 			.name(namePredicate)
