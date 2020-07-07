@@ -1113,11 +1113,41 @@ paths.class-factory.default-class-loader.additional-class-repositories=C:/some p
 	</ul>
 </details>
 <details open>
+	<summary><b>Constructors</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Handling-privates-and-all-other-constructors-of-a-class">
+			<b>USE CASE</b>: handling privates and all other constructors of a class
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
+	<summary><b>Fields</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Handling-privates-and-all-other-fields-of-a-class">
+			<b>USE CASE</b>: handling privates and all other fields of a class
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
 	<summary><b>FileSystemItem</b></summary>
 	<ul>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Reaching-a-resource-of-the-file-system">
-			<b>USE CASE</b>: Reaching a resource of the file system
+			<b>USE CASE</b>: reaching a resource of the file system
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
+	<summary><b>Methods</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Handling-privates-and-all-other-methods-of-a-class">
+			<b>USE CASE</b>: handling privates and all other methods of a class
 			</a>
 		</li>
 	</ul>
@@ -1127,7 +1157,7 @@ paths.class-factory.default-class-loader.additional-class-repositories=C:/some p
 	<ul>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Retrieving-placeholdered-items-from-map-and-properties-file">
-			<b>USE CASE</b>: Retrieving placeholdered items from map and properties file
+			<b>USE CASE</b>: retrieving placeholdered items from map and properties file
 			</a>
 		</li>
 	</ul>
@@ -1137,7 +1167,7 @@ paths.class-factory.default-class-loader.additional-class-repositories=C:/some p
 	<ul>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Resolving,-collecting-or-retrieving-paths">
-			<b>USE CASE</b>: Resolving, collecting or retrieving paths
+			<b>USE CASE</b>: resolving, collecting or retrieving paths
 			</a>
 		</li>
 	</ul>
