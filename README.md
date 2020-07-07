@@ -523,7 +523,7 @@ We can also use a [**FileSystemItem**](#Reaching-a-resource-of-the-file-system) 
 ```properties
 paths.all-runtime-classes=//${paths.main-class-paths}//allChildren:.*?\.classes;
 ```
-A **FSIL** expression enclose in a couple of double slash an absolute path or a placeholdered path collection and that will be scanned; after the second double slash we have the listing type that could refear to direct children of scanned paths ('**children**') or to all nested children of scanned paths ('**allChildren**'); after that and colons we have the regular expression with we are going to filter the absolute paths iterated.
+A **FSIL** expression encloses in a couple of double slash an absolute path or a placeholdered path collection that will be scanned; after the second double slash we have the listing type that could refear to direct children of scanned paths ('**children**') or to all nested children of scanned paths ('**allChildren**'); after that and colons we have the regular expression with we are going to filter the absolute paths iterated.
 
 <br/>
 
