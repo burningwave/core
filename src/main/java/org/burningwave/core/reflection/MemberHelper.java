@@ -77,7 +77,7 @@ abstract class MemberHelper<M extends Member> implements Component {
 		if (arguments != null && arguments.length > 0) {
 			StringBuffer argumentsKeyStringBuffer = new StringBuffer();
 			Stream.of(Classes.retrieveFrom(arguments)).forEach(cls ->
-				argumentsKeyStringBuffer.append("/" + cls != null ? cls.getName() : "null")
+				argumentsKeyStringBuffer.append("/" + Optional.ofNullable(cls).map(Class::getName).orElseGet(() ->"null"))
 			);
 			argumentsKey = argumentsKeyStringBuffer.toString();
 		}

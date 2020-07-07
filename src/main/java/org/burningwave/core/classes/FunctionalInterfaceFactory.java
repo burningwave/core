@@ -233,7 +233,11 @@ public class FunctionalInterfaceFactory implements Component {
 		if (parameters != null && parameters.length > 0) {
 			StringBuffer argumentsKeyStringBuffer = new StringBuffer();
 			Stream.of(parameters).forEach(parameter ->
-				argumentsKeyStringBuffer.append("/" + parameter.getType().getName())
+				argumentsKeyStringBuffer.append("/" + 
+					Optional.ofNullable(parameter).map(param -> 
+						param.getType().getName()
+					).orElseGet(() ->"null")
+				)
 			);
 			argumentsKey = argumentsKeyStringBuffer.toString();
 		}
