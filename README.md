@@ -32,6 +32,8 @@ And now we will see:
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 * [**other examples of using some components**](#Other-examples-of-using-some-components)
 
+<br/>
+
 **For assistance you can [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to/) or you can ask on [Stack Overflow](https://stackoverflow.com/questions/tagged/burningwave)**.
 
 <br/>
