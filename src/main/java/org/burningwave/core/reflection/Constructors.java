@@ -115,7 +115,7 @@ public class Constructors extends MemberHelper<Constructor<?>>  {
 		Object... arguments
 	) {	
 		Class<?> targetClass = Classes.retrieveFrom(target);
-		String cacheKey = getCacheKey(targetClass, "all constructors with input parameters");
+		String cacheKey = getCacheKey(targetClass, "all constructors with input parameters", arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		ConstructorCriteria criteria = ConstructorCriteria.create()
 			.and().parameterTypesAreAssignableFrom(arguments);
