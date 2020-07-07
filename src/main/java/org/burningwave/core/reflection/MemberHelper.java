@@ -40,10 +40,7 @@ import java.util.stream.Stream;
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.MemberCriteria;
 
-public abstract class MemberHelper<M extends Member> implements Component {
-	
-	public MemberHelper() {}
-	
+abstract class MemberHelper<M extends Member> implements Component {	
 
 	@SuppressWarnings("unchecked")
 	<C extends MemberCriteria<M, C, ?>> Collection<M> findAllAndApply(C criteria, Object target, Consumer<M>... consumers) {
@@ -89,10 +86,4 @@ public abstract class MemberHelper<M extends Member> implements Component {
 			argumentsKey;
 		return cacheKey;		
 	}
-	
-	@Override
-	public void close() {
-		
-	}
-
 }
