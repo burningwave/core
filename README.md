@@ -572,7 +572,7 @@ public class FieldsHandler {
 }
 ```
 For methods handling we are going to use **Methods** component:
-```
+```java
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 public class MethodsHandler {
