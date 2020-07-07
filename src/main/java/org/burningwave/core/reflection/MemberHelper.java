@@ -73,11 +73,14 @@ abstract class MemberHelper<M extends Member> implements Component {
 	}
 	
 	String getCacheKey(Class<?> targetClass, String groupName, Object... arguments) {
+		if (arguments == null) {
+			arguments = new Object[] {null};
+		}
 		String argumentsKey = "";
 		if (arguments != null && arguments.length > 0) {
 			StringBuffer argumentsKeyStringBuffer = new StringBuffer();
 			Stream.of(Classes.retrieveFrom(arguments)).forEach(cls ->
-				argumentsKeyStringBuffer.append("/" + cls != null ? cls.getName() : "null")
+				argumentsKeyStringBuffer.append("/" + Optional.ofNullable(cls).map(Class::getName).orElseGet(() ->"null"))
 			);
 			argumentsKey = argumentsKeyStringBuffer.toString();
 		}

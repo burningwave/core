@@ -107,6 +107,8 @@ public class Classes implements Component, MembersRetriever {
 					classes[i] = retrieveFrom(objects[i]);
 				}
 			}
+		} else {
+			classes = new Class[]{null};
 		}
 		return classes;
 	}

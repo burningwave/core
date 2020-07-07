@@ -23,9 +23,11 @@ And now we will see:
 * [**generating classes at runtime and invoking their methods with and without the use of reflection**](#Generating-classes-at-runtime-and-invoking-their-methods-with-and-without-the-use-of-reflection)
 * [**executing stringified source code**](#Executing-stringified-source-code)
 * [**retrieving classes of runtime class paths or of other paths through the ClassHunter**](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
+* [**finding where a class is loaded from**](#Finding-where-a-class-is-loaded-from)
 * [**reaching a resource of the file system**](#Reaching-a-resource-of-the-file-system)
 * [**resolving, collecting or retrieving paths**](#Resolving-collecting-or-retrieving-paths)
 * [**retrieving placeholdered items from map and properties file**](#Retrieving-placeholdered-items-from-map-and-properties-file)
+* [**handling privates and all other members of a class**](#Handling-privates-and-all-other-members-of-a-class)
 * [**getting and setting properties of a Java bean through path**](#Getting-and-setting-properties-of-a-Java-bean-through-path)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 * [**other examples of using some components**](#Other-examples-of-using-some-components)
@@ -41,7 +43,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.14.0</version>
+    <version>7.15.0</version>
 </dependency>
 ```
 
@@ -369,6 +371,50 @@ public class Finder {
 
 <br/>
 
+# Finding where a class is loaded from
+
+For this purpose we are going to use the **ClassPathHunter** component:
+```java
+import java.util.Collection;
+
+import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.ClassCriteria;
+import org.burningwave.core.classes.CacheableSearchConfig;
+import org.burningwave.core.classes.ClassPathHunter;
+import org.burningwave.core.classes.ClassPathHunter.SearchResult;
+import org.burningwave.core.classes.SearchConfig;
+import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.io.PathHelper;
+
+public class Finder {
+
+    public Collection<FileSystemItem> find() {
+        ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+        PathHelper pathHelper = componentSupplier.getPathHelper();
+        ClassPathHunter classPathHunter = componentSupplier.getClassPathHunter();
+
+        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+            //Here you can add all absolute path you want:
+            //both folders, zip and jar will be recursively scanned.
+            //For example you can add: "C:\\Users\\user\\.m2"
+            //With the row below the search will be executed on runtime Classpaths
+            pathHelper.getMainClassPaths()
+        ).by(
+            ClassCriteria.create().allThat(cls ->
+                cls.getName().equals("Finder")      
+            )
+        );        
+
+        SearchResult searchResult = classPathHunter.loadInCache(searchConfig).find();
+        return searchResult.getClassPaths();
+    }
+
+}
+```
+
+<br/>
+
 # Reaching a resource of the file system
 Through **FileSystemItem** you can reach a resource of the file system even if it is contained in a nested supported (**zip, jar, war, ear, jmod**) compressed archive and obtain the content of it or other informations such as if it is a folder or a file or a compressed archive or if it is a compressed entry or obtain, if it is a folder or a compressed archive, the direct children or all nested children or a filtered collection of them. You can retrieve a FileSystemItem through an absolute path or through a relative path referred to your classpath by using the PathHelper. FileSystemItems are cached and **there will only be one instance of them for an absolute path** and you can also clear the cache e reload all informations of a FileSystemItem. In the example below we show how to retrieve and use a FileSystemItem.
 
@@ -537,6 +583,82 @@ public class ItemFromMapRetriever {
     }
 }
 ```
+<br>
+
+# Handling privates and all other members of a class
+Through **Fields**, **Constructors** and **Methods** components it is possible to get or set fields value, invoking or finding constructors or methods of a class.
+Members handlers use to cache all members for faster access.
+For fields handling we are going to use **Fields** component:
+```java
+import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
+
+import java.util.Collection;
+import java.util.Map;
+
+
+public class FieldsHandler {
+    
+    public static void execute() {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        //Fast access by memory address
+        Collection<Class<?>> loadedClasses = Fields.getDirect(classLoader, "classes");
+        //Access by Reflection
+        loadedClasses = Fields.get(classLoader, "classes");
+        
+        //Get all fields of an object through memory address access
+        Map<String, Object> values = Fields.getAllDirect(classLoader);
+        //Get all fields of an object through reflection access
+        values = Fields.getAll(classLoader);
+    }
+    
+    public static void main(String[] args) {
+        execute();
+    } 
+}
+```
+For methods handling we are going to use **Methods** component:
+```java
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
+
+public class MethodsHandler {
+    
+    public static void execute() {
+        //Invoking method by using reflection
+        Methods.invoke(System.out, "println", "Hello World");
+        
+        //Invoking method by using MethodHandle
+        Integer number = Methods.invokeDirect(Integer.class, "valueOf", 1);
+    }
+    
+    public static void main(String[] args) {
+        execute();
+    }
+}
+```
+
+For constructors handling we are going to use **Constructors** component:
+```java
+import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
+
+import org.burningwave.core.classes.MemoryClassLoader;
+
+public class ConstructorsHandler {
+    
+    public static void execute() {
+        //Invoking constructor by using reflection
+        MemoryClassLoader classLoader = Constructors.newInstanceOf(MemoryClassLoader.class, Thread.currentThread().getContextClassLoader());
+        
+        //Invoking constructor with a null parameter value by using MethodHandle
+        classLoader = Constructors.newInstanceDirectOf(MemoryClassLoader.class, null);
+    }
+    
+    public static void main(String[] args) {
+        execute();
+    }
+    
+}
+```
+
 <br>
 
 # Getting and setting properties of a Java bean through path
@@ -1036,11 +1158,41 @@ paths.class-factory.default-class-loader.additional-class-repositories=C:/some p
 	</ul>
 </details>
 <details open>
+	<summary><b>Constructors</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Handling-privates-and-all-other-constructors-of-a-class">
+			<b>USE CASE</b>: handling privates and all other constructors of a class
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
+	<summary><b>Fields</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Handling-privates-and-all-other-fields-of-a-class">
+			<b>USE CASE</b>: handling privates and all other fields of a class
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
 	<summary><b>FileSystemItem</b></summary>
 	<ul>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Reaching-a-resource-of-the-file-system">
-			<b>USE CASE</b>: Reaching a resource of the file system
+			<b>USE CASE</b>: reaching a resource of the file system
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
+	<summary><b>Methods</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Handling-privates-and-all-other-methods-of-a-class">
+			<b>USE CASE</b>: handling privates and all other methods of a class
 			</a>
 		</li>
 	</ul>
@@ -1050,7 +1202,7 @@ paths.class-factory.default-class-loader.additional-class-repositories=C:/some p
 	<ul>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Retrieving-placeholdered-items-from-map-and-properties-file">
-			<b>USE CASE</b>: Retrieving placeholdered items from map and properties file
+			<b>USE CASE</b>: retrieving placeholdered items from map and properties file
 			</a>
 		</li>
 	</ul>
@@ -1060,7 +1212,7 @@ paths.class-factory.default-class-loader.additional-class-repositories=C:/some p
 	<ul>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Resolving,-collecting-or-retrieving-paths">
-			<b>USE CASE</b>: Resolving, collecting or retrieving paths
+			<b>USE CASE</b>: resolving, collecting or retrieving paths
 			</a>
 		</li>
 	</ul>
