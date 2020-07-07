@@ -157,7 +157,7 @@ public class Methods extends MemberHelper<Method> {
 		return ThrowingSupplier.get(() -> {
 			Method method = findFirstAndMakeItAccessible(target, methodName, arguments);
 			logInfo("Invoking " + method);
-			return (T)method.invoke(Modifier.isStatic(method.getModifiers()) ? null : target, arguments);
+			return (T)method.invoke(Modifier.isStatic(method.getModifiers()) ? null : target, arguments != null? arguments : new Object[]{null});
 		});
 	}
 	
@@ -179,9 +179,9 @@ public class Methods extends MemberHelper<Method> {
 		);
 		return ThrowingSupplier.get(() -> {
 				if (!Modifier.isStatic(methodHandle.getKey().getModifiers())) {
-					return (T)methodHandle.getValue().bindTo(target).invokeWithArguments(arguments);
+					return (T)methodHandle.getValue().bindTo(target).invokeWithArguments(arguments != null? arguments : new Object[]{null});
 				}
-				return (T)methodHandle.getValue().invokeWithArguments(arguments);
+				return (T)methodHandle.getValue().invokeWithArguments(arguments != null? arguments : new Object[]{null});
 			}
 		);
 	}

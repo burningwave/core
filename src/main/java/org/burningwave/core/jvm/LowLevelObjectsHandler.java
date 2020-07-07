@@ -207,6 +207,9 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 	}
 	
 	public Object invoke(Object target, Method method, Object... params) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		if (params == null) {
+			params = new Object[] {null};
+		}
 		return methodInvoker.invoke(null, method, target, params);
 	}
 	

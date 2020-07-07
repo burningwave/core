@@ -64,8 +64,12 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 		if (params == null) {
 			params = new ArrayList<>();
 		}
-		for (Object param : parameters) {
-			params.add(param);
+		if (parameters != null) {
+			for (Object param : parameters) {
+				params.add(param);
+			}
+		} else {
+			params.add(null);
 		}
 		return (C)this;
 	}		

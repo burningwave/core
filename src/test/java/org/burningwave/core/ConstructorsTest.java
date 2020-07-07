@@ -8,7 +8,7 @@ import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.service.ExtendedService;
 import org.junit.jupiter.api.Test;
 
-
+@SuppressWarnings("all")
 public class ConstructorsTest extends BaseTest {
 	
 	@Test
@@ -39,6 +39,13 @@ public class ConstructorsTest extends BaseTest {
 	public void newInstanceOfDirectTestOne() {
 		testNotNull(() ->
 			Constructors.newInstanceDirectOf(MemoryClassLoader.class, Thread.currentThread().getContextClassLoader())
+		);
+	}
+	
+	@Test
+	public void newInstanceOfDirectTestTwo() {
+		testNotNull(() ->
+			Constructors.newInstanceDirectOf(MemoryClassLoader.class, null)
 		);
 	}
 }

@@ -73,6 +73,9 @@ abstract class MemberHelper<M extends Member> implements Component {
 	}
 	
 	String getCacheKey(Class<?> targetClass, String groupName, Object... arguments) {
+		if (arguments == null) {
+			arguments = new Object[] {null};
+		}
 		String argumentsKey = "";
 		if (arguments != null && arguments.length > 0) {
 			StringBuffer argumentsKeyStringBuffer = new StringBuffer();

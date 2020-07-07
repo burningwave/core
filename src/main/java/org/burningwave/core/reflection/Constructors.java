@@ -65,7 +65,7 @@ public class Constructors extends MemberHelper<Constructor<?>>  {
 		Object... arguments
 	) {
 		return ThrowingSupplier.get(() -> 
-			(T)findFirstAndMakeItAccessible(object, arguments).newInstance(arguments)
+			(T)findFirstAndMakeItAccessible(object, arguments).newInstance(arguments != null? arguments : new Object[]{null})
 		);
 	}
 	
@@ -89,7 +89,7 @@ public class Constructors extends MemberHelper<Constructor<?>>  {
 			}
 		);
 		return ThrowingSupplier.get(() -> {
-				return (T)methodHandle.getValue().invokeWithArguments(arguments);
+				return (T)methodHandle.getValue().invokeWithArguments(arguments != null? arguments : new Object[]{null});
 			}
 		);
 	}
