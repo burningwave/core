@@ -605,14 +605,15 @@ public class FieldsHandler {
         //Access by Reflection
         loadedClasses = Fields.get(classLoader, "classes");
         
-        //Get all fields of an object through memory address access
+        //Getting all field values of an object through memory address access
         Map<String, Object> values = Fields.getAllDirect(classLoader);
-        //Get all fields of an object through reflection access
+        //Getting all field values of an object through reflection access
         values = Fields.getAll(classLoader);
         Object obj = new Object() {
             List<Object> objectValue;
         };
         List<Object> objectValue = new ArrayList<>();
+        //Setting field value through memory address access
         Fields.setDirect(obj, "objectValue", objectValue);
         List<Object> objectValue2Var = Fields.getDirect(obj, "objectValue");
     }
