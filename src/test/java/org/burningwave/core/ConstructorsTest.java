@@ -13,13 +13,13 @@ public class ConstructorsTest extends BaseTest {
 	
 	@Test
 	public void newInstanceOfTestOne() {
-		testNotNull(() -> Constructors.newInstanceOfDirect(ExtendedService.class));
+		testNotNull(() -> Constructors.newInstanceDirectOf(ExtendedService.class));
 	}
 	
 	@Test
 	public void newInstanceOfTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> Constructors.newInstanceOfDirect(
+		testNotNull(() -> Constructors.newInstanceDirectOf(
 				FunctionalInterfaceFactory.class, 
 				componentSupplier.getClassFactory()
 			)
@@ -38,7 +38,7 @@ public class ConstructorsTest extends BaseTest {
 	@Test
 	public void newInstanceOfDirectTestOne() {
 		testNotNull(() ->
-			Constructors.newInstanceOfDirect(MemoryClassLoader.class, Thread.currentThread().getContextClassLoader())
+			Constructors.newInstanceDirectOf(MemoryClassLoader.class, Thread.currentThread().getContextClassLoader())
 		);
 	}
 }

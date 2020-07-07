@@ -102,7 +102,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 	
 	protected C newInstance() {
 		return ThrowingSupplier.get(() -> {
-			return (C)Constructors.newInstanceOfDirect(this);
+			return (C)Constructors.newInstanceDirectOf(this);
 		});
 	}
 	
@@ -501,7 +501,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 		
 		protected C newInstance() {
 			return ThrowingSupplier.get(() -> {
-				return (C)Constructors.newInstanceOfDirect(this);
+				return (C)Constructors.newInstanceDirectOf(this);
 			});
 		}
 	}

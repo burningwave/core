@@ -69,7 +69,7 @@ public class Constructors extends MemberHelper<Constructor<?>>  {
 		);
 	}
 	
-	public <T> T newInstanceOfDirect(
+	public <T> T newInstanceDirectOf(
 		Object target,
 		Object... arguments
 	) {
