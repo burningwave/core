@@ -1168,8 +1168,8 @@ paths.class-factory.default-class-loader.additional-class-repositories=C:/some p
 	<summary><b>Constructors</b></summary>
 	<ul>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/Handling-privates-and-all-other-constructors-of-a-class">
-			<b>USE CASE</b>: handling privates and all other constructors of a class
+			<a href="https://github.com/burningwave/core/wiki/Handling-privates-and-all-other-constructors-of-an-object">
+			<b>USE CASE</b>: handling privates and all other constructors of an object
 			</a>
 		</li>
 	</ul>
@@ -1178,8 +1178,8 @@ paths.class-factory.default-class-loader.additional-class-repositories=C:/some p
 	<summary><b>Fields</b></summary>
 	<ul>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/Handling-privates-and-all-other-fields-of-a-class">
-			<b>USE CASE</b>: handling privates and all other fields of a class
+			<a href="https://github.com/burningwave/core/wiki/Handling-privates-and-all-other-fields-of-an-object">
+			<b>USE CASE</b>: handling privates and all other fields of an object
 			</a>
 		</li>
 	</ul>
@@ -1198,8 +1198,8 @@ paths.class-factory.default-class-loader.additional-class-repositories=C:/some p
 	<summary><b>Methods</b></summary>
 	<ul>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/Handling-privates-and-all-other-methods-of-a-class">
-			<b>USE CASE</b>: handling privates and all other methods of a class
+			<a href="https://github.com/burningwave/core/wiki/Handling-privates-and-all-other-methods-of-an-object">
+			<b>USE CASE</b>: handling privates and all other methods of an object
 			</a>
 		</li>
 	</ul>
