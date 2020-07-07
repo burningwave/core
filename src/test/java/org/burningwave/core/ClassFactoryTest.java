@@ -308,7 +308,7 @@ public class ClassFactoryTest extends BaseTest {
 				Service.class,
 				PojoInterface.class
 			);
-			Virtual virtual = (Virtual)Constructors.newInstanceOfDirect(virtualClass);
+			Virtual virtual = (Virtual)Constructors.newInstanceDirectOf(virtualClass);
 			virtual.invokeDirect("setList", new ArrayList<>());
 			virtual.invoke("setList", new ArrayList<>());
 			virtual.invokeDirect("setList", new ArrayList<>());

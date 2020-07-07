@@ -42,7 +42,6 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -185,20 +184,6 @@ public class Methods extends MemberHelper<Method> {
 				return (T)methodHandle.getValue().invokeWithArguments(arguments);
 			}
 		);
-	}
-	
-	public <T> Collection<T> invokeAll(Object target, String methodNameRegEx, Object... arguments) {
-		return ThrowingSupplier.get(() -> {
-			Collection<Method> members = findAllByMatchedNameAndMakeThemAccessible(target, methodNameRegEx, arguments);		
-			Collection<T> results = new ArrayList<>();
-			for (Method member : members) {
-				results.add((T)member.invoke(
-					Modifier.isStatic(member.getModifiers()) ? null : target,
-					arguments
-				));
-			}			
-			return results;
-		});
 	}
 	
 	public MethodHandle convertToMethodHandle(Method method) {

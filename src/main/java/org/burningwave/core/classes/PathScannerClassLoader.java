@@ -51,7 +51,6 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.concurrent.Mutex;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.io.PathHelper.ComparePathsResult;
 
 
 public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryClassLoader {
@@ -269,10 +268,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			}
 		}
 		return false;
-	}
-	
-	ComparePathsResult compareWithAllLoadedPaths(Collection<String> paths, boolean considerURLClassLoaderPathsAsLoadedPaths) {
-		return pathHelper.comparePaths(getAllLoadedPaths(considerURLClassLoaderPathsAsLoadedPaths), paths);
 	}
 	
 	@SuppressWarnings("resource")
