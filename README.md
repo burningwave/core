@@ -609,6 +609,12 @@ public class FieldsHandler {
         Map<String, Object> values = Fields.getAllDirect(classLoader);
         //Get all fields of an object through reflection access
         values = Fields.getAll(classLoader);
+        Object obj = new Object() {
+            List<Object> objectValue;
+        };
+        List<Object> objectValue = new ArrayList<>();
+        Fields.setDirect(obj, "objectValue", objectValue);
+        List<Object> objectValue2Var = Fields.getDirect(obj, "objectValue");
     }
     
     public static void main(String[] args) {
