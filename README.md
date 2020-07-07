@@ -578,10 +578,10 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 public class MethodsHandler {
     
     public static void execute() {
-        //Inoking method by using reflection
+        //Invoking method by using reflection
         Methods.invoke(System.out, "println", "Hello World");
         
-        //Inoking method by using MethodHandle
+        //Invoking method by using MethodHandle
         Integer number = Methods.invokeDirect(Integer.class, "valueOf", 1);
     }
     
@@ -602,10 +602,10 @@ import org.burningwave.core.classes.MemoryClassLoader;
 public class ConstructorsHandler {
     
     public static void execute() {
-        //Inoking constructor by using reflection
+        //Invoking constructor by using reflection
         MemoryClassLoader classLoader = Constructors.newInstanceOf(MemoryClassLoader.class, Thread.currentThread().getContextClassLoader());
         
-        //Inoking constructor with a null parameter value by using MethodHandle
+        //Invoking constructor with a null parameter value by using MethodHandle
         classLoader = Constructors.newInstanceDirectOf(MemoryClassLoader.class, new Object[] {null});
     }
     
