@@ -9,23 +9,12 @@ import org.junit.jupiter.api.Test;
 public class MethodsTest extends BaseTest {
 	
 	@Test
-	public void invokeAllTestOne() {
-		testNotEmpty(
+	public void invokeTestOne() {
+		testNotNull(
 			() -> {
 				ComponentSupplier componentSupplier = getComponentSupplier();
 				componentSupplier.clearHuntersCache(false);
-				return Methods.invokeAll(Integer.class, "valueOf", 1);	
-			}
-		);
-	}
-	
-	@Test
-	public void invokeAllByCacheLoadingTestOne() {
-		testNotEmpty(
-			() -> {
-				ComponentSupplier componentSupplier = getComponentSupplier();
-				componentSupplier.clearHuntersCache(false);
-				return Methods.invokeAll(Integer.class, "valueOf", 1);	
+				return Methods.invoke(Integer.class, "valueOf", 1);	
 			}
 		);
 	}
