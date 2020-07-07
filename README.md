@@ -27,7 +27,7 @@ And now we will see:
 * [**reaching a resource of the file system**](#Reaching-a-resource-of-the-file-system)
 * [**resolving, collecting or retrieving paths**](#Resolving-collecting-or-retrieving-paths)
 * [**retrieving placeholdered items from map and properties file**](#Retrieving-placeholdered-items-from-map-and-properties-file)
-* [**handling privates and all other members of a class**](#Handling-privates-and-all-other-members-of-a-class)
+* [**handling privates and all other members of an object**](#Handling-privates-and-all-other-members-of-an-object)
 * [**getting and setting properties of a Java bean through path**](#Getting-and-setting-properties-of-a-Java-bean-through-path)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 * [**other examples of using some components**](#Other-examples-of-using-some-components)
@@ -585,8 +585,8 @@ public class ItemFromMapRetriever {
 ```
 <br>
 
-# Handling privates and all other members of a class
-Through **Fields**, **Constructors** and **Methods** components it is possible to get or set fields value, invoking or finding constructors or methods of a class.
+# Handling privates and all other members of an object
+Through **Fields**, **Constructors** and **Methods** components it is possible to get or set fields value, invoking or finding constructors or methods of an object.
 Members handlers use to cache all members for faster access.
 For fields handling we are going to use **Fields** component:
 ```java
