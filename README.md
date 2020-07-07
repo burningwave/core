@@ -26,6 +26,7 @@ And now we will see:
 * [**reaching a resource of the file system**](#Reaching-a-resource-of-the-file-system)
 * [**resolving, collecting or retrieving paths**](#Resolving-collecting-or-retrieving-paths)
 * [**retrieving placeholdered items from map and properties file**](#Retrieving-placeholdered-items-from-map-and-properties-file)
+* [**using private and all other members of a class**](#Using-private-and-all-other-members-of-a-class)
 * [**getting and setting properties of a Java bean through path**](#Getting-and-setting-properties-of-a-Java-bean-through-path)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 * [**other examples of using some components**](#Other-examples-of-using-some-components)
@@ -537,6 +538,83 @@ public class ItemFromMapRetriever {
     }
 }
 ```
+<br>
+
+# Using private and all other members of a class
+Through **Fields**, **Constructors** and **Methods** components it is possible to get or set fields value, invoking or finding constructors or methods of a class.
+Members handlers use to cache all members for faster access.
+For fields handling we are going to use **Fields** component:
+```java
+import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
+
+import java.util.Collection;
+import java.util.Map;
+
+
+public class FieldsHandler {
+    
+    public static void execute() {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        //Fast access by memory address
+        Collection<Class<?>> loadedClasses = Fields.getDirect(classLoader, "classes");
+        //Access by Reflection
+        loadedClasses = Fields.get(classLoader, "classes");
+        
+        //Get all fields of an object through memory address access
+        Map<String, Object> values = Fields.getAllDirect(classLoader);
+        //Get all fields of an object through reflection access
+        values = Fields.getAll(classLoader);
+    }
+    
+    public static void main(String[] args) {
+        execute();
+    } 
+}
+```
+For methods handling we are going to use **Methods** component:
+```
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
+
+public class MethodsHandler {
+    
+    public static void execute() {
+        //Inoking method by using reflection
+        Methods.invoke(System.out, "println", "Hello World");
+        
+        //Inoking method by using MethodHandle
+        Integer number = Methods.invokeDirect(Integer.class, "valueOf", 1);
+    }
+    
+    public static void main(String[] args) {
+        execute();
+    }
+}
+
+For constructors handling we are going to use **Constructors** component:
+```java
+import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
+
+import org.burningwave.core.classes.MemoryClassLoader;
+
+
+@SuppressWarnings("unused")
+public class ConstructorsHandler {
+    
+    public static void execute() {
+        //Inoking constructor by using reflection
+        MemoryClassLoader classLoader = Constructors.newInstanceOf(MemoryClassLoader.class, Thread.currentThread().getContextClassLoader());
+        
+        //Inoking constructor with a null parameter value by using MethodHandle
+        classLoader = Constructors.newInstanceDirectOf(MemoryClassLoader.class, new Object[] {null});
+    }
+    
+    public static void main(String[] args) {
+        execute();
+    }
+    
+}
+```
+
 <br>
 
 # Getting and setting properties of a Java bean through path
