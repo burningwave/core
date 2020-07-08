@@ -104,6 +104,8 @@ abstract class MemberHelper<M extends Member> implements Component {
 			if (parameters.length > 0 && parameters[parameters.length - 1].isVarArgs() && arguments.length < parameters.length) {
 				argumentList.add(null);
 			}
+		} else {
+			argumentList.add(null);
 		}
 		return argumentList;
 	}
