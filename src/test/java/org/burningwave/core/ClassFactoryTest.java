@@ -314,8 +314,8 @@ public class ClassFactoryTest extends BaseTest {
 			virtual.invokeDirect("setList", new ArrayList<>());
 			virtual.invoke("consume", Integer.valueOf(1));
 			virtual.invokeDirect("consume", Integer.valueOf(1));
-			List<?> list = virtual.get("list");
-			list = virtual.getDirect("list");
+			List<?> list = virtual.getValueOf("list");
+			list = virtual.getDirectValueOf("list");
 			return list;
 			}
 		);
