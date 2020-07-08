@@ -84,6 +84,19 @@ public class MethodsTest extends BaseTest {
 	}
 	
 	@Test
+	public void invokeStaticTestOne() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invoke(Service.class, "staticApply", "Hello", "World!", "How are you?");
+		});
+	}
+	
+	@Test
+	public void invokeDirectStaticTestOne() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invokeDirect(Service.class, "staticApply", "Hello", "World!", "How are you?");
+		});
+	}
+	@Test
 	public void invokeDirectVoidWithVarArgsTestThree() throws Throwable {
 		testDoesNotThrow(() -> {
 			Methods.invokeDirect(new Service(), "apply", "Hello", "World!");
