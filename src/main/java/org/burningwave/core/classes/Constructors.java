@@ -60,9 +60,10 @@ public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
 		Object... arguments
 	) {	
 		Constructor<?> ctor = findFirstAndMakeItAccessible(targetClass, Classes.deepRetrieveFrom(arguments));
-		return ThrowingSupplier.get(() -> 
-			(T)ctor.newInstance(getArgumentList(ctor, arguments))
-		);
+		return ThrowingSupplier.get(() -> {
+			logInfo("Invoking " + ctor);
+			return (T)ctor.newInstance(getArgumentList(ctor, arguments));
+		});
 	}
 	
 	public <T> T newInstanceDirectOf(
@@ -85,8 +86,10 @@ public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
 			}
 		);
 		return ThrowingSupplier.get(() -> {
+				Constructor<?> ctor = (Constructor<?>) methodHandleBag.getKey();
+				logInfo("Direct invoking of " + ctor);
 				return (T)methodHandleBag.getValue().invokeWithArguments(
-					getArgumentList((Constructor<?>)methodHandleBag.getKey(), arguments)
+					getArgumentList(ctor, arguments)
 				);
 			}
 		);

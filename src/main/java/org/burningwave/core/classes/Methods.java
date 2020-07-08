@@ -189,6 +189,7 @@ public class Methods extends ExecutableMemberHelper<Method> {
 		return ThrowingSupplier.get(() -> {
 				Method method = (Method)methodHandleBag.getKey();
 				List<Object> argumentList = getArgumentList(method, arguments);
+				logInfo("Direct invoking of " + method);
 				if (!Modifier.isStatic(method.getModifiers())) {
 					return (T)methodHandleBag.getValue().bindTo(target).invokeWithArguments(argumentList);
 				}
