@@ -40,7 +40,7 @@ public class MethodsTest extends BaseTest {
 	}
 	
 	@Test
-	public void invokeDirectVoidTestOne() {
+	public void invokeDirectVoidTestTwo() {
 		testDoesNotThrow(
 			() -> {
 				Methods.invokeDirect(System.out, "println", "Hello World");	
@@ -49,9 +49,23 @@ public class MethodsTest extends BaseTest {
 	}
 	
 	@Test
+	public void invokeVoidTestTwo() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invoke(new Service(), "apply", "Hello", "World!", new String[]{"How are you?"});
+		});
+	}
+	
+	@Test
 	public void invokeDirectVoidWithVarArgsTestOne() throws Throwable {
 		testDoesNotThrow(() -> {
 			Methods.invokeDirect(new Service(), "apply", "Hello", "World!", new String[]{"How are you?"});
+		});
+	}
+	
+	@Test
+	public void invokeVoidWithVarArgsTestTwo() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invoke(new Service(), "apply", "Hello", "World!", null);
 		});
 	}
 	
@@ -63,9 +77,23 @@ public class MethodsTest extends BaseTest {
 	}
 	
 	@Test
+	public void invokeVoidWithVarArgsTestThree() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invoke(new Service(), "apply", "Hello", "World!");
+		});
+	}
+	
+	@Test
 	public void invokeDirectVoidWithVarArgsTestThree() throws Throwable {
 		testDoesNotThrow(() -> {
 			Methods.invokeDirect(new Service(), "apply", "Hello", "World!");
+		});
+	}
+	
+	@Test
+	public void invokeNoArgs() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invoke(new Service(), "supply");
 		});
 	}
 	
@@ -76,4 +104,31 @@ public class MethodsTest extends BaseTest {
 		});
 	}
 	
+	@Test
+	public void invokeMethodWithVarArgsTestOne() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invoke(new Service(), "methodWithVarArgs");
+		});
+	}	
+	
+	@Test
+	public void invokeDirectMethodWithVarArgsTestOne() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invokeDirect(new Service(), "methodWithVarArgs");
+		});
+	}
+	
+	@Test
+	public void invokeMethodWithVarArgsTestTwo() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invoke(new Service(), "methodWithVarArgs", "Hello!");
+		});
+	}
+	
+	@Test
+	public void invokeDirectMethodWithVarArgsTestTwo() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invokeDirect(new Service(), "methodWithVarArgs", "Hello!");
+		});
+	}
 }
