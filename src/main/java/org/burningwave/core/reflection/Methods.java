@@ -79,7 +79,7 @@ public class Methods extends MemberHelper<Method> {
 	public Method findOneAndMakeItAccessible(Object target, String memberName, Object... arguments) {
 		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(target, memberName, arguments);
 		if (members.size() != 1) {
-			Throwables.toRuntimeException("Method " + memberName
+			throw Throwables.toRuntimeException("Method " + memberName
 				+ " not found or found more than one method in " + Classes.retrieveFrom(target).getName()
 				+ " hierarchy");
 		}
@@ -89,7 +89,7 @@ public class Methods extends MemberHelper<Method> {
 	public Method findFirstAndMakeItAccessible(Object target, String memberName, Object... arguments) {
 		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(target, memberName, arguments);
 		if (members.size() < 1) {
-			Throwables.toRuntimeException("Method " + memberName
+			throw Throwables.toRuntimeException("Method " + memberName
 				+ " not found in " + Classes.retrieveFrom(target).getName()
 				+ " hierarchy");
 		}

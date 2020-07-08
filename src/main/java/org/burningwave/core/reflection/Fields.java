@@ -121,7 +121,7 @@ public class Fields extends MemberHelper<Field> {
 	public Field findOneAndMakeItAccessible(Object target, String memberName, Object... arguments) {
 		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(target, memberName);
 		if (members.size() != 1) {
-			Throwables.toRuntimeException("Field " + memberName
+			throw Throwables.toRuntimeException("Field " + memberName
 				+ " not found or found more than one field in " + Classes.retrieveFrom(target).getName()
 				+ " hierarchy");
 		}
@@ -131,7 +131,7 @@ public class Fields extends MemberHelper<Field> {
 	public Field findFirstAndMakeItAccessible(Object target, String fieldName, Object... arguments) {
 		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(target, fieldName);
 		if (members.size() < 1) {
-			Throwables.toRuntimeException("Field " + fieldName
+			throw Throwables.toRuntimeException("Field " + fieldName
 				+ " not found in " + Classes.retrieveFrom(target).getName()
 				+ " hierarchy");
 		}

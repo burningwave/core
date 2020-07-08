@@ -42,7 +42,7 @@ public class Throwables implements Component {
 		if (obj instanceof RuntimeException) {
 			return (RuntimeException)obj;
 		} else if (obj instanceof String) {
-			throw new RuntimeException((String)obj);
+			return new RuntimeException((String)obj);
 		} else {
 			logError("", (Throwable)obj);
 			return new RuntimeException((Throwable)obj);

@@ -23,15 +23,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	public void getOrBuildFunctionClassTestOne() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
-			Method mth = Members.findOne(
-				MethodCriteria.create()
-				.name((name) -> name.matches("apply"))
-				.and().parameterType((params, idx) -> idx == 0 && params[idx].equals(Object.class))
-				.and().parameterType((params, idx) -> idx == 1 && params[idx].equals(String.class))
-				.and().parameterType((params, idx) -> idx == 2 && params[idx].equals(String.class)),
-				Service.class				
-			);
-			MultiParamsFunction<String> virtualObj = componentSupplier.getFunctionalInterfaceFactory().create(mth);
+			MultiParamsFunction<String> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(new Service(), "apply", "Hello", "World!", "How are you?");
 			virtualObj.apply(new Service(), "Hello", "World!", "How are you?");
 		});
 	}
@@ -48,7 +40,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 				.and().parameterType((params, idx) -> idx == 2 && params[idx].equals(String.class)),
 				Service.class				
 			);
-			Virtual virtualObj = componentSupplier.getFunctionalInterfaceFactory().create(mth);
+			Virtual virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			((MultiParamsPredicate)virtualObj).test(new Service(), new Object(), "World!", "How are you?");
 		});
 	}
@@ -64,7 +56,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 				.and().parameterTypes((params) -> params.length == 1),
 				Service.class
 			);
-			BiFunction<Service, String, String> bindedFunction = componentSupplier.getFunctionalInterfaceFactory().create(mth);
+			BiFunction<Service, String, String> bindedFunction = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			bindedFunction.apply(
 				new Service(), "Hello World!"
 			);
@@ -83,7 +75,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 				.and().parameterType((params, idx) -> idx == 2 && params[idx].equals(String.class)),
 				Service.class				
 			);
-			MultiParamsFunction<String> virtualObj = componentSupplier.getFunctionalInterfaceFactory().create(mth);
+			MultiParamsFunction<String> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.apply("Hello", "World!", "How are you?");
 		});
 	}
@@ -97,7 +89,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 				.name((name) -> name.matches("retrieve")).and().parameterTypes(params -> params.length == 0),
 				Service.class				
 			);
-			Supplier<Object> virtualObj = componentSupplier.getFunctionalInterfaceFactory().create(mth);
+			Supplier<Object> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.get();
 		});
 	}
@@ -111,7 +103,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 				.name((name) -> name.matches("supply")).and().parameterTypes(params -> params.length == 0),
 				Service.class				
 			);
-			Function<Service, Service> virtualObj = componentSupplier.getFunctionalInterfaceFactory().create(mth);
+			Function<Service, Service> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.apply(new Service());
 		});
 	}
@@ -129,7 +121,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 				.and().parameterType((params, idx) -> idx == 2 && params[idx].equals(String.class)),
 				Service.class				
 			);
-			MultiParamsConsumer virtualObj = componentSupplier.getFunctionalInterfaceFactory().create(mth);
+			MultiParamsConsumer virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.accept(new Service(), "Hello", "World!", "How are you?");
 		});
 	}
@@ -143,7 +135,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 				.name((name) -> name.matches("accept")).and().parameterTypes(params -> params.length == 1),
 				Service.class				
 			);
-			BiConsumer<Service, String> virtualObj = componentSupplier.getFunctionalInterfaceFactory().create(mth);
+			BiConsumer<Service, String> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.accept(new Service(), "hello!");
 		});
 	}
@@ -157,7 +149,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 				.name((name) -> name.matches("staticAccept")).and().parameterTypes(params -> params.length == 4),
 				Service.class				
 			);
-			MultiParamsConsumer virtualObj = componentSupplier.getFunctionalInterfaceFactory().create(mth);
+			MultiParamsConsumer virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.accept(new Service(), "Hello ", "world!", "How are you?");
 		});
 	}
@@ -171,7 +163,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 				.name((name) -> name.matches("run")).and().parameterTypes(params -> params.length == 0),
 				Service.class				
 			);
-			Consumer<Service> virtualObj = componentSupplier.getFunctionalInterfaceFactory().create(mth);
+			Consumer<Service> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.accept(new Service());
 		});
 	}
@@ -185,7 +177,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 				.name((name) -> name.matches("staticRun")).and().parameterTypes(params -> params.length == 0),
 				Service.class				
 			);
-			Runnable virtualObj = componentSupplier.getFunctionalInterfaceFactory().create(mth);
+			Runnable virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.run();
 		});
 	}

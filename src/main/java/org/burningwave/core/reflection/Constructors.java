@@ -97,7 +97,7 @@ public class Constructors extends MemberHelper<Constructor<?>>  {
 	public Constructor<?> findOneAndMakeItAccessible(Object target, Object... arguments) {
 		Collection<Constructor<?>> members = findAllAndMakeThemAccessible(target, arguments);
 		if (members.size() != 1) {
-			Throwables.toRuntimeException("Constructor not found or found more than one constructor in " + Classes.retrieveFrom(target).getName());
+			throw Throwables.toRuntimeException("Constructor not found or found more than one constructor in " + Classes.retrieveFrom(target).getName());
 		}
 		return members.stream().findFirst().get();
 	}
@@ -105,7 +105,7 @@ public class Constructors extends MemberHelper<Constructor<?>>  {
 	public Constructor<?> findFirstAndMakeItAccessible(Object target, Object... arguments) {
 		Collection<Constructor<?>> members = findAllAndMakeThemAccessible(target, arguments);
 		if (members.size() < 1) {
-			Throwables.toRuntimeException("Constructor not found in " + Classes.retrieveFrom(target).getName());
+			throw Throwables.toRuntimeException("Constructor not found in " + Classes.retrieveFrom(target).getName());
 		}
 		return members.stream().findFirst().get();
 	}
