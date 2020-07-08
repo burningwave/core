@@ -114,6 +114,9 @@ public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		ConstructorCriteria criteria = ConstructorCriteria.create()
 			.and().parameterTypesAreAssignableFrom(arguments);
+		if (arguments != null && arguments.length == 0) {
+			criteria.or().parameter((parameters, idx) -> parameters.length == 1 && parameters[0].isVarArgs());
+		}
 		return Cache.uniqueKeyForConstructors.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> 
 			Collections.unmodifiableCollection(
 				findAllAndMakeThemAccessible(target).stream().filter(
