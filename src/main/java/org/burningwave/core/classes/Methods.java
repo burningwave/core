@@ -104,11 +104,11 @@ public class Methods extends ExecutableMemberHelper<Method> {
 	}
 	
 	public Collection<Method> findAllByExactNameAndMakeThemAccessible(
-		Class<?> target,
+		Class<?> targetClass,
 		String methodName,
 		Class<?>... argumentTypes
 	) {	
-		return findAllByNamePredicateAndMakeThemAccessible(target, "equals " + methodName, methodName::equals, argumentTypes);
+		return findAllByNamePredicateAndMakeThemAccessible(targetClass, "equals " + methodName, methodName::equals, argumentTypes);
 	}
 	
 	public Collection<Method> findAllByMatchedNameAndMakeThemAccessible(
