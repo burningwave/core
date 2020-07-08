@@ -26,9 +26,8 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.reflection;
+package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 
 import java.lang.reflect.Member;
@@ -38,13 +37,12 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.classes.MemberCriteria;
 
 abstract class MemberHelper<M extends Member> implements Component {	
 
 	@SuppressWarnings("unchecked")
-	<C extends MemberCriteria<M, C, ?>> Collection<M> findAllAndApply(C criteria, Object target, Consumer<M>... consumers) {
-		Collection<M> members = Members.findAll(criteria, target);
+	<C extends MemberCriteria<M, C, ?>> Collection<M> findAllAndApply(C criteria, Class<?> targetClass, Consumer<M>... consumers) {
+		Collection<M> members = Members.findAll(criteria, targetClass);
 		Optional.ofNullable(consumers).ifPresent(cnsms -> 
 			members.stream().forEach(member -> 
 				Stream.of(cnsms).filter(consumer -> 
@@ -58,8 +56,8 @@ abstract class MemberHelper<M extends Member> implements Component {
 	}
 	
 	@SuppressWarnings("unchecked")
-	<C extends MemberCriteria<M, C, ?>> M findOneAndApply(C criteria, Object target, Consumer<M>... consumers) {
-		M member = Members.findOne(criteria, target);
+	<C extends MemberCriteria<M, C, ?>> M findOneAndApply(C criteria, Class<?> targetClass, Consumer<M>... consumers) {
+		M member = Members.findOne(criteria, targetClass);
 		Optional.ofNullable(consumers).ifPresent(cnsms -> 
 			Optional.ofNullable(member).ifPresent(mmb -> 
 				Stream.of(cnsms).filter(consumer -> 
@@ -72,14 +70,14 @@ abstract class MemberHelper<M extends Member> implements Component {
 		return member;
 	}
 	
-	String getCacheKey(Class<?> targetClass, String groupName, Object... arguments) {
+	String getCacheKey(Class<?> targetClass, String groupName, Class<?>... arguments) {
 		if (arguments == null) {
-			arguments = new Object[] {null};
+			arguments = new Class<?>[] {null};
 		}
 		String argumentsKey = "";
 		if (arguments != null && arguments.length > 0) {
 			StringBuffer argumentsKeyStringBuffer = new StringBuffer();
-			Stream.of(Classes.retrieveFrom(arguments)).forEach(cls ->
+			Stream.of(arguments).forEach(cls ->
 				argumentsKeyStringBuffer.append("/" + Optional.ofNullable(cls).map(Class::getName).orElseGet(() ->"null"))
 			);
 			argumentsKey = argumentsKeyStringBuffer.toString();

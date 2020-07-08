@@ -61,8 +61,12 @@ public class FunctionalInterfaceFactory implements Component {
 	public static FunctionalInterfaceFactory create(ClassFactory classFactory) {
 		return new FunctionalInterfaceFactory(classFactory);
 	}
-
-	public <F> F create(Method targetMethod) throws Throwable {
+	
+	public <T> T getOrCreate(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
+		return getOrCreate(Methods.findOneAndMakeItAccessible(targetClass, methodName, argumentTypes));
+	}
+	
+	public <F> F getOrCreate(Method targetMethod) {
 		if (targetMethod.getParameterTypes().length == 0 && targetMethod.getReturnType() == void.class) {
 			return getBindedRunnable(targetMethod);
 		} else if (targetMethod.getParameterTypes().length == 0 && targetMethod.getReturnType() != void.class) {

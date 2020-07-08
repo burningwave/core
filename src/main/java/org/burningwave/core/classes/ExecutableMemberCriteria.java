@@ -29,8 +29,10 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 import java.lang.reflect.Executable;
+import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -40,13 +42,13 @@ import java.util.function.Predicate;
 import org.burningwave.core.Criteria;
 import org.burningwave.core.function.TriPredicate;
 
+@SuppressWarnings("unchecked")
 public abstract class ExecutableMemberCriteria<
 	E extends Executable, 
 	C extends ExecutableMemberCriteria<E, C, T>, 
 	T extends Criteria.TestContext<E, C>
 > extends MemberCriteria<E, C, T> {
 	
-	@SuppressWarnings("unchecked")
 	public C parameterTypes(final Predicate<Class<?>[]> predicate) {
 		this.predicate = concat(
 			this.predicate,
@@ -55,12 +57,12 @@ public abstract class ExecutableMemberCriteria<
 		return (C)this;
 	}
 	
-	@SuppressWarnings("unchecked")
-	public C parameterTypesAreAssignableFrom(Object... arguments) {
+	
+	public C parameterTypesAreAssignableFrom(Class<?>... arguments) {
 		if (arguments == null) {
-			arguments = new Object[]{null};
+			arguments = new Class<?>[]{null};
 		}
-		Class<?>[] argumentsClasses = Classes.retrieveFrom(arguments);
+		Class<?>[] argumentsClasses = arguments;
 		if (argumentsClasses != null && argumentsClasses.length > 0) {
 			List<Class<?>> argumentsClassesAsList = Arrays.asList(argumentsClasses);
 			for (int i = 0; i < argumentsClasses.length; i++) {
@@ -68,14 +70,21 @@ public abstract class ExecutableMemberCriteria<
 				this.predicate = concat(
 					this.predicate,
 					(context, member) -> {
-						Class<?>[] memberParameters = member.getParameterTypes();
-						if (argumentsClassesAsList.size() == memberParameters.length) {							
+						Parameter[] memberParameter = member.getParameters();
+						if (memberParameter.length > 1 && 
+							memberParameter[memberParameter.length - 1].isVarArgs() && 
+							(memberParameter.length - 1) > argumentsClassesAsList.size()
+						) {
+							return false;
+						}
+						Class<?>[] memberParameterTypes = Methods.retrieveParameterTypes(member, argumentsClassesAsList);	
+						if (argumentsClassesAsList.size() == memberParameterTypes.length) {							
 							TriPredicate<List<Class<?>>, Class<?>[], Integer> predicate = (argClasses, paramTypes, innerIdx) -> 
 								(argClasses.get(innerIdx) == null || Classes.isAssignableFrom(paramTypes[innerIdx], argClasses.get(innerIdx)));
 							if (context.getCriteria().getClassSupplier() == null) {
-								return predicate.test(argumentsClassesAsList, memberParameters, index);
+								return predicate.test(argumentsClassesAsList, memberParameterTypes, index);
 							} else {
-								return predicate.test(context.getCriteria().retrieveUploadedClasses(argumentsClasses), memberParameters, index);
+								return predicate.test(context.getCriteria().retrieveUploadedClasses(argumentsClasses), memberParameterTypes, index);
 							}
 						} else {
 							return false;
@@ -95,7 +104,11 @@ public abstract class ExecutableMemberCriteria<
 		return (C)this;
 	}
 	
-	@SuppressWarnings("unchecked")
+	
+	public C parameterTypesAreAssignableFromTypeOf(Object... arguments) {
+		return parameterTypesAreAssignableFrom(Classes.deepRetrieveFrom(arguments));
+	}
+	
 	public C parameterType(final BiPredicate<Class<?>[], Integer> predicate) {
 		this.predicate = concat(
 			this.predicate,
@@ -108,12 +121,34 @@ public abstract class ExecutableMemberCriteria<
 	}
 	
 	
-	@SuppressWarnings("unchecked")
 	public C parameterType(final TriPredicate<Map<Class<?>, Class<?>>, Class<?>[], Integer> predicate) {
 		this.predicate = concat(
 			this.predicate,
 			getPredicateWrapper(
 				(context, member) -> member.getParameterTypes(), 				
+				(context, array, index) -> predicate.test(context.getCriteria().getUploadedClasses(), array, index)
+			)
+		);
+		return (C)this;
+	}
+	
+
+	public C parameter(final BiPredicate<Parameter[], Integer> predicate) {
+		this.predicate = concat(
+			this.predicate,
+			getPredicateWrapper(
+				(criteria, member) -> member.getParameters(), 				
+				(criteria, array, index) -> predicate.test(array, index)
+			)
+		);
+		return (C)this;
+	}
+	
+	public C parameter(final TriPredicate<Map<Class<?>, Class<?>>, Parameter[], Integer> predicate) {
+		this.predicate = concat(
+			this.predicate,
+			getPredicateWrapper(
+				(context, member) -> member.getParameters(), 				
 				(context, array, index) -> predicate.test(context.getCriteria().getUploadedClasses(), array, index)
 			)
 		);

@@ -10,9 +10,9 @@ import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.classes.ClassSourceGenerator;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.MemoryClassLoader;
+import org.burningwave.core.classes.PropertyAccessor;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
-import org.burningwave.core.reflection.PropertyAccessor;
 import org.junit.jupiter.api.Test;
 
 public class MemoryClassLoaderTest extends BaseTest {

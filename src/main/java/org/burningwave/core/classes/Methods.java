@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.reflection;
+package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
@@ -45,20 +45,16 @@ import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("unchecked")
-public class Methods extends MemberHelper<Method> {
-	
-	private Methods() {
-		super();
-	}
+public class Methods extends ExecutableMemberHelper<Method> {
 	
 	public static Methods create() {
 		return new Methods();
@@ -76,57 +72,70 @@ public class Methods extends MemberHelper<Method> {
 		return methodName;
 	}
 	
-	public Method findOneAndMakeItAccessible(Object target, String memberName, Object... arguments) {
-		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(target, memberName, arguments);
-		if (members.size() != 1) {
-			Throwables.toRuntimeException("Method " + memberName
-				+ " not found or found more than one method in " + Classes.retrieveFrom(target).getName()
-				+ " hierarchy");
+	public Method findOneAndMakeItAccessible(Class<?> targetClass, String memberName, Class<?>... argumentTypes) {
+		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(targetClass, memberName, argumentTypes);
+		if (members.size() == 1) {
+			return members.stream().findFirst().get();
+		} else if (members.size() > 1) {
+			Collection<Method> membersThatMatch = searchForExactMatch(members, argumentTypes);
+			if (membersThatMatch.size() == 1) {
+				return membersThatMatch.stream().findFirst().get();
+			}
 		}
-		return members.stream().findFirst().get();
+		throw Throwables.toRuntimeException("Method " + memberName
+				+ " not found or found more than one method in " + targetClass.getName()
+				+ " hierarchy");
 	}
 	
-	public Method findFirstAndMakeItAccessible(Object target, String memberName, Object... arguments) {
-		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(target, memberName, arguments);
-		if (members.size() < 1) {
-			Throwables.toRuntimeException("Method " + memberName
-				+ " not found in " + Classes.retrieveFrom(target).getName()
-				+ " hierarchy");
+	public Method findFirstAndMakeItAccessible(Class<?> targetClass, String memberName, Class<?>... arguments) {
+		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(targetClass, memberName, arguments);
+		if (members.size() == 1) {
+			return members.stream().findFirst().get();
+		} else if (members.size() > 1) {
+			Collection<Method> membersThatMatch = searchForExactMatch(members, arguments);
+			if (!membersThatMatch.isEmpty()) {
+				return membersThatMatch.stream().findFirst().get();
+			}
+			return members.stream().findFirst().get();
 		}
-		return members.stream().findFirst().get();
+		throw Throwables.toRuntimeException("Method " + memberName
+				+ " not found in " + targetClass.getName()
+				+ " hierarchy");
 	}
 	
 	public Collection<Method> findAllByExactNameAndMakeThemAccessible(
-		Object target,
+		Class<?> targetClass,
 		String methodName,
-		Object... arguments
+		Class<?>... argumentTypes
 	) {	
-		return findAllByNamePredicateAndMakeThemAccessible(target, "equals " + methodName, methodName::equals, arguments);
+		return findAllByNamePredicateAndMakeThemAccessible(targetClass, "equals " + methodName, methodName::equals, argumentTypes);
 	}
 	
 	public Collection<Method> findAllByMatchedNameAndMakeThemAccessible(
-		Object target,
+		Class<?> targetClass,
 		String methodName,
-		Object... arguments
+		Class<?>... argumentTypes
 	) {	
-		return findAllByNamePredicateAndMakeThemAccessible(target, "match " + methodName, methodName::matches, arguments);
+		return findAllByNamePredicateAndMakeThemAccessible(targetClass, "match " + methodName, methodName::matches, argumentTypes);
 	}
 	
 	private Collection<Method> findAllByNamePredicateAndMakeThemAccessible(
-		Object target,
+		Class<?> targetClass,
 		String cacheKeyPrefix,
 		Predicate<String> namePredicate,
-		Object... arguments
+		Class<?>... arguments
 	) {	
-		Class<?> targetClass = Classes.retrieveFrom(target);
 		String cacheKey = getCacheKey(targetClass, cacheKeyPrefix, arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		MethodCriteria criteria = MethodCriteria.create()
 			.name(namePredicate)
 			.and().parameterTypesAreAssignableFrom(arguments);
+		if (arguments != null && arguments.length == 0) {
+			criteria.or().parameter((parameters, idx) -> parameters.length == 1 && parameters[0].isVarArgs());
+		}
 		return Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> 
 			Collections.unmodifiableCollection(
-				findAllAndMakeThemAccessible(target).stream().filter(
+				findAllAndMakeThemAccessible(targetClass).stream().filter(
 					criteria.getPredicateOrTruePredicateIfPredicateIsNull()
 				).collect(
 					Collectors.toCollection(LinkedHashSet::new)
@@ -136,16 +145,15 @@ public class Methods extends MemberHelper<Method> {
 	}
 
 	public Collection<Method> findAllAndMakeThemAccessible(
-		Object target
+		Class<?> targetClass
 	) {
-		Class<?> targetClass = Classes.retrieveFrom(target);
 		String cacheKey = getCacheKey(targetClass, "all methods");
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		Collection<Method> members = Cache.uniqueKeyForMethods.getOrUploadIfAbsent(
 			targetClassClassLoader, cacheKey, () -> {
 				return Collections.unmodifiableCollection(
 					findAllAndApply(
-						MethodCriteria.create(), target, (member) -> member.setAccessible(true)
+						MethodCriteria.create(), targetClass, (member) -> member.setAccessible(true)
 					)
 				);
 			}
@@ -155,20 +163,21 @@ public class Methods extends MemberHelper<Method> {
 
 	public <T> T invoke(Object target, String methodName, Object... arguments) {
 		return ThrowingSupplier.get(() -> {
-			Method method = findFirstAndMakeItAccessible(target, methodName, arguments);
+			Method method = findFirstAndMakeItAccessible(Classes.retrieveFrom(target), methodName, Classes.deepRetrieveFrom(arguments));
 			logInfo("Invoking " + method);
-			return (T)method.invoke(Modifier.isStatic(method.getModifiers()) ? null : target, arguments != null? arguments : new Object[]{null});
+			return (T)method.invoke(Modifier.isStatic(method.getModifiers()) ? null : target, getArgumentArray(method, arguments));
 		});
 	}
 	
 	public <T> T invokeDirect(Object target, String methodName, Object... arguments) {
 		Class<?> targetClass = Classes.retrieveFrom(target);
-		String cacheKey = getCacheKey(targetClass, "equals " + methodName, arguments);
+		Class<?>[] argsType = Classes.deepRetrieveFrom(arguments);
+		String cacheKey = getCacheKey(targetClass, "equals " + methodName, argsType);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
-		Entry<Executable, MethodHandle> methodHandle = Cache.uniqueKeyForExecutableAndMethodHandle.getOrUploadIfAbsent(
+		Entry<Executable, MethodHandle> methodHandleBag = Cache.uniqueKeyForExecutableAndMethodHandle.getOrUploadIfAbsent(
 			targetClassClassLoader, cacheKey, 
 			() -> {
-				Method method = findFirstAndMakeItAccessible(targetClass, methodName, arguments);
+				Method method = findFirstAndMakeItAccessible(targetClass, methodName, argsType);
 				return new AbstractMap.SimpleEntry<>(
 					method, 
 					convertToMethodHandle(
@@ -178,10 +187,12 @@ public class Methods extends MemberHelper<Method> {
 			}
 		);
 		return ThrowingSupplier.get(() -> {
-				if (!Modifier.isStatic(methodHandle.getKey().getModifiers())) {
-					return (T)methodHandle.getValue().bindTo(target).invokeWithArguments(arguments != null? arguments : new Object[]{null});
+				Method method = (Method)methodHandleBag.getKey();
+				List<Object> argumentList = getArgumentList(method, arguments);
+				if (!Modifier.isStatic(method.getModifiers())) {
+					return (T)methodHandleBag.getValue().bindTo(target).invokeWithArguments(argumentList);
 				}
-				return (T)methodHandle.getValue().invokeWithArguments(arguments != null? arguments : new Object[]{null});
+				return (T)methodHandleBag.getValue().invokeWithArguments(argumentList);
 			}
 		);
 	}
