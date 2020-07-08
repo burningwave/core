@@ -127,21 +127,24 @@ public class Methods extends ExecutableMemberHelper<Method> {
 	) {	
 		String cacheKey = getCacheKey(targetClass, cacheKeyPrefix, arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
-		MethodCriteria criteria = MethodCriteria.create()
-			.name(namePredicate)
-			.and().parameterTypesAreAssignableFrom(arguments);
-		if (arguments != null && arguments.length == 0) {
-			criteria.or().parameter((parameters, idx) -> parameters.length == 1 && parameters[0].isVarArgs());
-		}
-		return Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> 
-			Collections.unmodifiableCollection(
-				findAllAndMakeThemAccessible(targetClass).stream().filter(
-					criteria.getPredicateOrTruePredicateIfPredicateIsNull()
-				).collect(
-					Collectors.toCollection(LinkedHashSet::new)
+		return Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> {
+			MethodCriteria criteria = MethodCriteria.create()
+				.name(namePredicate)
+				.and().parameterTypesAreAssignableFrom(arguments);			
+			if (arguments != null && arguments.length == 0) {
+				criteria = criteria.or(MethodCriteria.create().name(namePredicate).and().parameter((parameters, idx) -> parameters.length == 1 && parameters[0].isVarArgs()));
+			}
+			MethodCriteria finalCriteria = criteria;
+			return Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> 
+				Collections.unmodifiableCollection(
+					findAllAndMakeThemAccessible(targetClass).stream().filter(
+						finalCriteria.getPredicateOrTruePredicateIfPredicateIsNull()
+					).collect(
+						Collectors.toCollection(LinkedHashSet::new)
+					)
 				)
-			)
-		);
+			);
+		});
 	}
 
 	public Collection<Method> findAllAndMakeThemAccessible(
@@ -164,7 +167,7 @@ public class Methods extends ExecutableMemberHelper<Method> {
 	public <T> T invoke(Object target, String methodName, Object... arguments) {
 		return ThrowingSupplier.get(() -> {
 			Method method = findFirstAndMakeItAccessible(Classes.retrieveFrom(target), methodName, Classes.deepRetrieveFrom(arguments));
-			logInfo("Invoking " + method);
+			//logInfo("Invoking " + method);
 			return (T)method.invoke(Modifier.isStatic(method.getModifiers()) ? null : target, getArgumentArray(method, arguments));
 		});
 	}
@@ -189,7 +192,7 @@ public class Methods extends ExecutableMemberHelper<Method> {
 		return ThrowingSupplier.get(() -> {
 				Method method = (Method)methodHandleBag.getKey();
 				List<Object> argumentList = getArgumentList(method, arguments);
-				logInfo("Direct invoking of " + method);
+				//logInfo("Direct invoking of " + method);
 				if (!Modifier.isStatic(method.getModifiers())) {
 					return (T)methodHandleBag.getValue().bindTo(target).invokeWithArguments(argumentList);
 				}

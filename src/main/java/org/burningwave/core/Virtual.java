@@ -33,11 +33,11 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 
 public interface Virtual extends Component {
 	
-	default <T> T get(String fieldName) {
+	default <T> T getValueOf(String fieldName) {
 		return Fields.get(this, fieldName);
 	}
 	
-	default <T> T getDirect(String fieldName) {
+	default <T> T getDirectValueOf(String fieldName) {
 		return Fields.getDirect(this, fieldName);
 	}
 	

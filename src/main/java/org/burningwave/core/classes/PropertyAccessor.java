@@ -105,7 +105,7 @@ public abstract class PropertyAccessor implements Component {
 			if (exceptions.size() == propertyRetrievers.size()) {
 				throw Throwables.toRuntimeException(message.toString());
 			} else {
-				logDebug("Warning: " + message);
+				//logDebug("Warning: " + message);
 			}
 		}
 	}
@@ -167,8 +167,7 @@ public abstract class PropertyAccessor implements Component {
 		Object objToReturn;
 		objToReturn = Methods.invokeDirect(
 			obj, 
-			Methods.createGetterMethodNameByPropertyName(propertyName), 
-			(Object[])null
+			Methods.createGetterMethodNameByPropertyName(propertyName)
 		);
 		return objToReturn;
 	}
