@@ -50,7 +50,7 @@ public class Service implements Component {
 		return "";
 	}
 	
-	public String apply(String value_01, String value_02, String value_03) {
+	public String apply(String value_01, String value_02, String... value_03) {
 		LOGGER.info("TriFunction: " + value_01 + " " + value_02 + " " + value_03);
 		return "";
 	}

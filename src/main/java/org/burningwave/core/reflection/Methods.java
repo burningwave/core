@@ -45,6 +45,7 @@ import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
@@ -165,7 +166,7 @@ public class Methods extends MemberHelper<Method> {
 		Class<?> targetClass = Classes.retrieveFrom(target);
 		String cacheKey = getCacheKey(targetClass, "equals " + methodName, arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
-		Entry<Executable, MethodHandle> methodHandle = Cache.uniqueKeyForExecutableAndMethodHandle.getOrUploadIfAbsent(
+		Entry<Executable, MethodHandle> methodHandleBag = Cache.uniqueKeyForExecutableAndMethodHandle.getOrUploadIfAbsent(
 			targetClassClassLoader, cacheKey, 
 			() -> {
 				Method method = findFirstAndMakeItAccessible(targetClass, methodName, arguments);
@@ -178,10 +179,12 @@ public class Methods extends MemberHelper<Method> {
 			}
 		);
 		return ThrowingSupplier.get(() -> {
-				if (!Modifier.isStatic(methodHandle.getKey().getModifiers())) {
-					return (T)methodHandle.getValue().bindTo(target).invokeWithArguments(arguments != null? arguments : new Object[]{null});
+				Executable method = methodHandleBag.getKey();
+				List<Object> argumentList = getArgumentList(method, arguments);
+				if (!Modifier.isStatic(method.getModifiers())) {
+					return (T)methodHandleBag.getValue().bindTo(target).invokeWithArguments(argumentList);
 				}
-				return (T)methodHandle.getValue().invokeWithArguments(arguments != null? arguments : new Object[]{null});
+				return (T)methodHandleBag.getValue().invokeWithArguments(argumentList);
 			}
 		);
 	}

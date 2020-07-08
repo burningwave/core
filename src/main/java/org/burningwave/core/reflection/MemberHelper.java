@@ -31,8 +31,12 @@ package org.burningwave.core.reflection;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 
+import java.lang.reflect.Executable;
 import java.lang.reflect.Member;
+import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -88,5 +92,19 @@ abstract class MemberHelper<M extends Member> implements Component {
 			"/" + groupName +
 			argumentsKey;
 		return cacheKey;		
+	}
+	
+	List<Object> getArgumentList(Executable method, Object... arguments) {
+		Parameter[] parameters = method.getParameters();
+		List<Object> argumentList = new ArrayList<>();
+		if (arguments != null) {
+			for (Object arg : arguments) {
+				argumentList.add(arg);
+			}
+			if (parameters.length > 0 && parameters[parameters.length - 1].isVarArgs() && arguments.length < parameters.length) {
+				argumentList.add(null);
+			}
+		}
+		return argumentList;
 	}
 }

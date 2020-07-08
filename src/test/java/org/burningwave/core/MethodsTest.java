@@ -3,6 +3,7 @@ package org.burningwave.core;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
 
 
@@ -45,6 +46,34 @@ public class MethodsTest extends BaseTest {
 				Methods.invokeDirect(System.out, "println", "Hello World");	
 			}
 		);
+	}
+	
+	@Test
+	public void invokeDirectVoidWithVarArgsTestOne() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invokeDirect(new Service(), "apply", "Hello", "World!", new String[]{"How are you?"});
+		});
+	}
+	
+	@Test
+	public void invokeDirectVoidWithVarArgsTestTwo() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invokeDirect(new Service(), "apply", "Hello", "World!", null);
+		});
+	}
+	
+	@Test
+	public void invokeDirectVoidWithVarArgsTestThree() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invokeDirect(new Service(), "apply", "Hello", "World!");
+		});
+	}
+	
+	@Test
+	public void invokeDirectNoArgs() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invokeDirect(new Service(), "supply");
+		});
 	}
 	
 }
