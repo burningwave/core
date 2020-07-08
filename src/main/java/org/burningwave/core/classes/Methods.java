@@ -41,7 +41,6 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Parameter;
 import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Collections;
@@ -76,18 +75,6 @@ public class Methods extends ExecutableMemberHelper<Method> {
 	public Method findOneAndMakeItAccessible(Object target, String memberName, Object... arguments) {
 		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(target, memberName, arguments);
 		if (members.size() != 1) {
-			if (arguments != null && arguments.length > 0) {
-				for (Method method : members) {
-					if (method.getParameters().length == arguments.length) {
-						Parameter[] parameters = method.getParameters();
-						for (int i = 0; i < parameters.length; i++) {
-							if (parameters[i].getType().equals(arguments.getClass())) {
-								
-							}
-						}
-					}
-				}
-			}
 			throw Throwables.toRuntimeException("Method " + memberName
 				+ " not found or found more than one method in " + Classes.retrieveFrom(target).getName()
 				+ " hierarchy");
@@ -133,6 +120,9 @@ public class Methods extends ExecutableMemberHelper<Method> {
 		MethodCriteria criteria = MethodCriteria.create()
 			.name(namePredicate)
 			.and().parameterTypesAreAssignableFrom(arguments);
+		if (arguments != null && arguments.length == 0) {
+			criteria.or().parameter((parameters, idx) -> parameters.length == 1 && parameters[0].isVarArgs());
+		}
 		return Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> 
 			Collections.unmodifiableCollection(
 				findAllAndMakeThemAccessible(target).stream().filter(
@@ -166,7 +156,7 @@ public class Methods extends ExecutableMemberHelper<Method> {
 		return ThrowingSupplier.get(() -> {
 			Method method = findFirstAndMakeItAccessible(target, methodName, arguments);
 			logInfo("Invoking " + method);
-			return (T)method.invoke(Modifier.isStatic(method.getModifiers()) ? null : target, arguments != null? arguments : new Object[]{null});
+			return (T)method.invoke(Modifier.isStatic(method.getModifiers()) ? null : target, getArgumentArray(method, arguments));
 		});
 	}
 	

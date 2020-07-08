@@ -39,16 +39,20 @@ public class Service implements Component {
 	
 	public void run() {
 		LOGGER.info("static run");
-	}	
+	}
+	
+	public void methodWithVarArgs(String... arg) {
+		LOGGER.info("methodWithVarArgs");
+	}
 	
 	public static void staticRun() {
 		LOGGER.info("static run");
-	}		
+	}	
 	
-	public String apply(String value_01, String value_02) {
-		LOGGER.info("BiFunction: " + value_01 + " " + value_02);
-		return "";
-	}
+//	public String apply(String value_01, String value_02) {
+//		LOGGER.info("BiFunction: " + value_01 + " " + value_02);
+//		return "";
+//	}
 	
 	public String apply(String value_01, String value_02, String... value_03) {
 		LOGGER.info("TriFunction: " + value_01 + " " + value_02 + " " + value_03);
