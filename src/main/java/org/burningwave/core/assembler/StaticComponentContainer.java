@@ -56,22 +56,22 @@ public class StaticComponentContainer {
 			DEFAULT_VALUES.put(Key.HIDE_BANNER_ON_INIT, "false");
 		}
 	}
-	public static final org.burningwave.core.reflection.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
-	public static final org.burningwave.core.reflection.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
+	public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
+	public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
 	public static final org.burningwave.core.Cache Cache;
 	public static final org.burningwave.core.classes.Classes Classes;
 	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
-	public static final org.burningwave.core.reflection.Constructors Constructors;
+	public static final org.burningwave.core.classes.Constructors Constructors;
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
-	public static final org.burningwave.core.reflection.Fields Fields;
+	public static final org.burningwave.core.classes.Fields Fields;
 	public static final org.burningwave.core.iterable.Properties GlobalProperties;
 	public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
 	public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;
 	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 	public static final org.burningwave.core.classes.Members Members;
-	public static final org.burningwave.core.reflection.Methods Methods;
+	public static final org.burningwave.core.classes.Methods Methods;
 	public static final org.burningwave.core.Strings.Paths Paths;
 	public static final org.burningwave.core.io.Resources Resources;
 	public static final org.burningwave.core.io.Streams Streams;
@@ -125,11 +125,11 @@ public class StaticComponentContainer {
 			ClassLoaders = org.burningwave.core.classes.Classes.Loaders.create();
 			Cache = org.burningwave.core.Cache.create();
 			Members = org.burningwave.core.classes.Members.create();
-			Constructors = org.burningwave.core.reflection.Constructors.create();
-			Fields = org.burningwave.core.reflection.Fields.create();
-			Methods = org.burningwave.core.reflection.Methods.create();
-			ByFieldOrByMethodPropertyAccessor = org.burningwave.core.reflection. PropertyAccessor.ByFieldOrByMethod.create();
-			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.reflection.PropertyAccessor.ByMethodOrByField.create();
+			Constructors = org.burningwave.core.classes.Constructors.create();
+			Fields = org.burningwave.core.classes.Fields.create();
+			Methods = org.burningwave.core.classes.Methods.create();
+			ByFieldOrByMethodPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByFieldOrByMethod.create();
+			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
 		} catch (Throwable exc){
 			ManagedLoggersRepository.logError(StaticComponentContainer.class, "Exception occurred", exc);

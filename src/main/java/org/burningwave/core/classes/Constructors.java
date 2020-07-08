@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.reflection;
+package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
@@ -45,16 +45,11 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.function.ThrowingSupplier;
 
 
 @SuppressWarnings("unchecked")
-public class Constructors extends MemberHelper<Constructor<?>>  {
-
-	private Constructors() {
-		super();
-	}
+public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
 	
 	public static Constructors create() {
 		return new Constructors();

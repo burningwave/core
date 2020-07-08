@@ -29,6 +29,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 import java.lang.reflect.Executable;
 import java.lang.reflect.Parameter;
@@ -70,32 +71,13 @@ public abstract class ExecutableMemberCriteria<
 					this.predicate,
 					(context, member) -> {
 						Parameter[] memberParameter = member.getParameters();
-						Class<?>[] memberParameterTypes = member.getParameterTypes();
-						if (memberParameter.length > 0 && memberParameter[memberParameter.length - 1].isVarArgs()) {
-							Class<?> varArgsType = 
-								argumentsClassesAsList.size() > 0 && 
-								argumentsClassesAsList.get(argumentsClassesAsList.size()-1) != null &&
-								argumentsClassesAsList.get(argumentsClassesAsList.size()-1).isArray()?
-								memberParameter[memberParameter.length - 1].getType():
-								memberParameter[memberParameter.length - 1].getType().getComponentType();
-							if (memberParameter.length == 1) {
-								memberParameterTypes = new Class<?>[argumentsClassesAsList.size()];
-								for (int j = 0; j < memberParameterTypes.length; j++) {
-									memberParameterTypes[j] = varArgsType;
-								}
-							} else if (memberParameter.length - 1 <= argumentsClassesAsList.size()) {
-								memberParameterTypes = new Class<?>[argumentsClassesAsList.size()];
-								for (int j = 0; j < memberParameterTypes.length; j++) {
-									if (j < (memberParameter.length - 1)) {
-										memberParameterTypes[j] = memberParameter[j].getType();
-									} else {
-										memberParameterTypes[j] = varArgsType;
-									}
-								}
-							} else {
-								return false;
-							}
-						}						
+						if (memberParameter.length > 1 && 
+							memberParameter[memberParameter.length - 1].isVarArgs() && 
+							(memberParameter.length - 1) > argumentsClassesAsList.size()
+						) {
+							return false;
+						}
+						Class<?>[] memberParameterTypes = Methods.retrieveParameterTypes(member, argumentsClassesAsList);	
 						if (argumentsClassesAsList.size() == memberParameterTypes.length) {							
 							TriPredicate<List<Class<?>>, Class<?>[], Integer> predicate = (argClasses, paramTypes, innerIdx) -> 
 								(argClasses.get(innerIdx) == null || Classes.isAssignableFrom(paramTypes[innerIdx], argClasses.get(innerIdx)));

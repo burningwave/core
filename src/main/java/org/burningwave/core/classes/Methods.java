@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.reflection;
+package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
@@ -41,6 +41,7 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Collections;
@@ -51,15 +52,10 @@ import java.util.Map.Entry;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("unchecked")
-public class Methods extends MemberHelper<Method> {
-	
-	private Methods() {
-		super();
-	}
+public class Methods extends ExecutableMemberHelper<Method> {
 	
 	public static Methods create() {
 		return new Methods();
@@ -80,6 +76,18 @@ public class Methods extends MemberHelper<Method> {
 	public Method findOneAndMakeItAccessible(Object target, String memberName, Object... arguments) {
 		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(target, memberName, arguments);
 		if (members.size() != 1) {
+			if (arguments != null && arguments.length > 0) {
+				for (Method method : members) {
+					if (method.getParameters().length == arguments.length) {
+						Parameter[] parameters = method.getParameters();
+						for (int i = 0; i < parameters.length; i++) {
+							if (parameters[i].getType().equals(arguments.getClass())) {
+								
+							}
+						}
+					}
+				}
+			}
 			throw Throwables.toRuntimeException("Method " + memberName
 				+ " not found or found more than one method in " + Classes.retrieveFrom(target).getName()
 				+ " hierarchy");

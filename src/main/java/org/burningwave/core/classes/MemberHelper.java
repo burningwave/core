@@ -26,23 +26,18 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core.reflection;
+package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 
-import java.lang.reflect.Executable;
 import java.lang.reflect.Member;
-import java.lang.reflect.Parameter;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.classes.MemberCriteria;
 
 abstract class MemberHelper<M extends Member> implements Component {	
 
@@ -92,21 +87,5 @@ abstract class MemberHelper<M extends Member> implements Component {
 			"/" + groupName +
 			argumentsKey;
 		return cacheKey;		
-	}
-	
-	List<Object> getArgumentList(Executable method, Object... arguments) {
-		Parameter[] parameters = method.getParameters();
-		List<Object> argumentList = new ArrayList<>();
-		if (arguments != null) {
-			for (Object arg : arguments) {
-				argumentList.add(arg);
-			}
-			if (parameters.length > 0 && parameters[parameters.length - 1].isVarArgs() && arguments.length < parameters.length) {
-				argumentList.add(null);
-			}
-		} else {
-			argumentList.add(null);
-		}
-		return argumentList;
 	}
 }

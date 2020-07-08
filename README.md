@@ -809,22 +809,22 @@ More than one dynamic container can be created, while only one static container 
 ## Static component container
 It is represented by the **org.burningwave.core.assembler.StaticComponentContainer** class that provides the following fields for each component supplied:
 ```java
-public static final org.burningwave.core.reflection.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
-public static final org.burningwave.core.reflection.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
+public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
+public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
 public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
 public static final org.burningwave.core.Cache Cache;
 public static final org.burningwave.core.classes.Classes Classes;
 public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
-public static final org.burningwave.core.reflection.Constructors Constructors;
+public static final org.burningwave.core.classes.Constructors Constructors;
 public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
-public static final org.burningwave.core.reflection.Fields Fields;
+public static final org.burningwave.core.classes.Fields Fields;
 public static final org.burningwave.core.iterable.Properties GlobalProperties;
 public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
 public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
 public static final org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;
 public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 public static final org.burningwave.core.classes.Members Members;
-public static final org.burningwave.core.reflection.Methods Methods;
+public static final org.burningwave.core.classes.Methods Methods;
 public static final org.burningwave.core.Strings.Paths Paths;
 public static final org.burningwave.core.io.Resources Resources;
 public static final org.burningwave.core.io.Streams Streams;
