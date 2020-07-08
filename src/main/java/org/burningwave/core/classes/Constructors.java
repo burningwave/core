@@ -84,25 +84,38 @@ public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
 			}
 		);
 		return ThrowingSupplier.get(() -> {
-				return (T)methodHandleBag.getValue().invokeWithArguments(getArgumentList(methodHandleBag.getKey(), arguments));
+				return (T)methodHandleBag.getValue().invokeWithArguments(
+					getArgumentList((Constructor<?>)methodHandleBag.getKey(), arguments)
+				);
 			}
 		);
 	}
 
 	public Constructor<?> findOneAndMakeItAccessible(Object target, Object... arguments) {
 		Collection<Constructor<?>> members = findAllAndMakeThemAccessible(target, arguments);
-		if (members.size() != 1) {
-			throw Throwables.toRuntimeException("Constructor not found or found more than one constructor in " + Classes.retrieveFrom(target).getName());
+		if (members.size() == 1) {
+			return members.stream().findFirst().get();
+		} else if (members.size() > 1) {
+			Constructor<?> member = searchForExactMatch(members, arguments);
+			if (member != null) {
+				return member;
+			}
 		}
-		return members.stream().findFirst().get();
+		throw Throwables.toRuntimeException("Constructor not found or found more than one constructor in " + Classes.retrieveFrom(target).getName());
 	}
 	
 	public Constructor<?> findFirstAndMakeItAccessible(Object target, Object... arguments) {
 		Collection<Constructor<?>> members = findAllAndMakeThemAccessible(target, arguments);
-		if (members.size() < 1) {
-			throw Throwables.toRuntimeException("Constructor not found in " + Classes.retrieveFrom(target).getName());
+		if (members.size() == 1) {
+			return members.stream().findFirst().get();
+		} else if (members.size() > 1) {
+			Constructor<?> member = searchForExactMatch(members, arguments);
+			if (member != null) {
+				return member;
+			}
+			return members.stream().findFirst().get();
 		}
-		return members.stream().findFirst().get();
+		throw Throwables.toRuntimeException("Constructor not found in " + Classes.retrieveFrom(target).getName());
 	}
 	
 	public Collection<Constructor<?>> findAllAndMakeThemAccessible(

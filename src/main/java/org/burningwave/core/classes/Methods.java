@@ -74,22 +74,33 @@ public class Methods extends ExecutableMemberHelper<Method> {
 	
 	public Method findOneAndMakeItAccessible(Object target, String memberName, Object... arguments) {
 		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(target, memberName, arguments);
-		if (members.size() != 1) {
-			throw Throwables.toRuntimeException("Method " + memberName
+		if (members.size() == 1) {
+			return members.stream().findFirst().get();
+		} else if (members.size() > 1) {
+			Method member = searchForExactMatch(members, arguments);
+			if (member != null) {
+				return member;
+			}
+		}
+		throw Throwables.toRuntimeException("Method " + memberName
 				+ " not found or found more than one method in " + Classes.retrieveFrom(target).getName()
 				+ " hierarchy");
-		}
-		return members.stream().findFirst().get();
 	}
 	
 	public Method findFirstAndMakeItAccessible(Object target, String memberName, Object... arguments) {
 		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(target, memberName, arguments);
-		if (members.size() < 1) {
-			throw Throwables.toRuntimeException("Method " + memberName
+		if (members.size() == 1) {
+			return members.stream().findFirst().get();
+		} else if (members.size() > 1) {
+			Method member = searchForExactMatch(members, arguments);
+			if (member != null) {
+				return member;
+			}
+			return members.stream().findFirst().get();
+		}
+		throw Throwables.toRuntimeException("Method " + memberName
 				+ " not found in " + Classes.retrieveFrom(target).getName()
 				+ " hierarchy");
-		}
-		return members.stream().findFirst().get();
 	}
 	
 	public Collection<Method> findAllByExactNameAndMakeThemAccessible(
@@ -177,7 +188,7 @@ public class Methods extends ExecutableMemberHelper<Method> {
 			}
 		);
 		return ThrowingSupplier.get(() -> {
-				Executable method = methodHandleBag.getKey();
+				Method method = (Method)methodHandleBag.getKey();
 				List<Object> argumentList = getArgumentList(method, arguments);
 				if (!Modifier.isStatic(method.getModifiers())) {
 					return (T)methodHandleBag.getValue().bindTo(target).invokeWithArguments(argumentList);

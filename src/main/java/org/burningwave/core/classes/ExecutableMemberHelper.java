@@ -28,15 +28,19 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 public class ExecutableMemberHelper<E extends Executable> extends MemberHelper<E> {
 	
-	List<Object> getArgumentList(Executable member, Object... arguments) {
+	List<Object> getArgumentList(E member, Object... arguments) {
 		Parameter[] parameters = member.getParameters();
 		List<Object> argumentList = new ArrayList<>();
 		if (arguments != null) {
@@ -60,7 +64,7 @@ public class ExecutableMemberHelper<E extends Executable> extends MemberHelper<E
 		return argumentList;
 	}
 	
-	Object[] getArgumentArray(Executable member, Object... arguments) {
+	Object[] getArgumentArray(E member, Object... arguments) {
 		List<Object> argumentList = getArgumentList(member, arguments);
 		return argumentList.toArray(new Object[argumentList.size()]);
 	}
@@ -94,4 +98,21 @@ public class ExecutableMemberHelper<E extends Executable> extends MemberHelper<E
 		return memberParameterTypes;
 	}
 	
+
+	E searchForExactMatch(Collection<E> members, Object... arguments) {
+		for (E executable : members) {
+			List<Class<?>> argumentsClassesAsList = Arrays.asList(Classes.retrieveFrom(arguments));
+			Class<?>[] parameterTypes = retrieveParameterTypes(executable, argumentsClassesAsList);
+			boolean exactMatch = true;
+			for (int i = 0; i < parameterTypes.length; i++) {
+				if (argumentsClassesAsList.get(i) != null && !argumentsClassesAsList.get(i).equals(parameterTypes[i])) {
+					exactMatch = false;
+				}
+			}
+			if (exactMatch) {
+				return executable;
+			}
+		}
+		return null;
+	}
 }
