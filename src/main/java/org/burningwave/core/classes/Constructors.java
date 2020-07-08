@@ -56,25 +56,26 @@ public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
 	}	
 	
 	public <T> T newInstanceOf(
-		Object object,
+		Class<?> targetClass,
 		Object... arguments
-	) {
+	) {	
+		Constructor<?> ctor = findFirstAndMakeItAccessible(targetClass, Classes.deepRetrieveFrom(arguments));
 		return ThrowingSupplier.get(() -> 
-			(T)findFirstAndMakeItAccessible(object, arguments).newInstance(arguments != null? arguments : new Object[]{null})
+			(T)ctor.newInstance(getArgumentList(ctor, arguments))
 		);
 	}
 	
 	public <T> T newInstanceDirectOf(
-		Object target,
+		Class<?> targetClass,
 		Object... arguments
 	) {
-		Class<?> targetClass = Classes.retrieveFrom(target);
-		String cacheKey = getCacheKey(targetClass, "equals " + Classes.retrieveSimpleName(targetClass.getName()), arguments);
+		Class<?>[] argsType = Classes.deepRetrieveFrom(arguments);
+		String cacheKey = getCacheKey(targetClass, "equals " + Classes.retrieveSimpleName(targetClass.getName()), argsType);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		Map.Entry<java.lang.reflect.Executable, MethodHandle> methodHandleBag = Cache.uniqueKeyForExecutableAndMethodHandle.getOrUploadIfAbsent(
 			targetClassClassLoader, cacheKey, 
 			() -> {
-				Constructor<?> constructor = findFirstAndMakeItAccessible(targetClass, arguments);
+				Constructor<?> constructor = findFirstAndMakeItAccessible(targetClass, argsType);
 				return new AbstractMap.SimpleEntry<>(
 					constructor,
 					convertToMethodHandle(
@@ -91,38 +92,37 @@ public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
 		);
 	}
 
-	public Constructor<?> findOneAndMakeItAccessible(Object target, Object... arguments) {
-		Collection<Constructor<?>> members = findAllAndMakeThemAccessible(target, arguments);
+	public Constructor<?> findOneAndMakeItAccessible(Class<?> targetClass, Class<?>... arguments) {
+		Collection<Constructor<?>> members = findAllAndMakeThemAccessible(targetClass, arguments);
 		if (members.size() == 1) {
 			return members.stream().findFirst().get();
 		} else if (members.size() > 1) {
-			Constructor<?> member = searchForExactMatch(members, arguments);
-			if (member != null) {
-				return member;
+			Collection<Constructor<?>> membersThatMatch = searchForExactMatch(members, arguments);
+			if (membersThatMatch.size() == 1) {
+				return membersThatMatch.stream().findFirst().get();
 			}
 		}
-		throw Throwables.toRuntimeException("Constructor not found or found more than one constructor in " + Classes.retrieveFrom(target).getName());
+		throw Throwables.toRuntimeException("Constructor not found or found more than one constructor in " + targetClass.getName());
 	}
 	
-	public Constructor<?> findFirstAndMakeItAccessible(Object target, Object... arguments) {
-		Collection<Constructor<?>> members = findAllAndMakeThemAccessible(target, arguments);
+	public Constructor<?> findFirstAndMakeItAccessible(Class<?> targetClass, Class<?>... arguments) {
+		Collection<Constructor<?>> members = findAllAndMakeThemAccessible(targetClass, arguments);
 		if (members.size() == 1) {
 			return members.stream().findFirst().get();
 		} else if (members.size() > 1) {
-			Constructor<?> member = searchForExactMatch(members, arguments);
-			if (member != null) {
-				return member;
+			Collection<Constructor<?>> membersThatMatch = searchForExactMatch(members, arguments);
+			if (!membersThatMatch.isEmpty()) {
+				return membersThatMatch.stream().findFirst().get();
 			}
 			return members.stream().findFirst().get();
 		}
-		throw Throwables.toRuntimeException("Constructor not found in " + Classes.retrieveFrom(target).getName());
+		throw Throwables.toRuntimeException("Constructor not found in " + targetClass.getName());
 	}
 	
 	public Collection<Constructor<?>> findAllAndMakeThemAccessible(
-		Object target,
-		Object... arguments
+		Class<?> targetClass,
+		Class<?>... arguments
 	) {	
-		Class<?> targetClass = Classes.retrieveFrom(target);
 		String cacheKey = getCacheKey(targetClass, "all constructors with input parameters", arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		ConstructorCriteria criteria = ConstructorCriteria.create()
@@ -132,7 +132,7 @@ public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
 		}
 		return Cache.uniqueKeyForConstructors.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> 
 			Collections.unmodifiableCollection(
-				findAllAndMakeThemAccessible(target).stream().filter(
+				findAllAndMakeThemAccessible(targetClass).stream().filter(
 					criteria.getPredicateOrTruePredicateIfPredicateIsNull()
 				).collect(
 					Collectors.toCollection(LinkedHashSet::new)
@@ -142,9 +142,8 @@ public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
 	}
 	
 	public Collection<Constructor<?>> findAllAndMakeThemAccessible(
-		Object target
+		Class<?> targetClass
 	) {
-		Class<?> targetClass = Classes.retrieveFrom(target);
 		String cacheKey = getCacheKey(targetClass, "all constructors");
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		Collection<Constructor<?>> members = Cache.uniqueKeyForConstructors.getOrUploadIfAbsent(
@@ -153,7 +152,7 @@ public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
 					findAllAndApply(
 						ConstructorCriteria.byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
 		                    return lastClassInHierarchy.equals(currentScannedClass);
-		                }), target, (member) -> 
+		                }), targetClass, (member) -> 
 							member.setAccessible(true)
 					)
 				);

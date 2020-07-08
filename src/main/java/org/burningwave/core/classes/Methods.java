@@ -72,60 +72,59 @@ public class Methods extends ExecutableMemberHelper<Method> {
 		return methodName;
 	}
 	
-	public Method findOneAndMakeItAccessible(Object target, String memberName, Object... arguments) {
-		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(target, memberName, arguments);
+	public Method findOneAndMakeItAccessible(Class<?> targetClass, String memberName, Class<?>... argumentTypes) {
+		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(targetClass, memberName, argumentTypes);
 		if (members.size() == 1) {
 			return members.stream().findFirst().get();
 		} else if (members.size() > 1) {
-			Method member = searchForExactMatch(members, arguments);
-			if (member != null) {
-				return member;
+			Collection<Method> membersThatMatch = searchForExactMatch(members, argumentTypes);
+			if (membersThatMatch.size() == 1) {
+				return membersThatMatch.stream().findFirst().get();
 			}
 		}
 		throw Throwables.toRuntimeException("Method " + memberName
-				+ " not found or found more than one method in " + Classes.retrieveFrom(target).getName()
+				+ " not found or found more than one method in " + targetClass.getName()
 				+ " hierarchy");
 	}
 	
-	public Method findFirstAndMakeItAccessible(Object target, String memberName, Object... arguments) {
-		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(target, memberName, arguments);
+	public Method findFirstAndMakeItAccessible(Class<?> targetClass, String memberName, Class<?>... arguments) {
+		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(targetClass, memberName, arguments);
 		if (members.size() == 1) {
 			return members.stream().findFirst().get();
 		} else if (members.size() > 1) {
-			Method member = searchForExactMatch(members, arguments);
-			if (member != null) {
-				return member;
+			Collection<Method> membersThatMatch = searchForExactMatch(members, arguments);
+			if (!membersThatMatch.isEmpty()) {
+				return membersThatMatch.stream().findFirst().get();
 			}
 			return members.stream().findFirst().get();
 		}
 		throw Throwables.toRuntimeException("Method " + memberName
-				+ " not found in " + Classes.retrieveFrom(target).getName()
+				+ " not found in " + targetClass.getName()
 				+ " hierarchy");
 	}
 	
 	public Collection<Method> findAllByExactNameAndMakeThemAccessible(
-		Object target,
+		Class<?> target,
 		String methodName,
-		Object... arguments
+		Class<?>... argumentTypes
 	) {	
-		return findAllByNamePredicateAndMakeThemAccessible(target, "equals " + methodName, methodName::equals, arguments);
+		return findAllByNamePredicateAndMakeThemAccessible(target, "equals " + methodName, methodName::equals, argumentTypes);
 	}
 	
 	public Collection<Method> findAllByMatchedNameAndMakeThemAccessible(
-		Object target,
+		Class<?> targetClass,
 		String methodName,
-		Object... arguments
+		Class<?>... argumentTypes
 	) {	
-		return findAllByNamePredicateAndMakeThemAccessible(target, "match " + methodName, methodName::matches, arguments);
+		return findAllByNamePredicateAndMakeThemAccessible(targetClass, "match " + methodName, methodName::matches, argumentTypes);
 	}
 	
 	private Collection<Method> findAllByNamePredicateAndMakeThemAccessible(
-		Object target,
+		Class<?> targetClass,
 		String cacheKeyPrefix,
 		Predicate<String> namePredicate,
-		Object... arguments
+		Class<?>... arguments
 	) {	
-		Class<?> targetClass = Classes.retrieveFrom(target);
 		String cacheKey = getCacheKey(targetClass, cacheKeyPrefix, arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		MethodCriteria criteria = MethodCriteria.create()
@@ -136,7 +135,7 @@ public class Methods extends ExecutableMemberHelper<Method> {
 		}
 		return Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> 
 			Collections.unmodifiableCollection(
-				findAllAndMakeThemAccessible(target).stream().filter(
+				findAllAndMakeThemAccessible(targetClass).stream().filter(
 					criteria.getPredicateOrTruePredicateIfPredicateIsNull()
 				).collect(
 					Collectors.toCollection(LinkedHashSet::new)
@@ -146,16 +145,15 @@ public class Methods extends ExecutableMemberHelper<Method> {
 	}
 
 	public Collection<Method> findAllAndMakeThemAccessible(
-		Object target
+		Class<?> targetClass
 	) {
-		Class<?> targetClass = Classes.retrieveFrom(target);
 		String cacheKey = getCacheKey(targetClass, "all methods");
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		Collection<Method> members = Cache.uniqueKeyForMethods.getOrUploadIfAbsent(
 			targetClassClassLoader, cacheKey, () -> {
 				return Collections.unmodifiableCollection(
 					findAllAndApply(
-						MethodCriteria.create(), target, (member) -> member.setAccessible(true)
+						MethodCriteria.create(), targetClass, (member) -> member.setAccessible(true)
 					)
 				);
 			}
@@ -165,7 +163,7 @@ public class Methods extends ExecutableMemberHelper<Method> {
 
 	public <T> T invoke(Object target, String methodName, Object... arguments) {
 		return ThrowingSupplier.get(() -> {
-			Method method = findFirstAndMakeItAccessible(target, methodName, arguments);
+			Method method = findFirstAndMakeItAccessible(Classes.retrieveFrom(target), methodName, Classes.deepRetrieveFrom(arguments));
 			logInfo("Invoking " + method);
 			return (T)method.invoke(Modifier.isStatic(method.getModifiers()) ? null : target, getArgumentArray(method, arguments));
 		});
@@ -173,12 +171,13 @@ public class Methods extends ExecutableMemberHelper<Method> {
 	
 	public <T> T invokeDirect(Object target, String methodName, Object... arguments) {
 		Class<?> targetClass = Classes.retrieveFrom(target);
-		String cacheKey = getCacheKey(targetClass, "equals " + methodName, arguments);
+		Class<?>[] argsType = Classes.deepRetrieveFrom(arguments);
+		String cacheKey = getCacheKey(targetClass, "equals " + methodName, argsType);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		Entry<Executable, MethodHandle> methodHandleBag = Cache.uniqueKeyForExecutableAndMethodHandle.getOrUploadIfAbsent(
 			targetClassClassLoader, cacheKey, 
 			() -> {
-				Method method = findFirstAndMakeItAccessible(targetClass, methodName, arguments);
+				Method method = findFirstAndMakeItAccessible(targetClass, methodName, argsType);
 				return new AbstractMap.SimpleEntry<>(
 					method, 
 					convertToMethodHandle(

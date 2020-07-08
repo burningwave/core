@@ -57,7 +57,7 @@ public class Fields extends MemberHelper<Field> {
 	}
 	
 	public <T> T get(Object target, String fieldName) {
-		return get(target, findFirstAndMakeItAccessible(target, fieldName));
+		return get(target, findFirstAndMakeItAccessible(Classes.deepRetrieveFrom(target), fieldName));
 	}	
 	
 	public <T> T getDirect(Object target, Field field) {
@@ -65,11 +65,11 @@ public class Fields extends MemberHelper<Field> {
 	}
 	
 	public <T> T getDirect(Object target, String fieldName) {
-		return getDirect(target, findFirstAndMakeItAccessible(target, fieldName));
+		return getDirect(target, findFirstAndMakeItAccessible(Classes.deepRetrieveFrom(target), fieldName));
 	}
 	
 	public void set(Object target, String fieldName, Object value) {
-		set(target, findFirstAndMakeItAccessible(target, fieldName), value);
+		set(target, findFirstAndMakeItAccessible(Classes.deepRetrieveFrom(target), fieldName), value);
 	}
 	
 	public void set(Object target, Field field, Object value) {
@@ -77,7 +77,7 @@ public class Fields extends MemberHelper<Field> {
 	}
 	
 	public void setDirect(Object target, String fieldName, Object value) {
-		setDirect(target, findFirstAndMakeItAccessible(target, fieldName), value);
+		setDirect(target, findFirstAndMakeItAccessible(Classes.deepRetrieveFrom(target), fieldName), value);
 	}
 	
 	public void setDirect(Object target, Field field, Object value) {
@@ -86,7 +86,7 @@ public class Fields extends MemberHelper<Field> {
 	
 	public <T> Map<String, T> getAll(Object target) {
 		Map<String, T> fieldValues = new HashMap<>();
-		Collection<Field> fields = findAllAndMakeThemAccessible(target);
+		Collection<Field> fields = findAllAndMakeThemAccessible(Classes.deepRetrieveFrom(target));
 		for (Field field : fields) {
 			fieldValues.put(
 				field.getDeclaringClass() + "." + field.getName(),
@@ -103,7 +103,7 @@ public class Fields extends MemberHelper<Field> {
 	
 	public <T> Map<String, T> getAllDirect(Object target) {
 		Map<String, T> fieldValues = new HashMap<>();
-		Collection<Field> fields = findAllAndMakeThemAccessible(target);
+		Collection<Field> fields = findAllAndMakeThemAccessible(Classes.deepRetrieveFrom(target));
 		for (Field field : fields) {
 			fieldValues.put(
 				field.getDeclaringClass() + "." + field.getName(),
@@ -113,48 +113,46 @@ public class Fields extends MemberHelper<Field> {
 		return fieldValues;
 	}
 	
-	public Field findOneAndMakeItAccessible(Object target, String memberName, Object... arguments) {
-		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(target, memberName);
+	public Field findOneAndMakeItAccessible(Class<?> targetClass, String memberName) {
+		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, memberName);
 		if (members.size() != 1) {
 			throw Throwables.toRuntimeException("Field " + memberName
-				+ " not found or found more than one field in " + Classes.retrieveFrom(target).getName()
+				+ " not found or found more than one field in " + targetClass.getName()
 				+ " hierarchy");
 		}
 		return members.stream().findFirst().get();
 	}
 	
-	public Field findFirstAndMakeItAccessible(Object target, String fieldName, Object... arguments) {
-		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(target, fieldName);
+	public Field findFirstAndMakeItAccessible(Class<?> targetClass, String fieldName) {
+		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, fieldName);
 		if (members.size() < 1) {
 			throw Throwables.toRuntimeException("Field " + fieldName
-				+ " not found in " + Classes.retrieveFrom(target).getName()
+				+ " not found in " + targetClass.getName()
 				+ " hierarchy");
 		}
 		return members.stream().findFirst().get();
 	}
 
 	public Collection<Field> findAllByExactNameAndMakeThemAccessible(
-		Object target,
+		Class<?> targetClass,
 		String fieldName
 	) {	
-		Class<?> targetClass = Classes.retrieveFrom(target);
-		String cacheKey = getCacheKey(targetClass, "equals " + fieldName, (Object[])null);
+		String cacheKey = getCacheKey(targetClass, "equals " + fieldName, (Class<?>[])null);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		return Cache.uniqueKeyForFields.getOrUploadIfAbsent(
 			targetClassClassLoader,
 			cacheKey, 
 			() -> 
 				Collections.unmodifiableCollection(
-					findAllAndMakeThemAccessible(target).stream().filter(field -> field.getName().equals(fieldName)).collect(Collectors.toCollection(LinkedHashSet::new))
+					findAllAndMakeThemAccessible(targetClass).stream().filter(field -> field.getName().equals(fieldName)).collect(Collectors.toCollection(LinkedHashSet::new))
 				)
 		);
 	}
 	
 	public Collection<Field> findAllAndMakeThemAccessible(
-		Object target
+		Class<?> targetClass
 	) {	
-		Class<?> targetClass = Classes.retrieveFrom(target);
-		String cacheKey = getCacheKey(targetClass, "all fields", (Object[])null);
+		String cacheKey = getCacheKey(targetClass, "all fields", (Class<?>[])null);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		return Cache.uniqueKeyForFields.getOrUploadIfAbsent(
 			targetClassClassLoader, 
@@ -163,7 +161,7 @@ public class Fields extends MemberHelper<Field> {
 				Collections.unmodifiableCollection(
 					findAllAndApply(
 						FieldCriteria.create(),
-						target,
+						targetClass,
 						(field) -> 
 							field.setAccessible(true)
 					)

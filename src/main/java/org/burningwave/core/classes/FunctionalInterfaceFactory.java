@@ -62,8 +62,8 @@ public class FunctionalInterfaceFactory implements Component {
 		return new FunctionalInterfaceFactory(classFactory);
 	}
 	
-	public <T> T getOrCreate(Object target, String methodName, Object... arguments) {
-		return getOrCreate(Methods.findOneAndMakeItAccessible(target, methodName, arguments));
+	public <T> T getOrCreate(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
+		return getOrCreate(Methods.findOneAndMakeItAccessible(targetClass, methodName, argumentTypes));
 	}
 	
 	public <F> F getOrCreate(Method targetMethod) {

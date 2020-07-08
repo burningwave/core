@@ -23,7 +23,16 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	public void getOrBuildFunctionClassTestOne() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
-			MultiParamsFunction<String> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(new Service(), "apply", "Hello", "World!", "How are you?");
+			MultiParamsFunction<String> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(Service.class, "apply", String.class, String.class, String.class);
+			virtualObj.apply(new Service(), "Hello", "World!", new String[] {"How are you?"});
+		});
+	}
+	
+	@Test
+	public void getOrBuildFunctionClassTestSix() throws Throwable {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testDoesNotThrow(() -> {
+			MultiParamsFunction<String> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(Service.class, "apply", Object.class, String.class, String.class);
 			virtualObj.apply(new Service(), "Hello", "World!", "How are you?");
 		});
 	}
@@ -32,7 +41,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	public void getOrBuildFunctionClassTestFour() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
-			MultiParamsFunction<String> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(new Service(), "apply", String.class, String.class, String[].class);
+			MultiParamsFunction<String> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(Service.class, "apply", String.class, String.class, String[].class);
 			virtualObj.apply(new Service(), "Hello", "World!", new String[] {"How are you?"});
 		});
 	}
@@ -41,7 +50,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	public void getOrBuildFunctionClassTestFive() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
-			BiConsumer<Service, String[]> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(new Service(), "methodWithVarArgs", String[].class);
+			BiConsumer<Service, String[]> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(Service.class, "methodWithVarArgs", String[].class);
 			virtualObj.accept(new Service(), new String[] {"Hello", "World!"});
 		});
 	}

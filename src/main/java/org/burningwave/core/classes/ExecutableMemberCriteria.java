@@ -58,11 +58,11 @@ public abstract class ExecutableMemberCriteria<
 	}
 	
 	
-	public C parameterTypesAreAssignableFrom(Object... arguments) {
+	public C parameterTypesAreAssignableFrom(Class<?>... arguments) {
 		if (arguments == null) {
-			arguments = new Object[]{null};
+			arguments = new Class<?>[]{null};
 		}
-		Class<?>[] argumentsClasses = Classes.retrieveFrom(arguments);
+		Class<?>[] argumentsClasses = arguments;
 		if (argumentsClasses != null && argumentsClasses.length > 0) {
 			List<Class<?>> argumentsClassesAsList = Arrays.asList(argumentsClasses);
 			for (int i = 0; i < argumentsClasses.length; i++) {
@@ -102,6 +102,11 @@ public abstract class ExecutableMemberCriteria<
 			);
 		}
 		return (C)this;
+	}
+	
+	
+	public C parameterTypesAreAssignableFromTypeOf(Object... arguments) {
+		return parameterTypesAreAssignableFrom(Classes.deepRetrieveFrom(arguments));
 	}
 	
 	public C parameterType(final BiPredicate<Class<?>[], Integer> predicate) {

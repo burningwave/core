@@ -36,6 +36,7 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 public class ExecutableMemberHelper<E extends Executable> extends MemberHelper<E> {
@@ -99,20 +100,23 @@ public class ExecutableMemberHelper<E extends Executable> extends MemberHelper<E
 	}
 	
 
-	E searchForExactMatch(Collection<E> members, Object... arguments) {
+	Collection<E> searchForExactMatch(Collection<E> members, Class<?>... arguments) {
+		Collection<E> membersThatMatch = new LinkedHashSet<>();
 		for (E executable : members) {
-			List<Class<?>> argumentsClassesAsList = Arrays.asList(Classes.retrieveFrom(arguments));
+			List<Class<?>> argumentsClassesAsList = Arrays.asList(arguments);
 			Class<?>[] parameterTypes = retrieveParameterTypes(executable, argumentsClassesAsList);
 			boolean exactMatch = true;
 			for (int i = 0; i < parameterTypes.length; i++) {
-				if (argumentsClassesAsList.get(i) != null && !argumentsClassesAsList.get(i).equals(parameterTypes[i])) {
+				if (argumentsClassesAsList.get(i) != null && 
+					!Classes.getClassOrWrapper(argumentsClassesAsList.get(i)).equals(Classes.getClassOrWrapper(parameterTypes[i]))
+				) {
 					exactMatch = false;
 				}
 			}
 			if (exactMatch) {
-				return executable;
+				membersThatMatch.add(executable);
 			}
 		}
-		return null;
+		return membersThatMatch;
 	}
 }

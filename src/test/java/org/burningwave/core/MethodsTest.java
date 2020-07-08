@@ -24,8 +24,8 @@ public class MethodsTest extends BaseTest {
 	public void findAllAndMakeThemAccessibleTestOne() {
 		testNotEmpty(
 			() -> {
-				Methods.findAllAndMakeThemAccessible(System.out);	
-				return Methods.findAllAndMakeThemAccessible(System.out);	
+				Methods.findAllAndMakeThemAccessible(System.out.getClass());	
+				return Methods.findAllAndMakeThemAccessible(System.out.getClass());	
 			},
 		true);
 	}
