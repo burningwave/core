@@ -29,6 +29,24 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	}
 	
 	@Test
+	public void getOrBuildFunctionClassTestFour() throws Throwable {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testDoesNotThrow(() -> {
+			MultiParamsFunction<String> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(new Service(), "apply", String.class, String.class, String[].class);
+			virtualObj.apply(new Service(), "Hello", "World!", new String[] {"How are you?"});
+		});
+	}
+	
+	@Test
+	public void getOrBuildFunctionClassTestFive() throws Throwable {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testDoesNotThrow(() -> {
+			BiConsumer<Service, String[]> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(new Service(), "methodWithVarArgs", String[].class);
+			virtualObj.accept(new Service(), new String[] {"Hello", "World!"});
+		});
+	}
+	
+	@Test
 	public void getOrBuildPredicateClassTestOne() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
