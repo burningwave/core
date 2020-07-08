@@ -57,7 +57,7 @@ public class Fields extends MemberHelper<Field> {
 	}
 	
 	public <T> T get(Object target, String fieldName) {
-		return get(target, findFirstAndMakeItAccessible(Classes.deepRetrieveFrom(target), fieldName));
+		return get(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName));
 	}	
 	
 	public <T> T getDirect(Object target, Field field) {
@@ -65,11 +65,11 @@ public class Fields extends MemberHelper<Field> {
 	}
 	
 	public <T> T getDirect(Object target, String fieldName) {
-		return getDirect(target, findFirstAndMakeItAccessible(Classes.deepRetrieveFrom(target), fieldName));
+		return getDirect(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName));
 	}
 	
 	public void set(Object target, String fieldName, Object value) {
-		set(target, findFirstAndMakeItAccessible(Classes.deepRetrieveFrom(target), fieldName), value);
+		set(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName), value);
 	}
 	
 	public void set(Object target, Field field, Object value) {
@@ -77,7 +77,7 @@ public class Fields extends MemberHelper<Field> {
 	}
 	
 	public void setDirect(Object target, String fieldName, Object value) {
-		setDirect(target, findFirstAndMakeItAccessible(Classes.deepRetrieveFrom(target), fieldName), value);
+		setDirect(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName), value);
 	}
 	
 	public void setDirect(Object target, Field field, Object value) {
