@@ -97,8 +97,8 @@ public abstract class ExecutableMemberCriteria<
 			}				
 		} else {
 			parameterTypes(
-				context ->
-				context.length == 0
+				parameters ->
+				parameters.length == 0
 			);
 		}
 		return (C)this;

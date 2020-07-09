@@ -84,15 +84,15 @@ public class Fields extends MemberHelper<Field> {
 		LowLevelObjectsHandler.setFieldValue(target, field, value);
 	}
 	
-	public <T> Map<String, T> getAll(Object target) {
-		Map<String, T> fieldValues = new HashMap<>();
+	public Map<Field, ?> getAll(Object target) {
+		Map<Field, Object> fieldValues = new HashMap<>();
 		Collection<Field> fields = findAllAndMakeThemAccessible(Classes.deepRetrieveFrom(target));
 		for (Field field : fields) {
 			fieldValues.put(
-				field.getDeclaringClass() + "." + field.getName(),
+				field,
 				ThrowingSupplier.get(
 					() ->
-						(T)field.get(
+						field.get(
 							Modifier.isStatic(field.getModifiers()) ? null : target
 						)
 				)
@@ -101,13 +101,13 @@ public class Fields extends MemberHelper<Field> {
 		return fieldValues;
 	}
 	
-	public <T> Map<String, T> getAllDirect(Object target) {
-		Map<String, T> fieldValues = new HashMap<>();
+	public Map<Field, ?> getAllDirect(Object target) {
+		Map<Field, ?> fieldValues = new HashMap<>();
 		Collection<Field> fields = findAllAndMakeThemAccessible(Classes.deepRetrieveFrom(target));
 		for (Field field : fields) {
 			fieldValues.put(
-				field.getDeclaringClass() + "." + field.getName(),
-				ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, field))
+				field,
+				ThrowingSupplier.get(() -> LowLevelObjectsHandler.getFieldValue(target, field))
 			);
 		}
 		return fieldValues;

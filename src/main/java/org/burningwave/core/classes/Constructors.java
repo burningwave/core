@@ -60,9 +60,10 @@ public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
 		Object... arguments
 	) {	
 		Constructor<?> ctor = findFirstAndMakeItAccessible(targetClass, Classes.deepRetrieveFrom(arguments));
-		return ThrowingSupplier.get(() -> 
-			(T)ctor.newInstance(getArgumentList(ctor, arguments))
-		);
+		return ThrowingSupplier.get(() -> {
+			//logInfo("Invoking " + ctor);
+			return (T)ctor.newInstance(getArgumentList(ctor, arguments));
+		});
 	}
 	
 	public <T> T newInstanceDirectOf(
@@ -85,8 +86,10 @@ public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
 			}
 		);
 		return ThrowingSupplier.get(() -> {
+				Constructor<?> ctor = (Constructor<?>) methodHandleBag.getKey();
+				//logInfo("Direct invoking of " + ctor);
 				return (T)methodHandleBag.getValue().invokeWithArguments(
-					getArgumentList((Constructor<?>)methodHandleBag.getKey(), arguments)
+					getArgumentList(ctor, arguments)
 				);
 			}
 		);
@@ -125,20 +128,19 @@ public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
 	) {	
 		String cacheKey = getCacheKey(targetClass, "all constructors with input parameters", arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
-		ConstructorCriteria criteria = ConstructorCriteria.create()
-			.and().parameterTypesAreAssignableFrom(arguments);
-		if (arguments != null && arguments.length == 0) {
-			criteria.or().parameter((parameters, idx) -> parameters.length == 1 && parameters[0].isVarArgs());
-		}
-		return Cache.uniqueKeyForConstructors.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> 
-			Collections.unmodifiableCollection(
+		return Cache.uniqueKeyForConstructors.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> {
+			ConstructorCriteria criteria = ConstructorCriteria.create().parameterTypesAreAssignableFrom(arguments);
+			if (arguments != null && arguments.length == 0) {
+				criteria.or().parameter((parameters, idx) -> parameters.length == 1 && parameters[0].isVarArgs());
+			}
+			return Collections.unmodifiableCollection(
 				findAllAndMakeThemAccessible(targetClass).stream().filter(
 					criteria.getPredicateOrTruePredicateIfPredicateIsNull()
 				).collect(
 					Collectors.toCollection(LinkedHashSet::new)
 				)
-			)
-		);
+			);
+		});
 	}
 	
 	public Collection<Constructor<?>> findAllAndMakeThemAccessible(

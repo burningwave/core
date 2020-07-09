@@ -29,15 +29,19 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
+
+import java.lang.reflect.Field;
+import java.util.Map;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 
 public interface Virtual extends Component {
 	
-	default <T> T get(String fieldName) {
+	default <T> T getValueOf(String fieldName) {
 		return Fields.get(this, fieldName);
 	}
 	
-	default <T> T getDirect(String fieldName) {
+	default <T> T getDirectValueOf(String fieldName) {
 		return Fields.getDirect(this, fieldName);
 	}
 	
@@ -48,5 +52,12 @@ public interface Virtual extends Component {
 	default <T> T invokeDirect(String methodName, Object... parameters) {
 		return Methods.invokeDirect(this, methodName, parameters);
 	}
-
+	
+	default Map<Field, ?> getAllValues() {
+		return Fields.getAll(this);
+	}
+	
+	default Map<Field, ?> getAllDirectValues() {
+		return Fields.getAllDirect(this);
+	}	
 }
