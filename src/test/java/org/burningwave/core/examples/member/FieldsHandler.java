@@ -2,6 +2,7 @@ package org.burningwave.core.examples.member;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 
+import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Map;
 
@@ -17,7 +18,7 @@ public class FieldsHandler {
         loadedClasses = Fields.get(classLoader, "classes");
         
         //Get all fields of an object through memory address access
-        Map<String, Object> values = Fields.getAllDirect(classLoader);
+        Map<Field, ?> values = Fields.getAllDirect(classLoader);
         //Get all fields of an object through reflection access
         values = Fields.getAll(classLoader);
     }
