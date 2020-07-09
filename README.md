@@ -19,18 +19,18 @@
 Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria based classes search: it’s possible to search classes by every criteria that your immagination can made by using lambda expressions; **scan engine is highly optimized using direct allocated ByteBuffers to avoid heap saturation; searches are executed in multithreading context and are not affected by “_the issue of the same class loaded by different classloaders_”** (normally if you try to execute "isAssignableFrom" method on a same class loaded from different classloader it returns false).
 
 And now we will see:
-* [**including Burningwave Core in your project**](https://github.com/burningwave/core/tree/experimental#Including-Burningwave-Core-in-your-project)
-* [**generating classes at runtime and invoking their methods with and without the use of reflection**](https://github.com/burningwave/core/tree/experimental#Generating-classes-at-runtime-and-invoking-their-methods-with-and-without-the-use-of-reflection)
-* [**executing stringified source code**](https://github.com/burningwave/core/tree/experimental#Executing-stringified-source-code)
-* [**retrieving classes of runtime class paths or of other paths through the ClassHunter**](https://github.com/burningwave/core/tree/experimental#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
-* [**finding where a class is loaded from**](https://github.com/burningwave/core/tree/experimental#Finding-where-a-class-is-loaded-from)
-* [**reaching a resource of the file system**](https://github.com/burningwave/core/tree/experimental#Reaching-a-resource-of-the-file-system)
-* [**resolving, collecting or retrieving paths**](https://github.com/burningwave/core/tree/experimental#Resolving-collecting-or-retrieving-paths)
-* [**retrieving placeholdered items from map and properties file**](https://github.com/burningwave/core/tree/experimental#Retrieving-placeholdered-items-from-map-and-properties-file)
-* [**handling privates and all other members of an object**](https://github.com/burningwave/core/tree/experimental#Handling-privates-and-all-other-members-of-an-object)
-* [**getting and setting properties of a Java bean through path**](https://github.com/burningwave/core/tree/experimental#Getting-and-setting-properties-of-a-Java-bean-through-path)
-* [**architectural overview and configuration**](https://github.com/burningwave/core/tree/experimental#Architectural-overview-and-configuration)
-* [**other examples of using some components**](https://github.com/burningwave/core/tree/experimental#Other-examples-of-using-some-components)
+* [**including Burningwave Core in your project**](#Including-Burningwave-Core-in-your-project)
+* [**generating classes at runtime and invoking their methods with and without the use of reflection**](#Generating-classes-at-runtime-and-invoking-their-methods-with-and-without-the-use-of-reflection)
+* [**executing stringified source code**](#Executing-stringified-source-code)
+* [**retrieving classes of runtime class paths or of other paths through the ClassHunter**](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
+* [**finding where a class is loaded from**](#Finding-where-a-class-is-loaded-from)
+* [**reaching a resource of the file system**](#Reaching-a-resource-of-the-file-system)
+* [**resolving, collecting or retrieving paths**](#Resolving-collecting-or-retrieving-paths)
+* [**retrieving placeholdered items from map and properties file**](#Retrieving-placeholdered-items-from-map-and-properties-file)
+* [**handling privates and all other members of an object**](#Handling-privates-and-all-other-members-of-an-object)
+* [**getting and setting properties of a Java bean through path**](#Getting-and-setting-properties-of-a-Java-bean-through-path)
+* [**architectural overview and configuration**](#Architectural-overview-and-configuration)
+* [**other examples of using some components**](#Other-examples-of-using-some-components)
 
 <br/>
 
@@ -157,9 +157,9 @@ public class RuntimeClassExtender {
 
 # Executing stringified source code
 It is possible to execute stringified source code by using the **CodeExecutor** in three three different ways:
-* [through **BodySourceGenerator**](https://github.com/burningwave/core/tree/experimental#Executing-code-with-BodySourceGenerator)
-* [through a property located in Burningwave configuration file](https://github.com/burningwave/core/tree/experimental#Executing-code-of-a-property-located-in-Burningwave-configuration-file)
-* [through a property located in a custom Properties file](https://github.com/burningwave/core/tree/experimental#Executing-code-of-a-property-located-in-a-custom-properties-file)
+* [through **BodySourceGenerator**](#Executing-code-with-BodySourceGenerator)
+* [through a property located in Burningwave configuration file](#Executing-code-of-a-property-located-in-Burningwave-configuration-file)
+* [through a property located in a custom Properties file](#Executing-code-of-a-property-located-in-a-custom-properties-file)
 
 <br/>
 
@@ -204,7 +204,7 @@ public class SourceCodeExecutor {
 <br/>
 
 ## Executing code of a property located in Burningwave configuration file
-To execute code from Burningwave configuration file (**burningwave.properties** or other file that we have used to create the ComponentContainer: [**see architectural overview and configuration**](https://github.com/burningwave/core/tree/experimental#Architectural-overview-and-configuration)) we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
+To execute code from Burningwave configuration file (**burningwave.properties** or other file that we have used to create the ComponentContainer: [**see architectural overview and configuration**](#Architectural-overview-and-configuration)) we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
 ```properties
 code-block-1=\
     Date now= new Date();\
@@ -495,7 +495,7 @@ public class ResourceReacher {
 # Resolving, collecting or retrieving paths
 
 Through **PathHelper** we can resolve or collect paths or retrieving resources even through supported archive files (zip, jar, jmod, ear and war).
-So we can create a path collection by adding an entry in **[burningwave.properties](https://github.com/burningwave/core/tree/experimental#configuration-1)** file that **starts with 'paths.' prefix (this is a fundamental requirement to allow PathHelper to load the paths)**, e.g.:
+So we can create a path collection by adding an entry in **[burningwave.properties](#configuration-1)** file that **starts with 'paths.' prefix (this is a fundamental requirement to allow PathHelper to load the paths)**, e.g.:
 ```properties
 paths.my-collection=c:/some folder;C:/some folder 2/ some folder 3;
 paths.my-collection-2=c:/some folder 4;C:/some folder 6;
@@ -519,7 +519,7 @@ It is also possibile to obtain references to resources of the runtime class path
 ```properties
 paths.my-jar=${paths.main-class-paths}/../some.jar;
 ```
-We can also use a [**FileSystemItem**](https://github.com/burningwave/core/tree/experimental#Reaching-a-resource-of-the-file-system) listing (**FSIL**) expression and, for example, create a path collection of all absolute path of all classes of the runtime class paths:
+We can also use a [**FileSystemItem**](#Reaching-a-resource-of-the-file-system) listing (**FSIL**) expression and, for example, create a path collection of all absolute path of all classes of the runtime class paths:
 ```properties
 paths.all-runtime-classes=//${paths.main-class-paths}//allChildren:.*?\.classes;
 ```
@@ -529,9 +529,9 @@ A **FSIL** expression encloses in a couple of double slash an absolute path or a
 
 # Retrieving placeholdered items from map and properties file
 
-With **IterableObjectHelper** component it is possible to retrieve items from map by using placeholder or not. In the following example we are going to show how to retrieve strings or objects from **[burningwave.properties](https://github.com/burningwave/core/tree/experimental#configuration-1)** file and from maps.
+With **IterableObjectHelper** component it is possible to retrieve items from map by using placeholder or not. In the following example we are going to show how to retrieve strings or objects from **[burningwave.properties](#configuration-1)** file and from maps.
 
-**[burningwave.properties](https://github.com/burningwave/core/tree/experimental#configuration-1)** file:
+**[burningwave.properties](#configuration-1)** file:
 ```properties
 ...
 code-block-1=\
