@@ -395,6 +395,7 @@ public class ComponentContainer implements ComponentSupplier {
 			componentContainer.clear();
 		}
 		Cache.clear();
+		System.gc();
 	}
 	
 	public static void clearAllCaches(boolean closeHuntersResults, boolean closeClassRetrievers) {
@@ -402,6 +403,7 @@ public class ComponentContainer implements ComponentSupplier {
 			componentContainer.clearCache(closeHuntersResults, closeClassRetrievers);
 		}
 		Cache.clear();
+		System.gc();
 	}
 	
 	@Override
@@ -410,7 +412,8 @@ public class ComponentContainer implements ComponentSupplier {
 		ClassFactory classFactory = (ClassFactory)components.get(ClassFactory.class);
 		if (classFactory != null) {
 			classFactory.reset(closeClassRetrievers);
-		}		
+		}
+		System.gc();
 	}
 	
 	@Override
