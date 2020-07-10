@@ -42,6 +42,7 @@ public class CompileConfig {
 	private Collection<String> additionalClassRepositoriesWhereToSearchNotFoundClasses;
 	
 	private boolean storingCompiledClassesEnabled;
+	private boolean adjustClassPaths;
 	
 	private CompileConfig() {
 		this.sources = new HashSet<>();
@@ -63,14 +64,14 @@ public class CompileConfig {
 	}
 	
 	public CompileConfig storeCompiledClasses(boolean flag) {
-		storingCompiledClassesEnabled = flag;
+		this.storingCompiledClassesEnabled = flag;
 		return this;
 	}
 	
-	boolean isStoringCompiledClassesEnabled() {
-		return storingCompiledClassesEnabled;
-	}
-	
+	public CompileConfig adjustClassPaths(boolean flag) {
+		this.adjustClassPaths = flag;
+		return this;
+	}	
 	
 	@SafeVarargs
 	public final CompileConfig setClassPaths(Collection<String>... classPathCollections) {
@@ -156,5 +157,11 @@ public class CompileConfig {
 		return additionalClassRepositoriesWhereToSearchNotFoundClasses;
 	}
 	
+	boolean isStoringCompiledClassesEnabled() {
+		return storingCompiledClassesEnabled;
+	}
 	
+	boolean isAdjustClassPathsEnabled() {
+		return adjustClassPaths;
+	}
 }

@@ -251,6 +251,17 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		}
 	}
 	
+	TestContext testPath(
+		C context, 
+		FileSystemItem[] filesToBeTested, 
+		Predicate<FileSystemItem[]> fileFilterPredicate
+	) {
+		if (fileFilterPredicate.test(filesToBeTested)) {
+			return context.getSearchConfig().getClassCriteria().testWithTrueResultForNullEntityOrTrueResultForNullPredicate(null);
+		}
+		return context.test(null);
+	}
+	
 	TestContext testPathAndCachedItem(
 		C context, 
 		FileSystemItem[] filesToBeTested, 
