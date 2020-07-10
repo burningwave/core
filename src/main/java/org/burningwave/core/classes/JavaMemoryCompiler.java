@@ -162,8 +162,8 @@ public class JavaMemoryCompiler implements Component {
 				pathHelper::getAllMainClassPaths
 			),
 			IterableObjectHelper.merge(
-				config::getClassPathsWhereToSearchNotFoundClasses,
-				config::getAdditionalClassPathsWhereToSearchNotFoundClasses,
+				config::getClassRepositoriesWhereToSearchNotFoundClasses,
+				config::getAdditionalRepositoriesPathsWhereToSearchNotFoundClasses,
 				() -> pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES)
 			),
 			config.isStoringCompiledClassesEnabled()

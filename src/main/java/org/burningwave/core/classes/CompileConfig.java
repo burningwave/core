@@ -148,11 +148,11 @@ public class CompileConfig {
 		return additionalClassPaths;
 	}
 
-	Collection<String> getClassPathsWhereToSearchNotFoundClasses() {
+	Collection<String> getClassRepositoriesWhereToSearchNotFoundClasses() {
 		return classRepositoriesWhereToSearchNotFoundClasses;
 	}
 
-	Collection<String> getAdditionalClassPathsWhereToSearchNotFoundClasses() {
+	Collection<String> getAdditionalRepositoriesPathsWhereToSearchNotFoundClasses() {
 		return additionalClassRepositoriesWhereToSearchNotFoundClasses;
 	}
 	
