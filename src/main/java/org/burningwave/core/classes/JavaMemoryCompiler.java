@@ -163,7 +163,7 @@ public class JavaMemoryCompiler implements Component {
 			),
 			IterableObjectHelper.merge(
 				config::getClassRepositoriesWhereToSearchNotFoundClasses,
-				config::getAdditionalRepositoriesPathsWhereToSearchNotFoundClasses,
+				config::getAdditionalRepositoriesWhereToSearchNotFoundClasses,
 				() -> pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES)
 			),
 			config.isStoringCompiledClassesEnabled()
