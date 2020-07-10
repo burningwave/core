@@ -16,7 +16,9 @@ import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.bean.Complex;
 import org.burningwave.core.bean.PojoInterface;
 import org.burningwave.core.classes.ByteCodeHunter.SearchResult;
+import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassFactory;
+import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.ClassSourceGenerator;
 import org.burningwave.core.classes.FunctionSourceGenerator;
 import org.burningwave.core.classes.LoadOrBuildAndDefineConfig;
@@ -186,10 +188,7 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		testNotNull(() -> {
 			ClassFactory.ClassRetriever classRetriever =  componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG)
-				.addCompilationClassPaths(
-					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
-				).addClassPathsWhereToSearchNotFoundClasses(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassRepository(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				).useClassLoader(classLoader)
 			);
@@ -198,9 +197,7 @@ public class ClassFactoryTest extends BaseTest {
 				ComponentContainer.clearAllCaches(false, false);
 			}
 			classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).addCompilationClassPaths(
-					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
-				).addClassPathsWhereToSearchNotFoundClasses(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).setClassRepository(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				).useClassLoader(classLoader)
 			);
@@ -223,16 +220,21 @@ public class ClassFactoryTest extends BaseTest {
 		).addImport(
 			"org.springframework.core.serializer.DefaultSerializer"
 		);
-		testNotNull(() -> {
-			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).addCompilationClassPaths(
-					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
-				).addClassPathsWhereToSearchNotFoundClasses(
-					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
-				)
-			);
-			return classRetriever.get("packagename.ExternalClassReferenceTest");
-		});
+		
+			testNotNull(() -> {
+				try (ClassPathHunter.SearchResult searchResult = componentSupplier.getClassPathHunter().findBy(
+					SearchConfig.byCriteria(
+						ClassCriteria.create().className(Virtual.class.getName()::equals)
+					)
+				)) {
+					ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
+						LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassRepository(
+							pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
+						)
+					);
+					return classRetriever.get("packagename.ExternalClassReferenceTest");
+				}
+			});
 	}
 	
 	@Test
@@ -252,9 +254,7 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		testNotNull(() -> {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).addCompilationClassPaths(
-					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
-				).addClassPathsWhereToSearchNotFoundClasses(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassRepository(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				).useOneShotJavaCompiler(true)
 			);
@@ -280,9 +280,7 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		testNotNull(() -> {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).addCompilationClassPaths(
-					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
-				).addClassPathsWhereToSearchNotFoundClasses(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassRepository(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				)
 			);
