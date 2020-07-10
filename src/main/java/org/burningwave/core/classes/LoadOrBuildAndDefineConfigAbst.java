@@ -31,79 +31,80 @@ package org.burningwave.core.classes;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
+import org.burningwave.core.Virtual;
+
+@SuppressWarnings("unchecked")
 class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>> {
 	
-	private Collection<String> compilationClassPaths;
-	private Collection<String> classPathsWhereToSearchNotFoundClassesDuringCompilation;
-	private Collection<String> classPathsWhereToSearchNotFoundClassesDuringLoading;
 	Collection<UnitSourceGenerator> unitSourceGenerators;
+	private Function<CompileConfig, CompileConfig> compileConfigSupplier;
+	private Collection<String> classPathsWhereToSearchNotFoundClassesDuringLoading;
+	private Collection<String> additionalClassPathsWhereToSearchNotFoundClassesDuringLoading;
+	
 	private ClassLoader classLoader;
 	private boolean useOneShotJavaCompiler;
-	private boolean storeCompiledClasses;
+	private boolean virtualizeClasses;
 		
 	@SafeVarargs LoadOrBuildAndDefineConfigAbst(UnitSourceGenerator... unitsCode) {
 		this(Arrays.asList(unitsCode));
-		this.storeCompiledClasses = true;
 	}
 	
 	@SafeVarargs
 	LoadOrBuildAndDefineConfigAbst(Collection<UnitSourceGenerator>... unitCodeCollections) {
+		virtualizeClasses = true;
 		unitSourceGenerators = new HashSet<>();
 		for (Collection<UnitSourceGenerator> unitsCode : unitCodeCollections) {
 			unitSourceGenerators.addAll(unitsCode);
 		}
+		compileConfigSupplier = (compileConfig) -> {
+			Collection<String> sources = new HashSet<>();
+			for (UnitSourceGenerator unitCode : this.unitSourceGenerators) {
+				unitCode.getAllClasses().entrySet().forEach(entry -> {
+					if (virtualizeClasses) {
+						entry.getValue().addConcretizedType(TypeDeclarationSourceGenerator.create(Virtual.class));
+					}
+				});
+				sources.add(unitCode.make());
+			}
+			return CompileConfig.withSources(sources);
+		};
 	}
 	
-	@SuppressWarnings("unchecked")
-	@SafeVarargs
-	public final L addCompilationClassPaths(Collection<String>... classPathCollections) {
-		if (compilationClassPaths == null) {
-			compilationClassPaths = new HashSet<>();
-		}
-		for (Collection<String> classPathCollection : classPathCollections) {
-			compilationClassPaths.addAll(classPathCollection);
-		}
+	public L virtualizeClasses(boolean flag) {
+		this.virtualizeClasses = flag;
+		return (L)this;
+	}
+	
+	public L modifyCompileConfig(Consumer<CompileConfig> compileConfigModifier) {
+		compileConfigSupplier = compileConfigSupplier.andThen((compileConfig) -> {
+			compileConfigModifier.accept(compileConfig);
+			return compileConfig;
+		});
 		return (L)this;
 	}
 	
 	@SafeVarargs
-	public final L addCompilationClassPaths(String... classPaths) {
-		return addCompilationClassPaths(Arrays.asList(classPaths));
-	}
-	
-	@SuppressWarnings("unchecked")
-	@SafeVarargs
-	public final L addClassPathsWhereToSearchNotFoundClassesDuringCompilation(Collection<String>... classPathCollections) {
-		if (classPathsWhereToSearchNotFoundClassesDuringCompilation == null) {
-			classPathsWhereToSearchNotFoundClassesDuringCompilation = new HashSet<>();
-		}
-		for (Collection<String> classPathCollection : classPathCollections) {
-			classPathsWhereToSearchNotFoundClassesDuringCompilation.addAll(classPathCollection);
-		}
-		return (L)this;
-	}
-	
-	@SafeVarargs
-	public final L addClassPathsWhereToSearchNotFoundClassesDuringCompilation(String... classPaths) {
-		return addClassPathsWhereToSearchNotFoundClassesDuringCompilation(Arrays.asList(classPaths));
-	}
-	
-	@SafeVarargs
-	public final L addClassPathsWhereToSearchNotFoundClasses(String... classPaths) {
-		return addClassPathsWhereToSearchNotFoundClassesDuringCompilation(classPaths)
-			.addClassPathsWhereToSearchNotFoundClassesDuringLoading(classPaths);		
+	public final L setClassPathsWhereToSearchNotFoundClasses(String... classPaths) {
+		compileConfigSupplier = compileConfigSupplier.andThen((compileConfig) -> 
+			compileConfig.setClassPathsWhereToSearchNotFoundClasses(classPaths)
+		);
+		return setClassPathsWhereToSearchNotFoundClassesDuringLoading(classPaths);		
 	}
 	
 	@SafeVarargs
 	public final L addClassPathsWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
-		return addClassPathsWhereToSearchNotFoundClassesDuringCompilation(classPathCollections)
-			.addClassPathsWhereToSearchNotFoundClassesDuringLoading(classPathCollections);		
+		compileConfigSupplier = compileConfigSupplier.andThen((compileConfig) -> 
+			compileConfig.addClassPathsWhereToSearchNotFoundClasses(classPathCollections)
+		);
+		return addClassPathsWhereToSearchNotFoundClassesDuringLoading(classPathCollections);		
 	}
 	
-	@SuppressWarnings("unchecked")
 	@SafeVarargs
-	public final L addClassPathsWhereToSearchNotFoundClassesDuringLoading(Collection<String>... classPathCollections) {
+	public final L setClassPathsWhereToSearchNotFoundClassesDuringLoading(Collection<String>... classPathCollections) {
 		if (classPathsWhereToSearchNotFoundClassesDuringLoading == null) {
 			classPathsWhereToSearchNotFoundClassesDuringLoading = new HashSet<>();
 		}
@@ -114,44 +115,45 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	}
 	
 	@SafeVarargs
+	public final L setClassPathsWhereToSearchNotFoundClassesDuringLoading(String... classPaths) {
+		return (L)setClassPathsWhereToSearchNotFoundClassesDuringLoading(Arrays.asList(classPaths));
+	}
+	
+	@SafeVarargs
+	public final L addClassPathsWhereToSearchNotFoundClassesDuringLoading(Collection<String>... classPathCollections) {
+		if (additionalClassPathsWhereToSearchNotFoundClassesDuringLoading == null) {
+			additionalClassPathsWhereToSearchNotFoundClassesDuringLoading = new HashSet<>();
+		}
+		for (Collection<String> classPathCollection : classPathCollections) {
+			additionalClassPathsWhereToSearchNotFoundClassesDuringLoading.addAll(classPathCollection);
+		}
+		return (L)this;
+	}
+	
+	@SafeVarargs
 	public final L addClassPathsWhereToSearchNotFoundClassesDuringLoading(String... classPaths) {
 		return (L)addClassPathsWhereToSearchNotFoundClassesDuringLoading(Arrays.asList(classPaths));
 	}
 	
-	@SuppressWarnings("unchecked")
+
 	public L useClassLoader(ClassLoader classLoader) {
 		this.classLoader = classLoader;
 		return (L)this;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public L useOneShotJavaCompiler(boolean flag) {
 		this.useOneShotJavaCompiler = flag;
 		return (L)this;
-	}
-	
-	@SuppressWarnings("unchecked")
-	public L storeCompiledClasses(boolean flag) {
-		this.storeCompiledClasses = flag;
-		return (L)this;
-	}
-	
-	Collection<String> getCompilationClassPaths() {
-		return compilationClassPaths;
-	}
-
-	Collection<String> getClassPathsWhereToSearchNotFoundClassesDuringCompilation() {
-		return classPathsWhereToSearchNotFoundClassesDuringCompilation;
 	}
 
 	Collection<String> getClassPathsWhereToSearchNotFoundClassesDuringLoading() {
 		return classPathsWhereToSearchNotFoundClassesDuringLoading;
 	}
 	
-	Collection<UnitSourceGenerator> getUnitSourceGenerators() {
-		return unitSourceGenerators;
-	}
-
+	Collection<String> getAdditionalClassPathsWhereToSearchNotFoundClassesDuringLoading() {
+		return additionalClassPathsWhereToSearchNotFoundClassesDuringLoading;
+	}	
+	
 	ClassLoader getClassLoader() {
 		return classLoader;
 	}
@@ -160,7 +162,17 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		return useOneShotJavaCompiler;
 	}
 	
-	boolean isStoreCompiledClasses() {
-		return storeCompiledClasses;
+	Collection<String> getClassesName() {
+		Collection<String> classesName = new HashSet<>();
+		unitSourceGenerators.stream().forEach(unitCode -> {
+			unitCode.getAllClasses().entrySet().forEach(entry -> {
+				classesName.add(entry.getKey());
+			});
+		});
+		return classesName;
+	}
+	
+	Supplier<CompileConfig> getCompileConfigSupplier() {
+		return () -> compileConfigSupplier.apply(null);
 	}
 }

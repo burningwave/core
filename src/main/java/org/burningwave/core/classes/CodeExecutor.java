@@ -214,8 +214,8 @@ public class CodeExecutor implements Component {
 		}
 	}
 	
-	public <T extends Executable> Class<T> loadOrBuildAndDefineExecutorSubType(
-		LoadOrBuildAndDefineConfig.ForCodeExecutor config
+	public <E extends LoadOrBuildAndDefineConfig.ForCodeExecutorAbst<E>, T extends Executable> Class<T> loadOrBuildAndDefineExecutorSubType(
+		E config
 	) {	
 		ClassFactory.ClassRetriever classRetriever = getClassFactory().loadOrBuildAndDefine(
 			config

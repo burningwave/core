@@ -186,10 +186,9 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		testNotNull(() -> {
 			ClassFactory.ClassRetriever classRetriever =  componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG)
-				.addCompilationClassPaths(
-					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
-				).addClassPathsWhereToSearchNotFoundClasses(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).modifyCompileConfig(
+					compileConfig -> compileConfig.addClassPaths(pathHelper.getAllMainClassPaths())
+				).setClassPathsWhereToSearchNotFoundClasses(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				).useClassLoader(classLoader)
 			);
@@ -198,9 +197,9 @@ public class ClassFactoryTest extends BaseTest {
 				ComponentContainer.clearAllCaches(false, false);
 			}
 			classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).addCompilationClassPaths(
-					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
-				).addClassPathsWhereToSearchNotFoundClasses(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).modifyCompileConfig(
+					compileConfig -> compileConfig.addClassPaths(pathHelper.getAllMainClassPaths())
+				).setClassPathsWhereToSearchNotFoundClasses(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				).useClassLoader(classLoader)
 			);
@@ -225,9 +224,9 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		testNotNull(() -> {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).addCompilationClassPaths(
-					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
-				).addClassPathsWhereToSearchNotFoundClasses(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).modifyCompileConfig(
+					compileConfig -> compileConfig.addClassPaths(pathHelper.getAllMainClassPaths())
+				).setClassPathsWhereToSearchNotFoundClasses(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				)
 			);
@@ -252,9 +251,9 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		testNotNull(() -> {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).addCompilationClassPaths(
-					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
-				).addClassPathsWhereToSearchNotFoundClasses(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).modifyCompileConfig(
+					compileConfig -> compileConfig.addClassPaths(pathHelper.getAllMainClassPaths())
+				).setClassPathsWhereToSearchNotFoundClasses(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				).useOneShotJavaCompiler(true)
 			);
@@ -280,9 +279,9 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		testNotNull(() -> {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).addCompilationClassPaths(
-					pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
-				).addClassPathsWhereToSearchNotFoundClasses(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).modifyCompileConfig(
+					compileConfig -> compileConfig.addClassPaths(pathHelper.getAllMainClassPaths())
+				).setClassPathsWhereToSearchNotFoundClasses(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				)
 			);

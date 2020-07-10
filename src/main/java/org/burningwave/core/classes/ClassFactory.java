@@ -29,6 +29,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -40,17 +41,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.JavaMemoryCompiler.CompilationResult;
 import org.burningwave.core.function.MultiParamsFunction;
@@ -218,50 +216,29 @@ public class ClassFactory implements Component {
 	}
 	
 	public <L extends LoadOrBuildAndDefineConfigAbst<L>> ClassRetriever loadOrBuildAndDefine(L config) {
-		Collection<String> compilationClassPaths = 
-			Optional.ofNullable(
-				config.getCompilationClassPaths()
-			).orElseGet(() -> 
-				pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.MAIN_CLASS_PATHS, JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES)
-			);
-		
-		Collection<String> classPathsForNotFoundClassesDuringCompilantion = 
-			Optional.ofNullable(
-				config.getClassPathsWhereToSearchNotFoundClassesDuringCompilation()
-			).orElseGet(() -> 
-				pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES)
-			);
-		
-		Collection<String> classPathsForNotFoundClassesDuringLoading = 
-			Optional.ofNullable(
-				config.getClassPathsWhereToSearchNotFoundClassesDuringLoading()
-			).orElseGet(() -> 
-				pathHelper.getPaths(Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER)
-			);
-		
 		return loadOrBuildAndDefine(
+			config.getClassesName(),
+			config.getCompileConfigSupplier(),			
 			config.isUseOneShotJavaCompiler(),
-			compilationClassPaths,
-			classPathsForNotFoundClassesDuringCompilantion, 
-			classPathsForNotFoundClassesDuringLoading,
-			config.isStoreCompiledClasses(),
+			IterableObjectHelper.merge(
+				config::getClassPathsWhereToSearchNotFoundClassesDuringLoading,
+				config::getAdditionalClassPathsWhereToSearchNotFoundClassesDuringLoading,
+				() -> pathHelper.getPaths(Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER)
+			),
 			(client) -> Optional.ofNullable(
 				config.getClassLoader()
 			).orElseGet(() -> 
 				getDefaultClassLoader(client)
-			),
-			config.getUnitSourceGenerators()
+			)
 		);
 	}
 	
 	private ClassRetriever loadOrBuildAndDefine(
+		Collection<String> classesName,
+		Supplier<CompileConfig> compileConfigSupplier,		
 		boolean useOneShotJavaCompiler,
-		Collection<String> compilationClassPaths,
-		Collection<String> classPathsForNotFoundClassesDuringCompilantion,
 		Collection<String> classPathsForNotFoundClassesDuringLoading,
-		boolean storeCompiledClasses,
-		Function<Object, ClassLoader> classLoaderSupplier,
-		Collection<UnitSourceGenerator> unitsCode
+		Function<Object, ClassLoader> classLoaderSupplier
 	) {
 		try {
 			Object temporaryClient = new Object();
@@ -278,24 +255,15 @@ public class ClassFactory implements Component {
 					classPathsForNotFoundClassesDuringLoading
 				);
 			}
-			Set<String> classesName = new HashSet<>();
-			unitsCode.forEach(unitCode -> 
-				unitCode.getAllClasses().entrySet().forEach(entry -> {
-					entry.getValue().addConcretizedType(TypeDeclarationSourceGenerator.create(Virtual.class));
-					classesName.add(entry.getKey());
-				})
-			);
 			Map<String, Class<?>> classes = new HashMap<>();
 			AtomicReference<Map<String, ByteBuffer>> retrievedBytecodes = new AtomicReference<>();
 			for (String className : classesName) {
 				try {
 					classes.put(className, classLoader.loadClass(className));
 				} catch (Throwable exc) {
-					CompilationResult compilationResult = build(
-						useOneShotJavaCompiler,
-						compilationClassPaths,
-						classPathsForNotFoundClassesDuringCompilantion, 
-						unitsCode, storeCompiledClasses
+					CompilationResult compilationResult = build0(
+						compileConfigSupplier.get(),
+						useOneShotJavaCompiler
 					);
 					if (classLoader instanceof PathScannerClassLoader) {
 						((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(
@@ -409,30 +377,11 @@ public class ClassFactory implements Component {
 		return retrievedBytecodes;
 	}
 	
-	private CompilationResult build(
-		boolean useOneShotCompiler,
-		Collection<String> mainClassPaths,
-		Collection<String> extraClassPaths,
-		Collection<UnitSourceGenerator> unitsCode,
-		boolean storeCompiledClasses
-	) {
-		return build0(
-			useOneShotCompiler,
-			mainClassPaths,
-			extraClassPaths,
-			unitsCode.stream().map(unitCode -> unitCode.make()).collect(Collectors.toList()),
-			storeCompiledClasses
-		);
-	}
-	
 	private CompilationResult build0(
-		boolean useOneShotCompiler,
-		Collection<String> compilationClassPaths,
-		Collection<String> classPathsForNotFoundClassesDuringCompilantion,
-		Collection<String> unitsCode,
-		boolean storeCompiledClasses
+		CompileConfig compileConfig,
+		boolean useOneShotCompiler
+		
 	) {
-		logInfo("Try to compile: \n\n{}\n",String.join("\n", unitsCode));
 		if (useOneShotCompiler) {
 			try (JavaMemoryCompiler compiler = JavaMemoryCompiler.create(
 				pathHelper,
@@ -440,18 +389,12 @@ public class ClassFactory implements Component {
 				config
 			)) {
 				return compiler.compile(
-					unitsCode,
-					compilationClassPaths, 
-					classPathsForNotFoundClassesDuringCompilantion,
-					storeCompiledClasses
+					compileConfig
 				);
 			}
 		} else {
 			return this.javaMemoryCompiler.compile(
-				unitsCode,
-				compilationClassPaths, 
-				classPathsForNotFoundClassesDuringCompilantion,
-				storeCompiledClasses
+				compileConfig
 			);
 		}
 	}
