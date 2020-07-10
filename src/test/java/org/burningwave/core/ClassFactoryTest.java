@@ -29,6 +29,7 @@ import org.burningwave.core.classes.UnitSourceGenerator;
 import org.burningwave.core.classes.VariableSourceGenerator;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.service.Service;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 public class ClassFactoryTest extends BaseTest {
@@ -139,6 +140,7 @@ public class ClassFactoryTest extends BaseTest {
 	}
 	
 	@Test
+	@Tag("Heavy")
 	public void getOrBuildClassWithExternalClassTestFive() {
 		getOrBuildClassWithExternalClassTestOne(true, true, "ComplexExampleFour", "ComplexExampleFive", null);
 	}
