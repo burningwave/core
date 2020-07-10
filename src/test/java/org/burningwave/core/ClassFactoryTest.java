@@ -209,7 +209,7 @@ public class ClassFactoryTest extends BaseTest {
 			);
 			classRetriever.get("packagename." + classNameOne);
 			if (clearCache) {
-				ComponentContainer.clearAllCaches(false, false);
+				ComponentContainer.clearAllCaches(true, true);
 			}
 			classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).setClassRepository(
