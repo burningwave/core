@@ -188,9 +188,7 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		testNotNull(() -> {
 			ClassFactory.ClassRetriever classRetriever =  componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).modifyCompileConfig(
-					compileConfig -> compileConfig.addClassPaths(pathHelper.getAllMainClassPaths())
-				).setClassRepositoryWhereToSearchNotFoundClasses(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassPaths(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				).useClassLoader(classLoader)
 			);
@@ -199,9 +197,7 @@ public class ClassFactoryTest extends BaseTest {
 				ComponentContainer.clearAllCaches(false, false);
 			}
 			classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).modifyCompileConfig(
-					compileConfig -> compileConfig.addClassPaths(pathHelper.getAllMainClassPaths())
-				).setClassRepositoryWhereToSearchNotFoundClasses(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).setClassPaths(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				).useClassLoader(classLoader)
 			);
