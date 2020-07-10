@@ -179,7 +179,12 @@ public class JavaMemoryCompiler implements Component {
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
 		Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
 		sourcesToMemorySources(sources, memorySources);
-		try (Compilation.Context context = Compilation.Context.create(this, classPathHunter, memorySources, new ArrayList<>(classPaths), new ArrayList<>(classRepositoriesPaths))) {
+		try (Compilation.Context context = Compilation.Context.create(
+				this, classPathHunter, 
+				memorySources, 
+				new ArrayList<>(classPaths), 
+				new ArrayList<>(classRepositoriesPaths))
+		) {
 			Map<String, ByteBuffer> compiledFiles = _compile(context, null);
 			if (!compiledFiles.isEmpty() && storeCompiledClasses) {
 				compiledFiles.forEach((className, byteCode) -> {

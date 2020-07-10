@@ -90,12 +90,12 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 ////////////////////
 	
 @SafeVarargs
-	public final L setClassPaths(String... classPaths) {
-		return (L)setClassPaths(Arrays.asList(classPaths));
+	public final L setClassRepository(String... classPaths) {
+		return (L)setClassRepositories(Arrays.asList(classPaths));
 	}
 	
 	@SafeVarargs
-	public final L setClassPaths(Collection<String>... classPathCollections) {
+	public final L setClassRepositories(Collection<String>... classPathCollections) {
 		modifyCompileConfig(compileConfig ->
 			compileConfig.setClassPaths(classPathCollections)
 		);
@@ -104,12 +104,12 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 ////////////////////	
 	
 	@SafeVarargs
-	public final L addClassPaths(String... classPaths) {
-		return (L)addClassPaths(Arrays.asList(classPaths));
+	public final L addClassRepository(String... classPaths) {
+		return (L)addClassRepositories(Arrays.asList(classPaths));
 	}
 	
 	@SafeVarargs
-	public final L addClassPaths(Collection<String>... classPathCollections) {
+	public final L addClassRepositories(Collection<String>... classPathCollections) {
 		modifyCompileConfig(compileConfig ->
 			compileConfig.addClassPaths(classPathCollections)
 		);
