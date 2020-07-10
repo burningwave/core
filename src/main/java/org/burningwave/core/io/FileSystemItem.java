@@ -576,7 +576,14 @@ public class FileSystemItem implements ManagedLogger {
 	public synchronized FileSystemItem reset(boolean removeLinkedResourcesFromCache) {
 		if (allChildren != null) {
 			for (FileSystemItem child : allChildren) {
-				child.reset(removeLinkedResourcesFromCache);
+				child.absolutePath.setValue(null);
+				child.parentContainer = null;
+				child.parent = null;
+				child.allChildren = null;
+				child.children = null;
+				if (removeLinkedResourcesFromCache) {
+					removeLinkedResourcesFromCache(child);
+				}
 			}
 			allChildren = null;
 			if (children != null) {
@@ -781,6 +788,9 @@ public class FileSystemItem implements ManagedLogger {
 					superParent = superParent.getParentContainer();
 				}
 				if (call == 0) {
+					if (superParent.allChildren != null) {
+						superParent.refresh();
+					}
 					superParent.getAllChildren();
 					return toByteBuffer(++call);
 				} else {
