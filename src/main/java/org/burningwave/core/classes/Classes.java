@@ -179,6 +179,15 @@ public class Classes implements Component, MembersRetriever {
 		return classSimpleName;
 	}
 	
+	public String toPath(Class<?> cls) {
+		String path = cls.getSimpleName().replace(".", "$");
+		Package pckg = cls.getPackage();
+		if (pckg != null) {
+			path = pckg.getName().replace(".", "/") + "/" + path + ".class";
+		}
+		return path;
+	}
+	
 	public String retrieveName(
 		final byte[] classFileBuffer
 	) {

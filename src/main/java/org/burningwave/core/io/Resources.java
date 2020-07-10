@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.BufferedReader;
@@ -65,6 +66,16 @@ public class Resources {
 			}
 		}
 		return propertiesBag;
+	}
+	
+	FileSystemItem get(Class<?> cls) {
+		return FileSystemItem.of(Classes.getClassLoader(cls).getResource(Classes.toPath(cls)));
+	}
+	
+	FileSystemItem getClassPath(Class<?> cls) {
+		String classRelativePath = Classes.toPath(cls);
+		String classAbsolutePath = FileSystemItem.of(Classes.getClassLoader(cls).getResource(classRelativePath)).getAbsolutePath();
+		return FileSystemItem.ofPath(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf(classRelativePath) - 1) );
 	}
 	
 	public InputStream getAsInputStream(ClassLoader resourceClassLoader, String resourceRelativePath) {

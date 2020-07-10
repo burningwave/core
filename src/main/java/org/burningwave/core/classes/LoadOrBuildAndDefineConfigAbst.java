@@ -87,12 +87,55 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		return (L)this;
 	}
 	
+////////////////////
+	
+@SafeVarargs
+	public final L setClassPaths(String... classPaths) {
+		return (L)setClassPaths(Arrays.asList(classPaths));
+	}
+	
+	@SafeVarargs
+	public final L setClassPaths(Collection<String>... classPathCollections) {
+		modifyCompileConfig(compileConfig ->
+			compileConfig.setClassPaths(classPathCollections)
+		);
+		return (L)setClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
+	}
+////////////////////	
+	
+	@SafeVarargs
+	public final L addClassPaths(String... classPaths) {
+		return (L)addClassPaths(Arrays.asList(classPaths));
+	}
+	
+	@SafeVarargs
+	public final L addClassPaths(Collection<String>... classPathCollections) {
+		modifyCompileConfig(compileConfig ->
+			compileConfig.addClassPaths(classPathCollections)
+		);
+		return (L)addClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
+	}
+
+////////////////////	
+	
 	@SafeVarargs
 	public final L setClassRepositoryWhereToSearchNotFoundClasses(String... classPaths) {
+		return setClassRepositoriesWhereToSearchNotFoundClasses(Arrays.asList(classPaths));		
+	}
+	
+	@SafeVarargs
+	public final L setClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
 		compileConfigSupplier = compileConfigSupplier.andThen((compileConfig) -> 
-			compileConfig.setClassRepositoryWhereToSearchNotFoundClasses(classPaths)
+			compileConfig.setClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections)
 		);
-		return setClassRepositoryWhereToSearchNotFoundClassesDuringLoading(classPaths);		
+		return setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(classPathCollections);		
+	}
+
+////////////////////	
+	
+	@SafeVarargs
+	public final L addClassRepositoryWhereToSearchNotFoundClasses(String... classPaths) {
+		return addClassRepositoriesWhereToSearchNotFoundClasses(Arrays.asList(classPaths));
 	}
 	
 	@SafeVarargs
@@ -101,6 +144,13 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 			compileConfig.addClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections)
 		);
 		return addClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(classPathCollections);		
+	}
+
+////////////////////
+	
+	@SafeVarargs
+	public final L setClassRepositoryWhereToSearchNotFoundClassesDuringLoading(String... classPaths) {
+		return (L)setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(Arrays.asList(classPaths));
 	}
 	
 	@SafeVarargs
@@ -113,10 +163,12 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		}
 		return (L)this;
 	}
+
+////////////////////	
 	
 	@SafeVarargs
-	public final L setClassRepositoryWhereToSearchNotFoundClassesDuringLoading(String... classPaths) {
-		return (L)setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(Arrays.asList(classPaths));
+	public final L addClassRepositoryWhereToSearchNotFoundClassesDuringLoading(String... classPaths) {
+		return (L)addClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(Arrays.asList(classPaths));
 	}
 	
 	@SafeVarargs
@@ -129,12 +181,8 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		}
 		return (L)this;
 	}
-	
-	@SafeVarargs
-	public final L addClassRepositoryWhereToSearchNotFoundClassesDuringLoading(String... classPaths) {
-		return (L)addClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(Arrays.asList(classPaths));
-	}
-	
+
+////////////////////
 
 	public L useClassLoader(ClassLoader classLoader) {
 		this.classLoader = classLoader;
@@ -158,7 +206,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		return classLoader;
 	}
 
-	boolean isUseOneShotJavaCompiler() {
+	boolean isUseOneShotJavaCompilerEnabled() {
 		return useOneShotJavaCompiler;
 	}
 	
@@ -174,5 +222,9 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	
 	Supplier<CompileConfig> getCompileConfigSupplier() {
 		return () -> compileConfigSupplier.apply(null);
+	}
+	
+	boolean isVirtualizeClassesEnabled() {
+		return virtualizeClasses;
 	}
 }

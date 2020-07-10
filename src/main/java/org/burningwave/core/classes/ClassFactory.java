@@ -216,10 +216,13 @@ public class ClassFactory implements Component {
 	}
 	
 	public <L extends LoadOrBuildAndDefineConfigAbst<L>> ClassRetriever loadOrBuildAndDefine(L config) {
+		if (config.isVirtualizeClassesEnabled()) {
+			config.addClassPaths(pathHelper.getBurningwaveRuntimeClassPath());
+		}
 		return loadOrBuildAndDefine(
 			config.getClassesName(),
 			config.getCompileConfigSupplier(),			
-			config.isUseOneShotJavaCompiler(),
+			config.isUseOneShotJavaCompilerEnabled(),
 			IterableObjectHelper.merge(
 				() -> config.getClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(),
 				() -> config.getAdditionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(),
@@ -264,6 +267,14 @@ public class ClassFactory implements Component {
 					CompilationResult compilationResult = build0(
 						compileConfigSupplier.get(),
 						useOneShotJavaCompiler
+					);
+					logInfo(
+						classesName.size() > 1?	
+							"Classes {} have been succesfully compiled":
+							"Class {} has been succesfully compiled",
+						classesName.size() > 1?		
+							String.join(", ", classesName):
+							classesName.stream().findFirst().orElseGet(() -> "")
 					);
 					if (classLoader instanceof PathScannerClassLoader) {
 						((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(

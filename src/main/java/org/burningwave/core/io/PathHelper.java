@@ -29,6 +29,7 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
+import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -162,6 +163,10 @@ public class PathHelper implements Component {
 				loadPaths(pathGroupName);
 			}
 		});
+	}
+	
+	public String getBurningwaveRuntimeClassPath() {
+		return Resources.getClassPath(this.getClass()).getAbsolutePath();
 	}
 	
 	public Collection<String> getMainClassPaths() {

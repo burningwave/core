@@ -85,7 +85,7 @@ public class CompileConfig {
 	
 	@SafeVarargs
 	public final CompileConfig setClassPaths(String... classPaths) {
-		return addClassPaths(Arrays.asList(classPaths));
+		return setClassPaths(Arrays.asList(classPaths));
 	}
 	
 	@SafeVarargs
@@ -117,7 +117,7 @@ public class CompileConfig {
 	
 	@SafeVarargs
 	public final CompileConfig setClassRepositoryWhereToSearchNotFoundClasses(String... classPaths) {
-		return addClassRepositoriesWhereToSearchNotFoundClasses(Arrays.asList(classPaths));
+		return setClassRepositoriesWhereToSearchNotFoundClasses(Arrays.asList(classPaths));
 	}
 	
 	@SafeVarargs
