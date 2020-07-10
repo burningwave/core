@@ -87,7 +87,7 @@ public class ClassPathHunterTest extends BaseTest {
 	}
 	
 	@Test
-	public void getFourteen() {
+	public void findAllTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		componentSupplier.clearHuntersCache(false);
 		testNotEmpty(
