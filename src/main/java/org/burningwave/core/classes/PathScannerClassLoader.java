@@ -114,7 +114,11 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	
 	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean checkForAddedClasses) {
 		Collection<String> scannedPaths = new HashSet<>();
-		if (!isClosed) {
+		Collection<String> loadedPaths = this.loadedPaths;
+		Collection<String> allLoadedPaths = this.allLoadedPaths;
+		FileSystemItem.Criteria classFileCriteriaAndConsumer = this.classFileCriteriaAndConsumer;
+		Mutex.Manager mutexManager = this.mutexManager;
+		if (!isClosed) {			
 			for (String path : paths) {
 				if (!isClosed) {
 					if (checkForAddedClasses || !hasBeenLoaded(path, !checkForAddedClasses)) {
@@ -256,7 +260,8 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	}
 	
 	public boolean hasBeenLoaded(String path, boolean considerURLClassLoaderPathsAsLoadedPaths) {
-		if (allLoadedPaths.contains(path)) {
+		Collection<String> allLoadedPaths = this.allLoadedPaths;
+		if (isClosed || allLoadedPaths.contains(path)) {
 			return true;
 		}
 		FileSystemItem pathFIS = FileSystemItem.ofPath(path);
