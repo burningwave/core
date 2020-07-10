@@ -16,7 +16,9 @@ import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.bean.Complex;
 import org.burningwave.core.bean.PojoInterface;
 import org.burningwave.core.classes.ByteCodeHunter.SearchResult;
+import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassFactory;
+import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.ClassSourceGenerator;
 import org.burningwave.core.classes.FunctionSourceGenerator;
 import org.burningwave.core.classes.LoadOrBuildAndDefineConfig;
@@ -222,16 +224,21 @@ public class ClassFactoryTest extends BaseTest {
 		).addImport(
 			"org.springframework.core.serializer.DefaultSerializer"
 		);
-		testNotNull(() -> {
-			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).modifyCompileConfig(
-					compileConfig -> compileConfig.addClassPaths(pathHelper.getAllMainClassPaths())
-				).setClassRepositoryWhereToSearchNotFoundClasses(
-					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
-				)
-			);
-			return classRetriever.get("packagename.ExternalClassReferenceTest");
-		});
+		
+			testNotNull(() -> {
+				try (ClassPathHunter.SearchResult searchResult = componentSupplier.getClassPathHunter().findBy(
+					SearchConfig.byCriteria(
+						ClassCriteria.create().className(Virtual.class.getName()::equals)
+					)
+				)) {
+					ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
+						LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassPaths(
+							pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
+						)
+					);
+					return classRetriever.get("packagename.ExternalClassReferenceTest");
+				}
+			});
 	}
 	
 	@Test
