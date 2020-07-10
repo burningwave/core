@@ -249,7 +249,8 @@ public class JavaMemoryCompiler implements Component {
 								adjustedClassPaths.add(
 									classPath.getAbsolutePath()
 								);
-								
+								//Free memory
+								classPath.reset();
 							}
 						});
 					} else {
@@ -372,7 +373,8 @@ public class JavaMemoryCompiler implements Component {
 							context.addToClassPath(
 								classPath.getAbsolutePath()
 							);
-							
+							//Free memory
+							classPath.reset();
 						}
 					});
 				} else {
