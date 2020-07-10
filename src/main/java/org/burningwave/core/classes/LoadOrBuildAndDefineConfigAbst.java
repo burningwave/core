@@ -150,7 +150,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		return classRepositoriesWhereToSearchNotFoundClassesDuringLoading;
 	}
 	
-	Collection<String> getAdditionalClassRepositoriesPathsWhereToSearchNotFoundClassesDuringLoading() {
+	Collection<String> getAdditionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading() {
 		return additionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading;
 	}	
 	

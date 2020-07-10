@@ -221,8 +221,8 @@ public class ClassFactory implements Component {
 			config.getCompileConfigSupplier(),			
 			config.isUseOneShotJavaCompiler(),
 			IterableObjectHelper.merge(
-				config::getClassRepositoriesWhereToSearchNotFoundClassesDuringLoading,
-				config::getAdditionalClassRepositoriesPathsWhereToSearchNotFoundClassesDuringLoading,
+				() -> config.getClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(),
+				() -> config.getAdditionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(),
 				() -> pathHelper.getPaths(Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER)
 			),
 			(client) -> Optional.ofNullable(
