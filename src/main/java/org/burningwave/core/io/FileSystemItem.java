@@ -44,6 +44,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -788,10 +789,18 @@ public class FileSystemItem implements ManagedLogger {
 					superParent = superParent.getParentContainer();
 				}
 				if (call == 0) {
-					if (superParent.allChildren != null) {
-						superParent.refresh();
+					Collection<FileSystemItem> superParentAllChildren = superParent.getAllChildren();
+					FileSystemItem fIS = random(superParentAllChildren);
+					while (fIS.getAbsolutePath() == this.getAbsolutePath() && superParentAllChildren.size() > 1) {
+						fIS = random(superParentAllChildren);
 					}
-					superParent.getAllChildren();
+					if ( Cache.pathForContents.get(fIS.getAbsolutePath()) == null ) {
+						synchronized (fIS) {
+							if (Cache.pathForContents.get(fIS.getAbsolutePath()) == null ) {
+								superParent.refresh().getAllChildren();
+							}
+						}
+					}
 					return toByteBuffer(++call);
 				} else {
 					return superParent.refresh().findFirstInAllChildren(
@@ -808,6 +817,12 @@ public class FileSystemItem implements ManagedLogger {
 			}
 		}
 		return resource;
+	}
+	
+	private FileSystemItem random(Collection<FileSystemItem> coll) {
+		int num = (int) (Math.random() * coll.size());
+	    for(FileSystemItem t: coll) if (--num < 0) return t;
+	    return null;
 	}
 	
 	public InputStream toInputStream() {
