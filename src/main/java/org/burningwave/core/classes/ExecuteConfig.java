@@ -38,7 +38,7 @@ import org.burningwave.core.Executable;
 import org.burningwave.core.iterable.Properties;
 
 @SuppressWarnings("unchecked")
-public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBuildAndDefineConfig.ForCodeExecutor {
+public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBuildAndDefineConfig.ForCodeExecutorAbst<C> {
 	ClassLoader parentClassLoader;
 	boolean useDefaultClassLoaderAsParentIfParentClassLoaderIsNull;
 	List<Object> params;
@@ -119,7 +119,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 	}
 	
 	public static ExecuteConfig.ForBodySourceGenerator forBodySourceGenerator() {
-		return new ForBodySourceGenerator(BodySourceGenerator.createSimple());
+		return forBodySourceGenerator(BodySourceGenerator.createSimple());
 	}
 	
 	public static ExecuteConfig.ForBodySourceGenerator forBodySourceGenerator(BodySourceGenerator body) {
@@ -142,6 +142,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 			);
 			isAbsoluteFilePath = false;
 			indentCodeActive = true;
+			virtualizeClasses(false);
 		}
 		
 		
@@ -214,6 +215,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 				Executable.class.getPackage().getName() + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""),
 				body			
 			);
+			virtualizeClasses(false);
 		}
 		
 		public ExecuteConfig.ForBodySourceGenerator addCodeRow(String... codeRow) {

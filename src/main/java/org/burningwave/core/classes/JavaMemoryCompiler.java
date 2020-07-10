@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -142,22 +143,48 @@ public class JavaMemoryCompiler implements Component {
 	
 	public 	CompilationResult compile(Collection<String> sources, boolean storeCompiledClasses) {
 		return compile(
-			sources, 
-			pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.MAIN_CLASS_PATHS),
-			pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES),
-			storeCompiledClasses
+			CompileConfig.withSources(sources).setClassPaths(
+				pathHelper.getAllMainClassPaths()
+			).setClassRepositoriesWhereToSearchNotFoundClasses(
+				pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES)
+			).storeCompiledClasses(
+				storeCompiledClasses
+			)
 		);
 	}
 	
-	public CompilationResult compile(
+	public CompilationResult compile(CompileConfig config) {
+		return compile(
+			config.getSources(),
+			IterableObjectHelper.merge(
+				config::getClassPaths,
+				config::getAdditionalClassPaths,
+				pathHelper::getAllMainClassPaths
+			),
+			IterableObjectHelper.merge(
+				config::getClassRepositoriesWhereToSearchNotFoundClasses,
+				config::getAdditionalRepositoriesWhereToSearchNotFoundClasses,
+				() -> pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES)
+			),
+			config.isStoringCompiledClassesEnabled()
+		);
+	}
+	
+	private CompilationResult compile(
 		Collection<String> sources, 
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
 		boolean storeCompiledClasses
-	) {
+	) {	
+		logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
 		Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
 		sourcesToMemorySources(sources, memorySources);
-		try (Compilation.Context context = Compilation.Context.create(this, classPathHunter, memorySources, new ArrayList<>(classPaths), new ArrayList<>(classRepositoriesPaths))) {
+		try (Compilation.Context context = Compilation.Context.create(
+				this, classPathHunter, 
+				memorySources, 
+				new ArrayList<>(classPaths), 
+				new ArrayList<>(classRepositoriesPaths))
+		) {
 			Map<String, ByteBuffer> compiledFiles = _compile(context, null);
 			if (!compiledFiles.isEmpty() && storeCompiledClasses) {
 				compiledFiles.forEach((className, byteCode) -> {

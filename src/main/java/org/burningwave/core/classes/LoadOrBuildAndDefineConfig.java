@@ -32,9 +32,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 
 import java.util.Collection;
-import java.util.UUID;
-
-import org.burningwave.core.Executable;
 
 @SuppressWarnings("unchecked")
 public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<LoadOrBuildAndDefineConfig> {
@@ -64,7 +61,7 @@ public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<L
 			super(SourceCodeHandler.generateExecutor(executorName, bodySG));
 			this.body = bodySG;
 			body.setElementPrefix("\t");
-			storeCompiledClasses(false);
+			modifyCompileConfig(compileConfig -> compileConfig.storeCompiledClasses(false));
 		}
 		
 		public C setSimpleName(String simpleName) {
@@ -94,25 +91,4 @@ public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<L
 		
 	}
 	
-	public static class ForCodeExecutor extends ForCodeExecutorAbst<ForCodeExecutor> {
-		BodySourceGenerator body;
-		
-		ForCodeExecutor(String executorName, BodySourceGenerator bodySG) {
-			super(executorName, bodySG);
-			this.body = bodySG;
-			body.setElementPrefix("\t");
-			storeCompiledClasses(false);
-		}
-		
-		public static ForCodeExecutor withCode(String executorName, BodySourceGenerator bodySG) {
-			return new ForCodeExecutor(executorName, bodySG);
-		}
-		
-		public static ForCodeExecutor withCode(BodySourceGenerator bodySG) {
-			String packageName = Executable.class.getPackage().getName();
-			String className = packageName + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", "");
-			return withCode(className, bodySG);
-		}
-		
-	}
 }

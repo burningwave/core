@@ -52,7 +52,24 @@ public class IterableObjectHelper implements Component {
 	public static IterableObjectHelper create() {
 		return new IterableObjectHelper();
 	}
-
+	
+	public <T> Collection<T> merge(
+		Supplier<Collection<T>> baseCollectionSupplier,
+		Supplier<Collection<T>> additionalCollectionSupplier,
+		Supplier<Collection<T>> defaultCollectionSupplier
+	) {
+		Collection<T> mergedCollection = Optional.ofNullable(
+			baseCollectionSupplier.get()
+		).orElseGet(() ->
+			defaultCollectionSupplier.get()
+		);
+		Collection<T> additionalClassPaths = additionalCollectionSupplier.get();
+		if (additionalClassPaths != null) {
+			mergedCollection.addAll(additionalClassPaths);
+		}
+		return mergedCollection;
+	}
+	
 	public <T> Stream<T> retrieveStream(Object object) {
 		Stream<T> stream = null;
 		if (object != null) {
