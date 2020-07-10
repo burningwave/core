@@ -42,8 +42,8 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	
 	Collection<UnitSourceGenerator> unitSourceGenerators;
 	private Function<CompileConfig, CompileConfig> compileConfigSupplier;
-	private Collection<String> classPathsWhereToSearchNotFoundClassesDuringLoading;
-	private Collection<String> additionalClassPathsWhereToSearchNotFoundClassesDuringLoading;
+	private Collection<String> classRepositoriesWhereToSearchNotFoundClassesDuringLoading;
+	private Collection<String> additionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading;
 	
 	private ClassLoader classLoader;
 	private boolean useOneShotJavaCompiler;
@@ -88,51 +88,51 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	}
 	
 	@SafeVarargs
-	public final L setClassPathsWhereToSearchNotFoundClasses(String... classPaths) {
+	public final L setClassRepositoryWhereToSearchNotFoundClasses(String... classPaths) {
 		compileConfigSupplier = compileConfigSupplier.andThen((compileConfig) -> 
-			compileConfig.setClassPathsWhereToSearchNotFoundClasses(classPaths)
+			compileConfig.setClassRepositoryWhereToSearchNotFoundClasses(classPaths)
 		);
-		return setClassPathsWhereToSearchNotFoundClassesDuringLoading(classPaths);		
+		return setClassRepositoryWhereToSearchNotFoundClassesDuringLoading(classPaths);		
 	}
 	
 	@SafeVarargs
-	public final L addClassPathsWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
+	public final L addClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
 		compileConfigSupplier = compileConfigSupplier.andThen((compileConfig) -> 
-			compileConfig.addClassPathsWhereToSearchNotFoundClasses(classPathCollections)
+			compileConfig.addClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections)
 		);
-		return addClassPathsWhereToSearchNotFoundClassesDuringLoading(classPathCollections);		
+		return addClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(classPathCollections);		
 	}
 	
 	@SafeVarargs
-	public final L setClassPathsWhereToSearchNotFoundClassesDuringLoading(Collection<String>... classPathCollections) {
-		if (classPathsWhereToSearchNotFoundClassesDuringLoading == null) {
-			classPathsWhereToSearchNotFoundClassesDuringLoading = new HashSet<>();
+	public final L setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(Collection<String>... classPathCollections) {
+		if (classRepositoriesWhereToSearchNotFoundClassesDuringLoading == null) {
+			classRepositoriesWhereToSearchNotFoundClassesDuringLoading = new HashSet<>();
 		}
 		for (Collection<String> classPathCollection : classPathCollections) {
-			classPathsWhereToSearchNotFoundClassesDuringLoading.addAll(classPathCollection);
+			classRepositoriesWhereToSearchNotFoundClassesDuringLoading.addAll(classPathCollection);
 		}
 		return (L)this;
 	}
 	
 	@SafeVarargs
-	public final L setClassPathsWhereToSearchNotFoundClassesDuringLoading(String... classPaths) {
-		return (L)setClassPathsWhereToSearchNotFoundClassesDuringLoading(Arrays.asList(classPaths));
+	public final L setClassRepositoryWhereToSearchNotFoundClassesDuringLoading(String... classPaths) {
+		return (L)setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(Arrays.asList(classPaths));
 	}
 	
 	@SafeVarargs
-	public final L addClassPathsWhereToSearchNotFoundClassesDuringLoading(Collection<String>... classPathCollections) {
-		if (additionalClassPathsWhereToSearchNotFoundClassesDuringLoading == null) {
-			additionalClassPathsWhereToSearchNotFoundClassesDuringLoading = new HashSet<>();
+	public final L addClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(Collection<String>... classPathCollections) {
+		if (additionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading == null) {
+			additionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading = new HashSet<>();
 		}
 		for (Collection<String> classPathCollection : classPathCollections) {
-			additionalClassPathsWhereToSearchNotFoundClassesDuringLoading.addAll(classPathCollection);
+			additionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading.addAll(classPathCollection);
 		}
 		return (L)this;
 	}
 	
 	@SafeVarargs
-	public final L addClassPathsWhereToSearchNotFoundClassesDuringLoading(String... classPaths) {
-		return (L)addClassPathsWhereToSearchNotFoundClassesDuringLoading(Arrays.asList(classPaths));
+	public final L addClassRepositoryWhereToSearchNotFoundClassesDuringLoading(String... classPaths) {
+		return (L)addClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(Arrays.asList(classPaths));
 	}
 	
 
@@ -147,11 +147,11 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	}
 
 	Collection<String> getClassPathsWhereToSearchNotFoundClassesDuringLoading() {
-		return classPathsWhereToSearchNotFoundClassesDuringLoading;
+		return classRepositoriesWhereToSearchNotFoundClassesDuringLoading;
 	}
 	
 	Collection<String> getAdditionalClassPathsWhereToSearchNotFoundClassesDuringLoading() {
-		return additionalClassPathsWhereToSearchNotFoundClassesDuringLoading;
+		return additionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading;
 	}	
 	
 	ClassLoader getClassLoader() {

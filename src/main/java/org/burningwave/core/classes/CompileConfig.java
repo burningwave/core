@@ -38,8 +38,8 @@ public class CompileConfig {
 	private Collection<String> classPaths;
 	private Collection<String> additionalClassPaths;
 	
-	private Collection<String> classPathsWhereToSearchNotFoundClasses;
-	private Collection<String> additionalClassPathsWhereToSearchNotFoundClasses;
+	private Collection<String> classRepositoriesWhereToSearchNotFoundClasses;
+	private Collection<String> additionalClassRepositoriesWhereToSearchNotFoundClasses;
 	
 	private boolean storingCompiledClassesEnabled;
 	
@@ -105,35 +105,35 @@ public class CompileConfig {
 	}
 	
 	@SafeVarargs
-	public final CompileConfig setClassPathsWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
-		if (classPathsWhereToSearchNotFoundClasses == null) {
-			classPathsWhereToSearchNotFoundClasses = new HashSet<>();
+	public final CompileConfig setClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
+		if (classRepositoriesWhereToSearchNotFoundClasses == null) {
+			classRepositoriesWhereToSearchNotFoundClasses = new HashSet<>();
 		}
 		for (Collection<String> classPathCollection : classPathCollections) {
-			classPathsWhereToSearchNotFoundClasses.addAll(classPathCollection);
+			classRepositoriesWhereToSearchNotFoundClasses.addAll(classPathCollection);
 		}
 		return this;
 	}
 	
 	@SafeVarargs
-	public final CompileConfig setClassPathsWhereToSearchNotFoundClasses(String... classPaths) {
-		return addClassPathsWhereToSearchNotFoundClasses(Arrays.asList(classPaths));
+	public final CompileConfig setClassRepositoryWhereToSearchNotFoundClasses(String... classPaths) {
+		return addClassRepositoriesWhereToSearchNotFoundClasses(Arrays.asList(classPaths));
 	}
 	
 	@SafeVarargs
-	public final CompileConfig addClassPathsWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
-		if (additionalClassPathsWhereToSearchNotFoundClasses == null) {
-			additionalClassPathsWhereToSearchNotFoundClasses = new HashSet<>();
+	public final CompileConfig addClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
+		if (additionalClassRepositoriesWhereToSearchNotFoundClasses == null) {
+			additionalClassRepositoriesWhereToSearchNotFoundClasses = new HashSet<>();
 		}
 		for (Collection<String> classPathCollection : classPathCollections) {
-			additionalClassPathsWhereToSearchNotFoundClasses.addAll(classPathCollection);
+			additionalClassRepositoriesWhereToSearchNotFoundClasses.addAll(classPathCollection);
 		}
 		return this;
 	}
 	
 	@SafeVarargs
-	public final CompileConfig addClassPathsWhereToSearchNotFoundClasses(String... classPaths) {
-		return addClassPathsWhereToSearchNotFoundClasses(Arrays.asList(classPaths));
+	public final CompileConfig addClassRepositoryWhereToSearchNotFoundClasses(String... classPaths) {
+		return addClassRepositoriesWhereToSearchNotFoundClasses(Arrays.asList(classPaths));
 	}
 
 	Collection<String> getSources() {
@@ -149,11 +149,11 @@ public class CompileConfig {
 	}
 
 	Collection<String> getClassPathsWhereToSearchNotFoundClasses() {
-		return classPathsWhereToSearchNotFoundClasses;
+		return classRepositoriesWhereToSearchNotFoundClasses;
 	}
 
 	Collection<String> getAdditionalClassPathsWhereToSearchNotFoundClasses() {
-		return additionalClassPathsWhereToSearchNotFoundClasses;
+		return additionalClassRepositoriesWhereToSearchNotFoundClasses;
 	}
 	
 	

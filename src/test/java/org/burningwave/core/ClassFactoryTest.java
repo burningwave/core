@@ -188,7 +188,7 @@ public class ClassFactoryTest extends BaseTest {
 			ClassFactory.ClassRetriever classRetriever =  componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).modifyCompileConfig(
 					compileConfig -> compileConfig.addClassPaths(pathHelper.getAllMainClassPaths())
-				).setClassPathsWhereToSearchNotFoundClasses(
+				).setClassRepositoryWhereToSearchNotFoundClasses(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				).useClassLoader(classLoader)
 			);
@@ -199,7 +199,7 @@ public class ClassFactoryTest extends BaseTest {
 			classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).modifyCompileConfig(
 					compileConfig -> compileConfig.addClassPaths(pathHelper.getAllMainClassPaths())
-				).setClassPathsWhereToSearchNotFoundClasses(
+				).setClassRepositoryWhereToSearchNotFoundClasses(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				).useClassLoader(classLoader)
 			);
@@ -226,7 +226,7 @@ public class ClassFactoryTest extends BaseTest {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).modifyCompileConfig(
 					compileConfig -> compileConfig.addClassPaths(pathHelper.getAllMainClassPaths())
-				).setClassPathsWhereToSearchNotFoundClasses(
+				).setClassRepositoryWhereToSearchNotFoundClasses(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				)
 			);
@@ -253,7 +253,7 @@ public class ClassFactoryTest extends BaseTest {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).modifyCompileConfig(
 					compileConfig -> compileConfig.addClassPaths(pathHelper.getAllMainClassPaths())
-				).setClassPathsWhereToSearchNotFoundClasses(
+				).setClassRepositoryWhereToSearchNotFoundClasses(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				).useOneShotJavaCompiler(true)
 			);
@@ -281,7 +281,7 @@ public class ClassFactoryTest extends BaseTest {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).modifyCompileConfig(
 					compileConfig -> compileConfig.addClassPaths(pathHelper.getAllMainClassPaths())
-				).setClassPathsWhereToSearchNotFoundClasses(
+				).setClassRepositoryWhereToSearchNotFoundClasses(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				)
 			);

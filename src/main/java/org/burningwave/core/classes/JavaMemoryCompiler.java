@@ -145,7 +145,7 @@ public class JavaMemoryCompiler implements Component {
 		return compile(
 			CompileConfig.withSources(sources).setClassPaths(
 				pathHelper.getAllMainClassPaths()
-			).setClassPathsWhereToSearchNotFoundClasses(
+			).setClassRepositoriesWhereToSearchNotFoundClasses(
 				pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES)
 			).storeCompiledClasses(
 				storeCompiledClasses
