@@ -122,7 +122,7 @@ public class ClassFactoryTest extends BaseTest {
 			int threadCount = 6;
 			Collection<Thread> threads = new ArrayList<>();
 			for (int i = 0; i < threadCount; i++) {
-				threads.add(new Thread( () -> getOrBuildClassWithExternalClassTestOne(true, null)));
+				threads.add(new Thread( () -> getOrBuildClassWithExternalClassTestOne(true, false, "ComplexExample", "ComplexExampleTwo", null)));
 			}
 			for (Thread thread : threads) {
 				thread.start();
@@ -135,20 +135,31 @@ public class ClassFactoryTest extends BaseTest {
 	
 	@Test
 	public void getOrBuildClassWithExternalClassTestOne() {
-		getOrBuildClassWithExternalClassTestOne(true, null);
+		getOrBuildClassWithExternalClassTestOne(true, false, "ComplexExample", "ComplexExampleTwo", null);
 	}
 	
 	@Test
 	public void getOrBuildClassWithExternalClassTestFive() {
-		getOrBuildClassWithExternalClassTestOne(true, Thread.currentThread().getContextClassLoader());
+		getOrBuildClassWithExternalClassTestOne(true, true, "ComplexExampleFour", "ComplexExampleFive", null);
 	}
 	
-	public void getOrBuildClassWithExternalClassTestOne(boolean clearCache, ClassLoader classLoader) {
+	@Test
+	public void getOrBuildClassWithExternalClassTestSix() {
+		getOrBuildClassWithExternalClassTestOne(true, false, "ComplexExample", "ComplexExampleTwo", Thread.currentThread().getContextClassLoader());
+	}
+	
+	public void getOrBuildClassWithExternalClassTestOne(
+		boolean clearCache,
+		boolean adjustClassPaths,
+		String classNameOne,
+		String classNameTwo,
+		ClassLoader classLoader
+	) {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
 		UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
 			ClassSourceGenerator.create(
-				TypeDeclarationSourceGenerator.create("ComplexExample")
+				TypeDeclarationSourceGenerator.create(classNameOne)
 			).addModifier(
 				Modifier.PUBLIC
 			).expands(
@@ -168,7 +179,7 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		UnitSourceGenerator unitSG2= UnitSourceGenerator.create("packagename").addClass(
 			ClassSourceGenerator.create(
-				TypeDeclarationSourceGenerator.create("ComplexExampleTwo")
+				TypeDeclarationSourceGenerator.create(classNameTwo)
 			).addModifier(
 				Modifier.PUBLIC
 			).expands(
@@ -190,18 +201,26 @@ public class ClassFactoryTest extends BaseTest {
 			ClassFactory.ClassRetriever classRetriever =  componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassRepository(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
-				).useClassLoader(classLoader)
+				).modifyCompileConfig(compileConfig -> 
+					compileConfig.adjustClassPaths(adjustClassPaths)
+				).useClassLoader(
+					classLoader
+				)				
 			);
-			classRetriever.get("packagename.ComplexExample");
+			classRetriever.get("packagename." + classNameOne);
 			if (clearCache) {
 				ComponentContainer.clearAllCaches(false, false);
 			}
 			classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).setClassRepository(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
-				).useClassLoader(classLoader)
+				).modifyCompileConfig(compileConfig -> 
+					compileConfig.adjustClassPaths(adjustClassPaths)
+				).useClassLoader(
+					classLoader
+				)	
 			);
-			return classRetriever.get("packagename.ComplexExampleTwo");
+			return classRetriever.get("packagename." + classNameTwo);
 		});
 	}
 	
