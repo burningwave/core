@@ -29,6 +29,7 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -772,57 +773,42 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public ByteBuffer toByteBuffer() {
-		return toByteBuffer(0);
-	}
-	
-	private ByteBuffer toByteBuffer(int call) {
 		String absolutePath = getAbsolutePath();
 		ByteBuffer resource = Cache.pathForContents.get(absolutePath); 
 		if (resource != null) {
 			return resource;
 		}
-		String conventionedAbsolutePath = computeConventionedAbsolutePath();
 		if (exists() && !isFolder()) {
 			if (isCompressed()) {
 				FileSystemItem superParent = getParentContainer();
 				while (superParent.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
 					superParent = superParent.getParentContainer();
 				}
-				if (call == 0) {
-					Collection<FileSystemItem> superParentAllChildren = superParent.getAllChildren();
-					FileSystemItem fIS = random(superParentAllChildren);
-					while (fIS.getAbsolutePath() == this.getAbsolutePath() && superParentAllChildren.size() > 1) {
-						fIS = random(superParentAllChildren);
-					}
-					if ( Cache.pathForContents.get(fIS.getAbsolutePath()) == null ) {
-						synchronized (superParentAllChildren) {
-							if (Cache.pathForContents.get(fIS.getAbsolutePath()) == null ) {
-								superParent.refresh().getAllChildren();
-							}
+				Collection<FileSystemItem> superParentAllChildren = superParent.getAllChildren();
+				FileSystemItem fIS = IterableObjectHelper.getRandom(superParentAllChildren);
+				while (fIS.getAbsolutePath() == this.getAbsolutePath() && superParentAllChildren.size() > 1) {
+					fIS = IterableObjectHelper.getRandom(superParentAllChildren);
+				}
+				if ( Cache.pathForContents.get(fIS.getAbsolutePath()) == null ) {
+					synchronized (superParentAllChildren) {
+						if (Cache.pathForContents.get(fIS.getAbsolutePath()) == null ) {
+							superParent.refresh().getAllChildren();
 						}
 					}
-					return toByteBuffer(++call);
-				} else {
-					return superParent.refresh().findFirstInAllChildren(
-						FileSystemItem.Criteria.forAllFileThat(file -> file.getAbsolutePath().equals(absolutePath))
-					).toByteBuffer(++call);
-				}				
-			} else {
-				try (FileInputStream fIS = FileInputStream.create(conventionedAbsolutePath)) {
-					return Cache.pathForContents.getOrUploadIfAbsent(
-						absolutePath, () ->
-						fIS.toByteBuffer()
-					);
 				}
+				return toByteBuffer();				
+			} else {
+				return Cache.pathForContents.getOrUploadIfAbsent(
+					absolutePath, () -> {
+						try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
+							return fIS.toByteBuffer();
+						}						
+					}
+				);
+				
 			}
 		}
 		return resource;
-	}
-	
-	private FileSystemItem random(Collection<FileSystemItem> coll) {
-		int num = (int) (Math.random() * coll.size());
-	    for(FileSystemItem t: coll) if (--num < 0) return t;
-	    return null;
 	}
 	
 	public InputStream toInputStream() {

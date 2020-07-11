@@ -70,6 +70,14 @@ public class IterableObjectHelper implements Component {
 		return mergedCollection;
 	}
 	
+	public <T> T getRandom(Collection<T> coll) {
+		int num = (int) (Math.random() * coll.size());
+	    for(T t: coll) {
+	    	if (--num < 0) return t;
+	    }
+	    return null;
+	}
+	
 	public <T> Stream<T> retrieveStream(Object object) {
 		Stream<T> stream = null;
 		if (object != null) {
