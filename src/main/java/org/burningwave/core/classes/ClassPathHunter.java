@@ -31,6 +31,7 @@ package org.burningwave.core.classes;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -110,12 +111,27 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 	}
 	
 	@Override
+	void iterateAndTestCachedPaths(
+		SearchContext context,
+		String basePath,
+		Map<String, Collection<Class<?>>> itemsForPath,
+		FileSystemItem.Criteria fileFilter
+	) {
+		for (Entry<String, Collection<Class<?>>> cachedItemAsEntry : itemsForPath.entrySet()) {
+			String absolutePathOfItem = cachedItemAsEntry.getKey();
+			if (FileSystemItem.ofPath(absolutePathOfItem).findFirstInAllChildren(fileFilter) != null) {
+				context.addItemFound(basePath, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
+			}
+		}
+	}
+	
+	@Override
 	void addToContext(SearchContext context, TestContext criteriaTestContext,
 		String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
 	) {
 		String classPath = fileSystemItem.getAbsolutePath();
-		classPath = classPath.substring(0, classPath.lastIndexOf(javaClass.getName().replace(".", "/")));
-		context.addItemFound(basePath, classPath, context.loadClass(javaClass.getName()));		
+		FileSystemItem classPathAsFIS = FileSystemItem.ofPath(classPath.substring(0, classPath.lastIndexOf(javaClass.getName().replace(".", "/"))));
+		context.addItemFound(basePath, classPathAsFIS.getAbsolutePath(), context.loadClass(javaClass.getName()));		
 	}
 	
 	@Override

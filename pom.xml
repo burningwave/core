@@ -4,7 +4,7 @@
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
 
-	<version>7.19.0-SNAPSHOT</version>
+	<version>7.20.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	
 	<name>Burningwave Core</name>
@@ -49,7 +49,8 @@
 		<project_jdk_version>8</project_jdk_version>
 		<javadocExecutable.relativePath>bin/javadoc</javadocExecutable.relativePath>
 		<skipTests>true</skipTests>
-		<project.test.includes>**/AllExceptHeavyTestsSuite.java</project.test.includes>
+		<project.test.testSuite>AllExceptHeavyTestsSuite</project.test.testSuite>
+		<project.test.includes>**/${project.test.testSuite}.java</project.test.includes>
 		<project.test.excludes>**/*Test.java</project.test.excludes>
 		<project.generated.artifacts.prefix>bw</project.generated.artifacts.prefix>
 		<repository.url>https://burningwave@github.com/burningwave/core.git</repository.url>

@@ -42,6 +42,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -166,6 +167,7 @@ public class JavaMemoryCompiler implements Component {
 				config::getAdditionalRepositoriesWhereToSearchNotFoundClasses,
 				() -> pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES)
 			),
+			config.isAdjustClassPathsEnabled(),
 			config.isStoringCompiledClassesEnabled()
 		);
 	}
@@ -174,16 +176,21 @@ public class JavaMemoryCompiler implements Component {
 		Collection<String> sources, 
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
+		boolean adjustClassPaths,
 		boolean storeCompiledClasses
 	) {	
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
+		if (adjustClassPaths) {
+			classPaths = adjustClassPaths(classPaths);
+		}
 		Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
 		sourcesToMemorySources(sources, memorySources);
 		try (Compilation.Context context = Compilation.Context.create(
 				this, classPathHunter, 
 				memorySources, 
 				new ArrayList<>(classPaths), 
-				new ArrayList<>(classRepositoriesPaths))
+				new ArrayList<>(classRepositoriesPaths)
+			)
 		) {
 			Map<String, ByteBuffer> compiledFiles = _compile(context, null);
 			if (!compiledFiles.isEmpty() && storeCompiledClasses) {
@@ -196,6 +203,65 @@ public class JavaMemoryCompiler implements Component {
 		}
 	}
 	
+	private Collection<String> adjustClassPaths(Collection<String> classPaths) {
+		Collection<String> adjustedClassPaths = new HashSet<>();
+		Collection<String> toBeAdjuested = new HashSet<>(); 
+		for (String classPath : classPaths) {
+			FileSystemItem fIS = FileSystemItem.ofPath(classPath);
+			if (fIS.exists()) {
+				if (fIS.isArchive()) {
+					toBeAdjuested.add(fIS.getAbsolutePath());
+				} else {
+					adjustedClassPaths.add(fIS.getAbsolutePath());
+				}
+			}
+		}
+		FileSystemItem.CheckingOption checkFileOption = 
+			FileSystemItem.CheckingOption.forLabel(config.resolveStringValue(
+				Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+				JavaMemoryCompiler.Configuration.DEFAULT_VALUES
+			)
+		);
+		try(SearchResult result = classPathHunter.loadInCache(
+				SearchConfig.forPaths(toBeAdjuested).withScanFileCriteria(
+					FileSystemItem.Criteria.forClassTypeFiles(checkFileOption)
+				).optimizePaths(
+					true
+				)
+			).find()
+		) {	
+			Collection<FileSystemItem> effectiveClassPaths = result.getClassPaths();
+			if (!effectiveClassPaths.isEmpty()) {
+				for (FileSystemItem fsObject : effectiveClassPaths) {
+					if (fsObject.isCompressed()) {					
+						ThrowingRunnable.run(() -> {
+							synchronized (this) {
+								FileSystemItem classPathBasePath = fsObject.isArchive() ?
+									classPathHunterBasePathForCompressedLibs :
+									classPathHunterBasePathForCompressedClasses
+								;
+								FileSystemItem classPath = FileSystemItem.ofPath(
+									classPathBasePath.getAbsolutePath() + "/" + fsObject.getName()
+								);
+								if (!classPath.refresh().exists()) {
+									fsObject.copyTo(classPathBasePath.getAbsolutePath());
+								}
+								adjustedClassPaths.add(
+									classPath.getAbsolutePath()
+								);
+								//Free memory
+								classPath.reset();
+							}
+						});
+					} else {
+						adjustedClassPaths.add(fsObject.getAbsolutePath());
+					}
+				}
+			}
+		}
+		return adjustedClassPaths;
+	}
+
 	private void sourcesToMemorySources(Collection<String> sources, Collection<MemorySource> memorySources) {
 		for (String source : sources) {
 			String className = SourceCodeHandler.extractClassName(source);
@@ -307,7 +373,8 @@ public class JavaMemoryCompiler implements Component {
 							context.addToClassPath(
 								classPath.getAbsolutePath()
 							);
-							
+							//Free memory
+							classPath.reset();
 						}
 					});
 				} else {

@@ -29,6 +29,7 @@ import org.burningwave.core.classes.UnitSourceGenerator;
 import org.burningwave.core.classes.VariableSourceGenerator;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.service.Service;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 public class ClassFactoryTest extends BaseTest {
@@ -122,7 +123,7 @@ public class ClassFactoryTest extends BaseTest {
 			int threadCount = 6;
 			Collection<Thread> threads = new ArrayList<>();
 			for (int i = 0; i < threadCount; i++) {
-				threads.add(new Thread( () -> getOrBuildClassWithExternalClassTestOne(true, null)));
+				threads.add(new Thread( () -> getOrBuildClassWithExternalClassTestOne(true, false, "ComplexExample", "ComplexExampleTwo", null)));
 			}
 			for (Thread thread : threads) {
 				thread.start();
@@ -135,20 +136,32 @@ public class ClassFactoryTest extends BaseTest {
 	
 	@Test
 	public void getOrBuildClassWithExternalClassTestOne() {
-		getOrBuildClassWithExternalClassTestOne(true, null);
+		getOrBuildClassWithExternalClassTestOne(true, false, "ComplexExample", "ComplexExampleTwo", null);
 	}
 	
 	@Test
+	@Tag("Heavy")
 	public void getOrBuildClassWithExternalClassTestFive() {
-		getOrBuildClassWithExternalClassTestOne(true, Thread.currentThread().getContextClassLoader());
+		getOrBuildClassWithExternalClassTestOne(true, true, "ComplexExampleFour", "ComplexExampleFive", null);
 	}
 	
-	public void getOrBuildClassWithExternalClassTestOne(boolean clearCache, ClassLoader classLoader) {
+	@Test
+	public void getOrBuildClassWithExternalClassTestSix() {
+		getOrBuildClassWithExternalClassTestOne(true, false, "ComplexExample", "ComplexExampleTwo", Thread.currentThread().getContextClassLoader());
+	}
+	
+	public void getOrBuildClassWithExternalClassTestOne(
+		boolean clearCache,
+		boolean adjustClassPaths,
+		String classNameOne,
+		String classNameTwo,
+		ClassLoader classLoader
+	) {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
 		UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
 			ClassSourceGenerator.create(
-				TypeDeclarationSourceGenerator.create("ComplexExample")
+				TypeDeclarationSourceGenerator.create(classNameOne)
 			).addModifier(
 				Modifier.PUBLIC
 			).expands(
@@ -168,7 +181,7 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		UnitSourceGenerator unitSG2= UnitSourceGenerator.create("packagename").addClass(
 			ClassSourceGenerator.create(
-				TypeDeclarationSourceGenerator.create("ComplexExampleTwo")
+				TypeDeclarationSourceGenerator.create(classNameTwo)
 			).addModifier(
 				Modifier.PUBLIC
 			).expands(
@@ -187,21 +200,33 @@ public class ClassFactoryTest extends BaseTest {
 			"javax.xml.soap.SOAPException"
 		);
 		testNotNull(() -> {
-			ClassFactory.ClassRetriever classRetriever =  componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassRepository(
-					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
-				).useClassLoader(classLoader)
+			LoadOrBuildAndDefineConfig config = LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).useClassLoader(
+				classLoader
 			);
-			classRetriever.get("packagename.ComplexExample");
+			if (adjustClassPaths) {
+				config.setClassRepository(
+					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+				);
+			}
+			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
+				config			
+			);
+			classRetriever.get("packagename." + classNameOne);
 			if (clearCache) {
-				ComponentContainer.clearAllCaches(false, false);
+				ComponentContainer.clearAllCaches(true, true);
+			}
+			config = LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).useClassLoader(
+				classLoader
+			);
+			if (adjustClassPaths) {
+				config.setClassRepository(
+					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+				);
 			}
 			classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).setClassRepository(
-					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
-				).useClassLoader(classLoader)
+				config			
 			);
-			return classRetriever.get("packagename.ComplexExampleTwo");
+			return classRetriever.get("packagename." + classNameTwo);
 		});
 	}
 	
@@ -228,7 +253,7 @@ public class ClassFactoryTest extends BaseTest {
 					)
 				)) {
 					ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-						LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassRepository(
+						LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassPaths(
 							pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 						)
 					);
@@ -254,7 +279,7 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		testNotNull(() -> {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassRepository(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassPaths(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				).useOneShotJavaCompiler(true)
 			);
@@ -280,7 +305,7 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		testNotNull(() -> {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassRepository(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassPaths(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				)
 			);

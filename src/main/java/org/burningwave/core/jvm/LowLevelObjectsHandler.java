@@ -66,7 +66,7 @@ import org.burningwave.core.io.ByteBufferOutputStream;
 
 import sun.misc.Unsafe;
 
-@SuppressWarnings({"restriction","unchecked"})
+@SuppressWarnings({"all"})
 public class LowLevelObjectsHandler implements Component, MembersRetriever {
 
 	Unsafe unsafe;
@@ -229,45 +229,45 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			}
 		} else if (cls == int.class) {
 			if (!Modifier.isVolatile(field.getModifiers())) {
-				return (T)new Integer(unsafe.getInt(target, fieldOffset));
+				return (T)Integer.valueOf(unsafe.getInt(target, fieldOffset));
 			} else {
-				return (T)new Integer(unsafe.getIntVolatile(target, fieldOffset));
+				return (T)Integer.valueOf(unsafe.getIntVolatile(target, fieldOffset));
 			}
 		} else if (cls == long.class) {
 			if (!Modifier.isVolatile(field.getModifiers())) {
-				return (T)new Long(unsafe.getLong(target, fieldOffset));
+				return (T)Long.valueOf(unsafe.getLong(target, fieldOffset));
 			} else {
-				return (T)new Long(unsafe.getLongVolatile(target, fieldOffset));
+				return (T)Long.valueOf(unsafe.getLongVolatile(target, fieldOffset));
 			}
 		} else if (cls == float.class) {
 			if (!Modifier.isVolatile(field.getModifiers())) {
-				return (T)new Float(unsafe.getFloat(target, fieldOffset));
+				return (T)Float.valueOf(unsafe.getFloat(target, fieldOffset));
 			} else {
-				return (T)new Float(unsafe.getFloatVolatile(target, fieldOffset));
+				return (T)Float.valueOf(unsafe.getFloatVolatile(target, fieldOffset));
 			}
 		} else if (cls == double.class) {
 			if (!Modifier.isVolatile(field.getModifiers())) {
-				return (T)new Double(unsafe.getDouble(target, fieldOffset));
+				return (T)Double.valueOf(unsafe.getDouble(target, fieldOffset));
 			} else {
-				return (T)new Double(unsafe.getDoubleVolatile(target, fieldOffset));
+				return (T)Double.valueOf(unsafe.getDoubleVolatile(target, fieldOffset));
 			}
 		} else if (cls == boolean.class) {
 			if (!Modifier.isVolatile(field.getModifiers())) {
-				return (T)new Boolean(unsafe.getBoolean(target, fieldOffset));
+				return (T)Boolean.valueOf(unsafe.getBoolean(target, fieldOffset));
 			} else {
-				return (T)new Boolean(unsafe.getBooleanVolatile(target, fieldOffset));
+				return (T)Boolean.valueOf(unsafe.getBooleanVolatile(target, fieldOffset));
 			}
 		} else if (cls == byte.class) {
 			if (!Modifier.isVolatile(field.getModifiers())) {
-				return (T)new Byte(unsafe.getByte(target, fieldOffset));
+				return (T)Byte.valueOf(unsafe.getByte(target, fieldOffset));
 			} else {
-				return (T)new Byte(unsafe.getByteVolatile(target, fieldOffset));
+				return (T)Byte.valueOf(unsafe.getByteVolatile(target, fieldOffset));
 			}
 		} else {
 			if (!Modifier.isVolatile(field.getModifiers())) {
-				return (T)new Character(unsafe.getChar(target, fieldOffset));
+				return (T)Character.valueOf(unsafe.getChar(target, fieldOffset));
 			} else {
-				return (T)new Character(unsafe.getCharVolatile(target, fieldOffset));
+				return (T)Character.valueOf(unsafe.getCharVolatile(target, fieldOffset));
 			}
 		}
 	}

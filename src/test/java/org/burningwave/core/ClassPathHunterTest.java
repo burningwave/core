@@ -85,5 +85,21 @@ public class ClassPathHunterTest extends BaseTest {
 			true
 		);
 	}
+	
+	@Test
+	public void findAllTestOne() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		componentSupplier.clearHuntersCache(false);
+		testNotEmpty(
+			() -> componentSupplier.getClassPathHunter().loadInCache(
+				SearchConfig.forPaths(
+					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+				)
+			).find(),
+			(result) -> {
+				return result.getClassPaths();				
+			}, true
+		);
+	}
 
 }

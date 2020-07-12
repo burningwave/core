@@ -217,7 +217,7 @@ public class ClassFactory implements Component {
 	
 	public <L extends LoadOrBuildAndDefineConfigAbst<L>> ClassRetriever loadOrBuildAndDefine(L config) {
 		if (config.isVirtualizeClassesEnabled()) {
-			config.addClassRepository(pathHelper.getBurningwaveRuntimeClassPath());
+			config.addClassPaths(pathHelper.getBurningwaveRuntimeClassPath());
 		}
 		return loadOrBuildAndDefine(
 			config.getClassesName(),

@@ -114,45 +114,39 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	
 	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean checkForAddedClasses) {
 		Collection<String> scannedPaths = new HashSet<>();
-		if (!isClosed) {
+		try {
 			for (String path : paths) {
-				if (!isClosed) {
-					if (checkForAddedClasses || !hasBeenLoaded(path, !checkForAddedClasses)) {
-						synchronized(mutexManager.getMutex(path)) {
-							if (checkForAddedClasses || !hasBeenLoaded(path, !checkForAddedClasses)) {
-								FileSystemItem pathFIS = FileSystemItem.ofPath(path);
-								if (checkForAddedClasses) {
-									pathFIS.refresh();
-								}
-								for (FileSystemItem child : pathFIS.getAllChildren()) {
-									if (!isClosed) {
-										if (classFileCriteriaAndConsumer.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(
-											new FileSystemItem [] {child, pathFIS}
-										)){
-											try {
-												JavaClass javaClass = JavaClass.create(child.toByteBuffer());
-												addByteCode(javaClass.getName(), javaClass.getByteCode());
-											} catch (Exception exc) {
-												logError("Exception occurred while scanning " + child.getAbsolutePath(), exc);
-											}
-										}
-									} else {
-										break;
+				if (checkForAddedClasses || !hasBeenLoaded(path, !checkForAddedClasses)) {
+					synchronized(mutexManager.getMutex(path)) {
+						if (checkForAddedClasses || !hasBeenLoaded(path, !checkForAddedClasses)) {
+							FileSystemItem pathFIS = FileSystemItem.ofPath(path);
+							if (checkForAddedClasses) {
+								pathFIS.refresh();
+							}
+							for (FileSystemItem child : pathFIS.getAllChildren()) {
+								if (classFileCriteriaAndConsumer.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(
+									new FileSystemItem [] {child, pathFIS}
+								)){
+									try {
+										JavaClass javaClass = JavaClass.create(child.toByteBuffer());
+										addByteCode(javaClass.getName(), javaClass.getByteCode());
+									} catch (Exception exc) {
+										logError("Exception occurred while scanning " + child.getAbsolutePath(), exc);
 									}
 								}
-								if (!isClosed) {
-									loadedPaths.add(path);
-									allLoadedPaths.add(path);
-								} else {
-									break;
-								}
-								scannedPaths.add(path);
 							}
+							loadedPaths.add(path);
+							allLoadedPaths.add(path);
+							scannedPaths.add(path);
 						}
 					}
-				} else {
-					break;
 				}
+			}
+		} catch (Throwable exc) {
+			if (isClosed) {
+				logWarn("Could not execute scanPathsAndAddAllByteCodesFound because {} has been closed", this.toString());
+			} else {
+				throw exc;
 			}
 		}
 		return scannedPaths;
