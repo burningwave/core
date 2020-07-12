@@ -223,7 +223,7 @@ public class ClassFactoryTest extends BaseTest {
 				classLoader
 			);
 			if (adjustClassPaths) {
-				config.setClassRepository(
+				config.addClassRepository(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				);
 			} else {
