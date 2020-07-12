@@ -207,6 +207,10 @@ public class ClassFactoryTest extends BaseTest {
 				config.setClassRepository(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				);
+			} else {
+				config.addClassPaths(
+					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+				);
 			}
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				config			
@@ -220,6 +224,10 @@ public class ClassFactoryTest extends BaseTest {
 			);
 			if (adjustClassPaths) {
 				config.setClassRepository(
+					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+				);
+			} else {
+				config.addClassPaths(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				);
 			}
