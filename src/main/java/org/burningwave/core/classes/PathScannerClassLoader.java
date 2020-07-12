@@ -28,12 +28,14 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -130,7 +132,10 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 									try {
 										JavaClass javaClass = JavaClass.create(child.toByteBuffer());
 										addByteCode(javaClass.getName(), javaClass.getByteCode());
-									} catch (Exception exc) {
+									} catch (Throwable exc) {
+										if (isClosed) {
+											throw exc;
+										}
 										logError("Exception occurred while scanning " + child.getAbsolutePath(), exc);
 									}
 								}
@@ -151,6 +156,15 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		}
 		return scannedPaths;
 	}
+	
+	@Override
+	public void addByteCode(String className, ByteBuffer byteCode) {
+		if (ClassLoaders.retrieveLoadedClass(this, className) == null) {
+    		synchronized (notLoadedByteCodes) {
+    			notLoadedByteCodes.put(className, byteCode);
+    		}
+		}
+    }
 	
 	@Override
 	public URL getResource(String name) {
