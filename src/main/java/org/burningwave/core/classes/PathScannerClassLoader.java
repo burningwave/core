@@ -133,10 +133,11 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 										JavaClass javaClass = JavaClass.create(child.toByteBuffer());
 										addByteCode(javaClass.getName(), javaClass.getByteCode());
 									} catch (Throwable exc) {
-										if (isClosed) {
+										if (!isClosed) {
+											logError("Exception occurred while scanning " + child.getAbsolutePath(), exc);
+										} else {
 											throw exc;
-										}
-										logError("Exception occurred while scanning " + child.getAbsolutePath(), exc);
+										}										
 									}
 								}
 							}
