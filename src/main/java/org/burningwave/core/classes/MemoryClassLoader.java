@@ -90,7 +90,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     	}
     }
 
-	private void addByteCode0(String className, ByteBuffer byteCode) {
+	void addByteCode0(String className, ByteBuffer byteCode) {
 		if (ClassLoaders.retrieveLoadedClass(this, className) == null) {
 			synchronized (notLoadedByteCodes) {
 				notLoadedByteCodes.put(className, byteCode);
