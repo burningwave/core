@@ -95,11 +95,11 @@ public class JavaMemoryCompiler implements Component {
 			);
 			DEFAULT_VALUES.put(
 				Key.CLASS_PATHS,
-				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS + "}"
+				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + ";"
 			);
 			DEFAULT_VALUES.put(
 				Key.ADDITIONAL_CLASS_PATHS, 
-				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}"
+				"${" + PathHelper.Configuration.Key.PATHS_PREFIX + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}"
 			);
 		}
 	}
@@ -157,15 +157,17 @@ public class JavaMemoryCompiler implements Component {
 			IterableObjectHelper.merge(
 				config::getClassPaths,
 				config::getAdditionalClassPaths,
-				() -> pathHelper.getPaths(
-					Configuration.Key.CLASS_PATHS, 
-					Configuration.Key.ADDITIONAL_CLASS_PATHS
-				)
+				() -> 
+					pathHelper.getPaths(
+						Configuration.Key.CLASS_PATHS, 
+						Configuration.Key.ADDITIONAL_CLASS_PATHS
+					)
 			),
 			IterableObjectHelper.merge(
 				config::getClassRepositoriesWhereToSearchNotFoundClasses,
 				config::getAdditionalRepositoriesWhereToSearchNotFoundClasses,
-				() -> pathHelper.getPaths(
+				() ->
+					pathHelper.getPaths(
 						Configuration.Key.CLASS_REPOSITORIES,
 						Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES
 					)
