@@ -265,9 +265,9 @@ public class Cache implements Component {
 		
 		public void clear() {
 			resources.clear();
-			mutexManagerForPartitions.clear();         
-			mutexManagerForLoadedResources.clear();    
-			mutexManagerForPartitionedResources.clear(); 
+			//mutexManagerForPartitions.clear();         
+			//mutexManagerForLoadedResources.clear();    
+			//mutexManagerForPartitionedResources.clear(); 
 		}
 	}
 	
