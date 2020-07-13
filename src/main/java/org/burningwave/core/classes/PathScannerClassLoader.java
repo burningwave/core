@@ -28,12 +28,14 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -114,53 +116,56 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	
 	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean checkForAddedClasses) {
 		Collection<String> scannedPaths = new HashSet<>();
-		Collection<String> loadedPaths = this.loadedPaths;
-		Collection<String> allLoadedPaths = this.allLoadedPaths;
-		FileSystemItem.Criteria classFileCriteriaAndConsumer = this.classFileCriteriaAndConsumer;
-		Mutex.Manager mutexManager = this.mutexManager;
-		if (!isClosed) {			
+		try {
 			for (String path : paths) {
-				if (!isClosed) {
-					if (checkForAddedClasses || !hasBeenLoaded(path, !checkForAddedClasses)) {
-						synchronized(mutexManager.getMutex(path)) {
-							if (checkForAddedClasses || !hasBeenLoaded(path, !checkForAddedClasses)) {
-								FileSystemItem pathFIS = FileSystemItem.ofPath(path);
-								if (checkForAddedClasses) {
-									pathFIS.refresh();
-								}
-								for (FileSystemItem child : pathFIS.getAllChildren()) {
-									if (!isClosed) {
-										if (classFileCriteriaAndConsumer.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(
-											new FileSystemItem [] {child, pathFIS}
-										)){
-											try {
-												JavaClass javaClass = JavaClass.create(child.toByteBuffer());
-												addByteCode(javaClass.getName(), javaClass.getByteCode());
-											} catch (Exception exc) {
-												logError("Exception occurred while scanning " + child.getAbsolutePath(), exc);
-											}
-										}
-									} else {
-										break;
+				if (checkForAddedClasses || !hasBeenLoaded(path, !checkForAddedClasses)) {
+					synchronized(mutexManager.getMutex(path)) {
+						if (checkForAddedClasses || !hasBeenLoaded(path, !checkForAddedClasses)) {
+							FileSystemItem pathFIS = FileSystemItem.ofPath(path);
+							if (checkForAddedClasses) {
+								pathFIS.refresh();
+							}
+							for (FileSystemItem child : pathFIS.getAllChildren()) {
+								if (classFileCriteriaAndConsumer.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(
+									new FileSystemItem [] {child, pathFIS}
+								)){
+									try {
+										JavaClass javaClass = JavaClass.create(child.toByteBuffer());
+										addByteCode(javaClass.getName(), javaClass.getByteCode());
+									} catch (Throwable exc) {
+										if (!isClosed) {
+											logError("Exception occurred while scanning " + child.getAbsolutePath(), exc);
+										} else {
+											throw exc;
+										}										
 									}
 								}
-								if (!isClosed) {
-									loadedPaths.add(path);
-									allLoadedPaths.add(path);
-								} else {
-									break;
-								}
-								scannedPaths.add(path);
 							}
+							loadedPaths.add(path);
+							allLoadedPaths.add(path);
+							scannedPaths.add(path);
 						}
 					}
-				} else {
-					break;
 				}
+			}
+		} catch (Throwable exc) {
+			if (isClosed) {
+				logWarn("Could not execute scanPathsAndAddAllByteCodesFound because {} has been closed", this.toString());
+			} else {
+				throw exc;
 			}
 		}
 		return scannedPaths;
 	}
+	
+	@Override
+	public void addByteCode(String className, ByteBuffer byteCode) {
+		if (ClassLoaders.retrieveLoadedClass(this, className) == null) {
+    		synchronized (notLoadedByteCodes) {
+    			notLoadedByteCodes.put(className, byteCode);
+    		}
+		}
+    }
 	
 	@Override
 	public URL getResource(String name) {
@@ -260,8 +265,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	}
 	
 	public boolean hasBeenLoaded(String path, boolean considerURLClassLoaderPathsAsLoadedPaths) {
-		Collection<String> allLoadedPaths = this.allLoadedPaths;
-		if (isClosed || allLoadedPaths.contains(path)) {
+		if (allLoadedPaths.contains(path)) {
 			return true;
 		}
 		FileSystemItem pathFIS = FileSystemItem.ofPath(path);

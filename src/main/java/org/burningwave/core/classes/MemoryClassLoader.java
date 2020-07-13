@@ -45,12 +45,12 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.io.ByteBufferInputStream;
 
 
+@SuppressWarnings("unchecked")
 public class MemoryClassLoader extends ClassLoader implements Component {
 
 	Map<String, ByteBuffer> notLoadedByteCodes;
@@ -79,49 +79,104 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 
 	public void addByteCode(String className, ByteBuffer byteCode) {
-		Map<String, ByteBuffer> notLoadedByteCodes = this.notLoadedByteCodes;
-		if (!isClosed) {
-	    	if (ClassLoaders.retrieveLoadedClass(this, className) == null) {
-	    		synchronized (notLoadedByteCodes) {
-	    			notLoadedByteCodes.put(className, byteCode);
-	    		}
-			} else {
-				logWarn("Could not add compiled class {} cause it's already defined", className);
+    	try {
+			addByteCode0(className, byteCode);
+    	} catch (Throwable exc) {
+    		if (!isClosed) {
+    			throw exc;
+    		} else {
+    			logWarn("Could not execute addByteCode on class named {} because {} has been closed", className, this.toString());
+    		}
+    	}
+    }
+
+	private void addByteCode0(String className, ByteBuffer byteCode) {
+		if (ClassLoaders.retrieveLoadedClass(this, className) == null) {
+			synchronized (notLoadedByteCodes) {
+				notLoadedByteCodes.put(className, byteCode);
 			}
 		} else {
-			logWarn("Could not execute addByteCode on class named {} because {} has been closed", className, this.toString());
+			logWarn("Could not add compiled class {} cause it's already defined", className);
 		}
-    }
+	}
     
-    public Map.Entry<String, ByteBuffer> getNotLoadedByteCode(String name) {
-    	for (Map.Entry<String, ByteBuffer> entry : notLoadedByteCodes.entrySet()){
-    	    if (entry.getKey().equals(name)) {
-    	    	return entry;
-    	    }
+    public Map.Entry<String, ByteBuffer> getNotLoadedByteCode(String className) {
+    	try {
+        	for (Map.Entry<String, ByteBuffer> entry : notLoadedByteCodes.entrySet()){
+        	    if (entry.getKey().equals(className)) {
+        	    	return entry;
+        	    }
+        	}
+    	} catch (Throwable exc) {
+    		if (!isClosed) {
+    			throw exc;
+    		} else {
+    			logWarn("Could not execute getNotLoadedByteCode on class named {} because {} has been closed", className, this.toString());
+    		}
     	}
     	return null;
     }
     
-    public ByteBuffer getByteCodeOf(String name) {
-    	return Optional.ofNullable(notLoadedByteCodes.get(name)).orElseGet(() -> Optional.ofNullable(loadedByteCodes.get(name)).orElseGet(() -> null));
+    public ByteBuffer getByteCodeOf(String className) {
+    	try {
+    		return Optional.ofNullable(notLoadedByteCodes.get(className)).orElseGet(() -> Optional.ofNullable(loadedByteCodes.get(className)).orElseGet(() -> null));
+    	} catch (Throwable exc) {
+    		if (!isClosed) {
+    			throw exc;
+    		} else {
+    			logWarn("Could not execute getByteCodeOf on class named {} because {} has been closed", className, this.toString());
+    		}
+    	}
+    	return null;
     }
     
     void addByteCodes(Map<String, ByteBuffer> byteCodes) {
-		for (Map.Entry<String, ByteBuffer> clazz : byteCodes.entrySet()) {
-			addByteCode(
-				clazz.getKey(), clazz.getValue()
-			);
-		}
+    	try {
+    		for (Map.Entry<String, ByteBuffer> clazz : byteCodes.entrySet()) {
+    			addByteCode0(
+    				clazz.getKey(), clazz.getValue()
+    			);
+    		}
+    	} catch (Throwable exc) {
+    		if (!isClosed) {
+    			throw exc;
+    		} else {
+    			logWarn("Could not execute addByteCodes on {} because {} has been closed", byteCodes.toString(), this.toString());
+    		}
+    	}
+		
     }
     
     public void addByteCodes(Collection<Entry<String, ByteBuffer>> classes) {
-    	classes.forEach(classObject -> addByteCode(classObject.getKey(), classObject.getValue()));	
+    	try {
+    		for (Map.Entry<String, ByteBuffer> clazz : classes) {
+    			addByteCode0(
+    				clazz.getKey(), clazz.getValue()
+    			);
+    		}
+    	} catch (Throwable exc) {
+    		if (!isClosed) {
+    			throw exc;
+    		} else {
+    			logWarn("Could not execute addByteCodes on {} because {} has been closed", classes.toString(), this.toString());
+    		}
+    	}
 	} 
 
-    
-    @SuppressWarnings("unchecked")
 	public void addByteCodes(Entry<String, ByteBuffer>... classes) {
-    	Stream.of(classes).forEach(classObject -> addByteCode(classObject.getKey(), classObject.getValue()));	
+		try {
+    		for (Map.Entry<String, ByteBuffer> clazz : classes) {
+    			addByteCode0(
+    				clazz.getKey(), clazz.getValue()
+    			);
+    		}
+    	} catch (Throwable exc) {
+    		if (!isClosed) {
+    			throw exc;
+    		} else {
+    			logWarn("Could not execute addByteCodes on {} because {} has been closed", classes.toString(), this.toString());
+    		}
+    	}    	
 	} 
     
 	public boolean hasPackageBeenDefined(String packageName) {
@@ -212,26 +267,43 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
     
 	ByteBuffer getByteCode(String classRelativePath) {
-		String className = classRelativePath.substring(0, classRelativePath.lastIndexOf(".class")).replace("/", ".");
-		ByteBuffer byteCode = loadedByteCodes.get(className);
-		if (byteCode == null) {
-			byteCode = notLoadedByteCodes.get(className);
-		}
-		return byteCode;
+		try {
+			String className = classRelativePath.substring(0, classRelativePath.lastIndexOf(".class")).replace("/", ".");
+			ByteBuffer byteCode = loadedByteCodes.get(className);
+			if (byteCode == null) {
+				byteCode = notLoadedByteCodes.get(className);
+			}
+			return byteCode;
+    	} catch (Throwable exc) {
+    		if (!isClosed) {
+    			throw exc;
+    		} else {
+    			logWarn("Could not execute getByteCode on {} because {} has been closed", classRelativePath, this.toString());
+    		}
+    	}    
+		return null;
 	}
     
     
     protected void addLoadedByteCode(String className, ByteBuffer byteCode) {
-    	synchronized (loadedByteCodes) {
-    		loadedByteCodes.put(className, byteCode);
-		}
+    	try {
+    		synchronized (loadedByteCodes) {
+        		loadedByteCodes.put(className, byteCode);
+    		}
+    	} catch (Throwable exc) {
+    		if (!isClosed) {
+    			throw exc;
+    		} else {
+    			logWarn("Could not execute addLoadedByteCode on {} because {} has been closed", className, this.toString());
+    		}
+    	}    
     }
     
     
 	@Override
     protected Class<?> findClass(String className) throws ClassNotFoundException {
-		if (!isClosed) {
-			Class<?> cls = null;
+		Class<?> cls = null;
+		try {
 			ByteBuffer byteCode = notLoadedByteCodes.get(className);
 			if (byteCode != null) {
 				try {
@@ -248,14 +320,17 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			} else {
 				logWarn("Compiled class " + className + " not found");
 			}
-			if (cls != null) {
-				return cls;
+		} catch (Throwable exc) {
+			if (isClosed) {
+				logWarn("Could not load class {} because {} has been closed", className, this.toString());
 			} else {
-				throw new ClassNotFoundException(className);
+				throw exc;
 			}
+		}
+		if (cls != null) {
+			return cls;
 		} else {
-			logWarn("Could not load class {} because {} has been closed", className, this.toString());
-			return null;
+			throw new ClassNotFoundException(className);
 		}
 	}
 	
@@ -267,14 +342,17 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 
 	public void removeNotLoadedCompiledClass(String className) {
-		Map<String, ByteBuffer> notLoadedByteCodes = this.notLoadedByteCodes;
-		if (!isClosed) {
+		try {
 			synchronized (notLoadedByteCodes) {
 				notLoadedByteCodes.remove(className);
 			}
-		} else {
-			logWarn("Could not execute removeNotLoadedCompiledClass on class named {} because {} has been closed", className, this.toString());
-		}
+    	} catch (Throwable exc) {
+    		if (!isClosed) {
+    			throw exc;
+    		} else {
+    			logWarn("Could not execute removeNotLoadedCompiledClass on class named {} because {} has been closed", className, this.toString());
+    		}
+    	}    
 	}
 	
 	
@@ -299,14 +377,16 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	public void clear () {
-		Map<String, ByteBuffer> items = this.notLoadedByteCodes;
-		if (items != null) {
-			items.clear();
-		}
-		items = this.loadedByteCodes;
-		if (items != null) {
-			items.clear();
-		}
+		try {
+			this.notLoadedByteCodes.clear();
+			this.loadedByteCodes.clear();
+    	} catch (Throwable exc) {
+    		if (!isClosed) {
+    			throw exc;
+    		} else {
+    			logWarn("Could not execute clear because {} has been closed", this.toString());
+    		}
+    	}   
 	}
 	
 	protected void unregister() {
