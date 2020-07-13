@@ -994,6 +994,8 @@ paths.java-memory-compiler.class-paths=\
     ${paths.main-class-paths};\
     ${paths.main-class-paths.extension};\
     ${paths.java-memory-compiler.additional-class-paths}
+#This variable is empty by default and could be valorized by developer 
+paths.java-memory-compiler.additional-class-paths=
 #This variable is empty by default and could be valorized by developer   
 paths.java-memory-compiler.class-repositories=
 paths.main-class-paths.extension=\
