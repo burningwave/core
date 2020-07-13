@@ -937,7 +937,7 @@ class-factory.byte-code-hunter.search-config.check-file-option=\
 #default classloader used by the ClassFactory to load generated classes
 class-factory.default-class-loader=\
     (Supplier<ClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
-#This variable is empty by default and could be valorized by developer and it is
+#This variable is empty by default and can be valorized by developer and it is
 #included by 'class-factory.default-class-loader.imports' property
 class-factory.default-class-loader.additional-imports=
 class-factory.default-class-loader.imports=\  
@@ -951,7 +951,7 @@ class-factory.default-class-loader.name=\
     org.burningwave.core.classes.DefaultClassLoaderRetrieverForClassFactory
 class-hunter.default-path-scanner-class-loader=\
     (Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
-#This variable is empty by default and could be valorized by developer and it is
+#This variable is empty by default and can be valorized by developer and it is
 #included by 'class-hunter.default-path-scanner-class-loader.imports' property
 class-hunter.default-path-scanner-class-loader.additional-imports=
 class-hunter.default-path-scanner-class-loader.imports=\
@@ -981,7 +981,7 @@ path-scanner-class-loader.parent.name=\
     org.burningwave.core.classes.ParentClassLoaderRetrieverForPathScannerClassLoader
 #other possible values are: checkFileName, checkFileName|checkFileSignature, checkFileName&checkFileSignature
 path-scanner-class-loader.search-config.check-file-option=checkFileName
-#This variable is empty by default and could be valorized by developer and it is
+#This variable is empty by default and can be valorized by developer and it is
 #included by 'paths.class-factory.default-class-loader.class-repositories' property
 paths.class-factory.default-class-loader.additional-class-repositories=
 #this variable indicates all the paths from which the classes 
@@ -995,9 +995,8 @@ paths.hunters.default-search-config.paths=${paths.main-class-paths};
 #This variable is empty by default and can be valorized by developer and it is
 #included by 'paths.paths.java-memory-compiler.class-paths' property
 paths.java-memory-compiler.additional-class-paths=
-#this variable indicates all the paths from which the classes 
-#must be taken if during the compilation there will be classes
-#not found
+#this variable indicates all the class paths used by the JavaMemoryCompiler
+#component for compiling
 paths.java-memory-compiler.class-paths=\
     ${paths.main-class-paths};\
     ${paths.main-class-paths.extension};\
