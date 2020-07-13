@@ -83,8 +83,8 @@ public class JavaMemoryCompiler implements Component {
 			public static final String CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-paths";
 			public static final String ADDITIONAL_CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.additional-class-paths";
 			public static final String CLASS_REPOSITORIES =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-repositories";
-			public static final String ADDITIONAL_CLASS_REPOSITORIES = PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.additional-class-repositories";
 		}
+		
 		public final static Map<String, Object> DEFAULT_VALUES;
 		
 		static {
@@ -95,11 +95,9 @@ public class JavaMemoryCompiler implements Component {
 			);
 			DEFAULT_VALUES.put(
 				Key.CLASS_PATHS,
-				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + ";"
-			);
-			DEFAULT_VALUES.put(
-				Key.ADDITIONAL_CLASS_PATHS, 
-				"${" + PathHelper.Configuration.Key.PATHS_PREFIX + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}"
+				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
+				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
+				"${" + Configuration.Key.ADDITIONAL_CLASS_PATHS + "}"
 			);
 		}
 	}
@@ -159,18 +157,21 @@ public class JavaMemoryCompiler implements Component {
 				config::getAdditionalClassPaths,
 				() -> 
 					pathHelper.getPaths(
-						Configuration.Key.CLASS_PATHS, 
-						Configuration.Key.ADDITIONAL_CLASS_PATHS
+						Configuration.Key.CLASS_PATHS
 					)
 			),
 			IterableObjectHelper.merge(
 				config::getClassRepositoriesWhereToSearchNotFoundClasses,
 				config::getAdditionalRepositoriesWhereToSearchNotFoundClasses,
-				() ->
-					pathHelper.getPaths(
-						Configuration.Key.CLASS_REPOSITORIES,
-						Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES
-					)
+				() -> {
+					Collection<String> classRepositories = pathHelper.getPaths(
+						Configuration.Key.CLASS_REPOSITORIES
+					);
+					if (!classRepositories.isEmpty()) {
+						config.neededClassesPreventiveSearch(true);
+					}
+					return classRepositories;
+				}
 			),
 			config.isNeededClassesPreventiveSearchEnabled(),
 			config.isStoringCompiledClassesEnabled()

@@ -71,7 +71,7 @@ public class PathHelper implements Component {
 			public static String PATHS_PREFIX = "paths.";
 			public static String PATHS_SEPARATOR = ";";
 			public static String MAIN_CLASS_PATHS = PATHS_PREFIX + "main-class-paths";
-			public static String MAIN_CLASS_PATHS_PLACE_HOLDER = "${" + PATHS_PREFIX + MAIN_CLASS_PATHS + "}";
+			public static String MAIN_CLASS_PATHS_PLACE_HOLDER = "${" + MAIN_CLASS_PATHS + "}";
 			public static String MAIN_CLASS_PATHS_EXTENSION = MAIN_CLASS_PATHS + ".extension";
 		}
 		

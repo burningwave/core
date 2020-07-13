@@ -97,13 +97,8 @@ public class ClassFactory implements Component {
 			DEFAULT_VALUES.put(
 				Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER,
 				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_PATHS + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
-				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES + "}"
-				
-			);
-			DEFAULT_VALUES.put(
-				Key.ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER,
-				"${" + JavaMemoryCompiler.Configuration.Key.ADDITIONAL_CLASS_PATHS + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
-				"${" + JavaMemoryCompiler.Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES + "}"
+				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
+				"${" + Key.ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER + "}"				
 			);
 			
 			DEFAULT_VALUES.put(
