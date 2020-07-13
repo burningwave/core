@@ -178,6 +178,8 @@ public class ClassFactoryTest extends BaseTest {
 			"org.apache.axis2.saaj.SOAPPartImpl",
 			"org.apache.axis2.saaj.SOAPMessageImpl",
 			"javax.xml.soap.SOAPException"
+		).addStaticImport(
+			"org.burningwave.core.assembler.StaticComponentContainer.Classes"
 		);
 		UnitSourceGenerator unitSG2= UnitSourceGenerator.create("packagename").addClass(
 			ClassSourceGenerator.create(
@@ -198,6 +200,8 @@ public class ClassFactoryTest extends BaseTest {
 			"org.apache.axis2.saaj.SOAPPartImpl",
 			"org.apache.axis2.saaj.SOAPMessageImpl",
 			"javax.xml.soap.SOAPException"
+		).addStaticImport(
+			"org.burningwave.core.assembler.StaticComponentContainer.Classes"
 		);
 		testNotNull(() -> {
 			LoadOrBuildAndDefineConfig config = LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).useClassLoader(

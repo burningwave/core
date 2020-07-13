@@ -33,6 +33,8 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.reflect.Modifier;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -62,6 +64,22 @@ public class SourceCodeHandler implements Component {
 			Strings.extractAllGroups(
 				Pattern.compile("(?<=\\n|\\A)(?:public\\s*)?(class|interface|enum)\\s*([^\\n\\s<]*)"), classCode
 			).get(2).get(0);
+	}
+	
+	public Collection<String> extractImports(String classCode) {
+		Collection<String> imports = Strings.extractAllGroups(
+			Pattern.compile("import\\s+(.*?)\\s*;"), classCode
+		).get(1);
+		Collection<String> finalImports = new HashSet<>();
+		for (String className : imports) {
+			if (className.startsWith("static")) {
+				className = className.replaceAll("static\\s+", "");
+				className = className.substring(0, className.lastIndexOf("."));
+			}
+			finalImports.add(className);
+		}
+		
+		return finalImports;
 	}
 
 	public UnitSourceGenerator generateExecutor(String className, BodySourceGenerator body) {

@@ -38,11 +38,14 @@ public class CompileConfig {
 	private Collection<String> classPaths;
 	private Collection<String> additionalClassPaths;
 	
+	private Collection<String> classRepositories;
+	private Collection<String> additionalClassRepositories;
+	
 	private Collection<String> classRepositoriesWhereToSearchNotFoundClasses;
 	private Collection<String> additionalClassRepositoriesWhereToSearchNotFoundClasses;
 	
 	private boolean storingCompiledClassesEnabled;
-	private boolean adjustClassPaths;
+	private boolean neededClassesPreventiveSearchEnabled;
 	
 	private CompileConfig() {
 		this.sources = new HashSet<>();
@@ -68,42 +71,48 @@ public class CompileConfig {
 		return this;
 	}
 	
-	CompileConfig adjustClassPaths(boolean flag) {
-		this.adjustClassPaths = flag;
+	public CompileConfig neededClassesPreventiveSearch(boolean flag) {
+		this.neededClassesPreventiveSearchEnabled = flag;
 		return this;
-	}	
+	}
+
+///////////////////	
 	
 	@SafeVarargs
 	public final CompileConfig setClassRepositories(Collection<String>... classPathCollections) {
-		if (classPaths == null) {
-			classPaths = new HashSet<>();
+		if (classRepositories == null) {
+			classRepositories = new HashSet<>();
 		}
 		for (Collection<String> classPathCollection : classPathCollections) {
-			classPaths.addAll(classPathCollection);
+			classRepositories.addAll(classPathCollection);
 		}
-		return this.adjustClassPaths(true);
+		return this;
 	}
 	
 	@SafeVarargs
 	public final CompileConfig setClassRepository(String... classPaths) {
-		return setClassPaths(Arrays.asList(classPaths));
-	}
+		return setClassRepositories(Arrays.asList(classPaths));
+	}	
+	
+////////////////////	
 	
 	@SafeVarargs
 	public final CompileConfig addClassRepositories(Collection<String>... classPathCollections) {
-		if (additionalClassPaths == null) {
-			additionalClassPaths = new HashSet<>();
+		if (additionalClassRepositories == null) {
+			additionalClassRepositories = new HashSet<>();
 		}
 		for (Collection<String> classPathCollection : classPathCollections) {
-			additionalClassPaths.addAll(classPathCollection);
+			additionalClassRepositories.addAll(classPathCollection);
 		}
-		return this.adjustClassPaths(true);
+		return this;
 	}
 	
 	@SafeVarargs
 	public final CompileConfig addClassRepository(String... classPaths) {
 		return addClassPaths(Arrays.asList(classPaths));
 	}
+
+////////////////////	
 	
 	@SafeVarargs
 	public final CompileConfig setClassPaths(Collection<String>... classPathCollections) {
@@ -120,6 +129,8 @@ public class CompileConfig {
 	public final CompileConfig setClassPaths(String... classPaths) {
 		return setClassPaths(Arrays.asList(classPaths));
 	}
+
+////////////////////	
 	
 	@SafeVarargs
 	public final CompileConfig addClassPaths(Collection<String>... classPathCollections) {
@@ -136,6 +147,8 @@ public class CompileConfig {
 	public final CompileConfig addClassPaths(String... classPaths) {
 		return addClassPaths(Arrays.asList(classPaths));
 	}
+
+////////////////////	
 	
 	@SafeVarargs
 	public final CompileConfig setClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
@@ -152,6 +165,8 @@ public class CompileConfig {
 	public final CompileConfig setClassRepositoryWhereToSearchNotFoundClasses(String... classPaths) {
 		return setClassRepositoriesWhereToSearchNotFoundClasses(Arrays.asList(classPaths));
 	}
+
+////////////////////	
 	
 	@SafeVarargs
 	public final CompileConfig addClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
@@ -169,6 +184,8 @@ public class CompileConfig {
 		return addClassRepositoriesWhereToSearchNotFoundClasses(Arrays.asList(classPaths));
 	}
 
+////////////////////	
+	
 	Collection<String> getSources() {
 		return sources;
 	}
@@ -189,11 +206,20 @@ public class CompileConfig {
 		return additionalClassRepositoriesWhereToSearchNotFoundClasses;
 	}
 	
+	Collection<String> getClassRepositories() {
+		return classRepositories;
+	}
+
+	Collection<String> getAdditionalRepositories() {
+		return additionalClassRepositories;
+	}	
+	
 	boolean isStoringCompiledClassesEnabled() {
 		return storingCompiledClassesEnabled;
 	}
 	
-	boolean isAdjustClassPathsEnabled() {
-		return adjustClassPaths;
-	}
+	boolean isNeededClassesPreventiveSearchEnabled() {
+		return neededClassesPreventiveSearchEnabled;
+	}	
 }
+

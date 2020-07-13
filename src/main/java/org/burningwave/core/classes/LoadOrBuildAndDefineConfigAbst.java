@@ -87,6 +87,8 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		return (L)this;
 	}
 
+////////////////////	
+	
 	@SafeVarargs
 	public final L setClassRepository(String... classPaths) {
 		return (L)setClassRepositories(Arrays.asList(classPaths));
@@ -95,7 +97,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	@SafeVarargs
 	public final L setClassRepositories(Collection<String>... classPathCollections) {
 		modifyCompileConfig(compileConfig ->
-			compileConfig.setClassRepositories(classPathCollections)
+			compileConfig.setClassRepositories(classPathCollections).neededClassesPreventiveSearch(true)
 		);
 		return (L)setClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
 	}
@@ -109,7 +111,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	@SafeVarargs
 	public final L addClassRepositories(Collection<String>... classPathCollections) {
 		modifyCompileConfig(compileConfig ->
-			compileConfig.addClassRepositories(classPathCollections)
+			compileConfig.addClassRepositories(classPathCollections).neededClassesPreventiveSearch(true)
 		);
 		return (L)addClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
 	}	
