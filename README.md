@@ -977,27 +977,25 @@ path-scanner-class-loader.parent.name=\
     org.burningwave.core.classes.ParentClassLoaderRetrieverForPathScannerClassLoader
 #other possible values are: checkFileName, checkFileName|checkFileSignature, checkFileName&checkFileSignature
 path-scanner-class-loader.search-config.check-file-option=checkFileName
+#This variable is empty by default and could be valorized by developer
+paths.class-factory.default-class-loader.additional-class-repositories=
 #this variable indicates all the paths from which the classes 
 #must be taken if during the definition of the compiled classes
 #on classloader there will be classes not found
 paths.class-factory.default-class-loader.class-repositories=\
-    ${paths.java-memory-compiler.class-repositories};\
-    ${paths.class-factory.default-class-loader.additional-class-repositories};
-paths.hunters.default-search-config.paths=${main-class-paths};
+    ${paths.java-memory-compiler.class-paths};\
+    ${paths.java-memory-compiler.class-repositories};
+    ${paths.class-factory.default-class-loader.additional-class-repositories}
+paths.hunters.default-search-config.paths=${paths.main-class-paths};
 #this variable indicates all the paths from which the classes 
 #must be taken if during the compilation there will be classes
 #not found
-paths.java-memory-compiler.class-repositories=\
-    ${main-class-paths};\
-    ${paths.java-memory-compiler.additional-main-class-paths};\
+paths.java-memory-compiler.class-paths=\
+    ${paths.main-class-paths};\
     ${paths.main-class-paths.extension};\
-    #This variable is empty by default and could be valorized by developer
-    ${paths.java-memory-compiler.additional-class-repositories};
-paths.java-memory-compiler.main-class-paths=\
-    ${main-class-paths};\
-    #This variable is empty by default and could be valorized by developer
-    ${paths.java-memory-compiler.additional-main-class-paths};
-paths.main-class-paths=${system.properties:java.class.path}
+    ${paths.java-memory-compiler.additional-class-paths}
+#This variable is empty by default and could be valorized by developer   
+paths.java-memory-compiler.class-repositories=
 paths.main-class-paths.extension=\
     //${system.properties:java.home}/lib//children:.*?\.jar|.*?\.jmod;\
     //${system.properties:java.home}/lib/ext//children:.*?\.jar|.*?\.jmod;\
@@ -1059,24 +1057,20 @@ path-scanner-class-loader.parent.name=\
     org.burningwave.core.classes.ParentClassLoaderRetrieverForPathScannerClassLoader
 path-scanner-class-loader.search-config.check-file-option=checkFileName
 paths.class-factory.default-class-loader.class-repositories=\
-    ${paths.java-memory-compiler.class-repositories};\
-    ${paths.class-factory.default-class-loader.additional-class-repositories};
-paths.hunters.default-search-config.paths=${main-class-paths};
-paths.java-memory-compiler.class-repositories=\
-    ${main-class-paths};\
-    ${paths.java-memory-compiler.additional-main-class-paths};\
+    ${paths.java-memory-compiler.class-paths};\
+    ${paths.java-memory-compiler.class-repositories};
+    ${paths.class-factory.default-class-loader.additional-class-repositories}
+paths.hunters.default-search-config.paths=${paths.main-class-paths};
+paths.java-memory-compiler.class-paths=\
+    ${paths.main-class-paths};\
     ${paths.main-class-paths.extension};\
-    ${paths.java-memory-compiler.additional-class-repositories};
-paths.java-memory-compiler.main-class-paths=\
-    ${main-class-paths};\
-    ${paths.java-memory-compiler.additional-main-class-paths};
-paths.main-class-paths=${system.properties:java.class.path}
+    ${paths.java-memory-compiler.additional-class-paths}
 paths.main-class-paths.extension=\
     //${system.properties:java.home}/lib//children:.*?\.jar|.*?\.jmod;\
     //${system.properties:java.home}/lib/ext//children:.*?\.jar|.*?\.jmod;\
     //${system.properties:java.home}/jmods//children:.*?\.jar|.*?\.jmod;
-paths.java-memory-compiler.additional-main-class-paths=C:/some paths 1;C:/some paths 2;
-paths.java-memory-compiler.additional-class-repositories=C:/some paths 3;C:/some paths 4;
+paths.java-memory-compiler.additional-class-paths=C:/some paths 1;C:/some paths 2;
+paths.java-memory-compiler.class-repositories=C:/some paths 3;C:/some paths 4;
 paths.class-factory.default-class-loader.additional-class-repositories=C:/some paths 5;C:/some paths 6;
 ```
 
