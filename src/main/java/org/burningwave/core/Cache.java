@@ -278,10 +278,9 @@ public class Cache implements Component {
 	}
 	
 	public void clear(Cleanable... excluded) {
-		Set<Cleanable> toBeExcluded = new HashSet<>();
-		if (excluded != null) {
-			toBeExcluded.addAll(Arrays.asList(excluded));
-		}
+		Set<Cleanable> toBeExcluded = excluded != null && excluded.length > 0 ?
+			new HashSet<>(Arrays.asList(excluded)) :
+			null;
 		clear(pathForContents, toBeExcluded);
 		clear(pathForFileSystemItems, toBeExcluded);
 		clear(pathForZipFiles, toBeExcluded);
@@ -296,7 +295,7 @@ public class Cache implements Component {
 	}
 	
 	private void clear(Cleanable cache, Set<Cleanable> excluded) {
-		if (!excluded.contains(cache)) {
+		if (excluded == null || !excluded.contains(cache)) {
 			cache.clear();
 		}
 	}
