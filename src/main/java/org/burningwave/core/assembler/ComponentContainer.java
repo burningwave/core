@@ -411,7 +411,7 @@ public class ComponentContainer implements ComponentSupplier {
 		for (ComponentContainer componentContainer : instances) {
 			componentContainer.clearCache(closeHuntersResults, closeClassRetrievers);
 		}
-		Cache.clear(clearFileSystemItemReferences ? Cache.pathForFileSystemItems : null);
+		Cache.clear(clearFileSystemItemReferences ? null : Cache.pathForFileSystemItems);
 		System.gc();
 	}
 	
