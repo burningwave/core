@@ -162,7 +162,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					//Search in the runtime Classpaths. Here you can add all absolute path you want:
 					//both folders, zip and jar will be scanned recursively
-					componentSupplier.getPathHelper().getPaths(PathHelper.Configuration.Key.MAIN_CLASS_PATHS, PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION)
+					componentSupplier.getPathHelper().getAllMainClassPaths()
 				).by(
 					classCriteria
 				)
