@@ -234,7 +234,9 @@ public class ClassFactory implements Component {
 						Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER, 
 						Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER
 					);
-					config.addClassRepositoriesWhereToSearchNotFoundClasses(classRepositoriesForNotFoundClasses);
+					if (!classRepositoriesForNotFoundClasses.isEmpty()) {
+						config.addClassRepositoriesWhereToSearchNotFoundClasses(classRepositoriesForNotFoundClasses);
+					}
 					return classRepositoriesForNotFoundClasses;
 				}
 			),
