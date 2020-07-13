@@ -937,8 +937,10 @@ class-factory.byte-code-hunter.search-config.check-file-option=\
 #default classloader used by the ClassFactory to load generated classes
 class-factory.default-class-loader=\
     (Supplier<ClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
-class-factory.default-class-loader.imports=\
-    #This variable is empty by default and could be valorized by developer
+#This variable is empty by default and could be valorized by developer and it is
+#included by 'class-factory.default-class-loader.imports' property
+class-factory.default-class-loader.additional-imports=
+class-factory.default-class-loader.imports=\  
     ${class-factory.default-class-loader.additional-imports};\
     org.burningwave.core.assembler.ComponentSupplier;\
     java.util.function.Function;\
@@ -949,8 +951,10 @@ class-factory.default-class-loader.name=\
     org.burningwave.core.classes.DefaultClassLoaderRetrieverForClassFactory
 class-hunter.default-path-scanner-class-loader=\
     (Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
+#This variable is empty by default and could be valorized by developer and it is
+#included by 'class-hunter.default-path-scanner-class-loader.imports' property
+class-hunter.default-path-scanner-class-loader.additional-imports=
 class-hunter.default-path-scanner-class-loader.imports=\
-    #This variable is empty by default and could be valorized by developer
     ${class-hunter.default-path-scanner-class-loader.additional-imports};\
     org.burningwave.core.assembler.ComponentSupplier;\
     org.burningwave.core.io.FileSystemItem;\
@@ -977,7 +981,8 @@ path-scanner-class-loader.parent.name=\
     org.burningwave.core.classes.ParentClassLoaderRetrieverForPathScannerClassLoader
 #other possible values are: checkFileName, checkFileName|checkFileSignature, checkFileName&checkFileSignature
 path-scanner-class-loader.search-config.check-file-option=checkFileName
-#This variable is empty by default and could be valorized by developer
+#This variable is empty by default and could be valorized by developer and it is
+#included by 'paths.class-factory.default-class-loader.class-repositories' property
 paths.class-factory.default-class-loader.additional-class-repositories=
 #this variable indicates all the paths from which the classes 
 #must be taken if during the definition of the compiled classes
@@ -985,8 +990,11 @@ paths.class-factory.default-class-loader.additional-class-repositories=
 paths.class-factory.default-class-loader.class-repositories=\
     ${paths.java-memory-compiler.class-paths};\
     ${paths.java-memory-compiler.class-repositories};
-    ${paths.class-factory.default-class-loader.additional-class-repositories}
+    ${paths.class-factory.default-class-loader.additional-class-repositories}\
 paths.hunters.default-search-config.paths=${paths.main-class-paths};
+#This variable is empty by default and can be valorized by developer and it is
+#included by 'paths.paths.java-memory-compiler.class-paths' property
+paths.java-memory-compiler.additional-class-paths=
 #this variable indicates all the paths from which the classes 
 #must be taken if during the compilation there will be classes
 #not found
@@ -994,9 +1002,9 @@ paths.java-memory-compiler.class-paths=\
     ${paths.main-class-paths};\
     ${paths.main-class-paths.extension};\
     ${paths.java-memory-compiler.additional-class-paths}
-#This variable is empty by default and could be valorized by developer 
-paths.java-memory-compiler.additional-class-paths=
-#This variable is empty by default and could be valorized by developer   
+#This variable is empty by default and can be valorized by developer. All
+#paths inserted here will analyze by JavaMemoryCompiler component before
+#compiling to search for all classes imported from sources 
 paths.java-memory-compiler.class-repositories=
 paths.main-class-paths.extension=\
     //${system.properties:java.home}/lib//children:.*?\.jar|.*?\.jmod;\
@@ -1021,6 +1029,7 @@ class-factory.default-class-loader=PathScannerClassLoader.create(\
         FileSystemItem.CheckingOption.FOR_NAME\
     )\
 )
+class-factory.default-class-loader.additional-imports=java.util.function.Consumer;
 class-factory.default-class-loader.imports=\
     ${class-factory.default-class-loader.additional-imports};\
     org.burningwave.core.assembler.ComponentSupplier;\
@@ -1032,6 +1041,7 @@ class-factory.default-class-loader.name=\
     org.burningwave.core.classes.DefaultClassLoaderRetrieverForClassFactory
 class-hunter.default-path-scanner-class-loader=\
     (Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
+class-hunter.default-path-scanner-class-loader.additional-imports=java.util.function.Consumer;
 class-hunter.default-path-scanner-class-loader.imports=\
     ${class-hunter.default-path-scanner-class-loader.additional-imports};\
     org.burningwave.core.assembler.ComponentSupplier;\
@@ -1060,7 +1070,7 @@ path-scanner-class-loader.parent.name=\
 path-scanner-class-loader.search-config.check-file-option=checkFileName
 paths.class-factory.default-class-loader.class-repositories=\
     ${paths.java-memory-compiler.class-paths};\
-    ${paths.java-memory-compiler.class-repositories};
+    ${paths.java-memory-compiler.class-repositories};\
     ${paths.class-factory.default-class-loader.additional-class-repositories}
 paths.hunters.default-search-config.paths=${paths.main-class-paths};
 paths.java-memory-compiler.class-paths=\
