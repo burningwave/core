@@ -352,7 +352,8 @@ public class ComponentContainer implements ComponentSupplier {
 		};
 	}
 	
-	public ComponentSupplier clear() {
+	@Override
+	public ComponentContainer clear() {
 		Iterator<Entry<Class<? extends Component>, Component>> componentsItr =
 			components.entrySet().iterator();
 		synchronized (components) {
@@ -398,11 +399,19 @@ public class ComponentContainer implements ComponentSupplier {
 		System.gc();
 	}
 	
+	public static void clearAllCaches() {
+		clearAllCaches(true, true, true);
+	}
+	
 	public static void clearAllCaches(boolean closeHuntersResults, boolean closeClassRetrievers) {
+		clearAllCaches(closeHuntersResults, closeClassRetrievers, true);
+	}
+	
+	public static void clearAllCaches(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
 		for (ComponentContainer componentContainer : instances) {
 			componentContainer.clearCache(closeHuntersResults, closeClassRetrievers);
 		}
-		Cache.clear();
+		Cache.clear(clearFileSystemItemReferences ? null : Cache.pathForFileSystemItems);
 		System.gc();
 	}
 	

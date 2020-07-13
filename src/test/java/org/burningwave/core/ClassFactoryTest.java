@@ -29,7 +29,6 @@ import org.burningwave.core.classes.UnitSourceGenerator;
 import org.burningwave.core.classes.VariableSourceGenerator;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.service.Service;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 public class ClassFactoryTest extends BaseTest {
@@ -140,7 +139,7 @@ public class ClassFactoryTest extends BaseTest {
 	}
 	
 	@Test
-	@Tag("Heavy")
+	//@Tag("Heavy")
 	public void getOrBuildClassWithExternalClassTestFive() {
 		getOrBuildClassWithExternalClassTestOne(true, true, "ComplexExampleFour", "ComplexExampleFive", null);
 	}
@@ -178,6 +177,8 @@ public class ClassFactoryTest extends BaseTest {
 			"org.apache.axis2.saaj.SOAPPartImpl",
 			"org.apache.axis2.saaj.SOAPMessageImpl",
 			"javax.xml.soap.SOAPException"
+		).addStaticImport(
+			"org.burningwave.core.assembler.StaticComponentContainer.Classes"
 		);
 		UnitSourceGenerator unitSG2= UnitSourceGenerator.create("packagename").addClass(
 			ClassSourceGenerator.create(
@@ -198,29 +199,43 @@ public class ClassFactoryTest extends BaseTest {
 			"org.apache.axis2.saaj.SOAPPartImpl",
 			"org.apache.axis2.saaj.SOAPMessageImpl",
 			"javax.xml.soap.SOAPException"
+		).addStaticImport(
+			"org.burningwave.core.assembler.StaticComponentContainer.Classes"
 		);
 		testNotNull(() -> {
-			ClassFactory.ClassRetriever classRetriever =  componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassRepository(
+			LoadOrBuildAndDefineConfig config = LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).useClassLoader(
+				classLoader
+			);
+			if (adjustClassPaths) {
+				config.setClassRepository(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
-				).modifyCompileConfig(compileConfig -> 
-					compileConfig.adjustClassPaths(adjustClassPaths)
-				).useClassLoader(
-					classLoader
-				)				
+				);
+			} else {
+				config.addClassPaths(
+					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+				);
+			}
+			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
+				config			
 			);
 			classRetriever.get("packagename." + classNameOne);
 			if (clearCache) {
-				ComponentContainer.clearAllCaches(true, true);
+				ComponentContainer.clearAllCaches(true, true, false);
+			}
+			config = LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).useClassLoader(
+				classLoader
+			);
+			if (adjustClassPaths) {
+				config.addClassRepository(
+					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+				);
+			} else {
+				config.addClassPaths(
+					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+				);
 			}
 			classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).setClassRepository(
-					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
-				).modifyCompileConfig(compileConfig -> 
-					compileConfig.adjustClassPaths(adjustClassPaths)
-				).useClassLoader(
-					classLoader
-				)	
+				config			
 			);
 			return classRetriever.get("packagename." + classNameTwo);
 		});
@@ -249,7 +264,7 @@ public class ClassFactoryTest extends BaseTest {
 					)
 				)) {
 					ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-						LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassRepository(
+						LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassPaths(
 							pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 						)
 					);
@@ -275,7 +290,7 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		testNotNull(() -> {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassRepository(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassPaths(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				).useOneShotJavaCompiler(true)
 			);
@@ -301,7 +316,7 @@ public class ClassFactoryTest extends BaseTest {
 		);
 		testNotNull(() -> {
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassRepository(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassPaths(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				)
 			);

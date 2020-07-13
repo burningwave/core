@@ -80,11 +80,11 @@ public class JavaMemoryCompiler implements Component {
 		public static class Key {
 			
 			public static final String CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "java-memory-compiler.class-path-hunter.search-config.check-file-option";
-			public static final String MAIN_CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.main-class-paths";
-			public static final String ADDITIONAL_MAIN_CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.additional-main-class-paths";
+			public static final String CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-paths";
+			public static final String ADDITIONAL_CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.additional-class-paths";
 			public static final String CLASS_REPOSITORIES =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-repositories";
-			public static final String ADDITIONAL_CLASS_REPOSITORIES = PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.additional-class-repositories";
 		}
+		
 		public final static Map<String, Object> DEFAULT_VALUES;
 		
 		static {
@@ -94,15 +94,10 @@ public class JavaMemoryCompiler implements Component {
 				"${" + ClassPathScannerAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
 			);
 			DEFAULT_VALUES.put(
-				Key.MAIN_CLASS_PATHS, 
+				Key.CLASS_PATHS,
 				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
-				"${" + Configuration.Key.ADDITIONAL_MAIN_CLASS_PATHS + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR
-			);
-			DEFAULT_VALUES.put(
-				Key.CLASS_REPOSITORIES, 
-				DEFAULT_VALUES.get(Key.MAIN_CLASS_PATHS) +
-				"${" + PathHelper.Configuration.Key.PATHS_PREFIX + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
-				"${" + Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR 
+				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
+				"${" + Configuration.Key.ADDITIONAL_CLASS_PATHS + "}"
 			);
 		}
 	}
@@ -160,14 +155,25 @@ public class JavaMemoryCompiler implements Component {
 			IterableObjectHelper.merge(
 				config::getClassPaths,
 				config::getAdditionalClassPaths,
-				pathHelper::getAllMainClassPaths
+				() -> 
+					pathHelper.getPaths(
+						Configuration.Key.CLASS_PATHS
+					)
 			),
 			IterableObjectHelper.merge(
 				config::getClassRepositoriesWhereToSearchNotFoundClasses,
 				config::getAdditionalRepositoriesWhereToSearchNotFoundClasses,
-				() -> pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES)
+				() -> {
+					Collection<String> classRepositories = pathHelper.getPaths(
+						Configuration.Key.CLASS_REPOSITORIES
+					);
+					if (!classRepositories.isEmpty()) {
+						config.neededClassesPreventiveSearch(true);
+					}
+					return classRepositories;
+				}
 			),
-			config.isAdjustClassPathsEnabled(),
+			config.isNeededClassesPreventiveSearchEnabled(),
 			config.isStoringCompiledClassesEnabled()
 		);
 	}
@@ -176,12 +182,12 @@ public class JavaMemoryCompiler implements Component {
 		Collection<String> sources, 
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
-		boolean adjustClassPaths,
+		boolean neededClassesPreventiveSearchEnabled,
 		boolean storeCompiledClasses
 	) {	
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
-		if (adjustClassPaths) {
-			classPaths = adjustClassPaths(classPaths);
+		if (neededClassesPreventiveSearchEnabled) {
+			classPaths = computeClassPaths(classRepositoriesPaths, sources);
 		}
 		Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
 		sourcesToMemorySources(sources, memorySources);
@@ -203,63 +209,73 @@ public class JavaMemoryCompiler implements Component {
 		}
 	}
 	
-	private Collection<String> adjustClassPaths(Collection<String> classPaths) {
-		Collection<String> adjustedClassPaths = new HashSet<>();
+	private Collection<String> computeClassPaths(Collection<String> classRepositories, Collection<String> sources) {
+		Collection<String> imports = new HashSet<>();
+		for (String sourceCode : sources) {
+			imports.addAll(SourceCodeHandler.extractImports(sourceCode));
+		}	
+		Collection<String> classPaths = new HashSet<>();
 		Collection<String> toBeAdjuested = new HashSet<>(); 
-		for (String classPath : classPaths) {
+		for (String classPath : classRepositories) {
 			FileSystemItem fIS = FileSystemItem.ofPath(classPath);
 			if (fIS.exists()) {
 				if (fIS.isArchive()) {
 					toBeAdjuested.add(fIS.getAbsolutePath());
 				} else {
-					adjustedClassPaths.add(fIS.getAbsolutePath());
+					classPaths.add(fIS.getAbsolutePath());
 				}
 			}
 		}
-		FileSystemItem.CheckingOption checkFileOption = 
-			FileSystemItem.CheckingOption.forLabel(config.resolveStringValue(
-				Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-				JavaMemoryCompiler.Configuration.DEFAULT_VALUES
-			)
-		);
-		try(SearchResult result = classPathHunter.loadInCache(
-				SearchConfig.forPaths(toBeAdjuested).withScanFileCriteria(
-					FileSystemItem.Criteria.forClassTypeFiles(checkFileOption)
-				).optimizePaths(
-					true
+		if (!toBeAdjuested.isEmpty()) {
+			FileSystemItem.CheckingOption checkFileOption = 
+				FileSystemItem.CheckingOption.forLabel(config.resolveStringValue(
+					Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+					JavaMemoryCompiler.Configuration.DEFAULT_VALUES
 				)
-			).find()
-		) {	
-			Collection<FileSystemItem> effectiveClassPaths = result.getClassPaths();
-			if (!effectiveClassPaths.isEmpty()) {
-				for (FileSystemItem fsObject : effectiveClassPaths) {
-					if (fsObject.isCompressed()) {					
-						ThrowingRunnable.run(() -> {
-							synchronized (this) {
-								FileSystemItem classPathBasePath = fsObject.isArchive() ?
-									classPathHunterBasePathForCompressedLibs :
-									classPathHunterBasePathForCompressedClasses
-								;
-								FileSystemItem classPath = FileSystemItem.ofPath(
-									classPathBasePath.getAbsolutePath() + "/" + fsObject.getName()
-								);
-								if (!classPath.refresh().exists()) {
-									fsObject.copyTo(classPathBasePath.getAbsolutePath());
+			);
+			try(SearchResult result = classPathHunter.loadInCache(
+					SearchConfig.forPaths(toBeAdjuested).withScanFileCriteria(
+						FileSystemItem.Criteria.forClassTypeFiles(checkFileOption)
+					).by(ClassCriteria.create().className(
+						className -> 
+							imports.contains(className)
+						)
+					).optimizePaths(
+						true
+					)
+				).find()
+			) {	
+				Collection<FileSystemItem> effectiveClassPaths = result.getClassPaths();
+				if (!effectiveClassPaths.isEmpty()) {
+					for (FileSystemItem fsObject : effectiveClassPaths) {
+						if (fsObject.isCompressed()) {					
+							ThrowingRunnable.run(() -> {
+								synchronized (this) {
+									FileSystemItem classPathBasePath = fsObject.isArchive() ?
+										classPathHunterBasePathForCompressedLibs :
+										classPathHunterBasePathForCompressedClasses
+									;
+									FileSystemItem classPath = FileSystemItem.ofPath(
+										classPathBasePath.getAbsolutePath() + "/" + fsObject.getName()
+									);
+									if (!classPath.refresh().exists()) {
+										fsObject.copyTo(classPathBasePath.getAbsolutePath());
+									}
+									classPaths.add(
+										classPath.getAbsolutePath()
+									);
+									//Free memory
+									classPath.reset();
 								}
-								adjustedClassPaths.add(
-									classPath.getAbsolutePath()
-								);
-								//Free memory
-								classPath.reset();
-							}
-						});
-					} else {
-						adjustedClassPaths.add(fsObject.getAbsolutePath());
+							});
+						} else {
+							classPaths.add(fsObject.getAbsolutePath());
+						}
 					}
 				}
 			}
 		}
-		return adjustedClassPaths;
+		return classPaths;
 	}
 
 	private void sourcesToMemorySources(Collection<String> sources, Collection<MemorySource> memorySources) {

@@ -67,7 +67,7 @@ public class ClassFactory implements Component {
 			public static final String DEFAULT_CLASS_LOADER = "class-factory.default-class-loader";
 
 			public static final String CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER = PathHelper.Configuration.Key.PATHS_PREFIX + "class-factory.default-class-loader.class-repositories";
-			public static final String CLASS_ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER = PathHelper.Configuration.Key.PATHS_PREFIX + "class-factory.default-class-loader.additional-class-repositories";
+			public static final String ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER = PathHelper.Configuration.Key.PATHS_PREFIX + "class-factory.default-class-loader.additional-class-repositories";
 			public static final String BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "class-factory.byte-code-hunter.search-config.check-file-option";
 					
 		}
@@ -92,12 +92,15 @@ public class ClassFactory implements Component {
 				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) ->
 					componentSupplier.getPathScannerClassLoader()
 			);
+			
 
 			DEFAULT_VALUES.put(
-				Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER, 
-				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
-				"${" + Configuration.Key.CLASS_ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR
+				Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER,
+				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_PATHS + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
+				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
+				"${" + Key.ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER + "}"				
 			);
+			
 			DEFAULT_VALUES.put(
 				Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 				"${" + ClassPathScannerAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
@@ -217,7 +220,7 @@ public class ClassFactory implements Component {
 	
 	public <L extends LoadOrBuildAndDefineConfigAbst<L>> ClassRetriever loadOrBuildAndDefine(L config) {
 		if (config.isVirtualizeClassesEnabled()) {
-			config.addClassRepository(pathHelper.getBurningwaveRuntimeClassPath());
+			config.addClassPaths(pathHelper.getBurningwaveRuntimeClassPath());
 		}
 		return loadOrBuildAndDefine(
 			config.getClassesName(),
@@ -226,7 +229,10 @@ public class ClassFactory implements Component {
 			IterableObjectHelper.merge(
 				() -> config.getClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(),
 				() -> config.getAdditionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(),
-				() -> pathHelper.getPaths(Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER)
+				() -> pathHelper.getPaths(
+						Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER, 
+						Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER
+					)
 			),
 			(client) -> Optional.ofNullable(
 				config.getClassLoader()

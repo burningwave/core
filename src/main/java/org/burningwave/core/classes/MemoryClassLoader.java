@@ -90,7 +90,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     	}
     }
 
-	private void addByteCode0(String className, ByteBuffer byteCode) {
+	void addByteCode0(String className, ByteBuffer byteCode) {
 		if (ClassLoaders.retrieveLoadedClass(this, className) == null) {
 			synchronized (notLoadedByteCodes) {
 				notLoadedByteCodes.put(className, byteCode);
@@ -376,7 +376,8 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		return loadedClasses;
 	}
 	
-	public void clear () {
+	@Override
+	public MemoryClassLoader clear () {
 		try {
 			this.notLoadedByteCodes.clear();
 			this.loadedByteCodes.clear();
@@ -386,7 +387,8 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     		} else {
     			logWarn("Could not execute clear because {} has been closed", this.toString());
     		}
-    	}   
+    	}  
+		return this;
 	}
 	
 	protected void unregister() {
