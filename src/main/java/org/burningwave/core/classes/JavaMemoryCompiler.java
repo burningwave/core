@@ -55,7 +55,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.tools.Diagnostic;
-import javax.tools.DiagnosticListener;
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaCompiler;
@@ -305,7 +304,7 @@ public class JavaMemoryCompiler implements Component {
 		try (JavaMemoryCompiler.MemoryFileManager memoryFileManager = new MemoryFileManager(compiler)) {
 			CompilationTask task = compiler.getTask(
 				null, memoryFileManager,
-				new MemoryDiagnosticListener(context), options, null,
+				new DiagnosticListener(context), options, null,
 				new ArrayList<>(context.sources)
 			);
 			boolean done = false;
@@ -331,13 +330,13 @@ public class JavaMemoryCompiler implements Component {
 		}
 	}
 	
-	static class MemoryDiagnosticListener implements DiagnosticListener<JavaFileObject>, Serializable, Component {
+	static class DiagnosticListener implements javax.tools.DiagnosticListener<JavaFileObject>, Serializable, Component {
 
 		private static final long serialVersionUID = 4404913684967693355L;
 		
 		private Compilation.Context context;
 		
-		MemoryDiagnosticListener (Compilation.Context context) {
+		DiagnosticListener (Compilation.Context context) {
 			this.context = context;
 		}
 		
@@ -396,7 +395,7 @@ public class JavaMemoryCompiler implements Component {
 				} else {
 					context.addToClassPath(fsObject.getAbsolutePath());
 				}
-			});		
+			});
 		}
 
 		private Map.Entry<String, Predicate<Class<?>>> getClassPredicateBagFromErrorMessage(String message) {
