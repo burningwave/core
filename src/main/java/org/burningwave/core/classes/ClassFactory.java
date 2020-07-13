@@ -229,10 +229,16 @@ public class ClassFactory implements Component {
 			IterableObjectHelper.merge(
 				() -> config.getClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(),
 				() -> config.getAdditionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(),
-				() -> pathHelper.getPaths(
+				() -> {
+					Collection<String> classRepositoriesForNotFoundClasses = pathHelper.getPaths(
 						Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER, 
 						Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER
-					)
+					);
+					if (!classRepositoriesForNotFoundClasses.isEmpty()) {
+						config.addClassRepositoriesWhereToSearchNotFoundClasses(classRepositoriesForNotFoundClasses);
+					}
+					return classRepositoriesForNotFoundClasses;
+				}
 			),
 			(client) -> Optional.ofNullable(
 				config.getClassLoader()
