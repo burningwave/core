@@ -118,7 +118,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	
 ////////////////////
 	
-@SafeVarargs
+	@SafeVarargs
 	public final L setClassPaths(String... classPaths) {
 		return (L)setClassPaths(Arrays.asList(classPaths));
 	}
