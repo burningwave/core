@@ -36,9 +36,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -46,6 +49,7 @@ import org.burningwave.core.concurrent.Mutex;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.IterableZipContainer;
 
+@SuppressWarnings("unchecked")
 public class Cache implements Component {
 	public final PathForResources<ByteBuffer> pathForContents;
 	public final PathForResources<FileSystemItem> pathForFileSystemItems;
@@ -130,9 +134,10 @@ public class Cache implements Component {
 			return null;
 		}
 		
-		public void clear() {
+		public ObjectAndPathForResources<T, R> clear() {
 			resources.clear();
 			mutexManagerForResources.clear();
+			return this;
 		}
 	}
 	
@@ -263,26 +268,37 @@ public class Cache implements Component {
 			return count;
 		}
 		
-		public void clear() {
+		public PathForResources<R> clear() {
 			resources.clear();
-			//mutexManagerForPartitions.clear();         
-			//mutexManagerForLoadedResources.clear();    
-			//mutexManagerForPartitionedResources.clear(); 
+			mutexManagerForPartitions.clear();         
+			mutexManagerForLoadedResources.clear();    
+			mutexManagerForPartitionedResources.clear();
+			return this;
 		}
 	}
 	
-	public void clear() {
-		pathForContents.clear();
-		pathForFileSystemItems.clear();
-		pathForZipFiles.clear();
-		classLoaderForFields.clear();
-		classLoaderForMethods.clear();
-		classLoaderForConstructors.clear();
-		bindedFunctionalInterfaces.clear();
-		uniqueKeyForFields.clear();
-		uniqueKeyForConstructors.clear();
-		uniqueKeyForMethods.clear();
-		uniqueKeyForExecutableAndMethodHandle.clear();
+	public void clear(Cleanable... excluded) {
+		Set<Cleanable> toBeExcluded = new HashSet<>();
+		if (excluded != null) {
+			toBeExcluded.addAll(Arrays.asList(excluded));
+		}
+		clear(pathForContents, toBeExcluded);
+		clear(pathForFileSystemItems, toBeExcluded);
+		clear(pathForZipFiles, toBeExcluded);
+		clear(classLoaderForFields, toBeExcluded);
+		clear(classLoaderForMethods, toBeExcluded);
+		clear(classLoaderForConstructors, toBeExcluded);
+		clear(bindedFunctionalInterfaces, toBeExcluded);
+		clear(uniqueKeyForFields, toBeExcluded);
+		clear(uniqueKeyForConstructors, toBeExcluded);
+		clear(uniqueKeyForMethods, toBeExcluded);
+		clear(uniqueKeyForExecutableAndMethodHandle, toBeExcluded);
+	}
+	
+	private void clear(Cleanable cache, Set<Cleanable> excluded) {
+		if (!excluded.contains(cache)) {
+			cache.clear();
+		}
 	}
 	
 	@Override

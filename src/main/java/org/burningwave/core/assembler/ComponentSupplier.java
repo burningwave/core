@@ -47,8 +47,6 @@ public interface ComponentSupplier extends Component {
 		return ComponentContainer.getInstance();
 	}
 
-	public ComponentSupplier clear();
-
 	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier);
 	
 	public ByteCodeHunter getByteCodeHunter();

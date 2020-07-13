@@ -220,7 +220,7 @@ public class ClassFactoryTest extends BaseTest {
 			);
 			classRetriever.get("packagename." + classNameOne);
 			if (clearCache) {
-				ComponentContainer.clearAllCaches(true, true);
+				ComponentContainer.clearAllCaches(true, true, false);
 			}
 			config = LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).useClassLoader(
 				classLoader

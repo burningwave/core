@@ -28,13 +28,13 @@
  */
 package org.burningwave.core;
 
-import org.burningwave.core.iterable.Properties;
 
-public interface Component extends AutoCloseable, Cleanable, ManagedLogger, Properties.Listener, Memorizer {
-	
-	@Override
-	default public void close() {
-			
+
+@SuppressWarnings("unchecked")
+public interface Cleanable {
+		
+	public default <C extends Cleanable> C clear() {
+		return (C)this;
 	}
 	
 }
