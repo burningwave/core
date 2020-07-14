@@ -100,11 +100,11 @@ class ZipFile implements IterableZipContainer {
 						File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(toString());
 						FileSystemItem fileSystemItem = FileSystemItem.ofPath(temporaryFolder.getAbsolutePath() + "/" + file.getName());
 						if (!fileSystemItem.exists()) {
-							fileSystemItem = Streams.store(temporaryFolder.getAbsolutePath() + "/" + file.getName(), content);
-							String temporaryFileAbsolutePath = fileSystemItem.getAbsolutePath();
+							FileSystemItem fileSystemItemRef = fileSystemItem = Streams.store(temporaryFolder.getAbsolutePath() + "/" + file.getName(), content);
 							temporaryFileDeleter = () -> {
-								FileSystemHelper.delete(new File(temporaryFileAbsolutePath));
-								Cache.pathForContents.remove(temporaryFileAbsolutePath);
+								String temporaryFileAbsolutePath = fileSystemItemRef.getAbsolutePath();
+								FileSystemHelper.delete(temporaryFileAbsolutePath);
+								fileSystemItemRef.destroy();
 							};
 						}			
 						file = new File(fileSystemItem.getAbsolutePath());
