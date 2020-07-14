@@ -564,7 +564,7 @@ public class FileSystemItem implements ManagedLogger {
 	
 	private void removeFromCache(FileSystemItem fileSystemItem, boolean removeFromCache) {
 		Cache.pathForContents.remove(fileSystemItem.getAbsolutePath());
-		IterableZipContainer zipContainer = Cache.pathForZipFiles.get(fileSystemItem.getAbsolutePath()); 
+		IterableZipContainer zipContainer = Cache.pathForIterableZipContainers.get(fileSystemItem.getAbsolutePath()); 
 		if (zipContainer != null) {
 			zipContainer.destroy();
 		}

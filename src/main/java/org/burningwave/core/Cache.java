@@ -53,7 +53,7 @@ import org.burningwave.core.io.IterableZipContainer;
 public class Cache implements Component {
 	public final PathForResources<ByteBuffer> pathForContents;
 	public final PathForResources<FileSystemItem> pathForFileSystemItems;
-	public final PathForResources<IterableZipContainer> pathForZipFiles;
+	public final PathForResources<IterableZipContainer> pathForIterableZipContainers;
 	public final ObjectAndPathForResources<ClassLoader, Field[]> classLoaderForFields;
 	public final ObjectAndPathForResources<ClassLoader, Method[]> classLoaderForMethods;
 	public final ObjectAndPathForResources<ClassLoader, Constructor<?>[]> classLoaderForConstructors;
@@ -67,7 +67,7 @@ public class Cache implements Component {
 		logInfo("Building cache");
 		pathForContents = new PathForResources<>(1L, Streams::shareContent);
 		pathForFileSystemItems = new PathForResources<>(1L, fileSystemItem -> fileSystemItem);
-		pathForZipFiles = new PathForResources<>(1L, zipFileContainer -> zipFileContainer);
+		pathForIterableZipContainers = new PathForResources<>(1L, zipFileContainer -> zipFileContainer);
 		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);
 		classLoaderForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
 		uniqueKeyForFields = new ObjectAndPathForResources<>(1L, field -> field);
@@ -283,7 +283,7 @@ public class Cache implements Component {
 			null;
 		clear(pathForContents, toBeExcluded);
 		clear(pathForFileSystemItems, toBeExcluded);
-		clear(pathForZipFiles, toBeExcluded);
+		clear(pathForIterableZipContainers, toBeExcluded);
 		clear(classLoaderForFields, toBeExcluded);
 		clear(classLoaderForMethods, toBeExcluded);
 		clear(classLoaderForConstructors, toBeExcluded);

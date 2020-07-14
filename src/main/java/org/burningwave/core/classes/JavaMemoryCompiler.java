@@ -654,12 +654,12 @@ public class JavaMemoryCompiler implements Component {
 	@Override
 	public void close() {
 		unregister(config);
-		compiledClassesRepository.destroy();
 		FileSystemHelper.deleteFolder(new File(compiledClassesRepository.getAbsolutePath()));
-		basePathForLibCopies.destroy();
+		compiledClassesRepository.destroy();
 		FileSystemHelper.deleteFolder(new File(basePathForLibCopies.getAbsolutePath()));
-		basePathForClassCopies.destroy();
+		basePathForLibCopies.destroy();
 		FileSystemHelper.deleteFolder(new File(basePathForClassCopies.getAbsolutePath()));
+		basePathForClassCopies.destroy();
 		compiler = null;
 		classPathHunter = null;
 		config = null;
