@@ -199,13 +199,14 @@ public class JavaMemoryCompiler implements Component {
 			)
 		) {
 			Map<String, ByteBuffer> compiledFiles = _compile(context, null);
+			String storedFilesClassPath = compiledClassesRepository.getAbsolutePath() + "/" + UUID.randomUUID().toString();
 			if (!compiledFiles.isEmpty() && storeCompiledClasses) {
 				compiledFiles.forEach((className, byteCode) -> {
 					JavaClass javaClass = JavaClass.create(byteCode);
-					javaClass.storeToClassPath(compiledClassesRepository.getAbsolutePath() + "/" + UUID.randomUUID().toString());
+					javaClass.storeToClassPath(storedFilesClassPath);
 				});
 			}			
-			return new CompilationResult(compiledClassesRepository, compiledFiles);
+			return new CompilationResult(FileSystemItem.ofPath(storedFilesClassPath), compiledFiles);
 		}
 	}
 	
