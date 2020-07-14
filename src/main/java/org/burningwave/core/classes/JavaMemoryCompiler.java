@@ -174,7 +174,8 @@ public class JavaMemoryCompiler implements Component {
 				}
 			),
 			config.isNeededClassesPreventiveSearchEnabled(),
-			config.isStoringCompiledClassesEnabled()
+			config.isStoringCompiledClassesEnabled(),
+			config.isStoringCompiledClassesToNewFolderEnabled()
 		);
 	}
 	
@@ -183,7 +184,8 @@ public class JavaMemoryCompiler implements Component {
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
 		boolean neededClassesPreventiveSearchEnabled,
-		boolean storeCompiledClasses
+		boolean storeCompiledClasses,
+		boolean storeCompiledClassesToNewFolder
 	) {	
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
 		if (neededClassesPreventiveSearchEnabled) {
@@ -199,7 +201,10 @@ public class JavaMemoryCompiler implements Component {
 			)
 		) {
 			Map<String, ByteBuffer> compiledFiles = _compile(context, null);
-			String storedFilesClassPath = compiledClassesRepository.getAbsolutePath() + "/" + UUID.randomUUID().toString();
+			String storedFilesClassPath = compiledClassesRepository.getAbsolutePath() + 
+				(storeCompiledClassesToNewFolder?
+					"/" + UUID.randomUUID().toString() :
+					"");
 			if (!compiledFiles.isEmpty() && storeCompiledClasses) {
 				compiledFiles.forEach((className, byteCode) -> {
 					JavaClass javaClass = JavaClass.create(byteCode);
