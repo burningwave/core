@@ -28,12 +28,14 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
+import java.io.File;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -652,6 +654,12 @@ public class JavaMemoryCompiler implements Component {
 	@Override
 	public void close() {
 		unregister(config);
+		compiledClassesRepository.destroy();
+		FileSystemHelper.deleteFolder(new File(compiledClassesRepository.getAbsolutePath()));
+		basePathForLibCopies.destroy();
+		FileSystemHelper.deleteFolder(new File(basePathForLibCopies.getAbsolutePath()));
+		basePathForClassCopies.destroy();
+		FileSystemHelper.deleteFolder(new File(basePathForClassCopies.getAbsolutePath()));
 		compiler = null;
 		classPathHunter = null;
 		config = null;
