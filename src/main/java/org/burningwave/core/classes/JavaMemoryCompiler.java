@@ -655,12 +655,16 @@ public class JavaMemoryCompiler implements Component {
 		unregister(config);
 		FileSystemHelper.delete(compiledClassesRepository.getAbsolutePath());
 		compiledClassesRepository.destroy();
+		compiledClassesRepository = null;
 		FileSystemHelper.delete(basePathForLibCopies.getAbsolutePath());
 		basePathForLibCopies.destroy();
+		basePathForLibCopies = null;
 		FileSystemHelper.delete(basePathForClassCopies.getAbsolutePath());
 		basePathForClassCopies.destroy();
+		basePathForClassCopies = null;
 		compiler = null;
 		classPathHunter = null;
+		pathHelper = null;
 		config = null;
 	}
 	
