@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/7)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/167613772)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/168600256)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/167613772)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/168600256)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -45,7 +45,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.20.1</version>
+    <version>7.20.2</version>
 </dependency>
 ```
 
@@ -53,7 +53,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 
 # Generating classes at runtime and invoking their methods with and without the use of reflection
 
-For this purpose is necessary the use of **ClassFactory** component and of the **sources generating components**. Once the sources have been set in **UnitSourceGenerator** objects, they must be passed to **loadOrBuildAndDefine** method of ClassFactory with the ClassLoader where you want to define new generated classes. This method performs the following operations: tries to load all the classes present in the UnitSourceGenerator through the class loader, if at least one of these is not found it proceeds to compiling all the UnitSourceGenerators and uploading their classes on class loader: in this case, keep in mind that if a class with the same name was previously loaded by the class loader, the compiled class will not be uploaded. Once the classes have been compiled and loaded, it is possible to invoke their methods in severals ways as shown at the end of the example below. **For more examples you can go [here](https://github.com/burningwave/core/tree/master/src/test/java/org/burningwave/core/examples/classfactory) where you can also find an [example about the generation of classes by using libraries located outside the runtime class paths](https://github.com/burningwave/core/blob/master/src/test/java/org/burningwave/core/examples/classfactory/ExternalClassRuntimeExtender.java)**.
+For this purpose is necessary the use of **ClassFactory** component and of the **sources generating components**. Once the sources have been set in **UnitSourceGenerator** objects, they must be passed to **loadOrBuildAndDefine** method of ClassFactory with the ClassLoader where you want to define new generated classes. This method performs the following operations: tries to load all the classes present in the UnitSourceGenerator through the class loader, if at least one of these is not found it proceeds to compiling all the UnitSourceGenerators and uploading their classes on class loader: in this case, keep in mind that if a class with the same name was previously loaded by the class loader, the compiled class will not be uploaded. Once the classes have been compiled and loaded, it is possible to invoke their methods in severals ways as shown at the end of the example below. **For more examples you can go [here](https://github.com/burningwave/core/tree/master/src/test/java/org/burningwave/core/examples/classfactory) and if you need to generate classes by using libraries located outside the runtime class paths, you must read [this guide](https://www.burningwave.org/forum/topic/how-can-i-use-classes-outside-the-runtime-class-path-in-my-generated-sources/) where you also can find a [link to an example about this topic](https://github.com/burningwave/core/blob/master/src/test/java/org/burningwave/core/examples/classfactory/ExternalClassRuntimeExtender.java). For further assistance you can [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to/) or you can ask on [Stack Overflow](https://stackoverflow.com/questions/tagged/burningwave)**.
 ```java
 package org.burningwave.core.examples.classfactory;
 
