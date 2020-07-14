@@ -581,7 +581,7 @@ public class FileSystemItem implements ManagedLogger {
 		return clear(removeLinkedResourcesFromCache, false);
 	}
 	
-	synchronized void destroy() {
+	public synchronized void destroy() {
 		clear(true, true);
 	}
 	
