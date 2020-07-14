@@ -35,7 +35,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.SourceCode
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
-import java.io.File;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -654,11 +653,11 @@ public class JavaMemoryCompiler implements Component {
 	@Override
 	public void close() {
 		unregister(config);
-		FileSystemHelper.deleteFolder(new File(compiledClassesRepository.getAbsolutePath()));
+		FileSystemHelper.delete(compiledClassesRepository.getAbsolutePath());
 		compiledClassesRepository.destroy();
-		FileSystemHelper.deleteFolder(new File(basePathForLibCopies.getAbsolutePath()));
+		FileSystemHelper.delete(basePathForLibCopies.getAbsolutePath());
 		basePathForLibCopies.destroy();
-		FileSystemHelper.deleteFolder(new File(basePathForClassCopies.getAbsolutePath()));
+		FileSystemHelper.delete(basePathForClassCopies.getAbsolutePath());
 		basePathForClassCopies.destroy();
 		compiler = null;
 		classPathHunter = null;
