@@ -44,12 +44,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -104,9 +104,9 @@ public class JavaMemoryCompiler implements Component {
 	private PathHelper pathHelper;
 	private ClassPathHunter classPathHunter;
 	private JavaCompiler compiler;
-	private FileSystemItem compiledClassesClassPath;
-	private FileSystemItem classPathHunterBasePathForCompressedLibs;
-	private FileSystemItem classPathHunterBasePathForCompressedClasses;
+	private FileSystemItem compiledClassesRepository;
+	private FileSystemItem basePathForLibCopies;
+	private FileSystemItem basePathForClassCopies;
 	private Properties config;	
 	
 	private JavaMemoryCompiler(
@@ -117,9 +117,9 @@ public class JavaMemoryCompiler implements Component {
 		this.pathHelper = pathHelper;
 		this.classPathHunter = classPathHunter;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
-		this.compiledClassesClassPath = FileSystemItem.of(getOrCreateTemporaryFolder("compiled"));
-		this.classPathHunterBasePathForCompressedLibs = FileSystemItem.of(getOrCreateTemporaryFolder("lib"));
-		this.classPathHunterBasePathForCompressedClasses = FileSystemItem.of(getOrCreateTemporaryFolder("classes"));
+		this.compiledClassesRepository = FileSystemItem.of(getOrCreateTemporaryFolder("compiledClassesRepository"));
+		this.basePathForLibCopies = FileSystemItem.of(getOrCreateTemporaryFolder("lib"));
+		this.basePathForClassCopies = FileSystemItem.of(getOrCreateTemporaryFolder("classes"));
 		this.config = config;
 		listenTo(config);
 	}	
@@ -186,12 +186,12 @@ public class JavaMemoryCompiler implements Component {
 	) {	
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
 		if (neededClassesPreventiveSearchEnabled) {
-			classPaths = computeClassPaths(classRepositoriesPaths, sources);
+			classPaths = computeClassPaths(classRepositoriesPaths, sources, null);
 		}
 		Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
 		sourcesToMemorySources(sources, memorySources);
 		try (Compilation.Context context = Compilation.Context.create(
-				this, classPathHunter, 
+				this,
 				memorySources, 
 				new ArrayList<>(classPaths), 
 				new ArrayList<>(classRepositoriesPaths)
@@ -201,14 +201,18 @@ public class JavaMemoryCompiler implements Component {
 			if (!compiledFiles.isEmpty() && storeCompiledClasses) {
 				compiledFiles.forEach((className, byteCode) -> {
 					JavaClass javaClass = JavaClass.create(byteCode);
-					javaClass.storeToClassPath(compiledClassesClassPath.getAbsolutePath());
+					javaClass.storeToClassPath(compiledClassesRepository.getAbsolutePath() + "/" + UUID.randomUUID().toString());
 				});
 			}			
-			return new CompilationResult(compiledClassesClassPath, compiledFiles);
+			return new CompilationResult(compiledClassesRepository, compiledFiles);
 		}
 	}
 	
-	private Collection<String> computeClassPaths(Collection<String> classRepositories, Collection<String> sources) {
+	Collection<String> computeClassPaths(
+		Collection<String> classRepositories,
+		Collection<String> sources,
+		ClassCriteria otherClassCriteria
+	) {
 		Collection<String> imports = new HashSet<>();
 		for (String sourceCode : sources) {
 			imports.addAll(SourceCodeHandler.extractImports(sourceCode));
@@ -232,13 +236,18 @@ public class JavaMemoryCompiler implements Component {
 					JavaMemoryCompiler.Configuration.DEFAULT_VALUES
 				)
 			);
+			ClassCriteria classCriteria = ClassCriteria.create().className(
+				className -> 
+					imports.contains(className)
+			);
+			if (otherClassCriteria != null) {
+				classCriteria = classCriteria.or(otherClassCriteria);
+			}
 			try(SearchResult result = classPathHunter.loadInCache(
 					SearchConfig.forPaths(toBeAdjuested).withScanFileCriteria(
 						FileSystemItem.Criteria.forClassTypeFiles(checkFileOption)
-					).by(ClassCriteria.create().className(
-						className -> 
-							imports.contains(className)
-						)
+					).by(
+						classCriteria
 					).optimizePaths(
 						true
 					)
@@ -251,8 +260,8 @@ public class JavaMemoryCompiler implements Component {
 							ThrowingRunnable.run(() -> {
 								synchronized (this) {
 									FileSystemItem classPathBasePath = fsObject.isArchive() ?
-										classPathHunterBasePathForCompressedLibs :
-										classPathHunterBasePathForCompressedClasses
+										basePathForLibCopies :
+										basePathForClassCopies
 									;
 									FileSystemItem classPath = FileSystemItem.ofPath(
 										classPathBasePath.getAbsolutePath() + "/" + fsObject.getName()
@@ -276,7 +285,33 @@ public class JavaMemoryCompiler implements Component {
 		}
 		return classPaths;
 	}
-
+	
+	Collection<String> searchClassPathsInCompiledClassesRepositoryWithoutTheUseOfCache(ClassCriteria classCriteria) {
+		FileSystemItem.CheckingOption checkFileOption = 
+			FileSystemItem.CheckingOption.forLabel(config.resolveStringValue(
+				Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+				JavaMemoryCompiler.Configuration.DEFAULT_VALUES
+			)
+		);
+		Collection<String> classPaths = new HashSet<>();
+		try (SearchResult result = classPathHunter.findBy(
+				SearchConfig.withoutUsingCache().addPaths(compiledClassesRepository.getAbsolutePath()).by(
+					classCriteria
+				).withScanFileCriteria(
+					FileSystemItem.Criteria.forClassTypeFiles(checkFileOption)
+				).optimizePaths(
+					true
+				)
+			)
+		) {	
+			for (FileSystemItem classPath : result.getClassPaths()) {
+				classPaths.add(classPath.getAbsolutePath());
+				classPath.reset();
+			}
+		}
+		return classPaths;
+	}
+	
 	private void sourcesToMemorySources(Collection<String> sources, Collection<MemorySource> memorySources) {
 		for (String source : sources) {
 			String className = SourceCodeHandler.extractClassName(source);
@@ -347,7 +382,7 @@ public class JavaMemoryCompiler implements Component {
 				context.options.put("-Xlint:", "unchecked");
 				return;
 			}
-			Collection<FileSystemItem> fsObjects = null;
+			Collection<String> fsObjects = null;
 			
 			Map.Entry<String, Predicate<Class<?>>> classNameAndClassPredicate = getClassPredicateBagFromErrorMessage(message);
 			String packageName = null;
@@ -372,29 +407,7 @@ public class JavaMemoryCompiler implements Component {
 				);
 			}
 			fsObjects.forEach((fsObject) -> {
-				if (fsObject.isCompressed()) {					
-					ThrowingRunnable.run(() -> {
-						synchronized (context.javaMemoryCompiler) {
-							FileSystemItem classPathBasePath = fsObject.isArchive() ?
-								context.javaMemoryCompiler.classPathHunterBasePathForCompressedLibs :
-								context.javaMemoryCompiler.classPathHunterBasePathForCompressedClasses
-							;
-							FileSystemItem classPath = FileSystemItem.ofPath(
-								classPathBasePath.getAbsolutePath() + "/" + fsObject.getName()
-							);
-							if (!classPath.refresh().exists()) {
-								fsObject.copyTo(classPathBasePath.getAbsolutePath());
-							}
-							context.addToClassPath(
-								classPath.getAbsolutePath()
-							);
-							//Free memory
-							classPath.reset();
-						}
-					});
-				} else {
-					context.addToClassPath(fsObject.getAbsolutePath());
-				}
+				context.addToClassPath(fsObject);
 			});
 		}
 
@@ -463,6 +476,10 @@ public class JavaMemoryCompiler implements Component {
 	    
 	    @Override
 	    public CharSequence getCharContent(boolean ignore) {
+	        return this.content;
+	    }
+	    
+	    public String getContent() {
 	        return this.content;
 	    }
 	}
@@ -549,8 +566,6 @@ public class JavaMemoryCompiler implements Component {
 			
 			private Map<String, String> options;
 			private Collection<MemorySource> sources;
-			private ClassPathHunter classPathHunter;
-			private Collection<SearchResult> classPathsSearchResults;
 			private Collection<String> classRepositoriesPaths;
 			private JavaMemoryCompiler javaMemoryCompiler;
 			
@@ -563,7 +578,6 @@ public class JavaMemoryCompiler implements Component {
 			
 			private Context(
 				JavaMemoryCompiler javaMemoryCompiler,
-				ClassPathHunter classPathHunter,
 				Collection<MemorySource> sources,
 				Collection<String> classPaths,
 				Collection<String> classRepositories
@@ -571,107 +585,59 @@ public class JavaMemoryCompiler implements Component {
 				this.javaMemoryCompiler = javaMemoryCompiler;
 				options =  new LinkedHashMap<>();
 				this.sources = sources;
-				this.classPathHunter = classPathHunter;
 				if (classPaths != null) {
 					for(String classPath : classPaths) {
 						addToClassPath(classPath);
 					}
 				}
 				this.classRepositoriesPaths = classRepositories;
-				this.classPathsSearchResults = new LinkedHashSet<>();
 			}
 			
 			private static Context create(
 				JavaMemoryCompiler javaMemoryCompiler,
-				ClassPathHunter classPathHunter,
 				Collection<MemorySource> sources,
 				Collection<String> classPaths,
 				Collection<String> classRepositories
 			) {
-				return new Context(javaMemoryCompiler, classPathHunter, sources, classPaths, classRepositories);
+				return new Context(javaMemoryCompiler, sources, classPaths, classRepositories);
 			}
 			
-			public Collection<FileSystemItem> findForPackageName(String packageName) throws Exception {
-				FileSystemItem.CheckingOption checkFileOption = 
-					FileSystemItem.CheckingOption.forLabel(javaMemoryCompiler.config.resolveStringValue(
-						Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-						JavaMemoryCompiler.Configuration.DEFAULT_VALUES
-					)
-				);
-
-				SearchResult result = classPathHunter.findBy(
-					SearchConfig.withoutUsingCache().addPaths(
-						javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()
-					).by(
-						ClassCriteria.create().packageName((iteratedClassPackageName) ->
+			public Collection<String> findForPackageName(String packageName) throws Exception {
+				Collection<String> classPaths = javaMemoryCompiler.searchClassPathsInCompiledClassesRepositoryWithoutTheUseOfCache(
+					ClassCriteria.create().packageName((iteratedClassPackageName) ->
 							Objects.equals(iteratedClassPackageName, packageName)
 						)
-					).withScanFileCriteria(
-						FileSystemItem.Criteria.forClassTypeFiles(checkFileOption)
-					).optimizePaths(
-						true
-					)
 				);
-				
-				classPathsSearchResults.add(result);
-				if (result.getClassPaths().isEmpty()) {
-					result = classPathHunter.loadInCache(
-						SearchConfig.forPaths(classRepositoriesPaths).by(
+				if (classPaths.isEmpty()) {
+					classPaths.addAll(
+						javaMemoryCompiler.computeClassPaths(
+							classRepositoriesPaths, 
+							sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)), 
 							ClassCriteria.create().packageName((iteratedClassPackageName) ->
 								Objects.equals(iteratedClassPackageName, packageName)									
 							)
-						).withScanFileCriteria(
-							FileSystemItem.Criteria.forClassTypeFiles(checkFileOption)
-						).optimizePaths(
-							true
 						)
-					).find();
-					classPathsSearchResults.add(result);
+					);
 				}
-				return result.getClassPaths();
+				return classPaths;
 			}
 			
-			public Collection<FileSystemItem> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
-				FileSystemItem.CheckingOption checkFileOption = 
-					FileSystemItem.CheckingOption.forLabel(javaMemoryCompiler.config.resolveStringValue(
-						Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-						JavaMemoryCompiler.Configuration.DEFAULT_VALUES
-					)
+			public Collection<String> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
+				Collection<String> classPaths = javaMemoryCompiler.searchClassPathsInCompiledClassesRepositoryWithoutTheUseOfCache(
+					ClassCriteria.create().allThat(classPredicate)
 				);
-				SearchResult result = classPathHunter.findBy(
-					SearchConfig.withoutUsingCache().addPaths(javaMemoryCompiler.compiledClassesClassPath.getAbsolutePath()).by(
-						ClassCriteria.create().allThat(classPredicate)
-					).withScanFileCriteria(
-						FileSystemItem.Criteria.forClassTypeFiles(checkFileOption)
-					).optimizePaths(
-						true
-					)
-				);
-				classPathsSearchResults.add(result);
-				if (result.getClassPaths().isEmpty()) {
-					result = classPathHunter.loadInCache(
-						SearchConfig.forPaths(classRepositoriesPaths).by(
-							ClassCriteria.create().allThat(classPredicate)
-						).withScanFileCriteria(
-							FileSystemItem.Criteria.forClassTypeFiles(checkFileOption)
-						).optimizePaths(
-							true
-						)
-					).find();
-					classPathsSearchResults.add(result);
+				if (classPaths.isEmpty()) {
+					classPaths.addAll(javaMemoryCompiler.computeClassPaths(
+						classRepositoriesPaths, 
+						sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)), 
+						ClassCriteria.create().allThat(classPredicate))
+					);
 				}
-				return result.getClassPaths();
+				return classPaths;
 			}
 
 			@Override
 			public void close() {
-				if (!classPathsSearchResults.isEmpty()) {
-					classPathsSearchResults.stream().forEach(
-						(result)  -> result.close()
-					);
-				}
-				classPathsSearchResults = null;
-				classPathHunter = null;
 				options.clear();
 				options = null;
 				sources = null;
