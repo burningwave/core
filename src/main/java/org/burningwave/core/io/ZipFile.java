@@ -82,8 +82,8 @@ class ZipFile implements IterableZipContainer {
 						}
 					)
 				);
-				originalZipFile = null;
 			}
+			originalZipFile = null;
 		} catch (IOException exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
