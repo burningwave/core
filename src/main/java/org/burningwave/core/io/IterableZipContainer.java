@@ -224,8 +224,14 @@ public interface IterableZipContainer extends Component {
 		);
 	}
 	
+	public default void destroy(boolean removeFromCache) {
+		if (removeFromCache) {
+			Cache.pathForIterableZipContainers.remove(getAbsolutePath());
+		}
+	}
+	
 	public default void destroy() {
-		Cache.pathForIterableZipContainers.remove(getAbsolutePath());
+		destroy(true);
 	}
 	
 	public static interface Entry extends Component{
