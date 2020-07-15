@@ -82,8 +82,8 @@ class ZipFile implements IterableZipContainer {
 						}
 					)
 				);
-				originalZipFile = null;
 			}
+			originalZipFile = null;
 		} catch (IOException exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
@@ -97,10 +97,19 @@ class ZipFile implements IterableZipContainer {
 				if ((originalZipFile = this.originalZipFile) == null) {
 					File file = new File(absolutePath);
 					if (!file.exists()) {
-						File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(toString());
-						FileSystemItem fileSystemItem = FileSystemItem.ofPath(temporaryFolder.getAbsolutePath() + "/" + file.getName());
+						File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(this.getClass().getName());
+						String fileName = null;
+						if (absolutePath.chars().filter(ch -> ch == '/').count() > 1) {
+							fileName = absolutePath.substring(absolutePath.indexOf("/")).replaceFirst("\\/", "\\[").replace("/", "][");
+							fileName = fileName.substring(0, fileName.lastIndexOf("][") + 1) + fileName.substring(fileName.lastIndexOf("][") +2);
+						} else {
+							fileName = absolutePath.substring(absolutePath.indexOf("/") + 1);
+						}
+						FileSystemItem fileSystemItem = FileSystemItem.ofPath(
+							temporaryFolder.getAbsolutePath() + "/" + fileName
+						);
 						if (!fileSystemItem.exists()) {
-							FileSystemItem fileSystemItemRef = fileSystemItem = Streams.store(temporaryFolder.getAbsolutePath() + "/" + file.getName(), content);
+							FileSystemItem fileSystemItemRef = fileSystemItem = Streams.store(fileSystemItem.getAbsolutePath(), content);
 							temporaryFileDeleter = () -> {
 								String temporaryFileAbsolutePath = fileSystemItemRef.getAbsolutePath();
 								FileSystemHelper.delete(temporaryFileAbsolutePath);
