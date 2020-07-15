@@ -45,6 +45,7 @@ public class CompileConfig {
 	private Collection<String> additionalClassRepositoriesWhereToSearchNotFoundClasses;
 	
 	private boolean storingCompiledClassesEnabled;
+	private boolean storingCompiledClassesToNewFolderEnabled;
 	private boolean neededClassesPreventiveSearchEnabled;
 	
 	private CompileConfig() {
@@ -68,6 +69,14 @@ public class CompileConfig {
 	
 	public CompileConfig storeCompiledClasses(boolean flag) {
 		this.storingCompiledClassesEnabled = flag;
+		return this;
+	}
+	
+	public CompileConfig storeCompiledClassesToNewFolder(boolean flag) {
+		if (flag) {
+			storeCompiledClasses(flag);
+		}
+		this.storingCompiledClassesToNewFolderEnabled = flag;
 		return this;
 	}
 	
@@ -217,6 +226,11 @@ public class CompileConfig {
 	boolean isStoringCompiledClassesEnabled() {
 		return storingCompiledClassesEnabled;
 	}
+	
+	boolean isStoringCompiledClassesToNewFolderEnabled() {
+		return storingCompiledClassesToNewFolderEnabled;
+	}
+	
 	
 	boolean isNeededClassesPreventiveSearchEnabled() {
 		return neededClassesPreventiveSearchEnabled;

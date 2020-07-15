@@ -64,7 +64,7 @@ public interface IterableZipContainer extends Component {
 	@SuppressWarnings("resource")
 	public static IterableZipContainer create(String absolutePath, ByteBuffer bytes) {
 		if (Streams.isJModArchive(bytes)) {
-			return Cache.pathForZipFiles.getOrUploadIfAbsent(
+			return Cache.pathForIterableZipContainers.getOrUploadIfAbsent(
 				absolutePath, () -> new ZipFile(absolutePath, bytes)
 			).duplicate();
 		} else if (Streams.isArchive(bytes)) {
@@ -85,7 +85,7 @@ public interface IterableZipContainer extends Component {
 			iS = new ByteBufferInputStream(Streams.toByteBuffer(inputStream));
 		}
 		if (Streams.isJModArchive(iS.toByteBuffer())) {
-			return Cache.pathForZipFiles.getOrUploadIfAbsent(
+			return Cache.pathForIterableZipContainers.getOrUploadIfAbsent(
 				absolutePath, () -> new ZipFile(absolutePath, iS.toByteBuffer())
 			).duplicate();
 		} else if (Streams.isArchive(iS.toByteBuffer())) {
@@ -224,8 +224,14 @@ public interface IterableZipContainer extends Component {
 		);
 	}
 	
+	public default void destroy(boolean removeFromCache) {
+		if (removeFromCache) {
+			Cache.pathForIterableZipContainers.remove(getAbsolutePath());
+		}
+	}
+	
 	public default void destroy() {
-		Cache.pathForZipFiles.remove(getAbsolutePath());
+		destroy(true);
 	}
 	
 	public static interface Entry extends Component{

@@ -127,8 +127,7 @@ public class FileSystemItem implements ManagedLogger {
 			}
 		}
 		if (conventionedAbsolutePath == null) {
-			reset(true);
-			Cache.pathForFileSystemItems.remove(getAbsolutePath());
+			destroy();
 		}	
 		return conventionedAbsolutePath;
 	}
@@ -563,11 +562,14 @@ public class FileSystemItem implements ManagedLogger {
 		return this;
 	}
 	
-	private void removeLinkedResourcesFromCache(FileSystemItem fileSystemItem) {
+	private void removeFromCache(FileSystemItem fileSystemItem, boolean removeFromCache) {
 		Cache.pathForContents.remove(fileSystemItem.getAbsolutePath());
-		IterableZipContainer iterableZipContainer = Cache.pathForZipFiles.get(fileSystemItem.getAbsolutePath()); 
-		if (iterableZipContainer != null) {
-			iterableZipContainer.destroy();
+		IterableZipContainer zipContainer = Cache.pathForIterableZipContainers.get(fileSystemItem.getAbsolutePath()); 
+		if (zipContainer != null) {
+			zipContainer.destroy();
+		}
+		if (removeFromCache) {
+			Cache.pathForFileSystemItems.remove(fileSystemItem.getAbsolutePath());
 		}
 	}
 	
@@ -576,6 +578,14 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public synchronized FileSystemItem reset(boolean removeLinkedResourcesFromCache) {
+		return clear(removeLinkedResourcesFromCache, false);
+	}
+	
+	public synchronized void destroy() {
+		clear(true, true);
+	}
+	
+	synchronized FileSystemItem clear(boolean removeLinkedResourcesFromCache, boolean removeFromCache) {
 		if (allChildren != null) {
 			for (FileSystemItem child : allChildren) {
 				child.absolutePath.setValue(null);
@@ -584,7 +594,7 @@ public class FileSystemItem implements ManagedLogger {
 				child.allChildren = null;
 				child.children = null;
 				if (removeLinkedResourcesFromCache) {
-					removeLinkedResourcesFromCache(child);
+					removeFromCache(child, removeFromCache);
 				}
 			}
 			allChildren = null;
@@ -593,7 +603,7 @@ public class FileSystemItem implements ManagedLogger {
 			}			
 		} else if (children != null) {
 			for (FileSystemItem child : children) {
-				child.reset(removeLinkedResourcesFromCache);
+				child.clear(removeLinkedResourcesFromCache, removeFromCache);
 			}
 			children = null;
 		}
@@ -601,9 +611,10 @@ public class FileSystemItem implements ManagedLogger {
 		absolutePath.setValue(null);
 		parent = null;
 		if (removeLinkedResourcesFromCache) {
-			removeLinkedResourcesFromCache(this);
+			removeFromCache(this, removeFromCache);
 		}
-		return this;
+		return removeFromCache ?
+			null : this;
 	}
 	
 	private Set<FileSystemItem> retrieveChildren(Supplier<IterableZipContainer> zipInputStreamSupplier, String itemToSearch) {

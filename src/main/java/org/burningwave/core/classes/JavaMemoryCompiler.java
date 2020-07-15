@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
@@ -173,7 +174,8 @@ public class JavaMemoryCompiler implements Component {
 				}
 			),
 			config.isNeededClassesPreventiveSearchEnabled(),
-			config.isStoringCompiledClassesEnabled()
+			config.isStoringCompiledClassesEnabled(),
+			config.isStoringCompiledClassesToNewFolderEnabled()
 		);
 	}
 	
@@ -182,7 +184,8 @@ public class JavaMemoryCompiler implements Component {
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
 		boolean neededClassesPreventiveSearchEnabled,
-		boolean storeCompiledClasses
+		boolean storeCompiledClasses,
+		boolean storeCompiledClassesToNewFolder
 	) {	
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
 		if (neededClassesPreventiveSearchEnabled) {
@@ -198,13 +201,17 @@ public class JavaMemoryCompiler implements Component {
 			)
 		) {
 			Map<String, ByteBuffer> compiledFiles = _compile(context, null);
+			String storedFilesClassPath = compiledClassesRepository.getAbsolutePath() + 
+				(storeCompiledClassesToNewFolder?
+					"/" + UUID.randomUUID().toString() :
+					"");
 			if (!compiledFiles.isEmpty() && storeCompiledClasses) {
 				compiledFiles.forEach((className, byteCode) -> {
 					JavaClass javaClass = JavaClass.create(byteCode);
-					javaClass.storeToClassPath(compiledClassesRepository.getAbsolutePath() + "/" + UUID.randomUUID().toString());
+					javaClass.storeToClassPath(storedFilesClassPath);
 				});
 			}			
-			return new CompilationResult(compiledClassesRepository, compiledFiles);
+			return new CompilationResult(FileSystemItem.ofPath(storedFilesClassPath), compiledFiles);
 		}
 	}
 	
@@ -652,8 +659,18 @@ public class JavaMemoryCompiler implements Component {
 	@Override
 	public void close() {
 		unregister(config);
+		FileSystemHelper.delete(compiledClassesRepository.getAbsolutePath());
+		compiledClassesRepository.destroy();
+		compiledClassesRepository = null;
+		FileSystemHelper.delete(basePathForLibCopies.getAbsolutePath());
+		basePathForLibCopies.destroy();
+		basePathForLibCopies = null;
+		FileSystemHelper.delete(basePathForClassCopies.getAbsolutePath());
+		basePathForClassCopies.destroy();
+		basePathForClassCopies = null;
 		compiler = null;
 		classPathHunter = null;
+		pathHelper = null;
 		config = null;
 	}
 	

@@ -82,8 +82,8 @@ class ZipFile implements IterableZipContainer {
 						}
 					)
 				);
-				originalZipFile = null;
 			}
+			originalZipFile = null;
 		} catch (IOException exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
@@ -97,17 +97,24 @@ class ZipFile implements IterableZipContainer {
 				if ((originalZipFile = this.originalZipFile) == null) {
 					File file = new File(absolutePath);
 					if (!file.exists()) {
-						File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(toString());
-						FileSystemItem fileSystemItem = FileSystemItem.ofPath(temporaryFolder.getAbsolutePath() + "/" + file.getName());
-						if (!fileSystemItem.exists()) {
-							fileSystemItem = Streams.store(temporaryFolder.getAbsolutePath() + "/" + file.getName(), content);
-							String temporaryFileAbsolutePath = fileSystemItem.getAbsolutePath();
+						File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(ZipFile.class.toString());
+						String fileAbsolutePath = null;
+						if (absolutePath.chars().filter(ch -> ch == '/').count() > 1) {
+							fileAbsolutePath = absolutePath.substring(absolutePath.indexOf("/")).replaceFirst("\\/", "\\[").replace("/", "][");
+							fileAbsolutePath = fileAbsolutePath.substring(0, fileAbsolutePath.lastIndexOf("][") + 1) + fileAbsolutePath.substring(fileAbsolutePath.lastIndexOf("][") +2);
+						} else {
+							fileAbsolutePath = absolutePath.substring(absolutePath.indexOf("/") + 1);
+						}
+						fileAbsolutePath = Paths.clean(temporaryFolder.getAbsolutePath()) + "/" + fileAbsolutePath;
+						file = new File(fileAbsolutePath);
+						if (!file.exists()) {
+							FileSystemItem fileSystemItem = Streams.store(fileAbsolutePath, content);
 							temporaryFileDeleter = () -> {
-								FileSystemHelper.delete(new File(temporaryFileAbsolutePath));
-								Cache.pathForContents.remove(temporaryFileAbsolutePath);
+								//String temporaryFileAbsolutePath = fileSystemItem.getAbsolutePath();
+								FileSystemHelper.delete(fileSystemItem.getAbsolutePath());
+								fileSystemItem.destroy();
 							};
-						}			
-						file = new File(fileSystemItem.getAbsolutePath());
+						}
 					}
 					try {
 						originalZipFile = this.originalZipFile = new java.util.zip.ZipFile(file);
@@ -214,8 +221,14 @@ class ZipFile implements IterableZipContainer {
 	}
 	
 	@Override
-	public void destroy() {
-		IterableZipContainer.super.destroy();
+	public void destroy(boolean removeFromCache) {
+		if (removeFromCache) {
+			IterableZipContainer.super.destroy(removeFromCache);
+		}		
+		for (Entry entry : entries) {
+			entry.destroy();
+		}
+		entries.clear();
 		close();
 		Runnable temporaryFileDeleter = this.temporaryFileDeleter;
 		if (temporaryFileDeleter != null) {
@@ -261,6 +274,13 @@ class ZipFile implements IterableZipContainer {
 		@Override
 		public ByteBuffer toByteBuffer() {
 			return Cache.pathForContents.getOrUploadIfAbsent(getAbsolutePath(), zipEntryContentSupplier);
-		}	
+		}
+		
+		public void destroy() {
+			this.absolutePath = null;
+			this.name = null;
+			this.zipEntryContentSupplier = null;
+			this.zipMemoryContainer = null;
+		}
 	}
 }

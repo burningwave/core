@@ -41,6 +41,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -53,7 +54,7 @@ import org.burningwave.core.io.IterableZipContainer;
 public class Cache implements Component {
 	public final PathForResources<ByteBuffer> pathForContents;
 	public final PathForResources<FileSystemItem> pathForFileSystemItems;
-	public final PathForResources<IterableZipContainer> pathForZipFiles;
+	public final PathForResources<IterableZipContainer> pathForIterableZipContainers;
 	public final ObjectAndPathForResources<ClassLoader, Field[]> classLoaderForFields;
 	public final ObjectAndPathForResources<ClassLoader, Method[]> classLoaderForMethods;
 	public final ObjectAndPathForResources<ClassLoader, Constructor<?>[]> classLoaderForConstructors;
@@ -67,7 +68,25 @@ public class Cache implements Component {
 		logInfo("Building cache");
 		pathForContents = new PathForResources<>(1L, Streams::shareContent);
 		pathForFileSystemItems = new PathForResources<>(1L, fileSystemItem -> fileSystemItem);
-		pathForZipFiles = new PathForResources<>(1L, zipFileContainer -> zipFileContainer);
+		pathForIterableZipContainers = new PathForResources<IterableZipContainer>(1L, zipFileContainer -> zipFileContainer) {
+			void clearResources(Map<Long,Map<String,Map<String,IterableZipContainer>>> partitions) {
+				Collection<IterableZipContainer> iZCs = new HashSet<>();
+				for (Entry<Long, Map<String, Map<String, IterableZipContainer>>> partition : partitions.entrySet()) {
+					for (Entry<String, Map<String, IterableZipContainer>> nestedPartition : partition.getValue().entrySet()) {
+						for (Entry<String, IterableZipContainer> resources : nestedPartition.getValue().entrySet()) {
+							iZCs.add(resources.getValue());
+						}
+						nestedPartition.getValue().clear();
+					}
+					partition.getValue().clear();
+				}
+				partitions.clear();
+				for (IterableZipContainer iZC : iZCs) {
+					iZC.destroy(false);
+				}
+				iZCs.clear();
+			};			
+		};
 		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);
 		classLoaderForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
 		uniqueKeyForFields = new ObjectAndPathForResources<>(1L, field -> field);
@@ -268,13 +287,34 @@ public class Cache implements Component {
 			return count;
 		}
 		
+		@Override
 		public PathForResources<R> clear() {
-			resources.clear();
-			mutexManagerForPartitions.clear();         
-			mutexManagerForLoadedResources.clear();    
-			mutexManagerForPartitionedResources.clear();
+			Map<Long, Map<String, Map<String, R>>> partitions;
+			synchronized (this.resources) {	
+				partitions = this.resources;
+				this.resources = new HashMap<>();
+				mutexManagerForPartitions.clear();         
+				mutexManagerForLoadedResources.clear();    
+				mutexManagerForPartitionedResources.clear();
+			}
+			Thread cleaner = new Thread(() -> {
+				clearResources(partitions);
+			});
+			cleaner.setPriority(Thread.MIN_PRIORITY);
+			cleaner.start();
 			return this;
 		}
+
+		void clearResources(Map<Long, Map<String, Map<String, R>>> partitions) {
+			for (Entry<Long, Map<String, Map<String, R>>> partition : partitions.entrySet()) {
+				for (Entry<String, Map<String, R>> nestedPartition : partition.getValue().entrySet()) {
+					nestedPartition.getValue().clear();
+				}
+				partition.getValue().clear();
+			}
+			partitions.clear();
+		}		
+		
 	}
 	
 	public void clear(Cleanable... excluded) {
@@ -283,7 +323,7 @@ public class Cache implements Component {
 			null;
 		clear(pathForContents, toBeExcluded);
 		clear(pathForFileSystemItems, toBeExcluded);
-		clear(pathForZipFiles, toBeExcluded);
+		clear(pathForIterableZipContainers, toBeExcluded);
 		clear(classLoaderForFields, toBeExcluded);
 		clear(classLoaderForMethods, toBeExcluded);
 		clear(classLoaderForConstructors, toBeExcluded);

@@ -276,9 +276,15 @@ public class ClassFactory implements Component {
 				try {
 					classes.put(className, classLoader.loadClass(className));
 				} catch (Throwable exc) {
-					CompilationResult compilationResult = build0(
-						compileConfigSupplier.get(),
-						useOneShotJavaCompiler
+					JavaMemoryCompiler compiler = !useOneShotJavaCompiler ?
+						this.javaMemoryCompiler :
+						JavaMemoryCompiler.create(
+							pathHelper,
+							getClassPathHunter(),
+							config
+						);
+					CompilationResult compilationResult = compiler.compile(
+						compileConfigSupplier.get()
 					);
 					logInfo(
 						classesName.size() > 1?	
@@ -320,8 +326,15 @@ public class ClassFactory implements Component {
 								});
 							}
 						}
-					};
-					
+						
+						@Override
+						public void close() {
+							super.close();
+							if (useOneShotJavaCompiler) {
+								compiler.close();
+							}
+						}
+					};					
 				}
 			}
 			logInfo("Classes {} loaded by classloader {} without building", String.join(", ", classes.keySet()), classLoader);
@@ -399,28 +412,7 @@ public class ClassFactory implements Component {
 		}
 		return retrievedBytecodes;
 	}
-	
-	private CompilationResult build0(
-		CompileConfig compileConfig,
-		boolean useOneShotCompiler
-		
-	) {
-		if (useOneShotCompiler) {
-			try (JavaMemoryCompiler compiler = JavaMemoryCompiler.create(
-				pathHelper,
-				getClassPathHunter(),
-				config
-			)) {
-				return compiler.compile(
-					compileConfig
-				);
-			}
-		} else {
-			return this.javaMemoryCompiler.compile(
-				compileConfig
-			);
-		}
-	}
+
 	
 	public PojoSubTypeRetriever createPojoSubTypeRetriever(PojoSourceGenerator sourceGenerator) {
 		return PojoSubTypeRetriever.create(this, sourceGenerator);
@@ -621,7 +613,10 @@ public class ClassFactory implements Component {
 		private ClassLoader classLoader;
 		private ClassFactory classFactory;
 		
-		private ClassRetriever(ClassFactory classFactory, Function<ClassRetriever, ClassLoader> classLoaderSupplier) {
+		private ClassRetriever(
+			ClassFactory classFactory,
+			Function<ClassRetriever, ClassLoader> classLoaderSupplier
+		) {
 			this.classLoader = classLoaderSupplier.apply(this);
 			this.classFactory = classFactory;
 			this.classFactory.register(this);
