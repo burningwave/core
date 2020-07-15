@@ -41,6 +41,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -268,13 +269,35 @@ public class Cache implements Component {
 			return count;
 		}
 		
+		@Override
 		public PathForResources<R> clear() {
-			resources.clear();
-			mutexManagerForPartitions.clear();         
-			mutexManagerForLoadedResources.clear();    
-			mutexManagerForPartitionedResources.clear();
+			Map<Long, Map<String, Map<String, R>>> partitions;
+			synchronized (this.resources) {	
+				partitions = this.resources;
+				this.resources = new HashMap<>();
+				mutexManagerForPartitions.clear();         
+				mutexManagerForLoadedResources.clear();    
+				mutexManagerForPartitionedResources.clear();
+			}
+			Thread cleaner = new Thread(() -> {
+				clearResources(partitions);
+				logInfo("{} ended to clean {}", Thread.currentThread().toString(), this.toString());
+			});
+			cleaner.setPriority(Thread.MIN_PRIORITY);
+			cleaner.start();
 			return this;
 		}
+
+		void clearResources(Map<Long, Map<String, Map<String, R>>> partitions) {
+			for (Entry<Long, Map<String, Map<String, R>>> partition : partitions.entrySet()) {
+				for (Entry<String, Map<String, R>> nestedPartition : partition.getValue().entrySet()) {
+					nestedPartition.getValue().clear();
+				}
+				partition.getValue().clear();
+			}
+			partitions.clear();
+		}		
+		
 	}
 	
 	public void clear(Cleanable... excluded) {
