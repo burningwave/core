@@ -82,8 +82,8 @@ class ZipFile implements IterableZipContainer {
 						}
 					)
 				);
+				originalZipFile = null;
 			}
-			originalZipFile = null;
 		} catch (IOException exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
@@ -125,8 +125,7 @@ class ZipFile implements IterableZipContainer {
 			}
 		}
 		return originalZipFile;
-	}
-	
+	}	
 	private ZipFile(String absolutePath, Collection<Entry> entries) {
 		this.absolutePath = absolutePath;
 		this.entries = entries;
@@ -221,14 +220,8 @@ class ZipFile implements IterableZipContainer {
 	}
 	
 	@Override
-	public void destroy(boolean removeFromCache) {
-		if (removeFromCache) {
-			IterableZipContainer.super.destroy(removeFromCache);
-		}		
-		for (Entry entry : entries) {
-			entry.destroy();
-		}
-		entries.clear();
+	public void destroy() {
+		IterableZipContainer.super.destroy();
 		close();
 		Runnable temporaryFileDeleter = this.temporaryFileDeleter;
 		if (temporaryFileDeleter != null) {
@@ -274,13 +267,6 @@ class ZipFile implements IterableZipContainer {
 		@Override
 		public ByteBuffer toByteBuffer() {
 			return Cache.pathForContents.getOrUploadIfAbsent(getAbsolutePath(), zipEntryContentSupplier);
-		}
-		
-		public void destroy() {
-			this.absolutePath = null;
-			this.name = null;
-			this.zipEntryContentSupplier = null;
-			this.zipMemoryContainer = null;
-		}
+		}	
 	}
 }
