@@ -97,7 +97,7 @@ class ZipFile implements IterableZipContainer {
 				if ((originalZipFile = this.originalZipFile) == null) {
 					File file = new File(absolutePath);
 					if (!file.exists()) {
-						File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(FileSystemHelper.toString());
+						File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(this.getClass().getName() + "@" + Integer.toHexString(this.getClass().hashCode()));
 						String fileAbsolutePath = null;
 						if (absolutePath.chars().filter(ch -> ch == '/').count() > 1) {
 							fileAbsolutePath = absolutePath.substring(absolutePath.indexOf("/")).replaceFirst("\\/", "\\[").replace("/", "][");

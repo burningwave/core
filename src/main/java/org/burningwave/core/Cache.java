@@ -299,6 +299,7 @@ public class Cache implements Component {
 			}
 			Thread cleaner = new Thread(() -> {
 				clearResources(partitions);
+				logInfo("{} ended to clean {}", Thread.currentThread().toString(), this.toString());
 			});
 			cleaner.setPriority(Thread.MIN_PRIORITY);
 			cleaner.start();
