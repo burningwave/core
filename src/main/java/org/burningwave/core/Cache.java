@@ -68,7 +68,7 @@ public class Cache implements Component {
 		logInfo("Building cache");
 		pathForContents = new PathForResources<>(1L, Streams::shareContent);
 		pathForFileSystemItems = new PathForResources<>(1L, fileSystemItem -> fileSystemItem);
-		pathForIterableZipContainers = new PathForResources<>(1L, zipFileContainer -> zipFileContainer) {
+		pathForIterableZipContainers = new PathForResources<IterableZipContainer>(1L, zipFileContainer -> zipFileContainer) {
 			void clearResources(Map<Long,Map<String,Map<String,IterableZipContainer>>> partitions) {
 				Collection<IterableZipContainer> iZCs = new HashSet<>();
 				for (Entry<Long, Map<String, Map<String, IterableZipContainer>>> partition : partitions.entrySet()) {
@@ -84,6 +84,7 @@ public class Cache implements Component {
 				for (IterableZipContainer iZC : iZCs) {
 					iZC.destroy(false);
 				}
+				iZCs.clear();
 			};			
 		};
 		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);
