@@ -33,6 +33,7 @@ import org.junit.runner.RunWith;
     StringsTest.class,
     UnitSourceGeneratorTest.class,
     RepeatedClassFactoryTest.class,
+    FieldsTest.class,
     ComponentContainerTest.class
 })
 @ExcludeTags("Heavy")
