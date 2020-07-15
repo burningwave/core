@@ -231,7 +231,6 @@ public interface IterableZipContainer extends Component {
 	}
 	
 	public default void destroy() {
-		Cache.pathForIterableZipContainers.remove(getAbsolutePath());
 		destroy(true);
 	}
 	
