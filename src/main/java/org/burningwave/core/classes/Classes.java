@@ -825,7 +825,7 @@ public class Classes implements Component, MembersRetriever {
 			Collection<String> allLoadedPaths = getAllLoadedPaths(urlClassLoader);
 			for (Collection<String> classPaths : classPathCollections) {
 				classPaths.removeAll(allLoadedPaths);
-				classPaths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL(false)).forEach(url -> {
+				classPaths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
 					Methods.invokeDirect(urlClassLoader, "addURL", url);
 				});	
 			}
