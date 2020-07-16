@@ -66,7 +66,6 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.classes.ClassPathHunter.SearchResult;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.io.FileSystemItem;
@@ -79,7 +78,6 @@ public class JavaMemoryCompiler implements Component {
 		
 		public static class Key {
 			
-			public static final String CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "java-memory-compiler.class-path-hunter.search-config.check-file-option";
 			public static final String CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-paths";
 			public static final String ADDITIONAL_CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.additional-class-paths";
 			public static final String CLASS_REPOSITORIES =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-repositories";
@@ -90,10 +88,6 @@ public class JavaMemoryCompiler implements Component {
 		static {
 			DEFAULT_VALUES = new HashMap<>();
 			DEFAULT_VALUES.put(
-				Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-				"${" + ClassPathScannerAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
-			);
-			DEFAULT_VALUES.put(
 				Key.CLASS_PATHS,
 				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
 				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
@@ -103,34 +97,31 @@ public class JavaMemoryCompiler implements Component {
 	}
 	
 	private PathHelper pathHelper;
-	private ClassPathHunter classPathHunter;
+	private ClassPathHelper classPathHelper;
 	private JavaCompiler compiler;
 	private FileSystemItem compiledClassesRepository;
-	private FileSystemItem basePathForLibCopies;
-	private FileSystemItem basePathForClassCopies;
+
 	private Properties config;	
 	
 	private JavaMemoryCompiler(
 		PathHelper pathHelper,
-		ClassPathHunter classPathHunter,
+		ClassPathHelper classPathHelper,
 		Properties config
 	) {
 		this.pathHelper = pathHelper;
-		this.classPathHunter = classPathHunter;
+		this.classPathHelper = classPathHelper;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
-		this.compiledClassesRepository = FileSystemItem.of(getOrCreateTemporaryFolder("compiledClassesRepository"));
-		this.basePathForLibCopies = FileSystemItem.of(getOrCreateTemporaryFolder("lib"));
-		this.basePathForClassCopies = FileSystemItem.of(getOrCreateTemporaryFolder("classes"));
+		this.compiledClassesRepository = FileSystemItem.of(classPathHelper.getOrCreateTemporaryFolder("compiledClassesRepository"));
 		this.config = config;
 		listenTo(config);
 	}	
 	
 	public static JavaMemoryCompiler create(
 		PathHelper pathHelper,
-		ClassPathHunter classPathHunter,
+		ClassPathHelper classPathHelper,
 		Properties config
 	) {
-		return new JavaMemoryCompiler(pathHelper, classPathHunter, config);
+		return new JavaMemoryCompiler(pathHelper, classPathHelper, config);
 	}
 	
 	public 	CompilationResult compile(Collection<String> sources) {
@@ -183,13 +174,13 @@ public class JavaMemoryCompiler implements Component {
 		Collection<String> sources, 
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
-		boolean neededClassesPreventiveSearchEnabled,
+		boolean isClassPathsResolvingEnabled,
 		boolean storeCompiledClasses,
 		boolean storeCompiledClassesToNewFolder
 	) {	
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
-		if (neededClassesPreventiveSearchEnabled) {
-			classPaths = computeClassPaths(classRepositoriesPaths, sources, null);
+		if (isClassPathsResolvingEnabled && !classRepositoriesPaths.isEmpty()) {
+			classPaths = classPathHelper.computeFromSources(sources, classRepositoriesPaths, null);
 		}
 		Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
 		sourcesToMemorySources(sources, memorySources);
@@ -213,111 +204,7 @@ public class JavaMemoryCompiler implements Component {
 			}			
 			return new CompilationResult(FileSystemItem.ofPath(storedFilesClassPath), compiledFiles);
 		}
-	}
-	
-	Collection<String> computeClassPaths(
-		Collection<String> classRepositories,
-		Collection<String> sources,
-		ClassCriteria otherClassCriteria
-	) {
-		Collection<String> imports = new HashSet<>();
-		for (String sourceCode : sources) {
-			imports.addAll(SourceCodeHandler.extractImports(sourceCode));
-		}	
-		Collection<String> classPaths = new HashSet<>();
-		Collection<String> toBeAdjuested = new HashSet<>(); 
-		for (String classPath : classRepositories) {
-			FileSystemItem fIS = FileSystemItem.ofPath(classPath);
-			if (fIS.exists()) {
-				if (fIS.isArchive()) {
-					toBeAdjuested.add(fIS.getAbsolutePath());
-				} else {
-					classPaths.add(fIS.getAbsolutePath());
-				}
-			}
-		}
-		if (!toBeAdjuested.isEmpty()) {
-			FileSystemItem.CheckingOption checkFileOption = 
-				FileSystemItem.CheckingOption.forLabel(config.resolveStringValue(
-					Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-					JavaMemoryCompiler.Configuration.DEFAULT_VALUES
-				)
-			);
-			ClassCriteria classCriteria = ClassCriteria.create().className(
-				className -> 
-					imports.contains(className)
-			);
-			if (otherClassCriteria != null) {
-				classCriteria = classCriteria.or(otherClassCriteria);
-			}
-			try(SearchResult result = classPathHunter.loadInCache(
-					SearchConfig.forPaths(toBeAdjuested).withScanFileCriteria(
-						FileSystemItem.Criteria.forClassTypeFiles(checkFileOption)
-					).by(
-						classCriteria
-					).optimizePaths(
-						true
-					)
-				).find()
-			) {	
-				Collection<FileSystemItem> effectiveClassPaths = result.getClassPaths();
-				if (!effectiveClassPaths.isEmpty()) {
-					for (FileSystemItem fsObject : effectiveClassPaths) {
-						if (fsObject.isCompressed()) {					
-							ThrowingRunnable.run(() -> {
-								synchronized (this) {
-									FileSystemItem classPathBasePath = fsObject.isArchive() ?
-										basePathForLibCopies :
-										basePathForClassCopies
-									;
-									FileSystemItem classPath = FileSystemItem.ofPath(
-										classPathBasePath.getAbsolutePath() + "/" + fsObject.getName()
-									);
-									if (!classPath.refresh().exists()) {
-										fsObject.copyTo(classPathBasePath.getAbsolutePath());
-									}
-									classPaths.add(
-										classPath.getAbsolutePath()
-									);
-									//Free memory
-									classPath.reset();
-								}
-							});
-						} else {
-							classPaths.add(fsObject.getAbsolutePath());
-						}
-					}
-				}
-			}
-		}
-		return classPaths;
-	}
-	
-	Collection<String> searchClassPathsInCompiledClassesRepositoryWithoutTheUseOfCache(ClassCriteria classCriteria) {
-		FileSystemItem.CheckingOption checkFileOption = 
-			FileSystemItem.CheckingOption.forLabel(config.resolveStringValue(
-				Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-				JavaMemoryCompiler.Configuration.DEFAULT_VALUES
-			)
-		);
-		Collection<String> classPaths = new HashSet<>();
-		try (SearchResult result = classPathHunter.findBy(
-				SearchConfig.withoutUsingCache().addPaths(compiledClassesRepository.getAbsolutePath()).by(
-					classCriteria
-				).withScanFileCriteria(
-					FileSystemItem.Criteria.forClassTypeFiles(checkFileOption)
-				).optimizePaths(
-					true
-				)
-			)
-		) {	
-			for (FileSystemItem classPath : result.getClassPaths()) {
-				classPaths.add(classPath.getAbsolutePath());
-				classPath.reset();
-			}
-		}
-		return classPaths;
-	}
+	}	
 	
 	private void sourcesToMemorySources(Collection<String> sources, Collection<MemorySource> memorySources) {
 		for (String source : sources) {
@@ -610,16 +497,17 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<String> findForPackageName(String packageName) throws Exception {
-				Collection<String> classPaths = javaMemoryCompiler.searchClassPathsInCompiledClassesRepositoryWithoutTheUseOfCache(
+				Collection<String> classPaths = javaMemoryCompiler.classPathHelper.searchWithoutTheUseOfCache(
 					ClassCriteria.create().packageName((iteratedClassPackageName) ->
-							Objects.equals(iteratedClassPackageName, packageName)
-						)
+						Objects.equals(iteratedClassPackageName, packageName)
+					),
+					javaMemoryCompiler.compiledClassesRepository.getAbsolutePath()
 				);
 				if (classPaths.isEmpty()) {
 					classPaths.addAll(
-						javaMemoryCompiler.computeClassPaths(
+						javaMemoryCompiler.classPathHelper.computeFromSources(
+							sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
 							classRepositoriesPaths, 
-							sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)), 
 							ClassCriteria.create().packageName((iteratedClassPackageName) ->
 								Objects.equals(iteratedClassPackageName, packageName)									
 							)
@@ -630,13 +518,14 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<String> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
-				Collection<String> classPaths = javaMemoryCompiler.searchClassPathsInCompiledClassesRepositoryWithoutTheUseOfCache(
-					ClassCriteria.create().allThat(classPredicate)
+				Collection<String> classPaths = javaMemoryCompiler.classPathHelper.searchWithoutTheUseOfCache(
+					ClassCriteria.create().allThat(classPredicate),
+					javaMemoryCompiler.compiledClassesRepository.getAbsolutePath()
 				);
 				if (classPaths.isEmpty()) {
-					classPaths.addAll(javaMemoryCompiler.computeClassPaths(
-						classRepositoriesPaths, 
-						sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)), 
+					classPaths.addAll(javaMemoryCompiler.classPathHelper.computeFromSources(
+						sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
+						classRepositoriesPaths,
 						ClassCriteria.create().allThat(classPredicate))
 					);
 				}
@@ -662,15 +551,9 @@ public class JavaMemoryCompiler implements Component {
 		FileSystemHelper.delete(compiledClassesRepository.getAbsolutePath());
 		compiledClassesRepository.destroy();
 		compiledClassesRepository = null;
-		FileSystemHelper.delete(basePathForLibCopies.getAbsolutePath());
-		basePathForLibCopies.destroy();
-		basePathForLibCopies = null;
-		FileSystemHelper.delete(basePathForClassCopies.getAbsolutePath());
-		basePathForClassCopies.destroy();
-		basePathForClassCopies = null;
 		compiler = null;
-		classPathHunter = null;
 		pathHelper = null;
+		classPathHelper = null;
 		config = null;
 	}
 	

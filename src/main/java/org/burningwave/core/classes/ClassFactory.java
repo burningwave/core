@@ -110,6 +110,7 @@ public class ClassFactory implements Component {
 	
 	
 	private PathHelper pathHelper;
+	private ClassPathHelper classPathHelper;
 	private JavaMemoryCompiler javaMemoryCompiler;
 	private PojoSubTypeRetriever pojoSubTypeRetriever;	
 	private ClassLoader defaultClassLoader;
@@ -127,6 +128,7 @@ public class ClassFactory implements Component {
 		Supplier<ClassPathHunter> classPathHunterSupplier,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
+		ClassPathHelper classPathHelper,
 		Object defaultClassLoaderOrDefaultClassLoaderSupplier,
 		Consumer<ClassLoader> classLoaderResetter,
 		Properties config
@@ -135,6 +137,7 @@ public class ClassFactory implements Component {
 		this.classPathHunterSupplier = classPathHunterSupplier;
 		this.javaMemoryCompiler = javaMemoryCompiler;
 		this.pathHelper = pathHelper;
+		this.classPathHelper = classPathHelper;
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
 		this.defaultClassLoaderOrDefaultClassLoaderSupplier = defaultClassLoaderOrDefaultClassLoaderSupplier;
 		this.classLoaderResetter = classLoaderResetter;
@@ -148,6 +151,7 @@ public class ClassFactory implements Component {
 		Supplier<ClassPathHunter> classPathHunterSupplier,
 		JavaMemoryCompiler javaMemoryCompiler,
 		PathHelper pathHelper,
+		ClassPathHelper classPathHelper,
 		Object defaultClassLoaderSupplier,
 		Consumer<ClassLoader> classLoaderResetter,
 		Properties config
@@ -157,6 +161,7 @@ public class ClassFactory implements Component {
 			classPathHunterSupplier,
 			javaMemoryCompiler, 
 			pathHelper,
+			classPathHelper,
 			defaultClassLoaderSupplier,
 			classLoaderResetter,
 			config
@@ -252,7 +257,7 @@ public class ClassFactory implements Component {
 		Collection<String> classesName,
 		Supplier<CompileConfig> compileConfigSupplier,		
 		boolean useOneShotJavaCompiler,
-		Collection<String> classPathsForNotFoundClassesDuringLoading,
+		Collection<String> additionalClassRepositoriesForClassLoader,
 		Function<Object, ClassLoader> classLoaderSupplier
 	) {
 		try {
@@ -265,13 +270,16 @@ public class ClassFactory implements Component {
 				}
 				return classLoader;
 			};
+			ClassPathHelper classPathHelper = !useOneShotJavaCompiler ? this.classPathHelper : ClassPathHelper.create(
+				getClassPathHunter(),
+				config
+			);
 			if (classLoader instanceof PathScannerClassLoader) {
 				((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(
-					classPathsForNotFoundClassesDuringLoading
+					additionalClassRepositoriesForClassLoader
 				);
 			}
 			Map<String, Class<?>> classes = new HashMap<>();
-			AtomicReference<Map<String, ByteBuffer>> retrievedBytecodes = new AtomicReference<>();
 			for (String className : classesName) {
 				try {
 					classes.put(className, classLoader.loadClass(className));
@@ -280,11 +288,12 @@ public class ClassFactory implements Component {
 						this.javaMemoryCompiler :
 						JavaMemoryCompiler.create(
 							pathHelper,
-							getClassPathHunter(),
+							classPathHelper,
 							config
 						);
+					CompileConfig compileConfig = compileConfigSupplier.get();
 					CompilationResult compilationResult = compiler.compile(
-						compileConfigSupplier.get()
+						compileConfig
 					);
 					logInfo(
 						classesName.size() > 1?	
@@ -317,8 +326,8 @@ public class ClassFactory implements Component {
 								return ThrowingSupplier.get(() -> {
 									return ClassLoaders.loadOrDefineByByteCode(className, 
 										loadBytecodesFromClassPaths(
-											retrievedBytecodes,
-											classPathsForNotFoundClassesDuringLoading,
+											this.byteCodesWrapper,
+											additionalClassRepositoriesForClassLoader,
 											compilationResult.getCompiledFiles(),
 											additionalByteCodes
 										).get(), classLoader
@@ -332,6 +341,7 @@ public class ClassFactory implements Component {
 							super.close();
 							if (useOneShotJavaCompiler) {
 								compiler.close();
+								classPathHelper.close();
 							}
 						}
 					};					
@@ -347,16 +357,17 @@ public class ClassFactory implements Component {
 						try {
 							return ClassLoaders.loadOrDefineByByteCode(className, Optional.ofNullable(additionalByteCodes).orElseGet(HashMap::new), classLoader);
 						} catch (Throwable exc2) {
-							return ThrowingSupplier.get(() -> 
-								ClassLoaders.loadOrDefineByByteCode(
-									className,
-									loadBytecodesFromClassPaths(
-										retrievedBytecodes, 
-										classPathsForNotFoundClassesDuringLoading,
-										additionalByteCodes
-									).get(), 
-									classLoader
-								)
+							return ThrowingSupplier.get(() -> {
+								return ClassLoaders.loadOrDefineByByteCode(
+										className,
+										loadBytecodesFromClassPaths(
+											byteCodesWrapper, 
+											additionalClassRepositoriesForClassLoader,
+											additionalByteCodes
+										).get(), 
+										classLoader
+									);
+								}
 							);
 						}
 					}
@@ -612,6 +623,7 @@ public class ClassFactory implements Component {
 	public static abstract class ClassRetriever implements Component {
 		private ClassLoader classLoader;
 		private ClassFactory classFactory;
+		AtomicReference<Map<String, ByteBuffer>> byteCodesWrapper;
 		
 		private ClassRetriever(
 			ClassFactory classFactory,
@@ -620,6 +632,7 @@ public class ClassFactory implements Component {
 			this.classLoader = classLoaderSupplier.apply(this);
 			this.classFactory = classFactory;
 			this.classFactory.register(this);
+			this.byteCodesWrapper = new AtomicReference<>();
 		}
 		
 		public abstract Class<?> get(Map<String, ByteBuffer> additionalByteCodes, String className);
@@ -649,6 +662,13 @@ public class ClassFactory implements Component {
 			if (classLoader instanceof MemoryClassLoader) {
 				((MemoryClassLoader)classLoader).unregister(this, true);
 			}
+			if (byteCodesWrapper != null) {
+				if (byteCodesWrapper.get() != null) {
+					byteCodesWrapper.get().clear();
+				}
+				byteCodesWrapper.set(null);
+			}
+			byteCodesWrapper = null;
 			this.classLoader = null;
 			this.classFactory.unregister(this);
 			classFactory = null;

@@ -214,7 +214,7 @@ public class SearchContext<T> implements Component {
 					logError("Could not retrieve className from exception", exc);
 				}
 				return defaultValueSupplier.get();
-			} catch (ClassFormatError | ClassCircularityError | IncompatibleClassChangeError | VerifyError | java.lang.InternalError exc) {
+			} catch (LinkageError | SecurityException | InternalError exc) {
 				logWarn("Could not load class {}: {}", classNameSupplier.get(), exc.toString());
 			}
 			return defaultValueSupplier.get();

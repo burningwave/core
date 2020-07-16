@@ -278,7 +278,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			} else if (considerURLClassLoaderPathsAsLoadedPaths && classLoader instanceof URLClassLoader) {
 				URL[] resUrl = ((URLClassLoader)classLoader).getURLs();
 				for (int i = 0; i < resUrl.length; i++) {
-					allLoadedPaths.add(Paths.clean(resUrl[i].getFile()));
+					allLoadedPaths.add(Paths.convertURLPathToAbsolutePath(resUrl[i].getPath()));
 				}
 			}
 		}

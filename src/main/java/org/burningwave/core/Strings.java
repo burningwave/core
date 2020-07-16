@@ -264,11 +264,14 @@ public class Strings implements Component {
 			if (absolutePath.startsWith("/")) {
 				absolutePath = absolutePath.substring(1);
 			}
+			
+			absolutePath = absolutePath.replaceAll("\\.(.*?)!\\/", "\\.$1\\/");
+			
 			if (absolutePath.endsWith("/")) {
 				absolutePath = absolutePath.substring(0, absolutePath.length() - 1);
 			}
 			
-			return absolutePath.replaceAll("\\.(.*?)!\\/", "\\.$1\\/");
+			return absolutePath;
 		}
 		
 		private String convertURLPathToAbsolutePath1(String inputURLPath) {
@@ -285,9 +288,7 @@ public class Strings implements Component {
 				"!"
 			);
 			
-			if (absolutePath.contains(".jar!/")) {
-				absolutePath = absolutePath.replace(".jar!/", ".jar/");
-			}
+			absolutePath = absolutePath.replaceAll("\\.(.*?)!\\/", "\\.$1\\/");
 			return absolutePath;
 		}
 		

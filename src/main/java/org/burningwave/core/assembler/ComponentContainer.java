@@ -38,6 +38,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -54,6 +55,7 @@ import org.burningwave.core.Executable;
 import org.burningwave.core.classes.ByteCodeHunter;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
+import org.burningwave.core.classes.ClassPathHelper;
 import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.ClassPathScannerAbst;
 import org.burningwave.core.classes.ClassPathScannerWithCachingSupport;
@@ -128,9 +130,10 @@ public class ComponentContainer implements ComponentSupplier {
 		defaultProperties.putAll(PathHelper.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(JavaMemoryCompiler.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
+		defaultProperties.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassPathScannerAbst.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassPathScannerWithCachingSupport.Configuration.DEFAULT_VALUES);
-		defaultProperties.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
+		defaultProperties.putAll(ClassPathHelper.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(PathScannerClassLoader.Configuration.DEFAULT_VALUES);
 				
 		config.putAll(GlobalProperties);
@@ -242,6 +245,7 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getClassPathHunter(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
+				getClassPathHelper(),
 				(Supplier<?>)() -> retrieveFromConfig(ClassFactory.Configuration.Key.DEFAULT_CLASS_LOADER, ClassFactory.Configuration.DEFAULT_VALUES),
 				getClassLoaderResetter(),
 				config
@@ -264,7 +268,7 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(JavaMemoryCompiler.class, () ->
 			JavaMemoryCompiler.create(
 				getPathHelper(),
-				getClassPathHunter(),
+				getClassPathHelper(),
 				config
 			)
 		);
@@ -283,6 +287,15 @@ public class ComponentContainer implements ComponentSupplier {
 		});
 	}
 
+	@Override
+	public ClassPathHelper getClassPathHelper() {
+		return getOrCreate(ClassPathHelper.class, () ->
+			ClassPathHelper.create(
+				getClassPathHunter(),
+				config
+			)
+		);
+	}
 	
 	@Override
 	public ClassPathHunter getClassPathHunter() {
@@ -335,6 +348,7 @@ public class ComponentContainer implements ComponentSupplier {
 				.withParameter(this)
 				.withDefaultPropertyValues(defaultValues)
 				.useAsParentClassLoader(Classes.getClassLoader(Executable.class))
+				.setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(new HashSet<>())
 			);
 		} else if (object instanceof Function) {
 			return (T)(Supplier<?>)() -> ((Function<ComponentSupplier, ?>)object).apply(this);

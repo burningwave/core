@@ -33,6 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
+import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -44,6 +45,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import java.util.Collection;
@@ -62,6 +64,7 @@ import java.util.function.Supplier;
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.io.FileSystemItem;
 
 @SuppressWarnings("unchecked")
 public class Classes implements Component, MembersRetriever {
@@ -811,6 +814,32 @@ public class Classes implements Component, MembersRetriever {
 			} else {
 				return null;
 			}
+		}
+		
+		public void addClassPaths(URLClassLoader urlClassLoader, Collection<String>... classPathCollections) {
+			Collection<String> allLoadedPaths = getAllLoadedPaths(urlClassLoader);
+			for (Collection<String> classPaths : classPathCollections) {
+				classPaths.removeAll(allLoadedPaths);
+				classPaths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
+					Methods.invokeDirect(urlClassLoader, "addURL", url);
+				});	
+			}
+		}
+
+		private Collection<String> getAllLoadedPaths(ClassLoader classLoaderr) {
+			Collection<String> allLoadedPaths = new LinkedHashSet<>();
+			ClassLoader classLoader = classLoaderr;
+			while((classLoader = getParent(classLoader)) != null) {
+				if (classLoader instanceof PathScannerClassLoader) {
+					allLoadedPaths.addAll(((PathScannerClassLoader)classLoader).loadedPaths);
+				} else if (classLoader instanceof URLClassLoader) {
+					URL[] resUrl = ((URLClassLoader)classLoader).getURLs();
+					for (int i = 0; i < resUrl.length; i++) {
+						allLoadedPaths.add(Paths.convertURLPathToAbsolutePath(resUrl[i].getPath()));
+					}
+				}
+			}
+			return allLoadedPaths;
 		}
 		
 		public void unregister(ClassLoader classLoader) {
