@@ -48,6 +48,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -816,23 +817,30 @@ public class Classes implements Component, MembersRetriever {
 			}
 		}
 		
+		public void addClassPath(URLClassLoader urlClassLoader, String... classPaths) {
+			addClassPaths(urlClassLoader, Arrays.asList(classPaths));
+		}
+		
 		public void addClassPaths(URLClassLoader urlClassLoader, Collection<String>... classPathCollections) {
 			Collection<String> allLoadedPaths = getAllLoadedPaths(urlClassLoader);
 			for (Collection<String> classPaths : classPathCollections) {
 				classPaths.removeAll(allLoadedPaths);
-				classPaths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
+				classPaths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL(false)).forEach(url -> {
 					Methods.invokeDirect(urlClassLoader, "addURL", url);
 				});	
 			}
 		}
 
-		private Collection<String> getAllLoadedPaths(ClassLoader classLoaderr) {
+		public Collection<String> getAllLoadedPaths(ClassLoader classLoader) {
+			return getAllLoadedPaths(classLoader, true);
+		}
+		
+		public Collection<String> getAllLoadedPaths(ClassLoader classLoader, boolean considerURLClassLoaderPathsAsLoadedPaths) {
 			Collection<String> allLoadedPaths = new LinkedHashSet<>();
-			ClassLoader classLoader = classLoaderr;
 			while((classLoader = getParent(classLoader)) != null) {
 				if (classLoader instanceof PathScannerClassLoader) {
 					allLoadedPaths.addAll(((PathScannerClassLoader)classLoader).loadedPaths);
-				} else if (classLoader instanceof URLClassLoader) {
+				} else if (considerURLClassLoaderPathsAsLoadedPaths && classLoader instanceof URLClassLoader) {
 					URL[] resUrl = ((URLClassLoader)classLoader).getURLs();
 					for (int i = 0; i < resUrl.length; i++) {
 						allLoadedPaths.add(Paths.convertURLPathToAbsolutePath(resUrl[i].getPath()));

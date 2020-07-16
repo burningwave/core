@@ -28,18 +28,16 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
+import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -258,7 +256,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			return true;
 		}
 		FileSystemItem pathFIS = FileSystemItem.ofPath(path);
-		for (String loadedPath : getAllLoadedPaths(considerURLClassLoaderPathsAsLoadedPaths)) {
+		for (String loadedPath : ClassLoaders.getAllLoadedPaths(this, considerURLClassLoaderPathsAsLoadedPaths)) {
 			FileSystemItem loadedPathFIS = FileSystemItem.ofPath(loadedPath);
 			if (pathFIS.isChildOf(loadedPathFIS) || pathFIS.equals(loadedPathFIS)) {
 				allLoadedPaths.add(path);
@@ -266,23 +264,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			}
 		}
 		return false;
-	}
-	
-	@SuppressWarnings("resource")
-	private Collection<String> getAllLoadedPaths(boolean considerURLClassLoaderPathsAsLoadedPaths) {
-		Collection<String> allLoadedPaths = new LinkedHashSet<>(loadedPaths);
-		ClassLoader classLoader = this;
-		while((classLoader = classLoader.getParent()) != null) {
-			if (classLoader instanceof PathScannerClassLoader) {
-				allLoadedPaths.addAll(((PathScannerClassLoader)classLoader).loadedPaths);
-			} else if (considerURLClassLoaderPathsAsLoadedPaths && classLoader instanceof URLClassLoader) {
-				URL[] resUrl = ((URLClassLoader)classLoader).getURLs();
-				for (int i = 0; i < resUrl.length; i++) {
-					allLoadedPaths.add(Paths.convertURLPathToAbsolutePath(resUrl[i].getPath()));
-				}
-			}
-		}
-		return allLoadedPaths;
 	}
 	
 	@Override
