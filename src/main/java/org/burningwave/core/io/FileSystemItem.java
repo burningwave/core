@@ -369,7 +369,7 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public URL getURL() {
-		return getURL(false);
+		return getURL(true);
 	}
 	
 	public boolean isArchive() {
@@ -841,7 +841,7 @@ public class FileSystemItem implements ManagedLogger {
 		if (!url.startsWith("/")) {
 			prefix = prefix + "/";
 		}
-		if (isCompressed()) {
+		if (isCompressed() && useExclamationPointSeparator) {
 			prefix =
 				"jar" +
 				//getParentContainer().getExtension() + 
@@ -851,15 +851,14 @@ public class FileSystemItem implements ManagedLogger {
 		url = ThrowingSupplier.get(() -> URLEncoder.encode(uRLToRet, StandardCharsets.UTF_8.name()))
 			.replace("%3A", ":").replace("%21", "!").replace("%2F", "/");
 		url = prefix + url;
-		return useExclamationPointSeparator ?
-			url :
-			isFolder() ? 
-				url.endsWith("/") ?
+		return isFolder() ? 
+			url.endsWith("/") ?
 					url :
 					url + "/":
-				url.endsWith("/") ?
-					url.substring(0, url.length() - 1) :
-					url;
+			url.endsWith("/") ?
+				url.substring(0, url.length() - 1) :
+				url;
+			
 	}
 	
 	public static enum CheckingOption {
