@@ -360,12 +360,16 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	
-	public URL getURL() {
+	public URL getURL(boolean useExclamationPointSeparator) {
 		try {
-			return new URL(toURL());
+			return new URL(toURL(useExclamationPointSeparator));
 		} catch (MalformedURLException exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
+	}
+	
+	public URL getURL() {
+		return getURL(false);
 	}
 	
 	public boolean isArchive() {
@@ -831,7 +835,7 @@ public class FileSystemItem implements ManagedLogger {
 		return absolutePath.getKey();
 	}
 	
-	private String toURL() {
+	private String toURL(boolean useExclamationPointSeparator) {
 		String url = computeConventionedAbsolutePath();
 		String prefix = "file:";
 		if (!url.startsWith("/")) {
@@ -843,11 +847,19 @@ public class FileSystemItem implements ManagedLogger {
 				//getParentContainer().getExtension() + 
 				":" + prefix;
 		}
-		String uRLToRet = url.replace(IterableZipContainer.ZIP_PATH_SEPARATOR, "!/");
+		String uRLToRet = url.replace(IterableZipContainer.ZIP_PATH_SEPARATOR, useExclamationPointSeparator? "!/" : "/");
 		url = ThrowingSupplier.get(() -> URLEncoder.encode(uRLToRet, StandardCharsets.UTF_8.name()))
 			.replace("%3A", ":").replace("%21", "!").replace("%2F", "/");
 		url = prefix + url;
-		return url;
+		return useExclamationPointSeparator ?
+			url :
+			isFolder() ? 
+				url.endsWith("/") ?
+					url :
+					url + "/":
+				url.endsWith("/") ?
+					url.substring(0, url.length() - 1) :
+					url;
 	}
 	
 	public static enum CheckingOption {
