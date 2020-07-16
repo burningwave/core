@@ -276,14 +276,15 @@ public class ClassFactory implements Component {
 				try {
 					classes.put(className, classLoader.loadClass(className));
 				} catch (Throwable exc) {
+					ClassPathHelper classPathHelper = !useOneShotJavaCompiler ? null : ClassPathHelper.create(
+						getClassPathHunter(),
+						config
+					);
 					JavaMemoryCompiler compiler = !useOneShotJavaCompiler ?
 						this.javaMemoryCompiler :
 						JavaMemoryCompiler.create(
 							pathHelper,
-							ClassPathHelper.create(
-								getClassPathHunter(),
-								config
-							),
+							classPathHelper,
 							config
 						);
 					CompilationResult compilationResult = compiler.compile(
@@ -335,6 +336,7 @@ public class ClassFactory implements Component {
 							super.close();
 							if (useOneShotJavaCompiler) {
 								compiler.close();
+								classPathHelper.close();
 							}
 						}
 					};					
