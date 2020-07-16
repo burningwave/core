@@ -164,6 +164,7 @@ public class JavaMemoryCompiler implements Component {
 					return classRepositories;
 				}
 			),
+			config.getClassRepositoriesToBeExcludedFromClassPathsResolving(),
 			config.isComputeClassPathsEnabled(),
 			config.isStoringCompiledClassesEnabled(),
 			config.isStoringCompiledClassesToNewFolderEnabled()
@@ -174,13 +175,18 @@ public class JavaMemoryCompiler implements Component {
 		Collection<String> sources, 
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
-		boolean neededClassesPreventiveSearchEnabled,
+		Collection<String> classRepositoriesPathsToBeExcluedFromClassPathsResolving,
+		boolean isClassPathsResolvingEnabled,
 		boolean storeCompiledClasses,
 		boolean storeCompiledClassesToNewFolder
 	) {	
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
-		if (neededClassesPreventiveSearchEnabled) {
-			classPaths = classPathHelper.computeFromSources(sources, classRepositoriesPaths, null);
+		if (isClassPathsResolvingEnabled && !classRepositoriesPaths.isEmpty()) {
+			Collection<String> classRepositoriesPathsFinal = new HashSet<>(classRepositoriesPaths);
+			if (classRepositoriesPathsToBeExcluedFromClassPathsResolving != null) {
+				classRepositoriesPathsFinal.removeAll(classRepositoriesPathsToBeExcluedFromClassPathsResolving);
+			}
+			classPaths = classPathHelper.computeFromSources(sources, classRepositoriesPathsFinal, null);
 		}
 		Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
 		sourcesToMemorySources(sources, memorySources);

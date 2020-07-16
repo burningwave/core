@@ -275,8 +275,9 @@ public class ClassFactory implements Component {
 				}
 				return classLoader;
 			};
+			Collection<String> adjustedPaths = null;
 			if (!additionalClassRepositoriesForClassLoader.isEmpty()) {
-				addClassRepositoriesTo(classLoader, additionalClassRepositoriesForClassLoader, classPathHelper);
+				adjustedPaths = addClassRepositoriesTo(classLoader, additionalClassRepositoriesForClassLoader, classPathHelper);
 			}
 			Map<String, Class<?>> classes = new HashMap<>();
 			AtomicReference<Map<String, ByteBuffer>> retrievedBytecodes = new AtomicReference<>();
@@ -291,8 +292,14 @@ public class ClassFactory implements Component {
 							classPathHelper,
 							config
 						);
+					CompileConfig compileConfig = compileConfigSupplier.get();
+					if (adjustedPaths != null) {
+						compileConfig.addClassRepositoriesToBeExcludedFromClassPathsResolving(adjustedPaths);
+						compileConfig.addClassRepositoriesToBeExcludedFromClassPathsResolving(additionalClassRepositoriesForClassLoader);
+						compileConfig.addClassPaths(adjustedPaths);
+					}
 					CompilationResult compilationResult = compiler.compile(
-						compileConfigSupplier.get()
+						compileConfig
 					);
 					logInfo(
 						classesName.size() > 1?	
@@ -379,17 +386,18 @@ public class ClassFactory implements Component {
 		}
 	}
 
-	private void addClassRepositoriesTo(
+	private Collection<String> addClassRepositoriesTo(
 		ClassLoader classLoader,
 		Collection<String> additionalClassRepositories,
 		ClassPathHelper classPathHelper
 	) {
+		Collection<String> classPaths = null;
 		if (classLoader instanceof PathScannerClassLoader) {
 			((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(
 				additionalClassRepositories
 			);
 		} else if (classLoader instanceof URLClassLoader) {
-			Collection<String> classPaths = classPathHelper.computeByClassesSearching(additionalClassRepositories);
+			classPaths = classPathHelper.computeByClassesSearching(additionalClassRepositories);
 			if (!classPaths.isEmpty()) {
 				ClassLoaders.addClassPaths(((URLClassLoader)classLoader), classPaths);
 			}
@@ -400,12 +408,13 @@ public class ClassFactory implements Component {
 			}
 			if (tempCLVar != null) {
 				URLClassLoader urlClassLoader = (URLClassLoader)tempCLVar;
-				Collection<String> classPaths = classPathHelper.computeByClassesSearching(additionalClassRepositories);
+				classPaths = classPathHelper.computeByClassesSearching(additionalClassRepositories);
 				if (!classPaths.isEmpty()) {
 					ClassLoaders.addClassPaths(((URLClassLoader)urlClassLoader), classPaths);
 				}
 			}
 		}
+		return classPaths;
 	}
 	
 	@SafeVarargs

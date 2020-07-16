@@ -44,9 +44,13 @@ public class CompileConfig {
 	private Collection<String> classRepositoriesWhereToSearchNotFoundClasses;
 	private Collection<String> additionalClassRepositoriesWhereToSearchNotFoundClasses;
 	
+	private Collection<String> classRepositoriesToBeExcludedFromClassPathsResolving;
+	
 	private boolean storingCompiledClassesEnabled;
 	private boolean storingCompiledClassesToNewFolderEnabled;
 	private boolean computeClassPaths;
+
+	
 	
 	private CompileConfig() {
 		this.sources = new HashSet<>();
@@ -193,6 +197,24 @@ public class CompileConfig {
 		return addClassRepositoriesWhereToSearchNotFoundClasses(Arrays.asList(classPaths));
 	}
 
+////////////////////
+	
+	@SafeVarargs
+	public final CompileConfig addClassRepositoriesToBeExcludedFromClassPathsResolving(Collection<String>... classPathCollections) {
+		if (classRepositoriesToBeExcludedFromClassPathsResolving == null) {
+			classRepositoriesToBeExcludedFromClassPathsResolving = new HashSet<>();
+		}
+		for (Collection<String> classPathCollection : classPathCollections) {
+			classRepositoriesToBeExcludedFromClassPathsResolving.addAll(classPathCollection);
+		}
+		return this;
+	}
+	
+	@SafeVarargs
+	public final CompileConfig addClassRepositoriesToBeExcludedFromClassPathsResolving(String... classPaths) {
+		return addClassRepositoriesToBeExcludedFromClassPathsResolving(Arrays.asList(classPaths));
+	}
+
 ////////////////////	
 	
 	Collection<String> getSources() {
@@ -223,6 +245,10 @@ public class CompileConfig {
 		return additionalClassRepositories;
 	}	
 	
+	Collection<String> getClassRepositoriesToBeExcludedFromClassPathsResolving() {
+		return classRepositoriesToBeExcludedFromClassPathsResolving;
+	}	
+	
 	boolean isStoringCompiledClassesEnabled() {
 		return storingCompiledClassesEnabled;
 	}
@@ -234,6 +260,7 @@ public class CompileConfig {
 	
 	boolean isComputeClassPathsEnabled() {
 		return computeClassPaths;
-	}	
+	}
+
 }
 
