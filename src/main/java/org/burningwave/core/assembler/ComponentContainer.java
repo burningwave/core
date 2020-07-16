@@ -38,6 +38,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -244,6 +245,7 @@ public class ComponentContainer implements ComponentSupplier {
 				() -> getClassPathHunter(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
+				getClassPathHelper(),
 				(Supplier<?>)() -> retrieveFromConfig(ClassFactory.Configuration.Key.DEFAULT_CLASS_LOADER, ClassFactory.Configuration.DEFAULT_VALUES),
 				getClassLoaderResetter(),
 				config
@@ -346,6 +348,7 @@ public class ComponentContainer implements ComponentSupplier {
 				.withParameter(this)
 				.withDefaultPropertyValues(defaultValues)
 				.useAsParentClassLoader(Classes.getClassLoader(Executable.class))
+				.setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(new HashSet<>())
 			);
 		} else if (object instanceof Function) {
 			return (T)(Supplier<?>)() -> ((Function<ComponentSupplier, ?>)object).apply(this);

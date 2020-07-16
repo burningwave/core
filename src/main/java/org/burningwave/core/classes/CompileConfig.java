@@ -46,7 +46,7 @@ public class CompileConfig {
 	
 	private boolean storingCompiledClassesEnabled;
 	private boolean storingCompiledClassesToNewFolderEnabled;
-	private boolean neededClassesPreventiveSearchEnabled;
+	private boolean computeClassPaths;
 	
 	private CompileConfig() {
 		this.sources = new HashSet<>();
@@ -80,8 +80,8 @@ public class CompileConfig {
 		return this;
 	}
 	
-	public CompileConfig neededClassesPreventiveSearch(boolean flag) {
-		this.neededClassesPreventiveSearchEnabled = flag;
+	public CompileConfig computeClassPaths(boolean flag) {
+		this.computeClassPaths = flag;
 		return this;
 	}
 
@@ -232,8 +232,8 @@ public class CompileConfig {
 	}
 	
 	
-	boolean isNeededClassesPreventiveSearchEnabled() {
-		return neededClassesPreventiveSearchEnabled;
+	boolean isComputeClassPathsEnabled() {
+		return computeClassPaths;
 	}	
 }
 

@@ -97,7 +97,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	@SafeVarargs
 	public final L setClassRepositories(Collection<String>... classPathCollections) {
 		modifyCompileConfig(compileConfig ->
-			compileConfig.setClassRepositories(classPathCollections).neededClassesPreventiveSearch(true)
+			compileConfig.setClassRepositories(classPathCollections).computeClassPaths(true)
 		);
 		return (L)setClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
 	}
@@ -111,7 +111,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	@SafeVarargs
 	public final L addClassRepositories(Collection<String>... classPathCollections) {
 		modifyCompileConfig(compileConfig ->
-			compileConfig.addClassRepositories(classPathCollections).neededClassesPreventiveSearch(true)
+			compileConfig.addClassRepositories(classPathCollections).computeClassPaths(true)
 		);
 		return (L)addClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
 	}	

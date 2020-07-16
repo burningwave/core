@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassPathHunter.SearchResult;
@@ -55,41 +56,21 @@ public static class Configuration {
 		return new ClassPathHelper(classPathHunter, config);
 	}
 	
-	Collection<String> computeFromSources(
-		Collection<String> sources,
+	public Collection<String> computeByClassesSearching(Collection<String> classRepositories) {
+		return computeByClassesSearching(classRepositories, ClassCriteria.create());
+	}
+	
+	public Collection<String> computeByClassesSearching(
 		Collection<String> classRepositories,
-		ClassCriteria otherClassCriteria
+		ClassCriteria classCriteria
 	) {
-		Collection<String> imports = new HashSet<>();
-		for (String sourceCode : sources) {
-			imports.addAll(SourceCodeHandler.extractImports(sourceCode));
-		}	
-		Collection<String> classPaths = new HashSet<>();
-		Collection<String> toBeAdjuested = new HashSet<>(); 
-		for (String classPath : classRepositories) {
-			FileSystemItem fIS = FileSystemItem.ofPath(classPath);
-			if (fIS.exists()) {
-				if (fIS.isArchive()) {
-					toBeAdjuested.add(fIS.getAbsolutePath());
-				} else {
-					classPaths.add(fIS.getAbsolutePath());
-				}
-			}
-		}
-		if (!toBeAdjuested.isEmpty()) {
+		return compute(classRepositories, (toBeAdjuested) -> {
 			FileSystemItem.CheckingOption checkFileOption = 
 				FileSystemItem.CheckingOption.forLabel(config.resolveStringValue(
 					Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 					Configuration.DEFAULT_VALUES
 				)
 			);
-			ClassCriteria classCriteria = ClassCriteria.create().className(
-				className -> 
-					imports.contains(className)
-			);
-			if (otherClassCriteria != null) {
-				classCriteria = classCriteria.or(otherClassCriteria);
-			}
 			try(SearchResult result = classPathHunter.loadInCache(
 					SearchConfig.forPaths(toBeAdjuested).withScanFileCriteria(
 						FileSystemItem.Criteria.forClassTypeFiles(checkFileOption)
@@ -100,37 +81,77 @@ public static class Configuration {
 					)
 				).find()
 			) {	
-				Collection<FileSystemItem> effectiveClassPaths = result.getClassPaths();
-				if (!effectiveClassPaths.isEmpty()) {
-					for (FileSystemItem fsObject : effectiveClassPaths) {
-						if (fsObject.isCompressed()) {					
-							ThrowingRunnable.run(() -> {
-								synchronized (this) {
-									FileSystemItem classPathBasePath = fsObject.isArchive() ?
-										basePathForLibCopies :
-										basePathForClassCopies
-									;
-									FileSystemItem classPath = FileSystemItem.ofPath(
-										classPathBasePath.getAbsolutePath() + "/" + fsObject.getName()
-									);
-									if (!classPath.refresh().exists()) {
-										fsObject.copyTo(classPathBasePath.getAbsolutePath());
-									}
-									classPaths.add(
-										classPath.getAbsolutePath()
-									);
-									//Free memory
-									classPath.reset();
+				return result.getClassPaths();
+			}
+		});
+	}
+	
+	private Collection<String> compute(
+		Collection<String> classRepositories,
+		Function<Collection<String>, Collection<FileSystemItem>> adjustedClassPathsSupplier
+	) {
+			Collection<String> classPaths = new HashSet<>();
+			Collection<FileSystemItem> effectiveClassPaths = null;
+			try {
+				effectiveClassPaths = adjustedClassPathsSupplier.apply(classRepositories);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if (!effectiveClassPaths.isEmpty()) {
+				for (FileSystemItem fsObject : effectiveClassPaths) {
+					if (fsObject.isCompressed()) {					
+						ThrowingRunnable.run(() -> {
+							synchronized (this) {
+								FileSystemItem classPathBasePath = fsObject.isArchive() ?
+									basePathForLibCopies :
+									basePathForClassCopies
+								;
+								FileSystemItem classPath = FileSystemItem.ofPath(
+									classPathBasePath.getAbsolutePath() + "/" + fsObject.getName()
+								);
+								if (!classPath.refresh().exists()) {
+									fsObject.copyTo(classPathBasePath.getAbsolutePath());
 								}
-							});
-						} else {
-							classPaths.add(fsObject.getAbsolutePath());
-						}
+								classPaths.add(
+									classPath.getAbsolutePath()
+								);
+								//Free memory
+								//classPath.reset();
+							}
+						});
+					} else {
+						classPaths.add(fsObject.getAbsolutePath());
 					}
 				}
 			}
+			return classPaths;
 		}
-		return classPaths;
+	
+	public Collection<String> computeFromSources(
+		Collection<String> sources,
+		Collection<String> classRepositories
+	) {
+		return computeFromSources(sources, classRepositories, null);
+	}
+	
+	public Collection<String> computeFromSources(
+		Collection<String> sources,
+		Collection<String> classRepositories,
+		ClassCriteria otherClassCriteria
+	) {
+		Collection<String> imports = new HashSet<>();
+		for (String sourceCode : sources) {
+			imports.addAll(SourceCodeHandler.extractImports(sourceCode));
+		}
+		ClassCriteria classCriteria = ClassCriteria.create().className(
+			className -> 
+				imports.contains(className)
+		);
+		if (otherClassCriteria != null) {
+			classCriteria = classCriteria.or(otherClassCriteria);
+		}
+		return computeByClassesSearching(classRepositories, classCriteria);
 	}
 	
 	@SafeVarargs

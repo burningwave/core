@@ -159,12 +159,12 @@ public class JavaMemoryCompiler implements Component {
 						Configuration.Key.CLASS_REPOSITORIES
 					);
 					if (!classRepositories.isEmpty()) {
-						config.neededClassesPreventiveSearch(true);
+						config.computeClassPaths(true);
 					}
 					return classRepositories;
 				}
 			),
-			config.isNeededClassesPreventiveSearchEnabled(),
+			config.isComputeClassPathsEnabled(),
 			config.isStoringCompiledClassesEnabled(),
 			config.isStoringCompiledClassesToNewFolderEnabled()
 		);
