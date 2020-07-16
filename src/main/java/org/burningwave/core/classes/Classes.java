@@ -826,7 +826,7 @@ public class Classes implements Component, MembersRetriever {
 			}
 		}
 
-		private Collection<String> getAllLoadedPaths(ClassLoader classLoaderr) {
+		public Collection<String> getAllLoadedPaths(ClassLoader classLoaderr) {
 			Collection<String> allLoadedPaths = new LinkedHashSet<>();
 			ClassLoader classLoader = classLoaderr;
 			while((classLoader = getParent(classLoader)) != null) {
