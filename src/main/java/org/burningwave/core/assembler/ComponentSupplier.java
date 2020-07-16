@@ -34,6 +34,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.classes.ByteCodeHunter;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
+import org.burningwave.core.classes.ClassPathHelper;
 import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
@@ -58,6 +59,8 @@ public interface ComponentSupplier extends Component {
 	public ClassHunter getClassHunter();
 
 	public ClassPathHunter getClassPathHunter();
+	
+	public ClassPathHelper getClassPathHelper();
 
 	public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
 

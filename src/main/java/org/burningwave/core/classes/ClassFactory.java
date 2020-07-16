@@ -280,7 +280,10 @@ public class ClassFactory implements Component {
 						this.javaMemoryCompiler :
 						JavaMemoryCompiler.create(
 							pathHelper,
-							getClassPathHunter(),
+							ClassPathHelper.create(
+								getClassPathHunter(),
+								config
+							),
 							config
 						);
 					CompilationResult compilationResult = compiler.compile(
