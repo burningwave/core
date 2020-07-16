@@ -91,13 +91,8 @@ public static class Configuration {
 		Function<Collection<String>, Collection<FileSystemItem>> adjustedClassPathsSupplier
 	) {
 			Collection<String> classPaths = new HashSet<>();
-			Collection<FileSystemItem> effectiveClassPaths = null;
-			try {
-				effectiveClassPaths = adjustedClassPathsSupplier.apply(classRepositories);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			Collection<FileSystemItem> effectiveClassPaths = adjustedClassPathsSupplier.apply(classRepositories);
+
 			if (!effectiveClassPaths.isEmpty()) {
 				for (FileSystemItem fsObject : effectiveClassPaths) {
 					if (fsObject.isCompressed()) {					
