@@ -360,16 +360,12 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	
-	public URL getURL(boolean useExclamationPointSeparator) {
+	public URL getURL() {
 		try {
-			return new URL(toURL(useExclamationPointSeparator));
+			return new URL(toURL());
 		} catch (MalformedURLException exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
-	}
-	
-	public URL getURL() {
-		return getURL(true);
 	}
 	
 	public boolean isArchive() {
@@ -835,29 +831,32 @@ public class FileSystemItem implements ManagedLogger {
 		return absolutePath.getKey();
 	}
 	
-	private String toURL(boolean useExclamationPointSeparator) {
+	private String toURL() {
 		String url = computeConventionedAbsolutePath();
 		String prefix = "file:";
 		if (!url.startsWith("/")) {
 			prefix = prefix + "/";
 		}
-		if (isCompressed() && useExclamationPointSeparator) {
+		if (isCompressed()) {
 			prefix =
 				"jar" +
 				//getParentContainer().getExtension() + 
 				":" + prefix;
 		}
-		String uRLToRet = url.replace(IterableZipContainer.ZIP_PATH_SEPARATOR, useExclamationPointSeparator? "!/" : "/");
+		url = url.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR) ? 
+				url.substring(0, url.lastIndexOf(IterableZipContainer.ZIP_PATH_SEPARATOR)) :
+				url;
+		String uRLToRet = url.replace(IterableZipContainer.ZIP_PATH_SEPARATOR, isCompressed()? "!/" : "/");
 		url = ThrowingSupplier.get(() -> URLEncoder.encode(uRLToRet, StandardCharsets.UTF_8.name()))
 			.replace("%3A", ":").replace("%21", "!").replace("%2F", "/");
 		url = prefix + url;
-		return isFolder() ? 
+		return isFolder()?
 			url.endsWith("/") ?
 					url :
 					url + "/":
 			url.endsWith("/") ?
-				url.substring(0, url.length() - 1) :
-				url;
+					url.substring(0, url.length() - 1) :
+					url; 			
 			
 	}
 	

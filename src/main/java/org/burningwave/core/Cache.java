@@ -68,25 +68,7 @@ public class Cache implements Component {
 		logInfo("Building cache");
 		pathForContents = new PathForResources<>(1L, Streams::shareContent);
 		pathForFileSystemItems = new PathForResources<>(1L, fileSystemItem -> fileSystemItem);
-		pathForIterableZipContainers = new PathForResources<IterableZipContainer>(1L, zipFileContainer -> zipFileContainer) {
-			void clearResources(Map<Long,Map<String,Map<String,IterableZipContainer>>> partitions) {
-				Collection<IterableZipContainer> iZCs = new HashSet<>();
-				for (Entry<Long, Map<String, Map<String, IterableZipContainer>>> partition : partitions.entrySet()) {
-					for (Entry<String, Map<String, IterableZipContainer>> nestedPartition : partition.getValue().entrySet()) {
-						for (Entry<String, IterableZipContainer> resources : nestedPartition.getValue().entrySet()) {
-							iZCs.add(resources.getValue());
-						}
-						nestedPartition.getValue().clear();
-					}
-					partition.getValue().clear();
-				}
-				partitions.clear();
-				for (IterableZipContainer iZC : iZCs) {
-					iZC.destroy(false);
-				}
-				iZCs.clear();
-			};			
-		};
+		pathForIterableZipContainers = new PathForResources<>(1L, zipFileContainer -> zipFileContainer);
 		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);
 		classLoaderForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
 		uniqueKeyForFields = new ObjectAndPathForResources<>(1L, field -> field);

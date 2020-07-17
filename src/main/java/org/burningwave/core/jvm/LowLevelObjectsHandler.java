@@ -30,6 +30,7 @@ package org.burningwave.core.jvm;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
+import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
@@ -47,6 +48,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.Buffer;
 import java.util.Collection;
 import java.util.HashMap;
@@ -58,6 +61,7 @@ import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.MembersRetriever;
 import org.burningwave.core.classes.MethodCriteria;
+import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingFunction;
 import org.burningwave.core.function.ThrowingSupplier;
@@ -145,6 +149,10 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		return field;
 	}
 	
+	public boolean isBuiltinClassLoader(ClassLoader classLoader) {
+		return builtinClassLoaderClass != null && builtinClassLoaderClass.isAssignableFrom(classLoader.getClass());
+	}
+	
 	public ClassLoader getParent(ClassLoader classLoader) {
 		if (builtinClassLoaderClass != null && builtinClassLoaderClass.isAssignableFrom(classLoader.getClass())) {
 			Field builtinClassLoaderClassParentField = getParentClassLoaderField(builtinClassLoaderClass);
@@ -156,7 +164,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 	
 	public Function<Boolean, ClassLoader> setAsParent(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
 		Class<?> classLoaderBaseClass = builtinClassLoaderClass;
-		if (builtinClassLoaderClass != null && builtinClassLoaderClass.isAssignableFrom(classLoader.getClass())) {
+		if (isBuiltinClassLoader(classLoader)) {
 			try {
 				Collection<Method> methods = Members.findAll(
 					MethodCriteria.byScanUpTo(
@@ -200,9 +208,13 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 	
 	public void setAccessible(AccessibleObject object, boolean flag) {
 		try {
-			accessibleSetter.accept(object, flag);
+			object.setAccessible(true);
 		} catch (Throwable exc) {
-			throw Throwables.toRuntimeException(exc);
+			try {
+				accessibleSetter.accept(object, flag);
+			} catch (Throwable exc2) {
+				throw Throwables.toRuntimeException(exc2);
+			}
 		}
 	}
 	

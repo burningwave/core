@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
@@ -208,7 +207,7 @@ public class JavaMemoryCompiler implements Component {
 					javaClass.storeToClassPath(storedFilesClassPath);
 				});
 			}			
-			return new CompilationResult(FileSystemItem.ofPath(storedFilesClassPath), compiledFiles);
+			return new CompilationResult(FileSystemItem.ofPath(storedFilesClassPath), compiledFiles, new HashSet<>(context.classPaths));
 		}
 	}	
 	
@@ -464,6 +463,7 @@ public class JavaMemoryCompiler implements Component {
 	private static class Compilation {
 		private static class Context implements Component {
 			
+			private Collection<String> classPaths;
 			private Map<String, String> options;
 			private Collection<MemorySource> sources;
 			private Collection<String> classRepositoriesPaths;
@@ -472,7 +472,9 @@ public class JavaMemoryCompiler implements Component {
 			
 			void addToClassPath(String path) {
 				if (Strings.isNotBlank(path)) {
-					options.put("-classpath", Optional.ofNullable(options.get("-classpath")).orElse("") + Paths.clean(path) + System.getProperty("path.separator"));
+					String classPath = Paths.clean(path);
+					options.put("-classpath", Optional.ofNullable(options.get("-classpath")).orElse("") + classPath + System.getProperty("path.separator"));
+					classPaths.add(classPath);
 				}
 			}
 			
@@ -484,6 +486,7 @@ public class JavaMemoryCompiler implements Component {
 			) {
 				this.javaMemoryCompiler = javaMemoryCompiler;
 				options =  new LinkedHashMap<>();
+				this.classPaths = new HashSet<>();
 				this.sources = sources;
 				if (classPaths != null) {
 					for(String classPath : classPaths) {
@@ -542,6 +545,8 @@ public class JavaMemoryCompiler implements Component {
 			public void close() {
 				options.clear();
 				options = null;
+				classPaths.clear();
+				classPaths = null;
 				sources = null;
 				classRepositoriesPaths.clear();
 				classRepositoriesPaths = null;
@@ -554,7 +559,7 @@ public class JavaMemoryCompiler implements Component {
 	@Override
 	public void close() {
 		unregister(config);
-		FileSystemHelper.delete(compiledClassesRepository.getAbsolutePath());
+		//FileSystemHelper.delete(compiledClassesRepository.getAbsolutePath());
 		compiledClassesRepository.destroy();
 		compiledClassesRepository = null;
 		compiler = null;
@@ -566,11 +571,13 @@ public class JavaMemoryCompiler implements Component {
 	public static class CompilationResult {
 		private FileSystemItem classPath;
 		private Map<String, ByteBuffer> compiledFiles;
+		private Collection<String> dependencies;
 		
 		
-		private CompilationResult (FileSystemItem classPath, Map<String, ByteBuffer> compiledFiles) {
+		private CompilationResult (FileSystemItem classPath, Map<String, ByteBuffer> compiledFiles, Collection<String> classPaths) {
 			this.classPath = classPath;
 			this.compiledFiles = compiledFiles;
+			this.dependencies = classPaths;
 		}
 
 
@@ -581,6 +588,11 @@ public class JavaMemoryCompiler implements Component {
 
 		public Map<String, ByteBuffer> getCompiledFiles() {
 			return compiledFiles;
+		}
+
+
+		public Collection<String> getDependencies() {
+			return dependencies;
 		}	
 		
 	}

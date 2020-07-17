@@ -47,8 +47,9 @@ abstract class MemberHelper<M extends Member> implements Component {
 			members.stream().forEach(member -> 
 				Stream.of(cnsms).filter(consumer -> 
 					consumer != null
-				).forEach(consumer ->
-					consumer.accept(member)
+				).forEach(consumer -> {
+						consumer.accept(member);
+					}
 				)
 			)
 		);
@@ -62,8 +63,9 @@ abstract class MemberHelper<M extends Member> implements Component {
 			Optional.ofNullable(member).ifPresent(mmb -> 
 				Stream.of(cnsms).filter(consumer -> 
 					consumer != null
-				).forEach(consumer ->
-					consumer.accept(mmb)
+				).forEach(consumer ->{
+						consumer.accept(mmb);
+					}
 				)
 			)
 		);

@@ -162,8 +162,9 @@ public class Fields extends MemberHelper<Field> {
 					findAllAndApply(
 						FieldCriteria.create(),
 						targetClass,
-						(field) -> 
-							field.setAccessible(true)
+						(member) -> {
+							LowLevelObjectsHandler.setAccessible(member, true);
+						}
 					)
 				)
 			

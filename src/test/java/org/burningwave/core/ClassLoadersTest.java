@@ -2,7 +2,6 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 
-import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,9 +79,9 @@ public class ClassLoadersTest extends BaseTest {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			PathHelper pathHelper = componentSupplier.getPathHelper();
-			URLClassLoader urlClassLoader = (URLClassLoader) Thread.currentThread().getContextClassLoader();
-			ClassLoaders.addClassPath(urlClassLoader, pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang"));
-			Class<?> cls = urlClassLoader.loadClass("org.apache.commons.lang.ArrayUtils");
+			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+			ClassLoaders.addClassPath(classLoader, pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang"));
+			Class<?> cls = classLoader.loadClass("org.apache.commons.lang.ArrayUtils");
 			return cls;
 		});
 	}
@@ -92,7 +91,7 @@ public class ClassLoadersTest extends BaseTest {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			PathHelper pathHelper = componentSupplier.getPathHelper();
-			URLClassLoader urlClassLoader = (URLClassLoader) Thread.currentThread().getContextClassLoader();
+			ClassLoader urlClassLoader = Thread.currentThread().getContextClassLoader();
 			ClassLoaders.addClassPath(urlClassLoader, pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar"));
 			Class<?> cls = urlClassLoader.loadClass("org.springframework.core.serializer.DefaultSerializer");
 			return cls;

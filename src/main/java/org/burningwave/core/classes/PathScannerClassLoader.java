@@ -44,6 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.concurrent.Mutex;
@@ -152,6 +153,11 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			}
 		}
 		return scannedPaths;
+	}
+	
+	public URL[] getURLs() {
+		Collection<URL> urls = loadedPaths.stream().map(absolutePath -> FileSystemItem.ofPath(absolutePath).getURL()).collect(Collectors.toSet());
+		return urls.toArray(new URL[urls.size()]);
 	}
 	
 	@Override

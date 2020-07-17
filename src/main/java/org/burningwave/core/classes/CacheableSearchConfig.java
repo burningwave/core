@@ -29,17 +29,25 @@
 package org.burningwave.core.classes;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.function.Predicate;
 
 public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfig> {
+	private Predicate<String> refreshCachePredicate;
 	
 	public CacheableSearchConfig refreshCache() {
+		return refreshCacheFor(path ->
+			this.paths.contains(path)
+		);
+	}
+	
+	public CacheableSearchConfig refreshCacheFor(Predicate<String> refreshCacheFor) {
+		this.refreshCachePredicate = refreshCacheFor;
 		this.checkForAddedClasses = true;
 		return this;
 	}
 	
-	boolean isRefreshCacheEnabled() {
-		return this.checkForAddedClasses;
+	Predicate<String> getRefreshCachePredicate() {
+		return refreshCachePredicate;
 	}
 	
 	@SafeVarargs
@@ -54,7 +62,7 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 	}
 	
 	public SearchConfig withoutUsingCache() {
-		return copyTo(SearchConfig.forPaths(new HashSet<>())).withoutUsingCache();
+		return super.copyTo(SearchConfig.withoutUsingCache());
 	}
 	
 	@Override
@@ -68,7 +76,8 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 	}
 	
 	@Override
-	public CacheableSearchConfig copyTo(CacheableSearchConfig destConfig) {
+	public <S extends SearchConfigAbst<S>> S copyTo(S destConfig) {
+		((CacheableSearchConfig)destConfig).refreshCachePredicate = this.refreshCachePredicate;
 		return super.copyTo(destConfig);
 	}
 }

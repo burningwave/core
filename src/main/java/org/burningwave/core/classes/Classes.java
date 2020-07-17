@@ -30,6 +30,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
@@ -58,6 +59,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -817,18 +819,51 @@ public class Classes implements Component, MembersRetriever {
 			}
 		}
 		
-		public void addClassPath(URLClassLoader urlClassLoader, String... classPaths) {
-			addClassPaths(urlClassLoader, Arrays.asList(classPaths));
+		public boolean addClassPath(ClassLoader classLoader, String... classPaths) {
+			return addClassPaths(classLoader, Arrays.asList(classPaths));
 		}
 		
-		public void addClassPaths(URLClassLoader urlClassLoader, Collection<String>... classPathCollections) {
-			Collection<String> allLoadedPaths = getAllLoadedPaths(urlClassLoader);
-			for (Collection<String> classPaths : classPathCollections) {
-				classPaths.removeAll(allLoadedPaths);
-				classPaths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL(false)).forEach(url -> {
-					Methods.invokeDirect(urlClassLoader, "addURL", url);
-				});	
+		public ClassLoader getClassLoaderOfPath(ClassLoader classLoader, String path) {
+			FileSystemItem fIS = FileSystemItem.ofPath(path);
+			ClassLoader pathLoader = null;
+			for (ClassLoader cl : getHierarchy(classLoader)) {
+				URL[] urls = getURLs(cl);
+				if (urls != null) {
+					for (URL url : urls) {
+						FileSystemItem loadedPathFIS = FileSystemItem.of(url);
+						if (loadedPathFIS.equals(fIS) || loadedPathFIS.isParentOf(fIS)) {
+							pathLoader = cl;
+						}
+					}
+				}
 			}
+			return pathLoader;
+		}
+		
+		public boolean addClassPaths(ClassLoader classLoader, Collection<String>... classPathCollections) {
+			Collection<String> paths = new HashSet<>();
+			for (Collection<String> classPaths : classPathCollections) {
+				paths.addAll(classPaths);
+			}
+			paths.removeAll(getAllLoadedPaths(classLoader));
+			if (classLoader instanceof URLClassLoader || LowLevelObjectsHandler.isBuiltinClassLoader(classLoader)) {	
+				Object target = classLoader instanceof URLClassLoader ?
+					classLoader :
+					Fields.getDirect(classLoader, "ucp");
+				if (target != null) {
+					Consumer<URL> classPathAdder = classLoader instanceof URLClassLoader ?
+						(urls) -> Methods.invokeDirect(target, "addURL", urls) :
+						(urls) -> Methods.invoke(target, "addURL", urls)	;	
+					paths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
+						classPathAdder.accept(url);
+					});
+					return true;
+				}				
+			} else if (classLoader instanceof PathScannerClassLoader) {
+				((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(paths, true);
+				return true;
+			}
+			return false;
 		}
 
 		public Collection<String> getAllLoadedPaths(ClassLoader classLoader) {
@@ -840,14 +875,34 @@ public class Classes implements Component, MembersRetriever {
 			while((classLoader = getParent(classLoader)) != null) {
 				if (classLoader instanceof PathScannerClassLoader) {
 					allLoadedPaths.addAll(((PathScannerClassLoader)classLoader).loadedPaths);
-				} else if (considerURLClassLoaderPathsAsLoadedPaths && classLoader instanceof URLClassLoader) {
-					URL[] resUrl = ((URLClassLoader)classLoader).getURLs();
-					for (int i = 0; i < resUrl.length; i++) {
-						allLoadedPaths.add(Paths.convertURLPathToAbsolutePath(resUrl[i].getPath()));
+				} else if (considerURLClassLoaderPathsAsLoadedPaths) {
+					URL[] resUrl = getURLs(classLoader);
+					if (resUrl != null) {
+						for (int i = 0; i < resUrl.length; i++) {
+							allLoadedPaths.add(Paths.convertURLPathToAbsolutePath(resUrl[i].getPath()));
+						}
 					}
 				}
 			}
 			return allLoadedPaths;
+		}
+		
+		public boolean isBuiltinClassLoader(ClassLoader classLoader) {
+			return LowLevelObjectsHandler.isBuiltinClassLoader(classLoader);
+		}
+		
+		public URL[] getURLs(ClassLoader classLoader) {
+			if (classLoader instanceof URLClassLoader) {
+				return ((URLClassLoader)classLoader).getURLs();
+			} else if (LowLevelObjectsHandler.isBuiltinClassLoader(classLoader)) {
+				Object urlClassPath = Fields.getDirect(classLoader, "ucp");
+				if (urlClassPath != null) {
+					return Methods.invoke(urlClassPath, "getURLs");
+				}
+			} else if (classLoader instanceof PathScannerClassLoader) {
+				return ((PathScannerClassLoader)classLoader).getURLs();
+			}
+			return null;
 		}
 		
 		public void unregister(ClassLoader classLoader) {

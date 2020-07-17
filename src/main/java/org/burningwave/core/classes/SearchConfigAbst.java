@@ -157,7 +157,8 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	
 	abstract S newInstance();
 	
-	public S copyTo(S destConfig) {
+	@SuppressWarnings("hiding")
+	public <S extends SearchConfigAbst<S>> S copyTo(S destConfig) {
 		destConfig.classCriteria = this.classCriteria.createCopy();
 		destConfig.paths = new HashSet<>();
 		destConfig.paths.addAll(this.paths);
