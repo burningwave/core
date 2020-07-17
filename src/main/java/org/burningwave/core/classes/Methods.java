@@ -156,7 +156,9 @@ public class Methods extends ExecutableMemberHelper<Method> {
 			targetClassClassLoader, cacheKey, () -> {
 				return Collections.unmodifiableCollection(
 					findAllAndApply(
-						MethodCriteria.create(), targetClass, (member) -> member.setAccessible(true)
+						MethodCriteria.create(), targetClass, (member) -> {
+							LowLevelObjectsHandler.setAccessible(member, true);
+						}
 					)
 				);
 			}

@@ -48,11 +48,7 @@ abstract class MemberHelper<M extends Member> implements Component {
 				Stream.of(cnsms).filter(consumer -> 
 					consumer != null
 				).forEach(consumer -> {
-						try {
-							consumer.accept(member);
-						} catch (Exception exc) {
-							logWarn("Exception occurred; " + exc.getMessage());
-						}
+						consumer.accept(member);
 					}
 				)
 			)
@@ -68,11 +64,7 @@ abstract class MemberHelper<M extends Member> implements Component {
 				Stream.of(cnsms).filter(consumer -> 
 					consumer != null
 				).forEach(consumer ->{
-						try {
-							consumer.accept(mmb);
-						} catch (Exception exc) {
-							logWarn("Exception occurred; " + exc.getMessage());
-						}
+						consumer.accept(mmb);
 					}
 				)
 			)
