@@ -327,6 +327,7 @@ public class ClassFactory implements Component {
 										searchConfig.addPaths(compilationResultAbsolutePath);
 										searchConfig.checkForAddedClassesForAllPathThat(compilationResultAbsolutePath::equals).useNewIsolatedClassLoader();
 									}
+									logInfo("Searching in: {}", String.join(", ", searchConfig.getPaths()));
 									try (ClassPathHunter.SearchResult searchResult = getClassPathHunter().findBy(
 											searchConfig
 										)
@@ -340,9 +341,16 @@ public class ClassFactory implements Component {
 													ClassLoaders.addClassPaths(toBeUploaded, (path) -> false,
 														classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())
 													);
+													logInfo("Added class paths: {}", String.join(", ", classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())));
 													return get(className);
+												} else {
+													logWarn("Class paths is empty");
 												}
+											} else {
+												logWarn("Class loader is null");
 											}
+										} else {
+											logWarn("Class paths is null");
 										}
 									}
 									throw exc;
