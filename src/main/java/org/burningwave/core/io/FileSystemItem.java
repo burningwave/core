@@ -397,11 +397,6 @@ public class FileSystemItem implements ManagedLogger {
 
 	public boolean isContainer() {
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
-		if (conventionedAbsolutePath == null) {
-			logWarn("Conventioned absolute path of " + getAbsolutePath() + " is null trying to reload it ");
-			toByteBuffer();
-			conventionedAbsolutePath = absolutePath.getValue();
-		}
 		return conventionedAbsolutePath.endsWith("/");
 	}
 	
