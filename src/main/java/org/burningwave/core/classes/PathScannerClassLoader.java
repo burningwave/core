@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -108,18 +109,18 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	}
 	
 	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths) {
-		return scanPathsAndAddAllByteCodesFound(paths, false);
+		return scanPathsAndAddAllByteCodesFound(paths, (path) -> false);
 	}
 	
-	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, boolean checkForAddedClasses) {
+	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, Predicate<String> checkForAddedClasses) {
 		Collection<String> scannedPaths = new HashSet<>();
 		try {
 			for (String path : paths) {
-				if (checkForAddedClasses || !hasBeenLoaded(path, !checkForAddedClasses)) {
+				if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
 					synchronized(mutexManager.getMutex(path)) {
-						if (checkForAddedClasses || !hasBeenLoaded(path, !checkForAddedClasses)) {
+						if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
 							FileSystemItem pathFIS = FileSystemItem.ofPath(path);
-							if (checkForAddedClasses) {
+							if (checkForAddedClasses.test(path)) {
 								pathFIS.refresh();
 							}
 							for (FileSystemItem child : pathFIS.getAllChildren()) {

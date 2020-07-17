@@ -113,7 +113,7 @@ public class ClassHunterTest extends BaseTest {
 				componentSupplier.getClassHunter().loadInCache(
 					SearchConfig.forPaths(
 						componentSupplier.getPathHelper().getPath(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
-					).refreshCache()
+					).checkForAddedClasses()
 			).find(),
 			(result) ->
 				result.getClasses()
@@ -128,7 +128,7 @@ public class ClassHunterTest extends BaseTest {
 			() -> componentSupplier.getClassHunter().loadInCache(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
-				).refreshCache()
+				).checkForAddedClasses()
 			).find(),
 			(result) ->
 				result.getClasses()

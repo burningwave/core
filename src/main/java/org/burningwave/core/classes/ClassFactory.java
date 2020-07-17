@@ -335,7 +335,7 @@ public class ClassFactory implements Component {
 									if (compileConfig.isStoringCompiledClassesEnabled()) {
 										String compilationResultAbsolutePath = compilationResult.getClassPath().getAbsolutePath();
 										searchConfig.addPaths(compilationResultAbsolutePath);
-										searchConfig.refreshCacheFor(compilationResultAbsolutePath::equals).useNewIsolatedClassLoader();
+										searchConfig.checkForAddedClassesForAllPathThat(compilationResultAbsolutePath::equals).useNewIsolatedClassLoader();
 									}
 									try (ClassPathHunter.SearchResult searchResult = getClassPathHunter().findBy(
 											searchConfig

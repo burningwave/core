@@ -183,10 +183,10 @@ public static class Configuration {
 	@Override
 	public void close() {
 		unregister(config);
-		//FileSystemHelper.delete(basePathForLibCopies.getAbsolutePath());
+		FileSystemHelper.delete(basePathForLibCopies.getAbsolutePath());
 		basePathForLibCopies.destroy();
 		basePathForLibCopies = null;
-		//FileSystemHelper.delete(basePathForClassCopies.getAbsolutePath());
+		FileSystemHelper.delete(basePathForClassCopies.getAbsolutePath());
 		basePathForClassCopies.destroy();
 		basePathForClassCopies = null;
 		classPathHunter = null;
