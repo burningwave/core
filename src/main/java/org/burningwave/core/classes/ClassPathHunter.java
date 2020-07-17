@@ -190,18 +190,17 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 				context.getSearchConfig().getClassCriteria().getByteCodeSupplier()
 			);
 			Optional.ofNullable(context.getSearchConfig().getClassCriteria().getClassesToBeUploaded()).ifPresent(classesToBeUploaded -> criteriaCopy.useClasses(classesToBeUploaded));
-			try (criteriaCopy) {
-				Map<String, Collection<Class<?>>> itemsFound = new HashMap<>();
-				getItemsFoundFlatMap().forEach((path, classColl) -> {
-					for (Class<?> cls : classColl) {
-						if (criteriaCopy.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(cls).getResult()) {
-							itemsFound.put(path, classColl);
-							break;
-						}
+			Map<String, Collection<Class<?>>> itemsFound = new HashMap<>();
+			getItemsFoundFlatMap().forEach((path, classColl) -> {
+				for (Class<?> cls : classColl) {
+					if (criteriaCopy.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(cls).getResult()) {
+						itemsFound.put(path, classColl);
+						break;
 					}
-				});
-				return itemsFound.keySet().stream().map(absolutePath -> FileSystemItem.ofPath(absolutePath)).collect(Collectors.toCollection(HashSet::new));
-			}
+				}
+			});
+			criteriaCopy.close();
+			return itemsFound.keySet().stream().map(absolutePath -> FileSystemItem.ofPath(absolutePath)).collect(Collectors.toCollection(HashSet::new));
 		}
 		
 		public Collection<FileSystemItem> getClassPaths() {
