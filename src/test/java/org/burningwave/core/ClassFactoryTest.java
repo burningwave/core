@@ -298,6 +298,37 @@ public class ClassFactoryTest extends BaseTest {
 	}
 	
 	@Test
+	public void getOrBuildClassWithExternalClassTestThree() {
+		getOrBuildClassWithExternalClassTestTwo();
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
+		UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
+			ClassSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("ExternalClassReferenceTest")
+			).addModifier(
+				Modifier.PUBLIC
+			).expands(
+				TypeDeclarationSourceGenerator.create("DefaultSerializer")
+			)
+		).addImport(
+			"org.springframework.core.serializer.DefaultSerializer"
+		);
+		testNotNull(() -> {
+			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassRepository(
+					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar"),
+					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+				)
+			);
+			classRetriever.get(
+				"org.apache.commons.lang.ArrayUtils",
+				"org.springframework.util.TypeUtils"
+			);
+			return classRetriever.get("packagename.ExternalClassReferenceTest");
+		});
+	}
+
+	@Test
 	public void getOrBuildPojoClassTestThree() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> {

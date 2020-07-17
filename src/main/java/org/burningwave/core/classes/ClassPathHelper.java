@@ -1,6 +1,5 @@
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 
 import java.util.Arrays;
@@ -183,10 +182,10 @@ public static class Configuration {
 	@Override
 	public void close() {
 		unregister(config);
-		FileSystemHelper.delete(basePathForLibCopies.getAbsolutePath());
+		//FileSystemHelper.delete(basePathForLibCopies.getAbsolutePath());
 		basePathForLibCopies.destroy();
 		basePathForLibCopies = null;
-		FileSystemHelper.delete(basePathForClassCopies.getAbsolutePath());
+		//FileSystemHelper.delete(basePathForClassCopies.getAbsolutePath());
 		basePathForClassCopies.destroy();
 		basePathForClassCopies = null;
 		classPathHunter = null;
