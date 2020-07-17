@@ -45,7 +45,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.21.0</version>
+    <version>7.22.0</version>
 </dependency>
 ```
 
@@ -886,6 +886,7 @@ It is represented by the **org.burningwave.core.assembler.ComponentContainer** c
 public ByteCodeHunter getByteCodeHunter();
 public ClassFactory getClassFactory();
 public ClassHunter getClassHunter();
+public ClassPathHunter getClassPathHelper();
 public ClassPathHunter getClassPathHunter();
 public CodeExecutor getCodeExecutor();
 public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
@@ -964,11 +965,11 @@ class-hunter.default-path-scanner-class-loader.name=\
     org.burningwave.core.classes.DefaultPathScannerClassLoaderRetrieverForClassHunter
 class-hunter.new-isolated-path-scanner-class-loader.search-config.check-file-option=\
     ${hunters.default-search-config.check-file-option}
+class-path-helper.class-path-hunter.search-config.check-file-option=\
+    ${hunters.default-search-config.check-file-option}
 hunters.default-search-config.check-file-option=\
     ${path-scanner-class-loader.search-config.check-file-option}
 hunters.path-loading-lock=forPath
-java-memory-compiler.class-path-hunter.search-config.check-file-option=\
-    ${hunters.default-search-config.check-file-option}
 path-scanner-class-loader.parent=\
     Thread.currentThread().getContextClassLoader()
 path-scanner-class-loader.parent.imports=\
@@ -1051,11 +1052,11 @@ class-hunter.default-path-scanner-class-loader.name=\
     org.burningwave.core.classes.DefaultPathScannerClassLoaderRetrieverForClassHunter
 class-hunter.new-isolated-path-scanner-class-loader.search-config.check-file-option=\
     ${hunters.default-search-config.check-file-option}
+class-path-helper.class-path-hunter.search-config.check-file-option=\
+    ${hunters.default-search-config.check-file-option}
 hunters.default-search-config.check-file-option=\
     ${path-scanner-class-loader.search-config.check-file-option}
 hunters.path-loading-lock=forPath
-java-memory-compiler.class-path-hunter.search-config.check-file-option=\
-    ${hunters.default-search-config.check-file-option}
 path-scanner-class-loader.parent=\
     Thread.currentThread().getContextClassLoader()
 path-scanner-class-loader.parent.imports=\
