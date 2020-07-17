@@ -153,17 +153,6 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		return builtinClassLoaderClass != null && builtinClassLoaderClass.isAssignableFrom(classLoader.getClass());
 	}
 	
-	public URL[] getURLs(ClassLoader classLoader) {
-		if (classLoader instanceof URLClassLoader) {
-			return ((URLClassLoader)classLoader).getURLs();
-		} else if (isBuiltinClassLoader(classLoader)) {
-			return Methods.invoke(Fields.getDirect(classLoader, "ucp"), "getURLs");
-		} else if (classLoader instanceof PathScannerClassLoader) {
-			return ((PathScannerClassLoader)classLoader).getURLs();
-		}
-		return null;
-	}
-	
 	public ClassLoader getParent(ClassLoader classLoader) {
 		if (builtinClassLoaderClass != null && builtinClassLoaderClass.isAssignableFrom(classLoader.getClass())) {
 			Field builtinClassLoaderClassParentField = getParentClassLoaderField(builtinClassLoaderClass);
