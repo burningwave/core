@@ -29,7 +29,6 @@
 package org.burningwave.core.classes;
 
 import java.util.Collection;
-import java.util.HashSet;
 
 public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfig> {
 	
@@ -54,7 +53,7 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 	}
 	
 	public SearchConfig withoutUsingCache() {
-		return copyTo(SearchConfig.forPaths(new HashSet<>())).withoutUsingCache();
+		return super.copyTo(SearchConfig.withoutUsingCache());
 	}
 	
 	@Override
@@ -66,9 +65,5 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 	CacheableSearchConfig newInstance() {
 		return new CacheableSearchConfig(this.paths);
 	}
-	
-	@Override
-	public CacheableSearchConfig copyTo(CacheableSearchConfig destConfig) {
-		return super.copyTo(destConfig);
-	}
+
 }
