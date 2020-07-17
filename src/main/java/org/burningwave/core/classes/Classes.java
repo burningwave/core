@@ -829,16 +829,18 @@ public class Classes implements Component, MembersRetriever {
 				Object target = classLoader instanceof URLClassLoader ?
 					classLoader :
 					Fields.getDirect(classLoader, "ucp");
-				Consumer<URL> classPathAdder = classLoader instanceof URLClassLoader ?
-					(urls) -> Methods.invokeDirect(target, "addURL", urls) :
-					(urls) -> Methods.invoke(target, "addURL", urls)	;	
-				for (Collection<String> classPaths : classPathCollections) {
-					classPaths.removeAll(allLoadedPaths);
-					classPaths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
-						classPathAdder.accept(url);
-					});	
-				}
-				return true;
+				if (target != null) {
+					Consumer<URL> classPathAdder = classLoader instanceof URLClassLoader ?
+						(urls) -> Methods.invokeDirect(target, "addURL", urls) :
+						(urls) -> Methods.invoke(target, "addURL", urls)	;	
+					for (Collection<String> classPaths : classPathCollections) {
+						classPaths.removeAll(allLoadedPaths);
+						classPaths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
+							classPathAdder.accept(url);
+						});	
+					}
+					return true;
+				}				
 			} else if (classLoader instanceof PathScannerClassLoader) {
 				for (Collection<String> classPaths : classPathCollections) {
 					classPaths.removeAll(allLoadedPaths);
