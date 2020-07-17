@@ -823,8 +823,29 @@ public class Classes implements Component, MembersRetriever {
 			return addClassPaths(classLoader, Arrays.asList(classPaths));
 		}
 		
+		public ClassLoader getClassLoaderOfPath(ClassLoader classLoader, String path) {
+			FileSystemItem fIS = FileSystemItem.ofPath(path);
+			ClassLoader pathLoader = null;
+			for (ClassLoader cl : getHierarchy(classLoader)) {
+				URL[] urls = getURLs(cl);
+				if (urls != null) {
+					for (URL url : urls) {
+						FileSystemItem loadedPathFIS = FileSystemItem.of(url);
+						if (loadedPathFIS.equals(fIS) || loadedPathFIS.isParentOf(fIS)) {
+							pathLoader = cl;
+						}
+					}
+				}
+			}
+			return pathLoader;
+		}
+		
 		public boolean addClassPaths(ClassLoader classLoader, Collection<String>... classPathCollections) {
-			Collection<String> allLoadedPaths = getAllLoadedPaths(classLoader);
+			Collection<String> paths = new HashSet<>();
+			for (Collection<String> classPaths : classPathCollections) {
+				paths.addAll(classPaths);
+			}
+			paths.removeAll(getAllLoadedPaths(classLoader));
 			if (classLoader instanceof URLClassLoader || LowLevelObjectsHandler.isBuiltinClassLoader(classLoader)) {	
 				Object target = classLoader instanceof URLClassLoader ?
 					classLoader :
@@ -833,19 +854,13 @@ public class Classes implements Component, MembersRetriever {
 					Consumer<URL> classPathAdder = classLoader instanceof URLClassLoader ?
 						(urls) -> Methods.invokeDirect(target, "addURL", urls) :
 						(urls) -> Methods.invoke(target, "addURL", urls)	;	
-					for (Collection<String> classPaths : classPathCollections) {
-						classPaths.removeAll(allLoadedPaths);
-						classPaths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
-							classPathAdder.accept(url);
-						});	
-					}
+					paths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
+						classPathAdder.accept(url);
+					});
 					return true;
 				}				
 			} else if (classLoader instanceof PathScannerClassLoader) {
-				for (Collection<String> classPaths : classPathCollections) {
-					classPaths.removeAll(allLoadedPaths);
-					((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(classPaths);
-				}
+				((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(paths, true);
 				return true;
 			}
 			return false;
@@ -870,6 +885,10 @@ public class Classes implements Component, MembersRetriever {
 				}
 			}
 			return allLoadedPaths;
+		}
+		
+		public boolean isBuiltinClassLoader(ClassLoader classLoader) {
+			return LowLevelObjectsHandler.isBuiltinClassLoader(classLoader);
 		}
 		
 		public URL[] getURLs(ClassLoader classLoader) {
