@@ -31,6 +31,7 @@ package org.burningwave.core.classes;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.function.Predicate;
 
 public class CompileConfig {
 	private Collection<String> sources;
@@ -46,7 +47,8 @@ public class CompileConfig {
 	
 	private boolean storingCompiledClassesEnabled;
 	private boolean storingCompiledClassesToNewFolderEnabled;
-	private boolean neededClassesPreventiveSearchEnabled;
+	private boolean computeClassPaths;
+	private Predicate<String> excludeFromClassPathsComputationAllRepositoriesThat;	
 	
 	private CompileConfig() {
 		this.sources = new HashSet<>();
@@ -80,8 +82,8 @@ public class CompileConfig {
 		return this;
 	}
 	
-	public CompileConfig neededClassesPreventiveSearch(boolean flag) {
-		this.neededClassesPreventiveSearchEnabled = flag;
+	public CompileConfig computeClassPaths(boolean flag) {
+		this.computeClassPaths = flag;
 		return this;
 	}
 
@@ -193,6 +195,13 @@ public class CompileConfig {
 		return addClassRepositoriesWhereToSearchNotFoundClasses(Arrays.asList(classPaths));
 	}
 
+////////////////////
+	
+	public final CompileConfig excludeFromClassPathsComputationAllRepositoriesThat(Predicate<String> predicate) {
+		this.excludeFromClassPathsComputationAllRepositoriesThat = predicate;
+		return this;
+	}
+
 ////////////////////	
 	
 	Collection<String> getSources() {
@@ -221,7 +230,11 @@ public class CompileConfig {
 
 	Collection<String> getAdditionalRepositories() {
 		return additionalClassRepositories;
-	}	
+	}
+	
+	public Predicate<String> getExcludeFromClassPathsComputationAllRepositoriesThatPredicate() {
+		return this.excludeFromClassPathsComputationAllRepositoriesThat;
+	}
 	
 	boolean isStoringCompiledClassesEnabled() {
 		return storingCompiledClassesEnabled;
@@ -232,8 +245,9 @@ public class CompileConfig {
 	}
 	
 	
-	boolean isNeededClassesPreventiveSearchEnabled() {
-		return neededClassesPreventiveSearchEnabled;
-	}	
+	boolean isComputeClassPathsEnabled() {
+		return computeClassPaths;
+	}
+
 }
 

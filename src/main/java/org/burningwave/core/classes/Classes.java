@@ -819,10 +819,6 @@ public class Classes implements Component, MembersRetriever {
 			}
 		}
 		
-		public boolean addClassPath(ClassLoader classLoader, String... classPaths) {
-			return addClassPaths(classLoader, Arrays.asList(classPaths));
-		}
-		
 		public ClassLoader getClassLoaderOfPath(ClassLoader classLoader, String path) {
 			FileSystemItem fIS = FileSystemItem.ofPath(path);
 			ClassLoader pathLoader = null;
@@ -840,7 +836,15 @@ public class Classes implements Component, MembersRetriever {
 			return pathLoader;
 		}
 		
-		public boolean addClassPaths(ClassLoader classLoader, Collection<String>... classPathCollections) {
+		public boolean addClassPath(ClassLoader classLoader, String... classPaths) {
+			return addClassPaths(classLoader, Arrays.asList(classPaths));
+		}
+		
+		public boolean addClassPath(ClassLoader classLoader, Predicate<String> checkForAddedClasses, String... classPaths) {
+			return addClassPaths(classLoader, checkForAddedClasses, Arrays.asList(classPaths));
+		}
+		
+		public boolean addClassPaths(ClassLoader classLoader, Predicate<String> checkForAddedClasses, Collection<String>... classPathCollections) {
 			Collection<String> paths = new HashSet<>();
 			for (Collection<String> classPaths : classPathCollections) {
 				paths.addAll(classPaths);
@@ -860,10 +864,14 @@ public class Classes implements Component, MembersRetriever {
 					return true;
 				}				
 			} else if (classLoader instanceof PathScannerClassLoader) {
-				((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(paths, (path) -> true);
+				((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(paths, checkForAddedClasses);
 				return true;
 			}
 			return false;
+		}
+		
+		public boolean addClassPaths(ClassLoader classLoader, Collection<String>... classPathCollections) {
+			return addClassPaths(classLoader, (path) -> false, classPathCollections);
 		}
 
 		public Collection<String> getAllLoadedPaths(ClassLoader classLoader) {

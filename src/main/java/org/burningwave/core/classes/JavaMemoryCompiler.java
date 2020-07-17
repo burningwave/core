@@ -158,12 +158,13 @@ public class JavaMemoryCompiler implements Component {
 						Configuration.Key.CLASS_REPOSITORIES
 					);
 					if (!classRepositories.isEmpty()) {
-						config.neededClassesPreventiveSearch(true);
+						config.computeClassPaths(true);
 					}
 					return classRepositories;
 				}
 			),
-			config.isNeededClassesPreventiveSearchEnabled(),
+			config.getExcludeFromClassPathsComputationAllRepositoriesThatPredicate(),
+			config.isComputeClassPathsEnabled(),
 			config.isStoringCompiledClassesEnabled(),
 			config.isStoringCompiledClassesToNewFolderEnabled()
 		);
@@ -173,13 +174,23 @@ public class JavaMemoryCompiler implements Component {
 		Collection<String> sources, 
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
-		boolean isNeededClassesPreventiveSearchEnabled,
+		Predicate<String> excludeFromClassPathComputationAllRepositoriesThatPredicate,
+		boolean isClassPathsComputationEnabled,
 		boolean storeCompiledClasses,
 		boolean storeCompiledClassesToNewFolder
 	) {	
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
-		if (isNeededClassesPreventiveSearchEnabled && !classRepositoriesPaths.isEmpty()) {
-			classPaths = classPathHelper.computeFromSources(sources, classRepositoriesPaths, null);
+		if (isClassPathsComputationEnabled && !classRepositoriesPaths.isEmpty()) {
+			Collection<String> classRepositoriesPathsFinal = Optional.ofNullable(
+				excludeFromClassPathComputationAllRepositoriesThatPredicate
+			).map(exclusiveFilter ->
+				classRepositoriesPaths.stream().filter(
+					exclusiveFilter.negate()
+				).collect(Collectors.toCollection(HashSet::new))
+			).orElseGet(() -> new HashSet<>(classRepositoriesPaths));
+			if (!classRepositoriesPathsFinal.isEmpty()) {
+				classPaths = classPathHelper.computeFromSources(sources, classRepositoriesPathsFinal);
+			}
 		}
 		Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
 		sourcesToMemorySources(sources, memorySources);
