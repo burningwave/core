@@ -29,8 +29,10 @@
 package org.burningwave.core.classes;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -180,6 +182,26 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		
 		public SearchResult(SearchContext context) {
 			super(context);
+		}
+		
+		public Collection<FileSystemItem> getClassPaths(ClassCriteria criteria) {
+			ClassCriteria criteriaCopy = criteria.createCopy().init(
+				context.getSearchConfig().getClassCriteria().getClassSupplier(),
+				context.getSearchConfig().getClassCriteria().getByteCodeSupplier()
+			);
+			Optional.ofNullable(context.getSearchConfig().getClassCriteria().getClassesToBeUploaded()).ifPresent(classesToBeUploaded -> criteriaCopy.useClasses(classesToBeUploaded));
+			try (criteriaCopy) {
+				Map<String, Collection<Class<?>>> itemsFound = new HashMap<>();
+				getItemsFoundFlatMap().forEach((path, classColl) -> {
+					for (Class<?> cls : classColl) {
+						if (criteriaCopy.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(cls).getResult()) {
+							itemsFound.put(path, classColl);
+							break;
+						}
+					}
+				});
+				return itemsFound.keySet().stream().map(absolutePath -> FileSystemItem.ofPath(absolutePath)).collect(Collectors.toCollection(HashSet::new));
+			}
 		}
 		
 		public Collection<FileSystemItem> getClassPaths() {
