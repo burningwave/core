@@ -33,6 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.function.Predicate;
 
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.io.FileSystemItem;
@@ -49,7 +50,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	boolean deleteFoundItemsOnClose;
 	boolean useDefaultPathScannerClassLoaderAsParent;
 	boolean waitForSearchEnding;
-	boolean checkForAddedClasses;
+	protected Predicate<String> checkForAddedClassesForAllPathThat;
 	
 
 	SearchConfigAbst(Collection<String>... pathsColl) {
@@ -60,6 +61,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		addPaths(pathsColl);
 		classCriteria = ClassCriteria.create();
 		scanFileCriteria = FileSystemItem.Criteria.create();
+		checkForAddedClassesForAllPathThat = (path) -> false;
 	}
 	
 	void init(PathScannerClassLoader classSupplier) {
@@ -147,12 +149,18 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	}
 	
 	public S checkForAddedClasses() {
-		this.checkForAddedClasses = true;
+		return checkForAddedClassesForAllPathThat(path ->
+			this.paths.contains(path)
+		);
+	}
+
+	public S checkForAddedClassesForAllPathThat(Predicate<String> refreshCacheFor) {
+		this.checkForAddedClassesForAllPathThat = refreshCacheFor;
 		return (S)this;
 	}
 	
-	boolean isCheckForAddedClassesEnabled() {
-		return this.checkForAddedClasses;
+	Predicate<String> getCheckForAddedClassesPredicate() {
+		return checkForAddedClassesForAllPathThat;
 	}
 	
 	abstract S newInstance();
@@ -169,7 +177,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		destConfig.useDefaultPathScannerClassLoaderAsParent = this.useDefaultPathScannerClassLoaderAsParent;
 		destConfig.deleteFoundItemsOnClose = this.deleteFoundItemsOnClose;
 		destConfig.waitForSearchEnding = this.waitForSearchEnding;
-		destConfig.checkForAddedClasses = this.checkForAddedClasses;
+		destConfig.checkForAddedClassesForAllPathThat = this.checkForAddedClassesForAllPathThat;
 		return destConfig;
 	}
 	

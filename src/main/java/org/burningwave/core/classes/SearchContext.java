@@ -198,7 +198,7 @@ public class SearchContext<T> implements Component {
 									if (pathScannerClassLoaderScannedPaths.isEmpty()) {
 										pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
 											getPathsToBeScanned(),
-											searchConfig.isCheckForAddedClassesEnabled() && pathScannerClassLoaderScannedPaths.isEmpty()
+											searchConfig.getCheckForAddedClassesPredicate().and(path -> pathScannerClassLoaderScannedPaths.isEmpty())
 										);
 										pathScannerClassLoaderScannedPaths.addAll(getPathsToBeScanned());
 									}

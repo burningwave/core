@@ -154,7 +154,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	) {
 		CacheableSearchConfig searchConfig = context.getSearchConfig();
 		FileSystemItem currentScannedPath = FileSystemItem.ofPath(basePath);
-		Predicate<String> refreshCache = searchConfig.getRefreshCachePredicate();
+		Predicate<String> refreshCache = searchConfig.getCheckForAddedClassesPredicate();
 		if (refreshCache != null && refreshCache.test(basePath)) {
 			synchronized(mutexManager.getMutex(basePath)) {
 				Optional.ofNullable(cache.get(basePath)).ifPresent((classesForPath) -> {

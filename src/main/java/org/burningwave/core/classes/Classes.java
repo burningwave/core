@@ -860,7 +860,7 @@ public class Classes implements Component, MembersRetriever {
 					return true;
 				}				
 			} else if (classLoader instanceof PathScannerClassLoader) {
-				((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(paths, true);
+				((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(paths, (path) -> true);
 				return true;
 			}
 			return false;

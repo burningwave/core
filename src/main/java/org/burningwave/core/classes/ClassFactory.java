@@ -305,7 +305,7 @@ public class ClassFactory implements Component {
 					);
 					if (classLoader instanceof PathScannerClassLoader) {
 						((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(
-							Arrays.asList(compilationResult.getClassPath().getAbsolutePath()), true
+							Arrays.asList(compilationResult.getClassPath().getAbsolutePath()), (path) -> true
 						);
 					}
 					return new ClassRetriever(this, classLoaderSupplierForClassRetriever) {
