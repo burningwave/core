@@ -689,6 +689,16 @@ public class ClassFactory implements Component {
 			Throwable exc,
 			CacheableSearchConfig searchConfig
 		) throws Throwable {
+			return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, exc, searchConfig, false);
+		}
+		
+		Class<?> searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
+			ClassLoader classLoader,
+			String className,
+			Throwable exc,
+			CacheableSearchConfig searchConfig,
+			boolean recursive
+		) throws Throwable {
 			Collection<String> notFoundClasses = Classes.retrieveNames(exc);
 			ClassCriteria criteriaOne = ClassCriteria.create().className(className::equals);
 			ClassCriteria criteriaTwo = ClassCriteria.create().className(notFoundClasses::contains);
@@ -708,7 +718,7 @@ public class ClassFactory implements Component {
 								false,
 							classPath.getAbsolutePath()
 						);
-						logWarn("Before now no class loader has loaded {} " + classPath.getAbsolutePath());
+						logWarn("Before now no class loader has loaded {}" + classPath.getAbsolutePath());
 					}
 					Collection<FileSystemItem> classPaths = searchResult.getClassPaths(criteriaTwo);
 					if (!classPaths.isEmpty()) {
@@ -720,6 +730,11 @@ public class ClassFactory implements Component {
 					} else {
 						logWarn("Class paths are empty");
 					}
+				} else if (!recursive) {
+					logWarn("Class paths are null try recursive call");
+					return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
+						classLoader, className, exc, searchConfig.checkForAddedClasses().useNewIsolatedClassLoader(), !recursive
+					);
 				} else {
 					logWarn("Class paths are null");
 				}
