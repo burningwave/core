@@ -34,7 +34,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
-import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashMap;
@@ -276,10 +275,6 @@ public class ClassFactory implements Component {
 				getClassPathHunter(),
 				config
 			);
-			Collection<String> adjustedPaths = null;
-			if (!additionalClassRepositoriesForClassLoader.isEmpty()) {
-				adjustedPaths = addClassRepositoriesTo(classLoader, additionalClassRepositoriesForClassLoader, classPathHelper);
-			}
 			Map<String, Class<?>> classes = new HashMap<>();
 			for (String className : classesName) {
 				try {
@@ -293,11 +288,6 @@ public class ClassFactory implements Component {
 							config
 						);
 					CompileConfig compileConfig = compileConfigSupplier.get();
-					if (adjustedPaths != null) {
-						compileConfig.addClassRepositoriesToBeExcludedFromClassPathsResolving(adjustedPaths);
-						compileConfig.addClassRepositoriesToBeExcludedFromClassPathsResolving(additionalClassRepositoriesForClassLoader);
-						compileConfig.addClassPaths(adjustedPaths);
-					}
 					CompilationResult compilationResult = compiler.compile(
 						compileConfig
 					);
@@ -310,9 +300,12 @@ public class ClassFactory implements Component {
 							classesName.stream().findFirst().orElseGet(() -> "")
 					);
 					if (compileConfig.isStoringCompiledClassesEnabled()) {
-						ClassLoaders.addClassPath(classLoader, compilationResult.getClassPath().getAbsolutePath());
+						ClassLoaders.addClassPath(
+							classLoader, 
+							compilationResult.getClassPath().getAbsolutePath()::equals,
+							compilationResult.getClassPath().getAbsolutePath()
+						);
 					}
-					Collection<String> finalAdjustedPaths = adjustedPaths;
 					return new ClassRetriever(this, classLoaderSupplierForClassRetriever) {
 						@Override
 						public Class<?> get(String className) {
@@ -329,9 +322,6 @@ public class ClassFactory implements Component {
 									).by(
 										criteriaOne.or(criteriaTwo)
 									);
-									if (finalAdjustedPaths != null) {
-										searchConfig.addPaths(finalAdjustedPaths);
-									}
 									if (compileConfig.isStoringCompiledClassesEnabled()) {
 										String compilationResultAbsolutePath = compilationResult.getClassPath().getAbsolutePath();
 										searchConfig.addPaths(compilationResultAbsolutePath);
@@ -347,7 +337,7 @@ public class ClassFactory implements Component {
 											if (toBeUploaded != null) {
 												Collection<FileSystemItem> classPaths = searchResult.getClassPaths(criteriaTwo);
 												if (!classPaths.isEmpty()) {
-													ClassLoaders.addClassPaths(toBeUploaded, 
+													ClassLoaders.addClassPaths(toBeUploaded, (path) -> false,
 														classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())
 													);
 													return get(className);
@@ -405,26 +395,6 @@ public class ClassFactory implements Component {
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
-	}
-	
-	private Collection<String> addClassRepositoriesTo(
-		ClassLoader classLoader,
-		Collection<String> additionalClassRepositories,
-		ClassPathHelper classPathHelper
-	) {
-		
-		Collection<String> classPaths = null;
-		if (classLoader instanceof PathScannerClassLoader || classLoader instanceof URLClassLoader || ClassLoaders.isBuiltinClassLoader(classLoader)) {
-			Collection<String> alreadyLoadedPaths = ClassLoaders.getAllLoadedPaths(classLoader);
-			additionalClassRepositories = new HashSet<>(additionalClassRepositories);
-			additionalClassRepositories.removeAll(ClassLoaders.getAllLoadedPaths(classLoader));
-			if (!additionalClassRepositories.isEmpty()) {
-				classPaths = classPathHelper.computeByClassesSearching(additionalClassRepositories);
-				classPaths.removeAll(alreadyLoadedPaths);
-				ClassLoaders.addClassPaths(classLoader, classPaths);
-			}
-		}
-		return classPaths;
 	}
 	
 	@SafeVarargs

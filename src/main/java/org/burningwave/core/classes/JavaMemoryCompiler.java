@@ -163,7 +163,7 @@ public class JavaMemoryCompiler implements Component {
 					return classRepositories;
 				}
 			),
-			config.getClassRepositoriesToBeExcludedFromClassPathsResolving(),
+			config.getExcludeFromClassPathsComputationAllRepositoriesThatPredicate(),
 			config.isComputeClassPathsEnabled(),
 			config.isStoringCompiledClassesEnabled(),
 			config.isStoringCompiledClassesToNewFolderEnabled()
@@ -174,18 +174,23 @@ public class JavaMemoryCompiler implements Component {
 		Collection<String> sources, 
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
-		Collection<String> classRepositoriesPathsToBeExcluedFromClassPathsResolving,
-		boolean isClassPathsResolvingEnabled,
+		Predicate<String> excludeFromClassPathComputationAllRepositoriesThatPredicate,
+		boolean isClassPathsComputationEnabled,
 		boolean storeCompiledClasses,
 		boolean storeCompiledClassesToNewFolder
 	) {	
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
-		if (isClassPathsResolvingEnabled && !classRepositoriesPaths.isEmpty()) {
-			Collection<String> classRepositoriesPathsFinal = new HashSet<>(classRepositoriesPaths);
-			if (classRepositoriesPathsToBeExcluedFromClassPathsResolving != null) {
-				classRepositoriesPathsFinal.removeAll(classRepositoriesPathsToBeExcluedFromClassPathsResolving);
+		if (isClassPathsComputationEnabled && !classRepositoriesPaths.isEmpty()) {
+			Collection<String> classRepositoriesPathsFinal = Optional.ofNullable(
+				excludeFromClassPathComputationAllRepositoriesThatPredicate
+			).map(exclusiveFilter ->
+				classRepositoriesPaths.stream().filter(
+					exclusiveFilter.negate()
+				).collect(Collectors.toCollection(HashSet::new))
+			).orElseGet(() -> new HashSet<>(classRepositoriesPaths));
+			if (!classRepositoriesPathsFinal.isEmpty()) {
+				classPaths = classPathHelper.computeFromSources(sources, classRepositoriesPathsFinal);
 			}
-			classPaths = classPathHelper.computeFromSources(sources, classRepositoriesPathsFinal, null);
 		}
 		Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
 		sourcesToMemorySources(sources, memorySources);

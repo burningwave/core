@@ -31,6 +31,7 @@ package org.burningwave.core.classes;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.function.Predicate;
 
 public class CompileConfig {
 	private Collection<String> sources;
@@ -44,13 +45,10 @@ public class CompileConfig {
 	private Collection<String> classRepositoriesWhereToSearchNotFoundClasses;
 	private Collection<String> additionalClassRepositoriesWhereToSearchNotFoundClasses;
 	
-	private Collection<String> classRepositoriesToBeExcludedFromClassPathsResolving;
-	
 	private boolean storingCompiledClassesEnabled;
 	private boolean storingCompiledClassesToNewFolderEnabled;
 	private boolean computeClassPaths;
-
-	
+	private Predicate<String> excludeFromClassPathsComputationAllRepositoriesThat;	
 	
 	private CompileConfig() {
 		this.sources = new HashSet<>();
@@ -199,20 +197,9 @@ public class CompileConfig {
 
 ////////////////////
 	
-	@SafeVarargs
-	public final CompileConfig addClassRepositoriesToBeExcludedFromClassPathsResolving(Collection<String>... classPathCollections) {
-		if (classRepositoriesToBeExcludedFromClassPathsResolving == null) {
-			classRepositoriesToBeExcludedFromClassPathsResolving = new HashSet<>();
-		}
-		for (Collection<String> classPathCollection : classPathCollections) {
-			classRepositoriesToBeExcludedFromClassPathsResolving.addAll(classPathCollection);
-		}
+	public final CompileConfig excludeFromClassPathsComputationAllRepositoriesThat(Predicate<String> predicate) {
+		this.excludeFromClassPathsComputationAllRepositoriesThat = predicate;
 		return this;
-	}
-	
-	@SafeVarargs
-	public final CompileConfig addClassRepositoriesToBeExcludedFromClassPathsResolving(String... classPaths) {
-		return addClassRepositoriesToBeExcludedFromClassPathsResolving(Arrays.asList(classPaths));
 	}
 
 ////////////////////	
@@ -243,11 +230,11 @@ public class CompileConfig {
 
 	Collection<String> getAdditionalRepositories() {
 		return additionalClassRepositories;
-	}	
+	}
 	
-	Collection<String> getClassRepositoriesToBeExcludedFromClassPathsResolving() {
-		return classRepositoriesToBeExcludedFromClassPathsResolving;
-	}	
+	public Predicate<String> getExcludeFromClassPathsComputationAllRepositoriesThatPredicate() {
+		return this.excludeFromClassPathsComputationAllRepositoriesThat;
+	}
 	
 	boolean isStoringCompiledClassesEnabled() {
 		return storingCompiledClassesEnabled;
