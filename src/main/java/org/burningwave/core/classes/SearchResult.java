@@ -82,11 +82,11 @@ public class SearchResult<E> implements Component {
 	
 	<C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends Criteria.TestContext<E, C>> C createCriteriaCopy(C criteria) {
 		C criteriaCopy = criteria.createCopy().init(
-				context.getSearchConfig().getClassCriteria().getClassSupplier(),
-				context.getSearchConfig().getClassCriteria().getByteCodeSupplier()
-			);
-			Optional.ofNullable(context.getSearchConfig().getClassCriteria().getClassesToBeUploaded()).ifPresent(classesToBeUploaded -> criteriaCopy.useClasses(classesToBeUploaded));
-			return criteriaCopy;
+			context.getSearchConfig().getClassCriteria().getClassSupplier(),
+			context.getSearchConfig().getClassCriteria().getByteCodeSupplier()
+		);
+		Optional.ofNullable(context.getSearchConfig().getClassCriteria().getClassesToBeUploaded()).ifPresent(classesToBeUploaded -> criteriaCopy.useClasses(classesToBeUploaded));
+		return criteriaCopy;
 	}
 	
 	<M extends Member, C extends MemberCriteria<M, C, T>, T extends Criteria.TestContext<M, C>> C createCriteriaCopy(C criteria) {

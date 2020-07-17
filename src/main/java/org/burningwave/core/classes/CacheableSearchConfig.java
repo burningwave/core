@@ -35,14 +35,14 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 	private Predicate<String> refreshCachePredicate;
 	
 	public CacheableSearchConfig refreshCache() {
-		refreshCachePredicate = (path) ->
-			this.paths.contains(path);
-		this.checkForAddedClasses = true;
-		return this;
+		return refreshCacheFor(path ->
+			this.paths.contains(path)
+		);
 	}
 	
 	public CacheableSearchConfig refreshCacheFor(Predicate<String> refreshCacheFor) {
 		this.refreshCachePredicate = refreshCacheFor;
+		this.checkForAddedClasses = true;
 		return this;
 	}
 	
