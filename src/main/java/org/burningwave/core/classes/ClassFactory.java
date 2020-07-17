@@ -700,11 +700,11 @@ public class ClassFactory implements Component {
 			) {
 				FileSystemItem classPath = searchResult.getClassPaths(criteriaOne).stream().findFirst().orElseGet(() -> null);
 				if (classPath != null) {
-					ClassLoader toBeUploaded = ClassLoaders.getClassLoaderOfPath(classLoader, classPath.getAbsolutePath());
-					if (toBeUploaded == null) {
-						toBeUploaded = classLoader;
+					ClassLoader targetClassLoader = ClassLoaders.getClassLoaderOfPath(classLoader, classPath.getAbsolutePath());
+					if (targetClassLoader == null) {
+						targetClassLoader = classLoader;
 						ClassLoaders.addClassPath(
-							toBeUploaded, (path) -> 
+							targetClassLoader, (path) -> 
 								false,
 							classPath.getAbsolutePath()
 						);
@@ -712,7 +712,7 @@ public class ClassFactory implements Component {
 					}
 					Collection<FileSystemItem> classPaths = searchResult.getClassPaths(criteriaTwo);
 					if (!classPaths.isEmpty()) {
-						ClassLoaders.addClassPaths(toBeUploaded, (path) -> false,
+						ClassLoaders.addClassPaths(targetClassLoader, (path) -> false,
 							classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())
 						);
 						logInfo("Added class paths: {}", String.join(", ", classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())));
