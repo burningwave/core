@@ -1,10 +1,7 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
-import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
-import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
-import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -83,18 +80,11 @@ public class ClassLoadersTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		if (classLoader instanceof URLClassLoader) {
-			testNotNull(() -> {
-				URLClassLoader urlClassLoader = (URLClassLoader) classLoader;
-				ClassLoaders.addClassPath(urlClassLoader, pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang"));
-				Class<?> cls = urlClassLoader.loadClass("org.apache.commons.lang.ArrayUtils");
-				return cls;
-			});
-		} else {
-			Object obj = Fields.getDirect(classLoader, "ucp");
-			URL url = pathHelper.getResource("../../src/test/external-resources/commons-lang").getURL();
-			Methods.invokeDirect(obj, "addURL", url);
-		}
+		testNotNull(() -> {
+			ClassLoaders.addClassPath(classLoader, pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang"));
+			Class<?> cls = classLoader.loadClass("org.apache.commons.lang.ArrayUtils");
+			return cls;
+		});
 	}
 	
 	@Test
