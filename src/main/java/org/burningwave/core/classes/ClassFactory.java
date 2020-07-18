@@ -308,7 +308,7 @@ public class ClassFactory implements Component {
 					}
 					return new ClassRetriever(this, getClassPathHunter(), classPathHelper, classLoaderSupplierForClassRetriever) {
 						@Override
-						public synchronized Class<?> get(String className) {
+						public Class<?> retrieve(String className) {
 							try {
 								try {
 									try {
@@ -365,7 +365,7 @@ public class ClassFactory implements Component {
 			logInfo("Classes {} loaded by classloader {} without building", String.join(", ", classes.keySet()), classLoader);
 			return new ClassRetriever(this, getClassPathHunter(), classPathHelper, classLoaderSupplierForClassRetriever) {
 				@Override
-				public synchronized Class<?> get(String className) {
+				public Class<?> retrieve(String className) {
 					try {	
 						try {
 							return classLoader.loadClass(className);
@@ -653,8 +653,17 @@ public class ClassFactory implements Component {
 			this.byteCodesWrapper = new AtomicReference<>();
 		}
 		
-		public abstract Class<?> get(String className);
+		public Class<?> get(String className) {
+			try {
+				return classLoader.loadClass(className);
+			} catch (Throwable exc) {
+				synchronized (classFactory) {
+					return retrieve(className);
+				}
+			}
+		}
 		
+		abstract Class<?> retrieve(String className);
 		
 		public Collection<Class<?>> get(String... classesName) {
 			Collection<Class<?>> classes = new HashSet<>();
@@ -726,7 +735,7 @@ public class ClassFactory implements Component {
 							classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())
 						);
 						logInfo("Added class paths: {}", String.join(", ", classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())));
-						return get(className);
+						return retrieve(className);
 					} else {
 						logWarn("Class paths are empty");
 					}
