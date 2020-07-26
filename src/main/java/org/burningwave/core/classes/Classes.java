@@ -845,6 +845,9 @@ public class Classes implements Component, MembersRetriever {
 		}
 		
 		public boolean addClassPaths(ClassLoader classLoader, Predicate<String> checkForAddedClasses, Collection<String>... classPathCollections) {
+			if (LowLevelObjectsHandler.isClassLoaderDelegate(classLoader)) {
+				return addClassPaths(Fields.getDirect(classLoader, "classLoader"));
+			}
 			Collection<String> paths = new HashSet<>();
 			for (Collection<String> classPaths : classPathCollections) {
 				paths.addAll(classPaths);
@@ -902,6 +905,8 @@ public class Classes implements Component, MembersRetriever {
 		public URL[] getURLs(ClassLoader classLoader) {
 			if (classLoader instanceof URLClassLoader) {
 				return ((URLClassLoader)classLoader).getURLs();
+			} else if (LowLevelObjectsHandler.isClassLoaderDelegate(classLoader)) {
+				return getURLs(Fields.getDirect(classLoader, "classLoader"));
 			} else if (LowLevelObjectsHandler.isBuiltinClassLoader(classLoader)) {
 				Object urlClassPath = Fields.getDirect(classLoader, "ucp");
 				if (urlClassPath != null) {

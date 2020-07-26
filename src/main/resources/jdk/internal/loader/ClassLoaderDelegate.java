@@ -39,11 +39,8 @@ public class ClassLoaderDelegate extends BuiltinClassLoader {
 	private ClassLoader classLoader;
 	private MethodHandle loadClassMethod;
 	
-	ClassLoaderDelegate(String name, BuiltinClassLoader parent, URLClassPath ucp) {
-		super(name, parent, ucp);
-	}
-	
-	public void init(ClassLoader classLoader, MethodHandle loadClassMethodHandle) {
+	ClassLoaderDelegate(BuiltinClassLoader parent, ClassLoader classLoader, MethodHandle loadClassMethodHandle) {
+		super(null, parent, null);
 		this.classLoader = classLoader;
 		this.loadClassMethod = loadClassMethodHandle;
 	}

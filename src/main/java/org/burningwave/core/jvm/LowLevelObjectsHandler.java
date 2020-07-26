@@ -29,6 +29,7 @@
 package org.burningwave.core.jvm;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
@@ -89,7 +90,6 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 	ThrowingBiConsumer<AccessibleObject, Boolean, Throwable> accessibleSetter;
 	ThrowingFunction<Class<?>, Lookup, Throwable> consulterRetriever;
 	
-	Map<Class<?>, Field> parentClassLoaderFields;
 	Long loadedPackagesMapMemoryOffset;
 	Long loadedClassesVectorMemoryOffset;	
 	
@@ -132,30 +132,19 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		return (Map<String, ?>)unsafe.getObject(classLoader, loadedPackagesMapMemoryOffset);
 	}
 	
-	private Field getParentClassLoaderField(Class<?> classLoaderClass) {
-		Field field = parentClassLoaderFields.get(classLoaderClass);
-		if (field == null) {
-			synchronized (parentClassLoaderFields) {
-				field = parentClassLoaderFields.get(classLoaderClass);
-				if (field == null) {
-					field = Members.findOne(
-						FieldCriteria.on(classLoaderClass).name("parent"::equals), classLoaderClass
-					);
-					setAccessible(field, true);
-					parentClassLoaderFields.put(classLoaderClass, field);
-				}
-			}
-		}
-		return field;
-	}
-	
 	public boolean isBuiltinClassLoader(ClassLoader classLoader) {
 		return builtinClassLoaderClass != null && builtinClassLoaderClass.isAssignableFrom(classLoader.getClass());
 	}
 	
+	public boolean isClassLoaderDelegate(ClassLoader classLoader) {
+		return classLoaderDelegateClass != null && classLoaderDelegateClass.isAssignableFrom(classLoader.getClass());
+	}
+	
 	public ClassLoader getParent(ClassLoader classLoader) {
-		if (builtinClassLoaderClass != null && builtinClassLoaderClass.isAssignableFrom(classLoader.getClass())) {
-			Field builtinClassLoaderClassParentField = getParentClassLoaderField(builtinClassLoaderClass);
+		if (isClassLoaderDelegate(classLoader)) {
+			return getParent(Fields.getDirect(classLoader, "classLoader"));
+		} else if (isBuiltinClassLoader(classLoader)) {
+			Field builtinClassLoaderClassParentField = Fields.findFirstAndMakeItAccessible(builtinClassLoaderClass, "parent");
 			return ThrowingSupplier.get(() ->(ClassLoader) builtinClassLoaderClassParentField.get(classLoader));
 		} else {
 			return classLoader.getParent();
@@ -164,35 +153,32 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 	
 	public Function<Boolean, ClassLoader> setAsParent(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
 		Class<?> classLoaderBaseClass = builtinClassLoaderClass;
+		if (isClassLoaderDelegate(classLoader)) {
+			return setAsParent(Fields.getDirect(classLoader, "classLoader"), futureParent, mantainHierarchy);
+		}
 		if (isBuiltinClassLoader(classLoader)) {
-			try {
-				Collection<Method> methods = Members.findAll(
-					MethodCriteria.byScanUpTo(
-						cls -> cls.getName().equals(ClassLoader.class.getName())
-					).name(
-						"loadClass"::equals
-					).and().parameterTypesAreAssignableFrom(
-						String.class, boolean.class
-					), futureParent.getClass()
-				);
-				Object classLoaderDelegate = unsafe.allocateInstance(classLoaderDelegateClass);
-				invoke(classLoaderDelegate,
-					Members.findOne(
-						MethodCriteria.on(classLoaderDelegateClass).name("init"::equals), classLoaderDelegateClass
-					), futureParent,
-					Methods.convertToMethodHandle(
+			if (!isBuiltinClassLoader(futureParent)) {
+				try {
+					Collection<Method> methods = Members.findAll(
+						MethodCriteria.byScanUpTo(
+							cls -> cls.getName().equals(ClassLoader.class.getName())
+						).name(
+							"loadClass"::equals
+						).and().parameterTypesAreAssignableFrom(
+							String.class, boolean.class
+						), futureParent.getClass()
+					);					
+					futureParent = (ClassLoader)Constructors.newInstanceOf(classLoaderDelegateClass, null, futureParent, Methods.convertToMethodHandle(
 						methods.stream().skip(methods.size() - 1).findFirst().get()
-					)
-				);
-				futureParent = (ClassLoader)classLoaderDelegate;
-			} catch (Throwable exc) {
-				throw Throwables.toRuntimeException(exc);
+					));
+				} catch (Throwable exc) {
+					throw Throwables.toRuntimeException(exc);
+				}
 			}
 		} else {
 			classLoaderBaseClass = ClassLoader.class;
 		}
-		Field parentClassLoaderField = getParentClassLoaderField(classLoaderBaseClass);
-		Long offset = unsafe.objectFieldOffset(parentClassLoaderField);
+		Long offset = unsafe.objectFieldOffset(Fields.findFirstAndMakeItAccessible(classLoaderBaseClass, "parent"));
 		final ClassLoader exParent = (ClassLoader)unsafe.getObject(classLoader, offset);
 		unsafe.putObject(classLoader, offset, futureParent);
 		if (mantainHierarchy && exParent != null) {
@@ -397,8 +383,6 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			methodInvoker = null;
 			accessibleSetter = null;	
 			consulterRetriever = null;
-			parentClassLoaderFields.clear();
-			parentClassLoaderFields = null;
 			classLoaderDelegateClass = null;
 			builtinClassLoaderClass = null;
 		} else {
@@ -524,7 +508,6 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 					MethodType.methodType(Constructor[].class, boolean.class),
 					Class.class
 				);
-				lowLevelObjectsHandler.parentClassLoaderFields = new HashMap<>();
 			} catch (Throwable exc) {
 				throw Throwables.toRuntimeException(exc);
 			}

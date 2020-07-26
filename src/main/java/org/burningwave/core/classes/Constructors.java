@@ -62,7 +62,7 @@ public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
 		Constructor<?> ctor = findFirstAndMakeItAccessible(targetClass, Classes.deepRetrieveFrom(arguments));
 		return ThrowingSupplier.get(() -> {
 			//logInfo("Invoking " + ctor);
-			return (T)ctor.newInstance(getArgumentList(ctor, arguments));
+			return (T)ctor.newInstance(getArgumentArray(ctor, arguments));
 		});
 	}
 	
@@ -155,7 +155,7 @@ public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
 						ConstructorCriteria.byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
 		                    return lastClassInHierarchy.equals(currentScannedClass);
 		                }), targetClass, (member) -> 
-							member.setAccessible(true)
+							LowLevelObjectsHandler.setAccessible(member, true)
 					)
 				);
 			}
