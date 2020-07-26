@@ -157,21 +157,23 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			return setAsParent(Fields.getDirect(classLoader, "classLoader"), futureParent, mantainHierarchy);
 		}
 		if (isBuiltinClassLoader(classLoader)) {
-			try {
-				Collection<Method> methods = Members.findAll(
-					MethodCriteria.byScanUpTo(
-						cls -> cls.getName().equals(ClassLoader.class.getName())
-					).name(
-						"loadClass"::equals
-					).and().parameterTypesAreAssignableFrom(
-						String.class, boolean.class
-					), futureParent.getClass()
-				);
-				futureParent = (ClassLoader)Constructors.newInstanceOf(classLoaderDelegateClass, null, futureParent, Methods.convertToMethodHandle(
-					methods.stream().skip(methods.size() - 1).findFirst().get()
-				));
-			} catch (Throwable exc) {
-				throw Throwables.toRuntimeException(exc);
+			if (!isBuiltinClassLoader(futureParent)) {
+				try {
+					Collection<Method> methods = Members.findAll(
+						MethodCriteria.byScanUpTo(
+							cls -> cls.getName().equals(ClassLoader.class.getName())
+						).name(
+							"loadClass"::equals
+						).and().parameterTypesAreAssignableFrom(
+							String.class, boolean.class
+						), futureParent.getClass()
+					);					
+					futureParent = (ClassLoader)Constructors.newInstanceOf(classLoaderDelegateClass, null, futureParent, Methods.convertToMethodHandle(
+						methods.stream().skip(methods.size() - 1).findFirst().get()
+					));
+				} catch (Throwable exc) {
+					throw Throwables.toRuntimeException(exc);
+				}
 			}
 		} else {
 			classLoaderBaseClass = ClassLoader.class;
