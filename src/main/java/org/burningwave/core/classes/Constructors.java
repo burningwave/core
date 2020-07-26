@@ -155,7 +155,7 @@ public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
 						ConstructorCriteria.byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
 		                    return lastClassInHierarchy.equals(currentScannedClass);
 		                }), targetClass, (member) -> 
-							member.setAccessible(true)
+							LowLevelObjectsHandler.setAccessible(member, true)
 					)
 				);
 			}
