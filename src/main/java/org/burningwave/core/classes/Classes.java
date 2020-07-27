@@ -858,9 +858,7 @@ public class Classes implements Component, MembersRetriever {
 					classLoader :
 					Fields.getDirect(classLoader, "ucp");
 				if (target != null) {
-					Consumer<URL> classPathAdder = classLoader instanceof URLClassLoader ?
-						(urls) -> Methods.invokeDirect(target, "addURL", urls) :
-						(urls) -> Methods.invoke(target, "addURL", urls)	;	
+					Consumer<URL> classPathAdder = 	urls -> Methods.invokeDirect(target, "addURL", urls);
 					paths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
 						classPathAdder.accept(url);
 					});

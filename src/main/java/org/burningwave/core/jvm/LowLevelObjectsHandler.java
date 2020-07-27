@@ -30,8 +30,8 @@ package org.burningwave.core.jvm;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
-import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
+import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
@@ -49,20 +49,15 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.Buffer;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.StaticComponentContainer;
-import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.MembersRetriever;
 import org.burningwave.core.classes.MethodCriteria;
-import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingFunction;
 import org.burningwave.core.function.ThrowingSupplier;
@@ -635,6 +630,18 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 					} catch (Throwable exc) {
 						throw Throwables.toRuntimeException(exc);
 					}
+					Class<?> lookupClass = Class.forName(MethodHandles.class.getName() + "$" + "Lookup");
+					Constructor<?> lookupCtor = lowLevelObjectsHandler.getDeclaredConstructor(
+						lookupClass, ctor -> 
+							ctor.getParameters().length == 2 && ctor.getParameters()[0].getType() == Class.class && ctor.getParameters()[1].getType() == int.class
+					);
+					lowLevelObjectsHandler.setAccessible(lookupCtor, true);
+					Field fullPowerModeConstant = lowLevelObjectsHandler.getDeclaredField(lookupClass, field -> "FULL_POWER_MODES".equals(field.getName()));
+					lowLevelObjectsHandler.setAccessible(fullPowerModeConstant, true);
+					int fullPowerModeConstantValue = fullPowerModeConstant.getInt(null);
+					MethodHandle mthHandle = ((Lookup)lookupCtor.newInstance(lookupClass, fullPowerModeConstantValue)).findConstructor(lookupClass, MethodType.methodType(void.class, Class.class, int.class));
+					lowLevelObjectsHandler.consulterRetriever = cls ->
+						(Lookup)mthHandle.invoke(cls, fullPowerModeConstantValue);
 				} catch (Throwable exc) {
 					logInfo("jdk.internal.loader.BuiltinClassLoader class not detected");
 					throw Throwables.toRuntimeException(exc);
