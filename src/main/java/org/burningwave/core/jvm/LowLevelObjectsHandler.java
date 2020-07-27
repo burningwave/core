@@ -144,7 +144,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		if (isClassLoaderDelegate(classLoader)) {
 			return getParent(Fields.getDirect(classLoader, "classLoader"));
 		} else if (isBuiltinClassLoader(classLoader)) {
-			Field builtinClassLoaderClassParentField = Fields.findFirstAndMakeItAccessible(builtinClassLoaderClass, "parent");
+			Field builtinClassLoaderClassParentField = Fields.findFirstAndMakeItAccessible(builtinClassLoaderClass, "parent", classLoader.getClass());
 			return ThrowingSupplier.get(() ->(ClassLoader) builtinClassLoaderClassParentField.get(classLoader));
 		} else {
 			return classLoader.getParent();
@@ -152,7 +152,6 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 	}
 	
 	public Function<Boolean, ClassLoader> setAsParent(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
-		Class<?> classLoaderBaseClass = builtinClassLoaderClass;
 		if (isClassLoaderDelegate(classLoader)) {
 			return setAsParent(Fields.getDirect(classLoader, "classLoader"), futureParent, mantainHierarchy);
 		}
@@ -175,18 +174,15 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 					throw Throwables.toRuntimeException(exc);
 				}
 			}
-		} else {
-			classLoaderBaseClass = ClassLoader.class;
 		}
-		Long offset = unsafe.objectFieldOffset(Fields.findFirstAndMakeItAccessible(classLoaderBaseClass, "parent"));
-		final ClassLoader exParent = (ClassLoader)unsafe.getObject(classLoader, offset);
-		unsafe.putObject(classLoader, offset, futureParent);
+		final ClassLoader exParent = Fields.getDirect(classLoader, "parent");
+		Fields.setDirect(classLoader, "parent", futureParent);
 		if (mantainHierarchy && exParent != null) {
-			unsafe.putObject(futureParent, offset, exParent);
+			Fields.setDirect(futureParent, "parent", exParent);
 		}
 		return (reset) -> {
 			if (reset) {
-				unsafe.putObject(classLoader, offset, exParent);
+				Fields.setDirect(classLoader, "parent", exParent);
 			}
 			return exParent;
 		};
