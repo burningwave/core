@@ -470,8 +470,10 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		private static void build(LowLevelObjectsHandler lowLevelObjectsHandler) {
 			try (Initializer initializer =
 					JVMInfo.getVersion() > 8 ?
-					new ForJava9(lowLevelObjectsHandler):
-					new ForJava8(lowLevelObjectsHandler)) {
+						JVMInfo.getVersion() > 13 ?
+							new ForJava14(lowLevelObjectsHandler):
+							new ForJava9(lowLevelObjectsHandler):
+						new ForJava8(lowLevelObjectsHandler)) {
 				initializer.init();
 			}
 		}
@@ -553,7 +555,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		
 		private static class ForJava9 extends Initializer {
 			
-			private ForJava9(LowLevelObjectsHandler lowLevelObjectsHandler) {
+			ForJava9(LowLevelObjectsHandler lowLevelObjectsHandler) {
 				super(lowLevelObjectsHandler);
 				try {
 			        Class<?> cls = Class.forName("jdk.internal.module.IllegalAccessLogger");
@@ -596,7 +598,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 					throw Throwables.toRuntimeException(exc);
 				}
 				try {
-					Lookup classLoaderConsulter = lowLevelObjectsHandler.consulterRetriever.apply(ClassLoader.class);
+					Lookup classLoaderConsulter = lowLevelObjectsHandler.getConsulter(ClassLoader.class);
 					MethodType methodType = MethodType.methodType(Package.class, String.class);
 					MethodHandle methodHandle = classLoaderConsulter.findSpecial(ClassLoader.class, "getDefinedPackage", methodType, ClassLoader.class);
 					lowLevelObjectsHandler.packageRetriever = (classLoader, object, packageName) ->
@@ -630,29 +632,37 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 					} catch (Throwable exc) {
 						throw Throwables.toRuntimeException(exc);
 					}
-					Class<?> lookupClass = Class.forName(MethodHandles.class.getName() + "$" + "Lookup");
-					Constructor<?> lookupCtor = lowLevelObjectsHandler.getDeclaredConstructor(
-						lookupClass, ctor -> 
-							ctor.getParameters().length >= 2
-					);
-					lowLevelObjectsHandler.getDeclaredConstructors(lookupClass);
-					lowLevelObjectsHandler.setAccessible(lookupCtor, true);
-					Field fullPowerModeConstant = lowLevelObjectsHandler.getDeclaredField(lookupClass, field -> "FULL_POWER_MODES".equals(field.getName()));
-					lowLevelObjectsHandler.setAccessible(fullPowerModeConstant, true);
-					int fullPowerModeConstantValue = fullPowerModeConstant.getInt(null);
-					try {
-						MethodHandle mthHandle = ((Lookup)lookupCtor.newInstance(lookupClass, fullPowerModeConstantValue)).findConstructor(lookupClass, MethodType.methodType(void.class, Class.class, int.class));
-						lowLevelObjectsHandler.consulterRetriever = cls ->
-							(Lookup)mthHandle.invoke(cls, fullPowerModeConstantValue);
-					} catch (Throwable exc) {
-						MethodHandle mthHandle = ((Lookup)lookupCtor.newInstance(lookupClass, null, fullPowerModeConstantValue)).findConstructor(lookupClass, MethodType.methodType(void.class, Class.class, Class.class, int.class));
-						lowLevelObjectsHandler.consulterRetriever = cls ->
-							(Lookup)mthHandle.invoke(cls, null, fullPowerModeConstantValue);
-					}
 				} catch (Throwable exc) {
 					logInfo("jdk.internal.loader.BuiltinClassLoader class not detected");
 					throw Throwables.toRuntimeException(exc);
 				}
+				try {
+					initDeepConsulter();
+				} catch (IllegalAccessException | NoSuchMethodException | InstantiationException
+						| InvocationTargetException | ClassNotFoundException exc) {
+					logInfo("Could not init deep consulter");
+					throw Throwables.toRuntimeException(exc);
+				}
+			}
+
+
+			void initDeepConsulter() throws IllegalAccessException,
+					NoSuchMethodException, InstantiationException, InvocationTargetException, ClassNotFoundException {
+				Class<?> lookupClass = Class.forName(MethodHandles.class.getName() + "$" + "Lookup");
+				Constructor<?> lookupCtor = lowLevelObjectsHandler.getDeclaredConstructor(
+					lookupClass, ctor -> 
+						ctor.getParameters().length == 2 && 
+						ctor.getParameters()[0].getType().equals(Class.class) &&
+						ctor.getParameters()[1].getType().equals(int.class)
+				);
+				lowLevelObjectsHandler.getDeclaredConstructors(lookupClass);
+				lowLevelObjectsHandler.setAccessible(lookupCtor, true);
+				Field fullPowerModeConstant = lowLevelObjectsHandler.getDeclaredField(lookupClass, field -> "FULL_POWER_MODES".equals(field.getName()));
+				lowLevelObjectsHandler.setAccessible(fullPowerModeConstant, true);
+				int fullPowerModeConstantValue = fullPowerModeConstant.getInt(null);
+				MethodHandle mthHandle = ((Lookup)lookupCtor.newInstance(lookupClass, fullPowerModeConstantValue)).findConstructor(lookupClass, MethodType.methodType(void.class, Class.class, int.class));
+				lowLevelObjectsHandler.consulterRetriever = cls ->
+					(Lookup)mthHandle.invoke(cls, fullPowerModeConstantValue);
 			}
 			
 			@Override
@@ -660,6 +670,34 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 				super.close();
 			}
 		}
-
+		
+		private static class ForJava14 extends ForJava9 {
+			
+			ForJava14(LowLevelObjectsHandler lowLevelObjectsHandler) {
+				super(lowLevelObjectsHandler);
+			}
+			
+			@Override
+			void initDeepConsulter() throws IllegalAccessException, NoSuchMethodException, InstantiationException,
+					InvocationTargetException, ClassNotFoundException {
+				Class<?> lookupClass = Class.forName(MethodHandles.class.getName() + "$" + "Lookup");
+				Constructor<?> lookupCtor = lowLevelObjectsHandler.getDeclaredConstructor(
+					lookupClass, ctor -> 
+						ctor.getParameters().length == 3 && 
+						ctor.getParameters()[0].getType().equals(Class.class) &&
+						ctor.getParameters()[1].getType().equals(Class.class) &&
+						ctor.getParameters()[2].getType().equals(int.class)
+				);
+				lowLevelObjectsHandler.getDeclaredConstructors(lookupClass);
+				lowLevelObjectsHandler.setAccessible(lookupCtor, true);
+				Field fullPowerModeConstant = lowLevelObjectsHandler.getDeclaredField(lookupClass, field -> "FULL_POWER_MODES".equals(field.getName()));
+				lowLevelObjectsHandler.setAccessible(fullPowerModeConstant, true);
+				int fullPowerModeConstantValue = fullPowerModeConstant.getInt(null);
+				MethodHandle mthHandle = ((Lookup)lookupCtor.newInstance(lookupClass, null, fullPowerModeConstantValue)).findConstructor(lookupClass, MethodType.methodType(void.class, Class.class, Class.class, int.class));
+				lowLevelObjectsHandler.consulterRetriever = cls ->
+					(Lookup)mthHandle.invoke(cls, null, fullPowerModeConstantValue);
+			}
+		}
+		
 	}
 }
