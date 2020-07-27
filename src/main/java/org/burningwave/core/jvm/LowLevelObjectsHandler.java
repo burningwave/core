@@ -633,15 +633,22 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 					Class<?> lookupClass = Class.forName(MethodHandles.class.getName() + "$" + "Lookup");
 					Constructor<?> lookupCtor = lowLevelObjectsHandler.getDeclaredConstructor(
 						lookupClass, ctor -> 
-							ctor.getParameters().length == 2 && ctor.getParameters()[0].getType() == Class.class && ctor.getParameters()[1].getType() == int.class
+							ctor.getParameters().length >= 2
 					);
+					lowLevelObjectsHandler.getDeclaredConstructors(lookupClass);
 					lowLevelObjectsHandler.setAccessible(lookupCtor, true);
 					Field fullPowerModeConstant = lowLevelObjectsHandler.getDeclaredField(lookupClass, field -> "FULL_POWER_MODES".equals(field.getName()));
 					lowLevelObjectsHandler.setAccessible(fullPowerModeConstant, true);
 					int fullPowerModeConstantValue = fullPowerModeConstant.getInt(null);
-					MethodHandle mthHandle = ((Lookup)lookupCtor.newInstance(lookupClass, fullPowerModeConstantValue)).findConstructor(lookupClass, MethodType.methodType(void.class, Class.class, int.class));
-					lowLevelObjectsHandler.consulterRetriever = cls ->
-						(Lookup)mthHandle.invoke(cls, fullPowerModeConstantValue);
+					try {
+						MethodHandle mthHandle = ((Lookup)lookupCtor.newInstance(lookupClass, fullPowerModeConstantValue)).findConstructor(lookupClass, MethodType.methodType(void.class, Class.class, int.class));
+						lowLevelObjectsHandler.consulterRetriever = cls ->
+							(Lookup)mthHandle.invoke(cls, fullPowerModeConstantValue);
+					} catch (Throwable exc) {
+						MethodHandle mthHandle = ((Lookup)lookupCtor.newInstance(lookupClass, null, fullPowerModeConstantValue)).findConstructor(lookupClass, MethodType.methodType(void.class, Class.class, Class.class, int.class));
+						lowLevelObjectsHandler.consulterRetriever = cls ->
+							(Lookup)mthHandle.invoke(cls, null, fullPowerModeConstantValue);
+					}
 				} catch (Throwable exc) {
 					logInfo("jdk.internal.loader.BuiltinClassLoader class not detected");
 					throw Throwables.toRuntimeException(exc);
