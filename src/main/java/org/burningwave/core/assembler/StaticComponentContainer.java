@@ -52,7 +52,7 @@ public class StaticComponentContainer {
 		
 		static {
 			DEFAULT_VALUES = new HashMap<>();
-			DEFAULT_VALUES.put(Key.CLEAR_TEMPORARY_FOLDER_ON_INIT, "true");
+			DEFAULT_VALUES.put(Key.CLEAR_TEMPORARY_FOLDER_ON_INIT, "false");
 			DEFAULT_VALUES.put(Key.HIDE_BANNER_ON_INIT, "false");
 		}
 	}
