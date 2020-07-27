@@ -40,7 +40,7 @@ public class ClassLoaderDelegate extends BuiltinClassLoader {
 	private MethodHandle loadClassMethod;
 	
 	ClassLoaderDelegate(BuiltinClassLoader parent, ClassLoader classLoader, MethodHandle loadClassMethodHandle) {
-		super(null, parent, null);
+		super("ClassLoaderDelegateOf" + classLoader.toString(), parent, null);
 		this.classLoader = classLoader;
 		this.loadClassMethod = loadClassMethodHandle;
 	}

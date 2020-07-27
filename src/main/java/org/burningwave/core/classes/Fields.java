@@ -57,7 +57,7 @@ public class Fields extends MemberHelper<Field> {
 	}
 	
 	public <T> T get(Object target, String fieldName) {
-		return get(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName));
+		return get(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName, null));
 	}	
 	
 	public <T> T getDirect(Object target, Field field) {
@@ -65,11 +65,11 @@ public class Fields extends MemberHelper<Field> {
 	}
 	
 	public <T> T getDirect(Object target, String fieldName) {
-		return getDirect(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName));
+		return getDirect(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName, null));
 	}
 	
 	public void set(Object target, String fieldName, Object value) {
-		set(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName), value);
+		set(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName, Classes.retrieveFrom(value)), value);
 	}
 	
 	public void set(Object target, Field field, Object value) {
@@ -77,7 +77,7 @@ public class Fields extends MemberHelper<Field> {
 	}
 	
 	public void setDirect(Object target, String fieldName, Object value) {
-		setDirect(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName), value);
+		setDirect(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName, Classes.retrieveFrom(value)), value);
 	}
 	
 	public void setDirect(Object target, Field field, Object value) {
@@ -114,7 +114,7 @@ public class Fields extends MemberHelper<Field> {
 	}
 	
 	public Field findOneAndMakeItAccessible(Class<?> targetClass, String memberName) {
-		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, memberName);
+		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, memberName, null);
 		if (members.size() != 1) {
 			throw Throwables.toRuntimeException("Field " + memberName
 				+ " not found or found more than one field in " + targetClass.getName()
@@ -123,8 +123,8 @@ public class Fields extends MemberHelper<Field> {
 		return members.stream().findFirst().get();
 	}
 	
-	public Field findFirstAndMakeItAccessible(Class<?> targetClass, String fieldName) {
-		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, fieldName);
+	public Field findFirstAndMakeItAccessible(Class<?> targetClass, String fieldName, Class<?> valueClass) {
+		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, fieldName, valueClass);
 		if (members.size() < 1) {
 			throw Throwables.toRuntimeException("Field " + fieldName
 				+ " not found in " + targetClass.getName()
@@ -135,16 +135,23 @@ public class Fields extends MemberHelper<Field> {
 
 	public Collection<Field> findAllByExactNameAndMakeThemAccessible(
 		Class<?> targetClass,
-		String fieldName
+		String fieldName, 
+		Class<?> valueClass
 	) {	
-		String cacheKey = getCacheKey(targetClass, "equals " + fieldName, (Class<?>[])null);
+		String cacheKey = getCacheKey(targetClass, "equals " + fieldName, valueClass);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		return Cache.uniqueKeyForFields.getOrUploadIfAbsent(
 			targetClassClassLoader,
 			cacheKey, 
 			() -> 
 				Collections.unmodifiableCollection(
-					findAllAndMakeThemAccessible(targetClass).stream().filter(field -> field.getName().equals(fieldName)).collect(Collectors.toCollection(LinkedHashSet::new))
+					findAllAndMakeThemAccessible(targetClass).stream().filter(field -> {
+						if (valueClass == null) {
+							return field.getName().equals(fieldName);
+						} else {
+							return field.getName().equals(fieldName) && Classes.isAssignableFrom(field.getType(), valueClass);
+						}
+					}).collect(Collectors.toCollection(LinkedHashSet::new))
 				)
 		);
 	}
