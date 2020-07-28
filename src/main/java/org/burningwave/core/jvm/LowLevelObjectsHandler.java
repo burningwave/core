@@ -648,7 +648,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 
 			void initDeepConsulter() throws IllegalAccessException,
 					NoSuchMethodException, InstantiationException, InvocationTargetException, ClassNotFoundException {
-				Class<?> lookupClass = Class.forName(MethodHandles.class.getName() + "$" + "Lookup");
+				Class<?> lookupClass = MethodHandles.Lookup.class;
 				Constructor<?> lookupCtor = lowLevelObjectsHandler.getDeclaredConstructor(
 					lookupClass, ctor -> 
 						ctor.getParameters().length == 2 && 
@@ -660,7 +660,9 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 				Field fullPowerModeConstant = lowLevelObjectsHandler.getDeclaredField(lookupClass, field -> "FULL_POWER_MODES".equals(field.getName()));
 				lowLevelObjectsHandler.setAccessible(fullPowerModeConstant, true);
 				int fullPowerModeConstantValue = fullPowerModeConstant.getInt(null);
-				MethodHandle mthHandle = ((Lookup)lookupCtor.newInstance(lookupClass, fullPowerModeConstantValue)).findConstructor(lookupClass, MethodType.methodType(void.class, Class.class, int.class));
+				MethodHandle mthHandle = ((Lookup)lookupCtor.newInstance(lookupClass, fullPowerModeConstantValue)).findConstructor(
+					lookupClass, MethodType.methodType(void.class, Class.class, int.class)
+				);
 				lowLevelObjectsHandler.consulterRetriever = cls ->
 					(Lookup)mthHandle.invoke(cls, fullPowerModeConstantValue);
 			}
@@ -680,7 +682,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			@Override
 			void initDeepConsulter() throws IllegalAccessException, NoSuchMethodException, InstantiationException,
 					InvocationTargetException, ClassNotFoundException {
-				Class<?> lookupClass = Class.forName(MethodHandles.class.getName() + "$" + "Lookup");
+				Class<?> lookupClass = MethodHandles.Lookup.class;
 				Constructor<?> lookupCtor = lowLevelObjectsHandler.getDeclaredConstructor(
 					lookupClass, ctor -> 
 						ctor.getParameters().length == 3 && 
@@ -693,7 +695,9 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 				Field fullPowerModeConstant = lowLevelObjectsHandler.getDeclaredField(lookupClass, field -> "FULL_POWER_MODES".equals(field.getName()));
 				lowLevelObjectsHandler.setAccessible(fullPowerModeConstant, true);
 				int fullPowerModeConstantValue = fullPowerModeConstant.getInt(null);
-				MethodHandle mthHandle = ((Lookup)lookupCtor.newInstance(lookupClass, null, fullPowerModeConstantValue)).findConstructor(lookupClass, MethodType.methodType(void.class, Class.class, Class.class, int.class));
+				MethodHandle mthHandle = ((Lookup)lookupCtor.newInstance(lookupClass, null, fullPowerModeConstantValue)).findConstructor(
+					lookupClass, MethodType.methodType(void.class, Class.class, Class.class, int.class)
+				);
 				lowLevelObjectsHandler.consulterRetriever = cls ->
 					(Lookup)mthHandle.invoke(cls, null, fullPowerModeConstantValue);
 			}
