@@ -742,7 +742,7 @@ public class ClassFactory implements Component {
 				} else if (!recursive) {
 					logWarn("Class paths are null try recursive call");
 					return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
-						classLoader, className, exc, searchConfig.checkForAddedClasses().useNewIsolatedClassLoader(), !recursive
+						classLoader, className, exc, searchConfig.checkForAddedClasses(), !recursive
 					);
 				} else {
 					logWarn("Class paths are null");
