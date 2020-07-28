@@ -41,7 +41,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.io.InputStream;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
@@ -83,7 +82,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 	ThrowingTriFunction<ClassLoader, Object, String, Package, Throwable> packageRetriever;	
 	Method methodInvoker;
 	ThrowingBiConsumer<AccessibleObject, Boolean, Throwable> accessibleSetter;
-	ThrowingFunction<Class<?>, Lookup, Throwable> consulterRetriever;
+	ThrowingFunction<Class<?>, MethodHandles.Lookup, Throwable> consulterRetriever;
 	
 	Long loadedPackagesMapMemoryOffset;
 	Long loadedClassesVectorMemoryOffset;	
@@ -332,12 +331,12 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		}		
 	}
 	
-	public Constructor<?>[] getDeclaredConstructors(Class<?> cls) {
+	public <T> Constructor<T>[] getDeclaredConstructors(Class<T> cls) {
 		try {
-			return (Constructor<?>[])getDeclaredConstructorsRetriever.invoke(cls, false);
+			return (Constructor<T>[])getDeclaredConstructorsRetriever.invoke(cls, false);
 		} catch (Throwable exc) {
 			logWarn("Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
-			return emptyConstructorsArray;
+			return (Constructor<T>[])emptyConstructorsArray;
 		}
 	}
 	
@@ -350,7 +349,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		}
 	}
 	
-	public Lookup getConsulter(Class<?> cls) {
+	public MethodHandles.Lookup getConsulter(Class<?> cls) {
 		return ThrowingSupplier.get(() ->
 			consulterRetriever.apply(cls)
 		);
@@ -480,7 +479,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		
 		private void initMembersRetrievers() {
 			try {
-				Lookup consulter = lowLevelObjectsHandler.consulterRetriever.apply(Class.class);
+				MethodHandles.Lookup consulter = lowLevelObjectsHandler.getConsulter(Class.class);
 				lowLevelObjectsHandler.getDeclaredFieldsRetriever = consulter.findSpecial(
 					Class.class,
 					"getDeclaredFields0",
@@ -519,13 +518,13 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 				super(lowLevelObjectsHandler);
 				Field modes;
 				try {
-					modes = Lookup.class.getDeclaredField("allowedModes");
+					modes = MethodHandles.Lookup.class.getDeclaredField("allowedModes");
 				} catch (NoSuchFieldException | SecurityException exc) {
 					throw Throwables.toRuntimeException(exc);
 				}
 				modes.setAccessible(true);
 				lowLevelObjectsHandler.consulterRetriever = (cls) -> {
-					Lookup consulter = MethodHandles.lookup().in(cls);
+					MethodHandles.Lookup consulter = MethodHandles.lookup().in(cls);
 					modes.setInt(consulter, -1);
 					return consulter;
 				};
@@ -574,10 +573,10 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 					MethodHandles.Lookup consulter = MethodHandles.lookup();
 					MethodHandle consulterRetrieverMethod = consulter.findStatic(
 						MethodHandles.class, "privateLookupIn",
-						MethodType.methodType(Lookup.class, Class.class, Lookup.class)
+						MethodType.methodType(MethodHandles.Lookup.class, Class.class, MethodHandles.Lookup.class)
 					);
 					lowLevelObjectsHandler.consulterRetriever = cls ->
-						(Lookup)consulterRetrieverMethod.invoke(cls, MethodHandles.lookup());
+						(MethodHandles.Lookup)consulterRetrieverMethod.invoke(cls, MethodHandles.lookup());
 				} catch (IllegalArgumentException | NoSuchMethodException
 						| SecurityException | IllegalAccessException exc) {
 					logError("Could not initialize consulter", exc);
@@ -598,7 +597,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 					throw Throwables.toRuntimeException(exc);
 				}
 				try {
-					Lookup classLoaderConsulter = lowLevelObjectsHandler.getConsulter(ClassLoader.class);
+					MethodHandles.Lookup classLoaderConsulter = lowLevelObjectsHandler.getConsulter(ClassLoader.class);
 					MethodType methodType = MethodType.methodType(Package.class, String.class);
 					MethodHandle methodHandle = classLoaderConsulter.findSpecial(ClassLoader.class, "getDefinedPackage", methodType, ClassLoader.class);
 					lowLevelObjectsHandler.packageRetriever = (classLoader, object, packageName) ->
@@ -648,23 +647,21 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 
 			void initDeepConsulter() throws IllegalAccessException,
 					NoSuchMethodException, InstantiationException, InvocationTargetException, ClassNotFoundException {
-				Class<?> lookupClass = MethodHandles.Lookup.class;
-				Constructor<?> lookupCtor = lowLevelObjectsHandler.getDeclaredConstructor(
-					lookupClass, ctor -> 
+				Constructor<MethodHandles.Lookup> lookupCtor = lowLevelObjectsHandler.getDeclaredConstructor(
+					MethodHandles.Lookup.class, ctor -> 
 						ctor.getParameters().length == 2 && 
 						ctor.getParameters()[0].getType().equals(Class.class) &&
 						ctor.getParameters()[1].getType().equals(int.class)
 				);
-				lowLevelObjectsHandler.getDeclaredConstructors(lookupClass);
 				lowLevelObjectsHandler.setAccessible(lookupCtor, true);
-				Field fullPowerModeConstant = lowLevelObjectsHandler.getDeclaredField(lookupClass, field -> "FULL_POWER_MODES".equals(field.getName()));
+				Field fullPowerModeConstant = lowLevelObjectsHandler.getDeclaredField(MethodHandles.Lookup.class, field -> "FULL_POWER_MODES".equals(field.getName()));
 				lowLevelObjectsHandler.setAccessible(fullPowerModeConstant, true);
 				int fullPowerModeConstantValue = fullPowerModeConstant.getInt(null);
-				MethodHandle mthHandle = ((Lookup)lookupCtor.newInstance(lookupClass, fullPowerModeConstantValue)).findConstructor(
-					lookupClass, MethodType.methodType(void.class, Class.class, int.class)
+				MethodHandle mthHandle = ((MethodHandles.Lookup)lookupCtor.newInstance(MethodHandles.Lookup.class, fullPowerModeConstantValue)).findConstructor(
+					MethodHandles.Lookup.class, MethodType.methodType(void.class, Class.class, int.class)
 				);
 				lowLevelObjectsHandler.consulterRetriever = cls ->
-					(Lookup)mthHandle.invoke(cls, fullPowerModeConstantValue);
+					(MethodHandles.Lookup)mthHandle.invoke(cls, fullPowerModeConstantValue);
 			}
 			
 			@Override
@@ -682,24 +679,22 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			@Override
 			void initDeepConsulter() throws IllegalAccessException, NoSuchMethodException, InstantiationException,
 					InvocationTargetException, ClassNotFoundException {
-				Class<?> lookupClass = MethodHandles.Lookup.class;
 				Constructor<?> lookupCtor = lowLevelObjectsHandler.getDeclaredConstructor(
-					lookupClass, ctor -> 
+					MethodHandles.Lookup.class, ctor -> 
 						ctor.getParameters().length == 3 && 
 						ctor.getParameters()[0].getType().equals(Class.class) &&
 						ctor.getParameters()[1].getType().equals(Class.class) &&
 						ctor.getParameters()[2].getType().equals(int.class)
 				);
-				lowLevelObjectsHandler.getDeclaredConstructors(lookupClass);
 				lowLevelObjectsHandler.setAccessible(lookupCtor, true);
-				Field fullPowerModeConstant = lowLevelObjectsHandler.getDeclaredField(lookupClass, field -> "FULL_POWER_MODES".equals(field.getName()));
+				Field fullPowerModeConstant = lowLevelObjectsHandler.getDeclaredField(MethodHandles.Lookup.class, field -> "FULL_POWER_MODES".equals(field.getName()));
 				lowLevelObjectsHandler.setAccessible(fullPowerModeConstant, true);
 				int fullPowerModeConstantValue = fullPowerModeConstant.getInt(null);
-				MethodHandle mthHandle = ((Lookup)lookupCtor.newInstance(lookupClass, null, fullPowerModeConstantValue)).findConstructor(
-					lookupClass, MethodType.methodType(void.class, Class.class, Class.class, int.class)
+				MethodHandle mthHandle = ((MethodHandles.Lookup)lookupCtor.newInstance(MethodHandles.Lookup.class, null, fullPowerModeConstantValue)).findConstructor(
+					MethodHandles.Lookup.class, MethodType.methodType(void.class, Class.class, Class.class, int.class)
 				);
 				lowLevelObjectsHandler.consulterRetriever = cls ->
-					(Lookup)mthHandle.invoke(cls, null, fullPowerModeConstantValue);
+					(MethodHandles.Lookup)mthHandle.invoke(cls, null, fullPowerModeConstantValue);
 			}
 		}
 		

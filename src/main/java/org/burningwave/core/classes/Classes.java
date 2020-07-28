@@ -345,8 +345,8 @@ public class Classes implements Component, MembersRetriever {
 		);
 	}
 	
-	public Constructor<?>[] getDeclaredConstructors(Class<?> cls)  {
-		return Cache.classLoaderForConstructors.getOrUploadIfAbsent(
+	public <T> Constructor<T>[] getDeclaredConstructors(Class<T> cls)  {
+		return (Constructor<T>[]) Cache.classLoaderForConstructors.getOrUploadIfAbsent(
 			getClassLoader(cls), cls.getName().replace(".", "/"),
 			() -> LowLevelObjectsHandler.getDeclaredConstructors(cls)
 		);
