@@ -11,7 +11,7 @@ public class MethodsHandler {
         Methods.invoke(System.out, "println", "Hello World");
         
         //Inoking method by using MethodHandle
-        Integer number = Methods.invokeDirect(Integer.class, "valueOf", 1);
+        Integer number = Methods.invokeStaticDirect(Integer.class, "valueOf", 1);
     }
     
     public static void main(String[] args) {
