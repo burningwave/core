@@ -314,7 +314,7 @@ public class ClassFactory implements Component {
 									try {
 										return classLoader.loadClass(className);
 									} catch (Throwable exc) {
-										if (!ClassLoaders.canBeExpanded(classLoader)) {
+										if (!ClassLoaders.isItPossibleToAddClassPaths(classLoader)) {
 											throw exc;
 										}
 										Map<String, ByteBuffer> finalByteCodes = new HashMap<>(compilationResult.getCompiledFiles());
@@ -325,7 +325,7 @@ public class ClassFactory implements Component {
 										return cls;	
 									}								
 								} catch (Throwable exc) {
-									if (!ClassLoaders.canBeExpanded(classLoader)) {
+									if (!ClassLoaders.isItPossibleToAddClassPaths(classLoader)) {
 										throw exc;
 									}
 									CacheableSearchConfig searchConfig = SearchConfig.forPaths(
@@ -340,7 +340,7 @@ public class ClassFactory implements Component {
 								}
 							} catch (Throwable exc) {
 								try {
-									if (!ClassLoaders.canBeExpanded(classLoader)) {
+									if (!ClassLoaders.isItPossibleToAddClassPaths(classLoader)) {
 										throw exc;
 									}
 									return computeClassPathsAndAddThemToClassLoaderAndTryToLoad(
@@ -379,7 +379,7 @@ public class ClassFactory implements Component {
 						try {
 							return classLoader.loadClass(className);
 						} catch (Throwable exc) {
-							if (!ClassLoaders.canBeExpanded(classLoader)) {
+							if (!ClassLoaders.isItPossibleToAddClassPaths(classLoader)) {
 								throw exc;
 							}
 							return computeClassPathsAndAddThemToClassLoaderAndTryToLoad(

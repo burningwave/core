@@ -791,12 +791,12 @@ public class Classes implements Component, MembersRetriever {
 			return pathLoader;
 		}
 		
-		public boolean canBeExpanded(ClassLoader classLoader) {
+		public boolean isItPossibleToAddClassPaths(ClassLoader classLoader) {
 			if (classLoader != null) {
 				if (classLoader instanceof URLClassLoader || isBuiltinClassLoader(classLoader) || classLoader instanceof PathScannerClassLoader) {
 					return true;
 				} else {
-					return canBeExpanded(getParent(classLoader));
+					return isItPossibleToAddClassPaths(getParent(classLoader));
 				}
 			} else {
 				return false;
