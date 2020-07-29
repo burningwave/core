@@ -49,7 +49,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 
 
 @SuppressWarnings("unchecked")
-public class Constructors extends ExecutableMemberHelper<Constructor<?>>  {
+public class Constructors extends Members.Handler.OfExecutable<Constructor<?>>  {
 	
 	public static Constructors create() {
 		return new Constructors();

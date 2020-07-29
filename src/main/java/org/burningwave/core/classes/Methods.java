@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("unchecked")
-public class Methods extends ExecutableMemberHelper<Method> {
+public class Methods extends Members.Handler.OfExecutable<Method> {
 	
 	public static Methods create() {
 		return new Methods();
