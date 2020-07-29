@@ -42,6 +42,7 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -49,9 +50,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.burningwave.core.function.ThrowingBiFunction;
 import org.burningwave.core.function.ThrowingFunction;
 import org.burningwave.core.function.ThrowingSupplier;
 
@@ -171,7 +172,14 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 	public 	<T> T invokeStatic(Class<?> targetClass, String methodName, Object... arguments) {
 		return invoke(
 			targetClass, null, methodName, method -> 
-				(T)method.invoke(null, getArgumentArray(method, arguments)),
+				(T)method.invoke(null, 
+					getArgumentArray(
+						method,
+						this::getArgumentListWithArrayForVarArgs,
+						ArrayList::new, 
+						arguments
+					)
+				),
 			arguments
 		);
 	}
@@ -180,7 +188,15 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		return invoke(
 			Classes.retrieveFrom(target), 
 			null, methodName, method -> 
-				(T)method.invoke(target, getArgumentArray(method, arguments)),
+				(T)method.invoke(
+					target,
+					getArgumentArray(
+						method,
+						this::getArgumentListWithArrayForVarArgs,
+						ArrayList::new, 
+						arguments
+					)
+				),
 			arguments
 		);
 	}
@@ -190,19 +206,22 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 	}
 	
 	public 	<T> T invokeStaticDirect(Class<?> targetClass, String methodName, Object... arguments) {
-		return (T) invokeDirect(targetClass, null, methodName, (methodHandle, argList) -> methodHandle.invokeWithArguments(argList),  arguments);
+		return (T) invokeDirect(targetClass, null, methodName, ArrayList::new, arguments);
 	}
 	
 	public <T> T invokeDirect(Object target, String methodName, Object... arguments) {
 		return (T) invokeDirect(
 			Classes.retrieveFrom(target), 
-			target, methodName, (methodHandle, argList) -> 
-				methodHandle.bindTo(target).invokeWithArguments(argList),
+			target, methodName, () -> {
+				List<Object> argumentList = new ArrayList<>();
+				argumentList.add(target);
+				return argumentList;
+			},
 			arguments
 		);
 	}
 	
-	private <T> T invokeDirect(Class<?> targetClass, Object target, String methodName, ThrowingBiFunction<MethodHandle, List<Object>, T, Throwable> methodInvoker,  Object... arguments) {
+	private <T> T invokeDirect(Class<?> targetClass, Object target, String methodName, Supplier<List<Object>> listSupplier,  Object... arguments) {
 		Class<?>[] argsType = Classes.retrieveFrom(arguments);
 		String cacheKey = getCacheKey(targetClass, "equals " + methodName, argsType);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
@@ -220,8 +239,8 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		);
 		return ThrowingSupplier.get(() -> {
 				Method method = (Method)methodHandleBag.getKey();
-				List<Object> argumentList = getArgumentList(method, arguments);
-				return (T)methodInvoker.apply(methodHandleBag.getValue(), argumentList);
+				List<Object> argumentList = getFlatArgumentList(method, listSupplier, arguments);
+				return (T)methodHandleBag.getValue().invokeWithArguments(argumentList);
 			}
 		);
 	}

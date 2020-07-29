@@ -39,6 +39,7 @@ import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -62,7 +63,14 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		Constructor<?> ctor = findFirstAndMakeItAccessible(targetClass, Classes.retrieveFrom(arguments));
 		return ThrowingSupplier.get(() -> {
 			//logInfo("Invoking " + ctor);
-			return (T)ctor.newInstance(getArgumentArray(ctor, arguments));
+			return (T)ctor.newInstance(
+				getArgumentArray(
+					ctor,
+					this::getArgumentListWithArrayForVarArgs,
+					ArrayList::new, 
+					arguments
+				)
+			);
 		});
 	}
 	
@@ -89,7 +97,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 				Constructor<?> ctor = (Constructor<?>) methodHandleBag.getKey();
 				//logInfo("Direct invoking of " + ctor);
 				return (T)methodHandleBag.getValue().invokeWithArguments(
-					getArgumentList(ctor, arguments)
+					getFlatArgumentList(ctor, ArrayList::new, arguments)
 				);
 			}
 		);
