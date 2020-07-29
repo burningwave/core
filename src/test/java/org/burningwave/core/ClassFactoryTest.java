@@ -148,6 +148,11 @@ public class ClassFactoryTest extends BaseTest {
 		getOrBuildClassWithExternalClassTestOne(true, false, "ComplexExample", "ComplexExampleTwo", Thread.currentThread().getContextClassLoader());
 	}
 	
+	@Test
+	public void getOrBuildClassWithExternalClassTestSeven() {
+		getOrBuildClassWithExternalClassTestOne(true, false, "ComplexExample", "ComplexExampleTwo", new ClassLoader(){});
+	}
+	
 	public void getOrBuildClassWithExternalClassTestOne(
 		boolean clearCache,
 		boolean adjustClassPaths,

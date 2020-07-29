@@ -58,9 +58,9 @@ public class Members implements Component {
 		return new Members();
 	}
 	
-	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
-		return findOne(criteria, Classes.deepRetrieveFrom(objectOrClass));
-	}
+//	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
+//		return findOne(criteria, Classes.retrieveFrom(objectOrClass));
+//	}
 	
 	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
 		Collection<M> members = findAll(criteria, classFrom);
@@ -70,9 +70,9 @@ public class Members implements Component {
 		return members.stream().findFirst().orElse(null);
 	}
 	
-	public <M extends Member> Collection<M> findAll(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
-		return findAll(criteria, Classes.retrieveFrom(objectOrClass));
-	}
+//	public <M extends Member> Collection<M> findAll(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
+//		return findAll(criteria, Classes.retrieveFrom(objectOrClass));
+//	}
 	
 	public <M extends Member> Collection<M> findAll(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
 		Collection<M> result = findAll(
@@ -109,10 +109,6 @@ public class Members implements Component {
 		return clsFrom.getSuperclass() == null || clsPredicate.test(initialClsFrom, clsFrom) ?
 			collection :
 			findAll((Class<?>) initialClsFrom, clsFrom.getSuperclass(), clsPredicate, memberSupplier, predicate, collection);
-	}
-	
-	public <M extends Member> boolean match(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
-		return match(criteria, Classes.deepRetrieveFrom(objectOrClass));
 	}
 	
 	public <M extends Member> boolean match(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
@@ -160,26 +156,13 @@ public class Members implements Component {
 	
 	static abstract class Handler<M extends Member, C extends MemberCriteria<M, C, ?>> {	
 
-		public M findOne(C criteria, Object objectOrClass) {
-			return Members.findOne(criteria, objectOrClass);
-		}
-
 		public M findOne(C criteria, Class<?> classFrom) {
 			return Members.findOne(criteria, classFrom);
-		}
-
-		public Collection<M> findAll(C criteria, Object objectOrClass) {
-			return Members.findAll(criteria, objectOrClass);
 		}
 
 		public Collection<M> findAll(C criteria, Class<?> classFrom) {
 			return Members.findAll(criteria, classFrom);
 		}
-
-		public boolean match(C criteria, Object objectOrClass) {
-			return Members.match(criteria, objectOrClass);
-		}
-
 
 		public boolean match(C criteria, Class<?> classFrom) {
 			return Members.match(criteria, classFrom);

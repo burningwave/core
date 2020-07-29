@@ -203,7 +203,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 	
 	public <T> T getFieldValue(Object target, Field field) {
 		target = Modifier.isStatic(field.getModifiers())?
-			Classes.retrieveFrom(target) :
+			field.getDeclaringClass() :
 			target;
 		long fieldOffset = Modifier.isStatic(field.getModifiers())?
 			unsafe.staticFieldOffset(field) :
@@ -265,7 +265,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			throw Throwables.toRuntimeException("Value " + value + " is not assignable to " + field.getName());
 		}
 		target = Modifier.isStatic(field.getModifiers())?
-			Classes.retrieveFrom(target) :
+			field.getDeclaringClass() :
 			target;
 		long fieldOffset = Modifier.isStatic(field.getModifiers())?
 			unsafe.staticFieldOffset(field) :

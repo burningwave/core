@@ -100,27 +100,8 @@ public class Classes implements Component, MembersRetriever {
 		return new Classes();
 	}
 	
-	public <T> Class<T> deepRetrieveFrom(Object object) {
-		return object != null ? (Class<T>)object.getClass() : null;
-	}
-	
-	public Class<?>[] deepRetrieveFrom(Object... objects) {
-		Class<?>[] classes = null;
-		if (objects != null) {
-			classes = new Class[objects.length];
-			for (int i = 0; i < objects.length; i++) {
-				if (objects[i] != null) {
-					classes[i] = deepRetrieveFrom(objects[i]);
-				}
-			}
-		} else {
-			classes = new Class[]{null};
-		}
-		return classes;
-	}
-	
 	public <T> Class<T> retrieveFrom(Object object) {
-		return (Class<T>)(object != null ? object instanceof Class? object : object.getClass() : null);
+		return object != null ? (Class<T>)object.getClass() : null;
 	}
 	
 	public Class<?>[] retrieveFrom(Object... objects) {
@@ -469,7 +450,7 @@ public class Classes implements Component, MembersRetriever {
 					String.class, String.class, String.class, String.class,
 					String.class, String.class, String.class, URL.class
 				),
-				classLoader
+				classLoader.getClass()
 			).stream().findFirst().orElse(null);
 			return Methods.convertToMethodHandleBag(method).getValue();
 		}
@@ -491,7 +472,7 @@ public class Classes implements Component, MembersRetriever {
 				).and().parameterTypesAreAssignableFrom(
 					String.class, ByteBuffer.class, ProtectionDomain.class
 				).and().returnType((cls) -> cls.getName().equals(Class.class.getName())),
-				classLoader
+				classLoader.getClass()
 			).stream().findFirst().orElse(null);
 			return Methods.convertToMethodHandleBag(method).getValue();
 		}

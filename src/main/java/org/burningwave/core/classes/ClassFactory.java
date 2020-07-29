@@ -423,11 +423,9 @@ public class ClassFactory implements Component {
 				});
 				retrievedBytecodes.set(extraClassPathsForClassLoaderByteCodes);
 			}
-		}
-		if (extraBytecodes != null && extraBytecodes.length > 0) {
-			for (Map<String, ByteBuffer> extraBytecode : extraBytecodes) {
-				if (extraBytecode != null) {
-					synchronized(retrievedBytecodes) {
+			if (extraBytecodes != null && extraBytecodes.length > 0) {
+				for (Map<String, ByteBuffer> extraBytecode : extraBytecodes) {
+					if (extraBytecode != null) {
 						retrievedBytecodes.get().putAll(extraBytecode);
 					}
 				}
@@ -727,7 +725,7 @@ public class ClassFactory implements Component {
 								false,
 							classPath.getAbsolutePath()
 						);
-						logWarn("Before now no class loader has loaded {}" + classPath.getAbsolutePath());
+						logWarn("Before now no class loader has loaded {}", classPath.getAbsolutePath());
 					}
 					Collection<FileSystemItem> classPaths = searchResult.getClassPaths(criteriaTwo);
 					if (!classPaths.isEmpty()) {

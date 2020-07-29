@@ -59,7 +59,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		Class<?> targetClass,
 		Object... arguments
 	) {	
-		Constructor<?> ctor = findFirstAndMakeItAccessible(targetClass, Classes.deepRetrieveFrom(arguments));
+		Constructor<?> ctor = findFirstAndMakeItAccessible(targetClass, Classes.retrieveFrom(arguments));
 		return ThrowingSupplier.get(() -> {
 			//logInfo("Invoking " + ctor);
 			return (T)ctor.newInstance(getArgumentArray(ctor, arguments));
@@ -70,7 +70,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		Class<?> targetClass,
 		Object... arguments
 	) {
-		Class<?>[] argsType = Classes.deepRetrieveFrom(arguments);
+		Class<?>[] argsType = Classes.retrieveFrom(arguments);
 		String cacheKey = getCacheKey(targetClass, "equals " + Classes.retrieveSimpleName(targetClass.getName()), argsType);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		Map.Entry<java.lang.reflect.Executable, MethodHandle> methodHandleBag = Cache.uniqueKeyForExecutableAndMethodHandle.getOrUploadIfAbsent(
