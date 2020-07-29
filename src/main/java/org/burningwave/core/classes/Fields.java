@@ -46,7 +46,7 @@ import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("unchecked")
-public class Fields extends Members.Handler<Field> {
+public class Fields extends Members.Handler<Field, FieldCriteria> {
 	
 	public static Fields create() {
 		return new Fields();

@@ -50,6 +50,7 @@ import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
 
+@SuppressWarnings("unchecked")
 public class Members implements Component {
 	
 	public static Members create() {
@@ -156,10 +157,9 @@ public class Members implements Component {
 				findFirst(initialClsFrom, clsFrom.getSuperclass(), clsPredicate, memberSupplier, predicate);
 	}
 	
-	static abstract class Handler<M extends Member> extends Members {	
+	static abstract class Handler<M extends Member, C extends MemberCriteria<M, C, ?>> extends Members {	
 		
-		@SuppressWarnings("unchecked")
-		<C extends MemberCriteria<M, C, ?>> Collection<M> findAllAndApply(C criteria, Class<?> targetClass, Consumer<M>... consumers) {
+		Collection<M> findAllAndApply(C criteria, Class<?> targetClass, Consumer<M>... consumers) {
 			Collection<M> members = findAll(criteria, targetClass);
 			Optional.ofNullable(consumers).ifPresent(cnsms -> 
 				members.stream().forEach(member -> 
@@ -173,9 +173,8 @@ public class Members implements Component {
 			);
 			return members;
 		}
-		
-		@SuppressWarnings("unchecked")
-		<C extends MemberCriteria<M, C, ?>> M findOneAndApply(C criteria, Class<?> targetClass, Consumer<M>... consumers) {
+	
+		M findOneAndApply(C criteria, Class<?> targetClass, Consumer<M>... consumers) {
 			M member = findOne(criteria, targetClass);
 			Optional.ofNullable(consumers).ifPresent(cnsms -> 
 				Optional.ofNullable(member).ifPresent(mmb -> 
@@ -208,7 +207,7 @@ public class Members implements Component {
 			return cacheKey;		
 		}
 		
-		static abstract class OfExecutable<E extends Executable> extends Members.Handler<E> {
+		static abstract class OfExecutable<E extends Executable, C extends ExecutableMemberCriteria<E, C, ?>> extends Members.Handler<E, C> {
 			
 			List<Object> getArgumentList(E member, Object... arguments) {
 				Parameter[] parameters = member.getParameters();
