@@ -30,6 +30,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Executable;
@@ -58,7 +59,7 @@ public class Members implements Component {
 	}
 	
 	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
-		return findOne(criteria, Classes.retrieveFrom(objectOrClass));
+		return findOne(criteria, Classes.deepRetrieveFrom(objectOrClass));
 	}
 	
 	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
@@ -111,7 +112,7 @@ public class Members implements Component {
 	}
 	
 	public <M extends Member> boolean match(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
-		return match(criteria, Classes.retrieveFrom(objectOrClass));
+		return match(criteria, Classes.deepRetrieveFrom(objectOrClass));
 	}
 	
 	public <M extends Member> boolean match(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
@@ -157,8 +158,37 @@ public class Members implements Component {
 				findFirst(initialClsFrom, clsFrom.getSuperclass(), clsPredicate, memberSupplier, predicate);
 	}
 	
-	static abstract class Handler<M extends Member, C extends MemberCriteria<M, C, ?>> extends Members {	
-		
+	static abstract class Handler<M extends Member, C extends MemberCriteria<M, C, ?>> {	
+
+		public M findOne(C criteria, Object objectOrClass) {
+			return Members.findOne(criteria, objectOrClass);
+		}
+
+		public M findOne(C criteria, Class<?> classFrom) {
+			return Members.findOne(criteria, classFrom);
+		}
+
+		public Collection<M> findAll(C criteria, Object objectOrClass) {
+			return Members.findAll(criteria, objectOrClass);
+		}
+
+		public Collection<M> findAll(C criteria, Class<?> classFrom) {
+			return Members.findAll(criteria, classFrom);
+		}
+
+		public boolean match(C criteria, Object objectOrClass) {
+			return Members.match(criteria, objectOrClass);
+		}
+
+
+		public boolean match(C criteria, Class<?> classFrom) {
+			return Members.match(criteria, classFrom);
+		}
+
+		public M findFirst(C criteria, Class<?> classFrom) {
+			return Members.findFirst(criteria, classFrom);
+		}
+
 		Collection<M> findAllAndApply(C criteria, Class<?> targetClass, Consumer<M>... consumers) {
 			Collection<M> members = findAll(criteria, targetClass);
 			Optional.ofNullable(consumers).ifPresent(cnsms -> 
@@ -180,10 +210,9 @@ public class Members implements Component {
 				Optional.ofNullable(member).ifPresent(mmb -> 
 					Stream.of(cnsms).filter(consumer -> 
 						consumer != null
-					).forEach(consumer ->{
-							consumer.accept(mmb);
-						}
-					)
+					).forEach(consumer -> {
+						consumer.accept(mmb);
+					})
 				)
 			);
 			return member;
