@@ -15,7 +15,7 @@ public class MethodsTest extends BaseTest {
 			() -> {
 				ComponentSupplier componentSupplier = getComponentSupplier();
 				componentSupplier.clearHuntersCache(false);
-				return Methods.invoke(Integer.class, "valueOf", 1);	
+				return Methods.invokeStatic(Integer.class, "valueOf", 1);	
 			}
 		);
 	}
@@ -86,14 +86,14 @@ public class MethodsTest extends BaseTest {
 	@Test
 	public void invokeStaticTestOne() throws Throwable {
 		testDoesNotThrow(() -> {
-			Methods.invoke(Service.class, "staticApply", "Hello", "World!", "How are you?");
+			Methods.invokeStatic(Service.class, "staticApply", "Hello", "World!", "How are you?");
 		});
 	}
 	
 	@Test
 	public void invokeDirectStaticTestOne() throws Throwable {
 		testDoesNotThrow(() -> {
-			Methods.invokeDirect(Service.class, "staticApply", "Hello", "World!", "How are you?");
+			Methods.invokeStaticDirect(Service.class, "staticApply", "Hello", "World!", "How are you?");
 		});
 	}
 	@Test
