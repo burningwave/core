@@ -314,6 +314,9 @@ public class ClassFactory implements Component {
 									try {
 										return classLoader.loadClass(className);
 									} catch (Throwable exc) {
+										if (!ClassLoaders.canBeExpanded(classLoader)) {
+											throw exc;
+										}
 										Map<String, ByteBuffer> finalByteCodes = new HashMap<>(compilationResult.getCompiledFiles());
 										Class<?> cls = ClassLoaders.loadOrDefineByByteCode(className, finalByteCodes, classLoader);
 										if (compileConfig.isStoringCompiledClassesEnabled() && finalByteCodes.containsKey(className)) {
@@ -321,7 +324,10 @@ public class ClassFactory implements Component {
 										}
 										return cls;	
 									}								
-								} catch (Throwable exc) {									
+								} catch (Throwable exc) {
+									if (!ClassLoaders.canBeExpanded(classLoader)) {
+										throw exc;
+									}
 									CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 										compilationResult.getDependencies()
 									);
@@ -334,6 +340,9 @@ public class ClassFactory implements Component {
 								}
 							} catch (Throwable exc) {
 								try {
+									if (!ClassLoaders.canBeExpanded(classLoader)) {
+										throw exc;
+									}
 									return computeClassPathsAndAddThemToClassLoaderAndTryToLoad(
 										classLoader, className, additionalClassRepositoriesForClassLoader, exc
 									);
@@ -369,7 +378,10 @@ public class ClassFactory implements Component {
 					try {	
 						try {
 							return classLoader.loadClass(className);
-						} catch (ClassNotFoundException | NoClassDefFoundError exc) {
+						} catch (Throwable exc) {
+							if (!ClassLoaders.canBeExpanded(classLoader)) {
+								throw exc;
+							}
 							return computeClassPathsAndAddThemToClassLoaderAndTryToLoad(
 								classLoader, className, additionalClassRepositoriesForClassLoader, exc
 							);
