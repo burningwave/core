@@ -7,6 +7,7 @@ import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
 
 
+@SuppressWarnings("all")
 public class MethodsTest extends BaseTest {
 	
 	@Test
@@ -16,6 +17,17 @@ public class MethodsTest extends BaseTest {
 				ComponentSupplier componentSupplier = getComponentSupplier();
 				componentSupplier.clearHuntersCache(false);
 				return Methods.invokeStatic(Integer.class, "valueOf", 1);	
+			}
+		);
+	}
+	
+	@Test
+	public void invokeDirectTestOne() {
+		testNotNull(
+			() -> {
+				ComponentSupplier componentSupplier = getComponentSupplier();
+				componentSupplier.clearHuntersCache(false);
+				return Methods.invokeStaticDirect(Integer.class, "valueOf", 1);	
 			}
 		);
 	}
@@ -35,6 +47,34 @@ public class MethodsTest extends BaseTest {
 		testDoesNotThrow(
 			() -> {
 				Methods.invoke(System.out, "println", "Hello World");	
+			}
+		);
+	}
+	
+	@Test
+	public void invokeVoidTestThree() {
+		testDoesNotThrow(
+			() -> {
+				Object empty = new Object() {
+					void print(String value) {
+						System.out.println(value);
+					}
+				};
+				Methods.invoke(empty, "print", null);	
+			}
+		);
+	}
+	
+	@Test
+	public void invokeDirectVoidTestThree() {
+		testDoesNotThrow(
+			() -> {
+				Object empty = new Object() {
+					void print(String value) {
+						System.out.println(value);
+					}
+				};
+				Methods.invokeDirect(empty, "print", null);	
 			}
 		);
 	}
