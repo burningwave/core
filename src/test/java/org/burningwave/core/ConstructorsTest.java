@@ -2,9 +2,12 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 
+import java.util.Arrays;
+
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.MemoryClassLoader;
+import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.service.ExtendedService;
 import org.junit.jupiter.api.Test;
 
@@ -46,6 +49,13 @@ public class ConstructorsTest extends BaseTest {
 	public void newInstanceOfDirectTestTwo() {
 		testNotNull(() ->
 			Constructors.newInstanceDirectOf(MemoryClassLoader.class, null)
+		);
+	}
+	
+	@Test
+	public void newInstanceOfDirectTestThree() {
+		testNotNull(() ->
+			Constructors.newInstanceDirectOf(SearchConfig.class, Arrays.asList(ComponentSupplier.getInstance().getPathHelper().getBurningwaveRuntimeClassPath()))
 		);
 	}
 }
