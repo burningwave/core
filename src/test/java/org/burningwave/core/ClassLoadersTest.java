@@ -100,7 +100,7 @@ public class ClassLoadersTest extends BaseTest {
 	
 	@Test
 	public void loadOrDefineByByteCodesTestOne() {
-		testNotEmpty(() -> {
+		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			PathHelper pathHelper = componentSupplier.getPathHelper();
 			SearchResult searchResult = componentSupplier.getByteCodeHunter().loadInCache(
@@ -108,10 +108,7 @@ public class ClassLoadersTest extends BaseTest {
 						pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
 				)
 			).find();
-			Map<String, ByteBuffer> byteCodesFound = searchResult.getByteCodesFlatMap();
-			Map<String, ByteBuffer> byteCodes = new HashMap<>();
-			byteCodes.put("org.apache.commons.lang.ArrayUtils", byteCodesFound.get("org.apache.commons.lang.ArrayUtils"));
-			return ClassLoaders.loadOrDefineByByteCodes(byteCodes, getMemoryClassLoader(null)).values();
+			return ClassLoaders.loadOrDefineByByteCode(searchResult.getByteCodesFlatMap().get("org.apache.commons.lang.ArrayUtils"), getMemoryClassLoader(null));
 		});
 	}
 	
