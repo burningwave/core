@@ -58,4 +58,11 @@ public class ConstructorsTest extends BaseTest {
 			Constructors.newInstanceDirectOf(SearchConfig.class, Arrays.asList(ComponentSupplier.getInstance().getPathHelper().getBurningwaveRuntimeClassPath()))
 		);
 	}
+	
+	@Test
+	public void newInstanceOfTestThree() {
+		testNotNull(() ->
+			Constructors.newInstanceOf(SearchConfig.class, Arrays.asList(ComponentSupplier.getInstance().getPathHelper().getBurningwaveRuntimeClassPath()))
+		);
+	}
 }
