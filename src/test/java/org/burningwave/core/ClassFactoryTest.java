@@ -2,6 +2,7 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -347,7 +348,7 @@ public class ClassFactoryTest extends BaseTest {
 			virtual.invoke("setList", new ArrayList<>());
 			virtual.invokeDirect("setList", new ArrayList<>());
 			virtual.invoke("consume", Integer.valueOf(1));
-			virtual.invokeDirect("consume", Integer.valueOf(1));
+			Methods.invokeStaticDirect(virtual.getClass(), "consume", Integer.valueOf(1));
 			List<?> list = virtual.getValueOf("list");
 			list = virtual.getDirectValueOf("list");
 			return list;
