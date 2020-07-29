@@ -150,7 +150,7 @@ public class ClassFactoryTest extends BaseTest {
 	
 	@Test
 	public void getOrBuildClassWithExternalClassTestSeven() {
-		getOrBuildClassWithExternalClassTestOne(true, false, "ComplexExample", "ComplexExampleTwo", new ClassLoader(){});
+		getOrBuildClassWithExternalClassTestOne(true, false, "ComplexExample", "ComplexExampleTwo", new ClassLoader(null){});
 	}
 	
 	public void getOrBuildClassWithExternalClassTestOne(
