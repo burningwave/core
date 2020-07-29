@@ -30,29 +30,37 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Member;
+import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
 
+@SuppressWarnings("unchecked")
 public class Members implements Component {
-
-	private Members() {}
 	
 	public static Members create() {
 		return new Members();
 	}
 	
-	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
-		return findOne(criteria, Classes.retrieveFrom(objectOrClass));
-	}
+//	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
+//		return findOne(criteria, Classes.retrieveFrom(objectOrClass));
+//	}
 	
 	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
 		Collection<M> members = findAll(criteria, classFrom);
@@ -62,9 +70,9 @@ public class Members implements Component {
 		return members.stream().findFirst().orElse(null);
 	}
 	
-	public <M extends Member> Collection<M> findAll(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
-		return findAll(criteria, Classes.retrieveFrom(objectOrClass));
-	}
+//	public <M extends Member> Collection<M> findAll(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
+//		return findAll(criteria, Classes.retrieveFrom(objectOrClass));
+//	}
 	
 	public <M extends Member> Collection<M> findAll(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
 		Collection<M> result = findAll(
@@ -101,10 +109,6 @@ public class Members implements Component {
 		return clsFrom.getSuperclass() == null || clsPredicate.test(initialClsFrom, clsFrom) ?
 			collection :
 			findAll((Class<?>) initialClsFrom, clsFrom.getSuperclass(), clsPredicate, memberSupplier, predicate, collection);
-	}
-	
-	public <M extends Member> boolean match(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
-		return match(criteria, Classes.retrieveFrom(objectOrClass));
 	}
 	
 	public <M extends Member> boolean match(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
@@ -149,4 +153,153 @@ public class Members implements Component {
 				null :
 				findFirst(initialClsFrom, clsFrom.getSuperclass(), clsPredicate, memberSupplier, predicate);
 	}
+	
+	static abstract class Handler<M extends Member, C extends MemberCriteria<M, C, ?>> {	
+
+		public M findOne(C criteria, Class<?> classFrom) {
+			return Members.findOne(criteria, classFrom);
+		}
+
+		public Collection<M> findAll(C criteria, Class<?> classFrom) {
+			return Members.findAll(criteria, classFrom);
+		}
+
+		public boolean match(C criteria, Class<?> classFrom) {
+			return Members.match(criteria, classFrom);
+		}
+
+		public M findFirst(C criteria, Class<?> classFrom) {
+			return Members.findFirst(criteria, classFrom);
+		}
+
+		Collection<M> findAllAndApply(C criteria, Class<?> targetClass, Consumer<M>... consumers) {
+			Collection<M> members = findAll(criteria, targetClass);
+			Optional.ofNullable(consumers).ifPresent(cnsms -> 
+				members.stream().forEach(member -> 
+					Stream.of(cnsms).filter(consumer -> 
+						consumer != null
+					).forEach(consumer -> {
+							consumer.accept(member);
+						}
+					)
+				)
+			);
+			return members;
+		}
+	
+		M findOneAndApply(C criteria, Class<?> targetClass, Consumer<M>... consumers) {
+			M member = findOne(criteria, targetClass);
+			Optional.ofNullable(consumers).ifPresent(cnsms -> 
+				Optional.ofNullable(member).ifPresent(mmb -> 
+					Stream.of(cnsms).filter(consumer -> 
+						consumer != null
+					).forEach(consumer -> {
+						consumer.accept(mmb);
+					})
+				)
+			);
+			return member;
+		}
+		
+		String getCacheKey(Class<?> targetClass, String groupName, Class<?>... arguments) {
+			if (arguments == null) {
+				arguments = new Class<?>[] {null};
+			}
+			String argumentsKey = "";
+			if (arguments != null && arguments.length > 0) {
+				StringBuffer argumentsKeyStringBuffer = new StringBuffer();
+				Stream.of(arguments).forEach(cls ->
+					argumentsKeyStringBuffer.append("/" + Optional.ofNullable(cls).map(Class::getName).orElseGet(() ->"null"))
+				);
+				argumentsKey = argumentsKeyStringBuffer.toString();
+			}
+			String cacheKey = "/" + targetClass.getName() + "@" + targetClass.hashCode() +
+				"/" + groupName +
+				argumentsKey;
+			return cacheKey;		
+		}
+		
+		static abstract class OfExecutable<E extends Executable, C extends ExecutableMemberCriteria<E, C, ?>> extends Members.Handler<E, C> {
+			
+			List<Object> getArgumentList(E member, Object... arguments) {
+				Parameter[] parameters = member.getParameters();
+				List<Object> argumentList = new ArrayList<>();
+				if (arguments != null) {
+					if (parameters.length == 1 && parameters[0].isVarArgs()) {
+						Object array = Array.newInstance(parameters[0].getType().getComponentType(), arguments.length);
+						for (int i=0; i< arguments.length; i++) {
+							Array.set(array, i, arguments[i]);
+						}
+						argumentList.add(array);
+					} else {
+						for (Object arg : arguments) {
+							argumentList.add(arg);
+						}
+						if (parameters.length > 0 && parameters[parameters.length - 1].isVarArgs() && arguments.length < parameters.length) {
+							argumentList.add(null);
+						}
+					}
+				} else {
+					argumentList.add(null);
+				}
+				return argumentList;
+			}
+			
+			Object[] getArgumentArray(E member, Object... arguments) {
+				List<Object> argumentList = getArgumentList(member, arguments);
+				return argumentList.toArray(new Object[argumentList.size()]);
+			}
+			
+			Class<?>[] retrieveParameterTypes(Executable member, List<Class<?>> argumentsClassesAsList) {
+				Parameter[] memberParameter = member.getParameters();
+				Class<?>[] memberParameterTypes = member.getParameterTypes();
+				if (memberParameter.length > 0 && memberParameter[memberParameter.length - 1].isVarArgs()) {
+					Class<?> varArgsType = 
+						argumentsClassesAsList.size() > 0 && 
+						argumentsClassesAsList.get(argumentsClassesAsList.size()-1) != null &&
+						argumentsClassesAsList.get(argumentsClassesAsList.size()-1).isArray()?
+						memberParameter[memberParameter.length - 1].getType():
+						memberParameter[memberParameter.length - 1].getType().getComponentType();
+					if (memberParameter.length == 1) {
+						memberParameterTypes = new Class<?>[argumentsClassesAsList.size()];
+						for (int j = 0; j < memberParameterTypes.length; j++) {
+							memberParameterTypes[j] = varArgsType;
+						}
+					} else if (memberParameter.length - 1 <= argumentsClassesAsList.size()) {
+						memberParameterTypes = new Class<?>[argumentsClassesAsList.size()];
+						for (int j = 0; j < memberParameterTypes.length; j++) {
+							if (j < (memberParameter.length - 1)) {
+								memberParameterTypes[j] = memberParameter[j].getType();
+							} else {
+								memberParameterTypes[j] = varArgsType;
+							}
+						}
+					}
+				}
+				return memberParameterTypes;
+			}
+			
+
+			Collection<E> searchForExactMatch(Collection<E> members, Class<?>... arguments) {
+				Collection<E> membersThatMatch = new LinkedHashSet<>();
+				for (E executable : members) {
+					List<Class<?>> argumentsClassesAsList = Arrays.asList(arguments);
+					Class<?>[] parameterTypes = retrieveParameterTypes(executable, argumentsClassesAsList);
+					boolean exactMatch = true;
+					for (int i = 0; i < parameterTypes.length; i++) {
+						if (argumentsClassesAsList.get(i) != null && 
+							!Classes.getClassOrWrapper(argumentsClassesAsList.get(i)).equals(Classes.getClassOrWrapper(parameterTypes[i]))
+						) {
+							exactMatch = false;
+						}
+					}
+					if (exactMatch) {
+						membersThatMatch.add(executable);
+					}
+				}
+				return membersThatMatch;
+			}
+		}
+	}
+
 }

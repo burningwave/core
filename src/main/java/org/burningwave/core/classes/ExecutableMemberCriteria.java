@@ -106,7 +106,7 @@ public abstract class ExecutableMemberCriteria<
 	
 	
 	public C parameterTypesAreAssignableFromTypeOf(Object... arguments) {
-		return parameterTypesAreAssignableFrom(Classes.deepRetrieveFrom(arguments));
+		return parameterTypesAreAssignableFrom(Classes.retrieveFrom(arguments));
 	}
 	
 	public C parameterType(final BiPredicate<Class<?>[], Integer> predicate) {

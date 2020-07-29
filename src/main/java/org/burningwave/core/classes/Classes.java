@@ -100,27 +100,8 @@ public class Classes implements Component, MembersRetriever {
 		return new Classes();
 	}
 	
-	public <T> Class<T> deepRetrieveFrom(Object object) {
-		return object != null ? (Class<T>)object.getClass() : null;
-	}
-	
-	public Class<?>[] deepRetrieveFrom(Object... objects) {
-		Class<?>[] classes = null;
-		if (objects != null) {
-			classes = new Class[objects.length];
-			for (int i = 0; i < objects.length; i++) {
-				if (objects[i] != null) {
-					classes[i] = deepRetrieveFrom(objects[i]);
-				}
-			}
-		} else {
-			classes = new Class[]{null};
-		}
-		return classes;
-	}
-	
 	public <T> Class<T> retrieveFrom(Object object) {
-		return (Class<T>)(object != null ? object instanceof Class? object : object.getClass() : null);
+		return object != null ? (Class<T>)object.getClass() : null;
 	}
 	
 	public Class<?>[] retrieveFrom(Object... objects) {
@@ -469,7 +450,7 @@ public class Classes implements Component, MembersRetriever {
 					String.class, String.class, String.class, String.class,
 					String.class, String.class, String.class, URL.class
 				),
-				classLoader
+				classLoader.getClass()
 			).stream().findFirst().orElse(null);
 			return Methods.convertToMethodHandleBag(method).getValue();
 		}
@@ -491,7 +472,7 @@ public class Classes implements Component, MembersRetriever {
 				).and().parameterTypesAreAssignableFrom(
 					String.class, ByteBuffer.class, ProtectionDomain.class
 				).and().returnType((cls) -> cls.getName().equals(Class.class.getName())),
-				classLoader
+				classLoader.getClass()
 			).stream().findFirst().orElse(null);
 			return Methods.convertToMethodHandleBag(method).getValue();
 		}
@@ -559,66 +540,15 @@ public class Classes implements Component, MembersRetriever {
 			return ThrowingSupplier.get(() -> LowLevelObjectsHandler.retrieveLoadedPackage(classLoader, packageToFind, packageName));
 		}
 		
-		public <T> Class<T> loadOrDefine(
-			Class<T> toLoad, 
-			ClassLoader classLoader
-		) throws ClassNotFoundException {
-			return loadOrDefine(
-				toLoad, classLoader,
-				getDefineClassMethod(classLoader),
-				getDefinePackageMethod(classLoader)
-			);
-		}
-		
 		public <T> Class<T> loadOrDefineByJavaClass(
 			JavaClass javaClass,
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
-			return loadOrDefineByJavaClass(
-				javaClass, classLoader,
-				getDefineClassMethod(classLoader),
-				getDefinePackageMethod(classLoader)
-			);
+			Map<String, JavaClass> repository = new HashMap<>();
+			repository.put(javaClass.getName(), javaClass);
+			return loadOrDefineByJavaClass(javaClass.getName(), repository, classLoader);
 		}
-		
-		public Map<String, Class<?>> loadOrDefineByByteCodes(
-			Map<String, ByteBuffer> byteCodes,
-			ClassLoader classLoader
-		) throws ClassNotFoundException {
-			Map<String, Class<?>> classes = new HashMap<>();
-			if (!(classLoader instanceof MemoryClassLoader)) {
-				for (Map.Entry<String, ByteBuffer> classNameForByteCode : byteCodes.entrySet()) {
-					classes.put(classNameForByteCode.getKey(),loadOrDefineByByteCode(classNameForByteCode.getKey(), byteCodes, classLoader));
-				}
-			} else {
-				for (Map.Entry<String, ByteBuffer> clazz : byteCodes.entrySet()) {
-					((MemoryClassLoader)classLoader).addByteCode(
-						clazz.getKey(), clazz.getValue()
-					);
-					classes.put(clazz.getKey(), classLoader.loadClass(clazz.getKey()));
-				}
-			}	
-			return classes;
-		}
-		
-		public <T> Class<T> loadOrDefineByByteCode(
-			String className,
-			Map<String, ByteBuffer> byteCodes,
-			ClassLoader classLoader
-		) throws ClassNotFoundException {
-			if (!(classLoader instanceof MemoryClassLoader)) {
-				try {
-					return loadOrDefineByByteCode(byteCodes.get(className), classLoader);
-				} catch (ClassNotFoundException exc) {
-					String newNotFoundClassName = Classes.retrieveNames(exc).stream().findFirst().orElseGet(() -> null);
-					loadOrDefineByByteCode(newNotFoundClassName, byteCodes, classLoader);
-					return loadOrDefineByByteCode(byteCodes.get(className), classLoader);
-				}
-			} else {
-				((MemoryClassLoader)classLoader).addByteCodes(byteCodes);
-				return (Class<T>) classLoader.loadClass(className);
-			}
-		}
+
 		
 		public <T> Class<T> loadOrDefineByJavaClass(
 			String className,
@@ -626,13 +556,10 @@ public class Classes implements Component, MembersRetriever {
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
 			if (!(classLoader instanceof MemoryClassLoader)) {
-				try {
-					return loadOrDefineByJavaClass(byteCodes.get(className), classLoader);
-				} catch (ClassNotFoundException exc) {
-					String newNotFoundClassName = Classes.retrieveNames(exc).stream().findFirst().orElseGet(() -> null);
-					loadOrDefineByJavaClass(newNotFoundClassName, byteCodes, classLoader);
-					return loadOrDefineByJavaClass(byteCodes.get(className), classLoader);
-				}
+				return loadOrDefineByByteCode(
+					className, clsName -> byteCodes.get(clsName).getByteCode(), classLoader,
+					getDefineClassMethod(classLoader), getDefinePackageMethod(classLoader)
+				);
 			} else {
 				for (Map.Entry<String, JavaClass> clazz : byteCodes.entrySet()) {
 					((MemoryClassLoader)classLoader).addByteCode(
@@ -643,44 +570,72 @@ public class Classes implements Component, MembersRetriever {
 			}
 		}
 		
-		public <T> Class<T> loadOrDefineByByteCode(
-			ByteBuffer byteCode,
-			ClassLoader classLoader
-		) throws ClassNotFoundException {
-			return loadOrDefineByJavaClass(
-				JavaClass.create(byteCode), classLoader,
-				getDefineClassMethod(classLoader),
-				getDefinePackageMethod(classLoader)
-			);
+		public Class<?> loadOrDefineByByteCode(ByteBuffer byteCode, ClassLoader classLoader) throws ClassNotFoundException {
+			Map<String, JavaClass> repository = new HashMap<>();
+			JavaClass javaClass = JavaClass.create(byteCode);
+			repository.put(javaClass.getName(), javaClass);
+			return loadOrDefineByJavaClass(javaClass.getName(), repository, classLoader);
 		}
 		
-		private <T> Class<T> loadOrDefineByJavaClass(
-			JavaClass javaClass, 
-			ClassLoader classLoader, 
+		public <T> Class<T> loadOrDefineByByteCode(
+			String className,
+			Map<String, ByteBuffer> repository,
+			ClassLoader classLoader
+		) throws ClassNotFoundException {
+			if (!(classLoader instanceof MemoryClassLoader)) {
+				return loadOrDefineByByteCode(
+					className, clsName -> repository.get(clsName), classLoader,
+					getDefineClassMethod(classLoader), getDefinePackageMethod(classLoader)
+				);
+			} else {
+				for (Map.Entry<String, ByteBuffer> clazz : repository.entrySet()) {
+					((MemoryClassLoader)classLoader).addByteCode(
+						clazz.getKey(), clazz.getValue()
+					);
+				}
+				return (Class<T>) classLoader.loadClass(className);
+			}
+		}
+		
+		
+		private <T> Class<T> loadOrDefineByByteCode(
+			String className, 
+			Function<String, ByteBuffer> byteCodeSupplier,
+			ClassLoader classLoader,
 			MethodHandle defineClassMethod, 
 			MethodHandle definePackageMethod
 		) throws ClassNotFoundException {
-	    	try {
-	    		return (Class<T>) classLoader.loadClass(javaClass.getName());
+			try {
+	    		return (Class<T>) classLoader.loadClass(className);
 	    	} catch (ClassNotFoundException | NoClassDefFoundError outerEx) {
 	    		try {
-	    			Class<T> cls = defineOrLoad(classLoader, defineClassMethod, javaClass.getName(), javaClass.getByteCode());
+	    			Class<T> cls = defineOrLoad(classLoader, defineClassMethod, className, byteCodeSupplier.apply(className));
 	    			definePackageFor(cls, classLoader, definePackageMethod);
 	    			return cls;
 				} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException outerExc) {
 					String newNotFoundClassName = Classes.retrieveNames(outerExc).stream().findFirst().orElseGet(() -> null);
-					loadOrDefine(
-	        			Class.forName(
-	        				newNotFoundClassName, false, classLoader
-	        			),
-	        			classLoader, defineClassMethod, definePackageMethod
+					loadOrDefineByByteCode(
+						newNotFoundClassName,
+						byteCodeSupplier, classLoader, defineClassMethod, definePackageMethod
 	        		);
-					return loadOrDefineByJavaClass(javaClass, classLoader,
+					return loadOrDefineByByteCode(className, byteCodeSupplier,
+						classLoader,
 						defineClassMethod, definePackageMethod
 	        		);
 				}
 	    	}
 	    }
+		
+		public <T> Class<T> loadOrDefine(
+			Class<T> toLoad, 
+			ClassLoader classLoader
+		) throws ClassNotFoundException {
+			return loadOrDefine(
+				toLoad, classLoader,
+				getDefineClassMethod(classLoader),
+				getDefinePackageMethod(classLoader)
+			);
+		}
 		
 		private <T> Class<T> loadOrDefine(
 			Class<T> toLoad, 
@@ -834,6 +789,18 @@ public class Classes implements Component, MembersRetriever {
 				}
 			}
 			return pathLoader;
+		}
+		
+		public boolean isItPossibleToAddClassPaths(ClassLoader classLoader) {
+			if (classLoader != null) {
+				if (classLoader instanceof URLClassLoader || isBuiltinClassLoader(classLoader) || classLoader instanceof PathScannerClassLoader) {
+					return true;
+				} else {
+					return isItPossibleToAddClassPaths(getParent(classLoader));
+				}
+			} else {
+				return false;
+			}
 		}
 		
 		public boolean addClassPath(ClassLoader classLoader, String... classPaths) {

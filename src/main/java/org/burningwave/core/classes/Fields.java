@@ -46,64 +46,123 @@ import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("unchecked")
-public class Fields extends MemberHelper<Field> {
+public class Fields extends Members.Handler<Field, FieldCriteria> {
 	
 	public static Fields create() {
 		return new Fields();
+	}
+	
+	public <T> T get(Field field) {
+		return ThrowingSupplier.get(() -> (T)field.get(null));
 	}
 	
 	public <T> T get(Object target, Field field) {
 		return ThrowingSupplier.get(() -> (T)field.get(target));
 	}
 	
+	public <T> T get(Class<?> targetClass, String fieldName) {
+		return get(findFirstAndMakeItAccessible(targetClass, fieldName, null));
+	}
+	
 	public <T> T get(Object target, String fieldName) {
-		return get(target, findFirstAndMakeItAccessible(Classes.deepRetrieveFrom(target), fieldName, null));
+		return get(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName, null));
 	}	
+	
+	public <T> T getDirect(Field field) {
+		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(null, field));
+	}
 	
 	public <T> T getDirect(Object target, Field field) {
 		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, field));
 	}
 	
-	public <T> T getDirect(Object target, String fieldName) {
-		return getDirect(target, findFirstAndMakeItAccessible(Classes.deepRetrieveFrom(target), fieldName, null));
+	public <T> T getDirect(Class<?> targetClass, String fieldName) {
+		return getDirect(findFirstAndMakeItAccessible(targetClass, fieldName, null));
 	}
 	
-	public void set(Object target, String fieldName, Object value) {
-		set(target, findFirstAndMakeItAccessible(Classes.deepRetrieveFrom(target), fieldName, Classes.deepRetrieveFrom(value)), value);
+	public <T> T getDirect(Object target, String fieldName) {
+		return getDirect(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName, null));
+	}
+	
+	private void set(Class<?> targetClass, Object target, String fieldName, Object value) {
+		set(target, findFirstAndMakeItAccessible(targetClass, fieldName, Classes.retrieveFrom(value)), value);
 	}
 	
 	public void set(Object target, Field field, Object value) {
 		ThrowingRunnable.run(() -> field.set(target, value));
 	}
 	
-	public void setDirect(Object target, String fieldName, Object value) {
-		setDirect(target, findFirstAndMakeItAccessible(Classes.deepRetrieveFrom(target), fieldName, Classes.deepRetrieveFrom(value)), value);
+	public void set(Class<?> targetClass, String fieldName, Object value) {
+		set(targetClass, null, fieldName, value);
+	}
+	
+	public void set(Object target, String fieldName, Object value) {
+		set(Classes.retrieveFrom(target), target, fieldName, value);
 	}
 	
 	public void setDirect(Object target, Field field, Object value) {
 		LowLevelObjectsHandler.setFieldValue(target, field, value);
 	}
 	
+	private void setDirect(Class<?> targetClass, Object target, String fieldName, Object value) {
+		setDirect(target, findFirstAndMakeItAccessible(targetClass, fieldName, Classes.retrieveFrom(value)), value);
+	}
+	
+	public void setDirect(Class<?> targetClass, String fieldName, Object value) {
+		setDirect(targetClass, null, fieldName, value);
+	}
+	
+	public void setDirect(Object target, String fieldName, Object value) {
+		setDirect(Classes.retrieveFrom(target), target, fieldName, value);
+	}
+	
+	public Map<Field, ?> getAll(Class<?> targetClass) {
+		return getAll(targetClass, null);
+	}
+	
 	public Map<Field, ?> getAll(Object target) {
+		return getAll(Classes.retrieveFrom(target), target);
+	}
+	
+	private Map<Field, ?> getAll(Class<?> targetClass, Object target) {
 		Map<Field, Object> fieldValues = new HashMap<>();
-		Collection<Field> fields = findAllAndMakeThemAccessible(Classes.deepRetrieveFrom(target));
+		Collection<Field> fields = findAllAndMakeThemAccessible(targetClass);
 		for (Field field : fields) {
-			fieldValues.put(
-				field,
-				ThrowingSupplier.get(
-					() ->
-						field.get(
-							Modifier.isStatic(field.getModifiers()) ? null : target
-						)
-				)
-			);
+			if (target != null) {
+				fieldValues.put(
+					field,
+					ThrowingSupplier.get(
+						() ->
+							field.get(
+								Modifier.isStatic(field.getModifiers()) ? null : target
+							)
+					)
+				);
+			} else if (Modifier.isStatic(field.getModifiers())) {
+				fieldValues.put(
+					field,
+					ThrowingSupplier.get(
+						() ->
+							field.get(null)
+					)
+				);
+			}
+			
 		}
 		return fieldValues;
 	}
 	
+	public Map<Field, ?> getAllDirect(Class<?> targetClass) {
+		return getAllDirect(targetClass, null);
+	}
+	
 	public Map<Field, ?> getAllDirect(Object target) {
+		return getAllDirect(Classes.retrieveFrom(target), target);
+	}
+	
+	private Map<Field, ?> getAllDirect(Class<?> targetClass, Object target) {
 		Map<Field, ?> fieldValues = new HashMap<>();
-		Collection<Field> fields = findAllAndMakeThemAccessible(Classes.deepRetrieveFrom(target));
+		Collection<Field> fields = findAllAndMakeThemAccessible(targetClass);
 		for (Field field : fields) {
 			fieldValues.put(
 				field,

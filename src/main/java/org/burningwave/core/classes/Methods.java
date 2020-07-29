@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("unchecked")
-public class Methods extends ExecutableMemberHelper<Method> {
+public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria> {
 	
 	public static Methods create() {
 		return new Methods();
@@ -166,17 +166,32 @@ public class Methods extends ExecutableMemberHelper<Method> {
 		return members;
 	}
 
+	public 	<T> T invoke(Class<?> targetClass, String methodName, Object... arguments) {
+		return invoke(targetClass, null, methodName, arguments);
+	}
+	
 	public <T> T invoke(Object target, String methodName, Object... arguments) {
+		return invoke(Classes.retrieveFrom(target), target, methodName, arguments);
+	}
+	
+	private <T> T invoke(Class<?> targetClass, Object target, String methodName, Object... arguments) {
 		return ThrowingSupplier.get(() -> {
-			Method method = findFirstAndMakeItAccessible(Classes.retrieveFrom(target), methodName, Classes.deepRetrieveFrom(arguments));
+			Method method = findFirstAndMakeItAccessible(targetClass, methodName, Classes.retrieveFrom(arguments));
 			//logInfo("Invoking " + method);
 			return (T)method.invoke(Modifier.isStatic(method.getModifiers()) ? null : target, getArgumentArray(method, arguments));
 		});
 	}
 	
+	public 	<T> T invokeDirect(Class<?> targetClass, String methodName, Object... arguments) {
+		return invokeDirect(targetClass, null, methodName, arguments);
+	}
+	
 	public <T> T invokeDirect(Object target, String methodName, Object... arguments) {
-		Class<?> targetClass = Classes.retrieveFrom(target);
-		Class<?>[] argsType = Classes.deepRetrieveFrom(arguments);
+		return invokeDirect(Classes.retrieveFrom(target), target, methodName, arguments);
+	}
+	
+	private <T> T invokeDirect(Class<?> targetClass, Object target, String methodName, Object... arguments) {
+		Class<?>[] argsType = Classes.retrieveFrom(arguments);
 		String cacheKey = getCacheKey(targetClass, "equals " + methodName, argsType);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		Entry<Executable, MethodHandle> methodHandleBag = Cache.uniqueKeyForExecutableAndMethodHandle.getOrUploadIfAbsent(
