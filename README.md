@@ -45,7 +45,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.22.5</version>
+    <version>7.23.1</version>
 </dependency>
 ```
 
@@ -629,19 +629,24 @@ For methods handling we are going to use **Methods** component:
 ```java
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
+
 public class MethodsHandler {
     
     public static void execute() {
         //Invoking method by using reflection
         Methods.invoke(System.out, "println", "Hello World");
+
+        //Invoking static method by using MethodHandle
+        Integer number = Methods.invokeStaticDirect(Integer.class, "valueOf", 1);
         
         //Invoking method by using MethodHandle
-        Integer number = Methods.invokeDirect(Integer.class, "valueOf", 1);
+        Methods.invokeDirect(System.out, "println", number);
     }
     
     public static void main(String[] args) {
         execute();
     }
+    
 }
 ```
 
@@ -856,7 +861,7 @@ The configuration of this type of container is done via **burningwave.static.pro
 managed-logger.repository=autodetect
 #to increase performance set it to false
 managed-logger.repository.enabled=true
-static-component-container.clear-temporary-folder-on-init=true
+static-component-container.clear-temporary-folder-on-init=false
 static-component-container.hide-banner-on-init=false
 streams.default-buffer-size=1024
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
@@ -875,7 +880,7 @@ managed-logger.repository.logging.debug.disabled-for=\
 streams.default-buffer-size=0.5Kb
 #other possible value is ByteBuffer::allocate
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
-static-component-container.clear-temporary-folder-on-init=false
+static-component-container.clear-temporary-folder-on-init=true
 static-component-container.hide-banner-on-init=false
 ```
 <br/>

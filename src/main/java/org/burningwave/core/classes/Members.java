@@ -29,14 +29,13 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Member;
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -46,10 +45,12 @@ import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.function.TriFunction;
 
 @SuppressWarnings("unchecked")
 public class Members implements Component {
@@ -58,10 +59,6 @@ public class Members implements Component {
 		return new Members();
 	}
 	
-//	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
-//		return findOne(criteria, Classes.retrieveFrom(objectOrClass));
-//	}
-	
 	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
 		Collection<M> members = findAll(criteria, classFrom);
 		if (members.size() > 1) {
@@ -69,10 +66,6 @@ public class Members implements Component {
 		}
 		return members.stream().findFirst().orElse(null);
 	}
-	
-//	public <M extends Member> Collection<M> findAll(MemberCriteria<M, ?, ?> criteria, Object objectOrClass) {
-//		return findAll(criteria, Classes.retrieveFrom(objectOrClass));
-//	}
 	
 	public <M extends Member> Collection<M> findAll(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
 		Collection<M> result = findAll(
@@ -221,22 +214,48 @@ public class Members implements Component {
 		
 		static abstract class OfExecutable<E extends Executable, C extends ExecutableMemberCriteria<E, C, ?>> extends Members.Handler<E, C> {
 			
-			List<Object> getArgumentList(E member, Object... arguments) {
+			Object[] getArgumentArray(
+				E member,
+				TriFunction<E, Supplier<List<Object>>, Object[], List<Object>> argumentListSupplier,
+				Supplier<List<Object>> listSupplier,
+				Object... arguments
+			) {
+				List<Object> argumentList = argumentListSupplier.apply(member, listSupplier, arguments);
+				return argumentList.toArray(new Object[argumentList.size()]);
+			}
+			
+			List<Object> getFlatArgumentList(E member, Supplier<List<Object>> argumentListSupplier, Object... arguments) {
 				Parameter[] parameters = member.getParameters();
-				List<Object> argumentList = new ArrayList<>();
+				List<Object> argumentList = argumentListSupplier.get();
 				if (arguments != null) {
-					if (parameters.length == 1 && parameters[0].isVarArgs()) {
-						Object array = Array.newInstance(parameters[0].getType().getComponentType(), arguments.length);
-						for (int i=0; i< arguments.length; i++) {
-							Array.set(array, i, arguments[i]);
+					if (parameters.length > 0 && parameters[parameters.length - 1].isVarArgs()) {
+						for (int i = 0; i < arguments.length && i < parameters.length - 1; i++) {
+							argumentList.add(arguments[i]);
 						}
-						argumentList.add(array);
-					} else {
-						for (Object arg : arguments) {
-							argumentList.add(arg);
-						}
-						if (parameters.length > 0 && parameters[parameters.length - 1].isVarArgs() && arguments.length < parameters.length) {
+						Parameter lastParameter = parameters[parameters.length -1];
+						if (arguments.length == parameters.length) {
+							Object lastArgument = arguments[arguments.length -1];
+							if (lastArgument != null && 
+								lastArgument.getClass().isArray() && 
+								lastArgument.getClass().equals(lastParameter.getType())) {
+								for (int i = 0; i < Array.getLength(lastArgument); i++) {
+									argumentList.add(Array.get(lastArgument, i));
+								}
+							} else {
+								for (int i = parameters.length - 1; i < arguments.length; i++) {
+									argumentList.add(arguments[i]);
+								}
+							}
+						} else if (arguments.length > parameters.length) {
+							for (int i = parameters.length - 1; i < arguments.length; i++) {
+								argumentList.add(arguments[i]);
+							}
+						} else if (arguments.length < parameters.length) {
 							argumentList.add(null);
+						}						
+					} else if (arguments.length > 0) {
+						for (int i = 0; i < arguments.length; i++) {
+							argumentList.add(arguments[i]);
 						}
 					}
 				} else {
@@ -244,10 +263,45 @@ public class Members implements Component {
 				}
 				return argumentList;
 			}
-			
-			Object[] getArgumentArray(E member, Object... arguments) {
-				List<Object> argumentList = getArgumentList(member, arguments);
-				return argumentList.toArray(new Object[argumentList.size()]);
+
+			List<Object> getArgumentListWithArrayForVarArgs(E member, Supplier<List<Object>> argumentListSupplier, Object... arguments) {
+				Parameter[] parameters = member.getParameters();
+				List<Object> argumentList = argumentListSupplier.get();
+				if (arguments != null) {
+					if (parameters.length > 0 && parameters[parameters.length - 1].isVarArgs()) {
+						for (int i = 0; i < arguments.length && i < parameters.length - 1; i++) {
+							argumentList.add(arguments[i]);
+						}
+						Parameter lastParameter = parameters[parameters.length -1];
+						if (arguments.length == parameters.length) {
+							Object lastArgument = arguments[arguments.length -1];
+							if (lastArgument != null && 
+								lastArgument.getClass().isArray() && 
+								lastArgument.getClass().equals(lastParameter.getType())) {
+								argumentList.add(lastArgument);
+							} else {
+								Object array = Array.newInstance(lastParameter.getType().getComponentType(), 1);
+								Array.set(array, 0, lastArgument);
+								argumentList.add(array);
+							}
+						} else if (arguments.length > parameters.length) {
+							Object array = Array.newInstance(lastParameter.getType().getComponentType(), arguments.length - (parameters.length - 1));
+							for (int i = parameters.length - 1, j = 0; i < arguments.length; i++, j++) {
+								Array.set(array, j, arguments[i]);
+							}
+							argumentList.add(array);
+						} else if (arguments.length < parameters.length) {
+							argumentList.add(Array.newInstance(lastParameter.getType().getComponentType(),0));
+						}						
+					} else if (arguments.length > 0) {
+						for (int i = 0; i < arguments.length; i++) {
+							argumentList.add(arguments[i]);
+						}
+					}
+				} else {
+					argumentList.add(null);
+				}
+				return argumentList;
 			}
 			
 			Class<?>[] retrieveParameterTypes(Executable member, List<Class<?>> argumentsClassesAsList) {

@@ -69,6 +69,11 @@ public class Service implements Component {
 		return "";
 	}
 	
+	public static String staticApply(Object value_01, String value_02, String value_03, String... value_04) {
+		LOGGER.info("TriFunction: " + value_01 + " " + value_02 + " " + value_03 + " " + value_04);
+		return "";
+	}
+	
 	public boolean test(Object value_01, String value_02, String value_03) {
 		LOGGER.info("TriPredicate: " + value_01 + " " + value_02 + " " + value_03);
 		return true;

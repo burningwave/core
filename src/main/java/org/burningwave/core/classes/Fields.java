@@ -52,7 +52,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 		return new Fields();
 	}
 	
-	public <T> T get(Field field) {
+	public <T> T getStatic(Field field) {
 		return ThrowingSupplier.get(() -> (T)field.get(null));
 	}
 	
@@ -60,15 +60,15 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 		return ThrowingSupplier.get(() -> (T)field.get(target));
 	}
 	
-	public <T> T get(Class<?> targetClass, String fieldName) {
-		return get(findFirstAndMakeItAccessible(targetClass, fieldName, null));
+	public <T> T getStatic(Class<?> targetClass, String fieldName) {
+		return getStatic(findFirstAndMakeItAccessible(targetClass, fieldName, null));
 	}
 	
 	public <T> T get(Object target, String fieldName) {
 		return get(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName, null));
 	}	
 	
-	public <T> T getDirect(Field field) {
+	public <T> T getStaticDirect(Field field) {
 		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(null, field));
 	}
 	
@@ -76,8 +76,8 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, field));
 	}
 	
-	public <T> T getDirect(Class<?> targetClass, String fieldName) {
-		return getDirect(findFirstAndMakeItAccessible(targetClass, fieldName, null));
+	public <T> T getStaticDirect(Class<?> targetClass, String fieldName) {
+		return getStaticDirect(findFirstAndMakeItAccessible(targetClass, fieldName, null));
 	}
 	
 	public <T> T getDirect(Object target, String fieldName) {
@@ -92,7 +92,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 		ThrowingRunnable.run(() -> field.set(target, value));
 	}
 	
-	public void set(Class<?> targetClass, String fieldName, Object value) {
+	public void setStatic(Class<?> targetClass, String fieldName, Object value) {
 		set(targetClass, null, fieldName, value);
 	}
 	
@@ -108,7 +108,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 		setDirect(target, findFirstAndMakeItAccessible(targetClass, fieldName, Classes.retrieveFrom(value)), value);
 	}
 	
-	public void setDirect(Class<?> targetClass, String fieldName, Object value) {
+	public void setStaticDirect(Class<?> targetClass, String fieldName, Object value) {
 		setDirect(targetClass, null, fieldName, value);
 	}
 	
@@ -116,7 +116,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 		setDirect(Classes.retrieveFrom(target), target, fieldName, value);
 	}
 	
-	public Map<Field, ?> getAll(Class<?> targetClass) {
+	public Map<Field, ?> getAllStatic(Class<?> targetClass) {
 		return getAll(targetClass, null);
 	}
 	
@@ -152,7 +152,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 		return fieldValues;
 	}
 	
-	public Map<Field, ?> getAllDirect(Class<?> targetClass) {
+	public Map<Field, ?> getAllStaticDirect(Class<?> targetClass) {
 		return getAllDirect(targetClass, null);
 	}
 	

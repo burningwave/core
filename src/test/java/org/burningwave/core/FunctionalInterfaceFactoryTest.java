@@ -97,6 +97,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 			Method mth = Members.findOne(
 				MethodCriteria.create()
 				.name((name) -> name.matches("staticApply"))
+				.and().parameterTypes(params -> params.length == 3)
 				.and().parameterType((params, idx) -> idx == 0 && params[idx].equals(Object.class))
 				.and().parameterType((params, idx) -> idx == 1 && params[idx].equals(String.class))
 				.and().parameterType((params, idx) -> idx == 2 && params[idx].equals(String.class)),
