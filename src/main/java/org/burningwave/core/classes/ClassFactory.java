@@ -759,6 +759,10 @@ public class ClassFactory implements Component {
 					for (String path : searchConfig.getPaths()) {
 						logWarn("path \"{}\" exists: {}", path, FileSystemItem.ofPath(path).exists());
 					}
+					logWarn("Skipped classes:");
+					for (String skippedClassName : searchResult.getSkippedClassNames()) {
+						logWarn(skippedClassName);
+					}
 				}
 			}
 			throw exc;

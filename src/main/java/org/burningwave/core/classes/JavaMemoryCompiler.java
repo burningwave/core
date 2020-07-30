@@ -192,6 +192,7 @@ public class JavaMemoryCompiler implements Component {
 				classPaths = classPathHelper.computeFromSources(sources, classRepositoriesPathsFinal);
 			}
 		}
+		
 		Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
 		sourcesToMemorySources(sources, memorySources);
 		try (Compilation.Context context = Compilation.Context.create(
@@ -201,7 +202,7 @@ public class JavaMemoryCompiler implements Component {
 				new ArrayList<>(classRepositoriesPaths)
 			)
 		) {
-			Map<String, ByteBuffer> compiledFiles = _compile(context, null);
+			Map<String, ByteBuffer> compiledFiles = compile(context, null);
 			String storedFilesClassPath = compiledClassesRepository.getAbsolutePath() + 
 				(storeCompiledClassesToNewFolder?
 					"/" + UUID.randomUUID().toString() :
@@ -229,7 +230,10 @@ public class JavaMemoryCompiler implements Component {
 	}
 
 
-	private Map<String, ByteBuffer> _compile(Compilation.Context context, Throwable thr) {
+	private Map<String, ByteBuffer> compile(Compilation.Context context, Throwable thr) {
+		if (!context.classPaths.isEmpty()) {
+			logInfo("... Using class paths: {}",String.join(", ", context.classPaths));
+		}
 		List<String> options = new ArrayList<String>();
 		if (!context.options.isEmpty()) {
 			context.options.forEach((key, val) -> {
@@ -257,7 +261,7 @@ public class JavaMemoryCompiler implements Component {
 				exception = exc;
 			}
 			if (!done) {
-				return _compile(context, exception);
+				return compile(context, exception);
 			} else {
 				return memoryFileManager.getCompiledFiles().stream().collect(
 					Collectors.toMap(compiledFile -> 
