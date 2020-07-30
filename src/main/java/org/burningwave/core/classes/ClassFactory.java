@@ -237,8 +237,7 @@ public class ClassFactory implements Component {
 				() -> config.getAdditionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(),
 				() -> {
 					Collection<String> classRepositoriesForNotFoundClasses = pathHelper.getPaths(
-						Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER, 
-						Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER
+						Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER
 					);
 					if (!classRepositoriesForNotFoundClasses.isEmpty()) {
 						config.addClassRepositoriesWhereToSearchNotFoundClasses(classRepositoriesForNotFoundClasses);
