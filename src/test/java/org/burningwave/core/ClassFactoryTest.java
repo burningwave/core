@@ -122,7 +122,7 @@ public class ClassFactoryTest extends BaseTest {
 			int threadCount = 6;
 			Collection<Thread> threads = new ArrayList<>();
 			for (int i = 0; i < threadCount; i++) {
-				threads.add(new Thread( () -> getOrBuildClassWithExternalClassTestOne(true, false, "ComplexExample", "ComplexExampleTwo", null)));
+				threads.add(new Thread( () -> getOrBuildClassWithExternalClassTestOne(true, "ComplexExample", "ComplexExampleTwo", null)));
 			}
 			for (Thread thread : threads) {
 				thread.start();
@@ -135,28 +135,27 @@ public class ClassFactoryTest extends BaseTest {
 	
 	@Test
 	public void getOrBuildClassWithExternalClassTestOne() {
-		getOrBuildClassWithExternalClassTestOne(true, false, "ComplexExample", "ComplexExampleTwo", null);
+		getOrBuildClassWithExternalClassTestOne(true, "ComplexExample", "ComplexExampleTwo", null);
 	}
 	
 	@Test
 	//@Tag("Heavy")
 	public void getOrBuildClassWithExternalClassTestFive() {
-		getOrBuildClassWithExternalClassTestOne(true, true, "ComplexExampleFour", "ComplexExampleFive", null);
+		getOrBuildClassWithExternalClassTestOne(true, "ComplexExampleFour", "ComplexExampleFive", null);
 	}
 	
 	@Test
 	public void getOrBuildClassWithExternalClassTestSix() {
-		getOrBuildClassWithExternalClassTestOne(true, false, "ComplexExample", "ComplexExampleTwo", Thread.currentThread().getContextClassLoader());
+		getOrBuildClassWithExternalClassTestOne(true, "ComplexExample", "ComplexExampleTwo", Thread.currentThread().getContextClassLoader());
 	}
 	
 	@Test
 	public void getOrBuildClassWithExternalClassTestSeven() {
-		getOrBuildClassWithExternalClassTestOne(true, false, "ComplexExample", "ComplexExampleTwo", new ClassLoader(null){});
+		getOrBuildClassWithExternalClassTestOne(true, "ComplexExample", "ComplexExampleTwo", new ClassLoader(null){});
 	}
 	
 	public void getOrBuildClassWithExternalClassTestOne(
 		boolean clearCache,
-		boolean adjustClassPaths,
 		String classNameOne,
 		String classNameTwo,
 		ClassLoader classLoader
@@ -211,15 +210,9 @@ public class ClassFactoryTest extends BaseTest {
 			LoadOrBuildAndDefineConfig config = LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).useClassLoader(
 				classLoader
 			);
-			if (adjustClassPaths) {
-				config.setClassRepository(
-					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
-				);
-			} else {
-				config.addClassPaths(
-					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
-				);
-			}
+			config.setClassRepository(
+				pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+			);
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				config			
 			);
@@ -230,15 +223,9 @@ public class ClassFactoryTest extends BaseTest {
 			config = LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).useClassLoader(
 				classLoader
 			);
-			if (adjustClassPaths) {
-				config.addClassRepository(
-					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
-				);
-			} else {
-				config.addClassPaths(
-					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
-				);
-			}
+			config.setClassRepository(
+				pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+			);
 			classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
 				config			
 			);
