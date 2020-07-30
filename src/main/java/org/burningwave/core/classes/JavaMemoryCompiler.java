@@ -95,10 +95,8 @@ public class JavaMemoryCompiler implements Component {
 			);
 			DEFAULT_VALUES.put(
 				Key.CLASS_REPOSITORIES,
-				"${" + Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES + "}"  + PathHelper.Configuration.Key.PATHS_SEPARATOR +
-				"//${system.properties:java.home}/lib//children:.*?\\.jmod" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
-				"//${system.properties:java.home}/lib/ext//children:.*?\\.jmod" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
-				"//${system.properties:java.home}/jmods//children:.*?\\.jmod" + PathHelper.Configuration.Key.PATHS_SEPARATOR
+				"${" + PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
+				"${" + Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR
 			);
 			
 			
@@ -141,8 +139,6 @@ public class JavaMemoryCompiler implements Component {
 		return compile(
 			CompileConfig.withSources(sources).setClassPaths(
 				pathHelper.getAllMainClassPaths()
-			).setClassRepositories(
-				pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES)
 			).storeCompiledClasses(
 				storeCompiledClasses
 			)

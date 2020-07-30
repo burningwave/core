@@ -64,7 +64,9 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	
 			DEFAULT_VALUES.put(
 				Key.DEFAULT_SEARCH_CONFIG_PATHS, 
-				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + ";"
+				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + PathHelper.Configuration.Key.PATHS_SEPARATOR +
+				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
+				"${" + PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR
 			);
 			DEFAULT_VALUES.put(
 				Key.DEFAULT_CHECK_FILE_OPTIONS,

@@ -73,6 +73,7 @@ public class PathHelper implements Component {
 			public static String MAIN_CLASS_PATHS = PATHS_PREFIX + "main-class-paths";
 			public static String MAIN_CLASS_PATHS_PLACE_HOLDER = "${" + MAIN_CLASS_PATHS + "}";
 			public static String MAIN_CLASS_PATHS_EXTENSION = MAIN_CLASS_PATHS + ".extension";
+			public static String MAIN_CLASS_REPOSITORIES = PATHS_PREFIX + "main-class-repositories";
 		}
 		
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -83,8 +84,11 @@ public class PathHelper implements Component {
 			DEFAULT_VALUES.put(
 				Key.MAIN_CLASS_PATHS_EXTENSION, 
 				"//${system.properties:java.home}/lib//children:.*?\\.jar" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
-				"//${system.properties:java.home}/lib/ext//children:.*?\\.jar" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
-				"//${system.properties:java.home}/jmods//children:.*?\\.jar" + PathHelper.Configuration.Key.PATHS_SEPARATOR
+				"//${system.properties:java.home}/lib/ext//children:.*?\\.jar" + PathHelper.Configuration.Key.PATHS_SEPARATOR
+			);
+			DEFAULT_VALUES.put(
+				Key.MAIN_CLASS_REPOSITORIES, 
+				"//${system.properties:java.home}/jmods//children:.*?\\.jmod" + PathHelper.Configuration.Key.PATHS_SEPARATOR
 			);
 		}
 	}	
