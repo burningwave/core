@@ -98,14 +98,7 @@ class ZipFile implements IterableZipContainer {
 					File file = new File(absolutePath);
 					if (!file.exists()) {
 						File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(this.getClass().getName() + "@" + Integer.toHexString(this.getClass().hashCode()));
-						String fileAbsolutePath = null;
-						if (absolutePath.chars().filter(ch -> ch == '/').count() > 1) {
-							fileAbsolutePath = absolutePath.substring(absolutePath.indexOf("/")).replaceFirst("\\/", "\\[").replace("/", "][");
-							fileAbsolutePath = fileAbsolutePath.substring(0, fileAbsolutePath.lastIndexOf("][") + 1) + fileAbsolutePath.substring(fileAbsolutePath.lastIndexOf("][") +2);
-						} else {
-							fileAbsolutePath = absolutePath.substring(absolutePath.indexOf("/") + 1);
-						}
-						fileAbsolutePath = Paths.clean(temporaryFolder.getAbsolutePath()) + "/" + fileAbsolutePath;
+						String fileAbsolutePath = Paths.clean(temporaryFolder.getAbsolutePath()) + "/" + Paths.toSquaredPath(absolutePath, false);
 						file = new File(fileAbsolutePath);
 						if (!file.exists()) {
 							FileSystemItem fileSystemItem = Streams.store(fileAbsolutePath, content);

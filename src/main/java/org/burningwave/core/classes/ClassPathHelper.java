@@ -1,7 +1,9 @@
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -102,10 +104,11 @@ public static class Configuration {
 									basePathForClassCopies
 								;
 								FileSystemItem classPath = FileSystemItem.ofPath(
-									classPathBasePath.getAbsolutePath() + "/" + fsObject.getName()
+									classPathBasePath.getAbsolutePath() + "/" + Paths.toSquaredPath(fsObject.getAbsolutePath(), fsObject.isFolder())
 								);
 								if (!classPath.refresh().exists()) {
-									fsObject.copyTo(classPathBasePath.getAbsolutePath());
+									FileSystemItem copy = fsObject.copyTo(classPathBasePath.getAbsolutePath());
+									new File(copy.getAbsolutePath()).renameTo(new File(classPath.getAbsolutePath()));
 								}
 								classPaths.add(
 									classPath.getAbsolutePath()

@@ -219,6 +219,27 @@ public class Strings implements Component {
 			return pathCleaner.apply(path);
 		}
 		
+		public String toSquaredPath(String absolutePath, boolean isFolder) {
+			String squaredPath = null;
+			String root = absolutePath.indexOf("/") > 0?
+				absolutePath.substring(0, absolutePath.indexOf(":")) :
+				"root";
+			if (absolutePath.chars().filter(ch -> ch == '/').count() > 1) {
+				if (isFolder) {
+					squaredPath = absolutePath.substring(absolutePath.indexOf("/")).replaceFirst("\\/", "\\[").replace("/", "][") + "]";
+				} else {
+					squaredPath = absolutePath.substring(absolutePath.indexOf("/")).replaceFirst("\\/", "\\[").replace("/", "][");
+					squaredPath = squaredPath.substring(0, squaredPath.lastIndexOf("][") + 1) + squaredPath.substring(squaredPath.lastIndexOf("][") +2);
+				}
+			} else {
+				squaredPath = absolutePath.substring(absolutePath.indexOf("/") + 1);
+				if (isFolder) {
+					squaredPath = "[" + squaredPath + "]";
+				}
+			}
+			return "[" + root + "]" + squaredPath;
+		}
+		
 		public String normalizeAndClean(String path) {
 			if (path.contains("..") ||
 				path.contains(".\\") ||

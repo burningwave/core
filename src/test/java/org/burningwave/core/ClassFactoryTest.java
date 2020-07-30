@@ -279,6 +279,39 @@ public class ClassFactoryTest extends BaseTest {
 	}
 	
 	@Test
+	public void getOrBuildClassWithExternalClassTestEight() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		UnitSourceGenerator unitSG = UnitSourceGenerator.create("jdk.internal.loader").addClass(
+			ClassSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("ExtendedBuiltinClassLoader")
+			).addModifier(
+				Modifier.PUBLIC
+			).expands(
+				TypeDeclarationSourceGenerator.create("BuiltinClassLoader")
+			).addConstructor(
+				FunctionSourceGenerator.create().addParameter(
+					VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("BuiltinClassLoader"), "parent")
+				).addBodyCodeRow("super(null, parent, null);")
+			)
+		).addImport(
+			"jdk.internal.loader.BuiltinClassLoader"
+		);
+		
+			testNotNull(() -> {
+				try (ClassPathHunter.SearchResult searchResult = componentSupplier.getClassPathHunter().findBy(
+					SearchConfig.byCriteria(
+						ClassCriteria.create().className(Virtual.class.getName()::equals)
+					)
+				)) {
+					ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
+						LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG)
+					);
+					return classRetriever.get("jdk.internal.loader.ExtendedBuiltinClassLoader");
+				}
+			});
+	}
+	
+	@Test
 	public void getOrBuildClassWithExternalClassTestFour() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
