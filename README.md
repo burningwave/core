@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/7)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/187735923)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/188604369)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/187735923)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea-blueviolet)](https://github.com/burningwave/core/actions/runs/188604369)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -45,7 +45,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.23.1</version>
+    <version>7.24.0</version>
 </dependency>
 ```
 
@@ -993,11 +993,14 @@ paths.class-factory.default-class-loader.additional-class-repositories=
 #this variable indicates all the paths from which the classes 
 #must be taken if during the definition of the compiled classes
 #on classloader there will be classes not found
-paths.class-factory.default-class-loader.class-repositories=\
+paths.class-factory.default-class-loader.class-repositories=
     ${paths.java-memory-compiler.class-paths};\
-    ${paths.java-memory-compiler.class-repositories};
-    ${paths.class-factory.default-class-loader.additional-class-repositories}\
-paths.hunters.default-search-config.paths=${paths.main-class-paths};
+    ${paths.java-memory-compiler.class-repositories};\
+    ${paths.class-factory.default-class-loader.additional-class-repositories}
+paths.hunters.default-search-config.paths=\
+    ${paths.main-class-paths};\
+    ${paths.main-class-paths.extension};\
+    ${paths.main-class-repositories};
 #This variable is empty by default and can be valorized by developer and it is
 #included by 'paths.paths.java-memory-compiler.class-paths' property
 paths.java-memory-compiler.additional-class-paths=
@@ -1007,14 +1010,19 @@ paths.java-memory-compiler.class-paths=\
     ${paths.main-class-paths};\
     ${paths.main-class-paths.extension};\
     ${paths.java-memory-compiler.additional-class-paths}
-#This variable is empty by default and can be valorized by developer. All
-#paths inserted here will analyze by JavaMemoryCompiler component before
-#compiling to search for all classes imported from sources 
-paths.java-memory-compiler.class-repositories=
+#This variable is empty by default and can be valorized by developer. and it is
+#included by 'paths.java-memory-compiler.class-repositories' property
+paths.java-memory-compiler.additional-class-repositories=
+#All paths inserted here will be analyzed by JavaMemoryCompiler component in case 
+#of compilation failure to search for class paths of all classes imported by sources 
+paths.java-memory-compiler.class-repositories=\
+    ${paths.main-class-repositories};\
+    ${paths.java-memory-compiler.additional-class-repositories};
+paths.main-class-paths=${system.properties:java.class.path}
 paths.main-class-paths.extension=\
-    //${system.properties:java.home}/lib//children:.*?\.jar|.*?\.jmod;\
-    //${system.properties:java.home}/lib/ext//children:.*?\.jar|.*?\.jmod;\
-    //${system.properties:java.home}/jmods//children:.*?\.jar|.*?\.jmod;
+    //${system.properties:java.home}/lib//children:.*?\.jar;\
+    //${system.properties:java.home}/lib/ext//children:.*?\.jar;
+paths.main-class-repositories=//${system.properties:java.home}/jmods//children:.*?\.jmod;
 ```
 **If in your custom burningwave.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 
@@ -1073,22 +1081,35 @@ path-scanner-class-loader.parent.imports=\
 path-scanner-class-loader.parent.name=\
     org.burningwave.core.classes.ParentClassLoaderRetrieverForPathScannerClassLoader
 path-scanner-class-loader.search-config.check-file-option=checkFileName
-paths.class-factory.default-class-loader.class-repositories=\
+paths.class-factory.default-class-loader.class-repositories=
     ${paths.java-memory-compiler.class-paths};\
     ${paths.java-memory-compiler.class-repositories};\
     ${paths.class-factory.default-class-loader.additional-class-repositories}
-paths.hunters.default-search-config.paths=${paths.main-class-paths};
+paths.hunters.default-search-config.paths=\
+    ${paths.main-class-paths};\
+    ${paths.main-class-paths.extension};\
+    ${paths.main-class-repositories};
 paths.java-memory-compiler.class-paths=\
     ${paths.main-class-paths};\
     ${paths.main-class-paths.extension};\
     ${paths.java-memory-compiler.additional-class-paths}
+paths.java-memory-compiler.class-repositories=\
+    ${paths.main-class-repositories};\
+    ${paths.java-memory-compiler.additional-class-repositories};
+paths.main-class-paths=${system.properties:java.class.path}
 paths.main-class-paths.extension=\
-    //${system.properties:java.home}/lib//children:.*?\.jar|.*?\.jmod;\
-    //${system.properties:java.home}/lib/ext//children:.*?\.jar|.*?\.jmod;\
-    //${system.properties:java.home}/jmods//children:.*?\.jar|.*?\.jmod;
-paths.java-memory-compiler.additional-class-paths=C:/some paths 1;C:/some paths 2;
-paths.java-memory-compiler.class-repositories=C:/some paths 3;C:/some paths 4;
-paths.class-factory.default-class-loader.additional-class-repositories=C:/some paths 5;C:/some paths 6;
+    //${system.properties:java.home}/lib//children:.*?\.jar;\
+    //${system.properties:java.home}/lib/ext//children:.*?\.jar;
+paths.main-class-repositories=//${system.properties:java.home}/jmods//children:.*?\.jmod;
+paths.java-memory-compiler.additional-class-paths=\
+    C:/some paths 1/some library 1.jar;\
+    C:/some paths 2/some library 2.jar;
+paths.java-memory-compiler.additional-class-repositories=\
+    C:/some paths 3;\
+    C:/some paths 4;
+paths.class-factory.default-class-loader.additional-class-repositories=\
+    C:/some paths 5;\
+    C:/some paths 6;
 ```
 
 ### Other examples of using some components:
