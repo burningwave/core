@@ -39,16 +39,15 @@ public static class Configuration {
 	}
 
 	private ClassPathHunter classPathHunter;
-	private FileSystemItem basePathForLibCopies;
-	private FileSystemItem basePathForClassCopies;
+	private FileSystemItem classPathsBasePath;
 	private Properties config;	
 	
 	public ClassPathHelper(
 		ClassPathHunter classPathHunter, Properties config
 	) {
 		this.classPathHunter = classPathHunter;
-		this.basePathForLibCopies = FileSystemItem.of(getOrCreateTemporaryFolder("lib"));
-		this.basePathForClassCopies = FileSystemItem.of(getOrCreateTemporaryFolder("classes"));
+		this.classPathsBasePath = FileSystemItem.of(getOrCreateTemporaryFolder("classPaths"));
+
 		this.config = config;
 		listenTo(config);
 	}
@@ -99,15 +98,11 @@ public static class Configuration {
 					if (fsObject.isCompressed()) {					
 						ThrowingRunnable.run(() -> {
 							synchronized (this) {
-								FileSystemItem classPathBasePath = fsObject.isArchive() ?
-									basePathForLibCopies :
-									basePathForClassCopies
-								;
 								FileSystemItem classPath = FileSystemItem.ofPath(
-									classPathBasePath.getAbsolutePath() + "/" + Paths.toSquaredPath(fsObject.getAbsolutePath(), fsObject.isFolder())
+									classPathsBasePath.getAbsolutePath() + "/" + Paths.toSquaredPath(fsObject.getAbsolutePath(), fsObject.isFolder())
 								);
 								if (!classPath.refresh().exists()) {
-									FileSystemItem copy = fsObject.copyTo(classPathBasePath.getAbsolutePath());
+									FileSystemItem copy = fsObject.copyTo(classPathsBasePath.getAbsolutePath());
 									new File(copy.getAbsolutePath()).renameTo(new File(classPath.getAbsolutePath()));
 								}
 								classPaths.add(
@@ -186,11 +181,8 @@ public static class Configuration {
 	public void close() {
 		unregister(config);
 		//FileSystemHelper.delete(basePathForLibCopies.getAbsolutePath());
-		basePathForLibCopies.destroy();
-		basePathForLibCopies = null;
-		//FileSystemHelper.delete(basePathForClassCopies.getAbsolutePath());
-		basePathForClassCopies.destroy();
-		basePathForClassCopies = null;
+		classPathsBasePath.destroy();
+		classPathsBasePath = null;
 		classPathHunter = null;
 		config = null;
 	}
