@@ -97,7 +97,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	@SafeVarargs
 	public final L setClassRepositories(Collection<String>... classPathCollections) {
 		modifyCompileConfig(compileConfig ->
-			compileConfig.setClassRepositories(classPathCollections).computeClassPaths(true)
+			compileConfig.setClassRepositories(classPathCollections)
 		);
 		return (L)setClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
 	}
@@ -111,7 +111,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	@SafeVarargs
 	public final L addClassRepositories(Collection<String>... classPathCollections) {
 		modifyCompileConfig(compileConfig ->
-			compileConfig.addClassRepositories(classPathCollections).computeClassPaths(true)
+			compileConfig.addClassRepositories(classPathCollections)
 		);
 		return (L)addClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
 	}	
@@ -155,7 +155,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	@SafeVarargs
 	public final L setClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
 		compileConfigSupplier = compileConfigSupplier.andThen((compileConfig) -> 
-			compileConfig.setClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections)
+			compileConfig.setClassRepositories(classPathCollections)
 		);
 		return setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(classPathCollections);		
 	}
@@ -170,7 +170,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	@SafeVarargs
 	public final L addClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
 		compileConfigSupplier = compileConfigSupplier.andThen((compileConfig) -> 
-			compileConfig.addClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections)
+			compileConfig.addClassRepositories(classPathCollections)
 		);
 		return addClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(classPathCollections);		
 	}

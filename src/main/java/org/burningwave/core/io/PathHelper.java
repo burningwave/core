@@ -82,9 +82,9 @@ public class PathHelper implements Component {
 			DEFAULT_VALUES.put(Key.MAIN_CLASS_PATHS, "${system.properties:java.class.path}");
 			DEFAULT_VALUES.put(
 				Key.MAIN_CLASS_PATHS_EXTENSION, 
-				"//${system.properties:java.home}/lib//children:.*?\\.jar|.*?\\.jmod" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
-				"//${system.properties:java.home}/lib/ext//children:.*?\\.jar|.*?\\.jmod" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
-				"//${system.properties:java.home}/jmods//children:.*?\\.jar|.*?\\.jmod" + PathHelper.Configuration.Key.PATHS_SEPARATOR
+				"//${system.properties:java.home}/lib//children:.*?\\.jar" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
+				"//${system.properties:java.home}/lib/ext//children:.*?\\.jar" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
+				"//${system.properties:java.home}/jmods//children:.*?\\.jar" + PathHelper.Configuration.Key.PATHS_SEPARATOR
 			);
 		}
 	}	

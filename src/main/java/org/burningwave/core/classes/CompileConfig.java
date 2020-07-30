@@ -31,7 +31,6 @@ package org.burningwave.core.classes;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.function.Predicate;
 
 public class CompileConfig {
 	private Collection<String> sources;
@@ -42,13 +41,8 @@ public class CompileConfig {
 	private Collection<String> classRepositories;
 	private Collection<String> additionalClassRepositories;
 	
-	private Collection<String> classRepositoriesWhereToSearchNotFoundClasses;
-	private Collection<String> additionalClassRepositoriesWhereToSearchNotFoundClasses;
-	
 	private boolean storingCompiledClassesEnabled;
 	private boolean storingCompiledClassesToNewFolderEnabled;
-	private boolean computeClassPaths;
-	private Predicate<String> excludeFromClassPathsComputationAllRepositoriesThat;	
 	
 	private CompileConfig() {
 		this.sources = new HashSet<>();
@@ -81,47 +75,7 @@ public class CompileConfig {
 		this.storingCompiledClassesToNewFolderEnabled = flag;
 		return this;
 	}
-	
-	public CompileConfig computeClassPaths(boolean flag) {
-		this.computeClassPaths = flag;
-		return this;
-	}
 
-///////////////////	
-	
-	@SafeVarargs
-	public final CompileConfig setClassRepositories(Collection<String>... classPathCollections) {
-		if (classRepositories == null) {
-			classRepositories = new HashSet<>();
-		}
-		for (Collection<String> classPathCollection : classPathCollections) {
-			classRepositories.addAll(classPathCollection);
-		}
-		return this;
-	}
-	
-	@SafeVarargs
-	public final CompileConfig setClassRepository(String... classPaths) {
-		return setClassRepositories(Arrays.asList(classPaths));
-	}	
-	
-////////////////////	
-	
-	@SafeVarargs
-	public final CompileConfig addClassRepositories(Collection<String>... classPathCollections) {
-		if (additionalClassRepositories == null) {
-			additionalClassRepositories = new HashSet<>();
-		}
-		for (Collection<String> classPathCollection : classPathCollections) {
-			additionalClassRepositories.addAll(classPathCollection);
-		}
-		return this;
-	}
-	
-	@SafeVarargs
-	public final CompileConfig addClassRepository(String... classPaths) {
-		return addClassPaths(Arrays.asList(classPaths));
-	}
 
 ////////////////////	
 	
@@ -162,44 +116,37 @@ public class CompileConfig {
 ////////////////////	
 	
 	@SafeVarargs
-	public final CompileConfig setClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
-		if (classRepositoriesWhereToSearchNotFoundClasses == null) {
-			classRepositoriesWhereToSearchNotFoundClasses = new HashSet<>();
+	public final CompileConfig setClassRepositories(Collection<String>... classPathCollections) {
+		if (classRepositories == null) {
+			classRepositories = new HashSet<>();
 		}
 		for (Collection<String> classPathCollection : classPathCollections) {
-			classRepositoriesWhereToSearchNotFoundClasses.addAll(classPathCollection);
+			classRepositories.addAll(classPathCollection);
 		}
 		return this;
 	}
 	
 	@SafeVarargs
-	public final CompileConfig setClassRepositoryWhereToSearchNotFoundClasses(String... classPaths) {
-		return setClassRepositoriesWhereToSearchNotFoundClasses(Arrays.asList(classPaths));
+	public final CompileConfig setClassRepository(String... classPaths) {
+		return setClassRepositories(Arrays.asList(classPaths));
 	}
 
 ////////////////////	
 	
 	@SafeVarargs
-	public final CompileConfig addClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
-		if (additionalClassRepositoriesWhereToSearchNotFoundClasses == null) {
-			additionalClassRepositoriesWhereToSearchNotFoundClasses = new HashSet<>();
+	public final CompileConfig addClassRepositories(Collection<String>... classPathCollections) {
+		if (additionalClassRepositories == null) {
+			additionalClassRepositories = new HashSet<>();
 		}
 		for (Collection<String> classPathCollection : classPathCollections) {
-			additionalClassRepositoriesWhereToSearchNotFoundClasses.addAll(classPathCollection);
+			additionalClassRepositories.addAll(classPathCollection);
 		}
 		return this;
 	}
 	
 	@SafeVarargs
-	public final CompileConfig addClassRepositoryWhereToSearchNotFoundClasses(String... classPaths) {
-		return addClassRepositoriesWhereToSearchNotFoundClasses(Arrays.asList(classPaths));
-	}
-
-////////////////////
-	
-	public final CompileConfig excludeFromClassPathsComputationAllRepositoriesThat(Predicate<String> predicate) {
-		this.excludeFromClassPathsComputationAllRepositoriesThat = predicate;
-		return this;
+	public final CompileConfig addClassRepository(String... classPaths) {
+		return addClassRepositories(Arrays.asList(classPaths));
 	}
 
 ////////////////////	
@@ -216,24 +163,12 @@ public class CompileConfig {
 		return additionalClassPaths;
 	}
 
-	Collection<String> getClassRepositoriesWhereToSearchNotFoundClasses() {
-		return classRepositoriesWhereToSearchNotFoundClasses;
-	}
-
-	Collection<String> getAdditionalRepositoriesWhereToSearchNotFoundClasses() {
-		return additionalClassRepositoriesWhereToSearchNotFoundClasses;
-	}
-	
 	Collection<String> getClassRepositories() {
 		return classRepositories;
 	}
 
-	Collection<String> getAdditionalRepositories() {
+	Collection<String> getAdditionalClassRepositories() {
 		return additionalClassRepositories;
-	}
-	
-	public Predicate<String> getExcludeFromClassPathsComputationAllRepositoriesThatPredicate() {
-		return this.excludeFromClassPathsComputationAllRepositoriesThat;
 	}
 	
 	boolean isStoringCompiledClassesEnabled() {
@@ -242,11 +177,6 @@ public class CompileConfig {
 	
 	boolean isStoringCompiledClassesToNewFolderEnabled() {
 		return storingCompiledClassesToNewFolderEnabled;
-	}
-	
-	
-	boolean isComputeClassPathsEnabled() {
-		return computeClassPaths;
 	}
 
 }
