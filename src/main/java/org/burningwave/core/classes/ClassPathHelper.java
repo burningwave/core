@@ -1,7 +1,9 @@
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -37,16 +39,15 @@ public static class Configuration {
 	}
 
 	private ClassPathHunter classPathHunter;
-	private FileSystemItem basePathForLibCopies;
-	private FileSystemItem basePathForClassCopies;
+	private FileSystemItem classPathsBasePath;
 	private Properties config;	
 	
 	public ClassPathHelper(
 		ClassPathHunter classPathHunter, Properties config
 	) {
 		this.classPathHunter = classPathHunter;
-		this.basePathForLibCopies = FileSystemItem.of(getOrCreateTemporaryFolder("lib"));
-		this.basePathForClassCopies = FileSystemItem.of(getOrCreateTemporaryFolder("classes"));
+		this.classPathsBasePath = FileSystemItem.of(getOrCreateTemporaryFolder("classPaths"));
+
 		this.config = config;
 		listenTo(config);
 	}
@@ -97,15 +98,12 @@ public static class Configuration {
 					if (fsObject.isCompressed()) {					
 						ThrowingRunnable.run(() -> {
 							synchronized (this) {
-								FileSystemItem classPathBasePath = fsObject.isArchive() ?
-									basePathForLibCopies :
-									basePathForClassCopies
-								;
 								FileSystemItem classPath = FileSystemItem.ofPath(
-									classPathBasePath.getAbsolutePath() + "/" + fsObject.getName()
+									classPathsBasePath.getAbsolutePath() + "/" + Paths.toSquaredPath(fsObject.getAbsolutePath(), fsObject.isFolder())
 								);
 								if (!classPath.refresh().exists()) {
-									fsObject.copyTo(classPathBasePath.getAbsolutePath());
+									FileSystemItem copy = fsObject.copyTo(classPathsBasePath.getAbsolutePath());
+									new File(copy.getAbsolutePath()).renameTo(new File(classPath.getAbsolutePath()));
 								}
 								classPaths.add(
 									classPath.getAbsolutePath()
@@ -183,11 +181,8 @@ public static class Configuration {
 	public void close() {
 		unregister(config);
 		//FileSystemHelper.delete(basePathForLibCopies.getAbsolutePath());
-		basePathForLibCopies.destroy();
-		basePathForLibCopies = null;
-		//FileSystemHelper.delete(basePathForClassCopies.getAbsolutePath());
-		basePathForClassCopies.destroy();
-		basePathForClassCopies = null;
+		classPathsBasePath.destroy();
+		classPathsBasePath = null;
 		classPathHunter = null;
 		config = null;
 	}

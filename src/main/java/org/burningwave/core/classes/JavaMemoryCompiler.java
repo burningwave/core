@@ -80,6 +80,7 @@ public class JavaMemoryCompiler implements Component {
 			public static final String CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-paths";
 			public static final String ADDITIONAL_CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.additional-class-paths";
 			public static final String CLASS_REPOSITORIES =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-repositories";
+			public static final String ADDITIONAL_CLASS_REPOSITORIES =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.additional-class-repositories";
 		}
 		
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -92,6 +93,13 @@ public class JavaMemoryCompiler implements Component {
 				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
 				"${" + Configuration.Key.ADDITIONAL_CLASS_PATHS + "}"
 			);
+			DEFAULT_VALUES.put(
+				Key.CLASS_REPOSITORIES,
+				"${" + PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
+				"${" + Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR
+			);
+			
+			
 		}
 	}
 	
@@ -131,8 +139,6 @@ public class JavaMemoryCompiler implements Component {
 		return compile(
 			CompileConfig.withSources(sources).setClassPaths(
 				pathHelper.getAllMainClassPaths()
-			).setClassRepositoriesWhereToSearchNotFoundClasses(
-				pathHelper.getPaths(JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES)
 			).storeCompiledClasses(
 				storeCompiledClasses
 			)
@@ -151,20 +157,15 @@ public class JavaMemoryCompiler implements Component {
 					)
 			),
 			IterableObjectHelper.merge(
-				config::getClassRepositoriesWhereToSearchNotFoundClasses,
-				config::getAdditionalRepositoriesWhereToSearchNotFoundClasses,
+				config::getClassRepositories,
+				config::getAdditionalClassRepositories,
 				() -> {
 					Collection<String> classRepositories = pathHelper.getPaths(
 						Configuration.Key.CLASS_REPOSITORIES
 					);
-					if (!classRepositories.isEmpty()) {
-						config.computeClassPaths(true);
-					}
 					return classRepositories;
 				}
 			),
-			config.getExcludeFromClassPathsComputationAllRepositoriesThatPredicate(),
-			config.isComputeClassPathsEnabled(),
 			config.isStoringCompiledClassesEnabled(),
 			config.isStoringCompiledClassesToNewFolderEnabled()
 		);
@@ -174,24 +175,10 @@ public class JavaMemoryCompiler implements Component {
 		Collection<String> sources, 
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
-		Predicate<String> excludeFromClassPathComputationAllRepositoriesThatPredicate,
-		boolean isClassPathsComputationEnabled,
 		boolean storeCompiledClasses,
 		boolean storeCompiledClassesToNewFolder
 	) {	
 		logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
-		if (isClassPathsComputationEnabled && !classRepositoriesPaths.isEmpty()) {
-			Collection<String> classRepositoriesPathsFinal = Optional.ofNullable(
-				excludeFromClassPathComputationAllRepositoriesThatPredicate
-			).map(exclusiveFilter ->
-				classRepositoriesPaths.stream().filter(
-					exclusiveFilter.negate()
-				).collect(Collectors.toCollection(HashSet::new))
-			).orElseGet(() -> new HashSet<>(classRepositoriesPaths));
-			if (!classRepositoriesPathsFinal.isEmpty()) {
-				classPaths = classPathHelper.computeFromSources(sources, classRepositoriesPathsFinal);
-			}
-		}
 		Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
 		sourcesToMemorySources(sources, memorySources);
 		try (Compilation.Context context = Compilation.Context.create(
@@ -201,7 +188,7 @@ public class JavaMemoryCompiler implements Component {
 				new ArrayList<>(classRepositoriesPaths)
 			)
 		) {
-			Map<String, ByteBuffer> compiledFiles = _compile(context, null);
+			Map<String, ByteBuffer> compiledFiles = compile(context, null);
 			String storedFilesClassPath = compiledClassesRepository.getAbsolutePath() + 
 				(storeCompiledClassesToNewFolder?
 					"/" + UUID.randomUUID().toString() :
@@ -229,7 +216,10 @@ public class JavaMemoryCompiler implements Component {
 	}
 
 
-	private Map<String, ByteBuffer> _compile(Compilation.Context context, Throwable thr) {
+	private Map<String, ByteBuffer> compile(Compilation.Context context, Throwable thr) {
+		if (!context.classPaths.isEmpty()) {
+			logInfo("... Using class paths: {}",String.join(", ", context.classPaths));
+		}
 		List<String> options = new ArrayList<String>();
 		if (!context.options.isEmpty()) {
 			context.options.forEach((key, val) -> {
@@ -257,7 +247,7 @@ public class JavaMemoryCompiler implements Component {
 				exception = exc;
 			}
 			if (!done) {
-				return _compile(context, exception);
+				return compile(context, exception);
 			} else {
 				return memoryFileManager.getCompiledFiles().stream().collect(
 					Collectors.toMap(compiledFile -> 
@@ -471,7 +461,7 @@ public class JavaMemoryCompiler implements Component {
 			private Collection<String> classPaths;
 			private Map<String, String> options;
 			private Collection<MemorySource> sources;
-			private Collection<String> classRepositoriesPaths;
+			private Collection<String> classRepositories;
 			private JavaMemoryCompiler javaMemoryCompiler;
 			
 			
@@ -498,7 +488,7 @@ public class JavaMemoryCompiler implements Component {
 						addToClassPath(classPath);
 					}
 				}
-				this.classRepositoriesPaths = classRepositories;
+				this.classRepositories = classRepositories;
 			}
 			
 			private static Context create(
@@ -521,7 +511,7 @@ public class JavaMemoryCompiler implements Component {
 					classPaths.addAll(
 						javaMemoryCompiler.classPathHelper.computeFromSources(
 							sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
-							classRepositoriesPaths, 
+							classRepositories, 
 							ClassCriteria.create().packageName((iteratedClassPackageName) ->
 								Objects.equals(iteratedClassPackageName, packageName)									
 							)
@@ -539,7 +529,7 @@ public class JavaMemoryCompiler implements Component {
 				if (classPaths.isEmpty()) {
 					classPaths.addAll(javaMemoryCompiler.classPathHelper.computeFromSources(
 						sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
-						classRepositoriesPaths,
+						classRepositories,
 						ClassCriteria.create().allThat(classPredicate))
 					);
 				}
@@ -553,8 +543,8 @@ public class JavaMemoryCompiler implements Component {
 				classPaths.clear();
 				classPaths = null;
 				sources = null;
-				classRepositoriesPaths.clear();
-				classRepositoriesPaths = null;
+				classRepositories.clear();
+				classRepositories = null;
 				javaMemoryCompiler = null;
 			}
 

@@ -107,6 +107,10 @@ public class SearchResult<E> implements Component {
 		context.waitForSearchEnding();
 	}
 	
+	public Collection<String> getSkippedClassNames() {
+		return context.getSkippedClassNames();
+	}
+	
 	@Override
 	public void close() {
 		context.close();

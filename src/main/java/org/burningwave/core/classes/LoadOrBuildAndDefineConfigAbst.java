@@ -97,7 +97,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	@SafeVarargs
 	public final L setClassRepositories(Collection<String>... classPathCollections) {
 		modifyCompileConfig(compileConfig ->
-			compileConfig.setClassRepositories(classPathCollections).computeClassPaths(true)
+			compileConfig.setClassRepositories(classPathCollections)
 		);
 		return (L)setClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
 	}
@@ -111,7 +111,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	@SafeVarargs
 	public final L addClassRepositories(Collection<String>... classPathCollections) {
 		modifyCompileConfig(compileConfig ->
-			compileConfig.addClassRepositories(classPathCollections).computeClassPaths(true)
+			compileConfig.addClassRepositories(classPathCollections)
 		);
 		return (L)addClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
 	}	
@@ -153,11 +153,9 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	}
 	
 	@SafeVarargs
-	public final L setClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
-		compileConfigSupplier = compileConfigSupplier.andThen((compileConfig) -> 
-			compileConfig.setClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections)
-		);
-		return setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(classPathCollections);		
+	public final L setClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classRepositoryCollections) {
+		return modifyCompileConfig(compileConfig -> compileConfig.setClassRepositories(classRepositoryCollections))
+			.setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(classRepositoryCollections);		
 	}
 
 ////////////////////	
@@ -168,11 +166,9 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	}
 	
 	@SafeVarargs
-	public final L addClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classPathCollections) {
-		compileConfigSupplier = compileConfigSupplier.andThen((compileConfig) -> 
-			compileConfig.addClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections)
-		);
-		return addClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(classPathCollections);		
+	public final L addClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classRepositoryCollections) {
+		return modifyCompileConfig(compileConfig -> compileConfig.addClassRepositories(classRepositoryCollections))
+			.addClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(classRepositoryCollections);		
 	}
 
 ////////////////////

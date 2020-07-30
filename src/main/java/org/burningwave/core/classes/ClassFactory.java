@@ -237,8 +237,7 @@ public class ClassFactory implements Component {
 				() -> config.getAdditionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(),
 				() -> {
 					Collection<String> classRepositoriesForNotFoundClasses = pathHelper.getPaths(
-						Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER, 
-						Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER
+						Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER
 					);
 					if (!classRepositoriesForNotFoundClasses.isEmpty()) {
 						config.addClassRepositoriesWhereToSearchNotFoundClasses(classRepositoriesForNotFoundClasses);
@@ -313,7 +312,7 @@ public class ClassFactory implements Component {
 								try {
 									try {
 										return classLoader.loadClass(className);
-									} catch (Throwable exc) {
+									} catch (ClassNotFoundException | NoClassDefFoundError exc) {
 										if (!ClassLoaders.isItPossibleToAddClassPaths(classLoader)) {
 											throw exc;
 										}
@@ -324,7 +323,7 @@ public class ClassFactory implements Component {
 										}
 										return cls;	
 									}								
-								} catch (Throwable exc) {
+								} catch (ClassNotFoundException | NoClassDefFoundError exc) {
 									if (!ClassLoaders.isItPossibleToAddClassPaths(classLoader)) {
 										throw exc;
 									}
@@ -338,7 +337,7 @@ public class ClassFactory implements Component {
 									}									
 									return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, exc, searchConfig);
 								}
-							} catch (Throwable exc) {
+							} catch (ClassNotFoundException | NoClassDefFoundError exc) {
 								try {
 									if (!ClassLoaders.isItPossibleToAddClassPaths(classLoader)) {
 										throw exc;
@@ -346,7 +345,7 @@ public class ClassFactory implements Component {
 									return computeClassPathsAndAddThemToClassLoaderAndTryToLoad(
 										classLoader, className, additionalClassRepositoriesForClassLoader, exc
 									);
-								} catch (Throwable exc2) {
+								} catch (ClassNotFoundException | NoClassDefFoundError exc2) {
 									return ThrowingSupplier.get(() -> {
 										return ClassLoaders.loadOrDefineByByteCode(className, 
 											loadBytecodesFromClassPaths(
@@ -378,7 +377,7 @@ public class ClassFactory implements Component {
 					try {	
 						try {
 							return classLoader.loadClass(className);
-						} catch (Throwable exc) {
+						} catch (ClassNotFoundException | NoClassDefFoundError exc) {
 							if (!ClassLoaders.isItPossibleToAddClassPaths(classLoader)) {
 								throw exc;
 							}
@@ -386,7 +385,7 @@ public class ClassFactory implements Component {
 								classLoader, className, additionalClassRepositoriesForClassLoader, exc
 							);
 						}						
-					} catch (Throwable exc) {
+					} catch (ClassNotFoundException | NoClassDefFoundError exc) {
 						return ThrowingSupplier.get(() -> {
 							return ClassLoaders.loadOrDefineByByteCode(
 									className,
@@ -688,7 +687,7 @@ public class ClassFactory implements Component {
 			String className,
 			Collection<String> classRepositories,
 			Throwable exc
-		) throws Throwable {
+		) throws ClassNotFoundException, NoClassDefFoundError {
 			Collection<String> notFoundClasses = Classes.retrieveNames(exc);
 			ClassCriteria criteriaOne = ClassCriteria.create().className(className::equals);
 			ClassCriteria criteriaTwo = ClassCriteria.create().className(notFoundClasses::contains);
@@ -707,7 +706,7 @@ public class ClassFactory implements Component {
 			String className,
 			Throwable exc,
 			CacheableSearchConfig searchConfig
-		) throws Throwable {
+		) throws ClassNotFoundException, NoClassDefFoundError {
 			return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, exc, searchConfig, false);
 		}
 		
@@ -717,12 +716,12 @@ public class ClassFactory implements Component {
 			Throwable exc,
 			CacheableSearchConfig searchConfig,
 			boolean recursive
-		) throws Throwable {
+		) throws ClassNotFoundException, NoClassDefFoundError {
 			Collection<String> notFoundClasses = Classes.retrieveNames(exc);
 			ClassCriteria criteriaOne = ClassCriteria.create().className(className::equals);
 			ClassCriteria criteriaTwo = ClassCriteria.create().className(notFoundClasses::contains);
 			searchConfig.by(criteriaOne.or(criteriaTwo));
-			logInfo("Searching in: {}", String.join(", ", searchConfig.getPaths()));
+			logInfo("Searching for {}, {} in: {}", className, String.join(", ", notFoundClasses), String.join(", ", searchConfig.getPaths()));
 			try (ClassPathHunter.SearchResult searchResult = classPathHunter.findBy(
 					searchConfig
 				)
@@ -756,9 +755,21 @@ public class ClassFactory implements Component {
 					);
 				} else {
 					logWarn("Class paths are null");
+					for (String path : searchConfig.getPaths()) {
+						logWarn("path \"{}\" exists: {}", path, FileSystemItem.ofPath(path).exists());
+					}
+					logWarn("Skipped classes:");
+					for (String skippedClassName : searchResult.getSkippedClassNames()) {
+						logWarn(skippedClassName);
+					}
 				}
 			}
-			throw exc;
+			if (exc instanceof ClassNotFoundException) {
+				throw (ClassNotFoundException)exc;
+			} else if (exc instanceof NoClassDefFoundError) {
+				throw (NoClassDefFoundError)exc;
+			}
+			throw Throwables.toRuntimeException(exc);
 		}
 		
 		@Override
