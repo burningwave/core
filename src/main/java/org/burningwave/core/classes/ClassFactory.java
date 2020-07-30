@@ -722,7 +722,7 @@ public class ClassFactory implements Component {
 			ClassCriteria criteriaOne = ClassCriteria.create().className(className::equals);
 			ClassCriteria criteriaTwo = ClassCriteria.create().className(notFoundClasses::contains);
 			searchConfig.by(criteriaOne.or(criteriaTwo));
-			logInfo("Searching in: {}", String.join(", ", searchConfig.getPaths()));
+			logInfo("Searching for {}, {} in: {}", className, String.join(", ", notFoundClasses), String.join(", ", searchConfig.getPaths()));
 			try (ClassPathHunter.SearchResult searchResult = classPathHunter.findBy(
 					searchConfig
 				)
@@ -756,6 +756,9 @@ public class ClassFactory implements Component {
 					);
 				} else {
 					logWarn("Class paths are null");
+					for (String path : searchConfig.getPaths()) {
+						logWarn("path \"{}\" exists: {}", path, FileSystemItem.ofPath(path).exists());
+					}
 				}
 			}
 			throw exc;
