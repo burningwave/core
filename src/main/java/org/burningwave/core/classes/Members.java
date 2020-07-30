@@ -232,8 +232,8 @@ public class Members implements Component {
 						for (int i = 0; i < arguments.length && i < parameters.length - 1; i++) {
 							argumentList.add(arguments[i]);
 						}
-						Parameter lastParameter = parameters[parameters.length -1];
 						if (arguments.length == parameters.length) {
+							Parameter lastParameter = parameters[parameters.length -1];
 							Object lastArgument = arguments[arguments.length -1];
 							if (lastArgument != null && 
 								lastArgument.getClass().isArray() && 
@@ -242,9 +242,7 @@ public class Members implements Component {
 									argumentList.add(Array.get(lastArgument, i));
 								}
 							} else {
-								for (int i = parameters.length - 1; i < arguments.length; i++) {
-									argumentList.add(arguments[i]);
-								}
+								argumentList.add(lastArgument);
 							}
 						} else if (arguments.length > parameters.length) {
 							for (int i = parameters.length - 1; i < arguments.length; i++) {
