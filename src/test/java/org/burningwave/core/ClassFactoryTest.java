@@ -278,7 +278,7 @@ public class ClassFactoryTest extends BaseTest {
 			});
 	}
 	
-	@Test
+	//@Test
 	public void getOrBuildClassWithExternalClassTestEight() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		UnitSourceGenerator unitSG = UnitSourceGenerator.create("jdk.internal.loader").addClass(
