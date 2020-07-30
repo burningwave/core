@@ -438,24 +438,18 @@ public class PathHelper implements Component {
 		}
 		paths = new HashSet<>(copyOfPaths);
 		Collection<String> toBeRemoved = new HashSet<>();
-		Iterator<String> pathsItr = copyOfPaths.iterator();
-		int i = 0;
-		while (pathsItr.hasNext()) {
-			String path = pathsItr.next();
-			FileSystemItem path1AsFile = FileSystemItem.ofPath(path);
-			Iterator<String> pathsItrNested = copyOfPaths.iterator();
-			int j = 0;
-			while (pathsItrNested.hasNext()) {
-				String nestedPath = pathsItrNested.next();
-				if (i != j) {					
-					FileSystemItem path2AsFile = FileSystemItem.ofPath(nestedPath);
-					if (path2AsFile.equals(path1AsFile) || path1AsFile.isChildOf(path2AsFile)) {
-						toBeRemoved.add(path);
-					}
+		Iterator<String> paths1Itr = copyOfPaths.iterator();
+		while (paths1Itr.hasNext()) {
+			String path1 = paths1Itr.next();
+			FileSystemItem path1AsFile = FileSystemItem.ofPath(path1);
+			Iterator<String> paths2Itr = copyOfPaths.iterator();
+			while (paths2Itr.hasNext()) {
+				String path2 = paths2Itr.next();
+				FileSystemItem path2AsFile = FileSystemItem.ofPath(path2);
+				if (path1AsFile.isChildOf(path2AsFile)) {
+					toBeRemoved.add(path1);
 				}
-				j++;
 			}
-			i++;
 		}
 		if (!toBeRemoved.isEmpty()) {
 			copyOfPaths.removeAll(toBeRemoved);
