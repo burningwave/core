@@ -59,8 +59,10 @@ class ZipFile implements IterableZipContainer {
 	Collection<Entry> entries;
 	Runnable temporaryFileDeleter;
 	java.util.zip.ZipFile originalZipFile;
+	Boolean isDestroyed;
 	
 	ZipFile(String absolutePath, ByteBuffer content) {
+		isDestroyed = Boolean.FALSE;				
 		this.absolutePath = Paths.clean(absolutePath);
 		entries = ConcurrentHashMap.newKeySet();
 		try (java.util.zip.ZipFile zipFile = retrieveFile(absolutePath, content)) {
@@ -222,18 +224,26 @@ class ZipFile implements IterableZipContainer {
 	
 	@Override
 	public void destroy(boolean removeFromCache) {
-		if (removeFromCache) {
-			IterableZipContainer.super.destroy(removeFromCache);
-		}		
-		for (Entry entry : entries) {
-			entry.destroy();
+		boolean destroy = false;
+		synchronized (isDestroyed) {
+			if (!isDestroyed) {
+				destroy = isDestroyed = Boolean.TRUE;
+			}
 		}
-		entries.clear();
-		close();
-		Runnable temporaryFileDeleter = this.temporaryFileDeleter;
-		if (temporaryFileDeleter != null) {
-			this.temporaryFileDeleter = null;
-			temporaryFileDeleter.run();			
+		if (destroy) {
+			if (removeFromCache) {
+				IterableZipContainer.super.destroy(removeFromCache);
+			}		
+			for (Entry entry : entries) {
+				entry.destroy();
+			}
+			entries.clear();
+			close();
+			Runnable temporaryFileDeleter = this.temporaryFileDeleter;
+			if (temporaryFileDeleter != null) {
+				this.temporaryFileDeleter = null;
+				temporaryFileDeleter.run();			
+			}
 		}
 	}
 	

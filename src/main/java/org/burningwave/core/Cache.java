@@ -90,7 +90,28 @@ public class Cache implements Component {
 			};
 		};
 		pathForFileSystemItems = new PathForResources<>(1L, fileSystemItem -> fileSystemItem);
-		pathForIterableZipContainers = new PathForResources<>(1L, zipFileContainer -> zipFileContainer);
+		pathForIterableZipContainers = new PathForResources<IterableZipContainer>(1L, zipFileContainer -> zipFileContainer){
+			void clearResources(java.util.Map<Long,java.util.Map<String,java.util.Map<String,IterableZipContainer>>> partitions) {
+				for (Entry<Long, Map<String, Map<String, IterableZipContainer>>> partition : partitions.entrySet()) {
+					for (Entry<String, Map<String, IterableZipContainer>> nestedPartition : partition.getValue().entrySet()) {
+						for (Entry<String, IterableZipContainer> iZCE : nestedPartition.getValue().entrySet()) {
+							iZCE.getValue().destroy();
+						}
+						nestedPartition.getValue().clear();
+					}
+					partition.getValue().clear();
+				}
+				partitions.clear();				
+			};
+			
+			public IterableZipContainer remove(String path) {
+				IterableZipContainer iZCE = super.remove(path);
+				if (iZCE != null) {
+					iZCE.destroy();
+				}
+				return iZCE;
+			};
+		};
 		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);
 		classLoaderForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
 		uniqueKeyForFields = new ObjectAndPathForResources<>(1L, field -> field);
