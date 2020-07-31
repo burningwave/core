@@ -42,6 +42,7 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -49,6 +50,7 @@ import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 
 class ZipFile implements IterableZipContainer {
+	private final static String classId = UUID.randomUUID().toString();
 	String absolutePath;
 	String conventionedAbsolutePath;
 	IterableZipContainer parent;
@@ -89,7 +91,12 @@ class ZipFile implements IterableZipContainer {
 		}
 		entriesIterator = entries.iterator();
 	}
-
+	
+	@Override
+	public String getTemporaryFolderPrefix() {
+		return this.getClass().getName() + "@" + classId;
+	}
+	
 	private java.util.zip.ZipFile retrieveFile(String absolutePath, ByteBuffer content) {
 		java.util.zip.ZipFile originalZipFile = this.originalZipFile;
 		if (originalZipFile == null) {
@@ -97,7 +104,7 @@ class ZipFile implements IterableZipContainer {
 				if ((originalZipFile = this.originalZipFile) == null) {
 					File file = new File(absolutePath);
 					if (!file.exists()) {
-						File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(this.getClass().getName() + "@" + Integer.toHexString(this.getClass().hashCode()));
+						File temporaryFolder = getOrCreateTemporaryFolder();
 						String fileAbsolutePath = Paths.clean(temporaryFolder.getAbsolutePath()) + "/" + Paths.toSquaredPath(absolutePath, false);
 						file = new File(fileAbsolutePath);
 						if (!file.exists()) {

@@ -102,38 +102,46 @@ public class FileSystemHelper implements Component {
 		if (files != null) {
 			Iterator<File> itr = files.iterator();
 			while(itr.hasNext()) {
-				File tempFile = (File)itr.next();
-				if (tempFile.exists()) {
-					delete(tempFile);
-				}
+				delete((File)itr.next());
 			}
 		}
 	}
 	
 	public boolean delete(File file) {
 		if (file.isDirectory()) {
-			return deleteFolder(file);
-		} else {
-			return file.delete();
+		    File[] files = file.listFiles();
+		    if(files != null) { //some JVMs return null for empty dirs
+		        for(File fsItem: files) {
+		            delete(fsItem);
+		        }
+		    }
 		}
+		if (!file.delete()) {
+    		file.deleteOnExit();
+    		return false;
+    	}
+		return true;
 	}
 	
-	public void delete(String absolutePath) {
-		delete(new File(absolutePath));	
+	public void deleteOnExit(File file) {
+		if (file.isDirectory()) {
+		    File[] files = file.listFiles();
+		    if(files != null) { //some JVMs return null for empty dirs
+		        for(File fsItem: files) {
+		        	deleteOnExit(fsItem);
+		        }
+		    }
+		}
+		file.deleteOnExit();
+		
 	}
-
-	public boolean deleteFolder(File folder) {
-	    File[] files = folder.listFiles();
-	    if(files!=null) { //some JVMs return null for empty dirs
-	        for(File f: files) {
-	            if(f.isDirectory()) {
-	                deleteFolder(f);
-	            } else {
-	                f.delete();
-	            }
-	        }
-	    }
-	    return folder.delete();
+	
+	public boolean delete(String absolutePath) {
+		return delete(new File(absolutePath));	
+	}
+	
+	public void deleteOnExit(String absolutePath) {
+		deleteOnExit(new File(absolutePath));	
 	}
 	
 	public void deleteTemporaryFolders() {

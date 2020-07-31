@@ -28,6 +28,7 @@
  */
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
@@ -66,7 +67,28 @@ public class Cache implements Component {
 	
 	private Cache() {
 		logInfo("Building cache");
-		pathForContents = new PathForResources<>(1L, Streams::shareContent);
+		pathForContents = new PathForResources<>(1L, Streams::shareContent) {
+			void clearResources(java.util.Map<Long,java.util.Map<String,java.util.Map<String,ByteBuffer>>> partitions) {
+				for (Entry<Long, Map<String, Map<String, ByteBuffer>>> partition : partitions.entrySet()) {
+					for (Entry<String, Map<String, ByteBuffer>> nestedPartition : partition.getValue().entrySet()) {
+						for (Entry<String, ByteBuffer> contentEntry : nestedPartition.getValue().entrySet()) {
+							ByteBufferDelegate.destroy(contentEntry.getValue());
+						}
+						nestedPartition.getValue().clear();
+					}
+					partition.getValue().clear();
+				}
+				partitions.clear();				
+			};
+			
+			public ByteBuffer remove(String path) {
+				ByteBuffer content = super.remove(path);
+				if (content != null) {
+					ByteBufferDelegate.destroy(content);
+				}
+				return content;
+			};
+		};
 		pathForFileSystemItems = new PathForResources<>(1L, fileSystemItem -> fileSystemItem);
 		pathForIterableZipContainers = new PathForResources<>(1L, zipFileContainer -> zipFileContainer);
 		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);

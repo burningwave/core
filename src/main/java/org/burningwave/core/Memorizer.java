@@ -10,10 +10,13 @@ public interface Memorizer {
 		return getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(this));
 	}
 	
-	default public File getOrCreateTemporaryFolder(String folderName) {
+	default public File getOrCreateTemporaryFolder() {
 		//Register main temporary folder for deleting on FileSystemHelper closing 
-		FileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix());
-		return FileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix() + "/" + folderName);
+		return FileSystemHelper.getOrCreateTemporaryFolder(getTemporaryFolderPrefix());
+	}
+	
+	default public File getOrCreateTemporaryFolder(String folderName) {
+		return FileSystemHelper.getOrCreateTemporaryFolder(getOrCreateTemporaryFolder().getName() + "/" + folderName);
 	}
 
 }
