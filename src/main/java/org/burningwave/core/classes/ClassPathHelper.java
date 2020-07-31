@@ -40,7 +40,7 @@ public static class Configuration {
 		}
 	}
 	
-	private String id;
+	private String instanceId;
 	private ClassPathHunter classPathHunter;
 	private FileSystemItem classPathsBasePath;
 	private Properties config;	
@@ -49,7 +49,7 @@ public static class Configuration {
 	public ClassPathHelper(
 		ClassPathHunter classPathHunter, Properties config
 	) {	
-		this.id = UUID.randomUUID().toString();
+		this.instanceId = UUID.randomUUID().toString();
 		this.classPathHunter = classPathHunter;
 		this.classPathsBasePath = FileSystemItem.of(getOrCreateTemporaryFolder("classPaths"));
 		this.config = config;
@@ -59,7 +59,7 @@ public static class Configuration {
 	
 	@Override
 	public String getTemporaryFolderPrefix() {
-		return getClass().getName() + "@" + id;
+		return getClass().getName() + "@" + instanceId;
 	}
 	
 	public static ClassPathHelper create(ClassPathHunter classPathHunter, Properties config) {
@@ -195,6 +195,7 @@ public static class Configuration {
 		classPathsBasePath = null;
 		classPathHunter = null;
 		config = null;
+		instanceId = null;
 	}
 	
 }

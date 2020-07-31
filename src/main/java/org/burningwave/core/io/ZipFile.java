@@ -50,7 +50,7 @@ import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 
 class ZipFile implements IterableZipContainer {
-	private final static String classId = UUID.randomUUID().toString();
+	private final static String classId;
 	String absolutePath;
 	String conventionedAbsolutePath;
 	IterableZipContainer parent;
@@ -60,6 +60,10 @@ class ZipFile implements IterableZipContainer {
 	Runnable temporaryFileDeleter;
 	java.util.zip.ZipFile originalZipFile;
 	Boolean isDestroyed;
+	
+	static {
+		classId = UUID.randomUUID().toString();
+	}
 	
 	ZipFile(String absolutePath, ByteBuffer content) {
 		isDestroyed = Boolean.FALSE;				
