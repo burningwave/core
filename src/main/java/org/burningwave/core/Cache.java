@@ -28,6 +28,7 @@
  */
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
@@ -66,9 +67,51 @@ public class Cache implements Component {
 	
 	private Cache() {
 		logInfo("Building cache");
-		pathForContents = new PathForResources<>(1L, Streams::shareContent);
+		pathForContents = new PathForResources<ByteBuffer>(1L, Streams::shareContent) {
+			void clearResources(java.util.Map<Long,java.util.Map<String,java.util.Map<String,ByteBuffer>>> partitions) {
+				for (Entry<Long, Map<String, Map<String, ByteBuffer>>> partition : partitions.entrySet()) {
+					for (Entry<String, Map<String, ByteBuffer>> nestedPartition : partition.getValue().entrySet()) {
+						for (Entry<String, ByteBuffer> contentEntry : nestedPartition.getValue().entrySet()) {
+							ByteBufferDelegate.destroy(contentEntry.getValue());
+						}
+						nestedPartition.getValue().clear();
+					}
+					partition.getValue().clear();
+				}
+				partitions.clear();				
+			};
+			
+			public ByteBuffer remove(String path) {
+				ByteBuffer content = super.remove(path);
+				if (content != null) {
+					ByteBufferDelegate.destroy(content);
+				}
+				return content;
+			};
+		};
 		pathForFileSystemItems = new PathForResources<>(1L, fileSystemItem -> fileSystemItem);
-		pathForIterableZipContainers = new PathForResources<>(1L, zipFileContainer -> zipFileContainer);
+		pathForIterableZipContainers = new PathForResources<IterableZipContainer>(1L, zipFileContainer -> zipFileContainer){
+			void clearResources(java.util.Map<Long,java.util.Map<String,java.util.Map<String,IterableZipContainer>>> partitions) {
+				for (Entry<Long, Map<String, Map<String, IterableZipContainer>>> partition : partitions.entrySet()) {
+					for (Entry<String, Map<String, IterableZipContainer>> nestedPartition : partition.getValue().entrySet()) {
+						for (Entry<String, IterableZipContainer> iZCE : nestedPartition.getValue().entrySet()) {
+							iZCE.getValue().destroy();
+						}
+						nestedPartition.getValue().clear();
+					}
+					partition.getValue().clear();
+				}
+				partitions.clear();				
+			};
+			
+			public IterableZipContainer remove(String path) {
+				IterableZipContainer iZCE = super.remove(path);
+				if (iZCE != null) {
+					iZCE.destroy();
+				}
+				return iZCE;
+			};
+		};
 		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);
 		classLoaderForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
 		uniqueKeyForFields = new ObjectAndPathForResources<>(1L, field -> field);

@@ -390,8 +390,8 @@ public class ComponentContainer implements ComponentSupplier {
 		return this;
 	}
 	
-	public void close() {
-		if (LazyHolder.getComponentContainerInstance() != this) {
+	void close(boolean force) {
+		if (force || LazyHolder.getComponentContainerInstance() != this) {
 			unregister(GlobalProperties);
 			unregister(config);
 			clear();			
@@ -403,6 +403,18 @@ public class ComponentContainer implements ComponentSupplier {
 		} else {
 			throw Throwables.toRuntimeException("Could not close singleton instance " + LazyHolder.COMPONENT_CONTAINER_INSTANCE);
 		}
+	}
+	
+	public void close() {
+		close(false);
+	}
+	
+	static void closeAll() {
+		for (ComponentContainer componentContainer : instances) {
+			componentContainer.close(true);
+		}
+		Cache.clear();
+		System.gc();
 	}
 	
 	public static void clearAll() {

@@ -42,6 +42,7 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -49,6 +50,7 @@ import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 
 class ZipFile implements IterableZipContainer {
+	private final static String classId;
 	String absolutePath;
 	String conventionedAbsolutePath;
 	IterableZipContainer parent;
@@ -57,8 +59,14 @@ class ZipFile implements IterableZipContainer {
 	Collection<Entry> entries;
 	Runnable temporaryFileDeleter;
 	java.util.zip.ZipFile originalZipFile;
+	Boolean isDestroyed;
+	
+	static {
+		classId = UUID.randomUUID().toString();
+	}
 	
 	ZipFile(String absolutePath, ByteBuffer content) {
+		isDestroyed = Boolean.FALSE;				
 		this.absolutePath = Paths.clean(absolutePath);
 		entries = ConcurrentHashMap.newKeySet();
 		try (java.util.zip.ZipFile zipFile = retrieveFile(absolutePath, content)) {
@@ -89,7 +97,12 @@ class ZipFile implements IterableZipContainer {
 		}
 		entriesIterator = entries.iterator();
 	}
-
+	
+	@Override
+	public String getTemporaryFolderPrefix() {
+		return this.getClass().getName() + "@" + classId;
+	}
+	
 	private java.util.zip.ZipFile retrieveFile(String absolutePath, ByteBuffer content) {
 		java.util.zip.ZipFile originalZipFile = this.originalZipFile;
 		if (originalZipFile == null) {
@@ -97,7 +110,7 @@ class ZipFile implements IterableZipContainer {
 				if ((originalZipFile = this.originalZipFile) == null) {
 					File file = new File(absolutePath);
 					if (!file.exists()) {
-						File temporaryFolder = FileSystemHelper.getOrCreateTemporaryFolder(this.getClass().getName() + "@" + Integer.toHexString(this.getClass().hashCode()));
+						File temporaryFolder = getOrCreateTemporaryFolder();
 						String fileAbsolutePath = Paths.clean(temporaryFolder.getAbsolutePath()) + "/" + Paths.toSquaredPath(absolutePath, false);
 						file = new File(fileAbsolutePath);
 						if (!file.exists()) {
@@ -215,18 +228,26 @@ class ZipFile implements IterableZipContainer {
 	
 	@Override
 	public void destroy(boolean removeFromCache) {
-		if (removeFromCache) {
-			IterableZipContainer.super.destroy(removeFromCache);
-		}		
-		for (Entry entry : entries) {
-			entry.destroy();
+		boolean destroy = false;
+		synchronized (isDestroyed) {
+			if (!isDestroyed) {
+				destroy = isDestroyed = Boolean.TRUE;
+			}
 		}
-		entries.clear();
-		close();
-		Runnable temporaryFileDeleter = this.temporaryFileDeleter;
-		if (temporaryFileDeleter != null) {
-			this.temporaryFileDeleter = null;
-			temporaryFileDeleter.run();			
+		if (destroy) {
+			if (removeFromCache) {
+				IterableZipContainer.super.destroy(removeFromCache);
+			}		
+			for (Entry entry : entries) {
+				entry.destroy();
+			}
+			entries.clear();
+			close();
+			Runnable temporaryFileDeleter = this.temporaryFileDeleter;
+			if (temporaryFileDeleter != null) {
+				this.temporaryFileDeleter = null;
+				temporaryFileDeleter.run();			
+			}
 		}
 	}
 	

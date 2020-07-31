@@ -187,14 +187,6 @@ public interface ManagedLogger {
 					}
 				}
 			}
-			 
-			public String getId(Object... objects) {
-				String id = "_";
-				for (Object object : objects) {
-					id += System.identityHashCode(object) + "_";
-				}
-				return id;
-			}
 			
 			@Override
 			public boolean isEnabled() {

@@ -34,10 +34,11 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.burningwave.core.ManagedLogger.Repository;
+import org.burningwave.core.concurrent.Mutex;
 
 public class SimpleManagedLoggerRepository extends Repository.Abst {
 	private Map<String, LoggingLevel.Mutable> loggers;
-	
+	private Mutex.Manager mutexManager;
 	public SimpleManagedLoggerRepository(Properties properties) {
 		super(properties);
 	}
@@ -45,13 +46,14 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	
 	@Override
 	void init(Properties properties) {
-		loggers = new HashMap<>();		
+		loggers = new HashMap<>();
+		mutexManager = Mutex.Manager.create(loggers);
 	}
 	
 	private LoggingLevel.Mutable getLoggerEnabledFlag(String clientName) {
 		LoggingLevel.Mutable loggerEnabledFlag = loggers.get(clientName);
 		if (loggerEnabledFlag == null) {
-			synchronized (getId(loggers, clientName)) {
+			synchronized (mutexManager.getMutex(clientName)) {
 				loggerEnabledFlag = loggers.get(clientName);
 				if (loggerEnabledFlag == null) {
 					loggers.put(clientName, loggerEnabledFlag = new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_ENABLED));

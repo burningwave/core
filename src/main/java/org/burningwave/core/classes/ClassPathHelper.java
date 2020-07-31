@@ -1,5 +1,6 @@
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 
@@ -9,6 +10,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
@@ -37,19 +39,27 @@ public static class Configuration {
 			);
 		}
 	}
-
+	
+	private String instanceId;
 	private ClassPathHunter classPathHunter;
 	private FileSystemItem classPathsBasePath;
 	private Properties config;	
 	
+	
 	public ClassPathHelper(
 		ClassPathHunter classPathHunter, Properties config
-	) {
+	) {	
+		this.instanceId = UUID.randomUUID().toString();
 		this.classPathHunter = classPathHunter;
 		this.classPathsBasePath = FileSystemItem.of(getOrCreateTemporaryFolder("classPaths"));
-
 		this.config = config;
 		listenTo(config);
+	}
+	
+	
+	@Override
+	public String getTemporaryFolderPrefix() {
+		return getClass().getName() + "@" + instanceId;
 	}
 	
 	public static ClassPathHelper create(ClassPathHunter classPathHunter, Properties config) {
@@ -180,11 +190,12 @@ public static class Configuration {
 	@Override
 	public void close() {
 		unregister(config);
-		//FileSystemHelper.delete(basePathForLibCopies.getAbsolutePath());
+		FileSystemHelper.deleteOnExit(classPathsBasePath.getAbsolutePath());
 		classPathsBasePath.destroy();
 		classPathsBasePath = null;
 		classPathHunter = null;
 		config = null;
+		instanceId = null;
 	}
 	
 }
