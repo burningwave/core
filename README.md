@@ -318,14 +318,49 @@ public class SourceCodeExecutor {
 <br/>
 
 # Retrieving classes of runtime class paths or of other paths through the ClassHunter
-The compononents of the class paths scanning engine are: **ByteCodeHunter**, **ClassHunter** and the **ClassPathHunter**. Now we are going to use the ClassHunter to search for all classes that have package name that matches a regex. So in this example we're looking for all classes whose package name contains "springframework" string in the runtime class paths
+The compononents of the class paths scanning engine are: **ByteCodeHunter**, **ClassHunter** and the **ClassPathHunter**. Now we are going to use the ClassHunter to search for all classes that have package name that matches a regex. So in this example we're looking for all classes whose package name contains "springframework" string in the runtime class paths:
+
 ```java
 import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria;
+import org.burningwave.core.classes.ClassHunter;
+import org.burningwave.core.classes.ClassHunter.SearchResult;
+import org.burningwave.core.classes.SearchConfig;
+    
+public class Finder {
+    
+    public Collection<Class<?>> simplifiedFind() {
+         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+            ClassHunter classHunter = componentSupplier.getClassHunter();
+            
+            //With this the search will be executed on default configured paths that are the 
+            //runtime class paths plus, on java 9 and later, the jmods folder of the Java home.
+            //The default configured paths are indicated in the 'paths.hunters.default-search-config.paths'
+            //property of burningwave.properties file (see Architectural overview and configuration)
+            SearchResult searchResult = classHunter.loadInCache(SearchConfig.byCriteria(
+                ClassCriteria.create().allThat((cls) -> {
+                    return cls.getPackage().getName().matches(".*springframework.*");
+                })
+            )).find();
+            
+            return searchResult.getClasses();
+    }
+    
+}
+```
+
+It is also possible to expressly indicate the paths on which to search:
+
+```java
+import java.util.Collection;
+
+import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.CacheableSearchConfig;
+import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassHunter.SearchResult;
 import org.burningwave.core.classes.SearchConfig;
@@ -333,7 +368,7 @@ import org.burningwave.core.io.PathHelper;
     
 public class Finder {
     
-    public Collection<Class<?>> find() {
+   public Collection<Class<?>> find() {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         PathHelper pathHelper = componentSupplier.getPathHelper();
         ClassHunter classHunter = componentSupplier.getClassHunter();
@@ -343,8 +378,10 @@ public class Finder {
             //both folders, zip, jar, ear and war will be recursively scanned.
             //For example you can add: "C:\\Users\\user\\.m2", or a path of
             //an ear file that contains nested war with nested jar files
-            //With the row below the search will be executed on runtime Classpaths
-            pathHelper.getMainClassPaths()
+            //With the rows below the search will be executed on runtime class paths and
+            //on java 9 and later also on .jmod files contained in jmods folder of the Java home
+            pathHelper.getAllMainClassPaths(),
+            pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES)
             //If you want to scan only one jar or some certain jars you can use, for example,
             //this commented line of code instead "pathHelper.getMainClassPaths()":
             //pathHelper.getPaths(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
