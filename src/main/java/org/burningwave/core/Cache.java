@@ -67,7 +67,7 @@ public class Cache implements Component {
 	
 	private Cache() {
 		logInfo("Building cache");
-		pathForContents = new PathForResources<>(1L, Streams::shareContent) {
+		pathForContents = new PathForResources<ByteBuffer>(1L, Streams::shareContent) {
 			void clearResources(java.util.Map<Long,java.util.Map<String,java.util.Map<String,ByteBuffer>>> partitions) {
 				for (Entry<Long, Map<String, Map<String, ByteBuffer>>> partition : partitions.entrySet()) {
 					for (Entry<String, Map<String, ByteBuffer>> nestedPartition : partition.getValue().entrySet()) {
