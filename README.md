@@ -383,7 +383,8 @@ public class Finder {
             pathHelper.getAllMainClassPaths(),
             pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES)
             //If you want to scan only one jar or some certain jars you can use, for example,
-            //this commented line of code instead "pathHelper.getMainClassPaths()":
+            //this commented line of code instead "pathHelper.getAllMainClassPaths()" and 
+            //"pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES)":
             //pathHelper.getPaths(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
         ).by(
             ClassCriteria.create().allThat((cls) -> {
