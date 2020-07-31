@@ -49,6 +49,28 @@ public class ClassHunterTest extends BaseTest {
 	}
 	
 	@Test
+	public void findAllTestTwo() throws Exception {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotEmpty(
+			() -> 
+				componentSupplier.getClassHunter().findAndCache(),
+			(result) ->
+				result.getClasses()
+		);
+	}
+	
+	@Test
+	public void findAllUncachedTestFour() throws Exception {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotEmpty(
+			() -> 
+				componentSupplier.getClassHunter().find(),
+			(result) ->
+				result.getClasses()
+		);
+	}
+	
+	@Test
 	public void getResourceAsStreamTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		componentSupplier.clearHuntersCache(false);
