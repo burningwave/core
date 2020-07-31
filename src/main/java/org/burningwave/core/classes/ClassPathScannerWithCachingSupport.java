@@ -126,7 +126,10 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			findBy(srcCfg == null? searchConfig : srcCfg);
 	}
 	
-	//Cached search
+	public R findAndCache() {
+		return findBy(SearchConfig.create());
+	}
+
 	public R findBy(CacheableSearchConfig searchConfig) {
 		return findBy(searchConfig, this::searchInCacheOrInFileSystem);
 	}

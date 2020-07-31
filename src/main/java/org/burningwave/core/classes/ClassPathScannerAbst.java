@@ -106,6 +106,10 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			(classHunter = classHunterSupplier.get());
 	}
 	
+	public R find() {
+		return findBy(SearchConfig.withoutUsingCache());
+	}
+	
 	//Not cached search
 	public R findBy(SearchConfig searchConfig) {
 		return findBy(searchConfig, this::searchInFileSystem);

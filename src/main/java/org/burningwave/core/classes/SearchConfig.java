@@ -41,6 +41,10 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 		super(pathsColl);
 	}	
 	
+	public static CacheableSearchConfig create() {
+		return new CacheableSearchConfig(new HashSet<>()); 
+	}
+	
 	public static SearchConfig withoutUsingCache() {
 		return new SearchConfig(new HashSet<>());
 	}
