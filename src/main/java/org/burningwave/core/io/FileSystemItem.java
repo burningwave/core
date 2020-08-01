@@ -563,13 +563,13 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	private void removeFromCache(FileSystemItem fileSystemItem, boolean removeFromCache) {
-		Cache.pathForContents.remove(fileSystemItem.getAbsolutePath());
+		Cache.pathForContents.remove(fileSystemItem.getAbsolutePath(), true);
 		IterableZipContainer zipContainer = Cache.pathForIterableZipContainers.get(fileSystemItem.getAbsolutePath()); 
 		if (zipContainer != null) {
 			zipContainer.destroy();
 		}
 		if (removeFromCache) {
-			Cache.pathForFileSystemItems.remove(fileSystemItem.getAbsolutePath());
+			Cache.pathForFileSystemItems.remove(fileSystemItem.getAbsolutePath(), true);
 		}
 	}
 	
@@ -700,13 +700,7 @@ public class FileSystemItem implements ManagedLogger {
 		IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);
 		try {
 			if (zIS == null) {
-				Cache.pathForContents.remove(zipInputStreamName);
-				zIS = IterableZipContainer.create(zipInputStreamName);
-				if (zIS == null) {
-					throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
-				} else {
-					logWarn("Removed and reloaded dirty cache entry for " + zIS.getAbsolutePath());
-				}
+				throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
 			}
 			Predicate<IterableZipContainer.Entry> zipEntryPredicate = zEntry -> {
 				return zEntry.getName().equals(relativePath1) || zEntry.getName().equals(relativePath1 + "/");

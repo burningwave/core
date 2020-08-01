@@ -68,48 +68,21 @@ public class Cache implements Component {
 	private Cache() {
 		logInfo("Building cache");
 		pathForContents = new PathForResources<ByteBuffer>(1L, Streams::shareContent) {
-			void clearResources(java.util.Map<Long,java.util.Map<String,java.util.Map<String,ByteBuffer>>> partitions) {
-				for (Entry<Long, Map<String, Map<String, ByteBuffer>>> partition : partitions.entrySet()) {
-					for (Entry<String, Map<String, ByteBuffer>> nestedPartition : partition.getValue().entrySet()) {
-						for (Entry<String, ByteBuffer> contentEntry : nestedPartition.getValue().entrySet()) {
-							ByteBufferDelegate.destroy(contentEntry.getValue());
-						}
-						nestedPartition.getValue().clear();
-					}
-					partition.getValue().clear();
-				}
-				partitions.clear();				
-			};
-			
-			public ByteBuffer remove(String path) {
-				ByteBuffer content = super.remove(path);
-				if (content != null) {
-					ByteBufferDelegate.destroy(content);
-				}
-				return content;
-			};
+			@Override
+			void destroy(String path, ByteBuffer item) {
+				ByteBufferDelegate.destroy(item);
+			}
 		};
-		pathForFileSystemItems = new PathForResources<>(1L, fileSystemItem -> fileSystemItem);
+		pathForFileSystemItems = new PathForResources<FileSystemItem>(1L, fileSystemItem -> fileSystemItem) {
+			@Override
+			void destroy(String path, FileSystemItem item) {
+				item.destroy();
+			}
+		};
 		pathForIterableZipContainers = new PathForResources<IterableZipContainer>(1L, zipFileContainer -> zipFileContainer){
-			void clearResources(java.util.Map<Long,java.util.Map<String,java.util.Map<String,IterableZipContainer>>> partitions) {
-				for (Entry<Long, Map<String, Map<String, IterableZipContainer>>> partition : partitions.entrySet()) {
-					for (Entry<String, Map<String, IterableZipContainer>> nestedPartition : partition.getValue().entrySet()) {
-						for (Entry<String, IterableZipContainer> iZCE : nestedPartition.getValue().entrySet()) {
-							iZCE.getValue().destroy();
-						}
-						nestedPartition.getValue().clear();
-					}
-					partition.getValue().clear();
-				}
-				partitions.clear();				
-			};
-			
-			public IterableZipContainer remove(String path) {
-				IterableZipContainer iZCE = super.remove(path);
-				if (iZCE != null) {
-					iZCE.destroy();
-				}
-				return iZCE;
+			@Override
+			void destroy(String path, IterableZipContainer item) {
+				item.destroy();				
 			};
 		};
 		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);
@@ -126,7 +99,7 @@ public class Cache implements Component {
 		return new Cache();
 	}
 	
-	public static class ObjectAndPathForResources<T, R> implements Component  {
+	public static class ObjectAndPathForResources<T, R> implements Component {
 		
 		Map<T, PathForResources<R>> resources;
 		Supplier<PathForResources<R>> pathForResourcesSupplier;
@@ -134,7 +107,12 @@ public class Cache implements Component {
 		
 		public ObjectAndPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
 			this.resources = new HashMap<>();
-			this.pathForResourcesSupplier = () -> new PathForResources<>(partitionStartLevel, sharer);
+			this.pathForResourcesSupplier = () -> new PathForResources<R>(partitionStartLevel, sharer) {
+				@Override
+				void destroy(String path, R item) {
+					ObjectAndPathForResources.this.destroy(path, item);
+				}
+			};
 			mutexManagerForResources = Mutex.Manager.create(this);
 		}
 
@@ -166,23 +144,57 @@ public class Cache implements Component {
 			return pathForResources.get(path);
 		}
 		
-		public PathForResources<R> remove(T object) {
-			return resources.remove(object);
+		public PathForResources<R> remove(T object, boolean destroyItems) {
+			PathForResources<R> pathForResources = resources.remove(object);
+			if (pathForResources != null && destroyItems) {
+				Thread cleaner = new Thread(() -> {
+					pathForResources.clear(destroyItems);
+					logInfo("{} ended to clean linked resources of {}", Thread.currentThread().toString(), object.toString());
+				});				
+				cleaner.setPriority(Thread.MIN_PRIORITY);
+				cleaner.start();	
+			}
+			return pathForResources;
 		}
-
+		
 		public R removePath(T object, String path) {
+			return removePath(object, path, false);
+		}
+		
+		public R removePath(T object, String path, boolean destroyItem) {
 			PathForResources<R> pathForResources = resources.get(object);
 			if (pathForResources != null) {
-				return pathForResources.remove(path);
+				return pathForResources.remove(path, destroyItem);
 			}
 			return null;
 		}
 		
+		@Override
 		public ObjectAndPathForResources<T, R> clear() {
-			resources.clear();
-			mutexManagerForResources.clear();
+			return clear(false);
+		}
+		
+		public ObjectAndPathForResources<T, R> clear(boolean destroyItems) {
+			Map<T, PathForResources<R>> resources;
+			synchronized (this.resources) {	
+				resources = this.resources;
+				this.resources = new HashMap<>();
+				mutexManagerForResources.clear();
+			}
+			Thread cleaner = new Thread(() -> {
+				for (Entry<T, PathForResources<R>> item : resources.entrySet()) {
+					item.getValue().clear(destroyItems);
+				}
+				resources.clear();
+				logInfo("{} ended to clean {}", Thread.currentThread().toString(), this.toString());
+			});
+			
+			cleaner.setPriority(Thread.MIN_PRIORITY);
+			cleaner.start();			
 			return this;
 		}
+		
+		void destroy(String path, R item) {}
 	}
 	
 	public static class PathForResources<R> implements Component  {
@@ -289,13 +301,17 @@ public class Cache implements Component {
 			return getOrUploadIfAbsent(path, null);
 		}
 		
-		public R remove(String path) {
+		public R remove(String path, boolean destroy) {
 			path = Paths.clean(path);
 			Long occurences = path.chars().filter(ch -> ch == '/').count();
 			Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
 			Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
 			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
-			return nestedPartition.remove(path);
+			R item = nestedPartition.remove(path);
+			if (destroy && item != null) {
+				destroy(path, item);
+			}
+			return item;
 		}
 		
 		public int getLoadedResourcesCount() {
@@ -314,6 +330,10 @@ public class Cache implements Component {
 		
 		@Override
 		public PathForResources<R> clear() {
+			return clear(false);
+		}
+		
+		public PathForResources<R> clear(boolean destroyItems) {
 			Map<Long, Map<String, Map<String, R>>> partitions;
 			synchronized (this.resources) {	
 				partitions = this.resources;
@@ -323,7 +343,7 @@ public class Cache implements Component {
 				mutexManagerForPartitionedResources.clear();
 			}
 			Thread cleaner = new Thread(() -> {
-				clearResources(partitions);
+				clearResources(partitions, destroyItems);
 				logInfo("{} ended to clean {}", Thread.currentThread().toString(), this.toString());
 			});
 			cleaner.setPriority(Thread.MIN_PRIORITY);
@@ -331,43 +351,64 @@ public class Cache implements Component {
 			return this;
 		}
 
-		void clearResources(Map<Long, Map<String, Map<String, R>>> partitions) {
+		void clearResources(Map<Long, Map<String, Map<String, R>>> partitions, boolean destroyItems) {
 			for (Entry<Long, Map<String, Map<String, R>>> partition : partitions.entrySet()) {
 				for (Entry<String, Map<String, R>> nestedPartition : partition.getValue().entrySet()) {
+					for (Entry<String, R> item : nestedPartition.getValue().entrySet()) {
+						if (destroyItems) {
+							destroy(item.getKey(), item.getValue());
+						}
+					}
 					nestedPartition.getValue().clear();
 				}
 				partition.getValue().clear();
 			}
 			partitions.clear();
-		}		
+		}
+		
+		void destroy(String path, R item) {}
 		
 	}
 	
 	public void clear(Cleanable... excluded) {
+		clear(false, excluded);
+	}
+	
+	public void clear(boolean destroyItems, Cleanable... excluded) {
 		Set<Cleanable> toBeExcluded = excluded != null && excluded.length > 0 ?
 			new HashSet<>(Arrays.asList(excluded)) :
 			null;
-		clear(pathForContents, toBeExcluded);
-		clear(pathForFileSystemItems, toBeExcluded);
-		clear(pathForIterableZipContainers, toBeExcluded);
-		clear(classLoaderForFields, toBeExcluded);
-		clear(classLoaderForMethods, toBeExcluded);
-		clear(classLoaderForConstructors, toBeExcluded);
-		clear(bindedFunctionalInterfaces, toBeExcluded);
-		clear(uniqueKeyForFields, toBeExcluded);
-		clear(uniqueKeyForConstructors, toBeExcluded);
-		clear(uniqueKeyForMethods, toBeExcluded);
-		clear(uniqueKeyForExecutableAndMethodHandle, toBeExcluded);
+		clear(pathForContents, toBeExcluded, destroyItems);
+		clear(pathForFileSystemItems, toBeExcluded, destroyItems);
+		clear(pathForIterableZipContainers, toBeExcluded, destroyItems);
+		clear(classLoaderForFields, toBeExcluded, destroyItems);
+		clear(classLoaderForMethods, toBeExcluded, destroyItems);
+		clear(classLoaderForConstructors, toBeExcluded, destroyItems);
+		clear(bindedFunctionalInterfaces, toBeExcluded, destroyItems);
+		clear(uniqueKeyForFields, toBeExcluded, destroyItems);
+		clear(uniqueKeyForConstructors, toBeExcluded, destroyItems);
+		clear(uniqueKeyForMethods, toBeExcluded, destroyItems);
+		clear(uniqueKeyForExecutableAndMethodHandle, toBeExcluded, destroyItems);
 	}
-	
-	private void clear(Cleanable cache, Set<Cleanable> excluded) {
+
+	private void clear(Cleanable cache, Set<Cleanable> excluded, boolean destroyItems) {
 		if (excluded == null || !excluded.contains(cache)) {
-			cache.clear();
+			if (!destroyItems) {
+				cache.clear();
+			} else if (cache instanceof ObjectAndPathForResources) {
+				((ObjectAndPathForResources<?,?>)cache).clear(destroyItems);
+			}  else if (cache instanceof PathForResources) {
+				((PathForResources<?>)cache).clear(destroyItems);
+			}
 		}
 	}
 	
 	@Override
 	public void close() {
-		clear();
+		close(false);
+	}
+	
+	public void close(boolean destroyItem) {
+		clear(destroyItem);
 	}
 }
