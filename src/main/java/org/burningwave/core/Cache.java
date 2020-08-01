@@ -68,48 +68,21 @@ public class Cache implements Component {
 	private Cache() {
 		logInfo("Building cache");
 		pathForContents = new PathForResources<ByteBuffer>(1L, Streams::shareContent) {
-			void clearResources(java.util.Map<Long,java.util.Map<String,java.util.Map<String,ByteBuffer>>> partitions) {
-				for (Entry<Long, Map<String, Map<String, ByteBuffer>>> partition : partitions.entrySet()) {
-					for (Entry<String, Map<String, ByteBuffer>> nestedPartition : partition.getValue().entrySet()) {
-						for (Entry<String, ByteBuffer> contentEntry : nestedPartition.getValue().entrySet()) {
-							ByteBufferDelegate.destroy(contentEntry.getValue());
-						}
-						nestedPartition.getValue().clear();
-					}
-					partition.getValue().clear();
-				}
-				partitions.clear();				
-			};
-			
-			public ByteBuffer remove(String path) {
-				ByteBuffer content = super.remove(path);
-				if (content != null) {
-					ByteBufferDelegate.destroy(content);
-				}
-				return content;
-			};
+			@Override
+			void destroy(ByteBuffer item) {
+				ByteBufferDelegate.destroy(item);
+			}
 		};
-		pathForFileSystemItems = new PathForResources<>(1L, fileSystemItem -> fileSystemItem);
+		pathForFileSystemItems = new PathForResources<FileSystemItem>(1L, fileSystemItem -> fileSystemItem) {
+			@Override
+			void destroy(FileSystemItem item) {
+				item.destroy();
+			}
+		};
 		pathForIterableZipContainers = new PathForResources<IterableZipContainer>(1L, zipFileContainer -> zipFileContainer){
-			void clearResources(java.util.Map<Long,java.util.Map<String,java.util.Map<String,IterableZipContainer>>> partitions) {
-				for (Entry<Long, Map<String, Map<String, IterableZipContainer>>> partition : partitions.entrySet()) {
-					for (Entry<String, Map<String, IterableZipContainer>> nestedPartition : partition.getValue().entrySet()) {
-						for (Entry<String, IterableZipContainer> iZCE : nestedPartition.getValue().entrySet()) {
-							iZCE.getValue().destroy();
-						}
-						nestedPartition.getValue().clear();
-					}
-					partition.getValue().clear();
-				}
-				partitions.clear();				
-			};
-			
-			public IterableZipContainer remove(String path) {
-				IterableZipContainer iZCE = super.remove(path);
-				if (iZCE != null) {
-					iZCE.destroy();
-				}
-				return iZCE;
+			@Override
+			void destroy(IterableZipContainer item) {
+				item.destroy();				
 			};
 		};
 		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);
@@ -170,10 +143,10 @@ public class Cache implements Component {
 			return resources.remove(object);
 		}
 
-		public R removePath(T object, String path) {
+		public R removePath(T object, String path, boolean destroy) {
 			PathForResources<R> pathForResources = resources.get(object);
 			if (pathForResources != null) {
-				return pathForResources.remove(path);
+				return pathForResources.remove(path, destroy);
 			}
 			return null;
 		}
@@ -289,13 +262,17 @@ public class Cache implements Component {
 			return getOrUploadIfAbsent(path, null);
 		}
 		
-		public R remove(String path) {
+		public R remove(String path, boolean destroy) {
 			path = Paths.clean(path);
 			Long occurences = path.chars().filter(ch -> ch == '/').count();
 			Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
 			Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
 			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
-			return nestedPartition.remove(path);
+			R item = nestedPartition.remove(path);
+			if (destroy && item != null) {
+				destroy(item);
+			}
+			return item;
 		}
 		
 		public int getLoadedResourcesCount() {
@@ -334,12 +311,17 @@ public class Cache implements Component {
 		void clearResources(Map<Long, Map<String, Map<String, R>>> partitions) {
 			for (Entry<Long, Map<String, Map<String, R>>> partition : partitions.entrySet()) {
 				for (Entry<String, Map<String, R>> nestedPartition : partition.getValue().entrySet()) {
+					for (Entry<String, R> item : nestedPartition.getValue().entrySet()) {
+						destroy(item.getValue());
+					}
 					nestedPartition.getValue().clear();
 				}
 				partition.getValue().clear();
 			}
 			partitions.clear();
-		}		
+		}
+		
+		void destroy(R item) {}
 		
 	}
 	
@@ -359,7 +341,7 @@ public class Cache implements Component {
 		clear(uniqueKeyForMethods, toBeExcluded);
 		clear(uniqueKeyForExecutableAndMethodHandle, toBeExcluded);
 	}
-	
+
 	private void clear(Cleanable cache, Set<Cleanable> excluded) {
 		if (excluded == null || !excluded.contains(cache)) {
 			cache.clear();

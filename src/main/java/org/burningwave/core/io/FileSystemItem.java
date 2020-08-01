@@ -563,13 +563,13 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	private void removeFromCache(FileSystemItem fileSystemItem, boolean removeFromCache) {
-		Cache.pathForContents.remove(fileSystemItem.getAbsolutePath());
+		Cache.pathForContents.remove(fileSystemItem.getAbsolutePath(), true);
 		IterableZipContainer zipContainer = Cache.pathForIterableZipContainers.get(fileSystemItem.getAbsolutePath()); 
 		if (zipContainer != null) {
 			zipContainer.destroy();
 		}
 		if (removeFromCache) {
-			Cache.pathForFileSystemItems.remove(fileSystemItem.getAbsolutePath());
+			Cache.pathForFileSystemItems.remove(fileSystemItem.getAbsolutePath(), true);
 		}
 	}
 	
@@ -700,7 +700,7 @@ public class FileSystemItem implements ManagedLogger {
 		IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);
 		try {
 			if (zIS == null) {
-				Cache.pathForContents.remove(zipInputStreamName);
+				Cache.pathForContents.remove(zipInputStreamName, true);
 				zIS = IterableZipContainer.create(zipInputStreamName);
 				if (zIS == null) {
 					throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
