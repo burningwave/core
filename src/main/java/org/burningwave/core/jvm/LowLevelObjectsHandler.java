@@ -418,8 +418,9 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		
 		public <T extends Buffer> boolean destroy(T buffer) {
 			if (buffer.isDirect()) {
-				if (Methods.invokeDirect(buffer, "attachment") != null) {
-					Methods.invokeDirect(buffer, "cleaner");
+				Object cleaner;
+				if (Methods.invokeDirect(buffer, "attachment") != null && (cleaner = Methods.invokeDirect(buffer, "cleaner")) != null) {
+					Methods.invokeDirect(cleaner, "clean");
 					return true;
 				}
 				return false;
