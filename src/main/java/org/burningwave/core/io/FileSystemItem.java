@@ -700,13 +700,7 @@ public class FileSystemItem implements ManagedLogger {
 		IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);
 		try {
 			if (zIS == null) {
-				Cache.pathForContents.remove(zipInputStreamName, true);
-				zIS = IterableZipContainer.create(zipInputStreamName);
-				if (zIS == null) {
-					throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
-				} else {
-					logWarn("Removed and reloaded dirty cache entry for " + zIS.getAbsolutePath());
-				}
+				throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
 			}
 			Predicate<IterableZipContainer.Entry> zipEntryPredicate = zEntry -> {
 				return zEntry.getName().equals(relativePath1) || zEntry.getName().equals(relativePath1 + "/");

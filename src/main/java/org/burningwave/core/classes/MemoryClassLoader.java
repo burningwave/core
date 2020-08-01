@@ -393,14 +393,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	protected void unregister() {
 		ClassLoaders.unregister(this);
-		Cache.classLoaderForConstructors.remove(this);
-		Cache.classLoaderForFields.remove(this);
-		Cache.classLoaderForMethods.remove(this);
-		Cache.uniqueKeyForFields.remove(this);
-		Cache.uniqueKeyForConstructors.remove(this);
-		Cache.uniqueKeyForMethods.remove(this);
-		Cache.bindedFunctionalInterfaces.remove(this);
-		Cache.uniqueKeyForExecutableAndMethodHandle.remove(this);
+		Cache.classLoaderForConstructors.remove(this, true);
+		Cache.classLoaderForFields.remove(this, true);
+		Cache.classLoaderForMethods.remove(this, true);
+		Cache.uniqueKeyForFields.remove(this, true);
+		Cache.uniqueKeyForConstructors.remove(this, true);
+		Cache.uniqueKeyForMethods.remove(this, true);
+		Cache.bindedFunctionalInterfaces.remove(this, true);
+		Cache.uniqueKeyForExecutableAndMethodHandle.remove(this, true);
 	}
 	
 	public synchronized boolean register(Object client) {
