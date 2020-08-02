@@ -424,16 +424,23 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		}
 		
 		public <T extends Buffer> boolean destroy(T buffer) {
+			return destroy(buffer, false);
+		}
+		
+		public <T extends Buffer> boolean destroy(T buffer, boolean force) {
 			if (buffer.isDirect()) {
-				if (Fields.getDirect(buffer, "att") == null) {
+				T attachment = Fields.getDirect(buffer, "att");
+				if (attachment == null) {
 					Object cleaner;
 					if ((cleaner = Methods.invokeDirect(buffer, "cleaner")) != null) {
 						Methods.invokeDirect(cleaner, "clean");
 						return true;
 					}
-				} else {
-					Fields.setDirect(buffer, "att", null);
 				}
+				Fields.setDirect(buffer, "att", null);
+				if (force){
+					return destroy(attachment, force);
+				}				
 				return false;
 			} else {
 				return true;
