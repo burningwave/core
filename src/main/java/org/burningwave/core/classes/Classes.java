@@ -434,7 +434,6 @@ public class Classes implements Component, MembersRetriever {
 		
 		public MethodHandle getDefinePackageMethod(ClassLoader classLoader) {
 			return getMethod(
-				classLoader,
 				classLoader.getClass().getName() + "_" + "definePackage",
 				() -> findDefinePackageMethodAndMakeItAccesible(classLoader)
 			);
@@ -457,7 +456,6 @@ public class Classes implements Component, MembersRetriever {
 		
 		public MethodHandle getDefineClassMethod(ClassLoader classLoader) {
 			return getMethod(
-				classLoader,
 				Classes.getClassLoader(classLoader.getClass()) + "_" + classLoader + "_" +  "defineClass",
 				() -> findDefineClassMethodAndMakeItAccesible(classLoader)
 			);
@@ -477,7 +475,7 @@ public class Classes implements Component, MembersRetriever {
 			return Methods.convertToMethodHandleBag(method).getValue();
 		}
 		
-		private MethodHandle getMethod(ClassLoader classLoader, String key, Supplier<MethodHandle> methodSupplier) {
+		private MethodHandle getMethod(String key, Supplier<MethodHandle> methodSupplier) {
 			MethodHandle method = classLoadersMethods.get(key);
 			if (method == null) {
 				synchronized (classLoadersMethods) {

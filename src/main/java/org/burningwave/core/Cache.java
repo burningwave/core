@@ -43,7 +43,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -65,27 +64,13 @@ public class Cache implements Component {
 	public final ObjectAndPathForResources<ClassLoader, Collection<Method>> uniqueKeyForMethods;
 	public final ObjectAndPathForResources<ClassLoader, Object> bindedFunctionalInterfaces;
 	public final ObjectAndPathForResources<ClassLoader, Map.Entry<java.lang.reflect.Executable, MethodHandle>> uniqueKeyForExecutableAndMethodHandle;
-	public final Collection<ByteBuffer> uncleanedByteBuffers;
-	
-	
-	public void clearUncleanedByteBuffers() {
-		for (ByteBuffer byteBuffer : uncleanedByteBuffers) {
-			ByteBufferDelegate.forceDestroy(byteBuffer);
-		}
-		uncleanedByteBuffers.clear();
-	}
 	
 	private Cache() {
 		logInfo("Building cache");
-		uncleanedByteBuffers = ConcurrentHashMap.newKeySet();
 		pathForContents = new PathForResources<ByteBuffer>(1L, Streams::shareContent) {
 			@Override
 			void destroy(String path, ByteBuffer item) {
-				ByteBuffer byteBuffer = ByteBufferDelegate.destroy(item);
-				if (byteBuffer != null) {
-					uncleanedByteBuffers.add(byteBuffer);
-					logWarn("Added uncleaned buffer for path {}", path);
-				}
+				ByteBufferDelegate.destroy(item);
 			}
 		};
 		pathForFileSystemItems = new PathForResources<FileSystemItem>(1L, fileSystemItem -> fileSystemItem) {
