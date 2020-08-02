@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.io.IOException;
@@ -48,12 +49,12 @@ public final class ByteBufferInputStream extends InputStream {
     }
     
     public ByteBuffer toByteBuffer() {
-		return bufferCopy.duplicate();
+		return ByteBufferDelegate.duplicate(bufferCopy);
 	}
     
     @Override
     public synchronized void reset() throws IOException {
-    	buffer = bufferCopy.duplicate();
+    	buffer = ByteBufferDelegate.duplicate(toByteBuffer());
     }
     
     public int read() {
@@ -75,7 +76,15 @@ public final class ByteBufferInputStream extends InputStream {
     
     @Override
     public void close() throws IOException {
-    	buffer = null;
-    	bufferCopy = null;
+    	ByteBuffer buffer = this.buffer;
+    	this.buffer = null;
+    	ByteBuffer bufferCopy = this.bufferCopy;
+    	this.bufferCopy = null;
+    	if (buffer != null) {
+    		ByteBufferDelegate.destroy(buffer);
+    	}
+    	if (bufferCopy != null) {
+    		ByteBufferDelegate.destroy(bufferCopy);
+    	}
     }
 }

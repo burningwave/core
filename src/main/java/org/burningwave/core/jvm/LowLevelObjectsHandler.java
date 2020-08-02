@@ -49,8 +49,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
@@ -388,6 +391,10 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			return new ByteBufferDelegate();
 		}
 		
+		public ByteBuffer duplicate(ByteBuffer buffer) {
+			return buffer.duplicate();
+		}
+		
 		public <T extends Buffer> int limit(T buffer) {
 			return ((Buffer)buffer).limit();
 		}
@@ -418,17 +425,20 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		
 		public <T extends Buffer> boolean destroy(T buffer) {
 			if (buffer.isDirect()) {
-				Object cleaner;
-				if (Methods.invokeDirect(buffer, "attachment") != null && (cleaner = Methods.invokeDirect(buffer, "cleaner")) != null) {
-					Methods.invokeDirect(cleaner, "clean");
-					return true;
+				if (Fields.getDirect(buffer, "att") == null) {
+					Object cleaner;
+					if ((cleaner = Methods.invokeDirect(buffer, "cleaner")) != null) {
+						Methods.invokeDirect(cleaner, "clean");
+						return true;
+					}
+				} else {
+					Fields.setDirect(buffer, "att", null);
 				}
 				return false;
 			} else {
 				return true;
 			}
 		}
-		
 	}
 	
 	private abstract static class Initializer implements Component {
