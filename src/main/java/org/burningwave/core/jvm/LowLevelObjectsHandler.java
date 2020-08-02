@@ -416,10 +416,29 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			return ((Buffer)buffer).remaining();
 		}
 		
-		public <T extends Buffer> boolean destroy(T buffer) {
+		public <T extends Buffer> T destroy(T buffer) {
 			if (buffer.isDirect()) {
 				Object cleaner;
 				if (Methods.invokeDirect(buffer, "attachment") != null && (cleaner = Methods.invokeDirect(buffer, "cleaner")) != null) {
+					Methods.invokeDirect(buffer, "cleaner");
+					return null;
+				}
+				return buffer;
+			} else {
+				return null;
+			}
+		}
+		
+		public <T extends Buffer> boolean forceDestroy(T buffer) {
+			if (buffer.isDirect()) {
+				Object cleaner;
+				Buffer cleanerHolder = buffer;
+				Buffer temp = null;
+				while ((temp = Fields.getDirect(cleanerHolder, "att")) != null) {
+					Fields.setDirect(cleanerHolder, "att", null);
+					cleanerHolder = temp;
+				}
+				if ((cleaner = Methods.invokeDirect(cleanerHolder, "cleaner")) != null) {
 					Methods.invokeDirect(cleaner, "clean");
 					return true;
 				}
@@ -428,7 +447,6 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 				return true;
 			}
 		}
-		
 	}
 	
 	private abstract static class Initializer implements Component {

@@ -422,6 +422,7 @@ public class ComponentContainer implements ComponentSupplier {
 			componentContainer.clear();
 		}
 		Cache.clear();
+		Cache.clearUncleanedByteBuffers();
 		System.gc();
 	}
 	
