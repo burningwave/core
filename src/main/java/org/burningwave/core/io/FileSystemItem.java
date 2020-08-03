@@ -794,7 +794,7 @@ public class FileSystemItem implements ManagedLogger {
 				while (fIS.getAbsolutePath() == this.getAbsolutePath() && superParentAllChildren.size() > 1) {
 					fIS = IterableObjectHelper.getRandom(superParentAllChildren);
 				}
-				if (Cache.pathForContents.get(fIS.getAbsolutePath()) == null ) {
+				if ( Cache.pathForContents.get(fIS.getAbsolutePath()) == null ) {
 					synchronized (superParentAllChildren) {
 						if (Cache.pathForContents.get(fIS.getAbsolutePath()) == null ) {
 							superParent.refresh().getAllChildren();

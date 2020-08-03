@@ -29,7 +29,6 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
-import static org.burningwave.core.assembler.StaticComponentContainer.Cleaner;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
@@ -148,7 +147,12 @@ public class Cache implements Component {
 		public PathForResources<R> remove(T object, boolean destroyItems) {
 			PathForResources<R> pathForResources = resources.remove(object);
 			if (pathForResources != null && destroyItems) {
-				pathForResources.clear(destroyItems);
+				Thread cleaner = new Thread(() -> {
+					pathForResources.clear(destroyItems);
+					logInfo("{} ended to clean linked resources of {}", Thread.currentThread().toString(), object.toString());
+				});				
+				cleaner.setPriority(Thread.MIN_PRIORITY);
+				cleaner.start();	
 			}
 			return pathForResources;
 		}
@@ -177,13 +181,16 @@ public class Cache implements Component {
 				this.resources = new HashMap<>();
 				mutexManagerForResources.clear();
 			}
-			Cleaner.add(() -> {
+			Thread cleaner = new Thread(() -> {
 				for (Entry<T, PathForResources<R>> item : resources.entrySet()) {
 					item.getValue().clear(destroyItems);
 				}
 				resources.clear();
-				logInfo("Cleaning of {} is finished", this.toString());
-			}, Thread.MIN_PRIORITY);		
+				logInfo("{} ended to clean {}", Thread.currentThread().toString(), this.toString());
+			});
+			
+			cleaner.setPriority(Thread.MIN_PRIORITY);
+			cleaner.start();			
 			return this;
 		}
 		
@@ -302,8 +309,7 @@ public class Cache implements Component {
 			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
 			R item = nestedPartition.remove(path);
 			if (destroy && item != null) {
-				String finalPath = path;
-				Cleaner.add(() -> destroy(finalPath, item), Thread.MIN_PRIORITY);
+				destroy(path, item);
 			}
 			return item;
 		}
@@ -336,10 +342,12 @@ public class Cache implements Component {
 				mutexManagerForLoadedResources.clear();    
 				mutexManagerForPartitionedResources.clear();
 			}
-			Cleaner.add(() -> {
+			Thread cleaner = new Thread(() -> {
 				clearResources(partitions, destroyItems);
-				logInfo("Cleaning of {} is finished", this.toString());
-			}, Thread.MIN_PRIORITY);
+				logInfo("{} ended to clean {}", Thread.currentThread().toString(), this.toString());
+			});
+			cleaner.setPriority(Thread.MIN_PRIORITY);
+			cleaner.start();
 			return this;
 		}
 

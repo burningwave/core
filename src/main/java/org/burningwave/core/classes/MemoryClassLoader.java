@@ -27,12 +27,9 @@
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package org.burningwave.core.classes;
-
-import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.Cleaner;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -59,7 +56,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	Map<String, ByteBuffer> notLoadedByteCodes;
 	Map<String, ByteBuffer> loadedByteCodes;
 	HashSet<Object> clients;
-	Boolean isClosed;
+	boolean isClosed;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -69,7 +66,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		ClassLoader parentClassLoader
 	) {
 		super(parentClassLoader);
-		isClosed = Boolean.FALSE;
 		if (parentClassLoader instanceof MemoryClassLoader) {
 			((MemoryClassLoader)parentClassLoader).register(this);
 		}
@@ -382,29 +378,16 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	@Override
 	public MemoryClassLoader clear () {
-		Map<String, ByteBuffer> notLoadedByteCodes = this.notLoadedByteCodes;
-		Map<String, ByteBuffer> loadedByteCodes = this.loadedByteCodes;
-		this.notLoadedByteCodes = new HashMap<>();
-		this.loadedByteCodes = new HashMap<>();
-		Cleaner.add(() -> {
-			try {
-				for (ByteBuffer byteCode : notLoadedByteCodes.values()) {
-					ByteBufferDelegate.destroy(byteCode);
-				}
-				notLoadedByteCodes.clear();
-				for (ByteBuffer byteCode : loadedByteCodes.values()) {
-					ByteBufferDelegate.destroy(byteCode);
-				}
-				loadedByteCodes.clear();
-				logInfo("Cleaning of {} is finished", this.toString());
-	    	} catch (Throwable exc) {
-	    		if (!isClosed) {
-	    			throw exc;
-	    		} else {
-	    			logWarn("Could not execute clear because {} has been closed", this.toString());
-	    		}
-	    	}
-		}, Thread.MIN_PRIORITY);
+		try {
+			this.notLoadedByteCodes.clear();
+			this.loadedByteCodes.clear();
+    	} catch (Throwable exc) {
+    		if (!isClosed) {
+    			throw exc;
+    		} else {
+    			logWarn("Could not execute clear because {} has been closed", this.toString());
+    		}
+    	}  
 		return this;
 	}
 	
@@ -441,38 +424,27 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		return false;
 	}
 	
-	public void close() {
+	public synchronized void close() {
 		HashSet<Object> clients = this.clients;
 		if (clients != null && !clients.isEmpty()) {
 			throw Throwables.toRuntimeException("Could not close " + this + " because there are " + clients.size() +" registered clients");
 		}
-		boolean close = false;
-		synchronized (isClosed) {
-			if (!isClosed) {
-				close = isClosed = Boolean.TRUE;
-			}
+		isClosed = true;
+		ClassLoader parentClassLoader = getParent();
+		if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
+			((MemoryClassLoader)parentClassLoader).unregister(this,true);
 		}
-		if (close) {
-			Thread closingThread = new Thread(() -> {
-				ClassLoader parentClassLoader = getParent();
-				if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
-					((MemoryClassLoader)parentClassLoader).unregister(this,true);
-				}
-				if (clients != null) {
-					clients.clear();
-				}
-				this.clients = null;
-				clear();
-				notLoadedByteCodes = null;
-				loadedByteCodes = null;
-				Collection<Class<?>> loadedClasses = ClassLoaders.retrieveLoadedClasses(this);
-				if (loadedClasses != null) {
-					loadedClasses.clear();
-				}
-				unregister();
-			});
-			closingThread.setPriority(Thread.MIN_PRIORITY);
-			closingThread.start();
+		if (clients != null) {
+			clients.clear();
 		}
+		this.clients = null;
+		clear();
+		notLoadedByteCodes = null;
+		loadedByteCodes = null;
+		Collection<Class<?>> loadedClasses = ClassLoaders.retrieveLoadedClasses(this);
+		if (loadedClasses != null) {
+			loadedClasses.clear();
+		}
+		unregister();
 	}
 }
