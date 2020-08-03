@@ -99,6 +99,7 @@ public class AsynExecutor implements Component{
 				}
 			}
 		}, name);
+		executor.setPriority(initialPriority);
 		prioritySetter = priority -> executor.setPriority(priority);
 		executor.start();
 	}
@@ -107,8 +108,8 @@ public class AsynExecutor implements Component{
 		return new AsynExecutor(name, initialPriority);
 	}
 	
-	public void add(Runnable cleaner, int priority) {
-		executables.put(cleaner, priority);
+	public void add(Runnable executable, int priority) {
+		executables.put(executable, priority);
 		try {
 			synchronized(mutexManager.getMutex("executableCollectionFiller")) {
 				mutexManager.getMutex("executableCollectionFiller").notifyAll();
@@ -130,7 +131,6 @@ public class AsynExecutor implements Component{
 				}
 			}
 		}
-		executor.setPriority(Thread.MIN_PRIORITY);
 	}
 
 	public void suspend() {
