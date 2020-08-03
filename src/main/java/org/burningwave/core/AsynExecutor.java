@@ -39,12 +39,13 @@ public class AsynExecutor implements Component{
 	private Runnable currentExecutable;
 	private Boolean supended;
 	private Mutex.Manager mutexManager;
+	private Thread executor;
 	
 	private AsynExecutor(String name) {
 		mutexManager = Mutex.Manager.create(this);
 		supended = Boolean.FALSE;
 		executables = ConcurrentHashMap.newKeySet();
-		Thread cleaner = new Thread(() -> {
+		executor = new Thread(() -> {
 			while (executables != null) {
 				if (!executables.isEmpty()) {
 					Iterator<Runnable> cleanersItr = executables.iterator();
@@ -95,8 +96,8 @@ public class AsynExecutor implements Component{
 				}
 			}
 		}, name);
-		cleaner.setPriority(Thread.MIN_PRIORITY);
-		cleaner.start();
+		executor.setPriority(Thread.MIN_PRIORITY);
+		executor.start();
 	}
 	
 	public static AsynExecutor create(String name) {
@@ -115,6 +116,7 @@ public class AsynExecutor implements Component{
 	}
 	
 	public void waitForExecutablesEnding() {
+		executor.setPriority(Thread.MAX_PRIORITY);
 		while (!executables.isEmpty()) {
 			synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
 				try {
@@ -124,9 +126,11 @@ public class AsynExecutor implements Component{
 				}
 			}
 		}
+		executor.setPriority(Thread.MIN_PRIORITY);
 	}
 
 	public void suspend() {
+		executor.setPriority(Thread.MAX_PRIORITY);
 		supended = Boolean.TRUE;
 		if (currentExecutable != null) {
 			synchronized (mutexManager.getMutex("suspensionCaller")) {
@@ -139,6 +143,7 @@ public class AsynExecutor implements Component{
 				}
 			}
 		}
+		executor.setPriority(Thread.MIN_PRIORITY);
 	}
 
 	public void resume() {
