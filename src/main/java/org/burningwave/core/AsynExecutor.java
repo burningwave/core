@@ -28,27 +28,29 @@
  */
 package org.burningwave.core;
 
-import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 import org.burningwave.core.concurrent.Mutex;
 
 public class AsynExecutor implements Component{
-	private final Collection<Runnable> executables;
-	private Runnable currentExecutable;
+	private final Map<Runnable, Integer> executables;
+	private Entry<Runnable, Integer> currentExecutable;
 	private Boolean supended;
 	private Mutex.Manager mutexManager;
 	private Thread executor;
-	
+	private Consumer<Integer> prioritySetter;
 	private AsynExecutor(String name, int initialPriority) {
 		mutexManager = Mutex.Manager.create(this);
 		supended = Boolean.FALSE;
-		executables = ConcurrentHashMap.newKeySet();
+		executables = new ConcurrentHashMap<>();
 		executor = new Thread(() -> {
 			while (executables != null) {
 				if (!executables.isEmpty()) {
-					Iterator<Runnable> cleanersItr = executables.iterator();
+					Iterator<Entry<Runnable, Integer>> cleanersItr = executables.entrySet().iterator();
 					while (cleanersItr.hasNext()) {
 						synchronized(mutexManager.getMutex("resumeCaller")) {
 							try {
@@ -62,7 +64,8 @@ public class AsynExecutor implements Component{
 						}
 						try {
 							currentExecutable = cleanersItr.next();
-							currentExecutable.run();
+							prioritySetter.accept(currentExecutable.getValue());
+							currentExecutable.getKey().run();
 							cleanersItr.remove();
 							synchronized(mutexManager.getMutex("suspensionCaller")) {
 								currentExecutable = null;
@@ -96,7 +99,7 @@ public class AsynExecutor implements Component{
 				}
 			}
 		}, name);
-		executor.setPriority(initialPriority);
+		prioritySetter = priority -> executor.setPriority(priority);
 		executor.start();
 	}
 	
@@ -104,8 +107,8 @@ public class AsynExecutor implements Component{
 		return new AsynExecutor(name, initialPriority);
 	}
 	
-	public void add(Runnable cleaner) {
-		executables.add(cleaner);
+	public void add(Runnable cleaner, int priority) {
+		executables.put(cleaner, priority);
 		try {
 			synchronized(mutexManager.getMutex("executableCollectionFiller")) {
 				mutexManager.getMutex("executableCollectionFiller").notifyAll();
@@ -118,6 +121,7 @@ public class AsynExecutor implements Component{
 	public void waitForExecutablesEnding() {
 		executor.setPriority(Thread.MAX_PRIORITY);
 		while (!executables.isEmpty()) {
+			executables.replaceAll((executable, priority) -> Thread.MAX_PRIORITY);
 			synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
 				try {
 					mutexManager.getMutex("executingFinishedWaiter").wait();
@@ -143,7 +147,6 @@ public class AsynExecutor implements Component{
 				}
 			}
 		}
-		executor.setPriority(Thread.MIN_PRIORITY);
 	}
 
 	public void resume() {

@@ -404,7 +404,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	    			logWarn("Could not execute clear because {} has been closed", this.toString());
 	    		}
 	    	}
-		});
+		}, Thread.MIN_PRIORITY);
 		return this;
 	}
 	
