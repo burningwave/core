@@ -32,22 +32,22 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Cleaner implements Component{
-	private final Collection<Runnable> cleaners;
+public class AsynExecutor implements Component{
+	private final Collection<Runnable> executables;
 	private Boolean supended;
 	
-	private Cleaner() {
+	private AsynExecutor() {
 		supended = Boolean.FALSE;
-		cleaners = ConcurrentHashMap.newKeySet();
+		executables = ConcurrentHashMap.newKeySet();
 		Thread cleaner = new Thread(() -> {
-			while (cleaners != null) {
-				if (!cleaners.isEmpty()) {
-					Iterator<Runnable> cleanersItr = cleaners.iterator();
+			while (executables != null) {
+				if (!executables.isEmpty()) {
+					Iterator<Runnable> cleanersItr = executables.iterator();
 					while (cleanersItr.hasNext()) {
-						synchronized(cleaners) {
+						synchronized(executables) {
 							try {
 								if (supended) {
-									cleaners.wait();
+									executables.wait();
 									continue;
 								}
 							} catch (InterruptedException exc) {
@@ -61,10 +61,10 @@ public class Cleaner implements Component{
 							logWarn("Exception occurred", exc);
 						}						
 					}
-					synchronized(cleaners) {
-						if (cleaners.isEmpty()) {
+					synchronized(executables) {
+						if (executables.isEmpty()) {
 							try {
-								cleaners.notify();
+								executables.notifyAll();
 							} catch (Throwable exc) {
 								logWarn("Exception occurred", exc);
 							}
@@ -73,10 +73,10 @@ public class Cleaner implements Component{
 						}
 					}
 				} else {
-					synchronized(cleaners) {
+					synchronized(executables) {
 						try {
-							if (cleaners.isEmpty()) {
-								cleaners.wait();
+							while (executables.isEmpty()) {
+								executables.wait();
 							}
 						} catch (InterruptedException exc) {
 							logWarn("Exception occurred", exc);
@@ -89,28 +89,26 @@ public class Cleaner implements Component{
 		cleaner.start();
 	}
 	
-	public static Cleaner create() {
-		return new Cleaner();
+	public static AsynExecutor create() {
+		return new AsynExecutor();
 	}
 	
 	public void add(Runnable cleaner) {
-		cleaners.add(cleaner);
+		executables.add(cleaner);
 		try {
-			synchronized(cleaners) {
-				cleaners.notify();
+			synchronized(executables) {
+				executables.notifyAll();
 			}
 		} catch (Throwable exc) {
 			logWarn("Exception occurred", exc);
 		}
 	}
 	
-	public void waitForCleanEnding() {
-		if (!cleaners.isEmpty()) {
-			synchronized(cleaners) {
+	public void waitForExecutorsEnding() {
+		while (!executables.isEmpty()) {
+			synchronized(executables) {
 				try {
-					if (!cleaners.isEmpty()) {
-						cleaners.wait();
-					}
+					executables.wait();
 				} catch (InterruptedException exc) {
 					logWarn("Exception occurred", exc);
 				}
@@ -123,10 +121,10 @@ public class Cleaner implements Component{
 	}
 
 	public void resume() {
-		synchronized(cleaners) {
+		synchronized(executables) {
 			try {
 				supended = Boolean.FALSE;
-				cleaners.notify();
+				executables.notifyAll();
 			} catch (Throwable exc) {
 				logWarn("Exception occurred", exc);
 			}

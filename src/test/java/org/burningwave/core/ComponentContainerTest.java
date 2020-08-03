@@ -33,7 +33,7 @@ public class ComponentContainerTest extends BaseTest {
 	public void clearAll() {
 		logWarn("Total memory before clearAll {}", Runtime.getRuntime().totalMemory());
 		ComponentContainer.clearAll();
-		Cleaner.waitForCleanEnding();
+		Cleaner.waitForExecutorsEnding();
 		logWarn("Total memory after clearAll {}", Runtime.getRuntime().totalMemory());
 	}
 	

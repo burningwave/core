@@ -63,7 +63,7 @@ public class ClassHunterTest extends BaseTest {
 	
 	@Test
 	public void findAllUncachedTestFour() throws Exception {
-		Cleaner.waitForCleanEnding();
+		Cleaner.waitForExecutorsEnding();
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
 			() -> 
