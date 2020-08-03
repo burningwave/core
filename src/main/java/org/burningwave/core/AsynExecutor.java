@@ -32,12 +32,16 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.burningwave.core.concurrent.Mutex;
+
 public class AsynExecutor implements Component{
 	private final Collection<Runnable> executables;
 	private Runnable currentExecutable;
 	private Boolean supended;
+	private Mutex.Manager mutexManager;
 	
 	private AsynExecutor(String name) {
+		mutexManager = Mutex.Manager.create(this);
 		supended = Boolean.FALSE;
 		executables = ConcurrentHashMap.newKeySet();
 		Thread cleaner = new Thread(() -> {
@@ -45,10 +49,10 @@ public class AsynExecutor implements Component{
 				if (!executables.isEmpty()) {
 					Iterator<Runnable> cleanersItr = executables.iterator();
 					while (cleanersItr.hasNext()) {
-						synchronized(executables) {
+						synchronized(mutexManager.getMutex("resumeCaller")) {
 							try {
 								if (supended) {
-									executables.wait();
+									mutexManager.getMutex("resumeCaller").wait();
 									continue;
 								}
 							} catch (InterruptedException exc) {
@@ -59,18 +63,18 @@ public class AsynExecutor implements Component{
 							currentExecutable = cleanersItr.next();
 							currentExecutable.run();
 							cleanersItr.remove();
-							synchronized(executables) {
+							synchronized(mutexManager.getMutex("suspensionCaller")) {
 								currentExecutable = null;
-								executables.notifyAll();
+								mutexManager.getMutex("suspensionCaller").notifyAll();
 							}
 						} catch (Throwable exc) {
 							logWarn("Exception occurred", exc);
 						}						
 					}
-					synchronized(executables) {
+					synchronized(mutexManager.getMutex("executingFinishedWaiters")) {
 						if (executables.isEmpty()) {
 							try {
-								executables.notifyAll();
+								mutexManager.getMutex("executingFinishedWaiters").notifyAll();
 							} catch (Throwable exc) {
 								logWarn("Exception occurred", exc);
 							}
@@ -79,10 +83,10 @@ public class AsynExecutor implements Component{
 						}
 					}
 				} else {
-					synchronized(executables) {
+					synchronized(mutexManager.getMutex("executableCollectionFiller")) {
 						try {
 							while (executables.isEmpty()) {
-								executables.wait();
+								mutexManager.getMutex("executableCollectionFiller").wait();
 							}
 						} catch (InterruptedException exc) {
 							logWarn("Exception occurred", exc);
@@ -102,8 +106,8 @@ public class AsynExecutor implements Component{
 	public void add(Runnable cleaner) {
 		executables.add(cleaner);
 		try {
-			synchronized(executables) {
-				executables.notifyAll();
+			synchronized(mutexManager.getMutex("executableCollectionFiller")) {
+				mutexManager.getMutex("executableCollectionFiller").notifyAll();
 			}
 		} catch (Throwable exc) {
 			logWarn("Exception occurred", exc);
@@ -112,9 +116,9 @@ public class AsynExecutor implements Component{
 	
 	public void waitForExecutablesEnding() {
 		while (!executables.isEmpty()) {
-			synchronized(executables) {
+			synchronized(mutexManager.getMutex("executingFinishedWaiters")) {
 				try {
-					executables.wait();
+					mutexManager.getMutex("executingFinishedWaiters").wait();
 				} catch (InterruptedException exc) {
 					logWarn("Exception occurred", exc);
 				}
@@ -125,10 +129,10 @@ public class AsynExecutor implements Component{
 	public void suspend() {
 		supended = Boolean.TRUE;
 		if (currentExecutable != null) {
-			synchronized (executables) {
+			synchronized (mutexManager.getMutex("suspensionCaller")) {
 				if (currentExecutable != null) {
 					try {
-						executables.wait();
+						mutexManager.getMutex("suspensionCaller").wait();
 					} catch (InterruptedException exc) {
 						logWarn("Exception occurred", exc);
 					}
@@ -138,10 +142,10 @@ public class AsynExecutor implements Component{
 	}
 
 	public void resume() {
-		synchronized(executables) {
+		synchronized(mutexManager.getMutex("resumeCaller")) {
 			try {
 				supended = Boolean.FALSE;
-				executables.notifyAll();
+				mutexManager.getMutex("resumeCaller").notifyAll();
 			} catch (Throwable exc) {
 				logWarn("Exception occurred", exc);
 			}
