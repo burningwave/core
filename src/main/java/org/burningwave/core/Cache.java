@@ -148,10 +148,7 @@ public class Cache implements Component {
 		public PathForResources<R> remove(T object, boolean destroyItems) {
 			PathForResources<R> pathForResources = resources.remove(object);
 			if (pathForResources != null && destroyItems) {
-				Cleaner.add(() -> {
-					pathForResources.clear(destroyItems);
-					logInfo("{} ended to clean linked resources of {}", Thread.currentThread().toString(), object.toString());
-				});
+				pathForResources.clear(destroyItems);
 			}
 			return pathForResources;
 		}
