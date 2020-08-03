@@ -36,7 +36,7 @@ public class AsynExecutor implements Component{
 	private final Collection<Runnable> executables;
 	private Boolean supended;
 	
-	private AsynExecutor() {
+	private AsynExecutor(String name) {
 		supended = Boolean.FALSE;
 		executables = ConcurrentHashMap.newKeySet();
 		Thread cleaner = new Thread(() -> {
@@ -84,13 +84,13 @@ public class AsynExecutor implements Component{
 					}
 				}
 			}
-		}, this.toString());
+		}, name);
 		cleaner.setPriority(Thread.MIN_PRIORITY);
 		cleaner.start();
 	}
 	
-	public static AsynExecutor create() {
-		return new AsynExecutor();
+	public static AsynExecutor create(String name) {
+		return new AsynExecutor(name);
 	}
 	
 	public void add(Runnable cleaner) {
@@ -104,7 +104,7 @@ public class AsynExecutor implements Component{
 		}
 	}
 	
-	public void waitForExecutorsEnding() {
+	public void waitForExecutablesEnding() {
 		while (!executables.isEmpty()) {
 			synchronized(executables) {
 				try {

@@ -182,7 +182,7 @@ public class Cache implements Component {
 					item.getValue().clear(destroyItems);
 				}
 				resources.clear();
-				logInfo("{} ended to clean {}", Thread.currentThread().toString(), this.toString());
+				logInfo("Cleaning of {} is finished", this.toString());
 			});		
 			return this;
 		}
@@ -338,7 +338,7 @@ public class Cache implements Component {
 			}
 			Cleaner.add(() -> {
 				clearResources(partitions, destroyItems);
-				logInfo("{} ended to clean {}", Thread.currentThread().toString(), this.toString());
+				logInfo("Cleaning of {} is finished", this.toString());
 			});
 			return this;
 		}

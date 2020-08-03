@@ -396,13 +396,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 					ByteBufferDelegate.destroy(byteCode);
 				}
 				loadedByteCodes.clear();
+				logInfo("Cleaning of {} is finished", this.toString());
 	    	} catch (Throwable exc) {
 	    		if (!isClosed) {
 	    			throw exc;
 	    		} else {
 	    			logWarn("Could not execute clear because {} has been closed", this.toString());
 	    		}
-	    	} 
+	    	}
 		});
 		return this;
 	}

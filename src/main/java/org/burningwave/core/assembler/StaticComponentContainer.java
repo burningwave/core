@@ -81,7 +81,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
-		Cleaner = org.burningwave.core.AsynExecutor.create();
+		Cleaner = org.burningwave.core.AsynExecutor.create("Cleaner");
 		Properties properties = new Properties();
 		properties.putAll(Configuration.DEFAULT_VALUES);
 		properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
