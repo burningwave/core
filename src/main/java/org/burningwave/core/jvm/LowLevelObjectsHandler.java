@@ -49,8 +49,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
@@ -388,6 +391,10 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			return new ByteBufferDelegate();
 		}
 		
+		public ByteBuffer duplicate(ByteBuffer buffer) {
+			return buffer.duplicate();
+		}
+		
 		public <T extends Buffer> int limit(T buffer) {
 			return ((Buffer)buffer).limit();
 		}
@@ -417,18 +424,28 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		}
 		
 		public <T extends Buffer> boolean destroy(T buffer) {
+			return destroy(buffer, false);
+		}
+		
+		public <T extends Buffer> boolean destroy(T buffer, boolean force) {
 			if (buffer.isDirect()) {
-				Object cleaner;
-				if (Methods.invokeDirect(buffer, "attachment") != null && (cleaner = Methods.invokeDirect(buffer, "cleaner")) != null) {
-					Methods.invokeDirect(cleaner, "clean");
-					return true;
+				T attachment = Fields.getDirect(buffer, "att");
+				if (attachment == null) {
+					Object cleaner;
+					if ((cleaner = Methods.invokeDirect(buffer, "cleaner")) != null) {
+						Methods.invokeDirect(cleaner, "clean");
+						return true;
+					}
 				}
+				Fields.setDirect(buffer, "att", null);
+				if (force){
+					return destroy(attachment, force);
+				}				
 				return false;
 			} else {
 				return true;
 			}
 		}
-		
 	}
 	
 	private abstract static class Initializer implements Component {

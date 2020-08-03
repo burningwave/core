@@ -134,7 +134,7 @@ public class Streams implements Component {
 	}
 	
 	private boolean is(ByteBuffer bytes, Predicate<Integer> predicate) {
-		return bytes.capacity() > 4 && bytes.limit() > 4 && predicate.test(bytes.duplicate().getInt());
+		return bytes.capacity() > 4 && bytes.limit() > 4 && predicate.test(ByteBufferDelegate.duplicate(bytes).getInt());
 	}
 	
 	private boolean isArchive(int fileSignature) {
@@ -184,7 +184,7 @@ public class Streams implements Component {
     }
 
 	public ByteBuffer shareContent(ByteBuffer byteBuffer) {
-		ByteBuffer duplicated = byteBuffer.duplicate();
+		ByteBuffer duplicated = ByteBufferDelegate.duplicate(byteBuffer);
 		if (ByteBufferDelegate.position(byteBuffer) > 0) {
 			ByteBufferDelegate.flip(duplicated);
 		}		

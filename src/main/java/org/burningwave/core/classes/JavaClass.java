@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
@@ -120,7 +121,7 @@ public class JavaClass {
 	}
 	
 	public ByteBuffer getByteCode() {
-		return byteCode.duplicate();
+		return ByteBufferDelegate.duplicate(byteCode);
 	}
 	
 	public byte[] toByteArray() {
