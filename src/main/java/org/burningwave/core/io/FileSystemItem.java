@@ -29,7 +29,6 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
-import static org.burningwave.core.assembler.StaticComponentContainer.Cleaner;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
@@ -275,9 +274,7 @@ public class FileSystemItem implements ManagedLogger {
 			synchronized (this) {
 				allChildren = this.allChildren;
 				if (allChildren == null) {
-					Cleaner.suspend();
 					allChildren = this.allChildren = loadAllChildren();
-					Cleaner.resume();
 				}
 			}
 		}

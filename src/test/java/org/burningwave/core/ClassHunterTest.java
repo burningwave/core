@@ -1,5 +1,7 @@
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Cleaner;
+
 import java.io.Closeable;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -61,6 +63,7 @@ public class ClassHunterTest extends BaseTest {
 	
 	@Test
 	public void findAllUncachedTestFour() throws Exception {
+		Cleaner.waitForCleanEnding();
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
 			() -> 
