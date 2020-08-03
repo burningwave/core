@@ -134,7 +134,8 @@ public class Streams implements Component {
 	}
 	
 	private boolean is(ByteBuffer bytes, Predicate<Integer> predicate) {
-		return bytes.capacity() > 4 && bytes.limit() > 4 && predicate.test(ByteBufferDelegate.duplicate(bytes).getInt());
+		return bytes.capacity() > 4 && bytes.limit() > 4 && 
+			ByteBufferDelegate.execute(bytes, buffer -> predicate.test(buffer.getInt()), true, false);
 	}
 	
 	private boolean isArchive(int fileSignature) {
