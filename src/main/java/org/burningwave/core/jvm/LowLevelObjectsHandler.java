@@ -51,9 +51,8 @@ import java.lang.reflect.Modifier;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
@@ -425,6 +424,15 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		
 		public <T extends Buffer> boolean destroy(T buffer) {
 			return destroy(buffer, false);
+		}
+		
+		public <T> T execute(ByteBuffer buffer, Function<ByteBuffer, T> consumer, boolean destroyBuffer, boolean forceDestroy) {
+			buffer = buffer.duplicate();
+			T result = consumer.apply(buffer);
+			if (destroyBuffer) {
+				destroy(buffer, forceDestroy);
+			}
+			return result;
 		}
 		
 		public <T extends Buffer> boolean destroy(T buffer, boolean force) {
