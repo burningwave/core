@@ -29,7 +29,6 @@
 package org.burningwave.core.jvm;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.Cleaner;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
@@ -52,8 +51,9 @@ import java.lang.reflect.Modifier;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
@@ -423,15 +423,6 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			return ((Buffer)buffer).remaining();
 		}
 		
-		public <T> T execute(ByteBuffer buffer, Function<ByteBuffer, T> consumer, boolean destroyBuffer, boolean forceDestroy) {
-			ByteBuffer copy = buffer.duplicate();
-			T result = consumer.apply(copy);
-			if (destroyBuffer) {
-				Cleaner.add(() -> destroy(copy, forceDestroy));
-			}
-			return result;
-		}
-		
 		public <T extends Buffer> boolean destroy(T buffer) {
 			return destroy(buffer, false);
 		}
@@ -441,9 +432,12 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 				T attachment = Fields.getDirect(buffer, "att");
 				if (attachment == null) {
 					Object cleaner;
-					if ((cleaner = Methods.invokeDirect(buffer, "cleaner")) != null) {
-						Methods.invokeDirect(cleaner, "clean");
-						return true;
+					synchronized (buffer) {
+						if ((cleaner = Methods.invokeDirect(buffer, "cleaner")) != null) {
+							Fields.setDirect(buffer, "cleaner", null);
+							Methods.invokeDirect(cleaner, "clean");
+							return true;
+						}
 					}
 				}
 				Fields.setDirect(buffer, "att", null);

@@ -796,7 +796,7 @@ public class FileSystemItem implements ManagedLogger {
 				}
 				if (Cache.pathForContents.get(fIS.getAbsolutePath()) == null ) {
 					synchronized (superParentAllChildren) {
-						if (Cache.pathForContents.get(fIS.getAbsolutePath()) == null) {
+						if (Cache.pathForContents.get(fIS.getAbsolutePath()) == null ) {
 							superParent.refresh().getAllChildren();
 						}
 					}

@@ -30,9 +30,9 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
-import static org.burningwave.core.assembler.StaticComponentContainer.Cleaner;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.Cleaner;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -69,7 +69,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		ClassLoader parentClassLoader
 	) {
 		super(parentClassLoader);
-		isClosed = new Boolean(false);
+		isClosed = Boolean.FALSE;
 		if (parentClassLoader instanceof MemoryClassLoader) {
 			((MemoryClassLoader)parentClassLoader).register(this);
 		}
@@ -404,7 +404,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	    			logWarn("Could not execute clear because {} has been closed", this.toString());
 	    		}
 	    	}
-		});
+		}, Thread.MIN_PRIORITY);
 		return this;
 	}
 	
@@ -449,7 +449,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		boolean close = false;
 		synchronized (isClosed) {
 			if (!isClosed) {
-				close = isClosed = new Boolean(true);
+				close = isClosed = Boolean.TRUE;
 			}
 		}
 		if (close) {

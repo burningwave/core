@@ -183,7 +183,7 @@ public class Cache implements Component {
 				}
 				resources.clear();
 				logInfo("Cleaning of {} is finished", this.toString());
-			});		
+			}, Thread.MIN_PRIORITY);		
 			return this;
 		}
 		
@@ -303,7 +303,7 @@ public class Cache implements Component {
 			R item = nestedPartition.remove(path);
 			if (destroy && item != null) {
 				String finalPath = path;
-				Cleaner.add(() -> destroy(finalPath, item));
+				Cleaner.add(() -> destroy(finalPath, item), Thread.MIN_PRIORITY);
 			}
 			return item;
 		}
@@ -339,7 +339,7 @@ public class Cache implements Component {
 			Cleaner.add(() -> {
 				clearResources(partitions, destroyItems);
 				logInfo("Cleaning of {} is finished", this.toString());
-			});
+			}, Thread.MIN_PRIORITY);
 			return this;
 		}
 

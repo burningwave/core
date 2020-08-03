@@ -30,6 +30,8 @@ package org.burningwave.core.io;
 
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
+import static org.burningwave.core.assembler.StaticComponentContainer.Cleaner;
+import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.io.InputStream;
@@ -122,6 +124,14 @@ public class ByteBufferOutputStream extends OutputStream {
         temp.put(buffer);
         ByteBufferDelegate.limit(buffer, limit);
         ByteBufferDelegate.position(buffer, initialPosition);
+        if (Fields != null) {
+	        ByteBufferDelegate.destroy(buffer);
+        } else {
+        	ByteBuffer oldBuffer = buffer; 
+	        Cleaner.add(() -> {
+	        	ByteBufferDelegate.destroy(oldBuffer);
+	        }, Thread.MAX_PRIORITY);
+        }
         buffer = temp;
     }
     

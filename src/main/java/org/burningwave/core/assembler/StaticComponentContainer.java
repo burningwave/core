@@ -81,7 +81,8 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
-		Cleaner = org.burningwave.core.AsynExecutor.create("Cleaner");
+		Cleaner = org.burningwave.core.AsynExecutor.create("Cleaner", Thread.MIN_PRIORITY, true);
+		Cleaner.suspend();
 		Properties properties = new Properties();
 		properties.putAll(Configuration.DEFAULT_VALUES);
 		properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
@@ -134,6 +135,7 @@ public class StaticComponentContainer {
 			Members = org.burningwave.core.classes.Members.create();
 			Constructors = org.burningwave.core.classes.Constructors.create();
 			Fields = org.burningwave.core.classes.Fields.create();
+			Cleaner.resume();
 			Methods = org.burningwave.core.classes.Methods.create();
 			ByFieldOrByMethodPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByFieldOrByMethod.create();
 			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
