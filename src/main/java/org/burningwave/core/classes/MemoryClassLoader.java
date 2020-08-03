@@ -69,7 +69,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		ClassLoader parentClassLoader
 	) {
 		super(parentClassLoader);
-		isClosed = Boolean.FALSE;
+		isClosed = new Boolean(false);
 		if (parentClassLoader instanceof MemoryClassLoader) {
 			((MemoryClassLoader)parentClassLoader).register(this);
 		}
@@ -449,7 +449,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		boolean close = false;
 		synchronized (isClosed) {
 			if (!isClosed) {
-				close = isClosed = Boolean.TRUE;
+				close = isClosed = new Boolean(true);
 			}
 		}
 		if (close) {

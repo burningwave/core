@@ -66,7 +66,7 @@ class ZipFile implements IterableZipContainer {
 	}
 	
 	ZipFile(String absolutePath, ByteBuffer content) {
-		isDestroyed = Boolean.FALSE;				
+		isDestroyed = new Boolean(false);				
 		this.absolutePath = Paths.clean(absolutePath);
 		entries = ConcurrentHashMap.newKeySet();
 		try (java.util.zip.ZipFile zipFile = retrieveFile(absolutePath, content)) {
@@ -231,7 +231,7 @@ class ZipFile implements IterableZipContainer {
 		boolean destroy = false;
 		synchronized (isDestroyed) {
 			if (!isDestroyed) {
-				destroy = isDestroyed = Boolean.TRUE;
+				destroy = isDestroyed = new Boolean(true);
 			}
 		}
 		if (destroy) {
