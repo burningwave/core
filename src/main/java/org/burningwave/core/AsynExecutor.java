@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AsynExecutor implements Component{
 	private final Collection<Runnable> executables;
+	private Runnable currentExecutable;
 	private Boolean supended;
 	
 	private AsynExecutor(String name) {
@@ -55,8 +56,13 @@ public class AsynExecutor implements Component{
 							}
 						}
 						try {
-							cleanersItr.next().run();
+							currentExecutable = cleanersItr.next();
+							currentExecutable.run();
 							cleanersItr.remove();
+							synchronized(executables) {
+								currentExecutable = null;
+								executables.notifyAll();
+							}
 						} catch (Throwable exc) {
 							logWarn("Exception occurred", exc);
 						}						
@@ -118,6 +124,17 @@ public class AsynExecutor implements Component{
 
 	public void suspend() {
 		supended = Boolean.TRUE;
+		if (currentExecutable != null) {
+			synchronized (executables) {
+				if (currentExecutable != null) {
+					try {
+						executables.wait();
+					} catch (InterruptedException exc) {
+						logWarn("Exception occurred", exc);
+					}
+				}
+			}
+		}
 	}
 
 	public void resume() {
