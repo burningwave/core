@@ -34,14 +34,26 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Cleaner implements Component{
 	private final Collection<Runnable> cleaners;
+	private Boolean supended;
 	
 	private Cleaner() {
+		supended = Boolean.FALSE;
 		cleaners = ConcurrentHashMap.newKeySet();
 		Thread cleaner = new Thread(() -> {
 			while (cleaners != null) {
 				if (!cleaners.isEmpty()) {
 					Iterator<Runnable> cleanersItr = cleaners.iterator();
 					while (cleanersItr.hasNext()) {
+						synchronized(cleaners) {
+							try {
+								if (supended) {
+									cleaners.wait();
+									continue;
+								}
+							} catch (InterruptedException exc) {
+								logWarn("Exception occurred", exc);
+							}
+						}
 						try {
 							cleanersItr.next().run();
 							cleanersItr.remove();
@@ -104,6 +116,21 @@ public class Cleaner implements Component{
 				}
 			}
 		}
+	}
+
+	public void suspend() {
+		supended = Boolean.TRUE;
+	}
+
+	public void resume() {
+		synchronized(cleaners) {
+			try {
+				supended = Boolean.FALSE;
+				cleaners.notify();
+			} catch (Throwable exc) {
+				logWarn("Exception occurred", exc);
+			}
+		}		
 	}
 
 }
