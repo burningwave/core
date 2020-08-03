@@ -43,7 +43,8 @@ public class AsynExecutor implements Component{
 	private Mutex.Manager mutexManager;
 	private Thread executor;
 	private Consumer<Integer> prioritySetter;
-	private AsynExecutor(String name, int initialPriority) {
+	
+	private AsynExecutor(String name, int initialPriority, boolean daemon) {
 		mutexManager = Mutex.Manager.create(this);
 		supended = Boolean.FALSE;
 		executables = new ConcurrentHashMap<>();
@@ -100,12 +101,17 @@ public class AsynExecutor implements Component{
 			}
 		}, name);
 		executor.setPriority(initialPriority);
+		executor.setDaemon(daemon);
 		prioritySetter = priority -> executor.setPriority(priority);
 		executor.start();
 	}
 	
 	public static AsynExecutor create(String name, int initialPriority) {
-		return new AsynExecutor(name, initialPriority);
+		return create(name, initialPriority, false);
+	}
+	
+	public static AsynExecutor create(String name, int initialPriority, boolean daemon) {
+		return new AsynExecutor(name, initialPriority, daemon);
 	}
 	
 	public void add(Runnable executable, int priority) {
