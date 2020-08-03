@@ -29,6 +29,7 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
+import static org.burningwave.core.assembler.StaticComponentContainer.Cleaner;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
@@ -147,12 +148,7 @@ public class Cache implements Component {
 		public PathForResources<R> remove(T object, boolean destroyItems) {
 			PathForResources<R> pathForResources = resources.remove(object);
 			if (pathForResources != null && destroyItems) {
-				Thread cleaner = new Thread(() -> {
-					pathForResources.clear(destroyItems);
-					logInfo("{} ended to clean linked resources of {}", Thread.currentThread().toString(), object.toString());
-				});				
-				cleaner.setPriority(Thread.MIN_PRIORITY);
-				cleaner.start();	
+				pathForResources.clear(destroyItems);
 			}
 			return pathForResources;
 		}
@@ -181,16 +177,13 @@ public class Cache implements Component {
 				this.resources = new HashMap<>();
 				mutexManagerForResources.clear();
 			}
-			Thread cleaner = new Thread(() -> {
+			Cleaner.add(() -> {
 				for (Entry<T, PathForResources<R>> item : resources.entrySet()) {
 					item.getValue().clear(destroyItems);
 				}
 				resources.clear();
-				logInfo("{} ended to clean {}", Thread.currentThread().toString(), this.toString());
-			});
-			
-			cleaner.setPriority(Thread.MIN_PRIORITY);
-			cleaner.start();			
+				logInfo("Cleaning of {} is finished", this.toString());
+			});		
 			return this;
 		}
 		
@@ -309,7 +302,8 @@ public class Cache implements Component {
 			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
 			R item = nestedPartition.remove(path);
 			if (destroy && item != null) {
-				destroy(path, item);
+				String finalPath = path;
+				Cleaner.add(() -> destroy(finalPath, item));
 			}
 			return item;
 		}
@@ -342,12 +336,10 @@ public class Cache implements Component {
 				mutexManagerForLoadedResources.clear();    
 				mutexManagerForPartitionedResources.clear();
 			}
-			Thread cleaner = new Thread(() -> {
+			Cleaner.add(() -> {
 				clearResources(partitions, destroyItems);
-				logInfo("{} ended to clean {}", Thread.currentThread().toString(), this.toString());
+				logInfo("Cleaning of {} is finished", this.toString());
 			});
-			cleaner.setPriority(Thread.MIN_PRIORITY);
-			cleaner.start();
 			return this;
 		}
 

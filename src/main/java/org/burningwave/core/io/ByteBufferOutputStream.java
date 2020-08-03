@@ -122,6 +122,7 @@ public class ByteBufferOutputStream extends OutputStream {
         temp.put(buffer);
         ByteBufferDelegate.limit(buffer, limit);
         ByteBufferDelegate.position(buffer, initialPosition);
+        ByteBufferDelegate.destroy(buffer);
         buffer = temp;
     }
     
