@@ -432,9 +432,12 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 				T attachment = Fields.getDirect(buffer, "att");
 				if (attachment == null) {
 					Object cleaner;
-					if ((cleaner = Methods.invokeDirect(buffer, "cleaner")) != null) {
-						Methods.invokeDirect(cleaner, "clean");
-						return true;
+					synchronized (buffer) {
+						if ((cleaner = Methods.invokeDirect(buffer, "cleaner")) != null) {
+							Fields.setDirect(buffer, "cleaner", null);
+							Methods.invokeDirect(cleaner, "clean");
+							return true;
+						}
 					}
 				}
 				Fields.setDirect(buffer, "att", null);
