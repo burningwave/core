@@ -29,6 +29,7 @@
 package org.burningwave.core.jvm;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.Cleaner;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
@@ -422,17 +423,17 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			return ((Buffer)buffer).remaining();
 		}
 		
-		public <T extends Buffer> boolean destroy(T buffer) {
-			return destroy(buffer, false);
-		}
-		
 		public <T> T execute(ByteBuffer buffer, Function<ByteBuffer, T> consumer, boolean destroyBuffer, boolean forceDestroy) {
-			buffer = buffer.duplicate();
-			T result = consumer.apply(buffer);
+			ByteBuffer copy = buffer.duplicate();
+			T result = consumer.apply(copy);
 			if (destroyBuffer) {
-				destroy(buffer, forceDestroy);
+				Cleaner.add(() -> destroy(copy, forceDestroy));
 			}
 			return result;
+		}
+		
+		public <T extends Buffer> boolean destroy(T buffer) {
+			return destroy(buffer, false);
 		}
 		
 		public <T extends Buffer> boolean destroy(T buffer, boolean force) {

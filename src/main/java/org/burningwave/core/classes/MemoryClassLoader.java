@@ -30,6 +30,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.Cleaner;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -381,22 +382,28 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	@Override
 	public MemoryClassLoader clear () {
-		try {
-			for (ByteBuffer byteCode : notLoadedByteCodes.values()) {
-				ByteBufferDelegate.destroy(byteCode);
-			}
-			this.notLoadedByteCodes.clear();
-			for (ByteBuffer byteCode : loadedByteCodes.values()) {
-				ByteBufferDelegate.destroy(byteCode);
-			}
-			this.loadedByteCodes.clear();
-    	} catch (Throwable exc) {
-    		if (!isClosed) {
-    			throw exc;
-    		} else {
-    			logWarn("Could not execute clear because {} has been closed", this.toString());
-    		}
-    	}  
+		Map<String, ByteBuffer> notLoadedByteCodes = this.notLoadedByteCodes;
+		Map<String, ByteBuffer> loadedByteCodes = this.loadedByteCodes;
+		this.notLoadedByteCodes = new HashMap<>();
+		this.loadedByteCodes = new HashMap<>();
+		Cleaner.add(() -> {
+			try {
+				for (ByteBuffer byteCode : notLoadedByteCodes.values()) {
+					ByteBufferDelegate.destroy(byteCode);
+				}
+				notLoadedByteCodes.clear();
+				for (ByteBuffer byteCode : loadedByteCodes.values()) {
+					ByteBufferDelegate.destroy(byteCode);
+				}
+				loadedByteCodes.clear();
+	    	} catch (Throwable exc) {
+	    		if (!isClosed) {
+	    			throw exc;
+	    		} else {
+	    			logWarn("Could not execute clear because {} has been closed", this.toString());
+	    		}
+	    	} 
+		});
 		return this;
 	}
 	
