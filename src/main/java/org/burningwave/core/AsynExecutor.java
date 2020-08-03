@@ -71,10 +71,10 @@ public class AsynExecutor implements Component{
 							logWarn("Exception occurred", exc);
 						}						
 					}
-					synchronized(mutexManager.getMutex("executingFinishedWaiters")) {
+					synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
 						if (executables.isEmpty()) {
 							try {
-								mutexManager.getMutex("executingFinishedWaiters").notifyAll();
+								mutexManager.getMutex("executingFinishedWaiter").notifyAll();
 							} catch (Throwable exc) {
 								logWarn("Exception occurred", exc);
 							}
@@ -116,9 +116,9 @@ public class AsynExecutor implements Component{
 	
 	public void waitForExecutablesEnding() {
 		while (!executables.isEmpty()) {
-			synchronized(mutexManager.getMutex("executingFinishedWaiters")) {
+			synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
 				try {
-					mutexManager.getMutex("executingFinishedWaiters").wait();
+					mutexManager.getMutex("executingFinishedWaiter").wait();
 				} catch (InterruptedException exc) {
 					logWarn("Exception occurred", exc);
 				}
