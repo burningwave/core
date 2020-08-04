@@ -62,23 +62,23 @@ public class AsynExecutor implements Component{
 								logWarn("Exception occurred", exc);
 							}
 						}
+						this.currentExecutable = executable;
+						Runnable runnable = currentExecutable.getKey();
 						try {
-							this.currentExecutable = executable;
+							
 							int currentExecutablePriority = currentExecutable.getValue();
 							if (executor.getPriority() != currentExecutablePriority) {
 								executor.setPriority(currentExecutablePriority);
-							}
-							Runnable runnable = currentExecutable.getKey();
-							logInfo("Started execution of {}", runnable.toString());
+							}							
+							logInfo("Executing {}", runnable.toString());
 							runnable.run();
-							logInfo("Ended execution of {}", runnable.toString());
 							executables.remove(executable);
 							synchronized(mutexManager.getMutex("suspensionCaller")) {
 								currentExecutable = null;
 								mutexManager.getMutex("suspensionCaller").notifyAll();
 							}
 						} catch (Throwable exc) {
-							logWarn("Exception occurred", exc);
+							logError("Exception occurred while executing " + runnable.toString(), exc);
 						}						
 					}
 					synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
