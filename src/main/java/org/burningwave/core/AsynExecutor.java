@@ -28,15 +28,17 @@
  */
 package org.burningwave.core;
 
+import java.util.AbstractMap;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.burningwave.core.concurrent.Mutex;
 
 public class AsynExecutor implements Component{
-	private final Map<Runnable, Integer> executables;
+	private final Collection<Map.Entry<Runnable, Integer>> executables;
 	private Entry<Runnable, Integer> currentExecutable;
 	private Boolean supended;
 	private Mutex.Manager mutexManager;
@@ -45,11 +47,11 @@ public class AsynExecutor implements Component{
 	private AsynExecutor(String name, int initialPriority, boolean daemon) {
 		mutexManager = Mutex.Manager.create(this);
 		supended = Boolean.FALSE;
-		executables = new ConcurrentHashMap<>();
+		executables = new CopyOnWriteArrayList<>();
 		executor = new Thread(() -> {
 			while (executables != null) {
 				if (!executables.isEmpty()) {
-					Iterator<Entry<Runnable, Integer>> cleanersItr = executables.entrySet().iterator();
+					Iterator<Entry<Runnable, Integer>> cleanersItr = executables.iterator();
 					while (cleanersItr.hasNext()) {
 						synchronized(mutexManager.getMutex("resumeCaller")) {
 							try {
@@ -115,7 +117,7 @@ public class AsynExecutor implements Component{
 	}
 	
 	public void add(Runnable executable, int priority) {
-		executables.put(executable, priority);
+		executables.add(new AbstractMap.SimpleEntry<>(executable, priority));
 		try {
 			synchronized(mutexManager.getMutex("executableCollectionFiller")) {
 				mutexManager.getMutex("executableCollectionFiller").notifyAll();
@@ -128,7 +130,7 @@ public class AsynExecutor implements Component{
 	public void waitForExecutablesEnding() {
 		executor.setPriority(Thread.MAX_PRIORITY);
 		while (!executables.isEmpty()) {
-			executables.replaceAll((executable, priority) -> Thread.MAX_PRIORITY);
+			executables.stream().map(executable -> executable.setValue(Thread.MAX_PRIORITY));
 			synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
 				try {
 					mutexManager.getMutex("executingFinishedWaiter").wait();
