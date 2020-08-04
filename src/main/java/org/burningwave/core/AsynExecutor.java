@@ -115,8 +115,12 @@ public class AsynExecutor implements Component{
 		return new AsynExecutor(name, initialPriority, daemon);
 	}
 	
-	public void add(Runnable executable) {
-		add(executable, Thread.currentThread().getPriority());
+	public AsynExecutor addWithCurrentThreadPriority(Runnable executable) {
+		return add(executable, Thread.currentThread().getPriority());
+	}
+	
+	public AsynExecutor add(Runnable executable) {
+		return add(executable, this.defaultPriority);
 	}
 	
 	public AsynExecutor add(Runnable executable, int priority) {
