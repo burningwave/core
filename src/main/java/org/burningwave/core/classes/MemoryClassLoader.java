@@ -29,7 +29,6 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
-import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
@@ -391,15 +390,11 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			try {
 				Iterator<Entry<String, ByteBuffer>> itr = notLoadedByteCodes.entrySet().iterator();
 				while (itr.hasNext()) {
-					Entry<String, ByteBuffer> item = itr.next();
 					itr.remove();
-					ByteBufferDelegate.destroy(item.getValue());
 				}
 				itr = loadedByteCodes.entrySet().iterator();
 				while (itr.hasNext()) {
-					Entry<String, ByteBuffer> item = itr.next();
 					itr.remove();
-					ByteBufferDelegate.destroy(item.getValue());
 				}
 	    	} catch (Throwable exc) {
 	    		if (!isClosed) {

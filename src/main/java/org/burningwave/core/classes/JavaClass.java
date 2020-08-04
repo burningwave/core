@@ -162,7 +162,6 @@ public class JavaClass implements AutoCloseable {
 	@Override
 	public void close() {
 		className = null;
-		ByteBufferDelegate.destroy(byteCode);
 		byteCode = null;		
 	}
 }

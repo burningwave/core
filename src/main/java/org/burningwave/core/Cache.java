@@ -28,7 +28,6 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
@@ -69,12 +68,7 @@ public class Cache implements Component {
 	
 	private Cache() {
 		logInfo("Building cache");
-		pathForContents = new PathForResources<ByteBuffer>(1L, Streams::shareContent) {
-			@Override
-			void destroy(String path, ByteBuffer item) {
-				ByteBufferDelegate.destroy(item);
-			}
-		};
+		pathForContents = new PathForResources<ByteBuffer>(1L, Streams::shareContent);
 		pathForFileSystemItems = new PathForResources<FileSystemItem>(1L, fileSystemItem -> fileSystemItem) {
 			@Override
 			void destroy(String path, FileSystemItem item) {
@@ -303,7 +297,7 @@ public class Cache implements Component {
 			R item = nestedPartition.remove(path);
 			if (destroy && item != null) {
 				String finalPath = path;
-				BackgroundExecutor.add(() -> destroy(finalPath, item), Thread.MIN_PRIORITY);
+				BackgroundExecutor.add(() -> destroy(finalPath, item));
 			}
 			return item;
 		}
@@ -338,7 +332,7 @@ public class Cache implements Component {
 			}
 			BackgroundExecutor.add(() -> {
 				clearResources(partitions, destroyItems);
-			}, Thread.MIN_PRIORITY);
+			});
 			return this;
 		}
 

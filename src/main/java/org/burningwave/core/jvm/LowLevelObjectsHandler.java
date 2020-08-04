@@ -424,41 +424,6 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			return ((Buffer)buffer).remaining();
 		}
 		
-		public <T> T execute(ByteBuffer buffer, Function<ByteBuffer, T> consumer, boolean destroyBuffer, boolean forceDestroy) {
-			ByteBuffer copy = buffer.duplicate();
-			T result = consumer.apply(copy);
-			if (destroyBuffer) {
-				BackgroundExecutor.add(() -> destroy(copy, forceDestroy));
-			}
-			return result;
-		}
-		
-		public <T extends Buffer> boolean destroy(T buffer) {
-			return destroy(buffer, false);
-		}
-		
-		public <T extends Buffer> boolean destroy(T buffer, boolean force) {
-			if (buffer.isDirect()) {
-				T attachment = Fields.getDirect(buffer, "att");
-				if (attachment == null) {
-					Object cleaner;
-					synchronized (buffer) {
-						if ((cleaner = Methods.invokeDirect(buffer, "cleaner")) != null) {
-							Fields.setDirect(buffer, "cleaner", null);
-							Methods.invokeDirect(cleaner, "clean");
-							return true;
-						}
-					}
-				}
-				Fields.setDirect(buffer, "att", null);
-				if (force){
-					return destroy(attachment, force);
-				}				
-				return false;
-			} else {
-				return true;
-			}
-		}
 	}
 	
 	private abstract static class Initializer implements Component {

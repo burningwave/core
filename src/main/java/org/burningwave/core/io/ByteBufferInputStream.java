@@ -76,15 +76,7 @@ public final class ByteBufferInputStream extends InputStream {
     
     @Override
     public void close() throws IOException {
-    	ByteBuffer buffer = this.buffer;
     	this.buffer = null;
-    	ByteBuffer bufferCopy = this.bufferCopy;
     	this.bufferCopy = null;
-    	if (buffer != null) {
-    		ByteBufferDelegate.destroy(buffer);
-    	}
-    	if (bufferCopy != null) {
-    		ByteBufferDelegate.destroy(bufferCopy);
-    	}
     }
 }
