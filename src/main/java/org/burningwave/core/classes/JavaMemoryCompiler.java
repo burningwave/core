@@ -588,6 +588,13 @@ public class JavaMemoryCompiler implements Component {
 
 		public Collection<String> getDependencies() {
 			return dependencies;
+		}
+
+
+		public void close() {
+			compiledFiles.clear();
+			dependencies.clear();
+			classPath = null;
 		}	
 		
 	}

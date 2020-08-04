@@ -366,6 +366,7 @@ public class ClassFactory implements Component {
 								compiler.close();
 								classPathHelper.close();
 							}
+							compilationResult.close();
 						}
 					};					
 				}
