@@ -87,18 +87,7 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 	void addToContext(SearchContext<JavaClass> context, TestContext criteriaTestContext,
 		String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
 	) {
-		context.addItemFound(basePath, fileSystemItem.getAbsolutePath(), javaClass);		
-	}
-	
-	@Override
-	void analyze(SearchContext<JavaClass> context, FileSystemItem child, FileSystemItem basePath) {
-		JavaClass javaClass = JavaClass.create(child.toByteBuffer());
-		ClassCriteria.TestContext criteriaTestContext = testClassCriteria(context, javaClass);
-		if (criteriaTestContext.getResult()) {
-			addToContext(
-				context, criteriaTestContext, basePath.getAbsolutePath(), child, javaClass
-			);
-		}
+		context.addItemFound(basePath, fileSystemItem.getAbsolutePath(), javaClass.duplicate());		
 	}
 	
 	@Override

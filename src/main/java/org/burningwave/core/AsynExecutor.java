@@ -150,13 +150,14 @@ public class AsynExecutor implements Component{
 	public AsynExecutor waitForExecutablesEnding(int priority) {
 		executor.setPriority(priority);
 		while (!executables.isEmpty()) {
-			changePriority(priority);
 			executables.stream().map(executable -> executable.setValue(priority));
 			synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
-				try {
-					mutexManager.getMutex("executingFinishedWaiter").wait();
-				} catch (InterruptedException exc) {
-					logWarn("Exception occurred", exc);
+				if (!executables.isEmpty()) {
+					try {
+						mutexManager.getMutex("executingFinishedWaiter").wait();
+					} catch (InterruptedException exc) {
+						logWarn("Exception occurred", exc);
+					}
 				}
 			}
 		}
@@ -165,7 +166,7 @@ public class AsynExecutor implements Component{
 	}
 	
 	public AsynExecutor changePriority(int priority) {
-		this.defaultPriority= priority;
+		this.defaultPriority = priority;
 		executor.setPriority(priority);
 		executables.stream().map(executable -> executable.setValue(priority));
 		return this;
