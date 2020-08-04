@@ -67,7 +67,6 @@ public class AsynExecutor implements Component{
 						this.currentExecutable = executable;
 						Runnable runnable = currentExecutable.getKey();
 						try {
-							
 							int currentExecutablePriority = currentExecutable.getValue();
 							if (executor.getPriority() != currentExecutablePriority) {
 								executor.setPriority(currentExecutablePriority);
