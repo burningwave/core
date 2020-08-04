@@ -84,7 +84,7 @@ public class AsynExecutor implements Component{
 							runnable.run();							
 							++executedExecutableCount;
 							if (executedExecutableCount % 10000 == 0) {
-								logInfo("Executed {} operations", executedExecutableCount);
+								logInfo("Executed {} tasks", executedExecutableCount);
 							}
 							synchronized(mutexManager.getMutex("suspensionCaller")) {
 								currentExecutable = null;
@@ -239,6 +239,7 @@ public class AsynExecutor implements Component{
 		}
 		try {
 			executor.join();
+			logInfo("Unexecuted tasks {}", executables.size());
 			executables.clear();
 			executor = null;
 			mutexManager.close();
