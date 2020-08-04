@@ -130,7 +130,7 @@ public class ByteBufferOutputStream extends OutputStream {
         	ByteBuffer oldBuffer = buffer; 
         	BackgroundExecutor.add(() -> {
 	        	ByteBufferDelegate.destroy(oldBuffer);
-	        }, Thread.MAX_PRIORITY);
+	        });
         }
         buffer = temp;
     }

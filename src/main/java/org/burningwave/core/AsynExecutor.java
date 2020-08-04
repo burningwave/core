@@ -42,8 +42,9 @@ public class AsynExecutor implements Component{
 	private Boolean supended;
 	private Mutex.Manager mutexManager;
 	private Thread executor;
+	private int defaultPriority;
 	
-	private AsynExecutor(String name, int initialPriority, boolean daemon) {
+	private AsynExecutor(String name, int defaultPriority, boolean daemon) {
 		mutexManager = Mutex.Manager.create(this);
 		supended = Boolean.FALSE;
 		executables = new CopyOnWriteArrayList<>();
@@ -101,7 +102,7 @@ public class AsynExecutor implements Component{
 				}
 			}
 		}, name);
-		executor.setPriority(initialPriority);
+		executor.setPriority(this.defaultPriority = defaultPriority);
 		executor.setDaemon(daemon);
 		executor.start();
 	}
@@ -118,7 +119,7 @@ public class AsynExecutor implements Component{
 		add(executable, Thread.currentThread().getPriority());
 	}
 	
-	public void add(Runnable executable, int priority) {
+	public AsynExecutor add(Runnable executable, int priority) {
 		executables.add(new AbstractMap.SimpleEntry<>(executable, priority));
 		try {
 			synchronized(mutexManager.getMutex("executableCollectionFiller")) {
@@ -127,17 +128,17 @@ public class AsynExecutor implements Component{
 		} catch (Throwable exc) {
 			logWarn("Exception occurred", exc);
 		}
+		return this;
 	}
 	
-	public void waitForExecutablesEnding() {
-		waitForExecutablesEnding(Thread.currentThread().getPriority());
+	public AsynExecutor waitForExecutablesEnding() {
+		return waitForExecutablesEnding(Thread.currentThread().getPriority());
 	}
 	
-	public void waitForExecutablesEnding(int priority) {
-		int previousPriority = executor.getPriority();
+	public AsynExecutor waitForExecutablesEnding(int priority) {
 		executor.setPriority(priority);
 		while (!executables.isEmpty()) {
-			setPriority(priority);
+			changePriority(priority);
 			executables.stream().map(executable -> executable.setValue(priority));
 			synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
 				try {
@@ -147,19 +148,22 @@ public class AsynExecutor implements Component{
 				}
 			}
 		}
-		executor.setPriority(previousPriority);
+		executor.setPriority(this.defaultPriority);
+		return this;
 	}
 	
-	public void setPriority(int priority) {
+	public AsynExecutor changePriority(int priority) {
+		this.defaultPriority= priority;
 		executor.setPriority(priority);
 		executables.stream().map(executable -> executable.setValue(priority));
+		return this;
 	}
 	
-	public void suspend() {
-		suspend(Thread.currentThread().getPriority());
+	public AsynExecutor suspend() {
+		return suspend(Thread.currentThread().getPriority());
 	}
 	
-	public void suspend(int priority) {
+	public AsynExecutor suspend(int priority) {
 		executor.setPriority(priority);
 		supended = Boolean.TRUE;
 		if (currentExecutable != null) {
@@ -173,9 +177,10 @@ public class AsynExecutor implements Component{
 				}
 			}
 		}
+		return this;
 	}
 
-	public void resume() {
+	public AsynExecutor resume() {
 		synchronized(mutexManager.getMutex("resumeCaller")) {
 			try {
 				supended = Boolean.FALSE;
@@ -183,7 +188,8 @@ public class AsynExecutor implements Component{
 			} catch (Throwable exc) {
 				logWarn("Exception occurred", exc);
 			}
-		}		
+		}	
+		return this;
 	}
 	
 	public boolean isSuspended() {
