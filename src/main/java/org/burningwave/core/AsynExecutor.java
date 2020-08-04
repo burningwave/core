@@ -126,10 +126,15 @@ public class AsynExecutor implements Component{
 	}
 	
 	public void waitForExecutablesEnding() {
-		int currentThreadPriority = Thread.currentThread().getPriority();
-		executor.setPriority(currentThreadPriority);
+		waitForExecutablesEnding(Thread.currentThread().getPriority());
+	}
+	
+	public void waitForExecutablesEnding(int priority) {
+		int previousPriority = executor.getPriority();
+		executor.setPriority(priority);
 		while (!executables.isEmpty()) {
-			executables.stream().map(executable -> executable.setValue(currentThreadPriority));
+			setPriority(priority);
+			executables.stream().map(executable -> executable.setValue(priority));
 			synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
 				try {
 					mutexManager.getMutex("executingFinishedWaiter").wait();
@@ -138,11 +143,20 @@ public class AsynExecutor implements Component{
 				}
 			}
 		}
+		executor.setPriority(previousPriority);
 	}
-
+	
+	public void setPriority(int priority) {
+		executor.setPriority(priority);
+		executables.stream().map(executable -> executable.setValue(priority));
+	}
+	
 	public void suspend() {
-		int currentThreadPriority = Thread.currentThread().getPriority();
-		executor.setPriority(currentThreadPriority);
+		suspend(Thread.currentThread().getPriority());
+	}
+	
+	public void suspend(int priority) {
+		executor.setPriority(priority);
 		supended = Boolean.TRUE;
 		if (currentExecutable != null) {
 			synchronized (mutexManager.getMutex("suspensionCaller")) {
