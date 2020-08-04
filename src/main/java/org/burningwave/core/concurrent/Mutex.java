@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Mutex {
 	
-	public static class Manager {
+	public static class Manager implements AutoCloseable {
 		Map<String, Object> parallelLockMap;
 		private Object defaultMutex;
 		
@@ -78,6 +78,13 @@ public class Mutex {
 			if (parallelLockMap != null) {
 				parallelLockMap.clear();
 			}
+		}
+		
+		@Override
+		public void close() {
+			clear();
+			parallelLockMap = null;
+			this.defaultMutex = null;
 		}
 	}
 	

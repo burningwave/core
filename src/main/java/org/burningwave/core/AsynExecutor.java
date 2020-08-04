@@ -44,8 +44,17 @@ public class AsynExecutor implements Component{
 	private Thread executor;
 	private int defaultPriority;
 	private long executedExecutableCount;
+	private boolean isDaemon;
+	private String name;
 	
-	private AsynExecutor(String name, int defaultPriority, boolean daemon) {
+	private AsynExecutor(String name, int defaultPriority, boolean isDaemon) {
+		this.name = name;
+		this.defaultPriority = defaultPriority;
+		this.isDaemon = isDaemon;
+		init();
+	}
+	
+	void init (){
 		mutexManager = Mutex.Manager.create(this);
 		supended = Boolean.FALSE;
 		executables = new CopyOnWriteArrayList<>();
@@ -83,7 +92,10 @@ public class AsynExecutor implements Component{
 							}
 						} catch (Throwable exc) {
 							logError("Exception occurred while executing " + runnable.toString(), exc);
-						}						
+						}
+						if (executables == null) {
+							break;
+						}
 					}
 				} else {
 					synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
@@ -99,17 +111,27 @@ public class AsynExecutor implements Component{
 				}
 			}
 		}, name);
-		executor.setPriority(this.defaultPriority = defaultPriority);
-		executor.setDaemon(daemon);
+		executor.setPriority(this.defaultPriority);
+		executor.setDaemon(isDaemon);
 		executor.start();
 	}
 	
 	public static AsynExecutor create(String name, int initialPriority) {
-		return create(name, initialPriority, false);
+		return create(name, initialPriority, false, false);
 	}
 	
-	public static AsynExecutor create(String name, int initialPriority, boolean daemon) {
-		return new AsynExecutor(name, initialPriority, daemon);
+	public static AsynExecutor create(String name, int initialPriority, boolean daemon, boolean undestroyable) {
+		if (undestroyable) {
+			return new AsynExecutor(name, initialPriority, daemon) {
+				@Override
+				public void terminate(boolean waitForTaskTermination) {
+					super.terminate(waitForTaskTermination);
+					init();
+				}
+			};
+		} else {
+			return new AsynExecutor(name, initialPriority, daemon);
+		}
 	}
 	
 	public AsynExecutor addWithCurrentThreadPriority(Runnable executable) {
@@ -197,15 +219,33 @@ public class AsynExecutor implements Component{
 	}
 
 	public void terminate(boolean waitForTaskTermination) {
-		if (waitForTaskTermination) {
-			addWithCurrentThreadPriority(() -> this.executables = null);
-			waitForExecutablesEnding();
-			return;
-		}
-		suspend();
 		Collection<Map.Entry<Runnable, Integer>> executables = this.executables;
-		this.executables = null;
-		executables.clear();
-		resume();
+		if (waitForTaskTermination) {
+			addWithCurrentThreadPriority(() -> {
+				this.executables = null;
+			});
+		} else {
+			suspend();
+			this.executables = null;
+			resume();
+			try {
+				synchronized(mutexManager.getMutex("executableCollectionFiller")) {
+					mutexManager.getMutex("executableCollectionFiller").notifyAll();
+				}
+			} catch (Throwable exc) {
+				logWarn("Exception occurred", exc);
+			}
+			
+		}
+		try {
+			executor.join();
+			executables.clear();
+			executor = null;
+			mutexManager.close();
+			mutexManager = null; 
+			
+		} catch (InterruptedException exc) {
+			logError("Exception occurred", exc);
+		}
 	}
 }
