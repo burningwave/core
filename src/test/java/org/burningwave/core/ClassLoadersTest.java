@@ -124,8 +124,9 @@ public class ClassLoadersTest extends BaseTest {
 			).find();
 			Map<String, ByteBuffer> byteCodesFound = searchResult.getByteCodesFlatMap();
 			Map<String, JavaClass> byteCodes = new HashMap<>();
-			JavaClass javaClass = JavaClass.create(byteCodesFound.get("org.apache.commons.lang.ArrayUtils"));
-			byteCodes.put("org.apache.commons.lang.ArrayUtils", javaClass);
+			JavaClass.useByteCode(byteCodesFound.get("org.apache.commons.lang.ArrayUtils"), (javaClass) -> {
+				byteCodes.put("org.apache.commons.lang.ArrayUtils", javaClass);
+			});
 			return ClassLoaders.loadOrDefineByJavaClass("org.apache.commons.lang.ArrayUtils", byteCodes, getMemoryClassLoader(null));
 		});
 	}

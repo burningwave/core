@@ -31,17 +31,19 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Optional;
+import java.util.function.Consumer;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import org.burningwave.core.function.ThrowingFunction;
 import org.burningwave.core.io.FileSystemItem;
 
-public class JavaClass {
-	private final ByteBuffer byteCode;
-	private final String className;
+public class JavaClass implements AutoCloseable {
+	private ByteBuffer byteCode;
+	private String className;
 	
 	JavaClass(ByteBuffer byteCode) throws IOException {
 		this.byteCode = Streams.shareContent(byteCode);
@@ -53,6 +55,18 @@ public class JavaClass {
 			return new JavaClass(byteCode);
 		} catch (IOException exc) {
 			throw Throwables.toRuntimeException(exc);
+		}
+	}
+	
+	public static void useByteCode(ByteBuffer byteCode, Consumer<JavaClass> javaClassConsumer) {
+		try(JavaClass javaClass = JavaClass.create(byteCode)) {
+			javaClassConsumer.accept(javaClass);
+		}
+	}
+	
+	public static <T, E extends Throwable> T useByteCodeAndExtract(ByteBuffer byteCode, ThrowingFunction<JavaClass, T, E> javaClassConsumer) throws E {
+		try(JavaClass javaClass = JavaClass.create(byteCode)) {
+			return javaClassConsumer.apply(javaClass);
 		}
 	}
 	
@@ -143,5 +157,11 @@ public class JavaClass {
 			return new Criteria();
 		}
 		
+	}
+
+	@Override
+	public void close() {
+		className = null;		
+		byteCode = null;		
 	}
 }

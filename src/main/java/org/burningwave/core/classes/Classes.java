@@ -570,9 +570,10 @@ public class Classes implements Component, MembersRetriever {
 		
 		public Class<?> loadOrDefineByByteCode(ByteBuffer byteCode, ClassLoader classLoader) throws ClassNotFoundException {
 			Map<String, JavaClass> repository = new HashMap<>();
-			JavaClass javaClass = JavaClass.create(byteCode);
-			repository.put(javaClass.getName(), javaClass);
-			return loadOrDefineByJavaClass(javaClass.getName(), repository, classLoader);
+			return JavaClass.useByteCodeAndExtract(byteCode, javaClass -> {
+				repository.put(javaClass.getName(), javaClass);
+				return loadOrDefineByJavaClass(javaClass.getName(), repository, classLoader);
+			});
 		}
 		
 		public <T> Class<T> loadOrDefineByByteCode(
