@@ -28,11 +28,11 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -43,6 +43,7 @@ import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -388,14 +389,18 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		this.loadedByteCodes = new HashMap<>();
 		BackgroundExecutor.add(() -> {
 			try {
-				for (ByteBuffer byteCode : notLoadedByteCodes.values()) {
-					ByteBufferDelegate.destroy(byteCode);
+				Iterator<Entry<String, ByteBuffer>> itr = notLoadedByteCodes.entrySet().iterator();
+				while (itr.hasNext()) {
+					Entry<String, ByteBuffer> item = itr.next();
+					itr.remove();
+					ByteBufferDelegate.destroy(item.getValue());
 				}
-				notLoadedByteCodes.clear();
-				for (ByteBuffer byteCode : loadedByteCodes.values()) {
-					ByteBufferDelegate.destroy(byteCode);
+				itr = loadedByteCodes.entrySet().iterator();
+				while (itr.hasNext()) {
+					Entry<String, ByteBuffer> item = itr.next();
+					itr.remove();
+					ByteBufferDelegate.destroy(item.getValue());
 				}
-				loadedByteCodes.clear();
 				logInfo("Cleaning of {} is finished", this.toString());
 	    	} catch (Throwable exc) {
 	    		if (!isClosed) {
@@ -404,7 +409,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	    			logWarn("Could not execute clear because {} has been closed", this.toString());
 	    		}
 	    	}
-		}, Thread.MIN_PRIORITY);
+		});
 		return this;
 	}
 	
