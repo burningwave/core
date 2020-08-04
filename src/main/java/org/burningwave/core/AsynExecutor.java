@@ -43,11 +43,13 @@ public class AsynExecutor implements Component{
 	private Mutex.Manager mutexManager;
 	private Thread executor;
 	private int defaultPriority;
+	private long executedExecutableCount;
 	
 	private AsynExecutor(String name, int defaultPriority, boolean daemon) {
 		mutexManager = Mutex.Manager.create(this);
 		supended = Boolean.FALSE;
 		executables = new CopyOnWriteArrayList<>();
+		executedExecutableCount = 0;
 		executor = new Thread(() -> {
 			while (executables != null) {
 				if (!executables.isEmpty()) {
@@ -70,9 +72,12 @@ public class AsynExecutor implements Component{
 							if (executor.getPriority() != currentExecutablePriority) {
 								executor.setPriority(currentExecutablePriority);
 							}							
-							logInfo("Executing {}", runnable.toString());
 							runnable.run();
 							executables.remove(executable);
+							++executedExecutableCount;
+							if (executedExecutableCount % 10000 == 0) {
+								logInfo("Executed {} operations", executedExecutableCount);
+							}
 							synchronized(mutexManager.getMutex("suspensionCaller")) {
 								currentExecutable = null;
 								mutexManager.getMutex("suspensionCaller").notifyAll();
