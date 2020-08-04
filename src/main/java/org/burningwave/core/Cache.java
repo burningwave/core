@@ -28,7 +28,7 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
@@ -41,6 +41,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -67,12 +68,7 @@ public class Cache implements Component {
 	
 	private Cache() {
 		logInfo("Building cache");
-		pathForContents = new PathForResources<ByteBuffer>(1L, Streams::shareContent) {
-			@Override
-			void destroy(String path, ByteBuffer item) {
-				ByteBufferDelegate.destroy(item);
-			}
-		};
+		pathForContents = new PathForResources<ByteBuffer>(1L, Streams::shareContent);
 		pathForFileSystemItems = new PathForResources<FileSystemItem>(1L, fileSystemItem -> fileSystemItem) {
 			@Override
 			void destroy(String path, FileSystemItem item) {
@@ -147,12 +143,7 @@ public class Cache implements Component {
 		public PathForResources<R> remove(T object, boolean destroyItems) {
 			PathForResources<R> pathForResources = resources.remove(object);
 			if (pathForResources != null && destroyItems) {
-				Thread cleaner = new Thread(() -> {
-					pathForResources.clear(destroyItems);
-					logInfo("{} ended to clean linked resources of {}", Thread.currentThread().toString(), object.toString());
-				});				
-				cleaner.setPriority(Thread.MIN_PRIORITY);
-				cleaner.start();	
+				pathForResources.clear(destroyItems);
 			}
 			return pathForResources;
 		}
@@ -181,16 +172,12 @@ public class Cache implements Component {
 				this.resources = new HashMap<>();
 				mutexManagerForResources.clear();
 			}
-			Thread cleaner = new Thread(() -> {
+			BackgroundExecutor.add(() -> {
 				for (Entry<T, PathForResources<R>> item : resources.entrySet()) {
 					item.getValue().clear(destroyItems);
 				}
 				resources.clear();
-				logInfo("{} ended to clean {}", Thread.currentThread().toString(), this.toString());
-			});
-			
-			cleaner.setPriority(Thread.MIN_PRIORITY);
-			cleaner.start();			
+			}, Thread.MIN_PRIORITY);		
 			return this;
 		}
 		
@@ -309,7 +296,8 @@ public class Cache implements Component {
 			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
 			R item = nestedPartition.remove(path);
 			if (destroy && item != null) {
-				destroy(path, item);
+				String finalPath = path;
+				BackgroundExecutor.add(() -> destroy(finalPath, item));
 			}
 			return item;
 		}
@@ -342,24 +330,21 @@ public class Cache implements Component {
 				mutexManagerForLoadedResources.clear();    
 				mutexManagerForPartitionedResources.clear();
 			}
-			Thread cleaner = new Thread(() -> {
+			BackgroundExecutor.add(() -> {
 				clearResources(partitions, destroyItems);
-				logInfo("{} ended to clean {}", Thread.currentThread().toString(), this.toString());
 			});
-			cleaner.setPriority(Thread.MIN_PRIORITY);
-			cleaner.start();
 			return this;
 		}
 
 		void clearResources(Map<Long, Map<String, Map<String, R>>> partitions, boolean destroyItems) {
 			for (Entry<Long, Map<String, Map<String, R>>> partition : partitions.entrySet()) {
 				for (Entry<String, Map<String, R>> nestedPartition : partition.getValue().entrySet()) {
-					for (Entry<String, R> item : nestedPartition.getValue().entrySet()) {
-						if (destroyItems) {
-							destroy(item.getKey(), item.getValue());
-						}
+					Iterator<Entry<String, R>> itr = nestedPartition.getValue().entrySet().iterator();
+					while (itr.hasNext()) {
+						Entry<String, R> item = itr.next();
+						itr.remove();
+						destroy(item.getKey(), item.getValue());
 					}
-					nestedPartition.getValue().clear();
 				}
 				partition.getValue().clear();
 			}

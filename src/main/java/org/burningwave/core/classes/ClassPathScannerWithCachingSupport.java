@@ -296,13 +296,17 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			synchronized(mutexManager.getMutex(path)) {
 				FileSystemItem.ofPath(path).reset();
 				Map<String, I> items = cache.remove(path);
-				if (items != null) {
-					items.clear();
-				}
+				clearItemsForPath(items);
 			}
 		}
 		if (closeSearchResults) {
 			closeSearchResults();
+		}
+	}
+
+	void clearItemsForPath(Map<String, I> items) {
+		if (items != null) {
+			items.clear();
 		}
 	}
 	

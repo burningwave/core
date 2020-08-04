@@ -195,8 +195,7 @@ public class JavaMemoryCompiler implements Component {
 					"");
 			if (!compiledFiles.isEmpty() && storeCompiledClasses) {
 				compiledFiles.forEach((className, byteCode) -> {
-					JavaClass javaClass = JavaClass.create(byteCode);
-					javaClass.storeToClassPath(storedFilesClassPath);
+					JavaClass.use(byteCode, (javaClass) -> javaClass.storeToClassPath(storedFilesClassPath));
 				});
 			}			
 			return new CompilationResult(FileSystemItem.ofPath(storedFilesClassPath), compiledFiles, new HashSet<>(context.classPaths));
@@ -563,7 +562,7 @@ public class JavaMemoryCompiler implements Component {
 	}
 	
 	
-	public static class CompilationResult {
+	public static class CompilationResult implements AutoCloseable {
 		private FileSystemItem classPath;
 		private Map<String, ByteBuffer> compiledFiles;
 		private Collection<String> dependencies;
@@ -588,6 +587,13 @@ public class JavaMemoryCompiler implements Component {
 
 		public Collection<String> getDependencies() {
 			return dependencies;
+		}
+
+
+		public void close() {
+			compiledFiles.clear();
+			dependencies.clear();
+			classPath = null;
 		}	
 		
 	}

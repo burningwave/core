@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.jvm;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
@@ -49,8 +50,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
@@ -388,6 +392,10 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			return new ByteBufferDelegate();
 		}
 		
+		public ByteBuffer duplicate(ByteBuffer buffer) {
+			return buffer.duplicate();
+		}
+		
 		public <T extends Buffer> int limit(T buffer) {
 			return ((Buffer)buffer).limit();
 		}
@@ -414,19 +422,6 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		
 		public <T extends Buffer> int remaining(T buffer) {
 			return ((Buffer)buffer).remaining();
-		}
-		
-		public <T extends Buffer> boolean destroy(T buffer) {
-			if (buffer.isDirect()) {
-				Object cleaner;
-				if (Methods.invokeDirect(buffer, "attachment") != null && (cleaner = Methods.invokeDirect(buffer, "cleaner")) != null) {
-					Methods.invokeDirect(cleaner, "clean");
-					return true;
-				}
-				return false;
-			} else {
-				return true;
-			}
 		}
 		
 	}

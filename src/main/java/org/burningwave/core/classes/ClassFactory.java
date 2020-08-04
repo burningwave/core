@@ -361,6 +361,7 @@ public class ClassFactory implements Component {
 						
 						@Override
 						public void close() {
+							compilationResult.close();
 							super.close();
 							if (useOneShotJavaCompiler) {
 								compiler.close();

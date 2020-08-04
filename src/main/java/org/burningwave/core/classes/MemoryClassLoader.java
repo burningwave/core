@@ -27,6 +27,8 @@
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package org.burningwave.core.classes;
+
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
@@ -40,6 +42,7 @@ import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -56,7 +59,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	Map<String, ByteBuffer> notLoadedByteCodes;
 	Map<String, ByteBuffer> loadedByteCodes;
 	HashSet<Object> clients;
-	boolean isClosed;
+	Boolean isClosed;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -66,6 +69,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		ClassLoader parentClassLoader
 	) {
 		super(parentClassLoader);
+		isClosed = Boolean.FALSE;
 		if (parentClassLoader instanceof MemoryClassLoader) {
 			((MemoryClassLoader)parentClassLoader).register(this);
 		}
@@ -378,16 +382,28 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	@Override
 	public MemoryClassLoader clear () {
-		try {
-			this.notLoadedByteCodes.clear();
-			this.loadedByteCodes.clear();
-    	} catch (Throwable exc) {
-    		if (!isClosed) {
-    			throw exc;
-    		} else {
-    			logWarn("Could not execute clear because {} has been closed", this.toString());
-    		}
-    	}  
+		Map<String, ByteBuffer> notLoadedByteCodes = this.notLoadedByteCodes;
+		Map<String, ByteBuffer> loadedByteCodes = this.loadedByteCodes;
+		this.notLoadedByteCodes = new HashMap<>();
+		this.loadedByteCodes = new HashMap<>();
+		BackgroundExecutor.add(() -> {
+			try {
+				Iterator<Entry<String, ByteBuffer>> itr = notLoadedByteCodes.entrySet().iterator();
+				while (itr.hasNext()) {
+					itr.remove();
+				}
+				itr = loadedByteCodes.entrySet().iterator();
+				while (itr.hasNext()) {
+					itr.remove();
+				}
+	    	} catch (Throwable exc) {
+	    		if (!isClosed) {
+	    			throw exc;
+	    		} else {
+	    			logWarn("Could not execute clear because {} has been closed", this.toString());
+	    		}
+	    	}
+		});
 		return this;
 	}
 	
@@ -424,27 +440,38 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		return false;
 	}
 	
-	public synchronized void close() {
+	public void close() {
 		HashSet<Object> clients = this.clients;
 		if (clients != null && !clients.isEmpty()) {
 			throw Throwables.toRuntimeException("Could not close " + this + " because there are " + clients.size() +" registered clients");
 		}
-		isClosed = true;
-		ClassLoader parentClassLoader = getParent();
-		if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
-			((MemoryClassLoader)parentClassLoader).unregister(this,true);
+		boolean close = false;
+		synchronized (isClosed) {
+			if (!isClosed) {
+				close = isClosed = Boolean.TRUE;
+			}
 		}
-		if (clients != null) {
-			clients.clear();
+		if (close) {
+			Thread closingThread = new Thread(() -> {
+				ClassLoader parentClassLoader = getParent();
+				if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
+					((MemoryClassLoader)parentClassLoader).unregister(this,true);
+				}
+				if (clients != null) {
+					clients.clear();
+				}
+				this.clients = null;
+				clear();
+				notLoadedByteCodes = null;
+				loadedByteCodes = null;
+				Collection<Class<?>> loadedClasses = ClassLoaders.retrieveLoadedClasses(this);
+				if (loadedClasses != null) {
+					loadedClasses.clear();
+				}
+				unregister();
+			});
+			closingThread.setPriority(Thread.MIN_PRIORITY);
+			closingThread.start();
 		}
-		this.clients = null;
-		clear();
-		notLoadedByteCodes = null;
-		loadedByteCodes = null;
-		Collection<Class<?>> loadedClasses = ClassLoaders.retrieveLoadedClasses(this);
-		if (loadedClasses != null) {
-			loadedClasses.clear();
-		}
-		unregister();
 	}
 }

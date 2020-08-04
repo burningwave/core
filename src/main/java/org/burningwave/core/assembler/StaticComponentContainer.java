@@ -62,6 +62,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Cache Cache;
 	public static final org.burningwave.core.classes.Classes Classes;
 	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
+	public static final org.burningwave.core.AsynExecutor BackgroundExecutor;
 	public static final org.burningwave.core.classes.Constructors Constructors;
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.classes.Fields Fields;
@@ -80,6 +81,8 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
+		BackgroundExecutor = org.burningwave.core.AsynExecutor.create("Background executor", Thread.MIN_PRIORITY, true);
+		BackgroundExecutor.suspend();
 		Properties properties = new Properties();
 		properties.putAll(Configuration.DEFAULT_VALUES);
 		properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
@@ -132,6 +135,7 @@ public class StaticComponentContainer {
 			Members = org.burningwave.core.classes.Members.create();
 			Constructors = org.burningwave.core.classes.Constructors.create();
 			Fields = org.burningwave.core.classes.Fields.create();
+			BackgroundExecutor.resume();
 			Methods = org.burningwave.core.classes.Methods.create();
 			ByFieldOrByMethodPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByFieldOrByMethod.create();
 			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
