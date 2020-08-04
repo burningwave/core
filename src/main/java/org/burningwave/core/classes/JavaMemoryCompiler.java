@@ -563,7 +563,7 @@ public class JavaMemoryCompiler implements Component {
 	}
 	
 	
-	public static class CompilationResult {
+	public static class CompilationResult implements AutoCloseable {
 		private FileSystemItem classPath;
 		private Map<String, ByteBuffer> compiledFiles;
 		private Collection<String> dependencies;
