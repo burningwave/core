@@ -42,6 +42,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -346,12 +347,12 @@ public class Cache implements Component {
 		void clearResources(Map<Long, Map<String, Map<String, R>>> partitions, boolean destroyItems) {
 			for (Entry<Long, Map<String, Map<String, R>>> partition : partitions.entrySet()) {
 				for (Entry<String, Map<String, R>> nestedPartition : partition.getValue().entrySet()) {
-					for (Entry<String, R> item : nestedPartition.getValue().entrySet()) {
-						if (destroyItems) {
-							destroy(item.getKey(), item.getValue());
-						}
+					Iterator<Entry<String, R>> itr = nestedPartition.getValue().entrySet().iterator();
+					while (itr.hasNext()) {
+						Entry<String, R> item = itr.next();
+						itr.remove();
+						destroy(item.getKey(), item.getValue());
 					}
-					nestedPartition.getValue().clear();
 				}
 				partition.getValue().clear();
 			}
