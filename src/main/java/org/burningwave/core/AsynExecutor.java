@@ -30,7 +30,6 @@ package org.burningwave.core;
 
 import java.util.AbstractMap;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -51,8 +50,7 @@ public class AsynExecutor implements Component{
 		executor = new Thread(() -> {
 			while (executables != null) {
 				if (!executables.isEmpty()) {
-					Iterator<Entry<Runnable, Integer>> cleanersItr = executables.iterator();
-					while (cleanersItr.hasNext()) {
+					for (Entry<Runnable, Integer> executable : executables) {
 						synchronized(mutexManager.getMutex("resumeCaller")) {
 							try {
 								if (supended) {
@@ -64,13 +62,13 @@ public class AsynExecutor implements Component{
 							}
 						}
 						try {
-							currentExecutable = cleanersItr.next();
+							this.currentExecutable = executable;
 							int currentExecutablePriority = currentExecutable.getValue();
 							if (executor.getPriority() != currentExecutablePriority) {
 								executor.setPriority(currentExecutablePriority);
 							}
 							currentExecutable.getKey().run();
-							cleanersItr.remove();
+							executables.remove(executable);
 							synchronized(mutexManager.getMutex("suspensionCaller")) {
 								currentExecutable = null;
 								mutexManager.getMutex("suspensionCaller").notifyAll();
@@ -128,9 +126,10 @@ public class AsynExecutor implements Component{
 	}
 	
 	public void waitForExecutablesEnding() {
-		executor.setPriority(Thread.MAX_PRIORITY);
+		int currentThreadPriority = Thread.currentThread().getPriority();
+		executor.setPriority(currentThreadPriority);
 		while (!executables.isEmpty()) {
-			executables.stream().map(executable -> executable.setValue(Thread.MAX_PRIORITY));
+			executables.stream().map(executable -> executable.setValue(currentThreadPriority));
 			synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
 				try {
 					mutexManager.getMutex("executingFinishedWaiter").wait();
@@ -142,7 +141,8 @@ public class AsynExecutor implements Component{
 	}
 
 	public void suspend() {
-		executor.setPriority(Thread.MAX_PRIORITY);
+		int currentThreadPriority = Thread.currentThread().getPriority();
+		executor.setPriority(currentThreadPriority);
 		supended = Boolean.TRUE;
 		if (currentExecutable != null) {
 			synchronized (mutexManager.getMutex("suspensionCaller")) {
