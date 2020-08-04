@@ -29,7 +29,7 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
-import static org.burningwave.core.assembler.StaticComponentContainer.Cleaner;
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
@@ -177,7 +177,7 @@ public class Cache implements Component {
 				this.resources = new HashMap<>();
 				mutexManagerForResources.clear();
 			}
-			Cleaner.add(() -> {
+			BackgroundExecutor.add(() -> {
 				for (Entry<T, PathForResources<R>> item : resources.entrySet()) {
 					item.getValue().clear(destroyItems);
 				}
@@ -303,7 +303,7 @@ public class Cache implements Component {
 			R item = nestedPartition.remove(path);
 			if (destroy && item != null) {
 				String finalPath = path;
-				Cleaner.add(() -> destroy(finalPath, item), Thread.MIN_PRIORITY);
+				BackgroundExecutor.add(() -> destroy(finalPath, item), Thread.MIN_PRIORITY);
 			}
 			return item;
 		}
@@ -336,7 +336,7 @@ public class Cache implements Component {
 				mutexManagerForLoadedResources.clear();    
 				mutexManagerForPartitionedResources.clear();
 			}
-			Cleaner.add(() -> {
+			BackgroundExecutor.add(() -> {
 				clearResources(partitions, destroyItems);
 				logInfo("Cleaning of {} is finished", this.toString());
 			}, Thread.MIN_PRIORITY);

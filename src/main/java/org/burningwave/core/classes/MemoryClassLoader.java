@@ -32,7 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ByteBuffer
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.Cleaner;
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -386,7 +386,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		Map<String, ByteBuffer> loadedByteCodes = this.loadedByteCodes;
 		this.notLoadedByteCodes = new HashMap<>();
 		this.loadedByteCodes = new HashMap<>();
-		Cleaner.add(() -> {
+		BackgroundExecutor.add(() -> {
 			try {
 				for (ByteBuffer byteCode : notLoadedByteCodes.values()) {
 					ByteBufferDelegate.destroy(byteCode);
