@@ -114,6 +114,10 @@ public class AsynExecutor implements Component{
 		return new AsynExecutor(name, initialPriority, daemon);
 	}
 	
+	public void add(Runnable executable) {
+		add(executable, Thread.currentThread().getPriority());
+	}
+	
 	public void add(Runnable executable, int priority) {
 		executables.add(new AbstractMap.SimpleEntry<>(executable, priority));
 		try {
