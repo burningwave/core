@@ -68,7 +68,10 @@ public class AsynExecutor implements Component{
 							if (executor.getPriority() != currentExecutablePriority) {
 								executor.setPriority(currentExecutablePriority);
 							}
-							currentExecutable.getKey().run();
+							Runnable runnable = currentExecutable.getKey();
+							logInfo("Started execution of {}", runnable.toString());
+							runnable.run();
+							logInfo("Ended execution of {}", runnable.toString());
 							executables.remove(executable);
 							synchronized(mutexManager.getMutex("suspensionCaller")) {
 								currentExecutable = null;

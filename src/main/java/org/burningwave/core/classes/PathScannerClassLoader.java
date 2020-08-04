@@ -128,7 +128,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 									new FileSystemItem [] {child, pathFIS}
 								)){
 									try {
-										JavaClass.useByteCode(child.toByteBuffer(), javaClass ->
+										JavaClass.use(child.toByteBuffer(), javaClass ->
 											addByteCode0(javaClass.getName(), javaClass.getByteCode())
 										);
 									} catch (Throwable exc) {

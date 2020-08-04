@@ -401,7 +401,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 					itr.remove();
 					ByteBufferDelegate.destroy(item.getValue());
 				}
-				logInfo("Cleaning of {} is finished", this.toString());
 	    	} catch (Throwable exc) {
 	    		if (!isClosed) {
 	    			throw exc;

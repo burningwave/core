@@ -58,13 +58,13 @@ public class JavaClass implements AutoCloseable {
 		}
 	}
 	
-	public static void useByteCode(ByteBuffer byteCode, Consumer<JavaClass> javaClassConsumer) {
+	public static void use(ByteBuffer byteCode, Consumer<JavaClass> javaClassConsumer) {
 		try(JavaClass javaClass = JavaClass.create(byteCode)) {
 			javaClassConsumer.accept(javaClass);
 		}
 	}
 	
-	public static <T, E extends Throwable> T useByteCodeAndExtract(ByteBuffer byteCode, ThrowingFunction<JavaClass, T, E> javaClassConsumer) throws E {
+	public static <T, E extends Throwable> T extractByUsing(ByteBuffer byteCode, ThrowingFunction<JavaClass, T, E> javaClassConsumer) throws E {
 		try(JavaClass javaClass = JavaClass.create(byteCode)) {
 			return javaClassConsumer.apply(javaClass);
 		}

@@ -169,13 +169,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 				boolean isClass = false;
 				try {
 					if (isClass = classFilePredicate.test(new FileSystemItem[]{child, basePath})) {
-						JavaClass javaClass = JavaClass.create(child.toByteBuffer());
-						ClassCriteria.TestContext criteriaTestContext = testClassCriteria(context, javaClass);
-						if (criteriaTestContext.getResult()) {
-							addToContext(
-								context, criteriaTestContext, basePath.getAbsolutePath(), child, javaClass
-							);
-						}
+						analyze(context, child, basePath);
 					}
 				} catch (Throwable exc) {
 					logError("Could not scan " + child.getAbsolutePath(), exc);
@@ -183,6 +177,17 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 				return isClass;
 			}
 		);
+	}
+
+	void analyze(C context, FileSystemItem child, FileSystemItem basePath) {
+		JavaClass.use(child.toByteBuffer(), javaClass -> {
+			ClassCriteria.TestContext criteriaTestContext = testClassCriteria(context, javaClass);
+			if (criteriaTestContext.getResult()) {
+				addToContext(
+					context, criteriaTestContext, basePath.getAbsolutePath(), child, javaClass
+				);
+			}
+		});
 	}
 	
 	C createContext(SearchConfigAbst<?> searchConfig) {

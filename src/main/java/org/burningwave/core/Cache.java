@@ -183,7 +183,6 @@ public class Cache implements Component {
 					item.getValue().clear(destroyItems);
 				}
 				resources.clear();
-				logInfo("Cleaning of {} is finished", this.toString());
 			}, Thread.MIN_PRIORITY);		
 			return this;
 		}
@@ -339,7 +338,6 @@ public class Cache implements Component {
 			}
 			BackgroundExecutor.add(() -> {
 				clearResources(partitions, destroyItems);
-				logInfo("Cleaning of {} is finished", this.toString());
 			}, Thread.MIN_PRIORITY);
 			return this;
 		}

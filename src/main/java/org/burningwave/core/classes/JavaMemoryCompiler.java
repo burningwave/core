@@ -195,7 +195,7 @@ public class JavaMemoryCompiler implements Component {
 					"");
 			if (!compiledFiles.isEmpty() && storeCompiledClasses) {
 				compiledFiles.forEach((className, byteCode) -> {
-					JavaClass.useByteCode(byteCode, (javaClass) -> javaClass.storeToClassPath(storedFilesClassPath));
+					JavaClass.use(byteCode, (javaClass) -> javaClass.storeToClassPath(storedFilesClassPath));
 				});
 			}			
 			return new CompilationResult(FileSystemItem.ofPath(storedFilesClassPath), compiledFiles, new HashSet<>(context.classPaths));
