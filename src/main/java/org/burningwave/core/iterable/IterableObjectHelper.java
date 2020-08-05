@@ -38,6 +38,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Map.Entry;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -51,6 +54,39 @@ public class IterableObjectHelper implements Component {
 	
 	public static IterableObjectHelper create() {
 		return new IterableObjectHelper();
+	}
+	
+	public <K,V> void deepClear(Map<K,V> map) {
+		Iterator<Entry<K, V>> itr = map.entrySet().iterator();
+		while (itr.hasNext()) {
+			itr.next();
+			itr.remove();
+		}
+	}
+	
+	public <K,V> void deepClear(Map<K,V> map, BiConsumer<K, V> itemDestroyer) {
+		Iterator<Entry<K, V>> itr = map.entrySet().iterator();
+		while (itr.hasNext()) {
+			Entry<K, V> entry = itr.next();
+			itemDestroyer.accept(entry.getKey(), entry.getValue());
+			itr.remove();
+		}
+	}
+	
+	public <V> void deepClear(Collection<V> map) {
+		Iterator<V> itr = map.iterator();
+		while (itr.hasNext()) {
+			itr.next();
+			itr.remove();
+		}
+	}
+	
+	public <V> void deepClear(Collection<V> map, Consumer<V> itemDestroyer) {
+		Iterator<V> itr = map.iterator();
+		while (itr.hasNext()) {
+			itemDestroyer.accept(itr.next());
+			itr.remove();
+		}
 	}
 	
 	public <T> Collection<T> merge(

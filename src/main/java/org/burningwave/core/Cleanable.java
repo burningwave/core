@@ -28,8 +28,6 @@
  */
 package org.burningwave.core;
 
-
-
 @SuppressWarnings("unchecked")
 public interface Cleanable {
 		

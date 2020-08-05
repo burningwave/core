@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core;
+package org.burningwave.core.concurrent;
 
 import java.util.AbstractMap;
 import java.util.Collection;
@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.burningwave.core.concurrent.Mutex;
+import org.burningwave.core.Component;
 
 public class AsynExecutor implements Component {
 	private Collection<Map.Entry<Runnable, Integer>> executables;
