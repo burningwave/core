@@ -230,11 +230,11 @@ public class AsynExecutor implements Component {
 		return supended;
 	}
 
-	public void terminate(boolean waitForTaskTermination) {
+	public void terminate(boolean waitForTasksTermination) {
 		Collection<Map.Entry<Runnable, Integer>> executables = this.executables;
 		
 		Thread executor = this.executor;
-		if (waitForTaskTermination) {
+		if (waitForTasksTermination) {
 			addWithCurrentThreadPriority(() -> {
 				this.terminated = Boolean.TRUE;
 				logInfo("Unexecuted tasks {}", executables.size());
