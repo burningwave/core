@@ -484,39 +484,85 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 
 		public <T extends Buffer> boolean destroy(T buffer, boolean force) {
 			if (buffer.isDirect()) {
-				T attachment = Fields.getDirect(buffer, "att");
-				if (Fields.getDirect(buffer, "att") == null) {
-					return getDeallocator(buffer).freeMemory();
+				Cleaner cleaner = getCleaner(buffer, force);
+				if (cleaner != null) {
+					return cleaner.clean();
 				}
-				if (force){
-					return destroy(attachment, force);
-				}				
 				return false;
 			} else {
 				return true;
 			}
 		}
 		
-		public <T extends Buffer> Deallocator getDeallocator(T buffer) {
+		private <T extends Buffer> Object getInternalCleaner(T buffer, boolean findInAttachments) {
 			if (buffer.isDirect()) {
-				Object deallocator = Fields.getDirect(Fields.get(buffer, "cleaner"), "thunk");
-				return ()-> {
-					if (Long.valueOf((long)Fields.getDirect(deallocator, "address")) != 0) {
-						Methods.invokeDirect(deallocator, "run");
-						return true;
-					} else {
+				if (buffer != null) {
+					Object cleaner;
+					if ((cleaner = Fields.get(buffer, "cleaner")) != null) {
+						return cleaner;
+					} else if (findInAttachments){
+						return getInternalCleaner(Fields.getDirect(buffer, "att"), findInAttachments);
+					}
+				}
+			}
+			return null;
+		}
+		
+		private <T extends Buffer> Object getInternalDeallocator(T buffer, boolean findInAttachments) {
+			if (buffer.isDirect()) {
+				Object cleaner = getInternalCleaner(buffer, findInAttachments);
+				if (cleaner != null) {
+					return Fields.getDirect(cleaner, "thunk");
+				}
+			}
+			return null;
+		}
+		
+		public  <T extends Buffer> Cleaner getCleaner(T buffer, boolean findInAttachments) {
+			Object cleaner = getInternalCleaner(buffer, findInAttachments);
+			if (cleaner != null) {
+				return new Cleaner () {
+					@Override
+					public boolean clean() {
+						if (Long.valueOf((long)Fields.getDirect(Fields.getDirect(cleaner, "thunk"), "address")) != 0) {
+							Methods.invokeDirect(cleaner, "clean");
+							return true;
+						}
 						return false;
 					}
 				};
-			} else {
-				return () -> true;
 			}
+			return null;
+		}
+		
+		public <T extends Buffer> Deallocator getDeallocator(T buffer, boolean findInAttachments) {
+			if (buffer.isDirect()) {
+				Object deallocator = getInternalDeallocator(buffer, findInAttachments);
+				if (deallocator != null) {
+					return ()-> {
+						if (Long.valueOf((long)Fields.getDirect(deallocator, "address")) != 0) {
+							Methods.invokeDirect(deallocator, "run");
+							return true;
+						} else {
+							return false;
+						}
+					};
+				}
+			}
+			return () -> true;
 		}
 		
 		@FunctionalInterface
 		public static interface Deallocator {
 			
 			public boolean freeMemory();
+			
+		}
+		
+		@FunctionalInterface
+		public static interface Cleaner {
+			
+			public boolean clean();
 			
 		}
 	}
