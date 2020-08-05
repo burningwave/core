@@ -425,7 +425,7 @@ public class Classes implements Component, MembersRetriever {
 			return LowLevelObjectsHandler.getParent(classLoader);
 		}
 		
-		private  ClassLoader getMaster(ClassLoader classLoader) {
+		public  ClassLoader getMaster(ClassLoader classLoader) {
 			while (getParent(classLoader) != null) {
 				classLoader = getParent(classLoader); 
 			}

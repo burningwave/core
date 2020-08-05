@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
+import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
@@ -222,7 +222,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			public long getSize() {
 				long size = super.getSize();
 				if (size < 0) {
-					size = ByteBufferDelegate.limit(toByteBuffer());
+					size = ByteBufferHandler.limit(toByteBuffer());
 				}
 				return size;
 			}		

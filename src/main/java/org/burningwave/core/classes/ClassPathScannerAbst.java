@@ -143,13 +143,13 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 	
 	void searchInFileSystem(C context) {
-		FileSystemItem.Criteria filter = getFileAndClassTesterAndExecutor(context);
+		FileSystemItem.Criteria filter = retrieveFileAndClassTesterAndExecutor(context);
 		context.getSearchConfig().getPaths().parallelStream().forEach(basePath -> {
 			FileSystemItem.ofPath(basePath).refresh().findInAllChildren(filter);
 		});
 	}
 	
-	FileSystemItem.Criteria getFileAndClassTesterAndExecutor(C context) {
+	FileSystemItem.Criteria retrieveFileAndClassTesterAndExecutor(C context) {
 		SearchConfigAbst<?> searchConfig = context.getSearchConfig();
 		if (searchConfig.getScanFileCriteria().hasNoPredicate()) {
 			searchConfig.withScanFileCriteria(
@@ -160,16 +160,16 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		}
 
 		Predicate<FileSystemItem[]> classFilePredicate = searchConfig.getScanFileCriteria().getPredicateOrTruePredicateIfPredicateIsNull();
-		return getFileAndClassTesterAndExecutor(context, classFilePredicate);
+		return buildFileAndClassTesterAndExecutor(context, classFilePredicate);
 	}
 
-	FileSystemItem.Criteria getFileAndClassTesterAndExecutor(C context, Predicate<FileSystemItem[]> classFilePredicate) {
+	FileSystemItem.Criteria buildFileAndClassTesterAndExecutor(C context, Predicate<FileSystemItem[]> classFilePredicate) {
 		return FileSystemItem.Criteria.forAllFileThat(
 			(child, basePath) -> {
 				boolean isClass = false;
 				try {
 					if (isClass = classFilePredicate.test(new FileSystemItem[]{child, basePath})) {
-						analyze(context, child, basePath);
+						analyzeAndAddItemsToContext(context, child, basePath);
 					}
 				} catch (Throwable exc) {
 					logError("Could not scan " + child.getAbsolutePath(), exc);
@@ -179,7 +179,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		);
 	}
 
-	void analyze(C context, FileSystemItem child, FileSystemItem basePath) {
+	void analyzeAndAddItemsToContext(C context, FileSystemItem child, FileSystemItem basePath) {
 		JavaClass.use(child.toByteBuffer(), javaClass -> {
 			ClassCriteria.TestContext criteriaTestContext = testClassCriteria(context, javaClass);
 			if (criteriaTestContext.getResult()) {

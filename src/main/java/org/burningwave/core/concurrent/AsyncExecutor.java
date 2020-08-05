@@ -26,7 +26,7 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core;
+package org.burningwave.core.concurrent;
 
 import java.util.AbstractMap;
 import java.util.Collection;
@@ -34,33 +34,43 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.burningwave.core.concurrent.Mutex;
+import org.burningwave.core.Component;
 
-public class AsynExecutor implements Component{
+public class AsyncExecutor implements Component {
 	private Collection<Map.Entry<Runnable, Integer>> executables;
 	private Entry<Runnable, Integer> currentExecutable;
 	private Boolean supended;
 	private Mutex.Manager mutexManager;
-	private Thread executor;
+	Thread executor;
 	private int defaultPriority;
 	private long executedExecutableCount;
 	private boolean isDaemon;
 	private String name;
+	private Boolean terminated;
+	private Runnable initializer;
 	
-	private AsynExecutor(String name, int defaultPriority, boolean isDaemon) {
-		this.name = name;
-		this.defaultPriority = defaultPriority;
-		this.isDaemon = isDaemon;
+	private AsyncExecutor(String name, int defaultPriority, boolean isDaemon) {
+		mutexManager = Mutex.Manager.create(this);
+		executables = new CopyOnWriteArrayList<>();
+		initializer = () -> {
+			this.name = name;
+			this.defaultPriority = defaultPriority;
+			this.isDaemon = isDaemon;
+			init0();
+		};
 		init();
 	}
 	
-	void init (){
-		mutexManager = Mutex.Manager.create(this);
+	void init() {
+		initializer.run();
+	}
+	
+	void init0() {		
 		supended = Boolean.FALSE;
-		executables = new CopyOnWriteArrayList<>();
+		terminated = Boolean.FALSE;
 		executedExecutableCount = 0;
 		executor = new Thread(() -> {
-			while (executables != null) {
+			while (!terminated) {
 				if (!executables.isEmpty()) {
 					for (Entry<Runnable, Integer> executable : executables) {
 						synchronized(mutexManager.getMutex("resumeCaller")) {
@@ -93,7 +103,7 @@ public class AsynExecutor implements Component{
 						} catch (Throwable exc) {
 							logError("Exception occurred while executing " + runnable.toString(), exc);
 						}
-						if (executables == null) {
+						if (terminated) {
 							break;
 						}
 					}
@@ -116,33 +126,45 @@ public class AsynExecutor implements Component{
 		executor.start();
 	}
 	
-	public static AsynExecutor create(String name, int initialPriority) {
+	public static AsyncExecutor create(String name, int initialPriority) {
 		return create(name, initialPriority, false, false);
 	}
 	
-	public static AsynExecutor create(String name, int initialPriority, boolean daemon, boolean undestroyable) {
+	public static AsyncExecutor create(String name, int initialPriority, boolean daemon, boolean undestroyable) {
 		if (undestroyable) {
-			return new AsynExecutor(name, initialPriority, daemon) {
+			String creatorClass = Thread.currentThread().getStackTrace()[2].getClassName();
+			return new AsyncExecutor(name, initialPriority, daemon) {
+				
 				@Override
-				public void terminate(boolean waitForTaskTermination) {
-					super.terminate(waitForTaskTermination);
-					init();
+				public void shutDown(boolean waitForTasksTermination) {
+					super.shutDown(waitForTasksTermination);
 				}
+				
+				@Override
+				void closeResources() {
+					this.executor = null;
+					if (!Thread.currentThread().getStackTrace()[4].getClassName().equals(creatorClass)) {	
+						init();
+					} else {
+						super.closeResources();
+					}
+				}
+				
 			};
 		} else {
-			return new AsynExecutor(name, initialPriority, daemon);
+			return new AsyncExecutor(name, initialPriority, daemon);
 		}
 	}
 	
-	public AsynExecutor addWithCurrentThreadPriority(Runnable executable) {
+	public AsyncExecutor addWithCurrentThreadPriority(Runnable executable) {
 		return add(executable, Thread.currentThread().getPriority());
 	}
 	
-	public AsynExecutor add(Runnable executable) {
+	public AsyncExecutor add(Runnable executable) {
 		return add(executable, this.defaultPriority);
 	}
 	
-	public AsynExecutor add(Runnable executable, int priority) {
+	public AsyncExecutor add(Runnable executable, int priority) {
 		executables.add(new AbstractMap.SimpleEntry<>(executable, priority));
 		try {
 			synchronized(mutexManager.getMutex("executableCollectionFiller")) {
@@ -154,11 +176,11 @@ public class AsynExecutor implements Component{
 		return this;
 	}
 	
-	public AsynExecutor waitForExecutablesEnding() {
+	public AsyncExecutor waitForExecutablesEnding() {
 		return waitForExecutablesEnding(Thread.currentThread().getPriority());
 	}
 	
-	public AsynExecutor waitForExecutablesEnding(int priority) {
+	public AsyncExecutor waitForExecutablesEnding(int priority) {
 		executor.setPriority(priority);
 		executables.stream().map(executable -> executable.setValue(priority));
 		synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
@@ -174,18 +196,18 @@ public class AsynExecutor implements Component{
 		return this;
 	}
 	
-	public AsynExecutor changePriority(int priority) {
+	public AsyncExecutor changePriority(int priority) {
 		this.defaultPriority = priority;
 		executor.setPriority(priority);
 		executables.stream().map(executable -> executable.setValue(priority));
 		return this;
 	}
 	
-	public AsynExecutor suspend() {
+	public AsyncExecutor suspend() {
 		return suspend(Thread.currentThread().getPriority());
 	}
 	
-	public AsynExecutor suspend(int priority) {
+	public AsyncExecutor suspend(int priority) {
 		executor.setPriority(priority);
 		supended = Boolean.TRUE;
 		if (currentExecutable != null) {
@@ -202,7 +224,7 @@ public class AsynExecutor implements Component{
 		return this;
 	}
 
-	public AsynExecutor resume() {
+	public AsyncExecutor resume() {
 		synchronized(mutexManager.getMutex("resumeCaller")) {
 			try {
 				supended = Boolean.FALSE;
@@ -217,16 +239,21 @@ public class AsynExecutor implements Component{
 	public boolean isSuspended() {
 		return supended;
 	}
-
-	public void terminate(boolean waitForTaskTermination) {
+	
+	public void shutDown(boolean waitForTasksTermination) {
 		Collection<Map.Entry<Runnable, Integer>> executables = this.executables;
-		if (waitForTaskTermination) {
+		Thread executor = this.executor;
+		if (waitForTasksTermination) {
 			addWithCurrentThreadPriority(() -> {
-				this.executables = null;
+				this.terminated = Boolean.TRUE;
+				logInfo("Unexecuted tasks {}", executables.size());
+				executables.clear();
 			});
 		} else {
 			suspend();
-			this.executables = null;
+			this.terminated = Boolean.TRUE;
+			logInfo("Unexecuted tasks {}", executables.size());
+			executables.clear();
 			resume();
 			try {
 				synchronized(mutexManager.getMutex("executableCollectionFiller")) {
@@ -234,19 +261,30 @@ public class AsynExecutor implements Component{
 				}
 			} catch (Throwable exc) {
 				logWarn("Exception occurred", exc);
-			}
-			
+			}	
 		}
 		try {
 			executor.join();
-			logInfo("Unexecuted tasks {}", executables.size());
-			executables.clear();
-			executor = null;
-			mutexManager.close();
-			mutexManager = null; 
-			
+			closeResources();			
 		} catch (InterruptedException exc) {
 			logError("Exception occurred", exc);
 		}
+	}
+	
+	@Override
+	public void close() {
+		shutDown(true);
+	}
+	
+	void closeResources() {
+		this.executor = null;
+		mutexManager.clear();
+		mutexManager = null;
+		executables = null;
+		currentExecutable = null;
+		initializer = null;
+		terminated = null;
+		supended = null;
+		name = null;
 	}
 }

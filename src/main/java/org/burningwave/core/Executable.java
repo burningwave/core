@@ -28,6 +28,7 @@
  */
 package org.burningwave.core;
 
+@FunctionalInterface
 public interface Executable {
 	
     public <T> T execute(Object... parameters) throws Throwable;

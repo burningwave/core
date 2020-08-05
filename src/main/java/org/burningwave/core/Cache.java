@@ -29,6 +29,7 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
@@ -41,7 +42,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -297,7 +297,7 @@ public class Cache implements Component {
 			R item = nestedPartition.remove(path);
 			if (destroy && item != null) {
 				String finalPath = path;
-				BackgroundExecutor.add(() -> destroy(finalPath, item));
+				BackgroundExecutor.add(() -> destroy(finalPath, item), Thread.MIN_PRIORITY);
 			}
 			return item;
 		}
@@ -332,18 +332,17 @@ public class Cache implements Component {
 			}
 			BackgroundExecutor.add(() -> {
 				clearResources(partitions, destroyItems);
-			});
+			}, Thread.MIN_PRIORITY);
 			return this;
 		}
 
 		void clearResources(Map<Long, Map<String, Map<String, R>>> partitions, boolean destroyItems) {
 			for (Entry<Long, Map<String, Map<String, R>>> partition : partitions.entrySet()) {
 				for (Entry<String, Map<String, R>> nestedPartition : partition.getValue().entrySet()) {
-					Iterator<Entry<String, R>> itr = nestedPartition.getValue().entrySet().iterator();
-					while (itr.hasNext()) {
-						Entry<String, R> item = itr.next();
-						itr.remove();
-						destroy(item.getKey(), item.getValue());
+					if (destroyItems) {
+						IterableObjectHelper.deepClear(nestedPartition.getValue(), this::destroy);
+					} else {
+						nestedPartition.getValue().clear();
 					}
 				}
 				partition.getValue().clear();

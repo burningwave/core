@@ -28,11 +28,11 @@
  */
 package org.burningwave.core.jvm;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
+import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
@@ -53,8 +53,8 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
@@ -384,12 +384,47 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		}
 	}
 
-	public static class ByteBufferDelegate {
+	public static class ByteBufferHandler implements Component {
+		private Field directAllocatedByteBufferAddressField;
 		
-		private ByteBufferDelegate() {}
+		public ByteBufferHandler() {
+			new Thread(() -> {
+				init();
+				synchronized (this) {
+					this.notifyAll();
+				}
+			}).start();
+		}
+
+		void init() {
+			try {
+				if (LowLevelObjectsHandler == null) {
+					synchronized (LowLevelObjectsHandler.class) {
+						if (LowLevelObjectsHandler == null) {							
+							LowLevelObjectsHandler.class.wait();
+						}
+					}
+				}
+				Class directByteBufferClass = ByteBuffer.allocateDirect(1).getClass();
+				while (directByteBufferClass != null && directAllocatedByteBufferAddressField == null) {
+					directAllocatedByteBufferAddressField = LowLevelObjectsHandler.getDeclaredField(directByteBufferClass, field -> "address".equals(field.getName()));
+					directByteBufferClass = directByteBufferClass.getSuperclass();
+				}
+			} catch (InterruptedException exc) {
+				throw Throwables.toRuntimeException(exc);
+			}
+		}
 		
-		public static ByteBufferDelegate create() {
-			return new ByteBufferDelegate();
+		public static ByteBufferHandler create() {
+			return new ByteBufferHandler();
+		}
+		
+		public ByteBuffer allocate(int capacity) {
+			return ByteBuffer.allocate(capacity);
+		}
+		
+		public ByteBuffer allocateDirect(int capacity) {
+			return ByteBuffer.allocateDirect(capacity);
 		}
 		
 		public ByteBuffer duplicate(ByteBuffer buffer) {
@@ -424,6 +459,139 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			return ((Buffer)buffer).remaining();
 		}
 		
+		public <T extends Buffer> long getAddress(T buffer) {
+			try {
+				return (long)LowLevelObjectsHandler.getFieldValue(buffer, directAllocatedByteBufferAddressField);
+			} catch (NullPointerException exc) {
+				return (long)LowLevelObjectsHandler.getFieldValue(buffer, getDirectAllocatedByteBufferAddressField());
+			}
+		}
+		
+		private Field getDirectAllocatedByteBufferAddressField() {
+			if (directAllocatedByteBufferAddressField == null) {
+				synchronized (this) {
+					if (directAllocatedByteBufferAddressField == null) {
+						try {
+							this.wait();
+						} catch (InterruptedException exc) {
+							throw Throwables.toRuntimeException(exc);
+						}
+					}
+				}
+			}
+			return directAllocatedByteBufferAddressField;
+		}
+
+		public <T extends Buffer> boolean destroy(T buffer, boolean force) {
+			if (buffer.isDirect()) {
+				Cleaner cleaner = getCleaner(buffer, force);
+				if (cleaner != null) {
+					return cleaner.clean();
+				}
+				return false;
+			} else {
+				return true;
+			}
+		}
+		
+		private <T extends Buffer> Object getInternalCleaner(T buffer, boolean findInAttachments) {
+			if (buffer.isDirect()) {
+				if (buffer != null) {
+					Object cleaner;
+					if ((cleaner = Fields.get(buffer, "cleaner")) != null) {
+						return cleaner;
+					} else if (findInAttachments){
+						return getInternalCleaner(Fields.getDirect(buffer, "att"), findInAttachments);
+					}
+				}
+			}
+			return null;
+		}
+		
+		private <T extends Buffer> Object getInternalDeallocator(T buffer, boolean findInAttachments) {
+			if (buffer.isDirect()) {
+				Object cleaner = getInternalCleaner(buffer, findInAttachments);
+				if (cleaner != null) {
+					return Fields.getDirect(cleaner, "thunk");
+				}
+			}
+			return null;
+		}
+		
+		public  <T extends Buffer> Cleaner getCleaner(T buffer, boolean findInAttachments) {
+			Object cleaner;
+			if ((cleaner = getInternalCleaner(buffer, findInAttachments)) != null) {
+				return new Cleaner () {
+					
+					@Override
+					public boolean clean() {
+						if (getAddress() != 0) {
+							Methods.invokeDirect(cleaner, "clean");
+							return true;
+						}
+						return false;
+					}
+					
+					long getAddress() {
+						return Long.valueOf((long)Fields.getDirect(Fields.getDirect(cleaner, "thunk"), "address"));
+					}
+
+					@Override
+					public boolean cleaningHasBeenPerformed() {
+						return getAddress() == 0;
+					}
+					
+				};
+			}
+			return null;
+		}
+		
+		public <T extends Buffer> Deallocator getDeallocator(T buffer, boolean findInAttachments) {
+			if (buffer.isDirect()) {
+				Object deallocator;
+				if ((deallocator = getInternalDeallocator(buffer, findInAttachments)) != null) {
+					return new Deallocator() {
+						
+						@Override
+						public boolean freeMemory() {
+							if (getAddress() != 0) {
+								Methods.invokeDirect(deallocator, "run");
+								return true;
+							} else {
+								return false;
+							}
+						}
+
+						public long getAddress() {
+							return Long.valueOf((long)Fields.getDirect(deallocator, "address"));
+						}
+
+						@Override
+						public boolean memoryHasBeenReleased() {
+							return getAddress() == 0;
+						}
+						
+					};
+				}
+			}
+			return null;
+		}
+		
+		public static interface Deallocator {
+			
+			public boolean freeMemory();
+			
+			boolean memoryHasBeenReleased();
+			
+		}
+		
+		public static interface Cleaner {
+			
+			public boolean clean();
+			
+			public boolean cleaningHasBeenPerformed();
+			
+		}
 	}
 	
 	private abstract static class Initializer implements Component {

@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
+import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,10 +89,10 @@ public class Streams implements Component {
 		logInfo("default buffer size: {} bytes", defaultBufferSize);
 		String defaultByteBufferAllocationMode = config.resolveStringValue(Configuration.Key.BYTE_BUFFER_ALLOCATION_MODE, Configuration.DEFAULT_VALUES);
 		if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
-			this.defaultByteBufferAllocationMode = ByteBuffer::allocate;
+			this.defaultByteBufferAllocationMode = ByteBufferHandler::allocate;
 			logInfo("default allocation mode: ByteBuffer::allocate");
 		} else {
-			this.defaultByteBufferAllocationMode = ByteBuffer::allocateDirect;
+			this.defaultByteBufferAllocationMode = ByteBufferHandler::allocateDirect;
 			logInfo("default allocation mode: ByteBuffer::allocateDirect");
 		}
 		this.mutexManager = Mutex.Manager.create(this);
@@ -133,7 +133,7 @@ public class Streams implements Component {
 	}
 	
 	private boolean is(ByteBuffer bytes, Predicate<Integer> predicate) {
-		return bytes.capacity() > 4 && bytes.limit() > 4 && predicate.test(ByteBufferDelegate.duplicate(bytes).getInt());
+		return bytes.capacity() > 4 && bytes.limit() > 4 && predicate.test(ByteBufferHandler.duplicate(bytes).getInt());
 	}
 	
 	private boolean isArchive(int fileSignature) {
@@ -177,15 +177,15 @@ public class Streams implements Component {
 	
 	public byte[] toByteArray(ByteBuffer byteBuffer) {
     	byteBuffer = shareContent(byteBuffer);
-    	byte[] result = new byte[ByteBufferDelegate.limit(byteBuffer)];
+    	byte[] result = new byte[ByteBufferHandler.limit(byteBuffer)];
     	byteBuffer.get(result, 0, result.length);
         return result;
     }
 
 	public ByteBuffer shareContent(ByteBuffer byteBuffer) {
-		ByteBuffer duplicated = ByteBufferDelegate.duplicate(byteBuffer);
-		if (ByteBufferDelegate.position(byteBuffer) > 0) {
-			ByteBufferDelegate.flip(duplicated);
+		ByteBuffer duplicated = ByteBufferHandler.duplicate(byteBuffer);
+		if (ByteBufferHandler.position(byteBuffer) > 0) {
+			ByteBufferHandler.flip(duplicated);
 		}		
 		return duplicated;
 	}

@@ -56,13 +56,13 @@ public class StaticComponentContainer {
 			DEFAULT_VALUES.put(Key.HIDE_BANNER_ON_INIT, "false");
 		}
 	}
+	public static final org.burningwave.core.concurrent.AsyncExecutor BackgroundExecutor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
-	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
+	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler ByteBufferHandler;
 	public static final org.burningwave.core.Cache Cache;
 	public static final org.burningwave.core.classes.Classes Classes;
 	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
-	public static final org.burningwave.core.AsynExecutor BackgroundExecutor;
 	public static final org.burningwave.core.classes.Constructors Constructors;
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.classes.Fields Fields;
@@ -81,8 +81,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
-		BackgroundExecutor = org.burningwave.core.AsynExecutor.create("Background executor", Thread.MIN_PRIORITY, true, true);
-		BackgroundExecutor.suspend();
+		BackgroundExecutor = org.burningwave.core.concurrent.AsyncExecutor.create("Background executor", Thread.MIN_PRIORITY, true, true);
 		Properties properties = new Properties();
 		properties.putAll(Configuration.DEFAULT_VALUES);
 		properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
@@ -119,24 +118,30 @@ public class StaticComponentContainer {
 				new Thread(() -> {
 					ComponentContainer.closeAll();
 					FileSystemHelper.deleteTemporaryFolders();
+					BackgroundExecutor.shutDown(true);
 				})
 			);
 			String clearTemporaryFolderFlag = GlobalProperties.getProperty(Configuration.Key.CLEAR_TEMPORARY_FOLDER_ON_INIT);
 			if (Boolean.valueOf(clearTemporaryFolderFlag)) {
 				FileSystemHelper.clearMainTemporaryFolder();
 			}
-			ByteBufferDelegate = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate.create();
-			Streams = org.burningwave.core.io.Streams.create(GlobalProperties);
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
-			LowLevelObjectsHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.create();
+			ByteBufferHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler.create();
+			Streams = org.burningwave.core.io.Streams.create(GlobalProperties);
+			synchronized (org.burningwave.core.jvm.LowLevelObjectsHandler.class) {
+				LowLevelObjectsHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.create();
+				org.burningwave.core.jvm.LowLevelObjectsHandler.class.notifyAll();
+			}
 			Classes = org.burningwave.core.classes.Classes.create();
 			ClassLoaders = org.burningwave.core.classes.Classes.Loaders.create();
 			Cache = org.burningwave.core.Cache.create();
-			Members = org.burningwave.core.classes.Members.create();
-			Constructors = org.burningwave.core.classes.Constructors.create();
-			Fields = org.burningwave.core.classes.Fields.create();
-			BackgroundExecutor.resume();
-			Methods = org.burningwave.core.classes.Methods.create();
+			synchronized (org.burningwave.core.classes.Members.class) {
+				Members = org.burningwave.core.classes.Members.create();
+				Fields = org.burningwave.core.classes.Fields.create();
+				Constructors = org.burningwave.core.classes.Constructors.create();
+				Methods = org.burningwave.core.classes.Methods.create();
+				org.burningwave.core.classes.Members.class.notifyAll();
+			}			
 			ByFieldOrByMethodPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByFieldOrByMethod.create();
 			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();

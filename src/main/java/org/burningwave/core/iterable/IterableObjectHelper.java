@@ -37,6 +37,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -44,6 +45,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.function.ThrowingBiConsumer;
+import org.burningwave.core.function.ThrowingConsumer;
 
 @SuppressWarnings("unchecked")
 public class IterableObjectHelper implements Component {
@@ -51,6 +54,39 @@ public class IterableObjectHelper implements Component {
 	
 	public static IterableObjectHelper create() {
 		return new IterableObjectHelper();
+	}
+	
+	public <K, V> void deepClear(Map<K,V> map) {
+		Iterator<Entry<K, V>> itr = map.entrySet().iterator();
+		while (itr.hasNext()) {
+			itr.next();
+			itr.remove();
+		}
+	}
+	
+	public <K, V, E extends Throwable> void deepClear(Map<K,V> map, ThrowingBiConsumer<K, V, E> itemDestroyer) throws E {
+		Iterator<Entry<K, V>> itr = map.entrySet().iterator();
+		while (itr.hasNext()) {
+			Entry<K, V> entry = itr.next();
+			itr.remove();
+			itemDestroyer.accept(entry.getKey(), entry.getValue());
+		}
+	}
+	
+	public <V> void deepClear(Collection<V> map) {
+		Iterator<V> itr = map.iterator();
+		while (itr.hasNext()) {
+			itr.next();
+			itr.remove();
+		}
+	}
+	
+	public <V, E extends Throwable > void deepClear(Collection<V> map, ThrowingConsumer<V, E> itemDestroyer) throws E {
+		Iterator<V> itr = map.iterator();
+		while (itr.hasNext()) {
+			itr.remove();
+			itemDestroyer.accept(itr.next());
+		}
 	}
 	
 	public <T> Collection<T> merge(

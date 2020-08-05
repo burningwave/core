@@ -45,7 +45,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.25.0</version>
+    <version>7.27.0</version>
 </dependency>
 ```
 
@@ -852,9 +852,10 @@ More than one dynamic container can be created, while only one static container 
 ## Static component container
 It is represented by the **org.burningwave.core.assembler.StaticComponentContainer** class that provides the following fields for each component supplied:
 ```java
+public static final org.burningwave.core.concurrent.AsyncExecutor BackgroundExecutor;
 public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
 public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
-public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
+public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler ByteBufferHandler;
 public static final org.burningwave.core.Cache Cache;
 public static final org.burningwave.core.classes.Classes Classes;
 public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
@@ -880,13 +881,13 @@ public static final org.burningwave.core.Throwables Throwables;
 ```java
 package org.burningwave.core.examples.staticcomponents;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 
 public class UseOfStaticComponentsExample {
     
     public void yourMethod(){
-        ManagedLoggersRepository.logInfo(UseOfStaticComponentsExample.class, Classes.getId(this));
+        ManagedLoggersRepository.logInfo(UseOfStaticComponentsExample.class, "Master class loader is {}", ClassLoaders.getMaster(Thread.currentThread().getContextClassLoader()));
     }
 
 }

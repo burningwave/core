@@ -32,6 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Background
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -42,7 +43,6 @@ import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -387,22 +387,8 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		this.notLoadedByteCodes = new HashMap<>();
 		this.loadedByteCodes = new HashMap<>();
 		BackgroundExecutor.add(() -> {
-			try {
-				Iterator<Entry<String, ByteBuffer>> itr = notLoadedByteCodes.entrySet().iterator();
-				while (itr.hasNext()) {
-					itr.remove();
-				}
-				itr = loadedByteCodes.entrySet().iterator();
-				while (itr.hasNext()) {
-					itr.remove();
-				}
-	    	} catch (Throwable exc) {
-	    		if (!isClosed) {
-	    			throw exc;
-	    		} else {
-	    			logWarn("Could not execute clear because {} has been closed", this.toString());
-	    		}
-	    	}
+			IterableObjectHelper.deepClear(notLoadedByteCodes);
+			IterableObjectHelper.deepClear(loadedByteCodes);
 		});
 		return this;
 	}
