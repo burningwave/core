@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
+import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -139,7 +139,7 @@ public class JavaClass implements AutoCloseable {
 	}
 	
 	public ByteBuffer getByteCode() {
-		return ByteBufferDelegate.duplicate(byteCode);
+		return ByteBufferHandler.duplicate(byteCode);
 	}
 	
 	public byte[] toByteArray() {

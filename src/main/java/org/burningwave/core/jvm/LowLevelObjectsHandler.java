@@ -28,9 +28,11 @@
  */
 package org.burningwave.core.jvm;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
+import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
@@ -51,11 +53,17 @@ import java.lang.reflect.Modifier;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.Throwables;
 import org.burningwave.core.assembler.StaticComponentContainer;
+import org.burningwave.core.classes.Members;
 import org.burningwave.core.classes.MembersRetriever;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.ThrowingBiConsumer;
@@ -381,10 +389,39 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		}
 	}
 
-	public static class ByteBufferDelegate {
-	
-		public static ByteBufferDelegate create() {
-			return new ByteBufferDelegate();
+	public static class ByteBufferHandler {
+		private Field directAllocatedByteBufferAddressField;
+		
+		public ByteBufferHandler() {
+			new Thread(() -> {
+				init();
+				synchronized (this) {
+					this.notifyAll();
+				}
+			}).start();
+		}
+
+		void init() {
+			try {
+				if (LowLevelObjectsHandler == null) {
+					synchronized (LowLevelObjectsHandler.class) {
+						if (LowLevelObjectsHandler == null) {							
+							LowLevelObjectsHandler.class.wait();
+						}
+					}
+				}
+				Class directByteBufferClass = ByteBuffer.allocateDirect(1).getClass();
+				while (directByteBufferClass != null && directAllocatedByteBufferAddressField == null) {
+					directAllocatedByteBufferAddressField = LowLevelObjectsHandler.getDeclaredField(directByteBufferClass, field -> "address".equals(field.getName()));
+					directByteBufferClass = directByteBufferClass.getSuperclass();
+				}
+			} catch (InterruptedException exc) {
+				throw Throwables.toRuntimeException(exc);
+			}
+		}
+		
+		public static ByteBufferHandler create() {
+			return new ByteBufferHandler();
 		}
 		
 		public ByteBuffer allocate(int capacity) {
@@ -427,6 +464,70 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			return ((Buffer)buffer).remaining();
 		}
 		
+		public long getAddress(ByteBuffer byteBuffer) {
+			try {
+				return (long)LowLevelObjectsHandler.getFieldValue(byteBuffer, directAllocatedByteBufferAddressField);
+			} catch (NullPointerException exc) {
+				return (long)LowLevelObjectsHandler.getFieldValue(byteBuffer, getDirectAllocatedByteBufferAddressField());
+			}
+		}
+		
+		private Field getDirectAllocatedByteBufferAddressField() {
+			if (directAllocatedByteBufferAddressField == null) {
+				synchronized (this) {
+					if (directAllocatedByteBufferAddressField == null) {
+						try {
+							this.wait();
+						} catch (InterruptedException exc) {
+							throw Throwables.toRuntimeException(exc);
+						}
+					}
+				}
+			}
+			return directAllocatedByteBufferAddressField;
+		}
+
+		public <T extends Buffer> boolean destroy(T buffer, boolean force) {
+			if (buffer.isDirect()) {
+				T attachment = Fields.getDirect(buffer, "att");
+				if (attachment == null) {
+					long address = getAddress((ByteBuffer)buffer);
+					for (Object deallocator : getAllDeallocators((ByteBuffer)buffer)) {
+						Methods.invokeDirect(deallocator, "run");
+					}
+					return true;
+				}
+				if (force){
+					return destroy(attachment, force);
+				}				
+				return false;
+			} else {
+				return true;
+			}
+		}
+		
+		public Collection<Object> getAllDeallocators(ByteBuffer buffer) {
+			if (buffer.isDirect()) {
+				return getAllDeallocators((Object)Fields.get(buffer, "cleaner"));
+			}
+			return new LinkedHashSet<>();
+		}
+		
+		private Collection<Object> getAllDeallocators(Object cleaner) {
+			Collection<Object> deallocators = new LinkedHashSet<>();
+			if (cleaner != null) {
+				deallocators.add(Fields.getDirect(cleaner, "thunk"));
+				Object linkedCleaner = cleaner;
+				while ((linkedCleaner = Fields.getDirect(linkedCleaner, "next")) != null && linkedCleaner != cleaner) {
+					deallocators.add(Fields.getDirect(linkedCleaner, "thunk"));
+				}
+				linkedCleaner = cleaner;
+				while ((linkedCleaner = Fields.get(linkedCleaner, "prev")) != null && linkedCleaner != cleaner) {
+					deallocators.add(Fields.get(linkedCleaner, "thunk"));
+				}
+			}			
+			return deallocators; 
+		}
 	}
 	
 	private abstract static class Initializer implements Component {

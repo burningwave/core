@@ -58,7 +58,7 @@ public class StaticComponentContainer {
 	}
 	public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
-	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate ByteBufferDelegate;
+	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler ByteBufferHandler;
 	public static final org.burningwave.core.Cache Cache;
 	public static final org.burningwave.core.classes.Classes Classes;
 	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
@@ -126,9 +126,12 @@ public class StaticComponentContainer {
 				FileSystemHelper.clearMainTemporaryFolder();
 			}
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
-			ByteBufferDelegate = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate.create();
-			Streams = org.burningwave.core.io.Streams.create(GlobalProperties);			
-			LowLevelObjectsHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.create();			
+			ByteBufferHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler.create();
+			Streams = org.burningwave.core.io.Streams.create(GlobalProperties);
+			synchronized (org.burningwave.core.jvm.LowLevelObjectsHandler.class) {
+				LowLevelObjectsHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.create();
+				org.burningwave.core.jvm.LowLevelObjectsHandler.class.notifyAll();
+			}
 			Classes = org.burningwave.core.classes.Classes.create();
 			ClassLoaders = org.burningwave.core.classes.Classes.Loaders.create();
 			Cache = org.burningwave.core.Cache.create();
