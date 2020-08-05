@@ -519,17 +519,28 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		}
 		
 		public  <T extends Buffer> Cleaner getCleaner(T buffer, boolean findInAttachments) {
-			Object cleaner = getInternalCleaner(buffer, findInAttachments);
-			if (cleaner != null) {
+			Object cleaner;
+			if ((cleaner = getInternalCleaner(buffer, findInAttachments)) != null) {
 				return new Cleaner () {
+					
 					@Override
 					public boolean clean() {
-						if (Long.valueOf((long)Fields.getDirect(Fields.getDirect(cleaner, "thunk"), "address")) != 0) {
+						if (getAddress() != 0) {
 							Methods.invokeDirect(cleaner, "clean");
 							return true;
 						}
 						return false;
 					}
+					
+					long getAddress() {
+						return Long.valueOf((long)Fields.getDirect(Fields.getDirect(cleaner, "thunk"), "address"));
+					}
+
+					@Override
+					public boolean cleaningHasBeenPerformed() {
+						return getAddress() == 0;
+					}
+					
 				};
 			}
 			return null;
@@ -537,32 +548,48 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		
 		public <T extends Buffer> Deallocator getDeallocator(T buffer, boolean findInAttachments) {
 			if (buffer.isDirect()) {
-				Object deallocator = getInternalDeallocator(buffer, findInAttachments);
-				if (deallocator != null) {
-					return ()-> {
-						if (Long.valueOf((long)Fields.getDirect(deallocator, "address")) != 0) {
-							Methods.invokeDirect(deallocator, "run");
-							return true;
-						} else {
-							return false;
+				Object deallocator;
+				if ((deallocator = getInternalDeallocator(buffer, findInAttachments)) != null) {
+					return new Deallocator() {
+						
+						@Override
+						public boolean freeMemory() {
+							if (getAddress() != 0) {
+								Methods.invokeDirect(deallocator, "run");
+								return true;
+							} else {
+								return false;
+							}
 						}
+
+						public long getAddress() {
+							return Long.valueOf((long)Fields.getDirect(deallocator, "address"));
+						}
+
+						@Override
+						public boolean memoryHasBeenReleased() {
+							return getAddress() == 0;
+						}
+						
 					};
 				}
 			}
-			return () -> true;
+			return null;
 		}
 		
-		@FunctionalInterface
 		public static interface Deallocator {
 			
 			public boolean freeMemory();
 			
+			boolean memoryHasBeenReleased();
+			
 		}
 		
-		@FunctionalInterface
 		public static interface Cleaner {
 			
 			public boolean clean();
+			
+			public boolean cleaningHasBeenPerformed();
 			
 		}
 	}
