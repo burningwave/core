@@ -89,10 +89,10 @@ public class Streams implements Component {
 		logInfo("default buffer size: {} bytes", defaultBufferSize);
 		String defaultByteBufferAllocationMode = config.resolveStringValue(Configuration.Key.BYTE_BUFFER_ALLOCATION_MODE, Configuration.DEFAULT_VALUES);
 		if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
-			this.defaultByteBufferAllocationMode = ByteBuffer::allocate;
+			this.defaultByteBufferAllocationMode = ByteBufferDelegate::allocate;
 			logInfo("default allocation mode: ByteBuffer::allocate");
 		} else {
-			this.defaultByteBufferAllocationMode = ByteBuffer::allocateDirect;
+			this.defaultByteBufferAllocationMode = ByteBufferDelegate::allocateDirect;
 			logInfo("default allocation mode: ByteBuffer::allocateDirect");
 		}
 		this.mutexManager = Mutex.Manager.create(this);

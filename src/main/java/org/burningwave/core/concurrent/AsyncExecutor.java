@@ -36,7 +36,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.burningwave.core.Component;
 
-public class AsynExecutor implements Component {
+public class AsyncExecutor implements Component {
 	private Collection<Map.Entry<Runnable, Integer>> executables;
 	private Entry<Runnable, Integer> currentExecutable;
 	private Boolean supended;
@@ -49,7 +49,7 @@ public class AsynExecutor implements Component {
 	private Boolean terminated;
 	private Runnable initializer;
 	
-	private AsynExecutor(String name, int defaultPriority, boolean isDaemon) {
+	private AsyncExecutor(String name, int defaultPriority, boolean isDaemon) {
 		mutexManager = Mutex.Manager.create(this);
 		executables = new CopyOnWriteArrayList<>();
 		initializer = () -> {
@@ -126,13 +126,13 @@ public class AsynExecutor implements Component {
 		executor.start();
 	}
 	
-	public static AsynExecutor create(String name, int initialPriority) {
+	public static AsyncExecutor create(String name, int initialPriority) {
 		return create(name, initialPriority, false, false);
 	}
 	
-	public static AsynExecutor create(String name, int initialPriority, boolean daemon, boolean undestroyable) {
+	public static AsyncExecutor create(String name, int initialPriority, boolean daemon, boolean undestroyable) {
 		if (undestroyable) {
-			return new AsynExecutor(name, initialPriority, daemon) {
+			return new AsyncExecutor(name, initialPriority, daemon) {
 				
 				@Override
 				void closeResources() {
@@ -142,19 +142,19 @@ public class AsynExecutor implements Component {
 				
 			};
 		} else {
-			return new AsynExecutor(name, initialPriority, daemon);
+			return new AsyncExecutor(name, initialPriority, daemon);
 		}
 	}
 	
-	public AsynExecutor addWithCurrentThreadPriority(Runnable executable) {
+	public AsyncExecutor addWithCurrentThreadPriority(Runnable executable) {
 		return add(executable, Thread.currentThread().getPriority());
 	}
 	
-	public AsynExecutor add(Runnable executable) {
+	public AsyncExecutor add(Runnable executable) {
 		return add(executable, this.defaultPriority);
 	}
 	
-	public AsynExecutor add(Runnable executable, int priority) {
+	public AsyncExecutor add(Runnable executable, int priority) {
 		executables.add(new AbstractMap.SimpleEntry<>(executable, priority));
 		try {
 			synchronized(mutexManager.getMutex("executableCollectionFiller")) {
@@ -166,11 +166,11 @@ public class AsynExecutor implements Component {
 		return this;
 	}
 	
-	public AsynExecutor waitForExecutablesEnding() {
+	public AsyncExecutor waitForExecutablesEnding() {
 		return waitForExecutablesEnding(Thread.currentThread().getPriority());
 	}
 	
-	public AsynExecutor waitForExecutablesEnding(int priority) {
+	public AsyncExecutor waitForExecutablesEnding(int priority) {
 		executor.setPriority(priority);
 		executables.stream().map(executable -> executable.setValue(priority));
 		synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
@@ -186,18 +186,18 @@ public class AsynExecutor implements Component {
 		return this;
 	}
 	
-	public AsynExecutor changePriority(int priority) {
+	public AsyncExecutor changePriority(int priority) {
 		this.defaultPriority = priority;
 		executor.setPriority(priority);
 		executables.stream().map(executable -> executable.setValue(priority));
 		return this;
 	}
 	
-	public AsynExecutor suspend() {
+	public AsyncExecutor suspend() {
 		return suspend(Thread.currentThread().getPriority());
 	}
 	
-	public AsynExecutor suspend(int priority) {
+	public AsyncExecutor suspend(int priority) {
 		executor.setPriority(priority);
 		supended = Boolean.TRUE;
 		if (currentExecutable != null) {
@@ -214,7 +214,7 @@ public class AsynExecutor implements Component {
 		return this;
 	}
 
-	public AsynExecutor resume() {
+	public AsyncExecutor resume() {
 		synchronized(mutexManager.getMutex("resumeCaller")) {
 			try {
 				supended = Boolean.FALSE;

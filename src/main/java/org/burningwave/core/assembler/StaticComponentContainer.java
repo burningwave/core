@@ -62,7 +62,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Cache Cache;
 	public static final org.burningwave.core.classes.Classes Classes;
 	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
-	public static final org.burningwave.core.concurrent.AsynExecutor BackgroundExecutor;
+	public static final org.burningwave.core.concurrent.AsyncExecutor BackgroundExecutor;
 	public static final org.burningwave.core.classes.Constructors Constructors;
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.classes.Fields Fields;
@@ -81,7 +81,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
-		BackgroundExecutor = org.burningwave.core.concurrent.AsynExecutor.create("Background executor", Thread.MIN_PRIORITY, true, true);
+		BackgroundExecutor = org.burningwave.core.concurrent.AsyncExecutor.create("Background executor", Thread.MIN_PRIORITY, true, true);
 		BackgroundExecutor.suspend();
 		Properties properties = new Properties();
 		properties.putAll(Configuration.DEFAULT_VALUES);

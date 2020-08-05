@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.jvm;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
@@ -52,9 +51,7 @@ import java.lang.reflect.Modifier;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
@@ -385,11 +382,17 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 	}
 
 	public static class ByteBufferDelegate {
-		
-		private ByteBufferDelegate() {}
-		
+	
 		public static ByteBufferDelegate create() {
 			return new ByteBufferDelegate();
+		}
+		
+		public ByteBuffer allocate(int capacity) {
+			return ByteBuffer.allocate(capacity);
+		}
+		
+		public ByteBuffer allocateDirect(int capacity) {
+			return ByteBuffer.allocateDirect(capacity);
 		}
 		
 		public ByteBuffer duplicate(ByteBuffer buffer) {
