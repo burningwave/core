@@ -132,12 +132,22 @@ public class AsyncExecutor implements Component {
 	
 	public static AsyncExecutor create(String name, int initialPriority, boolean daemon, boolean undestroyable) {
 		if (undestroyable) {
+			String creatorClass = Thread.currentThread().getStackTrace()[2].getClassName();
 			return new AsyncExecutor(name, initialPriority, daemon) {
+				
+				@Override
+				public void shutDown(boolean waitForTasksTermination) {
+					super.shutDown(waitForTasksTermination);
+				}
 				
 				@Override
 				void closeResources() {
 					this.executor = null;
-					init();
+					if (!Thread.currentThread().getStackTrace()[4].getClassName().equals(creatorClass)) {	
+						init();
+					} else {
+						super.closeResources();
+					}
 				}
 				
 			};
@@ -229,10 +239,9 @@ public class AsyncExecutor implements Component {
 	public boolean isSuspended() {
 		return supended;
 	}
-
-	public void terminate(boolean waitForTasksTermination) {
+	
+	public void shutDown(boolean waitForTasksTermination) {
 		Collection<Map.Entry<Runnable, Integer>> executables = this.executables;
-		
 		Thread executor = this.executor;
 		if (waitForTasksTermination) {
 			addWithCurrentThreadPriority(() -> {
@@ -264,7 +273,7 @@ public class AsyncExecutor implements Component {
 	
 	@Override
 	public void close() {
-		terminate(true);
+		shutDown(true);
 	}
 	
 	void closeResources() {

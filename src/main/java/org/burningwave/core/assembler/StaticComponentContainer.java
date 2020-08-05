@@ -82,7 +82,6 @@ public class StaticComponentContainer {
 	
 	static {
 		BackgroundExecutor = org.burningwave.core.concurrent.AsyncExecutor.create("Background executor", Thread.MIN_PRIORITY, true, true);
-		BackgroundExecutor.suspend();
 		Properties properties = new Properties();
 		properties.putAll(Configuration.DEFAULT_VALUES);
 		properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
@@ -119,24 +118,27 @@ public class StaticComponentContainer {
 				new Thread(() -> {
 					ComponentContainer.closeAll();
 					FileSystemHelper.deleteTemporaryFolders();
+					BackgroundExecutor.shutDown(true);
 				})
 			);
 			String clearTemporaryFolderFlag = GlobalProperties.getProperty(Configuration.Key.CLEAR_TEMPORARY_FOLDER_ON_INIT);
 			if (Boolean.valueOf(clearTemporaryFolderFlag)) {
 				FileSystemHelper.clearMainTemporaryFolder();
 			}
-			ByteBufferDelegate = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate.create();
-			Streams = org.burningwave.core.io.Streams.create(GlobalProperties);
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
 			LowLevelObjectsHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.create();
+			ByteBufferDelegate = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate.create();
+			Streams = org.burningwave.core.io.Streams.create(GlobalProperties);
 			Classes = org.burningwave.core.classes.Classes.create();
 			ClassLoaders = org.burningwave.core.classes.Classes.Loaders.create();
 			Cache = org.burningwave.core.Cache.create();
-			Members = org.burningwave.core.classes.Members.create();
-			Constructors = org.burningwave.core.classes.Constructors.create();
-			Fields = org.burningwave.core.classes.Fields.create();
-			BackgroundExecutor.resume();
-			Methods = org.burningwave.core.classes.Methods.create();
+			synchronized (org.burningwave.core.classes.Members.class) {
+				Members = org.burningwave.core.classes.Members.create();
+				Fields = org.burningwave.core.classes.Fields.create();
+				Constructors = org.burningwave.core.classes.Constructors.create();
+				Methods = org.burningwave.core.classes.Methods.create();
+				org.burningwave.core.classes.Members.class.notifyAll();
+			}			
 			ByFieldOrByMethodPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByFieldOrByMethod.create();
 			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
