@@ -56,13 +56,13 @@ public class StaticComponentContainer {
 			DEFAULT_VALUES.put(Key.HIDE_BANNER_ON_INIT, "false");
 		}
 	}
+	public static final org.burningwave.core.concurrent.AsyncExecutor BackgroundExecutor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler ByteBufferHandler;
 	public static final org.burningwave.core.Cache Cache;
 	public static final org.burningwave.core.classes.Classes Classes;
 	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
-	public static final org.burningwave.core.concurrent.AsyncExecutor BackgroundExecutor;
 	public static final org.burningwave.core.classes.Constructors Constructors;
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.classes.Fields Fields;
