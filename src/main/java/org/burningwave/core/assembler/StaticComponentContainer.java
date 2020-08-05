@@ -132,8 +132,8 @@ public class StaticComponentContainer {
 			Classes = org.burningwave.core.classes.Classes.create();
 			ClassLoaders = org.burningwave.core.classes.Classes.Loaders.create();
 			Cache = org.burningwave.core.Cache.create();
-			synchronized (org.burningwave.core.classes.Members.class) {
-				Members = org.burningwave.core.classes.Members.create();
+			Members = org.burningwave.core.classes.Members.create();
+			synchronized (Members) {
 				Fields = org.burningwave.core.classes.Fields.create();
 				Constructors = org.burningwave.core.classes.Constructors.create();
 				Methods = org.burningwave.core.classes.Methods.create();
