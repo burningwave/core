@@ -126,9 +126,9 @@ public class StaticComponentContainer {
 				FileSystemHelper.clearMainTemporaryFolder();
 			}
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
-			LowLevelObjectsHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.create();
 			ByteBufferDelegate = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferDelegate.create();
-			Streams = org.burningwave.core.io.Streams.create(GlobalProperties);
+			Streams = org.burningwave.core.io.Streams.create(GlobalProperties);			
+			LowLevelObjectsHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.create();			
 			Classes = org.burningwave.core.classes.Classes.create();
 			ClassLoaders = org.burningwave.core.classes.Classes.Loaders.create();
 			Cache = org.burningwave.core.Cache.create();
