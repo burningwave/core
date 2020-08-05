@@ -29,12 +29,11 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -93,12 +92,7 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 	@Override
 	void clearItemsForPath(Map<String, JavaClass> items) {
 		BackgroundExecutor.add(() -> {
-			Iterator<Entry<String, JavaClass>> itr = items.entrySet().iterator();
-			while (itr.hasNext()) {
-				Entry<String, JavaClass> item = itr.next();
-				itr.remove();
-				item.getValue().close();
-			}
+			IterableObjectHelper.deepClear(items, (path, javaClass) -> javaClass.close());
 		});
 	}
 	
