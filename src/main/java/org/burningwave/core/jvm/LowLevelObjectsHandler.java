@@ -499,40 +499,18 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		
 		public <T extends Buffer> Deallocator getDeallocator(T buffer) {
 			if (buffer.isDirect()) {
-				long address = getAddress((ByteBuffer)buffer);
-				Collection<Object> deallocators = getAllDeallocators((ByteBuffer)buffer);
-				Iterator<Object> deallocatorsItr = deallocators.iterator();
+				Object deallocator = Fields.getDirect(Fields.get(buffer, "cleaner"), "thunk");
 				return ()-> {
-					boolean freeMemory = deallocatorsItr.hasNext();
-					while (deallocatorsItr.hasNext()) {
-						Methods.invokeDirect(deallocatorsItr.next(), "run");
-						deallocatorsItr.remove();
+					if (Long.valueOf((long)Fields.getDirect(deallocator, "address")) != 0) {
+						Methods.invokeDirect(deallocator, "run");
+						return true;
+					} else {
+						return false;
 					}
-					return freeMemory;
 				};
 			} else {
 				return () -> true;
 			}
-		}
-		
-		private Collection<Object> getAllDeallocators(ByteBuffer buffer) {
-			Collection<Object> deallocators = new LinkedHashSet<>();
-			if (buffer.isDirect()) {
-				Object cleaner = Fields.get(buffer, "cleaner");
-				deallocators = new LinkedHashSet<>();
-				if (cleaner != null) {
-					deallocators.add(Fields.getDirect(cleaner, "thunk"));
-					Object linkedCleaner = cleaner;
-					while ((linkedCleaner = Fields.getDirect(linkedCleaner, "next")) != null && linkedCleaner != cleaner) {
-						deallocators.add(Fields.getDirect(linkedCleaner, "thunk"));
-					}
-					linkedCleaner = cleaner;
-					while ((linkedCleaner = Fields.get(linkedCleaner, "prev")) != null && linkedCleaner != cleaner) {
-						deallocators.add(Fields.get(linkedCleaner, "thunk"));
-					}
-				}
-			}
-			return deallocators;
 		}
 		
 		@FunctionalInterface

@@ -297,7 +297,7 @@ public class Cache implements Component {
 			R item = nestedPartition.remove(path);
 			if (destroy && item != null) {
 				String finalPath = path;
-				BackgroundExecutor.add(() -> destroy(finalPath, item));
+				BackgroundExecutor.add(() -> destroy(finalPath, item), Thread.MIN_PRIORITY);
 			}
 			return item;
 		}
@@ -332,14 +332,18 @@ public class Cache implements Component {
 			}
 			BackgroundExecutor.add(() -> {
 				clearResources(partitions, destroyItems);
-			});
+			}, Thread.MIN_PRIORITY);
 			return this;
 		}
 
 		void clearResources(Map<Long, Map<String, Map<String, R>>> partitions, boolean destroyItems) {
 			for (Entry<Long, Map<String, Map<String, R>>> partition : partitions.entrySet()) {
 				for (Entry<String, Map<String, R>> nestedPartition : partition.getValue().entrySet()) {
-					IterableObjectHelper.deepClear(nestedPartition.getValue(), this::destroy);
+					if (destroyItems) {
+						IterableObjectHelper.deepClear(nestedPartition.getValue(), this::destroy);
+					} else {
+						nestedPartition.getValue().clear();
+					}
 				}
 				partition.getValue().clear();
 			}
