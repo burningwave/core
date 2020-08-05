@@ -33,7 +33,7 @@ import org.junit.runner.RunWith;
 //    SourceCodeHandlerTest.class,
 //    StringsTest.class,
 //    UnitSourceGeneratorTest.class,
-//    RepeatedClassFactoryTest.class,
+    RepeatedClassFactoryTest.class,
     ComponentContainerTest.class
 })
 //@ExcludeTags("Heavy")
