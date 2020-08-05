@@ -28,12 +28,11 @@
  */
 package org.burningwave.core.jvm;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
-import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
+import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
@@ -53,17 +52,13 @@ import java.lang.reflect.Modifier;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.Throwables;
 import org.burningwave.core.assembler.StaticComponentContainer;
-import org.burningwave.core.classes.Members;
 import org.burningwave.core.classes.MembersRetriever;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.ThrowingBiConsumer;
@@ -389,7 +384,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		}
 	}
 
-	public static class ByteBufferHandler {
+	public static class ByteBufferHandler implements Component {
 		private Field directAllocatedByteBufferAddressField;
 		
 		public ByteBufferHandler() {
@@ -464,11 +459,11 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			return ((Buffer)buffer).remaining();
 		}
 		
-		public long getAddress(ByteBuffer byteBuffer) {
+		public <T extends Buffer> long getAddress(T buffer) {
 			try {
-				return (long)LowLevelObjectsHandler.getFieldValue(byteBuffer, directAllocatedByteBufferAddressField);
+				return (long)LowLevelObjectsHandler.getFieldValue(buffer, directAllocatedByteBufferAddressField);
 			} catch (NullPointerException exc) {
-				return (long)LowLevelObjectsHandler.getFieldValue(byteBuffer, getDirectAllocatedByteBufferAddressField());
+				return (long)LowLevelObjectsHandler.getFieldValue(buffer, getDirectAllocatedByteBufferAddressField());
 			}
 		}
 		
@@ -490,12 +485,8 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		public <T extends Buffer> boolean destroy(T buffer, boolean force) {
 			if (buffer.isDirect()) {
 				T attachment = Fields.getDirect(buffer, "att");
-				if (attachment == null) {
-					long address = getAddress((ByteBuffer)buffer);
-					for (Object deallocator : getAllDeallocators((ByteBuffer)buffer)) {
-						Methods.invokeDirect(deallocator, "run");
-					}
-					return true;
+				if (Fields.getDirect(buffer, "att") == null) {
+					return getDeallocator(buffer).freeMemory();
 				}
 				if (force){
 					return destroy(attachment, force);
@@ -506,27 +497,49 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			}
 		}
 		
-		public Collection<Object> getAllDeallocators(ByteBuffer buffer) {
+		public <T extends Buffer> Deallocator getDeallocator(T buffer) {
 			if (buffer.isDirect()) {
-				return getAllDeallocators((Object)Fields.get(buffer, "cleaner"));
+				long address = getAddress((ByteBuffer)buffer);
+				Collection<Object> deallocators = getAllDeallocators((ByteBuffer)buffer);
+				Iterator<Object> deallocatorsItr = deallocators.iterator();
+				return ()-> {
+					boolean freeMemory = deallocatorsItr.hasNext();
+					while (deallocatorsItr.hasNext()) {
+						Methods.invokeDirect(deallocatorsItr.next(), "run");
+						deallocatorsItr.remove();
+					}
+					return freeMemory;
+				};
+			} else {
+				return () -> true;
 			}
-			return new LinkedHashSet<>();
 		}
 		
-		private Collection<Object> getAllDeallocators(Object cleaner) {
+		private Collection<Object> getAllDeallocators(ByteBuffer buffer) {
 			Collection<Object> deallocators = new LinkedHashSet<>();
-			if (cleaner != null) {
-				deallocators.add(Fields.getDirect(cleaner, "thunk"));
-				Object linkedCleaner = cleaner;
-				while ((linkedCleaner = Fields.getDirect(linkedCleaner, "next")) != null && linkedCleaner != cleaner) {
-					deallocators.add(Fields.getDirect(linkedCleaner, "thunk"));
+			if (buffer.isDirect()) {
+				Object cleaner = Fields.get(buffer, "cleaner");
+				deallocators = new LinkedHashSet<>();
+				if (cleaner != null) {
+					deallocators.add(Fields.getDirect(cleaner, "thunk"));
+					Object linkedCleaner = cleaner;
+					while ((linkedCleaner = Fields.getDirect(linkedCleaner, "next")) != null && linkedCleaner != cleaner) {
+						deallocators.add(Fields.getDirect(linkedCleaner, "thunk"));
+					}
+					linkedCleaner = cleaner;
+					while ((linkedCleaner = Fields.get(linkedCleaner, "prev")) != null && linkedCleaner != cleaner) {
+						deallocators.add(Fields.get(linkedCleaner, "thunk"));
+					}
 				}
-				linkedCleaner = cleaner;
-				while ((linkedCleaner = Fields.get(linkedCleaner, "prev")) != null && linkedCleaner != cleaner) {
-					deallocators.add(Fields.get(linkedCleaner, "thunk"));
-				}
-			}			
-			return deallocators; 
+			}
+			return deallocators;
+		}
+		
+		@FunctionalInterface
+		public static interface Deallocator {
+			
+			public boolean freeMemory();
+			
 		}
 	}
 	
