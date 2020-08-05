@@ -137,7 +137,7 @@ public class StaticComponentContainer {
 				Fields = org.burningwave.core.classes.Fields.create();
 				Constructors = org.burningwave.core.classes.Constructors.create();
 				Methods = org.burningwave.core.classes.Methods.create();
-				org.burningwave.core.classes.Members.class.notifyAll();
+				Members.notifyAll();
 			}			
 			ByFieldOrByMethodPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByFieldOrByMethod.create();
 			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
