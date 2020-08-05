@@ -19,10 +19,17 @@ public class ByteBufferHandlerTest extends BaseTest {
 	@Test
 	public void getDeallocatorTest() {
 		testDoesNotThrow(() -> {
-			Deallocator deallocator = ByteBufferHandler.getDeallocator(ByteBufferHandler.allocateDirect(1));
+			Deallocator deallocator = ByteBufferHandler.getDeallocator(ByteBufferHandler.allocateDirect(1).duplicate(), true);
 			deallocator.freeMemory();
 			deallocator.freeMemory();
-			ByteBufferHandler.getDeallocator(ByteBufferHandler.allocateDirect(1)).freeMemory();
+			ByteBufferHandler.getDeallocator(ByteBufferHandler.allocateDirect(1), false).freeMemory();
+		});
+	}
+	
+	@Test
+	public void destroyTest() {
+		testDoesNotThrow(() -> {
+			ByteBufferHandler.destroy(ByteBufferHandler.allocateDirect(1).duplicate(), true);
 		});
 	}
 	
