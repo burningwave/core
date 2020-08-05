@@ -387,22 +387,16 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		this.notLoadedByteCodes = new HashMap<>();
 		this.loadedByteCodes = new HashMap<>();
 		BackgroundExecutor.add(() -> {
-			try {
-				Iterator<Entry<String, ByteBuffer>> itr = notLoadedByteCodes.entrySet().iterator();
-				while (itr.hasNext()) {
-					itr.remove();
-				}
-				itr = loadedByteCodes.entrySet().iterator();
-				while (itr.hasNext()) {
-					itr.remove();
-				}
-	    	} catch (Throwable exc) {
-	    		if (!isClosed) {
-	    			throw exc;
-	    		} else {
-	    			logWarn("Could not execute clear because {} has been closed", this.toString());
-	    		}
-	    	}
+			Iterator<Entry<String, ByteBuffer>> itr = notLoadedByteCodes.entrySet().iterator();
+			while (itr.hasNext()) {
+				itr.next();
+				itr.remove();
+			}
+			itr = loadedByteCodes.entrySet().iterator();
+			while (itr.hasNext()) {
+				itr.next();
+				itr.remove();
+			}
 		});
 		return this;
 	}
