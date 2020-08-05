@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitPlatform.class)
 //@SelectPackages("org.burningwave.core")
 @SelectClasses({
+	ByteBufferHandlerTest.class,
 	ByteCodeHunterTest.class,
     ClassesTest.class,
     ClassFactoryTest.class,
