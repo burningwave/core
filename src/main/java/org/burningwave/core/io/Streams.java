@@ -29,7 +29,6 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferDelegate;
-import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 
 import java.io.File;
 import java.io.IOException;
@@ -210,10 +209,6 @@ public class Streams implements Component {
 					//ManagedLogger.Repository.logDebug(this.getClass(), "Class " + getName() + " WRITTEN to "+ Strings.Paths.clean(fileClass.getAbsolutePath()));
 				}
 			});
-			Cache.pathForContents.getOrUploadIfAbsent(
-				file.getAbsolutePath(), () ->
-				content
-			);
 		}
 		return FileSystemItem.ofPath(file.getAbsolutePath());
 	}

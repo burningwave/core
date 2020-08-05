@@ -45,9 +45,13 @@ public class JavaClass implements AutoCloseable {
 	private ByteBuffer byteCode;
 	private String className;
 	
+	private JavaClass(String className, ByteBuffer byteCode) {
+		this.className = className;
+		this.byteCode = byteCode;
+	}
+	
 	JavaClass(ByteBuffer byteCode) throws IOException {
-		this.byteCode = Streams.shareContent(byteCode);
-		this.className = Classes.retrieveName(byteCode);
+		this(Classes.retrieveName(byteCode), Streams.shareContent(byteCode));
 	}
 	
 	public static JavaClass create(ByteBuffer byteCode) {
@@ -144,6 +148,10 @@ public class JavaClass implements AutoCloseable {
 	
 	public FileSystemItem storeToClassPath(String classPathFolder) {
 		return Streams.store(classPathFolder + "/" + getPath(), getByteCode());
+	}
+	
+	public JavaClass duplicate() {
+		return new JavaClass(className, byteCode);
 	}
 	
 	@Override

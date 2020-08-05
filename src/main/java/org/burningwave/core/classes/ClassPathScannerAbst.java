@@ -246,6 +246,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			Iterator<SearchResult<I>> searchResultsIterator = searchResults.iterator();		
 			while(searchResultsIterator.hasNext()) {
 				SearchResult<I> searchResult = searchResultsIterator.next();
+				searchResult.context.searchConfig.deleteFoundItemsOnClose(true);
 				searchResult.close();
 			}
 		}
