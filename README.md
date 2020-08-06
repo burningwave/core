@@ -852,29 +852,30 @@ More than one dynamic container can be created, while only one static container 
 ## Static component container
 It is represented by the **org.burningwave.core.assembler.StaticComponentContainer** class that provides the following fields for each component supplied:
 ```java
-public static final org.burningwave.core.concurrent.AsyncExecutor BackgroundExecutor;
-public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
-public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
-public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler ByteBufferHandler;
-public static final org.burningwave.core.Cache Cache;
-public static final org.burningwave.core.classes.Classes Classes;
-public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
-public static final org.burningwave.core.classes.Constructors Constructors;
-public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
-public static final org.burningwave.core.classes.Fields Fields;
-public static final org.burningwave.core.iterable.Properties GlobalProperties;
-public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
-public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
-public static final org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;
-public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
-public static final org.burningwave.core.classes.Members Members;
-public static final org.burningwave.core.classes.Methods Methods;
-public static final org.burningwave.core.Strings.Paths Paths;
-public static final org.burningwave.core.io.Resources Resources;
-public static final org.burningwave.core.io.Streams Streams;
-public static final org.burningwave.core.classes.SourceCodeHandler SourceCodeHandler;
-public static final org.burningwave.core.Strings Strings;
-public static final org.burningwave.core.Throwables Throwables;
+	public static final org.burningwave.core.concurrent.QueuedTasksExecutor LowPriorityTasksExecutor;
+	public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
+	public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
+	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler ByteBufferHandler;
+	public static final org.burningwave.core.Cache Cache;
+	public static final org.burningwave.core.classes.Classes Classes;
+	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
+	public static final org.burningwave.core.classes.Constructors Constructors;
+	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
+	public static final org.burningwave.core.classes.Fields Fields;
+	public static final org.burningwave.core.iterable.Properties GlobalProperties;
+	public static final org.burningwave.core.concurrent.QueuedTasksExecutor HighPriorityTasksExecutor;
+	public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
+	public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
+	public static final org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;
+	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
+	public static final org.burningwave.core.classes.Members Members;
+	public static final org.burningwave.core.classes.Methods Methods;
+	public static final org.burningwave.core.Strings.Paths Paths;
+	public static final org.burningwave.core.io.Resources Resources;
+	public static final org.burningwave.core.io.Streams Streams;
+	public static final org.burningwave.core.classes.SourceCodeHandler SourceCodeHandler;
+	public static final org.burningwave.core.Strings Strings;
+	public static final org.burningwave.core.Throwables Throwables;
 ```
 
 ... That can be used within your application, simply adding a static import to your compilation unit, i.e.:
