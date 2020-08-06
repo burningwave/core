@@ -104,9 +104,9 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 		}
 		if (getLoggerEnabledFlag(client.getName()).partialyMatch(level)) {
 			if (exception == null) {
-				printStream.println(client.getName() + " - " + text);
+				printStream.println("[" + Thread.currentThread().getName() + "] - " + client.getName() + " - " + text);
 			} else {
-				printStream.println(client.getName() + " - " + text);
+				printStream.println("[" + Thread.currentThread().getName() + "] - " + client.getName() + " - " + text);
 				exception.printStackTrace(printStream);
 			}
 		}
