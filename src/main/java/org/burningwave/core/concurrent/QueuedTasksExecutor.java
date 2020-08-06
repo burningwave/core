@@ -339,11 +339,12 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		void join0(boolean ignoreThread) {
-			if (!hasFinished() && 
-				(!ignoreThread && Thread.currentThread() != queuedTasksExecutorThread && queuedTasksExecutorThread != null)
+			if (!hasFinished() && ((ignoreThread) ||
+				(!ignoreThread && Thread.currentThread() != queuedTasksExecutorThread && queuedTasksExecutorThread != null))
 			) {
 				synchronized (this) {
-					if (!hasFinished() && Thread.currentThread() != queuedTasksExecutorThread && queuedTasksExecutorThread != null) {
+					if (!hasFinished() && ((ignoreThread) ||
+						(!ignoreThread && Thread.currentThread() != queuedTasksExecutorThread && queuedTasksExecutorThread != null))) {
 						try {
 							wait();
 						} catch (InterruptedException exc) {
