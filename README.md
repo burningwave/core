@@ -45,7 +45,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.27.0</version>
+    <version>7.28.0</version>
 </dependency>
 ```
 
@@ -852,7 +852,7 @@ More than one dynamic container can be created, while only one static container 
 ## Static component container
 It is represented by the **org.burningwave.core.assembler.StaticComponentContainer** class that provides the following fields for each component supplied:
 ```java
-public static final org.burningwave.core.concurrent.AsyncExecutor BackgroundExecutor;
+public static final org.burningwave.core.concurrent.QueuedTasksExecutor LowPriorityTasksExecutor;
 public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
 public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
 public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler ByteBufferHandler;
@@ -863,6 +863,7 @@ public static final org.burningwave.core.classes.Constructors Constructors;
 public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 public static final org.burningwave.core.classes.Fields Fields;
 public static final org.burningwave.core.iterable.Properties GlobalProperties;
+public static final org.burningwave.core.concurrent.QueuedTasksExecutor HighPriorityTasksExecutor;
 public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
 public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
 public static final org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;

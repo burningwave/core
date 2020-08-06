@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.HighPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
@@ -468,15 +469,18 @@ public class PathHelper implements Component {
 	
 	@Override
 	public void close() {
-		unregister(config);
-		pathGroups.forEach((key, value) -> {
-			value.clear();
-			pathGroups.remove(key);
+		LowPriorityTasksExecutor.add(() -> {
+			waitForInitialization();
+			unregister(config);
+			pathGroups.forEach((key, value) -> {
+				value.clear();
+				pathGroups.remove(key);
+			});
+			pathGroups.clear();
+			pathGroups = null;
+			allPaths.clear();
+			allPaths = null;
+			config = null;
 		});
-		pathGroups.clear();
-		pathGroups = null;
-		allPaths.clear();
-		allPaths = null;
-		config = null;
 	}
 }

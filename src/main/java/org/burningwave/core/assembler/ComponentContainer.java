@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.assembler;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.HighPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
@@ -388,14 +389,17 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	void close(boolean force) {
 		if (force || LazyHolder.getComponentContainerInstance() != this) {
-			unregister(GlobalProperties);
-			unregister(config);
-			clear();			
-			components = null;
-			propertySupplier = null;
-			initializerTask = null;
-			config = null;
-			instances.remove(this);
+			LowPriorityTasksExecutor.add(() -> {
+				waitForInitialization();
+				unregister(GlobalProperties);
+				unregister(config);
+				clear();			
+				components = null;
+				propertySupplier = null;
+				initializerTask = null;
+				config = null;
+				instances.remove(this);
+			});
 		} else {
 			throw Throwables.toRuntimeException("Could not close singleton instance " + LazyHolder.COMPONENT_CONTAINER_INSTANCE);
 		}

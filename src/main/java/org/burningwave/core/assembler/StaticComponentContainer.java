@@ -119,9 +119,9 @@ public class StaticComponentContainer {
 			Runtime.getRuntime().addShutdownHook(
 				new Thread(() -> {
 					ComponentContainer.closeAll();
-					FileSystemHelper.deleteTemporaryFolders();
 					LowPriorityTasksExecutor.shutDown(true);
 					HighPriorityTasksExecutor.shutDown(true);
+					FileSystemHelper.deleteTemporaryFolders();
 				})
 			);
 			String clearTemporaryFolderFlag = GlobalProperties.getProperty(Configuration.Key.CLEAR_TEMPORARY_FOLDER_ON_INIT);

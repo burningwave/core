@@ -514,7 +514,7 @@ public class JavaMemoryCompiler implements Component {
 							ClassCriteria.create().packageName((iteratedClassPackageName) ->
 								Objects.equals(iteratedClassPackageName, packageName)									
 							)
-						)
+						).get()
 					);
 				}
 				return classPaths;
@@ -526,10 +526,12 @@ public class JavaMemoryCompiler implements Component {
 					javaMemoryCompiler.compiledClassesRepository.getAbsolutePath()
 				);
 				if (classPaths.isEmpty()) {
-					classPaths.addAll(javaMemoryCompiler.classPathHelper.computeFromSources(
-						sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
-						classRepositories,
-						ClassCriteria.create().allThat(classPredicate))
+					classPaths.addAll(
+						javaMemoryCompiler.classPathHelper.computeFromSources(
+							sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
+							classRepositories,
+							ClassCriteria.create().allThat(classPredicate)
+						).get()
 					);
 				}
 				return classPaths;
