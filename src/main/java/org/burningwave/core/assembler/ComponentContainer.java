@@ -397,6 +397,7 @@ public class ComponentContainer implements ComponentSupplier {
 				}
 			}
 			if (close) {
+				instances.remove(this);
 				LowPriorityTasksExecutor.add(() -> {
 					waitForInitialization(true);
 					unregister(GlobalProperties);
@@ -405,8 +406,7 @@ public class ComponentContainer implements ComponentSupplier {
 					components = null;
 					propertySupplier = null;
 					initializerTask = null;
-					config = null;
-					instances.remove(this);
+					config = null;					
 				});
 			}
 		} else {
