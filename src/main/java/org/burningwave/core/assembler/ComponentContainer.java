@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.assembler;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.HighPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
@@ -161,12 +161,12 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private ComponentContainer launchInit() {
-		initializerTask = BackgroundExecutor.add(() -> {
+		initializerTask = HighPriorityTasksExecutor.add(() -> {
 			synchronized (components) {
 				this.init();
 				this.initializerTask = null;
 			}
-		}, Thread.MAX_PRIORITY);
+		});
 		return this;
 	}
 	

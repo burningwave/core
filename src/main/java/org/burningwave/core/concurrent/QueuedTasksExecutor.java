@@ -86,6 +86,7 @@ public class QueuedTasksExecutor implements Component {
 							}
 						}
 						TaskAbst task =	this.currentTask = taskIterator.next();
+						tasksQueue.remove(task);
 						int currentExecutablePriority = currentTask.getPriority();
 						if (executor.getPriority() != currentExecutablePriority) {
 							executor.setPriority(currentExecutablePriority);
@@ -102,7 +103,6 @@ public class QueuedTasksExecutor implements Component {
 						synchronized(mutexManager.getMutex("suspensionCaller")) {
 							mutexManager.getMutex("suspensionCaller").notifyAll();
 						}
-						tasksQueue.remove(task);
 						if (terminated) {
 							break;
 						}
