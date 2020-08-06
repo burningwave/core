@@ -361,6 +361,7 @@ public class QueuedTasksExecutor implements Component {
 		
 		void markHasFinished() {
 			hasFinished = true;
+			queuedTasksExecutor = null;
 		}
 		
 		public void changePriority(int priority) {
@@ -384,7 +385,6 @@ public class QueuedTasksExecutor implements Component {
 		void execute0() {
 			executable.run();
 			executable = null;
-			queuedTasksExecutor = null;
 		}
 		
 		public void join() {
@@ -406,7 +406,6 @@ public class QueuedTasksExecutor implements Component {
 		void execute0() {
 			result = executable.get();
 			executable = null;
-			queuedTasksExecutor = null;
 		}
 		
 		public T join() {
