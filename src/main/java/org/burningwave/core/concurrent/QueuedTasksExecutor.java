@@ -167,7 +167,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public <T> ProducerTask<T> add(Supplier<T> executable, int priority) {
-		ProducerTask<T> task = new ProducerTask<T>(executable, priority, this);
+		ProducerTask<T> task = new ProducerTask<T>(executable, priority, this.executor);
 		tasksQueue.add(task);
 		return add(task);
 	}
@@ -181,7 +181,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public Task add(Runnable executable, int priority) {
-		Task task = new Task(executable, priority, this);
+		Task task = new Task(executable, priority, this.executor);
 		tasksQueue.add(task);
 		return add(task);
 	}
@@ -324,10 +324,10 @@ public class QueuedTasksExecutor implements Component {
 	static abstract class TaskAbst {
 		private boolean hasFinished;
 		private int priority;
-		QueuedTasksExecutor queuedTasksExecutor;
+		Thread queuedTasksExecutorThread;
 		
-		TaskAbst(int priority, QueuedTasksExecutor queuedTasksExecutor) {
-			this.queuedTasksExecutor = queuedTasksExecutor;
+		TaskAbst(int priority, Thread queuedTasksExecutorThread) {
+			this.queuedTasksExecutorThread = queuedTasksExecutorThread;
 			this.priority = priority;
 		}
 		
@@ -346,9 +346,9 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		void join0() {
-			if (!hasFinished() && Thread.currentThread() != queuedTasksExecutor.executor) {
+			if (!hasFinished() && Thread.currentThread() != queuedTasksExecutorThread && queuedTasksExecutorThread != null) {
 				synchronized (this) {
-					if (!hasFinished() && Thread.currentThread() != queuedTasksExecutor.executor) {
+					if (!hasFinished() && Thread.currentThread() != queuedTasksExecutorThread && queuedTasksExecutorThread != null) {
 						try {
 							wait();
 						} catch (InterruptedException exc) {
@@ -361,7 +361,6 @@ public class QueuedTasksExecutor implements Component {
 		
 		void markHasFinished() {
 			hasFinished = true;
-			queuedTasksExecutor = null;
 		}
 		
 		public void changePriority(int priority) {
@@ -376,8 +375,8 @@ public class QueuedTasksExecutor implements Component {
 	public static class Task extends TaskAbst {
 		private Runnable executable;
 		
-		Task(Runnable executable, int priority, QueuedTasksExecutor queuedTasksExecutor) {
-			super(priority, queuedTasksExecutor);
+		Task(Runnable executable, int priority, Thread queuedTasksExecutorThread) {
+			super(priority, queuedTasksExecutorThread);
 			this.executable = executable;
 		}
 
@@ -385,6 +384,7 @@ public class QueuedTasksExecutor implements Component {
 		void execute0() {
 			executable.run();
 			executable = null;
+			queuedTasksExecutorThread = null;
 		}
 		
 		public void join() {
@@ -397,8 +397,8 @@ public class QueuedTasksExecutor implements Component {
 		private Supplier<T> executable;
 		private T result;
 		
-		ProducerTask(Supplier<T> executable, int priority, QueuedTasksExecutor queuedTasksExecutor) {
-			super(priority, queuedTasksExecutor);
+		ProducerTask(Supplier<T> executable, int priority, Thread queuedTasksExecutorThread) {
+			super(priority, queuedTasksExecutorThread);
 			this.executable = executable;
 		}		
 		
@@ -406,6 +406,7 @@ public class QueuedTasksExecutor implements Component {
 		void execute0() {
 			result = executable.get();
 			executable = null;
+			queuedTasksExecutorThread = null;
 		}
 		
 		public T join() {
