@@ -117,7 +117,7 @@ public static class Configuration {
 								);
 								if (!classPath.refresh().exists()) {
 									pathsCreationTasks.add(
-										HighPriorityTasksExecutor.add(() -> {
+										HighPriorityTasksExecutor.addWithCurrentThreadPriority(() -> {
 											FileSystemItem copy = fsObject.copyTo(classPathsBasePath.getAbsolutePath());
 											File target = new File(classPath.getAbsolutePath());
 											new File(copy.getAbsolutePath()).renameTo(target);
