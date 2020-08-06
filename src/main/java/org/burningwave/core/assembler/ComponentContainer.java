@@ -79,6 +79,7 @@ public class ComponentContainer implements ComponentSupplier {
 	private Supplier<Properties> propertySupplier;
 	private Properties config;
 	private QueuedTasksExecutor.Task initializerTask;
+	boolean isClosed;
 	
 	static {
 		instances = ConcurrentHashMap.newKeySet();
@@ -171,10 +172,10 @@ public class ComponentContainer implements ComponentSupplier {
 		return this;
 	}
 	
-	private void waitForInitialization() {
+	private void waitForInitialization(boolean ignoreThread) {
 		QueuedTasksExecutor.Task initializerTask = this.initializerTask;
 		if (initializerTask != null) {
-			initializerTask.join();
+			initializerTask.join(ignoreThread);
 		}
 	}
 	
@@ -203,7 +204,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
 		T component = (T)components.get(componentType);
 		if (component == null) {
-			waitForInitialization();
+			waitForInitialization(false);
 			synchronized (components) {
 				if ((component = (T)components.get(componentType)) == null) {
 					component = componentSupplier.get();
@@ -389,17 +390,25 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	void close(boolean force) {
 		if (force || LazyHolder.getComponentContainerInstance() != this) {
-			LowPriorityTasksExecutor.add(() -> {
-				waitForInitialization();
-				unregister(GlobalProperties);
-				unregister(config);
-				clear();			
-				components = null;
-				propertySupplier = null;
-				initializerTask = null;
-				config = null;
+			boolean close = false;
+			synchronized (this) {
+				if (!isClosed) {
+					close = isClosed = Boolean.TRUE;
+				}
+			}
+			if (close) {
 				instances.remove(this);
-			});
+				LowPriorityTasksExecutor.add(() -> {
+					waitForInitialization(true);
+					unregister(GlobalProperties);
+					unregister(config);
+					clear();			
+					components = null;
+					propertySupplier = null;
+					initializerTask = null;
+					config = null;					
+				});
+			}
 		} else {
 			throw Throwables.toRuntimeException("Could not close singleton instance " + LazyHolder.COMPONENT_CONTAINER_INSTANCE);
 		}
@@ -419,6 +428,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public static void clearAll() {
 		for (ComponentContainer componentContainer : instances) {
+			componentContainer.waitForInitialization(false);
 			componentContainer.clear();
 		}
 		Cache.clear();

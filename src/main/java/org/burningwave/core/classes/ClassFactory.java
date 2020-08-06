@@ -123,6 +123,7 @@ public class ClassFactory implements Component {
 	private Collection<ClassRetriever> classRetrievers;
 	private Consumer<ClassLoader> classLoaderResetter;
 	private Properties config;
+	private boolean isClosed;
 	
 	private ClassFactory(
 		ByteCodeHunter byteCodeHunter,
@@ -626,24 +627,32 @@ public class ClassFactory implements Component {
 	
 	@Override
 	public void close() {
-		unregister(config);
-		closeClassRetrievers();
-		this.classRetrievers = null;
-		pathHelper = null;
-		javaMemoryCompiler = null;
-		pojoSubTypeRetriever = null;	
-		if (defaultClassLoader instanceof MemoryClassLoader) {
-			((MemoryClassLoader)defaultClassLoader).unregister(this, true);
+		boolean close = false;
+		synchronized (this) {
+			if (!isClosed) {
+				close = isClosed = Boolean.TRUE;
+			}
 		}
-		defaultClassLoader = null;
-		byteCodeHunter = null;
-		classPathHunter = null;
-		classPathHunterSupplier = null;
-		defaultClassLoaderOrDefaultClassLoaderSupplier = null;
-		defaultClassLoaderOrDefaultClassLoaderSupplier = null;
-		defaultClassLoaderSupplier = null;
-		classLoaderResetter = null;		
-		config = null;
+		if (close) {
+			unregister(config);
+			closeClassRetrievers();
+			this.classRetrievers = null;
+			pathHelper = null;
+			javaMemoryCompiler = null;
+			pojoSubTypeRetriever = null;	
+			if (defaultClassLoader instanceof MemoryClassLoader) {
+				((MemoryClassLoader)defaultClassLoader).unregister(this, true);
+			}
+			defaultClassLoader = null;
+			byteCodeHunter = null;
+			classPathHunter = null;
+			classPathHunterSupplier = null;
+			defaultClassLoaderOrDefaultClassLoaderSupplier = null;
+			defaultClassLoaderOrDefaultClassLoaderSupplier = null;
+			defaultClassLoaderSupplier = null;
+			classLoaderResetter = null;		
+			config = null;
+		}
 	}
 
 	public static abstract class ClassRetriever implements Component {
