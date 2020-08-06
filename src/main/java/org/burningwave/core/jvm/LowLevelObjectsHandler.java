@@ -51,9 +51,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -518,6 +517,15 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			return null;
 		}
 		
+		private <T extends Buffer> Collection<T> getAllLinkedBuffers(T buffer) {
+			Collection<T> allLinkedBuffers = new ArrayList<>();
+			allLinkedBuffers.add(buffer);
+			while((buffer = Fields.getDirect(buffer, "att")) != null) {
+				allLinkedBuffers.add(buffer);
+			}
+			return allLinkedBuffers;
+		}
+		
 		public  <T extends Buffer> Cleaner getCleaner(T buffer, boolean findInAttachments) {
 			Object cleaner;
 			if ((cleaner = getInternalCleaner(buffer, findInAttachments)) != null) {
@@ -527,6 +535,9 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 					public boolean clean() {
 						if (getAddress() != 0) {
 							Methods.invokeDirect(cleaner, "clean");
+							getAllLinkedBuffers(buffer).stream().forEach(linkedBuffer ->
+								Fields.setDirect(linkedBuffer, "address", 0L)
+							);							
 							return true;
 						}
 						return false;
@@ -556,6 +567,9 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 						public boolean freeMemory() {
 							if (getAddress() != 0) {
 								Methods.invokeDirect(deallocator, "run");
+								getAllLinkedBuffers(buffer).stream().forEach(linkedBuffer ->
+									Fields.setDirect(linkedBuffer, "address", 0L)
+								);	
 								return true;
 							} else {
 								return false;
