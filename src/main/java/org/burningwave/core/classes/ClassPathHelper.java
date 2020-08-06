@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassPathHunter.SearchResult;
@@ -68,11 +69,11 @@ public static class Configuration {
 		return new ClassPathHelper(classPathHunter, config);
 	}
 	
-	public Collection<String> computeByClassesSearching(Collection<String> classRepositories) {
+	public Supplier<Collection<String>> computeByClassesSearching(Collection<String> classRepositories) {
 		return computeByClassesSearching(classRepositories, ClassCriteria.create());
 	}
 	
-	public Collection<String> computeByClassesSearching(
+	public Supplier<Collection<String>> computeByClassesSearching(
 		Collection<String> classRepositories,
 		ClassCriteria classCriteria
 	) {
@@ -98,7 +99,7 @@ public static class Configuration {
 		});
 	}
 	
-	private Collection<String> compute(
+	private Supplier<Collection<String>> compute(
 		Collection<String> classRepositories,
 		Function<Collection<String>, Collection<FileSystemItem>> adjustedClassPathsSupplier
 	) {
@@ -137,18 +138,20 @@ public static class Configuration {
 					}
 				}
 			}
-			pathsCreationTasks.stream().forEach(pathsCreationTask -> pathsCreationTask.join());
-			return classPaths;
+			return () -> {
+				pathsCreationTasks.stream().forEach(pathsCreationTask -> pathsCreationTask.join());
+				return classPaths;
+			};
 		}
 	
-	public Collection<String> computeFromSources(
+	public Supplier<Collection<String>> computeFromSources(
 		Collection<String> sources,
 		Collection<String> classRepositories
 	) {
 		return computeFromSources(sources, classRepositories, null);
 	}
 	
-	public Collection<String> computeFromSources(
+	public Supplier<Collection<String>> computeFromSources(
 		Collection<String> sources,
 		Collection<String> classRepositories,
 		ClassCriteria otherClassCriteria

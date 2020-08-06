@@ -697,11 +697,10 @@ public class ClassFactory implements Component {
 			ClassCriteria criteriaOne = ClassCriteria.create().className(className::equals);
 			ClassCriteria criteriaTwo = ClassCriteria.create().className(notFoundClasses::contains);
 			
-			Collection<String> classPaths = this.classPathHelper.computeByClassesSearching(
-				classRepositories, criteriaOne.or(criteriaTwo)
-			);
 			CacheableSearchConfig searchConfig = SearchConfig.forPaths(
-				classPaths
+				this.classPathHelper.computeByClassesSearching(
+					classRepositories, criteriaOne.or(criteriaTwo)
+				).get()
 			);
 			return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, exc, searchConfig);
 		}
