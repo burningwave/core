@@ -59,7 +59,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	Map<String, ByteBuffer> notLoadedByteCodes;
 	Map<String, ByteBuffer> loadedByteCodes;
 	HashSet<Object> clients;
-	Boolean isClosed;
+	boolean isClosed;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -69,7 +69,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		ClassLoader parentClassLoader
 	) {
 		super(parentClassLoader);
-		isClosed = Boolean.FALSE;
 		if (parentClassLoader instanceof MemoryClassLoader) {
 			((MemoryClassLoader)parentClassLoader).register(this);
 		}
@@ -432,7 +431,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			throw Throwables.toRuntimeException("Could not close " + this + " because there are " + clients.size() +" registered clients");
 		}
 		boolean close = false;
-		synchronized (isClosed) {
+		synchronized (this) {
 			if (!isClosed) {
 				close = isClosed = Boolean.TRUE;
 			}

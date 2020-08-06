@@ -100,6 +100,7 @@ public class PathHelper implements Component {
 	private Collection<String> allPaths;
 	private Properties config;
 	private QueuedTasksExecutor.Task initializerTask;
+	boolean isClosed;
 	
 	private PathHelper(Properties config) {
 		pathGroups = new ConcurrentHashMap<>();
@@ -160,22 +161,22 @@ public class PathHelper implements Component {
 		return getPaths(Configuration.Key.MAIN_CLASS_PATHS, Configuration.Key.MAIN_CLASS_PATHS_EXTENSION);
 	}
 	
-	private void waitForInitialization() {
+	private void waitForInitialization(boolean ignoreThread) {
 		QueuedTasksExecutor.Task initializerTask = this.initializerTask;
 		if (initializerTask != null) {
-			initializerTask.join();
+			initializerTask.join(ignoreThread);
 		}
 	}
 	
 	public Collection<String> getAllPaths() {
-		waitForInitialization();
+		waitForInitialization(false);
 		Collection<String> allPaths = ConcurrentHashMap.newKeySet();
 		allPaths.addAll(this.allPaths);
 		return allPaths;
 	}
 	
 	public Collection<String> getPaths(String... names) {
-		waitForInitialization();
+		waitForInitialization(false);
 		Collection<String> pathGroup = new HashSet<>();
 		if (names != null && names.length > 0) {
 			for (String name : names) {
@@ -469,18 +470,26 @@ public class PathHelper implements Component {
 	
 	@Override
 	public void close() {
-		LowPriorityTasksExecutor.add(() -> {
-			waitForInitialization();
-			unregister(config);
-			pathGroups.forEach((key, value) -> {
-				value.clear();
-				pathGroups.remove(key);
+		boolean close = false;
+		synchronized (this) {
+			if (!isClosed) {
+				close = isClosed = Boolean.TRUE;
+			}
+		}
+		if (close) {
+			LowPriorityTasksExecutor.add(() -> {
+				waitForInitialization(true);
+				unregister(config);
+				pathGroups.forEach((key, value) -> {
+					value.clear();
+					pathGroups.remove(key);
+				});
+				pathGroups.clear();
+				pathGroups = null;
+				allPaths.clear();
+				allPaths = null;
+				config = null;
 			});
-			pathGroups.clear();
-			pathGroups = null;
-			allPaths.clear();
-			allPaths = null;
-			config = null;
-		});
+		}
 	}
 }

@@ -38,8 +38,8 @@ import java.util.function.Supplier;
 import org.burningwave.core.Component;
 
 public class QueuedTasksExecutor implements Component {
-	private Collection<TaskAbst> tasksQueue;
-	private TaskAbst currentTask;
+	private Collection<TaskAbst<?>> tasksQueue;
+	private TaskAbst<?> currentTask;
 	private Boolean supended;
 	private Mutex.Manager mutexManager;
 	Thread executor;
@@ -73,7 +73,7 @@ public class QueuedTasksExecutor implements Component {
 		executor = new Thread(() -> {
 			while (!terminated) {
 				if (!tasksQueue.isEmpty()) {
-					Iterator<TaskAbst> taskIterator = tasksQueue.iterator();
+					Iterator<TaskAbst<?>> taskIterator = tasksQueue.iterator();
 					while (taskIterator.hasNext()) {
 						synchronized(mutexManager.getMutex("resumeCaller")) {
 							try {
@@ -85,7 +85,7 @@ public class QueuedTasksExecutor implements Component {
 								logWarn("Exception occurred", exc);
 							}
 						}
-						TaskAbst task =	this.currentTask = taskIterator.next();
+						TaskAbst<?> task =	this.currentTask = taskIterator.next();
 						tasksQueue.remove(task);
 						int currentExecutablePriority = currentTask.getPriority();
 						if (executor.getPriority() != currentExecutablePriority) {
@@ -186,7 +186,7 @@ public class QueuedTasksExecutor implements Component {
 		return add(task);
 	}
 
-	<T extends TaskAbst> T add(T task) {
+	<E, T extends TaskAbst<E>> T add(T task) {
 		try {
 			synchronized(mutexManager.getMutex("executableCollectionFiller")) {
 				mutexManager.getMutex("executableCollectionFiller").notifyAll();
@@ -274,7 +274,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public void shutDown(boolean waitForTasksTermination) {
-		Collection<TaskAbst> executables = this.tasksQueue;
+		Collection<TaskAbst<?>> executables = this.tasksQueue;
 		Thread executor = this.executor;
 		if (waitForTasksTermination) {
 			addWithCurrentThreadPriority(() -> {
@@ -321,9 +321,10 @@ public class QueuedTasksExecutor implements Component {
 		name = null;
 	}
 	
-	static abstract class TaskAbst {
-		private boolean hasFinished;
-		private int priority;
+	static abstract class TaskAbst<E> {
+		E executable;
+		boolean hasFinished;
+		int priority;
 		Thread queuedTasksExecutorThread;
 		
 		TaskAbst(int priority, Thread queuedTasksExecutorThread) {
@@ -331,22 +332,16 @@ public class QueuedTasksExecutor implements Component {
 			this.priority = priority;
 		}
 		
-		abstract void execute0();
-		
-		void execute() {
-			execute0();
-			markHasFinished();
-			synchronized (this) {
-				notifyAll();
-			}
-		}
+		abstract void execute();
 		
 		public boolean hasFinished() {
 			return hasFinished;
 		}
 		
-		void join0() {
-			if (!hasFinished() && Thread.currentThread() != queuedTasksExecutorThread && queuedTasksExecutorThread != null) {
+		void join0(boolean ignoreThread) {
+			if (!hasFinished() && 
+				(!ignoreThread && Thread.currentThread() != queuedTasksExecutorThread && queuedTasksExecutorThread != null)
+			) {
 				synchronized (this) {
 					if (!hasFinished() && Thread.currentThread() != queuedTasksExecutorThread && queuedTasksExecutorThread != null) {
 						try {
@@ -372,8 +367,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 	}
 	
-	public static class Task extends TaskAbst {
-		private Runnable executable;
+	public static class Task extends TaskAbst<Runnable> {
 		
 		Task(Runnable executable, int priority, Thread queuedTasksExecutorThread) {
 			super(priority, queuedTasksExecutorThread);
@@ -381,20 +375,27 @@ public class QueuedTasksExecutor implements Component {
 		}
 
 		@Override
-		void execute0() {
+		void execute() {
 			executable.run();
+			markHasFinished();
 			executable = null;
 			queuedTasksExecutorThread = null;
+			synchronized (this) {
+				notifyAll();
+			}
+		}
+		
+		public void join(boolean ignoreThread) {
+			join0(ignoreThread);
 		}
 		
 		public void join() {
-			join0();
+			join0(false);
 		}
 		
 	}
 	
-	public static class ProducerTask<T> extends TaskAbst {
-		private Supplier<T> executable;
+	public static class ProducerTask<T> extends TaskAbst<Supplier<T>> {
 		private T result;
 		
 		ProducerTask(Supplier<T> executable, int priority, Thread queuedTasksExecutorThread) {
@@ -403,14 +404,22 @@ public class QueuedTasksExecutor implements Component {
 		}		
 		
 		@Override
-		void execute0() {
+		void execute() {
 			result = executable.get();
+			markHasFinished();
 			executable = null;
 			queuedTasksExecutorThread = null;
+			synchronized (this) {
+				notifyAll();
+			}
 		}
 		
 		public T join() {
-			join0();
+			return join(false);
+		}
+		
+		public T join(boolean ignoreThread) {
+			join0(ignoreThread);
 			return result;
 		}
 		
