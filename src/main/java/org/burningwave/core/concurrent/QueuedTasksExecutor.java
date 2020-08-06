@@ -36,6 +36,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.ManagedLogger;
 
 public class QueuedTasksExecutor implements Component {
 	private Collection<TaskAbst<?>> tasksQueue;
@@ -87,15 +88,11 @@ public class QueuedTasksExecutor implements Component {
 						}
 						TaskAbst<?> task =	this.currentTask = taskIterator.next();
 						tasksQueue.remove(task);
-						int currentExecutablePriority = currentTask.getPriority();
+						int currentExecutablePriority = task.getPriority();
 						if (executor.getPriority() != currentExecutablePriority) {
 							executor.setPriority(currentExecutablePriority);
 						}
-						try {
-							this.currentTask.execute();							
-						} catch (Throwable exc) {
-							logError("Exception occurred while executing " + task.toString(), exc);
-						}
+						task.execute();	
 						++executedTasksCount;
 						if (executedTasksCount % 10000 == 0) {
 							logInfo("Executed {} tasks", executedTasksCount);
@@ -321,18 +318,17 @@ public class QueuedTasksExecutor implements Component {
 		name = null;
 	}
 	
-	static abstract class TaskAbst<E> {
+	static abstract class TaskAbst<E> implements ManagedLogger {
 		E executable;
 		boolean hasFinished;
 		int priority;
 		Thread queuedTasksExecutorThread;
+		Throwable exc;
 		
 		TaskAbst(int priority, Thread queuedTasksExecutorThread) {
 			this.queuedTasksExecutorThread = queuedTasksExecutorThread;
 			this.priority = priority;
 		}
-		
-		abstract void execute();
 		
 		public boolean hasFinished() {
 			return hasFinished;
@@ -355,6 +351,23 @@ public class QueuedTasksExecutor implements Component {
 			}
 		}
 		
+		void execute() {
+			try {
+				execute0();						
+			} catch (Throwable exc) {
+				this.exc = exc;
+				logError("Exception occurred while executing " + this, exc);
+			}			
+			markHasFinished();
+			executable = null;
+			queuedTasksExecutorThread = null;
+			synchronized (this) {
+				notifyAll();
+			}
+		}
+		
+		abstract void execute0();
+		
 		void markHasFinished() {
 			hasFinished = true;
 		}
@@ -366,6 +379,14 @@ public class QueuedTasksExecutor implements Component {
 		public int getPriority() {
 			return priority;
 		}
+		
+		public Throwable getException() {
+			return exc;
+		}
+		
+		public boolean endedWithErrors() {
+			return exc != null;
+		}
 	}
 	
 	public static class Task extends TaskAbst<Runnable> {
@@ -376,14 +397,8 @@ public class QueuedTasksExecutor implements Component {
 		}
 
 		@Override
-		void execute() {
-			executable.run();
-			markHasFinished();
-			executable = null;
-			queuedTasksExecutorThread = null;
-			synchronized (this) {
-				notifyAll();
-			}
+		void execute0() {
+			this.executable.run();			
 		}
 		
 		public void join(boolean ignoreThread) {
@@ -393,7 +408,7 @@ public class QueuedTasksExecutor implements Component {
 		public void join() {
 			join0(false);
 		}
-		
+
 	}
 	
 	public static class ProducerTask<T> extends TaskAbst<Supplier<T>> {
@@ -405,14 +420,8 @@ public class QueuedTasksExecutor implements Component {
 		}		
 		
 		@Override
-		void execute() {
-			result = executable.get();
-			markHasFinished();
-			executable = null;
-			queuedTasksExecutorThread = null;
-			synchronized (this) {
-				notifyAll();
-			}
+		void execute0() {
+			result = executable.get();			
 		}
 		
 		public T join() {
