@@ -32,7 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Properties extends java.util.Properties {
 	private static final long serialVersionUID = -350748766178421942L;
@@ -46,13 +46,9 @@ public class Properties extends java.util.Properties {
 	
 	public Properties() {
 		super();
-		listeners = new CopyOnWriteArrayList<>();
+		listeners = ConcurrentHashMap.newKeySet();
 	}
 	
-	public Properties(Properties defaults) {
-		super();
-		listeners = new CopyOnWriteArrayList<>();
-	}
 
 ////////////////////
 	

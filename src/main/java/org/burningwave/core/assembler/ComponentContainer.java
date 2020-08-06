@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.assembler;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.HighPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
@@ -64,6 +65,7 @@ import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.PathScannerClassLoader;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
@@ -75,7 +77,7 @@ public class ComponentContainer implements ComponentSupplier {
 	protected Map<Class<? extends Component>, Component> components;
 	private Supplier<Properties> propertySupplier;
 	private Properties config;
-	private Thread initializerTask;
+	private QueuedTasksExecutor.Task initializerTask;
 	
 	static {
 		instances = ConcurrentHashMap.newKeySet();
@@ -159,35 +161,27 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private ComponentContainer launchInit() {
-		initializerTask = new Thread(() -> {
-			init();
+		initializerTask = HighPriorityTasksExecutor.add(() -> {
 			synchronized (components) {
-				initializerTask = null;
-				components.notifyAll();
+				this.init();
+				this.initializerTask = null;
 			}
 		});
-		initializerTask.start();
 		return this;
 	}
 	
-	public void reInit() {
-		clear();
-		config.clear();
-		launchInit();
+	private void waitForInitialization() {
+		QueuedTasksExecutor.Task initializerTask = this.initializerTask;
+		if (initializerTask != null) {
+			initializerTask.join();
+		}
 	}
 	
-	protected void waitForInitializationEnding() {
-		if (initializerTask != null) {
-			synchronized (components) {
-				if (initializerTask != null) {
-					try {
-						components.wait();
-					} catch (InterruptedException exc) {
-						logError("Exception while waiting " + ComponentContainer.class.getSimpleName() + " initializaziont", exc);
-						throw Throwables.toRuntimeException(exc);
-					}
-				}
-			}
+	public void reInit() {
+		synchronized (components) {
+			clear();
+			config.clear();
+			launchInit();
 		}
 	}
 	
@@ -203,10 +197,12 @@ public class ComponentContainer implements ComponentSupplier {
 		return IterableObjectHelper.resolveStringValue(config, propertyName, defaultValues);
 	}
 	
+	
+	
 	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
 		T component = (T)components.get(componentType);
-		if (component == null) {	
-			waitForInitializationEnding();
+		if (component == null) {
+			waitForInitialization();
 			synchronized (components) {
 				if ((component = (T)components.get(componentType)) == null) {
 					component = componentSupplier.get();

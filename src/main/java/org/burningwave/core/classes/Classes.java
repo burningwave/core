@@ -845,12 +845,12 @@ public class Classes implements Component, MembersRetriever {
 			return getAllLoadedPaths(classLoader, true);
 		}
 		
-		public Collection<String> getAllLoadedPaths(ClassLoader classLoader, boolean considerURLClassLoaderPathsAsLoadedPaths) {
+		public Collection<String> getAllLoadedPaths(ClassLoader classLoader, boolean considerThePathsLoadedByURLClassLoaderPathsAndBuiltinClassLoaderAsLoadeded) {
 			Collection<String> allLoadedPaths = new LinkedHashSet<>();
 			while((classLoader = getParent(classLoader)) != null) {
 				if (classLoader instanceof PathScannerClassLoader) {
 					allLoadedPaths.addAll(((PathScannerClassLoader)classLoader).loadedPaths);
-				} else if (considerURLClassLoaderPathsAsLoadedPaths) {
+				} else if (considerThePathsLoadedByURLClassLoaderPathsAndBuiltinClassLoaderAsLoadeded) {
 					URL[] resUrl = getURLs(classLoader);
 					if (resUrl != null) {
 						for (int i = 0; i < resUrl.length; i++) {

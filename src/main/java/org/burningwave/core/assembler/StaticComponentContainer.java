@@ -56,7 +56,7 @@ public class StaticComponentContainer {
 			DEFAULT_VALUES.put(Key.HIDE_BANNER_ON_INIT, "false");
 		}
 	}
-	public static final org.burningwave.core.concurrent.AsyncExecutor BackgroundExecutor;
+	public static final org.burningwave.core.concurrent.QueuedTasksExecutor LowPriorityTasksExecutor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler ByteBufferHandler;
@@ -67,6 +67,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.classes.Fields Fields;
 	public static final org.burningwave.core.iterable.Properties GlobalProperties;
+	public static final org.burningwave.core.concurrent.QueuedTasksExecutor HighPriorityTasksExecutor;
 	public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
 	public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;
@@ -81,7 +82,9 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
-		BackgroundExecutor = org.burningwave.core.concurrent.AsyncExecutor.create("Background executor", Thread.MIN_PRIORITY, true, true);
+		Throwables = org.burningwave.core.Throwables.create();
+		HighPriorityTasksExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("High priority tasks executor", Thread.MAX_PRIORITY, false, true);
+		LowPriorityTasksExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("Low priority tasks executor", Thread.MIN_PRIORITY, false, true);
 		Properties properties = new Properties();
 		properties.putAll(Configuration.DEFAULT_VALUES);
 		properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
@@ -89,7 +92,6 @@ public class StaticComponentContainer {
 		
 		Strings = org.burningwave.core.Strings.create();
 		IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create();
-		Throwables = org.burningwave.core.Throwables.create();
 		Resources = new org.burningwave.core.io.Resources();
 		Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
 			Resources.loadFirstOneFound(properties, "burningwave.static.properties", "burningwave.static.default.properties");
@@ -118,7 +120,8 @@ public class StaticComponentContainer {
 				new Thread(() -> {
 					ComponentContainer.closeAll();
 					FileSystemHelper.deleteTemporaryFolders();
-					BackgroundExecutor.shutDown(true);
+					LowPriorityTasksExecutor.shutDown(true);
+					HighPriorityTasksExecutor.shutDown(true);
 				})
 			);
 			String clearTemporaryFolderFlag = GlobalProperties.getProperty(Configuration.Key.CLEAR_TEMPORARY_FOLDER_ON_INIT);

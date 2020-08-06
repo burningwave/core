@@ -1,6 +1,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.HighPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 
@@ -15,6 +16,7 @@ import java.util.function.Function;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassPathHunter.SearchResult;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.iterable.Properties;
@@ -102,7 +104,9 @@ public static class Configuration {
 	) {
 			Collection<String> classPaths = new HashSet<>();
 			Collection<FileSystemItem> effectiveClassPaths = adjustedClassPathsSupplier.apply(classRepositories);
-
+			
+			Collection<QueuedTasksExecutor.ProducerTask<String>> pathsCreationTasks = new HashSet<>(); 
+			
 			if (!effectiveClassPaths.isEmpty()) {
 				for (FileSystemItem fsObject : effectiveClassPaths) {
 					if (fsObject.isCompressed()) {					
@@ -112,8 +116,14 @@ public static class Configuration {
 									classPathsBasePath.getAbsolutePath() + "/" + Paths.toSquaredPath(fsObject.getAbsolutePath(), fsObject.isFolder())
 								);
 								if (!classPath.refresh().exists()) {
-									FileSystemItem copy = fsObject.copyTo(classPathsBasePath.getAbsolutePath());
-									new File(copy.getAbsolutePath()).renameTo(new File(classPath.getAbsolutePath()));
+									pathsCreationTasks.add(
+										HighPriorityTasksExecutor.addWithCurrentThreadPriority(() -> {
+											FileSystemItem copy = fsObject.copyTo(classPathsBasePath.getAbsolutePath());
+											File target = new File(classPath.getAbsolutePath());
+											new File(copy.getAbsolutePath()).renameTo(target);
+											return Paths.clean(target.getAbsolutePath());
+										})
+									);
 								}
 								classPaths.add(
 									classPath.getAbsolutePath()
@@ -127,6 +137,7 @@ public static class Configuration {
 					}
 				}
 			}
+			pathsCreationTasks.stream().forEach(pathsCreationTask -> pathsCreationTask.join());
 			return classPaths;
 		}
 	
