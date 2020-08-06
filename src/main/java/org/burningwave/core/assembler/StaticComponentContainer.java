@@ -82,7 +82,7 @@ public class StaticComponentContainer {
 	
 	static {
 		Throwables = org.burningwave.core.Throwables.create();
-		BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("Background executor", Thread.MIN_PRIORITY, true, true);
+		BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("Background executor", Thread.MIN_PRIORITY, false, true);
 		Properties properties = new Properties();
 		properties.putAll(Configuration.DEFAULT_VALUES);
 		properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
