@@ -319,7 +319,11 @@ public class ClassFactory implements Component {
 										Map<String, ByteBuffer> finalByteCodes = new HashMap<>(compilationResult.getCompiledFiles());
 										Class<?> cls = ClassLoaders.loadOrDefineByByteCode(className, finalByteCodes, classLoader);
 										if (compileConfig.isStoringCompiledClassesEnabled() && finalByteCodes.containsKey(className)) {
-											ClassLoaders.addClassPath(cls.getClassLoader(), compilationResult.getClassPath().getAbsolutePath());
+											ClassLoaders.addClassPath(
+												cls.getClassLoader(),
+												compilationResult.getClassPath().getAbsolutePath()::equals,
+												compilationResult.getClassPath().getAbsolutePath()
+											);
 										}
 										return cls;	
 									}								

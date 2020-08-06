@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 	ByteCodeHunterTest.class,
     ClassesTest.class,
     ClassFactoryTest.class,
+    ComponentContainerTest.class,
     ClassHunterTest.class,
     ClassLoadersTest.class,
     ClassPathHunterTest.class,

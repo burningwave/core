@@ -118,7 +118,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 
 	R findBy(SearchConfigAbst<?> input, Consumer<C> searcher) {
-		BackgroundExecutor.suspend();
+		BackgroundExecutor.suspend(false);
 		SearchConfigAbst<?> searchConfig = input.createCopy();
 		Collection<String> paths = searchConfig.getPaths();
 		if (paths == null || paths.isEmpty()) {

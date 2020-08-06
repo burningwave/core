@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -36,14 +38,12 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -54,9 +54,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
@@ -98,13 +98,17 @@ public class PathHelper implements Component {
 	private Map<String, Collection<String>> pathGroups;
 	private Collection<String> allPaths;
 	private Properties config;
-		
+	private QueuedTasksExecutor.Task initializerTask;
+	
 	private PathHelper(Properties config) {
 		pathGroups = new ConcurrentHashMap<>();
 		allPaths = ConcurrentHashMap.newKeySet();
-		loadMainClassPaths();
 		this.config = config;
-		loadAllPaths();	
+		initializerTask = BackgroundExecutor.addWithCurrentThreadPriority(() -> {
+			loadMainClassPaths();	
+			loadAllPaths();
+			initializerTask = null;
+		});
 		listenTo(config);
 	}
 	
@@ -114,7 +118,7 @@ public class PathHelper implements Component {
 			if (key instanceof String) {
 				String propertyKey = (String)key;
 				if (propertyKey.startsWith(Configuration.Key.PATHS_PREFIX)) {
-					loadPaths(((String)key).replaceFirst(Configuration.Key.PATHS_PREFIX, ""));	
+					loadPaths(propertyKey);	
 				}
 			}
 		}
@@ -125,46 +129,20 @@ public class PathHelper implements Component {
 	}
 	
 	private void loadMainClassPaths() {
-		String classPaths = System.getProperty("java.class.path");
-		if (Strings.isNotEmpty(classPaths)) {
+		Collection<String> placeHolders = config.getAllPlaceHolders(Configuration.Key.MAIN_CLASS_PATHS);
+		if (placeHolders.contains("${system.properties:java.class.path}")) {
+			loadPaths(Configuration.Key.MAIN_CLASS_PATHS);
 			addPaths(
 				Configuration.Key.MAIN_CLASS_PATHS,
-				Stream.of(
-					classPaths.split(System.getProperty("path.separator"))
-				).map(path ->
-					Paths.clean(path)
-				).collect(
-					Collectors.toCollection(
-						LinkedHashSet::new
-					)
-				)
+				ClassLoaders.getAllLoadedPaths(this.getClass().getClassLoader())
 			);
-		}
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		while (classLoader != null) {
-			if (classLoader instanceof URLClassLoader) {
-				addPaths(
-					Configuration.Key.MAIN_CLASS_PATHS,
-					Stream.of(
-						((URLClassLoader)classLoader).getURLs()
-					).map(uRL -> 
-						Paths.clean(uRL.getFile())
-					).collect(
-						Collectors.toCollection(
-							LinkedHashSet::new
-						)
-					)
-				);
-			}
-			classLoader = classLoader.getParent();
 		}
 	}
 	
 	private void loadAllPaths() {
-		config.forEach((key, value) -> {
-			if (((String)key).startsWith(Configuration.Key.PATHS_PREFIX)) {
-				String pathGroupName = ((String)key).substring(Configuration.Key.PATHS_PREFIX.length());
-				loadPaths(pathGroupName);
+		config.forEach((pathGroupName, value) -> {
+			if (((String)pathGroupName).startsWith(Configuration.Key.PATHS_PREFIX)) {
+				loadPaths((String)pathGroupName);
 			}
 		});
 	}
@@ -181,13 +159,22 @@ public class PathHelper implements Component {
 		return getPaths(Configuration.Key.MAIN_CLASS_PATHS, Configuration.Key.MAIN_CLASS_PATHS_EXTENSION);
 	}
 	
+	private void waitForInitialization() {
+		QueuedTasksExecutor.Task initializerTask = this.initializerTask;
+		if (initializerTask != null) {
+			initializerTask.join();
+		}
+	}
+	
 	public Collection<String> getAllPaths() {
+		waitForInitialization();
 		Collection<String> allPaths = ConcurrentHashMap.newKeySet();
 		allPaths.addAll(this.allPaths);
 		return allPaths;
 	}
 	
 	public Collection<String> getPaths(String... names) {
+		waitForInitialization();
 		Collection<String> pathGroup = new HashSet<>();
 		if (names != null && names.length > 0) {
 			for (String name : names) {
@@ -299,6 +286,9 @@ public class PathHelper implements Component {
 	}
 	
 	private Collection<String> addPaths(String groupName, Collection<String> paths) {
+		groupName = groupName.startsWith(Configuration.Key.PATHS_PREFIX) ?
+			groupName.substring(Configuration.Key.PATHS_PREFIX.length()):
+			groupName;
 		if (paths != null) {
 			Collection<String> pathGroup = getOrCreatePathGroup(groupName);
 			for (String path : paths) {

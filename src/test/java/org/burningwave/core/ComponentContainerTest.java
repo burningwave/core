@@ -31,11 +31,20 @@ public class ComponentContainerTest extends BaseTest {
 	
 	@Test
 	public void clearAll() {
-		logWarn("Total memory before clearAll {}", Runtime.getRuntime().totalMemory());
-		ComponentContainer.clearAll();
-		BackgroundExecutor.waitForExecutablesEnding();
-		System.gc();
-		logWarn("Total memory after clearAll {}", Runtime.getRuntime().totalMemory());
+		testDoesNotThrow(() -> {
+			logWarn("Total memory before clearAll {}", Runtime.getRuntime().totalMemory());
+			ComponentContainer.clearAll();
+			BackgroundExecutor.waitForExecutablesEnding();
+			System.gc();
+			logWarn("Total memory after clearAll {}", Runtime.getRuntime().totalMemory());
+		});
 	}
 	
+	
+	@Test
+	public void reInit() {
+		testDoesNotThrow(() -> {
+			getComponentSupplier().reInit();
+		});
+	}
 }

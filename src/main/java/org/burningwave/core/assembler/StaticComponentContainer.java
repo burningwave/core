@@ -56,7 +56,7 @@ public class StaticComponentContainer {
 			DEFAULT_VALUES.put(Key.HIDE_BANNER_ON_INIT, "false");
 		}
 	}
-	public static final org.burningwave.core.concurrent.AsyncExecutor BackgroundExecutor;
+	public static final org.burningwave.core.concurrent.QueuedTasksExecutor BackgroundExecutor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler ByteBufferHandler;
@@ -81,7 +81,8 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
-		BackgroundExecutor = org.burningwave.core.concurrent.AsyncExecutor.create("Background executor", Thread.MIN_PRIORITY, true, true);
+		Throwables = org.burningwave.core.Throwables.create();
+		BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("Background executor", Thread.MIN_PRIORITY, true, true);
 		Properties properties = new Properties();
 		properties.putAll(Configuration.DEFAULT_VALUES);
 		properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
@@ -89,7 +90,6 @@ public class StaticComponentContainer {
 		
 		Strings = org.burningwave.core.Strings.create();
 		IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create();
-		Throwables = org.burningwave.core.Throwables.create();
 		Resources = new org.burningwave.core.io.Resources();
 		Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
 			Resources.loadFirstOneFound(properties, "burningwave.static.properties", "burningwave.static.default.properties");
