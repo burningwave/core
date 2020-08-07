@@ -386,10 +386,10 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		Map<String, ByteBuffer> loadedByteCodes = this.loadedByteCodes;
 		this.notLoadedByteCodes = new HashMap<>();
 		this.loadedByteCodes = new HashMap<>();
-		LowPriorityTasksExecutor.add(() -> {
+		LowPriorityTasksExecutor.createTask(() -> {
 			IterableObjectHelper.deepClear(notLoadedByteCodes);
 			IterableObjectHelper.deepClear(loadedByteCodes);
-		});
+		}).addToQueue();
 		return this;
 	}
 	

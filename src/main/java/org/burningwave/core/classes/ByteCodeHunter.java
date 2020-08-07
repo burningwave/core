@@ -91,9 +91,9 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 	
 	@Override
 	void clearItemsForPath(Map<String, JavaClass> items) {
-		LowPriorityTasksExecutor.add(() -> {
+		LowPriorityTasksExecutor.createTask(() -> {
 			IterableObjectHelper.deepClear(items, (path, javaClass) -> javaClass.close());
-		});
+		}).addToQueue();
 	}
 	
 	public static class SearchResult extends org.burningwave.core.classes.SearchResult<JavaClass> {

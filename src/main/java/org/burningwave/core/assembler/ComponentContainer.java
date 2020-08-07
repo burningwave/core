@@ -160,12 +160,13 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private ComponentContainer launchInit() {
-		initializerTask = HighPriorityTasksExecutor.add(() -> {
+		QueuedTasksExecutor.Task initializerTask = this.initializerTask = HighPriorityTasksExecutor.createTask(() -> {
 			synchronized (components) {
 				this.init();
 				this.initializerTask = null;
 			}
 		});
+		initializerTask.addToQueue();
 		return this;
 	}
 	
@@ -372,7 +373,7 @@ public class ComponentContainer implements ComponentSupplier {
 		synchronized (this) {
 			this.components = new ConcurrentHashMap<>();
 		}
-		LowPriorityTasksExecutor.add((Runnable)() ->
+		LowPriorityTasksExecutor.createTask((Runnable)() ->
 			IterableObjectHelper.deepClear(components, (type, component) -> {
 				try {
 					if (!(component instanceof PathScannerClassLoader)) {
@@ -384,7 +385,7 @@ public class ComponentContainer implements ComponentSupplier {
 					logError("Exception occurred while closing " + component, exc);
 				}
 			})
-		);
+		).addToQueue();
 		if (wait) {
 			LowPriorityTasksExecutor.waitForExecutablesEnding();
 		}
@@ -427,6 +428,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public static void clearAll(boolean wait) {
 		if (wait) {
+			HighPriorityTasksExecutor.waitForExecutablesEnding();
 			LowPriorityTasksExecutor.waitForExecutablesEnding();
 		}
 		for (ComponentContainer componentContainer : instances) {

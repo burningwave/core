@@ -172,12 +172,12 @@ public class Cache implements Component {
 				this.resources = new HashMap<>();
 				mutexManagerForResources.clear();
 			}
-			LowPriorityTasksExecutor.add(() -> {
+			LowPriorityTasksExecutor.createTask(() -> {
 				for (Entry<T, PathForResources<R>> item : resources.entrySet()) {
 					item.getValue().clear(destroyItems);
 				}
 				resources.clear();
-			}, Thread.MIN_PRIORITY);		
+			}, Thread.MIN_PRIORITY).addToQueue();		
 			return this;
 		}
 		
@@ -297,7 +297,7 @@ public class Cache implements Component {
 			R item = nestedPartition.remove(path);
 			if (destroy && item != null) {
 				String finalPath = path;
-				LowPriorityTasksExecutor.add(() -> destroy(finalPath, item), Thread.MIN_PRIORITY);
+				LowPriorityTasksExecutor.createTask(() -> destroy(finalPath, item), Thread.MIN_PRIORITY).addToQueue();
 			}
 			return item;
 		}
@@ -330,9 +330,9 @@ public class Cache implements Component {
 				mutexManagerForLoadedResources.clear();    
 				mutexManagerForPartitionedResources.clear();
 			}
-			LowPriorityTasksExecutor.add(() -> {
+			LowPriorityTasksExecutor.createTask(() -> {
 				clearResources(partitions, destroyItems);
-			}, Thread.MIN_PRIORITY);
+			}, Thread.MIN_PRIORITY).addToQueue();
 			return this;
 		}
 

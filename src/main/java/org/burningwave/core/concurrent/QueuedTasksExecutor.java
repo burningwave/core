@@ -41,7 +41,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
 
 public class QueuedTasksExecutor implements Component {
-	private Map<Object, Boolean> runOnlyOnceTemporaryTargets;
+	private Map<String, Boolean> runOnlyOnceTemporaryTargets;
 	private Collection<TaskAbst<?>> tasksQueue;
 	private TaskAbst<?> currentTask;
 	private Boolean supended;
@@ -159,36 +159,45 @@ public class QueuedTasksExecutor implements Component {
 		}
 	}
 	
-	public <T> ProducerTask<T> addWithCurrentThreadPriority(Supplier<T> executable) {
-		return add(executable, Thread.currentThread().getPriority());
+	public <T> ProducerTask<T> createTaskWithCurrentThreadPriority(Supplier<T> executable) {
+		return createTask(executable, Thread.currentThread().getPriority());
 	}
 	
-	public <T> ProducerTask<T> add(Supplier<T> executable) {
-		return add(executable, this.defaultPriority);
+	public <T> ProducerTask<T> createTask(Supplier<T> executable) {
+		return createTask(executable, this.defaultPriority);
 	}
 	
-	public <T> ProducerTask<T> add(Supplier<T> executable, int priority) {
-		ProducerTask<T> task = new ProducerTask<T>(executable, priority, this.executor);
-		tasksQueue.add(task);
-		return add(task);
+	public <T> ProducerTask<T> createTask(Supplier<T> executable, int priority) {
+		ProducerTask<T> task = new ProducerTask<T>(executable, priority, this.executor) {
+			public ProducerTask<T> addToQueue() {
+				add(this);
+				return this;
+			};
+		};
+		return task;
 	}
 	
-	public Task addWithCurrentThreadPriority(Runnable executable) {
-		return add(executable, Thread.currentThread().getPriority());
+	public Task createTaskWithCurrentThreadPriority(Runnable executable) {
+		return createTask(executable, Thread.currentThread().getPriority());
 	}
 	
-	public Task add(Runnable executable) {
-		return add(executable, this.defaultPriority);
+	public Task createTask(Runnable executable) {
+		return createTask(executable, this.defaultPriority);
 	}
 	
-	public Task add(Runnable executable, int priority) {
-		Task task = new Task(executable, priority, this.executor);
-		tasksQueue.add(task);
-		return add(task);
+	public Task createTask(Runnable executable, int priority) {
+		Task task = new Task(executable, priority, this.executor) {
+			public Task addToQueue() {
+				add(this);
+				return this;
+			};
+		};
+		return task;
 	}
 
 	<E, T extends TaskAbst<E>> T add(T task) {
 		try {
+			tasksQueue.add(task);
 			synchronized(mutexManager.getMutex("executableCollectionFiller")) {
 				mutexManager.getMutex("executableCollectionFiller").notifyAll();
 			}
@@ -198,22 +207,24 @@ public class QueuedTasksExecutor implements Component {
 		return task;
 	}
 	
-	public Task addToRunOnlyOnceWithCurrentThreadPriority(Object target, Supplier<Boolean> hasBeenExecutedChecker, Runnable executable) {
-		return addToRunOnlyOnce(target, hasBeenExecutedChecker, executable, Thread.currentThread().getPriority());
+	public Task createTaskToRunOnlyOnceWithCurrentThreadPriority(Object target, String operationId, Supplier<Boolean> hasBeenExecutedChecker, Runnable executable) {
+		return createTaskToRunOnlyOnce(target, operationId, hasBeenExecutedChecker, executable, Thread.currentThread().getPriority());
 	}
 	
-	public Task addToRunOnlyOnce(Object target, Supplier<Boolean> hasBeenExecutedChecker, Runnable executable) {
-		return addToRunOnlyOnce(target, hasBeenExecutedChecker, executable, this.defaultPriority);
+	public Task createTaskToRunOnlyOnce(Object target, String operationId, Supplier<Boolean> hasBeenExecutedChecker, Runnable executable) {
+		return createTaskToRunOnlyOnce(target, operationId, hasBeenExecutedChecker, executable, this.defaultPriority);
 	}
 	
-	public Task addToRunOnlyOnce(
+	public Task createTaskToRunOnlyOnce(
 		Object target,
+		String operationId,
 		Supplier<Boolean> hasBeenExecutedChecker,
 		Runnable executable,
 		int threadPriority
 	) {	
-		if (canBeExecuted(target, hasBeenExecutedChecker)) {
-			return add(() -> {
+		String taskId = target.getClass().getName() + "@" +  System.identityHashCode(target) + "->" + operationId;
+		if (canBeExecuted(target, taskId, hasBeenExecutedChecker)) {
+			return createTask(() -> {
 				try {
 					executable.run();
 				} finally {
@@ -224,22 +235,24 @@ public class QueuedTasksExecutor implements Component {
 		return null;
 	}
 	
-	public <T> ProducerTask<T> addToRunOnlyOnceWithCurrentThreadPriority(Object target, Supplier<Boolean> hasBeenExecutedChecker, Supplier<T> executable) {
-		return addToRunOnlyOnce(target, hasBeenExecutedChecker, executable, Thread.currentThread().getPriority());
+	public <T> ProducerTask<T> createTaskToRunOnlyOnceWithCurrentThreadPriority(Object target, String operationId, Supplier<Boolean> hasBeenExecutedChecker, Supplier<T> executable) {
+		return createTaskToRunOnlyOnce(target, operationId, hasBeenExecutedChecker, executable, Thread.currentThread().getPriority());
 	}
 	
-	public <T> ProducerTask<T> addToRunOnlyOnce(Object target, Supplier<Boolean> hasBeenExecutedChecker, Supplier<T> executable) {
-		return addToRunOnlyOnce(target, hasBeenExecutedChecker, executable, this.defaultPriority);
+	public <T> ProducerTask<T> createTaskToRunOnlyOnce(Object target, String operationId, Supplier<Boolean> hasBeenExecutedChecker, Supplier<T> executable) {
+		return createTaskToRunOnlyOnce(target, operationId, hasBeenExecutedChecker, executable, this.defaultPriority);
 	}
 	
-	public <T> ProducerTask<T> addToRunOnlyOnce(
+	public <T> ProducerTask<T> createTaskToRunOnlyOnce(
 			Object target,
+			String operationId,
 			Supplier<Boolean> hasBeenExecuted,
 			Supplier<T> executable,
 			int threadPriority
 		) {	
-			if (canBeExecuted(target, hasBeenExecuted)) {
-				return add(() -> {
+			String taskId = target.getClass().getName() + "@" +  System.identityHashCode(target) + "->" + operationId;
+			if (canBeExecuted(target, taskId, hasBeenExecuted)) {
+				return createTask(() -> {
 					try {
 						return executable.get();
 					} finally {
@@ -250,16 +263,17 @@ public class QueuedTasksExecutor implements Component {
 			return null;
 		}
 
-	boolean canBeExecuted(Object target, Supplier<Boolean> hasBeenExecuted) {
+	boolean canBeExecuted(Object target, String taskId, Supplier<Boolean> hasBeenExecuted) {
 		boolean execute = false;
 		if (!hasBeenExecuted.get()) {
-			Boolean isClosing = runOnlyOnceTemporaryTargets.get(target);
+			Boolean isClosing = runOnlyOnceTemporaryTargets.get(taskId);
 			if (isClosing == null) {
 				synchronized (target) {
 					if (!hasBeenExecuted.get()) {
-						isClosing = runOnlyOnceTemporaryTargets.get(target);
+						isClosing = runOnlyOnceTemporaryTargets.get(taskId);
 						if (isClosing == null) {
-							runOnlyOnceTemporaryTargets.put(target, execute = Boolean.TRUE);
+							runOnlyOnceTemporaryTargets.put(
+								taskId, execute = Boolean.TRUE);
 						}
 					}
 				}
@@ -323,7 +337,7 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		} else {
-			add(() -> supended = Boolean.TRUE, priority).join();
+			createTask(() -> supended = Boolean.TRUE, priority).addToQueue().join();
 		}
 		return this;
 	}
@@ -348,11 +362,11 @@ public class QueuedTasksExecutor implements Component {
 		Collection<TaskAbst<?>> executables = this.tasksQueue;
 		Thread executor = this.executor;
 		if (waitForTasksTermination) {
-			addWithCurrentThreadPriority(() -> {
+			createTaskWithCurrentThreadPriority(() -> {
 				this.terminated = Boolean.TRUE;
 				logInfo("Unexecuted tasks {}", executables.size());
 				executables.clear();
-			});
+			}).addToQueue();
 		} else {
 			suspend();
 			this.terminated = Boolean.TRUE;
@@ -469,9 +483,10 @@ public class QueuedTasksExecutor implements Component {
 		public boolean endedWithErrors() {
 			return exc != null;
 		}
+		
 	}
 	
-	public static class Task extends TaskAbst<Runnable> {
+	public static abstract class Task extends TaskAbst<Runnable> {
 		
 		Task(Runnable executable, int priority, Thread queuedTasksExecutorThread) {
 			super(priority, queuedTasksExecutorThread);
@@ -490,10 +505,12 @@ public class QueuedTasksExecutor implements Component {
 		public void join() {
 			join0(false);
 		}
+		
+		public abstract Task addToQueue();
 
 	}
 	
-	public static class ProducerTask<T> extends TaskAbst<Supplier<T>> {
+	public static abstract class ProducerTask<T> extends TaskAbst<Supplier<T>> {
 		private T result;
 		
 		ProducerTask(Supplier<T> executable, int priority, Thread queuedTasksExecutorThread) {
@@ -518,5 +535,7 @@ public class QueuedTasksExecutor implements Component {
 		public T get() {
 			return result;
 		}
+		
+		public abstract ProducerTask<T> addToQueue();
 	}
 }
