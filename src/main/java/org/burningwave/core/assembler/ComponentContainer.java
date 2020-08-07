@@ -33,6 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.HighPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -417,12 +418,22 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public static void clearAll() {
+		clearAll(false);
+	}
+	
+	public static void clearAll(boolean wait) {
+		if (wait) {
+			LowPriorityTasksExecutor.waitForExecutablesEnding();
+		}
 		for (ComponentContainer componentContainer : instances) {
 			componentContainer.waitForInitialization(false);
 			componentContainer.clear();
 		}
 		Cache.clear();
-		System.gc();
+		if (wait) {
+			LowPriorityTasksExecutor.waitForExecutablesEnding();
+			System.gc();
+		}
 	}
 	
 	public static void clearAllCaches() {
