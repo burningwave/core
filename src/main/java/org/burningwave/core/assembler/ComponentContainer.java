@@ -372,7 +372,7 @@ public class ComponentContainer implements ComponentSupplier {
 		synchronized (this) {
 			this.components = new ConcurrentHashMap<>();
 		}
-		LowPriorityTasksExecutor.add(() ->
+		LowPriorityTasksExecutor.add((Runnable)() ->
 			IterableObjectHelper.deepClear(components, (type, component) -> {
 				try {
 					if (!(component instanceof PathScannerClassLoader)) {
