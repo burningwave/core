@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -115,7 +117,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 
 	R findBy(SearchConfigAbst<?> input, Consumer<C> searcher) {
-		//LowPriorityTasksExecutor.suspend(true);
+		LowPriorityTasksExecutor.suspend(false);
 		SearchConfigAbst<?> searchConfig = input.createCopy();
 		Collection<String> paths = searchConfig.getPaths();
 		if (paths == null || paths.isEmpty()) {
@@ -135,7 +137,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		}
 		R searchResult = resultSupplier.apply(context);
 		searchResult.setClassPathScanner(this);
-		//LowPriorityTasksExecutor.resume();
+		LowPriorityTasksExecutor.resume();
 		return searchResult;
 	}
 	
