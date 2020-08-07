@@ -244,24 +244,24 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public <T> ProducerTask<T> createTaskToRunOnlyOnce(
-			Object target,
-			String operationId,
-			Supplier<Boolean> hasBeenExecuted,
-			Supplier<T> executable,
-			int threadPriority
-		) {	
-			String taskId = target.getClass().getName() + "@" +  System.identityHashCode(target) + "->" + operationId;
-			if (canBeExecuted(target, taskId, hasBeenExecuted)) {
-				return createTask(() -> {
-					try {
-						return executable.get();
-					} finally {
-						runOnlyOnceTemporaryTargets.remove(target);
-					}
-				}, threadPriority);
-			}
-			return null;
+		Object target,
+		String operationId,
+		Supplier<Boolean> hasBeenExecuted,
+		Supplier<T> executable,
+		int threadPriority
+	) {	
+		String taskId = target.getClass().getName() + "@" +  System.identityHashCode(target) + "->" + operationId;
+		if (canBeExecuted(target, taskId, hasBeenExecuted)) {
+			return createTask(() -> {
+				try {
+					return executable.get();
+				} finally {
+					runOnlyOnceTemporaryTargets.remove(taskId);
+				}
+			}, threadPriority);
 		}
+		return null;
+	}
 
 	boolean canBeExecuted(Object target, String taskId, Supplier<Boolean> hasBeenExecuted) {
 		boolean execute = false;
