@@ -83,8 +83,8 @@ public class StaticComponentContainer {
 	
 	static {
 		Throwables = org.burningwave.core.Throwables.create();
-		HighPriorityTasksExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("High priority tasks executor", Thread.MAX_PRIORITY, false, true);
-		LowPriorityTasksExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("Low priority tasks executor", Thread.MIN_PRIORITY, false, true);
+		HighPriorityTasksExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("High priority tasks executor", Thread.MAX_PRIORITY, true, true);
+		LowPriorityTasksExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("Low priority tasks executor", Thread.MIN_PRIORITY, true, true);
 		Properties properties = new Properties();
 		properties.putAll(Configuration.DEFAULT_VALUES);
 		properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
@@ -118,7 +118,11 @@ public class StaticComponentContainer {
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create();
 			Runtime.getRuntime().addShutdownHook(
 				new Thread(() -> {
-					ComponentContainer.closeAll();
+					try {
+						ComponentContainer.closeAll();
+					} catch (Throwable exc) {
+						ManagedLoggersRepository.logError(StaticComponentContainer.class, "Exception occurred while closing component containers", exc);
+					}
 					LowPriorityTasksExecutor.shutDown(true);
 					HighPriorityTasksExecutor.shutDown(true);
 					FileSystemHelper.deleteTemporaryFolders();

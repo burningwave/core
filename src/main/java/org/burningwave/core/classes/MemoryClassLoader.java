@@ -59,7 +59,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	Map<String, ByteBuffer> notLoadedByteCodes;
 	Map<String, ByteBuffer> loadedByteCodes;
 	HashSet<Object> clients;
-	boolean isClosed;
+	protected boolean isClosed;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
