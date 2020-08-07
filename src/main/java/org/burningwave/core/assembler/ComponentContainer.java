@@ -41,9 +41,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -365,24 +363,30 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public ComponentContainer clear() {
-		Iterator<Entry<Class<? extends Component>, Component>> componentsItr =
-			components.entrySet().iterator();
-		synchronized (components) {
-			while (componentsItr.hasNext()) {
-				Entry<Class<? extends Component>, Component> entry = componentsItr.next();
+		return clear(false);
+	}
+	
+	
+	public ComponentContainer clear(boolean wait) {
+		Map<Class<? extends Component>, Component> components = this.components;
+		synchronized (this) {
+			this.components = new ConcurrentHashMap<>();
+		}
+		LowPriorityTasksExecutor.add(() ->
+			IterableObjectHelper.deepClear(components, (type, component) -> {
 				try {
-					Component component = entry.getValue();
 					if (!(component instanceof PathScannerClassLoader)) {
-						entry.getValue().close();
+						component.close();
 					} else {
 						((PathScannerClassLoader)component).unregister(this, true);
-					}
-					
+					}					
 				} catch (Throwable exc) {
-					logError("Exception occurred while closing " + entry.getValue(), exc);
+					logError("Exception occurred while closing " + component, exc);
 				}
-			}
-			components.clear();
+			})
+		);
+		if (wait) {
+			LowPriorityTasksExecutor.waitForExecutablesEnding();
 		}
 		return this;
 	}
