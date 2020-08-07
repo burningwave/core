@@ -228,7 +228,7 @@ public class QueuedTasksExecutor implements Component {
 				try {
 					executable.run();
 				} finally {
-					runOnlyOnceTemporaryTargets.remove(target);
+					runOnlyOnceTemporaryTargets.remove(taskId);
 				}
 			}, threadPriority);
 		}

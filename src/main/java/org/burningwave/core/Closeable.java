@@ -30,6 +30,7 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
@@ -41,8 +42,12 @@ public interface Closeable extends AutoCloseable {
 			
 	}
 	
-	default public Task closeResources(Supplier<Boolean> isClosedPredicate, Runnable closingFunction) {
+	default public Task createCloseResoucesResources(Supplier<Boolean> isClosedPredicate, Runnable closingFunction) {
 		return LowPriorityTasksExecutor.createTaskToRunOnlyOnce(this, "closeResources", isClosedPredicate, closingFunction);
+	}
+	
+	default public Task closeResources(Supplier<Boolean> isClosedPredicate, Runnable closingFunction) {
+		return Optional.ofNullable(createCloseResoucesResources(isClosedPredicate, closingFunction)).map(task -> task.addToQueue()).orElseGet(() -> null);
 	}
 	
 }
