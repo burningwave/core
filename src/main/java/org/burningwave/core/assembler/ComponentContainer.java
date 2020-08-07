@@ -28,11 +28,10 @@
  */
 package org.burningwave.core.assembler;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
-import static org.burningwave.core.assembler.StaticComponentContainer.HighPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
+import static org.burningwave.core.assembler.StaticComponentContainer.HighPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
@@ -79,7 +78,6 @@ public class ComponentContainer implements ComponentSupplier {
 	private Supplier<Properties> propertySupplier;
 	private Properties config;
 	private QueuedTasksExecutor.Task initializerTask;
-	boolean isClosed;
 	
 	static {
 		instances = ConcurrentHashMap.newKeySet();
@@ -390,25 +388,17 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	void close(boolean force) {
 		if (force || LazyHolder.getComponentContainerInstance() != this) {
-			boolean close = false;
-			synchronized (this) {
-				if (!isClosed) {
-					close = isClosed = Boolean.TRUE;
-				}
-			}
-			if (close) {
+			closeResources(() -> !instances.contains(this),  () -> {
+				waitForInitialization(true);
+				unregister(GlobalProperties);
+				unregister(config);
 				instances.remove(this);
-				LowPriorityTasksExecutor.add(() -> {
-					waitForInitialization(true);
-					unregister(GlobalProperties);
-					unregister(config);
-					clear();			
-					components = null;
-					propertySupplier = null;
-					initializerTask = null;
-					config = null;					
-				});
-			}
+				clear();			
+				components = null;
+				propertySupplier = null;
+				initializerTask = null;
+				config = null;					
+			});
 		} else {
 			throw Throwables.toRuntimeException("Could not close singleton instance " + LazyHolder.COMPONENT_CONTAINER_INSTANCE);
 		}

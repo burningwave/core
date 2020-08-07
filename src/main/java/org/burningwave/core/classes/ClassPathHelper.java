@@ -203,13 +203,15 @@ public static class Configuration {
 	
 	@Override
 	public void close() {
-		unregister(config);
-		FileSystemHelper.deleteOnExit(classPathsBasePath.getAbsolutePath());
-		classPathsBasePath.destroy();
-		classPathsBasePath = null;
-		classPathHunter = null;
-		config = null;
-		instanceId = null;
+		closeResources(() -> classPathsBasePath == null,  () -> {
+			unregister(config);
+			FileSystemHelper.deleteOnExit(classPathsBasePath.getAbsolutePath());
+			classPathsBasePath.destroy();
+			classPathsBasePath = null;
+			classPathHunter = null;
+			config = null;
+			instanceId = null;				
+		});
 	}
 	
 }

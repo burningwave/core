@@ -109,7 +109,6 @@ public class JavaMemoryCompiler implements Component {
 	private JavaCompiler compiler;
 	private FileSystemItem compiledClassesRepository;
 	private Properties config;	
-	private boolean isClosed;
 	
 	private JavaMemoryCompiler(
 		PathHelper pathHelper,
@@ -555,13 +554,7 @@ public class JavaMemoryCompiler implements Component {
 	
 	@Override
 	public void close() {
-		boolean close = false;
-		synchronized (this) {
-			if (!isClosed) {
-				close = isClosed = Boolean.TRUE;
-			}
-		}
-		if (close) {
+		closeResources(() -> compiledClassesRepository == null, () -> {
 			unregister(config);
 			FileSystemHelper.deleteOnExit(compiledClassesRepository.getAbsolutePath());
 			compiledClassesRepository.destroy();
@@ -569,7 +562,7 @@ public class JavaMemoryCompiler implements Component {
 			compiler = null;
 			pathHelper = null;
 			config = null;
-		}
+		});
 	}
 	
 	

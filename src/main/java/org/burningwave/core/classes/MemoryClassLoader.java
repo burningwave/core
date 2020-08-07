@@ -28,11 +28,11 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -50,6 +50,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.io.ByteBufferInputStream;
 
 
@@ -58,7 +59,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 
 	Map<String, ByteBuffer> notLoadedByteCodes;
 	Map<String, ByteBuffer> loadedByteCodes;
-	HashSet<Object> clients;
+	Set<Object> clients;
 	protected boolean isClosed;
 	
 	static {
@@ -405,7 +406,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	public synchronized boolean register(Object client) {
-		HashSet<Object> clients = this.clients;
+		Set<Object> clients = this.clients;
 		if (!isClosed) {
 			clients.add(client);
 			return true;
@@ -414,7 +415,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	public synchronized boolean unregister(Object client, boolean close) {
-		HashSet<Object> clients = this.clients;
+		Set<Object> clients = this.clients;
 		if (!isClosed) {
 			clients.remove(client);
 			if (clients.isEmpty() && close) {
@@ -426,37 +427,32 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	public void close() {
-		HashSet<Object> clients = this.clients;
+		closeResources();
+	}
+
+	Task closeResources() {
+		Set<Object> clients = this.clients;
 		if (clients != null && !clients.isEmpty()) {
 			throw Throwables.toRuntimeException("Could not close " + this + " because there are " + clients.size() +" registered clients");
 		}
-		boolean close = false;
-		synchronized (this) {
-			if (!isClosed) {
-				close = isClosed = Boolean.TRUE;
+		return closeResources(() -> this.clients == null, () -> {
+			isClosed = true;
+			ClassLoader parentClassLoader = getParent();
+			if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
+				((MemoryClassLoader)parentClassLoader).unregister(this,true);
 			}
-		}
-		if (close) {
-			Thread closingThread = new Thread(() -> {
-				ClassLoader parentClassLoader = getParent();
-				if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
-					((MemoryClassLoader)parentClassLoader).unregister(this,true);
-				}
-				if (clients != null) {
-					clients.clear();
-				}
-				this.clients = null;
-				clear();
-				notLoadedByteCodes = null;
-				loadedByteCodes = null;
-				Collection<Class<?>> loadedClasses = ClassLoaders.retrieveLoadedClasses(this);
-				if (loadedClasses != null) {
-					loadedClasses.clear();
-				}
-				unregister();
-			});
-			closingThread.setPriority(Thread.MIN_PRIORITY);
-			closingThread.start();
-		}
+			if (clients != null) {
+				clients.clear();
+			}
+			this.clients = null;
+			clear();
+			notLoadedByteCodes = null;
+			loadedByteCodes = null;
+			Collection<Class<?>> loadedClasses = ClassLoaders.retrieveLoadedClasses(this);
+			if (loadedClasses != null) {
+				loadedClasses.clear();
+			}
+			unregister();
+		});
 	}
 }

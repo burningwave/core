@@ -32,6 +32,8 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Supplier;
 
@@ -39,6 +41,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
 
 public class QueuedTasksExecutor implements Component {
+	private Map<Object, Boolean> runOnlyOnceTemporaryTargets;
 	private Collection<TaskAbst<?>> tasksQueue;
 	private TaskAbst<?> currentTask;
 	private Boolean supended;
@@ -60,6 +63,7 @@ public class QueuedTasksExecutor implements Component {
 			this.isDaemon = isDaemon;
 			init0();
 		};
+		runOnlyOnceTemporaryTargets = new ConcurrentHashMap<>();
 		init();
 	}
 	
@@ -141,8 +145,8 @@ public class QueuedTasksExecutor implements Component {
 				
 				@Override
 				void closeResources() {
-					this.executor = null;
 					if (!Thread.currentThread().getStackTrace()[4].getClassName().equals(creatorClass)) {	
+						this.executor = null;
 						init();
 					} else {
 						super.closeResources();
@@ -192,6 +196,76 @@ public class QueuedTasksExecutor implements Component {
 			logWarn("Exception occurred", exc);
 		}
 		return task;
+	}
+	
+	public Task addToRunOnlyOnceWithCurrentThreadPriority(Object target, Supplier<Boolean> hasBeenExecutedChecker, Runnable executable) {
+		return addToRunOnlyOnce(target, hasBeenExecutedChecker, executable, Thread.currentThread().getPriority());
+	}
+	
+	public Task addToRunOnlyOnce(Object target, Supplier<Boolean> hasBeenExecutedChecker, Runnable executable) {
+		return addToRunOnlyOnce(target, hasBeenExecutedChecker, executable, this.defaultPriority);
+	}
+	
+	public Task addToRunOnlyOnce(
+		Object target,
+		Supplier<Boolean> hasBeenExecutedChecker,
+		Runnable executable,
+		int threadPriority
+	) {	
+		if (canBeExecuted(target, hasBeenExecutedChecker)) {
+			return add(() -> {
+				try {
+					executable.run();
+				} finally {
+					runOnlyOnceTemporaryTargets.remove(target);
+				}
+			}, threadPriority);
+		}
+		return null;
+	}
+	
+	public <T> ProducerTask<T> addToRunOnlyOnceWithCurrentThreadPriority(Object target, Supplier<Boolean> hasBeenExecutedChecker, Supplier<T> executable) {
+		return addToRunOnlyOnce(target, hasBeenExecutedChecker, executable, Thread.currentThread().getPriority());
+	}
+	
+	public <T> ProducerTask<T> addToRunOnlyOnce(Object target, Supplier<Boolean> hasBeenExecutedChecker, Supplier<T> executable) {
+		return addToRunOnlyOnce(target, hasBeenExecutedChecker, executable, this.defaultPriority);
+	}
+	
+	public <T> ProducerTask<T> addToRunOnlyOnce(
+			Object target,
+			Supplier<Boolean> hasBeenExecuted,
+			Supplier<T> executable,
+			int threadPriority
+		) {	
+			if (canBeExecuted(target, hasBeenExecuted)) {
+				return add(() -> {
+					try {
+						return executable.get();
+					} finally {
+						runOnlyOnceTemporaryTargets.remove(target);
+					}
+				}, threadPriority);
+			}
+			return null;
+		}
+
+	boolean canBeExecuted(Object target, Supplier<Boolean> hasBeenExecuted) {
+		boolean execute = false;
+		if (!hasBeenExecuted.get()) {
+			Boolean isClosing = runOnlyOnceTemporaryTargets.get(target);
+			if (isClosing == null) {
+				synchronized (target) {
+					if (!hasBeenExecuted.get()) {
+						isClosing = runOnlyOnceTemporaryTargets.get(target);
+						if (isClosing == null) {
+							runOnlyOnceTemporaryTargets.put(target, execute = Boolean.TRUE);
+						}
+					}
+				}
+			}
+		}
+		return execute;
 	}
 	
 	public QueuedTasksExecutor waitForExecutablesEnding() {
@@ -284,6 +358,7 @@ public class QueuedTasksExecutor implements Component {
 			this.terminated = Boolean.TRUE;
 			logInfo("Unexecuted tasks {}", executables.size());
 			executables.clear();
+			runOnlyOnceTemporaryTargets.clear();
 			resume();
 			try {
 				synchronized(mutexManager.getMutex("executableCollectionFiller")) {
@@ -307,7 +382,13 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	void closeResources() {
-		this.executor = null;
+		try {
+			executor.interrupt();
+		} catch (Throwable e) {
+			logWarn("Exception occurred while interrupting thread {} of {}", executor, this);
+		}
+		executor = null;
+		runOnlyOnceTemporaryTargets = null;
 		mutexManager.clear();
 		mutexManager = null;
 		tasksQueue = null;
@@ -315,7 +396,8 @@ public class QueuedTasksExecutor implements Component {
 		initializer = null;
 		terminated = null;
 		supended = null;
-		name = null;
+		logInfo("All resources of '{}' have been closed", name);
+		name = null;		
 	}
 	
 	static abstract class TaskAbst<E> implements ManagedLogger {

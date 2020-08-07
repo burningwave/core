@@ -28,9 +28,8 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
-import static org.burningwave.core.assembler.StaticComponentContainer.HighPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.HighPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -100,7 +99,6 @@ public class PathHelper implements Component {
 	private Collection<String> allPaths;
 	private Properties config;
 	private QueuedTasksExecutor.Task initializerTask;
-	boolean isClosed;
 	
 	private PathHelper(Properties config) {
 		pathGroups = new ConcurrentHashMap<>();
@@ -470,26 +468,18 @@ public class PathHelper implements Component {
 	
 	@Override
 	public void close() {
-		boolean close = false;
-		synchronized (this) {
-			if (!isClosed) {
-				close = isClosed = Boolean.TRUE;
-			}
-		}
-		if (close) {
-			LowPriorityTasksExecutor.add(() -> {
-				waitForInitialization(true);
-				unregister(config);
-				pathGroups.forEach((key, value) -> {
-					value.clear();
-					pathGroups.remove(key);
-				});
-				pathGroups.clear();
-				pathGroups = null;
-				allPaths.clear();
-				allPaths = null;
-				config = null;
+		closeResources(() -> pathGroups == null, () -> {
+			waitForInitialization(true);
+			unregister(config);
+			pathGroups.forEach((key, value) -> {
+				value.clear();
+				pathGroups.remove(key);
 			});
-		}
+			pathGroups.clear();
+			pathGroups = null;
+			allPaths.clear();
+			allPaths = null;
+			config = null;
+		});		
 	}
 }

@@ -123,7 +123,6 @@ public class ClassFactory implements Component {
 	private Collection<ClassRetriever> classRetrievers;
 	private Consumer<ClassLoader> classLoaderResetter;
 	private Properties config;
-	private boolean isClosed;
 	
 	private ClassFactory(
 		ByteCodeHunter byteCodeHunter,
@@ -627,13 +626,7 @@ public class ClassFactory implements Component {
 	
 	@Override
 	public void close() {
-		boolean close = false;
-		synchronized (this) {
-			if (!isClosed) {
-				close = isClosed = Boolean.TRUE;
-			}
-		}
-		if (close) {
+		closeResources(() -> this.classRetrievers == null, () -> {
 			unregister(config);
 			closeClassRetrievers();
 			this.classRetrievers = null;
@@ -652,7 +645,7 @@ public class ClassFactory implements Component {
 			defaultClassLoaderSupplier = null;
 			classLoaderResetter = null;		
 			config = null;
-		}
+		});
 	}
 
 	public static abstract class ClassRetriever implements Component {

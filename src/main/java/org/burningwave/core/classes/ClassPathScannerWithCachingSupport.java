@@ -94,7 +94,6 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	
 	Map<String, Map<String, I>> cache;
 	Mutex.Manager mutexManager;
-	private boolean isClosed;
 	
 	ClassPathScannerWithCachingSupport(
 		Supplier<ClassHunter> classHunterSupplier,
@@ -313,13 +312,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	
 	@Override
 	public void close() {
-		boolean close = false;
-		synchronized (this) {
-			if (!isClosed) {
-				close = isClosed = Boolean.TRUE;
-			}
-		}
-		if (close) {
+		closeResources(() -> cache == null, () -> {
 			clearCache(false);
 			cache = null;
 			pathHelper = null;
@@ -330,7 +323,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			}
 			this.mutexManager = null;
 			super.close();
-		}
+		});
 	}
 	
 	@FunctionalInterface
