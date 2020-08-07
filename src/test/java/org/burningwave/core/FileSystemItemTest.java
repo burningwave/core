@@ -372,7 +372,7 @@ public class FileSystemItemTest extends BaseTest {
 		testNotEmpty(() -> 
 			componentSupplier.getPathHelper().getResource(
 				"/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar"
-			).copyAllChildrenTo(System.getProperty("user.home") + "zz/Desktop/bw-tests").findFirstInAllChildren(
+			).copyAllChildrenTo(System.getProperty("user.home") + "/Desktop/bw-tests").findFirstInAllChildren(
 				FileSystemItem.Criteria.forAllFileThat(file -> "org".equals(file.getName()))
 			).getAllChildren()
 		);
