@@ -65,6 +65,7 @@ import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
@@ -382,7 +383,7 @@ public class ComponentContainer implements ComponentSupplier {
 			LowPriorityTasksExecutor.waitForTasksEnding();
 			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
 		}
-		LowPriorityTasksExecutor.createTask((Runnable)() ->
+		Task task = LowPriorityTasksExecutor.createTask((Runnable)() ->
 			IterableObjectHelper.deepClear(components, (type, component) -> {
 				try {
 					if (!(component instanceof PathScannerClassLoader)) {
@@ -396,8 +397,9 @@ public class ComponentContainer implements ComponentSupplier {
 			})
 		).addToQueue();
 		if (wait) {
+			task.join();
 			LowPriorityTasksExecutor.waitForTasksEnding();
-			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
+			System.gc();
 		}
 		return this;
 	}
@@ -441,7 +443,7 @@ public class ComponentContainer implements ComponentSupplier {
 			LowPriorityTasksExecutor.waitForTasksEnding();
 			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
 		}
-		LowPriorityTasksExecutor.createTask(() -> {
+		Task cleaningTask = LowPriorityTasksExecutor.createTask(() -> {
 			for (ComponentContainer componentContainer : instances) {
 				componentContainer.waitForInitialization(false);
 				componentContainer.clear(wait);
@@ -449,8 +451,8 @@ public class ComponentContainer implements ComponentSupplier {
 		}).addToQueue();
 		Cache.clear();
 		if (wait) {
+			cleaningTask.join();
 			LowPriorityTasksExecutor.waitForTasksEnding();
-			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
 			System.gc();
 		}
 	}
