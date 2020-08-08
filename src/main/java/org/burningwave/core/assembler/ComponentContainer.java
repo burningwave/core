@@ -397,9 +397,33 @@ public class ComponentContainer implements ComponentSupplier {
 		).addToQueue();
 		if (wait) {
 			cleaningTask.join();
+			LowPriorityTasksExecutor.waitForTasksEnding();
 			System.gc();
 		}
 		return this;
+	}
+	
+	public static void clearAll(boolean wait) {
+		if (wait) {
+			LowPriorityTasksExecutor.waitForTasksEnding();
+			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
+		}
+		Runnable cleaningRunnable = () -> {
+			for (ComponentContainer componentContainer : instances) {
+				componentContainer.waitForInitialization(false);
+				componentContainer.clear(wait);
+			}
+		};
+		if (wait) {
+			cleaningRunnable.run();
+		} else {
+			LowPriorityTasksExecutor.createTask(cleaningRunnable).addToQueue();
+		}
+		Cache.clear();
+		if (wait) {
+			LowPriorityTasksExecutor.waitForTasksEnding();
+			System.gc();
+		}
 	}
 	
 	void close(boolean force) {
@@ -434,25 +458,6 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public static void clearAll() {
 		clearAll(false);
-	}
-	
-	public static void clearAll(boolean wait) {
-		if (wait) {
-			LowPriorityTasksExecutor.waitForTasksEnding();
-			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
-		}
-		Task cleaningTask = HighPriorityTasksExecutor.createTask(() -> {
-			for (ComponentContainer componentContainer : instances) {
-				componentContainer.waitForInitialization(false);
-				componentContainer.clear(wait);
-			}
-		}).addToQueue();
-		Cache.clear();
-		if (wait) {
-			cleaningTask.join();
-			LowPriorityTasksExecutor.waitForTasksEnding();
-			System.gc();
-		}
 	}
 	
 	public static void clearAllCaches() {
