@@ -289,12 +289,14 @@ public class QueuedTasksExecutor implements Component {
 	public QueuedTasksExecutor waitForTasksEnding(int priority) {
 		executor.setPriority(priority);
 		tasksQueue.stream().forEach(executable -> executable.changePriority(priority));
-		synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
-			if (!tasksQueue.isEmpty()) {
-				try {
-					mutexManager.getMutex("executingFinishedWaiter").wait();
-				} catch (InterruptedException exc) {
-					logWarn("Exception occurred", exc);
+		while (!tasksQueue.isEmpty()) {
+			synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
+				if (!tasksQueue.isEmpty()) {
+					try {
+						mutexManager.getMutex("executingFinishedWaiter").wait();
+					} catch (InterruptedException exc) {
+						logWarn("Exception occurred", exc);
+					}
 				}
 			}
 		}
