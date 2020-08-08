@@ -282,7 +282,7 @@ public class QueuedTasksExecutor implements Component {
 		return execute;
 	}
 	
-	public QueuedTasksExecutor waitForExecutablesEnding() {
+	public QueuedTasksExecutor waitForTasksEnding() {
 		return waitForTasksEnding(Thread.currentThread().getPriority());
 	}
 	
