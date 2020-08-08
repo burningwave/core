@@ -70,13 +70,14 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "resource"})
 public class ComponentContainer implements ComponentSupplier {
 	private static Collection<ComponentContainer> instances;
 	protected Map<Class<? extends Component>, Component> components;
 	private Supplier<Properties> propertySupplier;
 	private Properties config;
 	private QueuedTasksExecutor.Task initializerTask;
+	private boolean isUndestroyable;
 	
 	static {
 		instances = ConcurrentHashMap.newKeySet();
@@ -89,7 +90,6 @@ public class ComponentContainer implements ComponentSupplier {
 		instances.add(this);
 	}
 	
-	@SuppressWarnings("resource")
 	public final static ComponentContainer create(String configFileName) {
 		try {
 			return new ComponentContainer(() -> {
@@ -147,6 +147,11 @@ public class ComponentContainer implements ComponentSupplier {
 			new TreeMap<>(config).entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
 		);
 		listenTo(GlobalProperties);
+		return this;
+	}
+	
+	ComponentContainer markAsUndestroyable() {
+		this.isUndestroyable = true;
 		return this;
 	}
 	
@@ -393,7 +398,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	void close(boolean force) {
-		if (force || LazyHolder.getComponentContainerInstance() != this) {
+		if (force || !isUndestroyable) {
 			closeResources(() -> !instances.contains(this),  () -> {
 				waitForInitialization(true);
 				unregister(GlobalProperties);
@@ -494,7 +499,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private static class LazyHolder {
-		private static final ComponentContainer COMPONENT_CONTAINER_INSTANCE = ComponentContainer.create("burningwave.properties");
+		private static final ComponentContainer COMPONENT_CONTAINER_INSTANCE = ComponentContainer.create("burningwave.properties").markAsUndestroyable();
 		
 		private static ComponentContainer getComponentContainerInstance() {
 			return COMPONENT_CONTAINER_INSTANCE;
