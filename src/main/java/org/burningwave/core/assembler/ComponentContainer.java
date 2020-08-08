@@ -113,7 +113,6 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
-	@SuppressWarnings("resource")
 	public final static ComponentContainer create(Properties properties) {
 		try {
 			return new ComponentContainer(() -> properties).launchInit();
