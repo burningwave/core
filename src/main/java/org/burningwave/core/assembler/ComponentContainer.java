@@ -184,7 +184,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public void reInit() {
 		synchronized (components) {
-			clear();
+			clear(true);
 			config.clear();
 			launchInit();
 		}
