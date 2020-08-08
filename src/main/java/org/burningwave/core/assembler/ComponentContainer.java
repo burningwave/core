@@ -379,6 +379,7 @@ public class ComponentContainer implements ComponentSupplier {
 			this.components = new ConcurrentHashMap<>();
 		}
 		if (wait) {
+			LowPriorityTasksExecutor.waitForTasksEnding();
 			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
 		}
 		LowPriorityTasksExecutor.createTask((Runnable)() ->
@@ -396,6 +397,7 @@ public class ComponentContainer implements ComponentSupplier {
 		).addToQueue();
 		if (wait) {
 			LowPriorityTasksExecutor.waitForTasksEnding();
+			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
 		}
 		return this;
 	}
@@ -436,8 +438,8 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public static void clearAll(boolean wait) {
 		if (wait) {
-			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
 			LowPriorityTasksExecutor.waitForTasksEnding();
+			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
 		}
 		LowPriorityTasksExecutor.createTask(() -> {
 			for (ComponentContainer componentContainer : instances) {
@@ -448,6 +450,7 @@ public class ComponentContainer implements ComponentSupplier {
 		Cache.clear();
 		if (wait) {
 			LowPriorityTasksExecutor.waitForTasksEnding();
+			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
 			System.gc();
 		}
 	}
