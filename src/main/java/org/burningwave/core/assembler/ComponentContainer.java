@@ -392,7 +392,7 @@ public class ComponentContainer implements ComponentSupplier {
 			})
 		).addToQueue();
 		if (wait) {
-			LowPriorityTasksExecutor.waitForExecutablesEnding();
+			LowPriorityTasksExecutor.waitForTasksEnding();
 		}
 		return this;
 	}
@@ -433,16 +433,18 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public static void clearAll(boolean wait) {
 		if (wait) {
-			HighPriorityTasksExecutor.waitForExecutablesEnding();
-			LowPriorityTasksExecutor.waitForExecutablesEnding();
+			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
+			LowPriorityTasksExecutor.waitForTasksEnding();
 		}
-		for (ComponentContainer componentContainer : instances) {
-			componentContainer.waitForInitialization(false);
-			componentContainer.clear();
-		}
+		LowPriorityTasksExecutor.createTask(() -> {
+			for (ComponentContainer componentContainer : instances) {
+				componentContainer.waitForInitialization(false);
+				componentContainer.clear(wait);
+			}
+		});
 		Cache.clear();
 		if (wait) {
-			LowPriorityTasksExecutor.waitForExecutablesEnding();
+			LowPriorityTasksExecutor.waitForTasksEnding();
 			System.gc();
 		}
 	}
