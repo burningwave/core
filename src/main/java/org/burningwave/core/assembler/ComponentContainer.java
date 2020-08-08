@@ -446,7 +446,7 @@ public class ComponentContainer implements ComponentSupplier {
 				componentContainer.waitForInitialization(false);
 				componentContainer.clear(wait);
 			}
-		});
+		}).addToQueue();
 		Cache.clear();
 		if (wait) {
 			LowPriorityTasksExecutor.waitForTasksEnding();
