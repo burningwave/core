@@ -382,7 +382,7 @@ public class ComponentContainer implements ComponentSupplier {
 			LowPriorityTasksExecutor.waitForTasksEnding();
 			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
 		}
-		Task cleaningTask = LowPriorityTasksExecutor.createTask((Runnable)() ->
+		Task cleaningTask = HighPriorityTasksExecutor.createTask((Runnable)() ->
 			IterableObjectHelper.deepClear(components, (type, component) -> {
 				try {
 					if (!(component instanceof PathScannerClassLoader)) {
@@ -393,7 +393,7 @@ public class ComponentContainer implements ComponentSupplier {
 				} catch (Throwable exc) {
 					logError("Exception occurred while closing " + component, exc);
 				}
-			})
+			}), Thread.MIN_PRIORITY
 		).addToQueue();
 		if (wait) {
 			cleaningTask.join();
