@@ -97,7 +97,10 @@ public class QueuedTasksExecutor implements Component {
 						if (executor.getPriority() != currentExecutablePriority) {
 							executor.setPriority(currentExecutablePriority);
 						}
-						task.execute();	
+						task.execute();
+						if (executor.getPriority() != this.defaultPriority) {
+							executor.setPriority(this.defaultPriority);
+						}
 						++executedTasksCount;
 						if (executedTasksCount % 10000 == 0) {
 							logInfo("Executed {} tasks", executedTasksCount);
@@ -340,7 +343,17 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		} else {
-			createTask(() -> supended = Boolean.TRUE, priority).addToQueue().join();
+			Task suspensionTask = createTask((Runnable)() -> supended = Boolean.TRUE, priority);
+			suspensionTask.addToQueue();
+			Iterator<TaskAbst<?>> taskIterator = tasksQueue.iterator();
+			while (taskIterator.hasNext()) {
+				TaskAbst<?> task = taskIterator.next();
+				if (task != suspensionTask) {
+					task.changePriority(priority);
+				} else {
+					break;
+				}
+			}
 		}
 		return this;
 	}
@@ -369,6 +382,7 @@ public class QueuedTasksExecutor implements Component {
 				this.terminated = Boolean.TRUE;
 				logInfo("Unexecuted tasks {}", executables.size());
 				executables.clear();
+				runOnlyOnceTemporaryTargets.clear();
 			}).addToQueue();
 		} else {
 			suspend();
