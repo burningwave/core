@@ -67,7 +67,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.classes.Fields Fields;
 	public static final org.burningwave.core.iterable.Properties GlobalProperties;
-	public static final org.burningwave.core.concurrent.QueuedTasksExecutor HighPriorityTasksExecutor;
+	public static final org.burningwave.core.concurrent.QueuedTasksExecutor NormalPriorityTasksExecutor;
 	public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
 	public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;
@@ -83,7 +83,7 @@ public class StaticComponentContainer {
 	
 	static {
 		Throwables = org.burningwave.core.Throwables.create();
-		HighPriorityTasksExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("High priority tasks executor", Thread.MAX_PRIORITY, true, true);
+		NormalPriorityTasksExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("Normal priority tasks executor", Thread.NORM_PRIORITY, true, true);
 		LowPriorityTasksExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("Low priority tasks executor", Thread.MIN_PRIORITY, true, true);
 		Properties properties = new Properties();
 		properties.putAll(Configuration.DEFAULT_VALUES);
@@ -124,7 +124,7 @@ public class StaticComponentContainer {
 						ManagedLoggersRepository.logError(StaticComponentContainer.class, "Exception occurred while closing component containers", exc);
 					}
 					LowPriorityTasksExecutor.shutDown(true);
-					HighPriorityTasksExecutor.shutDown(true);
+					NormalPriorityTasksExecutor.shutDown(true);
 					FileSystemHelper.deleteTemporaryFolders();
 				})
 			);

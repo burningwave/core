@@ -40,6 +40,7 @@ import java.util.function.Supplier;
 import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
 
+@SuppressWarnings("unchecked")
 public class QueuedTasksExecutor implements Component {
 	private Map<String, Boolean> runOnlyOnceTemporaryTargets;
 	private Collection<TaskAbst<?>> tasksQueue;
@@ -416,7 +417,7 @@ public class QueuedTasksExecutor implements Component {
 		name = null;		
 	}
 	
-	static abstract class TaskAbst<E> implements ManagedLogger {
+	public static abstract class TaskAbst<E> implements ManagedLogger {
 		E executable;
 		boolean hasFinished;
 		int priority;
@@ -470,8 +471,9 @@ public class QueuedTasksExecutor implements Component {
 			hasFinished = true;
 		}
 		
-		public void changePriority(int priority) {
+		public <T extends TaskAbst<E>> T changePriority(int priority) {
 			this.priority = priority;
+			return (T)this;
 		}
 		
 		public int getPriority() {

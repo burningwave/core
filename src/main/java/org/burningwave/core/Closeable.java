@@ -43,7 +43,7 @@ public interface Closeable extends AutoCloseable {
 	}
 	
 	default public Task createCloseResoucesResources(Supplier<Boolean> isClosedPredicate, Runnable closingFunction) {
-		return LowPriorityTasksExecutor.createTaskToRunOnlyOnce(this, "closeResources", isClosedPredicate, closingFunction);
+		return LowPriorityTasksExecutor.createTaskToRunOnlyOnce(this, "closeResources", isClosedPredicate, closingFunction, Thread.MIN_PRIORITY);
 	}
 	
 	default public Task closeResources(Supplier<Boolean> isClosedPredicate, Runnable closingFunction) {

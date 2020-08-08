@@ -29,7 +29,7 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
-import static org.burningwave.core.assembler.StaticComponentContainer.HighPriorityTasksExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.NormalPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -104,7 +104,7 @@ public class PathHelper implements Component {
 		pathGroups = new ConcurrentHashMap<>();
 		allPaths = ConcurrentHashMap.newKeySet();
 		this.config = config;
-		initializerTask = HighPriorityTasksExecutor.createTaskWithCurrentThreadPriority(() -> {
+		initializerTask = NormalPriorityTasksExecutor.createTaskWithCurrentThreadPriority(() -> {
 			loadMainClassPaths();	
 			loadAllPaths();
 			initializerTask = null;

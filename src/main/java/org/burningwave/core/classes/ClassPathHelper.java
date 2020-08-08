@@ -1,7 +1,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.HighPriorityTasksExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.NormalPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 
@@ -118,7 +118,7 @@ public static class Configuration {
 								);
 								if (!classPath.refresh().exists()) {
 									pathsCreationTasks.add(
-										HighPriorityTasksExecutor.createTaskWithCurrentThreadPriority(() -> {
+										NormalPriorityTasksExecutor.createTaskWithCurrentThreadPriority(() -> {
 											FileSystemItem copy = fsObject.copyTo(classPathsBasePath.getAbsolutePath());
 											File target = new File(classPath.getAbsolutePath());
 											new File(copy.getAbsolutePath()).renameTo(target);
