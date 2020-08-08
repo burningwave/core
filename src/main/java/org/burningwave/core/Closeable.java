@@ -28,9 +28,26 @@
  */
 package org.burningwave.core;
 
-import org.burningwave.core.iterable.Properties;
+import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
 
-public interface Component extends Closeable, Cleanable, ManagedLogger, Properties.Listener, Memorizer {
+import java.util.Optional;
+import java.util.function.Supplier;
+
+import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
+
+public interface Closeable extends AutoCloseable {
 	
-
+	@Override
+	default public void close() {
+			
+	}
+	
+	default public Task createCloseResoucesResources(Supplier<Boolean> isClosedPredicate, Runnable closingFunction) {
+		return LowPriorityTasksExecutor.createTaskToRunOnlyOnce(this, "closeResources", isClosedPredicate, closingFunction);
+	}
+	
+	default public Task closeResources(Supplier<Boolean> isClosedPredicate, Runnable closingFunction) {
+		return Optional.ofNullable(createCloseResoucesResources(isClosedPredicate, closingFunction)).map(task -> task.addToQueue()).orElseGet(() -> null);
+	}
+	
 }

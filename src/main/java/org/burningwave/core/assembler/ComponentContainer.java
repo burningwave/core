@@ -28,12 +28,12 @@
  */
 package org.burningwave.core.assembler;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
-import static org.burningwave.core.assembler.StaticComponentContainer.HighPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
+import static org.burningwave.core.assembler.StaticComponentContainer.HighPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -41,9 +41,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -72,14 +70,14 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "resource"})
 public class ComponentContainer implements ComponentSupplier {
 	private static Collection<ComponentContainer> instances;
 	protected Map<Class<? extends Component>, Component> components;
 	private Supplier<Properties> propertySupplier;
 	private Properties config;
 	private QueuedTasksExecutor.Task initializerTask;
-	boolean isClosed;
+	private boolean isUndestroyable;
 	
 	static {
 		instances = ConcurrentHashMap.newKeySet();
@@ -92,7 +90,6 @@ public class ComponentContainer implements ComponentSupplier {
 		instances.add(this);
 	}
 	
-	@SuppressWarnings("resource")
 	public final static ComponentContainer create(String configFileName) {
 		try {
 			return new ComponentContainer(() -> {
@@ -153,6 +150,11 @@ public class ComponentContainer implements ComponentSupplier {
 		return this;
 	}
 	
+	ComponentContainer markAsUndestroyable() {
+		this.isUndestroyable = true;
+		return this;
+	}
+	
 	@Override
 	public void receiveNotification(Properties properties, Event event, Object key, Object value) {
 		if (event == Event.PUT) {
@@ -163,12 +165,13 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private ComponentContainer launchInit() {
-		initializerTask = HighPriorityTasksExecutor.add(() -> {
+		QueuedTasksExecutor.Task initializerTask = this.initializerTask = HighPriorityTasksExecutor.createTask(() -> {
 			synchronized (components) {
 				this.init();
 				this.initializerTask = null;
 			}
 		});
+		initializerTask.addToQueue();
 		return this;
 	}
 	
@@ -366,49 +369,47 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public ComponentContainer clear() {
-		Iterator<Entry<Class<? extends Component>, Component>> componentsItr =
-			components.entrySet().iterator();
-		synchronized (components) {
-			while (componentsItr.hasNext()) {
-				Entry<Class<? extends Component>, Component> entry = componentsItr.next();
+		return clear(false);
+	}
+	
+	
+	public ComponentContainer clear(boolean wait) {
+		Map<Class<? extends Component>, Component> components = this.components;
+		synchronized (this) {
+			this.components = new ConcurrentHashMap<>();
+		}
+		LowPriorityTasksExecutor.createTask((Runnable)() ->
+			IterableObjectHelper.deepClear(components, (type, component) -> {
 				try {
-					Component component = entry.getValue();
 					if (!(component instanceof PathScannerClassLoader)) {
-						entry.getValue().close();
+						component.close();
 					} else {
 						((PathScannerClassLoader)component).unregister(this, true);
-					}
-					
+					}					
 				} catch (Throwable exc) {
-					logError("Exception occurred while closing " + entry.getValue(), exc);
+					logError("Exception occurred while closing " + component, exc);
 				}
-			}
-			components.clear();
+			})
+		).addToQueue();
+		if (wait) {
+			LowPriorityTasksExecutor.waitForTasksEnding();
 		}
 		return this;
 	}
 	
 	void close(boolean force) {
-		if (force || LazyHolder.getComponentContainerInstance() != this) {
-			boolean close = false;
-			synchronized (this) {
-				if (!isClosed) {
-					close = isClosed = Boolean.TRUE;
-				}
-			}
-			if (close) {
+		if (force || !isUndestroyable) {
+			closeResources(() -> !instances.contains(this),  () -> {
+				waitForInitialization(true);
+				unregister(GlobalProperties);
+				unregister(config);
 				instances.remove(this);
-				LowPriorityTasksExecutor.add(() -> {
-					waitForInitialization(true);
-					unregister(GlobalProperties);
-					unregister(config);
-					clear();			
-					components = null;
-					propertySupplier = null;
-					initializerTask = null;
-					config = null;					
-				});
-			}
+				clear();			
+				components = null;
+				propertySupplier = null;
+				initializerTask = null;
+				config = null;					
+			});
 		} else {
 			throw Throwables.toRuntimeException("Could not close singleton instance " + LazyHolder.COMPONENT_CONTAINER_INSTANCE);
 		}
@@ -427,12 +428,25 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public static void clearAll() {
-		for (ComponentContainer componentContainer : instances) {
-			componentContainer.waitForInitialization(false);
-			componentContainer.clear();
+		clearAll(false);
+	}
+	
+	public static void clearAll(boolean wait) {
+		if (wait) {
+			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
+			LowPriorityTasksExecutor.waitForTasksEnding();
 		}
+		LowPriorityTasksExecutor.createTask(() -> {
+			for (ComponentContainer componentContainer : instances) {
+				componentContainer.waitForInitialization(false);
+				componentContainer.clear(wait);
+			}
+		});
 		Cache.clear();
-		System.gc();
+		if (wait) {
+			LowPriorityTasksExecutor.waitForTasksEnding();
+			System.gc();
+		}
 	}
 	
 	public static void clearAllCaches() {
@@ -487,7 +501,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private static class LazyHolder {
-		private static final ComponentContainer COMPONENT_CONTAINER_INSTANCE = ComponentContainer.create("burningwave.properties");
+		private static final ComponentContainer COMPONENT_CONTAINER_INSTANCE = ComponentContainer.create("burningwave.properties").markAsUndestroyable();
 		
 		private static ComponentContainer getComponentContainerInstance() {
 			return COMPONENT_CONTAINER_INSTANCE;

@@ -118,12 +118,12 @@ public static class Configuration {
 								);
 								if (!classPath.refresh().exists()) {
 									pathsCreationTasks.add(
-										HighPriorityTasksExecutor.addWithCurrentThreadPriority(() -> {
+										HighPriorityTasksExecutor.createTaskWithCurrentThreadPriority(() -> {
 											FileSystemItem copy = fsObject.copyTo(classPathsBasePath.getAbsolutePath());
 											File target = new File(classPath.getAbsolutePath());
 											new File(copy.getAbsolutePath()).renameTo(target);
 											return Paths.clean(target.getAbsolutePath());
-										})
+										}).addToQueue()
 									);
 								}
 								classPaths.add(
@@ -203,13 +203,15 @@ public static class Configuration {
 	
 	@Override
 	public void close() {
-		unregister(config);
-		FileSystemHelper.deleteOnExit(classPathsBasePath.getAbsolutePath());
-		classPathsBasePath.destroy();
-		classPathsBasePath = null;
-		classPathHunter = null;
-		config = null;
-		instanceId = null;
+		closeResources(() -> classPathsBasePath == null,  () -> {
+			unregister(config);
+			FileSystemHelper.deleteOnExit(classPathsBasePath.getAbsolutePath());
+			classPathsBasePath.destroy();
+			classPathsBasePath = null;
+			classPathHunter = null;
+			config = null;
+			instanceId = null;				
+		});
 	}
 	
 }
