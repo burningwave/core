@@ -383,7 +383,7 @@ public class ComponentContainer implements ComponentSupplier {
 			LowPriorityTasksExecutor.waitForTasksEnding();
 			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
 		}
-		Task task = LowPriorityTasksExecutor.createTask((Runnable)() ->
+		Task cleaningTask = LowPriorityTasksExecutor.createTask((Runnable)() ->
 			IterableObjectHelper.deepClear(components, (type, component) -> {
 				try {
 					if (!(component instanceof PathScannerClassLoader)) {
@@ -397,8 +397,7 @@ public class ComponentContainer implements ComponentSupplier {
 			})
 		).addToQueue();
 		if (wait) {
-			task.join();
-			LowPriorityTasksExecutor.waitForTasksEnding();
+			cleaningTask.join();
 			System.gc();
 		}
 		return this;
@@ -452,7 +451,6 @@ public class ComponentContainer implements ComponentSupplier {
 		Cache.clear();
 		if (wait) {
 			cleaningTask.join();
-			LowPriorityTasksExecutor.waitForTasksEnding();
 			System.gc();
 		}
 	}
