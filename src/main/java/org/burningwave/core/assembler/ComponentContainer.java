@@ -378,6 +378,9 @@ public class ComponentContainer implements ComponentSupplier {
 		synchronized (this) {
 			this.components = new ConcurrentHashMap<>();
 		}
+		if (wait) {
+			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
+		}
 		LowPriorityTasksExecutor.createTask((Runnable)() ->
 			IterableObjectHelper.deepClear(components, (type, component) -> {
 				try {
