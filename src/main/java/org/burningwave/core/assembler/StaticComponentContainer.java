@@ -74,6 +74,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 	public static final org.burningwave.core.classes.Members Members;
 	public static final org.burningwave.core.classes.Methods Methods;
+	public static final org.burningwave.core.Objects Objects;
 	public static final org.burningwave.core.Strings.Paths Paths;
 	public static final org.burningwave.core.io.Resources Resources;
 	public static final org.burningwave.core.io.Streams Streams;
@@ -83,6 +84,7 @@ public class StaticComponentContainer {
 	
 	static {
 		Throwables = org.burningwave.core.Throwables.create();
+		Objects = org.burningwave.core.Objects.create();
 		NormalPriorityTasksExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("Normal priority tasks executor", Thread.NORM_PRIORITY, true, true);
 		LowPriorityTasksExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("Low priority tasks executor", Thread.MIN_PRIORITY, true, true);
 		Properties properties = new Properties();
