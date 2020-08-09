@@ -28,25 +28,35 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
+import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.StaticComponentContainer;
+import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
 
 public class FileSystemHelper implements Component {
 	private File baseTemporaryFolder;
 	private Set<File> temporaryFolders;
+	private String id;
 	
 	private FileSystemHelper() {
+		id = UUID.randomUUID().toString();
 		temporaryFolders = ConcurrentHashMap.newKeySet();	
 	}
 	
@@ -55,10 +65,10 @@ public class FileSystemHelper implements Component {
 	}
 	
 	public void clearMainTemporaryFolder() {
-		delete(Arrays.asList(getOrCreateMainTemporaryFolder().listFiles()));
+		delete(Arrays.asList(getOrCreateMainTemporaryFolder().listFiles()), false);
 	}
 	
-	private File getOrCreateMainTemporaryFolder() {
+	public File getOrCreateMainTemporaryFolder() {
 		if (baseTemporaryFolder != null) {
 			return baseTemporaryFolder;
 		}
@@ -72,6 +82,14 @@ public class FileSystemHelper implements Component {
 			toDelete.delete();
 			return folder;
 		});
+	}
+	
+	public File getOrCreateFilesToBeDeletedFile() {
+		File filesToBeDeleted = new File(Paths.clean(getOrCreateMainTemporaryFolder().getAbsolutePath() + "/" + id + "_files.to-be-deleted"));
+		if (!filesToBeDeleted.exists()) {
+			ThrowingRunnable.run(() -> filesToBeDeleted.createNewFile());
+		}
+		return filesToBeDeleted;
 	}
 	
 	public File createTemporaryFolder(String folderName) {
@@ -98,11 +116,17 @@ public class FileSystemHelper implements Component {
 		});
 	}
 	
-	public void delete(Collection<File> files) {
+	public void delete(Collection<File> files, boolean markToBeDeletedOnNextExecution) {
 		if (files != null) {
 			Iterator<File> itr = files.iterator();
 			while(itr.hasNext()) {
-				delete((File)itr.next());
+				File file = itr.next();
+				FileSystemItem fileSystemItem = FileSystemItem.ofPath(file.getAbsolutePath());
+				if (fileSystemItem.exists()) {
+					if (!delete(file) && markToBeDeletedOnNextExecution) {
+						markToBeDeletedOnNextExecution(file);
+					}
+				};
 			}
 		}
 	}
@@ -133,7 +157,16 @@ public class FileSystemHelper implements Component {
 		    }
 		}
 		file.deleteOnExit();
-		
+	}
+	
+	public void markToBeDeletedOnNextExecution(File file) {
+		LowPriorityTasksExecutor.createTask(() -> {
+			Files.write(
+				java.nio.file.Paths.get(Paths.clean(getOrCreateFilesToBeDeletedFile().getAbsolutePath())),
+				(Paths.clean(file.getAbsolutePath() + "\n").getBytes()), 
+				StandardOpenOption.APPEND
+			);
+		}).addToQueue();
 	}
 	
 	public boolean delete(String absolutePath) {
@@ -144,20 +177,41 @@ public class FileSystemHelper implements Component {
 		deleteOnExit(new File(absolutePath));	
 	}
 	
-	public void deleteTemporaryFolders() {
-		delete(temporaryFolders);
+	public void deleteTemporaryFolders(boolean markToBeDeletedOnNextExecution) {
+		delete(temporaryFolders, markToBeDeletedOnNextExecution);
 		temporaryFolders.clear();
 	}
 	
 	@Override
 	public void close() {
 		if (this != StaticComponentContainer.FileSystemHelper) {
-			deleteTemporaryFolders();
+			deleteTemporaryFolders(false);
 			baseTemporaryFolder = null;
 			temporaryFolders = null;
+			id = null;
 		} else {
 			throw Throwables.toRuntimeException("Could not close singleton instance " + this);
 		}
 	}
 
+	public void deleteUndeletedFoldersOfPreviousExecution() {
+		LowPriorityTasksExecutor.createTask(() -> {
+			Set<String> absolutePathsToBeDeleted = new HashSet<>();
+			for (FileSystemItem child : FileSystemItem.ofPath(getOrCreateMainTemporaryFolder().getAbsolutePath()).getChildren()) {
+				if ("to-be-deleted".equals(child.getExtension())) {
+					String filesToBeDeleted = Streams.getAsStringBuffer(
+						child.toInputStream()
+					).toString();
+					for (String fileSystemItemAbsolutePath : filesToBeDeleted.split("\n")) {
+						absolutePathsToBeDeleted.add(fileSystemItemAbsolutePath);
+					}
+					absolutePathsToBeDeleted.add(child.getAbsolutePath());
+				}
+			};
+			for (String absolutePathToBeDeleted : absolutePathsToBeDeleted) {
+				delete(absolutePathToBeDeleted);
+			}
+		}).addToQueue();
+	}
+	
 }

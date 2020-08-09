@@ -31,10 +31,10 @@ package org.burningwave.core.assembler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
-import static org.burningwave.core.assembler.StaticComponentContainer.NormalPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.NormalPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -66,6 +66,7 @@ import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
+import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
@@ -382,7 +383,7 @@ public class ComponentContainer implements ComponentSupplier {
 			LowPriorityTasksExecutor.waitForTasksEnding();
 			NormalPriorityTasksExecutor.waitForTasksEnding();
 		}
-		Task cleaningTask = LowPriorityTasksExecutor.createTask((Runnable)() ->
+		Task cleaningTask = LowPriorityTasksExecutor.createTask((ThrowingRunnable<?>)() ->
 			IterableObjectHelper.deepClear(components, (type, component) -> {
 				try {
 					if (!(component instanceof PathScannerClassLoader)) {
@@ -396,7 +397,7 @@ public class ComponentContainer implements ComponentSupplier {
 			})
 		).setPriority(Thread.MIN_PRIORITY).addToQueue();
 		if (wait) {
-			cleaningTask.join();
+			LowPriorityTasksExecutor.waitFor(cleaningTask.setPriorityToCurrentThreadPriority());
 			LowPriorityTasksExecutor.waitForTasksEnding();
 			System.gc();
 		}
@@ -408,14 +409,14 @@ public class ComponentContainer implements ComponentSupplier {
 			LowPriorityTasksExecutor.waitForTasksEnding();
 			NormalPriorityTasksExecutor.waitForTasksEnding();
 		}
-		Runnable cleaningRunnable = () -> {
+		ThrowingRunnable<?> cleaningRunnable = () -> {
 			for (ComponentContainer componentContainer : instances) {
 				componentContainer.waitForInitialization(false);
 				componentContainer.clear(wait);
 			}
 		};
 		if (wait) {
-			cleaningRunnable.run();
+			ThrowingRunnable.run(() -> cleaningRunnable.run());
 		} else {
 			LowPriorityTasksExecutor.createTask(cleaningRunnable).setPriority(Thread.MIN_PRIORITY).addToQueue();
 		}

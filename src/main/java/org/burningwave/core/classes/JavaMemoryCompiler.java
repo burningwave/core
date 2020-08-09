@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
@@ -556,7 +555,6 @@ public class JavaMemoryCompiler implements Component {
 	public void close() {
 		closeResources(() -> compiledClassesRepository == null, () -> {
 			unregister(config);
-			FileSystemHelper.deleteOnExit(compiledClassesRepository.getAbsolutePath());
 			compiledClassesRepository.destroy();
 			compiledClassesRepository = null;
 			compiler = null;

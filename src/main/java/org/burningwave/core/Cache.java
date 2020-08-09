@@ -72,13 +72,17 @@ public class Cache implements Component {
 		pathForFileSystemItems = new PathForResources<FileSystemItem>(1L, fileSystemItem -> fileSystemItem) {
 			@Override
 			void destroy(String path, FileSystemItem item) {
-				item.destroy();
+				LowPriorityTasksExecutor.createTask(() -> 
+					item.destroy()
+				).setPriority(Thread.MIN_PRIORITY).addToQueue();
 			}
 		};
 		pathForIterableZipContainers = new PathForResources<IterableZipContainer>(1L, zipFileContainer -> zipFileContainer){
 			@Override
 			void destroy(String path, IterableZipContainer item) {
-				item.destroy();				
+				LowPriorityTasksExecutor.createTask(() -> 
+					item.destroy()
+				).setPriority(Thread.MIN_PRIORITY).addToQueue();			
 			};
 		};
 		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);
@@ -296,12 +300,7 @@ public class Cache implements Component {
 			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
 			R item = nestedPartition.remove(path);
 			if (destroy && item != null) {
-				String finalPath = path;
-				//LowPriorityTasksExecutor.createTask(() -> 
-					destroy(finalPath, item)
-					//, Thread.MIN_PRIORITY
-				//).addToQueue()
-				;
+				destroy(path, item);
 			}
 			return item;
 		}

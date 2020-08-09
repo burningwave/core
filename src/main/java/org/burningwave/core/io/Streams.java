@@ -30,9 +30,11 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.math.BigDecimal;
@@ -160,6 +162,24 @@ public class Streams implements Component {
 			copy(inputStream, output);
 			return output.toByteBuffer();
 		}
+	}
+	
+	public StringBuffer getAsStringBuffer(InputStream inputStream) {
+		return ThrowingSupplier.get(() -> {
+			try (BufferedReader reader = new BufferedReader(
+					new InputStreamReader(
+						inputStream
+					)
+				)
+			) {
+				StringBuffer result = new StringBuffer();
+				String sCurrentLine;
+				while ((sCurrentLine = reader.readLine()) != null) {
+					result.append(sCurrentLine + "\n");
+				}
+				return result;
+			}
+		});
 	}
 	
 	public long copy(InputStream input, OutputStream output) {

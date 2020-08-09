@@ -301,7 +301,7 @@ public class FileSystemItem implements ManagedLogger {
 	public String getExtension() {
 		String extension = null;
 		String name = getName();
-		if (name.contains(".")) {
+		if (!isFolder() && name.contains(".")) {
 			extension = name.substring(name.lastIndexOf(".") + 1);
 		}
 		return extension;

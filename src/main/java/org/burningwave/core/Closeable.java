@@ -35,6 +35,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
+import org.burningwave.core.function.ThrowingRunnable;
 
 public interface Closeable extends AutoCloseable {
 	
@@ -43,11 +44,11 @@ public interface Closeable extends AutoCloseable {
 			
 	}
 	
-	default public Task createCloseResoucesResources(Supplier<Boolean> isClosedPredicate, Runnable closingFunction) {
+	default public Task createCloseResoucesResources(Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
 		return LowPriorityTasksExecutor.createTask(closingFunction).runOnlyOnce(Objects.getId(this) + "->" + "closeResources", isClosedPredicate);
 	}
 	
-	default public Task closeResources(Supplier<Boolean> isClosedPredicate, Runnable closingFunction) {
+	default public Task closeResources(Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
 		return Optional.ofNullable(createCloseResoucesResources(isClosedPredicate, closingFunction).addToQueue()).orElseGet(() -> null);
 	}
 	

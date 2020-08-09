@@ -32,6 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,13 +41,15 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.function.ThrowingRunnable;
+import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("unchecked")
 public class QueuedTasksExecutor implements Component {
 	private final static Map<String, TaskAbst<?, ?>> runOnlyOnceTasksToBeExecuted;
 	private Mutex.Manager mutexManager;
 	private String id;
-	private Collection<TaskAbst<?, ?>> tasksQueue;
+	private List<TaskAbst<?, ?>> tasksQueue;
 	private TaskAbst<?, ?> currentTask;
 	private Boolean supended;
 	
@@ -116,7 +119,7 @@ public class QueuedTasksExecutor implements Component {
 							executor.setPriority(this.defaultPriority);
 						}
 						++executedTasksCount;
-						if (executedTasksCount % 10000 == 0) {
+						if (executedTasksCount % 100 == 0) {
 							logInfo("Executed {} tasks", executedTasksCount);
 						}
 						synchronized(getMutex("suspensionCaller")) {
@@ -177,7 +180,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 	}
 	
-	public <T> ProducerTask<T> createTask(Supplier<T> executable) {
+	public <T> ProducerTask<T> createTask(ThrowingSupplier<T, ? extends Throwable> executable) {
 		ProducerTask<T> task = new ProducerTask<T>(executable, this.defaultPriority, this.executor) {
 			public ProducerTask<T> addToQueue() {
 				return add(this);
@@ -186,7 +189,7 @@ public class QueuedTasksExecutor implements Component {
 		return task;
 	}
 	
-	public Task createTask(Runnable executable) {
+	public Task createTask(ThrowingRunnable<? extends Throwable> executable) {
 		Task task = new Task(executable, this.defaultPriority, this.executor) {
 			public Task addToQueue() {
 				return add(this);
@@ -215,6 +218,16 @@ public class QueuedTasksExecutor implements Component {
 			return !task.hasBeenExecutedChecker.get() && runOnlyOnceTasksToBeExecuted.putIfAbsent(task.id, task) == null;
 		}
 		return true;
+	}
+	
+	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task) {
+		return waitFor(task, task.getPriority());
+	}
+	
+	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, int priority) {
+		changePriorityToAllTaskBefore(task, priority);
+		task.join0(false);
+		return this;
 	}
 	
 	public QueuedTasksExecutor waitForTasksEnding() {
@@ -274,19 +287,30 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		} else {
-			Task suspensionTask = createTask((Runnable)() -> supended = Boolean.TRUE).setPriority(priority);
-			suspensionTask.addToQueue();
-			Iterator<TaskAbst<?, ?>> taskIterator = tasksQueue.iterator();
-			while (taskIterator.hasNext()) {
-				TaskAbst<?, ?> task = taskIterator.next();
-				if (task != suspensionTask) {
-					task.setPriority(priority);
-				} else {
-					break;
-				}
-			}
+			changePriorityToAllTaskBefore(createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).setPriority(priority).addToQueue(), priority);
 		}
 		return this;
+	}
+
+	<E, T extends TaskAbst<E, T>> boolean changePriorityToAllTaskBefore(T task, int priority) {
+		int taskIndex = tasksQueue.indexOf(task);
+		if (taskIndex != -1) {
+			Iterator<TaskAbst<?, ?>> taskIterator = tasksQueue.iterator();
+			int idx = 0;
+			while (taskIterator.hasNext()) {
+				TaskAbst<?, ?> currentIterated = taskIterator.next();
+				if (idx < taskIndex) {					
+					if (currentIterated != task) {
+						task.setPriority(priority);
+					} else {
+						break;
+					}
+				}
+				idx++;
+			}
+			return true;
+		}
+		return false;
 	}
 
 	public QueuedTasksExecutor resume() {
@@ -410,7 +434,7 @@ public class QueuedTasksExecutor implements Component {
 			}
 		}
 		
-		abstract void execute0();
+		abstract void execute0() throws Throwable;
 		
 		void markHasFinished() {
 			hasFinished = true;
@@ -448,15 +472,15 @@ public class QueuedTasksExecutor implements Component {
 		
 	}
 	
-	public static abstract class Task extends TaskAbst<Runnable, Task> {
+	public static abstract class Task extends TaskAbst<ThrowingRunnable<? extends Throwable>, Task> {
 		
-		Task(Runnable executable, int priority, Thread queuedTasksExecutorThread) {
+		Task(ThrowingRunnable<? extends Throwable> executable, int priority, Thread queuedTasksExecutorThread) {
 			super(priority, queuedTasksExecutorThread);
 			this.executable = executable;
 		}
 
 		@Override
-		void execute0() {
+		void execute0() throws Throwable {
 			this.executable.run();			
 		}
 		
@@ -473,16 +497,16 @@ public class QueuedTasksExecutor implements Component {
 		
 	}
 	
-	public static abstract class ProducerTask<T> extends TaskAbst<Supplier<T>, ProducerTask<T>> {
+	public static abstract class ProducerTask<T> extends TaskAbst<ThrowingSupplier<T, ? extends Throwable>, ProducerTask<T>> {
 		private T result;
 		
-		ProducerTask(Supplier<T> executable, int priority, Thread queuedTasksExecutorThread) {
+		ProducerTask(ThrowingSupplier<T, ? extends Throwable> executable, int priority, Thread queuedTasksExecutorThread) {
 			super(priority, queuedTasksExecutorThread);
 			this.executable = executable;
 		}		
 		
 		@Override
-		void execute0() {
+		void execute0() throws Throwable {
 			result = executable.get();			
 		}
 		

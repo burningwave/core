@@ -205,7 +205,7 @@ public static class Configuration {
 	public void close() {
 		closeResources(() -> classPathsBasePath == null,  () -> {
 			unregister(config);
-			FileSystemHelper.deleteOnExit(classPathsBasePath.getAbsolutePath());
+			FileSystemHelper.deleteOnExit(getOrCreateTemporaryFolder());
 			classPathsBasePath.destroy();
 			classPathsBasePath = null;
 			classPathHunter = null;
