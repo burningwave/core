@@ -36,16 +36,19 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.StaticComponentContainer;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
@@ -116,7 +119,7 @@ public class FileSystemHelper implements Component {
 		});
 	}
 	
-	public void delete(Collection<File> files, boolean markToBeDeletedOnNextExecution) {
+	public QueuedTasksExecutor.Task delete(Collection<File> files, boolean markToBeDeletedOnNextExecution) {
 		if (files != null) {
 			Iterator<File> itr = files.iterator();
 			while(itr.hasNext()) {
@@ -124,11 +127,12 @@ public class FileSystemHelper implements Component {
 				FileSystemItem fileSystemItem = FileSystemItem.ofPath(file.getAbsolutePath());
 				if (fileSystemItem.exists()) {
 					if (!delete(file) && markToBeDeletedOnNextExecution) {
-						markToBeDeletedOnNextExecution(file);
+						return markToBeDeletedOnNextExecution(file);
 					}
 				};
 			}
 		}
+		return null;
 	}
 	
 	public boolean delete(File file) {
@@ -159,8 +163,8 @@ public class FileSystemHelper implements Component {
 		file.deleteOnExit();
 	}
 	
-	public void markToBeDeletedOnNextExecution(File file) {
-		LowPriorityTasksExecutor.createTask(() -> {
+	public QueuedTasksExecutor.Task markToBeDeletedOnNextExecution(File file) {
+		return LowPriorityTasksExecutor.createTask(() -> {
 			Files.write(
 				java.nio.file.Paths.get(Paths.clean(getOrCreateFilesToBeDeletedFile().getAbsolutePath())),
 				(Paths.clean(file.getAbsolutePath() + "\n").getBytes()), 
@@ -177,21 +181,14 @@ public class FileSystemHelper implements Component {
 		deleteOnExit(new File(absolutePath));	
 	}
 	
-	public void deleteTemporaryFolders(boolean markToBeDeletedOnNextExecution) {
-		delete(temporaryFolders, markToBeDeletedOnNextExecution);
-		temporaryFolders.clear();
-	}
-	
-	@Override
-	public void close() {
-		if (this != StaticComponentContainer.FileSystemHelper) {
-			deleteTemporaryFolders(false);
-			baseTemporaryFolder = null;
-			temporaryFolders = null;
-			id = null;
-		} else {
-			throw Throwables.toRuntimeException("Could not close singleton instance " + this);
-		}
+	public QueuedTasksExecutor.Task deleteTemporaryFolders(boolean markToBeDeletedOnNextExecution) {
+		QueuedTasksExecutor.Task deleteFoldersTask = delete(temporaryFolders, markToBeDeletedOnNextExecution);
+		return LowPriorityTasksExecutor.createTask(() -> {
+			if (deleteFoldersTask != null) {
+				deleteFoldersTask.join();
+			}
+			temporaryFolders.clear();
+		}).addToQueue();
 	}
 
 	public void deleteUndeletedFoldersOfPreviousExecution() {
@@ -209,9 +206,32 @@ public class FileSystemHelper implements Component {
 				}
 			};
 			for (String absolutePathToBeDeleted : absolutePathsToBeDeleted) {
-				delete(absolutePathToBeDeleted);
+				if (!delete(absolutePathToBeDeleted)) {
+					markToBeDeletedOnNextExecution(new File(absolutePathToBeDeleted));
+				}
 			}
 		}).addToQueue();
+	}
+	
+	@Override
+	public void close() {
+		if (this != StaticComponentContainer.FileSystemHelper || 
+			Thread.currentThread().getStackTrace()[2].getClassName().equals(StaticComponentContainer.class.getName())
+		) {	
+			List<QueuedTasksExecutor.Task> closingTasks = new ArrayList<>();
+			closingTasks.add(closeResources(() -> id == null, () -> {
+				closingTasks.add(deleteTemporaryFolders(true));
+				id = null;
+			}));
+			if (closingTasks.get(0) != null) {
+				closingTasks.get(0).join();
+				closingTasks.get(1).join();
+				baseTemporaryFolder = null;
+				temporaryFolders = null;
+			}
+		} else {
+			throw Throwables.toRuntimeException("Could not close singleton instance " + this);
+		}
 	}
 	
 }

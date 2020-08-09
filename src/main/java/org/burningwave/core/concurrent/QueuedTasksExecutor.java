@@ -402,13 +402,13 @@ public class QueuedTasksExecutor implements Component {
 			return hasFinished;
 		}
 		
-		void join0(boolean ignoreThread) {
-			if (!hasFinished() && ((ignoreThread) ||
-				(!ignoreThread && Thread.currentThread() != queuedTasksExecutorThread && queuedTasksExecutorThread != null))
+		void join0(boolean ignoreThreadCheck) {
+			if (!hasFinished() && ((ignoreThreadCheck) ||
+				(!ignoreThreadCheck && Thread.currentThread() != queuedTasksExecutorThread && queuedTasksExecutorThread != null))
 			) {
 				synchronized (this) {
-					if (!hasFinished() && ((ignoreThread) ||
-						(!ignoreThread && Thread.currentThread() != queuedTasksExecutorThread && queuedTasksExecutorThread != null))) {
+					if (!hasFinished() && ((ignoreThreadCheck) ||
+						(!ignoreThreadCheck && Thread.currentThread() != queuedTasksExecutorThread && queuedTasksExecutorThread != null))) {
 						try {
 							wait();
 						} catch (InterruptedException exc) {
@@ -490,10 +490,7 @@ public class QueuedTasksExecutor implements Component {
 		
 		public void join() {
 			join0(false);
-		}	
-		
-
-		
+		}
 		
 	}
 	
