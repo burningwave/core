@@ -104,11 +104,11 @@ public class PathHelper implements Component {
 		pathGroups = new ConcurrentHashMap<>();
 		allPaths = ConcurrentHashMap.newKeySet();
 		this.config = config;
-		initializerTask = NormalPriorityTasksExecutor.createTaskWithCurrentThreadPriority(() -> {
+		initializerTask = NormalPriorityTasksExecutor.createTask(() -> {
 			loadMainClassPaths();	
 			loadAllPaths();
 			initializerTask = null;
-		});
+		}).setPriorityToCurrentThreadPriority();
 		initializerTask.addToQueue();
 		listenTo(config);
 	}

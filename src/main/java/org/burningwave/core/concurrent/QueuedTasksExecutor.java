@@ -33,6 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Supplier;
@@ -42,11 +43,13 @@ import org.burningwave.core.ManagedLogger;
 
 @SuppressWarnings("unchecked")
 public class QueuedTasksExecutor implements Component {
-	private Map<String, Boolean> runOnlyOnceTemporaryTargets;
-	private Collection<TaskAbst<?>> tasksQueue;
-	private TaskAbst<?> currentTask;
-	private Boolean supended;
+	private final static Map<String, TaskAbst<?, ?>> runOnlyOnceTasksToBeExecuted;
 	private Mutex.Manager mutexManager;
+	private String id;
+	private Collection<TaskAbst<?, ?>> tasksQueue;
+	private TaskAbst<?, ?> currentTask;
+	private Boolean supended;
+	
 	Thread executor;
 	private int defaultPriority;
 	private long executedTasksCount;
@@ -55,21 +58,29 @@ public class QueuedTasksExecutor implements Component {
 	private Boolean terminated;
 	private Runnable initializer;
 	
+	static {
+		runOnlyOnceTasksToBeExecuted = new ConcurrentHashMap<>();;
+	}
+	
 	private QueuedTasksExecutor(String name, int defaultPriority, boolean isDaemon) {
 		mutexManager = Mutex.Manager.create(this);
 		tasksQueue = new CopyOnWriteArrayList<>();
+		id = UUID.randomUUID().toString();
 		initializer = () -> {
 			this.name = name;
 			this.defaultPriority = defaultPriority;
 			this.isDaemon = isDaemon;
 			init0();
-		};
-		runOnlyOnceTemporaryTargets = new ConcurrentHashMap<>();
+		};		
 		init();
 	}
 	
 	void init() {
 		initializer.run();
+	}
+	
+	private Object getMutex(String name) {
+		return mutexManager.getMutex(id + name);
 	}
 	
 	void init0() {		
@@ -79,25 +90,28 @@ public class QueuedTasksExecutor implements Component {
 		executor = new Thread(() -> {
 			while (!terminated) {
 				if (!tasksQueue.isEmpty()) {
-					Iterator<TaskAbst<?>> taskIterator = tasksQueue.iterator();
+					Iterator<TaskAbst<?, ?>> taskIterator = tasksQueue.iterator();
 					while (taskIterator.hasNext()) {
-						synchronized(mutexManager.getMutex("resumeCaller")) {
+						synchronized(getMutex("resumeCaller")) {
 							try {
 								if (supended) {
-									mutexManager.getMutex("resumeCaller").wait();
+									getMutex("resumeCaller").wait();
 									break;
 								}
 							} catch (InterruptedException exc) {
 								logWarn("Exception occurred", exc);
 							}
 						}
-						TaskAbst<?> task =	this.currentTask = taskIterator.next();
+						TaskAbst<?, ?> task =	this.currentTask = taskIterator.next();
 						tasksQueue.remove(task);
 						int currentExecutablePriority = task.getPriority();
 						if (executor.getPriority() != currentExecutablePriority) {
 							executor.setPriority(currentExecutablePriority);
 						}
 						task.execute();
+						if (task.runOnlyOnce) {
+							runOnlyOnceTasksToBeExecuted.remove(task.id);
+						}
 						if (executor.getPriority() != this.defaultPriority) {
 							executor.setPriority(this.defaultPriority);
 						}
@@ -105,21 +119,21 @@ public class QueuedTasksExecutor implements Component {
 						if (executedTasksCount % 10000 == 0) {
 							logInfo("Executed {} tasks", executedTasksCount);
 						}
-						synchronized(mutexManager.getMutex("suspensionCaller")) {
-							mutexManager.getMutex("suspensionCaller").notifyAll();
+						synchronized(getMutex("suspensionCaller")) {
+							getMutex("suspensionCaller").notifyAll();
 						}
 						if (terminated) {
 							break;
 						}
 					}
 				} else {
-					synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
-						mutexManager.getMutex("executingFinishedWaiter").notifyAll();
+					synchronized(getMutex("executingFinishedWaiter")) {
+						getMutex("executingFinishedWaiter").notifyAll();
 					}
-					synchronized(mutexManager.getMutex("executableCollectionFiller")) {
+					synchronized(getMutex("executableCollectionFiller")) {
 						if (tasksQueue.isEmpty()) {
 							try {
-								mutexManager.getMutex("executableCollectionFiller").wait();
+								getMutex("executableCollectionFiller").wait();
 							} catch (InterruptedException exc) {
 								logWarn("Exception occurred", exc);
 							}
@@ -163,127 +177,44 @@ public class QueuedTasksExecutor implements Component {
 		}
 	}
 	
-	public <T> ProducerTask<T> createTaskWithCurrentThreadPriority(Supplier<T> executable) {
-		return createTask(executable, Thread.currentThread().getPriority());
-	}
-	
 	public <T> ProducerTask<T> createTask(Supplier<T> executable) {
-		return createTask(executable, this.defaultPriority);
-	}
-	
-	public <T> ProducerTask<T> createTask(Supplier<T> executable, int priority) {
-		ProducerTask<T> task = new ProducerTask<T>(executable, priority, this.executor) {
+		ProducerTask<T> task = new ProducerTask<T>(executable, this.defaultPriority, this.executor) {
 			public ProducerTask<T> addToQueue() {
-				add(this);
-				return this;
+				return add(this);
 			};
 		};
 		return task;
-	}
-	
-	public Task createTaskWithCurrentThreadPriority(Runnable executable) {
-		return createTask(executable, Thread.currentThread().getPriority());
 	}
 	
 	public Task createTask(Runnable executable) {
-		return createTask(executable, this.defaultPriority);
-	}
-	
-	public Task createTask(Runnable executable, int priority) {
-		Task task = new Task(executable, priority, this.executor) {
+		Task task = new Task(executable, this.defaultPriority, this.executor) {
 			public Task addToQueue() {
-				add(this);
-				return this;
+				return add(this);
 			};
 		};
 		return task;
 	}
 
-	<E, T extends TaskAbst<E>> T add(T task) {
-		try {
-			tasksQueue.add(task);
-			synchronized(mutexManager.getMutex("executableCollectionFiller")) {
-				mutexManager.getMutex("executableCollectionFiller").notifyAll();
+	<E, T extends TaskAbst<E, T>> T add(T task) {
+		if (canBeExecuted(task)) {
+			try {
+				tasksQueue.add(task);
+				synchronized(getMutex("executableCollectionFiller")) {
+					getMutex("executableCollectionFiller").notifyAll();
+				}
+			} catch (Throwable exc) {
+				logWarn("Exception occurred", exc);
 			}
-		} catch (Throwable exc) {
-			logWarn("Exception occurred", exc);
-		}
-		return task;
-	}
-	
-	public Task createTaskToRunOnlyOnceWithCurrentThreadPriority(Object target, String operationId, Supplier<Boolean> hasBeenExecutedChecker, Runnable executable) {
-		return createTaskToRunOnlyOnce(target, operationId, hasBeenExecutedChecker, executable, Thread.currentThread().getPriority());
-	}
-	
-	public Task createTaskToRunOnlyOnce(Object target, String operationId, Supplier<Boolean> hasBeenExecutedChecker, Runnable executable) {
-		return createTaskToRunOnlyOnce(target, operationId, hasBeenExecutedChecker, executable, this.defaultPriority);
-	}
-	
-	public Task createTaskToRunOnlyOnce(
-		Object target,
-		String operationId,
-		Supplier<Boolean> hasBeenExecutedChecker,
-		Runnable executable,
-		int threadPriority
-	) {	
-		String taskId = target.getClass().getName() + "@" +  System.identityHashCode(target) + "->" + operationId;
-		if (canBeExecuted(target, taskId, hasBeenExecutedChecker)) {
-			return createTask(() -> {
-				try {
-					executable.run();
-				} finally {
-					runOnlyOnceTemporaryTargets.remove(taskId);
-				}
-			}, threadPriority);
-		}
-		return null;
-	}
-	
-	public <T> ProducerTask<T> createTaskToRunOnlyOnceWithCurrentThreadPriority(Object target, String operationId, Supplier<Boolean> hasBeenExecutedChecker, Supplier<T> executable) {
-		return createTaskToRunOnlyOnce(target, operationId, hasBeenExecutedChecker, executable, Thread.currentThread().getPriority());
-	}
-	
-	public <T> ProducerTask<T> createTaskToRunOnlyOnce(Object target, String operationId, Supplier<Boolean> hasBeenExecutedChecker, Supplier<T> executable) {
-		return createTaskToRunOnlyOnce(target, operationId, hasBeenExecutedChecker, executable, this.defaultPriority);
-	}
-	
-	public <T> ProducerTask<T> createTaskToRunOnlyOnce(
-		Object target,
-		String operationId,
-		Supplier<Boolean> hasBeenExecuted,
-		Supplier<T> executable,
-		int threadPriority
-	) {	
-		String taskId = target.getClass().getName() + "@" +  System.identityHashCode(target) + "->" + operationId;
-		if (canBeExecuted(target, taskId, hasBeenExecuted)) {
-			return createTask(() -> {
-				try {
-					return executable.get();
-				} finally {
-					runOnlyOnceTemporaryTargets.remove(taskId);
-				}
-			}, threadPriority);
+			return task;
 		}
 		return null;
 	}
 
-	boolean canBeExecuted(Object target, String taskId, Supplier<Boolean> hasBeenExecuted) {
-		boolean execute = false;
-		if (!hasBeenExecuted.get()) {
-			Boolean isClosing = runOnlyOnceTemporaryTargets.get(taskId);
-			if (isClosing == null) {
-				synchronized (target) {
-					if (!hasBeenExecuted.get()) {
-						isClosing = runOnlyOnceTemporaryTargets.get(taskId);
-						if (isClosing == null) {
-							runOnlyOnceTemporaryTargets.put(
-								taskId, execute = Boolean.TRUE);
-						}
-					}
-				}
-			}
+	<E, T extends TaskAbst<E, T>> boolean canBeExecuted(T task) {
+		if (task.runOnlyOnce) {
+			return !task.hasBeenExecutedChecker.get() && runOnlyOnceTasksToBeExecuted.putIfAbsent(task.id, task) == null;
 		}
-		return execute;
+		return true;
 	}
 	
 	public QueuedTasksExecutor waitForTasksEnding() {
@@ -292,12 +223,12 @@ public class QueuedTasksExecutor implements Component {
 	
 	public QueuedTasksExecutor waitForTasksEnding(int priority) {
 		executor.setPriority(priority);
-		tasksQueue.stream().forEach(executable -> executable.changePriority(priority));
+		tasksQueue.stream().forEach(executable -> executable.setPriority(priority));
 		while (!tasksQueue.isEmpty()) {
-			synchronized(mutexManager.getMutex("executingFinishedWaiter")) {
+			synchronized(getMutex("executingFinishedWaiter")) {
 				if (!tasksQueue.isEmpty()) {
 					try {
-						mutexManager.getMutex("executingFinishedWaiter").wait();
+						getMutex("executingFinishedWaiter").wait();
 					} catch (InterruptedException exc) {
 						logWarn("Exception occurred", exc);
 					}
@@ -311,7 +242,7 @@ public class QueuedTasksExecutor implements Component {
 	public QueuedTasksExecutor changePriority(int priority) {
 		this.defaultPriority = priority;
 		executor.setPriority(priority);
-		tasksQueue.stream().forEach(executable -> executable.changePriority(priority));
+		tasksQueue.stream().forEach(executable -> executable.setPriority(priority));
 		return this;
 	}
 	
@@ -332,10 +263,10 @@ public class QueuedTasksExecutor implements Component {
 		if (immediately) {
 			supended = Boolean.TRUE;
 			if (!currentTask.hasFinished) {
-				synchronized (mutexManager.getMutex("suspensionCaller")) {
+				synchronized (getMutex("suspensionCaller")) {
 					if (!currentTask.hasFinished) {
 						try {
-							mutexManager.getMutex("suspensionCaller").wait();
+							getMutex("suspensionCaller").wait();
 						} catch (InterruptedException exc) {
 							logWarn("Exception occurred", exc);
 						}
@@ -343,13 +274,13 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		} else {
-			Task suspensionTask = createTask((Runnable)() -> supended = Boolean.TRUE, priority);
+			Task suspensionTask = createTask((Runnable)() -> supended = Boolean.TRUE).setPriority(priority);
 			suspensionTask.addToQueue();
-			Iterator<TaskAbst<?>> taskIterator = tasksQueue.iterator();
+			Iterator<TaskAbst<?, ?>> taskIterator = tasksQueue.iterator();
 			while (taskIterator.hasNext()) {
-				TaskAbst<?> task = taskIterator.next();
+				TaskAbst<?, ?> task = taskIterator.next();
 				if (task != suspensionTask) {
-					task.changePriority(priority);
+					task.setPriority(priority);
 				} else {
 					break;
 				}
@@ -359,10 +290,10 @@ public class QueuedTasksExecutor implements Component {
 	}
 
 	public QueuedTasksExecutor resume() {
-		synchronized(mutexManager.getMutex("resumeCaller")) {
+		synchronized(getMutex("resumeCaller")) {
 			try {
 				supended = Boolean.FALSE;
-				mutexManager.getMutex("resumeCaller").notifyAll();
+				getMutex("resumeCaller").notifyAll();
 			} catch (Throwable exc) {
 				logWarn("Exception occurred", exc);
 			}
@@ -375,25 +306,25 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public void shutDown(boolean waitForTasksTermination) {
-		Collection<TaskAbst<?>> executables = this.tasksQueue;
+		Collection<TaskAbst<?, ?>> executables = this.tasksQueue;
 		Thread executor = this.executor;
 		if (waitForTasksTermination) {
-			createTaskWithCurrentThreadPriority(() -> {
+			createTask(() -> {
 				this.terminated = Boolean.TRUE;
+				logInfo("Executed tasks {}", executedTasksCount);
 				logInfo("Unexecuted tasks {}", executables.size());
 				executables.clear();
-				runOnlyOnceTemporaryTargets.clear();
-			}).addToQueue();
+			}).setPriorityToCurrentThreadPriority().addToQueue();
 		} else {
 			suspend();
 			this.terminated = Boolean.TRUE;
+			logInfo("Executed tasks {}", executedTasksCount);
 			logInfo("Unexecuted tasks {}", executables.size());
 			executables.clear();
-			runOnlyOnceTemporaryTargets.clear();
 			resume();
 			try {
-				synchronized(mutexManager.getMutex("executableCollectionFiller")) {
-					mutexManager.getMutex("executableCollectionFiller").notifyAll();
+				synchronized(getMutex("executableCollectionFiller")) {
+					getMutex("executableCollectionFiller").notifyAll();
 				}
 			} catch (Throwable exc) {
 				logWarn("Exception occurred", exc);
@@ -419,9 +350,6 @@ public class QueuedTasksExecutor implements Component {
 			logWarn("Exception occurred while interrupting thread {} of {}", executor, this);
 		}
 		executor = null;
-		runOnlyOnceTemporaryTargets = null;
-		mutexManager.clear();
-		mutexManager = null;
 		tasksQueue = null;
 		currentTask = null;
 		initializer = null;
@@ -431,7 +359,10 @@ public class QueuedTasksExecutor implements Component {
 		name = null;		
 	}
 	
-	public static abstract class TaskAbst<E> implements ManagedLogger {
+	public static abstract class TaskAbst<E, T extends TaskAbst<E, T>> implements ManagedLogger {
+		String id;
+		boolean runOnlyOnce;
+		Supplier<Boolean> hasBeenExecutedChecker;
 		E executable;
 		boolean hasFinished;
 		int priority;
@@ -470,7 +401,7 @@ public class QueuedTasksExecutor implements Component {
 			} catch (Throwable exc) {
 				this.exc = exc;
 				logError("Exception occurred while executing " + this, exc);
-			}			
+			}
 			markHasFinished();
 			executable = null;
 			queuedTasksExecutorThread = null;
@@ -485,8 +416,19 @@ public class QueuedTasksExecutor implements Component {
 			hasFinished = true;
 		}
 		
-		public <T extends TaskAbst<E>> T changePriority(int priority) {
+		public T setPriority(int priority) {
 			this.priority = priority;
+			return (T)this;
+		}
+		
+		public T setPriorityToCurrentThreadPriority() {
+			return setPriority(Thread.currentThread().getPriority());
+		}
+		
+		public T runOnlyOnce(String id, Supplier<Boolean> hasBeenExecutedChecker) {
+			runOnlyOnce = true;
+			this.id = id;
+			this.hasBeenExecutedChecker = hasBeenExecutedChecker;
 			return (T)this;
 		}
 		
@@ -502,9 +444,11 @@ public class QueuedTasksExecutor implements Component {
 			return exc != null;
 		}
 		
+		public abstract T addToQueue();
+		
 	}
 	
-	public static abstract class Task extends TaskAbst<Runnable> {
+	public static abstract class Task extends TaskAbst<Runnable, Task> {
 		
 		Task(Runnable executable, int priority, Thread queuedTasksExecutorThread) {
 			super(priority, queuedTasksExecutorThread);
@@ -522,13 +466,14 @@ public class QueuedTasksExecutor implements Component {
 		
 		public void join() {
 			join0(false);
-		}
+		}	
 		
-		public abstract Task addToQueue();
 
+		
+		
 	}
 	
-	public static abstract class ProducerTask<T> extends TaskAbst<Supplier<T>> {
+	public static abstract class ProducerTask<T> extends TaskAbst<Supplier<T>, ProducerTask<T>> {
 		private T result;
 		
 		ProducerTask(Supplier<T> executable, int priority, Thread queuedTasksExecutorThread) {
@@ -553,7 +498,5 @@ public class QueuedTasksExecutor implements Component {
 		public T get() {
 			return result;
 		}
-		
-		public abstract ProducerTask<T> addToQueue();
 	}
 }

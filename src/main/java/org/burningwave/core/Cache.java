@@ -177,7 +177,7 @@ public class Cache implements Component {
 					item.getValue().clear(destroyItems);
 				}
 				resources.clear();
-			}, Thread.MIN_PRIORITY).addToQueue();		
+			}).setPriority(Thread.MIN_PRIORITY).addToQueue();		
 			return this;
 		}
 		
@@ -297,7 +297,11 @@ public class Cache implements Component {
 			R item = nestedPartition.remove(path);
 			if (destroy && item != null) {
 				String finalPath = path;
-				LowPriorityTasksExecutor.createTask(() -> destroy(finalPath, item), Thread.MIN_PRIORITY).addToQueue();
+				//LowPriorityTasksExecutor.createTask(() -> 
+					destroy(finalPath, item)
+					//, Thread.MIN_PRIORITY
+				//).addToQueue()
+				;
 			}
 			return item;
 		}
@@ -332,7 +336,7 @@ public class Cache implements Component {
 			}
 			LowPriorityTasksExecutor.createTask(() -> {
 				clearResources(partitions, destroyItems);
-			}, Thread.MIN_PRIORITY).addToQueue();
+			}).setPriority(Thread.MIN_PRIORITY).addToQueue();
 			return this;
 		}
 

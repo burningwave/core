@@ -118,12 +118,12 @@ public static class Configuration {
 								);
 								if (!classPath.refresh().exists()) {
 									pathsCreationTasks.add(
-										NormalPriorityTasksExecutor.createTaskWithCurrentThreadPriority(() -> {
+										NormalPriorityTasksExecutor.createTask(() -> {
 											FileSystemItem copy = fsObject.copyTo(classPathsBasePath.getAbsolutePath());
 											File target = new File(classPath.getAbsolutePath());
 											new File(copy.getAbsolutePath()).renameTo(target);
 											return Paths.clean(target.getAbsolutePath());
-										}).addToQueue()
+										}).setPriorityToCurrentThreadPriority().addToQueue()
 									);
 								}
 								classPaths.add(
