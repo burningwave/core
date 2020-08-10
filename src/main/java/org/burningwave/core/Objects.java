@@ -28,28 +28,19 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
-import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
-
-import java.util.Optional;
-import java.util.function.Supplier;
-
-import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
-import org.burningwave.core.function.ThrowingRunnable;
-
-public interface Closeable extends AutoCloseable {
+public class Objects {
 	
-	@Override
-	default public void close() {
-			
+	public static Objects create() {
+		return new Objects();
 	}
 	
-	default public Task createCloseResoucesResources(Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
-		return BackgroundExecutor.createTask(closingFunction, Thread.MIN_PRIORITY).runOnlyOnce(Objects.getId(this) + "->" + "closeResources", isClosedPredicate);
+	public String getId(Object target) {
+		return target.getClass().getName() + "@" +  System.identityHashCode(target);
 	}
 	
-	default public Task closeResources(Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
-		return Optional.ofNullable(createCloseResoucesResources(isClosedPredicate, closingFunction).addToQueue()).orElseGet(() -> null);
+	
+	public String getStandardId(Object target) {
+		return target.getClass().getName() + "@" +  Integer.toHexString(System.identityHashCode(target));
 	}
 	
 }

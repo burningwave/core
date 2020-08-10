@@ -32,6 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -91,20 +92,26 @@ public class Resources {
 			ClassLoader classLoader = Optional.ofNullable(resourceClassLoader).orElseGet(() ->
 				ClassLoader.getSystemClassLoader()
 			);
-			try (BufferedReader reader = new BufferedReader(
-					new InputStreamReader(
-						classLoader.getResourceAsStream(resourceRelativePath)
-					)
-				)
-			) {
-				StringBuffer result = new StringBuffer();
-				String sCurrentLine;
-				while ((sCurrentLine = reader.readLine()) != null) {
-					result.append(sCurrentLine + "\n");
-				}
-				return result;
-			}
+			return getAsStringBuffer(					
+					classLoader.getResourceAsStream(resourceRelativePath)
+			);
 		});
+	}
+
+	private StringBuffer getAsStringBuffer(InputStream inputStream) throws IOException {
+		try (BufferedReader reader = new BufferedReader(
+				new InputStreamReader(
+					inputStream
+				)
+			)
+		) {
+			StringBuffer result = new StringBuffer();
+			String sCurrentLine;
+			while ((sCurrentLine = reader.readLine()) != null) {
+				result.append(sCurrentLine + "\n");
+			}
+			return result;
+		}
 	}
 
 	public URL getURL(ClassLoader resourceClassLoader, String fileName) {

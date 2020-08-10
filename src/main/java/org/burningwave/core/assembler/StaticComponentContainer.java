@@ -56,7 +56,7 @@ public class StaticComponentContainer {
 			DEFAULT_VALUES.put(Key.HIDE_BANNER_ON_INIT, "false");
 		}
 	}
-	public static final org.burningwave.core.concurrent.QueuedTasksExecutor LowPriorityTasksExecutor;
+	public static final org.burningwave.core.concurrent.QueuedTasksExecutor.Group BackgroundExecutor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler ByteBufferHandler;
@@ -67,13 +67,13 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.classes.Fields Fields;
 	public static final org.burningwave.core.iterable.Properties GlobalProperties;
-	public static final org.burningwave.core.concurrent.QueuedTasksExecutor HighPriorityTasksExecutor;
 	public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
 	public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;
 	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 	public static final org.burningwave.core.classes.Members Members;
 	public static final org.burningwave.core.classes.Methods Methods;
+	public static final org.burningwave.core.Objects Objects;
 	public static final org.burningwave.core.Strings.Paths Paths;
 	public static final org.burningwave.core.io.Resources Resources;
 	public static final org.burningwave.core.io.Streams Streams;
@@ -82,55 +82,44 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
-		Throwables = org.burningwave.core.Throwables.create();
-		HighPriorityTasksExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("High priority tasks executor", Thread.MAX_PRIORITY, true, true);
-		LowPriorityTasksExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("Low priority tasks executor", Thread.MIN_PRIORITY, true, true);
-		Properties properties = new Properties();
-		properties.putAll(Configuration.DEFAULT_VALUES);
-		properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
-		properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
-		
-		Strings = org.burningwave.core.Strings.create();
-		IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create();
-		Resources = new org.burningwave.core.io.Resources();
-		Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
-			Resources.loadFirstOneFound(properties, "burningwave.static.properties", "burningwave.static.default.properties");
-		GlobalProperties = propBag.getKey();
-		if (!Boolean.valueOf(GlobalProperties.getProperty(Configuration.Key.HIDE_BANNER_ON_INIT))) {
-			showBanner();
-		}
-		ManagedLoggersRepository = createManagedLoggersRepository(GlobalProperties);
-		URL globalPropertiesFileUrl = propBag.getValue();
-		if (globalPropertiesFileUrl != null) {
-			ManagedLoggersRepository.logInfo(
-				StaticComponentContainer.class, "Building static components by using " + ThrowingSupplier.get(() ->
-					URLDecoder.decode(
-						globalPropertiesFileUrl.toString(), StandardCharsets.UTF_8.name()
+		try {
+			Throwables = org.burningwave.core.Throwables.create();
+			Objects = org.burningwave.core.Objects.create();
+			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create("Background executor", true, true);
+			Properties properties = new Properties();
+			properties.putAll(Configuration.DEFAULT_VALUES);
+			properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
+			properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
+			Strings = org.burningwave.core.Strings.create();
+			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create();
+			Resources = new org.burningwave.core.io.Resources();
+			Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
+				Resources.loadFirstOneFound(properties, "burningwave.static.properties", "burningwave.static.default.properties");
+			GlobalProperties = propBag.getKey();
+			if (!Boolean.valueOf(GlobalProperties.getProperty(Configuration.Key.HIDE_BANNER_ON_INIT))) {
+				showBanner();
+			}
+			ManagedLoggersRepository = createManagedLoggersRepository(GlobalProperties);
+			URL globalPropertiesFileUrl = propBag.getValue();
+			if (globalPropertiesFileUrl != null) {
+				ManagedLoggersRepository.logInfo(
+					StaticComponentContainer.class, "Building static components by using " + ThrowingSupplier.get(() ->
+						URLDecoder.decode(
+							globalPropertiesFileUrl.toString(), StandardCharsets.UTF_8.name()
+						)
 					)
-				)
-			);
-		} else {
-			ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Building static components by using configuration");
-		}
-		ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Instantiated {}", ManagedLoggersRepository.getClass().getName());
-		try {			
+				);
+			} else {
+				ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Building static components by using configuration");
+			}
+			ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Instantiated {}", ManagedLoggersRepository.getClass().getName());
 			Paths = org.burningwave.core.Strings.Paths.create();
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create();
-			Runtime.getRuntime().addShutdownHook(
-				new Thread(() -> {
-					try {
-						ComponentContainer.closeAll();
-					} catch (Throwable exc) {
-						ManagedLoggersRepository.logError(StaticComponentContainer.class, "Exception occurred while closing component containers", exc);
-					}
-					LowPriorityTasksExecutor.shutDown(true);
-					HighPriorityTasksExecutor.shutDown(true);
-					FileSystemHelper.deleteTemporaryFolders();
-				})
-			);
 			String clearTemporaryFolderFlag = GlobalProperties.getProperty(Configuration.Key.CLEAR_TEMPORARY_FOLDER_ON_INIT);
 			if (Boolean.valueOf(clearTemporaryFolderFlag)) {
 				FileSystemHelper.clearMainTemporaryFolder();
+			} else {
+				FileSystemHelper.deleteUndeletedFoldersOfPreviousExecution();
 			}
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
 			ByteBufferHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler.create();
@@ -152,10 +141,22 @@ public class StaticComponentContainer {
 			ByFieldOrByMethodPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByFieldOrByMethod.create();
 			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
+			Runtime.getRuntime().addShutdownHook(
+				new Thread(() -> {
+					try {
+						ComponentContainer.closeAll();
+					} catch (Throwable exc) {
+						ManagedLoggersRepository.logError(StaticComponentContainer.class, "Exception occurred while closing component containers", exc);
+					}
+					FileSystemHelper.deleteTemporaryFolders(true);
+					BackgroundExecutor.shutDown(true);
+				})
+			);
 		} catch (Throwable exc){
-			ManagedLoggersRepository.logError(StaticComponentContainer.class, "Exception occurred", exc);
-			throw Throwables.toRuntimeException(exc);
+			exc.printStackTrace();
+			throw new RuntimeException(exc);
 		}
+		
 	}
 
 	static void showBanner() {

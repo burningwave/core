@@ -1,7 +1,7 @@
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.HighPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 
@@ -118,12 +118,12 @@ public static class Configuration {
 								);
 								if (!classPath.refresh().exists()) {
 									pathsCreationTasks.add(
-										HighPriorityTasksExecutor.createTaskWithCurrentThreadPriority(() -> {
+										BackgroundExecutor.createTask(() -> {
 											FileSystemItem copy = fsObject.copyTo(classPathsBasePath.getAbsolutePath());
 											File target = new File(classPath.getAbsolutePath());
 											new File(copy.getAbsolutePath()).renameTo(target);
 											return Paths.clean(target.getAbsolutePath());
-										}).addToQueue()
+										}, Thread.NORM_PRIORITY).addToQueue()
 									);
 								}
 								classPaths.add(
@@ -205,7 +205,7 @@ public static class Configuration {
 	public void close() {
 		closeResources(() -> classPathsBasePath == null,  () -> {
 			unregister(config);
-			FileSystemHelper.deleteOnExit(classPathsBasePath.getAbsolutePath());
+			FileSystemHelper.deleteOnExit(getOrCreateTemporaryFolder());
 			classPathsBasePath.destroy();
 			classPathsBasePath = null;
 			classPathHunter = null;

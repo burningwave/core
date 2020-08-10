@@ -31,9 +31,8 @@ package org.burningwave.core.assembler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
-import static org.burningwave.core.assembler.StaticComponentContainer.HighPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -65,6 +64,8 @@ import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
+import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
@@ -112,7 +113,6 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
-	@SuppressWarnings("resource")
 	public final static ComponentContainer create(Properties properties) {
 		try {
 			return new ComponentContainer(() -> properties).launchInit();
@@ -165,12 +165,12 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private ComponentContainer launchInit() {
-		QueuedTasksExecutor.Task initializerTask = this.initializerTask = HighPriorityTasksExecutor.createTask(() -> {
+		QueuedTasksExecutor.Task initializerTask = this.initializerTask = BackgroundExecutor.createTask(() -> {
 			synchronized (components) {
 				this.init();
 				this.initializerTask = null;
 			}
-		});
+		}, Thread.MAX_PRIORITY);
 		initializerTask.addToQueue();
 		return this;
 	}
@@ -184,7 +184,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public void reInit() {
 		synchronized (components) {
-			clear();
+			clear(true);
 			config.clear();
 			launchInit();
 		}
@@ -378,7 +378,10 @@ public class ComponentContainer implements ComponentSupplier {
 		synchronized (this) {
 			this.components = new ConcurrentHashMap<>();
 		}
-		LowPriorityTasksExecutor.createTask((Runnable)() ->
+		if (wait) {
+			BackgroundExecutor.waitForTasksEnding();
+		}
+		Task cleaningTask = BackgroundExecutor.createTask((ThrowingRunnable<?>)() ->
 			IterableObjectHelper.deepClear(components, (type, component) -> {
 				try {
 					if (!(component instanceof PathScannerClassLoader)) {
@@ -389,18 +392,42 @@ public class ComponentContainer implements ComponentSupplier {
 				} catch (Throwable exc) {
 					logError("Exception occurred while closing " + component, exc);
 				}
-			})
+			}),Thread.MIN_PRIORITY
 		).addToQueue();
 		if (wait) {
-			LowPriorityTasksExecutor.waitForTasksEnding();
+			BackgroundExecutor.waitFor(cleaningTask);
+			BackgroundExecutor.waitForTasksEnding();
+			System.gc();
 		}
 		return this;
+	}
+	
+	public static void clearAll(boolean wait) {
+		if (wait) {
+			BackgroundExecutor.waitForTasksEnding();
+		}
+		ThrowingRunnable<?> cleaningRunnable = () -> {
+			for (ComponentContainer componentContainer : instances) {
+				componentContainer.waitForInitialization(false);
+				componentContainer.clear(wait);
+			}
+		};
+		if (wait) {
+			ThrowingRunnable.run(() -> cleaningRunnable.run());
+		} else {
+			BackgroundExecutor.createTask(cleaningRunnable, Thread.MIN_PRIORITY).addToQueue();
+		}
+		Cache.clear();
+		if (wait) {
+			BackgroundExecutor.waitForTasksEnding();
+			System.gc();
+		}
 	}
 	
 	void close(boolean force) {
 		if (force || !isUndestroyable) {
 			closeResources(() -> !instances.contains(this),  () -> {
-				waitForInitialization(true);
+				waitForInitialization(false);
 				unregister(GlobalProperties);
 				unregister(config);
 				instances.remove(this);
@@ -429,24 +456,6 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public static void clearAll() {
 		clearAll(false);
-	}
-	
-	public static void clearAll(boolean wait) {
-		if (wait) {
-			HighPriorityTasksExecutor.waitForTasksEnding(Thread.MAX_PRIORITY);
-			LowPriorityTasksExecutor.waitForTasksEnding();
-		}
-		LowPriorityTasksExecutor.createTask(() -> {
-			for (ComponentContainer componentContainer : instances) {
-				componentContainer.waitForInitialization(false);
-				componentContainer.clear(wait);
-			}
-		});
-		Cache.clear();
-		if (wait) {
-			LowPriorityTasksExecutor.waitForTasksEnding();
-			System.gc();
-		}
 	}
 	
 	public static void clearAllCaches() {

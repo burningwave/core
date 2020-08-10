@@ -61,12 +61,12 @@ public class Mutex {
 			this.parallelLockMap = null;
 		}
 		
-		public Object getMutex(String name) {
+		public Object getMutex(String id) {
 			Object lock = defaultMutex;
 			Map<String, Object> parallelLockMap = this.parallelLockMap;
 			if (parallelLockMap != null) {
 		    	Object newLock = new Mutex();
-		    	lock = parallelLockMap.putIfAbsent(name, newLock);
+		    	lock = parallelLockMap.putIfAbsent(id, newLock);
 		        if (lock == null) {
 		            lock = newLock;
 		        }
@@ -85,6 +85,10 @@ public class Mutex {
 			clear();
 			parallelLockMap = null;
 			this.defaultMutex = null;
+		}
+
+		public void remove(String id) {
+			parallelLockMap.remove(id);	
 		}
 	}
 	
