@@ -121,16 +121,18 @@ public class FileSystemHelper implements Component {
 	
 	public QueuedTasksExecutor.Task delete(Collection<File> files, boolean markToBeDeletedOnNextExecution) {
 		if (files != null) {
+			Set<File> markedToBeDeletedOnNextExecution = new HashSet<>();
 			Iterator<File> itr = files.iterator();
 			while(itr.hasNext()) {
 				File file = itr.next();
 				FileSystemItem fileSystemItem = FileSystemItem.ofPath(file.getAbsolutePath());
 				if (fileSystemItem.exists()) {
 					if (!delete(file) && markToBeDeletedOnNextExecution) {
-						return markToBeDeletedOnNextExecution(file);
+						markedToBeDeletedOnNextExecution.add(file);
 					}
 				};
 			}
+			markToBeDeletedOnNextExecution(markedToBeDeletedOnNextExecution);
 		}
 		return null;
 	}
@@ -163,13 +165,15 @@ public class FileSystemHelper implements Component {
 		file.deleteOnExit();
 	}
 	
-	public QueuedTasksExecutor.Task markToBeDeletedOnNextExecution(File file) {
+	public QueuedTasksExecutor.Task markToBeDeletedOnNextExecution(Collection<File> files) {
 		return LowPriorityTasksExecutor.createTask(() -> {
-			Files.write(
-				java.nio.file.Paths.get(Paths.clean(getOrCreateFilesToBeDeletedFile().getAbsolutePath())),
-				(Paths.clean(file.getAbsolutePath() + "\n").getBytes()), 
-				StandardOpenOption.APPEND
-			);
+			for (File file : files) {
+				Files.write(
+					java.nio.file.Paths.get(Paths.clean(getOrCreateFilesToBeDeletedFile().getAbsolutePath())),
+					(Paths.clean(file.getAbsolutePath() + "\n").getBytes()), 
+					StandardOpenOption.APPEND
+				);
+			}
 		}).addToQueue();
 	}
 	
@@ -205,11 +209,13 @@ public class FileSystemHelper implements Component {
 					absolutePathsToBeDeleted.add(child.getAbsolutePath());
 				}
 			};
+			Set<File> markedToBeDeletedOnNextExecution = new HashSet<>();
 			for (String absolutePathToBeDeleted : absolutePathsToBeDeleted) {
 				if (!delete(absolutePathToBeDeleted)) {
-					markToBeDeletedOnNextExecution(new File(absolutePathToBeDeleted));
+					markedToBeDeletedOnNextExecution.add(new File(absolutePathToBeDeleted));
 				}
 			}
+			markToBeDeletedOnNextExecution(markedToBeDeletedOnNextExecution);
 		}).addToQueue();
 	}
 	
