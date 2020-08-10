@@ -32,9 +32,8 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
-import static org.burningwave.core.assembler.StaticComponentContainer.NormalPriorityTasksExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -166,12 +165,12 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private ComponentContainer launchInit() {
-		QueuedTasksExecutor.Task initializerTask = this.initializerTask = NormalPriorityTasksExecutor.createTask(() -> {
+		QueuedTasksExecutor.Task initializerTask = this.initializerTask = BackgroundExecutor.createTask(() -> {
 			synchronized (components) {
 				this.init();
 				this.initializerTask = null;
 			}
-		}).setPriority(Thread.MAX_PRIORITY);
+		}, Thread.MAX_PRIORITY);
 		initializerTask.addToQueue();
 		return this;
 	}
@@ -380,10 +379,9 @@ public class ComponentContainer implements ComponentSupplier {
 			this.components = new ConcurrentHashMap<>();
 		}
 		if (wait) {
-			LowPriorityTasksExecutor.waitForTasksEnding();
-			NormalPriorityTasksExecutor.waitForTasksEnding();
+			BackgroundExecutor.waitForTasksEnding();
 		}
-		Task cleaningTask = LowPriorityTasksExecutor.createTask((ThrowingRunnable<?>)() ->
+		Task cleaningTask = BackgroundExecutor.createTask((ThrowingRunnable<?>)() ->
 			IterableObjectHelper.deepClear(components, (type, component) -> {
 				try {
 					if (!(component instanceof PathScannerClassLoader)) {
@@ -394,11 +392,11 @@ public class ComponentContainer implements ComponentSupplier {
 				} catch (Throwable exc) {
 					logError("Exception occurred while closing " + component, exc);
 				}
-			})
-		).setPriority(Thread.MIN_PRIORITY).addToQueue();
+			}),Thread.MIN_PRIORITY
+		).addToQueue();
 		if (wait) {
-			LowPriorityTasksExecutor.waitFor(cleaningTask.setPriorityToCurrentThreadPriority());
-			LowPriorityTasksExecutor.waitForTasksEnding();
+			BackgroundExecutor.waitFor(cleaningTask);
+			BackgroundExecutor.waitForTasksEnding();
 			System.gc();
 		}
 		return this;
@@ -406,8 +404,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public static void clearAll(boolean wait) {
 		if (wait) {
-			LowPriorityTasksExecutor.waitForTasksEnding();
-			NormalPriorityTasksExecutor.waitForTasksEnding();
+			BackgroundExecutor.waitForTasksEnding();
 		}
 		ThrowingRunnable<?> cleaningRunnable = () -> {
 			for (ComponentContainer componentContainer : instances) {
@@ -418,11 +415,11 @@ public class ComponentContainer implements ComponentSupplier {
 		if (wait) {
 			ThrowingRunnable.run(() -> cleaningRunnable.run());
 		} else {
-			LowPriorityTasksExecutor.createTask(cleaningRunnable).setPriority(Thread.MIN_PRIORITY).addToQueue();
+			BackgroundExecutor.createTask(cleaningRunnable, Thread.MIN_PRIORITY).addToQueue();
 		}
 		Cache.clear();
 		if (wait) {
-			LowPriorityTasksExecutor.waitForTasksEnding();
+			BackgroundExecutor.waitForTasksEnding();
 			System.gc();
 		}
 	}
@@ -430,7 +427,7 @@ public class ComponentContainer implements ComponentSupplier {
 	void close(boolean force) {
 		if (force || !isUndestroyable) {
 			closeResources(() -> !instances.contains(this),  () -> {
-				waitForInitialization(true);
+				waitForInitialization(false);
 				unregister(GlobalProperties);
 				unregister(config);
 				instances.remove(this);

@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 
 import java.nio.ByteBuffer;
@@ -91,9 +91,9 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 	
 	@Override
 	void clearItemsForPath(Map<String, JavaClass> items) {
-		LowPriorityTasksExecutor.createTask(() -> {
+		BackgroundExecutor.createTask(() -> {
 			IterableObjectHelper.deepClear(items, (path, javaClass) -> javaClass.close());
-		}).addToQueue();
+		}, Thread.MIN_PRIORITY).addToQueue();
 	}
 	
 	public static class SearchResult extends org.burningwave.core.classes.SearchResult<JavaClass> {

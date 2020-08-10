@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -166,7 +166,7 @@ public class FileSystemHelper implements Component {
 	}
 	
 	public QueuedTasksExecutor.Task markToBeDeletedOnNextExecution(Collection<File> files) {
-		return LowPriorityTasksExecutor.createTask(() -> {
+		return BackgroundExecutor.createTask(() -> {
 			for (File file : files) {
 				Files.write(
 					java.nio.file.Paths.get(Paths.clean(getOrCreateFilesToBeDeletedFile().getAbsolutePath())),
@@ -174,7 +174,7 @@ public class FileSystemHelper implements Component {
 					StandardOpenOption.APPEND
 				);
 			}
-		}).addToQueue();
+		}, Thread.MIN_PRIORITY).addToQueue();
 	}
 	
 	public boolean delete(String absolutePath) {
@@ -187,16 +187,16 @@ public class FileSystemHelper implements Component {
 	
 	public QueuedTasksExecutor.Task deleteTemporaryFolders(boolean markToBeDeletedOnNextExecution) {
 		QueuedTasksExecutor.Task deleteFoldersTask = delete(temporaryFolders, markToBeDeletedOnNextExecution);
-		return LowPriorityTasksExecutor.createTask(() -> {
+		return BackgroundExecutor.createTask(() -> {
 			if (deleteFoldersTask != null) {
 				deleteFoldersTask.join();
 			}
 			temporaryFolders.clear();
-		}).addToQueue();
+		}, Thread.MIN_PRIORITY).addToQueue();
 	}
 
 	public void deleteUndeletedFoldersOfPreviousExecution() {
-		LowPriorityTasksExecutor.createTask(() -> {
+		BackgroundExecutor.createTask(() -> {
 			Set<String> absolutePathsToBeDeleted = new HashSet<>();
 			for (FileSystemItem child : FileSystemItem.ofPath(getOrCreateMainTemporaryFolder().getAbsolutePath()).getChildren()) {
 				if ("to-be-deleted".equals(child.getExtension())) {
@@ -216,7 +216,7 @@ public class FileSystemHelper implements Component {
 				}
 			}
 			markToBeDeletedOnNextExecution(markedToBeDeletedOnNextExecution);
-		}).addToQueue();
+		}, Thread.MIN_PRIORITY).addToQueue();
 	}
 	
 	@Override

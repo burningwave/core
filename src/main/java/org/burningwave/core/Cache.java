@@ -28,7 +28,7 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
@@ -72,17 +72,17 @@ public class Cache implements Component {
 		pathForFileSystemItems = new PathForResources<FileSystemItem>(1L, fileSystemItem -> fileSystemItem) {
 			@Override
 			void destroy(String path, FileSystemItem item) {
-				LowPriorityTasksExecutor.createTask(() -> 
-					item.destroy()
-				).setPriority(Thread.MIN_PRIORITY).addToQueue();
+				BackgroundExecutor.createTask(() -> 
+					item.destroy(),
+				Thread.MIN_PRIORITY).addToQueue();
 			}
 		};
 		pathForIterableZipContainers = new PathForResources<IterableZipContainer>(1L, zipFileContainer -> zipFileContainer){
 			@Override
 			void destroy(String path, IterableZipContainer item) {
-				LowPriorityTasksExecutor.createTask(() -> 
-					item.destroy()
-				).setPriority(Thread.MIN_PRIORITY).addToQueue();			
+				BackgroundExecutor.createTask(() -> 
+					item.destroy(),
+				Thread.MIN_PRIORITY).addToQueue();			
 			};
 		};
 		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);
@@ -176,12 +176,12 @@ public class Cache implements Component {
 				this.resources = new HashMap<>();
 				mutexManagerForResources.clear();
 			}
-			LowPriorityTasksExecutor.createTask(() -> {
+			BackgroundExecutor.createTask(() -> {
 				for (Entry<T, PathForResources<R>> item : resources.entrySet()) {
 					item.getValue().clear(destroyItems);
 				}
 				resources.clear();
-			}).setPriority(Thread.MIN_PRIORITY).addToQueue();		
+			}, Thread.MIN_PRIORITY).addToQueue();		
 			return this;
 		}
 		
@@ -333,9 +333,9 @@ public class Cache implements Component {
 				mutexManagerForLoadedResources.clear();    
 				mutexManagerForPartitionedResources.clear();
 			}
-			LowPriorityTasksExecutor.createTask(() -> {
+			BackgroundExecutor.createTask(() -> {
 				clearResources(partitions, destroyItems);
-			}).setPriority(Thread.MIN_PRIORITY).addToQueue();
+			}, Thread.MIN_PRIORITY).addToQueue();
 			return this;
 		}
 

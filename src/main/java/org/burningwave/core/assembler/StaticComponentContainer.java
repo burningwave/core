@@ -56,7 +56,7 @@ public class StaticComponentContainer {
 			DEFAULT_VALUES.put(Key.HIDE_BANNER_ON_INIT, "false");
 		}
 	}
-	public static final org.burningwave.core.concurrent.QueuedTasksExecutor LowPriorityTasksExecutor;
+	public static final org.burningwave.core.concurrent.QueuedTasksExecutor.Group BackgroundExecutor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler ByteBufferHandler;
@@ -67,7 +67,6 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.classes.Fields Fields;
 	public static final org.burningwave.core.iterable.Properties GlobalProperties;
-	public static final org.burningwave.core.concurrent.QueuedTasksExecutor NormalPriorityTasksExecutor;
 	public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
 	public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
 	public static final org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;
@@ -86,8 +85,7 @@ public class StaticComponentContainer {
 		try {
 			Throwables = org.burningwave.core.Throwables.create();
 			Objects = org.burningwave.core.Objects.create();
-			NormalPriorityTasksExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("Normal priority tasks executor", Thread.NORM_PRIORITY, true, true);
-			LowPriorityTasksExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.create("Low priority tasks executor", Thread.MIN_PRIORITY, true, true);
+			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create("Background executor", true, true);
 			Properties properties = new Properties();
 			properties.putAll(Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
@@ -151,8 +149,7 @@ public class StaticComponentContainer {
 						ManagedLoggersRepository.logError(StaticComponentContainer.class, "Exception occurred while closing component containers", exc);
 					}
 					FileSystemHelper.deleteTemporaryFolders(true);
-					LowPriorityTasksExecutor.shutDown(true);
-					NormalPriorityTasksExecutor.shutDown(true);
+					BackgroundExecutor.shutDown(true);
 				})
 			);
 		} catch (Throwable exc){

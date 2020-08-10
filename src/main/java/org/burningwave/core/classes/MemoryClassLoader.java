@@ -32,7 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.LowPriorityTasksExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -386,10 +386,10 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		Map<String, ByteBuffer> loadedByteCodes = this.loadedByteCodes;
 		this.notLoadedByteCodes = new HashMap<>();
 		this.loadedByteCodes = new HashMap<>();
-		LowPriorityTasksExecutor.createTask(() -> {
+		BackgroundExecutor.createTask(() -> {
 			IterableObjectHelper.deepClear(notLoadedByteCodes);
 			IterableObjectHelper.deepClear(loadedByteCodes);
-		}).addToQueue();
+		}, Thread.MIN_PRIORITY).addToQueue();
 		return this;
 	}
 	
