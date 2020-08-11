@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
@@ -52,6 +53,7 @@ import java.util.stream.Collectors;
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.JavaMemoryCompiler.CompilationResult;
+import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemItem;
@@ -279,35 +281,31 @@ public class ClassFactory implements Component {
 				try {
 					classes.put(className, classLoader.loadClass(className));
 				} catch (Throwable exc) {
-					JavaMemoryCompiler compiler = !useOneShotJavaCompiler ?
-						this.javaMemoryCompiler :
-						JavaMemoryCompiler.create(
-							pathHelper,
-							classPathHelper,
-							config
-						);
 					CompileConfig compileConfig = compileConfigSupplier.get();
-					CompilationResult compilationResult = compiler.compile(
-						compileConfig
-					);
-					logInfo(
-						classesName.size() > 1?	
-							"Classes {} have been succesfully compiled":
-							"Class {} has been succesfully compiled",
-						classesName.size() > 1?		
-							String.join(", ", classesName):
-							classesName.stream().findFirst().orElseGet(() -> "")
-					);
-					if (compileConfig.isStoringCompiledClassesEnabled()) {
-						ClassLoaders.addClassPath(
-							classLoader, 
-							compilationResult.getClassPath().getAbsolutePath()::equals,
-							compilationResult.getClassPath().getAbsolutePath()
+					JavaMemoryCompiler compiler = !useOneShotJavaCompiler ?
+							this.javaMemoryCompiler :
+							JavaMemoryCompiler.create(
+								pathHelper,
+								classPathHelper,
+								config
+							);
+					ProducerTask<CompilationResult> compilationTask = BackgroundExecutor.createTask(() -> {						
+						CompilationResult compilationResult = compiler.compile(
+							compileConfig
 						);
-					}
+						logInfo(
+							classesName.size() > 1?	
+								"Classes {} have been succesfully compiled":
+								"Class {} has been succesfully compiled",
+							classesName.size() > 1?		
+								String.join(", ", classesName):
+								classesName.stream().findFirst().orElseGet(() -> "")
+						);
+						return compilationResult;
+					}, Thread.MAX_PRIORITY).async().submit();
 					return new ClassRetriever(this, getClassPathHunter(), classPathHelper, classLoaderSupplierForClassRetriever) {
 						@Override
-						public Class<?> retrieve(String className) {
+						public Class<?> get(String className) {
 							try {
 								try {
 									try {
@@ -316,6 +314,7 @@ public class ClassFactory implements Component {
 										if (!ClassLoaders.isItPossibleToAddClassPaths(classLoader)) {
 											throw exc;
 										}
+										CompilationResult compilationResult = compilationTask.join();
 										Map<String, ByteBuffer> finalByteCodes = new HashMap<>(compilationResult.getCompiledFiles());
 										Class<?> cls = ClassLoaders.loadOrDefineByByteCode(className, finalByteCodes, classLoader);
 										if (compileConfig.isStoringCompiledClassesEnabled() && finalByteCodes.containsKey(className)) {
@@ -331,6 +330,7 @@ public class ClassFactory implements Component {
 									if (!ClassLoaders.isItPossibleToAddClassPaths(classLoader)) {
 										throw exc;
 									}
+									CompilationResult compilationResult = compilationTask.join();
 									CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 										compilationResult.getDependencies()
 									);
@@ -355,7 +355,7 @@ public class ClassFactory implements Component {
 											loadBytecodesFromClassPaths(
 												this.byteCodesWrapper,
 												additionalClassRepositoriesForClassLoader,
-												compilationResult.getCompiledFiles()
+												compilationTask.join().getCompiledFiles()
 											).get(), classLoader
 										);
 									});
@@ -365,7 +365,7 @@ public class ClassFactory implements Component {
 						
 						@Override
 						public void close() {
-							compilationResult.close();
+							compilationTask.join().close();
 							super.close();
 							if (useOneShotJavaCompiler) {
 								compiler.close();
@@ -378,7 +378,7 @@ public class ClassFactory implements Component {
 			logInfo("Classes {} loaded by classloader {} without building", String.join(", ", classes.keySet()), classLoader);
 			return new ClassRetriever(this, getClassPathHunter(), classPathHelper, classLoaderSupplierForClassRetriever) {
 				@Override
-				public Class<?> retrieve(String className) {
+				public Class<?> get(String className) {
 					try {	
 						try {
 							return classLoader.loadClass(className);
@@ -669,17 +669,7 @@ public class ClassFactory implements Component {
 			this.byteCodesWrapper = new AtomicReference<>();
 		}
 		
-		public Class<?> get(String className) {
-			try {
-				return classLoader.loadClass(className);
-			} catch (Throwable exc) {
-				synchronized (classFactory) {
-					return retrieve(className);
-				}
-			}
-		}
-		
-		abstract Class<?> retrieve(String className);
+		public abstract Class<?> get(String className);
 		
 		public Collection<Class<?>> get(String... classesName) {
 			Collection<Class<?>> classes = new HashSet<>();
@@ -750,7 +740,7 @@ public class ClassFactory implements Component {
 							classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())
 						);
 						logInfo("Added class paths: {}", String.join(", ", classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())));
-						return retrieve(className);
+						return get(className);
 					} else {
 						logWarn("Class paths are empty");
 					}
