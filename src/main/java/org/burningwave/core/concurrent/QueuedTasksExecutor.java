@@ -247,11 +247,13 @@ public class QueuedTasksExecutor implements Component {
 			task.setExecutor(this.executor);
 		} else if (TaskAbst.Execution.Mode.ASYNC.equals(task.executionMode)) {
 			Thread executor = new Thread(() -> {
-				asyncTasksInExecution.add(task);
-				task.execute();
-				asyncTasksInExecution.remove(task);
-				++executedTasksCount;
-				logExecutedTaskCount();
+				synchronized(task) {
+					asyncTasksInExecution.add(task);
+					task.execute();
+					asyncTasksInExecution.remove(task);
+					++executedTasksCount;
+					logExecutedTaskCount();
+				}
 			}, name + " - worker");
 			executor.setPriority(defaultPriority);
 			task.setExecutor(executor);
@@ -505,7 +507,9 @@ public class QueuedTasksExecutor implements Component {
 			}
 			executable = null;
 			executor = null;
-			notifyAll();
+			synchronized(this) {
+				notifyAll();
+			}
 		}
 		
 		abstract void execute0() throws Throwable;
