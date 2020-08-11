@@ -28,8 +28,8 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -38,6 +38,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -108,7 +109,7 @@ public class PathHelper implements Component {
 			loadMainClassPaths();	
 			loadAllPaths();
 			initializerTask = null;
-		}, Thread.MAX_PRIORITY);
+		}, Thread.MAX_PRIORITY).async();
 		initializerTask.addToQueue();
 		listenTo(config);
 	}
@@ -292,37 +293,45 @@ public class PathHelper implements Component {
 			groupName;
 		if (paths != null) {
 			Collection<String> pathGroup = getOrCreatePathGroup(groupName);
+			Collection<QueuedTasksExecutor.Task> tasks = new ArrayList<>();
 			for (String path : paths) {
-				if (path.matches(PATH_REGEX.pattern())) {
-					Map<Integer, List<String>> groupMap = Strings.extractAllGroups(PATH_REGEX, path);
-					FileSystemItem fileSystemItemParent = FileSystemItem.ofPath(groupMap.get(1).get(0));
-					if (fileSystemItemParent.exists()) {
-						String childrenSet = groupMap.get(2).get(0);
-						String childrenSetRegEx = groupMap.get(3).get(0);
-						Function<FileSystemItem.Criteria, Set<FileSystemItem>> childrenSupplier =
-							childrenSet.equalsIgnoreCase("children") ?
-								fileSystemItemParent::findInChildren :
-								childrenSet.equalsIgnoreCase("allChildren") ?
-									fileSystemItemParent::findInAllChildren : null;
-						if (childrenSupplier != null) {
-							Set<FileSystemItem> childrenFound = childrenSupplier.apply(
-								FileSystemItem.Criteria.forAllFileThat(
-									fileSystemItem -> fileSystemItem.getAbsolutePath().matches(childrenSetRegEx)
-								)
-							);
-							for (FileSystemItem fileSystemItem : childrenFound) {
+				tasks.add(
+					BackgroundExecutor.createTask(() -> {
+						if (path.matches(PATH_REGEX.pattern())) {
+							Map<Integer, List<String>> groupMap = Strings.extractAllGroups(PATH_REGEX, path);
+							FileSystemItem fileSystemItemParent = FileSystemItem.ofPath(groupMap.get(1).get(0));
+							if (fileSystemItemParent.exists()) {
+								String childrenSet = groupMap.get(2).get(0);
+								String childrenSetRegEx = groupMap.get(3).get(0);
+								Function<FileSystemItem.Criteria, Set<FileSystemItem>> childrenSupplier =
+									childrenSet.equalsIgnoreCase("children") ?
+										fileSystemItemParent::findInChildren :
+										childrenSet.equalsIgnoreCase("allChildren") ?
+											fileSystemItemParent::findInAllChildren : null;
+								if (childrenSupplier != null) {
+									Set<FileSystemItem> childrenFound = childrenSupplier.apply(
+										FileSystemItem.Criteria.forAllFileThat(
+											fileSystemItem -> fileSystemItem.getAbsolutePath().matches(childrenSetRegEx)
+										)
+									);
+									for (FileSystemItem fileSystemItem : childrenFound) {
+										pathGroup.add(fileSystemItem.getAbsolutePath());
+										allPaths.add(fileSystemItem.getAbsolutePath());
+									}
+								}
+							}
+						} else {
+							FileSystemItem fileSystemItem = FileSystemItem.ofPath(path);
+							if (fileSystemItem.exists()) {
 								pathGroup.add(fileSystemItem.getAbsolutePath());
 								allPaths.add(fileSystemItem.getAbsolutePath());
 							}
 						}
-					}
-				} else {
-					FileSystemItem fileSystemItem = FileSystemItem.ofPath(path);
-					if (fileSystemItem.exists()) {
-						pathGroup.add(fileSystemItem.getAbsolutePath());
-						allPaths.add(fileSystemItem.getAbsolutePath());
-					}
-				}
+					}).async().addToQueue()
+				);
+			}
+			for (QueuedTasksExecutor.Task task : tasks) {
+				task.join();
 			}
 			return pathGroup;
 		} else {
