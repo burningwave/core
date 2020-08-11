@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.iterable;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ForkJoinPool;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -48,9 +47,6 @@ import java.util.stream.Stream;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingConsumer;
-import org.burningwave.core.function.ThrowingFunction;
-import org.burningwave.core.function.ThrowingRunnable;
-import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("unchecked")
 public class IterableObjectHelper implements Component {
@@ -91,18 +87,6 @@ public class IterableObjectHelper implements Component {
 			itr.remove();
 			itemDestroyer.accept(itr.next());
 		}
-	}
-	
-	public <T> void executOnParallelStream(Collection<T> collection, ThrowingConsumer<Stream<T>, ?> streamConsumer) {
-		ForkJoinPool.submit(() -> {
-			ThrowingRunnable.run(() -> streamConsumer.accept(collection.parallelStream()));
-        }).join();
-	}
-	
-	public <T, O> O mapParallelStream(Collection<T> collection, ThrowingFunction<Stream<T>, O, ?> streamMapper) {
-		return ForkJoinPool.submit(() -> {
-			return ThrowingSupplier.get(() -> streamMapper.apply(collection.parallelStream()));
-        }).join();
 	}
 	
 	public <T> Collection<T> merge(

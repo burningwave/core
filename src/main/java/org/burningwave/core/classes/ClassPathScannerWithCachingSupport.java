@@ -28,8 +28,6 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -143,14 +141,10 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		FileSystemItem.Criteria filterAndExecutor = retrieveFileAndClassTesterAndExecutor(context);
 		//scanFileCriteria in this point has been changed by the previous method call
 		FileSystemItem.Criteria fileFilter = searchConfig.getScanFileCriteria();
-		IterableObjectHelper.executOnParallelStream(
-			context.getSearchConfig().getPaths(),
-			stream -> 
-				stream.forEach(basePath -> {
-					searchInCacheOrInFileSystem(basePath, context,
-							scanFileCriteriaHasNoPredicate, classCriteriaHasNoPredicate, filterAndExecutor, fileFilter);
-				})
-		);
+		context.getSearchConfig().getPaths().parallelStream().forEach(basePath -> {
+			searchInCacheOrInFileSystem(basePath, context,
+					scanFileCriteriaHasNoPredicate, classCriteriaHasNoPredicate, filterAndExecutor, fileFilter);
+		});
 	}
 
 	private void searchInCacheOrInFileSystem(

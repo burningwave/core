@@ -37,7 +37,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ForkJoinPool;
 
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.Properties;
@@ -67,7 +66,6 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.classes.Constructors Constructors;
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.classes.Fields Fields;
-	public static final ForkJoinPool ForkJoinPool;
 	public static final org.burningwave.core.iterable.Properties GlobalProperties;
 	public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
 	public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
@@ -86,7 +84,6 @@ public class StaticComponentContainer {
 	static {
 		try {
 			Throwables = org.burningwave.core.Throwables.create();
-			ForkJoinPool = new ForkJoinPool(Runtime.getRuntime().availableProcessors() > 4? Runtime.getRuntime().availableProcessors() - 3 : 1);
 			Objects = org.burningwave.core.Objects.create();
 			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create("Background executor", true, true);
 			Properties properties = new Properties();
@@ -153,7 +150,6 @@ public class StaticComponentContainer {
 					}
 					FileSystemHelper.deleteTemporaryFolders(true);
 					BackgroundExecutor.shutDown(true);
-					ForkJoinPool.shutdown();
 				})
 			);
 		} catch (Throwable exc){

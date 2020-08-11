@@ -38,7 +38,7 @@ public class PathScannerClassLoaderTest extends BaseTest {
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)
 			);
-			return Collections.list(classLoader.getResources("org/burningwave/core/Component.class"));			
+			return Collections.list(classLoader.getResources("org/burningwave/RuntimeException.class"));			
 		}, true);
 	}
 	
@@ -52,7 +52,7 @@ public class PathScannerClassLoaderTest extends BaseTest {
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)
 			);
-			return classLoader.getResource("org/burningwave/core/Component.class");			
+			return classLoader.getResource("org/burningwave/RuntimeException.class");			
 		});
 	}
 	

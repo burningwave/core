@@ -225,13 +225,11 @@ public class FileSystemItem implements ManagedLogger {
 		Supplier<C> setSupplier
 	) {
 		return Optional.ofNullable(childrenSupplier.get()).map(children ->
-			IterableObjectHelper.mapParallelStream(children, stream -> 
-				stream.filter(child -> 
-					filter.testWithTrueResultForNullPredicate(
-						new FileSystemItem[]{child, this}
-					)
-				).collect(Collectors.toCollection(setSupplier))
-			)
+			children.parallelStream().filter(child -> 
+				filter.testWithTrueResultForNullPredicate(
+					new FileSystemItem[]{child, this}
+				)
+			).collect(Collectors.toCollection(setSupplier))
 		).orElseGet(() -> null);
 	}
 	

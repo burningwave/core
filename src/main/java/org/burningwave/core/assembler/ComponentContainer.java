@@ -170,7 +170,7 @@ public class ComponentContainer implements ComponentSupplier {
 				this.init();
 				this.initializerTask = null;
 			}
-		}, Thread.MAX_PRIORITY).async();
+		}, Thread.MAX_PRIORITY);
 		initializerTask.submit();
 		return this;
 	}
@@ -393,9 +393,10 @@ public class ComponentContainer implements ComponentSupplier {
 					logError("Exception occurred while closing " + component, exc);
 				}
 			}),Thread.MIN_PRIORITY
-		).async().submit();
+		).submit();
 		if (wait) {
 			BackgroundExecutor.waitFor(cleaningTask);
+			BackgroundExecutor.waitForTasksEnding();
 			System.gc();
 		}
 		return this;
@@ -405,14 +406,19 @@ public class ComponentContainer implements ComponentSupplier {
 		if (wait) {
 			BackgroundExecutor.waitForTasksEnding();
 		}
-		QueuedTasksExecutor.Task cleaningTask = BackgroundExecutor.createTask(() -> {
+		ThrowingRunnable<?> cleaningRunnable = () -> {
 			for (ComponentContainer componentContainer : instances) {
 				componentContainer.waitForInitialization(false);
 				componentContainer.clear(wait);
 			}
-		}, Thread.MIN_PRIORITY).async().submit();
+		};
 		if (wait) {
-			BackgroundExecutor.waitFor(cleaningTask);
+			ThrowingRunnable.run(() -> cleaningRunnable.run());
+		} else {
+			BackgroundExecutor.createTask(cleaningRunnable, Thread.MIN_PRIORITY).submit();
+		}
+		Cache.clear();
+		if (wait) {
 			BackgroundExecutor.waitForTasksEnding();
 			System.gc();
 		}
