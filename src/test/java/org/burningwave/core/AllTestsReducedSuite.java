@@ -13,7 +13,8 @@ import org.junit.runner.RunWith;
 //	  ByteCodeHunterTest.class,
 //    ClassesTest.class,
 //    ClassFactoryTest.class,
-//    ClassHunterTest.class,
+	ComponentContainerTest.class,
+    ClassHunterTest.class,
 //    ClassLoadersTest.class,
 //    ClassPathHunterTest.class,
 //    CodeExecutorTest.class,
@@ -35,8 +36,8 @@ import org.junit.runner.RunWith;
 //    StringsTest.class,
 //    UnitSourceGeneratorTest.class,
 //    RepeatedClassFactoryTest.class,
-    ComponentContainerTest.class,
-    RepeatedComponentContainerTest.class
+//    ComponentContainerTest.class,
+//    RepeatedComponentContainerTest.class
 })
 //@ExcludeTags("Heavy")
 public class AllTestsReducedSuite {
