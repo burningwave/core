@@ -75,10 +75,10 @@ public class QueuedTasksExecutor implements Component {
 		tasksQueue = new CopyOnWriteArrayList<>();
 		asyncTasksInExecution = new CopyOnWriteArrayList<>();
 		id = UUID.randomUUID().toString();
+		this.loggingThreshold = loggingThreshold;
 		initializer = () -> {
 			this.name = name;
 			this.defaultPriority = defaultPriority;
-			this.loggingThreshold = loggingThreshold;
 			this.isDaemon = isDaemon;
 			init0();
 		};		
@@ -137,8 +137,7 @@ public class QueuedTasksExecutor implements Component {
 							executor.setPriority(this.defaultPriority);
 						}
 						if (isSync) {
-							++executedTasksCount;
-							logExecutedTaskCount();
+							incrementAndlogExecutedTaskCounters(true, false);
 						}						
 						synchronized(getMutex("suspensionCaller")) {
 							getMutex("suspensionCaller").notifyAll();
@@ -168,12 +167,18 @@ public class QueuedTasksExecutor implements Component {
 		executor.start();
 	}
 
-	void logExecutedTaskCount() {
-		if (executedTasksCount> 0 && executedTasksCount % loggingThreshold == 0) {
-			logInfo("Executed {} sync tasks", executedTasksCount);
+	void incrementAndlogExecutedTaskCounters(boolean incrementExecutedTasksCount, boolean incrementAsyncExecutorCount) {
+		if (incrementExecutedTasksCount) {
+			long counter = ++this.executedTasksCount;
+			if (counter % loggingThreshold == 0) {
+				logInfo("Executed {} sync tasks", counter);
+			}
 		}
-		if (asyncExecutorCount> 0 && asyncExecutorCount % loggingThreshold == 0) {
-			logInfo("Executed {} async tasks", asyncExecutorCount);
+		if (incrementAsyncExecutorCount) {
+			long counter = ++this.asyncExecutorCount;
+			if (counter % loggingThreshold == 0) {
+				logInfo("Executed {} async tasks", counter);
+			}
 		}
 	}
 	
@@ -255,12 +260,10 @@ public class QueuedTasksExecutor implements Component {
 				synchronized(task) {
 					asyncTasksInExecution.add(task);
 					task.execute();
-					++asyncExecutorCount;
 					asyncTasksInExecution.remove(task);
-					++executedTasksCount;
-					logExecutedTaskCount();
+					incrementAndlogExecutedTaskCounters(false, true);
 				}
-			}, name + " - async worker " + asyncExecutorCount);
+			}, name + "s");
 			executor.setPriority(defaultPriority);
 			task.setExecutor(executor);
 		}		
