@@ -100,6 +100,38 @@ public class PathHelper implements Component {
 	private Collection<String> allPaths;
 	private Properties config;
 	private QueuedTasksExecutor.Task initializerTask;
+	private BiConsumer<String, Collection<String>> pathAdder = (path, pathGroup) -> {
+		if (path.matches(PATH_REGEX.pattern())) {
+			Map<Integer, List<String>> groupMap = Strings.extractAllGroups(PATH_REGEX, path);
+			FileSystemItem fileSystemItemParent = FileSystemItem.ofPath(groupMap.get(1).get(0));
+			if (fileSystemItemParent.exists()) {
+				String childrenSet = groupMap.get(2).get(0);
+				String childrenSetRegEx = groupMap.get(3).get(0);
+				Function<FileSystemItem.Criteria, Set<FileSystemItem>> childrenSupplier =
+					childrenSet.equalsIgnoreCase("children") ?
+						fileSystemItemParent::findInChildren :
+						childrenSet.equalsIgnoreCase("allChildren") ?
+							fileSystemItemParent::findInAllChildren : null;
+				if (childrenSupplier != null) {
+					Set<FileSystemItem> childrenFound = childrenSupplier.apply(
+						FileSystemItem.Criteria.forAllFileThat(
+							fileSystemItem -> fileSystemItem.getAbsolutePath().matches(childrenSetRegEx)
+						)
+					);
+					for (FileSystemItem fileSystemItem : childrenFound) {
+						pathGroup.add(fileSystemItem.getAbsolutePath());
+						allPaths.add(fileSystemItem.getAbsolutePath());
+					}
+				}
+			}
+		} else {
+			FileSystemItem fileSystemItem = FileSystemItem.ofPath(path);
+			if (fileSystemItem.exists()) {
+				pathGroup.add(fileSystemItem.getAbsolutePath());
+				allPaths.add(fileSystemItem.getAbsolutePath());
+			}
+		}
+	};
 	
 	private PathHelper(Properties config) {
 		pathGroups = new ConcurrentHashMap<>();
@@ -294,44 +326,21 @@ public class PathHelper implements Component {
 		if (paths != null) {
 			Collection<String> pathGroup = getOrCreatePathGroup(groupName);
 			Collection<QueuedTasksExecutor.Task> tasks = new ArrayList<>();
-			for (String path : paths) {
-				tasks.add(
-					BackgroundExecutor.createTask(() -> {
-						if (path.matches(PATH_REGEX.pattern())) {
-							Map<Integer, List<String>> groupMap = Strings.extractAllGroups(PATH_REGEX, path);
-							FileSystemItem fileSystemItemParent = FileSystemItem.ofPath(groupMap.get(1).get(0));
-							if (fileSystemItemParent.exists()) {
-								String childrenSet = groupMap.get(2).get(0);
-								String childrenSetRegEx = groupMap.get(3).get(0);
-								Function<FileSystemItem.Criteria, Set<FileSystemItem>> childrenSupplier =
-									childrenSet.equalsIgnoreCase("children") ?
-										fileSystemItemParent::findInChildren :
-										childrenSet.equalsIgnoreCase("allChildren") ?
-											fileSystemItemParent::findInAllChildren : null;
-								if (childrenSupplier != null) {
-									Set<FileSystemItem> childrenFound = childrenSupplier.apply(
-										FileSystemItem.Criteria.forAllFileThat(
-											fileSystemItem -> fileSystemItem.getAbsolutePath().matches(childrenSetRegEx)
-										)
-									);
-									for (FileSystemItem fileSystemItem : childrenFound) {
-										pathGroup.add(fileSystemItem.getAbsolutePath());
-										allPaths.add(fileSystemItem.getAbsolutePath());
-									}
-								}
-							}
-						} else {
-							FileSystemItem fileSystemItem = FileSystemItem.ofPath(path);
-							if (fileSystemItem.exists()) {
-								pathGroup.add(fileSystemItem.getAbsolutePath());
-								allPaths.add(fileSystemItem.getAbsolutePath());
-							}
-						}
-					}).async().submit()
-				);
-			}
-			for (QueuedTasksExecutor.Task task : tasks) {
-				task.join();
+			int pathSize = paths.size();
+			if (pathSize > 1) {
+				for (String path : paths) {
+					pathAdder.accept(path, pathGroup);
+					tasks.add(
+						BackgroundExecutor.createTask(() -> {
+							pathAdder.accept(path, pathGroup);
+						}).async().submit()
+					);
+				}
+				for (QueuedTasksExecutor.Task task : tasks) {
+					task.join();
+				}
+			} else if (pathSize == 1){
+				pathAdder.accept(paths.iterator().next(), pathGroup);
 			}
 			return pathGroup;
 		} else {

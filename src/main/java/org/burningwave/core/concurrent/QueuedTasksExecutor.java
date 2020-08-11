@@ -60,6 +60,7 @@ public class QueuedTasksExecutor implements Component {
 	private int loggingThreshold;
 	int defaultPriority;
 	private long executedTasksCount;
+	private long asyncExecutorCount;
 	private boolean isDaemon;
 	private String name;
 	private Boolean terminated;
@@ -96,6 +97,7 @@ public class QueuedTasksExecutor implements Component {
 		supended = Boolean.FALSE;
 		terminated = Boolean.FALSE;
 		executedTasksCount = 0;
+		asyncExecutorCount = 0;
 		executor = new Thread(() -> {
 			while (!terminated) {
 				if (!tasksQueue.isEmpty()) {
@@ -113,34 +115,31 @@ public class QueuedTasksExecutor implements Component {
 						}
 						TaskAbst<?, ?> task =	this.currentTask = taskIterator.next();
 						synchronized (task) {
-							if (!tasksQueue.contains(task)) {
+							if (!tasksQueue.remove(task)) {
 								continue;
 							}
-							tasksQueue.remove(task);
-							Thread executor = task.executor;
-							if (!task.hasFinished()) {
-								int currentExecutablePriority = task.getPriority();
-								if (executor.getPriority() != currentExecutablePriority) {
-									executor.setPriority(currentExecutablePriority);
-								}
-								boolean isSync = executor == this.executor;
-								if (isSync) {
-									task.execute();
-								} else {
-									executor.start();
-								}
-								if (task.runOnlyOnce) {
-									runOnlyOnceTasksToBeExecuted.remove(task.id);
-								}
-								if (executor.getPriority() != this.defaultPriority) {
-									executor.setPriority(this.defaultPriority);
-								}
-								if (isSync) {
-									++executedTasksCount;
-									logExecutedTaskCount();
-								}
-							}
 						}
+						Thread executor = task.executor;
+						int currentExecutablePriority = task.getPriority();
+						if (executor.getPriority() != currentExecutablePriority) {
+							executor.setPriority(currentExecutablePriority);
+						}
+						boolean isSync = executor == this.executor;
+						if (isSync) {
+							task.execute();
+						} else {
+							executor.start();
+						}
+						if (task.runOnlyOnce) {
+							runOnlyOnceTasksToBeExecuted.remove(task.id);
+						}
+						if (executor.getPriority() != this.defaultPriority) {
+							executor.setPriority(this.defaultPriority);
+						}
+						if (isSync) {
+							++executedTasksCount;
+							logExecutedTaskCount();
+						}						
 						synchronized(getMutex("suspensionCaller")) {
 							getMutex("suspensionCaller").notifyAll();
 						}
@@ -246,6 +245,9 @@ public class QueuedTasksExecutor implements Component {
 		if (TaskAbst.Execution.Mode.SYNC.equals(task.executionMode)) {
 			task.setExecutor(this.executor);
 		} else if (TaskAbst.Execution.Mode.ASYNC.equals(task.executionMode)) {
+			if (task.executor != null) {
+				asyncExecutorCount--;
+			}
 			Thread executor = new Thread(() -> {
 				synchronized(task) {
 					asyncTasksInExecution.add(task);
@@ -254,7 +256,7 @@ public class QueuedTasksExecutor implements Component {
 					++executedTasksCount;
 					logExecutedTaskCount();
 				}
-			}, name + " - worker");
+			}, name + " - async worker " + asyncExecutorCount++);
 			executor.setPriority(defaultPriority);
 			task.setExecutor(executor);
 		}		
@@ -498,6 +500,11 @@ public class QueuedTasksExecutor implements Component {
 			return (T)this;
 		}
 		
+		public T sync() {
+			this.executionMode = Execution.Mode.SYNC;
+			return (T)this;
+		}
+		
 		void execute() {
 			try {
 				execute0();						
@@ -673,49 +680,47 @@ public class QueuedTasksExecutor implements Component {
 		QueuedTasksExecutor createQueuedTasksExecutor(String name, int priority, boolean isDaemon, int loggingThreshold) {
 			return new QueuedTasksExecutor(name, priority, isDaemon, loggingThreshold) {
 				
-				<T> Function<ThrowingSupplier<T, ? extends Throwable>, ProducerTask<T>> getProducerTaskSupplier() {
-					return executable -> new ProducerTask<T>(executable) {
-						public ProducerTask<T> submit() {
+				<T> Function<ThrowingSupplier<T, ? extends Throwable>, QueuedTasksExecutor.ProducerTask<T>> getProducerTaskSupplier() {
+					return executable -> new QueuedTasksExecutor.ProducerTask<T>(executable) {
+						
+						public QueuedTasksExecutor.ProducerTask<T> submit() {
 							return addToQueue(this);
 						};
 						
 						public QueuedTasksExecutor.ProducerTask<T> changePriority(int priority) {
-							int oldPriority = this.priority;
-							super.changePriority(checkAndCorrectPriority(priority));
-							if (oldPriority != priority) {
-								synchronized (this) {
-									if (getByPriority(oldPriority).tasksQueue.remove(this)) {
-										if (!this.hasFinished()) {
-											getByPriority(priority).addToQueue(this);										
-										}
-									}
-								}
-							}
-							return this;
+							return Group.this.changePriority(this, priority);
 						};
+						
+						
+						public QueuedTasksExecutor.ProducerTask<T> async() {
+							return Group.this.changeExecutionMode(this, QueuedTasksExecutor.TaskAbst.Execution.Mode.ASYNC);
+						}
+						
+						public QueuedTasksExecutor.ProducerTask<T> sync() {
+							return Group.this.changeExecutionMode(this, QueuedTasksExecutor.TaskAbst.Execution.Mode.SYNC);
+						}
+						
 					};
 				}
 				
-				<T> Function<ThrowingRunnable<? extends Throwable> , Task> getTaskSupplier() {
-					return executable -> new Task(executable) {
-						public Task submit() {
+				<T> Function<ThrowingRunnable<? extends Throwable> , QueuedTasksExecutor.Task> getTaskSupplier() {
+					return executable -> new QueuedTasksExecutor.Task(executable) {
+						
+						public QueuedTasksExecutor.Task submit() {
 							return addToQueue(this);
 						};
 						
-						public Task changePriority(int priority) {
-							int oldPriority = this.priority;
-							super.changePriority(checkAndCorrectPriority(priority));
-							if (oldPriority != priority) {
-								synchronized (this) {
-									if (getByPriority(oldPriority).tasksQueue.remove(this)) {
-										if (!this.hasFinished()) {
-											getByPriority(priority).addToQueue(this);										
-										}
-									}
-								}
-							}
-							return this;
+						public QueuedTasksExecutor.Task changePriority(int priority) {
+							return Group.this.changePriority(this, priority);
 						};
+						
+						public QueuedTasksExecutor.Task async() {
+							return Group.this.changeExecutionMode(this, QueuedTasksExecutor.TaskAbst.Execution.Mode.ASYNC);
+						}
+						
+						public QueuedTasksExecutor.Task sync() {
+							return Group.this.changeExecutionMode(this, QueuedTasksExecutor.TaskAbst.Execution.Mode.SYNC);
+						}
 					};
 				}
 				
@@ -754,7 +759,33 @@ public class QueuedTasksExecutor implements Component {
 				}
 			};
 		}
-
+		
+		<E, T extends TaskAbst<E, T>> T changePriority(T task, int priority) {
+			int oldPriority = task.priority;
+			task.priority = checkAndCorrectPriority(priority);
+			if (oldPriority != priority) {
+				synchronized (task) {
+					if (getByPriority(oldPriority).tasksQueue.remove(task)) {
+						getByPriority(priority).addToQueue(task);
+					}
+				}
+			}
+			return task;
+		}
+		
+		<E, T extends TaskAbst<E, T>> T changeExecutionMode(T task, QueuedTasksExecutor.TaskAbst.Execution.Mode executionMode) {
+			if (task.executionMode != executionMode) {
+				task.executionMode = executionMode;
+				synchronized (task) {
+					QueuedTasksExecutor queuedTasksExecutor = getByPriority(task.priority);
+					if (queuedTasksExecutor.tasksQueue.contains(task)) {
+						queuedTasksExecutor.setExecutorOf(task);
+					}
+				}
+			}
+			return task;
+		}
+		
 		public boolean shutDown(boolean waitForTasksTermination) {
 			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				queuedTasksExecutorBox.getValue().shutDown(waitForTasksTermination);
