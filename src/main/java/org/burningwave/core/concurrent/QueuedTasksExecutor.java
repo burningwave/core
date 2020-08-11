@@ -114,7 +114,7 @@ public class QueuedTasksExecutor implements Component {
 						TaskAbst<?, ?> task =	this.currentTask = taskIterator.next();
 						synchronized (task) {
 							if (!tasksQueue.contains(task)) {
-								break;
+								continue;
 							}
 						}
 						tasksQueue.remove(task);
