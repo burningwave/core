@@ -58,7 +58,7 @@ public class QueuedTasksExecutor implements Component {
 	private TaskAbst<?, ?> currentTask;
 	private Boolean supended;
 	private int loggingThreshold;
-	private int defaultPriority;
+	int defaultPriority;
 	private long executedTasksCount;
 	private boolean isDaemon;
 	private String name;
@@ -283,7 +283,7 @@ public class QueuedTasksExecutor implements Component {
 	
 	public QueuedTasksExecutor waitForTasksEnding(int priority) {
 		executor.setPriority(priority);
-		tasksQueue.stream().forEach(executable -> executable.changePriority(priority));
+		tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
 		while (!tasksQueue.isEmpty()) {
 			synchronized(getMutex("executingFinishedWaiter")) {
 				if (!tasksQueue.isEmpty()) {
@@ -720,20 +720,31 @@ public class QueuedTasksExecutor implements Component {
 				}
 				
 				public QueuedTasksExecutor waitForTasksEnding(int priority) {
-					while (!tasksQueue.isEmpty()) {
-						synchronized(getMutex("executingFinishedWaiter")) {
-							if (!tasksQueue.isEmpty()) {
-								try {
-									getMutex("executingFinishedWaiter").wait();
-								} catch (InterruptedException exc) {
-									logWarn("Exception occurred", exc);
+					if (priority == defaultPriority) {
+						while (!tasksQueue.isEmpty()) {
+							synchronized(getMutex("executingFinishedWaiter")) {
+								if (!tasksQueue.isEmpty()) {
+									try {
+										getMutex("executingFinishedWaiter").wait();
+									} catch (InterruptedException exc) {
+										logWarn("Exception occurred", exc);
+									}
 								}
 							}
 						}
+						asyncTasksInExecution.stream().forEach(task -> {
+							task.join0(false);
+						});
+					} else {	
+						tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
+						asyncTasksInExecution.stream().forEach(task -> {
+							Thread taskExecutor = task.executor;
+							if (taskExecutor != null) {
+								taskExecutor.setPriority(priority);
+							}
+							task.join0(false);
+						});						
 					}
-					asyncTasksInExecution.stream().forEach(task -> {
-						task.join0(false);
-					});
 					return this;
 				}
 				
@@ -758,23 +769,25 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public void waitForTasksEnding(int priority) {
+			QueuedTasksExecutor lastToBeWaitedFor = getByPriority(priority);
 			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
-				queuedTasksExecutor.waitForTasksEnding(priority);
-			}			
+				if (queuedTasksExecutor != lastToBeWaitedFor) {
+					queuedTasksExecutor.waitForTasksEnding(priority);
+				}
+			}
+			lastToBeWaitedFor.waitForTasksEnding(priority);			
 		}
 
-		public void waitFor(Task task) {
+		public <E, T extends TaskAbst<E, T>> void waitFor(T task) {
 			waitFor(task, Thread.currentThread().getPriority());	
 		}
 		
-		public void waitFor(Task task, int priority) {
-			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
-				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
-				if (queuedTasksExecutor.tasksQueue.contains(task)) {	
-					queuedTasksExecutor.waitFor(task, priority);
-				}
-			}			
+		public <E, T extends TaskAbst<E, T>> void waitFor(T task, int priority) {
+			if (task.getPriority() != priority) {
+				task.changePriority(priority);
+			}
+			task.join0(false);
 		}
 	}
 }
