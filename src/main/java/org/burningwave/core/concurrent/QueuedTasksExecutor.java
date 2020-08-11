@@ -126,9 +126,10 @@ public class QueuedTasksExecutor implements Component {
 							}
 							boolean isSync = executor == this.executor;
 							if (isSync) {
-								task.execute();
+								synchronized (task) {
+									task.execute();
+								}
 							} else {
-								asyncTasksInExecution.add(task);
 								executor.start();
 							}
 							if (task.runOnlyOnce) {
@@ -249,6 +250,7 @@ public class QueuedTasksExecutor implements Component {
 		} else if (TaskAbst.Execution.Mode.ASYNC.equals(task.executionMode)) {
 			Thread executor = new Thread(() -> {
 				synchronized (task) {
+					asyncTasksInExecution.add(task);
 					task.execute();
 					asyncTasksInExecution.remove(task);
 					++executedTasksCount;
@@ -498,7 +500,7 @@ public class QueuedTasksExecutor implements Component {
 			return (T)this;
 		}
 		
-		synchronized void execute() {
+		void execute() {
 			try {
 				execute0();						
 			} catch (Throwable exc) {
