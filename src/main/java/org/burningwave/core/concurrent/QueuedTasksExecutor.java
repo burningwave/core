@@ -112,6 +112,11 @@ public class QueuedTasksExecutor implements Component {
 							}
 						}
 						TaskAbst<?, ?> task =	this.currentTask = taskIterator.next();
+						synchronized (task) {
+							if (!tasksQueue.contains(task)) {
+								break;
+							}
+						}
 						tasksQueue.remove(task);
 						Thread executor = task.executor;
 						if (!task.hasFinished()) {
@@ -700,7 +705,6 @@ public class QueuedTasksExecutor implements Component {
 							super.changePriority(checkAndCorrectPriority(priority));
 							if (oldPriority != priority) {
 								synchronized (this) {
-									logInfo("old priority {}" + oldPriority);
 									if (getByPriority(oldPriority).tasksQueue.remove(this)) {
 										if (!this.hasFinished()) {
 											getByPriority(priority).addToQueue(this);										
