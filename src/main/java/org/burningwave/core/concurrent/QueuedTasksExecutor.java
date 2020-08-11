@@ -169,8 +169,11 @@ public class QueuedTasksExecutor implements Component {
 	}
 
 	void logExecutedTaskCount() {
-		if (executedTasksCount % loggingThreshold == 0) {
-			logInfo("Executed {} tasks", executedTasksCount);
+		if (executedTasksCount> 0 && executedTasksCount % loggingThreshold == 0) {
+			logInfo("Executed {} sync tasks", executedTasksCount);
+		}
+		if (asyncExecutorCount> 0 && asyncExecutorCount % loggingThreshold == 0) {
+			logInfo("Executed {} async tasks", asyncExecutorCount);
 		}
 	}
 	
