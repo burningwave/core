@@ -202,8 +202,8 @@ public class QueuedTasksExecutor implements Component {
 	
 	<T> Function<ThrowingSupplier<T, ? extends Throwable>, ProducerTask<T>> getProducerTaskSupplier() {
 		return executable -> new ProducerTask<T>(executable) {
-			public ProducerTask<T> addToQueue() {
-				return add(this);
+			public ProducerTask<T> submit() {
+				return addToQueue(this);
 			};
 		};
 	}
@@ -216,13 +216,13 @@ public class QueuedTasksExecutor implements Component {
 	
 	<T> Function<ThrowingRunnable<? extends Throwable> , Task> getTaskSupplier() {
 		return executable -> new Task(executable) {
-			public Task addToQueue() {
-				return add(this);
+			public Task submit() {
+				return addToQueue(this);
 			};
 		};
 	}
 
-	<E, T extends TaskAbst<E, T>> T add(T task) {
+	<E, T extends TaskAbst<E, T>> T addToQueue(T task) {
 		if (canBeExecuted(task)) {
 			try {
 				setExecutorOf(task);
@@ -337,7 +337,7 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		} else {
-			changePriorityToAllTaskBefore(createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).setPriority(priority).addToQueue(), priority);
+			changePriorityToAllTaskBefore(createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).setPriority(priority).submit(), priority);
 		}
 		return this;
 	}
@@ -396,7 +396,7 @@ public class QueuedTasksExecutor implements Component {
 				logInfo("Unexecuted tasks {}", executables.size());
 				executables.clear();
 				asyncTasksInExecution.clear();
-			}).setPriorityToCurrentThreadPriority().addToQueue();
+			}).setPriorityToCurrentThreadPriority().submit();
 		} else {
 			suspend();
 			this.terminated = Boolean.TRUE;
@@ -540,7 +540,7 @@ public class QueuedTasksExecutor implements Component {
 			return exc != null;
 		}
 		
-		public abstract T addToQueue();
+		public abstract T submit();
 		
 	}
 	
@@ -658,8 +658,8 @@ public class QueuedTasksExecutor implements Component {
 				
 				<T> Function<ThrowingSupplier<T, ? extends Throwable>, ProducerTask<T>> getProducerTaskSupplier() {
 					return executable -> new ProducerTask<T>(executable) {
-						public ProducerTask<T> addToQueue() {
-							return add(this);
+						public ProducerTask<T> submit() {
+							return addToQueue(this);
 						};
 						
 						public QueuedTasksExecutor.ProducerTask<T> setPriority(int priority) {
@@ -668,7 +668,7 @@ public class QueuedTasksExecutor implements Component {
 							if (oldPriority != priority && oldPriority != 0) {
 								if (getByPriority(oldPriority).tasksQueue.remove(this)) {
 									if (!this.hasFinished()) {
-										getByPriority(priority).add(this);										
+										getByPriority(priority).addToQueue(this);										
 									}
 								}
 							}
@@ -679,8 +679,8 @@ public class QueuedTasksExecutor implements Component {
 				
 				<T> Function<ThrowingRunnable<? extends Throwable> , Task> getTaskSupplier() {
 					return executable -> new Task(executable) {
-						public Task addToQueue() {
-							return add(this);
+						public Task submit() {
+							return addToQueue(this);
 						};
 						
 						public Task setPriority(int priority) {
@@ -689,7 +689,7 @@ public class QueuedTasksExecutor implements Component {
 							if (oldPriority != priority && oldPriority != 0) {
 								if (getByPriority(oldPriority).tasksQueue.remove(this)) {
 									if (!this.hasFinished()) {
-										getByPriority(priority).add(this);										
+										getByPriority(priority).addToQueue(this);										
 									}
 								}
 							}

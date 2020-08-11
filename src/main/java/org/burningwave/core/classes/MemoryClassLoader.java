@@ -28,11 +28,10 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -387,9 +386,9 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		this.notLoadedByteCodes = new HashMap<>();
 		this.loadedByteCodes = new HashMap<>();
 		BackgroundExecutor.createTask(() -> {
-			IterableObjectHelper.deepClear(notLoadedByteCodes);
-			IterableObjectHelper.deepClear(loadedByteCodes);
-		}, Thread.MIN_PRIORITY).addToQueue();
+			notLoadedByteCodes.clear();
+			loadedByteCodes.clear();
+		}, Thread.MIN_PRIORITY).submit();
 		return this;
 	}
 	

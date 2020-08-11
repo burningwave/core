@@ -123,7 +123,7 @@ public static class Configuration {
 											File target = new File(classPath.getAbsolutePath());
 											new File(copy.getAbsolutePath()).renameTo(target);
 											return Paths.clean(target.getAbsolutePath());
-										}).async().addToQueue()
+										}).async().submit()
 									);
 								}
 								classPaths.add(

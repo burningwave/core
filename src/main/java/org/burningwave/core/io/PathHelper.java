@@ -110,7 +110,7 @@ public class PathHelper implements Component {
 			loadAllPaths();
 			initializerTask = null;
 		}, Thread.MAX_PRIORITY).async();
-		initializerTask.addToQueue();
+		initializerTask.submit();
 		listenTo(config);
 	}
 	
@@ -327,7 +327,7 @@ public class PathHelper implements Component {
 								allPaths.add(fileSystemItem.getAbsolutePath());
 							}
 						}
-					}).async().addToQueue()
+					}).async().submit()
 				);
 			}
 			for (QueuedTasksExecutor.Task task : tasks) {

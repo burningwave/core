@@ -174,7 +174,7 @@ public class FileSystemHelper implements Component {
 					StandardOpenOption.APPEND
 				);
 			}
-		}, Thread.MIN_PRIORITY).addToQueue();
+		}, Thread.MIN_PRIORITY).submit();
 	}
 	
 	public boolean delete(String absolutePath) {
@@ -192,7 +192,7 @@ public class FileSystemHelper implements Component {
 				deleteFoldersTask.join();
 			}
 			temporaryFolders.clear();
-		}, Thread.MIN_PRIORITY).addToQueue();
+		}, Thread.MIN_PRIORITY).submit();
 	}
 
 	public void deleteUndeletedFoldersOfPreviousExecution() {
@@ -216,7 +216,7 @@ public class FileSystemHelper implements Component {
 				}
 			}
 			markToBeDeletedOnNextExecution(markedToBeDeletedOnNextExecution);
-		}, Thread.MIN_PRIORITY).addToQueue();
+		}, Thread.MIN_PRIORITY).submit();
 	}
 	
 	@Override
