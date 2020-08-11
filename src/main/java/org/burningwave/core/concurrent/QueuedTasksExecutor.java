@@ -116,31 +116,29 @@ public class QueuedTasksExecutor implements Component {
 							if (!tasksQueue.contains(task)) {
 								continue;
 							}
-						}
-						tasksQueue.remove(task);
-						Thread executor = task.executor;
-						if (!task.hasFinished()) {
-							int currentExecutablePriority = task.getPriority();
-							if (executor.getPriority() != currentExecutablePriority) {
-								executor.setPriority(currentExecutablePriority);
-							}
-							boolean isSync = executor == this.executor;
-							if (isSync) {
-								synchronized (task) {
-									task.execute();
+							tasksQueue.remove(task);
+							Thread executor = task.executor;
+							if (!task.hasFinished()) {
+								int currentExecutablePriority = task.getPriority();
+								if (executor.getPriority() != currentExecutablePriority) {
+									executor.setPriority(currentExecutablePriority);
 								}
-							} else {
-								executor.start();
-							}
-							if (task.runOnlyOnce) {
-								runOnlyOnceTasksToBeExecuted.remove(task.id);
-							}
-							if (executor.getPriority() != this.defaultPriority) {
-								executor.setPriority(this.defaultPriority);
-							}
-							if (isSync) {
-								++executedTasksCount;
-								logExecutedTaskCount();
+								boolean isSync = executor == this.executor;
+								if (isSync) {
+									task.execute();
+								} else {
+									executor.start();
+								}
+								if (task.runOnlyOnce) {
+									runOnlyOnceTasksToBeExecuted.remove(task.id);
+								}
+								if (executor.getPriority() != this.defaultPriority) {
+									executor.setPriority(this.defaultPriority);
+								}
+								if (isSync) {
+									++executedTasksCount;
+									logExecutedTaskCount();
+								}
 							}
 						}
 						synchronized(getMutex("suspensionCaller")) {
@@ -249,13 +247,11 @@ public class QueuedTasksExecutor implements Component {
 			task.setExecutor(this.executor);
 		} else if (TaskAbst.Execution.Mode.ASYNC.equals(task.executionMode)) {
 			Thread executor = new Thread(() -> {
-				synchronized (task) {
-					asyncTasksInExecution.add(task);
-					task.execute();
-					asyncTasksInExecution.remove(task);
-					++executedTasksCount;
-					logExecutedTaskCount();
-				}
+				asyncTasksInExecution.add(task);
+				task.execute();
+				asyncTasksInExecution.remove(task);
+				++executedTasksCount;
+				logExecutedTaskCount();
 			}, name + " - worker");
 			executor.setPriority(defaultPriority);
 			task.setExecutor(executor);
