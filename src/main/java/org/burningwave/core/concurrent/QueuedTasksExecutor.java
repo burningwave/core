@@ -261,7 +261,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task) {
-		return waitFor(task, task.getPriority());
+		return waitFor(task, Thread.currentThread().getPriority());
 	}
 	
 	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, int priority) {
@@ -731,21 +731,29 @@ public class QueuedTasksExecutor implements Component {
 			queuedTasksExecutors = null;
 			return true;
 		}
-
+		
 		public void waitForTasksEnding() {
+			waitForTasksEnding(Thread.currentThread().getPriority());	
+		}
+		
+		public void waitForTasksEnding(int priority) {
 			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
-				queuedTasksExecutor.waitForTasksEnding(queuedTasksExecutor.defaultPriority);
+				queuedTasksExecutor.waitForTasksEnding(priority);
 			}			
 		}
 
 		public void waitFor(Task task) {
+			waitFor(task, Thread.currentThread().getPriority());	
+		}
+		
+		public void waitFor(Task task, int priority) {
 			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
 				if (queuedTasksExecutor.tasksQueue.contains(task)) {	
-					queuedTasksExecutor.waitFor(task, queuedTasksExecutor.defaultPriority);
+					queuedTasksExecutor.waitFor(task, priority);
 				}
 			}			
-		}		
+		}
 	}
 }
