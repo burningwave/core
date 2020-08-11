@@ -304,8 +304,9 @@ public class Cache implements Component {
 			if (itemDestroyer != null && destroy && item != null) {
 				String finalPath = path;
 				BackgroundExecutor.createTask(() -> 
-					itemDestroyer.accept(finalPath, item)
-				);
+					itemDestroyer.accept(finalPath, item),
+					Thread.MIN_PRIORITY
+				).submit();
 			}
 			return item;
 		}

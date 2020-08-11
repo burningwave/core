@@ -628,21 +628,31 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public <T> ProducerTask<T> createTask(ThrowingSupplier<T, ? extends Throwable> executable, int priority) {
-			QueuedTasksExecutor queuedTasksExecutor = getByPriority(priority);
-			if (queuedTasksExecutor == null) {
-				if (priority < Thread.NORM_PRIORITY) {
-					priority = Thread.MIN_PRIORITY;
-				} else if (priority < Thread.MAX_PRIORITY) {
-					priority = Thread.NORM_PRIORITY;
-				} else {
-					priority = Thread.MAX_PRIORITY;
-				}
-			}			
-			return queuedTasksExecutor.createTask(executable);
+			return getByPriority(priority).createTask(executable);
 		}
 
 		QueuedTasksExecutor getByPriority(int priority) {
-			return queuedTasksExecutors.get(String.valueOf(priority));
+			QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutors.get(String.valueOf(priority));
+			if (queuedTasksExecutor == null) {
+				queuedTasksExecutor = queuedTasksExecutors.get(String.valueOf(checkAndCorrectPriority(priority)));
+			}	
+			return queuedTasksExecutor;
+		}
+
+		int checkAndCorrectPriority(int priority) {
+			if (priority != Thread.MIN_PRIORITY || 
+				priority != Thread.NORM_PRIORITY || 
+				priority != Thread.MAX_PRIORITY	
+			) {
+				if (priority < Thread.NORM_PRIORITY) {
+					return Thread.MIN_PRIORITY;
+				} else if (priority < Thread.MAX_PRIORITY) {
+					return Thread.NORM_PRIORITY;
+				} else {
+					return Thread.MAX_PRIORITY;
+				}
+			}
+			return priority;
 		}
 		
 		public Task createTask(ThrowingRunnable<? extends Throwable> executable) {
@@ -664,8 +674,8 @@ public class QueuedTasksExecutor implements Component {
 						
 						public QueuedTasksExecutor.ProducerTask<T> setPriority(int priority) {
 							int oldPriority = this.priority;
-							super.setPriority(priority);
-							if (oldPriority != priority && oldPriority != 0) {
+							super.setPriority(checkAndCorrectPriority(priority));
+							if (oldPriority != priority) {
 								if (getByPriority(oldPriority).tasksQueue.remove(this)) {
 									if (!this.hasFinished()) {
 										getByPriority(priority).addToQueue(this);										
@@ -685,8 +695,8 @@ public class QueuedTasksExecutor implements Component {
 						
 						public Task setPriority(int priority) {
 							int oldPriority = this.priority;
-							super.setPriority(priority);
-							if (oldPriority != priority && oldPriority != 0) {
+							super.setPriority(checkAndCorrectPriority(priority));
+							if (oldPriority != priority) {
 								if (getByPriority(oldPriority).tasksQueue.remove(this)) {
 									if (!this.hasFinished()) {
 										getByPriority(priority).addToQueue(this);										
