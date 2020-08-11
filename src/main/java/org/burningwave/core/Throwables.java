@@ -28,7 +28,6 @@
  */
 package org.burningwave.core;
 
-import org.burningwave.RuntimeException;
 
 public class Throwables implements Component {
 	
