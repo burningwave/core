@@ -252,11 +252,12 @@ public class QueuedTasksExecutor implements Component {
 				synchronized(task) {
 					asyncTasksInExecution.add(task);
 					task.execute();
+					++asyncExecutorCount;
 					asyncTasksInExecution.remove(task);
 					++executedTasksCount;
 					logExecutedTaskCount();
 				}
-			}, name + " - async worker " + asyncExecutorCount++);
+			}, name + " - async worker " + asyncExecutorCount);
 			executor.setPriority(defaultPriority);
 			task.setExecutor(executor);
 		}		
