@@ -315,27 +315,29 @@ public class ClassFactory implements Component {
 									try {
 										try {
 											try {
-												return classLoader.loadClass(className);
-											} catch (ClassNotFoundException | NoClassDefFoundError exc) {
-												if (!isItPossibleToAddClassPaths) {
-													throw exc;
-												}
-												CompilationResult compilationResult = compilationTask.join();
-												Map<String, ByteBuffer> finalByteCodes = new HashMap<>(compilationResult.getCompiledFiles());
-												if (finalByteCodes.containsKey(className)) {
-													Class<?> cls = ClassLoaders.loadOrDefineByByteCode(className, finalByteCodes, classLoader);
-													if (!compilationClassPathHasBeenAdded && compileConfig.isStoringCompiledClassesEnabled()) {
-														ClassLoaders.addClassPath(
-															cls.getClassLoader(),
-															compilationResult.getClassPath().getAbsolutePath()::equals,
-															compilationResult.getClassPath().getAbsolutePath()
-														);
-														compilationClassPathHasBeenAdded = true;
+												try {
+													return classLoader.loadClass(className);
+												} catch (ClassNotFoundException | NoClassDefFoundError exc) {
+													if (!isItPossibleToAddClassPaths || compilationClassPathHasBeenAdded || !compileConfig.isStoringCompiledClassesEnabled()) {
+														throw exc;
 													}
-													return cls;	
+													CompilationResult compilationResult = compilationTask.join();
+													compilationClassPathHasBeenAdded = true;
+													ClassLoaders.addClassPath(
+														classLoader,
+														compilationResult.getClassPath().getAbsolutePath()::equals,
+														compilationResult.getClassPath().getAbsolutePath()
+													);
+													return get(className);
+												}								
+											} catch (ClassNotFoundException | NoClassDefFoundError exc) {
+												CompilationResult compilationResult = compilationTask.join();
+												Map<String, ByteBuffer> compiledClasses = new HashMap<>(compilationResult.getCompiledFiles());
+												if (compiledClasses.containsKey(className)) {
+													return ClassLoaders.loadOrDefineByByteCode(className, compiledClasses, classLoader);
 												}
 												throw exc;
-											}								
+											}
 										} catch (ClassNotFoundException | NoClassDefFoundError exc) {
 											if (!isItPossibleToAddClassPaths) {
 												throw exc;
