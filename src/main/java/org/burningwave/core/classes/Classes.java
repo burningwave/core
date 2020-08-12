@@ -818,8 +818,8 @@ public class Classes implements Component, MembersRetriever {
 			for (Collection<String> classPaths : classPathCollections) {
 				paths.addAll(classPaths);
 			}
-			paths.removeAll(getAllLoadedPaths(classLoader));
 			if (classLoader instanceof URLClassLoader || LowLevelObjectsHandler.isBuiltinClassLoader(classLoader)) {	
+				paths.removeAll(getAllLoadedPaths(classLoader));
 				Object target = classLoader instanceof URLClassLoader ?
 					classLoader :
 					Fields.getDirect(classLoader, "ucp");
