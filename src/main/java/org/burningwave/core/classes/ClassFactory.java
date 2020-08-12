@@ -392,6 +392,10 @@ public class ClassFactory implements Component {
 						
 						@Override
 						public void close() {
+							classesSearchedInAdditionalClassRepositoriesForClassLoader.clear();
+							classesSearchedInAdditionalClassRepositoriesForClassLoader = null;
+							classesSearchedInCompilationDependenciesPaths.clear();
+							classesSearchedInCompilationDependenciesPaths = null;
 							compilationTask.join().close();
 							super.close();
 							if (useOneShotJavaCompiler) {
@@ -719,7 +723,9 @@ public class ClassFactory implements Component {
 					classRepositories, criteriaOne.or(criteriaTwo)
 				).get()
 			);
-			return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, notFoundClasses, searchConfig);
+			return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
+				classLoader, className, notFoundClasses, searchConfig
+			);
 		}
 		
 		Class<?> searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
@@ -752,15 +758,14 @@ public class ClassFactory implements Component {
 					if (targetClassLoader == null) {
 						targetClassLoader = classLoader;
 						ClassLoaders.addClassPath(
-							targetClassLoader, (path) -> 
-								false,
+							targetClassLoader, searchConfig.checkForAddedClassesForAllPathThat,
 							classPath.getAbsolutePath()
 						);
 						logWarn("Before now no class loader has loaded {}", classPath.getAbsolutePath());
 					}
 					Collection<FileSystemItem> classPaths = searchResult.getClassPaths(criteriaTwo);
 					if (!classPaths.isEmpty()) {
-						ClassLoaders.addClassPaths(targetClassLoader, (path) -> false,
+						ClassLoaders.addClassPaths(targetClassLoader, searchConfig.checkForAddedClassesForAllPathThat,
 							classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())
 						);
 						logInfo("Added class paths: {}", String.join(", ", classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())));
