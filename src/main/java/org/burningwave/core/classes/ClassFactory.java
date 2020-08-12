@@ -376,7 +376,7 @@ public class ClassFactory implements Component {
 										loadBytecodesFromClassPaths(
 											this.byteCodesWrapper,
 											compilationTask.join().getCompiledFiles(),
-											compilationTask.join().getDependencies()
+											additionalClassRepositoriesForClassLoader
 										).get(), classLoader
 									);
 								}
