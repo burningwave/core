@@ -304,64 +304,65 @@ public class ClassFactory implements Component {
 						return compilationResult;
 					}, Thread.MAX_PRIORITY).async().submit();
 					return new ClassRetriever(this, getClassPathHunter(), classPathHelper, classLoaderSupplierForClassRetriever) {
+						private boolean isItPossibleToAddClassPaths = ClassLoaders.isItPossibleToAddClassPaths(classLoader);
 						@Override
 						public Class<?> get(String className) {
 							try {
 								try {
 									try {
-										return classLoader.loadClass(className);
+										try {
+											return classLoader.loadClass(className);
+										} catch (ClassNotFoundException | NoClassDefFoundError exc) {
+											if (!isItPossibleToAddClassPaths) {
+												throw exc;
+											}
+											CompilationResult compilationResult = compilationTask.join();
+											Map<String, ByteBuffer> finalByteCodes = new HashMap<>(compilationResult.getCompiledFiles());
+											Class<?> cls = ClassLoaders.loadOrDefineByByteCode(className, finalByteCodes, classLoader);
+											if (compileConfig.isStoringCompiledClassesEnabled() && finalByteCodes.containsKey(className)) {
+												ClassLoaders.addClassPath(
+													cls.getClassLoader(),
+													compilationResult.getClassPath().getAbsolutePath()::equals,
+													compilationResult.getClassPath().getAbsolutePath()
+												);
+											}
+											return cls;	
+										}								
 									} catch (ClassNotFoundException | NoClassDefFoundError exc) {
-										if (!ClassLoaders.isItPossibleToAddClassPaths(classLoader)) {
+										if (!isItPossibleToAddClassPaths) {
 											throw exc;
 										}
 										CompilationResult compilationResult = compilationTask.join();
-										Map<String, ByteBuffer> finalByteCodes = new HashMap<>(compilationResult.getCompiledFiles());
-										Class<?> cls = ClassLoaders.loadOrDefineByByteCode(className, finalByteCodes, classLoader);
-										if (compileConfig.isStoringCompiledClassesEnabled() && finalByteCodes.containsKey(className)) {
-											ClassLoaders.addClassPath(
-												cls.getClassLoader(),
-												compilationResult.getClassPath().getAbsolutePath()::equals,
-												compilationResult.getClassPath().getAbsolutePath()
-											);
-										}
-										return cls;	
-									}								
-								} catch (ClassNotFoundException | NoClassDefFoundError exc) {
-									if (!ClassLoaders.isItPossibleToAddClassPaths(classLoader)) {
-										throw exc;
+										CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+											compilationResult.getDependencies()
+										);
+										if (compileConfig.isStoringCompiledClassesEnabled()) {
+											String compilationResultAbsolutePath = compilationResult.getClassPath().getAbsolutePath();
+											searchConfig.addPaths(compilationResultAbsolutePath);
+											searchConfig.checkForAddedClassesForAllPathThat(compilationResultAbsolutePath::equals).useNewIsolatedClassLoader();
+										}									
+										return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, exc, searchConfig);
 									}
-									CompilationResult compilationResult = compilationTask.join();
-									CacheableSearchConfig searchConfig = SearchConfig.forPaths(
-										compilationResult.getDependencies()
-									);
-									if (compileConfig.isStoringCompiledClassesEnabled()) {
-										String compilationResultAbsolutePath = compilationResult.getClassPath().getAbsolutePath();
-										searchConfig.addPaths(compilationResultAbsolutePath);
-										searchConfig.checkForAddedClassesForAllPathThat(compilationResultAbsolutePath::equals).useNewIsolatedClassLoader();
-									}									
-									return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, exc, searchConfig);
-								}
-							} catch (ClassNotFoundException | NoClassDefFoundError exc) {
-								try {
-									if (!ClassLoaders.isItPossibleToAddClassPaths(classLoader)) {
+								} catch (ClassNotFoundException | NoClassDefFoundError exc) {
+									if (!isItPossibleToAddClassPaths) {
 										throw exc;
 									}
 									return computeClassPathsAndAddThemToClassLoaderAndTryToLoad(
 										classLoader, className, additionalClassRepositoriesForClassLoader, exc
 									);
-								} catch (ClassNotFoundException | NoClassDefFoundError exc2) {
-									return ThrowingSupplier.get(() -> {
-										return ClassLoaders.loadOrDefineByByteCode(className, 
-											loadBytecodesFromClassPaths(
-												this.byteCodesWrapper,
-												additionalClassRepositoriesForClassLoader,
-												compilationTask.join().getCompiledFiles()
-											).get(), classLoader
-										);
-									});
 								}
+							} catch (ClassNotFoundException | NoClassDefFoundError exc2) {
+								return ThrowingSupplier.get(() -> {
+									return ClassLoaders.loadOrDefineByByteCode(className, 
+										loadBytecodesFromClassPaths(
+											this.byteCodesWrapper,
+											additionalClassRepositoriesForClassLoader,
+											compilationTask.join().getCompiledFiles()
+										).get(), classLoader
+									);
+								});
 							}
-						}
+						} 
 						
 						@Override
 						public void close() {
