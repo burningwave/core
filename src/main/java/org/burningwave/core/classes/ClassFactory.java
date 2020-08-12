@@ -337,7 +337,7 @@ public class ClassFactory implements Component {
 									if (compileConfig.isStoringCompiledClassesEnabled()) {
 										String compilationResultAbsolutePath = compilationResult.getClassPath().getAbsolutePath();
 										searchConfig.addPaths(compilationResultAbsolutePath);
-										searchConfig.checkForAddedClassesForAllPathThat(compilationResultAbsolutePath::equals);
+										searchConfig.checkForAddedClassesForAllPathThat(compilationResultAbsolutePath::equals).useNewIsolatedClassLoader();
 									}									
 									return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, exc, searchConfig);
 								}
@@ -703,6 +703,16 @@ public class ClassFactory implements Component {
 			Throwable exc,
 			CacheableSearchConfig searchConfig
 		) throws ClassNotFoundException, NoClassDefFoundError {
+			return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, exc, searchConfig, false);
+		}
+		
+		Class<?> searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
+			ClassLoader classLoader,
+			String className,
+			Throwable exc,
+			CacheableSearchConfig searchConfig,
+			boolean recursive
+		) throws ClassNotFoundException, NoClassDefFoundError {
 			Collection<String> notFoundClasses = Classes.retrieveNames(exc);
 			ClassCriteria criteriaOne = ClassCriteria.create().className(className::equals);
 			ClassCriteria criteriaTwo = ClassCriteria.create().className(notFoundClasses::contains);
@@ -734,6 +744,11 @@ public class ClassFactory implements Component {
 					} else {
 						logWarn("Class paths are empty");
 					}
+				} else if (!recursive) {
+					logWarn("Class paths are null try recursive call");
+					return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
+						classLoader, className, exc, searchConfig.checkForAddedClasses(), !recursive
+					);
 				} else {
 					logWarn("Class paths are null");
 					for (String path : searchConfig.getPaths()) {
