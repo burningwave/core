@@ -305,6 +305,7 @@ public class ClassFactory implements Component {
 					}, Thread.MAX_PRIORITY).async().submit();
 					return new ClassRetriever(this, getClassPathHunter(), classPathHelper, classLoaderSupplierForClassRetriever) {
 						private boolean isItPossibleToAddClassPaths = ClassLoaders.isItPossibleToAddClassPaths(classLoader);
+						private boolean compilationClassPathHasBeenAdded;
 						private Collection<String> classesSearchedInCompilationDependenciesPaths = new HashSet<>();
 						private Collection<String> classesSearchedInAdditionalClassRepositoriesForClassLoader = new HashSet<>();
 						@Override
@@ -322,12 +323,13 @@ public class ClassFactory implements Component {
 											Map<String, ByteBuffer> finalByteCodes = new HashMap<>(compilationResult.getCompiledFiles());
 											if (finalByteCodes.containsKey(className)) {
 												Class<?> cls = ClassLoaders.loadOrDefineByByteCode(className, finalByteCodes, classLoader);
-												if (compileConfig.isStoringCompiledClassesEnabled()) {
+												if (!compilationClassPathHasBeenAdded && compileConfig.isStoringCompiledClassesEnabled()) {
 													ClassLoaders.addClassPath(
 														cls.getClassLoader(),
 														compilationResult.getClassPath().getAbsolutePath()::equals,
 														compilationResult.getClassPath().getAbsolutePath()
 													);
+													compilationClassPathHasBeenAdded = true;
 												}
 												return cls;	
 											}
