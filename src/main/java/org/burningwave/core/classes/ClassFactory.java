@@ -728,18 +728,19 @@ public class ClassFactory implements Component {
 					if (targetClassLoader == null) {
 						targetClassLoader = classLoader;
 						ClassLoaders.addClassPath(
-							targetClassLoader, searchConfig.checkForAddedClassesForAllPathThat,
+							targetClassLoader, (path) -> 
+								false,
 							classPath.getAbsolutePath()
 						);
 						logWarn("Before now no class loader has loaded {}", classPath.getAbsolutePath());
 					}
 					Collection<FileSystemItem> classPaths = searchResult.getClassPaths(criteriaTwo);
 					if (!classPaths.isEmpty()) {
-						ClassLoaders.addClassPaths(targetClassLoader, searchConfig.checkForAddedClassesForAllPathThat,
+						ClassLoaders.addClassPaths(targetClassLoader, (path) -> false,
 							classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())
 						);
 						logInfo("Added class paths: {}", String.join(", ", classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())));
-						return targetClassLoader.loadClass(className);
+						return get(className);
 					} else {
 						logWarn("Class paths are empty");
 					}
@@ -766,7 +767,7 @@ public class ClassFactory implements Component {
 			}
 			throw Throwables.toRuntimeException(exc);
 		}
-	
+		
 		@Override
 		public void close() {
 			if (classLoader instanceof MemoryClassLoader) {
