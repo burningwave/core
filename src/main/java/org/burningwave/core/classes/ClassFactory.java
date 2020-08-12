@@ -347,10 +347,12 @@ public class ClassFactory implements Component {
 												throw exc;
 											}
 											classesSearchedInAdditionalClassRepositoriesForClassLoader.addAll(notFoundClasses);
-											computeClassPathsAndAddThemToClassLoaderAndTryToLoad(
+											if (!computeClassPathsAndAddThemToClassLoaderAndTryToLoad(
 												classLoader, additionalClassRepositoriesForClassLoader, className, notFoundClasses
-											);
-											return get(className);
+											).isEmpty()) {
+												return get(className);
+											}
+											throw exc;
 										}
 									} catch (ClassNotFoundException | NoClassDefFoundError exc) {
 										if (!isItPossibleToAddClassPaths) {
@@ -370,8 +372,10 @@ public class ClassFactory implements Component {
 											searchConfig.checkForAddedClassesForAllPathThat(compilationResultAbsolutePath::equals).useNewIsolatedClassLoader();
 										}										
 										classesSearchedInCompilationDependenciesPaths.addAll(notFoundClasses);
-										searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, 	notFoundClasses, searchConfig);
-										return get(className);
+										if (!searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, notFoundClasses, searchConfig).isEmpty()) {
+											return get(className);
+										}
+										throw exc;
 									}
 								} catch (ClassNotFoundException | NoClassDefFoundError exc) {
 									return ClassLoaders.loadOrDefineByByteCode(className, 
@@ -716,7 +720,7 @@ public class ClassFactory implements Component {
 			return classes;
 		}
 		
-		void computeClassPathsAndAddThemToClassLoaderAndTryToLoad(
+		Collection<String> computeClassPathsAndAddThemToClassLoaderAndTryToLoad(
 			ClassLoader classLoader,
 			Collection<String> classRepositories,
 			String className,
@@ -730,21 +734,21 @@ public class ClassFactory implements Component {
 					classRepositories, criteriaOne.or(criteriaTwo)
 				).get()
 			);
-			searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
+			return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
 				classLoader, className, notFoundClasses, searchConfig
 			);
 		}
 		
-		void searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
+		Collection<String> searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
 			ClassLoader classLoader,
 			String className,
 			Collection<String> notFoundClasses,
 			CacheableSearchConfig searchConfig
 		) {
-			searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, notFoundClasses, searchConfig, false);
+			return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, notFoundClasses, searchConfig, false);
 		}
 		
-		void searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
+		Collection<String> searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
 			ClassLoader classLoader,
 			String className,
 			Collection<String> notFoundClasses ,
@@ -755,25 +759,30 @@ public class ClassFactory implements Component {
 			ClassCriteria criteriaTwo = ClassCriteria.create().className(notFoundClasses::contains);
 			searchConfig.by(criteriaOne.or(criteriaTwo));
 			logInfo("Searching for {}, {} in: {}", className, String.join(", ", notFoundClasses), String.join(", ", searchConfig.getPaths()));
+			Collection<String> addedClassPaths = new HashSet<>();
 			try (ClassPathHunter.SearchResult searchResult = classPathHunter.findBy(
 					searchConfig
 				)
-			) {
+			) {	
 				FileSystemItem classPath = searchResult.getClassPaths(criteriaOne).stream().findFirst().orElseGet(() -> null);
 				if (classPath != null) {
 					ClassLoader targetClassLoader = ClassLoaders.getClassLoaderOfPath(classLoader, classPath.getAbsolutePath());
 					if (targetClassLoader == null) {
 						targetClassLoader = classLoader;
-						ClassLoaders.addClassPath(
-							targetClassLoader, path -> false,
-							classPath.getAbsolutePath()
+						addedClassPaths.addAll(
+							ClassLoaders.addClassPath(
+								targetClassLoader, searchConfig.checkForAddedClassesForAllPathThat,
+								classPath.getAbsolutePath()
+							)
 						);
 						logWarn("Before now no class loader has loaded {}", classPath.getAbsolutePath());
 					}
 					Collection<FileSystemItem> classPaths = searchResult.getClassPaths(criteriaTwo);
 					if (!classPaths.isEmpty()) {
-						ClassLoaders.addClassPaths(targetClassLoader, path -> false,
-							classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())
+						addedClassPaths.addAll(
+							ClassLoaders.addClassPaths(targetClassLoader, searchConfig.checkForAddedClassesForAllPathThat,
+								classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())
+							)
 						);
 						logInfo("Added class paths: {}", String.join(", ", classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())));
 					} else {
@@ -781,8 +790,10 @@ public class ClassFactory implements Component {
 					}
 				} else if (!recursive) {
 					logWarn("Class paths are null try recursive call");
-					searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
-						classLoader, className, notFoundClasses, searchConfig.checkForAddedClasses(), !recursive
+					addedClassPaths.addAll(
+						searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
+							classLoader, className, notFoundClasses, searchConfig.checkForAddedClasses(), !recursive
+						)
 					);
 				} else {
 					logWarn("Class paths are null");
@@ -795,6 +806,7 @@ public class ClassFactory implements Component {
 					}
 				}
 			}
+			return addedClassPaths;
 		}
 		
 		@Override

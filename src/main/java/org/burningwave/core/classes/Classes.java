@@ -808,15 +808,15 @@ public class Classes implements Component, MembersRetriever {
 			}
 		}
 		
-		public boolean addClassPath(ClassLoader classLoader, String... classPaths) {
+		public Collection<String> addClassPath(ClassLoader classLoader, String... classPaths) {
 			return addClassPaths(classLoader, Arrays.asList(classPaths));
 		}
 		
-		public boolean addClassPath(ClassLoader classLoader, Predicate<String> checkForAddedClasses, String... classPaths) {
+		public Collection<String> addClassPath(ClassLoader classLoader, Predicate<String> checkForAddedClasses, String... classPaths) {
 			return addClassPaths(classLoader, checkForAddedClasses, Arrays.asList(classPaths));
 		}
 		
-		public boolean addClassPaths(ClassLoader classLoader, Predicate<String> checkForAddedClasses, Collection<String>... classPathCollections) {
+		public Collection<String> addClassPaths(ClassLoader classLoader, Predicate<String> checkForAddedClasses, Collection<String>... classPathCollections) {
 			if (LowLevelObjectsHandler.isClassLoaderDelegate(classLoader)) {
 				return addClassPaths(Fields.getDirect(classLoader, "classLoader"));
 			}
@@ -826,24 +826,25 @@ public class Classes implements Component, MembersRetriever {
 			}
 			if (classLoader instanceof URLClassLoader || LowLevelObjectsHandler.isBuiltinClassLoader(classLoader)) {	
 				paths.removeAll(getAllLoadedPaths(classLoader));
-				Object target = classLoader instanceof URLClassLoader ?
-					classLoader :
-					Fields.getDirect(classLoader, "ucp");
-				if (target != null) {
-					Consumer<URL> classPathAdder = 	urls -> Methods.invokeDirect(target, "addURL", urls);
-					paths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
-						classPathAdder.accept(url);
-					});
-					return true;
-				}				
+				if (!paths.isEmpty()) {
+					Object target = classLoader instanceof URLClassLoader ?
+						classLoader :
+						Fields.getDirect(classLoader, "ucp");
+					if (target != null) {
+						Consumer<URL> classPathAdder = 	urls -> Methods.invokeDirect(target, "addURL", urls);
+						paths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
+							classPathAdder.accept(url);
+						});
+						return paths;
+					}
+				}
 			} else if (classLoader instanceof PathScannerClassLoader) {
-				((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(paths, checkForAddedClasses);
-				return true;
+				return ((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(paths, checkForAddedClasses);
 			}
-			return false;
+			return new HashSet<>();
 		}
 		
-		public boolean addClassPaths(ClassLoader classLoader, Collection<String>... classPathCollections) {
+		public Collection<String> addClassPaths(ClassLoader classLoader, Collection<String>... classPathCollections) {
 			return addClassPaths(classLoader, (path) -> false, classPathCollections);
 		}
 
