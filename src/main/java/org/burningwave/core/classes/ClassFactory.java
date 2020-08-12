@@ -721,7 +721,7 @@ public class ClassFactory implements Component {
 			Collection<String> classRepositories,
 			String className,
 			Collection<String> notFoundClasses
-		) throws ClassNotFoundException, NoClassDefFoundError {
+		) {
 			ClassCriteria criteriaOne = ClassCriteria.create().className(className::equals);
 			ClassCriteria criteriaTwo = ClassCriteria.create().className(notFoundClasses::contains);
 			
@@ -740,7 +740,7 @@ public class ClassFactory implements Component {
 			String className,
 			Collection<String> notFoundClasses,
 			CacheableSearchConfig searchConfig
-		) throws ClassNotFoundException, NoClassDefFoundError {
+		) {
 			searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, notFoundClasses, searchConfig, false);
 		}
 		
@@ -750,7 +750,7 @@ public class ClassFactory implements Component {
 			Collection<String> notFoundClasses ,
 			CacheableSearchConfig searchConfig,
 			boolean recursive
-		) throws ClassNotFoundException, NoClassDefFoundError {
+		) {
 			ClassCriteria criteriaOne = ClassCriteria.create().className(className::equals);
 			ClassCriteria criteriaTwo = ClassCriteria.create().className(notFoundClasses::contains);
 			searchConfig.by(criteriaOne.or(criteriaTwo));
@@ -765,14 +765,14 @@ public class ClassFactory implements Component {
 					if (targetClassLoader == null) {
 						targetClassLoader = classLoader;
 						ClassLoaders.addClassPath(
-							targetClassLoader, searchConfig.checkForAddedClassesForAllPathThat,
+							targetClassLoader, path -> false,
 							classPath.getAbsolutePath()
 						);
 						logWarn("Before now no class loader has loaded {}", classPath.getAbsolutePath());
 					}
 					Collection<FileSystemItem> classPaths = searchResult.getClassPaths(criteriaTwo);
 					if (!classPaths.isEmpty()) {
-						ClassLoaders.addClassPaths(targetClassLoader, searchConfig.checkForAddedClassesForAllPathThat,
+						ClassLoaders.addClassPaths(targetClassLoader, path -> false,
 							classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())
 						);
 						logInfo("Added class paths: {}", String.join(", ", classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())));
