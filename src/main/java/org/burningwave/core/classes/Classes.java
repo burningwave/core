@@ -605,24 +605,27 @@ public class Classes implements Component, MembersRetriever {
 			MethodHandle definePackageMethod
 		) throws ClassNotFoundException {
 			try {
-	    		return (Class<T>) classLoader.loadClass(className);
-	    	} catch (ClassNotFoundException | NoClassDefFoundError outerEx) {
-	    		try {
-	    			Class<T> cls = defineOrLoad(classLoader, defineClassMethod, className, byteCodeSupplier.apply(className));
+				try {
+					return (Class<T>) classLoader.loadClass(className);
+				}  catch (ClassNotFoundException | NoClassDefFoundError exc) {
+					Class<T> cls = defineOrLoad(classLoader, defineClassMethod, className, byteCodeSupplier.apply(className));
 	    			definePackageFor(cls, classLoader, definePackageMethod);
 	    			return cls;
-				} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException outerExc) {
-					String newNotFoundClassName = Classes.retrieveNames(outerExc).stream().findFirst().orElseGet(() -> null);
-					loadOrDefineByByteCode(
-						newNotFoundClassName,
-						byteCodeSupplier, classLoader, defineClassMethod, definePackageMethod
-	        		);
-					return loadOrDefineByByteCode(className, byteCodeSupplier,
-						classLoader,
-						defineClassMethod, definePackageMethod
-	        		);
 				}
-	    	}
+			}  catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException exc) {
+				if (byteCodeSupplier.apply(className) == null) {
+					throw new ClassNotFoundException(className);
+				}
+				String newNotFoundClassName = Classes.retrieveNames(exc).stream().findFirst().orElseGet(() -> null);
+				loadOrDefineByByteCode(
+					newNotFoundClassName,
+					byteCodeSupplier, classLoader, defineClassMethod, definePackageMethod
+        		);
+				return loadOrDefineByByteCode(className, byteCodeSupplier,
+					classLoader,
+					defineClassMethod, definePackageMethod
+        		);
+			}
 	    }
 		
 		public <T> Class<T> loadOrDefine(
@@ -642,29 +645,29 @@ public class Classes implements Component, MembersRetriever {
 			MethodHandle defineClassMethod, 
 			MethodHandle definePackageMethod
 		) throws ClassNotFoundException {
-	    	try {
-	    		return (Class<T>)classLoader.loadClass(toLoad.getName());
-	    	} catch (ClassNotFoundException | NoClassDefFoundError outerEx) {
-	    		try {
-	    			Class<T> cls = defineOrLoad(classLoader, defineClassMethod, toLoad.getName(), Streams.shareContent(Classes.getByteCode(toLoad)));
+			try {
+				try {
+					return (Class<T>)classLoader.loadClass(toLoad.getName());
+				} catch (ClassNotFoundException | NoClassDefFoundError exc) {
+					Class<T> cls = defineOrLoad(classLoader, defineClassMethod, toLoad.getName(), Streams.shareContent(Classes.getByteCode(toLoad)));
 	    			definePackageFor(cls, classLoader, definePackageMethod);
 	    			return cls;
-				} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException outerExc) {
-					String newNotFoundClassName = Classes.retrieveNames(outerExc).stream().findFirst().orElseGet(() -> null);
-					loadOrDefine(
-	        			Class.forName(
-	        				newNotFoundClassName, false, toLoad.getClassLoader()
-	        			),
-	        			classLoader, defineClassMethod, definePackageMethod
-	        		);
-					return (Class<T>)loadOrDefine(
-	        			Class.forName(
-	        					toLoad.getName(), false, toLoad.getClassLoader()
-	        			),
-	        			classLoader, defineClassMethod, definePackageMethod
-	        		);
 				}
-	    	}
+			} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException exc) {
+				String newNotFoundClassName = Classes.retrieveNames(exc).stream().findFirst().orElseGet(() -> null);
+				loadOrDefine(
+        			Class.forName(
+        				newNotFoundClassName, false, toLoad.getClassLoader()
+        			),
+        			classLoader, defineClassMethod, definePackageMethod
+        		);
+				return (Class<T>)loadOrDefine(
+        			Class.forName(
+        					toLoad.getName(), false, toLoad.getClassLoader()
+        			),
+        			classLoader, defineClassMethod, definePackageMethod
+        		);
+			}
 	    }
 		
 		public <T> Class<T> defineOrLoad(ClassLoader classLoader, JavaClass javaClass) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
@@ -688,6 +691,9 @@ public class Classes implements Component, MembersRetriever {
 				logWarn("Class {} is already defined", className);
 				return (Class<T>)classLoader.loadClass(className);
 			} catch (Throwable exc) {
+				if (byteCode == null) {
+					throw new ClassNotFoundException(className);
+				}
 				throw Throwables.toRuntimeException(exc);
 			}
 		}
