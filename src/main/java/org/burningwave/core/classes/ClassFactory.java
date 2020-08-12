@@ -703,16 +703,6 @@ public class ClassFactory implements Component {
 			Throwable exc,
 			CacheableSearchConfig searchConfig
 		) throws ClassNotFoundException, NoClassDefFoundError {
-			return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, exc, searchConfig, false);
-		}
-		
-		Class<?> searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
-			ClassLoader classLoader,
-			String className,
-			Throwable exc,
-			CacheableSearchConfig searchConfig,
-			boolean recursive
-		) throws ClassNotFoundException, NoClassDefFoundError {
 			Collection<String> notFoundClasses = Classes.retrieveNames(exc);
 			ClassCriteria criteriaOne = ClassCriteria.create().className(className::equals);
 			ClassCriteria criteriaTwo = ClassCriteria.create().className(notFoundClasses::contains);
@@ -728,27 +718,21 @@ public class ClassFactory implements Component {
 					if (targetClassLoader == null) {
 						targetClassLoader = classLoader;
 						ClassLoaders.addClassPath(
-							targetClassLoader, (path) -> 
-								false,
+							targetClassLoader, searchConfig.checkForAddedClassesForAllPathThat,
 							classPath.getAbsolutePath()
 						);
 						logWarn("Before now no class loader has loaded {}", classPath.getAbsolutePath());
 					}
 					Collection<FileSystemItem> classPaths = searchResult.getClassPaths(criteriaTwo);
 					if (!classPaths.isEmpty()) {
-						ClassLoaders.addClassPaths(targetClassLoader, (path) -> false,
+						ClassLoaders.addClassPaths(targetClassLoader, searchConfig.checkForAddedClassesForAllPathThat,
 							classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())
 						);
 						logInfo("Added class paths: {}", String.join(", ", classPaths.stream().map(fIS -> fIS.getAbsolutePath()).collect(Collectors.toSet())));
-						return get(className);
+						return targetClassLoader.loadClass(className);
 					} else {
 						logWarn("Class paths are empty");
 					}
-				} else if (!recursive) {
-					logWarn("Class paths are null try recursive call");
-					return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(
-						classLoader, className, exc, searchConfig.checkForAddedClasses(), !recursive
-					);
 				} else {
 					logWarn("Class paths are null");
 					for (String path : searchConfig.getPaths()) {
@@ -767,7 +751,7 @@ public class ClassFactory implements Component {
 			}
 			throw Throwables.toRuntimeException(exc);
 		}
-		
+	
 		@Override
 		public void close() {
 			if (classLoader instanceof MemoryClassLoader) {
