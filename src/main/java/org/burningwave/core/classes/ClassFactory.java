@@ -310,46 +310,37 @@ public class ClassFactory implements Component {
 							try {
 								try {
 									try {
-										try {
-											return classLoader.loadClass(className);
-										} catch (ClassNotFoundException | NoClassDefFoundError exc) {
-											if (!isItPossibleToAddClassPaths) {
-												throw exc;
-											}
-											CompilationResult compilationResult = compilationTask.join();
-											Map<String, ByteBuffer> finalByteCodes = new HashMap<>(compilationResult.getCompiledFiles());
-											Class<?> cls = ClassLoaders.loadOrDefineByByteCode(className, finalByteCodes, classLoader);
-											if (compileConfig.isStoringCompiledClassesEnabled() && finalByteCodes.containsKey(className)) {
-												ClassLoaders.addClassPath(
-													cls.getClassLoader(),
-													compilationResult.getClassPath().getAbsolutePath()::equals,
-													compilationResult.getClassPath().getAbsolutePath()
-												);
-											}
-											return cls;	
-										}								
+										return classLoader.loadClass(className);
 									} catch (ClassNotFoundException | NoClassDefFoundError exc) {
 										if (!isItPossibleToAddClassPaths) {
 											throw exc;
 										}
 										CompilationResult compilationResult = compilationTask.join();
-										CacheableSearchConfig searchConfig = SearchConfig.forPaths(
-											compilationResult.getDependencies()
-										);
-										if (compileConfig.isStoringCompiledClassesEnabled()) {
-											String compilationResultAbsolutePath = compilationResult.getClassPath().getAbsolutePath();
-											searchConfig.addPaths(compilationResultAbsolutePath);
-											searchConfig.checkForAddedClassesForAllPathThat(compilationResultAbsolutePath::equals).useNewIsolatedClassLoader();
-										}									
-										return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, exc, searchConfig);
-									}
+										Map<String, ByteBuffer> finalByteCodes = new HashMap<>(compilationResult.getCompiledFiles());
+										Class<?> cls = ClassLoaders.loadOrDefineByByteCode(className, finalByteCodes, classLoader);
+										if (compileConfig.isStoringCompiledClassesEnabled() && finalByteCodes.containsKey(className)) {
+											ClassLoaders.addClassPath(
+												cls.getClassLoader(),
+												compilationResult.getClassPath().getAbsolutePath()::equals,
+												compilationResult.getClassPath().getAbsolutePath()
+											);
+										}
+										return cls;	
+									}								
 								} catch (ClassNotFoundException | NoClassDefFoundError exc) {
 									if (!isItPossibleToAddClassPaths) {
 										throw exc;
 									}
-									return computeClassPathsAndAddThemToClassLoaderAndTryToLoad(
-										classLoader, className, additionalClassRepositoriesForClassLoader, exc
+									CompilationResult compilationResult = compilationTask.join();
+									CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+										compilationResult.getDependencies()
 									);
+									if (compileConfig.isStoringCompiledClassesEnabled()) {
+										String compilationResultAbsolutePath = compilationResult.getClassPath().getAbsolutePath();
+										searchConfig.addPaths(compilationResultAbsolutePath);
+										searchConfig.checkForAddedClassesForAllPathThat(compilationResultAbsolutePath::equals).useNewIsolatedClassLoader();
+									}									
+									return searchClassPathsAndAddThemToClassLoaderAndTryToLoad(classLoader, className, exc, searchConfig);
 								}
 							} catch (ClassNotFoundException | NoClassDefFoundError exc2) {
 								return ThrowingSupplier.get(() -> {
