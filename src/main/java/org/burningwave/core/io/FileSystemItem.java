@@ -984,5 +984,9 @@ public class FileSystemItem implements ManagedLogger {
 			return this.allThat(childAndSuperParent -> predicate.test(childAndSuperParent[0]));
 		}
 		
+		public final Criteria allFileThat(final BiPredicate<FileSystemItem, FileSystemItem> predicate) {
+			return this.allThat(childAndSuperParent -> predicate.test(childAndSuperParent[0], childAndSuperParent[1]));
+		}
+		
 	}
 }

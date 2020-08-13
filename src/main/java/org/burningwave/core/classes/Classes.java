@@ -175,6 +175,10 @@ public class Classes implements Component, MembersRetriever {
 		return path;
 	}
 	
+	public String toPath(String className) {
+		return className.replace(".", "/");
+	}
+	
 	public String retrieveName(
 		final byte[] classFileBuffer
 	) {
@@ -908,4 +912,5 @@ public class Classes implements Component, MembersRetriever {
 			}
 		}
 	}
+
 }

@@ -144,29 +144,39 @@ public class JavaMemoryCompiler implements Component {
 		);
 	}
 	
+	
+	
 	public CompilationResult compile(CompileConfig config) {
 		return compile(
 			config.getSources(),
-			IterableObjectHelper.merge(
-				config::getClassPaths,
-				config::getAdditionalClassPaths,
-				() -> 
-					pathHelper.getPaths(
-						Configuration.Key.CLASS_PATHS
-					)
-			),
-			IterableObjectHelper.merge(
-				config::getClassRepositories,
-				config::getAdditionalClassRepositories,
-				() -> {
-					Collection<String> classRepositories = pathHelper.getPaths(
-						Configuration.Key.CLASS_REPOSITORIES
-					);
-					return classRepositories;
-				}
-			),
+			getClassPathsFrom(config),
+			getClassRepositoriesFrom(config),
 			config.isStoringCompiledClassesEnabled(),
 			config.isStoringCompiledClassesToNewFolderEnabled()
+		);
+	}
+
+	Collection<String> getClassRepositoriesFrom(CompileConfig config) {
+		return IterableObjectHelper.merge(
+			config::getClassRepositories,
+			config::getAdditionalClassRepositories,
+			() -> {
+				Collection<String> classRepositories = pathHelper.getPaths(
+					Configuration.Key.CLASS_REPOSITORIES
+				);
+				return classRepositories;
+			}
+		);
+	}
+
+	Collection<String> getClassPathsFrom(CompileConfig config) {
+		return IterableObjectHelper.merge(
+			config::getClassPaths,
+			config::getAdditionalClassPaths,
+			() -> 
+				pathHelper.getPaths(
+					Configuration.Key.CLASS_PATHS
+				)
 		);
 	}
 	
@@ -216,7 +226,7 @@ public class JavaMemoryCompiler implements Component {
 
 	private Map<String, ByteBuffer> compile(Compilation.Context context, Throwable thr) {
 		if (!context.classPaths.isEmpty()) {
-			logInfo("... Using class paths: {}",String.join(", ", context.classPaths));
+			logInfo("... Using class paths:\n\t{}",String.join("\n\t", context.classPaths));
 		}
 		List<String> options = new ArrayList<String>();
 		if (!context.options.isEmpty()) {
@@ -513,7 +523,7 @@ public class JavaMemoryCompiler implements Component {
 							ClassCriteria.create().packageName((iteratedClassPackageName) ->
 								Objects.equals(iteratedClassPackageName, packageName)									
 							)
-						).get()
+						).get().values()
 					);
 				}
 				return classPaths;
@@ -530,7 +540,7 @@ public class JavaMemoryCompiler implements Component {
 							sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
 							classRepositories,
 							ClassCriteria.create().allThat(classPredicate)
-						).get()
+						).get().values()
 					);
 				}
 				return classPaths;

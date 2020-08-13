@@ -10,6 +10,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
@@ -154,6 +155,13 @@ public class ClassFactoryTest extends BaseTest {
 		getOrBuildClassWithExternalClassTestOne(true, "ComplexExample", "ComplexExampleTwo", new ClassLoader(null){});
 	}
 	
+//	@Test
+//	public void getOrBuildClassWithExternalClassTestNine() {
+//		testNotEmpty(() -> 
+//			_getOrBuildClassWithExternalClassTestTwo().getAllCompiledClasses()
+//		);
+//	}
+	
 	public void getOrBuildClassWithExternalClassTestOne(
 		boolean clearCache,
 		String classNameOne,
@@ -235,6 +243,11 @@ public class ClassFactoryTest extends BaseTest {
 	
 	@Test
 	public void getOrBuildClassWithExternalClassTestTwo() {
+		_getOrBuildClassWithExternalClassTestTwo();
+	}
+	
+	
+	public ClassFactory.ClassRetriever _getOrBuildClassWithExternalClassTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
 		UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
@@ -248,21 +261,24 @@ public class ClassFactoryTest extends BaseTest {
 		).addImport(
 			"org.springframework.core.serializer.DefaultSerializer"
 		);
-		
-			testNotNull(() -> {
-				try (ClassPathHunter.SearchResult searchResult = componentSupplier.getClassPathHunter().findBy(
-					SearchConfig.byCriteria(
-						ClassCriteria.create().className(Virtual.class.getName()::equals)
-					)
-				)) {
-					ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
+		AtomicReference<ClassFactory.ClassRetriever> classRetrieverWrapper = new AtomicReference<ClassFactory.ClassRetriever>();
+		testNotNull(() -> {
+			try (ClassPathHunter.SearchResult searchResult = componentSupplier.getClassPathHunter().findBy(
+				SearchConfig.byCriteria(
+					ClassCriteria.create().className(Virtual.class.getName()::equals)
+				)
+			)) {
+				classRetrieverWrapper.set(
+					componentSupplier.getClassFactory().loadOrBuildAndDefine(
 						LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassPaths(
 							pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 						)
-					);
-					return classRetriever.get("packagename.ExternalClassReferenceTest");
-				}
-			});
+					)
+				);
+				return classRetrieverWrapper.get().get("packagename.ExternalClassReferenceTest");
+			}
+		});
+		return classRetrieverWrapper.get();
 	}
 	
 	//@Test
