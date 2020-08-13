@@ -338,9 +338,12 @@ public class FileSystemItem implements ManagedLogger {
 					conventionedPath
 				);
 			} else {
-				return this.parent = FileSystemItem.ofPath(
-					absolutePath.getKey().substring(0, absolutePath.getKey().lastIndexOf("/"))
-				);
+				String absolutePath = getAbsolutePath();
+				String parentAbsolutePath = absolutePath.substring(0, absolutePath.lastIndexOf("/"));
+				if (isRoot(parentAbsolutePath)) {
+					parentAbsolutePath = "/";
+				}
+				return this.parent = FileSystemItem.ofPath(parentAbsolutePath);
 			}
 		}
 	}
@@ -421,7 +424,11 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public boolean isRoot() {
-		String absolutePathStr = getAbsolutePath();
+		return isRoot(getAbsolutePath());
+	}
+	
+	
+	private boolean isRoot(String absolutePathStr) {
 		return absolutePathStr.chars().filter(ch -> ch == '/').count() == 0 || absolutePathStr.equals("/");
 	}
 	
