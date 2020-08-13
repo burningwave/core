@@ -151,12 +151,12 @@ public class ClassFactoryTest extends BaseTest {
 	}
 	
 	@Test
-	public void getOrBuildClassWithExternalClassTestSeven() {
+	public void getOrBuildClassWithExternalClassTestNine() {
 		getOrBuildClassWithExternalClassTestOne(true, "ComplexExample", "ComplexExampleTwo", new ClassLoader(null){});
 	}
 	
 	@Test
-	public void getOrBuildClassWithExternalClassTestNine() {
+	public void getOrBuildClassWithExternalClassTestSeven() {
 		testNotNull(() -> {
 			_getOrBuildClassWithExternalClassTestTwo().getAllCompiledClasses();
 			ComponentSupplier componentSupplier = getComponentSupplier();
