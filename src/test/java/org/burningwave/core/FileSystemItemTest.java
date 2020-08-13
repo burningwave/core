@@ -119,7 +119,7 @@ public class FileSystemItemTest extends BaseTest {
 		testNotEmpty(() -> {
 				return FileSystemItem.ofPath(
 					System.getProperty("os.name").toLowerCase().contains("windows")?
-						"C:/Program Files (x86)" : "/home"
+						"C:/Windows" : "/home"
 				).getParent().getChildren();
 			}, true
 		);
