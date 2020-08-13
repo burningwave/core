@@ -46,10 +46,8 @@ import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
@@ -357,7 +355,7 @@ public class ClassFactory implements Component {
 											String absolutePathOfCompiledFilesClassPath = compilationTask.join().getClassPath().getAbsolutePath();
 											whereToFind.add(absolutePathOfCompiledFilesClassPath);
 											classesSearchedInAdditionalClassRepositoriesForClassLoader.addAll(notFoundClasses);
-											if (!computeClassPathsAndAddThemToClassLoader(
+											if (!classPathHelper.computeClassPathsAndAddThemToClassLoader(
 												classLoader, whereToFind, 
 												Arrays.asList(absolutePathOfCompiledFilesClassPath),
 												className,
@@ -384,7 +382,7 @@ public class ClassFactory implements Component {
 											classPathsToBeRefreshed.add(compilationResultAbsolutePath);
 										}										
 										classesSearchedInCompilationDependenciesPaths.addAll(notFoundClasses);
-										if (!computeClassPathsAndAddThemToClassLoader(
+										if (!classPathHelper.computeClassPathsAndAddThemToClassLoader(
 											classLoader, classPaths, classPathsToBeRefreshed, className, notFoundClasses
 										).isEmpty()) {
 											return get(className);
@@ -450,7 +448,7 @@ public class ClassFactory implements Component {
 										throw exc;
 									}
 									classesSearchedInAdditionalClassRepositoriesForClassLoader.addAll(notFoundClasses);
-									if (!computeClassPathsAndAddThemToClassLoader(
+									if (!classPathHelper.computeClassPathsAndAddThemToClassLoader(
 										classLoader, additionalClassRepositoriesForClassLoader, className, notFoundClasses
 									).isEmpty()) {
 										return get(className);
@@ -469,7 +467,7 @@ public class ClassFactory implements Component {
 								classRepositories.addAll(javaMemoryCompiler.getClassPathsFrom(compileConfig));
 								classRepositories.addAll(javaMemoryCompiler.getClassRepositoriesFrom(compileConfig));								
 								classesSearchedInCompilationDependenciesPaths.addAll(notFoundClasses);
-								if (!computeClassPathsAndAddThemToClassLoader(
+								if (!classPathHelper.computeClassPathsAndAddThemToClassLoader(
 									classLoader,
 									classRepositories,
 									className,
@@ -748,7 +746,6 @@ public class ClassFactory implements Component {
 	public static abstract class ClassRetriever implements Component {
 		private ClassLoader classLoader;
 		private ClassFactory classFactory;
-		private ClassPathHelper classPathHelper;
 		AtomicReference<Map<String, ByteBuffer>> byteCodesWrapper;
 		private Collection<String> uSGClassNames;
 		boolean isItPossibleToAddClassPaths;
@@ -765,7 +762,6 @@ public class ClassFactory implements Component {
 			this.classLoader = classLoaderSupplier.apply(this);
 			this.classFactory = classFactory;
 			this.classFactory.register(this);
-			this.classPathHelper = classPathHelper;
 			this.byteCodesWrapper = new AtomicReference<>();
 			this.isItPossibleToAddClassPaths = ClassLoaders.isItPossibleToAddClassPaths(classLoader);
 			classesSearchedInAdditionalClassRepositoriesForClassLoader = new HashSet<>();
@@ -789,110 +785,6 @@ public class ClassFactory implements Component {
 				classes.add(get(className));
 			}
 			return classes;
-		}
-		
-		Map<String, ClassLoader> computeClassPathsAndAddThemToClassLoader(
-			ClassLoader classLoader,
-			Collection<String> classRepositories,
-			String className,
-			Collection<String> notFoundClasses
-		) {
-			return computeClassPathsAndAddThemToClassLoader(classLoader, classRepositories, null, className, notFoundClasses);
-		}
-		
-		Map<String, ClassLoader> computeClassPathsAndAddThemToClassLoader(
-			ClassLoader classLoader,
-			Collection<String> classRepositories,
-			Collection<String> pathsToBeRefreshed,
-			String className,
-			Collection<String> notFoundClasses
-		) {	
-			Predicate<FileSystemItem> pathsToBeRefreshedPredicate = null;
-			if (pathsToBeRefreshed != null) {
-				pathsToBeRefreshedPredicate =  fileSystemItem -> pathsToBeRefreshed.contains(fileSystemItem.getAbsolutePath());
-			}
-			
-			Collection<String> notFoundClassClassPaths = new HashSet<>();
-			BiPredicate<FileSystemItem, JavaClass> criteriaOne = (fileSystemItemCls, javaClass) -> {
-				if (javaClass.getName().equals(className)) {
-					String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
-					notFoundClassClassPaths.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
-					return true;
-				}				
-				return false;
-			};
-			
-			Collection<String> notFoundClassesClassPaths = new HashSet<>();
-			BiPredicate<FileSystemItem, JavaClass> criteriaTwo = (fileSystemItemCls, javaClass) -> {
-				for (String notFoundClass : notFoundClasses) {
-					if (javaClass.getName().equals(notFoundClass)) {
-						String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
-						notFoundClassesClassPaths.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
-						return true;
-					}
-				}			
-				return false;
-			};
-			
-			Map<String, String> classPaths = this.classPathHelper.compute(
-				classRepositories,
-				pathsToBeRefreshedPredicate,
-				criteriaOne.or(criteriaTwo)
-			).get();
-			
-			ClassLoader targetClassLoader = classLoader;
-			Collection<String> classPathsToLoad = new HashSet<>();
-			if (!notFoundClassClassPaths.isEmpty()) {
-				String notFoundClassClassPath = notFoundClassClassPaths.stream().findFirst().get();
-				targetClassLoader = ClassLoaders.getClassLoaderOfPath(classLoader, notFoundClassClassPath);
-				if (targetClassLoader == null) {
-					String notFoundComputedClassClassPath = classPaths.get(notFoundClassClassPath);
-					if (!notFoundComputedClassClassPath.equals(notFoundClassClassPath)) {
-						targetClassLoader = ClassLoaders.getClassLoaderOfPath(classLoader, notFoundComputedClassClassPath);
-						if (targetClassLoader == null) {
-							classPathsToLoad.add(notFoundComputedClassClassPath);
-						}
-					} else {
-						classPathsToLoad.add(notFoundComputedClassClassPath);
-					}
-				}
-			}
-			if (targetClassLoader == null) {
-				targetClassLoader = classLoader;
-			}
-			
-			for (String classPath : notFoundClassesClassPaths) {
-				classPathsToLoad.add(classPaths.get(classPath));
-			}
-			return addClassPaths(
-				targetClassLoader,
-				absolutePath -> pathsToBeRefreshed != null && pathsToBeRefreshed.contains(absolutePath),
-				classPathsToLoad
-			);
-		}
-
-
-		Map<String, ClassLoader> addClassPaths(
-			ClassLoader classLoader, Predicate<String> checkForAddedClasses, Collection<String> classPaths
-		) {
-			Map<String, ClassLoader> addedClassPathsForClassLoader = new HashMap<>();
-			if (!classPaths.isEmpty()) {
-				for (String classPath : classPaths) {
-					ClassLoader targetClassLoader = ClassLoaders.getClassLoaderOfPath(classLoader, classPath);
-					if (targetClassLoader == null) {
-						targetClassLoader = classLoader;
-						ClassLoaders.addClassPath(targetClassLoader, checkForAddedClasses,
-							classPath
-						);
-						addedClassPathsForClassLoader.put(classPath, targetClassLoader);
-						logInfo("Added class path {} to {}", classPath, targetClassLoader.toString());						
-					} else {
-						logInfo("Class path {} already present in {}", classPath, targetClassLoader.toString());
-						addedClassPathsForClassLoader.put(classPath, targetClassLoader);
-					}
-				}				
-			}
-			return addedClassPathsForClassLoader;
 		}
 		
 		@Override

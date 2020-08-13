@@ -1,6 +1,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
@@ -287,6 +288,98 @@ public static class Configuration {
 			return classPaths;
 		};
 	}
+	
+	Map<String, ClassLoader> computeClassPathsAndAddThemToClassLoader(
+		ClassLoader classLoader,
+		Collection<String> classRepositories,
+		String className,
+		Collection<String> notFoundClasses
+	) {
+		return computeClassPathsAndAddThemToClassLoader(classLoader, classRepositories, null, className, notFoundClasses);
+	}
+	
+	Map<String, ClassLoader> computeClassPathsAndAddThemToClassLoader(
+		ClassLoader classLoader,
+		Collection<String> classRepositories,
+		Collection<String> pathsToBeRefreshed,
+		String className,
+		Collection<String> notFoundClasses
+	) {	
+		Predicate<FileSystemItem> pathsToBeRefreshedPredicate = null;
+		if (pathsToBeRefreshed != null) {
+			pathsToBeRefreshedPredicate =  fileSystemItem -> pathsToBeRefreshed.contains(fileSystemItem.getAbsolutePath());
+		}
+		
+		Collection<String> notFoundClassClassPaths = new HashSet<>();
+		BiPredicate<FileSystemItem, JavaClass> criteriaOne = (fileSystemItemCls, javaClass) -> {
+			if (javaClass.getName().equals(className)) {
+				String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
+				notFoundClassClassPaths.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
+				return true;
+			}				
+			return false;
+		};
+		
+		Collection<String> notFoundClassesClassPaths = new HashSet<>();
+		BiPredicate<FileSystemItem, JavaClass> criteriaTwo = (fileSystemItemCls, javaClass) -> {
+			for (String notFoundClass : notFoundClasses) {
+				if (javaClass.getName().equals(notFoundClass)) {
+					String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
+					notFoundClassesClassPaths.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
+					return true;
+				}
+			}			
+			return false;
+		};
+		
+		Map<String, String> classPaths = compute(
+			classRepositories,
+			pathsToBeRefreshedPredicate,
+			criteriaOne.or(criteriaTwo)
+		).get();
+		
+		ClassLoader targetClassLoader = classLoader;
+		Collection<String> classPathsToLoad = new HashSet<>();
+		if (!notFoundClassClassPaths.isEmpty()) {
+			String notFoundClassClassPath = notFoundClassClassPaths.stream().findFirst().get();
+			targetClassLoader = ClassLoaders.getClassLoaderOfPath(classLoader, notFoundClassClassPath);
+			if (targetClassLoader == null) {
+				String notFoundComputedClassClassPath = classPaths.get(notFoundClassClassPath);
+				if (!notFoundComputedClassClassPath.equals(notFoundClassClassPath)) {
+					targetClassLoader = ClassLoaders.getClassLoaderOfPath(classLoader, notFoundComputedClassClassPath);
+					if (targetClassLoader == null) {
+						classPathsToLoad.add(notFoundComputedClassClassPath);
+					}
+				} else {
+					classPathsToLoad.add(notFoundComputedClassClassPath);
+				}
+			}
+		}
+		if (targetClassLoader == null) {
+			targetClassLoader = classLoader;
+		}
+		
+		for (String classPath : notFoundClassesClassPaths) {
+			classPathsToLoad.add(classPaths.get(classPath));
+		}
+		Map<String, ClassLoader> addedClassPathsForClassLoader = new HashMap<>();
+		
+		for (String classPath :  classPathsToLoad) {
+			if (!ClassLoaders.addClassPath(
+				targetClassLoader,
+				absolutePath -> 
+					pathsToBeRefreshed != null && pathsToBeRefreshed.contains(absolutePath),
+				classPath
+			).isEmpty()) {
+				logInfo("Added class path {} to {}", classPath, targetClassLoader.toString());
+				addedClassPathsForClassLoader.put(classPath, targetClassLoader);
+			} else {
+				logInfo("Class path {} already present in {}", classPath, targetClassLoader.toString());
+			}
+		}
+		return addedClassPathsForClassLoader;
+	}
+			
 	
 	@Override
 	public void close() {
