@@ -63,13 +63,22 @@ public static class Configuration {
 	}
 	
 	
+	public static ClassPathHelper create(ClassPathHunter classPathHunter, Properties config) {
+		return new ClassPathHelper(classPathHunter, config);
+	}
+	
 	@Override
 	public String getTemporaryFolderPrefix() {
 		return getClass().getName() + "@" + instanceId;
 	}
 	
-	public static ClassPathHelper create(ClassPathHunter classPathHunter, Properties config) {
-		return new ClassPathHelper(classPathHunter, config);
+	CheckingOption getClassFileCheckingOption() {
+		return FileSystemItem.CheckingOption.forLabel(
+			config.resolveStringValue(
+				Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+				Configuration.DEFAULT_VALUES
+			)
+		);
 	}
 	
 	public Supplier<Map<String, String>> computeByClassesSearching(Collection<String> classRepositories) {
@@ -81,7 +90,7 @@ public static class Configuration {
 		ClassCriteria classCriteria
 	) {
 		return computeByClassesSearching(classRepositories, null, classCriteria);
-	}	
+	}
 	
 	public Supplier<Map<String, String>> computeByClassesSearching(CacheableSearchConfig searchConfig) {
 		return compute(searchConfig.getPaths(), (toBeAdjuested) -> {
@@ -99,16 +108,6 @@ public static class Configuration {
 				return result.getClassPaths();
 			}
 		});
-	}
-
-
-	CheckingOption getClassFileCheckingOption() {
-		return FileSystemItem.CheckingOption.forLabel(
-			config.resolveStringValue(
-				Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-				Configuration.DEFAULT_VALUES
-			)
-		);
 	}
 			
 	

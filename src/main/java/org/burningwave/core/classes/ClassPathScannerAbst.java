@@ -115,7 +115,6 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 
 	R findBy(SearchConfigAbst<?> input, Consumer<C> searcher) {
-		//LowPriorityTasksExecutor.suspend(false);
 		SearchConfigAbst<?> searchConfig = input.createCopy();
 		Collection<String> paths = searchConfig.getPaths();
 		if (paths == null || paths.isEmpty()) {
@@ -135,7 +134,6 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		}
 		R searchResult = resultSupplier.apply(context);
 		searchResult.setClassPathScanner(this);
-		//LowPriorityTasksExecutor.resume();
 		return searchResult;
 	}
 	
