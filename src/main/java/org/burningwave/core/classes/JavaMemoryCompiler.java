@@ -40,6 +40,7 @@ import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -286,7 +287,7 @@ public class JavaMemoryCompiler implements Component {
 			}
 			Collection<String> fsObjects = null;
 			
-			Map.Entry<String, Predicate<Class<?>>> classNameAndClassPredicate = getClassPredicateBagFromErrorMessage(message);
+			Map.Entry<String, Predicate<JavaClass>> classNameAndClassPredicate = getClassPredicateBagFromErrorMessage(message);
 			String packageName = null;
 			if (classNameAndClassPredicate != null) {
 				try {
@@ -313,7 +314,7 @@ public class JavaMemoryCompiler implements Component {
 			});
 		}
 
-		private Map.Entry<String, Predicate<Class<?>>> getClassPredicateBagFromErrorMessage(String message) {
+		private Map.Entry<String, Predicate<JavaClass>> getClassPredicateBagFromErrorMessage(String message) {
 			if (message.indexOf("class file for") != -1 && message.indexOf("not found") != -1) {
 				String objName = message.substring(message.indexOf("for ") + 4);
 				objName = objName.substring(0, objName.indexOf(" "));
@@ -509,41 +510,55 @@ public class JavaMemoryCompiler implements Component {
 			}
 			
 			public Collection<String> findForPackageName(String packageName) throws Exception {
-				Collection<String> classPaths = javaMemoryCompiler.classPathHelper.searchWithoutTheUseOfCache(
-					ClassCriteria.create().packageName((iteratedClassPackageName) ->
-						Objects.equals(iteratedClassPackageName, packageName)
-					),
-					javaMemoryCompiler.compiledClassesRepository.getAbsolutePath()
-				);
-				if (classPaths.isEmpty()) {
-					classPaths.addAll(
-						javaMemoryCompiler.classPathHelper.computeFromSources(
-							sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
-							classRepositories, 
-							ClassCriteria.create().packageName((iteratedClassPackageName) ->
-								Objects.equals(iteratedClassPackageName, packageName)									
-							)
-						).get().values()
-					);
-				}
-				return classPaths;
-			}
-			
-			public Collection<String> findForClassName(Predicate<Class<?>> classPredicate) throws Exception {
-				Collection<String> classPaths = javaMemoryCompiler.classPathHelper.searchWithoutTheUseOfCache(
-					ClassCriteria.create().allThat(classPredicate),
-					javaMemoryCompiler.compiledClassesRepository.getAbsolutePath()
+				Collection<String> classPaths = new HashSet<>(
+					javaMemoryCompiler.classPathHelper.compute(
+						Arrays.asList(javaMemoryCompiler.compiledClassesRepository.getAbsolutePath()),
+						fileSystemItem ->
+							fileSystemItem.getAbsolutePath().equals(
+								javaMemoryCompiler.compiledClassesRepository.getAbsolutePath()
+							),
+						(classFile, javaClass) ->
+							Objects.equals(javaClass.getPackageName(), packageName)		
+					).get().values()
 				);
 				if (classPaths.isEmpty()) {
 					classPaths.addAll(
 						javaMemoryCompiler.classPathHelper.computeFromSources(
 							sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
 							classRepositories,
-							ClassCriteria.create().allThat(classPredicate)
+							null,
+							(classFile, javaClass) ->
+								Objects.equals(javaClass.getPackageName(), packageName)	
 						).get().values()
 					);
 				}
 				return classPaths;
+			}
+			
+			public Collection<String> findForClassName(Predicate<JavaClass> classPredicate) throws Exception {
+				Collection<String> classPaths = new HashSet<>(
+						javaMemoryCompiler.classPathHelper.compute(
+							Arrays.asList(javaMemoryCompiler.compiledClassesRepository.getAbsolutePath()),
+							fileSystemItem ->
+								fileSystemItem.getAbsolutePath().equals(
+									javaMemoryCompiler.compiledClassesRepository.getAbsolutePath()
+								),
+							(classFile, javaClass) ->
+								classPredicate.test(javaClass)
+						).get().values()
+					);
+					if (classPaths.isEmpty()) {
+						classPaths.addAll(
+							javaMemoryCompiler.classPathHelper.computeFromSources(
+								sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
+								classRepositories,
+								null,
+								(classFile, javaClass) ->
+									classPredicate.test(javaClass)
+							).get().values()
+						);
+					}
+					return classPaths;
 			}
 
 			@Override
