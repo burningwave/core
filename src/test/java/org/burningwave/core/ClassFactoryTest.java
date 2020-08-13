@@ -155,12 +155,43 @@ public class ClassFactoryTest extends BaseTest {
 		getOrBuildClassWithExternalClassTestOne(true, "ComplexExample", "ComplexExampleTwo", new ClassLoader(null){});
 	}
 	
-//	@Test
-//	public void getOrBuildClassWithExternalClassTestNine() {
-//		testNotEmpty(() -> 
-//			_getOrBuildClassWithExternalClassTestTwo().getAllCompiledClasses()
-//		);
-//	}
+	@Test
+	public void getOrBuildClassWithExternalClassTestNine() {
+		testNotNull(() -> {
+			_getOrBuildClassWithExternalClassTestTwo().getAllCompiledClasses();
+			ComponentSupplier componentSupplier = getComponentSupplier();
+			PathHelper pathHelper = componentSupplier.getPathHelper();
+			UnitSourceGenerator unitSG = UnitSourceGenerator.create("packagename").addClass(
+				ClassSourceGenerator.create(
+					TypeDeclarationSourceGenerator.create("ExternalClassReferenceTest")
+				).addModifier(
+					Modifier.PUBLIC
+				).expands(
+					TypeDeclarationSourceGenerator.create("DefaultSerializer")
+				)
+			).addImport(
+				"org.springframework.core.serializer.DefaultSerializer"
+			);
+			AtomicReference<ClassFactory.ClassRetriever> classRetrieverWrapper = new AtomicReference<ClassFactory.ClassRetriever>();
+			testNotNull(() -> {
+				try (ClassPathHunter.SearchResult searchResult = componentSupplier.getClassPathHunter().findBy(
+					SearchConfig.byCriteria(
+						ClassCriteria.create().className(Virtual.class.getName()::equals)
+					)
+				)) {
+					classRetrieverWrapper.set(
+						componentSupplier.getClassFactory().loadOrBuildAndDefine(
+							LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassRepository(
+								pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+							)
+						)
+					);
+					return classRetrieverWrapper.get().get("freemarker.core.AndExpression");
+				}
+			});
+			return classRetrieverWrapper.get();
+		});
+	}
 	
 	public void getOrBuildClassWithExternalClassTestOne(
 		boolean clearCache,
