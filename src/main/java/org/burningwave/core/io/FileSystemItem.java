@@ -341,7 +341,7 @@ public class FileSystemItem implements ManagedLogger {
 				String absolutePath = getAbsolutePath();
 				String parentAbsolutePath = absolutePath.substring(0, absolutePath.lastIndexOf("/"));
 				if (isRoot(parentAbsolutePath)) {
-					parentAbsolutePath = "/";
+					parentAbsolutePath =  parentAbsolutePath.length() > 0 ? parentAbsolutePath : "/";
 				}
 				return this.parent = FileSystemItem.ofPath(parentAbsolutePath);
 			}
