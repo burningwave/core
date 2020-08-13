@@ -203,7 +203,7 @@ public static class Configuration {
 				Collection<FileSystemItem> classPaths = new HashSet<>();
 				for (String classRepositoryPath : clsRepositories) {
 					FileSystemItem classRepository = FileSystemItem.ofPath(classRepositoryPath);
-					if (pathsToBeRefreshedPredicate.test(classRepository)) {
+					if (pathsToBeRefreshedPredicate != null && pathsToBeRefreshedPredicate.test(classRepository)) {
 						classRepository.refresh();
 					}					
 					classRepository.findInAllChildren(classFileFilter.and().allFileThat(fileSystemItemCls -> 

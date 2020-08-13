@@ -866,7 +866,7 @@ public class ClassFactory implements Component {
 			}
 			return addClassPaths(
 				targetClassLoader,
-				absolutePath -> pathsToBeRefreshed.contains(absolutePath),
+				absolutePath -> pathsToBeRefreshed != null && pathsToBeRefreshed.contains(absolutePath),
 				classPathsToLoad
 			);
 		}
