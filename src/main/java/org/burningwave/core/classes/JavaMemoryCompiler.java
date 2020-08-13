@@ -38,7 +38,6 @@ import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -286,66 +285,62 @@ public class JavaMemoryCompiler implements Component {
 				return;
 			}
 			Collection<String> fsObjects = null;
+			String classNameOrSimpleNameTemp = null;
+			Predicate<JavaClass> javaClassPredicate = null;
 			
-			Map.Entry<String, Predicate<JavaClass>> classNameAndClassPredicate = getClassPredicateBagFromErrorMessage(message);
-			String packageName = null;
-			if (classNameAndClassPredicate != null) {
+			if (message.indexOf("class file for") != -1 && message.indexOf("not found") != -1) {
+				classNameOrSimpleNameTemp = message.substring(message.indexOf("for ") + 4);
+				classNameOrSimpleNameTemp = classNameOrSimpleNameTemp.substring(0, classNameOrSimpleNameTemp.indexOf(" "));
+				final String className = classNameOrSimpleNameTemp;
+				javaClassPredicate = (cls) -> cls.getName().equals(className);
+			} else if(message.indexOf("class ") != -1 && message.indexOf("package ") != -1 ){
+				classNameOrSimpleNameTemp = message.substring(message.indexOf("class ")+6);
+				classNameOrSimpleNameTemp = classNameOrSimpleNameTemp.substring(0, classNameOrSimpleNameTemp.indexOf("\n"));
+				String packageName = message.substring(message.indexOf("package") + 8);
+				final String className = packageName+"."+classNameOrSimpleNameTemp;
+				javaClassPredicate = (cls) -> cls.getName().equals(className);
+			} else if(message.indexOf("symbol: class") != -1) {
+				classNameOrSimpleNameTemp = message.substring(message.indexOf("class ")+6);
+				final String classSimpleName = classNameOrSimpleNameTemp;
+				javaClassPredicate =  (cls) -> cls.getSimpleName().equals(classSimpleName);
+			}			
+			
+			if (javaClassPredicate != null) {
 				try {
-					fsObjects = context.findForClassName(classNameAndClassPredicate.getValue());
-				} catch (Exception e) {
-					logError("Exception occurred", e);
-				}
-			} else if (Strings.isNotEmpty(packageName = getPackageNameFromErrorMessage(message))) {			
-				try {
-					fsObjects = context.findForPackageName(packageName);
+					fsObjects = context.findForClassName(javaClassPredicate);
 				} catch (Exception e) {
 					logError("Exception occurred", e);
 				}
 			} else {
-				throw new UnknownCompilerErrorMessageException(message);
+				String packageName = null;
+				if (message.indexOf("package exists in another module") == -1 && message.indexOf("cannot be accessed from outside package") == -1) {
+					if (message.indexOf("package ") != -1){
+						packageName = message.substring(message.indexOf("package") + 8);
+						int firstOccOfSpaceIdx = packageName.indexOf(" ");
+						if(firstOccOfSpaceIdx!=-1) {
+							packageName = packageName.substring(0, firstOccOfSpaceIdx);
+						}
+					}
+				}
+				if (Strings.isNotEmpty(packageName)) {			
+					try {
+						fsObjects = context.findForPackageName(packageName);
+					} catch (Exception e) {
+						logError("Exception occurred", e);
+					}
+				} else {
+					throw new UnknownCompilerErrorMessageException(message);
+				}
 			}
 			if (fsObjects == null || fsObjects.isEmpty()) {
+				String classNameOrSimpleName = classNameOrSimpleNameTemp;				
 				throw Throwables.toRuntimeException(
-					Optional.ofNullable(classNameAndClassPredicate).map(bag -> "Class or package \"" + bag.getKey() + "\" not found").orElseGet(() -> message)
+					Optional.ofNullable(javaClassPredicate).map(jCP -> "Class or package \"" + classNameOrSimpleName + "\" not found").orElseGet(() -> message)
 				);
 			}
 			fsObjects.forEach((fsObject) -> {
 				context.addToClassPath(fsObject);
 			});
-		}
-
-		private Map.Entry<String, Predicate<JavaClass>> getClassPredicateBagFromErrorMessage(String message) {
-			if (message.indexOf("class file for") != -1 && message.indexOf("not found") != -1) {
-				String objName = message.substring(message.indexOf("for ") + 4);
-				objName = objName.substring(0, objName.indexOf(" "));
-				final String className = objName;
-				return new AbstractMap.SimpleEntry<>(objName, (cls) -> cls.getName().equals(className));
-			} else if(message.indexOf("class ") != -1 && message.indexOf("package ") != -1 ){
-				String className = message.substring(message.indexOf("class ")+6);
-				className = className.substring(0, className.indexOf("\n"));
-				String packageName = message.substring(message.indexOf("package") + 8);
-				final String objName = packageName+"."+className;
-				return new AbstractMap.SimpleEntry<>(objName, (cls) -> cls.getName().equals(objName));
-			} else if(message.indexOf("symbol: class") != -1) {
-				String className = message.substring(message.indexOf("class ")+6);
-				final String objName = className;
-				return new AbstractMap.SimpleEntry<>(objName, (cls) -> cls.getSimpleName().equals(objName));
-			}
-			return null;
-		}
-		
-		private String getPackageNameFromErrorMessage(String message) {
-			String objName = null;
-			if (message.indexOf("package exists in another module") == -1 && message.indexOf("cannot be accessed from outside package") == -1) {
-				if (message.indexOf("package ") != -1){
-					objName = message.substring(message.indexOf("package") + 8);
-					int firstOccOfSpaceIdx = objName.indexOf(" ");
-					if(firstOccOfSpaceIdx!=-1) {
-						objName = objName.substring(0, firstOccOfSpaceIdx);
-					}
-				}
-			}
-			return objName;
 		}
 		
 	}
