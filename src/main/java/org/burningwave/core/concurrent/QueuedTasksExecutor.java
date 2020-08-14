@@ -244,7 +244,7 @@ public class QueuedTasksExecutor implements Component {
 			} catch (Throwable exc) {
 				logWarn("Exception occurred", exc);
 			}
-		}
+		} 
 		return task;
 	}
 
@@ -270,7 +270,7 @@ public class QueuedTasksExecutor implements Component {
 
 	<E, T extends TaskAbst<E, T>> boolean canBeExecuted(T task) {
 		if (task instanceof Task && ((Task)task).runOnlyOnce) {
-			return !task.hasBeenExecutedChecker.get() && runOnlyOnceTasksToBeExecuted.putIfAbsent(((Task)task).id, (Task)task) == null && !task.hasFinished();
+			return !((Task)task).hasBeenExecutedChecker.get() && runOnlyOnceTasksToBeExecuted.putIfAbsent(((Task)task).id, (Task)task) == null && !task.hasFinished();
 		}
 		return !task.hasFinished();
 	}
@@ -466,8 +466,6 @@ public class QueuedTasksExecutor implements Component {
 				SYNC, ASYNC
 			}
 		}
-		
-		Supplier<Boolean> hasBeenExecutedChecker;
 		E executable;
 		Execution.Mode executionMode;
 		int priority;
@@ -556,6 +554,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public static abstract class Task extends TaskAbst<ThrowingRunnable<? extends Throwable>, Task> {
+		Supplier<Boolean> hasBeenExecutedChecker;
 		boolean runOnlyOnce;
 		String id;
 		
@@ -602,7 +601,7 @@ public class QueuedTasksExecutor implements Component {
 					}
 				}
 				executable = null;
-				return true;
+				return hasBeenExecutedChecker.get();
 			}
 		}
 		
