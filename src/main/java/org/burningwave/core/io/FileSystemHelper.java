@@ -28,8 +28,6 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
-import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -79,25 +77,25 @@ public class FileSystemHelper implements Component {
 	}
 	
 	public File getOrCreateMainTemporaryFolder() {
-		if (mainTemporaryFolder != null) {
+		if (mainTemporaryFolder != null && mainTemporaryFolder.exists()) {
 			return mainTemporaryFolder;
 		}
-		BackgroundExecutor.createTask(() -> {
-			File toDelete = File.createTempFile("_BW_TEMP_", "_temp");
-			File tempFolder = toDelete.getParentFile();
-			File folder = new File(tempFolder.getAbsolutePath() + "/" + "Burningwave" +"/"+id);
-			if (!folder.exists()) {
-				folder.mkdirs();
-				folder.deleteOnExit();
-			}
-			mainTemporaryFolder = folder;
-			toDelete.delete();
-		}, Thread.MAX_PRIORITY)
-		.runOnlyOnce(
-			Objects.getId(this) + "->" + "getOrCreateMainTemporaryFolder", () -> 
-				mainTemporaryFolder != null
-		).submit().join();
-		return mainTemporaryFolder;
+		synchronized (this) {
+			if (mainTemporaryFolder != null && mainTemporaryFolder.exists()) {
+				return mainTemporaryFolder;
+			}			
+			return mainTemporaryFolder = ThrowingSupplier.get(() -> {
+				File toDelete = File.createTempFile("_BW_TEMP_", "_temp");
+				File tempFolder = toDelete.getParentFile();
+				File folder = new File(tempFolder.getAbsolutePath() + "/" + "Burningwave" +"/"+id);
+				if (!folder.exists()) {
+					folder.mkdirs();
+					folder.deleteOnExit();
+				}
+				toDelete.delete();
+				return folder;
+			});
+		}
 	}
 	
 	public File getOrCreatePingFile() {
@@ -136,8 +134,7 @@ public class FileSystemHelper implements Component {
 			Iterator<File> itr = files.iterator();
 			while(itr.hasNext()) {
 				File file = itr.next();
-				FileSystemItem fileSystemItem = FileSystemItem.ofPath(file.getAbsolutePath());
-				if (fileSystemItem.exists()) {
+				if (file.exists()) {
 					delete(file);
 				};
 			}
@@ -182,7 +179,7 @@ public class FileSystemHelper implements Component {
 	
 	public void startScavenger() {
 		if (scavenger == null) {
-			scavenger = new Scavenger(this, 300000, 10000);
+			scavenger = new Scavenger(this, 3600000, 30000);
 		}
 		if (!scavenger.isAlive) {
 			scavenger.start();

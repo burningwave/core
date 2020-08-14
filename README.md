@@ -901,7 +901,6 @@ The configuration of this type of container is done via **burningwave.static.pro
 managed-logger.repository=autodetect
 #to increase performance set it to false
 managed-logger.repository.enabled=true
-static-component-container.clear-temporary-folder-on-init=false
 static-component-container.hide-banner-on-init=false
 streams.default-buffer-size=1024
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
@@ -920,7 +919,6 @@ managed-logger.repository.logging.debug.disabled-for=\
 streams.default-buffer-size=0.5Kb
 #other possible value is ByteBuffer::allocate
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
-static-component-container.clear-temporary-folder-on-init=true
 static-component-container.hide-banner-on-init=false
 ```
 <br/>
