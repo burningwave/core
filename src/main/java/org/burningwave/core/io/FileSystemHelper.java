@@ -34,19 +34,17 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.ThrowingRunnable;
@@ -55,20 +53,27 @@ import org.burningwave.core.function.ThrowingSupplier;
 
 public class FileSystemHelper implements Component {
 	private File baseTemporaryFolder;
-	private Set<File> temporaryFolders;
 	private String id;
+	private Scavenger scavenger;
 	
 	private FileSystemHelper() {
-		id = UUID.randomUUID().toString();
-		temporaryFolders = ConcurrentHashMap.newKeySet();	
+		id = UUID.randomUUID().toString() + "_" + String.valueOf(System.currentTimeMillis());
 	}
 	
 	public static FileSystemHelper create() {
 		return new FileSystemHelper();
 	}
 	
+	public void clearBurningwaveTemporaryFolder() {
+		delete(Arrays.asList(getOrCreateBurningwaveTemporaryFolder().listFiles()));
+	}
+	
 	public void clearMainTemporaryFolder() {
-		delete(Arrays.asList(getOrCreateMainTemporaryFolder().listFiles()), false);
+		delete(getOrCreateMainTemporaryFolder());
+	}
+	
+	public File getOrCreateBurningwaveTemporaryFolder() {
+		return getOrCreateMainTemporaryFolder().getParentFile();
 	}
 	
 	public File getOrCreateMainTemporaryFolder() {
@@ -78,7 +83,7 @@ public class FileSystemHelper implements Component {
 		return ThrowingSupplier.get(() -> {
 			File toDelete = File.createTempFile("_BW_TEMP_", "_temp");
 			File tempFolder = toDelete.getParentFile();
-			File folder = new File(tempFolder.getAbsolutePath() + "/" + "Burningwave");
+			File folder = new File(tempFolder.getAbsolutePath() + "/" + "Burningwave" +"/"+id);
 			if (!folder.exists()) {
 				folder.mkdirs();
 			}
@@ -87,8 +92,8 @@ public class FileSystemHelper implements Component {
 		});
 	}
 	
-	public File getOrCreateFilesToBeDeletedFile() {
-		File filesToBeDeleted = new File(Paths.clean(getOrCreateMainTemporaryFolder().getAbsolutePath() + "/" + id + "_files.to-be-deleted"));
+	public File getOrCreatePingFile() {
+		File filesToBeDeleted = new File(Paths.clean(getOrCreateBurningwaveTemporaryFolder() .getAbsolutePath() + "/" + id + ".ping"));
 		if (!filesToBeDeleted.exists()) {
 			ThrowingRunnable.run(() -> filesToBeDeleted.createNewFile());
 		}
@@ -102,7 +107,6 @@ public class FileSystemHelper implements Component {
 				tempFolder.delete();
 			}
 			tempFolder.mkdirs();
-			temporaryFolders.add(tempFolder);
 			return tempFolder;
 		});
 	}
@@ -113,28 +117,22 @@ public class FileSystemHelper implements Component {
 			File tempFolder = new File(getOrCreateMainTemporaryFolder().getAbsolutePath() + "/" + folderName);
 			if (!tempFolder.exists()) {
 				tempFolder.mkdirs();
-				temporaryFolders.add(tempFolder);
 			}
 			return tempFolder;
 		});
 	}
 	
-	public QueuedTasksExecutor.Task delete(Collection<File> files, boolean markToBeDeletedOnNextExecution) {
+	public void delete(Collection<File> files) {
 		if (files != null) {
-			Set<File> markedToBeDeletedOnNextExecution = new HashSet<>();
 			Iterator<File> itr = files.iterator();
 			while(itr.hasNext()) {
 				File file = itr.next();
 				FileSystemItem fileSystemItem = FileSystemItem.ofPath(file.getAbsolutePath());
 				if (fileSystemItem.exists()) {
-					if (!delete(file) && markToBeDeletedOnNextExecution) {
-						markedToBeDeletedOnNextExecution.add(file);
-					}
+					delete(file);
 				};
 			}
-			markToBeDeletedOnNextExecution(markedToBeDeletedOnNextExecution);
 		}
-		return null;
 	}
 	
 	public boolean delete(File file) {
@@ -165,18 +163,6 @@ public class FileSystemHelper implements Component {
 		file.deleteOnExit();
 	}
 	
-	public QueuedTasksExecutor.Task markToBeDeletedOnNextExecution(Collection<File> files) {
-		return BackgroundExecutor.createTask(() -> {
-			for (File file : files) {
-				Files.write(
-					java.nio.file.Paths.get(Paths.clean(getOrCreateFilesToBeDeletedFile().getAbsolutePath())),
-					(Paths.clean(file.getAbsolutePath() + "\n").getBytes()), 
-					StandardOpenOption.APPEND
-				);
-			}
-		}, Thread.MIN_PRIORITY).submit();
-	}
-	
 	public boolean delete(String absolutePath) {
 		return delete(new File(absolutePath));	
 	}
@@ -185,38 +171,19 @@ public class FileSystemHelper implements Component {
 		deleteOnExit(new File(absolutePath));	
 	}
 	
-	public QueuedTasksExecutor.Task deleteTemporaryFolders(boolean markToBeDeletedOnNextExecution) {
-		QueuedTasksExecutor.Task deleteFoldersTask = delete(temporaryFolders, markToBeDeletedOnNextExecution);
-		return BackgroundExecutor.createTask(() -> {
-			if (deleteFoldersTask != null) {
-				deleteFoldersTask.join();
-			}
-			temporaryFolders.clear();
-		}, Thread.MIN_PRIORITY).submit();
+	public void startScavenger() {
+		if (scavenger == null) {
+			scavenger = new Scavenger(this);
+		}
+		if (!scavenger.isAlive) {
+			scavenger.start();
+		}
 	}
-
-	public void deleteUndeletedFoldersOfPreviousExecution() {
-		BackgroundExecutor.createTask(() -> {
-			Set<String> absolutePathsToBeDeleted = new HashSet<>();
-			for (FileSystemItem child : FileSystemItem.ofPath(getOrCreateMainTemporaryFolder().getAbsolutePath()).getChildren()) {
-				if ("to-be-deleted".equals(child.getExtension())) {
-					String filesToBeDeleted = Streams.getAsStringBuffer(
-						child.toInputStream()
-					).toString();
-					for (String fileSystemItemAbsolutePath : filesToBeDeleted.split("\n")) {
-						absolutePathsToBeDeleted.add(fileSystemItemAbsolutePath);
-					}
-					absolutePathsToBeDeleted.add(child.getAbsolutePath());
-				}
-			};
-			Set<File> markedToBeDeletedOnNextExecution = new HashSet<>();
-			for (String absolutePathToBeDeleted : absolutePathsToBeDeleted) {
-				if (!delete(absolutePathToBeDeleted)) {
-					markedToBeDeletedOnNextExecution.add(new File(absolutePathToBeDeleted));
-				}
-			}
-			markToBeDeletedOnNextExecution(markedToBeDeletedOnNextExecution);
-		}, Thread.MIN_PRIORITY).submit();
+	
+	public void stopScavenger() {
+		if (scavenger != null) {
+			scavenger.stop();
+		}
 	}
 	
 	@Override
@@ -224,19 +191,112 @@ public class FileSystemHelper implements Component {
 		if (this != StaticComponentContainer.FileSystemHelper || 
 			Thread.currentThread().getStackTrace()[2].getClassName().equals(StaticComponentContainer.class.getName())
 		) {	
-			List<QueuedTasksExecutor.Task> closingTasks = new ArrayList<>();
-			closingTasks.add(closeResources(() -> id == null, () -> {
-				closingTasks.add(deleteTemporaryFolders(true));
+			QueuedTasksExecutor.Task closingTask = closeResources(() -> id == null, () -> {
+				clearMainTemporaryFolder();
+				if (scavenger != null) {
+					scavenger.stop();
+					scavenger = null;
+				}
 				id = null;
-			}));
-			if (closingTasks.get(0) != null) {
-				closingTasks.get(0).join();
-				closingTasks.get(1).join();
+			});
+			if (closingTask != null) {
+				closingTask.join();
 				baseTemporaryFolder = null;
-				temporaryFolders = null;
 			}
 		} else {
 			throw Throwables.toRuntimeException("Could not close singleton instance " + this);
+		}
+	}
+	
+	public static class Scavenger implements ManagedLogger {
+		private boolean isAlive;
+		private FileSystemHelper fileSystemHelper;
+		private long deletingInterval;
+		private long waitInterval;
+		
+		private Scavenger(FileSystemHelper fileSystemHelper) {
+			this.fileSystemHelper = fileSystemHelper;
+			this.deletingInterval = 10000;
+			this.waitInterval = 5000;
+		}
+		
+		public void start() {
+			isAlive = true;
+			FileSystemItem burningwaveTemporaryFolder = 
+				FileSystemItem.ofPath(fileSystemHelper.getOrCreateBurningwaveTemporaryFolder().getAbsolutePath());
+			BackgroundExecutor.createTask(() -> {
+				long lastDeletionStartTime = -1;
+				while (isAlive) {
+					if (System.currentTimeMillis() - lastDeletionStartTime > deletingInterval) {
+						lastDeletionStartTime = System.currentTimeMillis();
+						for (FileSystemItem fileSystemItem : burningwaveTemporaryFolder.refresh().getChildren()) {
+							if (!fileSystemItem.getName().equals(fileSystemHelper.getOrCreateMainTemporaryFolder().getName()) &&
+								!fileSystemItem.getName().equals(fileSystemHelper.getOrCreatePingFile().getName()) 
+							) {
+								try {
+									if (fileSystemItem.isFolder()) {
+										long folderCreationTime = getCreationTime(fileSystemItem.getName());
+										FileSystemItem pingFile = FileSystemItem.ofPath(
+											burningwaveTemporaryFolder.getAbsolutePath() + "/" + fileSystemItem.getName() + ".ping"
+										);
+										long pingTime = folderCreationTime;
+										if (pingFile.exists()) {
+											pingTime = getPingTime(pingFile);
+										}
+										if (System.currentTimeMillis() - pingTime >= deletingInterval) {
+											delete(fileSystemItem);
+										}							
+									} else if ("ping".equals(fileSystemItem.getExtension())) {
+										long pingTime = getPingTime(fileSystemItem);
+										if (System.currentTimeMillis() - pingTime >= deletingInterval) {
+											FileSystemItem folder = FileSystemItem.ofPath(
+												burningwaveTemporaryFolder.getAbsolutePath() + "/" + fileSystemItem.getName().replace(".ping", "")
+											);
+											delete(fileSystemItem);
+										}
+									}
+								} catch (Throwable exc) {
+									logError("Exception occurred while cleaning temporary file system item " + fileSystemItem.getAbsolutePath());
+									logError(exc.getMessage());
+								}
+							}
+						}
+					}
+					setPingTime(fileSystemHelper.getOrCreatePingFile().getAbsolutePath());
+					Thread.sleep(waitInterval);
+				}				
+			},Thread.MIN_PRIORITY).async().submit();
+		}
+
+		void setPingTime(String absolutePath) throws IOException {
+			Files.write(
+				java.nio.file.Paths.get(Paths.clean(fileSystemHelper.getOrCreatePingFile().getAbsolutePath())),
+				(String.valueOf(System.currentTimeMillis()) + ";").getBytes(), 
+				StandardOpenOption.WRITE,
+				StandardOpenOption.TRUNCATE_EXISTING
+			);
+		}
+
+		Long getCreationTime(String resourceName) {
+			return Long.valueOf(resourceName.split("_")[1]);
+		}
+
+		void delete(FileSystemItem resource) {
+			fileSystemHelper.delete(resource.getAbsolutePath());
+			resource.destroy();
+		}
+
+		long getPingTime(FileSystemItem pingFile) throws IOException {
+			long pingTime;
+			try (InputStream pingFileAsInputStream = pingFile.toInputStream()) {
+				StringBuffer content = Streams.getAsStringBuffer(pingFileAsInputStream);
+				pingTime = Long.valueOf(content.toString().split(";")[0]);
+			}
+			return pingTime;
+		}
+		
+		public void stop() {
+			isAlive = false;
 		}
 	}
 	
