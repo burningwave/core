@@ -216,7 +216,7 @@ public class FileSystemHelper implements Component {
 		
 		private Scavenger(FileSystemHelper fileSystemHelper) {
 			this.fileSystemHelper = fileSystemHelper;
-			this.deletingInterval = 10000;
+			this.deletingInterval = 100000;
 			this.waitInterval = 5000;
 		}
 		
@@ -227,6 +227,7 @@ public class FileSystemHelper implements Component {
 			BackgroundExecutor.createTask(() -> {
 				long lastDeletionStartTime = -1;
 				while (isAlive) {
+					setPingTime(fileSystemHelper.getOrCreatePingFile().getAbsolutePath());
 					if (System.currentTimeMillis() - lastDeletionStartTime > deletingInterval) {
 						lastDeletionStartTime = System.currentTimeMillis();
 						for (FileSystemItem fileSystemItem : burningwaveTemporaryFolder.refresh().getChildren()) {
@@ -235,11 +236,10 @@ public class FileSystemHelper implements Component {
 							) {
 								try {
 									if (fileSystemItem.isFolder()) {
-										long folderCreationTime = getCreationTime(fileSystemItem.getName());
 										FileSystemItem pingFile = FileSystemItem.ofPath(
 											burningwaveTemporaryFolder.getAbsolutePath() + "/" + fileSystemItem.getName() + ".ping"
 										);
-										long pingTime = folderCreationTime;
+										long pingTime = getCreationTime(fileSystemItem.getName());
 										if (pingFile.exists()) {
 											pingTime = getPingTime(pingFile);
 										}
@@ -249,9 +249,6 @@ public class FileSystemHelper implements Component {
 									} else if ("ping".equals(fileSystemItem.getExtension())) {
 										long pingTime = getPingTime(fileSystemItem);
 										if (System.currentTimeMillis() - pingTime >= deletingInterval) {
-											FileSystemItem folder = FileSystemItem.ofPath(
-												burningwaveTemporaryFolder.getAbsolutePath() + "/" + fileSystemItem.getName().replace(".ping", "")
-											);
 											delete(fileSystemItem);
 										}
 									}
@@ -262,19 +259,20 @@ public class FileSystemHelper implements Component {
 							}
 						}
 					}
-					setPingTime(fileSystemHelper.getOrCreatePingFile().getAbsolutePath());
 					Thread.sleep(waitInterval);
 				}				
 			},Thread.MIN_PRIORITY).async().submit();
 		}
 
-		void setPingTime(String absolutePath) throws IOException {
+		long setPingTime(String absolutePath) throws IOException {
+			long pingTime = System.currentTimeMillis();
 			Files.write(
 				java.nio.file.Paths.get(Paths.clean(fileSystemHelper.getOrCreatePingFile().getAbsolutePath())),
-				(String.valueOf(System.currentTimeMillis()) + ";").getBytes(), 
+				(String.valueOf(pingTime) + ";").getBytes(), 
 				StandardOpenOption.WRITE,
 				StandardOpenOption.TRUNCATE_EXISTING
 			);
+			return pingTime;
 		}
 
 		Long getCreationTime(String resourceName) {
