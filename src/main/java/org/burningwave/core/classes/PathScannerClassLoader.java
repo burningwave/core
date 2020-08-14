@@ -276,7 +276,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	
 	@Override
 	public void close() {
-		super.closeResources().hasFinished();
+		super.closeResources();
 		closeResources(() -> this.loadedPaths == null, () -> {
 			Collection<String> loadedPaths = this.loadedPaths;
 			if (loadedPaths != null) {
