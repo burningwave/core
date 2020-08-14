@@ -49,7 +49,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings({"unchecked", "resource"})
 public class QueuedTasksExecutor implements Component {
-	private final static Map<String, TaskAbst<?, ?>> runOnlyOnceTasksToBeExecuted;
+	private final static Map<String, Task> runOnlyOnceTasksToBeExecuted;
 	private Mutex.Manager mutexManager;
 	private String id;
 	Thread executor;
@@ -130,8 +130,8 @@ public class QueuedTasksExecutor implements Component {
 						} else {
 							executor.start();
 						}
-						if (task.runOnlyOnce) {
-							runOnlyOnceTasksToBeExecuted.remove(task.id);
+						if (task instanceof Task && ((Task)task).runOnlyOnce) {
+							runOnlyOnceTasksToBeExecuted.remove(((Task)task).id);
 						}
 						if (executor.getPriority() != this.defaultPriority) {
 							executor.setPriority(this.defaultPriority);
@@ -244,9 +244,8 @@ public class QueuedTasksExecutor implements Component {
 			} catch (Throwable exc) {
 				logWarn("Exception occurred", exc);
 			}
-			return task;
 		}
-		return null;
+		return task;
 	}
 
 	private <E, T extends TaskAbst<E, T>> void setExecutorOf(T task) {
@@ -270,8 +269,8 @@ public class QueuedTasksExecutor implements Component {
 	}
 
 	<E, T extends TaskAbst<E, T>> boolean canBeExecuted(T task) {
-		if (task.runOnlyOnce) {
-			return !task.hasBeenExecutedChecker.get() && runOnlyOnceTasksToBeExecuted.putIfAbsent(task.id, task) == null && !task.hasFinished();
+		if (task instanceof Task && ((Task)task).runOnlyOnce) {
+			return !task.hasBeenExecutedChecker.get() && runOnlyOnceTasksToBeExecuted.putIfAbsent(((Task)task).id, (Task)task) == null && !task.hasFinished();
 		}
 		return !task.hasFinished();
 	}
@@ -468,8 +467,6 @@ public class QueuedTasksExecutor implements Component {
 			}
 		}
 		
-		String id;
-		boolean runOnlyOnce;
 		Supplier<Boolean> hasBeenExecutedChecker;
 		E executable;
 		Execution.Mode executionMode;
@@ -542,13 +539,6 @@ public class QueuedTasksExecutor implements Component {
 			return changePriority(Thread.currentThread().getPriority());
 		}
 		
-		public T runOnlyOnce(String id, Supplier<Boolean> hasBeenExecutedChecker) {
-			runOnlyOnce = true;
-			this.id = id;
-			this.hasBeenExecutedChecker = hasBeenExecutedChecker;
-			return (T)this;
-		}
-		
 		public int getPriority() {
 			return priority;
 		}
@@ -561,18 +551,13 @@ public class QueuedTasksExecutor implements Component {
 			return exc != null;
 		}
 		
-		public void terminate() {
-			Thread executor = this.executor;
-			if (executionMode == Execution.Mode.ASYNC && executor != null && executor.isAlive()) {
-				executor.interrupt();
-			}
-		}
-		
 		public abstract T submit();
 		
 	}
 	
 	public static abstract class Task extends TaskAbst<ThrowingRunnable<? extends Throwable>, Task> {
+		boolean runOnlyOnce;
+		String id;
 		
 		Task(ThrowingRunnable<? extends Throwable> executable) {
 			this.executable = executable;
@@ -584,11 +569,52 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public void join(boolean ignoreThread) {
-			join0(ignoreThread);
+			if (!runOnlyOnce) {
+				join0(ignoreThread);
+			} else {
+				Task task = getEffectiveTask();
+				if (task != null) {
+					if (task == this) {
+						join0(ignoreThread);
+					} else {
+						task.join();
+					}
+				}
+			}
+		}
+
+		Task getEffectiveTask() {
+			Task task = QueuedTasksExecutor.runOnlyOnceTasksToBeExecuted.get(id);
+			return task;
+		}
+		
+		@Override
+		public boolean hasFinished() {
+			if (!runOnlyOnce) {
+				return super.hasFinished();
+			} else {
+				Task task = getEffectiveTask();
+				if (task != null) {
+					if (task == this) {
+						return super.hasFinished();
+					} else {
+						return task.hasFinished();
+					}
+				}
+				executable = null;
+				return true;
+			}
 		}
 		
 		public void join() {
 			join0(false);
+		}
+		
+		public Task runOnlyOnce(String id, Supplier<Boolean> hasBeenExecutedChecker) {
+			runOnlyOnce = true;
+			this.id = id;
+			this.hasBeenExecutedChecker = hasBeenExecutedChecker;
+			return this;
 		}
 		
 	}
@@ -725,14 +751,35 @@ public class QueuedTasksExecutor implements Component {
 						};
 						
 						public QueuedTasksExecutor.Task changePriority(int priority) {
+							if (runOnlyOnce) {
+								Task task = getEffectiveTask();
+								if (task != null && task != this) {
+									task.changePriority(priority);
+									return this;
+								}
+							}
 							return Group.this.changePriority(this, priority);
 						};
 						
 						public QueuedTasksExecutor.Task async() {
+							if (runOnlyOnce) {
+								Task task = getEffectiveTask();
+								if (task != null && task != this) {
+									task.async();
+									return this;
+								}
+							}
 							return Group.this.changeExecutionMode(this, QueuedTasksExecutor.TaskAbst.Execution.Mode.ASYNC);
 						}
 						
 						public QueuedTasksExecutor.Task sync() {
+							if (runOnlyOnce) {
+								Task task = getEffectiveTask();
+								if (task != null && task != this) {
+									task.sync();
+									return this;
+								}
+							}
 							return Group.this.changeExecutionMode(this, QueuedTasksExecutor.TaskAbst.Execution.Mode.SYNC);
 						}
 					};

@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -80,25 +82,31 @@ public class FileSystemHelper implements Component {
 		if (mainTemporaryFolder != null) {
 			return mainTemporaryFolder;
 		}
-		return mainTemporaryFolder = ThrowingSupplier.get(() -> {
+		BackgroundExecutor.createTask(() -> {
 			File toDelete = File.createTempFile("_BW_TEMP_", "_temp");
 			File tempFolder = toDelete.getParentFile();
 			File folder = new File(tempFolder.getAbsolutePath() + "/" + "Burningwave" +"/"+id);
 			if (!folder.exists()) {
 				folder.mkdirs();
+				folder.deleteOnExit();
 			}
+			mainTemporaryFolder = folder;
 			toDelete.delete();
-			return folder;
-		});
+		}, Thread.MAX_PRIORITY)
+		.runOnlyOnce(
+			Objects.getId(this) + "->" + "getOrCreateMainTemporaryFolder", () -> 
+				mainTemporaryFolder != null
+		).submit().join();
+		return mainTemporaryFolder;
 	}
 	
 	public File getOrCreatePingFile() {
-		File filesToBeDeleted = new File(Paths.clean(getOrCreateBurningwaveTemporaryFolder() .getAbsolutePath() + "/" + id + ".ping"));
-		if (!filesToBeDeleted.exists()) {
-			ThrowingRunnable.run(() -> filesToBeDeleted.createNewFile());
-			filesToBeDeleted.deleteOnExit();
+		File pingFile = new File(Paths.clean(getOrCreateBurningwaveTemporaryFolder() .getAbsolutePath() + "/" + id + ".ping"));
+		if (!pingFile.exists()) {
+			ThrowingRunnable.run(() -> pingFile.createNewFile());
+			pingFile.deleteOnExit();
 		}
-		return filesToBeDeleted;
+		return pingFile;
 	}
 	
 	public File createTemporaryFolder(String folderName) {
