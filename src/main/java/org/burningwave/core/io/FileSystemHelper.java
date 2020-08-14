@@ -96,6 +96,7 @@ public class FileSystemHelper implements Component {
 		File filesToBeDeleted = new File(Paths.clean(getOrCreateBurningwaveTemporaryFolder() .getAbsolutePath() + "/" + id + ".ping"));
 		if (!filesToBeDeleted.exists()) {
 			ThrowingRunnable.run(() -> filesToBeDeleted.createNewFile());
+			filesToBeDeleted.deleteOnExit();
 		}
 		return filesToBeDeleted;
 	}
@@ -218,7 +219,9 @@ public class FileSystemHelper implements Component {
 			this.burningwaveTemporaryFolder = fileSystemHelper.getOrCreateBurningwaveTemporaryFolder();
 			executor = new Thread(() -> {
 				check();				
-			});
+			}, "Temporary file scavenger");
+			executor.setPriority(Thread.MIN_PRIORITY);
+			executor.setDaemon(true);
 		}
 
 		void check() {
