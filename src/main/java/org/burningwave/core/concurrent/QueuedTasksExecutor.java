@@ -561,6 +561,13 @@ public class QueuedTasksExecutor implements Component {
 			return exc != null;
 		}
 		
+		public void terminate() {
+			Thread executor = this.executor;
+			if (executionMode == Execution.Mode.ASYNC && executor != null && executor.isAlive()) {
+				executor.interrupt();
+			}
+		}
+		
 		public abstract T submit();
 		
 	}
