@@ -117,7 +117,7 @@ public class StaticComponentContainer {
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create();
 			Boolean clearTemporaryFolderFlag = Boolean.valueOf(GlobalProperties.getProperty(Configuration.Key.CLEAR_TEMPORARY_FOLDER_ON_INIT));
 			if (clearTemporaryFolderFlag) {
-				FileSystemHelper.clearMainTemporaryFolder();
+				FileSystemHelper.clearBurningwaveTemporaryFolder();
 			}
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
 			ByteBufferHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler.create();
