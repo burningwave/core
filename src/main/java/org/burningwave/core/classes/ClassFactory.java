@@ -417,7 +417,7 @@ public class ClassFactory implements Component {
 						
 						@Override
 						public void close() {
-							closeResources(() -> classLoader == null, () -> {
+							closeResources(() -> this.classLoader == null, () -> {
 								compilationTask.join().close();
 								super.close();
 								if (useOneShotJavaCompiler) {
@@ -749,7 +749,7 @@ public class ClassFactory implements Component {
 	}
 
 	public static abstract class ClassRetriever implements Component {
-		private ClassLoader classLoader;
+		ClassLoader classLoader;
 		private ClassFactory classFactory;
 		AtomicReference<Map<String, ByteBuffer>> byteCodesWrapper;
 		private Collection<String> uSGClassNames;
