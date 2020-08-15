@@ -269,6 +269,9 @@ public class ClassFactory implements Component {
 				if (classLoader instanceof MemoryClassLoader) {
 					((MemoryClassLoader)classLoader).register(classRetriever);
 					((MemoryClassLoader)classLoader).unregister(temporaryClient, true);
+					if (classLoader != defaultClassLoader) {
+						((MemoryClassLoader) classLoader).unregister(this, true);
+					}
 				}
 				return classLoader;
 			};
