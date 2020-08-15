@@ -807,7 +807,6 @@ public class ClassFactory implements Component {
 				}
 				byteCodesWrapper = null;
 				this.classLoader = null;
-				this.classFactory.unregister(this);
 				this.classFactory = null;
 				uSGClassNames.clear();
 				uSGClassNames = null;
@@ -815,6 +814,7 @@ public class ClassFactory implements Component {
 				classesSearchedInAdditionalClassRepositoriesForClassLoader = null;
 				classesSearchedInCompilationDependenciesPaths.clear();
 				classesSearchedInCompilationDependenciesPaths = null;
+				this.classFactory.unregister(this);
 			});
 		}
 	}
