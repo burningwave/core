@@ -729,7 +729,12 @@ public class ClassFactory implements Component {
 		closeResources(() -> this.classRetrievers == null, () -> {
 			unregister(config);
 			closeClassRetrievers();
-			this.classRetrievers = null;
+			BackgroundExecutor.createTask(() -> {
+					this.classRetrievers.clear();
+					this.classRetrievers = null;
+				},
+				Thread.MIN_PRIORITY
+			).submit();
 			pathHelper = null;
 			javaMemoryCompiler = null;
 			pojoSubTypeRetriever = null;	

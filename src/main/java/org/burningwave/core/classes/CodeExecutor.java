@@ -182,7 +182,6 @@ public class CodeExecutor implements Component {
 					if (defaultClassLoader instanceof MemoryClassLoader) {
 						((MemoryClassLoader)defaultClassLoader).unregister(executeClient, true);
 					}
-					memoryClassLoader.unregister(executeClient, true);
 					return retrievedElement;
 			});
 		} else {

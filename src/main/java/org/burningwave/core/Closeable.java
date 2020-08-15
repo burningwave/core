@@ -44,12 +44,24 @@ public interface Closeable extends AutoCloseable {
 			
 	}
 	
-	default public Task createCloseResoucesResources(Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
-		return BackgroundExecutor.createTask(closingFunction, Thread.MIN_PRIORITY).runOnlyOnce(Objects.getId(this) + "->" + "closeResources", isClosedPredicate);
+	default public String getId() {
+		return Objects.getId(this);
+	}
+	
+	default public Task createCloseResoucesTask(String objectId, Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
+		return BackgroundExecutor.createTask(closingFunction, Thread.MIN_PRIORITY).runOnlyOnce(objectId + "->" + "closeResources", isClosedPredicate);
+	}
+	
+	default public Task createCloseResoucesTask(Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
+		return createCloseResoucesTask(getId(), isClosedPredicate, closingFunction);
 	}
 	
 	default public Task closeResources(Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
-		return Optional.ofNullable(createCloseResoucesResources(isClosedPredicate, closingFunction).submit()).orElseGet(() -> null);
+		return closeResources(getId(), isClosedPredicate, closingFunction);
+	}
+	
+	default public Task closeResources(String objectId, Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
+		return Optional.ofNullable(createCloseResoucesTask(objectId, isClosedPredicate, closingFunction).submit()).orElseGet(() -> null);
 	}
 	
 }
