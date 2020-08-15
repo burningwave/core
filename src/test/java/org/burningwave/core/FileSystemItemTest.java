@@ -113,6 +113,17 @@ public class FileSystemItemTest extends BaseTest {
 			true
 		);
 	}
+	
+	@Test
+	public void readTestTwentyThree() {
+		testNotEmpty(() -> {
+				return FileSystemItem.ofPath(
+					System.getProperty("os.name").toLowerCase().contains("windows")?
+						"C:/Windows" : "/home"
+				).getParent().getChildren();
+			}, true
+		);
+	}
 		
 	@Test
 	public void readTestEight() {
