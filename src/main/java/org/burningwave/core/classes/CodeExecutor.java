@@ -162,9 +162,9 @@ public class CodeExecutor implements Component {
 	public <E extends ExecuteConfig<E>, T> T execute(
 		E config
 	) {	
+		Object executeClient = new Object() {};
 		if (config.getClassLoader() == null) {
 			return ThrowingSupplier.get(() -> {
-				Object executeClient = new Object();
 				ClassLoader defaultClassLoader = null;
 				ClassLoader parentClassLoader = config.getParentClassLoader();
 				if (parentClassLoader == null && config.isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull()) {
@@ -190,7 +190,6 @@ public class CodeExecutor implements Component {
 			});
 		} else {
 			return ThrowingSupplier.get(() -> {
-				Object executeClient = new Object();
 				ClassLoader defaultClassLoader = null;
 				Function<Boolean, ClassLoader> parentClassLoaderRestorer = null;
 				ClassLoader parentClassLoader = config.getParentClassLoader();

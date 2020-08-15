@@ -263,7 +263,7 @@ public class ClassFactory implements Component {
 		Function<Object, ClassLoader> classLoaderSupplier
 	) {
 		try {
-			Object temporaryClient = new Object();
+			Object temporaryClient = new Object(){};
 			ClassLoader classLoader = classLoaderSupplier.apply(temporaryClient);
 			Function<ClassRetriever, ClassLoader> classLoaderSupplierForClassRetriever = (classRetriever) -> {
 				if (classLoader instanceof MemoryClassLoader) {
