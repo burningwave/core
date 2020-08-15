@@ -170,11 +170,10 @@ public class CodeExecutor implements Component {
 				if (parentClassLoader == null && config.isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull()) {
 					parentClassLoader = defaultClassLoader = getClassFactory().getDefaultClassLoader(executeClient);
 				}
-				try (MemoryClassLoader memoryClassLoader = 
-					MemoryClassLoader.create(
+					MemoryClassLoader memoryClassLoader = MemoryClassLoader.create(
 						parentClassLoader
-					)
-				) {
+					);
+					memoryClassLoader.register(executeClient);
 					Class<? extends Executable> executableClass = loadOrBuildAndDefineExecutorSubType(
 						config.useClassLoader(memoryClassLoader)
 					);
@@ -183,8 +182,8 @@ public class CodeExecutor implements Component {
 					if (defaultClassLoader instanceof MemoryClassLoader) {
 						((MemoryClassLoader)defaultClassLoader).unregister(executeClient, true);
 					}
+					memoryClassLoader.unregister(executeClient, true);
 					return retrievedElement;
-				}
 			});
 		} else {
 			return ThrowingSupplier.get(() -> {

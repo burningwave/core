@@ -302,7 +302,7 @@ public class ClassFactory implements Component {
 								classNames.stream().findFirst().orElseGet(() -> "")
 						);
 						return compilationResult;
-					}, Thread.MAX_PRIORITY).async().submit();
+					}).async().submit();
 					return new ClassRetriever(
 						this, getClassPathHunter(),
 						classPathHelper,
@@ -414,12 +414,14 @@ public class ClassFactory implements Component {
 						
 						@Override
 						public void close() {
-							compilationTask.join().close();
-							super.close();
-							if (useOneShotJavaCompiler) {
-								compiler.close();
-								classPathHelper.close();
-							}
+							closeResources(() -> classLoader == null, () -> {
+								compilationTask.join().close();
+								super.close();
+								if (useOneShotJavaCompiler) {
+									compiler.close();
+									classPathHelper.close();
+								}
+							});
 						}
 					};					
 				}
@@ -789,25 +791,28 @@ public class ClassFactory implements Component {
 		
 		@Override
 		public void close() {
-			if (classLoader instanceof MemoryClassLoader) {
-				((MemoryClassLoader)classLoader).unregister(this, true);
-			}
-			if (byteCodesWrapper != null) {
-				if (byteCodesWrapper.get() != null) {
-					byteCodesWrapper.get().clear();
+			closeResources(() -> this.classLoader == null, () -> {
+				if (classLoader instanceof MemoryClassLoader) {
+					((MemoryClassLoader)classLoader).unregister(this, true);
 				}
-				byteCodesWrapper.set(null);
-			}
-			byteCodesWrapper = null;
-			this.classLoader = null;
-			this.classFactory.unregister(this);
-			this.classFactory = null;
-			uSGClassNames.clear();
-			uSGClassNames = null;
-			classesSearchedInAdditionalClassRepositoriesForClassLoader.clear();
-			classesSearchedInAdditionalClassRepositoriesForClassLoader = null;
-			classesSearchedInCompilationDependenciesPaths.clear();
-			classesSearchedInCompilationDependenciesPaths = null;
+				classLoader = null;
+				if (byteCodesWrapper != null) {
+					if (byteCodesWrapper.get() != null) {
+						byteCodesWrapper.get().clear();
+					}
+					byteCodesWrapper.set(null);
+				}
+				byteCodesWrapper = null;
+				this.classLoader = null;
+				this.classFactory.unregister(this);
+				this.classFactory = null;
+				uSGClassNames.clear();
+				uSGClassNames = null;
+				classesSearchedInAdditionalClassRepositoriesForClassLoader.clear();
+				classesSearchedInAdditionalClassRepositoriesForClassLoader = null;
+				classesSearchedInCompilationDependenciesPaths.clear();
+				classesSearchedInCompilationDependenciesPaths = null;
+			});
 		}
 	}
 }
