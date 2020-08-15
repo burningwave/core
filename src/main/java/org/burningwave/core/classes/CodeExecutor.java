@@ -170,20 +170,23 @@ public class CodeExecutor implements Component {
 				if (parentClassLoader == null && config.isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull()) {
 					parentClassLoader = defaultClassLoader = getClassFactory().getDefaultClassLoader(executeClient);
 				}
-					MemoryClassLoader memoryClassLoader = MemoryClassLoader.create(
-						parentClassLoader
-					);
+				MemoryClassLoader memoryClassLoader = MemoryClassLoader.create(
+					parentClassLoader
+				);
+				try {
 					memoryClassLoader.register(executeClient);
 					Class<? extends Executable> executableClass = loadOrBuildAndDefineExecutorSubType(
 						config.useClassLoader(memoryClassLoader)
 					);
 					Executable executor = Constructors.newInstanceDirectOf(executableClass);
 					T retrievedElement = executor.execute(config.getParams());
+					return retrievedElement;
+				} finally {
 					if (defaultClassLoader instanceof MemoryClassLoader) {
 						((MemoryClassLoader)defaultClassLoader).unregister(executeClient, true);
 					}
 					memoryClassLoader.unregister(executeClient, true);
-					return retrievedElement;
+				}
 			});
 		} else {
 			return ThrowingSupplier.get(() -> {
@@ -194,21 +197,24 @@ public class CodeExecutor implements Component {
 				if (parentClassLoader == null && config.isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull()) {
 					parentClassLoader = defaultClassLoader = getClassFactory().getDefaultClassLoader(executeClient);
 				}
-				if (parentClassLoader != null) {
-					parentClassLoaderRestorer = ClassLoaders.setAsParent(config.getClassLoader(), parentClassLoader, false);
+				try {
+					if (parentClassLoader != null) {
+						parentClassLoaderRestorer = ClassLoaders.setAsParent(config.getClassLoader(), parentClassLoader, false);
+					}
+					Class<? extends Executable> executableClass = loadOrBuildAndDefineExecutorSubType(
+						config
+					);
+					Executable executor = Constructors.newInstanceDirectOf(executableClass);
+					T retrievedElement = executor.execute(config.getParams());
+					if (parentClassLoaderRestorer != null) {
+						parentClassLoaderRestorer.apply(true);
+					}
+					return retrievedElement;
+				} finally {
+					if (defaultClassLoader instanceof MemoryClassLoader) {
+						((MemoryClassLoader)defaultClassLoader).unregister(executeClient, true);
+					}
 				}
-				Class<? extends Executable> executableClass = loadOrBuildAndDefineExecutorSubType(
-					config
-				);
-				Executable executor = Constructors.newInstanceDirectOf(executableClass);
-				T retrievedElement = executor.execute(config.getParams());
-				if (parentClassLoaderRestorer != null) {
-					parentClassLoaderRestorer.apply(true);
-				}
-				if (defaultClassLoader instanceof MemoryClassLoader) {
-					((MemoryClassLoader)defaultClassLoader).unregister(executeClient, true);
-				}
-				return retrievedElement;
 			});
 		}
 	}
