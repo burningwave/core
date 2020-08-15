@@ -729,11 +729,11 @@ public class ClassFactory implements Component {
 		closeResources(() -> this.classRetrievers == null, () -> {
 			unregister(config);
 			closeClassRetrievers();
+			Thread.currentThread().getPriority();
 			BackgroundExecutor.createTask(() -> {
 					this.classRetrievers.clear();
 					this.classRetrievers = null;
-				},
-				Thread.MIN_PRIORITY
+				}
 			).submit();
 			pathHelper = null;
 			javaMemoryCompiler = null;
@@ -812,14 +812,14 @@ public class ClassFactory implements Component {
 				}
 				byteCodesWrapper = null;
 				this.classLoader = null;
-				this.classFactory = null;
 				uSGClassNames.clear();
 				uSGClassNames = null;
 				classesSearchedInAdditionalClassRepositoriesForClassLoader.clear();
 				classesSearchedInAdditionalClassRepositoriesForClassLoader = null;
 				classesSearchedInCompilationDependenciesPaths.clear();
 				classesSearchedInCompilationDependenciesPaths = null;
-				this.classFactory.unregister(this);
+ 				this.classFactory.unregister(this);
+ 				this.classFactory = null;
 			});
 		}
 	}
