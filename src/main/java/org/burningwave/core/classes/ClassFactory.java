@@ -729,7 +729,6 @@ public class ClassFactory implements Component {
 		closeResources(() -> this.classRetrievers == null, () -> {
 			unregister(config);
 			closeClassRetrievers();
-			Thread.currentThread().getPriority();
 			BackgroundExecutor.createTask(() -> {
 					this.classRetrievers.clear();
 					this.classRetrievers = null;
