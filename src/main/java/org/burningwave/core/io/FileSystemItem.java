@@ -338,9 +338,12 @@ public class FileSystemItem implements ManagedLogger {
 					conventionedPath
 				);
 			} else {
-				return this.parent = FileSystemItem.ofPath(
-					absolutePath.getKey().substring(0, absolutePath.getKey().lastIndexOf("/"))
-				);
+				String absolutePath = getAbsolutePath();
+				String parentAbsolutePath = absolutePath.substring(0, absolutePath.lastIndexOf("/"));
+				if (isRoot(parentAbsolutePath)) {
+					parentAbsolutePath =  parentAbsolutePath.length() > 0 ? parentAbsolutePath : "/";
+				}
+				return this.parent = FileSystemItem.ofPath(parentAbsolutePath);
 			}
 		}
 	}
@@ -421,7 +424,11 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public boolean isRoot() {
-		String absolutePathStr = getAbsolutePath();
+		return isRoot(getAbsolutePath());
+	}
+	
+	
+	private boolean isRoot(String absolutePathStr) {
 		return absolutePathStr.chars().filter(ch -> ch == '/').count() == 0 || absolutePathStr.equals("/");
 	}
 	
@@ -982,6 +989,10 @@ public class FileSystemItem implements ManagedLogger {
 		
 		public final Criteria allFileThat(final Predicate<FileSystemItem> predicate) {
 			return this.allThat(childAndSuperParent -> predicate.test(childAndSuperParent[0]));
+		}
+		
+		public final Criteria allFileThat(final BiPredicate<FileSystemItem, FileSystemItem> predicate) {
+			return this.allThat(childAndSuperParent -> predicate.test(childAndSuperParent[0], childAndSuperParent[1]));
 		}
 		
 	}

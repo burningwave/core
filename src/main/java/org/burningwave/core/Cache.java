@@ -45,6 +45,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -69,22 +70,20 @@ public class Cache implements Component {
 	private Cache() {
 		logInfo("Building cache");
 		pathForContents = new PathForResources<ByteBuffer>(1L, Streams::shareContent);
-		pathForFileSystemItems = new PathForResources<FileSystemItem>(1L, fileSystemItem -> fileSystemItem) {
-			@Override
-			void destroy(String path, FileSystemItem item) {
-				BackgroundExecutor.createTask(() -> 
-					item.destroy(),
-				Thread.MIN_PRIORITY).addToQueue();
-			}
-		};
-		pathForIterableZipContainers = new PathForResources<IterableZipContainer>(1L, zipFileContainer -> zipFileContainer){
-			@Override
-			void destroy(String path, IterableZipContainer item) {
-				BackgroundExecutor.createTask(() -> 
-					item.destroy(),
-				Thread.MIN_PRIORITY).addToQueue();			
-			};
-		};
+		pathForFileSystemItems = new PathForResources<FileSystemItem>(
+			1L,
+			fileSystemItem -> 
+				fileSystemItem, 
+			(path, fileSystemItem) -> 
+				fileSystemItem.destroy()
+		);
+		pathForIterableZipContainers = new PathForResources<IterableZipContainer>(
+			1L, 
+			zipFileContainer ->
+				zipFileContainer, 
+			(path, zipFileContainer) -> 
+				zipFileContainer.destroy()
+		);
 		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);
 		classLoaderForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
 		uniqueKeyForFields = new ObjectAndPathForResources<>(1L, field -> field);
@@ -106,13 +105,12 @@ public class Cache implements Component {
 		Mutex.Manager mutexManagerForResources;
 		
 		public ObjectAndPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
+			this(partitionStartLevel, sharer, null);
+		}
+		
+		public ObjectAndPathForResources(Long partitionStartLevel, Function<R, R> sharer, BiConsumer<String, R> itemDestroyer) {
 			this.resources = new HashMap<>();
-			this.pathForResourcesSupplier = () -> new PathForResources<R>(partitionStartLevel, sharer) {
-				@Override
-				void destroy(String path, R item) {
-					ObjectAndPathForResources.this.destroy(path, item);
-				}
-			};
+			this.pathForResourcesSupplier = () -> new PathForResources<R>(partitionStartLevel, sharer, itemDestroyer);
 			mutexManagerForResources = Mutex.Manager.create(this);
 		}
 
@@ -181,11 +179,9 @@ public class Cache implements Component {
 					item.getValue().clear(destroyItems);
 				}
 				resources.clear();
-			}, Thread.MIN_PRIORITY).addToQueue();		
+			}, Thread.MIN_PRIORITY).submit();		
 			return this;
 		}
-		
-		void destroy(String path, R item) {}
 	}
 	
 	public static class PathForResources<R> implements Component  {
@@ -196,14 +192,20 @@ public class Cache implements Component {
 		Mutex.Manager mutexManagerForPartitions;
 		Mutex.Manager mutexManagerForLoadedResources;
 		Mutex.Manager mutexManagerForPartitionedResources;
+		BiConsumer<String, R> itemDestroyer;
 		
 		private PathForResources(Long partitionStartLevel, Function<R, R> sharer) {
+			this(partitionStartLevel, sharer, null);
+		}
+		
+		private PathForResources(Long partitionStartLevel, Function<R, R> sharer, BiConsumer<String, R> itemDestroyer) {
 			this.partitionStartLevel = partitionStartLevel;
 			this.sharer = sharer;
 			resources = new HashMap<>();
 			mutexManagerForPartitions = Mutex.Manager.create(this);
 			mutexManagerForLoadedResources = Mutex.Manager.create(this);
 			mutexManagerForPartitionedResources = Mutex.Manager.create(this);
+			this.itemDestroyer = itemDestroyer;
 		}
 		
 		Map<String, R> retrievePartition(Map<String, Map<String, R>> partion, Long partitionIndex, String path) {
@@ -299,8 +301,12 @@ public class Cache implements Component {
 			Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
 			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
 			R item = nestedPartition.remove(path);
-			if (destroy && item != null) {
-				destroy(path, item);
+			if (itemDestroyer != null && destroy && item != null) {
+				String finalPath = path;
+				BackgroundExecutor.createTask(() -> 
+					itemDestroyer.accept(finalPath, item),
+					Thread.MIN_PRIORITY
+				).submit();
 			}
 			return item;
 		}
@@ -335,15 +341,17 @@ public class Cache implements Component {
 			}
 			BackgroundExecutor.createTask(() -> {
 				clearResources(partitions, destroyItems);
-			}, Thread.MIN_PRIORITY).addToQueue();
+			}, Thread.MIN_PRIORITY).submit();
 			return this;
 		}
 
 		void clearResources(Map<Long, Map<String, Map<String, R>>> partitions, boolean destroyItems) {
 			for (Entry<Long, Map<String, Map<String, R>>> partition : partitions.entrySet()) {
 				for (Entry<String, Map<String, R>> nestedPartition : partition.getValue().entrySet()) {
-					if (destroyItems) {
-						IterableObjectHelper.deepClear(nestedPartition.getValue(), this::destroy);
+					if (itemDestroyer != null && destroyItems) {
+						IterableObjectHelper.deepClear(nestedPartition.getValue(), (path, resource) -> { 
+							this.itemDestroyer.accept(path, resource);
+						});
 					} else {
 						nestedPartition.getValue().clear();
 					}
@@ -352,8 +360,6 @@ public class Cache implements Component {
 			}
 			partitions.clear();
 		}
-		
-		void destroy(String path, R item) {}
 		
 	}
 	

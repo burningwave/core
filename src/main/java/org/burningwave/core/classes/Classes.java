@@ -175,6 +175,10 @@ public class Classes implements Component, MembersRetriever {
 		return path;
 	}
 	
+	public String toPath(String className) {
+		return className.replace(".", "/");
+	}
+	
 	public String retrieveName(
 		final byte[] classFileBuffer
 	) {
@@ -605,24 +609,27 @@ public class Classes implements Component, MembersRetriever {
 			MethodHandle definePackageMethod
 		) throws ClassNotFoundException {
 			try {
-	    		return (Class<T>) classLoader.loadClass(className);
-	    	} catch (ClassNotFoundException | NoClassDefFoundError outerEx) {
-	    		try {
-	    			Class<T> cls = defineOrLoad(classLoader, defineClassMethod, className, byteCodeSupplier.apply(className));
+				try {
+					return (Class<T>) classLoader.loadClass(className);
+				}  catch (ClassNotFoundException | NoClassDefFoundError exc) {
+					Class<T> cls = defineOrLoad(classLoader, defineClassMethod, className, byteCodeSupplier.apply(className));
 	    			definePackageFor(cls, classLoader, definePackageMethod);
 	    			return cls;
-				} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException outerExc) {
-					String newNotFoundClassName = Classes.retrieveNames(outerExc).stream().findFirst().orElseGet(() -> null);
-					loadOrDefineByByteCode(
-						newNotFoundClassName,
-						byteCodeSupplier, classLoader, defineClassMethod, definePackageMethod
-	        		);
-					return loadOrDefineByByteCode(className, byteCodeSupplier,
-						classLoader,
-						defineClassMethod, definePackageMethod
-	        		);
 				}
-	    	}
+			}  catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException exc) {
+				if (byteCodeSupplier.apply(className) == null) {
+					throw new ClassNotFoundException(className);
+				}
+				String newNotFoundClassName = Classes.retrieveNames(exc).stream().findFirst().orElseGet(() -> null);
+				loadOrDefineByByteCode(
+					newNotFoundClassName,
+					byteCodeSupplier, classLoader, defineClassMethod, definePackageMethod
+        		);
+				return loadOrDefineByByteCode(className, byteCodeSupplier,
+					classLoader,
+					defineClassMethod, definePackageMethod
+        		);
+			}
 	    }
 		
 		public <T> Class<T> loadOrDefine(
@@ -642,29 +649,29 @@ public class Classes implements Component, MembersRetriever {
 			MethodHandle defineClassMethod, 
 			MethodHandle definePackageMethod
 		) throws ClassNotFoundException {
-	    	try {
-	    		return (Class<T>)classLoader.loadClass(toLoad.getName());
-	    	} catch (ClassNotFoundException | NoClassDefFoundError outerEx) {
-	    		try {
-	    			Class<T> cls = defineOrLoad(classLoader, defineClassMethod, toLoad.getName(), Streams.shareContent(Classes.getByteCode(toLoad)));
+			try {
+				try {
+					return (Class<T>)classLoader.loadClass(toLoad.getName());
+				} catch (ClassNotFoundException | NoClassDefFoundError exc) {
+					Class<T> cls = defineOrLoad(classLoader, defineClassMethod, toLoad.getName(), Streams.shareContent(Classes.getByteCode(toLoad)));
 	    			definePackageFor(cls, classLoader, definePackageMethod);
 	    			return cls;
-				} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException outerExc) {
-					String newNotFoundClassName = Classes.retrieveNames(outerExc).stream().findFirst().orElseGet(() -> null);
-					loadOrDefine(
-	        			Class.forName(
-	        				newNotFoundClassName, false, toLoad.getClassLoader()
-	        			),
-	        			classLoader, defineClassMethod, definePackageMethod
-	        		);
-					return (Class<T>)loadOrDefine(
-	        			Class.forName(
-	        					toLoad.getName(), false, toLoad.getClassLoader()
-	        			),
-	        			classLoader, defineClassMethod, definePackageMethod
-	        		);
 				}
-	    	}
+			} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException exc) {
+				String newNotFoundClassName = Classes.retrieveNames(exc).stream().findFirst().orElseGet(() -> null);
+				loadOrDefine(
+        			Class.forName(
+        				newNotFoundClassName, false, toLoad.getClassLoader()
+        			),
+        			classLoader, defineClassMethod, definePackageMethod
+        		);
+				return (Class<T>)loadOrDefine(
+        			Class.forName(
+        					toLoad.getName(), false, toLoad.getClassLoader()
+        			),
+        			classLoader, defineClassMethod, definePackageMethod
+        		);
+			}
 	    }
 		
 		public <T> Class<T> defineOrLoad(ClassLoader classLoader, JavaClass javaClass) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
@@ -688,6 +695,9 @@ public class Classes implements Component, MembersRetriever {
 				logWarn("Class {} is already defined", className);
 				return (Class<T>)classLoader.loadClass(className);
 			} catch (Throwable exc) {
+				if (byteCode == null) {
+					throw new ClassNotFoundException(className);
+				}
 				throw Throwables.toRuntimeException(exc);
 			}
 		}
@@ -802,15 +812,15 @@ public class Classes implements Component, MembersRetriever {
 			}
 		}
 		
-		public boolean addClassPath(ClassLoader classLoader, String... classPaths) {
+		public Collection<String> addClassPath(ClassLoader classLoader, String... classPaths) {
 			return addClassPaths(classLoader, Arrays.asList(classPaths));
 		}
 		
-		public boolean addClassPath(ClassLoader classLoader, Predicate<String> checkForAddedClasses, String... classPaths) {
+		public Collection<String> addClassPath(ClassLoader classLoader, Predicate<String> checkForAddedClasses, String... classPaths) {
 			return addClassPaths(classLoader, checkForAddedClasses, Arrays.asList(classPaths));
 		}
 		
-		public boolean addClassPaths(ClassLoader classLoader, Predicate<String> checkForAddedClasses, Collection<String>... classPathCollections) {
+		public Collection<String> addClassPaths(ClassLoader classLoader, Predicate<String> checkForAddedClasses, Collection<String>... classPathCollections) {
 			if (LowLevelObjectsHandler.isClassLoaderDelegate(classLoader)) {
 				return addClassPaths(Fields.getDirect(classLoader, "classLoader"));
 			}
@@ -818,26 +828,27 @@ public class Classes implements Component, MembersRetriever {
 			for (Collection<String> classPaths : classPathCollections) {
 				paths.addAll(classPaths);
 			}
-			paths.removeAll(getAllLoadedPaths(classLoader));
 			if (classLoader instanceof URLClassLoader || LowLevelObjectsHandler.isBuiltinClassLoader(classLoader)) {	
-				Object target = classLoader instanceof URLClassLoader ?
-					classLoader :
-					Fields.getDirect(classLoader, "ucp");
-				if (target != null) {
-					Consumer<URL> classPathAdder = 	urls -> Methods.invokeDirect(target, "addURL", urls);
-					paths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
-						classPathAdder.accept(url);
-					});
-					return true;
-				}				
+				paths.removeAll(getAllLoadedPaths(classLoader));
+				if (!paths.isEmpty()) {
+					Object target = classLoader instanceof URLClassLoader ?
+						classLoader :
+						Fields.getDirect(classLoader, "ucp");
+					if (target != null) {
+						Consumer<URL> classPathAdder = 	urls -> Methods.invokeDirect(target, "addURL", urls);
+						paths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
+							classPathAdder.accept(url);
+						});
+						return paths;
+					}
+				}
 			} else if (classLoader instanceof PathScannerClassLoader) {
-				((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(paths, checkForAddedClasses);
-				return true;
+				return ((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(paths, checkForAddedClasses);
 			}
-			return false;
+			return new HashSet<>();
 		}
 		
-		public boolean addClassPaths(ClassLoader classLoader, Collection<String>... classPathCollections) {
+		public Collection<String> addClassPaths(ClassLoader classLoader, Collection<String>... classPathCollections) {
 			return addClassPaths(classLoader, (path) -> false, classPathCollections);
 		}
 
@@ -901,4 +912,5 @@ public class Classes implements Component, MembersRetriever {
 			}
 		}
 	}
+
 }

@@ -43,10 +43,11 @@ import org.burningwave.core.io.FileSystemItem;
 
 public class JavaClass implements AutoCloseable {
 	private ByteBuffer byteCode;
+	private String classNameSlashed;
 	private String className;
 	
 	private JavaClass(String className, ByteBuffer byteCode) {
-		this.className = className;
+		this.classNameSlashed = className;
 		this.byteCode = byteCode;
 	}
 	
@@ -75,15 +76,15 @@ public class JavaClass implements AutoCloseable {
 	}
 	
 	private  String _getPackageName() {
-		return className.contains("/") ?
-			className.substring(0, className.lastIndexOf("/")) :
+		return classNameSlashed.contains("/") ?
+			classNameSlashed.substring(0, classNameSlashed.lastIndexOf("/")) :
 			null;
 	}
 
 	private String _getSimpleName() {
-		return className.contains("/") ?
-			className.substring(className.lastIndexOf("/") + 1) :
-			className;
+		return classNameSlashed.contains("/") ?
+			classNameSlashed.substring(classNameSlashed.lastIndexOf("/") + 1) :
+			classNameSlashed;
 	}	
 	
 	public String getPackageName() {
@@ -121,21 +122,24 @@ public class JavaClass implements AutoCloseable {
 	}
 	
 	public String getName() {
-		String packageName = getPackageName();
-		String classSimpleName = getSimpleName();
-		String name = null;
-		if (packageName != null) {
-			name = packageName;
-		}
-		if (classSimpleName != null) {
-			if (packageName == null) {
-				name = "";
-			} else {
-				name += ".";
+		if (className == null) {
+			String packageName = getPackageName();
+			String classSimpleName = getSimpleName();
+			String name = null;
+			if (packageName != null) {
+				name = packageName;
 			}
-			name += classSimpleName;
-		}
-		return name;
+			if (classSimpleName != null) {
+				if (packageName == null) {
+					name = "";
+				} else {
+					name += ".";
+				}
+				name += classSimpleName;
+			}
+			className = name;
+		}		
+		return className;
 	}
 	
 	public ByteBuffer getByteCode() {
@@ -151,7 +155,7 @@ public class JavaClass implements AutoCloseable {
 	}
 	
 	public JavaClass duplicate() {
-		return new JavaClass(className, byteCode);
+		return new JavaClass(classNameSlashed, byteCode);
 	}
 	
 	@Override
@@ -169,7 +173,7 @@ public class JavaClass implements AutoCloseable {
 
 	@Override
 	public void close() {
-		className = null;
+		classNameSlashed = null;
 		byteCode = null;		
 	}
 }

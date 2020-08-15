@@ -132,7 +132,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
 	) {
 		String classPath = fileSystemItem.getAbsolutePath();
-		FileSystemItem classPathAsFIS = FileSystemItem.ofPath(classPath.substring(0, classPath.lastIndexOf(javaClass.getName().replace(".", "/"))));
+		FileSystemItem classPathAsFIS = FileSystemItem.ofPath(classPath.substring(0, classPath.lastIndexOf(javaClass.getPath())));
 		context.addItemFound(basePath, classPathAsFIS.getAbsolutePath(), context.loadClass(javaClass.getName()));		
 	}
 	

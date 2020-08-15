@@ -115,12 +115,6 @@ public class StaticComponentContainer {
 			ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Instantiated {}", ManagedLoggersRepository.getClass().getName());
 			Paths = org.burningwave.core.Strings.Paths.create();
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create();
-			String clearTemporaryFolderFlag = GlobalProperties.getProperty(Configuration.Key.CLEAR_TEMPORARY_FOLDER_ON_INIT);
-			if (Boolean.valueOf(clearTemporaryFolderFlag)) {
-				FileSystemHelper.clearMainTemporaryFolder();
-			} else {
-				FileSystemHelper.deleteUndeletedFoldersOfPreviousExecution();
-			}
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
 			ByteBufferHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler.create();
 			Streams = org.burningwave.core.io.Streams.create(GlobalProperties);
@@ -148,10 +142,11 @@ public class StaticComponentContainer {
 					} catch (Throwable exc) {
 						ManagedLoggersRepository.logError(StaticComponentContainer.class, "Exception occurred while closing component containers", exc);
 					}
-					FileSystemHelper.deleteTemporaryFolders(true);
+					FileSystemHelper.close();
 					BackgroundExecutor.shutDown(true);
 				})
 			);
+			FileSystemHelper.startScavenger();
 		} catch (Throwable exc){
 			exc.printStackTrace();
 			throw new RuntimeException(exc);

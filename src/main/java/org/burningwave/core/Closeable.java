@@ -49,7 +49,7 @@ public interface Closeable extends AutoCloseable {
 	}
 	
 	default public Task closeResources(Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
-		return Optional.ofNullable(createCloseResoucesResources(isClosedPredicate, closingFunction).addToQueue()).orElseGet(() -> null);
+		return Optional.ofNullable(createCloseResoucesResources(isClosedPredicate, closingFunction).submit()).orElseGet(() -> null);
 	}
 	
 }

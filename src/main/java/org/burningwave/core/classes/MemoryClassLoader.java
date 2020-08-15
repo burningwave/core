@@ -389,7 +389,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		BackgroundExecutor.createTask(() -> {
 			IterableObjectHelper.deepClear(notLoadedByteCodes);
 			IterableObjectHelper.deepClear(loadedByteCodes);
-		}, Thread.MIN_PRIORITY).addToQueue();
+		}, Thread.MIN_PRIORITY).submit();
 		return this;
 	}
 	

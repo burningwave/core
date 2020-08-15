@@ -93,7 +93,7 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 	void clearItemsForPath(Map<String, JavaClass> items) {
 		BackgroundExecutor.createTask(() -> {
 			IterableObjectHelper.deepClear(items, (path, javaClass) -> javaClass.close());
-		}, Thread.MIN_PRIORITY).addToQueue();
+		}, Thread.MIN_PRIORITY).submit();
 	}
 	
 	public static class SearchResult extends org.burningwave.core.classes.SearchResult<JavaClass> {

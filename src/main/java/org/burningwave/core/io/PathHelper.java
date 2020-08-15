@@ -109,7 +109,7 @@ public class PathHelper implements Component {
 			loadAllPaths();
 			initializerTask = null;
 		}, Thread.MAX_PRIORITY);
-		initializerTask.addToQueue();
+		initializerTask.submit();
 		listenTo(config);
 	}
 	
