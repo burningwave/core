@@ -144,7 +144,7 @@ public class StaticComponentContainer {
 					}
 					FileSystemHelper.close();
 					BackgroundExecutor.shutDown(true);
-				})
+				}, "Resources releaser")
 			);
 			FileSystemHelper.startScavenger();
 		} catch (Throwable exc){

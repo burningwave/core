@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
@@ -65,6 +66,7 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.io.FileSystemItem;
@@ -130,11 +132,11 @@ public class JavaMemoryCompiler implements Component {
 		return new JavaMemoryCompiler(pathHelper, classPathHelper, config);
 	}
 	
-	public 	CompilationResult compile(Collection<String> sources) {
+	public 	ProducerTask<Compilation.Result> compile(Collection<String> sources) {
 		return compile(sources, true);
 	}
 	
-	public 	CompilationResult compile(Collection<String> sources, boolean storeCompiledClasses) {
+	public 	ProducerTask<Compilation.Result> compile(Collection<String> sources, boolean storeCompiledClasses) {
 		return compile(
 			CompileConfig.withSources(sources).setClassPaths(
 				pathHelper.getAllMainClassPaths()
@@ -146,7 +148,7 @@ public class JavaMemoryCompiler implements Component {
 	
 	
 	
-	public CompilationResult compile(CompileConfig config) {
+	public ProducerTask<Compilation.Result> compile(CompileConfig config) {
 		return compile(
 			config.getSources(),
 			getClassPathsFrom(config),
@@ -180,35 +182,46 @@ public class JavaMemoryCompiler implements Component {
 		);
 	}
 	
-	private CompilationResult compile(
+	private ProducerTask<Compilation.Result> compile(
 		Collection<String> sources, 
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
 		boolean storeCompiledClasses,
 		boolean storeCompiledClassesToNewFolder
 	) {	
-		logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
-		Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
-		sourcesToMemorySources(sources, memorySources);
-		try (Compilation.Context context = Compilation.Context.create(
-				this,
-				memorySources, 
-				new ArrayList<>(classPaths), 
-				new ArrayList<>(classRepositoriesPaths)
-			)
-		) {
-			Map<String, ByteBuffer> compiledFiles = compile(context, null);
-			String storedFilesClassPath = compiledClassesRepository.getAbsolutePath() + 
-				(storeCompiledClassesToNewFolder?
-					"/" + UUID.randomUUID().toString() :
-					"");
-			if (!compiledFiles.isEmpty() && storeCompiledClasses) {
-				compiledFiles.forEach((className, byteCode) -> {
-					JavaClass.use(byteCode, (javaClass) -> javaClass.storeToClassPath(storedFilesClassPath));
-				});
-			}			
-			return new CompilationResult(FileSystemItem.ofPath(storedFilesClassPath), compiledFiles, new HashSet<>(context.classPaths));
-		}
+		return BackgroundExecutor.createTask(() -> {
+			logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
+			Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
+			sourcesToMemorySources(sources, memorySources);
+			try (Compilation.Context context = Compilation.Context.create(
+					this,
+					memorySources, 
+					new ArrayList<>(classPaths), 
+					new ArrayList<>(classRepositoriesPaths)
+				)
+			) {
+				Map<String, ByteBuffer> compiledFiles = compile(context);
+				String storedFilesClassPath = compiledClassesRepository.getAbsolutePath() + 
+					(storeCompiledClassesToNewFolder?
+						"/" + UUID.randomUUID().toString() :
+						"");
+				if (!compiledFiles.isEmpty() && storeCompiledClasses) {
+					compiledFiles.forEach((className, byteCode) -> {
+						JavaClass.use(byteCode, (javaClass) -> javaClass.storeToClassPath(storedFilesClassPath));
+					});
+				}
+				Collection<String> classNames = compiledFiles.keySet();
+				logInfo(
+					classNames.size() > 1?	
+						"Classes {} have been succesfully compiled":
+						"Class {} has been succesfully compiled",
+					classNames.size() > 1?		
+						String.join(", ", classNames):
+						classNames.stream().findFirst().orElseGet(() -> "")
+				);
+				return new Compilation.Result(FileSystemItem.ofPath(storedFilesClassPath), compiledFiles, new HashSet<>(context.classPaths));
+			}
+		}).async().submit();
 	}	
 	
 	private void sourcesToMemorySources(Collection<String> sources, Collection<MemorySource> memorySources) {
@@ -224,7 +237,7 @@ public class JavaMemoryCompiler implements Component {
 	}
 
 
-	private Map<String, ByteBuffer> compile(Compilation.Context context, Throwable thr) {
+	private Map<String, ByteBuffer> compile(Compilation.Context context) {
 		if (!context.classPaths.isEmpty()) {
 			logInfo("... Using class paths:\n\t{}",String.join("\n\t", context.classPaths));
 		}
@@ -245,17 +258,17 @@ public class JavaMemoryCompiler implements Component {
 				new ArrayList<>(context.sources)
 			);
 			boolean done = false;
-			Throwable exception = null;
 			try {
 				done = task.call();
-			} catch (Throwable exc) {
-				if (thr != null && thr.getMessage().equals(exc.getMessage())) {
-					throw exc;
+			} catch (Throwable currentException) {
+				Throwable previousException = context.getPreviousException();
+				if (previousException != null && previousException.getMessage().equals(currentException.getMessage())) {
+					throw currentException;
 				}
-				exception = exc;
+				context.setPreviousException(currentException);
 			}
 			if (!done) {
-				return compile(context, exception);
+				return compile(context);
 			} else {
 				return memoryFileManager.getCompiledFiles().stream().collect(
 					Collectors.toMap(compiledFile -> 
@@ -354,7 +367,7 @@ public class JavaMemoryCompiler implements Component {
 		}
 	}		
 	
-	public static class MemorySource extends SimpleJavaFileObject implements Serializable {
+	static class MemorySource extends SimpleJavaFileObject implements Serializable {
 
 		private static final long serialVersionUID = 4669403234662034315L;
 		
@@ -382,7 +395,7 @@ public class JavaMemoryCompiler implements Component {
 	    }
 	}
 	
-	public static class MemoryFileObject extends SimpleJavaFileObject implements Component {
+	static class MemoryFileObject extends SimpleJavaFileObject implements Component {
 		
 		private ByteBufferOutputStream baos = new ByteBufferOutputStream(false);
 		private final String name;
@@ -459,7 +472,7 @@ public class JavaMemoryCompiler implements Component {
 		}
 	}
 	
-	private static class Compilation {
+	public static class Compilation {
 		private static class Context implements Component {
 			
 			private Collection<String> classPaths;
@@ -467,6 +480,7 @@ public class JavaMemoryCompiler implements Component {
 			private Collection<MemorySource> sources;
 			private Collection<String> classRepositories;
 			private JavaMemoryCompiler javaMemoryCompiler;
+			private Throwable previousException;
 			
 			
 			void addToClassPath(String path) {
@@ -504,7 +518,7 @@ public class JavaMemoryCompiler implements Component {
 				return new Context(javaMemoryCompiler, sources, classPaths, classRepositories);
 			}
 			
-			public Collection<String> findForPackageName(String packageName) throws Exception {
+			Collection<String> findForPackageName(String packageName) throws Exception {
 				Collection<String> classPaths = new HashSet<>(
 					javaMemoryCompiler.classPathHelper.compute(
 						Arrays.asList(javaMemoryCompiler.compiledClassesRepository.getAbsolutePath()),
@@ -530,7 +544,7 @@ public class JavaMemoryCompiler implements Component {
 				return classPaths;
 			}
 			
-			public Collection<String> findForClassName(Predicate<JavaClass> classPredicate) throws Exception {
+			Collection<String> findForClassName(Predicate<JavaClass> classPredicate) throws Exception {
 				Collection<String> classPaths = new HashSet<>(
 						javaMemoryCompiler.classPathHelper.compute(
 							Arrays.asList(javaMemoryCompiler.compiledClassesRepository.getAbsolutePath()),
@@ -555,7 +569,15 @@ public class JavaMemoryCompiler implements Component {
 					}
 					return classPaths;
 			}
-
+			
+			void setPreviousException(Throwable previousException) {
+				this.previousException = previousException;
+			}
+			
+			Throwable getPreviousException() {
+				return previousException;
+			}
+			
 			@Override
 			public void close() {
 				options.clear();
@@ -568,6 +590,42 @@ public class JavaMemoryCompiler implements Component {
 				javaMemoryCompiler = null;
 			}
 
+		}
+		
+		public static class Result implements AutoCloseable {
+			private FileSystemItem classPath;
+			private Map<String, ByteBuffer> compiledFiles;
+			private Collection<String> dependencies;
+			
+			
+			private Result(FileSystemItem classPath, Map<String, ByteBuffer> compiledFiles, Collection<String> classPaths) {
+				this.classPath = classPath;
+				this.compiledFiles = compiledFiles;
+				this.dependencies = classPaths;
+			}
+
+
+			public FileSystemItem getClassPath() {
+				return classPath;
+			}
+
+
+			public Map<String, ByteBuffer> getCompiledFiles() {
+				return compiledFiles;
+			}
+
+
+			public Collection<String> getDependencies() {
+				return dependencies;
+			}
+
+
+			public void close() {
+				compiledFiles.clear();
+				dependencies.clear();
+				classPath = null;
+			}	
+			
 		}
 	}
 	
@@ -583,40 +641,4 @@ public class JavaMemoryCompiler implements Component {
 		});
 	}
 	
-	
-	public static class CompilationResult implements AutoCloseable {
-		private FileSystemItem classPath;
-		private Map<String, ByteBuffer> compiledFiles;
-		private Collection<String> dependencies;
-		
-		
-		private CompilationResult (FileSystemItem classPath, Map<String, ByteBuffer> compiledFiles, Collection<String> classPaths) {
-			this.classPath = classPath;
-			this.compiledFiles = compiledFiles;
-			this.dependencies = classPaths;
-		}
-
-
-		public FileSystemItem getClassPath() {
-			return classPath;
-		}
-
-
-		public Map<String, ByteBuffer> getCompiledFiles() {
-			return compiledFiles;
-		}
-
-
-		public Collection<String> getDependencies() {
-			return dependencies;
-		}
-
-
-		public void close() {
-			compiledFiles.clear();
-			dependencies.clear();
-			classPath = null;
-		}	
-		
-	}
 }

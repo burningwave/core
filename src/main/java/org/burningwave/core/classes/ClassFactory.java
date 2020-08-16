@@ -52,7 +52,7 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.JavaMemoryCompiler.CompilationResult;
+import org.burningwave.core.classes.JavaMemoryCompiler.Compilation;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.ThrowingSupplier;
@@ -263,12 +263,15 @@ public class ClassFactory implements Component {
 		Function<Object, ClassLoader> classLoaderSupplier
 	) {
 		try {
-			Object temporaryClient = new Object();
+			Object temporaryClient = new Object(){};
 			ClassLoader classLoader = classLoaderSupplier.apply(temporaryClient);
 			Function<ClassRetriever, ClassLoader> classLoaderSupplierForClassRetriever = (classRetriever) -> {
 				if (classLoader instanceof MemoryClassLoader) {
 					((MemoryClassLoader)classLoader).register(classRetriever);
 					((MemoryClassLoader)classLoader).unregister(temporaryClient, true);
+					if (classLoader != defaultClassLoader) {
+						((MemoryClassLoader) classLoader).unregister(this, true);
+					}
 				}
 				return classLoader;
 			};
@@ -289,20 +292,7 @@ public class ClassFactory implements Component {
 								classPathHelper,
 								config
 							);
-					ProducerTask<CompilationResult> compilationTask = BackgroundExecutor.createTask(() -> {						
-						CompilationResult compilationResult = compiler.compile(
-							compileConfig
-						);
-						logInfo(
-							classNames.size() > 1?	
-								"Classes {} have been succesfully compiled":
-								"Class {} has been succesfully compiled",
-							classNames.size() > 1?		
-								String.join(", ", classNames):
-								classNames.stream().findFirst().orElseGet(() -> "")
-						);
-						return compilationResult;
-					}, Thread.MAX_PRIORITY).async().submit();
+					ProducerTask<Compilation.Result> compilationTask = compiler.compile(compileConfig);
 					return new ClassRetriever(
 						this, getClassPathHunter(),
 						classPathHelper,
@@ -323,7 +313,7 @@ public class ClassFactory implements Component {
 													if (!isItPossibleToAddClassPaths || compilationClassPathHasBeenAdded || !compileConfig.isStoringCompiledClassesEnabled()) {
 														throw exc;
 													}
-													CompilationResult compilationResult = compilationTask.join();
+													Compilation.Result compilationResult = compilationTask.join();
 													compilationClassPathHasBeenAdded = true;
 													ClassLoaders.addClassPath(
 														classLoader,
@@ -333,7 +323,7 @@ public class ClassFactory implements Component {
 													return get(className);
 												}								
 											} catch (ClassNotFoundException | NoClassDefFoundError exc) {
-												CompilationResult compilationResult = compilationTask.join();
+												Compilation.Result compilationResult = compilationTask.join();
 												Map<String, ByteBuffer> compiledClasses = new HashMap<>(compilationResult.getCompiledFiles());
 												if (compiledClasses.containsKey(className)) {
 													return ClassLoaders.loadOrDefineByByteCode(className, compiledClasses, classLoader);
@@ -373,7 +363,7 @@ public class ClassFactory implements Component {
 										if (classesSearchedInCompilationDependenciesPaths.containsAll(notFoundClasses)) {
 											throw exc;
 										}
-										CompilationResult compilationResult = compilationTask.join();
+										Compilation.Result compilationResult = compilationTask.join();
 										Collection<String> classPaths = new HashSet<>(compilationResult.getDependencies());
 										Collection<String> classPathsToBeRefreshed = new HashSet<>();
 										if (compileConfig.isStoringCompiledClassesEnabled()) {
@@ -414,12 +404,14 @@ public class ClassFactory implements Component {
 						
 						@Override
 						public void close() {
-							compilationTask.join().close();
-							super.close();
-							if (useOneShotJavaCompiler) {
-								compiler.close();
-								classPathHelper.close();
-							}
+							closeResources(() -> this.classLoader == null, () -> {
+								compilationTask.join().close();
+								super.close();
+								if (useOneShotJavaCompiler) {
+									compiler.close();
+									classPathHelper.close();
+								}
+							});
 						}
 					};					
 				}
@@ -724,7 +716,11 @@ public class ClassFactory implements Component {
 		closeResources(() -> this.classRetrievers == null, () -> {
 			unregister(config);
 			closeClassRetrievers();
-			this.classRetrievers = null;
+			BackgroundExecutor.createTask(() -> {
+					this.classRetrievers.clear();
+					this.classRetrievers = null;
+				}
+			).submit();
 			pathHelper = null;
 			javaMemoryCompiler = null;
 			pojoSubTypeRetriever = null;	
@@ -744,7 +740,7 @@ public class ClassFactory implements Component {
 	}
 
 	public static abstract class ClassRetriever implements Component {
-		private ClassLoader classLoader;
+		ClassLoader classLoader;
 		private ClassFactory classFactory;
 		AtomicReference<Map<String, ByteBuffer>> byteCodesWrapper;
 		private Collection<String> uSGClassNames;
@@ -789,25 +785,28 @@ public class ClassFactory implements Component {
 		
 		@Override
 		public void close() {
-			if (classLoader instanceof MemoryClassLoader) {
-				((MemoryClassLoader)classLoader).unregister(this, true);
-			}
-			if (byteCodesWrapper != null) {
-				if (byteCodesWrapper.get() != null) {
-					byteCodesWrapper.get().clear();
+			closeResources(() -> this.classLoader == null, () -> {
+				if (classLoader instanceof MemoryClassLoader) {
+					((MemoryClassLoader)classLoader).unregister(this, true);
 				}
-				byteCodesWrapper.set(null);
-			}
-			byteCodesWrapper = null;
-			this.classLoader = null;
-			this.classFactory.unregister(this);
-			this.classFactory = null;
-			uSGClassNames.clear();
-			uSGClassNames = null;
-			classesSearchedInAdditionalClassRepositoriesForClassLoader.clear();
-			classesSearchedInAdditionalClassRepositoriesForClassLoader = null;
-			classesSearchedInCompilationDependenciesPaths.clear();
-			classesSearchedInCompilationDependenciesPaths = null;
+				classLoader = null;
+				if (byteCodesWrapper != null) {
+					if (byteCodesWrapper.get() != null) {
+						byteCodesWrapper.get().clear();
+					}
+					byteCodesWrapper.set(null);
+				}
+				byteCodesWrapper = null;
+				this.classLoader = null;
+				uSGClassNames.clear();
+				uSGClassNames = null;
+				classesSearchedInAdditionalClassRepositoriesForClassLoader.clear();
+				classesSearchedInAdditionalClassRepositoriesForClassLoader = null;
+				classesSearchedInCompilationDependenciesPaths.clear();
+				classesSearchedInCompilationDependenciesPaths = null;
+ 				this.classFactory.unregister(this);
+ 				this.classFactory = null;
+			});
 		}
 	}
 }
