@@ -200,7 +200,7 @@ public class JavaMemoryCompiler implements Component {
 					new ArrayList<>(classRepositoriesPaths)
 				)
 			) {
-				Map<String, ByteBuffer> compiledFiles = compile(context, null);
+				Map<String, ByteBuffer> compiledFiles = compile(context);
 				String storedFilesClassPath = compiledClassesRepository.getAbsolutePath() + 
 					(storeCompiledClassesToNewFolder?
 						"/" + UUID.randomUUID().toString() :
@@ -237,7 +237,7 @@ public class JavaMemoryCompiler implements Component {
 	}
 
 
-	private Map<String, ByteBuffer> compile(Compilation.Context context, Throwable thr) {
+	private Map<String, ByteBuffer> compile(Compilation.Context context) {
 		if (!context.classPaths.isEmpty()) {
 			logInfo("... Using class paths:\n\t{}",String.join("\n\t", context.classPaths));
 		}
@@ -258,17 +258,17 @@ public class JavaMemoryCompiler implements Component {
 				new ArrayList<>(context.sources)
 			);
 			boolean done = false;
-			Throwable exception = null;
 			try {
 				done = task.call();
-			} catch (Throwable exc) {
-				if (thr != null && thr.getMessage().equals(exc.getMessage())) {
-					throw exc;
+			} catch (Throwable currentException) {
+				Throwable previousException = context.getPreviousException();
+				if (previousException != null && previousException.getMessage().equals(currentException.getMessage())) {
+					throw currentException;
 				}
-				exception = exc;
+				context.setPreviousException(currentException);
 			}
 			if (!done) {
-				return compile(context, exception);
+				return compile(context);
 			} else {
 				return memoryFileManager.getCompiledFiles().stream().collect(
 					Collectors.toMap(compiledFile -> 
@@ -487,6 +487,7 @@ public class JavaMemoryCompiler implements Component {
 			private Collection<String> classRepositories;
 			private JavaMemoryCompiler javaMemoryCompiler;
 			private String previousDiagnosticMessage;
+			private Throwable previousException;
 			
 			
 			void addToClassPath(String path) {
@@ -582,6 +583,14 @@ public class JavaMemoryCompiler implements Component {
 			
 			String getPreviousDiagnosticMessage() {
 				return previousDiagnosticMessage;
+			}
+			
+			void setPreviousException(Throwable previousException) {
+				this.previousException = previousException;
+			}
+			
+			Throwable getPreviousException() {
+				return previousException;
 			}
 			
 			@Override
