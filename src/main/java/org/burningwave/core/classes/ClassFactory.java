@@ -292,20 +292,7 @@ public class ClassFactory implements Component {
 								classPathHelper,
 								config
 							);
-					ProducerTask<CompilationResult> compilationTask = BackgroundExecutor.createTask(() -> {						
-						CompilationResult compilationResult = compiler.compile(
-							compileConfig
-						);
-						logInfo(
-							classNames.size() > 1?	
-								"Classes {} have been succesfully compiled":
-								"Class {} has been succesfully compiled",
-							classNames.size() > 1?		
-								String.join(", ", classNames):
-								classNames.stream().findFirst().orElseGet(() -> "")
-						);
-						return compilationResult;
-					}).async().submit();
+					ProducerTask<CompilationResult> compilationTask = compiler.compile(compileConfig);
 					return new ClassRetriever(
 						this, getClassPathHunter(),
 						classPathHelper,

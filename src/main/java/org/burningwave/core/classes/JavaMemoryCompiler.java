@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
@@ -65,6 +66,7 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.io.FileSystemItem;
@@ -130,11 +132,11 @@ public class JavaMemoryCompiler implements Component {
 		return new JavaMemoryCompiler(pathHelper, classPathHelper, config);
 	}
 	
-	public 	CompilationResult compile(Collection<String> sources) {
+	public 	ProducerTask<CompilationResult> compile(Collection<String> sources) {
 		return compile(sources, true);
 	}
 	
-	public 	CompilationResult compile(Collection<String> sources, boolean storeCompiledClasses) {
+	public 	ProducerTask<CompilationResult> compile(Collection<String> sources, boolean storeCompiledClasses) {
 		return compile(
 			CompileConfig.withSources(sources).setClassPaths(
 				pathHelper.getAllMainClassPaths()
@@ -146,7 +148,7 @@ public class JavaMemoryCompiler implements Component {
 	
 	
 	
-	public CompilationResult compile(CompileConfig config) {
+	public ProducerTask<CompilationResult> compile(CompileConfig config) {
 		return compile(
 			config.getSources(),
 			getClassPathsFrom(config),
@@ -180,35 +182,46 @@ public class JavaMemoryCompiler implements Component {
 		);
 	}
 	
-	private CompilationResult compile(
+	private ProducerTask<CompilationResult> compile(
 		Collection<String> sources, 
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
 		boolean storeCompiledClasses,
 		boolean storeCompiledClassesToNewFolder
 	) {	
-		logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
-		Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
-		sourcesToMemorySources(sources, memorySources);
-		try (Compilation.Context context = Compilation.Context.create(
-				this,
-				memorySources, 
-				new ArrayList<>(classPaths), 
-				new ArrayList<>(classRepositoriesPaths)
-			)
-		) {
-			Map<String, ByteBuffer> compiledFiles = compile(context, null);
-			String storedFilesClassPath = compiledClassesRepository.getAbsolutePath() + 
-				(storeCompiledClassesToNewFolder?
-					"/" + UUID.randomUUID().toString() :
-					"");
-			if (!compiledFiles.isEmpty() && storeCompiledClasses) {
-				compiledFiles.forEach((className, byteCode) -> {
-					JavaClass.use(byteCode, (javaClass) -> javaClass.storeToClassPath(storedFilesClassPath));
-				});
-			}			
-			return new CompilationResult(FileSystemItem.ofPath(storedFilesClassPath), compiledFiles, new HashSet<>(context.classPaths));
-		}
+		return BackgroundExecutor.createTask(() -> {
+			logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
+			Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
+			sourcesToMemorySources(sources, memorySources);
+			try (Compilation.Context context = Compilation.Context.create(
+					this,
+					memorySources, 
+					new ArrayList<>(classPaths), 
+					new ArrayList<>(classRepositoriesPaths)
+				)
+			) {
+				Map<String, ByteBuffer> compiledFiles = compile(context, null);
+				String storedFilesClassPath = compiledClassesRepository.getAbsolutePath() + 
+					(storeCompiledClassesToNewFolder?
+						"/" + UUID.randomUUID().toString() :
+						"");
+				if (!compiledFiles.isEmpty() && storeCompiledClasses) {
+					compiledFiles.forEach((className, byteCode) -> {
+						JavaClass.use(byteCode, (javaClass) -> javaClass.storeToClassPath(storedFilesClassPath));
+					});
+				}
+				Collection<String> classNames = compiledFiles.keySet();
+				logInfo(
+					classNames.size() > 1?	
+						"Classes {} have been succesfully compiled":
+						"Class {} has been succesfully compiled",
+					classNames.size() > 1?		
+						String.join(", ", classNames):
+						classNames.stream().findFirst().orElseGet(() -> "")
+				);
+				return new CompilationResult(FileSystemItem.ofPath(storedFilesClassPath), compiledFiles, new HashSet<>(context.classPaths));
+			}
+		}).async().submit();
 	}	
 	
 	private void sourcesToMemorySources(Collection<String> sources, Collection<MemorySource> memorySources) {
