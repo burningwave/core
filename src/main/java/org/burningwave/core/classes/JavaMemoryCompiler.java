@@ -132,11 +132,11 @@ public class JavaMemoryCompiler implements Component {
 		return new JavaMemoryCompiler(pathHelper, classPathHelper, config);
 	}
 	
-	public 	ProducerTask<CompilationResult> compile(Collection<String> sources) {
+	public 	ProducerTask<Compilation.Result> compile(Collection<String> sources) {
 		return compile(sources, true);
 	}
 	
-	public 	ProducerTask<CompilationResult> compile(Collection<String> sources, boolean storeCompiledClasses) {
+	public 	ProducerTask<Compilation.Result> compile(Collection<String> sources, boolean storeCompiledClasses) {
 		return compile(
 			CompileConfig.withSources(sources).setClassPaths(
 				pathHelper.getAllMainClassPaths()
@@ -148,7 +148,7 @@ public class JavaMemoryCompiler implements Component {
 	
 	
 	
-	public ProducerTask<CompilationResult> compile(CompileConfig config) {
+	public ProducerTask<Compilation.Result> compile(CompileConfig config) {
 		return compile(
 			config.getSources(),
 			getClassPathsFrom(config),
@@ -182,7 +182,7 @@ public class JavaMemoryCompiler implements Component {
 		);
 	}
 	
-	private ProducerTask<CompilationResult> compile(
+	private ProducerTask<Compilation.Result> compile(
 		Collection<String> sources, 
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
@@ -219,7 +219,7 @@ public class JavaMemoryCompiler implements Component {
 						String.join(", ", classNames):
 						classNames.stream().findFirst().orElseGet(() -> "")
 				);
-				return new CompilationResult(FileSystemItem.ofPath(storedFilesClassPath), compiledFiles, new HashSet<>(context.classPaths));
+				return new Compilation.Result(FileSystemItem.ofPath(storedFilesClassPath), compiledFiles, new HashSet<>(context.classPaths));
 			}
 		}).async().submit();
 	}	
@@ -293,6 +293,12 @@ public class JavaMemoryCompiler implements Component {
 		@Override
 		public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
 			String message = diagnostic.getMessage(Locale.ENGLISH);
+			if (context.getPreviousDiagnosticMessage() != null && 
+				context.getPreviousDiagnosticMessage().equals(message)
+			) {
+				throw new UnknownCompilerErrorMessageException(message);
+			}
+			context.setPreviousDiagnosticMessage(message);
 			if (message.contains("unchecked or unsafe operations") || message.contains("Recompile with -Xlint:unchecked")) {
 				context.options.put("-Xlint:", "unchecked");
 				return;
@@ -367,7 +373,7 @@ public class JavaMemoryCompiler implements Component {
 		}
 	}		
 	
-	public static class MemorySource extends SimpleJavaFileObject implements Serializable {
+	static class MemorySource extends SimpleJavaFileObject implements Serializable {
 
 		private static final long serialVersionUID = 4669403234662034315L;
 		
@@ -395,7 +401,7 @@ public class JavaMemoryCompiler implements Component {
 	    }
 	}
 	
-	public static class MemoryFileObject extends SimpleJavaFileObject implements Component {
+	static class MemoryFileObject extends SimpleJavaFileObject implements Component {
 		
 		private ByteBufferOutputStream baos = new ByteBufferOutputStream(false);
 		private final String name;
@@ -472,7 +478,7 @@ public class JavaMemoryCompiler implements Component {
 		}
 	}
 	
-	private static class Compilation {
+	public static class Compilation {
 		private static class Context implements Component {
 			
 			private Collection<String> classPaths;
@@ -480,6 +486,7 @@ public class JavaMemoryCompiler implements Component {
 			private Collection<MemorySource> sources;
 			private Collection<String> classRepositories;
 			private JavaMemoryCompiler javaMemoryCompiler;
+			private String previousDiagnosticMessage;
 			
 			
 			void addToClassPath(String path) {
@@ -517,7 +524,7 @@ public class JavaMemoryCompiler implements Component {
 				return new Context(javaMemoryCompiler, sources, classPaths, classRepositories);
 			}
 			
-			public Collection<String> findForPackageName(String packageName) throws Exception {
+			Collection<String> findForPackageName(String packageName) throws Exception {
 				Collection<String> classPaths = new HashSet<>(
 					javaMemoryCompiler.classPathHelper.compute(
 						Arrays.asList(javaMemoryCompiler.compiledClassesRepository.getAbsolutePath()),
@@ -543,7 +550,7 @@ public class JavaMemoryCompiler implements Component {
 				return classPaths;
 			}
 			
-			public Collection<String> findForClassName(Predicate<JavaClass> classPredicate) throws Exception {
+			Collection<String> findForClassName(Predicate<JavaClass> classPredicate) throws Exception {
 				Collection<String> classPaths = new HashSet<>(
 						javaMemoryCompiler.classPathHelper.compute(
 							Arrays.asList(javaMemoryCompiler.compiledClassesRepository.getAbsolutePath()),
@@ -568,7 +575,15 @@ public class JavaMemoryCompiler implements Component {
 					}
 					return classPaths;
 			}
-
+			
+			void setPreviousDiagnosticMessage(String previousDiagnosticMessage) {
+				this.previousDiagnosticMessage = previousDiagnosticMessage;
+			}
+			
+			String getPreviousDiagnosticMessage() {
+				return previousDiagnosticMessage;
+			}
+			
 			@Override
 			public void close() {
 				options.clear();
@@ -581,6 +596,42 @@ public class JavaMemoryCompiler implements Component {
 				javaMemoryCompiler = null;
 			}
 
+		}
+		
+		public static class Result implements AutoCloseable {
+			private FileSystemItem classPath;
+			private Map<String, ByteBuffer> compiledFiles;
+			private Collection<String> dependencies;
+			
+			
+			private Result(FileSystemItem classPath, Map<String, ByteBuffer> compiledFiles, Collection<String> classPaths) {
+				this.classPath = classPath;
+				this.compiledFiles = compiledFiles;
+				this.dependencies = classPaths;
+			}
+
+
+			public FileSystemItem getClassPath() {
+				return classPath;
+			}
+
+
+			public Map<String, ByteBuffer> getCompiledFiles() {
+				return compiledFiles;
+			}
+
+
+			public Collection<String> getDependencies() {
+				return dependencies;
+			}
+
+
+			public void close() {
+				compiledFiles.clear();
+				dependencies.clear();
+				classPath = null;
+			}	
+			
 		}
 	}
 	
@@ -596,40 +647,4 @@ public class JavaMemoryCompiler implements Component {
 		});
 	}
 	
-	
-	public static class CompilationResult implements AutoCloseable {
-		private FileSystemItem classPath;
-		private Map<String, ByteBuffer> compiledFiles;
-		private Collection<String> dependencies;
-		
-		
-		private CompilationResult (FileSystemItem classPath, Map<String, ByteBuffer> compiledFiles, Collection<String> classPaths) {
-			this.classPath = classPath;
-			this.compiledFiles = compiledFiles;
-			this.dependencies = classPaths;
-		}
-
-
-		public FileSystemItem getClassPath() {
-			return classPath;
-		}
-
-
-		public Map<String, ByteBuffer> getCompiledFiles() {
-			return compiledFiles;
-		}
-
-
-		public Collection<String> getDependencies() {
-			return dependencies;
-		}
-
-
-		public void close() {
-			compiledFiles.clear();
-			dependencies.clear();
-			classPath = null;
-		}	
-		
-	}
 }

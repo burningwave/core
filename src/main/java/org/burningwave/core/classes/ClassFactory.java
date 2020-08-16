@@ -52,7 +52,7 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.JavaMemoryCompiler.CompilationResult;
+import org.burningwave.core.classes.JavaMemoryCompiler.Compilation;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
 import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.ThrowingSupplier;
@@ -292,7 +292,7 @@ public class ClassFactory implements Component {
 								classPathHelper,
 								config
 							);
-					ProducerTask<CompilationResult> compilationTask = compiler.compile(compileConfig);
+					ProducerTask<Compilation.Result> compilationTask = compiler.compile(compileConfig);
 					return new ClassRetriever(
 						this, getClassPathHunter(),
 						classPathHelper,
@@ -313,7 +313,7 @@ public class ClassFactory implements Component {
 													if (!isItPossibleToAddClassPaths || compilationClassPathHasBeenAdded || !compileConfig.isStoringCompiledClassesEnabled()) {
 														throw exc;
 													}
-													CompilationResult compilationResult = compilationTask.join();
+													Compilation.Result compilationResult = compilationTask.join();
 													compilationClassPathHasBeenAdded = true;
 													ClassLoaders.addClassPath(
 														classLoader,
@@ -323,7 +323,7 @@ public class ClassFactory implements Component {
 													return get(className);
 												}								
 											} catch (ClassNotFoundException | NoClassDefFoundError exc) {
-												CompilationResult compilationResult = compilationTask.join();
+												Compilation.Result compilationResult = compilationTask.join();
 												Map<String, ByteBuffer> compiledClasses = new HashMap<>(compilationResult.getCompiledFiles());
 												if (compiledClasses.containsKey(className)) {
 													return ClassLoaders.loadOrDefineByByteCode(className, compiledClasses, classLoader);
@@ -363,7 +363,7 @@ public class ClassFactory implements Component {
 										if (classesSearchedInCompilationDependenciesPaths.containsAll(notFoundClasses)) {
 											throw exc;
 										}
-										CompilationResult compilationResult = compilationTask.join();
+										Compilation.Result compilationResult = compilationTask.join();
 										Collection<String> classPaths = new HashSet<>(compilationResult.getDependencies());
 										Collection<String> classPathsToBeRefreshed = new HashSet<>();
 										if (compileConfig.isStoringCompiledClassesEnabled()) {
