@@ -293,12 +293,6 @@ public class JavaMemoryCompiler implements Component {
 		@Override
 		public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
 			String message = diagnostic.getMessage(Locale.ENGLISH);
-			if (context.getPreviousDiagnosticMessage() != null && 
-				context.getPreviousDiagnosticMessage().equals(message)
-			) {
-				throw new UnknownCompilerErrorMessageException(message);
-			}
-			context.setPreviousDiagnosticMessage(message);
 			if (message.contains("unchecked or unsafe operations") || message.contains("Recompile with -Xlint:unchecked")) {
 				context.options.put("-Xlint:", "unchecked");
 				return;
@@ -486,7 +480,6 @@ public class JavaMemoryCompiler implements Component {
 			private Collection<MemorySource> sources;
 			private Collection<String> classRepositories;
 			private JavaMemoryCompiler javaMemoryCompiler;
-			private String previousDiagnosticMessage;
 			private Throwable previousException;
 			
 			
@@ -575,14 +568,6 @@ public class JavaMemoryCompiler implements Component {
 						);
 					}
 					return classPaths;
-			}
-			
-			void setPreviousDiagnosticMessage(String previousDiagnosticMessage) {
-				this.previousDiagnosticMessage = previousDiagnosticMessage;
-			}
-			
-			String getPreviousDiagnosticMessage() {
-				return previousDiagnosticMessage;
 			}
 			
 			void setPreviousException(Throwable previousException) {
