@@ -918,8 +918,7 @@ managed-logger.repository.logging.debug.disabled-for=\
     org.burningwave.core.classes.MemoryClassLoader;
 streams.default-buffer-size=0.5Kb
 #other possible value is ByteBuffer::allocate
-streams
-static-component-container.clear-temporary-folder-on-init=true
+streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
 static-component-container.hide-banner-on-init=false
 ```
 <br/>
