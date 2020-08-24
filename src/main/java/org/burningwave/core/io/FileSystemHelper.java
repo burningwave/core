@@ -223,13 +223,13 @@ public class FileSystemHelper implements Component {
 			this.waitInterval = waitInterval;
 			this.burningwaveTemporaryFolder = fileSystemHelper.getOrCreateBurningwaveTemporaryFolder();
 			executor = new Thread(() -> {
-				check();				
+				pingAndDelete();				
 			}, "Temporary file scavenger");
 			executor.setPriority(Thread.MIN_PRIORITY);
 			executor.setDaemon(true);
 		}
 
-		void check() {
+		void pingAndDelete() {
 			long lastDeletionStartTime = -1;
 			while (isAlive) {
 				try {
