@@ -1,3 +1,31 @@
+/*
+ * This file is part of Burningwave Core.
+ *
+ * Author: Roberto Gentili
+ *
+ * Hosted at: https://github.com/burningwave/core
+ *
+ * --
+ *
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2019 Roberto Gentili
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without
+ * limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial
+ * portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+ * EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+ * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+ * OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
@@ -320,104 +348,104 @@ public static class Configuration {
 	}
 	
 	public Supplier<Map<String, String>> compute(
-			Collection<String> classRepositories,
-			Predicate<FileSystemItem> pathsToBeRefreshedPredicate,
-			BiPredicate<FileSystemItem, JavaClass> javaClassFilter
-		) {		
-			FileSystemItem.Criteria classFileFilter = FileSystemItem.Criteria.forClassTypeFiles(
-				getClassFileCheckingOption()
-			);
-			return compute(
-				classRepositories, 
-				null,
-				clsRepositories -> {
-					Collection<FileSystemItem> classPaths = new HashSet<>();
-					for (String classRepositoryPath : clsRepositories) {
-						FileSystemItem classRepository = FileSystemItem.ofPath(classRepositoryPath);
-						if (pathsToBeRefreshedPredicate != null && pathsToBeRefreshedPredicate.test(classRepository)) {
-							classRepository.refresh();
-						}					
-						classRepository.findInAllChildren(classFileFilter.and().allFileThat(fileSystemItemCls -> 
-								JavaClass.extractByUsing(fileSystemItemCls.toByteBuffer(), javaClass -> {
-									if (javaClassFilter.test(fileSystemItemCls, javaClass)) {
-										String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
-										classPaths.add(
-											FileSystemItem.ofPath(
-												classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath()))
-											)
-										);
-										return true;
-									}
-									return false;
-								})
-							)
-						);
-					}
-					return classPaths;
-				}
-			);
-		}
-		
-		private Supplier<Map<String, String>> compute(
-			Collection<String> classRepositories,
-			Function<Collection<String>, Collection<FileSystemItem>> adjustedClassPathsSupplier
-		) {
-			return compute(classRepositories, fileSystemItem -> false, adjustedClassPathsSupplier);
-		}
-		
-		private Supplier<Map<String, String>> compute(
-			Collection<String> classRepositories,
-			Predicate<FileSystemItem> pathsToBeRefreshedPredicate,
-			Function<Collection<String>, Collection<FileSystemItem>> callRepositoriesSupplier
-		) {
-			Map<String, String> classPaths = new HashMap<>();
-			Collection<FileSystemItem> effectiveClassPaths = callRepositoriesSupplier.apply(classRepositories);
-			
-			Collection<QueuedTasksExecutor.ProducerTask<String>> pathsCreationTasks = new HashSet<>(); 
-			
-			if (pathsToBeRefreshedPredicate == null) {
-				pathsToBeRefreshedPredicate = fileSystemItem -> false;
-			}	
-			
-			if (!effectiveClassPaths.isEmpty()) {
-				for (FileSystemItem fsObject : effectiveClassPaths) {
-					if (pathsToBeRefreshedPredicate.test(fsObject)) {
-						fsObject.refresh();
-					}
-					if (fsObject.isCompressed()) {					
-						ThrowingRunnable.run(() -> {
-							synchronized (this) {
-								FileSystemItem classPath = FileSystemItem.ofPath(
-									classPathsBasePath.getAbsolutePath() + "/" + Paths.toSquaredPath(fsObject.getAbsolutePath(), fsObject.isFolder())
-								);
-								if (!classPath.refresh().exists()) {
-									pathsCreationTasks.add(
-										BackgroundExecutor.createTask(() -> {
-											FileSystemItem copy = fsObject.copyTo(classPathsBasePath.getAbsolutePath());
-											File target = new File(classPath.getAbsolutePath());
-											new File(copy.getAbsolutePath()).renameTo(target);
-											return Paths.clean(target.getAbsolutePath());
-										}).submit()
+		Collection<String> classRepositories,
+		Predicate<FileSystemItem> pathsToBeRefreshedPredicate,
+		BiPredicate<FileSystemItem, JavaClass> javaClassFilter
+	) {		
+		FileSystemItem.Criteria classFileFilter = FileSystemItem.Criteria.forClassTypeFiles(
+			getClassFileCheckingOption()
+		);
+		return compute(
+			classRepositories, 
+			null,
+			clsRepositories -> {
+				Collection<FileSystemItem> classPaths = new HashSet<>();
+				for (String classRepositoryPath : clsRepositories) {
+					FileSystemItem classRepository = FileSystemItem.ofPath(classRepositoryPath);
+					if (pathsToBeRefreshedPredicate != null && pathsToBeRefreshedPredicate.test(classRepository)) {
+						classRepository.refresh();
+					}					
+					classRepository.findInAllChildren(classFileFilter.and().allFileThat(fileSystemItemCls -> 
+							JavaClass.extractByUsing(fileSystemItemCls.toByteBuffer(), javaClass -> {
+								if (javaClassFilter.test(fileSystemItemCls, javaClass)) {
+									String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
+									classPaths.add(
+										FileSystemItem.ofPath(
+											classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath()))
+										)
 									);
+									return true;
 								}
-								classPaths.put(
-									fsObject.getAbsolutePath(),
-									classPath.getAbsolutePath()
+								return false;
+							})
+						)
+					);
+				}
+				return classPaths;
+			}
+		);
+	}
+	
+	private Supplier<Map<String, String>> compute(
+		Collection<String> classRepositories,
+		Function<Collection<String>, Collection<FileSystemItem>> adjustedClassPathsSupplier
+	) {
+		return compute(classRepositories, fileSystemItem -> false, adjustedClassPathsSupplier);
+	}
+	
+	private Supplier<Map<String, String>> compute(
+		Collection<String> classRepositories,
+		Predicate<FileSystemItem> pathsToBeRefreshedPredicate,
+		Function<Collection<String>, Collection<FileSystemItem>> callRepositoriesSupplier
+	) {
+		Map<String, String> classPaths = new HashMap<>();
+		Collection<FileSystemItem> effectiveClassPaths = callRepositoriesSupplier.apply(classRepositories);
+		
+		Collection<QueuedTasksExecutor.ProducerTask<String>> pathsCreationTasks = new HashSet<>(); 
+		
+		if (pathsToBeRefreshedPredicate == null) {
+			pathsToBeRefreshedPredicate = fileSystemItem -> false;
+		}	
+		
+		if (!effectiveClassPaths.isEmpty()) {
+			for (FileSystemItem fsObject : effectiveClassPaths) {
+				if (pathsToBeRefreshedPredicate.test(fsObject)) {
+					fsObject.refresh();
+				}
+				if (fsObject.isCompressed()) {					
+					ThrowingRunnable.run(() -> {
+						synchronized (this) {
+							FileSystemItem classPath = FileSystemItem.ofPath(
+								classPathsBasePath.getAbsolutePath() + "/" + Paths.toSquaredPath(fsObject.getAbsolutePath(), fsObject.isFolder())
+							);
+							if (!classPath.refresh().exists()) {
+								pathsCreationTasks.add(
+									BackgroundExecutor.createTask(() -> {
+										FileSystemItem copy = fsObject.copyTo(classPathsBasePath.getAbsolutePath());
+										File target = new File(classPath.getAbsolutePath());
+										new File(copy.getAbsolutePath()).renameTo(target);
+										return Paths.clean(target.getAbsolutePath());
+									}).submit()
 								);
-								//Free memory
-								//classPath.reset();
 							}
-						});
-					} else {
-						classPaths.put(fsObject.getAbsolutePath(), fsObject.getAbsolutePath());
-					}
+							classPaths.put(
+								fsObject.getAbsolutePath(),
+								classPath.getAbsolutePath()
+							);
+							//Free memory
+							//classPath.reset();
+						}
+					});
+				} else {
+					classPaths.put(fsObject.getAbsolutePath(), fsObject.getAbsolutePath());
 				}
 			}
-			return () -> {
-				pathsCreationTasks.stream().forEach(pathsCreationTask -> pathsCreationTask.join());
-				return classPaths;
-			};
-		}	
+		}
+		return () -> {
+			pathsCreationTasks.stream().forEach(pathsCreationTask -> pathsCreationTask.join());
+			return classPaths;
+		};
+	}	
 	
 	@Override
 	public void close() {
