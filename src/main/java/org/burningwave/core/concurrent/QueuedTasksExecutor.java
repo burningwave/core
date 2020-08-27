@@ -115,7 +115,7 @@ public class QueuedTasksExecutor implements Component {
 								logWarn("Exception occurred", exc);
 							}
 						}
-						TaskAbst<?, ?> task =	this.currentTask = taskIterator.next();
+						TaskAbst<?, ?> task = this.currentTask = taskIterator.next();
 						synchronized (task) {
 							if (!tasksQueue.remove(task)) {
 								continue;
@@ -129,11 +129,11 @@ public class QueuedTasksExecutor implements Component {
 						boolean isSync = executor == this.executor;
 						if (isSync) {
 							task.execute();
+							if (task instanceof Task && ((Task)task).runOnlyOnce) {
+								runOnlyOnceTasksToBeExecuted.remove(((Task)task).id);
+							}
 						} else {
 							executor.start();
-						}
-						if (task instanceof Task && ((Task)task).runOnlyOnce) {
-							runOnlyOnceTasksToBeExecuted.remove(((Task)task).id);
 						}
 						if (executor.getPriority() != this.defaultPriority) {
 							executor.setPriority(this.defaultPriority);
@@ -261,6 +261,9 @@ public class QueuedTasksExecutor implements Component {
 				synchronized(task) {
 					asyncTasksInExecution.add(task);
 					task.execute();
+					if (task instanceof Task && ((Task)task).runOnlyOnce) {
+						runOnlyOnceTasksToBeExecuted.remove(((Task)task).id);
+					}
 					asyncTasksInExecution.remove(task);
 					incrementAndlogExecutedTaskCounters(false, true);
 				}
