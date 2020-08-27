@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.jvm;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
@@ -423,7 +424,12 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		}
 		
 		public ByteBuffer allocateDirect(int capacity) {
-			return ByteBuffer.allocateDirect(capacity);
+			try {
+				return ByteBuffer.allocateDirect(capacity);
+			} catch (OutOfMemoryError exc) {
+				BackgroundExecutor.waitForTasksEnding();
+				return ByteBuffer.allocateDirect(capacity);
+			}
 		}
 		
 		public ByteBuffer duplicate(ByteBuffer buffer) {
