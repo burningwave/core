@@ -31,10 +31,10 @@ jobs:
           architecture: ${{ matrix.architecture }}
       - if: endsWith(matrix.java, '-ea') != true 
         name: Build and test with final version JDK
-        run: mvn -B clean test -Dproject_jdk_version=${{ matrix.java }} -DskipTests=false --file pom.xml -Xmx2048m
+        run: mvn -B clean test -Dproject_jdk_version=${{ matrix.java }} -DskipTests=false --file pom.xml
       - if: endsWith(matrix.java, '15-ea') == true 
         name: Build and test with early access version JDK
-        run: mvn -B clean test -Dproject_jdk_version=15 -DskipTests=false --file pom.xml -Xmx2048m
+        run: mvn -B clean test -Dproject_jdk_version=15 -DskipTests=false --file pom.xml
       - if: endsWith(matrix.java, '16-ea') == true 
         name: Build and test with early access version JDK
-        run: mvn -B clean test -Dproject_jdk_version=16 -DskipTests=false --file pom.xml -Xmx2048m
+        run: mvn -B clean test -Dproject_jdk_version=16 -DskipTests=false --file pom.xml
