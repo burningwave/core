@@ -424,12 +424,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		}
 		
 		public ByteBuffer allocateDirect(int capacity) {
-			try {
-				return ByteBuffer.allocateDirect(capacity);
-			} catch (OutOfMemoryError exc) {
-				BackgroundExecutor.waitForTasksEnding();
-				return ByteBuffer.allocateDirect(capacity);
-			}
+			return ByteBuffer.allocateDirect(capacity);
 		}
 		
 		public ByteBuffer duplicate(ByteBuffer buffer) {
