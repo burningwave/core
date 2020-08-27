@@ -237,7 +237,7 @@ public static class Configuration {
 		return compute(classRepositories, null, javaClassProcessor);
 	}
 	
-	Map<String, ClassLoader> computeClassPathsAndAddThemToClassLoader(
+	public Map<String, ClassLoader> computeClassPathsAndAddThemToClassLoader(
 		ClassLoader classLoader,
 		Collection<String> classRepositories,
 		String className,
@@ -246,7 +246,7 @@ public static class Configuration {
 		return computeClassPathsAndAddThemToClassLoader(classLoader, classRepositories, null, className, notFoundClasses);
 	}
 	
-	Map<String, ClassLoader> computeClassPathsAndAddThemToClassLoader(
+	public Map<String, ClassLoader> computeClassPathsAndAddThemToClassLoader(
 		ClassLoader classLoader,
 		Collection<String> classRepositories,
 		Collection<String> pathsToBeRefreshed,
