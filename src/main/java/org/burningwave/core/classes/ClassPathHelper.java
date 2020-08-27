@@ -111,7 +111,7 @@ public static class Configuration {
 	}
 	
 	public Supplier<Map<String, String>> computeByClassesSearching(Collection<String> classRepositories) {
-		return computeByClassesSearching(classRepositories, null, ClassCriteria.create());
+		return compute(classRepositories, null, (BiPredicate<FileSystemItem, JavaClass>)null);
 	}
 	
 	public Supplier<Map<String, String>> computeByClassesSearching(
@@ -355,6 +355,12 @@ public static class Configuration {
 		FileSystemItem.Criteria classFileFilter = FileSystemItem.Criteria.forClassTypeFiles(
 			getClassFileCheckingOption()
 		);
+		Predicate<FileSystemItem> finalPathsToBeRefreshedPredicate = pathsToBeRefreshedPredicate != null? pathsToBeRefreshedPredicate :
+			fileSystemItem -> false;
+		
+		BiPredicate<FileSystemItem, JavaClass> finalJavaClassFilter = javaClassFilter != null? javaClassFilter :
+			(fileSystemItem, javaClass) -> true;
+		
 		return compute(
 			classRepositories, 
 			null,
@@ -362,12 +368,12 @@ public static class Configuration {
 				Collection<FileSystemItem> classPaths = new HashSet<>();
 				for (String classRepositoryPath : clsRepositories) {
 					FileSystemItem classRepository = FileSystemItem.ofPath(classRepositoryPath);
-					if (pathsToBeRefreshedPredicate != null && pathsToBeRefreshedPredicate.test(classRepository)) {
+					if (finalPathsToBeRefreshedPredicate.test(classRepository)) {
 						classRepository.refresh();
 					}					
 					classRepository.findInAllChildren(classFileFilter.and().allFileThat(fileSystemItemCls -> 
 							JavaClass.extractByUsing(fileSystemItemCls.toByteBuffer(), javaClass -> {
-								if (javaClassFilter.test(fileSystemItemCls, javaClass)) {
+								if (finalJavaClassFilter.test(fileSystemItemCls, javaClass)) {
 									String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
 									classPaths.add(
 										FileSystemItem.ofPath(
