@@ -50,6 +50,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 @SuppressWarnings({"unchecked", "resource"})
 public class QueuedTasksExecutor implements Component {
 	private final static Map<String, Task> runOnlyOnceTasksToBeExecuted;
+	private final static Mutex.Manager mutexManagerForRunOnlyOnceTasks;
 	private Mutex.Manager mutexManager;
 	private String id;
 	Thread executor;
@@ -69,6 +70,7 @@ public class QueuedTasksExecutor implements Component {
 	
 	static {
 		runOnlyOnceTasksToBeExecuted = new ConcurrentHashMap<>();
+		mutexManagerForRunOnlyOnceTasks = Mutex.Manager.create(QueuedTasksExecutor.class);
 	}
 	
 	QueuedTasksExecutor(String executorName, String asyncExecutorName, int defaultPriority, boolean isDaemon, int loggingThreshold) {
@@ -132,7 +134,7 @@ public class QueuedTasksExecutor implements Component {
 						} else {
 							executor.start();
 						}
-						if (executor.getPriority() != this.defaultPriority) {
+						if (executor == this.executor && executor.getPriority() != this.defaultPriority) {
 							executor.setPriority(this.defaultPriority);
 						}
 						if (isSync) {
@@ -213,7 +215,7 @@ public class QueuedTasksExecutor implements Component {
 	<T> Function<ThrowingSupplier<T, ? extends Throwable>, ProducerTask<T>> getProducerTaskSupplier() {
 		return executable -> new ProducerTask<T>(executable) {
 			public ProducerTask<T> submit() {
-				return addToQueue(this);
+				return addToQueue(this, false);
 			};
 		};
 	}
@@ -227,13 +229,13 @@ public class QueuedTasksExecutor implements Component {
 	<T> Function<ThrowingRunnable<? extends Throwable> , Task> getTaskSupplier() {
 		return executable -> new Task(executable) {
 			public Task submit() {
-				return addToQueue(this);
+				return addToQueue(this, false);
 			};
 		};
 	}
 
-	<E, T extends TaskAbst<E, T>> T addToQueue(T task) {
-		if (canBeExecuted(task)) {
+	<E, T extends TaskAbst<E, T>> T addToQueue(T task, boolean byPassCheck) {
+		if (byPassCheck || canBeExecuted(task)) {
 			try {
 				setExecutorOf(task);
 				tasksQueue.add(task);
@@ -269,7 +271,17 @@ public class QueuedTasksExecutor implements Component {
 
 	<E, T extends TaskAbst<E, T>> boolean canBeExecuted(T task) {
 		if (task instanceof Task && ((Task)task).runOnlyOnce) {
-			return !((Task)task).hasBeenExecutedChecker.get() && runOnlyOnceTasksToBeExecuted.putIfAbsent(((Task)task).id, (Task)task) == null && !task.hasFinished();
+			if (!((Task)task).hasBeenExecutedChecker.get()) {
+				synchronized(QueuedTasksExecutor.mutexManagerForRunOnlyOnceTasks.getMutex(((Task)task).id)) {
+					if (!((Task)task).hasBeenExecutedChecker.get()) {
+						if (runOnlyOnceTasksToBeExecuted.get(((Task)task).id) == null) {
+							runOnlyOnceTasksToBeExecuted.put(((Task)task).id, (Task)task);
+							return true;
+						}
+					}
+				}
+			}
+			return false;
 		}
 		return !task.hasFinished();
 	}
@@ -513,9 +525,6 @@ public class QueuedTasksExecutor implements Component {
 				this.exc = exc;
 				logError("Exception occurred while executing " + this, exc);
 			}
-			if (this instanceof Task && ((Task)this).runOnlyOnce) {
-				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
-			}
 			executable = null;
 			executor = null;
 			synchronized(this) {
@@ -558,7 +567,7 @@ public class QueuedTasksExecutor implements Component {
 	public static abstract class Task extends TaskAbst<ThrowingRunnable<? extends Throwable>, Task> {
 		Supplier<Boolean> hasBeenExecutedChecker;
 		boolean runOnlyOnce;
-		String id;
+		public String id;
 		
 		Task(ThrowingRunnable<? extends Throwable> executable) {
 			this.executable = executable;
@@ -566,7 +575,13 @@ public class QueuedTasksExecutor implements Component {
 
 		@Override
 		void execute0() throws Throwable {
-			this.executable.run();			
+			try {
+				this.executable.run();
+			} finally {
+				if (runOnlyOnce) {
+					runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
+				}
+			}
 		}
 		
 		public void join(boolean ignoreThread) {
@@ -746,7 +761,7 @@ public class QueuedTasksExecutor implements Component {
 					return executable -> new QueuedTasksExecutor.ProducerTask<T>(executable) {
 						
 						public QueuedTasksExecutor.ProducerTask<T> submit() {
-							return addToQueue(this);
+							return addToQueue(this, false);
 						};
 						
 						public QueuedTasksExecutor.ProducerTask<T> changePriority(int priority) {
@@ -769,7 +784,7 @@ public class QueuedTasksExecutor implements Component {
 					return executable -> new QueuedTasksExecutor.Task(executable) {
 						
 						public QueuedTasksExecutor.Task submit() {
-							return addToQueue(this);
+							return addToQueue(this, false);
 						};
 						
 						public QueuedTasksExecutor.Task changePriority(int priority) {
@@ -849,7 +864,7 @@ public class QueuedTasksExecutor implements Component {
 			if (oldPriority != priority) {
 				synchronized (task) {
 					if (getByPriority(oldPriority).tasksQueue.remove(task)) {
-						getByPriority(priority).addToQueue(task);
+						getByPriority(priority).addToQueue(task, true);
 					}
 				}
 			}
