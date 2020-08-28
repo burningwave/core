@@ -115,7 +115,7 @@ public class QueuedTasksExecutor implements Component {
 								logWarn("Exception occurred", exc);
 							}
 						}
-						TaskAbst<?, ?> task =	this.currentTask = taskIterator.next();
+						TaskAbst<?, ?> task = this.currentTask = taskIterator.next();
 						synchronized (task) {
 							if (!tasksQueue.remove(task)) {
 								continue;
@@ -132,10 +132,7 @@ public class QueuedTasksExecutor implements Component {
 						} else {
 							executor.start();
 						}
-						if (task instanceof Task && ((Task)task).runOnlyOnce) {
-							runOnlyOnceTasksToBeExecuted.remove(((Task)task).id);
-						}
-						if (executor.getPriority() != this.defaultPriority) {
+						if (executor == this.executor && executor.getPriority() != this.defaultPriority) {
 							executor.setPriority(this.defaultPriority);
 						}
 						if (isSync) {
@@ -216,7 +213,7 @@ public class QueuedTasksExecutor implements Component {
 	<T> Function<ThrowingSupplier<T, ? extends Throwable>, ProducerTask<T>> getProducerTaskSupplier() {
 		return executable -> new ProducerTask<T>(executable) {
 			public ProducerTask<T> submit() {
-				return addToQueue(this);
+				return addToQueue(this, false);
 			};
 		};
 	}
@@ -230,13 +227,13 @@ public class QueuedTasksExecutor implements Component {
 	<T> Function<ThrowingRunnable<? extends Throwable> , Task> getTaskSupplier() {
 		return executable -> new Task(executable) {
 			public Task submit() {
-				return addToQueue(this);
+				return addToQueue(this, false);
 			};
 		};
 	}
 
-	<E, T extends TaskAbst<E, T>> T addToQueue(T task) {
-		if (canBeExecuted(task)) {
+	<E, T extends TaskAbst<E, T>> T addToQueue(T task, boolean byPassCheck) {
+		if (byPassCheck || canBeExecuted(task)) {
 			try {
 				setExecutorOf(task);
 				tasksQueue.add(task);
@@ -272,7 +269,7 @@ public class QueuedTasksExecutor implements Component {
 
 	<E, T extends TaskAbst<E, T>> boolean canBeExecuted(T task) {
 		if (task instanceof Task && ((Task)task).runOnlyOnce) {
-			return !((Task)task).hasBeenExecutedChecker.get() && runOnlyOnceTasksToBeExecuted.putIfAbsent(((Task)task).id, (Task)task) == null && !task.hasFinished();
+			return !((Task)task).hasBeenExecutedChecker.get() && runOnlyOnceTasksToBeExecuted.putIfAbsent(((Task)task).id, (Task)task) == null;
 		}
 		return !task.hasFinished();
 	}
@@ -558,7 +555,7 @@ public class QueuedTasksExecutor implements Component {
 	public static abstract class Task extends TaskAbst<ThrowingRunnable<? extends Throwable>, Task> {
 		Supplier<Boolean> hasBeenExecutedChecker;
 		boolean runOnlyOnce;
-		String id;
+		public String id;
 		
 		Task(ThrowingRunnable<? extends Throwable> executable) {
 			this.executable = executable;
@@ -566,7 +563,13 @@ public class QueuedTasksExecutor implements Component {
 
 		@Override
 		void execute0() throws Throwable {
-			this.executable.run();			
+			try {
+				this.executable.run();
+			} finally {
+				if (runOnlyOnce) {
+					runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
+				}
+			}
 		}
 		
 		public void join(boolean ignoreThread) {
@@ -746,7 +749,7 @@ public class QueuedTasksExecutor implements Component {
 					return executable -> new QueuedTasksExecutor.ProducerTask<T>(executable) {
 						
 						public QueuedTasksExecutor.ProducerTask<T> submit() {
-							return addToQueue(this);
+							return addToQueue(this, false);
 						};
 						
 						public QueuedTasksExecutor.ProducerTask<T> changePriority(int priority) {
@@ -769,7 +772,7 @@ public class QueuedTasksExecutor implements Component {
 					return executable -> new QueuedTasksExecutor.Task(executable) {
 						
 						public QueuedTasksExecutor.Task submit() {
-							return addToQueue(this);
+							return addToQueue(this, false);
 						};
 						
 						public QueuedTasksExecutor.Task changePriority(int priority) {
@@ -849,7 +852,7 @@ public class QueuedTasksExecutor implements Component {
 			if (oldPriority != priority) {
 				synchronized (task) {
 					if (getByPriority(oldPriority).tasksQueue.remove(task)) {
-						getByPriority(priority).addToQueue(task);
+						getByPriority(priority).addToQueue(task, true);
 					}
 				}
 			}

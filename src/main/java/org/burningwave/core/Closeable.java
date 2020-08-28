@@ -31,7 +31,6 @@ package org.burningwave.core;
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
@@ -61,7 +60,7 @@ public interface Closeable extends AutoCloseable {
 	}
 	
 	default public Task closeResources(String objectId, Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
-		return Optional.ofNullable(createCloseResoucesTask(objectId, isClosedPredicate, closingFunction).submit()).orElseGet(() -> null);
+		return createCloseResoucesTask(objectId, isClosedPredicate, closingFunction).submit();
 	}
 	
 }
