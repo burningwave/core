@@ -49,7 +49,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings({"unchecked", "resource"})
 public class QueuedTasksExecutor implements Component {
-	private final static Map<String, Task> runOnlyOnceTasksToBeExecuted;
+	public final static Map<String, Task> runOnlyOnceTasksToBeExecuted;
 	private Mutex.Manager mutexManager;
 	private String id;
 	Thread executor;
@@ -129,9 +129,6 @@ public class QueuedTasksExecutor implements Component {
 						boolean isSync = executor == this.executor;
 						if (isSync) {
 							task.execute();
-							if (task instanceof Task && ((Task)task).runOnlyOnce) {
-								runOnlyOnceTasksToBeExecuted.remove(((Task)task).id);
-							}
 						} else {
 							executor.start();
 						}
@@ -261,9 +258,6 @@ public class QueuedTasksExecutor implements Component {
 				synchronized(task) {
 					asyncTasksInExecution.add(task);
 					task.execute();
-					if (task instanceof Task && ((Task)task).runOnlyOnce) {
-						runOnlyOnceTasksToBeExecuted.remove(((Task)task).id);
-					}
 					asyncTasksInExecution.remove(task);
 					incrementAndlogExecutedTaskCounters(false, true);
 				}
@@ -518,6 +512,9 @@ public class QueuedTasksExecutor implements Component {
 			} catch (Throwable exc) {
 				this.exc = exc;
 				logError("Exception occurred while executing " + this, exc);
+			}
+			if (this instanceof Task && ((Task)this).runOnlyOnce) {
+				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
 			}
 			executable = null;
 			executor = null;
