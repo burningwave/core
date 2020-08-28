@@ -804,7 +804,11 @@ public class ClassFactory implements Component {
 				classesSearchedInAdditionalClassRepositoriesForClassLoader = null;
 				classesSearchedInCompilationDependenciesPaths.clear();
 				classesSearchedInCompilationDependenciesPaths = null;
- 				this.classFactory.unregister(this);
+ 				try {
+					this.classFactory.unregister(this);
+				} catch (NullPointerException exc) {
+					logWarn("Exception while unregistering {}: classFactory is closed", this);
+				}
  				this.classFactory = null;
 			});
 		}
