@@ -49,7 +49,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings({"unchecked", "resource"})
 public class QueuedTasksExecutor implements Component {
-	public final static Map<String, Task> runOnlyOnceTasksToBeExecuted;
+	private final static Map<String, Task> runOnlyOnceTasksToBeExecuted;
 	private Mutex.Manager mutexManager;
 	private String id;
 	Thread executor;
