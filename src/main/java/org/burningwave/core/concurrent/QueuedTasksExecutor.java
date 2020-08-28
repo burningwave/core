@@ -50,7 +50,6 @@ import org.burningwave.core.function.ThrowingSupplier;
 @SuppressWarnings({"unchecked", "resource"})
 public class QueuedTasksExecutor implements Component {
 	private final static Map<String, Task> runOnlyOnceTasksToBeExecuted;
-	private final static Mutex.Manager mutexManagerForRunOnlyOnceTasks;
 	private Mutex.Manager mutexManager;
 	private String id;
 	Thread executor;
@@ -70,7 +69,6 @@ public class QueuedTasksExecutor implements Component {
 	
 	static {
 		runOnlyOnceTasksToBeExecuted = new ConcurrentHashMap<>();
-		mutexManagerForRunOnlyOnceTasks = Mutex.Manager.create(QueuedTasksExecutor.class);
 	}
 	
 	QueuedTasksExecutor(String executorName, String asyncExecutorName, int defaultPriority, boolean isDaemon, int loggingThreshold) {
@@ -271,17 +269,7 @@ public class QueuedTasksExecutor implements Component {
 
 	<E, T extends TaskAbst<E, T>> boolean canBeExecuted(T task) {
 		if (task instanceof Task && ((Task)task).runOnlyOnce) {
-			if (!((Task)task).hasBeenExecutedChecker.get()) {
-				synchronized(QueuedTasksExecutor.mutexManagerForRunOnlyOnceTasks.getMutex(((Task)task).id)) {
-					if (!((Task)task).hasBeenExecutedChecker.get()) {
-						if (runOnlyOnceTasksToBeExecuted.get(((Task)task).id) == null) {
-							runOnlyOnceTasksToBeExecuted.put(((Task)task).id, (Task)task);
-							return true;
-						}
-					}
-				}
-			}
-			return false;
+			return !((Task)task).hasBeenExecutedChecker.get() && runOnlyOnceTasksToBeExecuted.putIfAbsent(((Task)task).id, (Task)task) == null;
 		}
 		return !task.hasFinished();
 	}
