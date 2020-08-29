@@ -293,6 +293,11 @@ public class JavaMemoryCompiler implements Component {
 		@Override
 		public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
 			String message = diagnostic.getMessage(Locale.ENGLISH);
+			if (context.diagnositListenerInterceptedMessages.contains(message)) {
+				throw new UnknownCompilerErrorMessageException(message);
+			} else {
+				context.diagnositListenerInterceptedMessages.add(message);
+			}
 			if (message.contains("unchecked or unsafe operations") || message.contains("Recompile with -Xlint:unchecked")) {
 				context.options.put("-Xlint:", "unchecked");
 				return;
@@ -481,15 +486,7 @@ public class JavaMemoryCompiler implements Component {
 			private Collection<String> classRepositories;
 			private JavaMemoryCompiler javaMemoryCompiler;
 			private Throwable previousException;
-			
-			
-			void addToClassPath(String path) {
-				if (Strings.isNotBlank(path)) {
-					String classPath = Paths.clean(path);
-					options.put("-classpath", Optional.ofNullable(options.get("-classpath")).orElse("") + classPath + System.getProperty("path.separator"));
-					classPaths.add(classPath);
-				}
-			}
+			private Collection<String> diagnositListenerInterceptedMessages;
 			
 			private Context(
 				JavaMemoryCompiler javaMemoryCompiler,
@@ -507,6 +504,7 @@ public class JavaMemoryCompiler implements Component {
 					}
 				}
 				this.classRepositories = classRepositories;
+				this.diagnositListenerInterceptedMessages = new HashSet<>();
 			}
 			
 			private static Context create(
@@ -516,6 +514,14 @@ public class JavaMemoryCompiler implements Component {
 				Collection<String> classRepositories
 			) {
 				return new Context(javaMemoryCompiler, sources, classPaths, classRepositories);
+			}
+			
+			void addToClassPath(String path) {
+				if (Strings.isNotBlank(path)) {
+					String classPath = Paths.clean(path);
+					options.put("-classpath", Optional.ofNullable(options.get("-classpath")).orElse("") + classPath + System.getProperty("path.separator"));
+					classPaths.add(classPath);
+				}
 			}
 			
 			Collection<String> findForPackageName(String packageName) throws Exception {
@@ -588,6 +594,8 @@ public class JavaMemoryCompiler implements Component {
 				classRepositories.clear();
 				classRepositories = null;
 				javaMemoryCompiler = null;
+				diagnositListenerInterceptedMessages.clear();
+				diagnositListenerInterceptedMessages = null;
 			}
 
 		}

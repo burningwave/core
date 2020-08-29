@@ -543,7 +543,7 @@ public class ClassFactory implements Component {
 									if (!isItPossibleToAddClassPaths || compilationClassPathHasBeenAdded || !getCompilationConfig().isStoringCompiledClassesEnabled()) {
 										throw exc;
 									}
-									Compilation.Result compilationResult = getCompilationTask().join();
+									Compilation.Result compilationResult = getCompilationResult();
 									compilationClassPathHasBeenAdded = true;
 									ClassLoaders.addClassPath(
 										classLoader,
@@ -553,7 +553,7 @@ public class ClassFactory implements Component {
 									return get(className);
 								}								
 							} catch (ClassNotFoundException | NoClassDefFoundError exc) {
-								Compilation.Result compilationResult = getCompilationTask().join();
+								Compilation.Result compilationResult = getCompilationResult();
 								Map<String, ByteBuffer> compiledClasses = new HashMap<>(compilationResult.getCompiledFiles());
 								if (compiledClasses.containsKey(className)) {
 									return ClassLoaders.loadOrDefineByByteCode(className, compiledClasses, classLoader);
@@ -569,7 +569,7 @@ public class ClassFactory implements Component {
 								throw exc;
 							}
 							Collection<String> whereToFind = new HashSet<>(additionalClassRepositoriesForClassLoader);
-							String absolutePathOfCompiledFilesClassPath = getCompilationTask().join().getClassPath().getAbsolutePath();
+							String absolutePathOfCompiledFilesClassPath = getCompilationResult().getClassPath().getAbsolutePath();
 							whereToFind.add(absolutePathOfCompiledFilesClassPath);
 							classesSearchedInAdditionalClassRepositoriesForClassLoader.addAll(notFoundClasses);
 							if (!classPathHelper.computeClassPathsAndAddThemToClassLoader(
@@ -590,7 +590,7 @@ public class ClassFactory implements Component {
 						if (classesSearchedInCompilationDependenciesPaths.containsAll(notFoundClasses)) {
 							throw exc;
 						}
-						Compilation.Result compilationResult = getCompilationTask().join();
+						Compilation.Result compilationResult = getCompilationResult();
 						Collection<String> classPaths = new HashSet<>(compilationResult.getDependencies());
 						Collection<String> classPathsToBeRefreshed = new HashSet<>();
 						if (getCompilationConfig().isStoringCompiledClassesEnabled()) {
@@ -610,7 +610,7 @@ public class ClassFactory implements Component {
 					return ClassLoaders.loadOrDefineByByteCode(className, 
 						loadBytecodesFromClassPaths(
 							this.byteCodesWrapper,
-							getCompilationTask().join().getCompiledFiles(),
+							getCompilationResult().getCompiledFiles(),
 							additionalClassRepositoriesForClassLoader
 						).get(), classLoader
 					);
@@ -620,9 +620,9 @@ public class ClassFactory implements Component {
 					return ClassLoaders.loadOrDefineByByteCode(className, 
 						loadBytecodesFromClassPaths(
 							this.byteCodesWrapper,
-							getCompilationTask().join().getCompiledFiles(),
+							getCompilationResult().getCompiledFiles(),
 							additionalClassRepositoriesForClassLoader,
-							getCompilationTask().join().getDependencies()
+							getCompilationResult().getDependencies()
 						).get(), classLoader
 					);
 				});
@@ -650,6 +650,14 @@ public class ClassFactory implements Component {
 				}
 			}
 			return this.compilationTask;
+		}
+		
+		private Compilation.Result getCompilationResult() {
+			Compilation.Result compilationResult = getCompilationTask().join();
+			if (getCompilationTask().getException() != null) {
+				throw Throwables.toRuntimeException(getCompilationTask().getException());
+			}
+			return compilationResult;
 		}
 
 		private CompilationConfig getCompilationConfig() {
