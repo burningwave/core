@@ -301,8 +301,10 @@ public class ClassFactoryTest extends BaseTest {
 			)) {
 				classRetrieverWrapper.set(
 					componentSupplier.getClassFactory().loadOrBuildAndDefine(
-						LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassPaths(
-							pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
+						LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).modifyCompileConfig(compileConfig -> 
+							compileConfig.addClassPaths(
+								pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
+							)							
 						)
 					)
 				);
