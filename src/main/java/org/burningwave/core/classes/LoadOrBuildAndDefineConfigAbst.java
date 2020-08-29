@@ -41,7 +41,7 @@ import org.burningwave.core.Virtual;
 class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>> {
 	
 	Collection<UnitSourceGenerator> unitSourceGenerators;
-	private Function<CompileConfig, CompileConfig> compileConfigSupplier;
+	private Function<CompilationConfig, CompilationConfig> compilationConfigSupplier;
 	private Collection<String> classRepositoriesWhereToSearchNotFoundClassesDuringLoading;
 	private Collection<String> additionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading;
 	
@@ -60,7 +60,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		for (Collection<UnitSourceGenerator> unitsCode : unitCodeCollections) {
 			unitSourceGenerators.addAll(unitsCode);
 		}
-		compileConfigSupplier = (compileConfig) -> {
+		compilationConfigSupplier = (compileConfig) -> {
 			Collection<String> sources = new HashSet<>();
 			for (UnitSourceGenerator unitCode : this.unitSourceGenerators) {
 				unitCode.getAllClasses().entrySet().forEach(entry -> {
@@ -70,7 +70,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 				});
 				sources.add(unitCode.make());
 			}
-			return CompileConfig.withSources(sources);
+			return CompilationConfig.withSources(sources);
 		};
 	}
 	
@@ -79,9 +79,9 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		return (L)this;
 	}
 	
-	public L modifyCompileConfig(Consumer<CompileConfig> compileConfigModifier) {
-		compileConfigSupplier = compileConfigSupplier.andThen((compileConfig) -> {
-			compileConfigModifier.accept(compileConfig);
+	public L modifyCompilationConfig(Consumer<CompilationConfig> compilationConfigModifier) {
+		compilationConfigSupplier = compilationConfigSupplier.andThen((compileConfig) -> {
+			compilationConfigModifier.accept(compileConfig);
 			return compileConfig;
 		});
 		return (L)this;
@@ -96,7 +96,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	
 	@SafeVarargs
 	public final L setClassRepositories(Collection<String>... classPathCollections) {
-		modifyCompileConfig(compileConfig ->
+		modifyCompilationConfig(compileConfig ->
 			compileConfig.setClassRepositories(classPathCollections)
 		);
 		return (L)setClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
@@ -110,7 +110,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	
 	@SafeVarargs
 	public final L addClassRepositories(Collection<String>... classPathCollections) {
-		modifyCompileConfig(compileConfig ->
+		modifyCompilationConfig(compileConfig ->
 			compileConfig.addClassRepositories(classPathCollections)
 		);
 		return (L)addClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
@@ -125,7 +125,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	
 	@SafeVarargs
 	public final L setClassPaths(Collection<String>... classPathCollections) {
-		modifyCompileConfig(compileConfig ->
+		modifyCompilationConfig(compileConfig ->
 			compileConfig.setClassPaths(classPathCollections)
 		);
 		return (L)setClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
@@ -139,7 +139,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	
 	@SafeVarargs
 	public final L addClassPaths(Collection<String>... classPathCollections) {
-		modifyCompileConfig(compileConfig ->
+		modifyCompilationConfig(compileConfig ->
 			compileConfig.addClassPaths(classPathCollections)
 		);
 		return (L)addClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
@@ -154,7 +154,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	
 	@SafeVarargs
 	public final L setClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classRepositoryCollections) {
-		return modifyCompileConfig(compileConfig -> compileConfig.setClassRepositories(classRepositoryCollections))
+		return modifyCompilationConfig(compileConfig -> compileConfig.setClassRepositories(classRepositoryCollections))
 			.setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(classRepositoryCollections);		
 	}
 
@@ -167,7 +167,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	
 	@SafeVarargs
 	public final L addClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classRepositoryCollections) {
-		return modifyCompileConfig(compileConfig -> compileConfig.addClassRepositories(classRepositoryCollections))
+		return modifyCompilationConfig(compileConfig -> compileConfig.addClassRepositories(classRepositoryCollections))
 			.addClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(classRepositoryCollections);		
 	}
 
@@ -245,8 +245,8 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		return classesName;
 	}
 	
-	Supplier<CompileConfig> getCompileConfigSupplier() {
-		return () -> compileConfigSupplier.apply(null);
+	Supplier<CompilationConfig> getCompileConfigSupplier() {
+		return () -> compilationConfigSupplier.apply(null);
 	}
 	
 	boolean isVirtualizeClassesEnabled() {

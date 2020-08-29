@@ -182,7 +182,8 @@ public class ClassFactoryTest extends BaseTest {
 					classRetrieverWrapper.set(
 						componentSupplier.getClassFactory().loadOrBuildAndDefine(
 							LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).setClassRepository(
-								pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
+								pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip"),
+								pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 							)
 						)
 					);
@@ -301,7 +302,7 @@ public class ClassFactoryTest extends BaseTest {
 			)) {
 				classRetrieverWrapper.set(
 					componentSupplier.getClassFactory().loadOrBuildAndDefine(
-						LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).modifyCompileConfig(compileConfig -> 
+						LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).modifyCompilationConfig(compileConfig -> 
 							compileConfig.addClassPaths(
 								pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 							)							
