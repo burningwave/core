@@ -69,29 +69,23 @@ public class Cache implements Component {
 	
 	private Cache() {
 		logInfo("Building cache");
-		pathForContents = new PathForResources<ByteBuffer>(1L, Streams::shareContent);
+		pathForContents = new PathForResources<ByteBuffer>(Streams::shareContent);
 		pathForFileSystemItems = new PathForResources<FileSystemItem>(
-			1L,
-			fileSystemItem -> 
-				fileSystemItem, 
 			(path, fileSystemItem) -> 
 				fileSystemItem.destroy()
 		);
 		pathForIterableZipContainers = new PathForResources<IterableZipContainer>(
-			1L, 
-			zipFileContainer ->
-				zipFileContainer, 
 			(path, zipFileContainer) -> 
 				zipFileContainer.destroy()
 		);
-		classLoaderForFields = new ObjectAndPathForResources<>(1L, fields -> fields);
-		classLoaderForMethods = new ObjectAndPathForResources<>(1L, methods -> methods);
-		uniqueKeyForFields = new ObjectAndPathForResources<>(1L, field -> field);
-		uniqueKeyForMethods = new ObjectAndPathForResources<>(1L, constructors -> constructors);
-		uniqueKeyForConstructors = new ObjectAndPathForResources<>(1L, methods -> methods);
-		classLoaderForConstructors = new ObjectAndPathForResources<>(1L, constructors -> constructors);
-		bindedFunctionalInterfaces = new ObjectAndPathForResources<>(1L, functionalInterface -> functionalInterface);	
-		uniqueKeyForExecutableAndMethodHandle = new ObjectAndPathForResources<>(1L, methodHandle -> methodHandle);
+		classLoaderForFields = new ObjectAndPathForResources<>();
+		classLoaderForMethods = new ObjectAndPathForResources<>();
+		uniqueKeyForFields = new ObjectAndPathForResources<>();
+		uniqueKeyForMethods = new ObjectAndPathForResources<>();
+		uniqueKeyForConstructors = new ObjectAndPathForResources<>();
+		classLoaderForConstructors = new ObjectAndPathForResources<>();
+		bindedFunctionalInterfaces = new ObjectAndPathForResources<>();	
+		uniqueKeyForExecutableAndMethodHandle = new ObjectAndPathForResources<>();
 	}
 	
 	public static Cache create() {
@@ -103,6 +97,14 @@ public class Cache implements Component {
 		Map<T, PathForResources<R>> resources;
 		Supplier<PathForResources<R>> pathForResourcesSupplier;
 		Mutex.Manager mutexManagerForResources;
+		
+		public ObjectAndPathForResources() {
+			this(1L, item -> item, null );
+		}
+		
+		public ObjectAndPathForResources(Long partitionStartLevel) {
+			this(partitionStartLevel, item -> item, null);
+		}
 		
 		public ObjectAndPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
 			this(partitionStartLevel, sharer, null);
@@ -194,8 +196,32 @@ public class Cache implements Component {
 		Mutex.Manager mutexManagerForPartitionedResources;
 		BiConsumer<String, R> itemDestroyer;
 		
+		private PathForResources() {
+			this(1L, item -> item, null);
+		}
+		
+		private PathForResources(Long partitionStartLevel) {
+			this(partitionStartLevel, item -> item, null);
+		}
+		
+		private PathForResources(Function<R, R> sharer) {
+			this(1L, sharer, null);
+		}
+		
+		private PathForResources(BiConsumer<String, R> itemDestroyer) {
+			this(1L, item -> item, itemDestroyer);
+		}
+		
 		private PathForResources(Long partitionStartLevel, Function<R, R> sharer) {
 			this(partitionStartLevel, sharer, null);
+		}
+		
+		private PathForResources(Function<R, R> sharer, BiConsumer<String, R> itemDestroyer) {
+			this(1L, item -> item, itemDestroyer);
+		}
+		
+		private PathForResources(Long partitionStartLevel, BiConsumer<String, R> itemDestroyer) {
+			this(partitionStartLevel, item -> item, itemDestroyer);
 		}
 		
 		private PathForResources(Long partitionStartLevel, Function<R, R> sharer, BiConsumer<String, R> itemDestroyer) {
