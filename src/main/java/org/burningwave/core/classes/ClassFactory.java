@@ -331,9 +331,6 @@ public class ClassFactory implements Component {
 												throw exc;
 											}
 										} catch (ClassNotFoundException | NoClassDefFoundError exc) {
-											if (className.endsWith("ExternalClassReferenceTest")) {
-												logDebug("");
-											}
 											if (!isItPossibleToAddClassPaths) {
 												throw exc;
 											}
