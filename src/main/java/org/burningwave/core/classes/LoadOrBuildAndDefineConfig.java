@@ -61,7 +61,7 @@ public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<L
 			super(SourceCodeHandler.generateExecutor(executorName, bodySG));
 			this.body = bodySG;
 			body.setElementPrefix("\t");
-			modifyCompileConfig(compileConfig -> compileConfig.storeCompiledClasses(false));
+			modifyCompilationConfig(compileConfig -> compileConfig.storeCompiledClasses(false));
 		}
 		
 		public C setSimpleName(String simpleName) {

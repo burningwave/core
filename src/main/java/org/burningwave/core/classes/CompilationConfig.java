@@ -32,7 +32,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 
-public class CompileConfig {
+public class CompilationConfig {
 	private Collection<String> sources;
 	
 	private Collection<String> classPaths;
@@ -44,14 +44,14 @@ public class CompileConfig {
 	private boolean storingCompiledClassesEnabled;
 	private boolean storingCompiledClassesToNewFolderEnabled;
 	
-	private CompileConfig() {
+	private CompilationConfig() {
 		this.sources = new HashSet<>();
 		storingCompiledClassesEnabled = true;
 	}
 	
 	@SafeVarargs
-	public final static CompileConfig withSources(Collection<String>... sourceCollections) {
-		CompileConfig compileConfig = new CompileConfig();
+	public final static CompilationConfig withSources(Collection<String>... sourceCollections) {
+		CompilationConfig compileConfig = new CompilationConfig();
 		for (Collection<String> sourceCollection : sourceCollections) {
 			compileConfig.sources.addAll(sourceCollection);
 		}
@@ -59,16 +59,16 @@ public class CompileConfig {
 	}
 	
 	@SafeVarargs
-	public final static CompileConfig withSource(String... sources) {
+	public final static CompilationConfig withSource(String... sources) {
 		return withSources(Arrays.asList(sources));
 	}
 	
-	public CompileConfig storeCompiledClasses(boolean flag) {
+	public CompilationConfig storeCompiledClasses(boolean flag) {
 		this.storingCompiledClassesEnabled = flag;
 		return this;
 	}
 	
-	public CompileConfig storeCompiledClassesToNewFolder(boolean flag) {
+	public CompilationConfig storeCompiledClassesToNewFolder(boolean flag) {
 		if (flag) {
 			storeCompiledClasses(flag);
 		}
@@ -80,7 +80,7 @@ public class CompileConfig {
 ////////////////////	
 	
 	@SafeVarargs
-	public final CompileConfig setClassPaths(Collection<String>... classPathCollections) {
+	public final CompilationConfig setClassPaths(Collection<String>... classPathCollections) {
 		if (classPaths == null) {
 			classPaths = new HashSet<>();
 		}
@@ -91,14 +91,14 @@ public class CompileConfig {
 	}
 	
 	@SafeVarargs
-	public final CompileConfig setClassPaths(String... classPaths) {
+	public final CompilationConfig setClassPaths(String... classPaths) {
 		return setClassPaths(Arrays.asList(classPaths));
 	}
 
 ////////////////////	
 	
 	@SafeVarargs
-	public final CompileConfig addClassPaths(Collection<String>... classPathCollections) {
+	public final CompilationConfig addClassPaths(Collection<String>... classPathCollections) {
 		if (additionalClassPaths == null) {
 			additionalClassPaths = new HashSet<>();
 		}
@@ -109,14 +109,14 @@ public class CompileConfig {
 	}
 	
 	@SafeVarargs
-	public final CompileConfig addClassPaths(String... classPaths) {
+	public final CompilationConfig addClassPaths(String... classPaths) {
 		return addClassPaths(Arrays.asList(classPaths));
 	}
 
 ////////////////////	
 	
 	@SafeVarargs
-	public final CompileConfig setClassRepositories(Collection<String>... classPathCollections) {
+	public final CompilationConfig setClassRepositories(Collection<String>... classPathCollections) {
 		if (classRepositories == null) {
 			classRepositories = new HashSet<>();
 		}
@@ -127,14 +127,14 @@ public class CompileConfig {
 	}
 	
 	@SafeVarargs
-	public final CompileConfig setClassRepository(String... classPaths) {
+	public final CompilationConfig setClassRepository(String... classPaths) {
 		return setClassRepositories(Arrays.asList(classPaths));
 	}
 
 ////////////////////	
 	
 	@SafeVarargs
-	public final CompileConfig addClassRepositories(Collection<String>... classPathCollections) {
+	public final CompilationConfig addClassRepositories(Collection<String>... classPathCollections) {
 		if (additionalClassRepositories == null) {
 			additionalClassRepositories = new HashSet<>();
 		}
@@ -145,7 +145,7 @@ public class CompileConfig {
 	}
 	
 	@SafeVarargs
-	public final CompileConfig addClassRepository(String... classPaths) {
+	public final CompilationConfig addClassRepository(String... classPaths) {
 		return addClassRepositories(Arrays.asList(classPaths));
 	}
 

@@ -138,7 +138,7 @@ public class JavaMemoryCompiler implements Component {
 	
 	public 	ProducerTask<Compilation.Result> compile(Collection<String> sources, boolean storeCompiledClasses) {
 		return compile(
-			CompileConfig.withSources(sources).setClassPaths(
+			CompilationConfig.withSources(sources).setClassPaths(
 				pathHelper.getAllMainClassPaths()
 			).storeCompiledClasses(
 				storeCompiledClasses
@@ -148,7 +148,7 @@ public class JavaMemoryCompiler implements Component {
 	
 	
 	
-	public ProducerTask<Compilation.Result> compile(CompileConfig config) {
+	public ProducerTask<Compilation.Result> compile(CompilationConfig config) {
 		return compile(
 			config.getSources(),
 			getClassPathsFrom(config),
@@ -158,7 +158,7 @@ public class JavaMemoryCompiler implements Component {
 		);
 	}
 
-	Collection<String> getClassRepositoriesFrom(CompileConfig config) {
+	Collection<String> getClassRepositoriesFrom(CompilationConfig config) {
 		return IterableObjectHelper.merge(
 			config::getClassRepositories,
 			config::getAdditionalClassRepositories,
@@ -171,7 +171,7 @@ public class JavaMemoryCompiler implements Component {
 		);
 	}
 
-	Collection<String> getClassPathsFrom(CompileConfig config) {
+	Collection<String> getClassPathsFrom(CompilationConfig config) {
 		return IterableObjectHelper.merge(
 			config::getClassPaths,
 			config::getAdditionalClassPaths,
