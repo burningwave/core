@@ -47,7 +47,7 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	@Override
 	void init(Properties properties) {
 		loggers = new HashMap<>();
-		mutexManager = Mutex.Manager.create(loggers);
+		mutexManager = Mutex.Manager.create();
 	}
 	
 	private LoggingLevel.Mutable getLoggerEnabledFlag(String clientName) {

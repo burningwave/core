@@ -97,7 +97,7 @@ public class Streams implements Component {
 			this.defaultByteBufferAllocationMode = ByteBufferHandler::allocateDirect;
 			logInfo("default allocation mode: ByteBuffer::allocateDirect");
 		}
-		this.mutexManager = Mutex.Manager.create(this);
+		this.mutexManager = Mutex.Manager.create();
 	}
 	
 	public static Streams create(Properties properties) {
@@ -226,7 +226,6 @@ public class Streams implements Component {
 			ThrowingRunnable.run(() -> {					
 				try(ByteBufferInputStream inputStream = new ByteBufferInputStream(content); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
 					copy(inputStream, fileOutputStream);
-					//ManagedLogger.Repository.logDebug(this.getClass(), "Class " + getName() + " WRITTEN to "+ Strings.Paths.clean(fileClass.getAbsolutePath()));
 				}
 			});
 		}

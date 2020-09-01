@@ -30,6 +30,7 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
@@ -113,13 +114,13 @@ public class Cache implements Component {
 		public ObjectAndPathForResources(Long partitionStartLevel, Function<R, R> sharer, BiConsumer<String, R> itemDestroyer) {
 			this.resources = new HashMap<>();
 			this.pathForResourcesSupplier = () -> new PathForResources<R>(partitionStartLevel, sharer, itemDestroyer);
-			mutexManagerForResources = Mutex.Manager.create(this);
+			mutexManagerForResources = Mutex.Manager.create();
 		}
 
 		public R getOrUploadIfAbsent(T object, String path, Supplier<R> resourceSupplier) {
 			PathForResources<R> pathForResources = resources.get(object);
 			if (pathForResources == null) {
-				synchronized (mutexManagerForResources.getMutex(object.toString())) {
+				synchronized (mutexManagerForResources.getMutex(Objects.getId(object))) {
 					pathForResources = resources.get(object);
 					if (pathForResources == null) {
 						pathForResources = pathForResourcesSupplier.get();
@@ -133,7 +134,7 @@ public class Cache implements Component {
 		public R get(T object, String path) {
 			PathForResources<R> pathForResources = resources.get(object);
 			if (pathForResources == null) {
-				synchronized (mutexManagerForResources.getMutex(object.toString())) {
+				synchronized (mutexManagerForResources.getMutex(Objects.getId(object))) {
 					pathForResources = resources.get(object);
 					if (pathForResources == null) {
 						pathForResources = pathForResourcesSupplier.get();
@@ -145,6 +146,7 @@ public class Cache implements Component {
 		}
 		
 		public PathForResources<R> remove(T object, boolean destroyItems) {
+			mutexManagerForResources.remove(Objects.getId(object));
 			PathForResources<R> pathForResources = resources.remove(object);
 			if (pathForResources != null && destroyItems) {
 				pathForResources.clear(destroyItems);
@@ -228,9 +230,9 @@ public class Cache implements Component {
 			this.partitionStartLevel = partitionStartLevel;
 			this.sharer = sharer;
 			resources = new HashMap<>();
-			mutexManagerForPartitions = Mutex.Manager.create(this);
-			mutexManagerForLoadedResources = Mutex.Manager.create(this);
-			mutexManagerForPartitionedResources = Mutex.Manager.create(this);
+			mutexManagerForPartitions = Mutex.Manager.create();
+			mutexManagerForLoadedResources = Mutex.Manager.create();
+			mutexManagerForPartitionedResources = Mutex.Manager.create();
 			this.itemDestroyer = itemDestroyer;
 		}
 		
@@ -326,6 +328,7 @@ public class Cache implements Component {
 			Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
 			Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
 			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
+			mutexManagerForLoadedResources.remove(path);
 			R item = nestedPartition.remove(path);
 			if (itemDestroyer != null && destroy && item != null) {
 				String finalPath = path;

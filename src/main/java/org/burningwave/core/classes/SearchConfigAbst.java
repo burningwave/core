@@ -47,7 +47,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	FileSystemItem.Criteria scanFileCriteria;
 	boolean optimizePaths;
 	boolean useDefaultPathScannerClassLoader;
-	boolean deleteFoundItemsOnClose;
 	boolean useDefaultPathScannerClassLoaderAsParent;
 	boolean waitForSearchEnding;
 	protected Predicate<String> checkForAddedClassesForAllPathThat;
@@ -55,7 +54,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 
 	SearchConfigAbst(Collection<String>... pathsColl) {
 		useDefaultPathScannerClassLoader(true);
-		deleteFoundItemsOnClose = true;
 		waitForSearchEnding = true;
 		paths = new HashSet<>();
 		addPaths(pathsColl);
@@ -102,11 +100,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return classCriteria;
 	}
 	
-	public S deleteFoundItemsOnClose(boolean flag) {
-		this.deleteFoundItemsOnClose = flag;
-		return (S)this;
-	}	
-
 	public S useDefaultPathScannerClassLoader(boolean value) {
 		useDefaultPathScannerClassLoader = value;
 		useDefaultPathScannerClassLoaderAsParent = !useDefaultPathScannerClassLoader;
@@ -175,7 +168,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		destConfig.useDefaultPathScannerClassLoader = this.useDefaultPathScannerClassLoader;
 		destConfig.parentClassLoaderForPathScannerClassLoader = this.parentClassLoaderForPathScannerClassLoader;
 		destConfig.useDefaultPathScannerClassLoaderAsParent = this.useDefaultPathScannerClassLoaderAsParent;
-		destConfig.deleteFoundItemsOnClose = this.deleteFoundItemsOnClose;
 		destConfig.waitForSearchEnding = this.waitForSearchEnding;
 		destConfig.checkForAddedClassesForAllPathThat = this.checkForAddedClassesForAllPathThat;
 		return destConfig;

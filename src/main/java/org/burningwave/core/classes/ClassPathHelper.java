@@ -439,7 +439,7 @@ public static class Configuration {
 								classPath.getAbsolutePath()
 							);
 							//Free memory
-							//classPath.reset();
+							classPath.destroy();
 						}
 					});
 				} else {

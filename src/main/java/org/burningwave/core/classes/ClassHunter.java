@@ -266,14 +266,8 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		
 		@Override
 		public void close() {
-			if (membersFound != null) {
-				membersFound.clear();
-				membersFound = null;
-			}
-			if (membersFoundFlatMap != null) {
-				membersFoundFlatMap.clear();
-				membersFoundFlatMap = null;
-			}			
+			membersFound = null;
+			membersFoundFlatMap = null;		
 			super.close();
 		}
 	}

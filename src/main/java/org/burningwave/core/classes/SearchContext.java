@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -35,13 +36,13 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Context;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.ThrowingSupplier;
 
 public class SearchContext<T> implements Component {
@@ -52,10 +53,9 @@ public class SearchContext<T> implements Component {
 	PathScannerClassLoader sharedPathScannerClassLoader;
 	PathScannerClassLoader pathScannerClassLoader;
 	Collection<String> skippedClassNames;
-	CompletableFuture<Void> searchTask;
+	QueuedTasksExecutor.Task searchTask;
 	Collection<String> pathScannerClassLoaderScannedPaths;
 	Collection<T> itemsFound;
-	boolean searchTaskFinished;
 	
 	Collection<String> getSkippedClassNames() {
 		return skippedClassNames;
@@ -86,18 +86,20 @@ public class SearchContext<T> implements Component {
 	void executeSearch(Consumer<SearchContext<T>> searcher) {
 		if (searchConfig.waitForSearchEnding) {
 			searcher.accept(this);
-			searchTaskFinished = true;
 		} else {
-			searchTask = CompletableFuture.runAsync(() -> {
+			searchTask = BackgroundExecutor.createTask(() -> {
 				searcher.accept(this);
-				searchTaskFinished = true;
-			});
+			}).async().submit();
 		}
 	}
 	
 	void waitForSearchEnding() {
 		try {
-			searchTask.get();
+			QueuedTasksExecutor.Task searchTask = this.searchTask;
+			if (searchTask != null) {
+				searchTask.join();
+				this.searchTask = null;
+			}
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
@@ -261,17 +263,8 @@ public class SearchContext<T> implements Component {
 	
 	@Override
 	public void close() {
-		if (searchConfig.deleteFoundItemsOnClose) {
-			itemsFoundFlatMap.clear();
-			itemsFoundMap.entrySet().stream().forEach(entry -> {
-				entry.getValue().clear();
-			});
-		}
 		itemsFoundFlatMap = null;
 		itemsFoundMap = null;
-		if (itemsFound != null) {
-			itemsFound.clear();
-		}
 		itemsFound = null;
 		searchConfig.close();
 		searchConfig = null;
@@ -283,6 +276,7 @@ public class SearchContext<T> implements Component {
 		sharedPathScannerClassLoader = null;
 		skippedClassNames.clear();
 		skippedClassNames = null;
+		searchTask = null;
 	}
 	
 	

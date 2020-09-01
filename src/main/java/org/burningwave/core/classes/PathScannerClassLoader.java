@@ -100,7 +100,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		this.pathHelper = pathHelper;
 		this.allLoadedPaths = ConcurrentHashMap.newKeySet();
 		this.loadedPaths = ConcurrentHashMap.newKeySet();
-		this.mutexManager = Mutex.Manager.create(this);
+		this.mutexManager = Mutex.Manager.create();
 		this.classFileCriteriaAndConsumer = scanFileCriteria.createCopy();
 	}
 	
@@ -278,20 +278,11 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	public void close() {
 		closeResources(() -> this.loadedPaths == null, () -> {
 			super.close();
-			Collection<String> loadedPaths = this.loadedPaths;
-			if (loadedPaths != null) {
-				loadedPaths.clear();
-			}
+			this.loadedPaths.clear();
 			this.loadedPaths = null;
-			Collection<String> allLoadedPaths = this.allLoadedPaths;
-			if (allLoadedPaths != null) {
-				allLoadedPaths.clear();
-			}
+			this.allLoadedPaths.clear();
 			this.allLoadedPaths = null;
-			Mutex.Manager mutexManager = this.mutexManager;
-			if (mutexManager != null) {
-				mutexManager.clear();
-			}
+			this.mutexManager.clear();
 			this.mutexManager = null;
 			pathHelper = null;
 			classFileCriteriaAndConsumer = null;

@@ -29,7 +29,6 @@
 package org.burningwave.core.classes;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -48,24 +47,6 @@ import org.burningwave.core.iterable.Properties;
 
 
 public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>, R extends SearchResult<I>> extends ClassPathScannerAbst<I, C, R> {
-	
-	public static class Configuration {
-		public static class Key {
-			
-			public final static String PATH_LOADING_LOCK = "hunters.path-loading-lock";							
-		}
-		
-		public final static Map<String, Object> DEFAULT_VALUES;
-	
-		static {
-			DEFAULT_VALUES = new HashMap<>();
-	
-			DEFAULT_VALUES.put(
-				Key.PATH_LOADING_LOCK, 
-				PathLoadingLock.FOR_PATH.label
-			);
-		}
-	}
 	
 	public static enum PathLoadingLock {
 		FOR_CACHE("forCache"),
@@ -110,10 +91,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			config
 		);
 		this.cache = new ConcurrentHashMap<>();
-		this.mutexManager = Mutex.Manager.create(cache);
-		if (this.config.resolveStringValue(Configuration.Key.PATH_LOADING_LOCK, Configuration.DEFAULT_VALUES).equals(PathLoadingLock.FOR_CACHE.label)) {
-			this.mutexManager.disableLockForName();
-		}
+		this.mutexManager = Mutex.Manager.create();
 	}
 
 	public CacheScanner<I, R> loadInCache(CacheableSearchConfig searchConfig) {
@@ -297,6 +275,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 				FileSystemItem.ofPath(path).reset();
 				Map<String, I> items = cache.remove(path);
 				clearItemsForPath(items);
+				mutexManager.remove(path);
 			}
 		}
 		if (closeSearchResults) {
@@ -317,11 +296,8 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			cache = null;
 			pathHelper = null;
 			contextSupplier = null;
-			Mutex.Manager mutexManager = this.mutexManager;
-			if (mutexManager != null) {
-				mutexManager.clear();
-			}
-			this.mutexManager = null;
+			mutexManager.clear();
+			mutexManager = null;
 			super.close();
 		});
 	}
