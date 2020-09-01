@@ -226,7 +226,6 @@ public class Streams implements Component {
 			ThrowingRunnable.run(() -> {					
 				try(ByteBufferInputStream inputStream = new ByteBufferInputStream(content); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
 					copy(inputStream, fileOutputStream);
-					//ManagedLogger.Repository.logDebug(this.getClass(), "Class " + getName() + " WRITTEN to "+ Strings.Paths.clean(fileClass.getAbsolutePath()));
 				}
 			});
 		}
