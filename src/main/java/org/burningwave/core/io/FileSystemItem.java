@@ -598,29 +598,30 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	synchronized FileSystemItem clear(boolean removeLinkedResourcesFromCache, boolean removeFromCache) {
+		Collection<FileSystemItem> allChildren = this.allChildren;
+		Collection<FileSystemItem> children = this.children;
+		this.allChildren = null;		
+		this.children = null;
 		if (allChildren != null) {
 			for (FileSystemItem child : allChildren) {
-				child.absolutePath.setValue(null);
-				child.parentContainer = null;
-				child.parent = null;
-				child.allChildren = null;
-				child.children = null;
-				if (removeLinkedResourcesFromCache) {
-					removeFromCache(child, removeFromCache);
+				synchronized (child) {
+					child.absolutePath.setValue(null);
+					child.parentContainer = null;
+					child.parent = null;
+					child.allChildren = null;
+					child.children = null;
+					if (removeLinkedResourcesFromCache) {
+						removeFromCache(child, removeFromCache);
+					}
 				}
-			}
-			allChildren = null;
-			if (children != null) {
-				children = null;
-			}			
+			}				
 		} else if (children != null) {
 			for (FileSystemItem child : children) {
 				child.clear(removeLinkedResourcesFromCache, removeFromCache);
 			}
-			children = null;
 		}
-		parentContainer = null;
 		absolutePath.setValue(null);
+		parentContainer = null;		
 		parent = null;
 		if (removeLinkedResourcesFromCache) {
 			removeFromCache(this, removeFromCache);
