@@ -324,7 +324,6 @@ The components of the class paths scanning engine are: **ByteCodeHunter**, **Cla
 
 ```java
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
@@ -349,7 +348,7 @@ public class Finder {
             })
         )).find()
         ) {
-            return new HashSet<>(searchResult.getClasses());
+            return searchResult.getClasses();
         }
     }
     
@@ -360,7 +359,6 @@ It is also possible to expressly indicate the paths on which to search:
 
 ```java
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
@@ -407,7 +405,7 @@ public class Finder {
         //To perform searches that do not use the cache you must intantiate the search configuration with 
         //SearchConfig.withoutUsingCache() method
         try(SearchResult searchResult = classHunter.loadInCache(searchConfig).find()) {
-            return new HashSet<>(searchResult.getClasses());
+            return searchResult.getClasses();
         }
     }
     
@@ -1017,7 +1015,6 @@ class-path-helper.class-path-hunter.search-config.check-file-option=\
     ${hunters.default-search-config.check-file-option}
 hunters.default-search-config.check-file-option=\
     ${path-scanner-class-loader.search-config.check-file-option}
-hunters.path-loading-lock=forPath
 path-scanner-class-loader.parent=\
     Thread.currentThread().getContextClassLoader()
 path-scanner-class-loader.parent.imports=\
@@ -1112,7 +1109,6 @@ class-path-helper.class-path-hunter.search-config.check-file-option=\
     ${hunters.default-search-config.check-file-option}
 hunters.default-search-config.check-file-option=\
     ${path-scanner-class-loader.search-config.check-file-option}
-hunters.path-loading-lock=forPath
 path-scanner-class-loader.parent=\
     Thread.currentThread().getContextClassLoader()
 path-scanner-class-loader.parent.imports=\

@@ -72,7 +72,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	QueuedTasksExecutor(String executorName, String asyncExecutorName, int defaultPriority, boolean isDaemon, int loggingThreshold) {
-		mutexManager = Mutex.Manager.create(this);
+		mutexManager = Mutex.Manager.create();
 		tasksQueue = new CopyOnWriteArrayList<>();
 		asyncTasksInExecution = new CopyOnWriteArrayList<>();
 		id = UUID.randomUUID().toString();

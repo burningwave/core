@@ -682,8 +682,6 @@ public class ClassFactory implements Component {
 				try(ByteCodeHunter.SearchResult result = classFactory.byteCodeHunter.loadInCache(
 					SearchConfig.forPaths(
 						classPaths
-					).deleteFoundItemsOnClose(
-						false
 					).withScanFileCriteria(
 						FileSystemItem.Criteria.forClassTypeFiles(
 							classFactory.config.resolveStringValue(

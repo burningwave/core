@@ -24,8 +24,6 @@ public class ClassPathHunterTest extends BaseTest {
 					).useClasses(
 						Closeable.class
 					)
-				).deleteFoundItemsOnClose(
-					true
 				)
 			),
 			(result) ->
@@ -47,8 +45,6 @@ public class ClassPathHunterTest extends BaseTest {
 					).useClasses(
 						Complex.Data.Item.class
 					)
-				).deleteFoundItemsOnClose(
-					true
 				)
 			),
 			(result) ->
@@ -76,8 +72,6 @@ public class ClassPathHunterTest extends BaseTest {
 					).useClasses(
 						Closeable.class
 					)
-				).deleteFoundItemsOnClose(
-					true
 				)
 			),
 			(result) ->

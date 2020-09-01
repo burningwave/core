@@ -263,17 +263,8 @@ public class SearchContext<T> implements Component {
 	
 	@Override
 	public void close() {
-		if (searchConfig.deleteFoundItemsOnClose) {
-			itemsFoundFlatMap.clear();
-			itemsFoundMap.entrySet().stream().forEach(entry -> {
-				entry.getValue().clear();
-			});
-		}
 		itemsFoundFlatMap = null;
 		itemsFoundMap = null;
-		if (itemsFound != null) {
-			itemsFound.clear();
-		}
 		itemsFound = null;
 		searchConfig.close();
 		searchConfig = null;

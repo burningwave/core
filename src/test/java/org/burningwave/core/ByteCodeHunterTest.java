@@ -30,8 +30,6 @@ public class ByteCodeHunterTest extends BaseTest {
 					).useClasses(
 						Closeable.class
 					)
-				).deleteFoundItemsOnClose(
-					false
 				).withScanFileCriteria(
 					FileSystemItem.Criteria.forClassTypeFiles(
 						FileSystemItem.CheckingOption.FOR_NAME
@@ -144,8 +142,6 @@ public class ByteCodeHunterTest extends BaseTest {
 			).useClasses(
 				Closeable.class
 			)
-		).deleteFoundItemsOnClose(
-			false
 		);
 		Stream.of(
 			CompletableFuture.runAsync(() -> 

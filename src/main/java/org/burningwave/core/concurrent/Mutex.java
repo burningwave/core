@@ -35,67 +35,32 @@ public class Mutex {
 	
 	public static class Manager implements AutoCloseable {
 		Map<String, Object> parallelLockMap;
-		private Object defaultMutex;
 		
-		private Manager(Object defaultMutex) {
+		private Manager() {
 			this.parallelLockMap = new ConcurrentHashMap<>();
-			this.defaultMutex = defaultMutex;
 		}
 		
-		public static Manager create(Object client) {
-			return new Manager(client);
-		}
-		
-		public void enableLockForName() {
-			Map<String, Object> parallelLockMap = this.parallelLockMap;
-			if (parallelLockMap == null) {
-				synchronized(this) {
-					if ((parallelLockMap = this.parallelLockMap) == null) {
-						this.parallelLockMap = new ConcurrentHashMap<>();
-					}
-				}
-			}
-		}
-		
-		public void disableLockForName() {
-			clear();
-			this.parallelLockMap = null;
-		}
-		
-		public Object removeMutex(String id) {
-			Map<String, Object> parallelLockMap = this.parallelLockMap;
-			if (parallelLockMap != null) {
-				return parallelLockMap.remove(id);
-			}
-			return null;
+		public static Manager create() {
+			return new Manager();
 		}
 		
 		public Object getMutex(String id) {
-			try {
-				Object newLock = new Mutex();
-				Object lock = parallelLockMap.putIfAbsent(id, newLock);
-				if (lock != null) {
-					return lock;
-				} else {
-					return newLock;
-				}
-			} catch (NullPointerException exc) {
-				return defaultMutex;
-			}
+			Object newLock = new Mutex();
+	    	Object lock = parallelLockMap.putIfAbsent(id, newLock);
+	        if (lock != null) {
+	        	return lock;
+	        }
+	        return newLock;
 	    }
 
 		public void clear() {
-			Map<String, Object> parallelLockMap = this.parallelLockMap;
-			if (parallelLockMap != null) {
-				parallelLockMap.clear();
-			}
+			parallelLockMap.clear();
 		}
 		
 		@Override
 		public void close() {
 			clear();
 			parallelLockMap = null;
-			this.defaultMutex = null;
 		}
 
 		public void remove(String id) {

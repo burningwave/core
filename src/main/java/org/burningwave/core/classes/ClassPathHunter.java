@@ -218,9 +218,6 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		
 		@Override
 		public void close() {
-			if (classPaths != null) {
-				classPaths.clear();
-			}
 			classPaths = null;
 			super.close();
 		}

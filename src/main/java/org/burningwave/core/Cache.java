@@ -114,7 +114,7 @@ public class Cache implements Component {
 		public ObjectAndPathForResources(Long partitionStartLevel, Function<R, R> sharer, BiConsumer<String, R> itemDestroyer) {
 			this.resources = new HashMap<>();
 			this.pathForResourcesSupplier = () -> new PathForResources<R>(partitionStartLevel, sharer, itemDestroyer);
-			mutexManagerForResources = Mutex.Manager.create(this);
+			mutexManagerForResources = Mutex.Manager.create();
 		}
 
 		public R getOrUploadIfAbsent(T object, String path, Supplier<R> resourceSupplier) {
@@ -230,9 +230,9 @@ public class Cache implements Component {
 			this.partitionStartLevel = partitionStartLevel;
 			this.sharer = sharer;
 			resources = new HashMap<>();
-			mutexManagerForPartitions = Mutex.Manager.create(this);
-			mutexManagerForLoadedResources = Mutex.Manager.create(this);
-			mutexManagerForPartitionedResources = Mutex.Manager.create(this);
+			mutexManagerForPartitions = Mutex.Manager.create();
+			mutexManagerForLoadedResources = Mutex.Manager.create();
+			mutexManagerForPartitionedResources = Mutex.Manager.create();
 			this.itemDestroyer = itemDestroyer;
 		}
 		

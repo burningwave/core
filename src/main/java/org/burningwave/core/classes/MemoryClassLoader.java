@@ -441,17 +441,13 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
 				((MemoryClassLoader)parentClassLoader).unregister(this,true);
 			}
-			if (clients != null) {
-				clients.clear();
-			}
+			this.clients.clear();
 			this.clients = null;
 			clear();
 			notLoadedByteCodes = null;
 			loadedByteCodes = null;
 			Collection<Class<?>> loadedClasses = ClassLoaders.retrieveLoadedClasses(this);
-			if (loadedClasses != null) {
-				loadedClasses.clear();
-			}
+			loadedClasses.clear();
 			unregister();
 		});
 	}
