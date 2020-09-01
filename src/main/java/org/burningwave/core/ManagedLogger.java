@@ -35,6 +35,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.burningwave.core.classes.ClassHunter;
+import org.burningwave.core.classes.ClassPathHunter;
+import org.burningwave.core.classes.MemoryClassLoader;
+import org.burningwave.core.classes.PathScannerClassLoader;
+import org.burningwave.core.classes.SearchContext;
+import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.jvm.LowLevelObjectsHandler;
+
 public interface ManagedLogger {	
 	
 	@SuppressWarnings("unchecked")
@@ -111,6 +119,18 @@ public interface ManagedLogger {
 				DEFAULT_VALUES = new HashMap<>();
 				DEFAULT_VALUES.put(Key.TYPE, "autodetect");
 				DEFAULT_VALUES.put(Key.ENABLED_FLAG, String.valueOf(true));
+				DEFAULT_VALUES.put(Key.DEBUG_LOGGING_DISABLED_FOR, 
+					FileSystemItem.class.getName() + ";" +
+					MemoryClassLoader.class.getName() + ";" +
+					PathScannerClassLoader.class.getName() + ";"
+				);
+				DEFAULT_VALUES.put(Key.WARN_LOGGING_DISABLED_FOR, 
+					ClassHunter.SearchContext.class.getName() + ";" +
+					ClassPathHunter.SearchContext.class.getName() + ";" +
+					LowLevelObjectsHandler.class.getName() + ";" +
+					PathScannerClassLoader.class.getName() + ";" +
+					SearchContext.class.getName() + ";"
+				);
 			}
 		}
 		
