@@ -56,7 +56,6 @@ public class SearchContext<T> implements Component {
 	QueuedTasksExecutor.Task searchTask;
 	Collection<String> pathScannerClassLoaderScannedPaths;
 	Collection<T> itemsFound;
-	boolean searchTaskFinished;
 	
 	Collection<String> getSkippedClassNames() {
 		return skippedClassNames;
@@ -87,20 +86,19 @@ public class SearchContext<T> implements Component {
 	void executeSearch(Consumer<SearchContext<T>> searcher) {
 		if (searchConfig.waitForSearchEnding) {
 			searcher.accept(this);
-			searchTaskFinished = true;
 		} else {
 			searchTask = BackgroundExecutor.createTask(() -> {
 				searcher.accept(this);
-				searchTaskFinished = true;
 			}).async().submit();
 		}
 	}
 	
 	void waitForSearchEnding() {
 		try {
+			QueuedTasksExecutor.Task searchTask = this.searchTask;
 			if (searchTask != null) {
 				searchTask.join();
-				searchTask = null;
+				this.searchTask = null;
 			}
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
