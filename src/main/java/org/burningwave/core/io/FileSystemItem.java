@@ -224,13 +224,18 @@ public class FileSystemItem implements ManagedLogger {
 		FileSystemItem.Criteria filter,
 		Supplier<C> setSupplier
 	) {
-		return Optional.ofNullable(childrenSupplier.get()).map(children ->
-			children.parallelStream().filter(child -> 
-				filter.testWithTrueResultForNullPredicate(
-					new FileSystemItem[]{child, this}
-				)
-			).collect(Collectors.toCollection(setSupplier))
-		).orElseGet(() -> null);
+		Predicate<FileSystemItem> filterPredicate = child -> 
+			filter.testWithTrueResultForNullPredicate(
+				new FileSystemItem[]{child, this}
+			);
+		return Optional.ofNullable(childrenSupplier.get()).map(children -> {
+			try {
+				return children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier));
+			} catch (ArrayIndexOutOfBoundsException exc) {
+				logWarn("Error occurred while finding children: trying recursive call by using synchronized stream");
+				return children.stream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier));
+			}
+		}).orElseGet(() -> null);
 	}
 	
 	public FileSystemItem findFirstInAllChildren() {
@@ -593,29 +598,30 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	synchronized FileSystemItem clear(boolean removeLinkedResourcesFromCache, boolean removeFromCache) {
+		Collection<FileSystemItem> allChildren = this.allChildren;
+		Collection<FileSystemItem> children = this.children;
+		this.allChildren = null;		
+		this.children = null;
 		if (allChildren != null) {
 			for (FileSystemItem child : allChildren) {
-				child.absolutePath.setValue(null);
-				child.parentContainer = null;
-				child.parent = null;
-				child.allChildren = null;
-				child.children = null;
-				if (removeLinkedResourcesFromCache) {
-					removeFromCache(child, removeFromCache);
+				synchronized (child) {
+					child.absolutePath.setValue(null);
+					child.parentContainer = null;
+					child.parent = null;
+					child.allChildren = null;
+					child.children = null;
+					if (removeLinkedResourcesFromCache) {
+						removeFromCache(child, removeFromCache);
+					}
 				}
-			}
-			allChildren = null;
-			if (children != null) {
-				children = null;
-			}			
+			}				
 		} else if (children != null) {
 			for (FileSystemItem child : children) {
 				child.clear(removeLinkedResourcesFromCache, removeFromCache);
 			}
-			children = null;
 		}
-		parentContainer = null;
 		absolutePath.setValue(null);
+		parentContainer = null;		
 		parent = null;
 		if (removeLinkedResourcesFromCache) {
 			removeFromCache(this, removeFromCache);

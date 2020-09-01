@@ -44,7 +44,6 @@ import org.burningwave.core.iterable.Properties;
 public class StaticComponentContainer {
 	public static class Configuration {
 		public static class Key {
-			private static final String CLEAR_TEMPORARY_FOLDER_ON_INIT = "static-component-container.clear-temporary-folder-on-init";
 			private static final String HIDE_BANNER_ON_INIT = "static-component-container.hide-banner-on-init";
 		}
 		
@@ -52,7 +51,6 @@ public class StaticComponentContainer {
 		
 		static {
 			DEFAULT_VALUES = new HashMap<>();
-			DEFAULT_VALUES.put(Key.CLEAR_TEMPORARY_FOLDER_ON_INIT, "false");
 			DEFAULT_VALUES.put(Key.HIDE_BANNER_ON_INIT, "false");
 		}
 	}
@@ -110,7 +108,7 @@ public class StaticComponentContainer {
 					)
 				);
 			} else {
-				ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Building static components by using configuration");
+				ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Building static components by using default configuration");
 			}
 			ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Instantiated {}", ManagedLoggersRepository.getClass().getName());
 			Paths = org.burningwave.core.Strings.Paths.create();

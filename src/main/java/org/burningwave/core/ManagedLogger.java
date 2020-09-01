@@ -35,6 +35,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.burningwave.core.classes.ClassHunter;
+import org.burningwave.core.classes.ClassPathHunter;
+import org.burningwave.core.classes.MemoryClassLoader;
+import org.burningwave.core.classes.PathScannerClassLoader;
+import org.burningwave.core.classes.SearchContext;
+import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.jvm.LowLevelObjectsHandler;
+
 public interface ManagedLogger {	
 	
 	@SuppressWarnings("unchecked")
@@ -90,7 +98,7 @@ public interface ManagedLogger {
 	}
 	
 	
-	public static interface Repository {
+	public static interface Repository extends org.burningwave.core.iterable.Properties.Listener {
 		public static class Configuration {
 			
 			public static class Key {
@@ -111,6 +119,18 @@ public interface ManagedLogger {
 				DEFAULT_VALUES = new HashMap<>();
 				DEFAULT_VALUES.put(Key.TYPE, "autodetect");
 				DEFAULT_VALUES.put(Key.ENABLED_FLAG, String.valueOf(true));
+				DEFAULT_VALUES.put(Key.DEBUG_LOGGING_DISABLED_FOR, 
+					FileSystemItem.class.getName() + ";" +
+					MemoryClassLoader.class.getName() + ";" +
+					PathScannerClassLoader.class.getName() + ";"
+				);
+				DEFAULT_VALUES.put(Key.WARN_LOGGING_DISABLED_FOR, 
+					ClassHunter.SearchContext.class.getName() + ";" +
+					ClassPathHunter.SearchContext.class.getName() + ";" +
+					LowLevelObjectsHandler.class.getName() + ";" +
+					PathScannerClassLoader.class.getName() + ";" +
+					SearchContext.class.getName() + ";"
+				);
 			}
 		}
 		
@@ -154,7 +174,7 @@ public interface ManagedLogger {
 		
 		public void logTrace(Class<?> client, String message, Object... arguments);
 		
-		public static abstract class Abst implements Repository{
+		public static abstract class Abst implements Repository {
 			boolean isEnabled;
 			
 			Abst(Properties properties) {
@@ -174,7 +194,10 @@ public interface ManagedLogger {
 				removeLoggingLevelFor(properties, Repository.Configuration.Key.ERROR_LOGGING_DISABLED_FOR, LoggingLevel.ERROR);
 				removeLoggingLevelFor(properties, Repository.Configuration.Key.ALL_LEVEL_LOGGING_DISABLED_FOR,
 					LoggingLevel.TRACE, LoggingLevel.DEBUG, LoggingLevel.INFO, LoggingLevel.WARN, LoggingLevel.ERROR
-				);	
+				);
+				if (properties instanceof org.burningwave.core.iterable.Properties) {
+					listenTo((org.burningwave.core.iterable.Properties)properties);
+				}
 			}
 			
 			abstract void init(Properties properties);
