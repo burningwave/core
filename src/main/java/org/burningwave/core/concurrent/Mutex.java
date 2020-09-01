@@ -72,11 +72,12 @@ public class Mutex {
 		
 		public Object getMutex(String id) {
 			try {
-				Object lock = parallelLockMap.putIfAbsent(id, new Mutex());
+				Object newLock = new Mutex();
+				Object lock = parallelLockMap.putIfAbsent(id, newLock);
 				if (lock != null) {
 					return lock;
 				} else {
-					return parallelLockMap.get(id);
+					return newLock;
 				}
 			} catch (NullPointerException exc) {
 				return defaultMutex;
