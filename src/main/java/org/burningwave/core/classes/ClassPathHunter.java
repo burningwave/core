@@ -170,11 +170,6 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 			testedClassesForClassPath.add(testedClass);
 			itemsFoundFlatMap.putAll(testedClassesForClassPathMap);
 		}
-		
-		@Override
-		public void close() {
-			super.close();
-		}
 	}
 	
 	public static class SearchResult extends org.burningwave.core.classes.SearchResult<Collection<Class<?>>> {
@@ -219,6 +214,15 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 				}
 			}
 			return classPaths;
+		}
+		
+		@Override
+		public void close() {
+			if (classPaths != null) {
+				classPaths.clear();
+			}
+			classPaths = null;
+			super.close();
 		}
 	}
 
