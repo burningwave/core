@@ -45,7 +45,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.33.0</version>
+    <version>7.33.1</version>
 </dependency>
 ```
 
@@ -1017,7 +1017,6 @@ class-path-helper.class-path-hunter.search-config.check-file-option=\
     ${hunters.default-search-config.check-file-option}
 hunters.default-search-config.check-file-option=\
     ${path-scanner-class-loader.search-config.check-file-option}
-hunters.path-loading-lock=forPath
 path-scanner-class-loader.parent=\
     Thread.currentThread().getContextClassLoader()
 path-scanner-class-loader.parent.imports=\
@@ -1112,7 +1111,6 @@ class-path-helper.class-path-hunter.search-config.check-file-option=\
     ${hunters.default-search-config.check-file-option}
 hunters.default-search-config.check-file-option=\
     ${path-scanner-class-loader.search-config.check-file-option}
-hunters.path-loading-lock=forPath
 path-scanner-class-loader.parent=\
     Thread.currentThread().getContextClassLoader()
 path-scanner-class-loader.parent.imports=\
