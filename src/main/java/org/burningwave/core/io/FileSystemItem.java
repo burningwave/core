@@ -224,13 +224,18 @@ public class FileSystemItem implements ManagedLogger {
 		FileSystemItem.Criteria filter,
 		Supplier<C> setSupplier
 	) {
-		return Optional.ofNullable(childrenSupplier.get()).map(children ->
-			children.parallelStream().filter(child -> 
-				filter.testWithTrueResultForNullPredicate(
-					new FileSystemItem[]{child, this}
-				)
-			).collect(Collectors.toCollection(setSupplier))
-		).orElseGet(() -> null);
+		Predicate<FileSystemItem> filterPredicate = child -> 
+			filter.testWithTrueResultForNullPredicate(
+				new FileSystemItem[]{child, this}
+			);
+		return Optional.ofNullable(childrenSupplier.get()).map(children -> {
+			try {
+				return children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier));
+			} catch (ArrayIndexOutOfBoundsException exc) {
+				logWarn("Error occurred while finding children: trying recursive call by using synchronized stream");
+				return children.stream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier));
+			}
+		}).orElseGet(() -> null);
 	}
 	
 	public FileSystemItem findFirstInAllChildren() {
