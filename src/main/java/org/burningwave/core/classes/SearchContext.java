@@ -269,6 +269,10 @@ public class SearchContext<T> implements Component {
 		}
 		itemsFoundFlatMap = null;
 		itemsFoundMap = null;
+		if (itemsFound != null) {
+			itemsFound.clear();
+		}
+		itemsFound = null;
 		searchConfig.close();
 		searchConfig = null;
 		pathScannerClassLoader.unregister(this, true);
