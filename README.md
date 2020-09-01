@@ -110,9 +110,10 @@ public class RuntimeClassExtender {
         //burningwave.properties file (see "Overview and configuration").
         //If you need to upload the class to another class loader use
         //loadOrBuildAndDefine(LoadOrBuildAndDefineConfig) method
-        Class<?> generatedClass = classFactory.loadOrBuildAndDefine(
+        ClassFactory.ClassRetriever classRetriever = classFactory.loadOrBuildAndDefine(
             unitSG
-        ).get(
+        );
+        Class<?> generatedClass = classRetriever.get(
             "packagename.MyExtendedClass"
         );
         ToBeExtended generatedClassObject =
@@ -131,6 +132,7 @@ public class RuntimeClassExtender {
         System.out.println(
             ((Date)virtualObject.invokeDirect("convert", LocalDateTime.now())).toString()
         );
+        classRetriever.close();
     }   
 
     public static class ToBeExtended {
@@ -322,6 +324,7 @@ The components of the class paths scanning engine are: **ByteCodeHunter**, **Cla
 
 ```java
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
@@ -333,20 +336,21 @@ import org.burningwave.core.classes.SearchConfig;
 public class Finder {
     
     public Collection<Class<?>> simplifiedFind() {
-         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
-            ClassHunter classHunter = componentSupplier.getClassHunter();
-            
-            //With this the search will be executed on default configured paths that are the 
-            //runtime class paths plus, on java 9 and later, the jmods folder of the Java home.
-            //The default configured paths are indicated in the 'paths.hunters.default-search-config.paths'
-            //property of burningwave.properties file (see Architectural overview and configuration)
-            SearchResult searchResult = classHunter.loadInCache(SearchConfig.byCriteria(
-                ClassCriteria.create().allThat((cls) -> {
-                    return cls.getPackage().getName().matches(".*springframework.*");
-                })
-            )).find();
-            
-            return searchResult.getClasses();
+        ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+        ClassHunter classHunter = componentSupplier.getClassHunter();
+        
+        //With this the search will be executed on default configured paths that are the 
+        //runtime class paths plus, on java 9 and later, the jmods folder of the Java home.
+        //The default configured paths are indicated in the 'paths.hunters.default-search-config.paths'
+        //property of burningwave.properties file (see Architectural overview and configuration)
+        try (SearchResult searchResult = classHunter.loadInCache(SearchConfig.byCriteria(
+            ClassCriteria.create().allThat((cls) -> {
+                return cls.getPackage().getName().matches(".*springframework.*");
+            })
+        )).find()
+        ) {
+            return new HashSet<>(searchResult.getClasses());
+        }
     }
     
 }
@@ -356,6 +360,7 @@ It is also possible to expressly indicate the paths on which to search:
 
 ```java
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
@@ -401,9 +406,9 @@ public class Finder {
         //it is recommended to perform this cleaning using the clearHuntersCache method of the ComponentSupplier.
         //To perform searches that do not use the cache you must intantiate the search configuration with 
         //SearchConfig.withoutUsingCache() method
-        SearchResult searchResult = classHunter.loadInCache(searchConfig).find();
-        
-        return searchResult.getClasses();
+        try(SearchResult searchResult = classHunter.loadInCache(searchConfig).find()) {
+            return new HashSet<>(searchResult.getClasses());
+        }
     }
     
 }
