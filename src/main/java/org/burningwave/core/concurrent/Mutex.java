@@ -58,23 +58,33 @@ public class Mutex {
 		}
 		
 		public void disableLockForName() {
+			clear();
 			this.parallelLockMap = null;
 		}
 		
-		public Object getMutex(String id) {
-			Object lock = defaultMutex;
+		public Object removeMutex(String id) {
 			Map<String, Object> parallelLockMap = this.parallelLockMap;
 			if (parallelLockMap != null) {
-		    	Object newLock = new Mutex();
-		    	lock = parallelLockMap.putIfAbsent(id, newLock);
-		        if (lock == null) {
-		            lock = newLock;
-		        }
+				return parallelLockMap.remove(id);
 			}
-	        return lock;
+			return null;
+		}
+		
+		public Object getMutex(String id) {
+			try {
+				Object lock = parallelLockMap.putIfAbsent(id, new Mutex());
+				if (lock != null) {
+					return lock;
+				} else {
+					return parallelLockMap.get(id);
+				}
+			} catch (NullPointerException exc) {
+				return defaultMutex;
+			}
 	    }
 
 		public void clear() {
+			Map<String, Object> parallelLockMap = this.parallelLockMap;
 			if (parallelLockMap != null) {
 				parallelLockMap.clear();
 			}
