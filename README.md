@@ -45,7 +45,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.33.3</version>
+    <version>7.34.0</version>
 </dependency>
 ```
 
@@ -324,7 +324,6 @@ The components of the class paths scanning engine are: **ByteCodeHunter**, **Cla
 
 ```java
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
@@ -349,7 +348,7 @@ public class Finder {
             })
         )).find()
         ) {
-            return new HashSet<>(searchResult.getClasses());
+            return searchResult.getClasses();
         }
     }
     
@@ -360,7 +359,6 @@ It is also possible to expressly indicate the paths on which to search:
 
 ```java
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
@@ -407,7 +405,7 @@ public class Finder {
         //To perform searches that do not use the cache you must intantiate the search configuration with 
         //SearchConfig.withoutUsingCache() method
         try(SearchResult searchResult = classHunter.loadInCache(searchConfig).find()) {
-            return new HashSet<>(searchResult.getClasses());
+            return searchResult.getClasses();
         }
     }
     
@@ -893,7 +891,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 public class UseOfStaticComponentsExample {
     
     public void yourMethod(){
-        ManagedLoggersRepository.logInfo(UseOfStaticComponentsExample.class, "Master class loader is {}", ClassLoaders.getMaster(Thread.currentThread().getContextClassLoader()));
+        ManagedLoggersRepository.logInfo("Master class loader is {}", ClassLoaders.getMaster(Thread.currentThread().getContextClassLoader()));
     }
 
 }
