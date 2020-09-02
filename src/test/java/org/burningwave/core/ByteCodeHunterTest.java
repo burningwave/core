@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
-import org.burningwave.core.classes.PathScannerClassLoader;
+import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.service.Service;
@@ -25,7 +25,7 @@ public class ByteCodeHunterTest extends BaseTest {
 	@Test
 	public void findAllSubtypeOfTestOne() {
 		Collection<String> disabledLoggers = GlobalProperties.resolveStringValues("managed-logger.repository.logging.warn.disabled-for", ";");
-		disabledLoggers.remove(PathScannerClassLoader.class.getName());
+		disabledLoggers.remove(MemoryClassLoader.class.getName());
 		GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
@@ -46,7 +46,7 @@ public class ByteCodeHunterTest extends BaseTest {
 			),
 			(result) -> result.getClasses()
 		);
-		disabledLoggers.add(PathScannerClassLoader.class.getName());
+		disabledLoggers.add(MemoryClassLoader.class.getName());
 		GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
 	}
 	
