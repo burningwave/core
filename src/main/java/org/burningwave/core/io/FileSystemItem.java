@@ -229,8 +229,8 @@ public class FileSystemItem implements ManagedLogger {
 		return Optional.ofNullable(childrenSupplier.get()).map(children -> {
 			try {
 				return children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier));
-			} catch (ArrayIndexOutOfBoundsException exc) {
-				logWarn("Error occurred while finding children: trying recursive call by using synchronized stream");
+			} catch (Throwable exc) {
+				logWarn("Error occurred while finding children: trying to use synchronized stream");
 				return children.stream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier));
 			}
 		}).orElseGet(() -> null);
