@@ -119,53 +119,62 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 		}
 	}
 	
+	@Override
 	public void disableLogging(String clientName) {
 		setLoggerEnabledFlag(clientName, new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_DISABLED));
 	}
-	
+	@Override
 	public void enableLogging(String clientName) {
 		setLoggerEnabledFlag(clientName, new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_ENABLED));
 	}
 	
-	public void logError(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Throwable exc) {
+	@Override
+	void logError(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Throwable exc) {
 		log(clientNameSupplier,LoggingLevel.ERROR, System.err, messageSupplier, exc);
 	}
-
-	public void logError(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+	
+	@Override
+	void logError(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
 		log(clientNameSupplier,LoggingLevel.ERROR, System.err, messageSupplier, null);
 	}
 	
-	public void logDebug(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+	@Override
+	void logDebug(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
 		log(clientNameSupplier,LoggingLevel.DEBUG, System.out, messageSupplier, null);
 	}
 	
-	public void logDebug(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
+	@Override
+	void logDebug(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
 		log(clientNameSupplier,LoggingLevel.DEBUG, System.out, () -> replacePlaceHolder(messageSupplier.get(), arguments), null);
 	}
 	
-	public void logInfo(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+	@Override
+	void logInfo(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
 		log(clientNameSupplier,LoggingLevel.INFO, System.out, messageSupplier, null);
 	}
 	
-	public void logInfo(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
+	@Override
+	void logInfo(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
 		log(clientNameSupplier,LoggingLevel.INFO, System.out, () -> replacePlaceHolder(messageSupplier.get(), arguments), null);
 	}
 	
-	public void logWarn(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+	@Override
+	void logWarn(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
 		log(clientNameSupplier,LoggingLevel.WARN, System.out, messageSupplier, null);
 	}
 	
-	public void logWarn(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
+	@Override
+	void logWarn(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
 		log(clientNameSupplier,LoggingLevel.WARN, System.out, () -> replacePlaceHolder(messageSupplier.get(), arguments), null);
 	}
 	
 	@Override
-	public void logTrace(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+	void logTrace(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
 		log(clientNameSupplier,LoggingLevel.TRACE, System.out, messageSupplier, null);
 	}
 
 	@Override
-	public void logTrace(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
+	void logTrace(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
 		log(clientNameSupplier,LoggingLevel.TRACE, System.out, () -> replacePlaceHolder(messageSupplier.get(), arguments), null);
 	}
 	

@@ -94,7 +94,8 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 				loggerEntry = loggers.get(clientName);
 				if (loggerEntry == null) {
 					loggers.put(clientName, loggerEntry = new AbstractMap.SimpleEntry<>(
-						LoggerFactory.getLogger(clientName), new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_ENABLED)));
+						LoggerFactory.getLogger(clientName), new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_ENABLED))
+					);
 				}
 			}
 		}
@@ -134,45 +135,53 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 		getLoggerEntry(clientName).getValue().set(LoggingLevel.ALL_LEVEL_ENABLED);
 	}
 	
-	public void logError(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Throwable exc) {
+	@Override
+	void logError(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Throwable exc) {
 		log(clientNameSupplier, LoggingLevel.ERROR, (logger) -> logger.error(messageSupplier.get(), exc));
 	}
 	
-	public void logError(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+	@Override
+	void logError(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
 		log(clientNameSupplier, LoggingLevel.ERROR, (logger) -> logger.error(messageSupplier.get()));
 	}
 	
-	public void logDebug(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+	@Override
+	void logDebug(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
 		log(clientNameSupplier, LoggingLevel.DEBUG, (logger) -> logger.debug(messageSupplier.get()));
 	}
 	
-	public void logDebug(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
+	@Override
+	void logDebug(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
 		log(clientNameSupplier, LoggingLevel.DEBUG, (logger) -> logger.debug(messageSupplier.get(), arguments));
 	}
 	
-	public void logInfo(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+	@Override
+	void logInfo(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
 		log(clientNameSupplier, LoggingLevel.INFO, (logger) -> logger.info(messageSupplier.get()));
 	}
 	
-	public void logInfo(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
+	@Override
+	void logInfo(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
 		log(clientNameSupplier, LoggingLevel.INFO, (logger) -> logger.info(messageSupplier.get(), arguments));
 	}
 	
-	public void logWarn(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+	@Override
+	void logWarn(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
 		log(clientNameSupplier, LoggingLevel.WARN, (logger) -> logger.warn(messageSupplier.get()));
 	}
 	
-	public void logWarn(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
+	@Override
+	void logWarn(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
 		log(clientNameSupplier, LoggingLevel.WARN, (logger) -> logger.warn(messageSupplier.get(), arguments));
 	}
 
 	@Override
-	public void logTrace(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+	void logTrace(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
 		log(clientNameSupplier, LoggingLevel.TRACE, (logger) -> logger.trace(messageSupplier.get()));		
 	}
 
 	@Override
-	public void logTrace(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
+	void logTrace(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
 		log(clientNameSupplier, LoggingLevel.TRACE, (logger) -> logger.trace(messageSupplier.get(), arguments));
 	}
 }
