@@ -32,6 +32,7 @@ import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Supplier;
 
 import org.burningwave.core.ManagedLogger.Repository;
 import org.burningwave.core.concurrent.Mutex;
@@ -103,15 +104,16 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 		loggers.put(client, new LoggingLevel.Mutable(level.flags));
 	}
 
-	private void log(String clientName, LoggingLevel level, PrintStream printStream, String text, Throwable exception) {
+	private void log(Supplier<String> clientNameSupplier, LoggingLevel level, PrintStream printStream, Supplier<String> textSupplier, Throwable exception) {
 		if (!isEnabled) {
 			return;
 		}
+		String clientName = clientNameSupplier.get();
 		if (getLoggerEnabledFlag(clientName).partialyMatch(level)) {
 			if (exception == null) {
-				printStream.println("[" + Thread.currentThread().getName() + "] - " + clientName + " - " + text);
+				printStream.println("[" + Thread.currentThread().getName() + "] - " + clientName + " - " + textSupplier.get());
 			} else {
-				printStream.println("[" + Thread.currentThread().getName() + "] - " + clientName + " - " + text);
+				printStream.println("[" + Thread.currentThread().getName() + "] - " + clientName + " - " + textSupplier.get());
 				exception.printStackTrace(printStream);
 			}
 		}
@@ -125,50 +127,46 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 		setLoggerEnabledFlag(clientName, new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_ENABLED));
 	}
 	
-	public void logError(String clientName, String message, Throwable exc) {
-		log(clientName, LoggingLevel.ERROR, System.err, message, exc);
+	public void logError(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Throwable exc) {
+		log(clientNameSupplier,LoggingLevel.ERROR, System.err, messageSupplier, exc);
 	}
 
-	public void logError(String clientName, String message) {
-		log(clientName, LoggingLevel.ERROR, System.err, message, null);
+	public void logError(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+		log(clientNameSupplier,LoggingLevel.ERROR, System.err, messageSupplier, null);
 	}
 	
-	public void logDebug(String clientName, String message) {
-		log(clientName, LoggingLevel.DEBUG, System.out, message, null);
+	public void logDebug(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+		log(clientNameSupplier,LoggingLevel.DEBUG, System.out, messageSupplier, null);
 	}
 	
-	public void logDebug(String clientName, String message, Object... arguments) {
-		message = replacePlaceHolder(message, arguments);
-		log(clientName, LoggingLevel.DEBUG, System.out, message, null);
+	public void logDebug(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
+		log(clientNameSupplier,LoggingLevel.DEBUG, System.out, () -> replacePlaceHolder(messageSupplier.get(), arguments), null);
 	}
 	
-	public void logInfo(String clientName, String message) {
-		log(clientName, LoggingLevel.INFO, System.out, message, null);
+	public void logInfo(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+		log(clientNameSupplier,LoggingLevel.INFO, System.out, messageSupplier, null);
 	}
 	
-	public void logInfo(String clientName, String message, Object... arguments) {
-		message = replacePlaceHolder(message, arguments);
-		log(clientName, LoggingLevel.INFO, System.out, message, null);
+	public void logInfo(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
+		log(clientNameSupplier,LoggingLevel.INFO, System.out, () -> replacePlaceHolder(messageSupplier.get(), arguments), null);
 	}
 	
-	public void logWarn(String clientName, String message) {
-		log(clientName, LoggingLevel.WARN, System.out, message, null);
+	public void logWarn(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+		log(clientNameSupplier,LoggingLevel.WARN, System.out, messageSupplier, null);
 	}
 	
-	public void logWarn(String clientName, String message, Object... arguments) {
-		message = replacePlaceHolder(message, arguments);
-		log(clientName, LoggingLevel.WARN, System.out, message, null);
+	public void logWarn(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
+		log(clientNameSupplier,LoggingLevel.WARN, System.out, () -> replacePlaceHolder(messageSupplier.get(), arguments), null);
 	}
 	
 	@Override
-	public void logTrace(String clientName, String message) {
-		log(clientName, LoggingLevel.TRACE, System.out, message, null);
+	public void logTrace(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+		log(clientNameSupplier,LoggingLevel.TRACE, System.out, messageSupplier, null);
 	}
 
 	@Override
-	public void logTrace(String clientName, String message, Object... arguments) {
-		message = replacePlaceHolder(message, arguments);
-		log(clientName, LoggingLevel.TRACE, System.out, message, null);
+	public void logTrace(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
+		log(clientNameSupplier,LoggingLevel.TRACE, System.out, () -> replacePlaceHolder(messageSupplier.get(), arguments), null);
 	}
 	
 	private String replacePlaceHolder(String message, Object... arguments) {

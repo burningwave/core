@@ -34,6 +34,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Supplier;
 
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.SearchContext;
@@ -44,52 +45,52 @@ public interface ManagedLogger {
 	
 	default void logTrace(String message) {
 		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-		ManagedLoggersRepository.logTrace(stackTraceElement.getClassName(), ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement));
+		ManagedLoggersRepository.logTrace(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement));
 	}
 	
 	default void logTrace(String message, Object... arguments) {
 		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-		ManagedLoggersRepository.logTrace(stackTraceElement.getClassName(), ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement), arguments);
+		ManagedLoggersRepository.logTrace(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement), arguments);
 	}
 	
 	default void logDebug(String message) {
 		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-		ManagedLoggersRepository.logDebug(stackTraceElement.getClassName(), ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement));
+		ManagedLoggersRepository.logDebug(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement));
 	}
 	
 	default void logDebug(String message, Object... arguments) {
 		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-		ManagedLoggersRepository.logDebug(stackTraceElement.getClassName(), ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement), arguments);
+		ManagedLoggersRepository.logDebug(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement), arguments);
 	}
 	
 	default void logInfo(String message) {
 		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-		ManagedLoggersRepository.logInfo(stackTraceElement.getClassName(), ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement));
+		ManagedLoggersRepository.logInfo(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement));
 	}
 	
 	default void logInfo(String message, Object... arguments) {
 		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-		ManagedLoggersRepository.logInfo(stackTraceElement.getClassName(), ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement), arguments);
+		ManagedLoggersRepository.logInfo(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement), arguments);
 	}
 	
 	default void logWarn(String message) {
 		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-		ManagedLoggersRepository.logWarn(stackTraceElement.getClassName(), ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement));
+		ManagedLoggersRepository.logWarn(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement));
 	}
 	
 	default void logWarn(String message, Object... arguments) {
 		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-		ManagedLoggersRepository.logWarn(stackTraceElement.getClassName(), ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement), arguments);
+		ManagedLoggersRepository.logWarn(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement), arguments);
 	}
 	
 	default void logError(String message, Throwable exc) {
 		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-		ManagedLoggersRepository.logError(stackTraceElement.getClassName(), ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement), exc);
+		ManagedLoggersRepository.logError(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement), exc);
 	}
 	
 	default void logError(String message) {
 		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-		ManagedLoggersRepository.logError(stackTraceElement.getClassName(), ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement));
+		ManagedLoggersRepository.logError(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement));
 	}
 	
 	
@@ -156,77 +157,77 @@ public interface ManagedLogger {
 		
 		public default void logError(String message, Throwable exc) {
 			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-			logError(stackTraceElement.getClassName(), addDetailsToMessage(message, stackTraceElement), exc);
+			logError(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement), exc);
 		}
 		
 		public default void logError(String message) {
 			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-			logError(stackTraceElement.getClassName(), addDetailsToMessage(message, stackTraceElement));
+			logError(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement));
 		}
 		
 		public default void logDebug(String message) {
 			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-			logDebug(stackTraceElement.getClassName(), addDetailsToMessage(message, stackTraceElement));
+			logDebug(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement));
 		}
 		
 		public default void logDebug(String message, Object... arguments) {
 			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-			logDebug(stackTraceElement.getClassName(), addDetailsToMessage(message, stackTraceElement), arguments);
+			logDebug(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement), arguments);
 		}
 		
 		public default void logInfo(String message) {
 			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-			logInfo(stackTraceElement.getClassName(), addDetailsToMessage(message, stackTraceElement));
+			logInfo(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement));
 		}	
 		
 		public default void logInfo(String message, Object... arguments) {
 			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-			logInfo(stackTraceElement.getClassName(), addDetailsToMessage(message, stackTraceElement), arguments);			
+			logInfo(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement), arguments);			
 		}
 		
 		public default void logWarn(String message) {
 			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-			logWarn(stackTraceElement.getClassName(), addDetailsToMessage(message, stackTraceElement));
+			logWarn(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement));
 		}
 		
 		public default void logWarn(String message, Object... arguments) {
 			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-			logWarn(stackTraceElement.getClassName(), addDetailsToMessage(message, stackTraceElement), arguments);
+			logWarn(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement), arguments);
 		}
 		
 		public default void logTrace(String message) {
 			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-			logTrace(stackTraceElement.getClassName(), addDetailsToMessage(message, stackTraceElement), message);
+			logTrace(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement), message);
 		}
 		
 		public default void logTrace(String message, Object... arguments) {
 			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-			logTrace(stackTraceElement.getClassName(), addDetailsToMessage(message, stackTraceElement), arguments);
+			logTrace(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement), arguments);
 		}
 		
 		public default String addDetailsToMessage(String message, StackTraceElement stackTraceElement) {
 			return "(" + stackTraceElement.getFileName() + ":" + stackTraceElement.getLineNumber() + ") - " + message;
 		}	
 		
-		public void logError(String clientName, String message, Throwable exc);
+		public void logError(Supplier<String> clientName, Supplier<String> message, Throwable exc);
 		
-		public void logError(String clientName, String message);
+		public void logError(Supplier<String> clientName, Supplier<String> message);
 		
-		public void logDebug(String clientName, String message);
+		public void logDebug(Supplier<String> clientName, Supplier<String> message);
 		
-		public void logDebug(String clientName, String message, Object... arguments);
+		public void logDebug(Supplier<String> clientName, Supplier<String> message, Object... arguments);
 		
-		public void logInfo(String clientName, String message);
+		public void logInfo(Supplier<String> clientName, Supplier<String> message);
 		
-		public void logInfo(String clientName, String message, Object... arguments);
+		public void logInfo(Supplier<String> clientName, Supplier<String> message, Object... arguments);
 		
-		public void logWarn(String clientName, String message);
+		public void logWarn(Supplier<String> clientName, Supplier<String> message);
 		
-		public void logWarn(String clientName, String message, Object... arguments);
+		public void logWarn(Supplier<String> clientName, Supplier<String> message, Object... arguments);
 		
-		public void logTrace(String clientName, String message);
+		public void logTrace(Supplier<String> clientName, Supplier<String> message);
 		
-		public void logTrace(String clientName, String message, Object... arguments);
+		public void logTrace(Supplier<String> clientName, Supplier<String> message, Object... arguments);
 		
 		public static abstract class Abst implements Repository {
 			boolean isEnabled;
