@@ -82,7 +82,7 @@ public class MemoryClassLoaderTest extends BaseTest {
 			JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
 			MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
 			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).join().getCompiledFiles().entrySet());
-			return memoryClassLoader.forceCompiledClassesLoading();
+			return memoryClassLoader.forceBytecodesLoading();
 		});
 	}
 	

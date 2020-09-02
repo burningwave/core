@@ -1,8 +1,11 @@
 package org.burningwave.core;
 
 
+import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
+
 import java.io.Closeable;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -10,6 +13,7 @@ import java.util.stream.Stream;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
+import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.service.Service;
@@ -17,8 +21,12 @@ import org.junit.jupiter.api.Test;
 
 public class ByteCodeHunterTest extends BaseTest {
 	
+	
 	@Test
 	public void findAllSubtypeOfTestOne() {
+		Collection<String> disabledLoggers = GlobalProperties.resolveStringValues("managed-logger.repository.logging.warn.disabled-for", ";");
+		disabledLoggers.remove(MemoryClassLoader.class.getName());
+		GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
 			() -> componentSupplier.getByteCodeHunter().findBy(
@@ -38,6 +46,8 @@ public class ByteCodeHunterTest extends BaseTest {
 			),
 			(result) -> result.getClasses()
 		);
+		disabledLoggers.add(MemoryClassLoader.class.getName());
+		GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
 	}
 	
 	
