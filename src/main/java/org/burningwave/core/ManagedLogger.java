@@ -103,15 +103,7 @@ public interface ManagedLogger {
 				public static final String ENABLED_FLAG = "managed-logger.repository.enabled";
 				
 				private static final String LOGGING_LEVEL_FLAG_PREFIX = "managed-logger.repository.logging";
-				private static final String LOGGING_LEVEL_ENABLED_FLAG_SUFFIX = "enabled-for";
 				private static final String LOGGING_LEVEL_DISABLED_FLAG_SUFFIX = "disabled-for";
-				
-				public static final String ALL_LOGGING_LEVEL_ENABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".all-levels." + LOGGING_LEVEL_ENABLED_FLAG_SUFFIX;
-				public static final String TRACE_LOGGING_ENABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".trace." + LOGGING_LEVEL_ENABLED_FLAG_SUFFIX;
-				public static final String DEBUG_LOGGING_ENABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".debug." + LOGGING_LEVEL_ENABLED_FLAG_SUFFIX;
-				public static final String INFO_LOGGING_ENABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".info." + LOGGING_LEVEL_ENABLED_FLAG_SUFFIX;
-				public static final String WARN_LOGGING_ENABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".warn." + LOGGING_LEVEL_ENABLED_FLAG_SUFFIX;
-				public static final String ERROR_LOGGING_ENABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".error." + LOGGING_LEVEL_ENABLED_FLAG_SUFFIX;
 				
 				public static final String ALL_LOGGING_LEVEL_DISABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".all-levels." + LOGGING_LEVEL_DISABLED_FLAG_SUFFIX;
 				public static final String TRACE_LOGGING_DISABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".trace." + LOGGING_LEVEL_DISABLED_FLAG_SUFFIX;
@@ -213,8 +205,7 @@ public interface ManagedLogger {
 				if (getEnabledLoggingFlag(properties)) {
 					enableLogging();
 				}
-				removeLoggingLevels(properties);
-				addLoggingLevels(properties);			
+				removeLoggingLevels(properties);			
 				if (properties instanceof org.burningwave.core.iterable.Properties) {
 					listenTo((org.burningwave.core.iterable.Properties)properties);
 				}
@@ -244,21 +235,9 @@ public interface ManagedLogger {
 					if (keyAsString.startsWith(Configuration.Key.LOGGING_LEVEL_FLAG_PREFIX)) {
 						resetSpecificElements();
 						removeLoggingLevels(properties);
-						addLoggingLevels(properties);
 					}
 				}
 				
-			}
-			
-			void addLoggingLevels(Properties properties) {
-				addLoggingLevels(properties, Repository.Configuration.Key.TRACE_LOGGING_ENABLED_FOR, LoggingLevel.TRACE);
-				addLoggingLevels(properties, Repository.Configuration.Key.DEBUG_LOGGING_ENABLED_FOR, LoggingLevel.DEBUG);
-				addLoggingLevels(properties, Repository.Configuration.Key.INFO_LOGGING_ENABLED_FOR, LoggingLevel.INFO);
-				addLoggingLevels(properties, Repository.Configuration.Key.WARN_LOGGING_ENABLED_FOR, LoggingLevel.WARN);
-				addLoggingLevels(properties, Repository.Configuration.Key.ERROR_LOGGING_ENABLED_FOR, LoggingLevel.ERROR);
-				addLoggingLevels(properties, Repository.Configuration.Key.ALL_LOGGING_LEVEL_ENABLED_FOR,
-					LoggingLevel.TRACE, LoggingLevel.DEBUG, LoggingLevel.INFO, LoggingLevel.WARN, LoggingLevel.ERROR
-				);
 			}
 
 			void removeLoggingLevels(Properties properties) {
