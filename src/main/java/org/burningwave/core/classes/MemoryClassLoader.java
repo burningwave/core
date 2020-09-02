@@ -100,7 +100,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 				notLoadedByteCodes.put(className, byteCode);
 			}
 		} else {
-			logWarn("Could not add compiled class {} cause it's already defined", className);
+			logWarn("Could not add bytecode for class {} cause it's already defined", className);
 		}
 	}
     
@@ -227,7 +227,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		} catch (SecurityException exc) {
 			cls = Class.forName(className);
 		}
-    	removeNotLoadedCompiledClass(className);
+    	removeNotLoadedBytecode(className);
     	return cls;
     }
     
@@ -315,14 +315,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	        		definePackageOf(cls);
 	        	} catch (NoClassDefFoundError exc) {
 	        		String notFoundClassName = Classes.retrieveName(exc);
-	        		removeNotLoadedCompiledClass(className);
-					logWarn("Could not load compiled class " + className + " because class " + notFoundClassName + 
+	        		removeNotLoadedBytecode(className);
+					logWarn("Could not load class " + className + " because class " + notFoundClassName + 
 						" could not be found, so it will be removed: " + exc.toString()
 					);
 	    			throw exc;
 	        	}
 			} else {
-				logWarn("Compiled class " + className + " not found");
+				logWarn("Bytecode of class {} not found", className);
 			}
 		} catch (Throwable exc) {
 			if (isClosed) {
@@ -341,11 +341,11 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	Class<?> _defineClass(String className, java.nio.ByteBuffer byteCode, ProtectionDomain protectionDomain) {
 		Class<?> cls = super.defineClass(className, byteCode, protectionDomain);
 		addLoadedByteCode(className, byteCode);
-		removeNotLoadedCompiledClass(className);
+		removeNotLoadedBytecode(className);
 		return cls;
 	}
 
-	public void removeNotLoadedCompiledClass(String className) {
+	public void removeNotLoadedBytecode(String className) {
 		try {
 			synchronized (notLoadedByteCodes) {
 				notLoadedByteCodes.remove(className);
@@ -354,7 +354,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     		if (!isClosed) {
     			throw exc;
     		} else {
-    			logWarn("Could not execute removeNotLoadedCompiledClass on class named {} because {} has been closed", className, this.toString());
+    			logWarn("Could not execute removeNotLoadedBytecode on class named {} because {} has been closed", className, this.toString());
     		}
     	}    
 	}
@@ -364,11 +364,11 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		return ClassLoaders.retrieveLoadedClassesForPackage(this, packagePredicate);
 	}
 	
-	Map<String, ByteBuffer> getLoadedCompiledClasses() {
+	Map<String, ByteBuffer> getLoadedBytecodes() {
 		return loadedByteCodes;
 	}
 		
-	public Collection<Class<?>> forceCompiledClassesLoading() {
+	public Collection<Class<?>> forceBytecodesLoading() {
 		Collection<Class<?>> loadedClasses = new HashSet<>();
 		for (Map.Entry<String, ByteBuffer> entry : new HashMap<>(notLoadedByteCodes).entrySet()){
 			try {

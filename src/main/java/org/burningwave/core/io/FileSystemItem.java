@@ -142,7 +142,6 @@ public class FileSystemItem implements ManagedLogger {
 		Set<FileSystemItem> allChildren = findInAllChildren(finalFilter);
 		for (FileSystemItem child : allChildren) {
 			FileSystemItem destFile = FileSystemItem.ofPath(folder + child.getAbsolutePath().replaceFirst(this.getAbsolutePath(), ""));
-			logDebug("Copying " + child.getAbsolutePath());
 			if (child.isFolder()) {
 				File file = new File(destFile.getAbsolutePath());
 				if (!file.exists()) {
@@ -171,7 +170,6 @@ public class FileSystemItem implements ManagedLogger {
 			for (FileSystemItem fileSystemItem : (filter == null ? getChildren() : findInChildren(filter))) {
 				fileSystemItem.copyTo(file.getAbsolutePath(), filter);
 			}
-			//logDebug("Copied folder to " + file.getAbsolutePath());
 			destination = FileSystemItem.ofPath(file.getAbsolutePath());
 		}
 		return destination;
@@ -467,7 +465,6 @@ public class FileSystemItem implements ManagedLogger {
 									fileSystemItem, zipInputStream, zEntry, zEntry.getName()
 								)
 							);
-							//logDebug(fileSystemItem.getAbsolutePath());
 							if (fileSystemItem.isArchive()) {
 								Optional.ofNullable(
 									fileSystemItem.getAllChildren()
@@ -494,7 +491,6 @@ public class FileSystemItem implements ManagedLogger {
 					return allChildren;
 				}
 			} else if (isFolder()) {
-				//logDebug("Retrieving all children of " + absolutePath.getKey());
 				Set<FileSystemItem> children = getChildren();
 				if (children != null) {
 					Set<FileSystemItem> allChildren = ConcurrentHashMap.newKeySet();
@@ -655,7 +651,6 @@ public class FileSystemItem implements ManagedLogger {
 							}														
 						}
 					}					
-					//logDebug(nameToTest + " = " + nameToTest.matches(itemToSearchRegEx) + " " + (nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0) + " " + nameToTest.replaceFirst(itemToSearchRegEx, ""));
 					return nameToTest.matches(itemToSearchRegEx) && nameToTest.replaceFirst(itemToSearchRegEx, "").length() == 0;
 				},
 				(zEntry) -> {
@@ -695,8 +690,7 @@ public class FileSystemItem implements ManagedLogger {
 					return fileInputStream.getAbsolutePath() + IterableZipContainer.ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
 						fileInputStream.toByteBuffer(), fileInputStream.getAbsolutePath(), relativePath
 					);
-				} catch (Exception exc) {
-					//logWarn("File {}/{} does not exists", realAbsolutePath, relativePath);
+				} catch (Throwable exc) {
 					return null;
 				} 
 			}		

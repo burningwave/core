@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.slf4j.LoggerFactory;
 
@@ -46,8 +47,13 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 	}
 	
 	@Override
-	void init(Properties properties) {
+	void initSpecificElements(Properties properties) {
 		loggers = new HashMap<>();		
+	}
+	
+	@Override
+	void resetSpecificElements() {
+		loggers.clear();		
 	}
 	
 	@Override
@@ -95,15 +101,15 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 		return loggerEntry;
 	}
 
-	private void log(Class<?> client, LoggingLevel loggingLevel, Consumer<org.slf4j.Logger> loggerConsumer) {
-		Optional.ofNullable(getLogger(client, loggingLevel)).ifPresent(logger -> loggerConsumer.accept(logger));
+	private void log(Supplier<String> clientNameSupplier, LoggingLevel loggingLevel, Consumer<org.slf4j.Logger> loggerConsumer) {
+		if (!isEnabled) {
+			return;
+		}
+		Optional.ofNullable(getLogger(clientNameSupplier.get(), loggingLevel)).ifPresent(logger -> loggerConsumer.accept(logger));
 	}
 	
-	private org.slf4j.Logger getLogger(Class<?> client, LoggingLevel loggingLevel) {
-		if (!isEnabled) {
-			return null;
-		}
-		Map.Entry<org.slf4j.Logger, LoggingLevel.Mutable> loggerEntry = getLoggerEntry(client.getName());
+	private org.slf4j.Logger getLogger(String clientName, LoggingLevel loggingLevel) {
+		Map.Entry<org.slf4j.Logger, LoggingLevel.Mutable> loggerEntry = getLoggerEntry(clientName);
 		return loggerEntry.getValue().partialyMatch(loggingLevel)? loggerEntry.getKey() : null;
 	}	
 	
@@ -120,53 +126,53 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 		isEnabled = true;		
 	}
 	
-	public void disableLogging(Class<?> client) {
-		getLoggerEntry(client.getName()).getValue().set(LoggingLevel.ALL_LEVEL_DISABLED);
+	public void disableLogging(String clientName) {
+		getLoggerEntry(clientName).getValue().set(LoggingLevel.ALL_LEVEL_DISABLED);
 	}
 	
-	public void enableLogging(Class<?> client) {
-		getLoggerEntry(client.getName()).getValue().set(LoggingLevel.ALL_LEVEL_ENABLED);
+	public void enableLogging(String clientName) {
+		getLoggerEntry(clientName).getValue().set(LoggingLevel.ALL_LEVEL_ENABLED);
 	}
 	
-	public void logError(Class<?> client, String message, Throwable exc) {
-		log(client, LoggingLevel.ERROR, (logger) -> logger.error(message, exc));
+	public void logError(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Throwable exc) {
+		log(clientNameSupplier, LoggingLevel.ERROR, (logger) -> logger.error(messageSupplier.get(), exc));
 	}
 	
-	public void logError(Class<?> client, String message) {
-		log(client, LoggingLevel.ERROR, (logger) -> logger.error(message));
+	public void logError(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+		log(clientNameSupplier, LoggingLevel.ERROR, (logger) -> logger.error(messageSupplier.get()));
 	}
 	
-	public void logDebug(Class<?> client, String message) {
-		log(client, LoggingLevel.DEBUG, (logger) -> logger.debug(message));
+	public void logDebug(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+		log(clientNameSupplier, LoggingLevel.DEBUG, (logger) -> logger.debug(messageSupplier.get()));
 	}
 	
-	public void logDebug(Class<?> client, String message, Object... arguments) {
-		log(client, LoggingLevel.DEBUG, (logger) -> logger.debug(message, arguments));
+	public void logDebug(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
+		log(clientNameSupplier, LoggingLevel.DEBUG, (logger) -> logger.debug(messageSupplier.get(), arguments));
 	}
 	
-	public void logInfo(Class<?> client, String message) {
-		log(client, LoggingLevel.INFO, (logger) -> logger.info(message));
+	public void logInfo(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+		log(clientNameSupplier, LoggingLevel.INFO, (logger) -> logger.info(messageSupplier.get()));
 	}
 	
-	public void logInfo(Class<?> client, String message, Object... arguments) {
-		log(client, LoggingLevel.INFO, (logger) -> logger.info(message, arguments));
+	public void logInfo(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
+		log(clientNameSupplier, LoggingLevel.INFO, (logger) -> logger.info(messageSupplier.get(), arguments));
 	}
 	
-	public void logWarn(Class<?> client, String message) {
-		log(client, LoggingLevel.WARN, (logger) -> logger.warn(message));
+	public void logWarn(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+		log(clientNameSupplier, LoggingLevel.WARN, (logger) -> logger.warn(messageSupplier.get()));
 	}
 	
-	public void logWarn(Class<?> client, String message, Object... arguments) {
-		log(client, LoggingLevel.WARN, (logger) -> logger.warn(message, arguments));
+	public void logWarn(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
+		log(clientNameSupplier, LoggingLevel.WARN, (logger) -> logger.warn(messageSupplier.get(), arguments));
 	}
 
 	@Override
-	public void logTrace(Class<?> client, String message) {
-		log(client, LoggingLevel.TRACE, (logger) -> logger.trace(message));		
+	public void logTrace(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier) {
+		log(clientNameSupplier, LoggingLevel.TRACE, (logger) -> logger.trace(messageSupplier.get()));		
 	}
 
 	@Override
-	public void logTrace(Class<?> client, String message, Object... arguments) {
-		log(client, LoggingLevel.TRACE, (logger) -> logger.trace(message, arguments));
+	public void logTrace(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
+		log(clientNameSupplier, LoggingLevel.TRACE, (logger) -> logger.trace(messageSupplier.get(), arguments));
 	}
 }

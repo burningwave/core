@@ -30,7 +30,6 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -84,7 +83,7 @@ class ZipFile implements IterableZipContainer {
 								 Streams.copy(zipEntryIS, bBOS);
 								 return bBOS.toByteBuffer();
 							} catch (Throwable exc) {
-								ManagedLoggersRepository.logError(this.getClass(), "Could not load content of " + zipEntry.getName() + " of " + getAbsolutePath(), exc);
+								logError("Could not load content of " + zipEntry.getName() + " of " + getAbsolutePath(), exc);
 								return null;
 							}
 						}

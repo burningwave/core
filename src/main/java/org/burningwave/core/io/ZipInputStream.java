@@ -30,8 +30,8 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -44,7 +44,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.zip.ZipException;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ZipInputStream.Entry.Attached;
@@ -238,7 +237,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 							Streams.copy(zipInputStream, bBOS);
 						    return bBOS.toByteBuffer();
 						} catch (Throwable exc) {
-							ManagedLoggersRepository.logError(this.getClass(), "Could not load content of " + getName() + " of " + zipInputStream.getAbsolutePath(), exc);
+							logError("Could not load content of " + getName() + " of " + zipInputStream.getAbsolutePath(), exc);
 							return null;
 						}
 					}

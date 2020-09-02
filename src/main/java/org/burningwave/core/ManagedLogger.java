@@ -34,83 +34,91 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Supplier;
 
-import org.burningwave.core.classes.ClassHunter;
-import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.MemoryClassLoader;
-import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchContext;
-import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.iterable.Properties.Event;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
 
 public interface ManagedLogger {	
 	
-	@SuppressWarnings("unchecked")
-	public default <T extends ManagedLogger> T disableLogging() {
-		ManagedLoggersRepository.disableLogging(this.getClass());
-		return (T) this;
+	default void logTrace(String message) {
+		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+		ManagedLoggersRepository.logTrace(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement));
 	}
 	
-	@SuppressWarnings("unchecked")
-	public default <T extends ManagedLogger> T enableLogging() {
-		ManagedLoggersRepository.enableLogging(this.getClass());
-		return (T) this;
-	}
-	
-	public default Integer getLoggingLevelValue() {
-		return ManagedLoggersRepository.getLoggingLevelFlags(this.getClass());
-	}
-	
-	public default void setLoggingLevelValue(Integer flag) {
-		ManagedLoggersRepository.setLoggingLevelFlags(this.getClass(), flag);
-	}
-	
-	default void logError(String message, Throwable exc) {
-		ManagedLoggersRepository.logError(this.getClass(), message, exc);
-	}
-	
-	default void logError(String message) {
-		ManagedLoggersRepository.logError(this.getClass(), message);
+	default void logTrace(String message, Object... arguments) {
+		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+		ManagedLoggersRepository.logTrace(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement), arguments);
 	}
 	
 	default void logDebug(String message) {
-		ManagedLoggersRepository.logDebug(this.getClass(), message);
+		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+		ManagedLoggersRepository.logDebug(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement));
 	}
 	
 	default void logDebug(String message, Object... arguments) {
-		ManagedLoggersRepository.logDebug(this.getClass(), message, arguments);
+		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+		ManagedLoggersRepository.logDebug(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement), arguments);
 	}
 	
 	default void logInfo(String message) {
-		ManagedLoggersRepository.logInfo(this.getClass(), message);
+		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+		ManagedLoggersRepository.logInfo(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement));
 	}
 	
 	default void logInfo(String message, Object... arguments) {
-		ManagedLoggersRepository.logInfo(this.getClass(), message, arguments);
+		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+		ManagedLoggersRepository.logInfo(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement), arguments);
 	}
 	
 	default void logWarn(String message) {
-		ManagedLoggersRepository.logWarn(this.getClass(), message);
+		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+		ManagedLoggersRepository.logWarn(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement));
 	}
 	
 	default void logWarn(String message, Object... arguments) {
-		ManagedLoggersRepository.logWarn(this.getClass(), message, arguments);
+		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+		ManagedLoggersRepository.logWarn(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement), arguments);
+	}
+	
+	default void logError(String message, Throwable exc) {
+		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+		ManagedLoggersRepository.logError(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement), exc);
+	}
+	
+	default void logError(String message) {
+		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+		ManagedLoggersRepository.logError(() -> stackTraceElement.getClassName(), () -> ManagedLoggersRepository.addDetailsToMessage(message, stackTraceElement));
 	}
 	
 	
-	public static interface Repository {
+	public static interface Repository extends org.burningwave.core.iterable.Properties.Listener {
 		public static class Configuration {
 			
 			public static class Key {
 				
 				public static final String TYPE = "managed-logger.repository";
 				public static final String ENABLED_FLAG = "managed-logger.repository.enabled";
-				public static final String ALL_LEVEL_LOGGING_DISABLED_FOR = "managed-logger.repository.logging.all-level.disabled-for";
-				public static final String TRACE_LOGGING_DISABLED_FOR = "managed-logger.repository.logging.trace.disabled-for";
-				public static final String DEBUG_LOGGING_DISABLED_FOR = "managed-logger.repository.logging.debug.disabled-for";
-				public static final String INFO_LOGGING_DISABLED_FOR = "managed-logger.repository.logging.info.disabled-for";
-				public static final String WARN_LOGGING_DISABLED_FOR = "managed-logger.repository.logging.warn.disabled-for";
-				public static final String ERROR_LOGGING_DISABLED_FOR = "managed-logger.repository.logging.error.disabled-for";
+				
+				private static final String LOGGING_LEVEL_FLAG_PREFIX = "managed-logger.repository.logging";
+				private static final String LOGGING_LEVEL_ENABLED_FLAG_SUFFIX = "enabled-for";
+				private static final String LOGGING_LEVEL_DISABLED_FLAG_SUFFIX = "disabled-for";
+				
+				public static final String ALL_LOGGING_LEVEL_ENABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".all-levels." + LOGGING_LEVEL_ENABLED_FLAG_SUFFIX;
+				public static final String TRACE_LOGGING_ENABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".trace." + LOGGING_LEVEL_ENABLED_FLAG_SUFFIX;
+				public static final String DEBUG_LOGGING_ENABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".debug." + LOGGING_LEVEL_ENABLED_FLAG_SUFFIX;
+				public static final String INFO_LOGGING_ENABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".info." + LOGGING_LEVEL_ENABLED_FLAG_SUFFIX;
+				public static final String WARN_LOGGING_ENABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".warn." + LOGGING_LEVEL_ENABLED_FLAG_SUFFIX;
+				public static final String ERROR_LOGGING_ENABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".error." + LOGGING_LEVEL_ENABLED_FLAG_SUFFIX;
+				
+				public static final String ALL_LOGGING_LEVEL_DISABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".all-levels." + LOGGING_LEVEL_DISABLED_FLAG_SUFFIX;
+				public static final String TRACE_LOGGING_DISABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".trace." + LOGGING_LEVEL_DISABLED_FLAG_SUFFIX;
+				public static final String DEBUG_LOGGING_DISABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".debug." + LOGGING_LEVEL_DISABLED_FLAG_SUFFIX;
+				public static final String INFO_LOGGING_DISABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".info." + LOGGING_LEVEL_DISABLED_FLAG_SUFFIX;
+				public static final String WARN_LOGGING_DISABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".warn." + LOGGING_LEVEL_DISABLED_FLAG_SUFFIX;
+				public static final String ERROR_LOGGING_DISABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".error." + LOGGING_LEVEL_DISABLED_FLAG_SUFFIX;
 			}
 			
 			public final static Map<String, Object> DEFAULT_VALUES;
@@ -119,16 +127,9 @@ public interface ManagedLogger {
 				DEFAULT_VALUES = new HashMap<>();
 				DEFAULT_VALUES.put(Key.TYPE, "autodetect");
 				DEFAULT_VALUES.put(Key.ENABLED_FLAG, String.valueOf(true));
-				DEFAULT_VALUES.put(Key.DEBUG_LOGGING_DISABLED_FOR, 
-					FileSystemItem.class.getName() + ";" +
-					MemoryClassLoader.class.getName() + ";" +
-					PathScannerClassLoader.class.getName() + ";"
-				);
-				DEFAULT_VALUES.put(Key.WARN_LOGGING_DISABLED_FOR, 
-					ClassHunter.SearchContext.class.getName() + ";" +
-					ClassPathHunter.SearchContext.class.getName() + ";" +
+				DEFAULT_VALUES.put(Key.WARN_LOGGING_DISABLED_FOR,
 					LowLevelObjectsHandler.class.getName() + ";" +
-					PathScannerClassLoader.class.getName() + ";" +
+					MemoryClassLoader.class.getName() + ";" +
 					SearchContext.class.getName() + ";"
 				);
 			}
@@ -150,60 +151,165 @@ public interface ManagedLogger {
 		
 		public void enableLogging();
 		
-		public void disableLogging(Class<?> client);
+		public void disableLogging(String clientName);
 		
-		public void enableLogging(Class<?> client);
+		public void enableLogging(String clientName);
 		
-		public void logError(Class<?> client, String message, Throwable exc);
+		public default void logError(String message, Throwable exc) {
+			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+			logError(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement), exc);
+		}
 		
-		public void logError(Class<?> client, String message);
+		public default void logError(String message) {
+			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+			logError(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement));
+		}
 		
-		public void logDebug(Class<?> client, String message);
+		public default void logDebug(String message) {
+			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+			logDebug(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement));
+		}
 		
-		public void logDebug(Class<?> client, String message, Object... arguments);
+		public default void logDebug(String message, Object... arguments) {
+			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+			logDebug(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement), arguments);
+		}
 		
-		public void logInfo(Class<?> client, String message);
+		public default void logInfo(String message) {
+			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+			logInfo(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement));
+		}	
 		
-		public void logInfo(Class<?> client, String message, Object... arguments);
+		public default void logInfo(String message, Object... arguments) {
+			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+			logInfo(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement), arguments);			
+		}
 		
-		public void logWarn(Class<?> client, String message);
+		public default void logWarn(String message) {
+			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+			logWarn(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement));
+		}
 		
-		public void logWarn(Class<?> client, String message, Object... arguments);
+		public default void logWarn(String message, Object... arguments) {
+			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+			logWarn(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement), arguments);
+		}
 		
-		public void logTrace(Class<?> client, String message);
+		public default void logTrace(String message) {
+			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+			logTrace(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement), message);
+		}
 		
-		public void logTrace(Class<?> client, String message, Object... arguments);
+		public default void logTrace(String message, Object... arguments) {
+			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
+			logTrace(() -> stackTraceElement.getClassName(), () -> addDetailsToMessage(message, stackTraceElement), arguments);
+		}
 		
-		public static abstract class Abst implements Repository{
+		public default String addDetailsToMessage(String message, StackTraceElement stackTraceElement) {
+			return "(" + stackTraceElement.getFileName() + ":" + stackTraceElement.getLineNumber() + ") - " + message;
+		}	
+		
+		public void logError(Supplier<String> clientName, Supplier<String> message, Throwable exc);
+		
+		public void logError(Supplier<String> clientName, Supplier<String> message);
+		
+		public void logDebug(Supplier<String> clientName, Supplier<String> message);
+		
+		public void logDebug(Supplier<String> clientName, Supplier<String> message, Object... arguments);
+		
+		public void logInfo(Supplier<String> clientName, Supplier<String> message);
+		
+		public void logInfo(Supplier<String> clientName, Supplier<String> message, Object... arguments);
+		
+		public void logWarn(Supplier<String> clientName, Supplier<String> message);
+		
+		public void logWarn(Supplier<String> clientName, Supplier<String> message, Object... arguments);
+		
+		public void logTrace(Supplier<String> clientName, Supplier<String> message);
+		
+		public void logTrace(Supplier<String> clientName, Supplier<String> message, Object... arguments);
+		
+		public static abstract class Abst implements Repository {
 			boolean isEnabled;
 			
 			Abst(Properties properties) {
-				init(properties);
-				String enabledFlag = IterableObjectHelper.resolveStringValue(
-					properties,
-					Repository.Configuration.Key.ENABLED_FLAG,
-					Configuration.DEFAULT_VALUES
-				);
-				if (Boolean.parseBoolean(enabledFlag)) {
+				initSpecificElements(properties);
+				if (getEnabledLoggingFlag(properties)) {
 					enableLogging();
 				}
-				removeLoggingLevelFor(properties, Repository.Configuration.Key.TRACE_LOGGING_DISABLED_FOR, LoggingLevel.TRACE);
-				removeLoggingLevelFor(properties, Repository.Configuration.Key.DEBUG_LOGGING_DISABLED_FOR, LoggingLevel.DEBUG);
-				removeLoggingLevelFor(properties, Repository.Configuration.Key.INFO_LOGGING_DISABLED_FOR, LoggingLevel.INFO);
-				removeLoggingLevelFor(properties, Repository.Configuration.Key.WARN_LOGGING_DISABLED_FOR, LoggingLevel.WARN);
-				removeLoggingLevelFor(properties, Repository.Configuration.Key.ERROR_LOGGING_DISABLED_FOR, LoggingLevel.ERROR);
-				removeLoggingLevelFor(properties, Repository.Configuration.Key.ALL_LEVEL_LOGGING_DISABLED_FOR,
-					LoggingLevel.TRACE, LoggingLevel.DEBUG, LoggingLevel.INFO, LoggingLevel.WARN, LoggingLevel.ERROR
-				);	
+				removeLoggingLevels(properties);
+				addLoggingLevels(properties);			
+				if (properties instanceof org.burningwave.core.iterable.Properties) {
+					listenTo((org.burningwave.core.iterable.Properties)properties);
+				}
 			}
 			
-			abstract void init(Properties properties);
+			abstract void initSpecificElements(Properties properties);
 			
-			protected void removeLoggingLevelFor(Properties properties, String configKey, LoggingLevel... loggingLevels) {
+			abstract void resetSpecificElements();
+			
+			boolean getEnabledLoggingFlag(Properties properties) {
+				return Boolean.parseBoolean(IterableObjectHelper.resolveStringValue(
+					properties,
+					Configuration.Key.ENABLED_FLAG
+				));
+			}
+			
+			@Override
+			public <K, V> void receiveNotification(org.burningwave.core.iterable.Properties properties, Event event,
+					K key, V newValue, V oldValue) {
+				if (key instanceof String) {
+					String keyAsString = (String)key;
+					if (keyAsString.equals(Configuration.Key.ENABLED_FLAG)) {
+						if (getEnabledLoggingFlag(properties)) {
+							enableLogging();
+						}
+					}
+					if (keyAsString.startsWith(Configuration.Key.LOGGING_LEVEL_FLAG_PREFIX)) {
+						resetSpecificElements();
+						removeLoggingLevels(properties);
+						addLoggingLevels(properties);
+					}
+				}
+				
+			}
+			
+			void addLoggingLevels(Properties properties) {
+				addLoggingLevels(properties, Repository.Configuration.Key.TRACE_LOGGING_ENABLED_FOR, LoggingLevel.TRACE);
+				addLoggingLevels(properties, Repository.Configuration.Key.DEBUG_LOGGING_ENABLED_FOR, LoggingLevel.DEBUG);
+				addLoggingLevels(properties, Repository.Configuration.Key.INFO_LOGGING_ENABLED_FOR, LoggingLevel.INFO);
+				addLoggingLevels(properties, Repository.Configuration.Key.WARN_LOGGING_ENABLED_FOR, LoggingLevel.WARN);
+				addLoggingLevels(properties, Repository.Configuration.Key.ERROR_LOGGING_ENABLED_FOR, LoggingLevel.ERROR);
+				addLoggingLevels(properties, Repository.Configuration.Key.ALL_LOGGING_LEVEL_ENABLED_FOR,
+					LoggingLevel.TRACE, LoggingLevel.DEBUG, LoggingLevel.INFO, LoggingLevel.WARN, LoggingLevel.ERROR
+				);
+			}
+
+			void removeLoggingLevels(Properties properties) {
+				removeLoggingLevels(properties, Repository.Configuration.Key.TRACE_LOGGING_DISABLED_FOR, LoggingLevel.TRACE);
+				removeLoggingLevels(properties, Repository.Configuration.Key.DEBUG_LOGGING_DISABLED_FOR, LoggingLevel.DEBUG);
+				removeLoggingLevels(properties, Repository.Configuration.Key.INFO_LOGGING_DISABLED_FOR, LoggingLevel.INFO);
+				removeLoggingLevels(properties, Repository.Configuration.Key.WARN_LOGGING_DISABLED_FOR, LoggingLevel.WARN);
+				removeLoggingLevels(properties, Repository.Configuration.Key.ERROR_LOGGING_DISABLED_FOR, LoggingLevel.ERROR);
+				removeLoggingLevels(properties, Repository.Configuration.Key.ALL_LOGGING_LEVEL_DISABLED_FOR,
+					LoggingLevel.TRACE, LoggingLevel.DEBUG, LoggingLevel.INFO, LoggingLevel.WARN, LoggingLevel.ERROR
+				);
+			}
+			
+			protected void removeLoggingLevels(Properties properties, String configKey, LoggingLevel... loggingLevels) {
 				String loggerDisabledFor = (String)properties.getProperty(configKey);
 				if (loggerDisabledFor != null) {
 					for (LoggingLevel loggingLevel : loggingLevels) {
 						removeLoggingLevelFor(loggingLevel, loggerDisabledFor.split(";"));
+					}
+				}
+			}
+			
+			protected void addLoggingLevels(Properties properties, String configKey, LoggingLevel... loggingLevels) {
+				String loggerEnabledFor = (String)properties.getProperty(configKey);
+				if (loggerEnabledFor != null) {
+					for (LoggingLevel loggingLevel : loggingLevels) {
+						addLoggingLevelFor(loggingLevel, loggerEnabledFor.split(";"));
 					}
 				}
 			}

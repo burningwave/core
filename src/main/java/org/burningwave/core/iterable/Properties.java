@@ -131,21 +131,21 @@ public class Properties extends java.util.Properties {
 	
 	@Override
 	public synchronized Object put(Object key, Object value) {
-		Object put = super.put(key, value);
-		notifyChange(Event.PUT, key, value);
-		return put;
+		Object oldValue = super.put(key, value);
+		notifyChange(Event.PUT, key, value, oldValue);
+		return oldValue;
 	}
 
 	@Override
 	public synchronized Object remove(Object key) {
 		Object removed = super.remove(key);
-		notifyChange(Event.REMOVE, key, removed);
+		notifyChange(Event.REMOVE, key, null, removed);
 		return removed;
 	}
 	
-	private void notifyChange(Event event, Object key, Object value) {
+	private void notifyChange(Event event, Object key, Object newValue, Object oldValue) {
 		listeners.forEach((listener) -> 
-			listener.receiveNotification(this, event, key, value)
+			listener.receiveNotification(this, event, key, newValue, oldValue)
 		);
 	}
 	
@@ -160,7 +160,7 @@ public class Properties extends java.util.Properties {
 			properties.listeners.remove(this);
 		} 
 		
-		public default <K, V>void receiveNotification(Properties properties, Event event, K key, V value) {
+		public default <K, V>void receiveNotification(Properties properties, Event event, K key, V newValue, V previousValue) {
 			
 		}
 		
