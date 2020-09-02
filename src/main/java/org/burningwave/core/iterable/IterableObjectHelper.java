@@ -349,7 +349,13 @@ public class IterableObjectHelper implements Component {
 						}
 					}
 				} else {
-					values.add(stringValue);
+					if (valuesSeparator != null) {
+						for (String valueToAdd : stringValue.split(valuesSeparator)) {
+							values.add(valueToAdd);
+						}
+					} else {
+						values.add(stringValue);
+					}
 				}
 			} else {
 				values.add(stringValue);

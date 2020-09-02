@@ -42,6 +42,11 @@ public class LoggingLevel {
 	public final static LoggingLevel INFO = new LoggingLevel(INFO_ENABLED);
 	public final static LoggingLevel WARN = new LoggingLevel(WARN_ENABLED);
 	public final static LoggingLevel ERROR = new LoggingLevel(ERROR_ENABLED);
+	private final static LoggingLevel ALL_LEVEL = new LoggingLevel(ALL_LEVEL_ENABLED);
+	
+	public static enum Label {
+		TRACE, DEBUG, INFO, WARN, ERROR
+	}
 	
 	Integer flags;
 	
@@ -55,7 +60,24 @@ public class LoggingLevel {
 	
 	public boolean partialyMatch(LoggingLevel level) {
 		return matchPartialy(level.flags);
-	}	
+	}
+	
+	public static LoggingLevel fromLabel(String label) {
+		if (label.toLowerCase().contains(Label.TRACE.name().toLowerCase())) {
+			return TRACE;
+		} else if (label.toLowerCase().contains(Label.DEBUG.name().toLowerCase())) {
+			return DEBUG;
+		} else if (label.toLowerCase().contains(Label.INFO.name().toLowerCase())) {
+			return INFO;
+		} else if (label.toLowerCase().contains(Label.WARN.name().toLowerCase())) {
+			return WARN;
+		} else if (label.toLowerCase().contains(Label.ERROR.name().toLowerCase())) {
+			return ERROR;
+		} else if (label.toLowerCase().contains("all-levels")) {
+			return ALL_LEVEL;
+		}
+		return null;
+	}
 	
 	public static class Mutable extends LoggingLevel{
 
@@ -63,7 +85,7 @@ public class LoggingLevel {
 			super(flags);
 		}
 		
-		public void add(Integer level) {
+		public void add(Integer flags) {
 			this.flags |= flags;
 		}
 		
@@ -75,4 +97,6 @@ public class LoggingLevel {
 			this.flags = flags;
 		}
 	}
+	
+	
 }

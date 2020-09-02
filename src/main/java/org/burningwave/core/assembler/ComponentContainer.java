@@ -156,9 +156,9 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	@Override
-	public void receiveNotification(Properties properties, Event event, Object key, Object value) {
+	public void receiveNotification(Properties properties, Event event, Object key, Object newValue, Object oldValue) {
 		if (event == Event.PUT) {
-			config.put(key, value);
+			config.put(key, newValue);
 		} else if (event == Event.REMOVE) {
 			config.remove(key);
 		}

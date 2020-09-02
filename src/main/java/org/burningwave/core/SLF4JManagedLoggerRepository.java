@@ -46,8 +46,13 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 	}
 	
 	@Override
-	void init(Properties properties) {
+	void initSpecificElements(Properties properties) {
 		loggers = new HashMap<>();		
+	}
+	
+	@Override
+	void resetSpecificElements() {
+		loggers.clear();		
 	}
 	
 	@Override

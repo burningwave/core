@@ -114,7 +114,7 @@ public class PathHelper implements Component {
 	}
 	
 	@Override
-	public <K, V>void receiveNotification(Properties properties, Event event, K key, V value) {
+	public <K, V>void receiveNotification(Properties properties, Event event, K key, V newValue, V oldValue) {
 		if (event == Event.PUT) {
 			if (key instanceof String) {
 				String propertyKey = (String)key;
