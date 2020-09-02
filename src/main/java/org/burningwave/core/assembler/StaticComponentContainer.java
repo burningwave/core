@@ -101,16 +101,16 @@ public class StaticComponentContainer {
 			URL globalPropertiesFileUrl = propBag.getValue();
 			if (globalPropertiesFileUrl != null) {
 				ManagedLoggersRepository.logInfo(
-					StaticComponentContainer.class, "Building static components by using " + ThrowingSupplier.get(() ->
+					"Building static components by using " + ThrowingSupplier.get(() ->
 						URLDecoder.decode(
 							globalPropertiesFileUrl.toString(), StandardCharsets.UTF_8.name()
 						)
 					)
 				);
 			} else {
-				ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Building static components by using default configuration");
+				ManagedLoggersRepository.logInfo("Building static components by using default configuration");
 			}
-			ManagedLoggersRepository.logInfo(StaticComponentContainer.class, "Instantiated {}", ManagedLoggersRepository.getClass().getName());
+			ManagedLoggersRepository.logInfo(StaticComponentContainer.class.getName(), "Instantiated {}", ManagedLoggersRepository.getClass().getName());
 			Paths = org.burningwave.core.Strings.Paths.create();
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create();
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
@@ -138,7 +138,7 @@ public class StaticComponentContainer {
 					try {
 						ComponentContainer.closeAll();
 					} catch (Throwable exc) {
-						ManagedLoggersRepository.logError(StaticComponentContainer.class, "Exception occurred while closing component containers", exc);
+						ManagedLoggersRepository.logError("Exception occurred while closing component containers", exc);
 					}
 					FileSystemHelper.close();
 					BackgroundExecutor.shutDown(true);

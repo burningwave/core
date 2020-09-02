@@ -103,72 +103,72 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 		loggers.put(client, new LoggingLevel.Mutable(level.flags));
 	}
 
-	private void log(Class<?> client, LoggingLevel level, PrintStream printStream, String text, Throwable exception) {
+	private void log(String clientName, LoggingLevel level, PrintStream printStream, String text, Throwable exception) {
 		if (!isEnabled) {
 			return;
 		}
-		if (getLoggerEnabledFlag(client.getName()).partialyMatch(level)) {
+		if (getLoggerEnabledFlag(clientName).partialyMatch(level)) {
 			if (exception == null) {
-				printStream.println("[" + Thread.currentThread().getName() + "] - " + client.getName() + " - " + text);
+				printStream.println("[" + Thread.currentThread().getName() + "] - " + clientName + " - " + text);
 			} else {
-				printStream.println("[" + Thread.currentThread().getName() + "] - " + client.getName() + " - " + text);
+				printStream.println("[" + Thread.currentThread().getName() + "] - " + clientName + " - " + text);
 				exception.printStackTrace(printStream);
 			}
 		}
 	}
 	
-	public void disableLogging(Class<?> client) {
-		setLoggerEnabledFlag(client.getName(), new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_DISABLED));
+	public void disableLogging(String clientName) {
+		setLoggerEnabledFlag(clientName, new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_DISABLED));
 	}
 	
-	public void enableLogging(Class<?> client) {
-		setLoggerEnabledFlag(client.getName(), new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_ENABLED));
+	public void enableLogging(String clientName) {
+		setLoggerEnabledFlag(clientName, new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_ENABLED));
 	}
 	
-	public void logError(Class<?> client, String message, Throwable exc) {
-		log(client, LoggingLevel.ERROR, System.err, message, exc);
+	public void logError(String clientName, String message, Throwable exc) {
+		log(clientName, LoggingLevel.ERROR, System.err, message, exc);
 	}
 
-	public void logError(Class<?> client, String message) {
-		log(client, LoggingLevel.ERROR, System.err, message, null);
+	public void logError(String clientName, String message) {
+		log(clientName, LoggingLevel.ERROR, System.err, message, null);
 	}
 	
-	public void logDebug(Class<?> client, String message) {
-		log(client, LoggingLevel.DEBUG, System.out, message, null);
+	public void logDebug(String clientName, String message) {
+		log(clientName, LoggingLevel.DEBUG, System.out, message, null);
 	}
 	
-	public void logDebug(Class<?> client, String message, Object... arguments) {
+	public void logDebug(String clientName, String message, Object... arguments) {
 		message = replacePlaceHolder(message, arguments);
-		log(client, LoggingLevel.DEBUG, System.out, message, null);
+		log(clientName, LoggingLevel.DEBUG, System.out, message, null);
 	}
 	
-	public void logInfo(Class<?> client, String message) {
-		log(client, LoggingLevel.INFO, System.out, message, null);
+	public void logInfo(String clientName, String message) {
+		log(clientName, LoggingLevel.INFO, System.out, message, null);
 	}
 	
-	public void logInfo(Class<?> client, String message, Object... arguments) {
+	public void logInfo(String clientName, String message, Object... arguments) {
 		message = replacePlaceHolder(message, arguments);
-		log(client, LoggingLevel.INFO, System.out, message, null);
+		log(clientName, LoggingLevel.INFO, System.out, message, null);
 	}
 	
-	public void logWarn(Class<?> client, String message) {
-		log(client, LoggingLevel.WARN, System.out, message, null);
+	public void logWarn(String clientName, String message) {
+		log(clientName, LoggingLevel.WARN, System.out, message, null);
 	}
 	
-	public void logWarn(Class<?> client, String message, Object... arguments) {
+	public void logWarn(String clientName, String message, Object... arguments) {
 		message = replacePlaceHolder(message, arguments);
-		log(client, LoggingLevel.WARN, System.out, message, null);
+		log(clientName, LoggingLevel.WARN, System.out, message, null);
 	}
 	
 	@Override
-	public void logTrace(Class<?> client, String message) {
-		log(client, LoggingLevel.TRACE, System.out, message, null);
+	public void logTrace(String clientName, String message) {
+		log(clientName, LoggingLevel.TRACE, System.out, message, null);
 	}
 
 	@Override
-	public void logTrace(Class<?> client, String message, Object... arguments) {
+	public void logTrace(String clientName, String message, Object... arguments) {
 		message = replacePlaceHolder(message, arguments);
-		log(client, LoggingLevel.TRACE, System.out, message, null);
+		log(clientName, LoggingLevel.TRACE, System.out, message, null);
 	}
 	
 	private String replacePlaceHolder(String message, Object... arguments) {

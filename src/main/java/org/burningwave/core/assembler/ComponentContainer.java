@@ -98,9 +98,9 @@ public class ComponentContainer implements ComponentSupplier {
 					Properties config = new Properties();
 					if (inputStream != null) {
 						config.load(inputStream);
-						ManagedLoggersRepository.logInfo(ComponentContainer.class, configFileName + " loaded");
+						ManagedLoggersRepository.logInfo(configFileName + " loaded");
 					} else {
-						ManagedLoggersRepository.logInfo(ComponentContainer.class, configFileName + " not found");
+						ManagedLoggersRepository.logInfo(configFileName + " not found");
 					}
 					return config;
 				} catch (Throwable exc) {
@@ -108,7 +108,7 @@ public class ComponentContainer implements ComponentSupplier {
 				}
 			}).launchInit();
 		} catch (Throwable exc){
-			ManagedLoggersRepository.logError(ComponentContainer.class, "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
+			ManagedLoggersRepository.logError("Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
 			throw Throwables.toRuntimeException(exc);
 		}
 	}
@@ -117,7 +117,7 @@ public class ComponentContainer implements ComponentSupplier {
 		try {
 			return new ComponentContainer(() -> properties).launchInit();
 		} catch (Throwable exc){
-			ManagedLoggersRepository.logError(ComponentContainer.class, "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
+			ManagedLoggersRepository.logError("Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
 			throw Throwables.toRuntimeException(exc);
 		}
 	}
