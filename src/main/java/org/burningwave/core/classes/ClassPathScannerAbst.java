@@ -172,8 +172,8 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 							analyzeAndAddItemsToContext(context, child, basePath);
 						}
 					} catch (ArrayIndexOutOfBoundsException exc) {
-						logError("Problem while scanning {}, Trying to reload it" + child.getAbsolutePath());
-						if (isClass = classFilePredicate.test(new FileSystemItem[]{child.reset(), basePath})) {
+						logError("Problem while scanning " + child.getAbsolutePath() + " trying to reload it\"");
+						if (isClass = classFilePredicate.test(new FileSystemItem[]{child.reloadContent(), basePath})) {
 							analyzeAndAddItemsToContext(context, child, basePath);
 						}
 					}
