@@ -267,8 +267,8 @@ public class FileSystemHelper implements Component {
 									}
 								}
 							} catch (Throwable exc) {
-								logError("Exception occurred while cleaning temporary file system item " + fileSystemItem.getAbsolutePath());
-								logError(exc.getMessage());
+								logError("Exception occurred while cleaning temporary file system item " + fileSystemItem.getAbsolutePath(), exc);
+								logInfo("To avoid this error remove {} manually", fileSystemItem.getAbsolutePath());
 								logInfo("Current execution id: {}", fileSystemHelper.id);
 							}
 						}
