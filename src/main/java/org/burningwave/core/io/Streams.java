@@ -217,7 +217,7 @@ public class Streams implements Component {
 	public FileSystemItem store(String fileAbsolutePath, ByteBuffer bytes) {
 		ByteBuffer content = shareContent(bytes);
 		File file = new File(fileAbsolutePath);
-		MutexManager.execute(instanceId + "_" + fileAbsolutePath, () -> {
+		MutexManager.execute(fileAbsolutePath, () -> {
 			if (!file.exists()) {
 				new File(file.getParent()).mkdirs();
 			} else {

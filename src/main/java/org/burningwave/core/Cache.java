@@ -253,7 +253,7 @@ public class Cache implements Component {
 		R getOrUploadIfAbsent(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
 			R resource = loadedResources.get(path);
 			if (resource == null) {
-				resource = MutexManager.execute(instanceId + "_mutexManagerForLoadedResources_" + path, () -> {
+				resource = MutexManager.execute(path, () -> {
 					R resourceTemp = loadedResources.get(path);
 					if (resourceTemp == null && resourceSupplier != null) {
 						resourceTemp = resourceSupplier.get();
@@ -270,7 +270,7 @@ public class Cache implements Component {
 		}
 		
 		public R upload(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
-			R resource = MutexManager.execute(instanceId + "_mutexManagerForLoadedResources_" + path, () -> {
+			R resource = MutexManager.execute(path, () -> {
 				R resourceTemp = null;
 				if (resourceSupplier != null) {
 					resourceTemp = resourceSupplier.get();

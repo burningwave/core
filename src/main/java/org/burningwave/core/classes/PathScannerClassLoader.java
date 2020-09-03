@@ -115,7 +115,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		try {
 			for (String path : paths) {
 				if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
-					MutexManager.execute(instanceId + "_" + path, () -> {
+					MutexManager.execute(path, () -> {
 						if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
 							FileSystemItem pathFIS = FileSystemItem.ofPath(path);
 							if (checkForAddedClasses.test(path)) {
