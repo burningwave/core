@@ -36,11 +36,18 @@ public class Objects {
 	
 	public String getId(Object target) {
 		return target.getClass().getName() + "@" +  System.identityHashCode(target);
-	}
-	
+	}	
 	
 	public String getStandardId(Object target) {
 		return target.getClass().getName() + "@" +  Integer.toHexString(System.identityHashCode(target));
+	}
+
+	public String getCurrentId(Object target) {
+		return target.getClass().getName() + "@" +  System.identityHashCode(target) + "_" + System.currentTimeMillis();
+	}
+	
+	public String getClassId(Class<?> targetClass) {
+		return targetClass.getName() + "@" + System.identityHashCode(targetClass.getClass());
 	}
 	
 }

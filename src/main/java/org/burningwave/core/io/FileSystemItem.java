@@ -53,7 +53,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
@@ -108,7 +107,7 @@ public class FileSystemItem implements ManagedLogger {
 	private FileSystemItem(String realAbsolutePath, String conventionedAbsolutePath) {
 		realAbsolutePath = Paths.clean(realAbsolutePath);
 		this.absolutePath = new AbstractMap.SimpleEntry<>(realAbsolutePath, conventionedAbsolutePath);
-		instanceId = instanceIdPrefix + UUID.randomUUID().toString();
+		instanceId = instanceIdPrefix + "_" + System.currentTimeMillis() + "_" + absolutePath;
 	}
 
 	private String computeConventionedAbsolutePath() {

@@ -57,7 +57,7 @@ public class FileSystemHelper implements Component {
 	private Scavenger scavenger;
 	
 	private FileSystemHelper() {
-		id = UUID.randomUUID().toString() + "_" + String.valueOf(System.currentTimeMillis());
+		id = UUID.randomUUID().toString() + "_" + System.currentTimeMillis();
 	}
 	
 	public static FileSystemHelper create() {

@@ -29,6 +29,7 @@
 package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.MutexManager;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Collection;
@@ -37,7 +38,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
@@ -51,7 +51,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 @SuppressWarnings({"unchecked", "resource"})
 public class QueuedTasksExecutor implements Component {
 	private final static Map<String, Task> runOnlyOnceTasksToBeExecuted;
-	private String instanceId;
+	private final String instanceId;
 	Thread executor;
 	List<TaskAbst<?, ?>> tasksQueue;
 	List<TaskAbst<?, ?>> asyncTasksInExecution;
@@ -74,7 +74,7 @@ public class QueuedTasksExecutor implements Component {
 	QueuedTasksExecutor(String executorName, String asyncExecutorName, int defaultPriority, boolean isDaemon, int loggingThreshold) {
 		tasksQueue = new CopyOnWriteArrayList<>();
 		asyncTasksInExecution = new CopyOnWriteArrayList<>();
-		instanceId = UUID.randomUUID().toString();
+		instanceId = Objects.getCurrentId(this);
 		this.loggingThreshold = loggingThreshold;
 		initializer = () -> {
 			this.executorName = executorName;

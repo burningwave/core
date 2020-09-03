@@ -30,6 +30,7 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -41,7 +42,6 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -61,7 +61,7 @@ class ZipFile implements IterableZipContainer {
 	Boolean isDestroyed;
 	
 	static {
-		classId = UUID.randomUUID().toString();
+		classId = Objects.getClassId(ZipFile.class);
 	}
 	
 	ZipFile(String absolutePath, ByteBuffer content) {
@@ -99,7 +99,7 @@ class ZipFile implements IterableZipContainer {
 	
 	@Override
 	public String getTemporaryFolderPrefix() {
-		return this.getClass().getName() + "@" + classId;
+		return classId;
 	}
 	
 	private java.util.zip.ZipFile retrieveFile(String absolutePath, ByteBuffer content) {
