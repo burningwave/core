@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -97,7 +99,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		this.resultSupplier = resultSupplier;
 		this.config = config;
 		this.searchResults = ConcurrentHashMap.newKeySet();
-		instanceId = this.toString();
+		instanceId = Objects.getCurrentId(this);
 		listenTo(config);
 	}
 	

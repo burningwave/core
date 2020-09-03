@@ -136,7 +136,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		FileSystemItem currentScannedPath = FileSystemItem.ofPath(basePath);
 		Predicate<String> refreshCache = searchConfig.getCheckForAddedClassesPredicate();
 		if (refreshCache != null && refreshCache.test(basePath)) {
-			MutexManager.execute(basePath, () -> {
+			MutexManager.execute(instanceId + "_" + basePath, () -> {
 				Optional.ofNullable(cache.get(basePath)).ifPresent((classesForPath) -> {
 					cache.remove(basePath);
 					classesForPath.clear();
@@ -273,7 +273,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	public void clearCache(boolean closeSearchResults) {
 		Collection<String> pathsToBeRemoved = new HashSet<>(cache.keySet());
 		for (String path : pathsToBeRemoved) {
-			MutexManager.execute(path, () -> {				
+			MutexManager.execute( instanceId + "_" + path, () -> {				
 				FileSystemItem.ofPath(path).reset();
 				Map<String, I> items = cache.remove(path);
 				clearItemsForPath(items);
