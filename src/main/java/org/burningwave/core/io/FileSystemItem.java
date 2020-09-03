@@ -804,7 +804,7 @@ public class FileSystemItem implements ManagedLogger {
 					}
 				}
 				if (resource == null && (resource = Cache.pathForContents.get(absolutePath)) == null) {
-					reloadContent().toByteBuffer();
+					reloadContent();
 					resource = Cache.pathForContents.get(absolutePath);
 				}
 				return resource;		
