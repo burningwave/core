@@ -171,6 +171,8 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 						analyzeAndAddItemsToContext(context, child, basePath);
 					}
 				} catch (ArrayIndexOutOfBoundsException exc) {
+					//This exception is caugth by the lambda expression inside the method
+					//org.burningwave.core.io.FileSystemItem.Criteria.nativePredicateToSomeExceptionManagedPredicate
 					throw exc;
 				} catch (Throwable exc) {
 					logError("Could not scan " + child.getAbsolutePath(), exc);
