@@ -29,7 +29,6 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
-import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.MutexManager;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
@@ -781,30 +780,20 @@ public class FileSystemItem implements ManagedLogger {
 		}
 		if (exists() && !isFolder()) {
 			if (isCompressed()) {
-				FileSystemItem superParent = getParentContainer();
-				while (superParent.getParentContainer() != null && superParent.getParentContainer().isArchive()) {
-					superParent = superParent.getParentContainer();
+				try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(getParentContainer().getAbsolutePath())) {
+					IterableZipContainer.Entry zipEntry = iterableZipContainer.findFirst(
+						iteratedZipEntry -> 
+							iteratedZipEntry.getAbsolutePath().equals(absolutePath), 
+						iteratedZipEntry -> 
+							iteratedZipEntry.getAbsolutePath().equals(absolutePath));
+					return zipEntry.toByteBuffer();
 				}
-				Collection<FileSystemItem> superParentAllChildren = superParent.getAllChildren();
-				FileSystemItem fIS = IterableObjectHelper.getRandom(superParentAllChildren);
-				while (fIS.getAbsolutePath() == this.getAbsolutePath() && superParentAllChildren.size() > 1) {
-					fIS = IterableObjectHelper.getRandom(superParentAllChildren);
-				}
-				if (Cache.pathForContents.get(fIS.getAbsolutePath()) == null) {
-					synchronized (superParentAllChildren) {
-						if (Cache.pathForContents.get(fIS.getAbsolutePath()) == null) {
-							superParent.refresh().getAllChildren();
-						}
-					}
-				}
-				return Cache.pathForContents.get(absolutePath);
 			} else {
 				return Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
 					try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
 						return fIS.toByteBuffer();
 					}
 				});
-
 			}
 		}
 		return resource;
