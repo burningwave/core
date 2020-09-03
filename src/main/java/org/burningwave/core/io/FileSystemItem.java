@@ -787,29 +787,25 @@ public class FileSystemItem implements ManagedLogger {
 					superParentContainer = superParentContainer.getParentContainer();
 				}
 				Collection<FileSystemItem> superParentAllChildren = superParentContainer.getAllChildren();
-				FileSystemItem fIS = IterableObjectHelper.getRandom(superParentAllChildren);
-				while (fIS.getAbsolutePath() == this.getAbsolutePath() && superParentAllChildren.size() > 1) {
-					fIS = IterableObjectHelper.getRandom(superParentAllChildren);
-				}
-				if (Cache.pathForContents.get(fIS.getAbsolutePath()) == null ) {
-					synchronized (superParentAllChildren) {
-						if (Cache.pathForContents.get(fIS.getAbsolutePath()) == null ) {
-							superParentContainer.refresh().getAllChildren();
-						}
-					}
+				FileSystemItem randomFIS = IterableObjectHelper.getRandom(superParentAllChildren);
+				while (randomFIS.getAbsolutePath() == this.getAbsolutePath() && superParentAllChildren.size() > 1) {
+					randomFIS = IterableObjectHelper.getRandom(superParentAllChildren);
 				}
 				if ((resource = Cache.pathForContents.get(absolutePath)) == null) {
-					try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(parentContainer.getAbsolutePath())) {
-						IterableZipContainer.Entry zipEntry = iterableZipContainer.findFirst(
-							iteratedZipEntry -> 
-								iteratedZipEntry.getAbsolutePath().equals(absolutePath), 
-							iteratedZipEntry -> 
-								iteratedZipEntry.getAbsolutePath().equals(absolutePath));
-						resource = zipEntry.toByteBuffer();
-					}	
+					if ((Cache.pathForContents.get(randomFIS.getAbsolutePath())) == null) {
+						FileSystemItem finalRandomFIS = randomFIS;
+						FileSystemItem superParentContainerFinal = superParentContainer;
+						resource = MutexManager.execute(superParentContainer.instanceId, () -> {
+							if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
+								superParentContainerFinal.refresh().getAllChildren();
+							}
+							return Cache.pathForContents.get(absolutePath);
+						});
+					}
 				}
-				if (resource == null) {
-					logError("resource of " + absolutePath + " is null");
+				if (resource == null && (resource = Cache.pathForContents.get(absolutePath)) == null) {
+					reloadContent().toByteBuffer();
+					resource = Cache.pathForContents.get(absolutePath);
 				}
 				return resource;		
 			} else {
@@ -827,7 +823,6 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public FileSystemItem reloadContent() {
-		logError("Reloading content of " + absolutePath);
 		MutexManager.execute(instanceId, () -> {
 			String absolutePath = getAbsolutePath();
 			Cache.pathForContents.remove(absolutePath, true);
