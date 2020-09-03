@@ -1012,7 +1012,8 @@ public class FileSystemItem implements ManagedLogger {
 		}
 		
 		private Predicate<FileSystemItem[]> nativePredicateToSomeExceptionManagedPredicate(
-				Predicate<FileSystemItem[]> filterPredicate) {
+			Predicate<FileSystemItem[]> filterPredicate
+		) {
 			Predicate<FileSystemItem[]> finalFilterPredicate = childAndThis -> {
 				try {
 					return filterPredicate.test(childAndThis);
