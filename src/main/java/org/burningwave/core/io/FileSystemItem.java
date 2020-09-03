@@ -29,6 +29,7 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.MutexManager;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
@@ -774,26 +775,50 @@ public class FileSystemItem implements ManagedLogger {
 
 	public ByteBuffer toByteBuffer() {
 		String absolutePath = getAbsolutePath();
-		ByteBuffer resource = Cache.pathForContents.get(absolutePath);
+		ByteBuffer resource = Cache.pathForContents.get(absolutePath); 
 		if (resource != null) {
 			return resource;
 		}
 		if (exists() && !isFolder()) {
 			if (isCompressed()) {
-				try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(getParentContainer().getAbsolutePath())) {
-					IterableZipContainer.Entry zipEntry = iterableZipContainer.findFirst(
-						iteratedZipEntry -> 
-							iteratedZipEntry.getAbsolutePath().equals(absolutePath), 
-						iteratedZipEntry -> 
-							iteratedZipEntry.getAbsolutePath().equals(absolutePath));
-					return zipEntry.toByteBuffer();
+				FileSystemItem parentContainer = getParentContainer();
+				FileSystemItem superParentContainer = parentContainer;
+				while (superParentContainer.getParentContainer() != null && superParentContainer.getParentContainer().isArchive()) {
+					superParentContainer = superParentContainer.getParentContainer();
 				}
-			} else {
-				return Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
-					try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
-						return fIS.toByteBuffer();
+				Collection<FileSystemItem> superParentAllChildren = superParentContainer.getAllChildren();
+				FileSystemItem fIS = IterableObjectHelper.getRandom(superParentAllChildren);
+				while (fIS.getAbsolutePath() == this.getAbsolutePath() && superParentAllChildren.size() > 1) {
+					fIS = IterableObjectHelper.getRandom(superParentAllChildren);
+				}
+				if (Cache.pathForContents.get(fIS.getAbsolutePath()) == null ) {
+					synchronized (superParentAllChildren) {
+						if (Cache.pathForContents.get(fIS.getAbsolutePath()) == null ) {
+							superParentContainer.refresh().getAllChildren();
+						}
 					}
-				});
+				}
+				if ((resource = Cache.pathForContents.get(absolutePath)) == null) {
+					logError("Deep reload of " + absolutePath);
+					try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(parentContainer.getAbsolutePath())) {
+						IterableZipContainer.Entry zipEntry = iterableZipContainer.findFirst(
+							iteratedZipEntry -> 
+								iteratedZipEntry.getAbsolutePath().equals(absolutePath), 
+							iteratedZipEntry -> 
+								iteratedZipEntry.getAbsolutePath().equals(absolutePath));
+						resource = zipEntry.toByteBuffer();
+					}	
+				}
+				return resource;		
+			} else {
+				return Cache.pathForContents.getOrUploadIfAbsent(
+					absolutePath, () -> {
+						try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
+							return fIS.toByteBuffer();
+						}						
+					}
+				);
+				
 			}
 		}
 		return resource;
