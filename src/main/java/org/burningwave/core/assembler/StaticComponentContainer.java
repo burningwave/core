@@ -142,7 +142,11 @@ public class StaticComponentContainer {
 					} catch (Throwable exc) {
 						ManagedLoggersRepository.logError("Exception occurred while closing component containers", exc);
 					}
-					FileSystemHelper.close();
+					try {
+						FileSystemHelper.close();
+					} catch (Throwable exc) {
+						ManagedLoggersRepository.logError("Exception occurred while closing FileSystemHelper", exc);
+					}
 					BackgroundExecutor.shutDown(true);
 				}, "Resources releaser")
 			);

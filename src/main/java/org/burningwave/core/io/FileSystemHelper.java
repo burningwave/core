@@ -197,10 +197,13 @@ public class FileSystemHelper implements Component {
 		if (this != StaticComponentContainer.FileSystemHelper || 
 			Thread.currentThread().getStackTrace()[2].getClassName().equals(StaticComponentContainer.class.getName())
 		) {	
+			Scavenger scavenger = this.scavenger;
+			if (scavenger != null) {
+				scavenger.close();
+			}
 			closeResources(() -> id == null, () -> {
 				clearMainTemporaryFolder();
-				scavenger.close();
-				scavenger = null;
+				this.scavenger = null;
 				id = null;
 				mainTemporaryFolder = null;
 			});
