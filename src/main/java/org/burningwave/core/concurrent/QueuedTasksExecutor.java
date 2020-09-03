@@ -92,7 +92,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	Object getMutex(String name) {
-		return MutexManager.getMutex(instanceId + name);
+		return MutexManager.getMutex(instanceId + "_" + name);
 	}
 	
 	void init0() {		
