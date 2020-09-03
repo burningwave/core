@@ -167,16 +167,11 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			(child, basePath) -> {
 				boolean isClass = false;
 				try {
-					try {
-						if (isClass = classFilePredicate.test(new FileSystemItem[]{child, basePath})) {
-							analyzeAndAddItemsToContext(context, child, basePath);
-						}
-					} catch (ArrayIndexOutOfBoundsException exc) {
-						logWarn("Problem while scanning " + child.getAbsolutePath() + " trying to reload it");
-						if (isClass = classFilePredicate.test(new FileSystemItem[]{child.reloadContent(), basePath})) {
-							analyzeAndAddItemsToContext(context, child, basePath);
-						}
+					if (isClass = classFilePredicate.test(new FileSystemItem[]{child, basePath})) {
+						analyzeAndAddItemsToContext(context, child, basePath);
 					}
+				} catch (ArrayIndexOutOfBoundsException exc) {
+					throw exc;
 				} catch (Throwable exc) {
 					logError("Could not scan " + child.getAbsolutePath(), exc);
 				}

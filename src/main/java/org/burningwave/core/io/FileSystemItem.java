@@ -232,16 +232,25 @@ public class FileSystemItem implements ManagedLogger {
 
 	private <C extends Set<FileSystemItem>> Set<FileSystemItem> findIn(Supplier<Set<FileSystemItem>> childrenSupplier,
 			FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
-		Predicate<FileSystemItem> filterPredicate = child -> filter
-				.testWithTrueResultForNullPredicate(new FileSystemItem[] { child, this });
-		return Optional.ofNullable(childrenSupplier.get()).map(children -> {
+		Predicate<FileSystemItem> filterPredicate = criteriaToPredicate(filter);
+		return Optional.ofNullable(childrenSupplier.get()).map(children -> 
+			children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier))
+		).orElseGet(() -> null);
+	}
+
+	private Predicate<FileSystemItem> criteriaToPredicate(FileSystemItem.Criteria filter) {
+		Predicate<FileSystemItem[]> filterPredicate = filter.getPredicateOrTruePredicateIfPredicateIsNull();
+		Predicate<FileSystemItem> finalFilterPredicate = child -> {
+			FileSystemItem[] childAndThis = new FileSystemItem[] { child, this };
 			try {
-				return children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier));
-			} catch (Throwable exc) {
-				logWarn("Error occurred while finding children: trying to use synchronized stream");
-				return children.stream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier));
+				return filterPredicate.test(childAndThis);
+			} catch (ArrayIndexOutOfBoundsException exc) {
+				logError("Exception occurred while scanning " + getAbsolutePath());
+				childAndThis[0].reloadContent();
+				return filterPredicate.test(childAndThis);
 			}
-		}).orElseGet(() -> null);
+		};
+		return finalFilterPredicate;
 	}
 
 	public FileSystemItem findFirstInAllChildren() {
@@ -262,10 +271,9 @@ public class FileSystemItem implements ManagedLogger {
 
 	private FileSystemItem findFirstInChildren(Supplier<Set<FileSystemItem>> childrenSupplier,
 			FileSystemItem.Criteria filter) {
-		FileSystemItem[] thisAndChild = new FileSystemItem[] { null, this };
+		Predicate<FileSystemItem> filterPredicate = criteriaToPredicate(filter);
 		for (FileSystemItem fileSystemItem : childrenSupplier.get()) {
-			thisAndChild[0] = fileSystemItem;
-			if (filter.testWithTrueResultForNullPredicate(thisAndChild)) {
+			if (filterPredicate.test(fileSystemItem)) {
 				return fileSystemItem;
 			}
 		}

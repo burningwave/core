@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -365,7 +366,7 @@ public static class Configuration {
 			classRepositories, 
 			null,
 			clsRepositories -> {
-				Collection<FileSystemItem> classPaths = new HashSet<>();
+				Collection<FileSystemItem> classPaths = ConcurrentHashMap.newKeySet();
 				for (String classRepositoryPath : clsRepositories) {
 					FileSystemItem classRepository = FileSystemItem.ofPath(classRepositoryPath);
 					if (finalPathsToBeRefreshedPredicate.test(classRepository)) {
