@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.MutexManager;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -40,7 +42,6 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.classes.SearchContext.InitContext;
-import org.burningwave.core.concurrent.Mutex;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
@@ -74,7 +75,6 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	}
 	
 	Map<String, Map<String, I>> cache;
-	Mutex.Manager mutexManager;
 	
 	ClassPathScannerWithCachingSupport(
 		Supplier<ClassHunter> classHunterSupplier,
@@ -91,7 +91,6 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			config
 		);
 		this.cache = new ConcurrentHashMap<>();
-		this.mutexManager = Mutex.Manager.create();
 	}
 
 	public CacheScanner<I, R> loadInCache(CacheableSearchConfig searchConfig) {
@@ -137,18 +136,19 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		FileSystemItem currentScannedPath = FileSystemItem.ofPath(basePath);
 		Predicate<String> refreshCache = searchConfig.getCheckForAddedClassesPredicate();
 		if (refreshCache != null && refreshCache.test(basePath)) {
-			synchronized(mutexManager.getMutex(basePath)) {
+			MutexManager.execute(instanceId + "_" + basePath, () -> {
 				Optional.ofNullable(cache.get(basePath)).ifPresent((classesForPath) -> {
 					cache.remove(basePath);
 					classesForPath.clear();
 				});
-			}
+			});
 			currentScannedPath.refresh();
 		}
 		Map<String, I> classesForPath = cache.get(basePath);
 		if (classesForPath == null) {
 			if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate) {
-				synchronized(mutexManager.getMutex(basePath)) {
+				String mutexId = instanceId + "_" + basePath;
+				synchronized(MutexManager.getMutex(mutexId)) {
 					classesForPath = cache.get(basePath);
 					if (classesForPath == null) {
 						currentScannedPath.findInAllChildren(filterAndExecutor);
@@ -158,8 +158,10 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 							itemsForPath.putAll(itemsFound);
 						}
 						this.cache.put(basePath, itemsForPath);
+						MutexManager.removeMutex(mutexId);
 						return;
 					}
+					MutexManager.removeMutex(mutexId);
 				}
 				context.addAllItemsFound(basePath, classesForPath);
 				return;
@@ -271,12 +273,11 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	public void clearCache(boolean closeSearchResults) {
 		Collection<String> pathsToBeRemoved = new HashSet<>(cache.keySet());
 		for (String path : pathsToBeRemoved) {
-			synchronized(mutexManager.getMutex(path)) {
+			MutexManager.execute( instanceId + "_" + path, () -> {				
 				FileSystemItem.ofPath(path).reset();
 				Map<String, I> items = cache.remove(path);
 				clearItemsForPath(items);
-				mutexManager.remove(path);
-			}
+			});
 		}
 		if (closeSearchResults) {
 			closeSearchResults();
@@ -296,8 +297,6 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			cache = null;
 			pathHelper = null;
 			contextSupplier = null;
-			mutexManager.clear();
-			mutexManager = null;
 			super.close();
 		});
 	}

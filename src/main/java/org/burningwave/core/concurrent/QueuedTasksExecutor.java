@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.concurrent;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.MutexManager;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Collection;
@@ -50,8 +51,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 @SuppressWarnings({"unchecked", "resource"})
 public class QueuedTasksExecutor implements Component {
 	private final static Map<String, Task> runOnlyOnceTasksToBeExecuted;
-	private Mutex.Manager mutexManager;
-	private String id;
+	private String instanceId;
 	Thread executor;
 	List<TaskAbst<?, ?>> tasksQueue;
 	List<TaskAbst<?, ?>> asyncTasksInExecution;
@@ -72,10 +72,9 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	QueuedTasksExecutor(String executorName, String asyncExecutorName, int defaultPriority, boolean isDaemon, int loggingThreshold) {
-		mutexManager = Mutex.Manager.create();
 		tasksQueue = new CopyOnWriteArrayList<>();
 		asyncTasksInExecution = new CopyOnWriteArrayList<>();
-		id = UUID.randomUUID().toString();
+		instanceId = UUID.randomUUID().toString();
 		this.loggingThreshold = loggingThreshold;
 		initializer = () -> {
 			this.executorName = executorName;
@@ -92,7 +91,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	Object getMutex(String name) {
-		return mutexManager.getMutex(id + name);
+		return MutexManager.getMutex(instanceId + name);
 	}
 	
 	void init0() {		

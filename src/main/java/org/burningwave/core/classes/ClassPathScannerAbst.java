@@ -82,6 +82,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	Function<C, R> resultSupplier;
 	Properties config;
 	Collection<SearchResult<I>> searchResults;
+	String instanceId;
 
 	ClassPathScannerAbst(
 		Supplier<ClassHunter> classHunterSupplier,
@@ -96,6 +97,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		this.resultSupplier = resultSupplier;
 		this.config = config;
 		this.searchResults = ConcurrentHashMap.newKeySet();
+		instanceId = this.toString();
 		listenTo(config);
 	}
 	

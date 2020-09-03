@@ -61,6 +61,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	Map<String, ByteBuffer> loadedByteCodes;
 	Set<Object> clients;
 	protected boolean isClosed;
+	String instanceId;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -70,6 +71,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		ClassLoader parentClassLoader
 	) {
 		super(parentClassLoader);
+		instanceId = this.toString();
 		if (parentClassLoader instanceof MemoryClassLoader) {
 			((MemoryClassLoader)parentClassLoader).register(this);
 		}

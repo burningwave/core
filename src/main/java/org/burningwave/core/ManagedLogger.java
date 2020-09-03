@@ -199,8 +199,9 @@ public interface ManagedLogger {
 		
 		public static abstract class Abst implements Repository, org.burningwave.core.iterable.Properties.Listener  {
 			boolean isEnabled;
-			
+			String instanceId;
 			Abst(Properties properties) {
+				instanceId = this.toString();
 				initSpecificElements(properties);
 				if (getEnabledLoggingFlag(properties)) {
 					enableLogging();

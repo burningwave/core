@@ -28,6 +28,8 @@
  */
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.MutexManager;
+
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,11 +37,9 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 import org.burningwave.core.ManagedLogger.Repository;
-import org.burningwave.core.concurrent.Mutex;
 
 public class SimpleManagedLoggerRepository extends Repository.Abst {
 	private Map<String, LoggingLevel.Mutable> loggers;
-	private Mutex.Manager mutexManager;
 	public SimpleManagedLoggerRepository(Properties properties) {
 		super(properties);
 	}
@@ -48,7 +48,6 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	@Override
 	void initSpecificElements(Properties properties) {
 		loggers = new HashMap<>();
-		mutexManager = Mutex.Manager.create();
 	}
 	
 	@Override
@@ -59,12 +58,13 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	private LoggingLevel.Mutable getLoggerEnabledFlag(String clientName) {
 		LoggingLevel.Mutable loggerEnabledFlag = loggers.get(clientName);
 		if (loggerEnabledFlag == null) {
-			synchronized (mutexManager.getMutex(clientName)) {
-				loggerEnabledFlag = loggers.get(clientName);
-				if (loggerEnabledFlag == null) {
-					loggers.put(clientName, loggerEnabledFlag = new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_ENABLED));
+			loggerEnabledFlag = MutexManager.execute(instanceId + "_" + clientName, () -> {
+				LoggingLevel.Mutable loggerEnabledFlagTemp = loggers.get(clientName);
+				if (loggerEnabledFlagTemp == null) {
+					loggers.put(clientName, loggerEnabledFlagTemp = new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_ENABLED));
 				}
-			}
+				return loggerEnabledFlagTemp;
+			});
 		}
 		return loggerEnabledFlag;
 	}

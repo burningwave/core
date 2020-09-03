@@ -30,6 +30,7 @@ package org.burningwave.core.concurrent;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 public class Mutex {
 	
@@ -52,6 +53,28 @@ public class Mutex {
 	        }
 	        return newLock;
 	    }
+		
+		public void execute(String id, Runnable executable) {
+			synchronized (getMutex(id)) {
+				try {
+					executable.run();
+				} finally {
+					parallelLockMap.remove(id);
+				}
+			}
+		}
+		
+		public <T> T execute(String id, Supplier<T> executable) {
+			T result = null;
+			synchronized (getMutex(id)) {
+				try {
+					result = executable.get();
+				} finally {
+					parallelLockMap.remove(id);
+				}
+			}
+			return result;
+		}
 
 		public void clear() {
 			parallelLockMap.clear();
@@ -63,7 +86,7 @@ public class Mutex {
 			parallelLockMap = null;
 		}
 
-		public void remove(String id) {
+		public void removeMutex(String id) {
 			parallelLockMap.remove(id);	
 		}
 	}
