@@ -142,13 +142,13 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 	
 	void searchInFileSystem(C context) {
-		FileSystemItem.Criteria filter = retrieveFileAndClassTesterAndExecutor(context);
+		FileSystemItem.Criteria filter = buildFileAndClassTesterAndExecutor(context);
 		context.getSearchConfig().getPaths().parallelStream().forEach(basePath -> {
 			FileSystemItem.ofPath(basePath).refresh().findInAllChildren(filter);
 		});
 	}
 	
-	FileSystemItem.Criteria retrieveFileAndClassTesterAndExecutor(C context) {
+	FileSystemItem.Criteria buildFileAndClassTesterAndExecutor(C context) {
 		SearchConfigAbst<?> searchConfig = context.getSearchConfig();
 		if (searchConfig.getScanFileCriteria().hasNoPredicate()) {
 			searchConfig.withScanFileCriteria(
@@ -168,6 +168,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 				return isClass;
 			}
 		);
+		
 		if (searchConfig.getScanFileCriteria().hasNoExceptionHandler()) {
 			criteria.setDefaultExceptionHandler();
 		} else {

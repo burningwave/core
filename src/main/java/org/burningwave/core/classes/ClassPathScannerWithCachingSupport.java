@@ -115,7 +115,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		CacheableSearchConfig searchConfig = context.getSearchConfig();
 		boolean scanFileCriteriaHasNoPredicate = searchConfig.getScanFileCriteria().hasNoPredicate();
 		boolean classCriteriaHasNoPredicate = searchConfig.getClassCriteria().hasNoPredicate();		
-		FileSystemItem.Criteria filterAndExecutor = retrieveFileAndClassTesterAndExecutor(context);
+		FileSystemItem.Criteria filterAndExecutor = buildFileAndClassTesterAndExecutor(context);
 		//scanFileCriteria in this point has been changed by the previous method call
 		FileSystemItem.Criteria fileFilter = searchConfig.getScanFileCriteria();
 		context.getSearchConfig().getPaths().parallelStream().forEach(basePath -> {
