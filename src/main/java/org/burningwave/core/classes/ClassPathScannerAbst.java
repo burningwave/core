@@ -158,28 +158,23 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			);
 		}
 
-		Predicate<FileSystemItem[]> classFilePredicate = searchConfig.getScanFileCriteria().getPredicateOrTruePredicateIfPredicateIsNull();
-		return buildFileAndClassTesterAndExecutor(context, classFilePredicate);
-	}
-
-	FileSystemItem.Criteria buildFileAndClassTesterAndExecutor(C context, Predicate<FileSystemItem[]> classFilePredicate) {
-		return FileSystemItem.Criteria.forAllFileThat(
+		Predicate<FileSystemItem[]> classFilePredicate = searchConfig.getScanFileCriteria().getOriginalPredicateOrTruePredicateIfPredicateIsNull();
+		FileSystemItem.Criteria criteria = FileSystemItem.Criteria.forAllFileThat(
 			(child, basePath) -> {
 				boolean isClass = false;
-				try {
-					if (isClass = classFilePredicate.test(new FileSystemItem[]{child, basePath})) {
-						analyzeAndAddItemsToContext(context, child, basePath);
-					}
-				} catch (ArrayIndexOutOfBoundsException exc) {
-					//This exception is caugth by the lambda expression inside the method
-					//org.burningwave.core.io.FileSystemItem.Criteria.nativePredicateToSomeExceptionManagedPredicate
-					throw exc;
-				} catch (Throwable exc) {
-					logError("Could not scan " + child.getAbsolutePath(), exc);
+				if (isClass = classFilePredicate.test(new FileSystemItem[]{child, basePath})) {
+					analyzeAndAddItemsToContext(context, child, basePath);
 				}
 				return isClass;
 			}
 		);
+		if (searchConfig.getScanFileCriteria().hasNoExceptionHandler()) {
+			criteria.setDefaultExceptionHandler();
+		} else {
+			criteria.setExceptionHandler(searchConfig.getScanFileCriteria().getExceptionHandler());
+		}
+		
+		return criteria;
 	}
 
 	void analyzeAndAddItemsToContext(C context, FileSystemItem child, FileSystemItem basePath) {

@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -963,7 +964,9 @@ public class FileSystemItem implements ManagedLogger {
 	}
 
 	public static class Criteria extends org.burningwave.core.Criteria.Simple<FileSystemItem[], Criteria> {
-
+		
+		private BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler;
+		
 		public static Criteria create() {
 			return new Criteria();
 		}
@@ -1001,6 +1004,26 @@ public class FileSystemItem implements ManagedLogger {
 			return this.allThat(childAndSuperParent -> predicate.test(childAndSuperParent[0], childAndSuperParent[1]));
 		}
 		
+		public final Criteria setExceptionHandler(BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler) {
+			this.exceptionHandler = exceptionHandler;
+			return this;
+		}
+		
+		public final Criteria setDefaultExceptionHandler() {
+			return setExceptionHandler((exception, childAndParent) -> {
+				logError("Could not scan " + childAndParent[0].getAbsolutePath(), exception);
+				return false;
+			});
+		}		
+		
+		public boolean hasNoExceptionHandler() {
+			return this.exceptionHandler == null;
+		}
+		
+		public BiFunction<Throwable, FileSystemItem[], Boolean> getExceptionHandler() {
+			return this.exceptionHandler;
+		}
+		
 		@Override
 		public Predicate<FileSystemItem[]> getPredicateOrFalsePredicateIfPredicateIsNull() {
 			return nativePredicateToSomeExceptionManagedPredicate(super.getPredicateOrFalsePredicateIfPredicateIsNull());
@@ -1011,6 +1034,15 @@ public class FileSystemItem implements ManagedLogger {
 			return nativePredicateToSomeExceptionManagedPredicate(super.getPredicateOrTruePredicateIfPredicateIsNull());
 		}
 		
+		public Predicate<FileSystemItem[]> getOriginalPredicateOrFalsePredicateIfPredicateIsNull() {
+			return super.getPredicateOrFalsePredicateIfPredicateIsNull();
+		}
+		
+		public Predicate<FileSystemItem[]> getOriginalPredicateOrTruePredicateIfPredicateIsNull() {
+			return super.getPredicateOrTruePredicateIfPredicateIsNull();
+		}
+		
+		
 		private Predicate<FileSystemItem[]> nativePredicateToSomeExceptionManagedPredicate(
 			Predicate<FileSystemItem[]> filterPredicate
 		) {
@@ -1019,13 +1051,25 @@ public class FileSystemItem implements ManagedLogger {
 					return filterPredicate.test(childAndThis);
 				} catch (ArrayIndexOutOfBoundsException exc) {
 					String childAbsolutePath =  childAndThis[0].getAbsolutePath();
-					logError("Exception occurred while scanning " + childAbsolutePath);
+					logWarn("Exception occurred while scanning " + childAbsolutePath);
 					logInfo("Trying to reload content of " + childAbsolutePath + " and retest again");
 					childAndThis[0].reloadContent();
 					return filterPredicate.test(childAndThis);
+				} catch (Throwable exc) {
+					if (exceptionHandler != null) {
+						return exceptionHandler.apply(exc, childAndThis);
+					}
+					throw exc;
 				}
 			};
 			return finalFilterPredicate;
+		}
+		
+		@Override
+		public Criteria createCopy() {
+			Criteria copy = super.createCopy();
+			copy.exceptionHandler = this.exceptionHandler;
+			return copy;
 		}
 
 	}

@@ -385,7 +385,7 @@ public static class Configuration {
 								}
 								return false;
 							})
-						)
+						).setDefaultExceptionHandler()
 					);
 				}
 				return classPaths;

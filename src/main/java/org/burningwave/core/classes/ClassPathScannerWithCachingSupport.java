@@ -195,9 +195,13 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		Predicate<FileSystemItem[]> fileFilterPredicate = fileFilter.getPredicateOrTruePredicateIfPredicateIsNull();
 		for (Entry<String, I> cachedItemAsEntry : itemsForPath.entrySet()) {
 			String absolutePathOfItem = cachedItemAsEntry.getKey();
-			currentChildPathAndBasePath[0] = FileSystemItem.ofPath(absolutePathOfItem);
-			if (fileFilterPredicate.test(currentChildPathAndBasePath)) {
-				context.addItemFound(basePath, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
+			try {				
+				currentChildPathAndBasePath[0] = FileSystemItem.ofPath(absolutePathOfItem);
+				if (fileFilterPredicate.test(currentChildPathAndBasePath)) {
+					context.addItemFound(basePath, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
+				}
+			} catch (Throwable exc) {
+				logError("Could not test cached entry of path " + absolutePathOfItem, exc);
 			}
 		}
 	}
@@ -216,21 +220,30 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		Predicate<FileSystemItem[]> fileFilterPredicate = fileFilter.getPredicateOrTruePredicateIfPredicateIsNull();
 		for (Entry<String, I> cachedItemAsEntry : itemsForPath.entrySet()) {
 			String absolutePathOfItem = cachedItemAsEntry.getKey();
-			currentChildPathAndBasePath[0] = FileSystemItem.ofPath(absolutePathOfItem);
-			ClassCriteria.TestContext testContext;
-			if((testContext = testPathAndCachedItem(
-				context, currentChildPathAndBasePath, cachedItemAsEntry.getValue(), fileFilterPredicate
-			)).getResult()) {
-				addCachedItemToContext(context, testContext, basePath, cachedItemAsEntry);
+			try {
+				currentChildPathAndBasePath[0] = FileSystemItem.ofPath(absolutePathOfItem);
+				ClassCriteria.TestContext testContext;
+				if((testContext = testPathAndCachedItem(
+					context, currentChildPathAndBasePath, cachedItemAsEntry.getValue(), fileFilterPredicate
+				)).getResult()) {
+					addCachedItemToContext(context, testContext, basePath, cachedItemAsEntry);
+				}
+			} catch (Throwable exc) {
+				logError("Could not test cached entry of path " + absolutePathOfItem, exc);
 			}
 		}
 	}
 
 	void iterateAndTestCachedItems(C context, String basePath, Map<String, I> itemsForPath) {
 		for (Entry<String, I> cachedItemAsEntry : itemsForPath.entrySet()) {
-			ClassCriteria.TestContext testContext = testCachedItem(context, basePath, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
-			if(testContext.getResult()) {
-				addCachedItemToContext(context, testContext, basePath, cachedItemAsEntry);
+			String absolutePathOfItem = cachedItemAsEntry.getKey();
+			try {
+				ClassCriteria.TestContext testContext = testCachedItem(context, basePath, absolutePathOfItem, cachedItemAsEntry.getValue());
+				if(testContext.getResult()) {
+					addCachedItemToContext(context, testContext, basePath, cachedItemAsEntry);
+				}
+			} catch (Throwable exc) {
+				logError("Could not test cached entry of path " + absolutePathOfItem, exc);
 			}
 		}
 	}

@@ -119,10 +119,15 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		Map<String, Collection<Class<?>>> itemsForPath,
 		FileSystemItem.Criteria fileFilter
 	) {
+		fileFilter = fileFilter.createCopy().setDefaultExceptionHandler();
 		for (Entry<String, Collection<Class<?>>> cachedItemAsEntry : itemsForPath.entrySet()) {
 			String absolutePathOfItem = cachedItemAsEntry.getKey();
-			if (FileSystemItem.ofPath(absolutePathOfItem).findFirstInAllChildren(fileFilter) != null) {
-				context.addItemFound(basePath, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
+			try {
+				if (FileSystemItem.ofPath(absolutePathOfItem).findFirstInAllChildren(fileFilter) != null) {
+					context.addItemFound(basePath, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
+				}
+			} catch (Throwable exc) {
+				logError("Could not test cached entry of path " + absolutePathOfItem, exc);
 			}
 		}
 	}
