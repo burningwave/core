@@ -797,7 +797,7 @@ public class FileSystemItem implements ManagedLogger {
 						}
 					}
 				}
-				return toByteBuffer();
+				return Cache.pathForContents.get(absolutePath);
 			} else {
 				return Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
 					try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
