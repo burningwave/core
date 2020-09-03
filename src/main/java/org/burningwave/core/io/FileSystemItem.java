@@ -63,6 +63,7 @@ import java.util.stream.Collectors;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingSupplier;
 
+@SuppressWarnings("resource")
 public class FileSystemItem implements ManagedLogger {
 	private final static String instanceIdPrefix;
 	
@@ -232,25 +233,12 @@ public class FileSystemItem implements ManagedLogger {
 
 	private <C extends Set<FileSystemItem>> Set<FileSystemItem> findIn(Supplier<Set<FileSystemItem>> childrenSupplier,
 			FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
-		Predicate<FileSystemItem> filterPredicate = criteriaToPredicate(filter);
+		Predicate<FileSystemItem[]> nativePredicate = filter.getPredicateOrTruePredicateIfPredicateIsNull();
+		Predicate<FileSystemItem> filterPredicate = child -> 
+			nativePredicate.test(new FileSystemItem[] { child, this });
 		return Optional.ofNullable(childrenSupplier.get()).map(children -> 
 			children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier))
 		).orElseGet(() -> null);
-	}
-
-	private Predicate<FileSystemItem> criteriaToPredicate(FileSystemItem.Criteria filter) {
-		Predicate<FileSystemItem[]> filterPredicate = filter.getPredicateOrTruePredicateIfPredicateIsNull();
-		Predicate<FileSystemItem> finalFilterPredicate = child -> {
-			FileSystemItem[] childAndThis = new FileSystemItem[] { child, this };
-			try {
-				return filterPredicate.test(childAndThis);
-			} catch (ArrayIndexOutOfBoundsException exc) {
-				logError("Exception occurred while scanning " + getAbsolutePath());
-				childAndThis[0].reloadContent();
-				return filterPredicate.test(childAndThis);
-			}
-		};
-		return finalFilterPredicate;
 	}
 
 	public FileSystemItem findFirstInAllChildren() {
@@ -271,9 +259,11 @@ public class FileSystemItem implements ManagedLogger {
 
 	private FileSystemItem findFirstInChildren(Supplier<Set<FileSystemItem>> childrenSupplier,
 			FileSystemItem.Criteria filter) {
-		Predicate<FileSystemItem> filterPredicate = criteriaToPredicate(filter);
+		Predicate<FileSystemItem[]> filterPredicate = filter.getPredicateOrTruePredicateIfPredicateIsNull();
+		FileSystemItem[] childAndThis = new FileSystemItem[] { null, this };
 		for (FileSystemItem fileSystemItem : childrenSupplier.get()) {
-			if (filterPredicate.test(fileSystemItem)) {
+			childAndThis[0] = fileSystemItem;
+			if (filterPredicate.test(childAndThis)) {
 				return fileSystemItem;
 			}
 		}
@@ -1009,6 +999,32 @@ public class FileSystemItem implements ManagedLogger {
 
 		public final Criteria allFileThat(final BiPredicate<FileSystemItem, FileSystemItem> predicate) {
 			return this.allThat(childAndSuperParent -> predicate.test(childAndSuperParent[0], childAndSuperParent[1]));
+		}
+		
+		@Override
+		public Predicate<FileSystemItem[]> getPredicateOrFalsePredicateIfPredicateIsNull() {
+			return nativePredicateToSomeExceptionManagedPredicate(super.getPredicateOrFalsePredicateIfPredicateIsNull());
+		}
+		
+		@Override
+		public Predicate<FileSystemItem[]> getPredicateOrTruePredicateIfPredicateIsNull() {
+			return nativePredicateToSomeExceptionManagedPredicate(super.getPredicateOrTruePredicateIfPredicateIsNull());
+		}
+		
+		private Predicate<FileSystemItem[]> nativePredicateToSomeExceptionManagedPredicate(
+				Predicate<FileSystemItem[]> filterPredicate) {
+			Predicate<FileSystemItem[]> finalFilterPredicate = childAndThis -> {
+				try {
+					return filterPredicate.test(childAndThis);
+				} catch (ArrayIndexOutOfBoundsException exc) {
+					String childAbsolutePath =  childAndThis[0].getAbsolutePath();
+					logError("Exception occurred while scanning " + childAbsolutePath);
+					logInfo("Trying to reload content of " + childAbsolutePath + " and retest again");
+					childAndThis[0].reloadContent();
+					return filterPredicate.test(childAndThis);
+				}
+			};
+			return finalFilterPredicate;
 		}
 
 	}

@@ -41,7 +41,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.function.TriPredicate;
 
 @SuppressWarnings("unchecked")
-public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> implements AutoCloseable, ManagedLogger {
+public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> implements Closeable, ManagedLogger {
 	protected BiPredicate<T, E> predicate;
 	protected Function<BiPredicate<T, E>, BiPredicate<T, E>> logicalOperator;
 	
@@ -329,7 +329,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 	}
 	
 	
-	public static class Simple<E, C extends Simple<E, C>> {
+	public static class Simple<E, C extends Simple<E, C>> implements Closeable, ManagedLogger {
 		protected Predicate<E> predicate;
 		protected Function<Predicate<E>, Predicate<E>> logicalOperator;
 		
@@ -447,33 +447,33 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 		}
 		
 		public boolean testWithFalseResultForNullPredicate(E entity) {
-			return getPredicate(false).test(entity);
+			return getPredicateOrFalsePredicateIfPredicateIsNull().test(entity);
 		}		
 		
 		public boolean testWithTrueResultForNullPredicate(E entity) {
-			return getPredicate(true).test(entity);
+			return getPredicateOrTruePredicateIfPredicateIsNull().test(entity);
 		}
 		
 		public boolean testWithFalseResultForNullEntityOrTrueResultForNullPredicate(E entity) {
-			return Optional.ofNullable(entity).map(ent -> getPredicate(true).test(ent)).orElseGet(() -> 
+			return Optional.ofNullable(entity).map(ent -> getPredicateOrTruePredicateIfPredicateIsNull().test(ent)).orElseGet(() -> 
 				false
 			);
 		}
 		
 		public boolean testWithTrueResultForNullEntityOrTrueResultForNullPredicate(E entity) {
-			return Optional.ofNullable(entity).map(ent -> getPredicate(true).test(ent)).orElseGet(() -> 
+			return Optional.ofNullable(entity).map(ent -> getPredicateOrTruePredicateIfPredicateIsNull().test(ent)).orElseGet(() -> 
 				true
 			);
 		}
 		
 		public boolean testWithFalseResultForNullEntityOrFalseResultForNullPredicate(E entity) {
-			return Optional.ofNullable(entity).map(ent -> getPredicate(false).test(ent)).orElseGet(() -> 
+			return Optional.ofNullable(entity).map(ent -> getPredicateOrFalsePredicateIfPredicateIsNull().test(ent)).orElseGet(() -> 
 				false
 			);
 		}
 		
 		public boolean testWithTrueResultForNullEntityOrFalseResultForNullPredicate(E entity) {
-			return Optional.ofNullable(entity).map(ent -> getPredicate(false).test(ent)).orElseGet(() -> 
+			return Optional.ofNullable(entity).map(ent -> getPredicateOrFalsePredicateIfPredicateIsNull().test(ent)).orElseGet(() -> 
 				true
 			);
 		}
