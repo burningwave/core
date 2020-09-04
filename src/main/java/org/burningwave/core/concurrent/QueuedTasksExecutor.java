@@ -346,9 +346,9 @@ public class QueuedTasksExecutor implements Component {
 			logInfo("Wait for async tasks ending and suspend");
 			waitForAsyncTasksEnding(priority);
 			Task supendingTask = createSuspendingTask(priority);
-			logInfo("Changing priority to all tasks before ", supendingTask);
+			logInfo("Changing priority to all tasks before {}", supendingTask);
 			changePriorityToAllTaskBefore(supendingTask.submit(), priority);
-			logInfo("Waiting for suspending task ending ");
+			logInfo("Waiting for suspending task ending");
 			supendingTask.join(false);
 			logInfo("Suspending task ended");
 		}
