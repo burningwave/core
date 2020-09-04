@@ -408,7 +408,6 @@ public class QueuedTasksExecutor implements Component {
 		if (waitForTasksTermination) {
 			waitForTasksEnding();
 		}
-		logInfo("Suspending {}", this);
 		suspend();
 		this.terminated = Boolean.TRUE;
 		logQueueInfo();
