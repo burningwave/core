@@ -790,23 +790,21 @@ public class FileSystemItem implements ManagedLogger {
 				while (randomFIS.getAbsolutePath() == this.getAbsolutePath() && superParentAllChildren.size() > 1) {
 					randomFIS = IterableObjectHelper.getRandom(superParentAllChildren);
 				}
-				if ((resource = Cache.pathForContents.get(absolutePath)) == null) {
-					if ((Cache.pathForContents.get(randomFIS.getAbsolutePath())) == null) {
-						FileSystemItem finalRandomFIS = randomFIS;
-						FileSystemItem superParentContainerFinal = superParentContainer;
-						resource = Synchronizer.execute(superParentContainer.instanceId, () -> {
-							if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
-								superParentContainerFinal.refresh().getAllChildren();
-							}
-							return Cache.pathForContents.get(absolutePath);
-						});
-					}
+				if ((Cache.pathForContents.get(randomFIS.getAbsolutePath())) == null) {
+					FileSystemItem finalRandomFIS = randomFIS;
+					FileSystemItem superParentContainerFinal = superParentContainer;
+					Synchronizer.execute(superParentContainer.instanceId, () -> {
+						if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
+							logInfo("Reset of {}", superParentContainerFinal.getAbsolutePath());
+							superParentContainerFinal.refresh().getAllChildren();
+						}
+					});
 				}
-				if (resource == null && (resource = Cache.pathForContents.get(absolutePath)) == null) {
+				if (Cache.pathForContents.get(absolutePath) == null) {
 					reloadContent();
-					resource = Cache.pathForContents.get(absolutePath);
 				}
-				return resource;		
+				logInfo("Reloaded {}", absolutePath);
+				return toByteBuffer();		
 			} else {
 				return Cache.pathForContents.getOrUploadIfAbsent(
 					absolutePath, () -> {
