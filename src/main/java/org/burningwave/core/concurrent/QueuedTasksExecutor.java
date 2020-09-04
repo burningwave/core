@@ -403,9 +403,10 @@ public class QueuedTasksExecutor implements Component {
 		Collection<TaskAbst<?, ?>> executables = this.tasksQueue;
 		Thread executor = this.executor;
 		if (waitForTasksTermination) {
-			waitForTasksEnding();
+			suspend(false);
+		} else {
+			suspend();
 		}
-		suspend();
 		this.terminated = Boolean.TRUE;
 		logQueueInfo();
 		executables.clear();
