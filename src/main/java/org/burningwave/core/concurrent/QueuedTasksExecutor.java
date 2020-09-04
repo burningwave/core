@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.concurrent;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.MutexManager;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -92,7 +92,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	Object getMutex(String name) {
-		return MutexManager.getMutex(instanceId + "_" + name);
+		return Synchronizer.getMutex(instanceId + "_" + name);
 	}
 	
 	void init0() {		

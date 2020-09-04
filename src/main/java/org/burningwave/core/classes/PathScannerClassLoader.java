@@ -29,7 +29,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
-import static org.burningwave.core.assembler.StaticComponentContainer.MutexManager;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -115,7 +115,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		try {
 			for (String path : paths) {
 				if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
-					MutexManager.execute(instanceId + "_" + path, () -> {
+					Synchronizer.execute(instanceId + "_" + path, () -> {
 						if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
 							FileSystemItem pathFIS = FileSystemItem.ofPath(path);
 							if (checkForAddedClasses.test(path)) {

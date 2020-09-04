@@ -30,7 +30,7 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.MutexManager;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -117,7 +117,7 @@ public class FileSystemItem implements ManagedLogger {
 		FileSystemItem parentContainer = this.parentContainer;
 		String absolutePath = this.absolutePath.getKey();
 		if ((conventionedAbsolutePath == null) || parentContainer == null) {
-			conventionedAbsolutePath = MutexManager.execute(absolutePath, () -> {
+			conventionedAbsolutePath = Synchronizer.execute(absolutePath, () -> {
 				FileSystemItem parentContainerTemp = this.parentContainer;
 				String conventionedAbsolutePathTemp = this.absolutePath.getValue();
 				if (conventionedAbsolutePathTemp == null || parentContainerTemp == null) {
@@ -282,7 +282,7 @@ public class FileSystemItem implements ManagedLogger {
 	private Set<FileSystemItem> getAllChildren0() {
 		Set<FileSystemItem> allChildren = this.allChildren;
 		if (allChildren == null) {
-			allChildren = MutexManager.execute(instanceId, () -> {
+			allChildren = Synchronizer.execute(instanceId, () -> {
 				Set<FileSystemItem> allChildrenTemp = this.allChildren;
 				if (allChildrenTemp == null) {
 					allChildrenTemp = this.allChildren = loadAllChildren();
@@ -300,7 +300,7 @@ public class FileSystemItem implements ManagedLogger {
 	private Set<FileSystemItem> getChildren0() {
 		Set<FileSystemItem> children = this.children;
 		if (children == null) {
-			children = MutexManager.execute(instanceId, () -> {
+			children = Synchronizer.execute(instanceId, () -> {
 				Set<FileSystemItem> childrenTemp = this.children;
 				if (childrenTemp == null) {
 					childrenTemp = this.children = loadChildren();
@@ -578,14 +578,14 @@ public class FileSystemItem implements ManagedLogger {
 	}
 
 	FileSystemItem clear(boolean removeLinkedResourcesFromCache, boolean removeFromCache) {
-		return MutexManager.execute(instanceId, () -> {
+		return Synchronizer.execute(instanceId, () -> {
 			Collection<FileSystemItem> allChildren = this.allChildren;
 			Collection<FileSystemItem> children = this.children;
 			this.allChildren = null;
 			this.children = null;
 			if (allChildren != null) {
 				for (FileSystemItem child : allChildren) {
-					MutexManager.execute(child.instanceId, () -> {
+					Synchronizer.execute(child.instanceId, () -> {
 						child.absolutePath.setValue(null);
 						child.parentContainer = null;
 						child.parent = null;
@@ -794,7 +794,7 @@ public class FileSystemItem implements ManagedLogger {
 					if ((Cache.pathForContents.get(randomFIS.getAbsolutePath())) == null) {
 						FileSystemItem finalRandomFIS = randomFIS;
 						FileSystemItem superParentContainerFinal = superParentContainer;
-						resource = MutexManager.execute(superParentContainer.instanceId, () -> {
+						resource = Synchronizer.execute(superParentContainer.instanceId, () -> {
 							if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
 								superParentContainerFinal.refresh().getAllChildren();
 							}
@@ -822,7 +822,7 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public FileSystemItem reloadContent() {
-		MutexManager.execute(instanceId, () -> {
+		Synchronizer.execute(instanceId, () -> {
 			String absolutePath = getAbsolutePath();
 			Cache.pathForContents.remove(absolutePath, true);
 			if (exists() && !isFolder()) {

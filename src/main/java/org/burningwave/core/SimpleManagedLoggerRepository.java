@@ -28,7 +28,7 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.MutexManager;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -58,7 +58,7 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	private LoggingLevel.Mutable getLoggerEnabledFlag(String clientName) {
 		LoggingLevel.Mutable loggerEnabledFlag = loggers.get(clientName);
 		if (loggerEnabledFlag == null) {
-			loggerEnabledFlag = MutexManager.execute(instanceId + "_" + clientName, () -> {
+			loggerEnabledFlag = Synchronizer.execute(instanceId + "_" + clientName, () -> {
 				LoggingLevel.Mutable loggerEnabledFlagTemp = loggers.get(clientName);
 				if (loggerEnabledFlagTemp == null) {
 					loggers.put(clientName, loggerEnabledFlagTemp = new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_ENABLED));

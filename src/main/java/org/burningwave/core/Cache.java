@@ -30,7 +30,7 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.MutexManager;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
@@ -119,7 +119,7 @@ public class Cache implements Component {
 		public R getOrUploadIfAbsent(T object, String path, Supplier<R> resourceSupplier) {
 			PathForResources<R> pathForResources = resources.get(object);
 			if (pathForResources == null) {
-				pathForResources = MutexManager.execute(instanceId + "_" + Objects.getId(object), () -> {
+				pathForResources = Synchronizer.execute(instanceId + "_" + Objects.getId(object), () -> {
 					PathForResources<R> pathForResourcesTemp = resources.get(object);
 					if (pathForResourcesTemp == null) {
 						pathForResourcesTemp = pathForResourcesSupplier.get();
@@ -134,7 +134,7 @@ public class Cache implements Component {
 		public R get(T object, String path) {
 			PathForResources<R> pathForResources = resources.get(object);
 			if (pathForResources == null) {
-				pathForResources = MutexManager.execute(instanceId + "_mutexManagerForResources_" + Objects.getId(object), () -> {
+				pathForResources = Synchronizer.execute(instanceId + "_mutexManagerForResources_" + Objects.getId(object), () -> {
 					PathForResources<R> pathForResourcesTemp = resources.get(object);
 					if (pathForResourcesTemp == null) {
 						pathForResourcesTemp = pathForResourcesSupplier.get();
@@ -239,7 +239,7 @@ public class Cache implements Component {
 			Map<String, R> innerPartion = partion.get(partitionKey);
 			if (innerPartion == null) {
 				String finalPartitionKey = partitionKey;
-				innerPartion = MutexManager.execute(instanceId + "_mutexManagerForPartitions_" + finalPartitionKey, () -> {
+				innerPartion = Synchronizer.execute(instanceId + "_mutexManagerForPartitions_" + finalPartitionKey, () -> {
 					Map<String, R> innerPartionTemp = partion.get(finalPartitionKey);
 					if (innerPartionTemp == null) {
 						partion.put(finalPartitionKey, innerPartionTemp = new HashMap<>());
@@ -253,7 +253,7 @@ public class Cache implements Component {
 		R getOrUploadIfAbsent(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
 			R resource = loadedResources.get(path);
 			if (resource == null) {
-				resource = MutexManager.execute(instanceId + "_mutexManagerForLoadedResources_" + path, () -> {
+				resource = Synchronizer.execute(instanceId + "_mutexManagerForLoadedResources_" + path, () -> {
 					R resourceTemp = loadedResources.get(path);
 					if (resourceTemp == null && resourceSupplier != null) {
 						resourceTemp = resourceSupplier.get();
@@ -270,7 +270,7 @@ public class Cache implements Component {
 		}
 		
 		public R upload(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
-			R resource = MutexManager.execute(instanceId + "_mutexManagerForLoadedResources_" + path, () -> {
+			R resource = Synchronizer.execute(instanceId + "_mutexManagerForLoadedResources_" + path, () -> {
 				R resourceTemp = null;
 				if (resourceSupplier != null) {
 					resourceTemp = resourceSupplier.get();
@@ -288,7 +288,7 @@ public class Cache implements Component {
 		Map<String, Map<String, R>> retrievePartition(Map<Long, Map<String, Map<String, R>>> partitionedResources, Long partitionIndex) {
 			Map<String, Map<String, R>> resources = partitionedResources.get(partitionIndex);
 			if (resources == null) {
-				resources = MutexManager.execute(instanceId + "_mutexManagerForPartitionedResources_" + partitionIndex.toString(), () -> {
+				resources = Synchronizer.execute(instanceId + "_mutexManagerForPartitionedResources_" + partitionIndex.toString(), () -> {
 					Map<String, Map<String, R>> resourcesTemp = partitionedResources.get(partitionIndex);
 					if (resourcesTemp == null) {
 						partitionedResources.put(partitionIndex, resourcesTemp = new HashMap<>());

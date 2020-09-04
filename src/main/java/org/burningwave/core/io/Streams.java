@@ -29,7 +29,7 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
-import static org.burningwave.core.assembler.StaticComponentContainer.MutexManager;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -217,7 +217,7 @@ public class Streams implements Component {
 	public FileSystemItem store(String fileAbsolutePath, ByteBuffer bytes) {
 		ByteBuffer content = shareContent(bytes);
 		File file = new File(fileAbsolutePath);
-		MutexManager.execute(fileAbsolutePath, () -> {
+		Synchronizer.execute(fileAbsolutePath, () -> {
 			if (!file.exists()) {
 				new File(file.getParent()).mkdirs();
 			} else {

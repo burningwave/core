@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.MutexManager;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -136,7 +136,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		FileSystemItem currentScannedPath = FileSystemItem.ofPath(basePath);
 		Predicate<String> refreshCache = searchConfig.getCheckForAddedClassesPredicate();
 		if (refreshCache != null && refreshCache.test(basePath)) {
-			MutexManager.execute(instanceId + "_" + basePath, () -> {
+			Synchronizer.execute(instanceId + "_" + basePath, () -> {
 				Optional.ofNullable(cache.get(basePath)).ifPresent((classesForPath) -> {
 					cache.remove(basePath);
 					classesForPath.clear();
@@ -148,7 +148,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		if (classesForPath == null) {
 			if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate) {
 				String mutexId = instanceId + "_" + basePath;
-				synchronized(MutexManager.getMutex(mutexId)) {
+				synchronized(Synchronizer.getMutex(mutexId)) {
 					classesForPath = cache.get(basePath);
 					if (classesForPath == null) {
 						currentScannedPath.findInAllChildren(filterAndExecutor);
@@ -158,10 +158,10 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 							itemsForPath.putAll(itemsFound);
 						}
 						this.cache.put(basePath, itemsForPath);
-						MutexManager.removeMutex(mutexId);
+						Synchronizer.removeMutex(mutexId);
 						return;
 					}
-					MutexManager.removeMutex(mutexId);
+					Synchronizer.removeMutex(mutexId);
 				}
 				context.addAllItemsFound(basePath, classesForPath);
 				return;
@@ -286,7 +286,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	public void clearCache(boolean closeSearchResults) {
 		Collection<String> pathsToBeRemoved = new HashSet<>(cache.keySet());
 		for (String path : pathsToBeRemoved) {
-			MutexManager.execute( instanceId + "_" + path, () -> {				
+			Synchronizer.execute( instanceId + "_" + path, () -> {				
 				FileSystemItem.ofPath(path).reset();
 				Map<String, I> items = cache.remove(path);
 				clearItemsForPath(items);
