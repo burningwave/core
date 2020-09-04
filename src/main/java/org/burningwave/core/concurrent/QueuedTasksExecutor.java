@@ -57,7 +57,7 @@ public class QueuedTasksExecutor implements Component {
 	List<TaskAbst<?, ?>> tasksQueue;
 	List<TaskAbst<?, ?>> asyncTasksInExecution;
 	private TaskAbst<?, ?> currentTask;
-	private Boolean supended;
+	Boolean supended;
 	private int loggingThreshold;
 	int defaultPriority;
 	private long executedTasksCount;
@@ -351,12 +351,16 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		} else {
-			changePriorityToAllTaskBefore(createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).changePriority(priority).submit(), priority);
+			waitForTasksEndingAndSuspend(priority);
 		}
 		return this;
 	}
 
-	<E, T extends TaskAbst<E, T>> boolean changePriorityToAllTaskBefore(T task, int priority) {
+	void waitForTasksEndingAndSuspend(int priority) {
+		changePriorityToAllTaskBefore(createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).changePriority(priority).submit(), priority);
+	}
+
+	<E, T extends TaskAbst<E, T>> void changePriorityToAllTaskBefore(T task, int priority) {
 		int taskIndex = tasksQueue.indexOf(task);
 		if (taskIndex != -1) {
 			Iterator<TaskAbst<?, ?>> taskIterator = tasksQueue.iterator();
@@ -372,15 +376,14 @@ public class QueuedTasksExecutor implements Component {
 				}
 				idx++;
 			}
-			return true;
 		}
-		for (TaskAbst<?, ?> asynTask : asyncTasksInExecution) {
-			Thread executor = asynTask.executor;
-			if (executor != null) {
-				executor.setPriority(priority);
+		asyncTasksInExecution.stream().forEach(asyncTask -> {
+			Thread taskExecutor = asyncTask.executor;
+			if (taskExecutor != null) {
+				taskExecutor.setPriority(priority);
 			}
-		}
-		return false;
+			asyncTask.join0(false);
+		});
 	}
 
 	public QueuedTasksExecutor resume() {
@@ -853,6 +856,10 @@ public class QueuedTasksExecutor implements Component {
 				public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, int priority) {
 					task.join0(false);
 					return this;
+				}
+				
+				void waitForTasksEndingAndSuspend(int priority) {
+					changePriorityToAllTaskBefore(createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).submit(), priority);
 				}
 			};
 		}
