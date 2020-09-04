@@ -508,7 +508,7 @@ public class Classes implements Component, MembersRetriever {
 					}
 				}
 			}
-			logWarn("Classes collection has not been initialized on {}" + classLoader);
+			logWarn("'classes' collection has not been initialized on {}: trying recursive call", classLoader);
 			return retrieveLoadedClasses(classLoader);
 		}
 		
