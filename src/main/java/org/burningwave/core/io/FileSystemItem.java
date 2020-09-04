@@ -1048,7 +1048,7 @@ public class FileSystemItem implements ManagedLogger {
 				} catch (ArrayIndexOutOfBoundsException exc) {
 					String childAbsolutePath =  childAndThis[0].getAbsolutePath();
 					logWarn("Exception occurred while scanning " + childAbsolutePath);
-					logInfo("Trying to reload content of " + childAbsolutePath + " and retest again");
+					logInfo("Trying to reload content of " + childAbsolutePath + " and test again");
 					childAndThis[0].reloadContent();
 					return filterPredicate.test(childAndThis);
 				} catch (Throwable exc) {
