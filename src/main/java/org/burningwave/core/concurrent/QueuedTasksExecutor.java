@@ -343,10 +343,21 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		} else {
-			waitForTasksEndingAndSuspend(priority);
+			logInfo("Wait for async tasks ending and suspend");
+			waitForAsyncTasksEnding(priority);
+			Task supendingTask = createSuspendingTask(priority);
+			logInfo("Changing priority to all tasks before {}", supendingTask);
+			changePriorityToAllTaskBefore(supendingTask.submit(), priority);
+			logInfo("Waiting for suspending task ending");
+			supendingTask.join(false);
+			logInfo("Suspending task ended");
 		}
 		executor.setPriority(this.defaultPriority);
 		return this;
+	}
+
+	Task createSuspendingTask(int priority) {
+		return createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).changePriority(priority);
 	}
 
 	void waitForAsyncTasksEnding(int priority) {
@@ -357,10 +368,6 @@ public class QueuedTasksExecutor implements Component {
 			}
 			asyncTask.join0(false);
 		});
-	}
-
-	void waitForTasksEndingAndSuspend(int priority) {
-		changePriorityToAllTaskBefore(createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).changePriority(priority).submit(), priority);
 	}
 
 	<E, T extends TaskAbst<E, T>> void changePriorityToAllTaskBefore(T task, int priority) {
@@ -781,7 +788,7 @@ public class QueuedTasksExecutor implements Component {
 					return executable -> new QueuedTasksExecutor.Task(executable) {
 						
 						public QueuedTasksExecutor.Task submit() {
-							return addToQueue(this, false);
+							return Group.this.getByPriority(this.priority).addToQueue(this, false);
 						};
 						
 						public QueuedTasksExecutor.Task changePriority(int priority) {
@@ -847,8 +854,8 @@ public class QueuedTasksExecutor implements Component {
 					return this;
 				}
 				
-				void waitForTasksEndingAndSuspend(int priority) {
-					changePriorityToAllTaskBefore(createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).submit(), priority);
+				Task createSuspendingTask(int priority) {
+					return createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE);
 				}
 			};
 		}
