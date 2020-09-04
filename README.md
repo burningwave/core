@@ -875,9 +875,10 @@ public static final org.burningwave.core.classes.Methods Methods;
 public static final org.burningwave.core.Objects Objects;
 public static final org.burningwave.core.Strings.Paths Paths;
 public static final org.burningwave.core.io.Resources Resources;
-public static final org.burningwave.core.io.Streams Streams;
 public static final org.burningwave.core.classes.SourceCodeHandler SourceCodeHandler;
+public static final org.burningwave.core.io.Streams Streams;
 public static final org.burningwave.core.Strings Strings;
+public static final org.burningwave.core.concurrent.Synchronizer Synchronizer;
 public static final org.burningwave.core.Throwables Throwables;
 ```
 
