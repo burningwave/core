@@ -49,6 +49,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -508,7 +509,8 @@ public class Classes implements Component, MembersRetriever {
 					}
 				}
 			}
-			throw Throwables.toRuntimeException("Could not find classes Vector on " + classLoader);
+			logWarn("Classes collection has not been initialized on {}" + classLoader);
+			return new ArrayList<>();
 		}
 		
 		public Collection<Class<?>> retrieveAllLoadedClasses(ClassLoader classLoader) {

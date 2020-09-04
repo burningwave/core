@@ -143,6 +143,9 @@ public class CodeExecutor implements Component {
 			} else {
 				body.addCodeRow(code);
 			}
+			if (!code.contains("return")) {
+				body.addCodeRow("return null;");
+			}
 		} else {
 			body.addCodeRow(code.contains("return")?
 				code:

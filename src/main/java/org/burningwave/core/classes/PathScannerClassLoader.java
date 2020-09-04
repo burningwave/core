@@ -126,9 +126,22 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 									new FileSystemItem [] {child, pathFIS}
 								)){
 									try {
-										JavaClass.use(child.toByteBuffer(), javaClass ->
-											addByteCode0(javaClass.getName(), javaClass.getByteCode())
-										);
+										try {
+											JavaClass.use(child.toByteBuffer(), javaClass ->
+												addByteCode0(javaClass.getName(), javaClass.getByteCode())
+											);
+										} catch (ArrayIndexOutOfBoundsException exc) {
+											if (!isClosed){
+												String childAbsolutePath = child.getAbsolutePath();
+												logWarn("Exception occurred while scanning " + childAbsolutePath);
+												logInfo("Trying to reload content of " + childAbsolutePath + " and test again");
+												JavaClass.use(child.reloadContent().toByteBuffer(), javaClass ->
+													addByteCode0(javaClass.getName(), javaClass.getByteCode())
+												);
+											} else {
+												throw exc;
+											}
+										}
 									} catch (Throwable exc) {
 										if (!isClosed) {
 											logError("Exception occurred while scanning " + child.getAbsolutePath(), exc);
