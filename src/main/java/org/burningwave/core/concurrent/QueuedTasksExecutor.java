@@ -302,13 +302,7 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		}
-		asyncTasksInExecution.stream().forEach(task -> {
-			Thread taskExecutor = task.executor;
-			if (taskExecutor != null) {
-				taskExecutor.setPriority(priority);
-			}
-			task.join0(false);
-		});
+		waitForAsyncTasksEnding(priority);
 		executor.setPriority(this.defaultPriority);
 		return this;
 	}
@@ -336,10 +330,8 @@ public class QueuedTasksExecutor implements Component {
 		executor.setPriority(priority);
 		if (immediately) {
 			supended = Boolean.TRUE;
+			waitForAsyncTasksEnding(priority);
 			if (!currentTask.hasFinished()) {
-				for (TaskAbst<?, ?> asynTask : asyncTasksInExecution) {
-					asynTask.join0(false);
-				}
 				synchronized (getMutex("suspensionCaller")) {
 					if (!currentTask.hasFinished()) {
 						try {
@@ -353,7 +345,18 @@ public class QueuedTasksExecutor implements Component {
 		} else {
 			waitForTasksEndingAndSuspend(priority);
 		}
+		executor.setPriority(this.defaultPriority);
 		return this;
+	}
+
+	void waitForAsyncTasksEnding(int priority) {
+		asyncTasksInExecution.stream().forEach(asyncTask -> {
+			Thread taskExecutor = asyncTask.executor;
+			if (taskExecutor != null) {
+				taskExecutor.setPriority(priority);
+			}
+			asyncTask.join0(false);
+		});
 	}
 
 	void waitForTasksEndingAndSuspend(int priority) {
@@ -377,13 +380,7 @@ public class QueuedTasksExecutor implements Component {
 				idx++;
 			}
 		}
-		asyncTasksInExecution.stream().forEach(asyncTask -> {
-			Thread taskExecutor = asyncTask.executor;
-			if (taskExecutor != null) {
-				taskExecutor.setPriority(priority);
-			}
-			asyncTask.join0(false);
-		});
+		waitForAsyncTasksEnding(priority);
 	}
 
 	public QueuedTasksExecutor resume() {
@@ -839,13 +836,7 @@ public class QueuedTasksExecutor implements Component {
 						});
 					} else {	
 						tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
-						asyncTasksInExecution.stream().forEach(task -> {
-							Thread taskExecutor = task.executor;
-							if (taskExecutor != null) {
-								taskExecutor.setPriority(priority);
-							}
-							task.join0(false);
-						});						
+						waitForAsyncTasksEnding(priority);				
 					}
 					return this;
 				}
