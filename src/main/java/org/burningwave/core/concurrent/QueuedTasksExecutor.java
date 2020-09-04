@@ -302,13 +302,7 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		}
-		asyncTasksInExecution.stream().forEach(task -> {
-			Thread taskExecutor = task.executor;
-			if (taskExecutor != null) {
-				taskExecutor.setPriority(priority);
-			}
-			task.join0(false);
-		});
+		waitForAsyncTasksEnding(priority);
 		executor.setPriority(this.defaultPriority);
 		return this;
 	}
@@ -336,10 +330,8 @@ public class QueuedTasksExecutor implements Component {
 		executor.setPriority(priority);
 		if (immediately) {
 			supended = Boolean.TRUE;
+			waitForAsyncTasksEnding(priority);
 			if (!currentTask.hasFinished()) {
-				for (TaskAbst<?, ?> asynTask : asyncTasksInExecution) {
-					asynTask.join0(false);
-				}
 				synchronized (getMutex("suspensionCaller")) {
 					if (!currentTask.hasFinished()) {
 						try {
@@ -351,13 +343,31 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		} else {
-			waitForTasksEndingAndSuspend(priority);
+			logInfo("Wait for async tasks ending and suspend");
+			waitForAsyncTasksEnding(priority);
+			Task supendingTask = createSuspendingTask(priority);
+			logInfo("Changing priority to all tasks before ", supendingTask);
+			changePriorityToAllTaskBefore(supendingTask.submit(), priority);
+			logInfo("Waiting for suspending task ending ");
+			supendingTask.join(false);
+			logInfo("Suspending task ended");
 		}
+		executor.setPriority(this.defaultPriority);
 		return this;
 	}
 
-	void waitForTasksEndingAndSuspend(int priority) {
-		changePriorityToAllTaskBefore(createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).changePriority(priority).submit(), priority);
+	Task createSuspendingTask(int priority) {
+		return createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).changePriority(priority);
+	}
+
+	void waitForAsyncTasksEnding(int priority) {
+		asyncTasksInExecution.stream().forEach(asyncTask -> {
+			Thread taskExecutor = asyncTask.executor;
+			if (taskExecutor != null) {
+				taskExecutor.setPriority(priority);
+			}
+			asyncTask.join0(false);
+		});
 	}
 
 	<E, T extends TaskAbst<E, T>> void changePriorityToAllTaskBefore(T task, int priority) {
@@ -377,13 +387,7 @@ public class QueuedTasksExecutor implements Component {
 				idx++;
 			}
 		}
-		asyncTasksInExecution.stream().forEach(asyncTask -> {
-			Thread taskExecutor = asyncTask.executor;
-			if (taskExecutor != null) {
-				taskExecutor.setPriority(priority);
-			}
-			asyncTask.join0(false);
-		});
+		waitForAsyncTasksEnding(priority);
 	}
 
 	public QueuedTasksExecutor resume() {
@@ -406,9 +410,10 @@ public class QueuedTasksExecutor implements Component {
 		Collection<TaskAbst<?, ?>> executables = this.tasksQueue;
 		Thread executor = this.executor;
 		if (waitForTasksTermination) {
-			waitForTasksEnding();
+			suspend(false);
+		} else {
+			suspend();
 		}
-		suspend();
 		this.terminated = Boolean.TRUE;
 		logQueueInfo();
 		executables.clear();
@@ -783,7 +788,7 @@ public class QueuedTasksExecutor implements Component {
 					return executable -> new QueuedTasksExecutor.Task(executable) {
 						
 						public QueuedTasksExecutor.Task submit() {
-							return addToQueue(this, false);
+							return Group.this.getByPriority(this.priority).addToQueue(this, false);
 						};
 						
 						public QueuedTasksExecutor.Task changePriority(int priority) {
@@ -839,13 +844,7 @@ public class QueuedTasksExecutor implements Component {
 						});
 					} else {	
 						tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
-						asyncTasksInExecution.stream().forEach(task -> {
-							Thread taskExecutor = task.executor;
-							if (taskExecutor != null) {
-								taskExecutor.setPriority(priority);
-							}
-							task.join0(false);
-						});						
+						waitForAsyncTasksEnding(priority);				
 					}
 					return this;
 				}
@@ -855,8 +854,8 @@ public class QueuedTasksExecutor implements Component {
 					return this;
 				}
 				
-				void waitForTasksEndingAndSuspend(int priority) {
-					changePriorityToAllTaskBefore(createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).submit(), priority);
+				Task createSuspendingTask(int priority) {
+					return createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE);
 				}
 			};
 		}
