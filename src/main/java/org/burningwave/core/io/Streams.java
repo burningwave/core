@@ -29,6 +29,7 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -45,7 +46,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.concurrent.Mutex;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.Properties;
@@ -75,9 +75,10 @@ public class Streams implements Component {
 	
 	public int defaultBufferSize;
 	Function<Integer, ByteBuffer> defaultByteBufferAllocationMode;
-	private Mutex.Manager mutexManager;
+	String instanceId;
 	
 	private Streams(Properties config) {
+		instanceId = this.toString();
 		String defaultBufferSize = config.resolveStringValue(Configuration.Key.BUFFER_SIZE, Configuration.DEFAULT_VALUES);
 		String unit = defaultBufferSize.substring(defaultBufferSize.length()-2);
 		String value = defaultBufferSize.substring(0, defaultBufferSize.length()-2);
@@ -97,7 +98,6 @@ public class Streams implements Component {
 			this.defaultByteBufferAllocationMode = ByteBufferHandler::allocateDirect;
 			logInfo("default allocation mode: ByteBuffer::allocateDirect");
 		}
-		this.mutexManager = Mutex.Manager.create();
 	}
 	
 	public static Streams create(Properties properties) {
@@ -217,7 +217,7 @@ public class Streams implements Component {
 	public FileSystemItem store(String fileAbsolutePath, ByteBuffer bytes) {
 		ByteBuffer content = shareContent(bytes);
 		File file = new File(fileAbsolutePath);
-		synchronized (mutexManager.getMutex(fileAbsolutePath)) {
+		Synchronizer.execute(fileAbsolutePath, () -> {
 			if (!file.exists()) {
 				new File(file.getParent()).mkdirs();
 			} else {
@@ -228,7 +228,7 @@ public class Streams implements Component {
 					copy(inputStream, fileOutputStream);
 				}
 			});
-		}
+		});
 		return FileSystemItem.ofPath(file.getAbsolutePath());
 	}
 	

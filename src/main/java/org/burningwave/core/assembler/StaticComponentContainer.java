@@ -74,13 +74,15 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Objects Objects;
 	public static final org.burningwave.core.Strings.Paths Paths;
 	public static final org.burningwave.core.io.Resources Resources;
-	public static final org.burningwave.core.io.Streams Streams;
 	public static final org.burningwave.core.classes.SourceCodeHandler SourceCodeHandler;
+	public static final org.burningwave.core.io.Streams Streams;
 	public static final org.burningwave.core.Strings Strings;
+	public static final org.burningwave.core.concurrent.Synchronizer Synchronizer;
 	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
 		try {
+			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create();
 			Throwables = org.burningwave.core.Throwables.create();
 			Objects = org.burningwave.core.Objects.create();
 			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create("Background executor", true, true);
@@ -140,7 +142,11 @@ public class StaticComponentContainer {
 					} catch (Throwable exc) {
 						ManagedLoggersRepository.logError("Exception occurred while closing component containers", exc);
 					}
-					FileSystemHelper.close();
+					try {
+						FileSystemHelper.close();
+					} catch (Throwable exc) {
+						ManagedLoggersRepository.logError("Exception occurred while closing FileSystemHelper", exc);
+					}
 					BackgroundExecutor.shutDown(true);
 				}, "Resources releaser")
 			);

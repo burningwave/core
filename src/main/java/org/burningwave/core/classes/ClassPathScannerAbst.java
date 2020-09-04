@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -82,6 +84,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	Function<C, R> resultSupplier;
 	Properties config;
 	Collection<SearchResult<I>> searchResults;
+	String instanceId;
 
 	ClassPathScannerAbst(
 		Supplier<ClassHunter> classHunterSupplier,
@@ -96,6 +99,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		this.resultSupplier = resultSupplier;
 		this.config = config;
 		this.searchResults = ConcurrentHashMap.newKeySet();
+		instanceId = Objects.getCurrentId(this);
 		listenTo(config);
 	}
 	
@@ -138,13 +142,13 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 	
 	void searchInFileSystem(C context) {
-		FileSystemItem.Criteria filter = retrieveFileAndClassTesterAndExecutor(context);
+		FileSystemItem.Criteria filter = buildFileAndClassTesterAndExecutor(context);
 		context.getSearchConfig().getPaths().parallelStream().forEach(basePath -> {
 			FileSystemItem.ofPath(basePath).refresh().findInAllChildren(filter);
 		});
 	}
 	
-	FileSystemItem.Criteria retrieveFileAndClassTesterAndExecutor(C context) {
+	FileSystemItem.Criteria buildFileAndClassTesterAndExecutor(C context) {
 		SearchConfigAbst<?> searchConfig = context.getSearchConfig();
 		if (searchConfig.getScanFileCriteria().hasNoPredicate()) {
 			searchConfig.withScanFileCriteria(
@@ -154,24 +158,24 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			);
 		}
 
-		Predicate<FileSystemItem[]> classFilePredicate = searchConfig.getScanFileCriteria().getPredicateOrTruePredicateIfPredicateIsNull();
-		return buildFileAndClassTesterAndExecutor(context, classFilePredicate);
-	}
-
-	FileSystemItem.Criteria buildFileAndClassTesterAndExecutor(C context, Predicate<FileSystemItem[]> classFilePredicate) {
-		return FileSystemItem.Criteria.forAllFileThat(
+		Predicate<FileSystemItem[]> classFilePredicate = searchConfig.getScanFileCriteria().getOriginalPredicateOrTruePredicateIfPredicateIsNull();
+		FileSystemItem.Criteria criteria = FileSystemItem.Criteria.forAllFileThat(
 			(child, basePath) -> {
 				boolean isClass = false;
-				try {
-					if (isClass = classFilePredicate.test(new FileSystemItem[]{child, basePath})) {
-						analyzeAndAddItemsToContext(context, child, basePath);
-					}
-				} catch (Throwable exc) {
-					logError("Could not scan " + child.getAbsolutePath(), exc);
+				if (isClass = classFilePredicate.test(new FileSystemItem[]{child, basePath})) {
+					analyzeAndAddItemsToContext(context, child, basePath);
 				}
 				return isClass;
 			}
 		);
+		
+		if (searchConfig.getScanFileCriteria().hasNoExceptionHandler()) {
+			criteria.setDefaultExceptionHandler();
+		} else {
+			criteria.setExceptionHandler(searchConfig.getScanFileCriteria().getExceptionHandler());
+		}
+		
+		return criteria;
 	}
 
 	void analyzeAndAddItemsToContext(C context, FileSystemItem child, FileSystemItem basePath) {

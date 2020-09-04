@@ -30,42 +30,61 @@ package org.burningwave.core.concurrent;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
-public class Mutex {
+public class Synchronizer implements AutoCloseable {
+	Map<String, Object> parallelLockMap;
 	
-	public static class Manager implements AutoCloseable {
-		Map<String, Object> parallelLockMap;
-		
-		private Manager() {
-			this.parallelLockMap = new ConcurrentHashMap<>();
-		}
-		
-		public static Manager create() {
-			return new Manager();
-		}
-		
-		public Object getMutex(String id) {
-			Object newLock = new Mutex();
-	    	Object lock = parallelLockMap.putIfAbsent(id, newLock);
-	        if (lock != null) {
-	        	return lock;
-	        }
-	        return newLock;
-	    }
-
-		public void clear() {
-			parallelLockMap.clear();
-		}
-		
-		@Override
-		public void close() {
-			clear();
-			parallelLockMap = null;
-		}
-
-		public void remove(String id) {
-			parallelLockMap.remove(id);	
+	private Synchronizer() {
+		this.parallelLockMap = new ConcurrentHashMap<>();
+	}
+	
+	public static Synchronizer create() {
+		return new Synchronizer();
+	}
+	
+	public Object getMutex(String id) {
+		Object newLock = new Object();
+    	Object lock = parallelLockMap.putIfAbsent(id, newLock);
+        if (lock != null) {
+        	return lock;
+        }
+        return newLock;
+    }
+	
+	public void execute(String id, Runnable executable) {
+		synchronized (getMutex(id)) {
+			try {
+				executable.run();
+			} finally {
+				parallelLockMap.remove(id);
+			}
 		}
 	}
 	
+	public <T> T execute(String id, Supplier<T> executable) {
+		T result = null;
+		synchronized (getMutex(id)) {
+			try {
+				result = executable.get();
+			} finally {
+				parallelLockMap.remove(id);
+			}
+		}
+		return result;
+	}
+
+	public void clear() {
+		parallelLockMap.clear();
+	}
+	
+	@Override
+	public void close() {
+		clear();
+		parallelLockMap = null;
+	}
+
+	public void removeMutex(String id) {
+		parallelLockMap.remove(id);	
+	}
 }

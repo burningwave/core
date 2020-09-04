@@ -57,7 +57,7 @@ public class FileSystemHelper implements Component {
 	private Scavenger scavenger;
 	
 	private FileSystemHelper() {
-		id = UUID.randomUUID().toString() + "_" + String.valueOf(System.currentTimeMillis());
+		id = UUID.randomUUID().toString() + "_" + System.currentTimeMillis();
 	}
 	
 	public static FileSystemHelper create() {
@@ -197,10 +197,13 @@ public class FileSystemHelper implements Component {
 		if (this != StaticComponentContainer.FileSystemHelper || 
 			Thread.currentThread().getStackTrace()[2].getClassName().equals(StaticComponentContainer.class.getName())
 		) {	
+			Scavenger scavenger = this.scavenger;
+			if (scavenger != null) {
+				scavenger.close();
+			}
 			closeResources(() -> id == null, () -> {
 				clearMainTemporaryFolder();
-				scavenger.close();
-				scavenger = null;
+				this.scavenger = null;
 				id = null;
 				mainTemporaryFolder = null;
 			});
@@ -264,8 +267,8 @@ public class FileSystemHelper implements Component {
 									}
 								}
 							} catch (Throwable exc) {
-								logError("Exception occurred while cleaning temporary file system item " + fileSystemItem.getAbsolutePath());
-								logError(exc.getMessage());
+								logError("Exception occurred while cleaning temporary file system item " + fileSystemItem.getAbsolutePath(), exc);
+								logInfo("To avoid this error remove {} manually", fileSystemItem.getAbsolutePath());
 								logInfo("Current execution id: {}", fileSystemHelper.id);
 							}
 						}

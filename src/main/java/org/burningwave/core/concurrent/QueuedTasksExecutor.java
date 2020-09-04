@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.concurrent;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Collection;
@@ -36,11 +38,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
@@ -50,8 +52,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 @SuppressWarnings({"unchecked", "resource"})
 public class QueuedTasksExecutor implements Component {
 	private final static Map<String, Task> runOnlyOnceTasksToBeExecuted;
-	private Mutex.Manager mutexManager;
-	private String id;
+	private final String instanceId;
 	Thread executor;
 	List<TaskAbst<?, ?>> tasksQueue;
 	List<TaskAbst<?, ?>> asyncTasksInExecution;
@@ -72,10 +73,9 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	QueuedTasksExecutor(String executorName, String asyncExecutorName, int defaultPriority, boolean isDaemon, int loggingThreshold) {
-		mutexManager = Mutex.Manager.create();
 		tasksQueue = new CopyOnWriteArrayList<>();
 		asyncTasksInExecution = new CopyOnWriteArrayList<>();
-		id = UUID.randomUUID().toString();
+		instanceId = Objects.getCurrentId(this);
 		this.loggingThreshold = loggingThreshold;
 		initializer = () -> {
 			this.executorName = executorName;
@@ -92,7 +92,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	Object getMutex(String name) {
-		return mutexManager.getMutex(id + name);
+		return Synchronizer.getMutex(instanceId + "_" + name);
 	}
 	
 	void init0() {		
@@ -404,29 +404,21 @@ public class QueuedTasksExecutor implements Component {
 		Collection<TaskAbst<?, ?>> asyncTasksInExecution = this.asyncTasksInExecution;
 		Thread executor = this.executor;
 		if (waitForTasksTermination) {
-			createTask(() -> {
-				this.terminated = Boolean.TRUE;
-				logInfo("Executed tasks {}", executedTasksCount);
-				logInfo("Unexecuted tasks {}", executables.size());
-				executables.clear();
-				asyncTasksInExecution.clear();
-			}).setPriorityToCurrentThreadPriority().submit();
-		} else {
-			suspend();
-			this.terminated = Boolean.TRUE;
-			logInfo("Executed tasks {}", executedTasksCount);
-			logInfo("Unexecuted tasks {}", executables.size());
-			executables.clear();
-			asyncTasksInExecution.clear();
-			resume();
-			try {
-				synchronized(getMutex("executableCollectionFiller")) {
-					getMutex("executableCollectionFiller").notifyAll();
-				}
-			} catch (Throwable exc) {
-				logWarn("Exception occurred", exc);
-			}	
+			waitForTasksEnding();
 		}
+		suspend();
+		this.terminated = Boolean.TRUE;
+		logQueueInfo();
+		executables.clear();
+		asyncTasksInExecution.clear();
+		resume();
+		try {
+			synchronized(getMutex("executableCollectionFiller")) {
+				getMutex("executableCollectionFiller").notifyAll();
+			}
+		} catch (Throwable exc) {
+			logWarn("Exception occurred", exc);
+		}	
 		try {
 			executor.join();
 			closeResources();			
@@ -434,6 +426,23 @@ public class QueuedTasksExecutor implements Component {
 			logError("Exception occurred", exc);
 		}
 		return true;
+	}
+	
+	public void logQueueInfo() {
+		logQueueInfo(this.executedTasksCount, this.asyncTasksInExecution);
+	}
+	
+	private void logQueueInfo(Long executedTasksCount, Collection<TaskAbst<?, ?>> executables) {
+		Collection<String> executablesLog = executables.stream().map(executable -> "\t" + executable.toString()).collect(Collectors.toList());
+		StringBuffer log = new StringBuffer("Executed tasks: ")
+			.append(executedTasksCount).append(", Unexecuted tasks: ")
+			.append(executablesLog.size());
+			
+		if (executablesLog.size() > 0) {
+			log.append(":\n\t")
+			.append(String.join("\n\t", executablesLog));
+		}		
+		logInfo(log.toString());
 	}
 	
 	@Override
@@ -905,6 +914,13 @@ public class QueuedTasksExecutor implements Component {
 				task.changePriority(priority);
 			}
 			task.join0(false);
+		}
+
+		public void logQueuesInfo() {
+			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+				queuedTasksExecutorBox.getValue().logQueueInfo();
+			}
+			
 		}
 	}
 }

@@ -29,6 +29,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,7 +49,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.concurrent.Mutex;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 
@@ -58,7 +58,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	Collection<String> loadedPaths;
 	PathHelper pathHelper;
 	FileSystemItem.Criteria classFileCriteriaAndConsumer;
-	Mutex.Manager mutexManager;
 	
 	public static class Configuration {
 		public static class Key {
@@ -100,7 +99,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		this.pathHelper = pathHelper;
 		this.allLoadedPaths = ConcurrentHashMap.newKeySet();
 		this.loadedPaths = ConcurrentHashMap.newKeySet();
-		this.mutexManager = Mutex.Manager.create();
 		this.classFileCriteriaAndConsumer = scanFileCriteria.createCopy();
 	}
 	
@@ -117,7 +115,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		try {
 			for (String path : paths) {
 				if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
-					synchronized(mutexManager.getMutex(path)) {
+					Synchronizer.execute(instanceId + "_" + path, () -> {
 						if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
 							FileSystemItem pathFIS = FileSystemItem.ofPath(path);
 							if (checkForAddedClasses.test(path)) {
@@ -144,7 +142,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 							allLoadedPaths.add(path);
 							scannedPaths.add(path);
 						}
-					}
+					});
 				}
 			}
 		} catch (Throwable exc) {
@@ -282,8 +280,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			this.loadedPaths = null;
 			this.allLoadedPaths.clear();
 			this.allLoadedPaths = null;
-			this.mutexManager.clear();
-			this.mutexManager = null;
 			pathHelper = null;
 			classFileCriteriaAndConsumer = null;
 		});
