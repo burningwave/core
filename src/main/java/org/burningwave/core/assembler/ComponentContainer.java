@@ -173,6 +173,11 @@ public class ComponentContainer implements ComponentSupplier {
 			}
 		}, Thread.MAX_PRIORITY);
 		initializerTask.submit();
+		if (getConfigProperty("component-container.after-init") != null) {
+			BackgroundExecutor.createTask(() -> {
+				getCodeExecutor().executeProperty("component-container.after-init", this);
+			}).async().submit();
+		}
 		return this;
 	}
 	
