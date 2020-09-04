@@ -406,16 +406,13 @@ public class QueuedTasksExecutor implements Component {
 		Collection<TaskAbst<?, ?>> executables = this.tasksQueue;
 		Thread executor = this.executor;
 		if (waitForTasksTermination) {
-			logInfo("Waiting for tasks ending");
 			waitForTasksEnding();
 		}
-		logInfo("Suspending {}", this);
 		suspend();
 		this.terminated = Boolean.TRUE;
 		logQueueInfo();
 		executables.clear();
 		asyncTasksInExecution.clear();
-		logInfo("Resuming {}", this);
 		resume();
 		try {
 			synchronized(getMutex("executableCollectionFiller")) {
