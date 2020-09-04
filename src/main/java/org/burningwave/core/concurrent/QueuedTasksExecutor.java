@@ -401,16 +401,18 @@ public class QueuedTasksExecutor implements Component {
 	
 	public boolean shutDown(boolean waitForTasksTermination) {
 		Collection<TaskAbst<?, ?>> executables = this.tasksQueue;
-		Collection<TaskAbst<?, ?>> asyncTasksInExecution = this.asyncTasksInExecution;
 		Thread executor = this.executor;
 		if (waitForTasksTermination) {
+			logInfo("Waiting for tasks ending");
 			waitForTasksEnding();
 		}
+		logInfo("Suspending {}", this);
 		suspend();
 		this.terminated = Boolean.TRUE;
 		logQueueInfo();
 		executables.clear();
 		asyncTasksInExecution.clear();
+		logInfo("Resuming {}", this);
 		resume();
 		try {
 			synchronized(getMutex("executableCollectionFiller")) {
