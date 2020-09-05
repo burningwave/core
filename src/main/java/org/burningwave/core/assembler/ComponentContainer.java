@@ -178,7 +178,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 
 	private String getMutexForComponentsId() {
-		return getId() + "_" +Objects.getId(this.components);
+		return getId() + "_" + Objects.getId(this.components);
 	}
 	
 	private void waitForInitialization(boolean ignoreThread) {
