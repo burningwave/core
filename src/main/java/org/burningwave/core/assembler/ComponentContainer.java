@@ -34,6 +34,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -167,13 +168,17 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	private ComponentContainer launchInit() {
 		QueuedTasksExecutor.Task initializerTask = this.initializerTask = BackgroundExecutor.createTask(() -> {
-			synchronized (Synchronizer.getMutex(getId() + "_components")) {
+			synchronized (getMutexForComponents()) {
 				this.init();
 				this.initializerTask = null;
 			}
 		}, Thread.MAX_PRIORITY);
 		initializerTask.submit();
 		return this;
+	}
+
+	private Object getMutexForComponents() {
+		return Synchronizer.getMutex(getId() + "_" +Objects.getId(this.components));
 	}
 	
 	private void waitForInitialization(boolean ignoreThread) {
@@ -184,7 +189,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public void reInit() {
-		synchronized (Synchronizer.getMutex(getId() + "_components")) {
+		synchronized (getMutexForComponents()) {
 			clear(true);
 			config.clear();
 			launchInit();
@@ -215,7 +220,7 @@ public class ComponentContainer implements ComponentSupplier {
 		T component = (T)components.get(componentType);
 		if (component == null) {
 			waitForInitialization(false);
-			synchronized (Synchronizer.getMutex(getId() + "_components")) {
+			synchronized (getMutexForComponents()) {
 				if ((component = (T)components.get(componentType)) == null) {
 					component = componentSupplier.get();
 					components.put(componentType, component);
@@ -382,7 +387,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public ComponentContainer clear(boolean wait) {
 		Map<Class<? extends Component>, Component> components = this.components;
-		synchronized (Synchronizer.getMutex(getId() + "_components")) {
+		synchronized (getMutexForComponents()) {
 			this.components = new ConcurrentHashMap<>();
 		}
 		if (wait) {
@@ -508,7 +513,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private void resetPathScannerClassLoader() {
-		synchronized(components) {
+		synchronized (getMutexForComponents()) {
 			PathScannerClassLoader classLoader = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
 			if (classLoader != null) {
 				classLoader.unregister(this, true);
