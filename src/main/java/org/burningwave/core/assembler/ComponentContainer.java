@@ -220,11 +220,12 @@ public class ComponentContainer implements ComponentSupplier {
 		T component = (T)components.get(componentType);
 		if (component == null) {
 			waitForInitialization(false);
-			Synchronizer.execute(getMutexForComponentsId(), () -> {
-				if ((component = (T)components.get(componentType)) == null) {
-					component = componentSupplier.get();
-					components.put(componentType, component);
-				}				
+			component = Synchronizer.execute(getMutexForComponentsId(), () -> {
+				T componentTemp = (T)components.get(componentType);
+				if (componentTemp == null) {
+					components.put(componentType, componentTemp = componentSupplier.get());
+				}
+				return componentTemp;
 			});
 		}
 		return component;
