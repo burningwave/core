@@ -34,6 +34,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -167,10 +168,10 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	private ComponentContainer launchInit() {
 		QueuedTasksExecutor.Task initializerTask = this.initializerTask = BackgroundExecutor.createTask(() -> {
-			synchronized (Synchronizer.getMutex(getId() + "_components")) {
+			Synchronizer.execute(getMutexForComponentsId(), () -> {
 				this.init();
 				this.initializerTask = null;
-			}
+			});
 		}, Thread.MAX_PRIORITY);
 		initializerTask.submit();
 		if (getConfigProperty("component-container.after-init") != null) {
@@ -179,6 +180,10 @@ public class ComponentContainer implements ComponentSupplier {
 			}).async().submit();
 		}
 		return this;
+	}
+
+	private String getMutexForComponentsId() {
+		return getId() + "_" + Objects.getId(this.components);
 	}
 	
 	private void waitForInitialization(boolean ignoreThread) {
@@ -189,11 +194,11 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public void reInit() {
-		synchronized (Synchronizer.getMutex(getId() + "_components")) {
+		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			clear(true);
 			config.clear();
 			launchInit();
-		}
+		});
 	}
 	
 	public static ComponentContainer getInstance() {
@@ -220,12 +225,13 @@ public class ComponentContainer implements ComponentSupplier {
 		T component = (T)components.get(componentType);
 		if (component == null) {
 			waitForInitialization(false);
-			synchronized (Synchronizer.getMutex(getId() + "_components")) {
-				if ((component = (T)components.get(componentType)) == null) {
-					component = componentSupplier.get();
-					components.put(componentType, component);
-				}				
-			}
+			component = Synchronizer.execute(getMutexForComponentsId(), () -> {
+				T componentTemp = (T)components.get(componentType);
+				if (componentTemp == null) {
+					components.put(componentType, componentTemp = componentSupplier.get());
+				}
+				return componentTemp;
+			});
 		}
 		return component;
 	}
@@ -387,9 +393,9 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public ComponentContainer clear(boolean wait) {
 		Map<Class<? extends Component>, Component> components = this.components;
-		synchronized (Synchronizer.getMutex(getId() + "_components")) {
+		Synchronizer.execute(getMutexForComponentsId(), () -> { 
 			this.components = new ConcurrentHashMap<>();
-		}
+		});
 		if (wait) {
 			BackgroundExecutor.waitForTasksEnding();
 		}
@@ -513,12 +519,12 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private void resetPathScannerClassLoader() {
-		synchronized(components) {
+		Synchronizer.execute(getMutexForComponentsId(), () -> { 
 			PathScannerClassLoader classLoader = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
 			if (classLoader != null) {
 				classLoader.unregister(this, true);
 			}
-		}
+		});
 	}
 	
 	private static class LazyHolder {
