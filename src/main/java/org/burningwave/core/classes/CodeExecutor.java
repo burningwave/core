@@ -47,9 +47,16 @@ import org.burningwave.core.iterable.Properties;
 
 @SuppressWarnings("unchecked")
 public class CodeExecutor implements Component {
-	static final String PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX = ".imports";
-	static final String PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX = ".name";
-	static final String PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX = ".simple-name";
+	
+	public static class Configuration {
+		
+		public static class Key {
+			public static final String PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX = ".imports";
+			public static final String PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX = ".name";
+			public static final String PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_SUFFIX = ".simple-name";
+		}
+		
+	}
 	
 	private ClassFactory classFactory;
 	private PathHelper pathHelper;
@@ -115,7 +122,7 @@ public class CodeExecutor implements Component {
 				body.useType(param.getClass());
 			}
 		}
-		String importFromConfig = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, null, true, config.getDefaultValues());
+		String importFromConfig = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX, null, true, config.getDefaultValues());
 		if (Strings.isNotEmpty(importFromConfig)) {
 			Arrays.stream(importFromConfig.replaceAll(";{2,}", ";").split(";")).forEach(imp -> {
 				if (Strings.isNotEmpty(imp)) {
@@ -123,8 +130,8 @@ public class CodeExecutor implements Component {
 				}
 			});
 		}
-		String executorName = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, null, true, config.getDefaultValues());
-		String executorSimpleName = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, null, true, config.getDefaultValues());
+		String executorName = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, null, true, config.getDefaultValues());
+		String executorSimpleName = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_SUFFIX, null, true, config.getDefaultValues());
 
 		if (Strings.isNotEmpty(executorName)) {
 			config.setName(executorName);

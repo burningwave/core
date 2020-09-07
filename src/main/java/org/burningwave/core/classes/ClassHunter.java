@@ -64,14 +64,14 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		
 		static {
 			DEFAULT_VALUES = new HashMap<>();
-			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX,
+			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
 				"${"+ Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + ".additional-imports}" +  ";" +
 				ComponentSupplier.class.getName() + ";" +
 				FileSystemItem.class.getName() + ";" + 
 				PathScannerClassLoader.class.getName() + ";" +
 				Supplier.class.getName() + ";"
 			);
-			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, ClassHunter.class.getPackage().getName() + ".DefaultPathScannerClassLoaderRetrieverForClassHunter");
+			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, ClassHunter.class.getPackage().getName() + ".DefaultPathScannerClassLoaderRetrieverForClassHunter");
 			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
 			DEFAULT_VALUES.put(
 				Key.DEFAULT_PATH_SCANNER_CLASS_LOADER, 

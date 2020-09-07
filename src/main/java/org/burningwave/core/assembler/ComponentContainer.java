@@ -66,6 +66,7 @@ import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.PathScannerClassLoader;
+import org.burningwave.core.classes.SearchResult;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.function.ThrowingRunnable;
@@ -76,6 +77,35 @@ import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings({"unchecked", "resource"})
 public class ComponentContainer implements ComponentSupplier {
+	
+	public static class Configuration {
+		
+		public static class Key {
+			
+			public static final String AFTER_INIT = "component-container.after-init.operations";
+					
+		}
+		
+		public final static Map<String, Object> DEFAULT_VALUES;
+	
+		static {
+			DEFAULT_VALUES = new HashMap<>();
+			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
+			DEFAULT_VALUES.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
+				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".BackgroundExecutor" + ";" +
+				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" +  ";" +
+				ComponentSupplier.class.getName() + ";" +
+				Function.class.getName() + ";" +
+				FileSystemItem.class.getName() + ";" + 
+				PathScannerClassLoader.class.getName() + ";" +
+				SearchResult.class.getName() + ";" +
+				Supplier.class.getName() + ";"
+			);
+			DEFAULT_VALUES.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, ComponentContainer.class.getPackage().getName() + ".AfterInitOperations");
+
+		}
+	}
+	
 	private static Collection<ComponentContainer> instances;
 	protected Map<Class<? extends Component>, Component> components;
 	private Supplier<Properties> propertySupplier;
@@ -131,6 +161,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	private ComponentContainer init() {		
 		TreeMap<Object, Object> defaultProperties = new TreeMap<>();
+		defaultProperties.putAll(Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(PathHelper.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(JavaMemoryCompiler.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
@@ -173,9 +204,9 @@ public class ComponentContainer implements ComponentSupplier {
 				this.init();
 				this.initializerTask = null;
 			});
-			if (config.getProperty("component-container.after-init") != null) {
+			if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
 				BackgroundExecutor.createTask(() -> {
-					getCodeExecutor().executeProperty("component-container.after-init", this);
+					getCodeExecutor().executeProperty(Configuration.Key.AFTER_INIT, this);
 				}).async().submit();
 			}
 		}, Thread.MAX_PRIORITY).async();
@@ -196,9 +227,11 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public void reset() {
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
-			clear(false);
-			this.config = new Properties();
-			launchInit();
+			clear(true);
+			Synchronizer.execute(getMutexForComponentsId(), () -> {
+				this.config = new Properties();
+				launchInit();
+			});
 		});
 	}
 	
@@ -393,10 +426,9 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	
 	public ComponentContainer clear(boolean wait) {
-		Map<Class<? extends Component>, Component> components = new HashMap<>();
-		Synchronizer.execute(getMutexForComponentsId(), () -> {
-			components.putAll(this.components);
-			this.components.clear();
+		Map<Class<? extends Component>, Component> components = this.components;
+		Synchronizer.execute(getMutexForComponentsId(), () -> { 
+			this.components = new ConcurrentHashMap<>();
 		});
 		if (!components.isEmpty()) {
 			if (wait) {
