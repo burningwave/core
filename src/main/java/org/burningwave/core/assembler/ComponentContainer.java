@@ -191,8 +191,10 @@ public class ComponentContainer implements ComponentSupplier {
 	public void reset() {
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			clear(true);
-			config.clear();
-			launchInit();
+			Synchronizer.execute(getMutexForComponentsId(), () -> {
+				this.config = new Properties();
+				launchInit();
+			});
 		});
 	}
 	
