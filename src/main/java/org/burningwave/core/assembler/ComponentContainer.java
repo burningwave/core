@@ -96,8 +96,8 @@ public class ComponentContainer implements ComponentSupplier {
 				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" +  ";" +
 				ComponentSupplier.class.getName() + ";" +
 				Function.class.getName() + ";" +
-				FileSystemItem.class.getName() + ";" + 
-				PathScannerClassLoader.class.getName() + ";" +
+				FileSystemItem.class.getName() + ";" +
+				PathHelper.class.getName() + ";" +
 				SearchResult.class.getName() + ";" +
 				Supplier.class.getName() + ";"
 			);
