@@ -173,6 +173,11 @@ public class ComponentContainer implements ComponentSupplier {
 				this.init();
 				this.initializerTask = null;
 			});
+			if (config.getProperty("component-container.after-init") != null) {
+				BackgroundExecutor.createTask(() -> {
+					getCodeExecutor().executeProperty("component-container.after-init", this);
+				}).async().submit();
+			}
 		}, Thread.MAX_PRIORITY);
 		initializerTask.submit();
 		
