@@ -90,7 +90,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 		static {
 			DEFAULT_VALUES = new HashMap<>();
-			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
+
 			DEFAULT_VALUES.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
 				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".BackgroundExecutor" + ";" +
 				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" +  ";" +
