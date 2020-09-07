@@ -188,7 +188,7 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
-	public void reInit() {
+	public void reset() {
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			clear(true);
 			config.clear();
@@ -391,26 +391,28 @@ public class ComponentContainer implements ComponentSupplier {
 		Synchronizer.execute(getMutexForComponentsId(), () -> { 
 			this.components = new ConcurrentHashMap<>();
 		});
-		if (wait) {
-			BackgroundExecutor.waitForTasksEnding();
-		}
-		Task cleaningTask = BackgroundExecutor.createTask((ThrowingRunnable<?>)() ->
-			IterableObjectHelper.deepClear(components, (type, component) -> {
-				try {
-					if (!(component instanceof PathScannerClassLoader)) {
-						component.close();
-					} else {
-						((PathScannerClassLoader)component).unregister(this, true);
-					}					
-				} catch (Throwable exc) {
-					logError("Exception occurred while closing " + component, exc);
-				}
-			}),Thread.MIN_PRIORITY
-		).submit();
-		if (wait) {
-			BackgroundExecutor.waitFor(cleaningTask);
-			BackgroundExecutor.waitForTasksEnding();
-			System.gc();
+		if (!components.isEmpty()) {
+			if (wait) {
+				BackgroundExecutor.waitForTasksEnding();
+			}
+			Task cleaningTask = BackgroundExecutor.createTask((ThrowingRunnable<?>)() ->
+				IterableObjectHelper.deepClear(components, (type, component) -> {
+					try {
+						if (!(component instanceof PathScannerClassLoader)) {
+							component.close();
+						} else {
+							((PathScannerClassLoader)component).unregister(this, true);
+						}					
+					} catch (Throwable exc) {
+						logError("Exception occurred while closing " + component, exc);
+					}
+				}),Thread.MIN_PRIORITY
+			).submit();
+			if (wait) {
+				BackgroundExecutor.waitFor(cleaningTask);
+				BackgroundExecutor.waitForTasksEnding();
+				System.gc();
+			}
 		}
 		return this;
 	}
@@ -440,10 +442,11 @@ public class ComponentContainer implements ComponentSupplier {
 	void close(boolean force) {
 		if (force || !isUndestroyable) {
 			closeResources(() -> !instances.contains(this),  () -> {
+				instances.remove(this);
 				waitForInitialization(false);
 				unregister(GlobalProperties);
 				unregister(config);
-				instances.remove(this);
+				
 				clear();			
 				components = null;
 				propertySupplier = null;
@@ -528,5 +531,9 @@ public class ComponentContainer implements ComponentSupplier {
 		private static ComponentContainer getComponentContainerInstance() {
 			return COMPONENT_CONTAINER_INSTANCE;
 		}
+	}
+
+	public boolean isClosed() {
+		return !instances.contains(this);
 	}
 }
