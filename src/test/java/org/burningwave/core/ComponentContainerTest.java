@@ -1,6 +1,5 @@
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 
 import org.burningwave.core.assembler.ComponentContainer;
@@ -10,7 +9,7 @@ public class ComponentContainerTest extends BaseTest {
 
 	
 	@Test
-	public void reInitAndCloseTest() {
+	public void resetAndCloseTest() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentSupplier = ComponentContainer.create("burningwave.properties");
 			componentSupplier.getClassFactory();
@@ -19,12 +18,7 @@ public class ComponentContainerTest extends BaseTest {
 			componentSupplier.getCodeExecutor();
 			componentSupplier.getPathHelper();
 			GlobalProperties.put("newPropertyName", "newPropertyValue");
-			componentSupplier.reInit();
-//			if (componentSupplier.getConfigProperty("component-container.after-init") != null) {
-//				BackgroundExecutor.createTask(() -> {
-//					componentSupplier.getCodeExecutor().executeProperty("component-container.after-init", componentSupplier);
-//				}).async().submit();
-//			}
+			componentSupplier.reset();
 			componentSupplier.getClassFactory();
 			componentSupplier.getClassHunter();
 			componentSupplier.getClassPathHunter();
@@ -46,9 +40,9 @@ public class ComponentContainerTest extends BaseTest {
 	
 	
 	@Test
-	public void reInit() {
+	public void reset() {
 		testDoesNotThrow(() -> {
-			getComponentSupplier().reInit();
+			getComponentSupplier().reset();
 		});
 	}
 }

@@ -35,7 +35,7 @@ public class BaseTest implements Component {
 //	}
 	
 	protected synchronized ComponentContainer getComponentSupplier() {
-		if (componentSupplier == null) {
+		if (componentSupplier == null || componentSupplier.isClosed()) {
 			return componentSupplier = ComponentContainer.create("burningwave.properties");
 		}
 		return componentSupplier;
