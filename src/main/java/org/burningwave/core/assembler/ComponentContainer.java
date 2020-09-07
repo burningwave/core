@@ -89,6 +89,7 @@ public class ComponentContainer implements ComponentSupplier {
 	ComponentContainer(Supplier<Properties> propertySupplier) {
 		this.propertySupplier = propertySupplier;
 		this.components = new ConcurrentHashMap<>();
+		this.config = new Properties();
 		instances.add(this);
 	}
 	
@@ -168,8 +169,6 @@ public class ComponentContainer implements ComponentSupplier {
 	private ComponentContainer launchInit() {
 		QueuedTasksExecutor.Task initializerTask = this.initializerTask = BackgroundExecutor.createTask(() -> {
 			Synchronizer.execute(getMutexForComponentsId(), () -> {
-				this.config = new Properties();
-				clear(false);
 				this.init();
 				this.initializerTask = null;
 			});
@@ -180,7 +179,6 @@ public class ComponentContainer implements ComponentSupplier {
 			}
 		}, Thread.MAX_PRIORITY);
 		initializerTask.submit();
-		
 		return this;
 	}
 
@@ -196,7 +194,13 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public void reset() {
-		launchInit();
+		Synchronizer.execute(getMutexForComponentsId(), () -> {
+			clear(false);
+			Synchronizer.execute(getMutexForComponentsId(), () -> {
+				this.config = new Properties();
+				launchInit();
+			});
+		});
 	}
 	
 	public static ComponentContainer getInstance() {
@@ -447,8 +451,7 @@ public class ComponentContainer implements ComponentSupplier {
 			closeResources(() -> !instances.contains(this),  () -> {
 				instances.remove(this);
 				waitForInitialization(false);
-				unregister(GlobalProperties);
-				unregister(config);				
+				unregister(GlobalProperties);		
 				clear();			
 				components = null;
 				propertySupplier = null;
