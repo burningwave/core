@@ -35,12 +35,13 @@ import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProp
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
-import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -195,11 +196,9 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public void reset() {
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
-			clear(true);
-			Synchronizer.execute(getMutexForComponentsId(), () -> {
-				this.config = new Properties();
-				launchInit();
-			});
+			clear(false);
+			this.config = new Properties();
+			launchInit();
 		});
 	}
 	
@@ -394,9 +393,10 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	
 	public ComponentContainer clear(boolean wait) {
-		Map<Class<? extends Component>, Component> components = this.components;
-		Synchronizer.execute(getMutexForComponentsId(), () -> { 
-			this.components = new ConcurrentHashMap<>();
+		Map<Class<? extends Component>, Component> components = new HashMap<>();
+		Synchronizer.execute(getMutexForComponentsId(), () -> {
+			components.putAll(this.components);
+			this.components.clear();
 		});
 		if (!components.isEmpty()) {
 			if (wait) {
