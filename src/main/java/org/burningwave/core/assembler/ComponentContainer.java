@@ -451,7 +451,7 @@ public class ComponentContainer implements ComponentSupplier {
 			closeResources(() -> !instances.contains(this),  () -> {
 				instances.remove(this);
 				waitForInitialization(false);
-				unregister(GlobalProperties);		
+				unregister(GlobalProperties);
 				clear();			
 				components = null;
 				propertySupplier = null;
