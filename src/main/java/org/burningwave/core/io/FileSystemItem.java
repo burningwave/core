@@ -1045,11 +1045,15 @@ public class FileSystemItem implements ManagedLogger {
 			Predicate<FileSystemItem[]> finalFilterPredicate = childAndThis -> {
 				try {
 					return filterPredicate.test(childAndThis);
-				} catch (ArrayIndexOutOfBoundsException exc) {
-					String childAbsolutePath =  childAndThis[0].getAbsolutePath();
-					logWarn("Exception occurred while scanning " + childAbsolutePath);
-					logInfo("Trying to reload content of " + childAbsolutePath + " and test again");
-					childAndThis[0].reloadContent();
+				} catch (ArrayIndexOutOfBoundsException | NullPointerException exc) {
+					String childAbsolutePath = childAndThis[0].getAbsolutePath();
+					logWarn("Exception occurred while scanning {}", childAbsolutePath);
+					logInfo("Trying to reload content of {} and test again", childAbsolutePath);
+					if (exc instanceof ArrayIndexOutOfBoundsException) {
+						childAndThis[0].reloadContent();
+					} else if (exc instanceof NullPointerException) {
+						childAndThis[0].reset();
+					}
 					return filterPredicate.test(childAndThis);
 				} catch (Throwable exc) {
 					if (exceptionHandler != null) {
