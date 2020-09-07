@@ -133,8 +133,8 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 										} catch (ArrayIndexOutOfBoundsException | NullPointerException exc) {
 											if (!isClosed){
 												String childAbsolutePath = child.getAbsolutePath();
-												logWarn("Exception occurred while scanning " + childAbsolutePath);
-												logInfo("Trying to reload content of " + childAbsolutePath + " and test again");
+												logWarn("Exception occurred while scanning {}", childAbsolutePath);
+												logInfo("Trying to reload content of {} and test again", childAbsolutePath);
 												if (exc instanceof ArrayIndexOutOfBoundsException) {
 													child.reloadContent();
 												} else if (exc instanceof NullPointerException) {
