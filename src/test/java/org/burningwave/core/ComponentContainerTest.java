@@ -9,7 +9,7 @@ public class ComponentContainerTest extends BaseTest {
 
 	
 	@Test
-	public void reInitAndCloseTest() {
+	public void resetAndCloseTest() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentSupplier = ComponentContainer.create("burningwave.properties");
 			componentSupplier.getClassFactory();
@@ -18,7 +18,7 @@ public class ComponentContainerTest extends BaseTest {
 			componentSupplier.getCodeExecutor();
 			componentSupplier.getPathHelper();
 			GlobalProperties.put("newPropertyName", "newPropertyValue");
-			componentSupplier.reInit();
+			componentSupplier.reset();
 			componentSupplier.getClassFactory();
 			componentSupplier.getClassHunter();
 			componentSupplier.getClassPathHunter();
@@ -40,9 +40,9 @@ public class ComponentContainerTest extends BaseTest {
 	
 	
 	@Test
-	public void reInit() {
+	public void reset() {
 		testDoesNotThrow(() -> {
-			getComponentSupplier().reInit();
+			getComponentSupplier().reset();
 		});
 	}
 }
