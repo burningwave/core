@@ -34,7 +34,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
-import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -215,7 +214,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 
 	private String getMutexForComponentsId() {
-		return getId() + "_" + Objects.getId(this.components);
+		return getId() + "_components";
 	}
 	
 	private void waitForInitialization(boolean ignoreThread) {
@@ -228,10 +227,8 @@ public class ComponentContainer implements ComponentSupplier {
 	public void reset() {
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			clear(true);
-			Synchronizer.execute(getMutexForComponentsId(), () -> {
-				this.config = new Properties();
-				launchInit();
-			});
+			this.config = new Properties();
+			launchInit();
 		});
 	}
 	
