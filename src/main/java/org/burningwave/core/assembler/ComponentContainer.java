@@ -41,6 +41,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -175,9 +176,9 @@ public class ComponentContainer implements ComponentSupplier {
 			if (config.getProperty("component-container.after-init") != null) {
 				BackgroundExecutor.createTask(() -> {
 					getCodeExecutor().executeProperty("component-container.after-init", this);
-				}, Thread.NORM_PRIORITY).async().submit();
+				}).async().submit();
 			}
-		}, Thread.MAX_PRIORITY);
+		}, Thread.MAX_PRIORITY).async();
 		initializerTask.submit();
 		return this;
 	}
@@ -196,10 +197,8 @@ public class ComponentContainer implements ComponentSupplier {
 	public void reset() {
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			clear(false);
-			Synchronizer.execute(getMutexForComponentsId(), () -> {
-				this.config = new Properties();
-				launchInit();
-			});
+			this.config = new Properties();
+			launchInit();
 		});
 	}
 	
@@ -394,9 +393,10 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	
 	public ComponentContainer clear(boolean wait) {
-		Map<Class<? extends Component>, Component> components = this.components;
-		Synchronizer.execute(getMutexForComponentsId(), () -> { 
-			this.components = new ConcurrentHashMap<>();
+		Map<Class<? extends Component>, Component> components = new HashMap<>();
+		Synchronizer.execute(getMutexForComponentsId(), () -> {
+			components.putAll(this.components);
+			this.components.clear();
 		});
 		if (!components.isEmpty()) {
 			if (wait) {
