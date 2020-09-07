@@ -447,8 +447,6 @@ public class ComponentContainer implements ComponentSupplier {
 				instances.remove(this);
 				waitForInitialization(false);
 				unregister(GlobalProperties);
-				unregister(config);
-				
 				clear();			
 				components = null;
 				propertySupplier = null;
