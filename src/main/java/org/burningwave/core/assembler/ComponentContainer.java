@@ -425,9 +425,9 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	
 	public ComponentContainer clear(boolean wait) {
-		waitForInitialization(false);
 		Map<Class<? extends Component>, Component> components = this.components;
 		Synchronizer.execute(getMutexForComponentsId(), () -> { 
+			waitForInitialization(false);
 			this.components = new ConcurrentHashMap<>();
 		});
 		if (!components.isEmpty()) {
@@ -507,7 +507,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public static void clearAll() {
-		clearAll(false);
+		clearAll(true);
 	}
 	
 	public static void clearAllCaches() {
