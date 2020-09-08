@@ -202,10 +202,8 @@ public class ComponentContainer implements ComponentSupplier {
 	private ComponentContainer launchInit() {
 		String initializerTaskID = UUID.randomUUID().toString();
 		QueuedTasksExecutor.Task initializerTask = BackgroundExecutor.createTask(() -> {
-			Synchronizer.execute(getMutexForComponentsId(), () -> {
-				this.init();
-				this.initializerTasks.remove(initializerTaskID);
-			});
+			this.init();
+			this.initializerTasks.remove(initializerTaskID);
 			if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
 				BackgroundExecutor.createTask(() -> {
 					getCodeExecutor().executeProperty(Configuration.Key.AFTER_INIT, this);
@@ -232,7 +230,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public void reset() {
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
-			clear(false);
+			clear(true);
 			this.config = new Properties();
 			launchInit();
 		});
@@ -251,8 +249,6 @@ public class ComponentContainer implements ComponentSupplier {
 		waitForInitialization(false);
 		return IterableObjectHelper.resolveStringValue(config, propertyName, defaultValues);
 	}
-	
-	
 	
 	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
 		T component = (T)components.get(componentType);
