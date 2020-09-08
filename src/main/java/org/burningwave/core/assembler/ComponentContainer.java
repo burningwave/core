@@ -225,7 +225,6 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public void reset() {
-		waitForInitialization(false);
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			clear(false);
 			this.config = new Properties();
@@ -424,6 +423,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	
 	public ComponentContainer clear(boolean wait) {
+		waitForInitialization(false);
 		Map<Class<? extends Component>, Component> components = this.components;
 		Synchronizer.execute(getMutexForComponentsId(), () -> { 
 			this.components = new ConcurrentHashMap<>();
@@ -460,7 +460,6 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 		ThrowingRunnable<?> cleaningRunnable = () -> {
 			for (ComponentContainer componentContainer : instances) {
-				componentContainer.waitForInitialization(false);
 				componentContainer.clear(wait);
 			}
 		};
