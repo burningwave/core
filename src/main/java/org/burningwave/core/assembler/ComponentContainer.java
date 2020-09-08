@@ -45,6 +45,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -109,7 +110,7 @@ public class ComponentContainer implements ComponentSupplier {
 	protected Map<Class<? extends Component>, Component> components;
 	private Supplier<Properties> propertySupplier;
 	private Properties config;
-	private QueuedTasksExecutor.Task initializerTask;
+	private Map<String, QueuedTasksExecutor.Task> initializerTasks;
 	private boolean isUndestroyable;
 	
 	static {
@@ -120,6 +121,7 @@ public class ComponentContainer implements ComponentSupplier {
 		this.propertySupplier = propertySupplier;
 		this.components = new ConcurrentHashMap<>();
 		this.config = new Properties();
+		this.initializerTasks = new ConcurrentHashMap<>();
 		instances.add(this);
 	}
 	
@@ -198,17 +200,19 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private ComponentContainer launchInit() {
-		QueuedTasksExecutor.Task initializerTask = this.initializerTask = BackgroundExecutor.createTask(() -> {
+		String initializerTaskID = UUID.randomUUID().toString();
+		QueuedTasksExecutor.Task initializerTask = BackgroundExecutor.createTask(() -> {
 			Synchronizer.execute(getMutexForComponentsId(), () -> {
 				this.init();
-				this.initializerTask = null;
+				this.initializerTasks.remove(initializerTaskID);
 			});
 			if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
 				BackgroundExecutor.createTask(() -> {
 					getCodeExecutor().executeProperty(Configuration.Key.AFTER_INIT, this);
 				}).async().submit();
 			}
-		}, Thread.MAX_PRIORITY);
+		}, Thread.MAX_PRIORITY).async();
+		this.initializerTasks.put(initializerTaskID, initializerTask);
 		initializerTask.submit();
 		return this;
 	}
@@ -218,9 +222,10 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private void waitForInitialization(boolean ignoreThread) {
-		QueuedTasksExecutor.Task initializerTask = this.initializerTask;
-		if (initializerTask != null) {
-			initializerTask.join(ignoreThread);
+		if (!this.initializerTasks.isEmpty()) {
+			for (QueuedTasksExecutor.Task initializerTask : this.initializerTasks.values()) {
+				initializerTask.join(ignoreThread);
+			}
 		}
 	}
 	
@@ -484,7 +489,7 @@ public class ComponentContainer implements ComponentSupplier {
 				clear();			
 				components = null;
 				propertySupplier = null;
-				initializerTask = null;
+				initializerTasks = null;
 				config = null;					
 			});
 		} else {
