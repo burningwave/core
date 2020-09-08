@@ -226,6 +226,7 @@ public class ComponentContainer implements ComponentSupplier {
 			for (QueuedTasksExecutor.Task initializerTask : this.initializerTasks.values()) {
 				initializerTask.join(ignoreThread);
 			}
+			waitForInitialization(false);
 		}
 	}
 	
@@ -242,16 +243,12 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public String getConfigProperty(String propertyName) {
-		if (config == null) {
-			waitForInitialization(false);
-		}
+		waitForInitialization(false);
 		return IterableObjectHelper.resolveStringValue(config, propertyName);
 	}
 	
 	public String getConfigProperty(String propertyName, Map<String, String> defaultValues) {
-		if (config == null) {
-			waitForInitialization(false);
-		}
+		waitForInitialization(false);
 		return IterableObjectHelper.resolveStringValue(config, propertyName, defaultValues);
 	}
 	
