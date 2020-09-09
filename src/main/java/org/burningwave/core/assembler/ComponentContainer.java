@@ -207,9 +207,9 @@ public class ComponentContainer implements ComponentSupplier {
 			if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
 				BackgroundExecutor.createTask(() -> {
 					getCodeExecutor().executeProperty(Configuration.Key.AFTER_INIT, this);
-				}).async().submit();
+				}).pureAsync().submit();
 			}
-		}, Thread.MAX_PRIORITY).async();
+		}, Thread.MAX_PRIORITY).pureAsync();
 		this.initializerTasks.put(initializerTaskID, initializerTask);
 		initializerTask.submit();
 		return this;
@@ -442,7 +442,7 @@ public class ComponentContainer implements ComponentSupplier {
 						logError("Exception occurred while closing " + component, exc);
 					}
 				}),Thread.MIN_PRIORITY
-			).async().submit();
+			).pureAsync().submit();
 			if (wait) {
 				BackgroundExecutor.waitFor(cleaningTask);
 				BackgroundExecutor.waitForTasksEnding();
@@ -464,7 +464,7 @@ public class ComponentContainer implements ComponentSupplier {
 		if (wait) {
 			ThrowingRunnable.run(() -> cleaningRunnable.run());
 		} else {
-			BackgroundExecutor.createTask(cleaningRunnable, Thread.MIN_PRIORITY).async().submit();
+			BackgroundExecutor.createTask(cleaningRunnable, Thread.MIN_PRIORITY).pureAsync().submit();
 		}
 		Cache.clear();
 		if (wait) {
