@@ -492,18 +492,14 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		void join0(boolean ignoreThreadCheck) {
-			logInfo("{}", Thread.currentThread());
 			if (!hasFinished() && ((ignoreThreadCheck) ||
 				(!ignoreThreadCheck && Thread.currentThread() != executor && executor != null))
 			) {
 				synchronized (this) {
-					logInfo("{}", Thread.currentThread());
 					if (!hasFinished() && ((ignoreThreadCheck) ||
 						(!ignoreThreadCheck && Thread.currentThread() != executor && executor != null))) {
 						try {
-							logInfo("{}", Thread.currentThread());
 							wait();
-							logInfo("{}", Thread.currentThread());
 						} catch (InterruptedException exc) {
 							throw Throwables.toRuntimeException(exc);
 						}
