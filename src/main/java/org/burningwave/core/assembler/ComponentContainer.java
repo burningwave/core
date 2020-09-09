@@ -448,7 +448,7 @@ public class ComponentContainer implements ComponentSupplier {
 						logError("Exception occurred while closing " + component, exc);
 					}
 				}),Thread.MIN_PRIORITY
-			).submit();
+			).async().submit();
 			if (wait) {
 				BackgroundExecutor.waitFor(cleaningTask);
 				BackgroundExecutor.waitForTasksEnding();
@@ -470,7 +470,7 @@ public class ComponentContainer implements ComponentSupplier {
 		if (wait) {
 			ThrowingRunnable.run(() -> cleaningRunnable.run());
 		} else {
-			BackgroundExecutor.createTask(cleaningRunnable, Thread.MIN_PRIORITY).submit();
+			BackgroundExecutor.createTask(cleaningRunnable, Thread.MIN_PRIORITY).async().submit();
 		}
 		Cache.clear();
 		if (wait) {
