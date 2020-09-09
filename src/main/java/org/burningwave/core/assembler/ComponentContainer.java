@@ -458,6 +458,7 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 		ThrowingRunnable<?> cleaningRunnable = () -> {
 			for (ComponentContainer componentContainer : instances) {
+				componentContainer.waitForInitialization(false);
 				componentContainer.clear(wait);
 			}
 		};
