@@ -761,7 +761,7 @@ public class QueuedTasksExecutor implements Component {
 					return executable -> new QueuedTasksExecutor.ProducerTask<T>(executable) {
 						
 						public QueuedTasksExecutor.ProducerTask<T> submit() {
-							return addToQueue(this, false);
+							return Group.this.getByPriority(this.priority).addToQueue(this, false);
 						};
 						
 						public QueuedTasksExecutor.ProducerTask<T> changePriority(int priority) {
