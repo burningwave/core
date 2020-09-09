@@ -803,10 +803,12 @@ public class QueuedTasksExecutor implements Component {
 				<T> Function<ThrowingRunnable<? extends Throwable> , QueuedTasksExecutor.Task> getTaskSupplier() {
 					return executable -> new QueuedTasksExecutor.Task(executable) {
 						
+						@Override
 						public QueuedTasksExecutor.Task submit() {
 							return Group.this.getByPriority(this.priority).addToQueue(this, false);
 						};
 						
+						@Override
 						public QueuedTasksExecutor.Task changePriority(int priority) {
 							if (runOnlyOnce) {
 								Task task = getEffectiveTask();
@@ -818,6 +820,7 @@ public class QueuedTasksExecutor implements Component {
 							return Group.this.changePriority(this, priority);
 						};
 						
+						@Override
 						public QueuedTasksExecutor.Task async() {
 							if (runOnlyOnce) {
 								Task task = getEffectiveTask();
@@ -829,6 +832,7 @@ public class QueuedTasksExecutor implements Component {
 							return Group.this.changeExecutionMode(this, QueuedTasksExecutor.TaskAbst.Execution.Mode.ASYNC);
 						}
 						
+						@Override
 						public QueuedTasksExecutor.Task pureAsync() {
 							if (runOnlyOnce) {
 								Task task = getEffectiveTask();
@@ -853,6 +857,7 @@ public class QueuedTasksExecutor implements Component {
 					};
 				}
 				
+				@Override
 				public QueuedTasksExecutor waitForTasksEnding(int priority) {
 					if (priority == defaultPriority) {
 						while (!tasksQueue.isEmpty()) {
@@ -876,11 +881,13 @@ public class QueuedTasksExecutor implements Component {
 					return this;
 				}
 				
+				@Override
 				public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, int priority) {
 					task.join0(false);
 					return this;
 				}
 				
+				@Override
 				Task createSuspendingTask(int priority) {
 					return createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE);
 				}
