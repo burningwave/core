@@ -421,17 +421,18 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	
 	public ComponentContainer clear(boolean wait) {
-		Map<Class<? extends Component>, Component> oldComponents = this.components;
+		Map<Class<? extends Component>, Component> components = this.components;
+		logInfo("{}", Thread.currentThread());
 		Synchronizer.execute(getMutexForComponentsId(), () -> { 
 			waitForInitialization(false);
 			this.components = new ConcurrentHashMap<>();
 		});
-		if (!oldComponents.isEmpty()) {
+		if (!components.isEmpty()) {
 			if (wait) {
 				BackgroundExecutor.waitForTasksEnding();
 			}
 			Task cleaningTask = BackgroundExecutor.createTask((ThrowingRunnable<?>)() ->
-				IterableObjectHelper.deepClear(oldComponents, (type, component) -> {
+				IterableObjectHelper.deepClear(components, (type, component) -> {
 					try {
 						if (!(component instanceof PathScannerClassLoader)) {
 							component.close();
@@ -458,7 +459,6 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 		ThrowingRunnable<?> cleaningRunnable = () -> {
 			for (ComponentContainer componentContainer : instances) {
-				componentContainer.waitForInitialization(false);
 				componentContainer.clear(wait);
 			}
 		};
