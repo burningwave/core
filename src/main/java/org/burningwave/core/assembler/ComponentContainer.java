@@ -229,8 +229,8 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public void reset() {
+		clear(false);
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
-			clear(true);
 			this.config = new Properties();
 			launchInit();
 		});
