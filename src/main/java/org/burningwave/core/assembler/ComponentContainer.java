@@ -230,7 +230,9 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public void reset() {
 		clear(false);
+		logInfo("{}", Thread.currentThread());
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
+			logInfo("{}", Thread.currentThread());
 			this.config = new Properties();
 			launchInit();
 		});
@@ -254,7 +256,9 @@ public class ComponentContainer implements ComponentSupplier {
 		T component = (T)components.get(componentType);
 		if (component == null) {
 			waitForInitialization(false);
+			logInfo("{}", Thread.currentThread());
 			component = Synchronizer.execute(getMutexForComponentsId(), () -> {
+				logInfo("{}", Thread.currentThread());
 				T componentTemp = (T)components.get(componentType);
 				if (componentTemp == null) {
 					components.put(componentType, componentTemp = componentSupplier.get());
@@ -424,6 +428,7 @@ public class ComponentContainer implements ComponentSupplier {
 		Map<Class<? extends Component>, Component> components = this.components;
 		logInfo("{}", Thread.currentThread());
 		Synchronizer.execute(getMutexForComponentsId(), () -> { 
+			logInfo("{}", Thread.currentThread());
 			waitForInitialization(false);
 			this.components = new ConcurrentHashMap<>();
 		});
@@ -550,7 +555,9 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private void resetPathScannerClassLoader() {
-		Synchronizer.execute(getMutexForComponentsId(), () -> { 
+		logInfo("{}", Thread.currentThread());
+		Synchronizer.execute(getMutexForComponentsId(), () -> {
+			logInfo("{}", Thread.currentThread());
 			PathScannerClassLoader classLoader = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
 			if (classLoader != null) {
 				classLoader.unregister(this, true);
