@@ -35,11 +35,14 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Executable;
+import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
@@ -51,9 +54,27 @@ public class CodeExecutor implements Component {
 	public static class Configuration {
 		
 		public static class Key {
+			public static final String COMMON_IMPORTS = "code-executor.common.imports";
+			public static final String ADDITIONAL_COMMON_IMPORTS = "code-executor.common.additional-imports";
 			public static final String PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX = ".imports";
 			public static final String PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX = ".name";
 			public static final String PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_SUFFIX = ".simple-name";
+		}
+		
+		public final static Map<String, Object> DEFAULT_VALUES;
+		
+		static {
+			DEFAULT_VALUES = new HashMap<>();
+
+			DEFAULT_VALUES.put(Key.COMMON_IMPORTS,
+				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".BackgroundExecutor" + ";" +
+				"${"+ Key.ADDITIONAL_COMMON_IMPORTS +  "}" +
+				ComponentSupplier.class.getName() + ";" +
+				Function.class.getName() + ";" +
+				FileSystemItem.class.getName() + ";" +
+				PathHelper.class.getName() + ";" +
+				Supplier.class.getName() + ";"
+			);
 		}
 		
 	}

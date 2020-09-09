@@ -92,14 +92,9 @@ public class ComponentContainer implements ComponentSupplier {
 			DEFAULT_VALUES = new HashMap<>();
 
 			DEFAULT_VALUES.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
-				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".BackgroundExecutor" + ";" +
-				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" +  ";" +
-				ComponentSupplier.class.getName() + ";" +
-				Function.class.getName() + ";" +
-				FileSystemItem.class.getName() + ";" +
-				PathHelper.class.getName() + ";" +
-				SearchResult.class.getName() + ";" +
-				Supplier.class.getName() + ";"
+				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + ";" + 
+				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + ";" + 
+				SearchResult.class.getName() + ";"
 			);
 			DEFAULT_VALUES.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, ComponentContainer.class.getPackage().getName() + ".AfterInitOperations");
 
@@ -163,6 +158,7 @@ public class ComponentContainer implements ComponentSupplier {
 	private ComponentContainer init() {		
 		TreeMap<Object, Object> defaultProperties = new TreeMap<>();
 		defaultProperties.putAll(Configuration.DEFAULT_VALUES);
+		defaultProperties.putAll(CodeExecutor.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(PathHelper.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(JavaMemoryCompiler.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
