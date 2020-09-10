@@ -198,8 +198,11 @@ public class ComponentContainer implements ComponentSupplier {
 	private ComponentContainer launchInit() {
 		String initializerTaskID = UUID.randomUUID().toString();
 		QueuedTasksExecutor.Task initializerTask = BackgroundExecutor.createTask(() -> {
-			this.init();
-			this.initializerTasks.remove(initializerTaskID);
+			try {
+				this.init();
+			} finally {
+				this.initializerTasks.remove(initializerTaskID);
+			}			
 			if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
 				BackgroundExecutor.createTask(() -> {
 					getCodeExecutor().executeProperty(Configuration.Key.AFTER_INIT, this);
