@@ -460,7 +460,7 @@ public class ComponentContainer implements ComponentSupplier {
 		if (wait) {
 			ThrowingRunnable.run(() -> cleaningRunnable.run());
 		} else {
-			BackgroundExecutor.createTask(cleaningRunnable, Thread.MIN_PRIORITY).submit();
+			BackgroundExecutor.createTask(cleaningRunnable, Thread.MIN_PRIORITY).pureAsync().submit();
 		}
 		Cache.clear();
 		if (wait) {
