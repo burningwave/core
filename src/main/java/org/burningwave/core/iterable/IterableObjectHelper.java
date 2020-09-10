@@ -297,6 +297,7 @@ public class IterableObjectHelper implements Component {
 			if (!Strings.isEmpty(stringValue)) {
 				Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, stringValue);		
 				if (!subProperties.isEmpty()) {
+					boolean addStringValueAfterIteration = false;
 					for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
 						for (String propName : entry.getValue()) {
 							Object valueObjects = null;
@@ -312,7 +313,11 @@ public class IterableObjectHelper implements Component {
 							}
 							if (deleteUnresolvedPlaceHolder && valueObjects == null) {
 								stringValue = stringValue.replaceAll(Strings.placeHolderToRegEx("${" + propName + "}") + ".*?" + Optional.ofNullable(valuesSeparator).orElseGet(() -> ""), "");
-								values.add(stringValue);
+								if (valuesSeparator != null) {
+									values.add(stringValue);
+								} else {
+									addStringValueAfterIteration = true;
+								}
 							} else if (valueObjects != null) {
 								Collection<Object> replacements = new ArrayList<>();
 								if (valueObjects instanceof String) {
@@ -326,7 +331,8 @@ public class IterableObjectHelper implements Component {
 									if (valueObject instanceof String) {
 										String replacement = (String)valueObject;
 										if (valuesSeparator == null) {
-											values.add(stringValue.replace("${" + propName + "}", replacement));
+											addStringValueAfterIteration = true;
+											stringValue = stringValue.replace("${" + propName + "}", replacement);
 										} else {
 											for (String replacementUnit : replacement.split(valuesSeparator)) {
 												String valuesToAdd = stringValue.replace("${" + propName + "}", replacementUnit);
@@ -347,6 +353,9 @@ public class IterableObjectHelper implements Component {
 								values.add(stringValue);
 							}
 						}
+					}
+					if (addStringValueAfterIteration) {
+						values.add(stringValue);
 					}
 				} else {
 					if (valuesSeparator != null) {
