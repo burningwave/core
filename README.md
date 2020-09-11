@@ -971,7 +971,7 @@ class-factory.byte-code-hunter.search-config.check-file-option=\
 	${hunters.default-search-config.check-file-option}
 #default classloader used by the ClassFactory to load generated classes
 class-factory.default-class-loader=\
-    (Supplier<ClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
+	(Supplier<ClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
 #This variable is empty by default and can be valorized by developer and it is
 #included by 'class-factory.default-class-loader.imports' property
 class-factory.default-class-loader.additional-imports=
@@ -982,7 +982,7 @@ class-factory.default-class-loader.imports=\
 class-factory.default-class-loader.name=\
 	org.burningwave.core.classes.DefaultClassLoaderRetrieverForClassFactory
 class-hunter.default-path-scanner-class-loader=\
-    (Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
+	(Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
 #This variable is empty by default and can be valorized by developer and it is
 #included by 'class-hunter.default-path-scanner-class-loader.imports' property
 class-hunter.default-path-scanner-class-loader.additional-imports=
