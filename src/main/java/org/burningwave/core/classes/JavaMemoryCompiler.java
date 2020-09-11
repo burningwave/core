@@ -42,6 +42,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -88,20 +89,21 @@ public class JavaMemoryCompiler implements Component {
 		public final static Map<String, Object> DEFAULT_VALUES;
 		
 		static {
-			DEFAULT_VALUES = new HashMap<>();
-			DEFAULT_VALUES.put(
+			Map<String, Object> defaultValues = new HashMap<>();
+
+			defaultValues.put(
 				Key.CLASS_PATHS,
-				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
-				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
+				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + PathHelper.Configuration.getPathsSeparator() + 
+				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.getPathsSeparator() + 
 				"${" + Configuration.Key.ADDITIONAL_CLASS_PATHS + "}"
 			);
-			DEFAULT_VALUES.put(
+			defaultValues.put(
 				Key.CLASS_REPOSITORIES,
-				"${" + PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
-				"${" + Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR
+				"${" + PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.getPathsSeparator() +
+				"${" + Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.getPathsSeparator()
 			);
 			
-			
+			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
 	

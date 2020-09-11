@@ -34,17 +34,19 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
-import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
-import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -59,12 +61,12 @@ import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHelper;
 import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.ClassPathScannerAbst;
-import org.burningwave.core.classes.ClassPathScannerWithCachingSupport;
 import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.PathScannerClassLoader;
+import org.burningwave.core.classes.SearchResult;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.function.ThrowingRunnable;
@@ -75,11 +77,39 @@ import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings({"unchecked", "resource"})
 public class ComponentContainer implements ComponentSupplier {
+	
+	public static class Configuration {
+		
+		public static class Key {
+			
+			public static final String AFTER_INIT = "component-container.after-init.operations";
+					
+		}
+		
+		public final static Map<String, Object> DEFAULT_VALUES;
+	
+		static {
+			Map<String, Object> defaultValues = new HashMap<>();
+
+			defaultValues.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
+				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR + 
+				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR + 
+				SearchResult.class.getName() + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR
+			);
+			defaultValues.put(
+				Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, 
+				ComponentContainer.class.getPackage().getName() + ".AfterInitOperations"
+			);
+			
+			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
+		}
+	}
+	
 	private static Collection<ComponentContainer> instances;
 	protected Map<Class<? extends Component>, Component> components;
 	private Supplier<Properties> propertySupplier;
 	private Properties config;
-	private QueuedTasksExecutor.Task initializerTask;
+	private Map<String, QueuedTasksExecutor.Task> initializerTasks;
 	private boolean isUndestroyable;
 	
 	static {
@@ -90,6 +120,7 @@ public class ComponentContainer implements ComponentSupplier {
 		this.propertySupplier = propertySupplier;
 		this.components = new ConcurrentHashMap<>();
 		this.config = new Properties();
+		this.initializerTasks = new ConcurrentHashMap<>();
 		instances.add(this);
 	}
 	
@@ -130,12 +161,13 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	private ComponentContainer init() {		
 		TreeMap<Object, Object> defaultProperties = new TreeMap<>();
+		defaultProperties.putAll(Configuration.DEFAULT_VALUES);
+		defaultProperties.putAll(CodeExecutor.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(PathHelper.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(JavaMemoryCompiler.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassPathScannerAbst.Configuration.DEFAULT_VALUES);
-		defaultProperties.putAll(ClassPathScannerWithCachingSupport.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassPathHelper.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(PathScannerClassLoader.Configuration.DEFAULT_VALUES);
 				
@@ -144,9 +176,13 @@ public class ComponentContainer implements ComponentSupplier {
 		for (Map.Entry<Object, Object> defVal : defaultProperties.entrySet()) {
 			config.putIfAbsent(defVal.getKey(), defVal.getValue());
 		}
+		
+		Map<Object, Object> componentContainerConfig = new TreeMap<>(config);
+		componentContainerConfig.keySet().removeAll(GlobalProperties.keySet());
 		logInfo(
-			"Configuration values:\n\n{}\n\n... Are assumed",
-			new TreeMap<>(config).entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
+			"\nConfiguration values for\n\n\tstatic components:\n{}\n\n\tdynamic components:\n{}\n\n... Are assumed",
+			new TreeMap<>(GlobalProperties).entrySet().stream().map(entry -> "\t\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n")),
+			componentContainerConfig.entrySet().stream().map(entry -> "\t\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
 		);
 		listenTo(GlobalProperties);
 		return this;
@@ -167,34 +203,42 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private ComponentContainer launchInit() {
-		QueuedTasksExecutor.Task initializerTask = this.initializerTask = BackgroundExecutor.createTask(() -> {
-			Synchronizer.execute(getMutexForComponentsId(), () -> {
+		String initializerTaskID = UUID.randomUUID().toString();
+		QueuedTasksExecutor.Task initializerTask = BackgroundExecutor.createTask(() -> {
+			try {
 				this.init();
-				this.initializerTask = null;
-			});
-		}, Thread.MAX_PRIORITY);
+			} finally {
+				this.initializerTasks.remove(initializerTaskID);
+			}			
+			if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
+				BackgroundExecutor.createTask(() -> {
+					getCodeExecutor().executeProperty(Configuration.Key.AFTER_INIT, this);
+				}).pureAsync().submit();
+			}
+		}, Thread.MAX_PRIORITY).pureAsync();
+		this.initializerTasks.put(initializerTaskID, initializerTask);
 		initializerTask.submit();
 		return this;
 	}
 
 	private String getMutexForComponentsId() {
-		return getId() + "_" + Objects.getId(this.components);
+		return getId() + "_components";
 	}
 	
 	private void waitForInitialization(boolean ignoreThread) {
-		QueuedTasksExecutor.Task initializerTask = this.initializerTask;
-		if (initializerTask != null) {
-			initializerTask.join(ignoreThread);
+		if (!this.initializerTasks.isEmpty()) {
+			for (QueuedTasksExecutor.Task initializerTask : this.initializerTasks.values()) {
+				initializerTask.join(ignoreThread);
+			}
+			waitForInitialization(false);
 		}
 	}
 	
 	public void reset() {
+		clear(false);
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
-			clear(true);
-			Synchronizer.execute(getMutexForComponentsId(), () -> {
-				this.config = new Properties();
-				launchInit();
-			});
+			this.config = new Properties();
+			launchInit();
 		});
 	}
 	
@@ -203,20 +247,14 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public String getConfigProperty(String propertyName) {
-		if (config == null) {
-			waitForInitialization(false);
-		}
+		waitForInitialization(false);
 		return IterableObjectHelper.resolveStringValue(config, propertyName);
 	}
 	
 	public String getConfigProperty(String propertyName, Map<String, String> defaultValues) {
-		if (config == null) {
-			waitForInitialization(false);
-		}
+		waitForInitialization(false);
 		return IterableObjectHelper.resolveStringValue(config, propertyName, defaultValues);
 	}
-	
-	
 	
 	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
 		T component = (T)components.get(componentType);
@@ -391,6 +429,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public ComponentContainer clear(boolean wait) {
 		Map<Class<? extends Component>, Component> components = this.components;
 		Synchronizer.execute(getMutexForComponentsId(), () -> { 
+			waitForInitialization(false);
 			this.components = new ConcurrentHashMap<>();
 		});
 		if (!components.isEmpty()) {
@@ -409,7 +448,7 @@ public class ComponentContainer implements ComponentSupplier {
 						logError("Exception occurred while closing " + component, exc);
 					}
 				}),Thread.MIN_PRIORITY
-			).submit();
+			).pureAsync().submit();
 			if (wait) {
 				BackgroundExecutor.waitFor(cleaningTask);
 				BackgroundExecutor.waitForTasksEnding();
@@ -425,14 +464,13 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 		ThrowingRunnable<?> cleaningRunnable = () -> {
 			for (ComponentContainer componentContainer : instances) {
-				componentContainer.waitForInitialization(false);
 				componentContainer.clear(wait);
 			}
 		};
 		if (wait) {
 			ThrowingRunnable.run(() -> cleaningRunnable.run());
 		} else {
-			BackgroundExecutor.createTask(cleaningRunnable, Thread.MIN_PRIORITY).submit();
+			BackgroundExecutor.createTask(cleaningRunnable, Thread.MIN_PRIORITY).pureAsync().submit();
 		}
 		Cache.clear();
 		if (wait) {
@@ -450,7 +488,7 @@ public class ComponentContainer implements ComponentSupplier {
 				clear();			
 				components = null;
 				propertySupplier = null;
-				initializerTask = null;
+				initializerTasks = null;
 				config = null;					
 			});
 		} else {
@@ -471,7 +509,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public static void clearAll() {
-		clearAll(false);
+		clearAll(true);
 	}
 	
 	public static void clearAllCaches() {
@@ -517,7 +555,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private void resetPathScannerClassLoader() {
-		Synchronizer.execute(getMutexForComponentsId(), () -> { 
+		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			PathScannerClassLoader classLoader = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
 			if (classLoader != null) {
 				classLoader.unregister(this, true);
