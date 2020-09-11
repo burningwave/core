@@ -83,7 +83,6 @@ public class PathHelper implements Component {
 		static {
 			Map<String, Object> defaultValues = new HashMap<>();
 			
-			defaultValues.put(Key.PATHS_SEPARATOR, IterableObjectHelper.getDefaultValuesSeparator());
 			defaultValues.put(Key.MAIN_CLASS_PATHS, "${system.properties:java.class.path}");
 			defaultValues.put(
 				Key.MAIN_CLASS_PATHS_EXTENSION, 
@@ -99,7 +98,7 @@ public class PathHelper implements Component {
 		}
 		
 		public static String getPathsSeparator() {
-			return (String)DEFAULT_VALUES.get(Configuration.Key.PATHS_SEPARATOR);
+			return IterableObjectHelper.getDefaultValuesSeparator();
 		}
 	}	
 	

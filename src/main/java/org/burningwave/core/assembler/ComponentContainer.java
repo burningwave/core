@@ -176,9 +176,13 @@ public class ComponentContainer implements ComponentSupplier {
 		for (Map.Entry<Object, Object> defVal : defaultProperties.entrySet()) {
 			config.putIfAbsent(defVal.getKey(), defVal.getValue());
 		}
+		
+		Map<Object, Object> componentContainerConfig = new TreeMap<>(config);
+		componentContainerConfig.keySet().removeAll(GlobalProperties.keySet());
 		logInfo(
-			"Configuration values:\n\n{}\n\n... Are assumed",
-			new TreeMap<>(config).entrySet().stream().map(entry -> "\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
+			"\nConfiguration values for\n\n\tstatic components:\n{}\n\n\tdynamic components:\n{}\n\n... Are assumed",
+			new TreeMap<>(GlobalProperties).entrySet().stream().map(entry -> "\t\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n")),
+			componentContainerConfig.entrySet().stream().map(entry -> "\t\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
 		);
 		listenTo(GlobalProperties);
 		return this;
