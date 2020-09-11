@@ -212,9 +212,10 @@ public class ComponentContainer implements ComponentSupplier {
 				this.initializerTasks.remove(initializerTaskID);
 			}			
 			if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
-				BackgroundExecutor.createTask(() -> {
+				Task task = BackgroundExecutor.createTask(() -> {
 					getCodeExecutor().executeProperty(Configuration.Key.AFTER_INIT, this);
 				}).pureAsync().submit();
+				task.join();
 			}
 		}, Thread.MAX_PRIORITY).pureAsync();
 		this.initializerTasks.put(initializerTaskID, initializerTask);
@@ -465,7 +466,11 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 		ThrowingRunnable<?> cleaningRunnable = () -> {
 			for (ComponentContainer componentContainer : instances) {
-				componentContainer.clear(wait);
+				try {
+					componentContainer.clear(wait);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError("Exception occurred while executing clear on " + componentContainer.toString(), exc);
+				}
 			}
 		};
 		if (wait) {
