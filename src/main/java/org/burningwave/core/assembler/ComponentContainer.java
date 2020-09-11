@@ -466,7 +466,11 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 		ThrowingRunnable<?> cleaningRunnable = () -> {
 			for (ComponentContainer componentContainer : instances) {
-				componentContainer.clear(wait);
+				try {
+					componentContainer.clear(wait);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError("Exception occurred while executing clear on " + componentContainer.toString(), exc);
+				}
 			}
 		};
 		if (wait) {
