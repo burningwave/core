@@ -32,12 +32,12 @@ public class UnitSourceGeneratorTest extends BaseTest {
 					.setTypeDeclaration(TypeDeclarationSourceGenerator.create(GenericSourceGenerator.create("F"), GenericSourceGenerator.create("G")))
 					.setReturnType(TypeDeclarationSourceGenerator.create(Long.class))
 					.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Long.class), "parameter1")
-							.addOuterCodeRow("@Parameter"))
+							.addOuterCodeLine("@Parameter"))
 					.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(String.class), "parameter2"))
 					.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Long.class), "parameter3"))
-					.addBodyCodeRow("System.out.println(\"Hello world!\");")
-					.addBodyCodeRow("System.out.println(\"How are you!\");").addBodyCodeRow("return new Long(1);")
-					.addOuterCodeRow("@MethodAnnotation");
+					.addBodyCodeLine("System.out.println(\"Hello world!\");")
+					.addBodyCodeLine("System.out.println(\"How are you!\");").addBodyCodeLine("return new Long(1);")
+					.addOuterCodeLine("@MethodAnnotation");
 
 			FunctionSourceGenerator method2 = FunctionSourceGenerator.create("find2").addModifier(Modifier.PUBLIC)
 					.setTypeDeclaration(TypeDeclarationSourceGenerator.create(GenericSourceGenerator.create("F"), GenericSourceGenerator.create("G")))
@@ -45,10 +45,10 @@ public class UnitSourceGeneratorTest extends BaseTest {
 					.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Long.class), "parameter1"))
 					.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(String.class), "parameter2"))
 					.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Long.class), "parameter3"))
-					.addBodyCodeRow("System.out.println(\"Hello world!\");")
-					.addBodyCodeRow("System.out.println(\"How are you!\");").addBodyCodeRow("return new Long(1);");
+					.addBodyCodeLine("System.out.println(\"Hello world!\");")
+					.addBodyCodeLine("System.out.println(\"How are you!\");").addBodyCodeLine("return new Long(1);");
 
-			FunctionSourceGenerator constructor = FunctionSourceGenerator.create().addModifier(Modifier.PUBLIC).addBodyCodeRow("this.index1 = 1;");
+			FunctionSourceGenerator constructor = FunctionSourceGenerator.create().addModifier(Modifier.PUBLIC).addBodyCodeLine("this.index1 = 1;");
 
 			ClassSourceGenerator cls = ClassSourceGenerator
 					.create(TypeDeclarationSourceGenerator.create("Generated0")
@@ -60,7 +60,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 											.addGeneric(GenericSourceGenerator.create("Y")))))
 					.addModifier(Modifier.PUBLIC).expands(Object.class)
 					.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Integer.class), "index1").setValue("new Integer(1)")
-							.addModifier(Modifier.PRIVATE).addOuterCodeRow("@Field").addOuterCodeRow("@Annotation2"))
+							.addModifier(Modifier.PRIVATE).addOuterCodeLine("@Field").addOuterCodeLine("@Annotation2"))
 					.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Collection.class).addGeneric(GenericSourceGenerator.create("String").addOuterCode("@NotNull")), "collection")
 							.addModifier(Modifier.PRIVATE))
 					.addConstructor(constructor).addMethod(method).addMethod(method2);
@@ -74,10 +74,10 @@ public class UnitSourceGeneratorTest extends BaseTest {
 											.addGeneric(GenericSourceGenerator.create("Y")))))
 					.addModifier(Modifier.PUBLIC).expands(Object.class)
 					.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Integer.class), "index1")
-							.addModifier(Modifier.PRIVATE).addOuterCodeRow("@Field"))
+							.addModifier(Modifier.PRIVATE).addOuterCodeLine("@Field"))
 					.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Integer.class), "index2")
 							.addModifier(Modifier.PRIVATE))
-					.addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation2")
+					.addOuterCodeLine("@Annotation").addOuterCodeLine("@Annotation2")
 					.addInnerClass(ClassSourceGenerator
 							.create(TypeDeclarationSourceGenerator.create("Generated2")
 									.addGeneric(GenericSourceGenerator.create("T")
@@ -106,7 +106,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 					            	)
 					            )
 							)
-					.addMethod(method)).addOuterCodeRow("@Annotation").addOuterCodeRow("@Annotation2");
+					.addMethod(method)).addOuterCodeLine("@Annotation").addOuterCodeLine("@Annotation2");
 			unit.addClass(cls);
 			unit.addClass(cls);
 			logDebug(unit.make());
@@ -193,8 +193,8 @@ public class UnitSourceGeneratorTest extends BaseTest {
                 )
                 .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create("T")))
                 .addModifier(Modifier.PUBLIC)
-                .addOuterCodeRow("@Override")
-                .addBodyCodeRow("return (Comparable<T>)new Date();")
+                .addOuterCodeLine("@Override")
+                .addBodyCodeLine("return (Comparable<T>)new Date();")
                 .useType(Date.class)
             ).addConcretizedType(
                 MyInterface.class

@@ -98,7 +98,7 @@ public class SourceCodeHandler implements Component {
 			VariableSourceGenerator.create(
 				TypeDeclarationSourceGenerator.create("Object... "), "parameter"
 			)
-		).addOuterCodeRow("@Override").addBodyElement(body);
+		).addOuterCodeLine("@Override").addBodyElement(body);
 		typeDeclaration.addGeneric(returnType);		
 		ClassSourceGenerator cls = ClassSourceGenerator.create(
 			typeDeclaration
@@ -126,8 +126,8 @@ public class SourceCodeHandler implements Component {
 			void.class
 		).addModifier(Modifier.PUBLIC).setDefault().addParameter(
 			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("Object..."), "params")
-		).addOuterCodeRow("@Override");
-		varArgsAcceptMethod.addBodyCodeRow("accept(");
+		).addOuterCodeLine("@Override");
+		varArgsAcceptMethod.addBodyCodeLine("accept(");
 		BodySourceGenerator applyMethodCodeOne = BodySourceGenerator.createSimple().setBodyElementSeparator(", ");
 		for (int i = 0; i < parametersLength; i++) {
 			typeDeclaration.addGeneric(GenericSourceGenerator.create("P" + i));
@@ -146,7 +146,7 @@ public class SourceCodeHandler implements Component {
 			acceptMethod
 		).addMethod(
 			varArgsAcceptMethod
-		).addOuterCodeRow("@FunctionalInterface");
+		).addOuterCodeLine("@FunctionalInterface");
 		return UnitSourceGenerator.create(packageName).addClass(cls);
 	};
 	
@@ -164,8 +164,8 @@ public class SourceCodeHandler implements Component {
 			boolean.class
 		).addModifier(Modifier.PUBLIC).setDefault().addParameter(
 			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("Object..."), "params")
-		).addOuterCodeRow("@Override");
-		varArgsTestMethod.addBodyCodeRow("return test(");
+		).addOuterCodeLine("@Override");
+		varArgsTestMethod.addBodyCodeLine("return test(");
 		BodySourceGenerator applyMethodCodeOne = BodySourceGenerator.createSimple().setBodyElementSeparator(", ");
 		for (int i = 0; i < parametersLength; i++) {
 			typeDeclaration.addGeneric(GenericSourceGenerator.create("P" + i));
@@ -184,7 +184,7 @@ public class SourceCodeHandler implements Component {
 			testMethod
 		).addMethod(
 			varArgsTestMethod
-		).addOuterCodeRow("@FunctionalInterface");
+		).addOuterCodeLine("@FunctionalInterface");
 		return UnitSourceGenerator.create(packageName).addClass(cls);
 	};
 	
@@ -203,8 +203,8 @@ public class SourceCodeHandler implements Component {
 			returnType
 		).addModifier(Modifier.PUBLIC).setDefault().addParameter(
 			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("Object..."), "params")
-		).addOuterCodeRow("@Override");
-		varArgsApplyMethod.addBodyCodeRow("return apply(");
+		).addOuterCodeLine("@Override");
+		varArgsApplyMethod.addBodyCodeLine("return apply(");
 		BodySourceGenerator applyMethodCodeOne = BodySourceGenerator.createSimple().setBodyElementSeparator(", ");
 		for (int i = 0; i < parametersLength; i++) {
 			typeDeclaration.addGeneric(GenericSourceGenerator.create("P" + i));
@@ -224,7 +224,7 @@ public class SourceCodeHandler implements Component {
 			applyMethod
 		).addMethod(
 			varArgsApplyMethod
-		).addOuterCodeRow("@FunctionalInterface");
+		).addOuterCodeLine("@FunctionalInterface");
 		return UnitSourceGenerator.create(packageName).addClass(cls);
 	};
 	

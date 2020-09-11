@@ -126,7 +126,7 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		return this.parameters;
 	}
 	
-	public FunctionSourceGenerator addOuterCodeRow(String... codes) {
+	public FunctionSourceGenerator addOuterCodeLine(String... codes) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
 		for (String code : codes) {
 			if (!this.outerCode.isEmpty()) {
@@ -152,9 +152,9 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
-	public FunctionSourceGenerator addBodyCodeRow(String... code) {
+	public FunctionSourceGenerator addBodyCodeLine(String... code) {
 		this.body = Optional.ofNullable(this.body).orElseGet(BodySourceGenerator::create);
-		this.body.addCodeRow(code);
+		this.body.addCodeLine(code);
 		return this;
 	}
 	

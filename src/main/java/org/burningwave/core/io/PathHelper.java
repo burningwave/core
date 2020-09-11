@@ -116,6 +116,7 @@ public class PathHelper implements Component {
 		initializerTask = BackgroundExecutor.createTask(() -> {
 			loadMainClassPaths();	
 			loadAllPaths();
+			logInfo("\nAll loaded paths:\n{}", String.join("\n", this.allPaths));
 			initializerTask = null;
 		}, Thread.MAX_PRIORITY);
 		initializerTask.submit();

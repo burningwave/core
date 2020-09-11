@@ -218,8 +218,8 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 			virtualizeClasses(false);
 		}
 		
-		public ExecuteConfig.ForBodySourceGenerator addCodeRow(String... codeRow) {
-			body.addCodeRow(codeRow);
+		public ExecuteConfig.ForBodySourceGenerator addCodeLine(String... lineOfCode) {
+			body.addCodeLine(lineOfCode);
 			return this;
 		}
 		

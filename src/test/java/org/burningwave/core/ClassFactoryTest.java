@@ -215,7 +215,7 @@ public class ClassFactoryTest extends BaseTest {
 					VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(InputStream.class), "inputStream")
 				).addThrowable(
 					TypeDeclarationSourceGenerator.create("SOAPException")				
-				).addBodyCodeRow("super(parentSoapMsg, inputStream);")
+				).addBodyCodeLine("super(parentSoapMsg, inputStream);")
 			)
 		).addImport(
 			"org.apache.axis2.saaj.SOAPPartImpl",
@@ -237,7 +237,7 @@ public class ClassFactoryTest extends BaseTest {
 					VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(InputStream.class), "inputStream")
 				).addThrowable(
 					TypeDeclarationSourceGenerator.create("SOAPException")				
-				).addBodyCodeRow("super(parentSoapMsg, inputStream);")
+				).addBodyCodeLine("super(parentSoapMsg, inputStream);")
 			)
 		).addImport(
 			"org.apache.axis2.saaj.SOAPPartImpl",
@@ -328,7 +328,7 @@ public class ClassFactoryTest extends BaseTest {
 			).addConstructor(
 				FunctionSourceGenerator.create().addParameter(
 					VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("BuiltinClassLoader"), "parent")
-				).addBodyCodeRow("super(null, parent, null);")
+				).addBodyCodeLine("super(null, parent, null);")
 			)
 		).addImport(
 			"jdk.internal.loader.BuiltinClassLoader"

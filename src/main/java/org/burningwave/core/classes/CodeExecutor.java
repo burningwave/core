@@ -44,6 +44,7 @@ import java.util.function.Supplier;
 import org.burningwave.core.Component;
 import org.burningwave.core.Executable;
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
@@ -76,6 +77,8 @@ public class CodeExecutor implements Component {
 				Function.class.getName() + Key.CODE_LINE_SEPARATOR +
 				FileSystemItem.class.getName() + Key.CODE_LINE_SEPARATOR +
 				PathHelper.class.getName() + Key.CODE_LINE_SEPARATOR +
+				QueuedTasksExecutor.ProducerTask.class.getName() + Key.CODE_LINE_SEPARATOR +
+				QueuedTasksExecutor.Task.class.getName() + Key.CODE_LINE_SEPARATOR +
 				Supplier.class.getName() + Key.CODE_LINE_SEPARATOR
 			);
 			
@@ -194,19 +197,19 @@ public class CodeExecutor implements Component {
 		if (code.contains(";")) {
 			if (config.isIndentCodeActive()) {
 				code = code.replaceAll(";{2,}", ";");
-				for (String codeRow : code.split(";")) {
-					if (Strings.isNotEmpty(codeRow)) {
-						body.addCodeRow(codeRow + ";");
+				for (String codeLine : code.split(";")) {
+					if (Strings.isNotEmpty(codeLine)) {
+						body.addCodeLine(codeLine + ";");
 					}
 				}
 			} else {
-				body.addCodeRow(code);
+				body.addCodeLine(code);
 			}
 			if (!code.contains("return")) {
-				body.addCodeRow("return null;");
+				body.addCodeLine("return null;");
 			}
 		} else {
-			body.addCodeRow(code.contains("return")?
+			body.addCodeLine(code.contains("return")?
 				code:
 				"return (T)" + code + ";"
 			);

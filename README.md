@@ -94,7 +94,7 @@ public class RuntimeClassExtender {
                 ).addParameter(VariableSourceGenerator.create(LocalDateTime.class, "localDateTime"))
                 .addModifier(Modifier.PUBLIC)
                 .addAnnotation(AnnotationSourceGenerator.create(Override.class))
-                .addBodyCodeRow("return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());")
+                .addBodyCodeLine("return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());")
                 .useType(ZoneId.class)
             ).addConcretizedType(
                 MyInterface.class
@@ -185,13 +185,13 @@ public class SourceCodeExecutor {
         return componentSupplier.getCodeExecutor().execute(
             ExecuteConfig.forBodySourceGenerator(
                 BodySourceGenerator.createSimple().useType(ArrayList.class, List.class)
-                .addCodeRow("System.out.println(\"number to add: \" + parameter[0]);")
-                .addCodeRow("List<Integer> numbers = new ArrayList<>();")
-                .addCodeRow("numbers.add((Integer)parameter[0]);")
-                .addCodeRow("System.out.println(\"number list size: \" + numbers.size());")
-                .addCodeRow("System.out.println(\"number in the list: \" + numbers.get(0));")
-                .addCodeRow("Integer inputNumber = (Integer)parameter[0];")
-                .addCodeRow("return (T)new Integer(inputNumber + (Integer)parameter[1]);")
+                .addCodeLine("System.out.println(\"number to add: \" + parameter[0]);")
+                .addCodeLine("List<Integer> numbers = new ArrayList<>();")
+                .addCodeLine("numbers.add((Integer)parameter[0]);")
+                .addCodeLine("System.out.println(\"number list size: \" + numbers.size());")
+                .addCodeLine("System.out.println(\"number in the list: \" + numbers.get(0));")
+                .addCodeLine("Integer inputNumber = (Integer)parameter[0];")
+                .addCodeLine("return (T)new Integer(inputNumber + (Integer)parameter[1]);")
             ).withParameter(Integer.valueOf(5), Integer.valueOf(3))
         );
         

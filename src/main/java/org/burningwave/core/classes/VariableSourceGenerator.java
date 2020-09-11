@@ -78,7 +78,7 @@ public class VariableSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
-	public VariableSourceGenerator addOuterCodeRow(String code) {
+	public VariableSourceGenerator addOuterCodeLine(String code) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
 		if (!this.outerCode.isEmpty()) {
 			this.outerCode.add("\n" + code);

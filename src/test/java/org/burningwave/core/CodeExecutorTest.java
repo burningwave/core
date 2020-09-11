@@ -18,13 +18,13 @@ public class CodeExecutorTest extends BaseTest {
 			return componentSupplier.getCodeExecutor().execute(
 				ExecuteConfig.forBodySourceGenerator()
 				.useType(ArrayList.class, List.class)
-				.addCodeRow("System.out.println(\"number to add: \" + parameter[0]);")
-				.addCodeRow("List<Integer> numbers = new ArrayList<>();")
-				.addCodeRow("numbers.add((Integer)parameter[0]);")
-				.addCodeRow("System.out.println(\"number list size: \" + numbers.size());")
-				.addCodeRow("System.out.println(\"number in the list: \" + numbers.get(0));")
-				.addCodeRow("Integer inputNumber = (Integer)parameter[0];")
-				.addCodeRow("return (T)inputNumber++;")		
+				.addCodeLine("System.out.println(\"number to add: \" + parameter[0]);")
+				.addCodeLine("List<Integer> numbers = new ArrayList<>();")
+				.addCodeLine("numbers.add((Integer)parameter[0]);")
+				.addCodeLine("System.out.println(\"number list size: \" + numbers.size());")
+				.addCodeLine("System.out.println(\"number in the list: \" + numbers.get(0));")
+				.addCodeLine("Integer inputNumber = (Integer)parameter[0];")
+				.addCodeLine("return (T)inputNumber++;")		
 				.withParameter(Integer.valueOf(5))
 			);
 		});
