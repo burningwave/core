@@ -65,8 +65,8 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		static {
 			DEFAULT_VALUES = new HashMap<>();
 			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
-				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + ";" + 
-				"${"+ Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + ".additional-imports}" +  ";" +
+				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR + 
+				"${"+ Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + ".additional-imports}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR +
 				PathScannerClassLoader.class.getName() + ";"
 			);
 			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, ClassHunter.class.getPackage().getName() + ".DefaultPathScannerClassLoaderRetrieverForClassHunter");

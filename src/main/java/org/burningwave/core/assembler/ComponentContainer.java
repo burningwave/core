@@ -92,9 +92,9 @@ public class ComponentContainer implements ComponentSupplier {
 			DEFAULT_VALUES = new HashMap<>();
 
 			DEFAULT_VALUES.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
-				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + ";" + 
-				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + ";" + 
-				SearchResult.class.getName() + ";"
+				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR + 
+				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR + 
+				SearchResult.class.getName() + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR
 			);
 			DEFAULT_VALUES.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, ComponentContainer.class.getPackage().getName() + ".AfterInitOperations");
 

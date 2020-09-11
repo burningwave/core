@@ -107,11 +107,11 @@ public class Properties extends java.util.Properties {
 ////////////////////
 	
 	public <T> T resolveValue(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return IterableObjectHelper.resolveObjectValue(this, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+		return IterableObjectHelper.resolveValue(this, key, valuesSeparator, deleteUnresolvedPlaceHolder);
 	}
 	
 	public <T> Collection<T> resolveValues(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return IterableObjectHelper.resolveObjectValues(this, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+		return IterableObjectHelper.resolveValues(this, key, valuesSeparator, deleteUnresolvedPlaceHolder);
 	}
 	
 	public String resolveStringValue(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {

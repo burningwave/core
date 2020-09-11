@@ -29,6 +29,7 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
@@ -69,7 +70,7 @@ public class PathHelper implements Component {
 		
 		public static class Key {
 			public static String PATHS_PREFIX = "paths.";
-			public static String PATHS_SEPARATOR = ";";
+			public static String PATHS_SEPARATOR = IterableObjectHelper.DEFAULT_STRING_VALUES_SEPERATOR;
 			public static String MAIN_CLASS_PATHS = PATHS_PREFIX + "main-class-paths";
 			public static String MAIN_CLASS_PATHS_PLACE_HOLDER = "${" + MAIN_CLASS_PATHS + "}";
 			public static String MAIN_CLASS_PATHS_EXTENSION = MAIN_CLASS_PATHS + ".extension";

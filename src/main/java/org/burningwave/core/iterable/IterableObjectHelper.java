@@ -41,6 +41,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -50,6 +51,8 @@ import org.burningwave.core.function.ThrowingConsumer;
 
 @SuppressWarnings("unchecked")
 public class IterableObjectHelper implements Component {
+	public final String DEFAULT_STRING_VALUES_SEPERATOR = ";";
+	
 	private IterableObjectHelper() {}
 	
 	public static IterableObjectHelper create() {
@@ -135,11 +138,11 @@ public class IterableObjectHelper implements Component {
 ////////////////////	
 	
 	public <T> T resolveValue(Map<?,?> map, String key) {
-		return resolveValue(key, () -> resolve(map, key, null, false, null));
+		return resolveValue(key, () -> resolve(map, key, null, null, false, null));
 	}	
 	
 	public <T> Collection<T> resolveValues(Map<?,?> map, String key) {
-		return resolve(map, key, null, false, null);
+		return resolve(map, key, null, null, false, null);
 	}	
 	
 	public Collection<String> resolveStringValues(Map<?,?> map, String key) {
@@ -153,11 +156,11 @@ public class IterableObjectHelper implements Component {
 ////////////////////
 	
 	public <T> T resolveValue(Map<?,?> map, String key, Map<String, ?> defaultValues) {
-		return resolveValue(key, () -> resolve(map, key, null, false, defaultValues));
+		return resolveValue(key, () -> resolve(map, key, null, null, false, defaultValues));
 	}	
 	
 	public <T> Collection<T> resolveValues(Map<?,?> map, String key, Map<String, ?> defaultValues) {
-		return resolve(map, key, null, false, defaultValues);
+		return resolve(map, key, null, null, false, defaultValues);
 	}
 	
 	public String resolveStringValue(Map<?,?> map, String key, Map<String, ?> defaultValues) {
@@ -171,11 +174,11 @@ public class IterableObjectHelper implements Component {
 ////////////////////
 	
 	public <T> T resolveValue(Map<?,?> map, String key, String valuesSeparator) {
-		return resolveValue(key, () -> resolve(map, key, valuesSeparator, false, null));
+		return resolveValue(key, () -> resolve(map, key, valuesSeparator, null, false, null));
 	}	
 	
 	public <T> Collection<T> resolveValues(Map<?,?> map, String key, String valuesSeparator) {
-		return resolve(map, key, valuesSeparator, false, null);
+		return resolve(map, key, valuesSeparator, null, false, null);
 	}
 	
 	public String resolveStringValue(Map<?,?> map, String key, String valuesSeparator) {
@@ -189,21 +192,21 @@ public class IterableObjectHelper implements Component {
 ////////////////////
 
 	
-	public <T> T resolveObjectValue(
+	public <T> T resolveValue(
 		Map<?,?> map,
 		String key,
 		String valuesSeparator,
 		boolean deleteUnresolvedPlaceHolder
 	) {
-		return resolveValue(key, () -> resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, null));
+		return resolveValue(key, () -> resolve(map, key, valuesSeparator, null, deleteUnresolvedPlaceHolder, null));
 	}
 
-	public <T> Collection<T> resolveObjectValues(
+	public <T> Collection<T> resolveValues(
 		Map<?,?> map, String key,
 		String valuesSeparator,
 		boolean deleteUnresolvedPlaceHolder
 	) {
-		return resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, null);
+		return resolve(map, key, valuesSeparator, null, deleteUnresolvedPlaceHolder, null);
 	}
 
 	public String resolveStringValue(
@@ -212,7 +215,7 @@ public class IterableObjectHelper implements Component {
 		String valuesSeparator,
 		boolean deleteUnresolvedPlaceHolder
 	) {
-		return resolveObjectValue(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+		return resolveValue(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
 	}
 
 	public Collection<String> resolveStringValues(
@@ -221,7 +224,7 @@ public class IterableObjectHelper implements Component {
 		String valuesSeparator,
 		boolean deleteUnresolvedPlaceHolder
 	) {
-		return resolveObjectValues(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+		return resolveValues(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
 	}
 	
 ////////////////////
@@ -229,39 +232,44 @@ public class IterableObjectHelper implements Component {
 		Map<?,?> map,
 		String key,
 		String valuesSeparator,
+		String defaultValuesSeparator,
 		boolean deleteUnresolvedPlaceHolder,
 		Map<?,?> defaultValues
 	) {
-		return resolveValue(key, () -> resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues));
+		return resolveValue(key, () -> resolve(map, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues));
 	}
 
 	public <T> Collection<T> resolveValues(
-		Map<?,?> map, String key,
+		Map<?,?> map,
+		String key,
 		String valuesSeparator,
+		String defaultValuesSeparator,
 		boolean deleteUnresolvedPlaceHolder,
 		Map<?,?> defaultValues
 	) {
-		return resolve(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+		return resolve(map, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 	}
 
 	public String resolveStringValue(
 		Map<?,?> map,
 		String key,
 		String valuesSeparator,
+		String defaultValuesSeparator,
 		boolean deleteUnresolvedPlaceHolder,
 		Map<?,?> defaultValues
 	) {
-		return resolveValue(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+		return resolveValue(map, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 	}
 
 	public Collection<String> resolveStringValues(
 		Map<?,?> map,
 		String key,
 		String valuesSeparator,
+		String defaultValuesSeparator,
 		boolean deleteUnresolvedPlaceHolder,
 		Map<?,?> defaultValues
 	) {
-		return resolveValues(map, key, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+		return resolveValues(map, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 	}
 	
 ////////////////////	
@@ -284,12 +292,14 @@ public class IterableObjectHelper implements Component {
 		Map<?,?> map,
 		Object key,
 		String valuesSeparator,
+		String defaultValueSeparator,
 		boolean deleteUnresolvedPlaceHolder,
 		Map<?,?> defaultValues
-	) {
+	) {	
+		String valuesSeparatorForSplitting = valuesSeparator != null ? valuesSeparator : defaultValueSeparator != null ? defaultValueSeparator : DEFAULT_STRING_VALUES_SEPERATOR;
 		T value = (T) map.get(key);
 		if (value == null && defaultValues != null) {
-			value = (T) resolve(defaultValues, key, valuesSeparator, deleteUnresolvedPlaceHolder, null);
+			value = (T) resolve(defaultValues, key, valuesSeparator, defaultValueSeparator, deleteUnresolvedPlaceHolder, null);
 		}
 		if (value != null && value instanceof String) {
 			String stringValue = (String)value;
@@ -297,69 +307,76 @@ public class IterableObjectHelper implements Component {
 			if (!Strings.isEmpty(stringValue)) {
 				Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, stringValue);		
 				if (!subProperties.isEmpty()) {
-					boolean addStringValueAfterIteration = false;
 					for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
-						for (String propName : entry.getValue()) {
+						for (String placeHolder : entry.getValue()) {
 							Object valueObjects = null;
-							if (!propName.startsWith("system.properties:")) {
-								valueObjects = resolve(map, propName, valuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+							if (!placeHolder.startsWith("system.properties:")) {
+								valueObjects = resolve(map, placeHolder, valuesSeparator, defaultValueSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 							} else {
-								valueObjects = System.getProperty(propName.split(":")[1]);
-								if (valuesSeparator != null) {
+								valueObjects = System.getProperty(placeHolder.split(":")[1]);
+								if (valuesSeparatorForSplitting != null) {
 									valueObjects = ((String)valueObjects).replace(
-										System.getProperty("path.separator"), valuesSeparator
+										System.getProperty("path.separator"), valuesSeparatorForSplitting
 									);
 								}
 							}
-							if (deleteUnresolvedPlaceHolder && valueObjects == null) {
-								stringValue = stringValue.replaceAll(Strings.placeHolderToRegEx("${" + propName + "}") + ".*?" + Optional.ofNullable(valuesSeparator).orElseGet(() -> ""), "");
-								if (valuesSeparator != null) {
-									values.add(stringValue);
-								} else {
-									addStringValueAfterIteration = true;
+							if (valueObjects == null) {
+								if (deleteUnresolvedPlaceHolder) {
+									stringValue = stringValue.replaceAll(Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?" + valuesSeparatorForSplitting, "");
 								}
-							} else if (valueObjects != null) {
-								Collection<Object> replacements = new ArrayList<>();
-								if (valueObjects instanceof String) {
-									replacements.add(valueObjects);
-								} else if (valueObjects instanceof Collection) {
-									replacements.addAll((Collection<?>)valueObjects);
-								} else {
-									replacements.add(valueObjects);
-								}
-								for (Object valueObject : replacements) {
-									if (valueObject instanceof String) {
-										String replacement = (String)valueObject;
-										if (valuesSeparator == null) {
-											addStringValueAfterIteration = true;
-											stringValue = stringValue.replace("${" + propName + "}", replacement);
-										} else {
-											for (String replacementUnit : replacement.split(valuesSeparator)) {
-												String valuesToAdd = stringValue.replace("${" + propName + "}", replacementUnit);
-												if (valuesToAdd.contains(valuesSeparator)) {
-													for (String valueToAdd : valuesToAdd.split(valuesSeparator)) {
-														values.add(valueToAdd);
-													}
-												} else {
-													values.add(valuesToAdd);
-												}
-											}
-										}
-									} else {
-										values.add(valueObject);
-									}
-								}
+								continue;
+							}
+							Collection<Object> replacements = new ArrayList<>();
+							if (valueObjects instanceof Collection) {
+								replacements.addAll((Collection<?>)valueObjects);
 							} else {
-								values.add(stringValue);
+								replacements.add(valueObjects);
+							}
+							String regExpPattern = "("+Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?" + valuesSeparatorForSplitting +")";
+							Map<Integer, List<String>> placeHolderedValues = Strings.extractAllGroups(
+								Pattern.compile(regExpPattern), stringValue 
+							);
+							if (placeHolderedValues.isEmpty()) {
+								regExpPattern = "("+Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?)";
+								placeHolderedValues = Strings.extractAllGroups(
+									Pattern.compile(regExpPattern), stringValue 
+								);
+							}									
+							for (Map.Entry<Integer, List<String>> placeHolderedValuesEntry : placeHolderedValues.entrySet()) {												
+								for (String placeHolderedValue : placeHolderedValuesEntry.getValue()) {
+									String newReplacement = "";
+									for (Object valueObject : replacements) {
+										if (valueObject instanceof String) {
+											String replacement = (String)valueObject;
+											if (valuesSeparator != null) {
+												for (String replacementUnit : replacement.split(valuesSeparatorForSplitting)) {
+													newReplacement += placeHolderedValue.replace("${" + placeHolder + "}", replacementUnit);
+													newReplacement += newReplacement.endsWith(valuesSeparatorForSplitting) ? "" : valuesSeparatorForSplitting;
+												}
+											} else {
+												newReplacement += placeHolderedValue.replace("${" + placeHolder + "}", replacement);
+											}
+										} else {
+											values.add(valueObject);
+										}
+									}
+									stringValue = stringValue.replace(placeHolderedValue, newReplacement);
+								}										
 							}
 						}
 					}
-					if (addStringValueAfterIteration) {
-						values.add(stringValue);
+					if (stringValue != null && !stringValue.isEmpty()) {
+						if (valuesSeparator == null) {
+							values.add(stringValue);
+						} else {
+							for (String valueToAdd : stringValue.split(valuesSeparatorForSplitting)) {
+								values.add(valueToAdd);
+							}
+						}
 					}
 				} else {
 					if (valuesSeparator != null) {
-						for (String valueToAdd : stringValue.split(valuesSeparator)) {
+						for (String valueToAdd : stringValue.split(valuesSeparatorForSplitting)) {
 							values.add(valueToAdd);
 						}
 					} else {
