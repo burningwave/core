@@ -45,7 +45,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.36.2</version>
+    <version>7.37.0</version>
 </dependency>
 ```
 
@@ -1071,7 +1071,7 @@ If you create a component container instance through method ComponentContainer.c
 ```java
 ComponentContainer.create("org/burningwave/custom-config-file.properties")
 ```
-[Here an example of a **burningwave.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.properties).
+[Here an example of a **burningwave.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.properties)
 
 ### Other examples of using some components:
 <details open>
