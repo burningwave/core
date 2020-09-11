@@ -900,6 +900,7 @@ public class UseOfStaticComponentsExample {
 ### Configuration
 The configuration of this type of container is done via **burningwave.static.properties** file or via **burningwave.static.default.properties** file: the library searches for the first file and if it does not find it, then it searches for the second file and if neither this one is found then the library sets the default configuration programmatically. **The default configuration loaded programmatically if no configuration file is found is the following**:
 ```properties
+iterable-object-helper.default-values-separator=;
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
 #the SLF4JManagedLoggerRepository will be instantiated, otherwise the SimpleManagedLoggerRepository will be instantiated
 managed-logger.repository=autodetect
@@ -910,21 +911,7 @@ streams.default-buffer-size=1024
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
 ```
 **If in your custom burningwave.static.properties or burningwave.static.default.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
-Here an example of a **burningwave.static.properties** file with all configurable properties:
-```properties
-#other possible values are: autodetect, org.burningwave.core.SimpleManagedLoggerRepository
-managed-logger.repository=org.burningwave.core.SLF4JManagedLoggerRepository
-#to increase performance set it to false
-managed-logger.repository.enabled=true
-managed-logger.repository.logging.debug.disabled-for=\
-    org.burningwave.core.io.FileSystemItem;\
-    org.burningwave.core.classes.PathMemoryClassLoader;\
-    org.burningwave.core.classes.MemoryClassLoader;
-streams.default-buffer-size=0.5Kb
-#other possible value is ByteBuffer::allocate
-streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
-static-component-container.hide-banner-on-init=false
-```
+[Here an example of a **burningwave.static.properties**](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.static.properties)
 <br/>
 
 ## Dynamic component container
@@ -981,51 +968,62 @@ If you use the singleton instance obtained via ComponentContainer.getInstance() 
 **The default configuration automatically loaded if no configuration file is found is the following**:
 ```properties
 class-factory.byte-code-hunter.search-config.check-file-option=\
-    ${hunters.default-search-config.check-file-option}
+	${hunters.default-search-config.check-file-option}
 #default classloader used by the ClassFactory to load generated classes
 class-factory.default-class-loader=\
     (Supplier<ClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
 #This variable is empty by default and can be valorized by developer and it is
 #included by 'class-factory.default-class-loader.imports' property
 class-factory.default-class-loader.additional-imports=
-class-factory.default-class-loader.imports=\  
-    ${class-factory.default-class-loader.additional-imports};\
-    org.burningwave.core.assembler.ComponentSupplier;\
-    java.util.function.Function;\
-    org.burningwave.core.io.FileSystemItem;\
-    org.burningwave.core.classes.PathScannerClassLoader;\
-    java.util.function.Supplier;
+class-factory.default-class-loader.imports=\
+	${code-executor.common.imports};\
+	${class-factory.default-class-loader.additional-imports};\
+	org.burningwave.core.classes.PathScannerClassLoader;
 class-factory.default-class-loader.name=\
-    org.burningwave.core.classes.DefaultClassLoaderRetrieverForClassFactory
+	org.burningwave.core.classes.DefaultClassLoaderRetrieverForClassFactory
 class-hunter.default-path-scanner-class-loader=\
     (Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
 #This variable is empty by default and can be valorized by developer and it is
 #included by 'class-hunter.default-path-scanner-class-loader.imports' property
 class-hunter.default-path-scanner-class-loader.additional-imports=
 class-hunter.default-path-scanner-class-loader.imports=\
-    ${class-hunter.default-path-scanner-class-loader.additional-imports};\
-    org.burningwave.core.assembler.ComponentSupplier;\
-    org.burningwave.core.io.FileSystemItem;\
-    org.burningwave.core.classes.PathScannerClassLoader;\
-    java.util.function.Supplier;
+	${code-executor.common.imports};\
+	${class-hunter.default-path-scanner-class-loader.additional-imports};\
+	org.burningwave.core.classes.PathScannerClassLoader;
 class-hunter.default-path-scanner-class-loader.name=\
-    org.burningwave.core.classes.DefaultPathScannerClassLoaderRetrieverForClassHunter
+	org.burningwave.core.classes.DefaultPathScannerClassLoaderRetrieverForClassHunter
 class-hunter.new-isolated-path-scanner-class-loader.search-config.check-file-option=\
-    ${hunters.default-search-config.check-file-option}
+	${hunters.default-search-config.check-file-option}
 class-path-helper.class-path-hunter.search-config.check-file-option=\
-    ${hunters.default-search-config.check-file-option}
+	${hunters.default-search-config.check-file-option}
+#This variable is empty by default and can be valorized by developer and it is
+#included by 'code-executor.common.import' property
+code-executor.common.additional-imports=
+code-executor.common.imports=\
+	static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;\
+	${code-executor.common.additional-imports};\
+	org.burningwave.core.assembler.ComponentSupplier;\
+	java.util.function.Function;\
+	org.burningwave.core.io.FileSystemItem;\
+	org.burningwave.core.io.PathHelper;\
+	org.burningwave.core.concurrent.QueuedTasksExecutor$ProducerTask;\
+	org.burningwave.core.concurrent.QueuedTasksExecutor$Task;\
+	java.util.function.Supplier;
+component-container.after-init.operations.imports=\
+	${code-executor.common.imports};\
+	${component-container.after-init.operations.additional-imports};\
+	org.burningwave.core.classes.SearchResult;
+component-container.after-init.operations.name=\
+	org.burningwave.core.assembler.AfterInitOperations
 hunters.default-search-config.check-file-option=\
-    ${path-scanner-class-loader.search-config.check-file-option}
+	${path-scanner-class-loader.search-config.check-file-option}
 path-scanner-class-loader.parent=\
-    Thread.currentThread().getContextClassLoader()
+	Thread.currentThread().getContextClassLoader()
 path-scanner-class-loader.parent.imports=\
-    ${path-scanner-class-loader.parent.additional-imports};\
-    org.burningwave.core.assembler.ComponentSupplier;\
-    org.burningwave.core.io.FileSystemItem;\
-    org.burningwave.core.classes.PathScannerClassLoader;\
-    java.util.function.Supplier;
+	${code-executor.common.imports};\
+	${path-scanner-class-loader.parent.additional-imports};
 path-scanner-class-loader.parent.name=\
-    org.burningwave.core.classes.ParentClassLoaderRetrieverForPathScannerClassLoader
+	org.burningwave.core.classes.ParentClassLoaderRetrieverForPathScannerClassLoader
 #other possible values are: checkFileName, checkFileName|checkFileSignature, checkFileName&checkFileSignature
 path-scanner-class-loader.search-config.check-file-option=checkFileName
 #This variable is empty by default and can be valorized by developer and it is
@@ -1034,36 +1032,38 @@ paths.class-factory.default-class-loader.additional-class-repositories=
 #this variable indicates all the paths from which the classes 
 #must be taken if during the definition of the compiled classes
 #on classloader there will be classes not found
-paths.class-factory.default-class-loader.class-repositories=
-    ${paths.java-memory-compiler.class-paths};\
-    ${paths.java-memory-compiler.class-repositories};\
-    ${paths.class-factory.default-class-loader.additional-class-repositories}
+paths.class-factory.default-class-loader.class-repositories=\
+	${paths.java-memory-compiler.class-paths};\
+	${paths.java-memory-compiler.class-repositories};\
+	${paths.class-factory.default-class-loader.additional-class-repositories}
 paths.hunters.default-search-config.paths=\
-    ${paths.main-class-paths};\
-    ${paths.main-class-paths.extension};\
-    ${paths.main-class-repositories};
+	${paths.main-class-paths};\
+	${paths.main-class-paths.extension};\
+	${paths.main-class-repositories};
 #This variable is empty by default and can be valorized by developer and it is
 #included by 'paths.paths.java-memory-compiler.class-paths' property
 paths.java-memory-compiler.additional-class-paths=
 #this variable indicates all the class paths used by the JavaMemoryCompiler
 #component for compiling
 paths.java-memory-compiler.class-paths=\
-    ${paths.main-class-paths};\
-    ${paths.main-class-paths.extension};\
-    ${paths.java-memory-compiler.additional-class-paths}
+	${paths.main-class-paths};\
+	${paths.main-class-paths.extension};\
+	${paths.java-memory-compiler.additional-class-paths}
 #This variable is empty by default and can be valorized by developer. and it is
 #included by 'paths.java-memory-compiler.class-repositories' property
 paths.java-memory-compiler.additional-class-repositories=
 #All paths inserted here will be analyzed by JavaMemoryCompiler component in case 
 #of compilation failure to search for class paths of all classes imported by sources 
 paths.java-memory-compiler.class-repositories=\
-    ${paths.main-class-repositories};\
-    ${paths.java-memory-compiler.additional-class-repositories};
-paths.main-class-paths=${system.properties:java.class.path}
+	${paths.main-class-repositories};\
+	${paths.java-memory-compiler.additional-class-repositories};
+paths.main-class-paths=\
+	${system.properties:java.class.path}
 paths.main-class-paths.extension=\
-    //${system.properties:java.home}/lib//children:.*?\.jar;\
-    //${system.properties:java.home}/lib/ext//children:.*?\.jar;
-paths.main-class-repositories=//${system.properties:java.home}/jmods//children:.*?\.jmod;
+	//${system.properties:java.home}/lib//children:.*?\.jar;\
+	//${system.properties:java.home}/lib/ext//children:.*?\.jar;
+paths.main-class-repositories=\
+	//${system.properties:java.home}/jmods//children:.*?\.jmod;
 ```
 **If in your custom burningwave.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 
@@ -1071,86 +1071,7 @@ If you create a component container instance through method ComponentContainer.c
 ```java
 ComponentContainer.create("org/burningwave/custom-config-file.properties")
 ```
-Here an example of a **burningwave.properties** file with all configurable properties:
-```properties
-class-factory.byte-code-hunter.search-config.check-file-option=\
-    checkFileName&checkFileSignature
-class-factory.default-class-loader.parent=Thread.currentThread().getContextClassLoader()
-class-factory.default-class-loader=PathScannerClassLoader.create(\
-    ${class-factory.default-class-loader.parent},\
-    ((ComponentSupplier)parameter[0]).getPathHelper(),\
-    FileSystemItem.Criteria.forClassTypeFiles(\
-        FileSystemItem.CheckingOption.FOR_NAME\
-    )\
-)
-class-factory.default-class-loader.additional-imports=java.util.function.Consumer;
-class-factory.default-class-loader.imports=\
-    ${class-factory.default-class-loader.additional-imports};\
-    org.burningwave.core.assembler.ComponentSupplier;\
-    java.util.function.Function;\
-    org.burningwave.core.io.FileSystemItem;\
-    org.burningwave.core.classes.PathScannerClassLoader;\
-    java.util.function.Supplier;
-class-factory.default-class-loader.name=\
-    org.burningwave.core.classes.DefaultClassLoaderRetrieverForClassFactory
-class-hunter.default-path-scanner-class-loader=\
-    (Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
-class-hunter.default-path-scanner-class-loader.additional-imports=java.util.function.Consumer;
-class-hunter.default-path-scanner-class-loader.imports=\
-    ${class-hunter.default-path-scanner-class-loader.additional-imports};\
-    org.burningwave.core.assembler.ComponentSupplier;\
-    org.burningwave.core.io.FileSystemItem;\
-    org.burningwave.core.classes.PathScannerClassLoader;\
-    java.util.function.Supplier;
-class-hunter.default-path-scanner-class-loader.name=\
-    org.burningwave.core.classes.DefaultPathScannerClassLoaderRetrieverForClassHunter
-class-hunter.new-isolated-path-scanner-class-loader.search-config.check-file-option=\
-    ${hunters.default-search-config.check-file-option}
-class-path-helper.class-path-hunter.search-config.check-file-option=\
-    ${hunters.default-search-config.check-file-option}
-hunters.default-search-config.check-file-option=\
-    ${path-scanner-class-loader.search-config.check-file-option}
-path-scanner-class-loader.parent=\
-    Thread.currentThread().getContextClassLoader()
-path-scanner-class-loader.parent.imports=\
-    ${path-scanner-class-loader.parent.additional-imports};\
-    org.burningwave.core.assembler.ComponentSupplier;\
-    org.burningwave.core.io.FileSystemItem;\
-    org.burningwave.core.classes.PathScannerClassLoader;\
-    java.util.function.Supplier;
-path-scanner-class-loader.parent.name=\
-    org.burningwave.core.classes.ParentClassLoaderRetrieverForPathScannerClassLoader
-path-scanner-class-loader.search-config.check-file-option=checkFileName
-paths.class-factory.default-class-loader.class-repositories=
-    ${paths.java-memory-compiler.class-paths};\
-    ${paths.java-memory-compiler.class-repositories};\
-    ${paths.class-factory.default-class-loader.additional-class-repositories}
-paths.hunters.default-search-config.paths=\
-    ${paths.main-class-paths};\
-    ${paths.main-class-paths.extension};\
-    ${paths.main-class-repositories};
-paths.java-memory-compiler.class-paths=\
-    ${paths.main-class-paths};\
-    ${paths.main-class-paths.extension};\
-    ${paths.java-memory-compiler.additional-class-paths}
-paths.java-memory-compiler.class-repositories=\
-    ${paths.main-class-repositories};\
-    ${paths.java-memory-compiler.additional-class-repositories};
-paths.main-class-paths=${system.properties:java.class.path}
-paths.main-class-paths.extension=\
-    //${system.properties:java.home}/lib//children:.*?\.jar;\
-    //${system.properties:java.home}/lib/ext//children:.*?\.jar;
-paths.main-class-repositories=//${system.properties:java.home}/jmods//children:.*?\.jmod;
-paths.java-memory-compiler.additional-class-paths=\
-    C:/some paths 1/some library 1.jar;\
-    C:/some paths 2/some library 2.jar;
-paths.java-memory-compiler.additional-class-repositories=\
-    C:/some paths 3;\
-    C:/some paths 4;
-paths.class-factory.default-class-loader.additional-class-repositories=\
-    C:/some paths 5;\
-    C:/some paths 6;
-```
+[Here an example of a **burningwave.properties**](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.properties).
 
 ### Other examples of using some components:
 <details open>
