@@ -71,7 +71,6 @@ public class PathHelper implements Component {
 		
 		public static class Key {
 			public static String PATHS_PREFIX = "paths.";
-			private static String PATHS_SEPARATOR = "path-helper.paths-separator";
 			public static String MAIN_CLASS_PATHS = PATHS_PREFIX + "main-class-paths";
 			public static String MAIN_CLASS_PATHS_PLACE_HOLDER = "${" + MAIN_CLASS_PATHS + "}";
 			public static String MAIN_CLASS_PATHS_EXTENSION = MAIN_CLASS_PATHS + ".extension";
@@ -86,12 +85,12 @@ public class PathHelper implements Component {
 			defaultValues.put(Key.MAIN_CLASS_PATHS, "${system.properties:java.class.path}");
 			defaultValues.put(
 				Key.MAIN_CLASS_PATHS_EXTENSION, 
-				"//${system.properties:java.home}/lib//children:.*?\\.jar" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
-				"//${system.properties:java.home}/lib/ext//children:.*?\\.jar" + PathHelper.Configuration.Key.PATHS_SEPARATOR
+				"//${system.properties:java.home}/lib//children:.*?\\.jar" + PathHelper.Configuration.getPathsSeparator() +
+				"//${system.properties:java.home}/lib/ext//children:.*?\\.jar" + PathHelper.Configuration.getPathsSeparator()
 			);
 			defaultValues.put(
 				Key.MAIN_CLASS_REPOSITORIES, 
-				"//${system.properties:java.home}/jmods//children:.*?\\.jmod" + PathHelper.Configuration.Key.PATHS_SEPARATOR
+				"//${system.properties:java.home}/jmods//children:.*?\\.jmod" + PathHelper.Configuration.getPathsSeparator()
 			);
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
