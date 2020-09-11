@@ -113,14 +113,15 @@ public class PathHelper implements Component {
 		pathGroups = new ConcurrentHashMap<>();
 		allPaths = ConcurrentHashMap.newKeySet();
 		this.config = config;
+		pathsSeparator = Configuration.getPathsSeparator();
+		listenTo(config);
 		initializerTask = BackgroundExecutor.createTask(() -> {
 			loadMainClassPaths();	
 			loadAllPaths();
 			initializerTask = null;
 		}, Thread.MAX_PRIORITY);
 		initializerTask.submit();
-		pathsSeparator = Configuration.getPathsSeparator();
-		listenTo(config);
+		
 	}
 	
 	@Override
@@ -179,7 +180,6 @@ public class PathHelper implements Component {
 	
 	public Collection<String> getAllPaths() {
 		waitForInitialization(false);
-		logInfo("\nAll loaded paths:\n{}", String.join("\n", this.allPaths));
 		Collection<String> allPaths = ConcurrentHashMap.newKeySet();
 		allPaths.addAll(this.allPaths);
 		return allPaths;
