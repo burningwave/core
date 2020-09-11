@@ -116,7 +116,6 @@ public class PathHelper implements Component {
 		initializerTask = BackgroundExecutor.createTask(() -> {
 			loadMainClassPaths();	
 			loadAllPaths();
-			logInfo("\nAll loaded paths:\n{}", String.join("\n", this.allPaths));
 			initializerTask = null;
 		}, Thread.MAX_PRIORITY);
 		initializerTask.submit();
@@ -180,6 +179,7 @@ public class PathHelper implements Component {
 	
 	public Collection<String> getAllPaths() {
 		waitForInitialization(false);
+		logInfo("\nAll loaded paths:\n{}", String.join("\n", this.allPaths));
 		Collection<String> allPaths = ConcurrentHashMap.newKeySet();
 		allPaths.addAll(this.allPaths);
 		return allPaths;
