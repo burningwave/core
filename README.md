@@ -911,7 +911,7 @@ streams.default-buffer-size=1024
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
 ```
 **If in your custom burningwave.static.properties or burningwave.static.default.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
-[Here an example of a **burningwave.static.properties**](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.static.properties)
+[Here an example of a **burningwave.static.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.static.properties)
 <br/>
 
 ## Dynamic component container
@@ -1071,7 +1071,7 @@ If you create a component container instance through method ComponentContainer.c
 ```java
 ComponentContainer.create("org/burningwave/custom-config-file.properties")
 ```
-[Here an example of a **burningwave.properties**](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.properties).
+[Here an example of a **burningwave.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.properties).
 
 ### Other examples of using some components:
 <details open>
