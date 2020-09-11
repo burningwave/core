@@ -37,7 +37,7 @@ public class RuntimeClassExtender {
                 ).addParameter(VariableSourceGenerator.create(LocalDateTime.class, "localDateTime"))
                 .addModifier(Modifier.PUBLIC)
                 .addAnnotation(AnnotationSourceGenerator.create(Override.class))
-                .addBodyCodeRow("return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());")
+                .addBodyCodeLine("return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());")
                 .useType(ZoneId.class)
             ).addConcretizedType(
                 MyInterface.class

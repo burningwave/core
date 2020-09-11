@@ -35,11 +35,16 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Executable;
+import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
@@ -47,9 +52,40 @@ import org.burningwave.core.iterable.Properties;
 
 @SuppressWarnings("unchecked")
 public class CodeExecutor implements Component {
-	static final String PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX = ".imports";
-	static final String PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX = ".name";
-	static final String PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX = ".simple-name";
+		
+	
+	public static class Configuration {
+		
+		public static class Key {
+			public static final String COMMON_IMPORTS = "code-executor.common.imports";
+			public static final String ADDITIONAL_COMMON_IMPORTS = "code-executor.common.additional-imports";
+			public static final String PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX = ".imports";
+			public static final String PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX = ".name";
+			public static final String PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_SUFFIX = ".simple-name";
+			public static String CODE_LINE_SEPARATOR = ";";
+		}
+		
+		public final static Map<String, Object> DEFAULT_VALUES;
+		
+		static {
+			Map<String, Object> defaultValues = new HashMap<>();
+
+			defaultValues.put(Key.COMMON_IMPORTS,
+				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".BackgroundExecutor" + Key.CODE_LINE_SEPARATOR +
+				"${"+ Key.ADDITIONAL_COMMON_IMPORTS +  "}" + Key.CODE_LINE_SEPARATOR +
+ 				ComponentSupplier.class.getName() + Key.CODE_LINE_SEPARATOR +
+				Function.class.getName() + Key.CODE_LINE_SEPARATOR +
+				FileSystemItem.class.getName() + Key.CODE_LINE_SEPARATOR +
+				PathHelper.class.getName() + Key.CODE_LINE_SEPARATOR +
+				QueuedTasksExecutor.ProducerTask.class.getName() + Key.CODE_LINE_SEPARATOR +
+				QueuedTasksExecutor.Task.class.getName() + Key.CODE_LINE_SEPARATOR +
+				Supplier.class.getName() + Key.CODE_LINE_SEPARATOR
+			);
+			
+			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
+		}
+		
+	}
 	
 	private ClassFactory classFactory;
 	private PathHelper pathHelper;
@@ -115,7 +151,14 @@ public class CodeExecutor implements Component {
 				body.useType(param.getClass());
 			}
 		}
-		String importFromConfig = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX, null, true, config.getDefaultValues());
+		String importFromConfig = IterableObjectHelper.resolveStringValue(
+			properties, 
+			config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX, 
+			null, 
+			Configuration.Key.CODE_LINE_SEPARATOR,
+			true,
+			config.getDefaultValues()
+		);
 		if (Strings.isNotEmpty(importFromConfig)) {
 			Arrays.stream(importFromConfig.replaceAll(";{2,}", ";").split(";")).forEach(imp -> {
 				if (Strings.isNotEmpty(imp)) {
@@ -123,31 +166,50 @@ public class CodeExecutor implements Component {
 				}
 			});
 		}
-		String executorName = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, null, true, config.getDefaultValues());
-		String executorSimpleName = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName() + PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_KEY_SUFFIX, null, true, config.getDefaultValues());
+		String executorName = IterableObjectHelper.resolveStringValue(
+			properties, 
+			config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX,
+			null,
+			Configuration.Key.CODE_LINE_SEPARATOR,
+			true,
+			config.getDefaultValues()
+		);
+		String executorSimpleName = IterableObjectHelper.resolveStringValue(
+			properties,
+			config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_SUFFIX,
+			null, 
+			Configuration.Key.CODE_LINE_SEPARATOR,
+			true,
+			config.getDefaultValues()
+		);
 
 		if (Strings.isNotEmpty(executorName)) {
 			config.setName(executorName);
 		} else if (Strings.isNotEmpty(executorSimpleName)) {
 			config.setSimpleName(executorSimpleName);
 		}
-		String code = IterableObjectHelper.resolveStringValue(properties, config.getPropertyName(), null, true, config.getDefaultValues());
+		String code = IterableObjectHelper.resolveStringValue(
+			properties,
+			config.getPropertyName(), null,
+			Configuration.Key.CODE_LINE_SEPARATOR,
+			true, config.getDefaultValues()
+		);
 		if (code.contains(";")) {
 			if (config.isIndentCodeActive()) {
 				code = code.replaceAll(";{2,}", ";");
-				for (String codeRow : code.split(";")) {
-					if (Strings.isNotEmpty(codeRow)) {
-						body.addCodeRow(codeRow + ";");
+				for (String codeLine : code.split(";")) {
+					if (Strings.isNotEmpty(codeLine)) {
+						body.addCodeLine(codeLine + ";");
 					}
 				}
 			} else {
-				body.addCodeRow(code);
+				body.addCodeLine(code);
 			}
 			if (!code.contains("return")) {
-				body.addCodeRow("return null;");
+				body.addCodeLine("return null;");
 			}
 		} else {
-			body.addCodeRow(code.contains("return")?
+			body.addCodeLine(code.contains("return")?
 				code:
 				"return (T)" + code + ";"
 			);

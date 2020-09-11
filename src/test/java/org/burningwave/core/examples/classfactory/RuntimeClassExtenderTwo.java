@@ -72,8 +72,8 @@ public class RuntimeClassExtenderTwo {
                 )
                 .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create("T")))
                 .addModifier(Modifier.PUBLIC)
-                .addOuterCodeRow("@Override")
-                .addBodyCodeRow("return (Comparable<T>)new Date();")
+                .addOuterCodeLine("@Override")
+                .addBodyCodeLine("return (Comparable<T>)new Date();")
                 .useType(Date.class)
             ).addConcretizedType(
                 MyInterface.class

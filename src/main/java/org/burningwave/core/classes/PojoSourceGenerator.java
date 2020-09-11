@@ -79,11 +79,11 @@ public class PojoSourceGenerator {
 				});
 			}, (methodSG, method, options) -> {
 				String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst("set", ""));
-				methodSG.addBodyCodeRow("this." + fieldName + " = " + fieldName + ";");
+				methodSG.addBodyCodeLine("this." + fieldName + " = " + fieldName + ";");
 			}, (methodSG, method, options) -> {
 				String prefix = method.getName().startsWith("get")? "get" : "is";
 				String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst(prefix, ""));
-				methodSG.addBodyCodeRow("return this." + fieldName + ";");
+				methodSG.addBodyCodeLine("return this." + fieldName + ";");
 			}, null
 		);
 	}
@@ -155,7 +155,7 @@ public class PojoSourceGenerator {
 				cls.addConstructor(
 					create(
 						classSimpleName, constructor, modifiers, (funct, params) ->
-						funct.addBodyCodeRow("super(" + String.join(", ", params) + ");"),
+						funct.addBodyCodeLine("super(" + String.join(", ", params) + ");"),
 						isUseFullyQualifiedClassNamesEnabled(options)
 					)
 				);
@@ -163,7 +163,7 @@ public class PojoSourceGenerator {
 					cls.addMethod(
 						create(
 							"create", constructor, modifiers, (funct, params) ->
-								funct.addBodyCodeRow("return new " + classSimpleName + "(" + String.join(", ", params) + ");"),
+								funct.addBodyCodeLine("return new " + classSimpleName + "(" + String.join(", ", params) + ");"),
 							isUseFullyQualifiedClassNamesEnabled(options)
 						).addModifier(Modifier.STATIC | Modifier.PUBLIC).setReturnType(classSimpleName)
 					);

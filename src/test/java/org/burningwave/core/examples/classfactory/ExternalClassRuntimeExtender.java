@@ -34,7 +34,7 @@ public class ExternalClassRuntimeExtender {
 					VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(InputStream.class), "inputStream")
 				).addThrowable(
 					TypeDeclarationSourceGenerator.create("SOAPException")				
-				).addBodyCodeRow("super(parentSoapMsg, inputStream);")
+				).addBodyCodeLine("super(parentSoapMsg, inputStream);")
 			)
 		).addImport(
 			"org.apache.axis2.saaj.SOAPPartImpl",

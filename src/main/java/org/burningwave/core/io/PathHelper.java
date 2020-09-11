@@ -29,6 +29,7 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
@@ -40,6 +41,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -69,7 +71,6 @@ public class PathHelper implements Component {
 		
 		public static class Key {
 			public static String PATHS_PREFIX = "paths.";
-			public static String PATHS_SEPARATOR = ";";
 			public static String MAIN_CLASS_PATHS = PATHS_PREFIX + "main-class-paths";
 			public static String MAIN_CLASS_PATHS_PLACE_HOLDER = "${" + MAIN_CLASS_PATHS + "}";
 			public static String MAIN_CLASS_PATHS_EXTENSION = MAIN_CLASS_PATHS + ".extension";
@@ -79,17 +80,24 @@ public class PathHelper implements Component {
 		public final static Map<String, Object> DEFAULT_VALUES;
 		
 		static {
-			DEFAULT_VALUES = new HashMap<>();
-			DEFAULT_VALUES.put(Key.MAIN_CLASS_PATHS, "${system.properties:java.class.path}");
-			DEFAULT_VALUES.put(
+			Map<String, Object> defaultValues = new HashMap<>();
+			
+			defaultValues.put(Key.MAIN_CLASS_PATHS, "${system.properties:java.class.path}");
+			defaultValues.put(
 				Key.MAIN_CLASS_PATHS_EXTENSION, 
-				"//${system.properties:java.home}/lib//children:.*?\\.jar" + PathHelper.Configuration.Key.PATHS_SEPARATOR +
-				"//${system.properties:java.home}/lib/ext//children:.*?\\.jar" + PathHelper.Configuration.Key.PATHS_SEPARATOR
+				"//${system.properties:java.home}/lib//children:.*?\\.jar" + PathHelper.Configuration.getPathsSeparator() +
+				"//${system.properties:java.home}/lib/ext//children:.*?\\.jar" + PathHelper.Configuration.getPathsSeparator()
 			);
-			DEFAULT_VALUES.put(
+			defaultValues.put(
 				Key.MAIN_CLASS_REPOSITORIES, 
-				"//${system.properties:java.home}/jmods//children:.*?\\.jmod" + PathHelper.Configuration.Key.PATHS_SEPARATOR
+				"//${system.properties:java.home}/jmods//children:.*?\\.jmod" + PathHelper.Configuration.getPathsSeparator()
 			);
+			
+			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
+		}
+		
+		public static String getPathsSeparator() {
+			return IterableObjectHelper.getDefaultValuesSeparator();
 		}
 	}	
 	
@@ -99,18 +107,21 @@ public class PathHelper implements Component {
 	private Collection<String> allPaths;
 	private Properties config;
 	private QueuedTasksExecutor.Task initializerTask;
+	private String pathsSeparator;
 	
 	private PathHelper(Properties config) {
 		pathGroups = new ConcurrentHashMap<>();
 		allPaths = ConcurrentHashMap.newKeySet();
 		this.config = config;
+		pathsSeparator = Configuration.getPathsSeparator();
+		listenTo(config);
 		initializerTask = BackgroundExecutor.createTask(() -> {
 			loadMainClassPaths();	
 			loadAllPaths();
 			initializerTask = null;
 		}, Thread.MAX_PRIORITY);
 		initializerTask.submit();
-		listenTo(config);
+		
 	}
 	
 	@Override
@@ -225,8 +236,8 @@ public class PathHelper implements Component {
 		synchronized(this) {
 			String currentPropertyPaths = config.getProperty(pathGroupPropertyName);
 			if (Strings.isNotEmpty(currentPropertyPaths) && Strings.isNotEmpty(paths)) {
-				if (!currentPropertyPaths.endsWith(Configuration.Key.PATHS_SEPARATOR)) {
-					currentPropertyPaths += Configuration.Key.PATHS_SEPARATOR;
+				if (!currentPropertyPaths.endsWith(pathsSeparator)) {
+					currentPropertyPaths += pathsSeparator;
 				}
 				currentPropertyPaths += paths;
 				config.put(pathGroupPropertyName, currentPropertyPaths);
@@ -255,11 +266,11 @@ public class PathHelper implements Component {
 						defaultValues.put(placeHolderName,
 						Optional.ofNullable(defaultValues.get(placeHolderName)).map(pHP -> 
 							pHP + 
-							(pHP.endsWith(Configuration.Key.PATHS_SEPARATOR)?
-								"" : Configuration.Key.PATHS_SEPARATOR) +
+							(pHP.endsWith(pathsSeparator)?
+								"" : pathsSeparator) +
 							placeHolderPath + 
-							(placeHolderPath.endsWith(Configuration.Key.PATHS_SEPARATOR)?
-								"" : Configuration.Key.PATHS_SEPARATOR)
+							(placeHolderPath.endsWith(pathsSeparator)?
+								"" : pathsSeparator)
 						).orElseGet(() -> {
 							return placeHolderPath;
 						}));
@@ -270,7 +281,7 @@ public class PathHelper implements Component {
 			Properties configWithResolvedPaths = new Properties();
 			configWithResolvedPaths.putAll(config);
 			configWithResolvedPaths.putAll(defaultValues);
-			Collection<String> computedPaths = configWithResolvedPaths.resolveStringValues(pathGroupPropertyName, Configuration.Key.PATHS_SEPARATOR, true);
+			Collection<String> computedPaths = configWithResolvedPaths.resolveStringValues(pathGroupPropertyName, pathsSeparator, true);
 			if (computedPaths != null) {
 				for (String path : computedPaths) {
 					if (Strings.isNotEmpty(path)) {
@@ -480,6 +491,7 @@ public class PathHelper implements Component {
 			pathGroups = null;
 			allPaths.clear();
 			allPaths = null;
+			pathsSeparator = null;
 			config = null;
 		});		
 	}

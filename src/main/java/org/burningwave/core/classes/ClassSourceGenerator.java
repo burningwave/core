@@ -148,7 +148,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		return isAlreadyAdded;
 	}
 	
-	public ClassSourceGenerator addOuterCodeRow(String... codes) {
+	public ClassSourceGenerator addOuterCodeLine(String... codes) {
 		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
 		for (String code : codes) {
 			if (!this.outerCode.isEmpty()) {

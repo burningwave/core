@@ -87,7 +87,7 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 
-	public BodySourceGenerator addCodeRow(String... codes) {
+	public BodySourceGenerator addCodeLine(String... codes) {
 		for (String code : codes) {
 			addCode("\n" + Optional.ofNullable(elementPrefix).orElseGet(() -> "") + code);	
 		}

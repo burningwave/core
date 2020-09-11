@@ -36,8 +36,8 @@ public class UseFunctionalInterface {
                 .addParameter(VariableSourceGenerator.create(LocalDateTime.class, "localDateTime"))
                 .addModifier(Modifier.PUBLIC)
                 .addAnnotation(AnnotationSourceGenerator.create(Override.class))
-                .addBodyCodeRow("Function<LocalDateTime, Comparable<Date>> fI = (lDT) -> Date.from(lDT.atZone(ZoneId.systemDefault()).toInstant());")
-                .addBodyCodeRow("return fI.apply(localDateTime);")
+                .addBodyCodeLine("Function<LocalDateTime, Comparable<Date>> fI = (lDT) -> Date.from(lDT.atZone(ZoneId.systemDefault()).toInstant());")
+                .addBodyCodeLine("return fI.apply(localDateTime);")
                 .useType(ZoneId.class)
                 .useType(Function.class)
             ).addConcretizedType(
