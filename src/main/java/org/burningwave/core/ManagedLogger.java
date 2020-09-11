@@ -31,7 +31,6 @@ package org.burningwave.core;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -117,17 +116,14 @@ public interface ManagedLogger {
 			public final static Map<String, Object> DEFAULT_VALUES;
 			
 			static {
-				Map<String, Object> defaultValues = new HashMap<>();
-				
-				defaultValues.put(Key.TYPE, "autodetect");
-				defaultValues.put(Key.ENABLED_FLAG, String.valueOf(true));
-				defaultValues.put(Key.WARN_LOGGING_DISABLED_FOR,
+				DEFAULT_VALUES = new HashMap<>();
+				DEFAULT_VALUES.put(Key.TYPE, "autodetect");
+				DEFAULT_VALUES.put(Key.ENABLED_FLAG, String.valueOf(true));
+				DEFAULT_VALUES.put(Key.WARN_LOGGING_DISABLED_FOR,
 					LowLevelObjectsHandler.class.getName() + ";" +
 					MemoryClassLoader.class.getName() + ";" +
 					SearchContext.class.getName() + ";"
-				);				
-				
-				DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
+				);
 			}
 		}
 		

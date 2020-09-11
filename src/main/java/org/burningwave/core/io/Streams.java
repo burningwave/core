@@ -40,7 +40,6 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -65,15 +64,12 @@ public class Streams implements Component {
 		public final static Map<String, Object> DEFAULT_VALUES;
 		
 		static {
-			Map<String, Object> defaultValues = new HashMap<>();
-			
-			defaultValues.put(Key.BUFFER_SIZE, String.valueOf(BufferSize.KILO_BYTE.getValue()));
-			defaultValues.put(
+			DEFAULT_VALUES = new HashMap<>();
+			DEFAULT_VALUES.put(Key.BUFFER_SIZE, String.valueOf(BufferSize.KILO_BYTE.getValue()));
+			DEFAULT_VALUES.put(
 				Key.BYTE_BUFFER_ALLOCATION_MODE,
 				"ByteBuffer::allocateDirect"
 			);
-			
-			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
 	

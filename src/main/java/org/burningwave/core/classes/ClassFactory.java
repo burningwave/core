@@ -38,7 +38,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -79,33 +78,36 @@ public class ClassFactory implements Component {
 		public final static Map<String, Object> DEFAULT_VALUES;
 	
 		static {
-			Map<String, Object> defaultValues = new HashMap<>();
-			
+			DEFAULT_VALUES = new HashMap<>();
 			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
-			defaultValues.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
-				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR + 
-				"${"+ Configuration.Key.DEFAULT_CLASS_LOADER + ".additional-imports}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR + 
-				PathScannerClassLoader.class.getName() + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR
+			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_KEY_SUFFIX,
+				"${"+ Configuration.Key.DEFAULT_CLASS_LOADER + ".additional-imports}" +  ";" +
+				ComponentSupplier.class.getName() + ";" +
+				Function.class.getName() + ";" +
+				FileSystemItem.class.getName() + ";" + 
+				PathScannerClassLoader.class.getName() + ";" +
+				Supplier.class.getName() + ";"
 			);
-			defaultValues.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, ClassFactory.class.getPackage().getName() + ".DefaultClassLoaderRetrieverForClassFactory");
+			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.PROPERTIES_FILE_CODE_EXECUTOR_NAME_KEY_SUFFIX, ClassFactory.class.getPackage().getName() + ".DefaultClassLoaderRetrieverForClassFactory");
 			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, "(Supplier<ClassLoader>)() -> ((ComponentSupplier)parameter[0]).getClassHunter().getPathScannerClassLoader()");
-			defaultValues.put(
+			DEFAULT_VALUES.put(
 				Key.DEFAULT_CLASS_LOADER,
 				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) ->
 					componentSupplier.getPathScannerClassLoader()
 			);
-			defaultValues.put(
+			
+
+			DEFAULT_VALUES.put(
 				Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER,
-				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_PATHS + "}" + PathHelper.Configuration.getPathsSeparator() + 
-				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES + "}" + PathHelper.Configuration.getPathsSeparator() + 
+				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_PATHS + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
+				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
 				"${" + Key.ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER + "}"				
-			);			
-			defaultValues.put(
+			);
+			
+			DEFAULT_VALUES.put(
 				Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 				"${" + ClassPathScannerAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
 			);
-			
-			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
 	

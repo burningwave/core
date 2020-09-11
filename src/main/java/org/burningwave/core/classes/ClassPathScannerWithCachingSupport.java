@@ -133,14 +133,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		FileSystemItem.Criteria fileFilter
 	) {
 		CacheableSearchConfig searchConfig = context.getSearchConfig();
-		FileSystemItem currentScannedPath;
-		try {
-			currentScannedPath = FileSystemItem.ofPath(basePath);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		}
+		FileSystemItem currentScannedPath = FileSystemItem.ofPath(basePath);
 		Predicate<String> refreshCache = searchConfig.getCheckForAddedClassesPredicate();
 		if (refreshCache != null && refreshCache.test(basePath)) {
 			Synchronizer.execute(instanceId + "_" + basePath, () -> {

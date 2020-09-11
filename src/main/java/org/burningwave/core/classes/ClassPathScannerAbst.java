@@ -31,7 +31,6 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -62,20 +61,18 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		public final static Map<String, Object> DEFAULT_VALUES;
 	
 		static {
-			Map<String, Object> defaultValues = new HashMap<>();
+			DEFAULT_VALUES = new HashMap<>();
 	
-			defaultValues.put(
+			DEFAULT_VALUES.put(
 				Key.DEFAULT_SEARCH_CONFIG_PATHS, 
-				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + PathHelper.Configuration.getPathsSeparator() +
-				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.getPathsSeparator() + 
-				"${" + PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.getPathsSeparator()
+				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + PathHelper.Configuration.Key.PATHS_SEPARATOR +
+				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR + 
+				"${" + PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.Key.PATHS_SEPARATOR
 			);
-			defaultValues.put(
+			DEFAULT_VALUES.put(
 				Key.DEFAULT_CHECK_FILE_OPTIONS,
 				"${" + PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION + "}"
 			);
-			
-			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
 	

@@ -50,11 +50,8 @@ public class StaticComponentContainer {
 		public final static Map<String, Object> DEFAULT_VALUES;
 		
 		static {
-			Map<String, Object> defaultValues =  new HashMap<>(); 
-			
-			defaultValues.put(Key.HIDE_BANNER_ON_INIT, "false");
-			
-			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
+			DEFAULT_VALUES = new HashMap<>();
+			DEFAULT_VALUES.put(Key.HIDE_BANNER_ON_INIT, "false");
 		}
 	}
 	public static final org.burningwave.core.concurrent.QueuedTasksExecutor.Group BackgroundExecutor;
@@ -89,17 +86,16 @@ public class StaticComponentContainer {
 			Throwables = org.burningwave.core.Throwables.create();
 			Objects = org.burningwave.core.Objects.create();
 			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create("Background executor", true, true);
-			Strings = org.burningwave.core.Strings.create();
-			Resources = new org.burningwave.core.io.Resources();
 			Properties properties = new Properties();
 			properties.putAll(Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
-			properties.putAll(org.burningwave.core.iterable.IterableObjectHelper.Configuration.DEFAULT_VALUES);
+			Strings = org.burningwave.core.Strings.create();
+			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create();
+			Resources = new org.burningwave.core.io.Resources();
 			Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
 				Resources.loadFirstOneFound(properties, "burningwave.static.properties", "burningwave.static.default.properties");
 			GlobalProperties = propBag.getKey();
-			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
 			if (!Boolean.valueOf(GlobalProperties.getProperty(Configuration.Key.HIDE_BANNER_ON_INIT))) {
 				showBanner();
 			}

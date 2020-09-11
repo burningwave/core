@@ -119,8 +119,6 @@ public class QueuedTasksExecutor implements Component {
 						synchronized (task) {
 							if (!tasksQueue.remove(task)) {
 								continue;
-							} else if (TaskAbst.Execution.Mode.ASYNC.equals(task.executionMode)) {
-								asyncTasksInExecution.add(task);
 							}
 						}
 						Thread executor = task.executor;
@@ -131,10 +129,10 @@ public class QueuedTasksExecutor implements Component {
 						boolean isSync = executor == this.executor;
 						if (isSync) {
 							task.execute();
-						} else if (task.executionMode == TaskAbst.Execution.Mode.ASYNC) {
+						} else {
 							executor.start();
 						}
-						if (isSync && executor.getPriority() != this.defaultPriority) {
+						if (executor == this.executor && executor.getPriority() != this.defaultPriority) {
 							executor.setPriority(this.defaultPriority);
 						}
 						if (isSync) {
@@ -238,14 +236,9 @@ public class QueuedTasksExecutor implements Component {
 		if (byPassCheck || canBeExecuted(task)) {
 			try {
 				setExecutorOf(task);
-				if (TaskAbst.Execution.Mode.PURE_ASYNC.equals(task.executionMode)) {
-					asyncTasksInExecution.add(task);
-					task.executor.start();
-				} else {
-					tasksQueue.add(task);
-					synchronized(getMutex("executableCollectionFiller")) {
-						getMutex("executableCollectionFiller").notifyAll();
-					}
+				tasksQueue.add(task);
+				synchronized(getMutex("executableCollectionFiller")) {
+					getMutex("executableCollectionFiller").notifyAll();
 				}
 			} catch (Throwable exc) {
 				logWarn("Exception occurred", exc);
@@ -257,13 +250,13 @@ public class QueuedTasksExecutor implements Component {
 	private <E, T extends TaskAbst<E, T>> void setExecutorOf(T task) {
 		if (TaskAbst.Execution.Mode.SYNC.equals(task.executionMode)) {
 			task.setExecutor(this.executor);
-		} else if (TaskAbst.Execution.Mode.ASYNC.equals(task.executionMode) || 
-			TaskAbst.Execution.Mode.PURE_ASYNC.equals(task.executionMode)) {
+		} else if (TaskAbst.Execution.Mode.ASYNC.equals(task.executionMode)) {
 			if (task.executor != null) {
 				asyncExecutorCount--;
 			}
 			Thread executor = new Thread(() -> {
 				synchronized(task) {
+					asyncTasksInExecution.add(task);
 					task.execute();
 					asyncTasksInExecution.remove(task);
 					incrementAndlogExecutedTaskCounters(false, true);
@@ -481,7 +474,7 @@ public class QueuedTasksExecutor implements Component {
 		
 		static class Execution {
 			public static enum Mode {
-				SYNC, ASYNC, PURE_ASYNC
+				SYNC, ASYNC
 			}
 		}
 		E executable;
@@ -517,11 +510,6 @@ public class QueuedTasksExecutor implements Component {
 		
 		public T async() {
 			this.executionMode = Execution.Mode.ASYNC;
-			return (T)this;
-		}
-		
-		public T pureAsync() {
-			this.executionMode = Execution.Mode.PURE_ASYNC;
 			return (T)this;
 		}
 		
@@ -772,27 +760,19 @@ public class QueuedTasksExecutor implements Component {
 				<T> Function<ThrowingSupplier<T, ? extends Throwable>, QueuedTasksExecutor.ProducerTask<T>> getProducerTaskSupplier() {
 					return executable -> new QueuedTasksExecutor.ProducerTask<T>(executable) {
 						
-						@Override
 						public QueuedTasksExecutor.ProducerTask<T> submit() {
 							return Group.this.getByPriority(this.priority).addToQueue(this, false);
 						};
 						
-						@Override
 						public QueuedTasksExecutor.ProducerTask<T> changePriority(int priority) {
 							return Group.this.changePriority(this, priority);
 						};
 						
-						@Override
+						
 						public QueuedTasksExecutor.ProducerTask<T> async() {
 							return Group.this.changeExecutionMode(this, QueuedTasksExecutor.TaskAbst.Execution.Mode.ASYNC);
 						}
 						
-						@Override
-						public QueuedTasksExecutor.ProducerTask<T> pureAsync() {
-							return Group.this.changeExecutionMode(this, QueuedTasksExecutor.TaskAbst.Execution.Mode.PURE_ASYNC);
-						}
-						
-						@Override
 						public QueuedTasksExecutor.ProducerTask<T> sync() {
 							return Group.this.changeExecutionMode(this, QueuedTasksExecutor.TaskAbst.Execution.Mode.SYNC);
 						}
@@ -803,12 +783,10 @@ public class QueuedTasksExecutor implements Component {
 				<T> Function<ThrowingRunnable<? extends Throwable> , QueuedTasksExecutor.Task> getTaskSupplier() {
 					return executable -> new QueuedTasksExecutor.Task(executable) {
 						
-						@Override
 						public QueuedTasksExecutor.Task submit() {
 							return Group.this.getByPriority(this.priority).addToQueue(this, false);
 						};
 						
-						@Override
 						public QueuedTasksExecutor.Task changePriority(int priority) {
 							if (runOnlyOnce) {
 								Task task = getEffectiveTask();
@@ -820,7 +798,6 @@ public class QueuedTasksExecutor implements Component {
 							return Group.this.changePriority(this, priority);
 						};
 						
-						@Override
 						public QueuedTasksExecutor.Task async() {
 							if (runOnlyOnce) {
 								Task task = getEffectiveTask();
@@ -830,18 +807,6 @@ public class QueuedTasksExecutor implements Component {
 								}
 							}
 							return Group.this.changeExecutionMode(this, QueuedTasksExecutor.TaskAbst.Execution.Mode.ASYNC);
-						}
-						
-						@Override
-						public QueuedTasksExecutor.Task pureAsync() {
-							if (runOnlyOnce) {
-								Task task = getEffectiveTask();
-								if (task != null && task != this) {
-									task.pureAsync();
-									return this;
-								}
-							}
-							return Group.this.changeExecutionMode(this, QueuedTasksExecutor.TaskAbst.Execution.Mode.PURE_ASYNC);
 						}
 						
 						public QueuedTasksExecutor.Task sync() {
@@ -857,7 +822,6 @@ public class QueuedTasksExecutor implements Component {
 					};
 				}
 				
-				@Override
 				public QueuedTasksExecutor waitForTasksEnding(int priority) {
 					if (priority == defaultPriority) {
 						while (!tasksQueue.isEmpty()) {
@@ -881,13 +845,11 @@ public class QueuedTasksExecutor implements Component {
 					return this;
 				}
 				
-				@Override
 				public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, int priority) {
 					task.join0(false);
 					return this;
 				}
 				
-				@Override
 				Task createSuspendingTask(int priority) {
 					return createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE);
 				}
