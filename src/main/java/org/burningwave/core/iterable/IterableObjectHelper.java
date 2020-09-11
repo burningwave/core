@@ -49,6 +49,7 @@ import java.util.stream.Stream;
 import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingConsumer;
+import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings("unchecked")
 public class IterableObjectHelper implements Component {
@@ -69,7 +70,7 @@ public class IterableObjectHelper implements Component {
 		}
 	}
 	
-	private final String defaultValuesSeparator;
+	private String defaultValuesSeparator;
 	
 	private IterableObjectHelper(String defaultValuesSeparator) {
 		if (defaultValuesSeparator == null || defaultValuesSeparator.isEmpty()) {
@@ -83,7 +84,16 @@ public class IterableObjectHelper implements Component {
 	}
 	
 	public static IterableObjectHelper create(Properties globalproperties) {
-		return new IterableObjectHelper(globalproperties.getProperty(Configuration.Key.DEFAULT_VALUES_SEPERATOR));
+		IterableObjectHelper iterableObjectHelper = new IterableObjectHelper(globalproperties.getProperty(Configuration.Key.DEFAULT_VALUES_SEPERATOR));
+		iterableObjectHelper.listenTo(globalproperties);
+		return iterableObjectHelper;
+	}
+	
+	@Override
+	public <K, V> void receiveNotification(Properties properties, Event event, K key, V newValue, V previousValue) {
+		if (event == Event.PUT && key.equals(Configuration.Key.DEFAULT_VALUES_SEPERATOR)) {
+			this.defaultValuesSeparator = (String)newValue;
+		}
 	}
 	
 	public <K, V> void deepClear(Map<K,V> map) {
