@@ -132,10 +132,11 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 											if (!isClosed){
 												String childAbsolutePath = child.getAbsolutePath();
 												logWarn("Exception occurred while scanning {}", childAbsolutePath);
-												logInfo("Trying to reload content of {} and test again", childAbsolutePath);
 												if (exc instanceof ArrayIndexOutOfBoundsException) {
+													logInfo("Trying to reload content of {} and test it again", childAbsolutePath);
 													child.reloadContent();
 												} else if (exc instanceof NullPointerException) {
+													logInfo("Trying to reset {} and test it again", childAbsolutePath);
 													child.reset();
 												}
 												JavaClass.use(child.toByteBuffer(), javaClass ->

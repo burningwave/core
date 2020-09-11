@@ -1048,10 +1048,11 @@ public class FileSystemItem implements ManagedLogger {
 				} catch (ArrayIndexOutOfBoundsException | NullPointerException exc) {
 					String childAbsolutePath = childAndThis[0].getAbsolutePath();
 					logWarn("Exception occurred while scanning {}", childAbsolutePath);
-					logInfo("Trying to reload content of {} and test again", childAbsolutePath);
 					if (exc instanceof ArrayIndexOutOfBoundsException) {
+						logInfo("Trying to reload content of {} and test it again", childAbsolutePath);
 						childAndThis[0].reloadContent();
 					} else if (exc instanceof NullPointerException) {
+						logInfo("Trying to reset {} and test it again", childAbsolutePath);
 						childAndThis[0].reset();
 					}
 					return filterPredicate.test(childAndThis);
