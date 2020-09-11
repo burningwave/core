@@ -35,6 +35,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -66,9 +67,9 @@ public class CodeExecutor implements Component {
 		public final static Map<String, Object> DEFAULT_VALUES;
 		
 		static {
-			DEFAULT_VALUES = new HashMap<>();
+			Map<String, Object> defaultValues = new HashMap<>();
 
-			DEFAULT_VALUES.put(Key.COMMON_IMPORTS,
+			defaultValues.put(Key.COMMON_IMPORTS,
 				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".BackgroundExecutor" + Key.CODE_LINE_SEPARATOR +
 				"${"+ Key.ADDITIONAL_COMMON_IMPORTS +  "}" + Key.CODE_LINE_SEPARATOR +
  				ComponentSupplier.class.getName() + Key.CODE_LINE_SEPARATOR +
@@ -77,6 +78,8 @@ public class CodeExecutor implements Component {
 				PathHelper.class.getName() + Key.CODE_LINE_SEPARATOR +
 				Supplier.class.getName() + Key.CODE_LINE_SEPARATOR
 			);
+			
+			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 		
 	}

@@ -37,6 +37,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.SourceCode
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -68,11 +69,14 @@ public static class Configuration {
 		public final static Map<String, Object> DEFAULT_VALUES;
 		
 		static {
-			DEFAULT_VALUES = new HashMap<>();
-			DEFAULT_VALUES.put(
+			Map<String, Object> defaultValues = new HashMap<>();
+			
+			defaultValues.put(
 				Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 				"${" + ClassPathScannerAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
 			);
+			
+			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
 	

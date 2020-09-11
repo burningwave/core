@@ -40,6 +40,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -60,7 +61,6 @@ import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHelper;
 import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.ClassPathScannerAbst;
-import org.burningwave.core.classes.ClassPathScannerWithCachingSupport;
 import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
@@ -89,15 +89,19 @@ public class ComponentContainer implements ComponentSupplier {
 		public final static Map<String, Object> DEFAULT_VALUES;
 	
 		static {
-			DEFAULT_VALUES = new HashMap<>();
+			Map<String, Object> defaultValues = new HashMap<>();
 
-			DEFAULT_VALUES.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
+			defaultValues.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
 				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR + 
 				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR + 
 				SearchResult.class.getName() + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR
 			);
-			DEFAULT_VALUES.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, ComponentContainer.class.getPackage().getName() + ".AfterInitOperations");
-
+			defaultValues.put(
+				Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, 
+				ComponentContainer.class.getPackage().getName() + ".AfterInitOperations"
+			);
+			
+			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
 	
@@ -164,7 +168,6 @@ public class ComponentContainer implements ComponentSupplier {
 		defaultProperties.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassPathScannerAbst.Configuration.DEFAULT_VALUES);
-		defaultProperties.putAll(ClassPathScannerWithCachingSupport.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassPathHelper.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(PathScannerClassLoader.Configuration.DEFAULT_VALUES);
 				

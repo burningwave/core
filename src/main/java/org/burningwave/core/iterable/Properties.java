@@ -42,84 +42,89 @@ public class Properties extends java.util.Properties {
 	}
 	
 	private Collection<Listener> listeners;
-	
+	private String defaultValuesSeparator;
 	
 	public Properties() {
+		this(null);
+	}
+	
+	public Properties(String defaultValuesSeparator) {
 		super();
 		listeners = ConcurrentHashMap.newKeySet();
+		this.defaultValuesSeparator = defaultValuesSeparator;
 	}
 	
 
 ////////////////////
 	
 	public <T> T resolveValue(String key) {
-		return IterableObjectHelper.resolveValue(this, key);
+		return IterableObjectHelper.resolveValue(this, key, null, defaultValuesSeparator, false, null);
 	}
 	
 	public <T> Collection<T> resolveValues(String key) {
-		return IterableObjectHelper.resolveValues(this, key);
+		return IterableObjectHelper.resolveValues(this, key, null, defaultValuesSeparator, false, null);
 	}
 	
 	public String resolveStringValue(String key) {
-		return IterableObjectHelper.resolveStringValue(this, key);
+		return IterableObjectHelper.resolveStringValue(this, key, null, defaultValuesSeparator, false, null);
 	}
 	
 	public Collection<String> resolveStringValues(String key) {
-		return IterableObjectHelper.resolveStringValues(this, key);
+		return IterableObjectHelper.resolveStringValues(this, key, null, defaultValuesSeparator, false, null);
 	}
 	
 ////////////////////
 	
 	public <T> T resolveValue(String key, Map<String, ?> defaultValues) {
-		return IterableObjectHelper.resolveValue(this, key, defaultValues);
+		return IterableObjectHelper.resolveValue(this, key, null, defaultValuesSeparator, false, defaultValues);
 	}
 	
 	public <T> Collection<T> resolveValues(String key, Map<String, ?> defaultValues) {
-		return IterableObjectHelper.resolveValues(this, key, defaultValues);
+		return IterableObjectHelper.resolveValues(this, key, null, defaultValuesSeparator, false, defaultValues);
 	}
 	
 	public String resolveStringValue(String key, Map<String, ?> defaultValues) {
-		return IterableObjectHelper.resolveStringValue(this, key, defaultValues);
+		return IterableObjectHelper.resolveStringValue(this, key, null, defaultValuesSeparator, false, defaultValues);
 	}
 	
 	public Collection<String> resolveStringValues(String key, Map<String, ?> defaultValues) {
-		return IterableObjectHelper.resolveStringValues(this, key, defaultValues);
+		return IterableObjectHelper.resolveStringValues(this, key, null, defaultValuesSeparator, false, defaultValues);
 	}
 
 ////////////////////
 	
 	public <T> T resolveValue(String key, String valuesSeparator) {
-		return IterableObjectHelper.resolveValue(this, key, valuesSeparator);
+		return IterableObjectHelper.resolveValue(this, key, valuesSeparator, defaultValuesSeparator, false, null);
 	}
 	
 	public <T> Collection<T> resolveValues(String key, String valuesSeparator) {
-		return IterableObjectHelper.resolveValues(this, key, valuesSeparator);
+		return IterableObjectHelper.resolveValues(this, key, valuesSeparator, defaultValuesSeparator, false, null);
 	}
 	
 	public String resolveStringValue(String key, String valuesSeparator) {
-		return IterableObjectHelper.resolveStringValue(this, key, valuesSeparator);
+		return IterableObjectHelper.resolveStringValue(this, key, valuesSeparator, defaultValuesSeparator, false, null);
 	}
 	
 	public Collection<String> resolveStringValues(String key, String valuesSeparator) {
-		return IterableObjectHelper.resolveStringValues(this, key, valuesSeparator);
+		return IterableObjectHelper.resolveStringValues(this, key, valuesSeparator, defaultValuesSeparator, false, null);
 	}
 
 ////////////////////
 	
 	public <T> T resolveValue(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return IterableObjectHelper.resolveValue(this, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+		return IterableObjectHelper.resolveValue(this, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, null);
 	}
 	
 	public <T> Collection<T> resolveValues(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return IterableObjectHelper.resolveValues(this, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+		return IterableObjectHelper.resolveValues(this, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, null);
 	}
 	
 	public String resolveStringValue(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return IterableObjectHelper.resolveStringValue(this, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+		return IterableObjectHelper.resolveStringValue(this, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, null);
 	}
 	
 	public Collection<String> resolveStringValues(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return IterableObjectHelper.resolveStringValues(this, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+		return IterableObjectHelper.resolveStringValues(this, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, null);
 	}
 
 ////////////////////

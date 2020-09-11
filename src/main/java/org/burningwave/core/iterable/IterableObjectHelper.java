@@ -31,8 +31,9 @@ package org.burningwave.core.iterable;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -51,12 +52,38 @@ import org.burningwave.core.function.ThrowingConsumer;
 
 @SuppressWarnings("unchecked")
 public class IterableObjectHelper implements Component {
-	public final String DEFAULT_STRING_VALUES_SEPERATOR = ";";
 	
-	private IterableObjectHelper() {}
+	public static class Configuration {
+		public static class Key {
+			public final static String DEFAULT_VALUES_SEPERATOR = "iterable-object-helper.default-values-separator";
+		}
+		
+		public final static Map<String, Object> DEFAULT_VALUES;
+		
+		static {
+			Map<String, Object> defaultValues = new HashMap<>();
+
+			defaultValues.put(Key.DEFAULT_VALUES_SEPERATOR, ";");
+						
+			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
+		}
+	}
 	
-	public static IterableObjectHelper create() {
-		return new IterableObjectHelper();
+	private final String defaultValuesSeparator;
+	
+	private IterableObjectHelper(String defaultValuesSeparator) {
+		if (defaultValuesSeparator == null || defaultValuesSeparator.isEmpty()) {
+			defaultValuesSeparator = (String)Configuration.DEFAULT_VALUES.get(Configuration.Key.DEFAULT_VALUES_SEPERATOR);
+		}
+		this.defaultValuesSeparator = defaultValuesSeparator;
+	}
+
+	public String getDefaultValuesSeparator() {
+		return this.defaultValuesSeparator;
+	}
+	
+	public static IterableObjectHelper create(Properties globalproperties) {
+		return new IterableObjectHelper(globalproperties.getProperty(Configuration.Key.DEFAULT_VALUES_SEPERATOR));
 	}
 	
 	public <K, V> void deepClear(Map<K,V> map) {
@@ -296,14 +323,14 @@ public class IterableObjectHelper implements Component {
 		boolean deleteUnresolvedPlaceHolder,
 		Map<?,?> defaultValues
 	) {	
-		String valuesSeparatorForSplitting = valuesSeparator != null ? valuesSeparator : defaultValueSeparator != null ? defaultValueSeparator : DEFAULT_STRING_VALUES_SEPERATOR;
+		String valuesSeparatorForSplitting = valuesSeparator != null ? valuesSeparator : defaultValueSeparator != null ? defaultValueSeparator : defaultValuesSeparator;
 		T value = (T) map.get(key);
 		if (value == null && defaultValues != null) {
 			value = (T) resolve(defaultValues, key, valuesSeparator, defaultValueSeparator, deleteUnresolvedPlaceHolder, null);
 		}
 		if (value != null && value instanceof String) {
 			String stringValue = (String)value;
-			Collection<Object> values = new ArrayList<>();
+			Collection<Object> values = new IterableObjectHelper.ArrayList<>();
 			if (!Strings.isEmpty(stringValue)) {
 				Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, stringValue);		
 				if (!subProperties.isEmpty()) {
@@ -327,7 +354,7 @@ public class IterableObjectHelper implements Component {
 								continue;
 							}
 							Collection<Object> replacements = new ArrayList<>();
-							if (valueObjects instanceof Collection) {
+							if (valueObjects instanceof IterableObjectHelper.ArrayList) {
 								replacements.addAll((Collection<?>)valueObjects);
 							} else {
 								replacements.add(valueObjects);
@@ -383,8 +410,6 @@ public class IterableObjectHelper implements Component {
 						values.add(stringValue);
 					}
 				}
-			} else {
-				values.add(stringValue);
 			}
 			return (T)values;
 		} else {
@@ -455,5 +480,11 @@ public class IterableObjectHelper implements Component {
 			}
 		}		
 		return object != null && value != null && object.equals(value);
+	}
+	
+	private class ArrayList<E> extends java.util.ArrayList<E> {
+
+		private static final long serialVersionUID = -8096435103182655041L;
+		
 	}
 }

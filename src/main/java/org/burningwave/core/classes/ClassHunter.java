@@ -30,6 +30,7 @@ package org.burningwave.core.classes;
 
 import java.lang.reflect.Member;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -63,23 +64,26 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		public final static Map<String, Object> DEFAULT_VALUES;
 		
 		static {
-			DEFAULT_VALUES = new HashMap<>();
-			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
+			Map<String, Object> defaultValues = new HashMap<>();
+			
+			defaultValues.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
 				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR + 
 				"${"+ Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + ".additional-imports}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR +
 				PathScannerClassLoader.class.getName() + ";"
 			);
-			DEFAULT_VALUES.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, ClassHunter.class.getPackage().getName() + ".DefaultPathScannerClassLoaderRetrieverForClassHunter");
+			defaultValues.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, ClassHunter.class.getPackage().getName() + ".DefaultPathScannerClassLoaderRetrieverForClassHunter");
 			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
-			DEFAULT_VALUES.put(
+			defaultValues.put(
 				Key.DEFAULT_PATH_SCANNER_CLASS_LOADER, 
 				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) -> 
 					componentSupplier.getPathScannerClassLoader()
 			);
-			DEFAULT_VALUES.put(
+			defaultValues.put(
 				Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 				"${" + ClassPathScannerAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
 			);
+			
+			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
 	
