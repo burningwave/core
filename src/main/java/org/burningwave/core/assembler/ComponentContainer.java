@@ -177,7 +177,8 @@ public class ComponentContainer implements ComponentSupplier {
 			config.putIfAbsent(defVal.getKey(), defVal.getValue());
 		}
 		
-		Map<Object, Object> componentContainerConfig = new TreeMap<>(config);
+		Map<Object, Object> componentContainerConfig = new TreeMap<>();
+		componentContainerConfig.putAll(config);
 		componentContainerConfig.keySet().removeAll(GlobalProperties.keySet());
 		logInfo(
 			"\nConfiguration values for\n\n\tstatic components:\n{}\n\n\tdynamic components:\n{}\n\n... Are assumed",
