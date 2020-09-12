@@ -54,6 +54,9 @@ public class Properties extends java.util.Properties {
 		this.defaultValuesSeparator = defaultValuesSeparator;
 	}
 	
+	public String getDefaultValuesSeparator() {
+		return this.defaultValuesSeparator;
+	}
 
 ////////////////////
 	

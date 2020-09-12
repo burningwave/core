@@ -212,10 +212,23 @@ public class ComponentContainer implements ComponentSupplier {
 				this.initializerTasks.remove(initializerTaskID);
 			}			
 			if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
-				Task task = BackgroundExecutor.createTask(() -> {
-					getCodeExecutor().executeProperty(Configuration.Key.AFTER_INIT, this);
-				}).pureAsync().submit();
-				task.join();
+				String afterInitializerTaskID = UUID.randomUUID().toString();
+				Task afterInitializerTask = BackgroundExecutor.createTask(() -> {
+					try {
+						Properties configClone = new Properties(config.getDefaultValuesSeparator());
+						configClone.putAll(config);
+						configClone.remove(Configuration.Key.AFTER_INIT);
+						ComponentContainer temporaryComponentContainer = ComponentContainer.create(configClone);
+						temporaryComponentContainer.getCodeExecutor().execute(
+							ExecuteConfig.ForProperties.forProperties(config).setPropertyName(Configuration.Key.AFTER_INIT).withParameter(this)
+						);
+						temporaryComponentContainer.close();
+					} finally {
+						this.initializerTasks.remove(afterInitializerTaskID);
+					}
+				}).async();
+				this.initializerTasks.put(afterInitializerTaskID, afterInitializerTask);
+				afterInitializerTask.submit();
 			}
 		}, Thread.MAX_PRIORITY).pureAsync();
 		this.initializerTasks.put(initializerTaskID, initializerTask);
