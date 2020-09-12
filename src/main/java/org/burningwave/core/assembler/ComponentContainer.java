@@ -155,7 +155,6 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private ComponentContainer init() {
-		unregister(GlobalProperties);
 		TreeMap<Object, Object> defaultProperties = new TreeMap<>();
 		defaultProperties.putAll(Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(CodeExecutor.Configuration.DEFAULT_VALUES);
