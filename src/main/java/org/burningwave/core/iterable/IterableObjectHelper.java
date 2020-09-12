@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -490,6 +491,24 @@ public class IterableObjectHelper implements Component {
 			}
 		}		
 		return object != null && value != null && object.equals(value);
+	}
+	
+	private String toPrettyKeyValueLabel(Entry<?, ?> entry, String valuesSeparator, int marginTabCount) {
+		String margin = new String(new char[marginTabCount]).replace('\0', '\t');
+		String keyValueLabel = margin + entry.getKey() + "=\\\n" + margin + "\t" + entry.getValue().toString().replace(valuesSeparator, valuesSeparator + "\\\n" + margin +"\t");
+		keyValueLabel = keyValueLabel.endsWith(valuesSeparator + "\\\n" + margin +"\t")? keyValueLabel.substring(0, keyValueLabel.lastIndexOf("\\\n" + margin + "\t")) : keyValueLabel;
+		return keyValueLabel;
+	}
+	
+	public String toPrettyString(Map<?, ?> map, String valuesSeparator, int marginTabCount) {
+		TreeMap<?, ?> allValues = map instanceof TreeMap ? (TreeMap<?, ?>)map : new TreeMap<>(map);
+		return allValues.entrySet().stream().map(entry -> toPrettyKeyValueLabel(entry, valuesSeparator, marginTabCount)).collect(Collectors.joining("\n"));
+	}	
+	
+	public String toString(Map<?, ?> map, int marginTabCount) {
+		TreeMap<?, ?> allValues = map instanceof TreeMap ? (TreeMap<?, ?>)map : new TreeMap<>(map);
+		String margin = new String(new char[marginTabCount]).replace('\0', '\t');
+		return allValues.entrySet().stream().map(entry -> margin + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"));
 	}
 	
 	private class ArrayList<E> extends java.util.ArrayList<E> {
