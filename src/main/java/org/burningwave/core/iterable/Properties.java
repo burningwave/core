@@ -32,7 +32,9 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 public class Properties extends java.util.Properties {
 	private static final long serialVersionUID = -350748766178421942L;
@@ -44,36 +46,40 @@ public class Properties extends java.util.Properties {
 	private Collection<Listener> listeners;
 	private String defaultValuesSeparator;
 	
+    public Properties(Properties defaults) {
+    	this(defaults, null);
+    }
+	
 	public Properties() {
-		this(null);
+		this(null, null);
 	}
 	
-	public Properties(String defaultValuesSeparator) {
-		super();
+	public Properties(Properties defaults, String defaultValuesSeparator) {
+		super(defaults);
 		listeners = ConcurrentHashMap.newKeySet();
 		this.defaultValuesSeparator = defaultValuesSeparator;
 	}
 	
 	public String getDefaultValuesSeparator() {
-		return this.defaultValuesSeparator;
+		return this.defaultValuesSeparator != null ? this.defaultValuesSeparator : IterableObjectHelper.getDefaultValuesSeparator();
 	}
 
 ////////////////////
 	
 	public <T> T resolveValue(String key) {
-		return IterableObjectHelper.resolveValue(this, key, null, defaultValuesSeparator, false, null);
+		return IterableObjectHelper.resolveValue(this, key, null, defaultValuesSeparator, false, this.defaults);
 	}
 	
 	public <T> Collection<T> resolveValues(String key) {
-		return IterableObjectHelper.resolveValues(this, key, null, defaultValuesSeparator, false, null);
+		return IterableObjectHelper.resolveValues(this, key, null, defaultValuesSeparator, false, this.defaults);
 	}
 	
 	public String resolveStringValue(String key) {
-		return IterableObjectHelper.resolveStringValue(this, key, null, defaultValuesSeparator, false, null);
+		return IterableObjectHelper.resolveStringValue(this, key, null, defaultValuesSeparator, false, this.defaults);
 	}
 	
 	public Collection<String> resolveStringValues(String key) {
-		return IterableObjectHelper.resolveStringValues(this, key, null, defaultValuesSeparator, false, null);
+		return IterableObjectHelper.resolveStringValues(this, key, null, defaultValuesSeparator, false, this.defaults);
 	}
 	
 ////////////////////
@@ -97,37 +103,37 @@ public class Properties extends java.util.Properties {
 ////////////////////
 	
 	public <T> T resolveValue(String key, String valuesSeparator) {
-		return IterableObjectHelper.resolveValue(this, key, valuesSeparator, defaultValuesSeparator, false, null);
+		return IterableObjectHelper.resolveValue(this, key, valuesSeparator, defaultValuesSeparator, false, this.defaults);
 	}
 	
 	public <T> Collection<T> resolveValues(String key, String valuesSeparator) {
-		return IterableObjectHelper.resolveValues(this, key, valuesSeparator, defaultValuesSeparator, false, null);
+		return IterableObjectHelper.resolveValues(this, key, valuesSeparator, defaultValuesSeparator, false, this.defaults);
 	}
 	
 	public String resolveStringValue(String key, String valuesSeparator) {
-		return IterableObjectHelper.resolveStringValue(this, key, valuesSeparator, defaultValuesSeparator, false, null);
+		return IterableObjectHelper.resolveStringValue(this, key, valuesSeparator, defaultValuesSeparator, false, this.defaults);
 	}
 	
 	public Collection<String> resolveStringValues(String key, String valuesSeparator) {
-		return IterableObjectHelper.resolveStringValues(this, key, valuesSeparator, defaultValuesSeparator, false, null);
+		return IterableObjectHelper.resolveStringValues(this, key, valuesSeparator, defaultValuesSeparator, false, this.defaults);
 	}
 
 ////////////////////
 	
 	public <T> T resolveValue(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return IterableObjectHelper.resolveValue(this, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, null);
+		return IterableObjectHelper.resolveValue(this, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, this.defaults);
 	}
 	
 	public <T> Collection<T> resolveValues(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return IterableObjectHelper.resolveValues(this, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, null);
+		return IterableObjectHelper.resolveValues(this, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, this.defaults);
 	}
 	
 	public String resolveStringValue(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return IterableObjectHelper.resolveStringValue(this, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, null);
+		return IterableObjectHelper.resolveStringValue(this, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, this.defaults);
 	}
 	
 	public Collection<String> resolveStringValues(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return IterableObjectHelper.resolveStringValues(this, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, null);
+		return IterableObjectHelper.resolveStringValues(this, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, this.defaults);
 	}
 
 ////////////////////
@@ -151,12 +157,36 @@ public class Properties extends java.util.Properties {
 		return removed;
 	}
 	
+	public Map<Object, Object> toMap(Supplier<Map<Object, Object>> mapSupplier) {
+		Map<Object, Object> allValues = mapSupplier.get();
+		if (this.defaults != null) {
+			allValues.putAll(this.defaults);
+		}
+		allValues.putAll(this);
+		return allValues;
+	}
+	
+	public String toSimplePrettyString() {
+		return toSimplePrettyString(0);
+	}
+	
+	public String toSimplePrettyString(int marginTabCount) {
+		return IterableObjectHelper.toString(toMap(TreeMap::new), marginTabCount);
+	}
+	
+	public String toPrettyString() {
+		return toPrettyString(0);
+	}
+	
+	public String toPrettyString(int marginTabCount) {
+		return IterableObjectHelper.toPrettyString(toMap(TreeMap::new), getDefaultValuesSeparator(), marginTabCount);
+	}	
+	
 	private void notifyChange(Event event, Object key, Object newValue, Object oldValue) {
 		listeners.forEach((listener) -> 
 			listener.receiveNotification(this, event, key, newValue, oldValue)
 		);
 	}
-	
 	
 	public static interface Listener {
 		
