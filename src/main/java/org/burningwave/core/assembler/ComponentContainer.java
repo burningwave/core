@@ -202,10 +202,9 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	private ComponentContainer launchAfterInit() {
 		if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
-			Task task = BackgroundExecutor.createTask(() -> {
+			BackgroundExecutor.createTask(() -> {
 				getCodeExecutor().executeProperty(Configuration.Key.AFTER_INIT, this);
 			}).pureAsync().submit();
-			task.join();
 		}
 		return this;
 	}
