@@ -51,7 +51,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Executable;
@@ -177,13 +176,13 @@ public class ComponentContainer implements ComponentSupplier {
 			config.putIfAbsent(defVal.getKey(), defVal.getValue());
 		}
 		
-		Map<Object, Object> componentContainerConfig = new TreeMap<>();
+		Properties componentContainerConfig = new Properties();
 		componentContainerConfig.putAll(config);
 		componentContainerConfig.keySet().removeAll(GlobalProperties.keySet());
 		logInfo(
-			"\nConfiguration values for\n\n\tstatic components:\n{}\n\n\tdynamic components:\n{}\n\n... Are assumed",
-			new TreeMap<>(GlobalProperties).entrySet().stream().map(entry -> "\t\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n")),
-			componentContainerConfig.entrySet().stream().map(entry -> "\t\t" + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"))
+			"\nConfiguration values for...\n\n\tStatic components:\n{}\n\n\tDynamic components:\n{}\n\n... Are assumed",
+			GlobalProperties.toSimplePrettyString(2),
+			componentContainerConfig.toPrettyString(2)
 		);
 		listenTo(GlobalProperties);
 		return this;
