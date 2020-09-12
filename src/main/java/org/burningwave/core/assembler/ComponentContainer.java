@@ -408,9 +408,6 @@ public class ComponentContainer implements ComponentSupplier {
 			this.components = new ConcurrentHashMap<>();
 		});
 		if (!components.isEmpty()) {
-			if (wait) {
-				BackgroundExecutor.waitForTasksEnding();
-			}
 			Task cleaningTask = BackgroundExecutor.createTask((ThrowingRunnable<?>)() ->
 				IterableObjectHelper.deepClear(components, (type, component) -> {
 					try {
@@ -426,7 +423,6 @@ public class ComponentContainer implements ComponentSupplier {
 			).pureAsync().submit();
 			if (wait) {
 				BackgroundExecutor.waitFor(cleaningTask);
-				BackgroundExecutor.waitForTasksEnding();
 				System.gc();
 			}
 		}
@@ -434,9 +430,6 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public static void clearAll(boolean wait) {
-		if (wait) {
-			BackgroundExecutor.waitForTasksEnding();
-		}
 		ThrowingRunnable<?> cleaningRunnable = () -> {
 			for (ComponentContainer componentContainer : instances) {
 				try {
@@ -452,10 +445,6 @@ public class ComponentContainer implements ComponentSupplier {
 			BackgroundExecutor.createTask(cleaningRunnable, Thread.MIN_PRIORITY).pureAsync().submit();
 		}
 		Cache.clear();
-		if (wait) {
-			BackgroundExecutor.waitForTasksEnding();
-			System.gc();
-		}
 	}
 	
 	void close(boolean force) {
