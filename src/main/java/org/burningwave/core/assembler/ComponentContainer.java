@@ -46,7 +46,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -66,7 +65,6 @@ import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchResult;
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.FileSystemItem;
@@ -108,7 +106,6 @@ public class ComponentContainer implements ComponentSupplier {
 	protected Map<Class<? extends Component>, Component> components;
 	private Supplier<Properties> propertySupplier;
 	private Properties config;
-	private Map<String, QueuedTasksExecutor.Task> initializerTasks;
 	private boolean isUndestroyable;
 	
 	static {
@@ -119,7 +116,6 @@ public class ComponentContainer implements ComponentSupplier {
 		this.propertySupplier = propertySupplier;
 		this.components = new ConcurrentHashMap<>();
 		this.config = new Properties();
-		this.initializerTasks = new ConcurrentHashMap<>();
 		instances.add(this);
 	}
 	
@@ -138,7 +134,7 @@ public class ComponentContainer implements ComponentSupplier {
 				} catch (Throwable exc) {
 					throw Throwables.toRuntimeException(exc);
 				}
-			}).launchInit();
+			}).init();
 		} catch (Throwable exc){
 			ManagedLoggersRepository.logError("Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
 			throw Throwables.toRuntimeException(exc);
@@ -147,7 +143,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public final static ComponentContainer create(Properties properties) {
 		try {
-			return new ComponentContainer(() -> properties).launchInit();
+			return new ComponentContainer(() -> properties).init();
 		} catch (Throwable exc){
 			ManagedLoggersRepository.logError("Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
 			throw Throwables.toRuntimeException(exc);
@@ -158,7 +154,7 @@ public class ComponentContainer implements ComponentSupplier {
 		return create((Properties)null);
 	}
 	
-	private ComponentContainer init() {		
+	private ComponentContainer init() {
 		TreeMap<Object, Object> defaultProperties = new TreeMap<>();
 		defaultProperties.putAll(Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(CodeExecutor.Configuration.DEFAULT_VALUES);
@@ -185,6 +181,7 @@ public class ComponentContainer implements ComponentSupplier {
 			componentContainerConfig.toPrettyString(2)
 		);
 		listenTo(GlobalProperties);
+		launchAfterInit();
 		return this;
 	}
 	
@@ -202,23 +199,12 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
-	private ComponentContainer launchInit() {
-		String initializerTaskID = UUID.randomUUID().toString();
-		QueuedTasksExecutor.Task initializerTask = BackgroundExecutor.createTask(() -> {
-			try {
-				this.init();
-			} finally {
-				this.initializerTasks.remove(initializerTaskID);
-			}			
-			if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
-				Task task = BackgroundExecutor.createTask(() -> {
-					getCodeExecutor().executeProperty(Configuration.Key.AFTER_INIT, this);
-				}).pureAsync().submit();
-				task.join();
-			}
-		}, Thread.MAX_PRIORITY).pureAsync();
-		this.initializerTasks.put(initializerTaskID, initializerTask);
-		initializerTask.submit();
+	private ComponentContainer launchAfterInit() {
+		if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
+			BackgroundExecutor.createTask(() -> {
+				getCodeExecutor().executeProperty(Configuration.Key.AFTER_INIT, this);
+			}).pureAsync().submit();
+		}
 		return this;
 	}
 
@@ -226,20 +212,11 @@ public class ComponentContainer implements ComponentSupplier {
 		return getId() + "_components";
 	}
 	
-	private void waitForInitialization(boolean ignoreThread) {
-		if (!this.initializerTasks.isEmpty()) {
-			for (QueuedTasksExecutor.Task initializerTask : this.initializerTasks.values()) {
-				initializerTask.join(ignoreThread);
-			}
-			waitForInitialization(false);
-		}
-	}
-	
 	public void reset() {
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			clear(false);
 			this.config = new Properties();
-			launchInit();
+			init();
 		});
 	}
 	
@@ -248,19 +225,16 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public String getConfigProperty(String propertyName) {
-		waitForInitialization(false);
 		return IterableObjectHelper.resolveStringValue(config, propertyName);
 	}
 	
 	public String getConfigProperty(String propertyName, Map<String, String> defaultValues) {
-		waitForInitialization(false);
 		return IterableObjectHelper.resolveStringValue(config, propertyName, defaultValues);
 	}
 	
 	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
 		T component = (T)components.get(componentType);
 		if (component == null) {
-			waitForInitialization(false);
 			component = Synchronizer.execute(getMutexForComponentsId(), () -> {
 				T componentTemp = (T)components.get(componentType);
 				if (componentTemp == null) {
@@ -430,13 +404,9 @@ public class ComponentContainer implements ComponentSupplier {
 	public ComponentContainer clear(boolean wait) {
 		Map<Class<? extends Component>, Component> components = this.components;
 		Synchronizer.execute(getMutexForComponentsId(), () -> { 
-			waitForInitialization(false);
 			this.components = new ConcurrentHashMap<>();
 		});
 		if (!components.isEmpty()) {
-			if (wait) {
-				BackgroundExecutor.waitForTasksEnding();
-			}
 			Task cleaningTask = BackgroundExecutor.createTask((ThrowingRunnable<?>)() ->
 				IterableObjectHelper.deepClear(components, (type, component) -> {
 					try {
@@ -452,7 +422,6 @@ public class ComponentContainer implements ComponentSupplier {
 			).pureAsync().submit();
 			if (wait) {
 				BackgroundExecutor.waitFor(cleaningTask);
-				BackgroundExecutor.waitForTasksEnding();
 				System.gc();
 			}
 		}
@@ -460,9 +429,6 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	public static void clearAll(boolean wait) {
-		if (wait) {
-			BackgroundExecutor.waitForTasksEnding();
-		}
 		ThrowingRunnable<?> cleaningRunnable = () -> {
 			for (ComponentContainer componentContainer : instances) {
 				try {
@@ -478,10 +444,6 @@ public class ComponentContainer implements ComponentSupplier {
 			BackgroundExecutor.createTask(cleaningRunnable, Thread.MIN_PRIORITY).pureAsync().submit();
 		}
 		Cache.clear();
-		if (wait) {
-			BackgroundExecutor.waitForTasksEnding();
-			System.gc();
-		}
 	}
 	
 	void close(boolean force) {
@@ -489,12 +451,10 @@ public class ComponentContainer implements ComponentSupplier {
 			closeResources(() -> !instances.contains(this),  () -> {
 				Synchronizer.execute(getMutexForComponentsId(), () -> {
 					instances.remove(this);
-					waitForInitialization(false);
 					unregister(GlobalProperties);
 					clear();			
 					components = null;
 					propertySupplier = null;
-					initializerTasks = null;
 					config = null;
 				});
 			});
