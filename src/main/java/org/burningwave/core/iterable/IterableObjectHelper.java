@@ -38,6 +38,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -459,6 +460,33 @@ public class IterableObjectHelper implements Component {
 	
 	public boolean containsValue(Map<?, ?> map, String key, Object object) {
 		return containsValue(map, key, object, null);		
+	}
+	
+	public <K, V> void refresh(Map<K, V> source, Map<K, V> newValues) {
+		Collection<K> keyToBeRemoved = new HashSet<>();
+		Map<K, V> keyAndValuesToBePut = new HashMap<>();
+		for(Map.Entry<K, V> keyAndValue : source.entrySet()) {
+			K key = keyAndValue.getKey();
+			if (newValues.containsKey(key)) {
+				V oldValue = newValues.get(key);
+				V newValue = newValues.get(key);
+				if (!Objects.equals(oldValue, newValue)) {
+					keyAndValuesToBePut.put(key, newValue);
+				}
+			} else {
+				keyToBeRemoved.add(key);
+			}			
+		}
+		
+		for(Map.Entry<K, V> keyAndValue : newValues.entrySet()) {
+			K key = keyAndValue.getKey();
+			if (!source.containsKey(key)) {
+				keyAndValuesToBePut.put(key, keyAndValue.getValue());
+			}
+		}
+		
+		source.keySet().removeAll(keyToBeRemoved);
+		source.putAll(keyAndValuesToBePut);
 	}
 	
 	public boolean containsValue(Map<?, ?> map, String key, Object object, Map<?, ?> defaultValues) {
