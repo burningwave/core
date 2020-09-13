@@ -32,11 +32,12 @@ public class ComponentContainerTest extends BaseTest {
 	@Test
 	public void clearAll() {
 		testDoesNotThrow(() -> {
-			logWarn("Total memory before clearAll {}", Runtime.getRuntime().totalMemory());
+			logInfo("Total memory before clearAll {}", Runtime.getRuntime().totalMemory());
 			ComponentContainer.clearAll();
-			//BackgroundExecutor.waitForTasksEnding();
+			logInfo("Waiting for all tasks ending");
+			BackgroundExecutor.waitForTasksEnding();
 			System.gc();
-			logWarn("Total memory after clearAll {}", Runtime.getRuntime().totalMemory());
+			logInfo("Total memory after clearAll {}", Runtime.getRuntime().totalMemory());
 		});
 	}
 	
