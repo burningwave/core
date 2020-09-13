@@ -1,5 +1,6 @@
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 
 import org.burningwave.core.assembler.ComponentContainer;
@@ -32,7 +33,8 @@ public class ComponentContainerTest extends BaseTest {
 	public void clearAll() {
 		testDoesNotThrow(() -> {
 			logWarn("Total memory before clearAll {}", Runtime.getRuntime().totalMemory());
-			ComponentContainer.clearAll(true);
+			ComponentContainer.clearAll();
+			BackgroundExecutor.waitForTasksEnding();
 			System.gc();
 			logWarn("Total memory after clearAll {}", Runtime.getRuntime().totalMemory());
 		});
