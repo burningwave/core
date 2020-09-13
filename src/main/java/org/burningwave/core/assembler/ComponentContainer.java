@@ -65,7 +65,6 @@ import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchResult;
-import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
@@ -155,6 +154,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private ComponentContainer init() {
+		Properties config = new Properties();
 		TreeMap<Object, Object> defaultProperties = new TreeMap<>();
 		defaultProperties.putAll(Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(CodeExecutor.Configuration.DEFAULT_VALUES);
@@ -171,9 +171,11 @@ public class ComponentContainer implements ComponentSupplier {
 		for (Map.Entry<Object, Object> defVal : defaultProperties.entrySet()) {
 			config.putIfAbsent(defVal.getKey(), defVal.getValue());
 		}
+
+		IterableObjectHelper.refresh(this.config, config);
 		
 		Properties componentContainerConfig = new Properties();
-		componentContainerConfig.putAll(config);
+		componentContainerConfig.putAll(this.config);
 		componentContainerConfig.keySet().removeAll(GlobalProperties.keySet());
 		logInfo(
 			"\nConfiguration values for...\n\n\tStatic components:\n{}\n\n\tDynamic components:\n{}\n\n... Are assumed",
@@ -214,8 +216,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public void reset() {
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
-			clear(false);
-			this.config = new Properties();
+			clear();
 			init();
 		});
 	}
@@ -397,17 +398,12 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public ComponentContainer clear() {
-		return clear(false);
-	}
-	
-	
-	public ComponentContainer clear(boolean wait) {
 		Map<Class<? extends Component>, Component> components = this.components;
 		Synchronizer.execute(getMutexForComponentsId(), () -> { 
 			this.components = new ConcurrentHashMap<>();
 		});
 		if (!components.isEmpty()) {
-			Task cleaningTask = BackgroundExecutor.createTask((ThrowingRunnable<?>)() ->
+			BackgroundExecutor.createTask((ThrowingRunnable<?>)() ->
 				IterableObjectHelper.deepClear(components, (type, component) -> {
 					try {
 						if (!(component instanceof PathScannerClassLoader)) {
@@ -419,29 +415,18 @@ public class ComponentContainer implements ComponentSupplier {
 						logError("Exception occurred while closing " + component, exc);
 					}
 				}),Thread.MIN_PRIORITY
-			).pureAsync().submit();
-			if (wait) {
-				BackgroundExecutor.waitFor(cleaningTask);
-				System.gc();
-			}
+			).submit();
 		}
 		return this;
 	}
 	
-	public static void clearAll(boolean wait) {
-		ThrowingRunnable<?> cleaningRunnable = () -> {
-			for (ComponentContainer componentContainer : instances) {
-				try {
-					componentContainer.clear(wait);
-				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError("Exception occurred while executing clear on " + componentContainer.toString(), exc);
-				}
+	public static void clearAll() {
+		for (ComponentContainer componentContainer : instances) {
+			try {
+				componentContainer.clear();
+			} catch (Throwable exc) {
+				ManagedLoggersRepository.logError("Exception occurred while executing clear on " + componentContainer.toString(), exc);
 			}
-		};
-		if (wait) {
-			ThrowingRunnable.run(() -> cleaningRunnable.run());
-		} else {
-			BackgroundExecutor.createTask(cleaningRunnable, Thread.MIN_PRIORITY).pureAsync().submit();
 		}
 		Cache.clear();
 	}
@@ -473,10 +458,6 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 		Cache.clear();
 		System.gc();
-	}
-	
-	public static void clearAll() {
-		clearAll(true);
 	}
 	
 	public static void clearAllCaches() {
