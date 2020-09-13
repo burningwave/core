@@ -860,6 +860,7 @@ public class QueuedTasksExecutor implements Component {
 				@Override
 				public QueuedTasksExecutor waitForTasksEnding(int priority) {
 					if (priority == defaultPriority) {
+						logInfo("Waiting for tasks ending");
 						while (!tasksQueue.isEmpty()) {
 							synchronized(getMutex("executingFinishedWaiter")) {
 								if (!tasksQueue.isEmpty()) {
@@ -871,10 +872,12 @@ public class QueuedTasksExecutor implements Component {
 								}
 							}
 						}
+						logInfo("Waiting for async tasks ending");
 						asyncTasksInExecution.stream().forEach(task -> {
 							task.join0(false);
 						});
-					} else {	
+					} else {
+						logInfo("priority == default priority: Waiting for async tasks ending");
 						tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
 						waitForAsyncTasksEnding(priority);				
 					}
