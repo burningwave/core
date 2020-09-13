@@ -36,6 +36,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Member;
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -364,20 +365,37 @@ public class Members implements Component {
 			}
 			
 			public StackTraceElement getCaller() {
-				return getCaller(Thread.currentThread().getStackTrace());
+				return getCaller(Thread.currentThread().getStackTrace(), 1);
 			}
 			
 			public StackTraceElement getCaller(StackTraceElement[] stackTrace) {
-				return getCaller(stackTrace, (clientMethodSTE, currentIteratedSTE) -> !clientMethodSTE.getClassName().equals(currentIteratedSTE.getClassName()));
+				return getCaller(stackTrace, 1);
+			}
+			public StackTraceElement getCaller(StackTraceElement[] stackTrace, int level) {
+				return getCaller(stackTrace, (clientMethodSTE, currentIteratedSTE) -> !clientMethodSTE.getClassName().equals(currentIteratedSTE.getClassName()), level);
 			}
 			
-			public StackTraceElement getCaller(BiPredicate<StackTraceElement, StackTraceElement> filter) {
-				return getCaller(Thread.currentThread().getStackTrace(), filter);
+			public StackTraceElement getCaller(BiPredicate<StackTraceElement, StackTraceElement> filter, int level) {
+				return getCaller(Thread.currentThread().getStackTrace(), filter, 1);
 			}
 			
-			public StackTraceElement getCaller(StackTraceElement[] stackTrace, BiPredicate<StackTraceElement, StackTraceElement> filter) {
+			public StackTraceElement getCaller(StackTraceElement[] stackTrace, BiPredicate<StackTraceElement, StackTraceElement> filter, int level) {
+				return getCallers(stackTrace, filter, level).get(level);
+			}
+			
+			public List<StackTraceElement> getCallers() {
+				return getCallers(Thread.currentThread().getStackTrace(), 1);
+			}
+			
+			public List<StackTraceElement> getCallers(StackTraceElement[] stackTrace, int level) {
+				return getCallers(stackTrace, (clientMethodSTE, currentIteratedSTE) -> !clientMethodSTE.getClassName().equals(currentIteratedSTE.getClassName()), level);
+			}
+			
+			public List<StackTraceElement> getCallers(StackTraceElement[] stackTrace, BiPredicate<StackTraceElement, StackTraceElement> filter, int level) {
 				StackTraceElement clientMethodSTE = null;
 				StackTraceElement clientMethodCallerSTE = null;
+				List<StackTraceElement> clientMethodCallersSTE = new ArrayList<>();
+				int reachedLevel = 0;
 				for (int i = 1; i < stackTrace.length; i ++) {
 					if (clientMethodSTE == null && !classNamesToIgnoreToDetectTheCallingMethod.contains(stackTrace[i].getClassName())) {
 						clientMethodSTE = stackTrace[i];
@@ -385,10 +403,15 @@ public class Members implements Component {
 					}
 					if (clientMethodSTE != null && filter.test(clientMethodSTE, stackTrace[i])) {
 						clientMethodCallerSTE = stackTrace[i];
-						break;
+					}
+					if (clientMethodCallerSTE != null) {
+						clientMethodCallersSTE.add(stackTrace[i]);
+						if (level > 0 && ++reachedLevel == level) {
+							break;
+						}
 					}
 				}		
-				return clientMethodCallerSTE;
+				return clientMethodCallersSTE;
 			}	
 		}
 	}
