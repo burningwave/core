@@ -527,7 +527,7 @@ public class QueuedTasksExecutor implements Component {
 				this.creatingStackTrace = Methods.getCallers(
 					this.stackTraceOnCreation,
 					(clientMethodSTE, currentIteratedSTE) -> !currentIteratedSTE.getClassName().startsWith(QueuedTasksExecutor.class.getName()),
-					3
+					10
 				);
 			}
 			return creatingStackTrace;
