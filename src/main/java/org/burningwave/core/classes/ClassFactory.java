@@ -438,14 +438,17 @@ public class ClassFactory implements Component {
 		return true;
 	}
 	
-	public synchronized void closeClassRetrievers() {
+	public void closeClassRetrievers() {
 		Collection<ClassRetriever> classRetrievers = this.classRetrievers;
+		Collection<ClassRetriever> closedClassRetrievers = this.classRetrievers;
 		if (classRetrievers != null) {
 			Iterator<ClassRetriever> classRetrieverIterator = classRetrievers.iterator();		
 			while(classRetrieverIterator.hasNext()) {
 				ClassRetriever classRetriever = classRetrieverIterator.next();
 				classRetriever.close();
+				closedClassRetrievers.add(classRetriever);
 			}
+			classRetrievers.removeAll(closedClassRetrievers);
 		}
 	}
 	
@@ -466,18 +469,28 @@ public class ClassFactory implements Component {
 	@Override
 	public void close() {
 		closeResources(() -> this.classRetrievers == null, () -> {
+			int i = 0;
+			logInfo("Executed {}", ++i);
 			unregister(config);
+			logInfo("Executed {}", ++i);
 			closeClassRetrievers();
+			logInfo("Executed {}", ++i);
 			BackgroundExecutor.createTask(() -> {
 					this.classRetrievers.clear();
 					this.classRetrievers = null;
 				}
 			).submit();
+			logInfo("Executed {}", ++i);
 			pathHelper = null;
+			logInfo("Executed {}", ++i);
 			javaMemoryCompiler = null;
-			pojoSubTypeRetriever = null;	
+			logInfo("Executed {}", ++i);
+			pojoSubTypeRetriever = null;
+			logInfo("Executed {}", ++i);
 			if (defaultClassLoader instanceof MemoryClassLoader) {
+				logInfo("Executed {}", ++i);
 				((MemoryClassLoader)defaultClassLoader).unregister(this, true);
+				logInfo("Executed {}", ++i);
 			}
 			defaultClassLoader = null;
 			byteCodeHunter = null;
@@ -725,28 +738,40 @@ public class ClassFactory implements Component {
 		@Override
 		public void close() {
 			closeResources(() -> this.classLoader == null, () -> {
+				int i = 0;
+				logInfo("ClassRetriever executed {}", ++i);
 				if (classLoader instanceof MemoryClassLoader) {
+					logInfo("ClassRetriever executed {}", ++i);
 					((MemoryClassLoader)classLoader).unregister(this, true);
+					logInfo("ClassRetriever executed {}", ++i);
 				}
 				if (compilationTask != null) {
+					logInfo("ClassRetriever executed {}", ++i);
 					compilationTask.join().close();
+					logInfo("ClassRetriever executed {}", ++i);
 				}
 				compilationConfigSupplier = null;
 				compilationConfig = null;
 				compilationTask = null;
+				logInfo("ClassRetriever executed {}", ++i);
 				if (useOneShotJavaCompiler) {
+					logInfo("ClassRetriever executed {}", ++i);
 					compiler.close();
+					logInfo("ClassRetriever executed {}", ++i);
 					classPathHelper.close();
+					logInfo("ClassRetriever executed {}", ++i);
 				}
 				compiler = null;
 				classPathHelper = null;
 				classLoader = null;
+				logInfo("ClassRetriever executed {}", ++i);
 				if (byteCodesWrapper != null) {
 					if (byteCodesWrapper.get() != null) {
 						byteCodesWrapper.get().clear();
 					}
 					byteCodesWrapper.set(null);
 				}
+				logInfo("ClassRetriever executed {}", ++i);
 				byteCodesWrapper = null;
 				this.classLoader = null;
 				uSGClassNames.clear();
