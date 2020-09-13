@@ -419,7 +419,7 @@ public class ComponentContainer implements ComponentSupplier {
 						logError("Exception occurred while closing " + component, exc);
 					}
 				}),Thread.MIN_PRIORITY
-			).pureAsync().submit();
+			).submit();
 			if (wait) {
 				BackgroundExecutor.waitFor(cleaningTask);
 				System.gc();
@@ -428,20 +428,13 @@ public class ComponentContainer implements ComponentSupplier {
 		return this;
 	}
 	
-	public static void clearAll(boolean wait) {
-		ThrowingRunnable<?> cleaningRunnable = () -> {
-			for (ComponentContainer componentContainer : instances) {
-				try {
-					componentContainer.clear(wait);
-				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError("Exception occurred while executing clear on " + componentContainer.toString(), exc);
-				}
+	public static void clearAll() {
+		for (ComponentContainer componentContainer : instances) {
+			try {
+				componentContainer.clear(false);
+			} catch (Throwable exc) {
+				ManagedLoggersRepository.logError("Exception occurred while executing clear on " + componentContainer.toString(), exc);
 			}
-		};
-		if (wait) {
-			ThrowingRunnable.run(() -> cleaningRunnable.run());
-		} else {
-			BackgroundExecutor.createTask(cleaningRunnable, Thread.MIN_PRIORITY).pureAsync().submit();
 		}
 		Cache.clear();
 	}
@@ -473,10 +466,6 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 		Cache.clear();
 		System.gc();
-	}
-	
-	public static void clearAll() {
-		clearAll(true);
 	}
 	
 	public static void clearAllCaches() {
