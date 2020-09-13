@@ -56,7 +56,7 @@ public class QueuedTasksExecutor implements Component {
 	Thread executor;
 	List<TaskAbst<?, ?>> tasksQueue;
 	List<TaskAbst<?, ?>> asyncTasksInExecution;
-	private TaskAbst<?, ?> currentTask;
+	TaskAbst<?, ?> currentTask;
 	Boolean supended;
 	private int loggingThreshold;
 	int defaultPriority;
@@ -499,10 +499,12 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		void join0(boolean ignoreThreadCheck) {
+			Thread executor = this.executor;
 			if (!hasFinished() && ((ignoreThreadCheck) ||
 				(!ignoreThreadCheck && Thread.currentThread() != executor && executor != null))
 			) {
 				synchronized (this) {
+					executor = this.executor;
 					if (!hasFinished() && ((ignoreThreadCheck) ||
 						(!ignoreThreadCheck && Thread.currentThread() != executor && executor != null))) {
 						try {
@@ -865,7 +867,9 @@ public class QueuedTasksExecutor implements Component {
 							synchronized(getMutex("executingFinishedWaiter")) {
 								if (!tasksQueue.isEmpty()) {
 									try {
-										getMutex("executingFinishedWaiter").wait();
+										logInfo("Sleeping for 1 second while executing {}, current task queue size: {}", this.currentTask.executable, tasksQueue.size());
+										Thread.sleep(1000);
+										//getMutex("executingFinishedWaiter").wait();
 									} catch (InterruptedException exc) {
 										logWarn("Exception occurred", exc);
 									}
