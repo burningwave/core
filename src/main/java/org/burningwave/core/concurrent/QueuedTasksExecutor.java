@@ -883,7 +883,7 @@ public class QueuedTasksExecutor implements Component {
 							synchronized(getMutex("executingFinishedWaiter")) {
 								if (!tasksQueue.isEmpty()) {
 									try {
-										logInfo("Sleeping for 1 second while executing {}, current task queue size: {}\n\t", this.currentTask.executable, tasksQueue.size(),
+										logInfo("Sleeping for 1 second while executing {}, current task queue size: {}\n\t{}", this.currentTask.executable, tasksQueue.size(),
 												String.join("\n\t", this.currentTask.getCreatingExecutableST().stream().map(st -> st.toString()).collect(Collectors.toList())));
 										Thread.sleep(1000);
 										//getMutex("executingFinishedWaiter").wait();
