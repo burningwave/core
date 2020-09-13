@@ -29,6 +29,7 @@
 package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -484,6 +485,8 @@ public class QueuedTasksExecutor implements Component {
 				SYNC, ASYNC, PURE_ASYNC
 			}
 		}
+		StackTraceElement[] stackTraceOnCreation;
+		StackTraceElement creatingMethodSTE;
 		E executable;
 		Execution.Mode executionMode;
 		int priority;
@@ -492,6 +495,7 @@ public class QueuedTasksExecutor implements Component {
 		
 		public TaskAbst() {
 			this.executionMode = Execution.Mode.SYNC;
+			stackTraceOnCreation = Thread.currentThread().getStackTrace();
 		}
 		
 		public boolean hasFinished() {
@@ -516,6 +520,13 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		}		
+		
+		StackTraceElement getCreatingExecutableSTE() {
+			if (this.creatingMethodSTE == null) {
+				this.creatingMethodSTE = Methods.getCaller(this.stackTraceOnCreation, (clientMethodSTE, currentIteratedSTE) -> !currentIteratedSTE.getClassName().startsWith(QueuedTasksExecutor.class.getName()));
+			}
+			return creatingMethodSTE;
+		}
 		
 		public T async() {
 			this.executionMode = Execution.Mode.ASYNC;
@@ -867,7 +878,7 @@ public class QueuedTasksExecutor implements Component {
 							synchronized(getMutex("executingFinishedWaiter")) {
 								if (!tasksQueue.isEmpty()) {
 									try {
-										logInfo("Sleeping for 1 second while executing {}, current task queue size: {}", this.currentTask.executable, tasksQueue.size());
+										logInfo("Sleeping for 1 second while executing {}, current task queue size: {}", this.currentTask.getCreatingExecutableSTE().toString(), tasksQueue.size());
 										Thread.sleep(1000);
 										//getMutex("executingFinishedWaiter").wait();
 									} catch (InterruptedException exc) {
