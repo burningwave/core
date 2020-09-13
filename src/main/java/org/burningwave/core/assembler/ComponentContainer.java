@@ -401,16 +401,12 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public ComponentContainer clear() {
-		return clear(false);
-	}
-	
-	public ComponentContainer clear(boolean wait) {
 		Map<Class<? extends Component>, Component> components = this.components;
 		Synchronizer.execute(getMutexForComponentsId(), () -> { 
 			this.components = new ConcurrentHashMap<>();
 		});
 		if (!components.isEmpty()) {
-			Task cleaningTask = BackgroundExecutor.createTask((ThrowingRunnable<?>)() ->
+			BackgroundExecutor.createTask((ThrowingRunnable<?>)() ->
 				IterableObjectHelper.deepClear(components, (type, component) -> {
 					try {
 						if (!(component instanceof PathScannerClassLoader)) {
@@ -422,11 +418,7 @@ public class ComponentContainer implements ComponentSupplier {
 						logError("Exception occurred while closing " + component, exc);
 					}
 				}),Thread.MIN_PRIORITY
-			).pureAsync().submit();
-			if (wait) {
-				BackgroundExecutor.waitFor(cleaningTask);
-				System.gc();
-			}
+			).async().submit();
 		}
 		return this;
 	}
@@ -434,7 +426,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public static void clearAll() {
 		for (ComponentContainer componentContainer : instances) {
 			try {
-				componentContainer.clear(true);
+				componentContainer.clear();
 			} catch (Throwable exc) {
 				ManagedLoggersRepository.logError("Exception occurred while executing clear on " + componentContainer.toString(), exc);
 			}
