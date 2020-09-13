@@ -38,6 +38,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -213,6 +214,16 @@ public class Members implements Component {
 		}
 		
 		static abstract class OfExecutable<E extends Executable, C extends ExecutableMemberCriteria<E, C, ?>> extends Members.Handler<E, C> {
+			private Collection<String> classNamesToIgnoreToDetectTheCallingMethod;
+			
+			public OfExecutable() {
+				classNamesToIgnoreToDetectTheCallingMethod = new HashSet<>();
+				Class<?> cls = this.getClass();
+				while (!cls.getName().equals(OfExecutable.class.getSuperclass().getName())) {
+					classNamesToIgnoreToDetectTheCallingMethod.add(cls.getName());
+					cls = cls.getSuperclass();
+				}
+			}
 			
 			Object[] getArgumentArray(
 				E member,
@@ -351,7 +362,35 @@ public class Members implements Component {
 				}
 				return membersThatMatch;
 			}
+			
+			public StackTraceElement getCaller() {
+				return getCaller(Thread.currentThread().getStackTrace());
+			}
+			
+			public StackTraceElement getCaller(StackTraceElement[] stackTrace) {
+				return getCaller(stackTrace, (clientMethodSTE, currentIteratedSTE) -> !clientMethodSTE.getClassName().equals(currentIteratedSTE.getClassName()));
+			}
+			
+			public StackTraceElement getCaller(BiPredicate<StackTraceElement, StackTraceElement> filter) {
+				return getCaller(Thread.currentThread().getStackTrace(), filter);
+			}
+			
+			public StackTraceElement getCaller(StackTraceElement[] stackTrace, BiPredicate<StackTraceElement, StackTraceElement> filter) {
+				StackTraceElement clientMethodSTE = null;
+				StackTraceElement clientMethodCallerSTE = null;
+				for (int i = 1; i < stackTrace.length; i ++) {
+					if (clientMethodSTE == null && !classNamesToIgnoreToDetectTheCallingMethod.contains(stackTrace[i].getClassName())) {
+						clientMethodSTE = stackTrace[i];
+						continue;
+					}
+					if (clientMethodSTE != null && filter.test(clientMethodSTE, stackTrace[i])) {
+						clientMethodCallerSTE = stackTrace[i];
+						break;
+					}
+				}		
+				return clientMethodCallerSTE;
+			}	
 		}
 	}
-
+	
 }
