@@ -154,6 +154,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private ComponentContainer init() {
+		Properties config = new Properties();
 		TreeMap<Object, Object> defaultProperties = new TreeMap<>();
 		defaultProperties.putAll(Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(CodeExecutor.Configuration.DEFAULT_VALUES);
@@ -170,9 +171,11 @@ public class ComponentContainer implements ComponentSupplier {
 		for (Map.Entry<Object, Object> defVal : defaultProperties.entrySet()) {
 			config.putIfAbsent(defVal.getKey(), defVal.getValue());
 		}
+
+		IterableObjectHelper.refresh(this.config, config);
 		
 		Properties componentContainerConfig = new Properties();
-		componentContainerConfig.putAll(config);
+		componentContainerConfig.putAll(this.config);
 		componentContainerConfig.keySet().removeAll(GlobalProperties.keySet());
 		logInfo(
 			"\nConfiguration values for...\n\n\tStatic components:\n{}\n\n\tDynamic components:\n{}\n\n... Are assumed",
@@ -214,7 +217,6 @@ public class ComponentContainer implements ComponentSupplier {
 	public void reset() {
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			clear();
-			this.config = new Properties();
 			init();
 		});
 	}
