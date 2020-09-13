@@ -281,14 +281,16 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	abstract <S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(C context, String basePath, String absolutePathOfItem, I item);
 	
 	public void clearCache() {
-		clearCache(false);
+		clearCache(true, false);
 	}
 	
-	public void clearCache(boolean closeSearchResults) {
+	public void clearCache(boolean resetFileSystremItems, boolean closeSearchResults) {
 		Collection<String> pathsToBeRemoved = new HashSet<>(cache.keySet());
 		for (String path : pathsToBeRemoved) {
-			Synchronizer.execute( instanceId + "_" + path, () -> {				
-				FileSystemItem.ofPath(path).reset();
+			Synchronizer.execute( instanceId + "_" + path, () -> {
+				if (resetFileSystremItems) {
+					FileSystemItem.ofPath(path).reset();
+				}
 				Map<String, I> items = cache.remove(path);
 				clearItemsForPath(items);
 			});
@@ -307,7 +309,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	@Override
 	public void close() {
 		closeResources(() -> cache == null, () -> {
-			clearCache(false);
+			clearCache(false, false);
 			cache = null;
 			pathHelper = null;
 			contextSupplier = null;

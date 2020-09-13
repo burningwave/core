@@ -492,15 +492,15 @@ public class ComponentContainer implements ComponentSupplier {
 	public void clearHuntersCache(boolean closeHuntersResults) {
 		ByteCodeHunter byteCodeHunter = (ByteCodeHunter)components.get(ByteCodeHunter.class);
 		if (byteCodeHunter != null) {
-			byteCodeHunter.clearCache(closeHuntersResults);
+			byteCodeHunter.clearCache(true, closeHuntersResults);
 		}
 		ClassHunter classHunter = (ClassHunter)components.get(ClassHunter.class);
 		if (classHunter != null) {
-			classHunter.clearCache(closeHuntersResults);
+			classHunter.clearCache(true, closeHuntersResults);
 		}
 		ClassPathHunter classPathHunter = (ClassPathHunter)components.get(ClassPathHunter.class);
 		if (classPathHunter != null) {
-			classPathHunter.clearCache(closeHuntersResults);
+			classPathHunter.clearCache(true, closeHuntersResults);
 		}
 	}
 	
