@@ -65,7 +65,6 @@ import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchResult;
-import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
@@ -214,7 +213,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public void reset() {
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
-			clear(false);
+			clear();
 			this.config = new Properties();
 			init();
 		});
@@ -397,17 +396,12 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public ComponentContainer clear() {
-		return clear(false);
-	}
-	
-	
-	public ComponentContainer clear(boolean wait) {
 		Map<Class<? extends Component>, Component> components = this.components;
 		Synchronizer.execute(getMutexForComponentsId(), () -> { 
 			this.components = new ConcurrentHashMap<>();
 		});
 		if (!components.isEmpty()) {
-			Task cleaningTask = BackgroundExecutor.createTask((ThrowingRunnable<?>)() ->
+			BackgroundExecutor.createTask((ThrowingRunnable<?>)() ->
 				IterableObjectHelper.deepClear(components, (type, component) -> {
 					try {
 						if (!(component instanceof PathScannerClassLoader)) {
@@ -420,10 +414,6 @@ public class ComponentContainer implements ComponentSupplier {
 					}
 				}),Thread.MIN_PRIORITY
 			).submit();
-			if (wait) {
-				BackgroundExecutor.waitFor(cleaningTask);
-				System.gc();
-			}
 		}
 		return this;
 	}
@@ -431,7 +421,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public static void clearAll() {
 		for (ComponentContainer componentContainer : instances) {
 			try {
-				componentContainer.clear(false);
+				componentContainer.clear();
 			} catch (Throwable exc) {
 				ManagedLoggersRepository.logError("Exception occurred while executing clear on " + componentContainer.toString(), exc);
 			}
