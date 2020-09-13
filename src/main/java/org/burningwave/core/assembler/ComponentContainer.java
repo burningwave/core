@@ -172,7 +172,9 @@ public class ComponentContainer implements ComponentSupplier {
 			config.putIfAbsent(defVal.getKey(), defVal.getValue());
 		}
 
-		IterableObjectHelper.refresh(this.config, config);
+		Synchronizer.execute(getMutexForComponentsId(), () -> {
+			IterableObjectHelper.refresh(this.config, config);
+		});
 		
 		Properties componentContainerConfig = new Properties();
 		componentContainerConfig.putAll(this.config);
@@ -415,7 +417,7 @@ public class ComponentContainer implements ComponentSupplier {
 						logError("Exception occurred while closing " + component, exc);
 					}
 				}),Thread.MIN_PRIORITY
-			).submit();
+			).async().submit();
 		}
 		return this;
 	}
