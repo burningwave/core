@@ -171,7 +171,7 @@ public class ComponentContainer implements ComponentSupplier {
 		for (Map.Entry<Object, Object> defVal : defaultProperties.entrySet()) {
 			config.putIfAbsent(defVal.getKey(), defVal.getValue());
 		}
-		
+
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			IterableObjectHelper.refresh(this.config, config);
 		});
