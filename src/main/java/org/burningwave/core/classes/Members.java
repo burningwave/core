@@ -36,8 +36,10 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Member;
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -213,6 +215,16 @@ public class Members implements Component {
 		}
 		
 		static abstract class OfExecutable<E extends Executable, C extends ExecutableMemberCriteria<E, C, ?>> extends Members.Handler<E, C> {
+			private Collection<String> classNamesToIgnoreToDetectTheCallingMethod;
+			
+			public OfExecutable() {
+				classNamesToIgnoreToDetectTheCallingMethod = new HashSet<>();
+				Class<?> cls = this.getClass();
+				while (!cls.getName().equals(OfExecutable.class.getSuperclass().getName())) {
+					classNamesToIgnoreToDetectTheCallingMethod.add(cls.getName());
+					cls = cls.getSuperclass();
+				}
+			}
 			
 			Object[] getArgumentArray(
 				E member,
@@ -351,7 +363,57 @@ public class Members implements Component {
 				}
 				return membersThatMatch;
 			}
+			
+			public StackTraceElement retrieveCallerInfo() {
+				return retrieveCallerInfo(Thread.currentThread().getStackTrace(), 1);
+			}
+			
+			public StackTraceElement retrieveCallerInfo(StackTraceElement[] stackTrace) {
+				return retrieveCallerInfo(stackTrace, 1);
+			}
+			public StackTraceElement retrieveCallerInfo(StackTraceElement[] stackTrace, int level) {
+				return retrieveCallerInfo(stackTrace, (clientMethodSTE, currentIteratedSTE) -> !clientMethodSTE.getClassName().equals(currentIteratedSTE.getClassName()), level);
+			}
+			
+			public StackTraceElement retrieveCallerInfo(BiPredicate<StackTraceElement, StackTraceElement> filter, int level) {
+				return retrieveCallerInfo(Thread.currentThread().getStackTrace(), filter, 1);
+			}
+			
+			public StackTraceElement retrieveCallerInfo(StackTraceElement[] stackTrace, BiPredicate<StackTraceElement, StackTraceElement> filter, int level) {
+				return retrieveCallersInfo(stackTrace, filter, level).get(level);
+			}
+			
+			public List<StackTraceElement> retrieveCallersInfo() {
+				return retrieveCallersInfo(Thread.currentThread().getStackTrace(), 1);
+			}
+			
+			public List<StackTraceElement> retrieveCallersInfo(StackTraceElement[] stackTrace, int level) {
+				return retrieveCallersInfo(stackTrace, (clientMethodSTE, currentIteratedSTE) -> !clientMethodSTE.getClassName().equals(currentIteratedSTE.getClassName()), level);
+			}
+			
+			public List<StackTraceElement> retrieveCallersInfo(StackTraceElement[] stackTrace, BiPredicate<StackTraceElement, StackTraceElement> filter, int level) {
+				StackTraceElement clientMethodSTE = null;
+				StackTraceElement clientMethodCallerSTE = null;
+				List<StackTraceElement> clientMethodCallersSTE = new ArrayList<>();
+				int reachedLevel = 0;
+				for (int i = 1; i < stackTrace.length; i ++) {
+					if (clientMethodSTE == null && !classNamesToIgnoreToDetectTheCallingMethod.contains(stackTrace[i].getClassName())) {
+						clientMethodSTE = stackTrace[i];
+						continue;
+					}
+					if (clientMethodSTE != null && filter.test(clientMethodSTE, stackTrace[i])) {
+						clientMethodCallerSTE = stackTrace[i];
+					}
+					if (clientMethodCallerSTE != null) {
+						clientMethodCallersSTE.add(stackTrace[i]);
+						if (level > 0 && ++reachedLevel == level) {
+							break;
+						}
+					}
+				}		
+				return clientMethodCallersSTE;
+			}	
 		}
 	}
-
+	
 }
