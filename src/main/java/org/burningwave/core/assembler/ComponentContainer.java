@@ -417,7 +417,7 @@ public class ComponentContainer implements ComponentSupplier {
 						logError("Exception occurred while closing " + component, exc);
 					}
 				}),Thread.MIN_PRIORITY
-			).pureAsync().submit();
+			).async().submit();
 		}
 		return this;
 	}

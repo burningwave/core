@@ -28,9 +28,8 @@
  */
 package org.burningwave.core.concurrent;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
-import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Collection;
@@ -57,7 +56,7 @@ public class QueuedTasksExecutor implements Component {
 	Thread executor;
 	List<TaskAbst<?, ?>> tasksQueue;
 	List<TaskAbst<?, ?>> asyncTasksInExecution;
-	TaskAbst<?, ?> currentTask;
+	private TaskAbst<?, ?> currentTask;
 	Boolean supended;
 	private int loggingThreshold;
 	int defaultPriority;
@@ -485,9 +484,6 @@ public class QueuedTasksExecutor implements Component {
 				SYNC, ASYNC, PURE_ASYNC
 			}
 		}
-		boolean started;
-		StackTraceElement[] stackTraceOnCreation;
-		List<StackTraceElement> creatingStackTrace;
 		E executable;
 		Execution.Mode executionMode;
 		int priority;
@@ -496,8 +492,6 @@ public class QueuedTasksExecutor implements Component {
 		
 		public TaskAbst() {
 			this.executionMode = Execution.Mode.SYNC;
-			stackTraceOnCreation = Thread.currentThread().getStackTrace();
-			getCreatingExecutableST();
 		}
 		
 		public boolean hasFinished() {
@@ -505,12 +499,10 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		void join0(boolean ignoreThreadCheck) {
-			Thread executor = this.executor;
 			if (!hasFinished() && ((ignoreThreadCheck) ||
 				(!ignoreThreadCheck && Thread.currentThread() != executor && executor != null))
 			) {
 				synchronized (this) {
-					executor = this.executor;
 					if (!hasFinished() && ((ignoreThreadCheck) ||
 						(!ignoreThreadCheck && Thread.currentThread() != executor && executor != null))) {
 						try {
@@ -522,17 +514,6 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		}		
-		
-		List<StackTraceElement> getCreatingExecutableST() {
-			if (this.creatingStackTrace == null) {
-				this.creatingStackTrace = Methods.getCallers(
-					this.stackTraceOnCreation,
-					(clientMethodSTE, currentIteratedSTE) -> !currentIteratedSTE.getClassName().startsWith(QueuedTasksExecutor.class.getName()),
-					10
-				);
-			}
-			return creatingStackTrace;
-		}
 		
 		public T async() {
 			this.executionMode = Execution.Mode.ASYNC;
@@ -551,7 +532,6 @@ public class QueuedTasksExecutor implements Component {
 		
 		void execute() {
 			try {
-				started = true;
 				execute0();						
 			} catch (Throwable exc) {
 				this.exc = exc;
@@ -880,27 +860,21 @@ public class QueuedTasksExecutor implements Component {
 				@Override
 				public QueuedTasksExecutor waitForTasksEnding(int priority) {
 					if (priority == defaultPriority) {
-						logInfo("Waiting for tasks ending");
 						while (!tasksQueue.isEmpty()) {
 							synchronized(getMutex("executingFinishedWaiter")) {
 								if (!tasksQueue.isEmpty()) {
 									try {
-										logInfo("Sleeping for 1 second while executing {}:{}, current task queue size: {}\n\t{}", this.currentTask.executable, this.currentTask.started, tasksQueue.size(),
-												String.join("\n\t", this.currentTask.getCreatingExecutableST().stream().map(st -> st.toString()).collect(Collectors.toList())));
-										Thread.sleep(1000);
-										//getMutex("executingFinishedWaiter").wait();
+										getMutex("executingFinishedWaiter").wait();
 									} catch (InterruptedException exc) {
 										logWarn("Exception occurred", exc);
 									}
 								}
 							}
 						}
-						logInfo("Waiting for async tasks ending");
 						asyncTasksInExecution.stream().forEach(task -> {
 							task.join0(false);
 						});
-					} else {
-						logInfo("priority == default priority: Waiting for async tasks ending");
+					} else {	
 						tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
 						waitForAsyncTasksEnding(priority);				
 					}
