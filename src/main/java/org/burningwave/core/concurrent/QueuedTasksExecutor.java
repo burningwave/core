@@ -584,7 +584,7 @@ public class QueuedTasksExecutor implements Component {
 			return (T)this;
 		}
 		
-		public boolean isStarted() {
+		public boolean hasStarted() {
 			return started;
 		}
 		
