@@ -29,8 +29,8 @@
 package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
-import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Collection;
@@ -520,12 +520,13 @@ public class QueuedTasksExecutor implements Component {
 		void join0(boolean ignoreThreadCheck) {
 			if (!hasFinished() && ((ignoreThreadCheck) ||
 				(!ignoreThreadCheck && Thread.currentThread() != executor && executor != null))
-			) {
+			) {	
 				synchronized (this) {
 					if (!hasFinished() && ((ignoreThreadCheck) ||
 						(!ignoreThreadCheck && Thread.currentThread() != executor && executor != null))) {
 						try {
 							wait();
+							join0(ignoreThreadCheck);
 						} catch (InterruptedException exc) {
 							throw Throwables.toRuntimeException(exc);
 						}
@@ -551,8 +552,11 @@ public class QueuedTasksExecutor implements Component {
 		
 		void execute() {
 			started = true;
+			synchronized (this) {
+				notifyAll();
+			}
 			try {
-				execute0();						
+				execute0();					
 			} catch (Throwable exc) {
 				this.exc = exc;
 				logError("Exception occurred while executing " + this, exc);
@@ -562,6 +566,22 @@ public class QueuedTasksExecutor implements Component {
 			synchronized(this) {
 				notifyAll();
 			}
+		}
+		
+		public T waitForStarting() {
+			if (!started) {
+				synchronized (this) {
+					if (!started) {
+						try {
+							wait();
+							waitForStarting();
+						} catch (InterruptedException exc) {
+							throw Throwables.toRuntimeException(exc);
+						}
+					}
+				}
+			}
+			return (T)this;
 		}
 		
 		public boolean isStarted() {
