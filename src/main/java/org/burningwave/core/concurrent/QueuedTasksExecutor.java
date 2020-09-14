@@ -222,8 +222,9 @@ public class QueuedTasksExecutor implements Component {
 	
 	<T> Function<ThrowingSupplier<T, ? extends Throwable>, ProducerTask<T>> getProducerTaskSupplier() {
 		return executable -> new ProducerTask<T>(executable, taskCreationTrackingEnabled) {
-			public ProducerTask<T> submit() {
-				return addToQueue(this, false);
+			@Override
+			ProducerTask<T> addToQueue() {
+				return QueuedTasksExecutor.this.addToQueue(this, false);
 			};
 		};
 	}
@@ -236,14 +237,15 @@ public class QueuedTasksExecutor implements Component {
 	
 	<T> Function<ThrowingRunnable<? extends Throwable> , Task> getTaskSupplier() {
 		return executable -> new Task(executable, taskCreationTrackingEnabled) {
-			public Task submit() {
-				return addToQueue(this, false);
+			@Override
+			Task addToQueue() {
+				return QueuedTasksExecutor.this.addToQueue(this, false);
 			};
 		};
 	}
 
-	<E, T extends TaskAbst<E, T>> T addToQueue(T task, boolean byPassCheck) {
-		if (byPassCheck || canBeExecuted(task)) {
+	<E, T extends TaskAbst<E, T>> T addToQueue(T task, boolean skipCheck) {
+		if (skipCheck || canBeExecuted(task)) {
 			try {
 				setExecutorOf(task);
 				if (TaskAbst.Execution.Mode.PURE_ASYNC.equals(task.executionMode)) {
@@ -495,6 +497,7 @@ public class QueuedTasksExecutor implements Component {
 		StackTraceElement[] stackTraceOnCreation;
 		List<StackTraceElement> creatorInfos;
 		boolean started;
+		boolean submited;
 		E executable;
 		Execution.Mode executionMode;
 		int priority;
@@ -510,14 +513,18 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public List<StackTraceElement> getCreatorInfos() {
-			if (this.creatorInfos == null && stackTraceOnCreation != null) {
-				this.creatorInfos = Collections.unmodifiableList(
-					Methods.retrieveCallersInfo(
-						this.stackTraceOnCreation,
-						(clientMethodSTE, currentIteratedSTE) -> !currentIteratedSTE.getClassName().startsWith(QueuedTasksExecutor.class.getName()),
-						-1
-					)
-				);
+			if (this.creatorInfos == null) {
+				if (stackTraceOnCreation != null) {
+					this.creatorInfos = Collections.unmodifiableList(
+						Methods.retrieveCallersInfo(
+							this.stackTraceOnCreation,
+							(clientMethodSTE, currentIteratedSTE) -> !currentIteratedSTE.getClassName().startsWith(QueuedTasksExecutor.class.getName()),
+							-1
+						)
+					);
+				} else {
+					logWarn("Tasks creation tracking was disabled when {} was created", this);
+				}
 			}
 			return creatorInfos;
 		}
@@ -625,7 +632,26 @@ public class QueuedTasksExecutor implements Component {
 			return exc != null;
 		}
 		
-		public abstract T submit();
+		public final T submit() {
+			if (!submited) {
+				synchronized(this) {
+					if (!submited) {
+						submited = true;
+					} else {
+						throw Throwables.toRuntimeException("Could not submit task " + this + " twice");
+					}
+				}
+			} else {
+				throw Throwables.toRuntimeException("Could not submit task " + this + " twice");
+			}
+			return addToQueue();
+		}
+		
+		public boolean isSubmited() {
+			return submited;
+		}
+		
+		abstract T addToQueue();
 		
 	}
 	
@@ -825,7 +851,7 @@ public class QueuedTasksExecutor implements Component {
 					return executable -> new QueuedTasksExecutor.ProducerTask<T>(executable, taskCreationTrackingEnabled) {
 						
 						@Override
-						public QueuedTasksExecutor.ProducerTask<T> submit() {
+						QueuedTasksExecutor.ProducerTask<T> addToQueue() {
 							return Group.this.getByPriority(this.priority).addToQueue(this, false);
 						};
 						
@@ -860,7 +886,7 @@ public class QueuedTasksExecutor implements Component {
 					return executable -> new QueuedTasksExecutor.Task(executable, taskCreationTrackingEnabled) {
 						
 						@Override
-						public QueuedTasksExecutor.Task submit() {
+						QueuedTasksExecutor.Task addToQueue() {
 							return Group.this.getByPriority(this.priority).addToQueue(this, false);
 						};
 						
@@ -915,13 +941,7 @@ public class QueuedTasksExecutor implements Component {
 							synchronized(getMutex("executingFinishedWaiter")) {
 								if (!tasksQueue.isEmpty()) {
 									try {
-//										if (taskCreationTrackingEnabled && currentTask.getCreatorInfos() != null) {
-//											logInfo("Sleeping for 1 second while executing {}:{}, current task queue size: {}\n\t{}", this.currentTask.executable, this.currentTask.started, tasksQueue.size(),
-//													String.join("\n\t", this.currentTask.getCreatorInfos().stream().map(st -> st.toString()).collect(Collectors.toList())));
-//											Thread.sleep(1000);
-//										} else {
-											getMutex("executingFinishedWaiter").wait();
-//										}
+										getMutex("executingFinishedWaiter").wait();
 									} catch (InterruptedException exc) {
 										logWarn("Exception occurred", exc);
 									}

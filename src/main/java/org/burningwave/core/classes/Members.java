@@ -384,7 +384,7 @@ public class Members implements Component {
 			}
 			
 			public List<StackTraceElement> retrieveCallersInfo() {
-				return retrieveCallersInfo(Thread.currentThread().getStackTrace(), -1);
+				return retrieveCallersInfo(Thread.currentThread().getStackTrace(), 1);
 			}
 			
 			public List<StackTraceElement> retrieveCallersInfo(StackTraceElement[] stackTrace, int level) {
@@ -393,11 +393,11 @@ public class Members implements Component {
 			
 			public List<StackTraceElement> retrieveCallersInfo(StackTraceElement[] stackTrace, BiPredicate<StackTraceElement, StackTraceElement> filter, int level) {
 				List<StackTraceElement> clientMethodCallersSTE = new ArrayList<>();
-				StackTraceElement clientMethodSTE = null;
-				StackTraceElement clientMethodCallerSTE = null;
 				if (level == 0) {
 					return clientMethodCallersSTE;
 				}
+				StackTraceElement clientMethodSTE = null;
+				StackTraceElement clientMethodCallerSTE = null;				
 				int reachedLevel = 0;
 				for (int i = 1; i < stackTrace.length; i ++) {
 					if (clientMethodSTE == null && !classNamesToIgnoreToDetectTheCallingMethod.contains(stackTrace[i].getClassName())) {
