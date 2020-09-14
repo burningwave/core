@@ -89,6 +89,7 @@ public class StaticComponentContainer {
 			Throwables = org.burningwave.core.Throwables.create();
 			Objects = org.burningwave.core.Objects.create();
 			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create("Background executor", true, true);
+			BackgroundExecutor.setTasksCreationTrackingFlag(true);
 			Strings = org.burningwave.core.Strings.create();
 			Resources = new org.burningwave.core.io.Resources();
 			Properties properties = new Properties();

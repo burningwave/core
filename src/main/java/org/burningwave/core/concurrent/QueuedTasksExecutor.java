@@ -58,7 +58,7 @@ public class QueuedTasksExecutor implements Component {
 	Thread executor;
 	List<TaskAbst<?, ?>> tasksQueue;
 	List<TaskAbst<?, ?>> asyncTasksInExecution;
-	private TaskAbst<?, ?> currentTask;
+	TaskAbst<?, ?> currentTask;
 	Boolean supended;
 	private int loggingThreshold;
 	int defaultPriority;
@@ -510,7 +510,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public List<StackTraceElement> getCreatorInfos() {
-			if (this.creatorInfos == null) {
+			if (this.creatorInfos == null && stackTraceOnCreation != null) {
 				this.creatorInfos = Collections.unmodifiableList(
 					Methods.retrieveCallersInfo(
 						this.stackTraceOnCreation,
@@ -915,7 +915,13 @@ public class QueuedTasksExecutor implements Component {
 							synchronized(getMutex("executingFinishedWaiter")) {
 								if (!tasksQueue.isEmpty()) {
 									try {
-										getMutex("executingFinishedWaiter").wait();
+										if (taskCreationTrackingEnabled && currentTask.getCreatorInfos() != null) {
+											logInfo("Sleeping for 1 second while executing {}:{}, current task queue size: {}\n\t{}", this.currentTask.executable, this.currentTask.started, tasksQueue.size(),
+													String.join("\n\t", this.currentTask.getCreatorInfos().stream().map(st -> st.toString()).collect(Collectors.toList())));
+											Thread.sleep(1000);
+										} else {
+											getMutex("executingFinishedWaiter").wait();
+										}
 									} catch (InterruptedException exc) {
 										logWarn("Exception occurred", exc);
 									}
