@@ -485,6 +485,7 @@ public class QueuedTasksExecutor implements Component {
 				SYNC, ASYNC, PURE_ASYNC
 			}
 		}
+		boolean started;
 		StackTraceElement[] stackTraceOnCreation;
 		List<StackTraceElement> creatingStackTrace;
 		E executable;
@@ -550,6 +551,7 @@ public class QueuedTasksExecutor implements Component {
 		
 		void execute() {
 			try {
+				started = true;
 				execute0();						
 			} catch (Throwable exc) {
 				this.exc = exc;
@@ -883,7 +885,7 @@ public class QueuedTasksExecutor implements Component {
 							synchronized(getMutex("executingFinishedWaiter")) {
 								if (!tasksQueue.isEmpty()) {
 									try {
-										logInfo("Sleeping for 1 second while executing {}, current task queue size: {}\n\t{}", this.currentTask.executable, tasksQueue.size(),
+										logInfo("Sleeping for 1 second while executing {}:{}, current task queue size: {}\n\t{}", this.currentTask.executable, this.currentTask.started, tasksQueue.size(),
 												String.join("\n\t", this.currentTask.getCreatingExecutableST().stream().map(st -> st.toString()).collect(Collectors.toList())));
 										Thread.sleep(1000);
 										//getMutex("executingFinishedWaiter").wait();

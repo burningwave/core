@@ -33,6 +33,19 @@ public class ComponentContainerTest extends BaseTest {
 	public void clearAll() {
 		testDoesNotThrow(() -> {
 			logInfo("Total memory before clearAll {}", Runtime.getRuntime().totalMemory());
+			getComponentSupplier().reset();
+			getComponentSupplier().reset();
+			getComponentSupplier().reset();
+			ComponentContainer.clearAll();
+			BackgroundExecutor.waitForTasksEnding();
+			getComponentSupplier().reset();
+			getComponentSupplier().reset();
+			getComponentSupplier().reset();
+			ComponentContainer.clearAll();
+			BackgroundExecutor.waitForTasksEnding();
+			getComponentSupplier().reset();
+			getComponentSupplier().reset();
+			getComponentSupplier().reset();
 			ComponentContainer.clearAll();
 			BackgroundExecutor.waitForTasksEnding();
 			System.gc();
