@@ -28,11 +28,13 @@
  */
 package org.burningwave.core.concurrent;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -484,6 +486,9 @@ public class QueuedTasksExecutor implements Component {
 				SYNC, ASYNC, PURE_ASYNC
 			}
 		}
+		StackTraceElement[] stackTraceOnCreation;
+		List<StackTraceElement> creatorInfos;
+		boolean started;
 		E executable;
 		Execution.Mode executionMode;
 		int priority;
@@ -492,6 +497,20 @@ public class QueuedTasksExecutor implements Component {
 		
 		public TaskAbst() {
 			this.executionMode = Execution.Mode.SYNC;
+			stackTraceOnCreation = Thread.currentThread().getStackTrace();
+		}
+		
+		public List<StackTraceElement> getCreatorInfos() {
+			if (this.creatorInfos == null) {
+				this.creatorInfos = Collections.unmodifiableList(
+					Methods.retrieveCallersInfo(
+						this.stackTraceOnCreation,
+						(clientMethodSTE, currentIteratedSTE) -> !currentIteratedSTE.getClassName().startsWith(QueuedTasksExecutor.class.getName()),
+						-1
+					)
+				);
+			}
+			return creatorInfos;
 		}
 		
 		public boolean hasFinished() {
@@ -531,6 +550,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		void execute() {
+			started = true;
 			try {
 				execute0();						
 			} catch (Throwable exc) {
@@ -542,6 +562,10 @@ public class QueuedTasksExecutor implements Component {
 			synchronized(this) {
 				notifyAll();
 			}
+		}
+		
+		public boolean isStarted() {
+			return started;
 		}
 		
 		abstract void execute0() throws Throwable;
