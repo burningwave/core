@@ -119,7 +119,7 @@ public class PathHelper implements Component {
 			loadMainClassPaths();	
 			loadAllPaths();
 			initializerTask = null;
-		}, Thread.MAX_PRIORITY);
+		}, Thread.MAX_PRIORITY).pureAsync();
 		initializerTask.submit();
 		
 	}
