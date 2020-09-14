@@ -32,7 +32,9 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Background
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.nio.ByteBuffer;
@@ -169,6 +171,10 @@ public class ClassFactory implements Component {
 		);
 	}
 	
+	private String getOperationId(String operation) {
+		return Objects.getId(this) + "_" + operation;
+	}
+	
 	ClassLoader getDefaultClassLoader(Object client) {
 		if (defaultClassLoaderSupplier != null) {
 			ClassLoader classLoader = defaultClassLoaderSupplier.get();
@@ -193,7 +199,7 @@ public class ClassFactory implements Component {
 			return classLoader;
 		}
 		if (defaultClassLoader == null) {
-			synchronized (this) {
+			return Synchronizer.execute(getOperationId("getDefaultClassLoader"), () -> {
 				if (defaultClassLoader == null) {
 					Object classLoaderOrClassLoaderSupplier = ((Supplier<?>)this.defaultClassLoaderOrDefaultClassLoaderSupplier).get();
 					if (classLoaderOrClassLoaderSupplier instanceof ClassLoader) {
@@ -202,15 +208,14 @@ public class ClassFactory implements Component {
 							((MemoryClassLoader)defaultClassLoader).register(this);
 							((MemoryClassLoader)defaultClassLoader).register(client);
 						}
-						return defaultClassLoader;
 					} else if (classLoaderOrClassLoaderSupplier instanceof Supplier) {
 						this.defaultClassLoaderSupplier = (Supplier<ClassLoader>) classLoaderOrClassLoaderSupplier;
 						return getDefaultClassLoader(client);
 					}
-				} else { 
-					return defaultClassLoader;
 				}
-			}
+				return defaultClassLoader;
+			});
+			
 		}
 		return defaultClassLoader;
 	}
@@ -438,15 +443,17 @@ public class ClassFactory implements Component {
 		return true;
 	}
 	
-	public synchronized void closeClassRetrievers() {
-		Collection<ClassRetriever> classRetrievers = this.classRetrievers;
-		if (classRetrievers != null) {
-			Iterator<ClassRetriever> classRetrieverIterator = classRetrievers.iterator();		
-			while(classRetrieverIterator.hasNext()) {
-				ClassRetriever classRetriever = classRetrieverIterator.next();
-				classRetriever.close();
+	public void closeClassRetrievers() {
+		Synchronizer.execute(getOperationId("closeClassRetrievers"), () -> {
+			Collection<ClassRetriever> classRetrievers = this.classRetrievers;
+			if (classRetrievers != null) {
+				Iterator<ClassRetriever> classRetrieverIterator = classRetrievers.iterator();		
+				while(classRetrieverIterator.hasNext()) {
+					ClassRetriever classRetriever = classRetrieverIterator.next();
+					classRetriever.close();
+				}
 			}
-		}
+		});
 	}
 	
 	public void reset(boolean closeClassRetrievers) {
