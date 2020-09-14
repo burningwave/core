@@ -392,9 +392,12 @@ public class Members implements Component {
 			}
 			
 			public List<StackTraceElement> retrieveCallersInfo(StackTraceElement[] stackTrace, BiPredicate<StackTraceElement, StackTraceElement> filter, int level) {
-				StackTraceElement clientMethodSTE = null;
-				StackTraceElement clientMethodCallerSTE = null;
 				List<StackTraceElement> clientMethodCallersSTE = new ArrayList<>();
+				if (level == 0) {
+					return clientMethodCallersSTE;
+				}
+				StackTraceElement clientMethodSTE = null;
+				StackTraceElement clientMethodCallerSTE = null;				
 				int reachedLevel = 0;
 				for (int i = 1; i < stackTrace.length; i ++) {
 					if (clientMethodSTE == null && !classNamesToIgnoreToDetectTheCallingMethod.contains(stackTrace[i].getClassName())) {
@@ -406,7 +409,7 @@ public class Members implements Component {
 					}
 					if (clientMethodCallerSTE != null) {
 						clientMethodCallersSTE.add(stackTrace[i]);
-						if (level > 0 && ++reachedLevel == level) {
+						if (++reachedLevel == level) {
 							break;
 						}
 					}
