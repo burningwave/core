@@ -483,6 +483,7 @@ public class ComponentContainer implements ComponentSupplier {
 				Synchronizer.execute(getMutexForComponentsId(), () -> {
 					instances.remove(this);
 					unregister(GlobalProperties);
+					unregister(config);
 					clear();			
 					components = null;
 					propertySupplier = null;
