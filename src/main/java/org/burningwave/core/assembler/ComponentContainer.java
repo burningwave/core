@@ -30,8 +30,8 @@ package org.burningwave.core.assembler;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
-import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
@@ -216,7 +216,8 @@ public class ComponentContainer implements ComponentSupplier {
 					if (keyAsString.equals(PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER)) {
 						PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class);
 						if (pathScannerClassLoader != null) {
-							ClassLoaders.setAsParent(pathScannerClassLoader, retrieveFromConfig(
+							ClassLoaders.setAsParent(pathScannerClassLoader, resolveProperty(
+								this.config,
 								PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
 								PathScannerClassLoader.Configuration.DEFAULT_VALUES
 							), false);
@@ -243,7 +244,7 @@ public class ComponentContainer implements ComponentSupplier {
 	private ComponentContainer launchAfterInitTask() {
 		if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
 			BackgroundExecutor.createTask(() -> {
-				getCodeExecutor().executeProperty(Configuration.Key.AFTER_INIT, this);
+				resolveProperty(this.config, Configuration.Key.AFTER_INIT, null);
 			}).pureAsync().submit();
 		}
 		return this;
@@ -298,7 +299,8 @@ public class ComponentContainer implements ComponentSupplier {
 	public PathScannerClassLoader getPathScannerClassLoader() {
 		return getOrCreate(PathScannerClassLoader.class, () -> {
 				PathScannerClassLoader classLoader = PathScannerClassLoader.create(
-					retrieveFromConfig(
+					resolveProperty(
+						this.config,
 						PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
 						PathScannerClassLoader.Configuration.DEFAULT_VALUES
 					), getPathHelper(),
@@ -323,7 +325,7 @@ public class ComponentContainer implements ComponentSupplier {
 				getJavaMemoryCompiler(),
 				getPathHelper(),
 				getClassPathHelper(),
-				(Supplier<?>)() -> retrieveFromConfig(ClassFactory.Configuration.Key.DEFAULT_CLASS_LOADER, ClassFactory.Configuration.DEFAULT_VALUES),
+				(Supplier<?>)() -> resolveProperty(this.config, ClassFactory.Configuration.Key.DEFAULT_CLASS_LOADER, ClassFactory.Configuration.DEFAULT_VALUES),
 				getClassLoaderResetter(),
 				config
 			)
@@ -356,7 +358,7 @@ public class ComponentContainer implements ComponentSupplier {
 			return ClassHunter.create(
 				() -> getClassHunter(),
 				getPathHelper(),
-				(Supplier<?>)() -> retrieveFromConfig(ClassHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER, ClassHunter.Configuration.DEFAULT_VALUES),
+				(Supplier<?>)() -> resolveProperty(this.config, ClassHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER, ClassHunter.Configuration.DEFAULT_VALUES),
 				getClassLoaderResetter(),
 				config
 			);
@@ -414,17 +416,23 @@ public class ComponentContainer implements ComponentSupplier {
 		);
 	}
 	
+	public <T> T resolveProperty(java.util.Properties properties, String configKey) {
+		return resolveProperty(properties, configKey, null);
+	}
 	
-	private <T> T retrieveFromConfig(String configKey, Map<String, Object> defaultValues) {
-		T object = config.resolveValue(configKey, defaultValues);
+	public <T> T resolveProperty(java.util.Properties properties, String configKey, Map<?, ?> defaultValues) {
+		T object = IterableObjectHelper.resolveValue(properties, configKey, null, null, false, defaultValues);
 		if (object instanceof String) {
+			ExecuteConfig.ForProperties executeConfig = ExecuteConfig.fromDefaultProperties()
+			.setPropertyName(configKey)
+			.withParameter(this)
+			.useAsParentClassLoader(Classes.getClassLoader(Executable.class))
+			.setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(new HashSet<>());
+			if (defaultValues != null) {
+				executeConfig.withDefaultPropertyValues(defaultValues);
+			}
 			return getCodeExecutor().execute(
-				ExecuteConfig.fromDefaultProperties()
-				.setPropertyName(configKey)
-				.withParameter(this)
-				.withDefaultPropertyValues(defaultValues)
-				.useAsParentClassLoader(Classes.getClassLoader(Executable.class))
-				.setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(new HashSet<>())
+				executeConfig
 			);
 		} else if (object instanceof Function) {
 			return (T)(Supplier<?>)() -> ((Function<ComponentSupplier, ?>)object).apply(this);

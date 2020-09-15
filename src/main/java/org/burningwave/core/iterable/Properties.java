@@ -87,19 +87,19 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 	
 ////////////////////
 	
-	public <T> T resolveValue(String key, Map<String, ?> defaultValues) {
+	public <T> T resolveValue(String key, Map<?, ?> defaultValues) {
 		return IterableObjectHelper.resolveValue(this, key, null, defaultValuesSeparator, false, defaultValues);
 	}
 	
-	public <T> Collection<T> resolveValues(String key, Map<String, ?> defaultValues) {
+	public <T> Collection<T> resolveValues(String key, Map<?, ?> defaultValues) {
 		return IterableObjectHelper.resolveValues(this, key, null, defaultValuesSeparator, false, defaultValues);
 	}
 	
-	public String resolveStringValue(String key, Map<String, ?> defaultValues) {
+	public String resolveStringValue(String key, Map<?, ?> defaultValues) {
 		return IterableObjectHelper.resolveStringValue(this, key, null, defaultValuesSeparator, false, defaultValues);
 	}
 	
-	public Collection<String> resolveStringValues(String key, Map<String, ?> defaultValues) {
+	public Collection<String> resolveStringValues(String key, Map<?, ?> defaultValues) {
 		return IterableObjectHelper.resolveStringValues(this, key, null, defaultValuesSeparator, false, defaultValues);
 	}
 
