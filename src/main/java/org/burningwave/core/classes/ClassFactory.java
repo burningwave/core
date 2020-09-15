@@ -62,6 +62,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
+import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings("unchecked")
 public class ClassFactory implements Component {
@@ -171,6 +172,22 @@ public class ClassFactory implements Component {
 		);
 	}
 	
+	@Override
+	public <K, V> void processChangeNotification(Properties properties, Event event, K key, V newValue,
+			V previousValue) {
+		if (event.name().equals(Event.PUT.name())) {
+			if (key instanceof String) {
+				String keyAsString = (String)key;
+				if (keyAsString.equals(Configuration.Key.DEFAULT_CLASS_LOADER)) {
+					Synchronizer.execute(getOperationId("getDefaultClassLoader"), () -> {
+						this.defaultClassLoaderSupplier = null;
+						this.defaultClassLoader = null;
+					});
+				}
+			}
+		}
+	}
+	
 	private String getOperationId(String operation) {
 		return Objects.getId(this) + "_" + operation;
 	}
@@ -179,7 +196,8 @@ public class ClassFactory implements Component {
 		if (defaultClassLoaderSupplier != null) {
 			ClassLoader classLoader = defaultClassLoaderSupplier.get();
 			if (defaultClassLoader != classLoader) {
-				synchronized(classLoader) {
+				String mutexId = getOperationId(getOperationId("getDefaultClassLoader"));
+				synchronized(Synchronizer.getMutex(mutexId)) {
 					if (defaultClassLoader != classLoader) {
 						ClassLoader oldClassLoader = this.defaultClassLoader;
 						if (oldClassLoader != null && oldClassLoader instanceof MemoryClassLoader) {
@@ -193,6 +211,7 @@ public class ClassFactory implements Component {
 							}
 						}
 						this.defaultClassLoader = classLoader;
+						Synchronizer.removeMutex(mutexId);
 					}
 				}
 			}
@@ -462,8 +481,10 @@ public class ClassFactory implements Component {
 		}
 		ClassLoader defaultClassLoader = this.defaultClassLoader;
 		if (defaultClassLoader != null) {
-			this.defaultClassLoader = null;
-			this.defaultClassLoaderSupplier = null;
+			Synchronizer.execute(getOperationId("getDefaultClassLoader"), () -> {
+				this.defaultClassLoaderSupplier = null;
+				this.defaultClassLoader = null;
+			});
 			classLoaderResetter.accept(defaultClassLoader);
 			if (defaultClassLoader instanceof MemoryClassLoader) {
 				((MemoryClassLoader)defaultClassLoader).unregister(this, true);

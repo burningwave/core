@@ -285,6 +285,10 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	}
 	
 	public void clearCache(boolean closeSearchResults) {
+		ClassHunter classHunter = getClassHunter();
+		if (this != classHunter) {
+			classHunter.clearCache(closeSearchResults);
+		}
 		Collection<String> pathsToBeRemoved = new HashSet<>(cache.keySet());
 		for (String path : pathsToBeRemoved) {
 			Synchronizer.execute( instanceId + "_" + path, () -> {				
