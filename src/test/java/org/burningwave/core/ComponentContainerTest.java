@@ -75,8 +75,6 @@ public class ComponentContainerTest extends BaseTest {
 				"ManagedLoggersRepository.logInfo(\"ClassLoader {} succesfully created\", classLoader);" +
 				"return classLoader;"	
 			);
-			componentContainer.getClassFactory().getDefaultClassLoader(this);
-			BackgroundExecutor.waitForTasksEnding();
 		});
 	}
 }

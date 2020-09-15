@@ -76,6 +76,7 @@ public class CodeExecutor implements Component {
 
 			defaultValues.put(Key.COMMON_IMPORTS,
 				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".BackgroundExecutor" + Value.CODE_LINE_SEPARATOR +
+				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".ManagedLoggersRepository" + Value.CODE_LINE_SEPARATOR +
 				"${"+ Key.ADDITIONAL_COMMON_IMPORTS +  "}" + Value.CODE_LINE_SEPARATOR +
  				ComponentSupplier.class.getName() + Value.CODE_LINE_SEPARATOR +
 				Function.class.getName() + Value.CODE_LINE_SEPARATOR +
