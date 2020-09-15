@@ -4,6 +4,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Background
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 
 import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.classes.PathScannerClassLoader;
 import org.junit.jupiter.api.Test;
 
 public class ComponentContainerTest extends BaseTest {
@@ -45,6 +46,22 @@ public class ComponentContainerTest extends BaseTest {
 	public void reset() {
 		testDoesNotThrow(() -> {
 			getComponentSupplier().reset();
+		});
+	}
+	
+	@Test
+	public void putProperty() {
+		testDoesNotThrow(() -> {
+			ComponentContainer componentContainer = ((ComponentContainer)getComponentSupplier());
+			componentContainer.getPathScannerClassLoader();
+			componentContainer.setConfigProperty(
+				PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
+				Thread.currentThread().getContextClassLoader()
+			);
+			componentContainer.setConfigProperty(
+				PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION,
+				"checkFileSignature"
+			);
 		});
 	}
 }
