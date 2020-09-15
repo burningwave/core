@@ -51,7 +51,7 @@ public class ComponentContainerTest extends BaseTest {
 	}
 	
 	@Test
-	public void putProperty() {
+	public void putPropertyOne() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = ((ComponentContainer)getComponentSupplier());
 			componentContainer.getPathScannerClassLoader();
@@ -59,10 +59,24 @@ public class ComponentContainerTest extends BaseTest {
 				PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
 				Thread.currentThread().getContextClassLoader()
 			);
+		});
+	}
+	
+	@Test
+	public void putPropertyTwo() {
+		testDoesNotThrow(() -> {
+			ComponentContainer componentContainer = ((ComponentContainer)getComponentSupplier());
 			componentContainer.setConfigProperty(
 				PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION,
 				"checkFileSignature"
 			);
+		});
+	}
+	
+	@Test
+	public void putPropertyThree() {
+		testDoesNotThrow(() -> {
+			ComponentContainer componentContainer = ((ComponentContainer)getComponentSupplier());
 			componentContainer.setConfigProperty(
 				ClassFactory.Configuration.Key.DEFAULT_CLASS_LOADER,
 				"T classLoader = (T)PathScannerClassLoader.create(" +
