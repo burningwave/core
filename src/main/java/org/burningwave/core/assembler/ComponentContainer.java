@@ -176,6 +176,13 @@ public class ComponentContainer implements ComponentSupplier {
 			IterableObjectHelper.refresh(this.config, config);
 		});
 		
+		logConfigProperties();
+		listenTo(GlobalProperties);
+		launchAfterInitTask();
+		return this;
+	}
+
+	public void logConfigProperties() {
 		Properties componentContainerConfig = new Properties();
 		componentContainerConfig.putAll(this.config);
 		componentContainerConfig.keySet().removeAll(GlobalProperties.keySet());
@@ -184,9 +191,6 @@ public class ComponentContainer implements ComponentSupplier {
 			GlobalProperties.toSimplePrettyString(2),
 			componentContainerConfig.toPrettyString(2)
 		);
-		listenTo(GlobalProperties);
-		launchAfterInit();
-		return this;
 	}
 	
 	ComponentContainer markAsUndestroyable() {
@@ -195,15 +199,15 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	@Override
-	public void receiveNotification(Properties properties, Event event, Object key, Object newValue, Object oldValue) {
-		if (event == Event.PUT) {
+	public void processChangeNotification(Properties properties, Event event, Object key, Object newValue, Object oldValue) {
+		if (event.name().equals(Event.PUT.name())) {
 			config.put(key, newValue);
-		} else if (event == Event.REMOVE) {
+		} else if (event.name().equals(Event.REMOVE.name())) {
 			config.remove(key);
 		}
 	}
 	
-	private ComponentContainer launchAfterInit() {
+	private ComponentContainer launchAfterInitTask() {
 		if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
 			BackgroundExecutor.createTask(() -> {
 				getCodeExecutor().executeProperty(Configuration.Key.AFTER_INIT, this);

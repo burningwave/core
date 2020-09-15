@@ -38,9 +38,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.Properties;
+import org.burningwave.core.iterable.Properties.Event;
 
+@SuppressWarnings("unused")
 public class StaticComponentContainer {
 	public static class Configuration {
 		public static class Key {
@@ -57,6 +60,9 @@ public class StaticComponentContainer {
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
+	
+	private static final org.burningwave.core.iterable.Properties.Listener GlobalPropertiesListener;
+	
 	public static final org.burningwave.core.concurrent.QueuedTasksExecutor.Group BackgroundExecutor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
@@ -98,12 +104,29 @@ public class StaticComponentContainer {
 			properties.putAll(org.burningwave.core.iterable.IterableObjectHelper.Configuration.DEFAULT_VALUES);
 			Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
 				Resources.loadFirstOneFound(properties, "burningwave.static.properties", "burningwave.static.default.properties");
-			GlobalProperties = propBag.getKey();
+			GlobalPropertiesListener = new org.burningwave.core.iterable.Properties.Listener(){
+				@Override
+				public <K, V> void processChangeNotification(Properties config, org.burningwave.core.iterable.Properties.Event event, K key, V newValue, V previousValue) {
+					
+					if (key instanceof String) {
+						String keyAsString = (String)key;
+						if (event.name().equals(Event.PUT.name())) {
+							if (keyAsString.equals(ManagedLogger.Repository.Configuration.Key.TYPE)) {
+								ManagedLogger.Repository toBeReplaced = ManagedLoggersRepository;
+								Fields.setStaticDirect(StaticComponentContainer.class, "ManagedLoggersRepository", ManagedLogger.Repository.create(config));
+								toBeReplaced.close();
+							}
+						}
+					}
+					
+				};
+				
+			}.listenTo(GlobalProperties = propBag.getKey());
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
 			if (!Boolean.valueOf(GlobalProperties.getProperty(Configuration.Key.HIDE_BANNER_ON_INIT))) {
 				showBanner();
 			}
-			ManagedLoggersRepository = createManagedLoggersRepository(GlobalProperties);
+			ManagedLoggersRepository = ManagedLogger.Repository.create(GlobalProperties);
 			URL globalPropertiesFileUrl = propBag.getValue();
 			if (globalPropertiesFileUrl != null) {
 				ManagedLoggersRepository.logInfo(
@@ -170,32 +193,6 @@ public class StaticComponentContainer {
 		);
 		Collections.shuffle(bannerList);
 		System.out.println("\n" + bannerList.get(new Random().nextInt(bannerList.size())));
-	}
-	
-	private static org.burningwave.core.ManagedLogger.Repository createManagedLoggersRepository(
-		org.burningwave.core.iterable.Properties properties
-	) {
-		try {
-			String className = GlobalProperties.resolveStringValue(
-				org.burningwave.core.ManagedLogger.Repository.Configuration.Key.TYPE,
-				org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES
-			);
-			if ("autodetect".equalsIgnoreCase(className = className.trim())) {
-				try {
-					Class.forName("org.slf4j.Logger");
-					return new org.burningwave.core.SLF4JManagedLoggerRepository(properties);
-				} catch (Throwable exc2) {
-					return new org.burningwave.core.SimpleManagedLoggerRepository(properties);
-				}
-			} else {
-				return (org.burningwave.core.ManagedLogger.Repository)
-					Class.forName(className).getConstructor(java.util.Properties.class).newInstance(properties);
-			}
-			
-		} catch (Throwable exc) {
-			exc.printStackTrace();
-			throw Throwables.toRuntimeException(exc);
-		}
 	}
 	
 }

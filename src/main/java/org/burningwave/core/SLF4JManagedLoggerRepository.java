@@ -184,4 +184,10 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 	void logTrace(Supplier<String> clientNameSupplier, Supplier<String> messageSupplier, Object... arguments) {
 		log(clientNameSupplier, LoggingLevel.TRACE, (logger) -> logger.trace(messageSupplier.get(), arguments));
 	}
+	
+	@Override
+	public void close() {
+		this.loggers.clear();
+		super.close();
+	}
 }

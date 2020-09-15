@@ -36,6 +36,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+@SuppressWarnings("unchecked")
 public class Properties extends java.util.Properties {
 	private static final long serialVersionUID = -350748766178421942L;
 	
@@ -184,21 +185,24 @@ public class Properties extends java.util.Properties {
 	
 	private void notifyChange(Event event, Object key, Object newValue, Object oldValue) {
 		listeners.forEach((listener) -> 
-			listener.receiveNotification(this, event, key, newValue, oldValue)
+			listener.processChangeNotification(this, event, key, newValue, oldValue)
 		);
 	}
 	
 	public static interface Listener {
 		
-		public default void listenTo(Properties properties) {
+		
+		public default <T extends Listener> T listenTo(Properties properties) {
 			properties.listeners.add(this);
+			return (T)this;
 		}
 		
-		public default void unregister(Properties properties) {
+		public default <T extends Listener> T unregister(Properties properties) {
 			properties.listeners.remove(this);
+			return (T)this;
 		} 
 		
-		public default <K, V>void receiveNotification(Properties properties, Event event, K key, V newValue, V previousValue) {
+		public default <K, V>void processChangeNotification(Properties properties, Event event, K key, V newValue, V previousValue) {
 			
 		}
 		
