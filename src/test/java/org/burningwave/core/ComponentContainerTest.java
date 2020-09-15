@@ -4,6 +4,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Background
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 
 import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.junit.jupiter.api.Test;
 
@@ -62,6 +63,20 @@ public class ComponentContainerTest extends BaseTest {
 				PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION,
 				"checkFileSignature"
 			);
+			componentContainer.setConfigProperty(
+				ClassFactory.Configuration.Key.DEFAULT_CLASS_LOADER,
+				"T classLoader = (T)PathScannerClassLoader.create(" +
+					"((ComponentSupplier)parameter[0]).getPathScannerClassLoader()," +
+					"((ComponentSupplier)parameter[0]).getPathHelper()," +
+					"FileSystemItem.Criteria.forClassTypeFiles(" +
+						"FileSystemItem.CheckingOption.FOR_NAME" +
+					")" +
+				");" +
+				"ManagedLoggersRepository.logInfo(\"ClassLoader {} succesfully created\", classLoader);" +
+				"return classLoader;"	
+			);
+			componentContainer.getClassFactory().getDefaultClassLoader(this);
+			BackgroundExecutor.waitForTasksEnding();
 		});
 	}
 }
