@@ -87,10 +87,10 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		}
 	}
 	
+	private Consumer<ClassLoader> pathScannerClassLoaderResetter;
 	private Supplier<PathScannerClassLoader> defaultPathScannerClassLoaderSupplier;
 	private Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier;
-	private PathScannerClassLoader defaultPathScannerClassLoader;
-	private Consumer<ClassLoader> pathScannerClassLoaderResetter;
+	private PathScannerClassLoader defaultPathScannerClassLoader;	
 	
 	ClassHunter(
 		Supplier<ClassHunter> classHunterSupplier,
@@ -324,6 +324,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			pathScannerClassLoader.unregister(this, true);
 			pathScannerClassLoaderResetter.accept(pathScannerClassLoader);
 			this.defaultPathScannerClassLoader = null;
+			this.defaultPathScannerClassLoaderSupplier = null;
 		}
 	}
 	

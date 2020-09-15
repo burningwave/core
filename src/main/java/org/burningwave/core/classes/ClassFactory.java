@@ -116,12 +116,12 @@ public class ClassFactory implements Component {
 	private ClassPathHelper classPathHelper;
 	private JavaMemoryCompiler javaMemoryCompiler;
 	private PojoSubTypeRetriever pojoSubTypeRetriever;	
-	private ClassLoader defaultClassLoader;
 	private ByteCodeHunter byteCodeHunter;
 	private ClassPathHunter classPathHunter;
 	private Supplier<ClassPathHunter> classPathHunterSupplier;
-	private Object defaultClassLoaderOrDefaultClassLoaderSupplier;
+	private ClassLoader defaultClassLoader;
 	private Supplier<ClassLoader> defaultClassLoaderSupplier;
+	private Object defaultClassLoaderOrDefaultClassLoaderSupplier;
 	private Collection<ClassRetriever> classRetrievers;
 	private Consumer<ClassLoader> classLoaderResetter;
 	private Properties config;
@@ -463,6 +463,7 @@ public class ClassFactory implements Component {
 		ClassLoader defaultClassLoader = this.defaultClassLoader;
 		if (defaultClassLoader != null) {
 			this.defaultClassLoader = null;
+			this.defaultClassLoaderSupplier = null;
 			classLoaderResetter.accept(defaultClassLoader);
 			if (defaultClassLoader instanceof MemoryClassLoader) {
 				((MemoryClassLoader)defaultClassLoader).unregister(this, true);
