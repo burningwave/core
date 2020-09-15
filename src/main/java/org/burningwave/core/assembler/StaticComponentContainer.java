@@ -104,7 +104,7 @@ public class StaticComponentContainer {
 			properties.putAll(org.burningwave.core.iterable.IterableObjectHelper.Configuration.DEFAULT_VALUES);
 			Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
 				Resources.loadFirstOneFound(properties, "burningwave.static.properties", "burningwave.static.default.properties");
-			GlobalPropertiesListener = new org.burningwave.core.iterable.Properties.Listener(){
+			GlobalPropertiesListener = new org.burningwave.core.iterable.Properties.Listener() {
 				@Override
 				public <K, V> void processChangeNotification(Properties config, org.burningwave.core.iterable.Properties.Event event, K key, V newValue, V previousValue) {
 					

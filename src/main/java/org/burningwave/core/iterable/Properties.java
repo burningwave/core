@@ -36,8 +36,10 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import org.burningwave.core.ManagedLogger;
+
 @SuppressWarnings("unchecked")
-public class Properties extends java.util.Properties {
+public class Properties extends java.util.Properties implements ManagedLogger {
 	private static final long serialVersionUID = -350748766178421942L;
 	
 	public static enum Event {
@@ -184,9 +186,15 @@ public class Properties extends java.util.Properties {
 	}	
 	
 	private void notifyChange(Event event, Object key, Object newValue, Object oldValue) {
-		listeners.forEach((listener) -> 
-			listener.processChangeNotification(this, event, key, newValue, oldValue)
-		);
+		for (Listener listener : listeners) {
+			try  {
+				listener.processChangeNotification(this, event, key, newValue, oldValue);
+			} catch (Throwable exc){
+				logError("Exception occurred while notifying: " + event.name() + " -> (" + key + " - " + newValue + ") to " + listener, exc);
+				logWarn("Resetting {} to previous value: {}", key, oldValue);
+				put(key, oldValue);
+			}
+		}
 	}
 	
 	public static interface Listener {

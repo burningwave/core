@@ -54,6 +54,7 @@ import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
 
+@SuppressWarnings("resource")
 public class Streams implements Component {
 	public static class Configuration {
 		
@@ -128,8 +129,8 @@ public class Streams implements Component {
 		}
 	}
 	
-	public static Streams create(Properties properties) {
-		return new Streams(properties);
+	public static Streams create(Properties config) {
+		return new Streams(config).listenTo(config);
 	}
 	
 	public boolean isArchive(File file) throws IOException {

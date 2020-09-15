@@ -231,15 +231,17 @@ public interface ManagedLogger {
 		public static abstract class Abst implements Repository, org.burningwave.core.iterable.Properties.Listener  {
 			boolean isEnabled;
 			String instanceId;
-			Abst(Properties properties) {
+			Properties config;
+			Abst(Properties config) {
+				this.config = config;
 				instanceId = this.toString();
-				initSpecificElements(properties);
-				if (getEnabledLoggingFlag(properties)) {
+				initSpecificElements(config);
+				if (getEnabledLoggingFlag(config)) {
 					enableLogging();
 				}
-				removeLoggingLevels(properties);			
-				if (properties instanceof org.burningwave.core.iterable.Properties) {
-					listenTo((org.burningwave.core.iterable.Properties)properties);
+				removeLoggingLevels(config);			
+				if (config instanceof org.burningwave.core.iterable.Properties) {
+					listenTo((org.burningwave.core.iterable.Properties)config);
 				}
 			}
 			
@@ -339,6 +341,10 @@ public interface ManagedLogger {
 			
 			@Override
 			public void close() {
+				if (config instanceof org.burningwave.core.iterable.Properties) {
+					unregister((org.burningwave.core.iterable.Properties)config);
+				}
+				config = null;
 				instanceId = null;
 			}
 		}

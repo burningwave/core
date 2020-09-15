@@ -31,6 +31,8 @@ package org.burningwave.core.assembler;
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
@@ -88,9 +90,9 @@ public class ComponentContainer implements ComponentSupplier {
 			Map<String, Object> defaultValues = new HashMap<>();
 
 			defaultValues.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
-				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR + 
-				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR + 
-				SearchResult.class.getName() + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR
+				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
+				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
+				SearchResult.class.getName() + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR
 			);
 			defaultValues.put(
 				Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, 
@@ -103,7 +105,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	private static Collection<ComponentContainer> instances;
 	protected Map<Class<? extends Component>, Component> components;
-	private Supplier<Properties> propertySupplier;
+	private Supplier<java.util.Properties> propertySupplier;
 	private Properties config;
 	private boolean isUndestroyable;
 	
@@ -111,10 +113,12 @@ public class ComponentContainer implements ComponentSupplier {
 		instances = ConcurrentHashMap.newKeySet();
 	}
 	
-	ComponentContainer(Supplier<Properties> propertySupplier) {
+	ComponentContainer(Supplier<java.util.Properties> propertySupplier) {
 		this.propertySupplier = propertySupplier;
 		this.components = new ConcurrentHashMap<>();
 		this.config = new Properties();
+		listenTo(GlobalProperties);
+		listenTo(this.config);
 		instances.add(this);
 	}
 	
@@ -140,7 +144,7 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
-	public final static ComponentContainer create(Properties properties) {
+	public final static ComponentContainer create(java.util.Properties properties) {
 		try {
 			return new ComponentContainer(() -> properties).init();
 		} catch (Throwable exc){
@@ -177,7 +181,6 @@ public class ComponentContainer implements ComponentSupplier {
 		});
 		
 		logConfigProperties();
-		listenTo(GlobalProperties);
 		launchAfterInitTask();
 		return this;
 	}
@@ -200,10 +203,40 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public void processChangeNotification(Properties properties, Event event, Object key, Object newValue, Object oldValue) {
-		if (event.name().equals(Event.PUT.name())) {
-			config.put(key, newValue);
-		} else if (event.name().equals(Event.REMOVE.name())) {
-			config.remove(key);
+		if (properties == GlobalProperties) {
+			if (event.name().equals(Event.PUT.name())) {
+				config.put(key, newValue);
+			} else if (event.name().equals(Event.REMOVE.name())) {
+				config.remove(key);
+			}
+		} else if (properties == this.config) {
+			if (event.name().equals(Event.PUT.name())) {
+				if (key instanceof String) {
+					String keyAsString = (String)key;
+					if (keyAsString.equals(PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER)) {
+						PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class);
+						if (pathScannerClassLoader != null) {
+							ClassLoaders.setAsParent(pathScannerClassLoader, retrieveFromConfig(
+								PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
+								PathScannerClassLoader.Configuration.DEFAULT_VALUES
+							), false);
+						}
+					} else if (keyAsString.equals(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)) {
+						PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class);
+						if (pathScannerClassLoader != null) {
+							Fields.setDirect(
+								pathScannerClassLoader,
+								"classFileCriteriaAndConsumer",
+								FileSystemItem.Criteria.forClassTypeFiles(
+									config.resolveStringValue(
+										PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION
+									)
+								)
+							);
+						}
+					}
+				}
+			}
 		}
 	}
 	
@@ -237,6 +270,14 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	public String getConfigProperty(String propertyName, Map<String, String> defaultValues) {
 		return IterableObjectHelper.resolveStringValue(config, propertyName, defaultValues);
+	}
+	
+	public Object setConfigProperty(String propertyName, Object propertyValue) {
+		return config.put(propertyName, propertyValue);
+	}
+	
+	public Object removeConfigProperty(String propertyName) {
+		return config.remove(propertyName);
 	}
 	
 	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
@@ -304,8 +345,7 @@ public class ComponentContainer implements ComponentSupplier {
 		return getOrCreate(JavaMemoryCompiler.class, () ->
 			JavaMemoryCompiler.create(
 				getPathHelper(),
-				getClassPathHelper(),
-				config
+				getClassPathHelper()
 			)
 		);
 	}

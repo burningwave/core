@@ -85,9 +85,9 @@ public class ClassFactory implements Component {
 			
 			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
 			defaultValues.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
-				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR + 
-				"${"+ Configuration.Key.DEFAULT_CLASS_LOADER + ".additional-imports}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR + 
-				PathScannerClassLoader.class.getName() + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR
+				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
+				"${"+ Configuration.Key.DEFAULT_CLASS_LOADER + ".additional-imports}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
+				PathScannerClassLoader.class.getName() + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR
 			);
 			defaultValues.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, ClassFactory.class.getPackage().getName() + ".DefaultClassLoaderRetrieverForClassFactory");
 			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, "(Supplier<ClassLoader>)() -> ((ComponentSupplier)parameter[0]).getClassHunter().getPathScannerClassLoader()");
@@ -647,8 +647,7 @@ public class ClassFactory implements Component {
 							classFactory.javaMemoryCompiler :
 							JavaMemoryCompiler.create(
 								classFactory.pathHelper,
-								classPathHelper,
-								this.classFactory.config
+								classPathHelper
 							);
 						this.compilationTask = compiler.compile(getCompilationConfig());
 					}

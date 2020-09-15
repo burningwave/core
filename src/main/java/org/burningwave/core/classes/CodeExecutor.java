@@ -62,7 +62,11 @@ public class CodeExecutor implements Component {
 			public static final String PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX = ".imports";
 			public static final String PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX = ".name";
 			public static final String PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_SUFFIX = ".simple-name";
-			public static String CODE_LINE_SEPARATOR = ";";
+			
+		}
+		
+		public static class Value {
+			public static final String CODE_LINE_SEPARATOR = ";";
 		}
 		
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -71,15 +75,15 @@ public class CodeExecutor implements Component {
 			Map<String, Object> defaultValues = new HashMap<>();
 
 			defaultValues.put(Key.COMMON_IMPORTS,
-				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".BackgroundExecutor" + Key.CODE_LINE_SEPARATOR +
-				"${"+ Key.ADDITIONAL_COMMON_IMPORTS +  "}" + Key.CODE_LINE_SEPARATOR +
- 				ComponentSupplier.class.getName() + Key.CODE_LINE_SEPARATOR +
-				Function.class.getName() + Key.CODE_LINE_SEPARATOR +
-				FileSystemItem.class.getName() + Key.CODE_LINE_SEPARATOR +
-				PathHelper.class.getName() + Key.CODE_LINE_SEPARATOR +
-				QueuedTasksExecutor.ProducerTask.class.getName() + Key.CODE_LINE_SEPARATOR +
-				QueuedTasksExecutor.Task.class.getName() + Key.CODE_LINE_SEPARATOR +
-				Supplier.class.getName() + Key.CODE_LINE_SEPARATOR
+				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".BackgroundExecutor" + Value.CODE_LINE_SEPARATOR +
+				"${"+ Key.ADDITIONAL_COMMON_IMPORTS +  "}" + Value.CODE_LINE_SEPARATOR +
+ 				ComponentSupplier.class.getName() + Value.CODE_LINE_SEPARATOR +
+				Function.class.getName() + Value.CODE_LINE_SEPARATOR +
+				FileSystemItem.class.getName() + Value.CODE_LINE_SEPARATOR +
+				PathHelper.class.getName() + Value.CODE_LINE_SEPARATOR +
+				QueuedTasksExecutor.ProducerTask.class.getName() + Value.CODE_LINE_SEPARATOR +
+				QueuedTasksExecutor.Task.class.getName() + Value.CODE_LINE_SEPARATOR +
+				Supplier.class.getName() + Value.CODE_LINE_SEPARATOR
 			);
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
@@ -155,7 +159,7 @@ public class CodeExecutor implements Component {
 			properties, 
 			config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX, 
 			null, 
-			Configuration.Key.CODE_LINE_SEPARATOR,
+			Configuration.Value.CODE_LINE_SEPARATOR,
 			true,
 			config.getDefaultValues()
 		);
@@ -170,7 +174,7 @@ public class CodeExecutor implements Component {
 			properties, 
 			config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX,
 			null,
-			Configuration.Key.CODE_LINE_SEPARATOR,
+			Configuration.Value.CODE_LINE_SEPARATOR,
 			true,
 			config.getDefaultValues()
 		);
@@ -178,7 +182,7 @@ public class CodeExecutor implements Component {
 			properties,
 			config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_SUFFIX,
 			null, 
-			Configuration.Key.CODE_LINE_SEPARATOR,
+			Configuration.Value.CODE_LINE_SEPARATOR,
 			true,
 			config.getDefaultValues()
 		);
@@ -191,7 +195,7 @@ public class CodeExecutor implements Component {
 		String code = IterableObjectHelper.resolveStringValue(
 			properties,
 			config.getPropertyName(), null,
-			Configuration.Key.CODE_LINE_SEPARATOR,
+			Configuration.Value.CODE_LINE_SEPARATOR,
 			true, config.getDefaultValues()
 		);
 		if (code.contains(";")) {

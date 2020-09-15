@@ -72,7 +72,6 @@ import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.iterable.Properties;
 
 public class JavaMemoryCompiler implements Component {
 	
@@ -111,27 +110,22 @@ public class JavaMemoryCompiler implements Component {
 	private ClassPathHelper classPathHelper;
 	private JavaCompiler compiler;
 	private FileSystemItem compiledClassesRepository;
-	private Properties config;	
 	
 	private JavaMemoryCompiler(
 		PathHelper pathHelper,
-		ClassPathHelper classPathHelper,
-		Properties config
+		ClassPathHelper classPathHelper
 	) {
 		this.pathHelper = pathHelper;
 		this.classPathHelper = classPathHelper;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
 		this.compiledClassesRepository = FileSystemItem.of(classPathHelper.getOrCreateTemporaryFolder("compiledClassesRepository"));
-		this.config = config;
-		listenTo(config);
 	}	
 	
 	public static JavaMemoryCompiler create(
 		PathHelper pathHelper,
-		ClassPathHelper classPathHelper,
-		Properties config
+		ClassPathHelper classPathHelper
 	) {
-		return new JavaMemoryCompiler(pathHelper, classPathHelper, config);
+		return new JavaMemoryCompiler(pathHelper, classPathHelper);
 	}
 	
 	public 	ProducerTask<Compilation.Result> compile(Collection<String> sources) {
@@ -642,12 +636,10 @@ public class JavaMemoryCompiler implements Component {
 	@Override
 	public void close() {
 		closeResources(() -> compiledClassesRepository == null, () -> {
-			unregister(config);
 			compiledClassesRepository.destroy();
 			compiledClassesRepository = null;
 			compiler = null;
 			pathHelper = null;
-			config = null;
 		});
 	}
 	
