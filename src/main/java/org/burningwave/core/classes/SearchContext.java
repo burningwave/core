@@ -97,7 +97,7 @@ public class SearchContext<T> implements Component {
 		try {
 			QueuedTasksExecutor.Task searchTask = this.searchTask;
 			if (searchTask != null) {
-				searchTask.join();
+				searchTask.waitForFinish();
 				this.searchTask = null;
 			}
 		} catch (Throwable exc) {

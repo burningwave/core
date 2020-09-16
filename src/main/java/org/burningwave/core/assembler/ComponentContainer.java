@@ -41,6 +41,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Synchroniz
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -67,6 +68,7 @@ import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchResult;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
@@ -91,7 +93,8 @@ public class ComponentContainer implements ComponentSupplier {
 
 			defaultValues.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
 				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
-				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
+				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR +
+				Arrays.class.getName() + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
 				SearchResult.class.getName() + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR
 			);
 			defaultValues.put(
@@ -244,7 +247,12 @@ public class ComponentContainer implements ComponentSupplier {
 	private ComponentContainer launchAfterInitTask() {
 		if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
 			BackgroundExecutor.createTask(() -> {
-				resolveProperty(this.config, Configuration.Key.AFTER_INIT, null);
+				Collection<QueuedTasksExecutor.TaskAbst<?, ?>> tasks = resolveProperty(this.config, Configuration.Key.AFTER_INIT, null);
+				if (tasks != null) {
+					for (QueuedTasksExecutor.TaskAbst<?, ?> task : tasks) {
+						task.waitForFinish();
+					}
+				}
 			}).pureAsync().submit();
 		}
 		return this;

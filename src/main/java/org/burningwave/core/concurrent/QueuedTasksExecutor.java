@@ -363,7 +363,7 @@ public class QueuedTasksExecutor implements Component {
 			waitForAsyncTasksEnding(priority);
 			Task supendingTask = createSuspendingTask(priority);
 			changePriorityToAllTaskBefore(supendingTask.submit(), priority);
-			supendingTask.join(false);
+			supendingTask.waitForFinish(false);
 		}
 		executor.setPriority(this.defaultPriority);
 		return this;
@@ -584,6 +584,12 @@ public class QueuedTasksExecutor implements Component {
 			}
 		}
 		
+		public T waitForFinish() {
+			return waitForFinish(false);
+		}
+		
+		public abstract T waitForFinish(boolean ignoreThreadCheck);
+		
 		public T waitForStarting() {
 			if (!started) {
 				synchronized (this) {
@@ -675,7 +681,8 @@ public class QueuedTasksExecutor implements Component {
 			}
 		}
 		
-		public void join(boolean ignoreThread) {
+		@Override
+		public Task waitForFinish(boolean ignoreThread) {
 			if (!runOnlyOnce) {
 				join0(ignoreThread);
 			} else {
@@ -684,10 +691,11 @@ public class QueuedTasksExecutor implements Component {
 					if (task == this) {
 						join0(ignoreThread);
 					} else {
-						task.join();
+						task.join0(ignoreThread);
 					}
 				}
 			}
+			return this;
 		}
 
 		Task getEffectiveTask() {
@@ -711,10 +719,6 @@ public class QueuedTasksExecutor implements Component {
 				executable = null;
 				return hasBeenExecutedChecker.get();
 			}
-		}
-		
-		public void join() {
-			join0(false);
 		}
 		
 		public Task runOnlyOnce(String id, Supplier<Boolean> hasBeenExecutedChecker) {
@@ -749,6 +753,12 @@ public class QueuedTasksExecutor implements Component {
 		
 		public T get() {
 			return result;
+		}
+		
+		@Override
+		public ProducerTask<T> waitForFinish(boolean ignoreThreadCheck) {
+			join0(ignoreThreadCheck);
+			return this;
 		}
 	}
 	

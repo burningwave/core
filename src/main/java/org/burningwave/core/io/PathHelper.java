@@ -180,7 +180,7 @@ public class PathHelper implements Component {
 	private void waitForInitialization(boolean ignoreThread) {
 		QueuedTasksExecutor.Task initializerTask = this.initializerTask;
 		if (initializerTask != null) {
-			initializerTask.join(ignoreThread);
+			initializerTask.waitForFinish(ignoreThread);
 		}
 	}
 	
