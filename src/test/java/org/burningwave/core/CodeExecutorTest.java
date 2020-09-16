@@ -24,7 +24,7 @@ public class CodeExecutorTest extends BaseTest {
 				.addCodeLine("System.out.println(\"number list size: \" + numbers.size());")
 				.addCodeLine("System.out.println(\"number in the list: \" + numbers.get(0));")
 				.addCodeLine("Integer inputNumber = (Integer)parameter[0];")
-				.addCodeLine("return (T)inputNumber++;")		
+				.addCodeLine("return inputNumber++;")		
 				.withParameter(Integer.valueOf(5))
 			);
 		});
