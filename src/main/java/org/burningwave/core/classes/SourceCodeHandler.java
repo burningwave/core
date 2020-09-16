@@ -88,10 +88,9 @@ public class SourceCodeHandler implements Component {
 		}
 		String packageName = Classes.retrievePackageName(className);
 		String classSimpleName = Classes.retrieveSimpleName(className);
-		TypeDeclarationSourceGenerator typeDeclaration = TypeDeclarationSourceGenerator.create(classSimpleName);
-		GenericSourceGenerator returnType = GenericSourceGenerator.create("T");
+		
 		FunctionSourceGenerator executeMethod = FunctionSourceGenerator.create("execute").setReturnType(
-			returnType
+			Object.class
 		).addModifier(
 			Modifier.PUBLIC
 		).addParameter(
@@ -99,9 +98,8 @@ public class SourceCodeHandler implements Component {
 				TypeDeclarationSourceGenerator.create("Object... "), "parameter"
 			)
 		).addOuterCodeLine("@Override").addBodyElement(body);
-		typeDeclaration.addGeneric(returnType);		
 		ClassSourceGenerator cls = ClassSourceGenerator.create(
-			typeDeclaration
+			TypeDeclarationSourceGenerator.create(classSimpleName)
 		).addModifier(
 			Modifier.PUBLIC
 		).addConcretizedType(

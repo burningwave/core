@@ -216,7 +216,7 @@ public class CodeExecutor implements Component {
 		} else {
 			body.addCodeLine(code.contains("return")?
 				code:
-				"return (T)" + code + ";"
+				"return " + code + ";"
 			);
 		}
 
@@ -248,7 +248,7 @@ public class CodeExecutor implements Component {
 					config.useClassLoader(memoryClassLoader)
 				);
 				Executable executor = Constructors.newInstanceDirectOf(executableClass);
-				T retrievedElement = executor.execute(config.getParams());
+				T retrievedElement = executor.executeAndCast(config.getParams());
 				return retrievedElement;
 			} catch (Throwable exc) {
 				throw Throwables.toRuntimeException(exc);
@@ -268,7 +268,7 @@ public class CodeExecutor implements Component {
 					config
 				);
 				Executable executor = Constructors.newInstanceDirectOf(executableClass);
-				T retrievedElement = executor.execute(config.getParams());
+				T retrievedElement = executor.executeAndCast(config.getParams());
 				if (parentClassLoaderRestorer != null) {
 					parentClassLoaderRestorer.apply(true);
 				}
