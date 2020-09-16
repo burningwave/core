@@ -29,7 +29,6 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
-import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.io.BufferedReader;
@@ -85,7 +84,7 @@ public class Streams implements Component {
 	String instanceId;
 	
 	private Streams(Properties config) {
-		instanceId = Objects.getId(this);
+		instanceId = getId();
 		setDefaultByteBufferSize(config);
 		setDefaultByteBufferAllocationMode(config);
 	}

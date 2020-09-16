@@ -29,22 +29,17 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
-import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 
 import java.util.function.Supplier;
 
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.function.ThrowingRunnable;
 
-public interface Closeable extends AutoCloseable {
+public interface Closeable extends AutoCloseable, Identifiable {
 	
 	@Override
 	default public void close() {
 			
-	}
-	
-	default public String getId() {
-		return Objects.getId(this);
 	}
 	
 	default public Task createCloseResoucesTask(String objectId, Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {

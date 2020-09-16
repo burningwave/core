@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
+
 import java.lang.reflect.Member;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,6 +50,7 @@ import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
+import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings("unchecked")
 public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, ClassHunter.SearchContext, ClassHunter.SearchResult> {
@@ -112,7 +115,18 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		this.pathScannerClassLoaderResetter = pathScannerClassLoaderResetter;
 	}
 	
-	
+	@Override
+	public <K, V> void processChangeNotification(Properties properties, Event event, K key, V newValue,
+			V previousValue) {
+		if (event.name().equals(Event.PUT.name())) {
+			if (key instanceof String) {
+				String keyAsString = (String)key;
+				if (keyAsString.equals(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER)) {
+					resetDefaultPathScannerClassLoader();
+				}
+			}
+		}
+	}
 	
 	public static ClassHunter create(
 		Supplier<ClassHunter> classHunterSupplier, 
@@ -127,28 +141,31 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	}
 	
 	PathScannerClassLoader getDefaultPathScannerClassLoader(Object client) {
-		if (defaultPathScannerClassLoaderSupplier != null) {
-			PathScannerClassLoader classLoader = defaultPathScannerClassLoaderSupplier.get();
-			if (defaultPathScannerClassLoader != classLoader) {
-				synchronized(classLoader) {
-					if (defaultPathScannerClassLoader != classLoader) {
-						PathScannerClassLoader oldClassLoader = this.defaultPathScannerClassLoader;
-						if (oldClassLoader != null) {
-							oldClassLoader.unregister(this, true);
-						}
-						if (!classLoader.register(this)) {
+		PathScannerClassLoader classLoader = null;
+		if (defaultPathScannerClassLoaderSupplier != null && (classLoader = defaultPathScannerClassLoaderSupplier.get()) != defaultPathScannerClassLoader) {
+			String mutexId = getOperationId(getOperationId("getDefaultClassLoader"));
+			synchronized(Synchronizer.getMutex(mutexId)) {
+				if (defaultPathScannerClassLoaderSupplier != null && (classLoader = defaultPathScannerClassLoaderSupplier.get()) != defaultPathScannerClassLoader) {
+					ClassLoader oldClassLoader = this.defaultPathScannerClassLoader;
+					if (oldClassLoader != null && oldClassLoader instanceof MemoryClassLoader) {
+						((MemoryClassLoader)oldClassLoader).unregister(this, true);
+					}
+					if (classLoader instanceof MemoryClassLoader) {
+						if (!((MemoryClassLoader)classLoader).register(this)) {
 							classLoader = getDefaultPathScannerClassLoader(client);
 						} else {
-							classLoader.register(client);
+							((MemoryClassLoader)classLoader).register(client);
 						}
-						this.defaultPathScannerClassLoader = classLoader;
 					}
+					this.defaultPathScannerClassLoader = classLoader;
 				}
+				Synchronizer.removeMutex(mutexId);
 			}
 			return classLoader;
 		}
 		if (defaultPathScannerClassLoader == null) {
-			synchronized (this) {
+			String mutexId = getOperationId("getDefaultPathScannerClassLoader");
+			synchronized(Synchronizer.getMutex(mutexId)) {
 				if (defaultPathScannerClassLoader == null) {
 					Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier =
 						((Supplier<?>)this.defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier).get();
@@ -164,6 +181,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 				} else { 
 					return defaultPathScannerClassLoader;
 				}
+				Synchronizer.removeMutex(mutexId);
 			}
 		}
 		return defaultPathScannerClassLoader;
@@ -319,12 +337,18 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	@Override
 	public void clearCache(boolean closeSearchResults) {
 		super.clearCache(closeSearchResults);
+		resetDefaultPathScannerClassLoader();
+	}
+	
+	private void resetDefaultPathScannerClassLoader() {
 		PathScannerClassLoader pathScannerClassLoader = this.defaultPathScannerClassLoader;
 		if (pathScannerClassLoader != null) {
-			pathScannerClassLoader.unregister(this, true);
+			Synchronizer.execute(getOperationId("getDefaultClassLoader"), () -> {
+				this.defaultPathScannerClassLoaderSupplier = null;
+				this.defaultPathScannerClassLoader = null;
+			});
 			pathScannerClassLoaderResetter.accept(pathScannerClassLoader);
-			this.defaultPathScannerClassLoader = null;
-			this.defaultPathScannerClassLoaderSupplier = null;
+			pathScannerClassLoader.unregister(this, true);
 		}
 	}
 	

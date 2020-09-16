@@ -32,7 +32,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Background
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -179,46 +178,38 @@ public class ClassFactory implements Component {
 			if (key instanceof String) {
 				String keyAsString = (String)key;
 				if (keyAsString.equals(Configuration.Key.DEFAULT_CLASS_LOADER)) {
-					Synchronizer.execute(getOperationId("getDefaultClassLoader"), () -> {
-						this.defaultClassLoaderSupplier = null;
-						this.defaultClassLoader = null;
-					});
+					resetDefaultClassLoader();
 				}
 			}
 		}
 	}
 	
-	private String getOperationId(String operation) {
-		return Objects.getId(this) + "_" + operation;
-	}
-	
 	ClassLoader getDefaultClassLoader(Object client) {
-		if (defaultClassLoaderSupplier != null) {
-			ClassLoader classLoader = defaultClassLoaderSupplier.get();
-			if (defaultClassLoader != classLoader) {
-				String mutexId = getOperationId(getOperationId("getDefaultClassLoader"));
-				synchronized(Synchronizer.getMutex(mutexId)) {
-					if (defaultClassLoader != classLoader) {
-						ClassLoader oldClassLoader = this.defaultClassLoader;
-						if (oldClassLoader != null && oldClassLoader instanceof MemoryClassLoader) {
-							((MemoryClassLoader)oldClassLoader).unregister(this, true);
-						}
-						if (classLoader instanceof MemoryClassLoader) {
-							if (!((MemoryClassLoader)classLoader).register(this)) {
-								classLoader = getDefaultClassLoader(client);
-							} else {
-								((MemoryClassLoader)classLoader).register(client);
-							}
-						}
-						this.defaultClassLoader = classLoader;
-						Synchronizer.removeMutex(mutexId);
+		ClassLoader classLoader = null;
+		if (defaultClassLoaderSupplier != null && (classLoader = defaultClassLoaderSupplier.get()) != defaultClassLoader) {
+			String mutexId = getOperationId(getOperationId("getDefaultClassLoader"));
+			synchronized(Synchronizer.getMutex(mutexId)) {
+				if (defaultClassLoaderSupplier != null && (classLoader = defaultClassLoaderSupplier.get()) != defaultClassLoader) {
+					ClassLoader oldClassLoader = this.defaultClassLoader;
+					if (oldClassLoader != null && oldClassLoader instanceof MemoryClassLoader) {
+						((MemoryClassLoader)oldClassLoader).unregister(this, true);
 					}
+					if (classLoader instanceof MemoryClassLoader) {
+						if (!((MemoryClassLoader)classLoader).register(this)) {
+							classLoader = getDefaultClassLoader(client);
+						} else {
+							((MemoryClassLoader)classLoader).register(client);
+						}
+					}
+					this.defaultClassLoader = classLoader;
 				}
+				Synchronizer.removeMutex(mutexId);
 			}
 			return classLoader;
 		}
 		if (defaultClassLoader == null) {
-			return Synchronizer.execute(getOperationId("getDefaultClassLoader"), () -> {
+			String mutexId = getOperationId(getOperationId("getDefaultClassLoader"));
+			synchronized(Synchronizer.getMutex(mutexId)) {
 				if (defaultClassLoader == null) {
 					Object classLoaderOrClassLoaderSupplier = ((Supplier<?>)this.defaultClassLoaderOrDefaultClassLoaderSupplier).get();
 					if (classLoaderOrClassLoaderSupplier instanceof ClassLoader) {
@@ -227,14 +218,16 @@ public class ClassFactory implements Component {
 							((MemoryClassLoader)defaultClassLoader).register(this);
 							((MemoryClassLoader)defaultClassLoader).register(client);
 						}
+						return defaultClassLoader;
 					} else if (classLoaderOrClassLoaderSupplier instanceof Supplier) {
 						this.defaultClassLoaderSupplier = (Supplier<ClassLoader>) classLoaderOrClassLoaderSupplier;
 						return getDefaultClassLoader(client);
 					}
+				} else { 
+					return defaultClassLoader;
 				}
-				return defaultClassLoader;
-			});
-			
+				Synchronizer.removeMutex(mutexId);
+			}			
 		}
 		return defaultClassLoader;
 	}
@@ -479,6 +472,10 @@ public class ClassFactory implements Component {
 		if (closeClassRetrievers) {
 			closeClassRetrievers();
 		}
+		resetDefaultClassLoader();		
+	}
+
+	private void resetDefaultClassLoader() {
 		ClassLoader defaultClassLoader = this.defaultClassLoader;
 		if (defaultClassLoader != null) {
 			Synchronizer.execute(getOperationId("getDefaultClassLoader"), () -> {
@@ -489,7 +486,7 @@ public class ClassFactory implements Component {
 			if (defaultClassLoader instanceof MemoryClassLoader) {
 				((MemoryClassLoader)defaultClassLoader).unregister(this, true);
 			}
-		}		
+		}
 	}
 	
 	@Override
