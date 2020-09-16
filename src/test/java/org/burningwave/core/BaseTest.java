@@ -16,12 +16,15 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.junit.jupiter.api.MethodOrderer.Alphanumeric;
 import org.junit.jupiter.api.MethodOrderer.Random;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.api.function.ThrowingSupplier;
 
-@TestMethodOrder(Random.class)
+@SuppressWarnings("unused")
+//@TestMethodOrder(Random.class)
+//@TestMethodOrder(Alphanumeric.class)
 public class BaseTest implements Component {
 
 	Collection<ComponentSupplier> componentSuppliers = new CopyOnWriteArrayList<>();
