@@ -285,9 +285,9 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	}
 	
 	public void clearCache(boolean closeSearchResults) {
-		ClassHunter classHunter = getClassHunter();
+		ClassHunter classHunter = this.classHunter;
 		//this check is necessary to avoid infinite recursion
-		if (this != classHunter) {
+		if (classHunter != null && this != classHunter) {
 			//clearing the cache and resetting the class loader (owned  by the ClassHunter)
 			classHunter.clearCache(closeSearchResults);
 		}
