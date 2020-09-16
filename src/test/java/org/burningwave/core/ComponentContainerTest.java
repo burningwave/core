@@ -6,6 +6,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProp
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.PathScannerClassLoader;
+import org.burningwave.core.io.FileSystemItem;
 import org.junit.jupiter.api.Test;
 
 public class ComponentContainerTest extends BaseTest {
@@ -68,7 +69,7 @@ public class ComponentContainerTest extends BaseTest {
 			ComponentContainer componentContainer = ((ComponentContainer)getComponentSupplier());
 			componentContainer.setConfigProperty(
 				PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION,
-				"checkFileSignature"
+				FileSystemItem.CheckingOption.FOR_SIGNATURE_AND_NAME
 			);
 		});
 	}
@@ -83,7 +84,7 @@ public class ComponentContainerTest extends BaseTest {
 					"((ComponentSupplier)parameter[0]).getPathScannerClassLoader()," +
 					"((ComponentSupplier)parameter[0]).getPathHelper()," +
 					"FileSystemItem.Criteria.forClassTypeFiles(" +
-						"FileSystemItem.CheckingOption.FOR_NAME" +
+						"FileSystemItem.CheckingOption.FOR_SIGNATURE_AND_NAME" +
 					")" +
 				");" +
 				"ManagedLoggersRepository.logInfo(\"ClassLoader {} succesfully created\", classLoader);" +
