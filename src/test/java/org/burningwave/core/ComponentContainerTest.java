@@ -70,7 +70,7 @@ public class ComponentContainerTest extends BaseTest {
 			ComponentContainer componentContainer = ((ComponentContainer)getComponentSupplier());
 			componentContainer.setConfigProperty(
 				PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION,
-				FileSystemItem.CheckingOption.FOR_SIGNATURE_AND_NAME
+				FileSystemItem.CheckingOption.FOR_SIGNATURE_AND_NAME.getLabel()
 			);
 		});
 	}
@@ -81,7 +81,7 @@ public class ComponentContainerTest extends BaseTest {
 			ComponentContainer componentContainer = ((ComponentContainer)getComponentSupplier());
 			componentContainer.setConfigProperty(
 				ClassFactory.Configuration.Key.DEFAULT_CLASS_LOADER,
-				"T classLoader = (T)PathScannerClassLoader.create(" +
+				"PathScannerClassLoader classLoader = PathScannerClassLoader.create(" +
 					"((ComponentSupplier)parameter[0]).getPathScannerClassLoader()," +
 					"((ComponentSupplier)parameter[0]).getPathHelper()," +
 					"FileSystemItem.Criteria.forClassTypeFiles(" +
@@ -100,7 +100,7 @@ public class ComponentContainerTest extends BaseTest {
 			ComponentContainer componentContainer = ((ComponentContainer)getComponentSupplier());
 			componentContainer.setConfigProperty(
 				ClassHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER,
-				"T classLoader = (T)PathScannerClassLoader.create(" +
+				"PathScannerClassLoader classLoader = PathScannerClassLoader.create(" +
 					"((ComponentSupplier)parameter[0]).getPathScannerClassLoader()," +
 					"((ComponentSupplier)parameter[0]).getPathHelper()," +
 					"FileSystemItem.Criteria.forClassTypeFiles(" +
