@@ -881,7 +881,8 @@ public class FileSystemItem implements ManagedLogger {
 		FOR_NAME("checkFileName"), FOR_SIGNATURE("checkFileSignature"),
 		FOR_NAME_AND_SIGNATURE(FOR_NAME.label + "&" + FOR_SIGNATURE.label),
 		FOR_NAME_OR_SIGNATURE(FOR_NAME.label + "|" + FOR_SIGNATURE.label),
-		FOR_SIGNATURE_OR_NAME(FOR_SIGNATURE.label + "|" + FOR_NAME.label);
+		FOR_SIGNATURE_OR_NAME(FOR_SIGNATURE.label + "|" + FOR_NAME.label),
+		FOR_SIGNATURE_AND_NAME(FOR_SIGNATURE.label + "&" + FOR_NAME.label);
 
 		public abstract static class ForFileOf {
 
@@ -919,16 +920,18 @@ public class FileSystemItem implements ManagedLogger {
 			}
 
 			FileSystemItem.Criteria toCriteria(CheckingOption checkFileOption) {
-				if (checkFileOption.equals(CheckingOption.FOR_NAME_OR_SIGNATURE)) {
+				if (checkFileOption.equals(CheckingOption.FOR_NAME)) {
+					return FileSystemItem.Criteria.forAllFileThat(fileNameChecker);
+				} else if (checkFileOption.equals(CheckingOption.FOR_SIGNATURE)) {
+					return FileSystemItem.Criteria.forAllFileThat(fileSignatureChecker);
+				} else if (checkFileOption.equals(CheckingOption.FOR_NAME_OR_SIGNATURE)) {
 					return FileSystemItem.Criteria.forAllFileThat(fileNameChecker.or(fileSignatureChecker));
 				} else if (checkFileOption.equals(CheckingOption.FOR_SIGNATURE_OR_NAME)) {
 					return FileSystemItem.Criteria.forAllFileThat(fileSignatureChecker.or(fileNameChecker));
 				} else if (checkFileOption.equals(CheckingOption.FOR_NAME_AND_SIGNATURE)) {
 					return FileSystemItem.Criteria.forAllFileThat(fileNameChecker.and(fileSignatureChecker));
-				} else if (checkFileOption.equals(CheckingOption.FOR_NAME)) {
-					return FileSystemItem.Criteria.forAllFileThat(fileNameChecker);
-				} else if (checkFileOption.equals(CheckingOption.FOR_SIGNATURE)) {
-					return FileSystemItem.Criteria.forAllFileThat(fileSignatureChecker);
+				}  else if (checkFileOption.equals(CheckingOption.FOR_SIGNATURE_OR_NAME)) {
+					return FileSystemItem.Criteria.forAllFileThat(fileSignatureChecker.and(fileNameChecker));
 				}
 				return null;
 			}
