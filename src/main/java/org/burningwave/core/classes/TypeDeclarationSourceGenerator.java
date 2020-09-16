@@ -28,12 +28,14 @@
  */
 package org.burningwave.core.classes;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 
 public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
+	private Boolean publicFlag;
 	private String name;
 	private String simpleName;
 	private Collection<GenericSourceGenerator> generics;
@@ -41,6 +43,14 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	private TypeDeclarationSourceGenerator(String name, String simpleName) {
 		this.name = name;
 		this.simpleName = simpleName;
+	}
+	
+	private TypeDeclarationSourceGenerator(Class<?> clazz) {
+		if (!clazz.isPrimitive()) {
+			this.name = clazz.getName();
+		}
+		publicFlag = Modifier.isPublic(clazz.getModifiers());
+		this.simpleName = clazz.getSimpleName();
 	}
 	
 	private TypeDeclarationSourceGenerator() {}
@@ -54,7 +64,7 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public static TypeDeclarationSourceGenerator create(java.lang.Class<?> cls) {
-		return new TypeDeclarationSourceGenerator(cls.isPrimitive()? null : cls.getName(), cls.getSimpleName());
+		return new TypeDeclarationSourceGenerator(cls);
 	}
 	
 	public static TypeDeclarationSourceGenerator create(GenericSourceGenerator... generics) {
@@ -89,6 +99,10 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 			});
 		});
 		return types;
+	}
+	
+	Boolean isPublic() {
+		return publicFlag;
 	}
 	
 	@Override

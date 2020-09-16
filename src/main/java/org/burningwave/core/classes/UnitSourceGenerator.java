@@ -83,7 +83,11 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 	
 	public UnitSourceGenerator addImport(java.lang.Class<?>... classes) {
 		for (java.lang.Class<?> cls : classes) {
-			this.addImport(cls.getName());
+			if (Modifier.isPublic(cls.getModifiers())) {
+				this.addImport(cls.getName());
+			} else {
+				logWarn("Could not import {} because its modifier is not public", cls.getName());
+			}
 		}
 		return this;
 	}
@@ -105,9 +109,15 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		});
 		
 		getTypeDeclarations().forEach(typeDeclaration -> {
-			Optional.ofNullable(typeDeclaration.getName()).ifPresent(className -> {
-				imports.add("import " + className.replace("$", ".") + ";");
-			});
+			Boolean isPublic = typeDeclaration.isPublic();
+			String className = typeDeclaration.getName();
+			if (isPublic == null || isPublic) {	
+				Optional.ofNullable(className).ifPresent(clsName -> {
+					imports.add("import " + clsName.replace("$", ".") + ";");
+				});
+			} else {
+				logWarn("Could not import {} because its modifier is not public", className);
+			}
 		});
 		Collections.sort(imports);
 		return new LinkedHashSet<>(imports);
