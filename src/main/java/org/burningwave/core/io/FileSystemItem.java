@@ -930,7 +930,7 @@ public class FileSystemItem implements ManagedLogger {
 					return FileSystemItem.Criteria.forAllFileThat(fileSignatureChecker.or(fileNameChecker));
 				} else if (checkFileOption.equals(CheckingOption.FOR_NAME_AND_SIGNATURE)) {
 					return FileSystemItem.Criteria.forAllFileThat(fileNameChecker.and(fileSignatureChecker));
-				}  else if (checkFileOption.equals(CheckingOption.FOR_SIGNATURE_OR_NAME)) {
+				}  else if (checkFileOption.equals(CheckingOption.FOR_SIGNATURE_AND_NAME)) {
 					return FileSystemItem.Criteria.forAllFileThat(fileSignatureChecker.and(fileNameChecker));
 				}
 				return null;
