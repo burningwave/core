@@ -112,7 +112,7 @@ public class ComponentContainer implements ComponentSupplier {
 	private Properties config;
 	private boolean isUndestroyable;
 	private Consumer<ComponentContainer> preAfterInitCall;
-	private Object setPreAfterInitCallMutex;
+	private QueuedTasksExecutor.Task afterInitTask;
 	
 	static {
 		instances = ConcurrentHashMap.newKeySet();
@@ -122,7 +122,6 @@ public class ComponentContainer implements ComponentSupplier {
 		this.propertySupplier = propertySupplier;
 		this.components = new ConcurrentHashMap<>();
 		this.config = new Properties();
-		this.setPreAfterInitCallMutex  = Synchronizer.getMutex(getOperationId("_setPreAfterInitCall"));
 		listenTo(GlobalProperties);
 		listenTo(this.config);
 		instances.add(this);
@@ -187,39 +186,31 @@ public class ComponentContainer implements ComponentSupplier {
 		});
 		
 		logConfigProperties();
-		launchAfterInitTask();
+		setAfterInitTask();
 		return this;
 	}
 	
-	private ComponentContainer launchAfterInitTask() {
+	private ComponentContainer setAfterInitTask() {
 		if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
-			BackgroundExecutor.createTask(() -> {
-				if (preAfterInitCall == null) {
-					synchronized (setPreAfterInitCallMutex) {
-						if (preAfterInitCall == null) {
-							setPreAfterInitCallMutex.wait();
+			Synchronizer.execute(getMutexForComponentsId(), () -> {
+				this.afterInitTask = BackgroundExecutor.createTask(() -> {
+					if (preAfterInitCall != null) {
+						preAfterInitCall.accept(this);
+					}				
+					Collection<QueuedTasksExecutor.TaskAbst<?, ?>> tasks = resolveProperty(this.config, Configuration.Key.AFTER_INIT, null);
+					if (tasks != null) {
+						for (QueuedTasksExecutor.TaskAbst<?, ?> task : tasks) {
+							task.waitForFinish();
 						}
 					}
-				}
-				if (preAfterInitCall != null) {
-					preAfterInitCall.accept(this);
-				}				
-				Collection<QueuedTasksExecutor.TaskAbst<?, ?>> tasks = resolveProperty(this.config, Configuration.Key.AFTER_INIT, null);
-				if (tasks != null) {
-					for (QueuedTasksExecutor.TaskAbst<?, ?> task : tasks) {
-						task.waitForFinish();
-					}
-				}
-			}).pureAsync().submit();
+				}).pureAsync();
+			});
 		}
 		return this;
 	}
 	
 	public ComponentContainer preAfterInit(Consumer<ComponentContainer> preAfterInitCall) {
 		this.preAfterInitCall = preAfterInitCall;
-		synchronized (setPreAfterInitCallMutex) {
-			setPreAfterInitCallMutex.notifyAll();
-		}
 		return this;
 	}
 	
@@ -314,11 +305,13 @@ public class ComponentContainer implements ComponentSupplier {
 		T component = (T)components.get(componentType);
 		if (component == null) {
 			component = Synchronizer.execute(getMutexForComponentsId(), () -> {
+				QueuedTasksExecutor.Task afterInitTask = this.afterInitTask;
+				if (afterInitTask != null) {
+					afterInitTask.submit();
+					this.afterInitTask = null;
+				}
 				T componentTemp = (T)components.get(componentType);
 				if (componentTemp == null) {
-					synchronized(setPreAfterInitCallMutex) {
-						setPreAfterInitCallMutex.notifyAll();
-					}
 					components.put(componentType, componentTemp = componentSupplier.get());
 				}
 				return componentTemp;
@@ -528,12 +521,6 @@ public class ComponentContainer implements ComponentSupplier {
 					components = null;
 					propertySupplier = null;
 					config = null;
-					Synchronizer.getMutex(getOperationId("_setPreAfterInitCall"));
-					Object setPreAfterInitCallMutex = this.setPreAfterInitCallMutex;
-					synchronized(setPreAfterInitCallMutex) {
-						this.setPreAfterInitCallMutex = null;
-						setPreAfterInitCallMutex.notifyAll();						
-					}
 				});
 			});
 		} else {
