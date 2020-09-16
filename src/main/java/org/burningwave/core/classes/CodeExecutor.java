@@ -153,7 +153,9 @@ public class CodeExecutor implements Component {
 		BodySourceGenerator body = config.getBody();
 		if (config.getParams() != null && config.getParams().length > 0) {
 			for (Object param : config.getParams()) {
-				body.useType(param.getClass());
+				if (param != null) {
+					body.useType(param.getClass());
+				}
 			}
 		}
 		String importFromConfig = IterableObjectHelper.resolveStringValue(

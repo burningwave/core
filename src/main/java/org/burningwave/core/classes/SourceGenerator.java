@@ -35,7 +35,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Optional;
 
-public interface SourceGenerator {
+import org.burningwave.core.ManagedLogger;
+
+public interface SourceGenerator extends ManagedLogger {
 	
 	public String make();
 	
