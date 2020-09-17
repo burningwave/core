@@ -43,68 +43,76 @@ public class MemoryClassLoaderTest extends BaseTest {
 	
 	@Test
 	public void loadClassTestOne() {
-		testNotNull(() ->
-			getMemoryClassLoader(null).loadOrDefineClass(PropertyAccessor.class)
-		);
+		testNotNull(() -> {
+			try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
+				return memoryClassLoader.loadOrDefineClass(PropertyAccessor.class);
+			}			
+		});
 	}
 	
 	@Test
 	public void getResourceAsStreamTestOne() throws ClassNotFoundException {
-		MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
-		memoryClassLoader.loadOrDefineClass(PropertyAccessor.class);
-		testNotNull(() ->
-			memoryClassLoader.getResourceAsStream(PropertyAccessor.class.getName().replace(".", "/") + ".class")
-		);
+		testNotNull(() -> {
+			try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
+				memoryClassLoader.loadOrDefineClass(PropertyAccessor.class);
+				return memoryClassLoader.getResourceAsStream(PropertyAccessor.class.getName().replace(".", "/") + ".class");
+			}			
+		});
 	}
 	
 	@Test
 	public void getResourceAsStreamTestTwo() throws ClassNotFoundException {
-		MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
-		memoryClassLoader.loadOrDefineClass(PropertyAccessor.class);
-		assertTrue(memoryClassLoader.hasPackageBeenDefined(PropertyAccessor.class.getPackage().getName()));
+		try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
+			memoryClassLoader.loadOrDefineClass(PropertyAccessor.class);
+			assertTrue(memoryClassLoader.hasPackageBeenDefined(PropertyAccessor.class.getPackage().getName()));
+		}
 	}
 	
 	@Test
 	public void loadClassTestTwo() throws ClassNotFoundException {
 		testNotNull(() -> {
-			ComponentSupplier componentSupplier = getComponentSupplier();
-			JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
-			MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
-			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).join().getCompiledFiles().entrySet());
-			return memoryClassLoader.loadClass("tryyy.ReTry$ReReTry");
+			try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
+				ComponentSupplier componentSupplier = getComponentSupplier();
+				JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
+				memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).join().getCompiledFiles().entrySet());
+				return memoryClassLoader.loadClass("tryyy.ReTry$ReReTry");
+			}
 		});
 	}
 	
 	@Test
 	public void forceCompiledClassesLoadingTestOne() throws ClassNotFoundException {
 		testNotEmpty(() -> {
-			ComponentSupplier componentSupplier = getComponentSupplier();
-			JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
-			MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
-			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).join().getCompiledFiles().entrySet());
-			return memoryClassLoader.forceBytecodesLoading();
+			try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
+				ComponentSupplier componentSupplier = getComponentSupplier();
+				JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
+				memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).join().getCompiledFiles().entrySet());
+				return memoryClassLoader.forceBytecodesLoading();
+			}
 		});
 	}
 	
 	@Test
 	public void getNotLoadedByteCodeTestOne() throws ClassNotFoundException {
 		testNotNull(() -> {
-			ComponentSupplier componentSupplier = getComponentSupplier();
-			JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
-			MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
-			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).join().getCompiledFiles().entrySet());
-			return memoryClassLoader.getNotLoadedByteCode("tryyy.ReTry$ReReTry");
+			try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
+				ComponentSupplier componentSupplier = getComponentSupplier();
+				JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
+				memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).join().getCompiledFiles().entrySet());
+				return memoryClassLoader.getNotLoadedByteCode("tryyy.ReTry$ReReTry");
+			}
 		});
 	}
 	
 	@Test
 	public void getByteCodeOfTestOne() throws ClassNotFoundException {
 		testNotNull(() -> {
-			ComponentSupplier componentSupplier = getComponentSupplier();
-			JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
-			MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);
-			memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).join().getCompiledFiles().entrySet());
-			return memoryClassLoader.getByteCodeOf("tryyy.ReTry$ReReTry");
+			try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
+				ComponentSupplier componentSupplier = getComponentSupplier();
+				JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
+				memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).join().getCompiledFiles().entrySet());
+				return memoryClassLoader.getByteCodeOf("tryyy.ReTry$ReReTry");
+			}
 		});
 	}
 }
