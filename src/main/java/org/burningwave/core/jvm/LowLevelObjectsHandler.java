@@ -199,10 +199,10 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		if (isClassLoaderDelegate(target)) {
 			target = Fields.getDirect(target, "classLoader");
 		}
-		if (isClassLoaderDelegate(exParent)) {
+		if (exParent != null && isClassLoaderDelegate(exParent)) {
 			exParent = Fields.getDirect(exParent, "classLoader");
 		}
-		if (isClassLoaderDelegate(futureParent)) {
+		if (futureParent != null && isClassLoaderDelegate(futureParent)) {
 			futureParent = Fields.getDirect(futureParent, "classLoader");
 		}
 		MemoryClassLoader exParentMC = exParent instanceof MemoryClassLoader? (MemoryClassLoader)exParent : null;
