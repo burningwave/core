@@ -8,12 +8,17 @@ import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.io.FileSystemItem;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
+@TestMethodOrder(OrderAnnotation.class)
 public class ComponentContainerTest extends BaseTest {
 
 	
 	@Test
+	@Order(5)
 	public void resetAndCloseTest() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentSupplier = ComponentContainer.create("burningwave.properties");
@@ -34,6 +39,7 @@ public class ComponentContainerTest extends BaseTest {
 	}
 	
 	@Test
+	@Order(17)
 	public void clearAll() {
 		testDoesNotThrow(() -> {
 			logWarn("Total memory before clearAll {}", Runtime.getRuntime().totalMemory());
@@ -46,6 +52,7 @@ public class ComponentContainerTest extends BaseTest {
 	
 	
 	@Test
+	@Order(3)
 	public void reset() {
 		testDoesNotThrow(() -> {
 			getComponentSupplier().reset();
@@ -53,6 +60,7 @@ public class ComponentContainerTest extends BaseTest {
 	}
 	
 	@Test
+	@Order(1)
 	public void putPropertyOne() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = ((ComponentContainer)getComponentSupplier());
@@ -65,6 +73,7 @@ public class ComponentContainerTest extends BaseTest {
 	}
 	
 	@Test
+	@Order(2)
 	public void putPropertyTwo() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = ((ComponentContainer)getComponentSupplier());
@@ -76,6 +85,7 @@ public class ComponentContainerTest extends BaseTest {
 	}
 	
 	@Test
+	@Order(4)
 	public void putPropertyThree() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = ((ComponentContainer)getComponentSupplier());
@@ -95,6 +105,7 @@ public class ComponentContainerTest extends BaseTest {
 	}
 	
 	@Test
+	@Order(6)
 	public void putPropertyFour() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = ((ComponentContainer)getComponentSupplier());
