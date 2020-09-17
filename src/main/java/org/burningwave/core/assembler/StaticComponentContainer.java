@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Random;
 
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
@@ -167,6 +168,10 @@ public class StaticComponentContainer {
 					try {
 						BackgroundExecutor.waitForTasksEnding();
 						ComponentContainer.closeAll();
+						ManagedLoggersRepository.logInfo("Memory class loaders: {}", MemoryClassLoader.memoryClassLoaders.size());
+						for(MemoryClassLoader cl : MemoryClassLoader.memoryClassLoaders) {
+							cl.logInfos();
+						}
 					} catch (Throwable exc) {
 						ManagedLoggersRepository.logError("Exception occurred while closing component containers", exc);
 					}

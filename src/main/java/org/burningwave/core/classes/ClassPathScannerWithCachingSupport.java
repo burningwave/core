@@ -77,18 +77,14 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	Map<String, Map<String, I>> cache;
 	
 	ClassPathScannerWithCachingSupport(
-		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		Supplier<ClassPathHunter> classPathHunterSupplier,
 		PathHelper pathHelper,
 		Function<InitContext, C> contextSupplier,
 		Function<C, R> resultSupplier, 
 		Properties config
 	) {
 		super(
-			byteCodeHunterSupplier,
 			classHunterSupplier,
-			classPathHunterSupplier,
 			pathHelper,
 			contextSupplier,
 			resultSupplier,

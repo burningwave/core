@@ -96,18 +96,14 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	private PathScannerClassLoader defaultPathScannerClassLoader;	
 	
 	ClassHunter(
-		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		Supplier<ClassPathHunter> classPathHunterSupplier,
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 		Consumer<ClassLoader> pathScannerClassLoaderResetter,
 		Properties config
 	) {
 		super(
-			byteCodeHunterSupplier,
-			classHunterSupplier,
-			classPathHunterSupplier,	
+			classHunterSupplier,	
 			pathHelper,
 			(initContext) -> ClassHunter.SearchContext._create(
 				initContext
@@ -133,16 +129,14 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	}
 	
 	public static ClassHunter create(
-		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
-		Supplier<ClassPathHunter> classPathHunterSupplier,
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier,
 		Consumer<ClassLoader> pathScannerClassLoaderResetter,
 		Properties config
 	) {
 		return new ClassHunter(
-			byteCodeHunterSupplier, classHunterSupplier, classPathHunterSupplier, pathHelper, defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier, pathScannerClassLoaderResetter, config
+			classHunterSupplier, pathHelper, defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier, pathScannerClassLoaderResetter, config
 		);
 	}
 	
@@ -355,12 +349,6 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			});
 			pathScannerClassLoaderResetter.accept(pathScannerClassLoader);
 			pathScannerClassLoader.unregister(this, true);
-			if (getByteCodeHunter() != null) {
-				pathScannerClassLoader.unregister(this.byteCodeHunter, true);				
-			}
-			if (getClassPathHunter() != null) {
-				pathScannerClassLoader.unregister(this.classPathHunter, true);				
-			}
 		}
 	}
 	

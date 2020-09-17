@@ -249,7 +249,7 @@ public class ComponentContainer implements ComponentSupplier {
 								this.config,
 								PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
 								PathScannerClassLoader.Configuration.DEFAULT_VALUES
-							), false);
+							));
 						}
 					} else if (keyAsString.equals(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)) {
 						PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class);
@@ -381,9 +381,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public ClassHunter getClassHunter() {
 		return getOrCreate(ClassHunter.class, () -> {
 			return ClassHunter.create(
-				() -> (ByteCodeHunter)components.get(ByteCodeHunter.class),
 				() -> getClassHunter(),
-				() -> (ClassPathHunter)components.get(ClassPathHunter.class),
 				getPathHelper(),
 				(Supplier<?>)() -> resolveProperty(this.config, ClassHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER, ClassHunter.Configuration.DEFAULT_VALUES),
 				getClassLoaderResetter(),
@@ -406,9 +404,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public ClassPathHunter getClassPathHunter() {
 		return getOrCreate(ClassPathHunter.class, () -> 
 			ClassPathHunter.create(
-				() -> (ByteCodeHunter)components.get(ByteCodeHunter.class),
 				() -> getClassHunter(),
-				() -> (ClassPathHunter)components.get(ClassPathHunter.class),
 				getPathHelper(),
 				config
 			)
@@ -419,9 +415,7 @@ public class ComponentContainer implements ComponentSupplier {
 	public ByteCodeHunter getByteCodeHunter() {
 		return getOrCreate(ByteCodeHunter.class, () -> 
 			ByteCodeHunter.create(
-				() -> (ByteCodeHunter)components.get(ByteCodeHunter.class),
 				() -> getClassHunter(),
-				() -> (ClassPathHunter)components.get(ClassPathHunter.class),
 				getPathHelper(),
 				config
 			)
