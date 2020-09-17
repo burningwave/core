@@ -384,7 +384,7 @@ public class Members implements Component {
 			}
 			
 			public List<StackTraceElement> retrieveCallersInfo() {
-				return retrieveCallersInfo(Thread.currentThread().getStackTrace(), 1);
+				return retrieveCallersInfo(Thread.currentThread().getStackTrace(), -1);
 			}
 			
 			public List<StackTraceElement> retrieveCallersInfo(StackTraceElement[] stackTrace, int level) {

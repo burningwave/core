@@ -492,6 +492,9 @@ public class ClassFactory implements Component {
 	@Override
 	public void close() {
 		closeResources(() -> this.classRetrievers == null, () -> {
+			if (defaultClassLoader instanceof MemoryClassLoader) {
+				((MemoryClassLoader)defaultClassLoader).unregister(this, true);
+			}
 			unregister(config);
 			closeClassRetrievers();
 			BackgroundExecutor.createTask(() -> {
@@ -502,9 +505,6 @@ public class ClassFactory implements Component {
 			pathHelper = null;
 			javaMemoryCompiler = null;
 			pojoSubTypeRetriever = null;	
-			if (defaultClassLoader instanceof MemoryClassLoader) {
-				((MemoryClassLoader)defaultClassLoader).unregister(this, true);
-			}
 			defaultClassLoader = null;
 			byteCodeHunter = null;
 			classPathHunter = null;

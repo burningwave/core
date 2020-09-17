@@ -264,7 +264,7 @@ public class CodeExecutor implements Component {
 			Function<Boolean, ClassLoader> parentClassLoaderRestorer = null;
 			try {
 				if (parentClassLoader != null) {
-					parentClassLoaderRestorer = ClassLoaders.setAsParent(config.getClassLoader(), parentClassLoader, false);
+					parentClassLoaderRestorer = ClassLoaders.setAsParent(config.getClassLoader(), parentClassLoader);
 				}
 				Class<? extends Executable> executableClass = loadOrBuildAndDefineExecutorSubType(
 					config

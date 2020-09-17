@@ -59,6 +59,7 @@ import java.util.function.Function;
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.classes.MembersRetriever;
+import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingFunction;
@@ -148,41 +149,73 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		}
 	}
 	
-	public Function<Boolean, ClassLoader> setAsParent(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
-		if (isClassLoaderDelegate(classLoader)) {
-			return setAsParent(Fields.getDirect(classLoader, "classLoader"), futureParent, mantainHierarchy);
+	public synchronized Function<Boolean, ClassLoader> setAsParent(ClassLoader target, ClassLoader originalFutureParent) {
+		if (isClassLoaderDelegate(target)) {
+			return setAsParent(Fields.getDirect(target, "classLoader"), originalFutureParent);
 		}
-		if (isBuiltinClassLoader(classLoader)) {
-			if (!isBuiltinClassLoader(futureParent)) {
-				try {
-					Collection<Method> methods = Members.findAll(
-						MethodCriteria.byScanUpTo(
-							cls -> cls.getName().equals(ClassLoader.class.getName())
-						).name(
-							"loadClass"::equals
-						).and().parameterTypesAreAssignableFrom(
-							String.class, boolean.class
-						), futureParent.getClass()
-					);					
-					futureParent = (ClassLoader)Constructors.newInstanceOf(classLoaderDelegateClass, null, futureParent, Methods.convertToMethodHandle(
-						methods.stream().skip(methods.size() - 1).findFirst().get()
-					));
-				} catch (Throwable exc) {
-					throw Throwables.toRuntimeException(exc);
-				}
-			}
+		if (isClassLoaderDelegate(originalFutureParent)) {
+			return setAsParent(target, Fields.getDirect(originalFutureParent, "classLoader"));
 		}
-		final ClassLoader exParent = Fields.getDirect(classLoader, "parent");
-		Fields.setDirect(classLoader, "parent", futureParent);
-		if (mantainHierarchy && exParent != null) {
-			Fields.setDirect(futureParent, "parent", exParent);
+		ClassLoader futureParentTemp = originalFutureParent;
+		if (isBuiltinClassLoader(target)) {
+			futureParentTemp = checkAndConvertBuiltinClassLoader(futureParentTemp);
 		}
+		ClassLoader targetExParent = Fields.get(target, "parent");
+		ClassLoader futureParent = futureParentTemp;
+		checkAndRegisterOrUnregisterMemoryClassLoaders(target, targetExParent, originalFutureParent);		
+		Fields.setDirect(target, "parent", futureParent);
 		return (reset) -> {
 			if (reset) {
-				Fields.setDirect(classLoader, "parent", exParent);
+				checkAndRegisterOrUnregisterMemoryClassLoaders(target, futureParent, targetExParent);
+				Fields.setDirect(target, "parent", targetExParent);
 			}
-			return exParent;
+			return targetExParent;
 		};
+	}
+
+	private ClassLoader checkAndConvertBuiltinClassLoader(ClassLoader classLoader) {
+		if (!isBuiltinClassLoader(classLoader)) {
+			try {
+				Collection<Method> methods = Members.findAll(
+					MethodCriteria.byScanUpTo(
+						cls -> cls.getName().equals(ClassLoader.class.getName())
+					).name(
+						"loadClass"::equals
+					).and().parameterTypesAreAssignableFrom(
+						String.class, boolean.class
+					), classLoader.getClass()
+				);					
+				classLoader = (ClassLoader)Constructors.newInstanceOf(classLoaderDelegateClass, null, classLoader, Methods.convertToMethodHandle(
+					methods.stream().skip(methods.size() - 1).findFirst().get()
+				));
+			} catch (Throwable exc) {
+				throw Throwables.toRuntimeException(exc);
+			}
+		}
+		return classLoader;
+	}
+
+	private void checkAndRegisterOrUnregisterMemoryClassLoaders(ClassLoader target, ClassLoader exParent, ClassLoader futureParent) {
+		if (isClassLoaderDelegate(target)) {
+			target = Fields.getDirect(target, "classLoader");
+		}
+		if (isClassLoaderDelegate(exParent)) {
+			exParent = Fields.getDirect(exParent, "classLoader");
+		}
+		if (isClassLoaderDelegate(futureParent)) {
+			futureParent = Fields.getDirect(futureParent, "classLoader");
+		}
+		MemoryClassLoader exParentMC = exParent instanceof MemoryClassLoader? (MemoryClassLoader)exParent : null;
+		MemoryClassLoader futureParentMC = futureParent instanceof MemoryClassLoader? (MemoryClassLoader)futureParent : null;
+		MemoryClassLoader targetMemoryClassLoader = target instanceof MemoryClassLoader? (MemoryClassLoader)target : null;
+		if (targetMemoryClassLoader != null) {
+			if (futureParentMC != null) {
+				futureParentMC.register(targetMemoryClassLoader);
+			}
+			if (exParentMC != null) {
+				exParentMC.unregister(targetMemoryClassLoader, false);
+			}
+		}
 	}
 	
 	public void setAccessible(AccessibleObject object, boolean flag) {
