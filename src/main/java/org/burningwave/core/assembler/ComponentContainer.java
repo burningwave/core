@@ -534,7 +534,11 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	static void closeAll() {
 		for (ComponentContainer componentContainer : instances) {
-			componentContainer.close(true);
+			try {
+				componentContainer.close(true);
+			} catch (Throwable exc) {
+				ManagedLoggersRepository.logError("Exception occurred while closing " + componentContainer, exc);
+			}
 		}
 		Cache.clear();
 		System.gc();
