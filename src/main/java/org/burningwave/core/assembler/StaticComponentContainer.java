@@ -169,9 +169,6 @@ public class StaticComponentContainer {
 						BackgroundExecutor.waitForTasksEnding();
 						ComponentContainer.closeAll();
 						ManagedLoggersRepository.logInfo("Memory class loaders: {}", MemoryClassLoader.memoryClassLoaders.size());
-						for(MemoryClassLoader cl : MemoryClassLoader.memoryClassLoaders) {
-							cl.logInfos();
-						}
 					} catch (Throwable exc) {
 						ManagedLoggersRepository.logError("Exception occurred while closing component containers", exc);
 					}
