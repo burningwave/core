@@ -297,7 +297,7 @@ public class QueuedTasksExecutor implements Component {
 	
 	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, int priority) {
 		changePriorityToAllTaskBefore(task, priority);
-		task.join0(false);
+		task.waitForFinish(false);
 		return this;
 	}
 	
@@ -370,7 +370,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 
 	Task createSuspendingTask(int priority) {
-		return createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).changePriority(priority);
+		return createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).runOnlyOnce(getOperationId("suspend"), () -> supended).changePriority(priority);
 	}
 
 	void waitForAsyncTasksEnding(int priority) {
@@ -970,7 +970,7 @@ public class QueuedTasksExecutor implements Component {
 				
 				@Override
 				public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, int priority) {
-					task.join0(false);
+					task.waitForFinish(false);
 					return this;
 				}
 				
@@ -1040,7 +1040,7 @@ public class QueuedTasksExecutor implements Component {
 			if (task.getPriority() != priority) {
 				task.changePriority(priority);
 			}
-			task.join0(false);
+			task.waitForFinish(false);
 			return this;
 		}
 		
