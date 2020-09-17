@@ -100,6 +100,13 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 		}, Thread.MIN_PRIORITY).submit();
 	}
 	
+	@Override
+	public void close() {
+		closeResources(() -> this.cache == null, () -> {
+			super.close();
+		});
+	}
+	
 	public static class SearchResult extends org.burningwave.core.classes.SearchResult<JavaClass> {
 
 		public SearchResult(SearchContext<JavaClass> context) {

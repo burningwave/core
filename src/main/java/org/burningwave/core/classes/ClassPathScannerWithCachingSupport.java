@@ -312,13 +312,11 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	
 	@Override
 	public void close() {
-		closeResources(() -> cache == null, () -> {
-			clearCache(false);
-			cache = null;
-			pathHelper = null;
-			contextSupplier = null;
-			super.close();
-		});
+		clearCache(false);
+		cache = null;
+		pathHelper = null;
+		contextSupplier = null;
+		super.close();
 	}
 	
 	@FunctionalInterface

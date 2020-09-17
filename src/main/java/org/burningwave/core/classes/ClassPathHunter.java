@@ -144,7 +144,9 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 	
 	@Override
 	public void close() {
-		super.close();
+		closeResources(() -> this.cache == null, () -> {
+			super.close();
+		});
 	}
 	
 	public static class SearchContext extends org.burningwave.core.classes.SearchContext<Collection<Class<?>>> {
