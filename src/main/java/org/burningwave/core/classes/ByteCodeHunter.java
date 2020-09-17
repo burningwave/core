@@ -45,12 +45,16 @@ import org.burningwave.core.iterable.Properties;
 public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass, SearchContext<JavaClass>, ByteCodeHunter.SearchResult> {
 	
 	private ByteCodeHunter(
+		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
+		Supplier<ClassPathHunter> classPathHunterSupplier,
 		PathHelper pathHelper,
 		Properties config
 	) {
 		super(
+			byteCodeHunterSupplier,
 			classHunterSupplier,
+			classPathHunterSupplier,
 			pathHelper,
 			(initContext) -> SearchContext.<JavaClass>create(
 				initContext
@@ -61,11 +65,13 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 	}
 	
 	public static ByteCodeHunter create(
-		Supplier<ClassHunter> classHunterSupplier, 
+		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
+		Supplier<ClassHunter> classHunterSupplier,
+		Supplier<ClassPathHunter> classPathHunterSupplier,
 		PathHelper pathHelper,
 		Properties config
 	) {
-		return new ByteCodeHunter(classHunterSupplier, pathHelper, config);
+		return new ByteCodeHunter(byteCodeHunterSupplier, classHunterSupplier, classPathHunterSupplier, pathHelper, config);
 	}
 	
 	@Override

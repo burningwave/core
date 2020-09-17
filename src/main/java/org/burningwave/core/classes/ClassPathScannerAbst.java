@@ -79,9 +79,12 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		}
 	}
 	
+	Supplier<ByteCodeHunter> byteCodeHunterSupplier;
 	ByteCodeHunter byteCodeHunter;
 	Supplier<ClassHunter> classHunterSupplier;
 	ClassHunter classHunter;
+	Supplier<ClassPathHunter> classPathHunterSupplier;
+	ClassPathHunter classPathHunter;
 	PathHelper pathHelper;
 	Function<InitContext, C> contextSupplier;
 	Function<C, R> resultSupplier;
@@ -90,14 +93,18 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	String instanceId;
 
 	ClassPathScannerAbst(
+		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
+		Supplier<ClassPathHunter> classPathHunterSupplier,
 		PathHelper pathHelper,
 		Function<InitContext, C> contextSupplier,
 		Function<C, R> resultSupplier,
 		Properties config
 	) {
-		this.pathHelper = pathHelper;
+		this.byteCodeHunterSupplier = byteCodeHunterSupplier;
 		this.classHunterSupplier = classHunterSupplier;
+		this.classPathHunterSupplier = classPathHunterSupplier;
+		this.pathHelper = pathHelper;
 		this.contextSupplier = contextSupplier;
 		this.resultSupplier = resultSupplier;
 		this.config = config;
@@ -106,10 +113,22 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		listenTo(config);
 	}
 	
+	ByteCodeHunter getByteCodeHunter() {
+		return byteCodeHunter != null ?
+			byteCodeHunter	:
+			(byteCodeHunter = byteCodeHunterSupplier.get());
+	}
+	
 	ClassHunter getClassHunter() {
 		return classHunter != null ?
 			classHunter	:
 			(classHunter = classHunterSupplier.get());
+	}
+	
+	ClassPathHunter getClassPathHunter() {
+		return classPathHunter != null ?
+			classPathHunter	:
+			(classPathHunter = classPathHunterSupplier.get());
 	}
 	
 	public R find() {
@@ -261,5 +280,11 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		config = null;
 		closeSearchResults();
 		this.searchResults = null;
+		this.byteCodeHunterSupplier = null;
+		this.byteCodeHunter = null;
+		this.classHunterSupplier = null;
+		this.classHunter = null;
+		this.classPathHunterSupplier = null;
+		this.classPathHunter = null;
 	}
 }
