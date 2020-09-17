@@ -110,34 +110,37 @@ public class ClassLoadersTest extends BaseTest {
 	@Test
 	public void loadOrDefineByByteCodesTestOne() {
 		testNotNull(() -> {
-			ComponentSupplier componentSupplier = getComponentSupplier();
-			PathHelper pathHelper = componentSupplier.getPathHelper();
-			SearchResult searchResult = componentSupplier.getByteCodeHunter().loadInCache(
-				SearchConfig.forPaths(
-						pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
-				)
-			).find();
-			return ClassLoaders.loadOrDefineByByteCode(searchResult.getByteCodesFlatMap().get("org.apache.commons.lang.ArrayUtils"), getMemoryClassLoader(null));
+			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
+				ComponentSupplier componentSupplier = getComponentSupplier();
+				PathHelper pathHelper = componentSupplier.getPathHelper();
+				SearchResult searchResult = componentSupplier.getByteCodeHunter().loadInCache(
+					SearchConfig.forPaths(
+							pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
+					)
+				).find();
+				return ClassLoaders.loadOrDefineByByteCode(searchResult.getByteCodesFlatMap().get("org.apache.commons.lang.ArrayUtils"), classLoader);
+			}
 		});
 	}
 	
 	@Test
 	public void loadOrDefineByByteCodesTestTwo() {
 		testNotNull(() -> {
-			ComponentSupplier componentSupplier = getComponentSupplier();
-			PathHelper pathHelper = componentSupplier.getPathHelper();
-			SearchResult searchResult = componentSupplier.getByteCodeHunter().loadInCache(
-				SearchConfig.forPaths(
-						pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
-				)
-			).find();
-			Map<String, ByteBuffer> byteCodesFound = searchResult.getByteCodesFlatMap();
-			Map<String, JavaClass> byteCodes = new HashMap<>();
-			return JavaClass.extractByUsing(byteCodesFound.get("org.apache.commons.lang.ArrayUtils"), (javaClass) -> {
-				byteCodes.put("org.apache.commons.lang.ArrayUtils", javaClass);
-				return ClassLoaders.loadOrDefineByJavaClass("org.apache.commons.lang.ArrayUtils", byteCodes, getMemoryClassLoader(null));
-			});
-			
+			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
+				ComponentSupplier componentSupplier = getComponentSupplier();
+				PathHelper pathHelper = componentSupplier.getPathHelper();
+				SearchResult searchResult = componentSupplier.getByteCodeHunter().loadInCache(
+					SearchConfig.forPaths(
+							pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
+					)
+				).find();
+				Map<String, ByteBuffer> byteCodesFound = searchResult.getByteCodesFlatMap();
+				Map<String, JavaClass> byteCodes = new HashMap<>();
+				return JavaClass.extractByUsing(byteCodesFound.get("org.apache.commons.lang.ArrayUtils"), (javaClass) -> {
+					byteCodes.put("org.apache.commons.lang.ArrayUtils", javaClass);
+					return ClassLoaders.loadOrDefineByJavaClass("org.apache.commons.lang.ArrayUtils", byteCodes, classLoader);
+				});
+			}
 		});
 	}
 	
