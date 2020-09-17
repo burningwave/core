@@ -336,8 +336,8 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	
 	@Override
 	public void clearCache(boolean closeSearchResults) {
-		super.clearCache(closeSearchResults);
 		resetDefaultPathScannerClassLoader();
+		super.clearCache(closeSearchResults);
 	}
 	
 	private void resetDefaultPathScannerClassLoader() {
