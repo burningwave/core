@@ -120,6 +120,7 @@ public class QueuedTasksExecutor implements Component {
 						TaskAbst<?, ?> task = this.currentTask = taskIterator.next();
 						synchronized (task) {
 							if (!tasksQueue.remove(task)) {
+								this.currentTask = null;
 								continue;
 							} else if (TaskAbst.Execution.Mode.ASYNC.equals(task.executionMode)) {
 								asyncTasksInExecution.add(task);
@@ -339,9 +340,11 @@ public class QueuedTasksExecutor implements Component {
 		if (immediately) {
 			supended = Boolean.TRUE;
 			waitForAsyncTasksEnding(priority);
+			TaskAbst<?, ?> currentTask = this.currentTask;
 			if (currentTask != null && !currentTask.hasFinished()) {
 				synchronized (getMutex("suspensionCaller")) {
-					if (!currentTask.hasFinished()) {
+					currentTask = this.currentTask;
+					if (currentTask != null && !currentTask.hasFinished()) {
 						try {
 							getMutex("suspensionCaller").wait();
 						} catch (InterruptedException exc) {
