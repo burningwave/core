@@ -937,7 +937,7 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.iterable.Properties;
+import java.util.Properties;
 
 public class RetrievingDynamicComponentContainerAndComponents {
 
