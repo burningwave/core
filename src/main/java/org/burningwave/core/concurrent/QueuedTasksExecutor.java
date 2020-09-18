@@ -352,7 +352,7 @@ public class QueuedTasksExecutor implements Component {
 		if (immediately) {
 			supended = Boolean.TRUE;
 			waitForAsyncTasksEnding(priority);
-			if (!currentTask.hasFinished()) {
+			if (currentTask != null && !currentTask.hasFinished()) {
 				synchronized (getMutex("suspensionCaller")) {
 					if (!currentTask.hasFinished()) {
 						try {
