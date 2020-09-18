@@ -55,9 +55,6 @@ public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeab
 	
 	
 	C get() {
-		if (this.defaultClassLoader == null) {
-			return get(this);
-		}
 		return this.defaultClassLoader;
 	}
 	
