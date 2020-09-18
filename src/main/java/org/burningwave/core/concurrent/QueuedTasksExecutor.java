@@ -64,7 +64,6 @@ public class QueuedTasksExecutor implements Component {
 	private int loggingThreshold;
 	int defaultPriority;
 	private long executedTasksCount;
-	private long asyncExecutorCount;
 	private boolean isDaemon;
 	private String executorName;
 	private String asyncExecutorName;
@@ -103,7 +102,6 @@ public class QueuedTasksExecutor implements Component {
 		supended = Boolean.FALSE;
 		terminated = Boolean.FALSE;
 		executedTasksCount = 0;
-		asyncExecutorCount = 0;
 		executor = new Thread(() -> {
 			while (!terminated) {
 				if (!tasksQueue.isEmpty()) {
@@ -142,7 +140,7 @@ public class QueuedTasksExecutor implements Component {
 							executor.setPriority(this.defaultPriority);
 						}
 						if (isSync) {
-							incrementAndlogExecutedTaskCounters(true, false);
+							incrementAndlogExecutedTaskCounter();
 						}						
 						synchronized(getMutex("suspensionCaller")) {
 							getMutex("suspensionCaller").notifyAll();
@@ -172,18 +170,10 @@ public class QueuedTasksExecutor implements Component {
 		executor.start();
 	}
 
-	void incrementAndlogExecutedTaskCounters(boolean incrementExecutedTasksCount, boolean incrementAsyncExecutorCount) {
-		if (incrementExecutedTasksCount) {
-			long counter = ++this.executedTasksCount;
-			if (counter % loggingThreshold == 0) {
-				logInfo("Executed {} sync tasks", counter);
-			}
-		}
-		if (incrementAsyncExecutorCount) {
-			long counter = ++this.asyncExecutorCount;
-			if (counter % loggingThreshold == 0) {
-				logInfo("Executed {} async tasks", counter);
-			}
+	void incrementAndlogExecutedTaskCounter() {
+		long counter = ++this.executedTasksCount;
+		if (counter % loggingThreshold == 0) {
+			logInfo("Executed {} sync tasks", counter);
 		}
 	}
 	
@@ -270,14 +260,11 @@ public class QueuedTasksExecutor implements Component {
 			task.setExecutor(this.executor);
 		} else if (TaskAbst.Execution.Mode.ASYNC.equals(task.executionMode) || 
 			TaskAbst.Execution.Mode.PURE_ASYNC.equals(task.executionMode)) {
-			if (task.executor != null) {
-				asyncExecutorCount--;
-			}
 			Thread executor = new Thread(() -> {
 				synchronized(task) {
 					task.execute();
 					asyncTasksInExecution.remove(task);
-					incrementAndlogExecutedTaskCounters(false, true);
+					incrementAndlogExecutedTaskCounter();
 				}
 			}, asyncExecutorName);
 			executor.setPriority(task.priority);
@@ -455,7 +442,7 @@ public class QueuedTasksExecutor implements Component {
 	public void logQueueInfo() {
 		List<TaskAbst<?, ?>> tasks = new ArrayList<>(tasksQueue);
 		tasks.addAll(this.asyncTasksInExecution);
-		logQueueInfo(this.executedTasksCount + this.asyncExecutorCount, tasks);
+		logQueueInfo(this.executedTasksCount, tasks);
 	}
 	
 	private void logQueueInfo(Long executedTasksCount, Collection<TaskAbst<?, ?>> executables) {
