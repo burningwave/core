@@ -482,6 +482,10 @@ public class QueuedTasksExecutor implements Component {
 		initializer = null;
 		terminated = null;
 		supended = null;
+		resumeCaller = null;            
+		executingFinishedWaiter = null;    
+		suspensionCaller = null;           
+		executableCollectionFiller = null; 
 		logInfo("All resources of '{}' have been closed", executorName);
 		executorName = null;		
 	}
