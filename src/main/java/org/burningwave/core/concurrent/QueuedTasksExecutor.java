@@ -29,8 +29,6 @@
 package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
-import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
-import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.ArrayList;
@@ -55,11 +53,9 @@ import org.burningwave.core.function.ThrowingSupplier;
 @SuppressWarnings({"unchecked", "resource"})
 public class QueuedTasksExecutor implements Component {
 	private final static Map<String, Task> runOnlyOnceTasksToBeExecuted;
-	private final String instanceId;
 	Thread executor;
 	List<TaskAbst<?, ?>> tasksQueue;
 	List<TaskAbst<?, ?>> asyncTasksInExecution;
-	TaskAbst<?, ?> currentTask;
 	Boolean supended;
 	private int loggingThreshold;
 	int defaultPriority;
@@ -70,6 +66,10 @@ public class QueuedTasksExecutor implements Component {
 	private Boolean terminated;
 	private Runnable initializer;
 	boolean taskCreationTrackingEnabled;
+	Object resumeCaller;
+	Object executingFinishedWaiter;
+	Object suspensionCaller;
+	Object executableCollectionFiller;
 	
 	static {
 		runOnlyOnceTasksToBeExecuted = new ConcurrentHashMap<>();
@@ -78,8 +78,11 @@ public class QueuedTasksExecutor implements Component {
 	QueuedTasksExecutor(String executorName, String asyncExecutorName, int defaultPriority, boolean isDaemon, int loggingThreshold) {
 		tasksQueue = new CopyOnWriteArrayList<>();
 		asyncTasksInExecution = new CopyOnWriteArrayList<>();
-		instanceId = Objects.getCurrentId(this);
 		this.loggingThreshold = loggingThreshold;
+		this.resumeCaller = new Object();
+		this.executingFinishedWaiter = new Object();
+		this.suspensionCaller = new Object();
+		this.executableCollectionFiller = new Object();
 		initializer = () -> {
 			this.executorName = executorName;
 			this.asyncExecutorName = asyncExecutorName;
@@ -94,30 +97,22 @@ public class QueuedTasksExecutor implements Component {
 		initializer.run();
 	}
 	
-	Object getMutex(String name) {
-		return Synchronizer.getMutex(instanceId + "_" + name);
-	}
-	
 	void init0() {		
 		supended = Boolean.FALSE;
 		terminated = Boolean.FALSE;
 		executedTasksCount = 0;
 		executor = new Thread(() -> {
 			while (!terminated) {
+				if (checkAndNotifySuspension()) {
+					continue;
+				}
 				if (!tasksQueue.isEmpty()) {
 					Iterator<TaskAbst<?, ?>> taskIterator = tasksQueue.iterator();
 					while (taskIterator.hasNext()) {
-						synchronized(getMutex("resumeCaller")) {
-							try {
-								if (supended) {
-									getMutex("resumeCaller").wait();
-									break;
-								}
-							} catch (InterruptedException exc) {
-								logWarn("Exception occurred", exc);
-							}
+						if (checkAndNotifySuspension() || terminated) {
+							break;
 						}
-						TaskAbst<?, ?> task = this.currentTask = taskIterator.next();
+						TaskAbst<?, ?> task = taskIterator.next();
 						synchronized (task) {
 							if (!tasksQueue.remove(task)) {
 								continue;
@@ -142,21 +137,15 @@ public class QueuedTasksExecutor implements Component {
 						if (isSync) {
 							incrementAndlogExecutedTaskCounter();
 						}						
-						synchronized(getMutex("suspensionCaller")) {
-							getMutex("suspensionCaller").notifyAll();
-						}
-						if (terminated) {
-							break;
-						}
 					}
 				} else {
-					synchronized(getMutex("executingFinishedWaiter")) {
-						getMutex("executingFinishedWaiter").notifyAll();
-					}
-					synchronized(getMutex("executableCollectionFiller")) {
+					synchronized(executableCollectionFiller) {
 						if (tasksQueue.isEmpty()) {
 							try {
-								getMutex("executableCollectionFiller").wait();
+								synchronized(executingFinishedWaiter) {
+									executingFinishedWaiter.notifyAll();
+								}
+								executableCollectionFiller.wait();
 							} catch (InterruptedException exc) {
 								logWarn("Exception occurred", exc);
 							}
@@ -170,6 +159,23 @@ public class QueuedTasksExecutor implements Component {
 		executor.start();
 	}
 
+	private boolean checkAndNotifySuspension() {
+		if (supended) {
+			synchronized (suspensionCaller) {
+				suspensionCaller.notifyAll();
+			}
+			synchronized(resumeCaller) {
+				try {
+					resumeCaller.wait();
+					return true;
+				} catch (InterruptedException exc) {
+					logWarn("Exception occurred", exc);
+				}
+			}
+		}
+		return false;
+	}
+	
 	void incrementAndlogExecutedTaskCounter() {
 		long counter = ++this.executedTasksCount;
 		if (counter % loggingThreshold == 0) {
@@ -244,8 +250,8 @@ public class QueuedTasksExecutor implements Component {
 					task.executor.start();
 				} else {
 					tasksQueue.add(task);
-					synchronized(getMutex("executableCollectionFiller")) {
-						getMutex("executableCollectionFiller").notifyAll();
+					synchronized(executableCollectionFiller) {
+						executableCollectionFiller.notifyAll();
 					}
 				}
 			} catch (Throwable exc) {
@@ -297,10 +303,10 @@ public class QueuedTasksExecutor implements Component {
 		executor.setPriority(priority);
 		tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
 		while (!tasksQueue.isEmpty()) {
-			synchronized(getMutex("executingFinishedWaiter")) {
+			synchronized(executingFinishedWaiter) {
 				if (!tasksQueue.isEmpty()) {
 					try {
-						getMutex("executingFinishedWaiter").wait();
+						executingFinishedWaiter.wait();
 					} catch (InterruptedException exc) {
 						logWarn("Exception occurred", exc);
 					}
@@ -337,17 +343,15 @@ public class QueuedTasksExecutor implements Component {
 	QueuedTasksExecutor suspend0(boolean immediately, int priority) {
 		executor.setPriority(priority);
 		if (immediately) {
-			supended = Boolean.TRUE;
-			waitForAsyncTasksEnding(priority);
-			if (currentTask != null && !currentTask.hasFinished()) {
-				synchronized (getMutex("suspensionCaller")) {
-					if (!currentTask.hasFinished()) {
-						try {
-							getMutex("suspensionCaller").wait();
-						} catch (InterruptedException exc) {
-							logWarn("Exception occurred", exc);
-						}
-					}
+			Object suspensionMutex = suspensionCaller;
+			synchronized (suspensionMutex) {
+				supended = Boolean.TRUE;
+				resumeFromWaitingForNewTasks();	
+				waitForAsyncTasksEnding(priority);
+				try {
+					suspensionMutex.wait();
+				} catch (InterruptedException exc) {
+					logWarn("Exception occurred", exc);
 				}
 			}
 		} else {
@@ -394,11 +398,11 @@ public class QueuedTasksExecutor implements Component {
 		waitForAsyncTasksEnding(priority);
 	}
 
-	public QueuedTasksExecutor resume() {
-		synchronized(getMutex("resumeCaller")) {
+	public QueuedTasksExecutor resumeFromSuspension() {
+		synchronized(resumeCaller) {
 			try {
 				supended = Boolean.FALSE;
-				getMutex("resumeCaller").notifyAll();
+				resumeCaller.notifyAll();
 			} catch (Throwable exc) {
 				logWarn("Exception occurred", exc);
 			}
@@ -406,8 +410,8 @@ public class QueuedTasksExecutor implements Component {
 		return this;
 	}
 	
-	public boolean isSuspended() {
-		return supended;
+	public boolean isWaiting() {
+		return executor.getState().equals(Thread.State.WAITING);
 	}
 	
 	public boolean shutDown(boolean waitForTasksTermination) {
@@ -422,14 +426,7 @@ public class QueuedTasksExecutor implements Component {
 		logQueueInfo();
 		executables.clear();
 		asyncTasksInExecution.clear();
-		resume();
-		try {
-			synchronized(getMutex("executableCollectionFiller")) {
-				getMutex("executableCollectionFiller").notifyAll();
-			}
-		} catch (Throwable exc) {
-			logWarn("Exception occurred", exc);
-		}	
+		resumeFromSuspension();
 		try {
 			executor.join();
 			closeResources();			
@@ -437,6 +434,16 @@ public class QueuedTasksExecutor implements Component {
 			logError("Exception occurred", exc);
 		}
 		return true;
+	}
+
+	private void resumeFromWaitingForNewTasks() {
+		try {
+			synchronized(executableCollectionFiller) {
+				executableCollectionFiller.notifyAll();
+			}
+		} catch (Throwable exc) {
+			logWarn("Exception occurred", exc);
+		}
 	}
 	
 	public void logQueueInfo() {
@@ -472,7 +479,6 @@ public class QueuedTasksExecutor implements Component {
 		executor = null;
 		tasksQueue = null;
 		asyncTasksInExecution = null;
-		currentTask = null;
 		initializer = null;
 		terminated = null;
 		supended = null;
@@ -941,10 +947,10 @@ public class QueuedTasksExecutor implements Component {
 				public QueuedTasksExecutor waitForTasksEnding(int priority, boolean waitForNewAddedTasks) {
 					if (priority == defaultPriority) {
 						while (!tasksQueue.isEmpty()) {
-							synchronized(getMutex("executingFinishedWaiter")) {
+							synchronized(executingFinishedWaiter) {
 								if (!tasksQueue.isEmpty()) {
 									try {
-										getMutex("executingFinishedWaiter").wait();
+										executingFinishedWaiter.wait();
 									} catch (InterruptedException exc) {
 										logWarn("Exception occurred", exc);
 									}
