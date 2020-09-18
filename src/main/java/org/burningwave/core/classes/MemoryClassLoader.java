@@ -440,12 +440,12 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	public void logInfos() {
 		logInfo(
-			"\n\t{} {} and was created by:\n\t\t{}\n\n\t\t\tclients:{}", 
+			"\n\n\t{} {} and was created by:\n\n\t\t{}\n\n\t\t\tclients:\n\n\t\t\t\t{}", 
 			this,
 			isClosed? "is closed" : "is not closed", 
 			String.join("\n\t\t", creationStack.stream().map(sE -> sE.toString()).collect(Collectors.toList())),
-			String.join("\n\t\t\t\t", clients.entrySet().stream().map(cSE -> 
-				cSE.getKey() + "registered on\n\t\t\t\t\t" + String.join("\n\t\t\t\t\t", cSE.getValue().stream().map(sE -> sE.toString()).collect(Collectors.toList()))
+			String.join("\n\n\t\t\t\t", clients.entrySet().stream().map(cSE -> 
+				cSE.getKey() + " is registered by:\n\n\t\t\t\t\t" + String.join("\n\t\t\t\t\t", cSE.getValue().stream().map(sE -> sE.toString()).collect(Collectors.toList()))
 			).collect(Collectors.toList()))
 			
 		);
@@ -462,16 +462,16 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
 				((MemoryClassLoader)parentClassLoader).unregister(this,true);
 			}
-			this.clients.clear();
-			this.clients = null;
 			clear();
 			notLoadedByteCodes = null;
 			loadedByteCodes = null;
 			Collection<Class<?>> loadedClasses = ClassLoaders.retrieveLoadedClasses(this);
 			loadedClasses.clear();
 			unregister();
-			this.creationStack.clear();
-			this.creationStack = null;
+			creationStack.clear();
+			creationStack = null;
+			this.clients.clear();
+			this.clients = null;
 		});
 	}
 }
