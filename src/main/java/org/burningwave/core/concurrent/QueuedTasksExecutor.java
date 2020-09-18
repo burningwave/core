@@ -343,13 +343,12 @@ public class QueuedTasksExecutor implements Component {
 	QueuedTasksExecutor suspend0(boolean immediately, int priority) {
 		executor.setPriority(priority);
 		if (immediately) {
-			Object suspensionMutex = suspensionCaller;
-			synchronized (suspensionMutex) {
+			synchronized (suspensionCaller) {
 				supended = Boolean.TRUE;
 				resumeFromWaitingForNewTasks();	
 				waitForAsyncTasksEnding(priority);
 				try {
-					suspensionMutex.wait();
+					suspensionCaller.wait();
 				} catch (InterruptedException exc) {
 					logWarn("Exception occurred", exc);
 				}
