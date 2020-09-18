@@ -173,7 +173,7 @@ public class QueuedTasksExecutor implements Component {
 	void incrementAndlogExecutedTaskCounter() {
 		long counter = ++this.executedTasksCount;
 		if (counter % loggingThreshold == 0) {
-			logInfo("Executed {} sync tasks", counter);
+			logInfo("Executed {} tasks", counter);
 		}
 	}
 	
