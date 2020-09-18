@@ -348,19 +348,21 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			if (pathScannerClassLoader != null) {
 				this.defaultPathScannerClassLoaderSupplier = null;
 				this.defaultPathScannerClassLoader = null;
-				pathScannerClassLoaderResetter.accept(pathScannerClassLoader);
 				pathScannerClassLoader.unregister(this, true);
+				try {
+					pathScannerClassLoaderResetter.accept(pathScannerClassLoader);
+				} catch (Throwable exc) {
+					logWarn("Exception occurred while resetting default path scanner classloader {}", exc.getMessage());
+				}
 			}
 		});
 	}
 	
 	@Override
 	public void close() {
-		closeResources(() -> this.defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier == null, () -> {
-			this.defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier = null;
+		this.defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier = null;
+		closeResources(() -> this.cache == null, () -> {
 			super.close();
-			this.defaultPathScannerClassLoaderSupplier = null;
-			this.defaultPathScannerClassLoader = null;
 			this.pathScannerClassLoaderResetter = null;
 		});
 	}
