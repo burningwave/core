@@ -177,6 +177,7 @@ public class StaticComponentContainer {
 						ManagedLoggersRepository.logError("Exception occurred while closing FileSystemHelper", exc);
 					}
 					BackgroundExecutor.waitForTasksEnding(true).shutDown(false);
+					MemoryClassLoader.logInfosOfAll();
 				}, "Resources releaser")
 			);
 			FileSystemHelper.startScavenger();

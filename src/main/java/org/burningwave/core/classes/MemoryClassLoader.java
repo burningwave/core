@@ -33,6 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -50,6 +51,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -60,6 +62,7 @@ import org.burningwave.core.io.ByteBufferInputStream;
 
 @SuppressWarnings("unchecked")
 public class MemoryClassLoader extends ClassLoader implements Component {
+	private final static Collection<MemoryClassLoader> MEMORY_CLASS_LOADERS;
 	Map<String, ByteBuffer> notLoadedByteCodes;
 	Map<String, ByteBuffer> loadedByteCodes;
 	Map<Object, List<StackTraceElement>> clients;
@@ -70,12 +73,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	static {
         ClassLoader.registerAsParallelCapable();
+        MEMORY_CLASS_LOADERS = ConcurrentHashMap.newKeySet();
     }
 	
 	protected MemoryClassLoader(
 		ClassLoader parentClassLoader
 	) {
 		super(parentClassLoader);
+		MEMORY_CLASS_LOADERS.add(this);
 		creationStack = Methods.retrieveCallersInfo();
 		instanceId = Objects.getCurrentId(this);
 		if (parentClassLoader instanceof MemoryClassLoader) {
@@ -444,11 +449,18 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			this,
 			isClosed? "is closed" : "is not closed", 
 			String.join("\n\t\t", creationStack.stream().map(sE -> sE.toString()).collect(Collectors.toList())),
-			String.join("\n\n\t\t\t\t", clients.entrySet().stream().map(cSE -> 
-				cSE.getKey() + " is registered by:\n\n\t\t\t\t\t" + String.join("\n\t\t\t\t\t", cSE.getValue().stream().map(sE -> sE.toString()).collect(Collectors.toList()))
-			).collect(Collectors.toList()))
+			clients.isEmpty() ? 
+				"none" : 
+				String.join("\n\n\t\t\t\t", clients.entrySet().stream().map(cSE -> 
+					cSE.getKey() + " is registered by:\n\n\t\t\t\t\t" + String.join("\n\t\t\t\t\t", cSE.getValue().stream().map(sE -> sE.toString()).collect(Collectors.toList()))
+				).collect(Collectors.toList()))
 			
 		);
+	}
+	
+	public final static void logInfosOfAll() {
+		ManagedLoggersRepository.logInfo("Memory class loaders: {}", MEMORY_CLASS_LOADERS.size());
+		MEMORY_CLASS_LOADERS.stream().forEach(mCL -> mCL.logInfos());
 	}
 	
 	Task closeResources() {
@@ -458,6 +470,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 				throw Throwables.toRuntimeException("Could not close " + this + " because there are " + clients.size() +" registered clients");
 			}
 			isClosed = true;
+			MEMORY_CLASS_LOADERS.remove(this);
 			ClassLoader parentClassLoader = getParent();
 			if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
 				((MemoryClassLoader)parentClassLoader).unregister(this,true);
