@@ -125,17 +125,14 @@ public class QueuedTasksExecutor implements Component {
 						if (executor.getPriority() != currentExecutablePriority) {
 							executor.setPriority(currentExecutablePriority);
 						}
-						boolean isSync = executor == this.executor;
-						if (isSync) {
+						if (executor == this.executor) {
 							task.execute();
+							incrementAndlogExecutedTaskCounter();
+							if (executor.getPriority() != this.defaultPriority) {
+								executor.setPriority(this.defaultPriority);
+							}
 						} else if (task.executionMode == TaskAbst.Execution.Mode.ASYNC) {
 							executor.start();
-						}
-						if (isSync && executor.getPriority() != this.defaultPriority) {
-							executor.setPriority(this.defaultPriority);
-						}
-						if (isSync) {
-							incrementAndlogExecutedTaskCounter();
 						}						
 					}
 				} else {
