@@ -452,6 +452,7 @@ public class QueuedTasksExecutor implements Component {
 		}	
 		try {
 			logInfo("shutDown {}", ++counter);
+			logInfo("thread state: {}", executor.getState());
 			executor.join();
 			logInfo("shutDown {}", ++counter);
 			closeResources();
