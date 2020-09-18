@@ -247,6 +247,6 @@ public class SourceCodeHandler implements Component {
 		for (int lineCounter = 1; lineCounter < lines.length; lineCounter++) {
 			newSource.append(String.format("%0" + maxDigitCount + "d", lineCounter) + " | \t" + lines[lineCounter - 1] + "\n");
 		}		
-		return newSource.toString();
+		return newSource.substring(0, newSource.length() -1);
 	}
 }
