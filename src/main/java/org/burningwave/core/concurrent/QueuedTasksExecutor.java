@@ -33,6 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -302,10 +303,10 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public QueuedTasksExecutor waitForTasksEnding() {
-		return waitForTasksEnding(Thread.currentThread().getPriority());
+		return waitForTasksEnding(Thread.currentThread().getPriority(), false);
 	}
 	
-	public QueuedTasksExecutor waitForTasksEnding(int priority) {
+	public QueuedTasksExecutor waitForTasksEnding(int priority, boolean waitForNewAddedTasks) {
 		executor.setPriority(priority);
 		tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
 		while (!tasksQueue.isEmpty()) {
@@ -321,8 +322,8 @@ public class QueuedTasksExecutor implements Component {
 		}
 		waitForAsyncTasksEnding(priority);
 		executor.setPriority(this.defaultPriority);
-		if (!asyncTasksInExecution.isEmpty() || !tasksQueue.isEmpty()) {
-			waitForTasksEnding(priority);
+		if (waitForNewAddedTasks && (!tasksQueue.isEmpty() || !asyncTasksInExecution.isEmpty())) {
+			waitForTasksEnding(priority, waitForNewAddedTasks);
 		}
 		return this;
 	}
@@ -452,11 +453,13 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public void logQueueInfo() {
-		logQueueInfo(this.executedTasksCount, this.asyncTasksInExecution);
+		List<TaskAbst<?, ?>> tasks = new ArrayList<>(tasksQueue);
+		tasks.addAll(this.asyncTasksInExecution);
+		logQueueInfo(this.executedTasksCount + this.asyncExecutorCount, tasks);
 	}
 	
 	private void logQueueInfo(Long executedTasksCount, Collection<TaskAbst<?, ?>> executables) {
-		Collection<String> executablesLog = executables.stream().map(executable -> "\t" + executable.toString()).collect(Collectors.toList());
+		Collection<String> executablesLog = executables.stream().map(task -> "\t" + task.executable.toString()).collect(Collectors.toList());
 		StringBuffer log = new StringBuffer("Executed tasks: ")
 			.append(executedTasksCount).append(", Unexecuted tasks: ")
 			.append(executablesLog.size());
@@ -948,7 +951,7 @@ public class QueuedTasksExecutor implements Component {
 				}
 				
 				@Override
-				public QueuedTasksExecutor waitForTasksEnding(int priority) {
+				public QueuedTasksExecutor waitForTasksEnding(int priority, boolean waitForNewAddedTasks) {
 					if (priority == defaultPriority) {
 						while (!tasksQueue.isEmpty()) {
 							synchronized(getMutex("executingFinishedWaiter")) {
@@ -968,8 +971,8 @@ public class QueuedTasksExecutor implements Component {
 						tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
 						waitForAsyncTasksEnding(priority);				
 					}
-					if (!asyncTasksInExecution.isEmpty() || !tasksQueue.isEmpty()) {
-						waitForTasksEnding(priority);
+					if (waitForNewAddedTasks && (!asyncTasksInExecution.isEmpty() || !tasksQueue.isEmpty())) {
+						waitForTasksEnding(priority, waitForNewAddedTasks);
 					}
 					return this;
 				}
@@ -1023,22 +1026,26 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public Group waitForTasksEnding() {
-			return waitForTasksEnding(Thread.currentThread().getPriority());
+			return waitForTasksEnding(Thread.currentThread().getPriority(), false);
 		}
 		
-		public Group waitForTasksEnding(int priority) {
+		public Group waitForTasksEnding(boolean waitForNewAddedTasks) {
+			return waitForTasksEnding(Thread.currentThread().getPriority(), waitForNewAddedTasks);
+		}
+		
+		public Group waitForTasksEnding(int priority, boolean waitForNewAddedTasks) {
 			QueuedTasksExecutor lastToBeWaitedFor = getByPriority(priority);
 			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
 				if (queuedTasksExecutor != lastToBeWaitedFor) {
-					queuedTasksExecutor.waitForTasksEnding(priority);
+					queuedTasksExecutor.waitForTasksEnding(priority, waitForNewAddedTasks);
 				}
 			}
-			lastToBeWaitedFor.waitForTasksEnding(priority);	
+			lastToBeWaitedFor.waitForTasksEnding(priority, waitForNewAddedTasks);	
 			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
 				if (!queuedTasksExecutor.tasksQueue.isEmpty() || !queuedTasksExecutor.asyncTasksInExecution.isEmpty()) {
-					waitForTasksEnding(priority);
+					waitForTasksEnding(priority, waitForNewAddedTasks);
 					break;
 				}
 			}
