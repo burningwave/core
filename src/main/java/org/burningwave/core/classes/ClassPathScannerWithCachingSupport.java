@@ -291,9 +291,8 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 			try {
 				//clearing the cache and resetting the class loader (owned  by the ClassHunter)
 				classHunter.clearCache(closeSearchResults);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} catch (Throwable exc) {
+				logError("Exception occurred while trying to clear the cache of " + classHunter, exc);
 			}
 		}
 		if (closeSearchResults) {
