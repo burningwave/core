@@ -125,17 +125,14 @@ public class QueuedTasksExecutor implements Component {
 						if (executor.getPriority() != currentExecutablePriority) {
 							executor.setPriority(currentExecutablePriority);
 						}
-						boolean isSync = executor == this.executor;
-						if (isSync) {
+						if (executor == this.executor) {
 							task.execute();
+							incrementAndlogExecutedTaskCounter();
+							if (executor.getPriority() != this.defaultPriority) {
+								executor.setPriority(this.defaultPriority);
+							}
 						} else if (task.executionMode == TaskAbst.Execution.Mode.ASYNC) {
 							executor.start();
-						}
-						if (isSync && executor.getPriority() != this.defaultPriority) {
-							executor.setPriority(this.defaultPriority);
-						}
-						if (isSync) {
-							incrementAndlogExecutedTaskCounter();
 						}						
 					}
 				} else {
@@ -161,10 +158,10 @@ public class QueuedTasksExecutor implements Component {
 
 	private boolean checkAndNotifySuspension() {
 		if (supended) {
-			synchronized (suspensionCaller) {
-				suspensionCaller.notifyAll();
-			}
 			synchronized(resumeCaller) {
+				synchronized (suspensionCaller) {
+					suspensionCaller.notifyAll();
+				}
 				try {
 					resumeCaller.wait();
 					return true;
@@ -343,13 +340,12 @@ public class QueuedTasksExecutor implements Component {
 	QueuedTasksExecutor suspend0(boolean immediately, int priority) {
 		executor.setPriority(priority);
 		if (immediately) {
-			Object suspensionMutex = suspensionCaller;
-			synchronized (suspensionMutex) {
+			synchronized (suspensionCaller) {
 				supended = Boolean.TRUE;
 				resumeFromWaitingForNewTasks();	
 				waitForAsyncTasksEnding(priority);
 				try {
-					suspensionMutex.wait();
+					suspensionCaller.wait();
 				} catch (InterruptedException exc) {
 					logWarn("Exception occurred", exc);
 				}
