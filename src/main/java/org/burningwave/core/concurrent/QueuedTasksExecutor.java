@@ -460,7 +460,7 @@ public class QueuedTasksExecutor implements Component {
 	
 	private void logQueueInfo(Long executedTasksCount, Collection<TaskAbst<?, ?>> executables) {
 		Collection<String> executablesLog = executables.stream().map(task -> "\t" + task.executable.toString()).collect(Collectors.toList());
-		StringBuffer log = new StringBuffer("Executed tasks: ")
+		StringBuffer log = new StringBuffer(this.executor + " - Executed tasks: ")
 			.append(executedTasksCount).append(", Unexecuted tasks: ")
 			.append(executablesLog.size());
 			
