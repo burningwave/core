@@ -104,6 +104,21 @@ public class QueuedTasksExecutor implements Component {
 		executedTasksCount = 0;
 		executor = new Thread(() -> {
 			while (!terminated) {
+				synchronized(getMutex("resumeCaller")) {
+					try {
+						if (supended) {
+							logInfo("... suspendig");
+							synchronized(getMutex("suspensionCaller")) {
+								getMutex("suspensionCaller").notifyAll();
+							}
+							getMutex("resumeCaller").wait();
+							logInfo("... resuming", this.executor);
+							break;
+						}
+					} catch (InterruptedException exc) {
+						logWarn("Exception occurred", exc);
+					}
+				}
 				if (!tasksQueue.isEmpty()) {
 					Iterator<TaskAbst<?, ?>> taskIterator = tasksQueue.iterator();
 					while (taskIterator.hasNext()) {
@@ -111,6 +126,9 @@ public class QueuedTasksExecutor implements Component {
 							try {
 								if (supended) {
 									logInfo("... suspendig");
+									synchronized(getMutex("suspensionCaller")) {
+										getMutex("suspensionCaller").notifyAll();
+									}
 									getMutex("resumeCaller").wait();
 									logInfo("... resuming", this.executor);
 									break;
@@ -145,9 +163,6 @@ public class QueuedTasksExecutor implements Component {
 						if (isSync) {
 							incrementAndlogExecutedTaskCounter();
 						}						
-						synchronized(getMutex("suspensionCaller")) {
-							getMutex("suspensionCaller").notifyAll();
-						}
 						if (terminated) {
 							break;
 						}
@@ -342,25 +357,16 @@ public class QueuedTasksExecutor implements Component {
 		logInfo("suspend0 {}", ++counter);
 		executor.setPriority(priority);
 		if (immediately) {
-			supended = Boolean.TRUE;
-			logInfo("suspend0 {}", ++counter);
-			waitForAsyncTasksEnding(priority);
-			logInfo("suspend0 {}", ++counter);
-			TaskAbst<?, ?> currentTask = this.currentTask;
-			if (currentTask != null && !currentTask.hasFinished()) {
-				logInfo("suspend0 {}", ++counter);
-				synchronized (getMutex("suspensionCaller")) {
-					logInfo("suspend0 {}", ++counter);
-					currentTask = this.currentTask;
-					if (currentTask != null && !currentTask.hasFinished()) {
-						try {
-							logInfo("suspend0 {}", ++counter);
-							getMutex("suspensionCaller").wait();
-							logInfo("suspend0 {}", ++counter);
-						} catch (InterruptedException exc) {
-							logWarn("Exception occurred", exc);
-						}
+			Object suspensionMutex = getMutex("suspensionCaller");
+			synchronized (suspensionMutex) {
+				supended = Boolean.TRUE;
+				try {
+					synchronized(getMutex("executableCollectionFiller")) {
+						getMutex("executableCollectionFiller").notifyAll();
 					}
+					suspensionMutex.wait();
+				} catch (InterruptedException exc) {
+					logWarn("Exception occurred", exc);
 				}
 			}
 		} else {
