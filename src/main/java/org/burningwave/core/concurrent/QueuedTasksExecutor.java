@@ -336,17 +336,25 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	QueuedTasksExecutor suspend0(boolean immediately, int priority) {
+		int counter = 0;
+		logInfo("suspend0 {}", ++counter);
 		executor.setPriority(priority);
 		if (immediately) {
 			supended = Boolean.TRUE;
+			logInfo("suspend0 {}", ++counter);
 			waitForAsyncTasksEnding(priority);
+			logInfo("suspend0 {}", ++counter);
 			TaskAbst<?, ?> currentTask = this.currentTask;
 			if (currentTask != null && !currentTask.hasFinished()) {
+				logInfo("suspend0 {}", ++counter);
 				synchronized (getMutex("suspensionCaller")) {
+					logInfo("suspend0 {}", ++counter);
 					currentTask = this.currentTask;
 					if (currentTask != null && !currentTask.hasFinished()) {
 						try {
+							logInfo("suspend0 {}", ++counter);
 							getMutex("suspensionCaller").wait();
+							logInfo("suspend0 {}", ++counter);
 						} catch (InterruptedException exc) {
 							logWarn("Exception occurred", exc);
 						}
@@ -360,6 +368,7 @@ public class QueuedTasksExecutor implements Component {
 			supendingTask.waitForFinish(false);
 		}
 		executor.setPriority(this.defaultPriority);
+		logInfo("suspend0 exit");
 		return this;
 	}
 
@@ -416,26 +425,35 @@ public class QueuedTasksExecutor implements Component {
 	public boolean shutDown(boolean waitForTasksTermination) {
 		Collection<TaskAbst<?, ?>> executables = this.tasksQueue;
 		Thread executor = this.executor;
+		int counter = 0;
 		if (waitForTasksTermination) {
 			suspend(false);
 		} else {
+			logInfo("shutDown {}", ++counter);
 			suspend();
 		}
 		this.terminated = Boolean.TRUE;
 		logQueueInfo();
 		executables.clear();
 		asyncTasksInExecution.clear();
+		logInfo("shutDown {}", ++counter);
 		resume();
+		logInfo("shutDown {}", ++counter);
 		try {
+			logInfo("shutDown {}", ++counter);
 			synchronized(getMutex("executableCollectionFiller")) {
 				getMutex("executableCollectionFiller").notifyAll();
 			}
+			logInfo("shutDown {}", ++counter);
 		} catch (Throwable exc) {
 			logWarn("Exception occurred", exc);
 		}	
 		try {
+			logInfo("shutDown {}", ++counter);
 			executor.join();
-			closeResources();			
+			logInfo("shutDown {}", ++counter);
+			closeResources();
+			logInfo("shutDown {}", ++counter);
 		} catch (InterruptedException exc) {
 			logError("Exception occurred", exc);
 		}
