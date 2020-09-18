@@ -321,6 +321,9 @@ public class QueuedTasksExecutor implements Component {
 		}
 		waitForAsyncTasksEnding(priority);
 		executor.setPriority(this.defaultPriority);
+		if (!asyncTasksInExecution.isEmpty() || !tasksQueue.isEmpty()) {
+			waitForTasksEnding(priority);
+		}
 		return this;
 	}
 	
@@ -965,6 +968,9 @@ public class QueuedTasksExecutor implements Component {
 						tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
 						waitForAsyncTasksEnding(priority);				
 					}
+					if (!asyncTasksInExecution.isEmpty() || !tasksQueue.isEmpty()) {
+						waitForTasksEnding(priority);
+					}
 					return this;
 				}
 				
@@ -1028,7 +1034,14 @@ public class QueuedTasksExecutor implements Component {
 					queuedTasksExecutor.waitForTasksEnding(priority);
 				}
 			}
-			lastToBeWaitedFor.waitForTasksEnding(priority);		
+			lastToBeWaitedFor.waitForTasksEnding(priority);	
+			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
+				if (!queuedTasksExecutor.tasksQueue.isEmpty() || !queuedTasksExecutor.asyncTasksInExecution.isEmpty()) {
+					waitForTasksEnding(priority);
+					break;
+				}
+			}
 			return this;
 		}
 
