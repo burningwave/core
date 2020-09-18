@@ -427,7 +427,7 @@ public class QueuedTasksExecutor implements Component {
 		resumeFromSuspension();
 		try {
 			logInfo("Joinining {}", executor);
-			logInfo("{} stack trace is: \n\t{}", String.join("\n\t", Arrays.asList(executor.getStackTrace()).stream().map(sT -> sT.toString()).collect(Collectors.toList())));
+			logInfo("{} stack trace is: \n\t{}", executor, String.join("\n\t", Arrays.asList(executor.getStackTrace()).stream().map(sT -> sT.toString()).collect(Collectors.toList())));
 			executor.join();
 			closeResources();			
 		} catch (InterruptedException exc) {
