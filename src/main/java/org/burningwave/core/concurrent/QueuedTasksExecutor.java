@@ -161,10 +161,10 @@ public class QueuedTasksExecutor implements Component {
 
 	private boolean checkAndNotifySuspension() {
 		if (supended) {
-			synchronized (suspensionCaller) {
-				suspensionCaller.notifyAll();
-			}
 			synchronized(resumeCaller) {
+				synchronized (suspensionCaller) {
+					suspensionCaller.notifyAll();
+				}
 				try {
 					resumeCaller.wait();
 					return true;
