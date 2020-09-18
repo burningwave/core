@@ -37,6 +37,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Executable;
@@ -46,6 +47,7 @@ import org.burningwave.core.function.MultiParamsPredicate;
 
 
 public class SourceCodeHandler implements Component {
+	
 	private SourceCodeHandler() {}
 	
 	public static SourceCodeHandler create() {
@@ -228,4 +230,23 @@ public class SourceCodeHandler implements Component {
 	
 	@Override
 	public void close() {}
+	
+	public Collection<String> addLineCounter(Collection<String> sources) {
+		return sources.stream().map(source -> addLineCounter(source)).collect(Collectors.toList());
+	}
+	
+	public String addLineCounter(String source) {
+		StringBuffer newSource = new StringBuffer();
+		String[] lines = source.split("\n");
+		int maxDigitCount = 0;
+		int temp = lines.length;
+		while(temp > 0) {
+			temp = temp / 10;
+			++maxDigitCount; 
+		}
+		for (int lineCounter = 1; lineCounter < lines.length; lineCounter++) {
+			newSource.append(String.format("%0" + maxDigitCount + "d", lineCounter) + " | \t" + lines[lineCounter - 1] + "\n");
+		}		
+		return newSource.toString();
+	}
 }

@@ -186,7 +186,7 @@ public class JavaMemoryCompiler implements Component {
 		boolean storeCompiledClassesToNewFolder
 	) {	
 		return BackgroundExecutor.createTask(() -> {
-			logInfo("Try to compile: \n\n{}\n",String.join("\n", sources));
+			logInfo("Try to compile: \n\n{}\n", String.join("\n", SourceCodeHandler.addLineCounter(sources)));
 			Collection<JavaMemoryCompiler.MemorySource> memorySources = new ArrayList<>();
 			sourcesToMemorySources(sources, memorySources);
 			try (Compilation.Context context = Compilation.Context.create(
