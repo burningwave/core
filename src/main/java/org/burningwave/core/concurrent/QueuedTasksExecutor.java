@@ -32,6 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -422,8 +423,11 @@ public class QueuedTasksExecutor implements Component {
 		logQueueInfo();
 		executables.clear();
 		asyncTasksInExecution.clear();
+		logInfo("Resuming {}", executor);
 		resumeFromSuspension();
 		try {
+			logInfo("Joinining {}", executor);
+			logInfo("{} stack trace is: \n\t{}", String.join("\n\t", Arrays.asList(executor.getStackTrace()).stream().map(sT -> sT.toString()).collect(Collectors.toList())));
 			executor.join();
 			closeResources();			
 		} catch (InterruptedException exc) {
