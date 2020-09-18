@@ -120,7 +120,7 @@ public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeab
 				try {
 					classLoaderResetter.accept(classLoader);
 				} catch (Throwable exc) {
-					logWarn("Exception occurred while resetting default path scanner classloader {}", exc.getMessage());
+					logWarn("Exception occurred while resetting default path scanner classloader: {}", exc.getMessage());
 				}
 			}
 		});
