@@ -142,6 +142,9 @@ public class QueuedTasksExecutor implements Component {
 						if (isSync) {
 							incrementAndlogExecutedTaskCounter();
 						}						
+						synchronized(getMutex("suspensionCaller")) {
+							getMutex("suspensionCaller").notifyAll();
+						}
 						if (terminated) {
 							break;
 						}
@@ -336,9 +339,16 @@ public class QueuedTasksExecutor implements Component {
 		if (immediately) {
 			supended = Boolean.TRUE;
 			waitForAsyncTasksEnding(priority);
-			TaskAbst<?, ?> currentTask = this.currentTask;
 			if (currentTask != null && !currentTask.hasFinished()) {
-				currentTask.waitForFinish(false);
+				synchronized (getMutex("suspensionCaller")) {
+					if (!currentTask.hasFinished()) {
+						try {
+							getMutex("suspensionCaller").wait();
+						} catch (InterruptedException exc) {
+							logWarn("Exception occurred", exc);
+						}
+					}
+				}
 			}
 		} else {
 			waitForAsyncTasksEnding(priority);
@@ -414,14 +424,14 @@ public class QueuedTasksExecutor implements Component {
 		asyncTasksInExecution.clear();
 		resume();
 		try {
+			synchronized(getMutex("executableCollectionFiller")) {
+				getMutex("executableCollectionFiller").notifyAll();
+			}
+		} catch (Throwable exc) {
+			logWarn("Exception occurred", exc);
+		}	
+		try {
 			executor.join();
-			try {
-				synchronized(getMutex("executableCollectionFiller")) {
-					getMutex("executableCollectionFiller").notifyAll();
-				}
-			} catch (Throwable exc) {
-				logWarn("Exception occurred", exc);
-			}	
 			closeResources();			
 		} catch (InterruptedException exc) {
 			logError("Exception occurred", exc);
