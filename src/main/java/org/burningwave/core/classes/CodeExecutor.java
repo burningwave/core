@@ -62,7 +62,11 @@ public class CodeExecutor implements Component {
 			public static final String PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX = ".imports";
 			public static final String PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX = ".name";
 			public static final String PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_SUFFIX = ".simple-name";
-			public static String CODE_LINE_SEPARATOR = ";";
+			
+		}
+		
+		public static class Value {
+			public static final String CODE_LINE_SEPARATOR = ";";
 		}
 		
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -71,15 +75,16 @@ public class CodeExecutor implements Component {
 			Map<String, Object> defaultValues = new HashMap<>();
 
 			defaultValues.put(Key.COMMON_IMPORTS,
-				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".BackgroundExecutor" + Key.CODE_LINE_SEPARATOR +
-				"${"+ Key.ADDITIONAL_COMMON_IMPORTS +  "}" + Key.CODE_LINE_SEPARATOR +
- 				ComponentSupplier.class.getName() + Key.CODE_LINE_SEPARATOR +
-				Function.class.getName() + Key.CODE_LINE_SEPARATOR +
-				FileSystemItem.class.getName() + Key.CODE_LINE_SEPARATOR +
-				PathHelper.class.getName() + Key.CODE_LINE_SEPARATOR +
-				QueuedTasksExecutor.ProducerTask.class.getName() + Key.CODE_LINE_SEPARATOR +
-				QueuedTasksExecutor.Task.class.getName() + Key.CODE_LINE_SEPARATOR +
-				Supplier.class.getName() + Key.CODE_LINE_SEPARATOR
+				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".BackgroundExecutor" + Value.CODE_LINE_SEPARATOR +
+				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".ManagedLoggersRepository" + Value.CODE_LINE_SEPARATOR +
+				"${"+ Key.ADDITIONAL_COMMON_IMPORTS +  "}" + Value.CODE_LINE_SEPARATOR +
+ 				ComponentSupplier.class.getName() + Value.CODE_LINE_SEPARATOR +
+				Function.class.getName() + Value.CODE_LINE_SEPARATOR +
+				FileSystemItem.class.getName() + Value.CODE_LINE_SEPARATOR +
+				PathHelper.class.getName() + Value.CODE_LINE_SEPARATOR +
+				QueuedTasksExecutor.ProducerTask.class.getName() + Value.CODE_LINE_SEPARATOR +
+				QueuedTasksExecutor.Task.class.getName() + Value.CODE_LINE_SEPARATOR +
+				Supplier.class.getName() + Value.CODE_LINE_SEPARATOR
 			);
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
@@ -148,14 +153,16 @@ public class CodeExecutor implements Component {
 		BodySourceGenerator body = config.getBody();
 		if (config.getParams() != null && config.getParams().length > 0) {
 			for (Object param : config.getParams()) {
-				body.useType(param.getClass());
+				if (param != null) {
+					body.useType(param.getClass());
+				}
 			}
 		}
 		String importFromConfig = IterableObjectHelper.resolveStringValue(
 			properties, 
 			config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX, 
 			null, 
-			Configuration.Key.CODE_LINE_SEPARATOR,
+			Configuration.Value.CODE_LINE_SEPARATOR,
 			true,
 			config.getDefaultValues()
 		);
@@ -170,7 +177,7 @@ public class CodeExecutor implements Component {
 			properties, 
 			config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX,
 			null,
-			Configuration.Key.CODE_LINE_SEPARATOR,
+			Configuration.Value.CODE_LINE_SEPARATOR,
 			true,
 			config.getDefaultValues()
 		);
@@ -178,7 +185,7 @@ public class CodeExecutor implements Component {
 			properties,
 			config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_SUFFIX,
 			null, 
-			Configuration.Key.CODE_LINE_SEPARATOR,
+			Configuration.Value.CODE_LINE_SEPARATOR,
 			true,
 			config.getDefaultValues()
 		);
@@ -191,7 +198,7 @@ public class CodeExecutor implements Component {
 		String code = IterableObjectHelper.resolveStringValue(
 			properties,
 			config.getPropertyName(), null,
-			Configuration.Key.CODE_LINE_SEPARATOR,
+			Configuration.Value.CODE_LINE_SEPARATOR,
 			true, config.getDefaultValues()
 		);
 		if (code.contains(";")) {
@@ -211,7 +218,7 @@ public class CodeExecutor implements Component {
 		} else {
 			body.addCodeLine(code.contains("return")?
 				code:
-				"return (T)" + code + ";"
+				"return " + code + ";"
 			);
 		}
 
@@ -243,7 +250,7 @@ public class CodeExecutor implements Component {
 					config.useClassLoader(memoryClassLoader)
 				);
 				Executable executor = Constructors.newInstanceDirectOf(executableClass);
-				T retrievedElement = executor.execute(config.getParams());
+				T retrievedElement = executor.executeAndCast(config.getParams());
 				return retrievedElement;
 			} catch (Throwable exc) {
 				throw Throwables.toRuntimeException(exc);
@@ -257,13 +264,13 @@ public class CodeExecutor implements Component {
 			Function<Boolean, ClassLoader> parentClassLoaderRestorer = null;
 			try {
 				if (parentClassLoader != null) {
-					parentClassLoaderRestorer = ClassLoaders.setAsParent(config.getClassLoader(), parentClassLoader, false);
+					parentClassLoaderRestorer = ClassLoaders.setAsParent(config.getClassLoader(), parentClassLoader);
 				}
 				Class<? extends Executable> executableClass = loadOrBuildAndDefineExecutorSubType(
 					config
 				);
 				Executable executor = Constructors.newInstanceDirectOf(executableClass);
-				T retrievedElement = executor.execute(config.getParams());
+				T retrievedElement = executor.executeAndCast(config.getParams());
 				if (parentClassLoaderRestorer != null) {
 					parentClassLoaderRestorer.apply(true);
 				}

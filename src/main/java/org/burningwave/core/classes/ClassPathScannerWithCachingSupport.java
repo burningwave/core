@@ -285,6 +285,15 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	}
 	
 	public void clearCache(boolean closeSearchResults) {
+		ClassHunter classHunter = this.classHunter;
+		//this check is necessary to avoid infinite recursion
+		if (classHunter != null && this != classHunter && !classHunter.isClosed()) {
+			//clearing the cache and resetting the class loader (owned  by the ClassHunter)
+			classHunter.clearCache(closeSearchResults);
+		}
+		if (closeSearchResults) {
+			closeSearchResults();
+		}
 		Collection<String> pathsToBeRemoved = new HashSet<>(cache.keySet());
 		for (String path : pathsToBeRemoved) {
 			Synchronizer.execute( instanceId + "_" + path, () -> {				
@@ -292,9 +301,6 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 				Map<String, I> items = cache.remove(path);
 				clearItemsForPath(items);
 			});
-		}
-		if (closeSearchResults) {
-			closeSearchResults();
 		}
 	}
 
@@ -304,15 +310,17 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		}
 	}
 	
+	boolean isClosed() {
+		return cache == null;
+	}
+	
 	@Override
 	public void close() {
-		closeResources(() -> cache == null, () -> {
-			clearCache(false);
-			cache = null;
-			pathHelper = null;
-			contextSupplier = null;
-			super.close();
-		});
+		clearCache(false);
+		cache = null;
+		pathHelper = null;
+		contextSupplier = null;
+		super.close();
 	}
 	
 	@FunctionalInterface

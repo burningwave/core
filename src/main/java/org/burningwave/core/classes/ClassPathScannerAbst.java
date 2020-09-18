@@ -79,7 +79,6 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		}
 	}
 	
-	ByteCodeHunter byteCodeHunter;
 	Supplier<ClassHunter> classHunterSupplier;
 	ClassHunter classHunter;
 	PathHelper pathHelper;
@@ -96,8 +95,8 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		Function<C, R> resultSupplier,
 		Properties config
 	) {
-		this.pathHelper = pathHelper;
 		this.classHunterSupplier = classHunterSupplier;
+		this.pathHelper = pathHelper;
 		this.contextSupplier = contextSupplier;
 		this.resultSupplier = resultSupplier;
 		this.config = config;
@@ -261,5 +260,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		config = null;
 		closeSearchResults();
 		this.searchResults = null;
+		this.classHunterSupplier = null;
+		this.classHunter = null;
 	}
 }

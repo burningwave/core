@@ -5,6 +5,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoade
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ByteCodeHunter.SearchResult;
@@ -26,30 +27,38 @@ public class ClassLoadersTest extends BaseTest {
 	@Test
 	public void setAsParentClassLoaderTest() {
 		testNotNull(() -> {
-			ClassLoader classLoader = getMemoryClassLoader(null);
-			ClassLoaders.setAsParent(classLoader, Thread.currentThread().getContextClassLoader(), true);
-			return ClassLoaders.getParent(classLoader);
+			try (MemoryClassLoader classLoader = getMemoryClassLoader(null);) {
+				ClassLoaders.setAsParent(classLoader, Thread.currentThread().getContextClassLoader());
+				return ClassLoaders.getParent(classLoader);
+			}
 		});
 	}
 	
 	@Test
 	public void setAsMasterTest() {
 		testNotNull(() -> {
-			ClassLoader classLoader_1 = getMemoryClassLoader(null);
-			ClassLoader classLoader_2 = getMemoryClassLoader(classLoader_1);
-			ClassLoader classLoader_3 = getMemoryClassLoader(classLoader_2);
-			ClassLoader classLoader_4 = getMemoryClassLoader(null);
-			ClassLoaders.setAsMaster(classLoader_3, classLoader_4, true);
-			return ClassLoaders.getParent(classLoader_1);
+			MemoryClassLoader classLoader_1 = getMemoryClassLoader(null);
+			MemoryClassLoader classLoader_2 = getMemoryClassLoader(classLoader_1);
+			MemoryClassLoader classLoader_3 = getMemoryClassLoader(classLoader_2);
+			MemoryClassLoader classLoader_4 = getMemoryClassLoader(null);
+			Function<Boolean, ClassLoader> resetter = ClassLoaders.setAsMaster(classLoader_3, classLoader_4);
+			ClassLoader parent = ClassLoaders.getParent(classLoader_1);
+			resetter.apply(true);
+			classLoader_4.close();
+			classLoader_3.close();
+			classLoader_2.close();
+			classLoader_1.close();
+			return parent;
 		});
 	}
 	
 	@Test
 	public void getAsParentClassLoaderTest() {
 		testNotEmpty(() -> {
-			ClassLoader classLoader = getMemoryClassLoader(null);
-			ClassLoaders.setAsParent(classLoader, Thread.currentThread().getContextClassLoader(), true);
-			return ClassLoaders.getAllParents(classLoader);
+			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
+				ClassLoaders.setAsParent(classLoader, Thread.currentThread().getContextClassLoader());
+				return ClassLoaders.getAllParents(classLoader);
+			}
 		});
 	}
 	
@@ -101,34 +110,39 @@ public class ClassLoadersTest extends BaseTest {
 	@Test
 	public void loadOrDefineByByteCodesTestOne() {
 		testNotNull(() -> {
-			ComponentSupplier componentSupplier = getComponentSupplier();
-			PathHelper pathHelper = componentSupplier.getPathHelper();
-			SearchResult searchResult = componentSupplier.getByteCodeHunter().loadInCache(
-				SearchConfig.forPaths(
-						pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
-				)
-			).find();
-			return ClassLoaders.loadOrDefineByByteCode(searchResult.getByteCodesFlatMap().get("org.apache.commons.lang.ArrayUtils"), getMemoryClassLoader(null));
+			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
+				ComponentSupplier componentSupplier = getComponentSupplier();
+				PathHelper pathHelper = componentSupplier.getPathHelper();
+				try (SearchResult searchResult = componentSupplier.getByteCodeHunter().loadInCache(
+					SearchConfig.forPaths(
+							pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
+					)
+				).find();) {
+					return ClassLoaders.loadOrDefineByByteCode(searchResult.getByteCodesFlatMap().get("org.apache.commons.lang.ArrayUtils"), classLoader);
+				}
+			}
 		});
 	}
 	
 	@Test
 	public void loadOrDefineByByteCodesTestTwo() {
 		testNotNull(() -> {
-			ComponentSupplier componentSupplier = getComponentSupplier();
-			PathHelper pathHelper = componentSupplier.getPathHelper();
-			SearchResult searchResult = componentSupplier.getByteCodeHunter().loadInCache(
-				SearchConfig.forPaths(
-						pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
-				)
-			).find();
-			Map<String, ByteBuffer> byteCodesFound = searchResult.getByteCodesFlatMap();
-			Map<String, JavaClass> byteCodes = new HashMap<>();
-			return JavaClass.extractByUsing(byteCodesFound.get("org.apache.commons.lang.ArrayUtils"), (javaClass) -> {
-				byteCodes.put("org.apache.commons.lang.ArrayUtils", javaClass);
-				return ClassLoaders.loadOrDefineByJavaClass("org.apache.commons.lang.ArrayUtils", byteCodes, getMemoryClassLoader(null));
-			});
-			
+			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
+				ComponentSupplier componentSupplier = getComponentSupplier();
+				PathHelper pathHelper = componentSupplier.getPathHelper();
+				try (SearchResult searchResult = componentSupplier.getByteCodeHunter().loadInCache(
+					SearchConfig.forPaths(
+							pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
+					)
+				).find();) {
+					Map<String, ByteBuffer> byteCodesFound = searchResult.getByteCodesFlatMap();
+					Map<String, JavaClass> byteCodes = new HashMap<>();
+					return JavaClass.extractByUsing(byteCodesFound.get("org.apache.commons.lang.ArrayUtils"), (javaClass) -> {
+						byteCodes.put("org.apache.commons.lang.ArrayUtils", javaClass);
+						return ClassLoaders.loadOrDefineByJavaClass("org.apache.commons.lang.ArrayUtils", byteCodes, classLoader);
+					});
+				}
+			}
 		});
 	}
 	

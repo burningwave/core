@@ -110,30 +110,36 @@ public class PathHelper implements Component {
 	private String pathsSeparator;
 	
 	private PathHelper(Properties config) {
-		pathGroups = new ConcurrentHashMap<>();
-		allPaths = ConcurrentHashMap.newKeySet();
 		this.config = config;
 		pathsSeparator = Configuration.getPathsSeparator();
 		listenTo(config);
+		launchAllPathsLoadingTask();		
+	}
+
+	private void launchAllPathsLoadingTask() {
 		initializerTask = BackgroundExecutor.createTask(() -> {
+			pathGroups = new ConcurrentHashMap<>();
+			allPaths = ConcurrentHashMap.newKeySet();
 			loadMainClassPaths();	
 			loadAllPaths();
 			initializerTask = null;
 		}, Thread.MAX_PRIORITY).pureAsync();
 		initializerTask.submit();
-		
 	}
 	
 	@Override
-	public <K, V>void receiveNotification(Properties properties, Event event, K key, V newValue, V oldValue) {
-		if (event == Event.PUT) {
-			if (key instanceof String) {
-				String propertyKey = (String)key;
-				if (propertyKey.startsWith(Configuration.Key.PATHS_PREFIX)) {
-					loadPaths(propertyKey);	
+	public <K, V>void processChangeNotification(Properties properties, Event event, K key, V newValue, V oldValue) {
+		if (key instanceof String) {
+			String propertyKey = (String)key;
+			if (propertyKey.startsWith(Configuration.Key.PATHS_PREFIX)) {
+				if (event.name().equals(Event.PUT.name())) {
+					loadPaths(propertyKey);
+				} else if (event.name().equals(Event.REMOVE.name())) {
+					launchAllPathsLoadingTask();
 				}
 			}
 		}
+		
 	}
 	
 	public static PathHelper create(Properties config) {
@@ -174,7 +180,7 @@ public class PathHelper implements Component {
 	private void waitForInitialization(boolean ignoreThread) {
 		QueuedTasksExecutor.Task initializerTask = this.initializerTask;
 		if (initializerTask != null) {
-			initializerTask.join(ignoreThread);
+			initializerTask.waitForFinish(ignoreThread);
 		}
 	}
 	

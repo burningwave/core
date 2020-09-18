@@ -31,6 +31,7 @@ import org.junit.runner.RunWith;
 //    PathHelperTest.class,
 //    PathScannerClassLoaderTest.class,
 //    PropertyAccessorTest.class,
+//    PropertiesTest.class,
 //    SourceCodeHandlerTest.class,
 //    StringsTest.class,
 //    UnitSourceGeneratorTest.class,

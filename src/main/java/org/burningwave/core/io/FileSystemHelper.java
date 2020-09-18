@@ -249,25 +249,34 @@ public class FileSystemHelper implements Component {
 							!fileSystemItem.getName().equals(fileSystemHelper.getOrCreatePingFile().getName()) 
 						) {
 							try {
-								if (fileSystemItem.isDirectory()) {
-									File pingFile = new File(
-										burningwaveTemporaryFolder.getAbsolutePath() + "/" + fileSystemItem.getName() + ".ping"
-									);
-									long pingTime = getCreationTime(fileSystemItem.getName());
-									if (pingFile.exists()) {
-										pingTime = getOrSetPingTime(pingFile);
+								try {
+									if (fileSystemItem.isDirectory()) {
+										File pingFile = new File(
+											burningwaveTemporaryFolder.getAbsolutePath() + "/" + fileSystemItem.getName() + ".ping"
+										);
+										long pingTime = getCreationTime(fileSystemItem.getName());
+										if (pingFile.exists()) {
+											pingTime = getOrSetPingTime(pingFile);
+										}
+										if (System.currentTimeMillis() - pingTime >= deletingInterval) {
+											delete(fileSystemItem);
+										}							
+									} else if (fileSystemItem.getName().endsWith("ping")) {
+										long pingTime = getOrSetPingTime(fileSystemItem);
+										if (System.currentTimeMillis() - pingTime >= deletingInterval) {
+											delete(fileSystemItem);
+										}
 									}
-									if (System.currentTimeMillis() - pingTime >= deletingInterval) {
+								} catch (Throwable exc) {
+									logError("Exception occurred while cleaning temporary file system item " + fileSystemItem.getAbsolutePath(), exc);
+									if (fileSystemItem.getName().contains("null")) {
+										logInfo("Trying to force deleting of {}", fileSystemItem.getAbsolutePath());
 										delete(fileSystemItem);
-									}							
-								} else if (fileSystemItem.getName().endsWith("ping")) {
-									long pingTime = getOrSetPingTime(fileSystemItem);
-									if (System.currentTimeMillis() - pingTime >= deletingInterval) {
-										delete(fileSystemItem);
+									} else {
+										throw exc;
 									}
 								}
 							} catch (Throwable exc) {
-								logError("Exception occurred while cleaning temporary file system item " + fileSystemItem.getAbsolutePath(), exc);
 								logInfo("To avoid this error remove {} manually", fileSystemItem.getAbsolutePath());
 								logInfo("Current execution id: {}", fileSystemHelper.id);
 							}

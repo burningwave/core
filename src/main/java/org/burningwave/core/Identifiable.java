@@ -28,34 +28,16 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 
-import java.util.function.Supplier;
-
-import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
-import org.burningwave.core.function.ThrowingRunnable;
-
-public interface Closeable extends AutoCloseable, Identifiable {
+public interface Identifiable {
 	
-	@Override
-	default public void close() {
-			
+	default public String getId() {
+		return Objects.getId(this);
 	}
 	
-	default public Task createCloseResoucesTask(String objectId, Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
-		return BackgroundExecutor.createTask(closingFunction, Thread.MIN_PRIORITY).runOnlyOnce(objectId + "->" + "closeResources", isClosedPredicate);
-	}
-	
-	default public Task createCloseResoucesTask(Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
-		return createCloseResoucesTask(getId(), isClosedPredicate, closingFunction);
-	}
-	
-	default public Task closeResources(Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
-		return closeResources(getId(), isClosedPredicate, closingFunction);
-	}
-	
-	default public Task closeResources(String objectId, Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
-		return createCloseResoucesTask(objectId, isClosedPredicate, closingFunction).submit();
+	default public String getOperationId(String operation) {
+		return Objects.getId(this) + "_" + operation;
 	}
 	
 }

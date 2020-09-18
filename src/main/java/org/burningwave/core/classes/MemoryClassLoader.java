@@ -28,12 +28,13 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -44,11 +45,13 @@ import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
@@ -57,12 +60,13 @@ import org.burningwave.core.io.ByteBufferInputStream;
 
 @SuppressWarnings("unchecked")
 public class MemoryClassLoader extends ClassLoader implements Component {
-
 	Map<String, ByteBuffer> notLoadedByteCodes;
 	Map<String, ByteBuffer> loadedByteCodes;
-	Set<Object> clients;
+	Map<Object, List<StackTraceElement>> clients;
+	List<StackTraceElement> creationStack;
 	protected boolean isClosed;
 	String instanceId;
+	
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -72,13 +76,14 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		ClassLoader parentClassLoader
 	) {
 		super(parentClassLoader);
+		creationStack = Methods.retrieveCallersInfo();
 		instanceId = Objects.getCurrentId(this);
 		if (parentClassLoader instanceof MemoryClassLoader) {
 			((MemoryClassLoader)parentClassLoader).register(this);
 		}
 		this.notLoadedByteCodes = new HashMap<>();
 		this.loadedByteCodes = new HashMap<>();
-		this.clients = new HashSet<>();
+		this.clients = new HashMap<>();
 	}
 	
 	public static MemoryClassLoader create(ClassLoader parentClassLoader) {
@@ -409,16 +414,16 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	public synchronized boolean register(Object client) {
-		Set<Object> clients = this.clients;
+		Map<Object, List<StackTraceElement>> clients = this.clients;
 		if (!isClosed) {
-			clients.add(client);
+			clients.put(client, Methods.retrieveCallersInfo());
 			return true;
 		}
 		return false;
 	}
 	
 	public synchronized boolean unregister(Object client, boolean close) {
-		Set<Object> clients = this.clients;
+		Map<Object, List<StackTraceElement>> clients = this.clients;
 		if (!isClosed) {
 			clients.remove(client);
 			if (clients.isEmpty() && close) {
@@ -432,26 +437,41 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	public void close() {
 		closeResources();
 	}
-
+	
+	public void logInfos() {
+		logInfo(
+			"\n\n\t{} {} and was created by:\n\n\t\t{}\n\n\t\t\tclients:\n\n\t\t\t\t{}", 
+			this,
+			isClosed? "is closed" : "is not closed", 
+			String.join("\n\t\t", creationStack.stream().map(sE -> sE.toString()).collect(Collectors.toList())),
+			String.join("\n\n\t\t\t\t", clients.entrySet().stream().map(cSE -> 
+				cSE.getKey() + " is registered by:\n\n\t\t\t\t\t" + String.join("\n\t\t\t\t\t", cSE.getValue().stream().map(sE -> sE.toString()).collect(Collectors.toList()))
+			).collect(Collectors.toList()))
+			
+		);
+	}
+	
 	Task closeResources() {
-		Set<Object> clients = this.clients;
-		if (clients != null && !clients.isEmpty()) {
-			throw Throwables.toRuntimeException("Could not close " + this + " because there are " + clients.size() +" registered clients");
-		}
 		return closeResources(MemoryClassLoader.class.getName() + "@" + System.identityHashCode(this), () -> isClosed, () -> {
+			Map<Object, List<StackTraceElement>> clients = this.clients;
+			if (clients != null && !clients.isEmpty()) {
+				throw Throwables.toRuntimeException("Could not close " + this + " because there are " + clients.size() +" registered clients");
+			}
 			isClosed = true;
 			ClassLoader parentClassLoader = getParent();
 			if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
 				((MemoryClassLoader)parentClassLoader).unregister(this,true);
 			}
-			this.clients.clear();
-			this.clients = null;
 			clear();
 			notLoadedByteCodes = null;
 			loadedByteCodes = null;
 			Collection<Class<?>> loadedClasses = ClassLoaders.retrieveLoadedClasses(this);
 			loadedClasses.clear();
 			unregister();
+			creationStack.clear();
+			creationStack = null;
+			this.clients.clear();
+			this.clients = null;
 		});
 	}
 }

@@ -40,6 +40,7 @@ import org.burningwave.core.ManagedLogger.Repository;
 
 public class SimpleManagedLoggerRepository extends Repository.Abst {
 	private Map<String, LoggingLevel.Mutable> loggers;
+	
 	public SimpleManagedLoggerRepository(Properties properties) {
 		super(properties);
 	}
@@ -196,4 +197,9 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 		.replace("$", "\\$");
 	}
 	
+	@Override
+	public void close() {
+		this.loggers.clear();
+		super.close();
+	}
 }

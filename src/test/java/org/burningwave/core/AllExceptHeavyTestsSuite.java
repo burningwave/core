@@ -3,8 +3,10 @@ package org.burningwave.core;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.platform.suite.api.ExcludeTags;
 import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.SelectPackages;
 import org.junit.runner.RunWith;
 
+@SuppressWarnings("unused")
 @RunWith(JUnitPlatform.class)
 //@SelectPackages("org.burningwave.core")
 @SelectClasses({
@@ -31,6 +33,7 @@ import org.junit.runner.RunWith;
     PathHelperTest.class,
     PathScannerClassLoaderTest.class,
     PropertyAccessorTest.class,
+    PropertiesTest.class,
     SourceCodeHandlerTest.class,
     StringsTest.class,
     UnitSourceGeneratorTest.class,

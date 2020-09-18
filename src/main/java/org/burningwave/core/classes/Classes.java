@@ -417,12 +417,12 @@ public class Classes implements Component, MembersRetriever {
 			return classLoaders;
 		}
 		
-		public Function<Boolean, ClassLoader> setAsMaster(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
-			return LowLevelObjectsHandler.setAsParent(getMaster(classLoader), futureParent, mantainHierarchy);
+		public Function<Boolean, ClassLoader> setAsMaster(ClassLoader classLoader, ClassLoader futureParent) {
+			return LowLevelObjectsHandler.setAsParent(getMaster(classLoader), futureParent);
 		}
 		
-		public Function<Boolean, ClassLoader> setAsParent(ClassLoader classLoader, ClassLoader futureParent, boolean mantainHierarchy) {
-			return LowLevelObjectsHandler.setAsParent(classLoader, futureParent, mantainHierarchy);
+		public Function<Boolean, ClassLoader> setAsParent(ClassLoader classLoader, ClassLoader futureParent) {
+			return LowLevelObjectsHandler.setAsParent(classLoader, futureParent);
 		}
 		
 		public ClassLoader getParent(ClassLoader classLoader) {

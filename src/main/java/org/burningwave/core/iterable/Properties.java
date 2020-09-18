@@ -36,7 +36,10 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-public class Properties extends java.util.Properties {
+import org.burningwave.core.ManagedLogger;
+
+@SuppressWarnings("unchecked")
+public class Properties extends java.util.Properties implements ManagedLogger {
 	private static final long serialVersionUID = -350748766178421942L;
 	
 	public static enum Event {
@@ -84,19 +87,19 @@ public class Properties extends java.util.Properties {
 	
 ////////////////////
 	
-	public <T> T resolveValue(String key, Map<String, ?> defaultValues) {
+	public <T> T resolveValue(String key, Map<?, ?> defaultValues) {
 		return IterableObjectHelper.resolveValue(this, key, null, defaultValuesSeparator, false, defaultValues);
 	}
 	
-	public <T> Collection<T> resolveValues(String key, Map<String, ?> defaultValues) {
+	public <T> Collection<T> resolveValues(String key, Map<?, ?> defaultValues) {
 		return IterableObjectHelper.resolveValues(this, key, null, defaultValuesSeparator, false, defaultValues);
 	}
 	
-	public String resolveStringValue(String key, Map<String, ?> defaultValues) {
+	public String resolveStringValue(String key, Map<?, ?> defaultValues) {
 		return IterableObjectHelper.resolveStringValue(this, key, null, defaultValuesSeparator, false, defaultValues);
 	}
 	
-	public Collection<String> resolveStringValues(String key, Map<String, ?> defaultValues) {
+	public Collection<String> resolveStringValues(String key, Map<?, ?> defaultValues) {
 		return IterableObjectHelper.resolveStringValues(this, key, null, defaultValuesSeparator, false, defaultValues);
 	}
 
@@ -183,22 +186,31 @@ public class Properties extends java.util.Properties {
 	}	
 	
 	private void notifyChange(Event event, Object key, Object newValue, Object oldValue) {
-		listeners.forEach((listener) -> 
-			listener.receiveNotification(this, event, key, newValue, oldValue)
-		);
+		for (Listener listener : listeners) {
+			try  {
+				listener.processChangeNotification(this, event, key, newValue, oldValue);
+			} catch (Throwable exc){
+				logError("Exception occurred while notifying: " + event.name() + " -> (" + key + " - " + newValue + ") to " + listener, exc);
+				logWarn("Resetting {} to previous value: {}", key, oldValue);
+				put(key, oldValue);
+			}
+		}
 	}
 	
 	public static interface Listener {
 		
-		public default void listenTo(Properties properties) {
+		
+		public default <T extends Listener> T listenTo(Properties properties) {
 			properties.listeners.add(this);
+			return (T)this;
 		}
 		
-		public default void unregister(Properties properties) {
+		public default <T extends Listener> T unregister(Properties properties) {
 			properties.listeners.remove(this);
+			return (T)this;
 		} 
 		
-		public default <K, V>void receiveNotification(Properties properties, Event event, K key, V newValue, V previousValue) {
+		public default <K, V>void processChangeNotification(Properties properties, Event event, K key, V newValue, V previousValue) {
 			
 		}
 		

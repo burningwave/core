@@ -92,8 +92,8 @@ public class IterableObjectHelper implements Component {
 	}
 	
 	@Override
-	public <K, V> void receiveNotification(Properties properties, Event event, K key, V newValue, V previousValue) {
-		if (event == Event.PUT && key.equals(Configuration.Key.DEFAULT_VALUES_SEPERATOR)) {
+	public <K, V> void processChangeNotification(Properties properties, Event event, K key, V newValue, V previousValue) {
+		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.DEFAULT_VALUES_SEPERATOR) && newValue != null) {
 			this.defaultValuesSeparator = (String)newValue;
 		}
 	}

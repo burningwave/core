@@ -61,11 +61,15 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 	}
 	
 	public static ByteCodeHunter create(
-		Supplier<ClassHunter> classHunterSupplier, 
+		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
 		Properties config
 	) {
-		return new ByteCodeHunter(classHunterSupplier, pathHelper, config);
+		return new ByteCodeHunter(
+			classHunterSupplier, 
+			pathHelper, 
+			config
+		);
 	}
 	
 	@Override
@@ -94,6 +98,13 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 		BackgroundExecutor.createTask(() -> {
 			IterableObjectHelper.deepClear(items, (path, javaClass) -> javaClass.close());
 		}, Thread.MIN_PRIORITY).submit();
+	}
+	
+	@Override
+	public void close() {
+		closeResources(() -> this.cache == null, () -> {
+			super.close();
+		});
 	}
 	
 	public static class SearchResult extends org.burningwave.core.classes.SearchResult<JavaClass> {

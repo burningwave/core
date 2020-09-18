@@ -32,7 +32,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Background
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -62,6 +61,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
+import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings("unchecked")
 public class ClassFactory implements Component {
@@ -85,9 +85,9 @@ public class ClassFactory implements Component {
 			
 			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
 			defaultValues.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
-				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR + 
-				"${"+ Configuration.Key.DEFAULT_CLASS_LOADER + ".additional-imports}" + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR + 
-				PathScannerClassLoader.class.getName() + CodeExecutor.Configuration.Key.CODE_LINE_SEPARATOR
+				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
+				"${"+ Configuration.Key.DEFAULT_CLASS_LOADER + ".additional-imports}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
+				PathScannerClassLoader.class.getName() + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR
 			);
 			defaultValues.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, ClassFactory.class.getPackage().getName() + ".DefaultClassLoaderRetrieverForClassFactory");
 			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, "(Supplier<ClassLoader>)() -> ((ComponentSupplier)parameter[0]).getClassHunter().getPathScannerClassLoader()");
@@ -116,14 +116,11 @@ public class ClassFactory implements Component {
 	private ClassPathHelper classPathHelper;
 	private JavaMemoryCompiler javaMemoryCompiler;
 	private PojoSubTypeRetriever pojoSubTypeRetriever;	
-	private ClassLoader defaultClassLoader;
 	private ByteCodeHunter byteCodeHunter;
 	private ClassPathHunter classPathHunter;
 	private Supplier<ClassPathHunter> classPathHunterSupplier;
-	private Object defaultClassLoaderOrDefaultClassLoaderSupplier;
-	private Supplier<ClassLoader> defaultClassLoaderSupplier;
+	private DefaultClassLoaderManager<ClassLoader> defaultClassLoaderManager;
 	private Collection<ClassRetriever> classRetrievers;
-	private Consumer<ClassLoader> classLoaderResetter;
 	private Properties config;
 	
 	private ClassFactory(
@@ -142,8 +139,10 @@ public class ClassFactory implements Component {
 		this.pathHelper = pathHelper;
 		this.classPathHelper = classPathHelper;
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
-		this.defaultClassLoaderOrDefaultClassLoaderSupplier = defaultClassLoaderOrDefaultClassLoaderSupplier;
-		this.classLoaderResetter = classLoaderResetter;
+		this.defaultClassLoaderManager = new DefaultClassLoaderManager<>(
+			defaultClassLoaderOrDefaultClassLoaderSupplier,
+			classLoaderResetter
+		);
 		this.classRetrievers = new CopyOnWriteArrayList<>();
 		this.config = config;
 		listenTo(config);
@@ -171,53 +170,21 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	private String getOperationId(String operation) {
-		return Objects.getId(this) + "_" + operation;
+	@Override
+	public <K, V> void processChangeNotification(Properties properties, Event event, K key, V newValue,
+			V previousValue) {
+		if (event.name().equals(Event.PUT.name())) {
+			if (key instanceof String) {
+				String keyAsString = (String)key;
+				if (keyAsString.equals(Configuration.Key.DEFAULT_CLASS_LOADER)) {
+					this.defaultClassLoaderManager.reset();
+				}
+			}
+		}
 	}
 	
 	ClassLoader getDefaultClassLoader(Object client) {
-		if (defaultClassLoaderSupplier != null) {
-			ClassLoader classLoader = defaultClassLoaderSupplier.get();
-			if (defaultClassLoader != classLoader) {
-				synchronized(classLoader) {
-					if (defaultClassLoader != classLoader) {
-						ClassLoader oldClassLoader = this.defaultClassLoader;
-						if (oldClassLoader != null && oldClassLoader instanceof MemoryClassLoader) {
-							((MemoryClassLoader)oldClassLoader).unregister(this, true);
-						}
-						if (classLoader instanceof MemoryClassLoader) {
-							if (!((MemoryClassLoader)classLoader).register(this)) {
-								classLoader = getDefaultClassLoader(client);
-							} else {
-								((MemoryClassLoader)classLoader).register(client);
-							}
-						}
-						this.defaultClassLoader = classLoader;
-					}
-				}
-			}
-			return classLoader;
-		}
-		if (defaultClassLoader == null) {
-			return Synchronizer.execute(getOperationId("getDefaultClassLoader"), () -> {
-				if (defaultClassLoader == null) {
-					Object classLoaderOrClassLoaderSupplier = ((Supplier<?>)this.defaultClassLoaderOrDefaultClassLoaderSupplier).get();
-					if (classLoaderOrClassLoaderSupplier instanceof ClassLoader) {
-						this.defaultClassLoader = (ClassLoader)classLoaderOrClassLoaderSupplier;
-						if (defaultClassLoader instanceof MemoryClassLoader) {
-							((MemoryClassLoader)defaultClassLoader).register(this);
-							((MemoryClassLoader)defaultClassLoader).register(client);
-						}
-					} else if (classLoaderOrClassLoaderSupplier instanceof Supplier) {
-						this.defaultClassLoaderSupplier = (Supplier<ClassLoader>) classLoaderOrClassLoaderSupplier;
-						return getDefaultClassLoader(client);
-					}
-				}
-				return defaultClassLoader;
-			});
-			
-		}
-		return defaultClassLoader;
+		return this.defaultClassLoaderManager.get(client);
 	}
 	
 	private ClassPathHunter getClassPathHunter() {
@@ -267,28 +234,24 @@ public class ClassFactory implements Component {
 	) {
 		try {
 			Object temporaryClient = new Object(){};
-			ClassLoader classLoader = classLoaderSupplier.apply(temporaryClient);
-			Function<ClassRetriever, ClassLoader> classLoaderSupplierForClassRetriever = (classRetriever) -> {
-				if (classLoader instanceof MemoryClassLoader) {
-					((MemoryClassLoader)classLoader).register(classRetriever);
-					((MemoryClassLoader)classLoader).unregister(temporaryClient, true);
-					if (classLoader != defaultClassLoader) {
-						((MemoryClassLoader) classLoader).unregister(this, true);
-					}
-				}
-				return classLoader;
-			};
-			
+			ClassLoader classLoader = classLoaderSupplier.apply(temporaryClient);			
 			return new ClassRetriever(
 				this,
-				classLoaderSupplierForClassRetriever,
+				 (classRetriever) -> {
+					if (classLoader instanceof MemoryClassLoader) {
+						((MemoryClassLoader)classLoader).register(classRetriever);
+						((MemoryClassLoader)classLoader).unregister(temporaryClient, true);
+						if (classLoader != this.defaultClassLoaderManager.get()) {
+							((MemoryClassLoader) classLoader).unregister(this, true);
+						}
+					}
+					return classLoader;
+				},
 				compileConfigSupplier,
 				useOneShotJavaCompiler,
 				additionalClassRepositoriesForClassLoader,
 				classNames
-			);					
-
-
+			);
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
@@ -460,40 +423,24 @@ public class ClassFactory implements Component {
 		if (closeClassRetrievers) {
 			closeClassRetrievers();
 		}
-		ClassLoader defaultClassLoader = this.defaultClassLoader;
-		if (defaultClassLoader != null) {
-			this.defaultClassLoader = null;
-			classLoaderResetter.accept(defaultClassLoader);
-			if (defaultClassLoader instanceof MemoryClassLoader) {
-				((MemoryClassLoader)defaultClassLoader).unregister(this, true);
-			}
-		}		
+		this.defaultClassLoaderManager.reset();		
 	}
 	
 	@Override
 	public void close() {
 		closeResources(() -> this.classRetrievers == null, () -> {
+			this.defaultClassLoaderManager.close();
 			unregister(config);
 			closeClassRetrievers();
 			BackgroundExecutor.createTask(() -> {
-					this.classRetrievers.clear();
-					this.classRetrievers = null;
-				}
-			).submit();
+				this.classRetrievers = null;
+			}).submit();
 			pathHelper = null;
 			javaMemoryCompiler = null;
 			pojoSubTypeRetriever = null;	
-			if (defaultClassLoader instanceof MemoryClassLoader) {
-				((MemoryClassLoader)defaultClassLoader).unregister(this, true);
-			}
-			defaultClassLoader = null;
 			byteCodeHunter = null;
 			classPathHunter = null;
-			classPathHunterSupplier = null;
-			defaultClassLoaderOrDefaultClassLoaderSupplier = null;
-			defaultClassLoaderOrDefaultClassLoaderSupplier = null;
-			defaultClassLoaderSupplier = null;
-			classLoaderResetter = null;		
+			classPathHunterSupplier = null;	
 			config = null;
 		});
 	}
@@ -647,8 +594,7 @@ public class ClassFactory implements Component {
 							classFactory.javaMemoryCompiler :
 							JavaMemoryCompiler.create(
 								classFactory.pathHelper,
-								classPathHelper,
-								this.classFactory.config
+								classPathHelper
 							);
 						this.compilationTask = compiler.compile(getCompilationConfig());
 					}

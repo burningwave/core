@@ -97,7 +97,7 @@ public class SearchContext<T> implements Component {
 		try {
 			QueuedTasksExecutor.Task searchTask = this.searchTask;
 			if (searchTask != null) {
-				searchTask.join();
+				searchTask.waitForFinish();
 				this.searchTask = null;
 			}
 		} catch (Throwable exc) {
@@ -263,15 +263,15 @@ public class SearchContext<T> implements Component {
 	
 	@Override
 	public void close() {
+		pathScannerClassLoader.unregister(this, true);
+		if (sharedPathScannerClassLoader != null) {
+			sharedPathScannerClassLoader.unregister(this, true);
+		}
 		itemsFoundFlatMap = null;
 		itemsFoundMap = null;
 		itemsFound = null;
 		searchConfig.close();
 		searchConfig = null;
-		pathScannerClassLoader.unregister(this, true);
-		if (sharedPathScannerClassLoader != null) {
-			sharedPathScannerClassLoader.unregister(this, true);
-		}
 		pathScannerClassLoader = null;
 		sharedPathScannerClassLoader = null;
 		skippedClassNames.clear();

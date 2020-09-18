@@ -32,8 +32,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -52,7 +52,7 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 		Properties config
 	) {
 		super(
-			classHunterSupplier,
+			classHunterSupplier,		
 			pathHelper,
 			(initContext) -> SearchContext._create(initContext),
 			(context) -> new ClassPathHunter.SearchResult(context),
@@ -61,13 +61,12 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 	}
 	
 	public static ClassPathHunter create(
-		Supplier<ByteCodeHunter> byteCodeHunterSupplier,
 		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
 		Properties config
 	) {
 		return new ClassPathHunter(
-			classHunterSupplier,
+			classHunterSupplier,	
 			pathHelper,
 			config
 		);
@@ -145,7 +144,9 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collecti
 	
 	@Override
 	public void close() {
-		super.close();
+		closeResources(() -> this.cache == null, () -> {
+			super.close();
+		});
 	}
 	
 	public static class SearchContext extends org.burningwave.core.classes.SearchContext<Collection<Class<?>>> {

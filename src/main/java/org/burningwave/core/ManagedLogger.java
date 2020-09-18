@@ -30,6 +30,7 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -95,8 +96,8 @@ public interface ManagedLogger {
 	}
 	
 	
-	public static interface Repository {
-		public static class Configuration {
+	public static interface Repository extends Closeable {
+		public static class Configuration {			
 			
 			public static class Key {
 				
@@ -128,6 +129,32 @@ public interface ManagedLogger {
 				);				
 				
 				DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
+			}
+		}
+		
+		public static org.burningwave.core.ManagedLogger.Repository create(
+			org.burningwave.core.iterable.Properties config
+		) {
+			try {
+				String className = config.resolveStringValue(
+					org.burningwave.core.ManagedLogger.Repository.Configuration.Key.TYPE,
+					org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES
+				);
+				if ("autodetect".equalsIgnoreCase(className = className.trim())) {
+					try {
+						Class.forName("org.slf4j.Logger");
+						return new org.burningwave.core.SLF4JManagedLoggerRepository(config);
+					} catch (Throwable exc2) {
+						return new org.burningwave.core.SimpleManagedLoggerRepository(config);
+					}
+				} else {
+					return (org.burningwave.core.ManagedLogger.Repository)
+						Class.forName(className).getConstructor(java.util.Properties.class).newInstance(config);
+				}
+				
+			} catch (Throwable exc) {
+				exc.printStackTrace();
+				throw Throwables.toRuntimeException(exc);
 			}
 		}
 		
@@ -204,15 +231,17 @@ public interface ManagedLogger {
 		public static abstract class Abst implements Repository, org.burningwave.core.iterable.Properties.Listener  {
 			boolean isEnabled;
 			String instanceId;
-			Abst(Properties properties) {
+			Properties config;
+			Abst(Properties config) {
+				this.config = config;
 				instanceId = this.toString();
-				initSpecificElements(properties);
-				if (getEnabledLoggingFlag(properties)) {
+				initSpecificElements(config);
+				if (getEnabledLoggingFlag(config)) {
 					enableLogging();
 				}
-				removeLoggingLevels(properties);			
-				if (properties instanceof org.burningwave.core.iterable.Properties) {
-					listenTo((org.burningwave.core.iterable.Properties)properties);
+				removeLoggingLevels(config);			
+				if (config instanceof org.burningwave.core.iterable.Properties) {
+					listenTo((org.burningwave.core.iterable.Properties)config);
 				}
 			}
 			
@@ -228,7 +257,7 @@ public interface ManagedLogger {
 			}
 			
 			@Override
-			public <K, V> void receiveNotification(org.burningwave.core.iterable.Properties properties, Event event,
+			public <K, V> void processChangeNotification(org.burningwave.core.iterable.Properties properties, Event event,
 					K key, V newValue, V oldValue) {
 				if (key instanceof String) {
 					String keyAsString = (String)key;
@@ -242,7 +271,6 @@ public interface ManagedLogger {
 						removeLoggingLevels(properties);
 					}
 				}
-				
 			}
 
 			void removeLoggingLevels(Properties properties) {
@@ -310,6 +338,15 @@ public interface ManagedLogger {
 			abstract void logTrace(Supplier<String> clientName, Supplier<String> message);
 			
 			abstract void logTrace(Supplier<String> clientName, Supplier<String> message, Object... arguments);
+			
+			@Override
+			public void close() {
+				if (config instanceof org.burningwave.core.iterable.Properties) {
+					unregister((org.burningwave.core.iterable.Properties)config);
+				}
+				config = null;
+				instanceId = null;
+			}
 		}
 	}
 }

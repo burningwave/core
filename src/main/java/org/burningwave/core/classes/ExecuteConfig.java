@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.burningwave.core.Executable;
-import org.burningwave.core.iterable.Properties;
+import java.util.Properties;
 
 @SuppressWarnings("unchecked")
 public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBuildAndDefineConfig.ForCodeExecutorAbst<C> {
@@ -133,7 +133,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 		private String filePath;
 		private boolean isAbsoluteFilePath;
 		private boolean indentCodeActive;
-		private Map<String, Object> defaultValues;
+		private Map<Object, Object> defaultValues;
 		    		
 		private ForProperties() {
 			super(
@@ -164,7 +164,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 			return this;
 		}
 		
-		public ExecuteConfig.ForProperties withDefaultPropertyValues(Map<String, Object> defaultValues) {
+		public ExecuteConfig.ForProperties withDefaultPropertyValues(Map<?, ?> defaultValues) {
 			if (this.defaultValues == null && defaultValues != null) {
 				this.defaultValues = new HashMap<>();
 			}
@@ -192,7 +192,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 		}
 
 
-		Map<String, Object> getDefaultValues() {
+		Map<Object, Object> getDefaultValues() {
 			return defaultValues;
 		}
 

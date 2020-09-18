@@ -40,16 +40,20 @@ public class ConstructorsTest extends BaseTest {
 	
 	@Test
 	public void newInstanceOfDirectTestOne() {
-		testNotNull(() ->
-			Constructors.newInstanceDirectOf(MemoryClassLoader.class, Thread.currentThread().getContextClassLoader())
-		);
+		testNotNull(() -> {
+			try (MemoryClassLoader classLoader = Constructors.newInstanceDirectOf(MemoryClassLoader.class, Thread.currentThread().getContextClassLoader())) {
+				return classLoader;
+			}
+		});
 	}
 	
 	@Test
 	public void newInstanceOfDirectTestTwo() {
-		testNotNull(() ->
-			Constructors.newInstanceDirectOf(MemoryClassLoader.class, null)
-		);
+		testNotNull(() -> {
+			try (MemoryClassLoader classLoader = Constructors.newInstanceDirectOf(MemoryClassLoader.class, null)) {
+				return classLoader;
+			}
+		});
 	}
 	
 	@Test
