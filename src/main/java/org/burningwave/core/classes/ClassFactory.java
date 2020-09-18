@@ -234,28 +234,24 @@ public class ClassFactory implements Component {
 	) {
 		try {
 			Object temporaryClient = new Object(){};
-			ClassLoader classLoader = classLoaderSupplier.apply(temporaryClient);
-			Function<ClassRetriever, ClassLoader> classLoaderSupplierForClassRetriever = (classRetriever) -> {
-				if (classLoader instanceof MemoryClassLoader) {
-					((MemoryClassLoader)classLoader).register(classRetriever);
-					((MemoryClassLoader)classLoader).unregister(temporaryClient, true);
-					if (classLoader != this.defaultClassLoaderManager.get()) {
-						((MemoryClassLoader) classLoader).unregister(this, true);
-					}
-				}
-				return classLoader;
-			};
-			
+			ClassLoader classLoader = classLoaderSupplier.apply(temporaryClient);			
 			return new ClassRetriever(
 				this,
-				classLoaderSupplierForClassRetriever,
+				 (classRetriever) -> {
+					if (classLoader instanceof MemoryClassLoader) {
+						((MemoryClassLoader)classLoader).register(classRetriever);
+						((MemoryClassLoader)classLoader).unregister(temporaryClient, true);
+						if (classLoader != this.defaultClassLoaderManager.get()) {
+							((MemoryClassLoader) classLoader).unregister(this, true);
+						}
+					}
+					return classLoader;
+				},
 				compileConfigSupplier,
 				useOneShotJavaCompiler,
 				additionalClassRepositoriesForClassLoader,
 				classNames
-			);					
-
-
+			);
 		} catch (Throwable exc) {
 			throw Throwables.toRuntimeException(exc);
 		}
