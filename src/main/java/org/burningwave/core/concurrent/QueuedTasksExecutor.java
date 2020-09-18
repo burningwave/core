@@ -1031,7 +1031,7 @@ public class QueuedTasksExecutor implements Component {
 			lastToBeWaitedFor.waitForTasksEnding(priority, waitForNewAddedTasks);	
 			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
-				if (waitForNewAddedTasks && !queuedTasksExecutor.tasksQueue.isEmpty() || !queuedTasksExecutor.asyncTasksInExecution.isEmpty()) {
+				if (waitForNewAddedTasks && (!queuedTasksExecutor.tasksQueue.isEmpty() || !queuedTasksExecutor.asyncTasksInExecution.isEmpty())) {
 					waitForTasksEnding(priority, waitForNewAddedTasks);
 					break;
 				}
