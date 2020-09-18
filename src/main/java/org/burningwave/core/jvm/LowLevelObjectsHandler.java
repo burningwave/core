@@ -153,9 +153,6 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		if (isClassLoaderDelegate(target)) {
 			return setAsParent(Fields.getDirect(target, "classLoader"), originalFutureParent);
 		}
-		if (isClassLoaderDelegate(originalFutureParent)) {
-			return setAsParent(target, Fields.getDirect(originalFutureParent, "classLoader"));
-		}
 		ClassLoader futureParentTemp = originalFutureParent;
 		if (isBuiltinClassLoader(target)) {
 			futureParentTemp = checkAndConvertBuiltinClassLoader(futureParentTemp);
@@ -166,7 +163,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		Fields.setDirect(target, "parent", futureParent);
 		return (reset) -> {
 			if (reset) {
-				checkAndRegisterOrUnregisterMemoryClassLoaders(target, futureParent, targetExParent);
+				checkAndRegisterOrUnregisterMemoryClassLoaders(target, originalFutureParent, targetExParent);
 				Fields.setDirect(target, "parent", targetExParent);
 			}
 			return targetExParent;
