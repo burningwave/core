@@ -110,7 +110,9 @@ public class QueuedTasksExecutor implements Component {
 						synchronized(getMutex("resumeCaller")) {
 							try {
 								if (supended) {
+									logInfo("... suspendig");
 									getMutex("resumeCaller").wait();
+									logInfo("... resuming", this.executor);
 									break;
 								}
 							} catch (InterruptedException exc) {
