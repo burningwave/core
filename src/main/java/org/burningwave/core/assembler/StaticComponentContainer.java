@@ -166,7 +166,7 @@ public class StaticComponentContainer {
 			Runtime.getRuntime().addShutdownHook(
 				new Thread(() -> {
 					try {
-						BackgroundExecutor.waitForTasksEnding();
+						BackgroundExecutor.waitForTasksEnding(true);
 						ComponentContainer.closeAll();
 					} catch (Throwable exc) {
 						ManagedLoggersRepository.logError("Exception occurred while closing component containers", exc);
@@ -177,7 +177,6 @@ public class StaticComponentContainer {
 						ManagedLoggersRepository.logError("Exception occurred while closing FileSystemHelper", exc);
 					}
 					BackgroundExecutor.waitForTasksEnding(true).shutDown(false);
-					MemoryClassLoader.logInfosOfAll();
 				}, "Resources releaser")
 			);
 			FileSystemHelper.startScavenger();

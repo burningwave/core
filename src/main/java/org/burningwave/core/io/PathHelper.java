@@ -118,11 +118,14 @@ public class PathHelper implements Component {
 
 	private void launchAllPathsLoadingTask() {
 		initializerTask = BackgroundExecutor.createTask(() -> {
-			pathGroups = new ConcurrentHashMap<>();
-			allPaths = ConcurrentHashMap.newKeySet();
-			loadMainClassPaths();	
-			loadAllPaths();
-			initializerTask = null;
+			try {
+				pathGroups = new ConcurrentHashMap<>();
+				allPaths = ConcurrentHashMap.newKeySet();			
+				loadMainClassPaths();	
+				loadAllPaths();
+			} finally {
+				initializerTask = null;
+			}
 		}, Thread.MAX_PRIORITY).pureAsync();
 		initializerTask.submit();
 	}
