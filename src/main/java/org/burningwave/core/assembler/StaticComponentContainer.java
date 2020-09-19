@@ -166,7 +166,7 @@ public class StaticComponentContainer {
 			Runtime.getRuntime().addShutdownHook(
 				new Thread(() -> {
 					try {
-						BackgroundExecutor.waitForTasksEnding();
+						BackgroundExecutor.waitForTasksEnding(true);
 						ComponentContainer.closeAll();
 					} catch (Throwable exc) {
 						ManagedLoggersRepository.logError("Exception occurred while closing component containers", exc);

@@ -299,7 +299,7 @@ public class QueuedTasksExecutor implements Component {
 	public QueuedTasksExecutor waitForTasksEnding(int priority, boolean waitForNewAddedTasks) {
 		executor.setPriority(priority);
 		tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
-		while (!tasksQueue.isEmpty()) {
+		if (!tasksQueue.isEmpty()) {
 			synchronized(executingFinishedWaiter) {
 				if (!tasksQueue.isEmpty()) {
 					try {
@@ -946,7 +946,7 @@ public class QueuedTasksExecutor implements Component {
 				@Override
 				public QueuedTasksExecutor waitForTasksEnding(int priority, boolean waitForNewAddedTasks) {
 					if (priority == defaultPriority) {
-						while (!tasksQueue.isEmpty()) {
+						if (!tasksQueue.isEmpty()) {
 							synchronized(executingFinishedWaiter) {
 								if (!tasksQueue.isEmpty()) {
 									try {
