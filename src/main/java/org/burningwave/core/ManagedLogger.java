@@ -45,43 +45,43 @@ import org.burningwave.core.jvm.LowLevelObjectsHandler;
 public interface ManagedLogger {	
 	
 	default void logTrace(String message) {
-		((ManagedLogger.Repository.Abst)ManagedLoggersRepository).logTrace(message);
+		ManagedLoggersRepository.logTrace(message);
 	}
 	
 	default void logTrace(String message, Object... arguments) {
-		((ManagedLogger.Repository.Abst)ManagedLoggersRepository).logTrace(message, arguments);
+		ManagedLoggersRepository.logTrace(message, arguments);
 	}
 	
 	default void logDebug(String message) {
-		((ManagedLogger.Repository.Abst)ManagedLoggersRepository).logDebug(message);
+		ManagedLoggersRepository.logDebug(message);
 	}
 	
 	default void logDebug(String message, Object... arguments) {
-		((ManagedLogger.Repository.Abst)ManagedLoggersRepository).logDebug(message, arguments);
+		ManagedLoggersRepository.logDebug(message, arguments);
 	}
 	
 	default void logInfo(String message) {
-		((ManagedLogger.Repository.Abst)ManagedLoggersRepository).logInfo(message);
+		ManagedLoggersRepository.logInfo(message);
 	}
 	
 	default void logInfo(String message, Object... arguments) {
-		((ManagedLogger.Repository.Abst)ManagedLoggersRepository).logInfo(message, arguments);
+		ManagedLoggersRepository.logInfo(message, arguments);
 	}
 	
 	default void logWarn(String message) {
-		((ManagedLogger.Repository.Abst)ManagedLoggersRepository).logWarn(message);
+		ManagedLoggersRepository.logWarn(message);
 	}
 	
 	default void logWarn(String message, Object... arguments) {
-		((ManagedLogger.Repository.Abst)ManagedLoggersRepository).logWarn(message, arguments);
+		ManagedLoggersRepository.logWarn(message, arguments);
 	}
 	
 	default void logError(String message, Throwable exc) {
-		((ManagedLogger.Repository.Abst)ManagedLoggersRepository).logError(message, exc);
+		ManagedLoggersRepository.logError(message, exc);
 	}
 	
 	default void logError(String message) {
-		((ManagedLogger.Repository.Abst)ManagedLoggersRepository).logError(message);
+		ManagedLoggersRepository.logError(message);
 	}
 	
 	
