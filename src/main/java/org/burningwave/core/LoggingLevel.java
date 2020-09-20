@@ -90,7 +90,7 @@ public class LoggingLevel {
 		}
 		
 		public void remove(Integer flags) {
-			this.flags = (this.flags | flags) ^ flags;
+			this.flags &= ALL_LEVEL_ENABLED ^ flags;
 		}
 		
 		public void set(Integer flags) {
