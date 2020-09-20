@@ -76,7 +76,7 @@ class ZipFile implements IterableZipContainer {
 					new Entry(
 						this, 
 						zipEntry.getName(), () -> {
-							return buildZipEntry(absolutePath, content, zipEntry, false);
+							return buildZipEntry(absolutePath, content, zipEntry, true);
 						}
 					)
 				);
@@ -96,9 +96,9 @@ class ZipFile implements IterableZipContainer {
 			 Streams.copy(zipEntryIS, bBOS);
 			 return bBOS.toByteBuffer();
 		} catch (Throwable exc) {
-			if (!recursive) {
+			if (recursive) {
 				this.originalZipFile = null;
-				return buildZipEntry(absolutePath, content, zipEntry, true);
+				return buildZipEntry(absolutePath, content, zipEntry, false);
 			}
 			logError("Could not load content of " + zipEntry.getName() + " of " + absolutePath, exc);
 			return null;
