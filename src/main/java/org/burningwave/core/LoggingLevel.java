@@ -55,7 +55,7 @@ public class LoggingLevel {
 	}
 	
 	public boolean matchPartialy(Integer flags) {
-		return this.flags == 0 && flags == 0 || (this.flags & flags) != 0;
+		return (this.flags & flags) != 0;
 	}
 	
 	public boolean partialyMatch(LoggingLevel level) {
