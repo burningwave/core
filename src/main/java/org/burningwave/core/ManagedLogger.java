@@ -39,6 +39,7 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 import org.burningwave.core.classes.MemoryClassLoader;
+import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchContext;
 import org.burningwave.core.iterable.Properties.Event;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
@@ -115,6 +116,7 @@ public interface ManagedLogger {
 				defaultValues.put(Key.WARN_LOGGING_DISABLED_FOR,
 					LowLevelObjectsHandler.class.getName() + ";" +
 					MemoryClassLoader.class.getName() + ";" +
+					PathScannerClassLoader.class.getName() + ";" +
 					SearchContext.class.getName() + ";"
 				);				
 				
