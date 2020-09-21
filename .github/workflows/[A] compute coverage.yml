@@ -3,7 +3,7 @@ name: Compute coverage
 on:
   push:
     branches:
-      - master
+      - experimental
     paths: 
       - "src/main/**"
       - "src/test/**"
@@ -22,5 +22,5 @@ jobs:
           java-version: 8
           architecture: x64
       - name: Build and test
-        run: mvn clean test -DskipTests=false -Dproject.test.testSuite=AllTestsSuite -Dproject_jdk_version=8 -P run-coveralls jacoco:report coveralls:report -DrepoToken=${{ secrets.coveralls_repo_token }}
+        run: mvn clean test -DskipTests=false -Dproject_jdk_version=8 -P run-coveralls jacoco:report coveralls:report -DrepoToken=${{ secrets.coveralls_repo_token }}
 

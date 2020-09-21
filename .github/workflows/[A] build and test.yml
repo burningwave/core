@@ -1,0 +1,37 @@
+name: Build and test
+
+on:
+  push:
+    branches:
+      - experimental
+    paths: 
+      - "src/main/**.java"
+      - "src/test/**.java"
+      - "**.properties"
+      - "**.xml"
+
+jobs:
+    
+  build-and-test-with-Java-8-and-later:
+    name: Build -> Test (JVM ${{ matrix.java }}, ${{ matrix.os }})
+    strategy:
+      fail-fast: true
+      max-parallel: 16
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        java: [8, 9, 10, 11, 12, 13, 14, 15, 16-ea]
+        architecture: [x64]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+          architecture: ${{ matrix.architecture }}
+      - if: endsWith(matrix.java, '-ea') != true 
+        name: Build and test with final version JDK
+        run: mvn -B clean test -Dproject_jdk_version=${{ matrix.java }} -DskipTests=false --file pom.xml
+      - if: endsWith(matrix.java, '16-ea') == true 
+        name: Build and test with early access version JDK
+        run: mvn -B clean test -Dproject_jdk_version=16 -DskipTests=false --file pom.xml
