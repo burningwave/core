@@ -515,7 +515,7 @@ public class QueuedTasksExecutor implements Component {
 			if (this.creatorInfos == null) {
 				if (stackTraceOnCreation != null) {
 					this.creatorInfos = Collections.unmodifiableList(
-						Methods.retrieveCallersInfo(
+						Methods.retrieveExternalCallersInfo(
 							this.stackTraceOnCreation,
 							(clientMethodSTE, currentIteratedSTE) -> !currentIteratedSTE.getClassName().startsWith(QueuedTasksExecutor.class.getName()),
 							-1
