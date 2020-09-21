@@ -108,7 +108,9 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 		if (!isEnabled) {
 			return;
 		}
-		StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[4];
+		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+		StackTraceElement stackTraceElement = stackTraceElements[3].getClassName().equals(ManagedLogger.class.getName()) ?
+			stackTraceElements[4] : stackTraceElements[3];
 		String clientName = stackTraceElement.getClassName();
 		if (getLoggerEnabledFlag(clientName).partialyMatch(level)) {
 			if (exception == null) {
