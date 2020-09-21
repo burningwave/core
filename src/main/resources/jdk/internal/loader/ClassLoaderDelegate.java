@@ -50,7 +50,7 @@ public class ClassLoaderDelegate extends BuiltinClassLoader {
 		try {
 			return (Class<?>)loadClassMethod.invoke(classLoader, className, resolve);
 		} catch (Throwable exc) {
-			System.out.println("Class " + className + " not found");
+			exc.printStackTrace();
 			return null;
 		}
 	}
@@ -59,9 +59,11 @@ public class ClassLoaderDelegate extends BuiltinClassLoader {
 	protected Class<?> loadClass(String className, boolean resolve) throws ClassNotFoundException {
 		try {
 			return (Class<?>)loadClassMethod.invoke(classLoader, className, resolve);
+		} catch (ClassNotFoundException exc) {
+			throw exc;
 		} catch (Throwable exc) {
-			System.out.println("Class " + className + " not found");
-			return null;
+			exc.printStackTrace();
+			throw new ClassNotFoundException(className);
 		}
 	}
 	
