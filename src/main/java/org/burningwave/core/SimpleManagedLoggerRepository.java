@@ -185,7 +185,7 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	
 	private String replacePlaceHolder(String message, Object... arguments) {
 		for (Object obj : arguments) {
-			message = message.replaceFirst("\\{\\}", Objects.isNull(obj) ? null : clear(obj.toString()));
+			message = message.replaceFirst("\\{\\}", Objects.isNull(obj) ? "null" : clear(obj.toString()));
 		}
 		return message;
 	}
