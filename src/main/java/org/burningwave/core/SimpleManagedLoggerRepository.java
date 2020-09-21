@@ -33,6 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Synchroniz
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.burningwave.core.ManagedLogger.Repository;
@@ -183,7 +184,7 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	
 	private String replacePlaceHolder(String message, Object... arguments) {
 		for (Object obj : arguments) {
-			message = message.replaceFirst("\\{\\}", clear(obj.toString()));
+			message = message.replaceFirst("\\{\\}", Objects.isNull(obj) ? null : clear(obj.toString()));
 		}
 		return message;
 	}
