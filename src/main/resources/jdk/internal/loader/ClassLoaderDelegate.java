@@ -62,8 +62,7 @@ public class ClassLoaderDelegate extends BuiltinClassLoader {
 		} catch (ClassNotFoundException exc) {
 			throw exc;
 		} catch (Throwable exc) {
-			exc.printStackTrace();
-			throw new ClassNotFoundException(className);
+			throw new ClassNotFoundException(className, exc);
 		}
 	}
 	

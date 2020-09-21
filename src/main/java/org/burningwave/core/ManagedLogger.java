@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Supplier;
 
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.SearchContext;
@@ -45,43 +46,43 @@ import org.burningwave.core.jvm.LowLevelObjectsHandler;
 public interface ManagedLogger {	
 	
 	default void logTrace(String message) {
-		ManagedLoggersRepository.logTrace(message);
+		ManagedLoggersRepository.logTrace(() -> this.getClass().getName(), message);
 	}
 	
 	default void logTrace(String message, Object... arguments) {
-		ManagedLoggersRepository.logTrace(message, arguments);
+		ManagedLoggersRepository.logTrace(() -> this.getClass().getName(), message, arguments);
 	}
 	
 	default void logDebug(String message) {
-		ManagedLoggersRepository.logDebug(message);
+		ManagedLoggersRepository.logDebug(() -> this.getClass().getName(), message);
 	}
 	
 	default void logDebug(String message, Object... arguments) {
-		ManagedLoggersRepository.logDebug(message, arguments);
+		ManagedLoggersRepository.logDebug(() -> this.getClass().getName(), message, arguments);
 	}
 	
 	default void logInfo(String message) {
-		ManagedLoggersRepository.logInfo(message);
+		ManagedLoggersRepository.logInfo(() -> this.getClass().getName(), message);
 	}
 	
 	default void logInfo(String message, Object... arguments) {
-		ManagedLoggersRepository.logInfo(message, arguments);
+		ManagedLoggersRepository.logInfo(() -> this.getClass().getName(), message, arguments);
 	}
 	
 	default void logWarn(String message) {
-		ManagedLoggersRepository.logWarn(message);
+		ManagedLoggersRepository.logWarn(() -> this.getClass().getName(), message);
 	}
 	
 	default void logWarn(String message, Object... arguments) {
-		ManagedLoggersRepository.logWarn(message, arguments);
+		ManagedLoggersRepository.logWarn(() -> this.getClass().getName(), message, arguments);
 	}
 	
 	default void logError(String message, Throwable exc) {
-		ManagedLoggersRepository.logError(message, exc);
+		ManagedLoggersRepository.logError(() -> this.getClass().getName(), message, exc);
 	}
 	
 	default void logError(String message) {
-		ManagedLoggersRepository.logError(message);
+		ManagedLoggersRepository.logError(() -> this.getClass().getName(), message);
 	}
 	
 	
@@ -167,25 +168,25 @@ public interface ManagedLogger {
 		
 		public void enableLogging(String clientName);
 		
-		public void logError(String message, Throwable exc);
+		public void logError(Supplier<String> clientNameSupplier, String message, Throwable exc);
 		
-		public void logError(String message);
+		public void logError(Supplier<String> clientNameSupplier, String message);
 		
-		public void logDebug(String message);
+		public void logDebug(Supplier<String> clientNameSupplier, String message);
 		
-		public void logDebug(String message, Object... arguments);
+		public void logDebug(Supplier<String> clientNameSupplier, String message, Object... arguments);
 		
-		public void logInfo(String message);
+		public void logInfo(Supplier<String> clientNameSupplier, String message);
 		
-		public void logInfo(String message, Object... arguments);
+		public void logInfo(Supplier<String> clientNameSupplier, String message, Object... arguments);
 		
-		public void logWarn(String message);
+		public void logWarn(Supplier<String> clientNameSupplier, String message);
 		
-		public void logWarn(String message, Object... arguments);
+		public void logWarn(Supplier<String> clientNameSupplier, String message, Object... arguments);
 		
-		public void logTrace(String message);
+		public void logTrace(Supplier<String> clientNameSupplier, String message);
 		
-		public void logTrace(String message, Object... arguments);
+		public void logTrace(Supplier<String> clientNameSupplier, String message, Object... arguments);
 		
 		public static abstract class Abst implements Repository, org.burningwave.core.iterable.Properties.Listener  {
 			boolean isEnabled;

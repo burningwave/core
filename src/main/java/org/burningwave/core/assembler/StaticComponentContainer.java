@@ -131,6 +131,7 @@ public class StaticComponentContainer {
 			URL globalPropertiesFileUrl = propBag.getValue();
 			if (globalPropertiesFileUrl != null) {
 				ManagedLoggersRepository.logInfo(
+					() -> StaticComponentContainer.class.getName(), 
 					"Building static components by using " + ThrowingSupplier.get(() ->
 						URLDecoder.decode(
 							globalPropertiesFileUrl.toString(), StandardCharsets.UTF_8.name()
@@ -138,9 +139,9 @@ public class StaticComponentContainer {
 					)
 				);
 			} else {
-				ManagedLoggersRepository.logInfo("Building static components by using default configuration");
+				ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Building static components by using default configuration");
 			}
-			ManagedLoggersRepository.logInfo(StaticComponentContainer.class.getName(), "Instantiated {}", ManagedLoggersRepository.getClass().getName());
+			ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Instantiated {}", ManagedLoggersRepository.getClass().getName());
 			Paths = org.burningwave.core.Strings.Paths.create();
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create();
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
@@ -166,22 +167,22 @@ public class StaticComponentContainer {
 			Runtime.getRuntime().addShutdownHook(
 				new Thread(() -> {
 					try {
-						ManagedLoggersRepository.logInfo("Waiting for all tasks ending");
+						ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Waiting for all tasks ending");
 						BackgroundExecutor.waitForTasksEnding(true);
-						ManagedLoggersRepository.logInfo("Closing all component containers");
+						ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Closing all component containers");
 						ComponentContainer.closeAll();
 					} catch (Throwable exc) {
-						ManagedLoggersRepository.logError("Exception occurred while closing component containers", exc);
+						ManagedLoggersRepository.logError(() -> StaticComponentContainer.class.getName(), "Exception occurred while closing component containers", exc);
 					}
 					try {
-						ManagedLoggersRepository.logInfo("Closing FileSystemHelper");
+						ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Closing FileSystemHelper");
 						FileSystemHelper.close();
 					} catch (Throwable exc) {
-						ManagedLoggersRepository.logError("Exception occurred while closing FileSystemHelper", exc);
+						ManagedLoggersRepository.logError(() -> StaticComponentContainer.class.getName(), "Exception occurred while closing FileSystemHelper", exc);
 					}
-					ManagedLoggersRepository.logInfo("Waiting for all tasks ending");
+					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Waiting for all tasks ending");
 					BackgroundExecutor.waitForTasksEnding(true);
-					ManagedLoggersRepository.logInfo("Shuting down BackgroundExecutor");
+					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Shuting down BackgroundExecutor");
 					BackgroundExecutor.shutDown(false);
 				}, "Resources releaser")
 			);
