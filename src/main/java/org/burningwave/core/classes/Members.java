@@ -364,38 +364,50 @@ public class Members implements Component {
 				return membersThatMatch;
 			}
 			
-			public StackTraceElement retrieveCallerInfo() {
-				return retrieveCallerInfo(Thread.currentThread().getStackTrace(), 1);
+			public StackTraceElement retrieveExternalCallerInfo() {
+				return retrieveExternalCallerInfo(Thread.currentThread().getStackTrace(), 1);
 			}
 			
-			public StackTraceElement retrieveCallerInfo(StackTraceElement[] stackTrace) {
-				return retrieveCallerInfo(stackTrace, 1);
+			public StackTraceElement retrieveExternalCallerInfo(StackTraceElement[] stackTrace) {
+				return retrieveExternalCallerInfo(stackTrace, 1);
 			}
-			public StackTraceElement retrieveCallerInfo(StackTraceElement[] stackTrace, int level) {
-				return retrieveCallerInfo(stackTrace, (clientMethodSTE, currentIteratedSTE) -> !clientMethodSTE.getClassName().equals(currentIteratedSTE.getClassName()), level);
-			}
-			
-			public StackTraceElement retrieveCallerInfo(BiPredicate<StackTraceElement, StackTraceElement> filter, int level) {
-				return retrieveCallerInfo(Thread.currentThread().getStackTrace(), filter, 1);
-			}
-			
-			public StackTraceElement retrieveCallerInfo(StackTraceElement[] stackTrace, BiPredicate<StackTraceElement, StackTraceElement> filter, int level) {
-				return retrieveCallersInfo(stackTrace, filter, level).get(level);
+			public StackTraceElement retrieveExternalCallerInfo(StackTraceElement[] stackTrace, int level) {
+				return retrieveExternalCallerInfo(stackTrace, (clientMethodSTE, currentIteratedSTE) -> 
+					!retrieveFileNameRelativePath(clientMethodSTE).equals(retrieveFileNameRelativePath(currentIteratedSTE)),
+					level
+				);
 			}
 			
-			public List<StackTraceElement> retrieveCallersInfo(int level) {
+			public StackTraceElement retrieveExternalCallerInfo(BiPredicate<StackTraceElement, StackTraceElement> filter, int level) {
+				return retrieveExternalCallerInfo(Thread.currentThread().getStackTrace(), filter, 1);
+			}
+			
+			public StackTraceElement retrieveExternalCallerInfo(StackTraceElement[] stackTrace, BiPredicate<StackTraceElement, StackTraceElement> filter, int level) {
+				return retrieveExternalCallersInfo(stackTrace, filter, level).get(level);
+			}
+			
+			public List<StackTraceElement> retrieveExternalCallersInfo(int level) {
 				return retrieveCallersInfo(Thread.currentThread().getStackTrace(), level);
 			}
 			
-			public List<StackTraceElement> retrieveCallersInfo() {
+			public List<StackTraceElement> retrieveExternalCallersInfo() {
 				return retrieveCallersInfo(Thread.currentThread().getStackTrace(), -1);
 			}
 			
 			public List<StackTraceElement> retrieveCallersInfo(StackTraceElement[] stackTrace, int level) {
-				return retrieveCallersInfo(stackTrace, (clientMethodSTE, currentIteratedSTE) -> !clientMethodSTE.getClassName().equals(currentIteratedSTE.getClassName()), level);
+				return retrieveExternalCallersInfo(stackTrace, (clientMethodSTE, currentIteratedSTE) -> 
+					!retrieveFileNameRelativePath(clientMethodSTE).equals(retrieveFileNameRelativePath(currentIteratedSTE)),
+					level
+				);
 			}
 			
-			public List<StackTraceElement> retrieveCallersInfo(StackTraceElement[] stackTrace, BiPredicate<StackTraceElement, StackTraceElement> filter, int level) {
+			private String retrieveFileNameRelativePath(StackTraceElement stackTraceElement) {
+				return Optional.ofNullable(
+					Classes.retrievePackageName(stackTraceElement.getClassName()).replace(".", "/")
+				).orElseGet(() -> "") + stackTraceElement.getFileName();
+			}
+			
+			public List<StackTraceElement> retrieveExternalCallersInfo(StackTraceElement[] stackTrace, BiPredicate<StackTraceElement, StackTraceElement> filter, int level) {
 				List<StackTraceElement> clientMethodCallersSTE = new ArrayList<>();
 				if (level == 0) {
 					return clientMethodCallersSTE;
