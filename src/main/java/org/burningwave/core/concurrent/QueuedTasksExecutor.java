@@ -142,7 +142,9 @@ public class QueuedTasksExecutor implements Component {
 								synchronized(executingFinishedWaiter) {
 									executingFinishedWaiter.notifyAll();
 								}
-								executableCollectionFiller.wait();
+								if (!supended) {
+									executableCollectionFiller.wait();
+								}
 							} catch (InterruptedException exc) {
 								logWarn("Exception occurred", exc);
 							}
@@ -342,9 +344,11 @@ public class QueuedTasksExecutor implements Component {
 		if (immediately) {
 			synchronized (suspensionCaller) {
 				supended = Boolean.TRUE;
-				resumeFromWaitingForNewTasks();	
 				waitForAsyncTasksEnding(priority);
 				try {
+					if (this.executor.getState().equals(Thread.State.WAITING)) {
+						resumeFromWaitingForNewTasks();
+					}
 					suspensionCaller.wait();
 				} catch (InterruptedException exc) {
 					logWarn("Exception occurred", exc);
