@@ -30,6 +30,7 @@ package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -160,7 +161,11 @@ public class Synchronizer implements AutoCloseable {
 		allThreadsStateLogger.setPriority(Thread.MIN_PRIORITY);
 		allThreadsStateLogger.start();
 	}
-
+	
+	public Thread[] getAllThreads() {
+		return Methods.invokeStaticDirect(Thread.class, "getThreads");
+	}
+	
 	private void waitFor(long timeout) {
 		synchronized(allThreadsStateLogger) {
 			try {
