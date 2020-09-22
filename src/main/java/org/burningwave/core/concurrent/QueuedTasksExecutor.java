@@ -1006,9 +1006,14 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public boolean shutDown(boolean waitForTasksTermination) {
+			QueuedTasksExecutor lastToBeWaitedFor = getByPriority(Thread.currentThread().getPriority());
 			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
-				queuedTasksExecutorBox.getValue().shutDown(waitForTasksTermination);
+				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
+				if (queuedTasksExecutor != lastToBeWaitedFor) {
+					queuedTasksExecutor.shutDown(waitForTasksTermination);
+				}
 			}
+			lastToBeWaitedFor.shutDown(waitForTasksTermination);	
 			queuedTasksExecutors.clear();
 			queuedTasksExecutors = null;
 			return true;
