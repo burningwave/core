@@ -142,7 +142,7 @@ public class Synchronizer implements AutoCloseable {
 					for (StackTraceElement stackTrace : threadAndStackTrace.getValue()) {
 						log.append("\t\t" + stackTrace + "\n");
 					}
-					log.append("\n\n\n");
+					log.append("\n\n");
 				}
 				ManagedLoggersRepository.logInfo(() -> this.getClass().getName(), "Current threads state: {}", log.toString());
 				waitFor(interval);
