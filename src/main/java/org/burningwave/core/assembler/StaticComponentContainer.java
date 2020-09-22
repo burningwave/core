@@ -100,6 +100,7 @@ public class StaticComponentContainer {
 			Resources = new org.burningwave.core.io.Resources();
 			Properties properties = new Properties();
 			properties.putAll(Configuration.DEFAULT_VALUES);
+			properties.putAll(org.burningwave.core.concurrent.Synchronizer.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.iterable.IterableObjectHelper.Configuration.DEFAULT_VALUES);
@@ -184,9 +185,21 @@ public class StaticComponentContainer {
 					BackgroundExecutor.waitForTasksEnding(true);
 					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Shuting down BackgroundExecutor");
 					BackgroundExecutor.shutDown(false);
+					Synchronizer.stopLoggingAllThreadsState();
 				}, "Resources releaser")
 			);
 			FileSystemHelper.startScavenger();
+			if (Boolean.valueOf(
+				GlobalProperties.resolveStringValue(
+					org.burningwave.core.concurrent.Synchronizer.Configuration.Key.ALL_THREADS_STATE_LOGGER_ENABLED
+				)
+			)) {
+				Synchronizer.startLoggingAllThreadsState(
+					Long.valueOf(
+						GlobalProperties.resolveValue(org.burningwave.core.concurrent.Synchronizer.Configuration.Key.ALL_THREADS_STATE_LOGGER_INTERVAL)
+					)
+				);
+			}
 		} catch (Throwable exc){
 			exc.printStackTrace();
 			throw new RuntimeException(exc);
