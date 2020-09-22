@@ -118,6 +118,7 @@ public class Synchronizer implements AutoCloseable {
 	@Override
 	public void close() {
 		clear();
+		stopLoggingAllThreadsState();
 		parallelLockMap = null;
 	}
 
@@ -137,15 +138,7 @@ public class Synchronizer implements AutoCloseable {
 		allThreadsStateLogger = new Thread(() -> {
 			isAliveWrapper.set(true);
 			while (isAliveWrapper.get()) {
-				StringBuffer log = new StringBuffer("\n\n");
-				for (Entry<Thread, StackTraceElement[]> threadAndStackTrace : Thread.getAllStackTraces().entrySet()) {
-					log.append("\t" + threadAndStackTrace.getKey() + ":\n\n");
-					for (StackTraceElement stackTrace : threadAndStackTrace.getValue()) {
-						log.append("\t\t" + stackTrace + "\n");
-					}
-					log.append("\n\n");
-				}
-				ManagedLoggersRepository.logInfo(() -> this.getClass().getName(), "Current threads state: {}", log.toString());
+				logAllThreadsState();
 				waitFor(interval);
 			}
 		}, "All threads state logger") {
@@ -159,7 +152,20 @@ public class Synchronizer implements AutoCloseable {
 			}
 		};
 		allThreadsStateLogger.setPriority(Thread.MIN_PRIORITY);
+		allThreadsStateLogger.setDaemon(true);
 		allThreadsStateLogger.start();
+	}
+
+	private void logAllThreadsState() {
+		StringBuffer log = new StringBuffer("\n\n");
+		for (Entry<Thread, StackTraceElement[]> threadAndStackTrace : Thread.getAllStackTraces().entrySet()) {
+			log.append("\t" + threadAndStackTrace.getKey() + ":\n\n");
+			for (StackTraceElement stackTrace : threadAndStackTrace.getValue()) {
+				log.append("\t\t" + stackTrace + "\n");
+			}
+			log.append("\n\n");
+		}
+		ManagedLoggersRepository.logInfo(() -> this.getClass().getName(), "Current threads state: {}", log.toString());
 	}
 	
 	public Thread[] getAllThreads() {
