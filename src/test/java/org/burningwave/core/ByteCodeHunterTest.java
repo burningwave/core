@@ -24,9 +24,6 @@ public class ByteCodeHunterTest extends BaseTest {
 	
 	@Test
 	public void findAllSubtypeOfTestOne() {
-		Collection<String> disabledLoggers = GlobalProperties.resolveStringValues("managed-logger.repository.logging.warn.disabled-for", ";");
-		disabledLoggers.remove(PathScannerClassLoader.class.getName());
-		GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
 			() -> componentSupplier.getByteCodeHunter().findBy(
@@ -46,8 +43,6 @@ public class ByteCodeHunterTest extends BaseTest {
 			),
 			(result) -> result.getClasses()
 		);
-		disabledLoggers.add(PathScannerClassLoader.class.getName());
-		GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
 	}
 	
 	
@@ -189,8 +184,13 @@ public class ByteCodeHunterTest extends BaseTest {
 	
 	@Test
 	public void findAllWithByteCodeEqualsAndUseDuplicatedPathsTestOne() {
+		Collection<String> disabledLoggers = GlobalProperties.resolveStringValues("managed-logger.repository.logging.warn.disabled-for", ";");
+		disabledLoggers.remove(PathScannerClassLoader.class.getName());
+		GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
 		findAllSubtypeOfTestOne();
 		findAllWithByteCodeEqualsTestOne();
+		disabledLoggers.add(PathScannerClassLoader.class.getName());
+		GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
 	}
 	
 	@Test
