@@ -895,7 +895,8 @@ public class UseOfStaticComponentsExample {
         ManagedLoggersRepository.logInfo(
             () -> UseOfStaticComponentsExample.class.getName(),
             "Master class loader is {}",
-            ClassLoaders.getMaster(Thread.currentThread().getContextClassLoader()));
+            ClassLoaders.getMaster(Thread.currentThread().getContextClassLoader())
+        );
     }
 
 }
