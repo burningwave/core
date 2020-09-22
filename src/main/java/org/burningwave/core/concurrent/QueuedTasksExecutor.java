@@ -248,6 +248,10 @@ public class QueuedTasksExecutor implements Component {
 				setExecutorOf(task);
 				if (TaskAbst.Execution.Mode.PURE_ASYNC.equals(task.executionMode)) {
 					asyncTasksInExecution.add(task);
+					synchronized (task) {
+						task.started = true;
+						task.notifyAll();
+					}
 					task.executor.start();
 				} else {
 					tasksQueue.add(task);
