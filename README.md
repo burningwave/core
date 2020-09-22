@@ -915,8 +915,8 @@ managed-logger.repository.logging.warn.disabled-for=\
 static-component-container.hide-banner-on-init=false
 streams.default-buffer-size=1024
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
-synchronizer.all-threads-state-logger.enabled=true
-synchronizer.all-threads-state-logger.log.interval=60000
+synchronizer.all-threads-state-logger.enabled=false
+synchronizer.all-threads-state-logger.log.interval=30000
 ```
 **If in your custom burningwave.static.properties or burningwave.static.default.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 [Here an example of a **burningwave.static.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.static.properties)
