@@ -45,8 +45,8 @@ public class Synchronizer implements AutoCloseable {
 		
 		public static class Key {
 			
-			public static final String ALL_THREADS_STATE_LOGGER_ENABLED = "synchronizer.log-all-threads-state.enabled";
-			public static final String ALL_THREADS_STATE_LOGGER_INTERVAL = "synchronizer.log-all-threads-state.interval";
+			public static final String ALL_THREADS_STATE_LOGGER_ENABLED = "synchronizer.all-threads-state-logger.enabled";
+			public static final String ALL_THREADS_STATE_LOGGER_LOG_INTERVAL = "synchronizer.all-threads-state-logger.log.interval";
 			
 		}
 		
@@ -60,7 +60,7 @@ public class Synchronizer implements AutoCloseable {
 				"false"
 			);
 			defaultValues.put(
-				Key.ALL_THREADS_STATE_LOGGER_INTERVAL,
+				Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL,
 				"30000"
 			);				
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
@@ -125,12 +125,12 @@ public class Synchronizer implements AutoCloseable {
 	}
 	
 	public synchronized void startLoggingAllThreadsState() {
-		startLoggingAllThreadsState(Long.valueOf(GlobalProperties.resolveValue(Configuration.Key.ALL_THREADS_STATE_LOGGER_INTERVAL)));
+		startLoggingAllThreadsState(Long.valueOf(GlobalProperties.resolveValue(Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL)));
 	}
 	
 	public synchronized void startLoggingAllThreadsState(Long interval) {
 		if (allThreadsStateLogger != null) {
-			return;
+			stopLoggingAllThreadsState();
 		}
 		AtomicBoolean isAliveWrapper = new AtomicBoolean();
 		allThreadsStateLogger = new Thread(() -> {
