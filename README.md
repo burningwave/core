@@ -45,7 +45,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.42.1</version>
+    <version>7.43.0</version>
 </dependency>
 ```
 
@@ -906,9 +906,17 @@ iterable-object-helper.default-values-separator=;
 managed-logger.repository=autodetect
 #to increase performance set it to false
 managed-logger.repository.enabled=true
+managed-logger.repository.logging.warn.disabled-for=\
+	org.burningwave.core.classes.ClassHunter$SearchContext;\
+	org.burningwave.core.classes.ClassPathHunter$SearchContext;\
+	org.burningwave.core.jvm.LowLevelObjectsHandler;\
+	org.burningwave.core.classes.MemoryClassLoader;\
+	org.burningwave.core.classes.SearchContext
 static-component-container.hide-banner-on-init=false
 streams.default-buffer-size=1024
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
+synchronizer.all-threads-state-logger.enabled=true
+synchronizer.all-threads-state-logger.log.interval=60000
 ```
 **If in your custom burningwave.static.properties or burningwave.static.default.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 [Here an example of a **burningwave.static.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.static.properties)

@@ -196,7 +196,7 @@ public class StaticComponentContainer {
 			)) {
 				Synchronizer.startLoggingAllThreadsState(
 					Long.valueOf(
-						GlobalProperties.resolveValue(org.burningwave.core.concurrent.Synchronizer.Configuration.Key.ALL_THREADS_STATE_LOGGER_INTERVAL)
+						GlobalProperties.resolveValue(org.burningwave.core.concurrent.Synchronizer.Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL)
 					)
 				);
 			}
