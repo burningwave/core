@@ -134,9 +134,9 @@ public class ComponentContainer implements ComponentSupplier {
 					Properties config = new Properties();
 					if (inputStream != null) {
 						config.load(inputStream);
-						ManagedLoggersRepository.logInfo(configFileName + " loaded");
+						ManagedLoggersRepository.logInfo(() -> ComponentContainer.class.getName(), configFileName + " loaded");
 					} else {
-						ManagedLoggersRepository.logInfo(configFileName + " not found");
+						ManagedLoggersRepository.logInfo(() -> ComponentContainer.class.getName(), configFileName + " not found");
 					}
 					return config;
 				} catch (Throwable exc) {
@@ -144,7 +144,7 @@ public class ComponentContainer implements ComponentSupplier {
 				}
 			}).init();
 		} catch (Throwable exc){
-			ManagedLoggersRepository.logError("Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
+			ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
 			throw Throwables.toRuntimeException(exc);
 		}
 	}
@@ -153,7 +153,7 @@ public class ComponentContainer implements ComponentSupplier {
 		try {
 			return new ComponentContainer(() -> properties).init();
 		} catch (Throwable exc){
-			ManagedLoggersRepository.logError("Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
+			ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
 			throw Throwables.toRuntimeException(exc);
 		}
 	}
@@ -503,7 +503,7 @@ public class ComponentContainer implements ComponentSupplier {
 			try {
 				componentContainer.clear();
 			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError("Exception occurred while executing clear on " + componentContainer.toString(), exc);
+				ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception occurred while executing clear on " + componentContainer.toString(), exc);
 			}
 		}
 		Cache.clear();
@@ -536,7 +536,7 @@ public class ComponentContainer implements ComponentSupplier {
 			try {
 				componentContainer.close(true);
 			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError("Exception occurred while closing " + componentContainer, exc);
+				ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception occurred while closing " + componentContainer, exc);
 			}
 		}
 		Cache.clear();

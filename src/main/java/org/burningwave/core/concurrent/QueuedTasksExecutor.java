@@ -142,7 +142,9 @@ public class QueuedTasksExecutor implements Component {
 								synchronized(executingFinishedWaiter) {
 									executingFinishedWaiter.notifyAll();
 								}
-								executableCollectionFiller.wait();
+								if (!supended) {
+									executableCollectionFiller.wait();
+								}
 							} catch (InterruptedException exc) {
 								logWarn("Exception occurred", exc);
 							}
@@ -342,9 +344,13 @@ public class QueuedTasksExecutor implements Component {
 		if (immediately) {
 			synchronized (suspensionCaller) {
 				supended = Boolean.TRUE;
-				resumeFromWaitingForNewTasks();	
 				waitForAsyncTasksEnding(priority);
 				try {
+					synchronized(executableCollectionFiller) {
+						if (this.executor.getState().equals(Thread.State.WAITING)) {
+							executableCollectionFiller.notifyAll();
+						}
+					}
 					suspensionCaller.wait();
 				} catch (InterruptedException exc) {
 					logWarn("Exception occurred", exc);
@@ -430,16 +436,6 @@ public class QueuedTasksExecutor implements Component {
 			logError("Exception occurred", exc);
 		}
 		return true;
-	}
-
-	private void resumeFromWaitingForNewTasks() {
-		try {
-			synchronized(executableCollectionFiller) {
-				executableCollectionFiller.notifyAll();
-			}
-		} catch (Throwable exc) {
-			logWarn("Exception occurred", exc);
-		}
 	}
 	
 	public void logQueueInfo() {
