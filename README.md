@@ -892,7 +892,11 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 public class UseOfStaticComponentsExample {
     
     public void yourMethod(){
-        ManagedLoggersRepository.logInfo("Master class loader is {}", ClassLoaders.getMaster(Thread.currentThread().getContextClassLoader()));
+        ManagedLoggersRepository.logInfo(
+            () -> UseOfStaticComponentsExample.class.getName(),
+            "Master class loader is {}",
+            ClassLoaders.getMaster(Thread.currentThread().getContextClassLoader())
+        );
     }
 
 }
