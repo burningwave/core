@@ -810,12 +810,12 @@ public class QueuedTasksExecutor implements Component {
 				return aborted;
 			}
 			if (!runOnlyOnce) {
-				return aborted = super.isAborted();
+				return aborted;
 			} else {
 				Task task = getEffectiveTask();
 				if (task != null) {
 					if (task == this) {
-						return aborted = super.isAborted();
+						return aborted;
 					} else {
 						return aborted = task.isAborted();
 					}
