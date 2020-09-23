@@ -1056,7 +1056,7 @@ public class FileSystemItem implements ManagedLogger {
 						childAndThis[0].reloadContent();
 					} else if (exc instanceof NullPointerException) {
 						logInfo("Trying to reset {} and test it again", childAbsolutePath);
-						childAndThis[0].reset();
+						childAndThis[0].reset().toByteBuffer();
 					}
 					return filterPredicate.test(childAndThis);
 				} catch (Throwable exc) {
