@@ -584,7 +584,7 @@ public class QueuedTasksExecutor implements Component {
 					if (!started) {
 						try {
 							if (isAborted()) {
-								throw new TaskAbortedException(this.toString() + " is aborted");
+								throw new TaskAbortedException(this);
 							}
 							wait();
 							waitForStarting();
@@ -612,7 +612,7 @@ public class QueuedTasksExecutor implements Component {
 						(!ignoreThreadCheck && Thread.currentThread() != executor && executor != null))) {
 						try {
 							if (isAborted()) {
-								throw new TaskAbortedException(this.toString() + " is aborted");
+								throw new TaskAbortedException(this);
 							}
 							wait();
 							join0(ignoreThreadCheck);

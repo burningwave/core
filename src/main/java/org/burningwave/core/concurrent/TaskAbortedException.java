@@ -28,12 +28,24 @@
  */
 package org.burningwave.core.concurrent;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+
+import java.util.stream.Collectors;
+
 public class TaskAbortedException extends RuntimeException {
 
 	private static final long serialVersionUID = -6504561450589871045L;
 	
 	
-	public TaskAbortedException(String message) {
-		super(message);
+	public TaskAbortedException(QueuedTasksExecutor.TaskAbst<?, ?> task) {
+		super(
+			Strings.compile(
+				"{} is aborted{}", 
+				task,
+				task.getCreatorInfos() != null ?
+					" and was created by: \n\t" + String.join("\n\t", task.getCreatorInfos().stream().map(sTE -> sTE.toString()).collect(Collectors.toList())) 
+					: "" 
+			)			
+		);
 	}
 }
