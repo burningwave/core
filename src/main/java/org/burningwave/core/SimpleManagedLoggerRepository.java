@@ -28,12 +28,12 @@
  */
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Supplier;
 
@@ -150,7 +150,7 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	
 	@Override
 	public void logDebug(Supplier<String> clientNameSupplier, String message, Object... arguments) {
-		log(clientNameSupplier, LoggingLevel.DEBUG, System.out, replacePlaceHolder(message, arguments), null);
+		log(clientNameSupplier, LoggingLevel.DEBUG, System.out, Strings.compile(message, arguments), null);
 	}
 	
 	@Override
@@ -160,7 +160,7 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	
 	@Override
 	public void logInfo(Supplier<String> clientNameSupplier, String message, Object... arguments) {
-		log(clientNameSupplier, LoggingLevel.INFO, System.out, replacePlaceHolder(message, arguments), null);
+		log(clientNameSupplier, LoggingLevel.INFO, System.out, Strings.compile(message, arguments), null);
 	}
 	
 	@Override
@@ -170,7 +170,7 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	
 	@Override
 	public void logWarn(Supplier<String> clientNameSupplier, String message, Object... arguments) {
-		log(clientNameSupplier, LoggingLevel.WARN, System.out, replacePlaceHolder(message, arguments), null);
+		log(clientNameSupplier, LoggingLevel.WARN, System.out, Strings.compile(message, arguments), null);
 	}
 	
 	@Override
@@ -180,25 +180,7 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 
 	@Override
 	public void logTrace(Supplier<String> clientNameSupplier, String message, Object... arguments) {
-		log(clientNameSupplier, LoggingLevel.TRACE, System.out, replacePlaceHolder(message, arguments), null);
-	}
-	
-	private String replacePlaceHolder(String message, Object... arguments) {
-		for (Object obj : arguments) {
-			message = message.replaceFirst("\\{\\}", Objects.isNull(obj) ? "null" : clear(obj.toString()));
-		}
-		return message;
-	}
-	
-	private static String clear(String text) {
-		return text
-		.replace("\\", "\\")
-		.replace("{", "\\{")
-		.replace("}", "\\}")
-		.replace("(", "\\(")
-		.replace(")", "\\)")
-		.replace(".", "\\.")
-		.replace("$", "\\$");
+		log(clientNameSupplier, LoggingLevel.TRACE, System.out, Strings.compile(message, arguments), null);
 	}
 	
 	@Override

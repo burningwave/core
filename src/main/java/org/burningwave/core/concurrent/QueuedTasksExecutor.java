@@ -298,6 +298,47 @@ public class QueuedTasksExecutor implements Component {
 		return waitForTasksEnding(Thread.currentThread().getPriority(), false);
 	}
 	
+	public <E, T extends TaskAbst<E, T>> boolean abort(T task) {
+		synchronized (task) {
+			if (!task.isStarted()) {
+				if (task instanceof Task) {
+					Task taskToBeAborted = (Task)task;
+					if (taskToBeAborted.runOnlyOnce) {
+						for (TaskAbst<?, ?> queuedTaskAbst : tasksQueue) {
+							if (queuedTaskAbst instanceof Task) {
+								Task queuedTask = (Task)queuedTaskAbst;
+								if (taskToBeAborted.id.equals(queuedTask.id)) {
+									if (tasksQueue.remove(queuedTask)) {
+										synchronized (queuedTask) {
+											if (!queuedTask.isStarted()) {
+												queuedTask.aborted = true;
+												if (queuedTask != taskToBeAborted) {
+													taskToBeAborted.aborted = queuedTask.aborted;
+												}
+												runOnlyOnceTasksToBeExecuted.remove(queuedTask.id);
+												queuedTask.notifyAll();
+												if (queuedTask != taskToBeAborted) {
+													taskToBeAborted.notifyAll();
+												}
+												return queuedTask.aborted;
+											}
+										}
+									}									
+								}
+							}
+						}
+						return false;
+					}
+				}
+				if (task.aborted = tasksQueue.remove(task)) {
+					task.notifyAll();
+					return task.aborted;
+				}
+			}
+		}
+		return false;
+	}
+	
 	public QueuedTasksExecutor waitForTasksEnding(int priority, boolean waitForNewAddedTasks) {
 		executor.setPriority(priority);
 		tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
@@ -365,7 +406,7 @@ public class QueuedTasksExecutor implements Component {
 		executor.setPriority(this.defaultPriority);
 		return this;
 	}
-
+	
 	Task createSuspendingTask(int priority) {
 		return createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).runOnlyOnce(getOperationId("suspend"), () -> supended).changePriority(priority);
 	}
@@ -493,6 +534,7 @@ public class QueuedTasksExecutor implements Component {
 		List<StackTraceElement> creatorInfos;
 		boolean started;
 		boolean submited;
+		boolean aborted;
 		E executable;
 		Execution.Mode executionMode;
 		int priority;
@@ -524,9 +566,42 @@ public class QueuedTasksExecutor implements Component {
 			return creatorInfos;
 		}
 		
+		public boolean isStarted() {
+			return started;
+		}
+		
 		public boolean hasFinished() {
 			return executable == null;
 		}
+		
+		public boolean isAborted() {
+			return aborted;
+		}
+		
+		public T waitForStarting() {
+			if (!started) {
+				synchronized (this) {
+					if (!started) {
+						try {
+							if (isAborted()) {
+								throw new TaskAbortedException(this);
+							}
+							wait();
+							waitForStarting();
+						} catch (InterruptedException exc) {
+							throw Throwables.toRuntimeException(exc);
+						}
+					}
+				}
+			}
+			return (T)this;
+		}
+		
+		public T waitForFinish() {
+			return waitForFinish(false);
+		}
+		
+		public abstract T waitForFinish(boolean ignoreThreadCheck);
 		
 		void join0(boolean ignoreThreadCheck) {
 			if (!hasFinished() && ((ignoreThreadCheck) ||
@@ -536,6 +611,9 @@ public class QueuedTasksExecutor implements Component {
 					if (!hasFinished() && ((ignoreThreadCheck) ||
 						(!ignoreThreadCheck && Thread.currentThread() != executor && executor != null))) {
 						try {
+							if (isAborted()) {
+								throw new TaskAbortedException(this);
+							}
 							wait();
 							join0(ignoreThreadCheck);
 						} catch (InterruptedException exc) {
@@ -564,6 +642,9 @@ public class QueuedTasksExecutor implements Component {
 		void execute() {
 			started = true;
 			synchronized (this) {
+				if (aborted) {
+					return;
+				}
 				notifyAll();
 			}
 			try {
@@ -571,38 +652,18 @@ public class QueuedTasksExecutor implements Component {
 			} catch (Throwable exc) {
 				this.exc = exc;
 				logError("Exception occurred while executing " + this, exc);
+			} finally {
+				markAsFinished();
 			}
+			
+		}
+		
+		void markAsFinished() {
 			executable = null;
 			executor = null;
 			synchronized(this) {
 				notifyAll();
 			}
-		}
-		
-		public T waitForFinish() {
-			return waitForFinish(false);
-		}
-		
-		public abstract T waitForFinish(boolean ignoreThreadCheck);
-		
-		public T waitForStarting() {
-			if (!started) {
-				synchronized (this) {
-					if (!started) {
-						try {
-							wait();
-							waitForStarting();
-						} catch (InterruptedException exc) {
-							throw Throwables.toRuntimeException(exc);
-						}
-					}
-				}
-			}
-			return (T)this;
-		}
-		
-		public boolean hasStarted() {
-			return started;
 		}
 		
 		abstract void execute0() throws Throwable;
@@ -660,20 +721,44 @@ public class QueuedTasksExecutor implements Component {
 		Supplier<Boolean> hasBeenExecutedChecker;
 		boolean runOnlyOnce;
 		public String id;
+		private boolean finished;
 		
 		Task(ThrowingRunnable<? extends Throwable> executable, boolean creationTracking) {
 			super(executable, creationTracking);
 		}
-
+		
 		@Override
 		void execute0() throws Throwable {
-			try {
-				this.executable.run();
-			} finally {
-				if (runOnlyOnce) {
-					runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
+			this.executable.run();			
+		}
+		
+		@Override
+		void markAsFinished() {
+			executable = null;
+			executor = null;
+			if (runOnlyOnce) {
+				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
+			}
+			synchronized(this) {
+				notifyAll();
+			}
+		}
+		
+		@Override
+		public Task waitForStarting() {
+			if (!runOnlyOnce) {
+				super.waitForStarting();
+			} else {
+				Task task = getEffectiveTask();
+				if (task != null) {
+					if (task == this) {
+						super.waitForStarting();
+					} else {
+						task.waitForStarting();
+					}
 				}
 			}
+			return this;
 		}
 		
 		@Override
@@ -700,19 +785,59 @@ public class QueuedTasksExecutor implements Component {
 		
 		@Override
 		public boolean hasFinished() {
+			if (finished) {
+				return finished;
+			}
 			if (!runOnlyOnce) {
-				return super.hasFinished();
+				return finished = super.hasFinished();
 			} else {
 				Task task = getEffectiveTask();
 				if (task != null) {
 					if (task == this) {
-						return super.hasFinished();
+						return finished = super.hasFinished();
 					} else {
-						return task.hasFinished();
+						return finished = task.hasFinished();
 					}
 				}
 				executable = null;
-				return hasBeenExecutedChecker.get();
+				return finished = hasBeenExecutedChecker.get();
+			}
+		}
+		
+		@Override
+		public boolean isAborted() {
+			if (aborted) {
+				return aborted;
+			}
+			if (!runOnlyOnce) {
+				return aborted;
+			} else {
+				Task task = getEffectiveTask();
+				if (task != null) {
+					if (task == this) {
+						return aborted;
+					} else {
+						return aborted = task.isAborted();
+					}
+				}
+				return aborted = !started && !hasBeenExecutedChecker.get();
+			}
+		}
+		
+		@Override
+		public boolean isStarted() {
+			if (!runOnlyOnce) {
+				return super.isStarted();
+			} else {
+				Task task = getEffectiveTask();
+				if (task != null && task != this) {
+					if (task == this) {
+						return super.isStarted();
+					} else {
+						return task.isStarted();
+					}
+				}
+				return submited;
 			}
 		}
 		
@@ -1071,5 +1196,15 @@ public class QueuedTasksExecutor implements Component {
 			}
 			return this;
 		}
+
+		public <E, T extends TaskAbst<E, T>> boolean abort(T task) {
+			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+				if (queuedTasksExecutorBox.getValue().abort(task)) {
+					return true;
+				}
+			}
+			return false;
+		}
 	}
+
 }

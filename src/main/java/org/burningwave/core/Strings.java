@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -181,6 +182,23 @@ public class Strings implements Component {
 		return found;
 	}
 	
+	public String compile(String message, Object... arguments) {
+		for (Object obj : arguments) {
+			message = message.replaceFirst("\\{\\}", Objects.isNull(obj) ? "null" : clear(obj.toString()));
+		}
+		return message;
+	}
+	
+	private String clear(String text) {
+		return text
+		.replace("\\", "\\")
+		.replace("{", "\\{")
+		.replace("}", "\\}")
+		.replace("(", "\\(")
+		.replace(")", "\\)")
+		.replace(".", "\\.")
+		.replace("$", "\\$");
+	}
 	
 	public static class Paths {
 		Function<String, String> pathCleaner;

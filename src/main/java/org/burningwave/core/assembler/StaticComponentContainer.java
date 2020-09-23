@@ -49,6 +49,7 @@ public class StaticComponentContainer {
 	public static class Configuration {
 		public static class Key {
 			private static final String HIDE_BANNER_ON_INIT = "static-component-container.hide-banner-on-init";
+			private static final String BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED = "background-executor.task-creation-tracking.enabled";
 		}
 		
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -57,6 +58,7 @@ public class StaticComponentContainer {
 			Map<String, Object> defaultValues =  new HashMap<>(); 
 			
 			defaultValues.put(Key.HIDE_BANNER_ON_INIT, "false");
+			defaultValues.put(Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED, "false");
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
@@ -117,6 +119,8 @@ public class StaticComponentContainer {
 								ManagedLogger.Repository toBeReplaced = ManagedLoggersRepository;
 								Fields.setStaticDirect(StaticComponentContainer.class, "ManagedLoggersRepository", ManagedLogger.Repository.create(config));
 								toBeReplaced.close();
+							} else if (keyAsString.equals(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED)) {
+								BackgroundExecutor.setTasksCreationTrackingFlag(Boolean.valueOf((String)newValue));
 							}
 						}
 					}
@@ -124,6 +128,9 @@ public class StaticComponentContainer {
 				};
 				
 			}.listenTo(GlobalProperties = propBag.getKey());
+			if (Boolean.valueOf(GlobalProperties.getProperty(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED))) {
+				BackgroundExecutor.setTasksCreationTrackingFlag(true);
+			}
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
 			if (!Boolean.valueOf(GlobalProperties.getProperty(Configuration.Key.HIDE_BANNER_ON_INIT))) {
 				showBanner();
