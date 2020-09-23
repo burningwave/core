@@ -646,6 +646,7 @@ public class QueuedTasksExecutor implements Component {
 			started = true;
 			synchronized (this) {
 				if (aborted) {
+					notifyAll();
 					removeExecutableAndExecutor();
 					return;
 				}
@@ -669,10 +670,10 @@ public class QueuedTasksExecutor implements Component {
 		
 		void markAsFinished() {
 			finished = true;
-			removeExecutableAndExecutor();
 			synchronized(this) {
 				notifyAll();
 			}
+			removeExecutableAndExecutor();			
 		}
 		
 		abstract void execute0() throws Throwable;
@@ -746,10 +747,10 @@ public class QueuedTasksExecutor implements Component {
 			if (runOnlyOnce) {
 				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
 			}
-			removeExecutableAndExecutor();
 			synchronized(this) {
 				notifyAll();
 			}
+			removeExecutableAndExecutor();			
 		}
 		
 		@Override
