@@ -119,8 +119,6 @@ public class QueuedTasksExecutor implements Component {
 							} else if (TaskAbst.Execution.Mode.ASYNC.equals(task.executionMode)) {
 								asyncTasksInExecution.add(task);
 							}
-							task.started = true;
-							task.notifyAll();
 						}
 						Thread executor = task.executor;
 						int currentExecutablePriority = task.getPriority();
@@ -248,10 +246,6 @@ public class QueuedTasksExecutor implements Component {
 				setExecutorOf(task);
 				if (TaskAbst.Execution.Mode.PURE_ASYNC.equals(task.executionMode)) {
 					asyncTasksInExecution.add(task);
-					synchronized (task) {
-						task.started = true;
-						task.notifyAll();
-					}
 					task.executor.start();
 				} else {
 					tasksQueue.add(task);
@@ -307,7 +301,39 @@ public class QueuedTasksExecutor implements Component {
 	public <E, T extends TaskAbst<E, T>> boolean abort(T task) {
 		synchronized (task) {
 			if (!task.isStarted()) {
-				return tasksQueue.remove(task);
+				if (task instanceof Task) {
+					Task taskToBeAborted = (Task)task;
+					if (taskToBeAborted.runOnlyOnce) {
+						for (TaskAbst<?, ?> queuedTaskAbst : tasksQueue) {
+							if (queuedTaskAbst instanceof Task) {
+								Task queuedTask = (Task)queuedTaskAbst;
+								if (taskToBeAborted.id.equals(queuedTask.id)) {
+									if (tasksQueue.remove(queuedTask)) {
+										synchronized (queuedTask) {
+											if (!queuedTask.isStarted()) {
+												queuedTask.aborted = true;
+												if (queuedTask != taskToBeAborted) {
+													taskToBeAborted.aborted = queuedTask.aborted;
+												}
+												runOnlyOnceTasksToBeExecuted.remove(queuedTask.id);
+												queuedTask.notifyAll();
+												if (queuedTask != taskToBeAborted) {
+													taskToBeAborted.notifyAll();
+												}
+												return queuedTask.aborted;
+											}
+										}
+									}									
+								}
+							}
+						}
+						return false;
+					}
+				}
+				if (task.aborted = tasksQueue.remove(task)) {
+					task.notifyAll();
+					return task.aborted;
+				}
 			}
 		}
 		return false;
@@ -508,6 +534,7 @@ public class QueuedTasksExecutor implements Component {
 		List<StackTraceElement> creatorInfos;
 		boolean started;
 		boolean submited;
+		boolean aborted;
 		E executable;
 		Execution.Mode executionMode;
 		int priority;
@@ -547,11 +574,18 @@ public class QueuedTasksExecutor implements Component {
 			return executable == null;
 		}
 		
+		public boolean isAborted() {
+			return aborted;
+		}
+		
 		public T waitForStarting() {
 			if (!started) {
 				synchronized (this) {
 					if (!started) {
 						try {
+							if (isAborted()) {
+								throw new TaskAbortedException(this.toString() + " is aborted");
+							}
 							wait();
 							waitForStarting();
 						} catch (InterruptedException exc) {
@@ -577,6 +611,9 @@ public class QueuedTasksExecutor implements Component {
 					if (!hasFinished() && ((ignoreThreadCheck) ||
 						(!ignoreThreadCheck && Thread.currentThread() != executor && executor != null))) {
 						try {
+							if (isAborted()) {
+								throw new TaskAbortedException(this.toString() + " is aborted");
+							}
 							wait();
 							join0(ignoreThreadCheck);
 						} catch (InterruptedException exc) {
@@ -603,12 +640,25 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		void execute() {
+			started = true;
+			synchronized (this) {
+				if (aborted) {
+					return;
+				}
+				notifyAll();
+			}
 			try {
 				execute0();					
 			} catch (Throwable exc) {
 				this.exc = exc;
 				logError("Exception occurred while executing " + this, exc);
+			} finally {
+				markAsFinished();
 			}
+			
+		}
+		
+		void markAsFinished() {
 			executable = null;
 			executor = null;
 			synchronized(this) {
@@ -675,15 +725,21 @@ public class QueuedTasksExecutor implements Component {
 		Task(ThrowingRunnable<? extends Throwable> executable, boolean creationTracking) {
 			super(executable, creationTracking);
 		}
-
+		
 		@Override
 		void execute0() throws Throwable {
-			try {
-				this.executable.run();
-			} finally {
-				if (runOnlyOnce) {
-					runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
-				}
+			this.executable.run();			
+		}
+		
+		@Override
+		void markAsFinished() {
+			executable = null;
+			executor = null;
+			if (runOnlyOnce) {
+				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
+			}
+			synchronized(this) {
+				notifyAll();
 			}
 		}
 		
@@ -745,13 +801,37 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		@Override
+		public boolean isAborted() {
+			if (aborted) {
+				return aborted;
+			}
+			if (!runOnlyOnce) {
+				return aborted = super.isAborted();
+			} else {
+				Task task = getEffectiveTask();
+				if (task != null) {
+					if (task == this) {
+						return aborted = super.isAborted();
+					} else {
+						return aborted = task.isAborted();
+					}
+				}
+				return aborted = !started && !hasBeenExecutedChecker.get();
+			}
+		}
+		
+		@Override
 		public boolean isStarted() {
 			if (!runOnlyOnce) {
 				return super.isStarted();
 			} else {
 				Task task = getEffectiveTask();
 				if (task != null && task != this) {
-					return task.isStarted();
+					if (task == this) {
+						return super.isStarted();
+					} else {
+						return task.isStarted();
+					}
 				}
 				return submited;
 			}
