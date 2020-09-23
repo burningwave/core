@@ -721,6 +721,7 @@ public class QueuedTasksExecutor implements Component {
 		Supplier<Boolean> hasBeenExecutedChecker;
 		boolean runOnlyOnce;
 		public String id;
+		private boolean finished;
 		
 		Task(ThrowingRunnable<? extends Throwable> executable, boolean creationTracking) {
 			super(executable, creationTracking);
@@ -784,19 +785,22 @@ public class QueuedTasksExecutor implements Component {
 		
 		@Override
 		public boolean hasFinished() {
+			if (finished) {
+				return finished;
+			}
 			if (!runOnlyOnce) {
-				return super.hasFinished();
+				return finished = super.hasFinished();
 			} else {
 				Task task = getEffectiveTask();
 				if (task != null) {
 					if (task == this) {
-						return super.hasFinished();
+						return finished = super.hasFinished();
 					} else {
-						return task.hasFinished();
+						return finished = task.hasFinished();
 					}
 				}
 				executable = null;
-				return hasBeenExecutedChecker.get();
+				return finished = hasBeenExecutedChecker.get();
 			}
 		}
 		
