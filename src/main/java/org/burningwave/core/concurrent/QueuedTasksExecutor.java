@@ -315,11 +315,13 @@ public class QueuedTasksExecutor implements Component {
 												if (queuedTask != taskToBeAborted) {
 													taskToBeAborted.aborted = queuedTask.aborted;
 												}
-												runOnlyOnceTasksToBeExecuted.remove(queuedTask.id);
+												queuedTask.removeExecutableAndExecutor();
 												queuedTask.notifyAll();
 												if (queuedTask != taskToBeAborted) {
+													taskToBeAborted.removeExecutableAndExecutor();
 													taskToBeAborted.notifyAll();
 												}
+												runOnlyOnceTasksToBeExecuted.remove(queuedTask.id);
 												return queuedTask.aborted;
 											}
 										}
@@ -535,6 +537,7 @@ public class QueuedTasksExecutor implements Component {
 		boolean started;
 		boolean submited;
 		boolean aborted;
+		boolean finished;
 		E executable;
 		Execution.Mode executionMode;
 		int priority;
@@ -571,7 +574,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public boolean hasFinished() {
-			return executable == null;
+			return finished;
 		}
 		
 		public boolean isAborted() {
@@ -643,6 +646,7 @@ public class QueuedTasksExecutor implements Component {
 			started = true;
 			synchronized (this) {
 				if (aborted) {
+					removeExecutableAndExecutor();
 					return;
 				}
 				notifyAll();
@@ -657,10 +661,15 @@ public class QueuedTasksExecutor implements Component {
 			}
 			
 		}
-		
-		void markAsFinished() {
+
+		void removeExecutableAndExecutor() {
 			executable = null;
 			executor = null;
+		}
+		
+		void markAsFinished() {
+			finished = true;
+			removeExecutableAndExecutor();
 			synchronized(this) {
 				notifyAll();
 			}
@@ -721,7 +730,6 @@ public class QueuedTasksExecutor implements Component {
 		Supplier<Boolean> hasBeenExecutedChecker;
 		boolean runOnlyOnce;
 		public String id;
-		private boolean finished;
 		
 		Task(ThrowingRunnable<? extends Throwable> executable, boolean creationTracking) {
 			super(executable, creationTracking);
@@ -734,11 +742,11 @@ public class QueuedTasksExecutor implements Component {
 		
 		@Override
 		void markAsFinished() {
-			executable = null;
-			executor = null;
+			finished = true;
 			if (runOnlyOnce) {
 				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
 			}
+			removeExecutableAndExecutor();
 			synchronized(this) {
 				notifyAll();
 			}
@@ -799,7 +807,6 @@ public class QueuedTasksExecutor implements Component {
 						return finished = task.hasFinished();
 					}
 				}
-				executable = null;
 				return finished = hasBeenExecutedChecker.get();
 			}
 		}
