@@ -307,8 +307,12 @@ public class ComponentContainer implements ComponentSupplier {
 			component = Synchronizer.execute(getMutexForComponentsId(), () -> {
 				QueuedTasksExecutor.Task afterInitTask = this.afterInitTask;
 				if (afterInitTask != null) {
-					afterInitTask.submit();
-					this.afterInitTask = null;
+					synchronized (afterInitTask) {
+						if (!afterInitTask.isSubmited()) {
+							afterInitTask.submit();
+						}
+						this.afterInitTask = null;
+					}
 				}
 				T componentTemp = (T)components.get(componentType);
 				if (componentTemp == null) {
