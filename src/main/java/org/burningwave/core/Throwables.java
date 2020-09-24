@@ -43,7 +43,6 @@ public class Throwables implements Component {
 		} else if (obj instanceof String) {
 			return new RuntimeException((String)obj);
 		} else {
-			logError("", (Throwable)obj);
 			return new RuntimeException((Throwable)obj);
 		}
 	}
