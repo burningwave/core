@@ -523,7 +523,7 @@ public class ComponentContainer implements ComponentSupplier {
 				});
 			});
 		} else {
-			throw Throwables.toRuntimeException("Could not close singleton instance " + LazyHolder.COMPONENT_CONTAINER_INSTANCE);
+			throw Throwables.toRuntimeException("Could not close singleton instance {}", LazyHolder.COMPONENT_CONTAINER_INSTANCE);
 		}
 	}
 	

@@ -533,7 +533,7 @@ public class Classes implements Component, MembersRetriever {
 			
 			}
 			if (packages == null) {
-				throw Throwables.toRuntimeException("Could not find packages Map on " + classLoader);
+				throw Throwables.toRuntimeException("Could not find packages Map on {}", classLoader);
 			}
 			return packages;
 			

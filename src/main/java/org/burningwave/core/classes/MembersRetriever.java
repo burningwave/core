@@ -42,7 +42,7 @@ public interface MembersRetriever {
 	public default Field getDeclaredField(Class<?> cls, Predicate<Field> predicate) {
 		Collection<Field> members = getDeclaredFields(cls, predicate);
 		if (members.size() > 1) {
-			throw Throwables.toRuntimeException("More than one member found for class " + cls.getName());
+			throw Throwables.toRuntimeException("More than one member found for class {}", cls.getName());
 		}
 		return members.stream().findFirst().orElse(null);
 	}
@@ -50,7 +50,7 @@ public interface MembersRetriever {
 	public default Method getDeclaredMethod(Class<?> cls, Predicate<Method> predicate) {
 		Collection<Method> members = getDeclaredMethods(cls, predicate);
 		if (members.size() > 1) {
-			throw Throwables.toRuntimeException("More than one member found for class " + cls.getName());
+			throw Throwables.toRuntimeException("More than one member found for class {}", cls.getName());
 		}
 		return members.stream().findFirst().orElse(null);
 	}
@@ -58,7 +58,7 @@ public interface MembersRetriever {
 	public default <T> Constructor<T> getDeclaredConstructor(Class<T> cls, Predicate<Constructor<T>> predicate) {
 		Collection<Constructor<T>> members = getDeclaredConstructors(cls, predicate);
 		if (members.size() > 1) {
-			throw Throwables.toRuntimeException("More than one member found for class " + cls.getName());
+			throw Throwables.toRuntimeException("More than one member found for class {}", cls.getName());
 		}
 		return members.stream().findFirst().orElse(null);
 	}

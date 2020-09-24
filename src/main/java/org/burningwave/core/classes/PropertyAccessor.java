@@ -149,7 +149,7 @@ public abstract class PropertyAccessor implements Component {
 			} else if (Map.class.isAssignableFrom(property.getClass())) {
 				propertyRetriever = () -> ((Map<?, ?>)property).get(index);
 			} else {
-				throw Throwables.toRuntimeException("indexed property " + property + " of type " + property.getClass() + " is not supporterd");
+				throw Throwables.toRuntimeException("indexed property {} of type {} is not supporterd", property, property.getClass());
 			}
 			return retrieveFromIndexedProperty(
 					propertyRetriever.get(), 
@@ -189,7 +189,7 @@ public abstract class PropertyAccessor implements Component {
 		} else if (Map.class.isAssignableFrom(property.getClass())) {
 			((Map<String, T>)property).put(index, (T)value);
 		} else {
-			throw Throwables.toRuntimeException("indexed property " + property + " of type " + property.getClass() + " is not supporterd");
+			throw Throwables.toRuntimeException("indexed property {} of type {} is not supporterd", property, property.getClass());
 		}
 	}
 

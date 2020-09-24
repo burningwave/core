@@ -295,7 +295,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 	
 	public void setFieldValue(Object target, Field field, Object value) {
 		if(value != null && !Classes.isAssignableFrom(field.getType(), value.getClass())) {
-			throw Throwables.toRuntimeException("Value " + value + " is not assignable to " + field.getName());
+			throw Throwables.toRuntimeException("Value {} is not assignable to {}", value , field.getName());
 		}
 		target = Modifier.isStatic(field.getModifiers())?
 			field.getDeclaringClass() :

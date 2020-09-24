@@ -231,13 +231,13 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 				return Cache.pathForContents.getOrUploadIfAbsent(
 					getAbsolutePath(), () -> {
 						if (zipInputStream.getCurrentZipEntry() != this) {
-							throw Throwables.toRuntimeException(Attached.class.getSimpleName() + " and his ZipInputStream are not aligned");
+							throw Throwables.toRuntimeException("{} and his ZipInputStream are not aligned", Attached.class.getSimpleName());
 						}
 						try (ByteBufferOutputStream bBOS = createDataBytesContainer()) {
 							Streams.copy(zipInputStream, bBOS);
 						    return bBOS.toByteBuffer();
 						} catch (Throwable exc) {
-							logError("Could not load content of " + getName() + " of " + zipInputStream.getAbsolutePath(), exc);
+							logError("Could not load content of {} of {}", exc, getName(), zipInputStream.getAbsolutePath());
 							return null;
 						}
 					}
