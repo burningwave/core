@@ -1047,18 +1047,20 @@ public class FileSystemItem implements ManagedLogger {
 		) {
 			Predicate<FileSystemItem[]> finalFilterPredicate = childAndThis -> {
 				try {
-					return filterPredicate.test(childAndThis);
-				} catch (ArrayIndexOutOfBoundsException | NullPointerException exc) {
-					String childAbsolutePath = childAndThis[0].getAbsolutePath();
-					logWarn("Exception occurred while scanning {}", childAbsolutePath);
-					if (exc instanceof ArrayIndexOutOfBoundsException) {
-						logInfo("Trying to reload content of {} and test it again", childAbsolutePath);
-						childAndThis[0].reloadContent();
-					} else if (exc instanceof NullPointerException) {
-						logInfo("Trying to reset {} and test it again", childAbsolutePath);
-						childAndThis[0].reset().toByteBuffer();
-					}
-					return filterPredicate.test(childAndThis);
+					try {
+						return filterPredicate.test(childAndThis);
+					} catch (ArrayIndexOutOfBoundsException | NullPointerException exc) {
+						String childAbsolutePath = childAndThis[0].getAbsolutePath();
+						logWarn("Exception occurred while scanning {}", childAbsolutePath);
+						if (exc instanceof ArrayIndexOutOfBoundsException) {
+							logInfo("Trying to reload content of {} and test it again", childAbsolutePath);
+							childAndThis[0].reloadContent();
+						} else if (exc instanceof NullPointerException) {
+							logInfo("Trying to reset {} and test it again", childAbsolutePath);
+							childAndThis[0].reset().toByteBuffer();
+						}
+						return filterPredicate.test(childAndThis);
+					} 
 				} catch (Throwable exc) {
 					if (exceptionHandler != null) {
 						return exceptionHandler.apply(exc, childAndThis);
