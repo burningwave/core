@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -1050,26 +1051,26 @@ public class QueuedTasksExecutor implements Component {
 						
 						@Override
 						public QueuedTasksExecutor.Task async() {
-							return setExecutionMode(() -> super.async(), QueuedTasksExecutor.TaskAbst.Execution.Mode.ASYNC);
+							return setExecutionMode(task -> task.async(), QueuedTasksExecutor.TaskAbst.Execution.Mode.ASYNC);
 						}
 						
 						@Override
 						public QueuedTasksExecutor.Task pureAsync() {
-							return setExecutionMode(() -> super.pureAsync(), QueuedTasksExecutor.TaskAbst.Execution.Mode.PURE_ASYNC);
+							return setExecutionMode(task -> task.pureAsync(), QueuedTasksExecutor.TaskAbst.Execution.Mode.PURE_ASYNC);
 						}
 						
 						public QueuedTasksExecutor.Task sync() {
-							return setExecutionMode(() -> super.sync(), QueuedTasksExecutor.TaskAbst.Execution.Mode.SYNC);
+							return setExecutionMode(task -> task.sync(), QueuedTasksExecutor.TaskAbst.Execution.Mode.SYNC);
 						}
 						
 						private QueuedTasksExecutor.Task setExecutionMode(
-							Runnable executionModeSetter,
+							Consumer<QueuedTasksExecutor.Task> executionModeSetter,
 							QueuedTasksExecutor.TaskAbst.Execution.Mode newValue
 						) {
 							if (runOnlyOnce) {
 								Task task = getEffectiveTask();
 								if (task != null && task != this) {
-									executionModeSetter.run();
+									executionModeSetter.accept(task);
 									return this;
 								}
 							}
