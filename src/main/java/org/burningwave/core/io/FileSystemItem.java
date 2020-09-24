@@ -231,7 +231,7 @@ public class FileSystemItem implements ManagedLogger {
 			Supplier<C> setSupplier) {
 		return findIn(this::getChildren, filter, setSupplier);
 	}
-	
+	/*
 	private <C extends Set<FileSystemItem>> Set<FileSystemItem> findIn(Supplier<Set<FileSystemItem>> childrenSupplier,
 			FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
 		Predicate<FileSystemItem[]> nativePredicate = filter.getPredicateOrTruePredicateIfPredicateIsNull();
@@ -241,8 +241,8 @@ public class FileSystemItem implements ManagedLogger {
 			children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier))
 		).orElseGet(() -> null);
 	}
-	
-	/*
+	*/
+
 	private <C extends Set<FileSystemItem>> Set<FileSystemItem> findIn(Supplier<Set<FileSystemItem>> childrenSupplier,
 			FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
 		Predicate<FileSystemItem[]> nativePredicate = filter.getOriginalPredicateOrTruePredicateIfPredicateIsNull();
@@ -271,7 +271,7 @@ public class FileSystemItem implements ManagedLogger {
 			children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier))
 		).orElseGet(() -> null);
 		if (!iteratedFISWithErrors.isEmpty()) {
-			for (Entry<FileSystemItem, Throwable> fisWithError : iteratedFISWithErrors.entrySet()) {
+			for (Map.Entry<FileSystemItem, Throwable> fisWithError : iteratedFISWithErrors.entrySet()) {
 				Throwable initialExc = fisWithError.getValue();
 				FileSystemItem child = fisWithError.getKey();
 				FileSystemItem[] childAndThis = new FileSystemItem[] { child, this };
@@ -296,7 +296,7 @@ public class FileSystemItem implements ManagedLogger {
 			iteratedFISWithErrors.clear();
 		}
 		return result;
-	}*/
+	}
 
 	public FileSystemItem findFirstInAllChildren() {
 		return findFirstInAllChildren(FileSystemItem.Criteria.create());
