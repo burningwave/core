@@ -142,7 +142,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 							}
 						}).runOnlyOnce(instanceId + "_" + path, () -> 
 							!checkForAddedClasses.test(path) && hasBeenLoaded(path, !checkForAddedClasses.test(path))
-						).submit()
+						).async().submit()
 					);
 				}
 			}
