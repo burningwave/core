@@ -402,7 +402,7 @@ public class PathHelper implements Component {
 					filesFound.put(fileSystemItem.getAbsolutePath(), fileSystemItem);
 					filesInfo.append("\t" + System.identityHashCode(file) + ": " + fileSystemItem.getAbsolutePath() + "\n");
 				} else {
-					throw Throwables.toRuntimeException("Found more than one resource under relative path " + resourceRelativePath);
+					throw Throwables.toRuntimeException("Found more than one resource under relative path {}",  resourceRelativePath);
 				}
 			}
 			if (filesFound.size() > 1) {
@@ -482,7 +482,7 @@ public class PathHelper implements Component {
 	public String getPath(Predicate<String> pathPredicate) {
 		Collection<String> classPathsFound = getPaths(pathPredicate);
 		if (classPathsFound.size() > 1) {
-			throw Throwables.toRuntimeException("Found more than one class path for predicate " + pathPredicate);
+			throw Throwables.toRuntimeException("Found more than one class path for predicate {}", pathPredicate);
 		}
 		return classPathsFound.stream().findFirst().orElseGet(() -> null);
 	}

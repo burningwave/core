@@ -95,10 +95,10 @@ public class StaticComponentContainer {
 	static {
 		try {
 			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create();
+			Strings = org.burningwave.core.Strings.create();
 			Throwables = org.burningwave.core.Throwables.create();
 			Objects = org.burningwave.core.Objects.create();
 			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create("Background executor", true, true);
-			Strings = org.burningwave.core.Strings.create();
 			Resources = new org.burningwave.core.io.Resources();
 			Properties properties = new Properties();
 			properties.putAll(Configuration.DEFAULT_VALUES);

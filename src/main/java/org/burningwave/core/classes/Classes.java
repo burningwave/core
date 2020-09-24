@@ -533,7 +533,7 @@ public class Classes implements Component, MembersRetriever {
 			
 			}
 			if (packages == null) {
-				throw Throwables.toRuntimeException("Could not find packages Map on " + classLoader);
+				throw Throwables.toRuntimeException("Could not find packages Map on {}", classLoader);
 			}
 			return packages;
 			
@@ -909,7 +909,7 @@ public class Classes implements Component, MembersRetriever {
 				this.classLoadersPackages.clear();
 				this.classLoadersPackages = null;
 			} else {
-				throw Throwables.toRuntimeException("Could not close singleton instance " + this);
+				throw Throwables.toRuntimeException("Could not close singleton instance {}", this);
 			}
 		}
 	}

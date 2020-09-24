@@ -717,7 +717,7 @@ public class QueuedTasksExecutor implements Component {
 					if (!submited) {
 						submited = true;
 					} else {
-						throw Throwables.toRuntimeException("Could not submit task " + this + " twice");
+						throw Throwables.toRuntimeException("Could not submit task {} twice", this);
 					}
 				}
 			} else {

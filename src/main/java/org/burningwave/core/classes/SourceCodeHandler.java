@@ -86,7 +86,7 @@ public class SourceCodeHandler implements Component {
 
 	public UnitSourceGenerator generateExecutor(String className, BodySourceGenerator body) {
 		if (className.contains("$")) {
-			throw Throwables.toRuntimeException(className + " CodeExecutor could not be a inner class");
+			throw Throwables.toRuntimeException("{} code executor could not be a inner class", className);
 		}
 		String packageName = Classes.retrievePackageName(className);
 		String classSimpleName = Classes.retrieveSimpleName(className);
@@ -116,7 +116,7 @@ public class SourceCodeHandler implements Component {
 		String packageName = Classes.retrievePackageName(className);
 		String classSimpleName = Classes.retrieveSimpleName(className);
 		if (className.contains("$")) {
-			throw Throwables.toRuntimeException(className + " Consumer could not be a inner class");
+			throw Throwables.toRuntimeException("{} consumer could not be a inner class", className);
 		}
 		TypeDeclarationSourceGenerator typeDeclaration = TypeDeclarationSourceGenerator.create(classSimpleName);
 		FunctionSourceGenerator acceptMethod = FunctionSourceGenerator.create("accept").setReturnType(
@@ -154,7 +154,7 @@ public class SourceCodeHandler implements Component {
 		String packageName = Classes.retrievePackageName(className);
 		String classSimpleName = Classes.retrieveSimpleName(className);
 		if (className.contains("$")) {
-			throw Throwables.toRuntimeException(className + " Predicate could not be a inner class");
+			throw Throwables.toRuntimeException("{} Predicate could not be a inner class", className);
 		}
 		TypeDeclarationSourceGenerator typeDeclaration = TypeDeclarationSourceGenerator.create(classSimpleName);
 		FunctionSourceGenerator testMethod = FunctionSourceGenerator.create("test").setReturnType(
@@ -192,7 +192,7 @@ public class SourceCodeHandler implements Component {
 		String packageName = Classes.retrievePackageName(className);
 		String classSimpleName = Classes.retrieveSimpleName(className);
 		if (className.contains("$")) {
-			throw Throwables.toRuntimeException(className + " Function could not be a inner class");
+			throw Throwables.toRuntimeException("{} function could not be a inner class", className);
 		}
 		TypeDeclarationSourceGenerator typeDeclaration = TypeDeclarationSourceGenerator.create(classSimpleName);
 		GenericSourceGenerator returnType = GenericSourceGenerator.create("R");

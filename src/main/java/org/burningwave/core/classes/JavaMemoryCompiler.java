@@ -226,7 +226,7 @@ public class JavaMemoryCompiler implements Component {
 			try {
 				memorySources.add(new MemorySource(Kind.SOURCE, className, source));
 			} catch (URISyntaxException eXC) {
-				throw Throwables.toRuntimeException("Class name \"" + className + "\" is not valid");
+				throw Throwables.toRuntimeException("Class name \"{}\" is not valid", className);
 			}
 		}
 		

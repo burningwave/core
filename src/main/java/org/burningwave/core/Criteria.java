@@ -164,9 +164,9 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 			return logicalOperator.apply(input);
 		}).orElseThrow(() -> 
 			Throwables.toRuntimeException(
-				"A call to and/or method is necessary before calling " +
-				Thread.currentThread().getStackTrace()[9].getMethodName() + " at " +
-				Thread.currentThread().getStackTrace()[10]
+				"A call to and/or method is necessary before calling {} at {}",
+				Thread.currentThread().getStackTrace()[10].getMethodName(),
+				Thread.currentThread().getStackTrace()[11]
 			)
 		);
 	}
@@ -431,9 +431,9 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 				return logicalOperator.apply(input);
 			}).orElseThrow(() -> 
 				Throwables.toRuntimeException(
-					"A call to and/or method is necessary before calling " +
-					Thread.currentThread().getStackTrace()[9].getMethodName() + " at " +
-					Thread.currentThread().getStackTrace()[10]
+					"A call to and/or method is necessary before calling {} at {}",
+					Thread.currentThread().getStackTrace()[10].getMethodName(),
+					Thread.currentThread().getStackTrace()[11]
 				)
 			);
 		}

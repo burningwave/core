@@ -208,7 +208,7 @@ public class FileSystemHelper implements Component {
 				mainTemporaryFolder = null;
 			});
 		} else {
-			throw Throwables.toRuntimeException("Could not close singleton instance " + this);
+			throw Throwables.toRuntimeException("Could not close singleton instance {}", this);
 		}
 	}
 	
