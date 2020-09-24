@@ -684,7 +684,10 @@ public class ClassFactory implements Component {
 				if (compilationTask != null) {
 					if (!BackgroundExecutor.abort(compilationTask)) {
 						if (compilationTask.isStarted()) {
-							compilationTask.join().close();
+							Compilation.Result compilationResult = compilationTask.join();
+							if (compilationResult != null) {
+								compilationResult.close();
+							}
 						}
 					}
 				}

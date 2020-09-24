@@ -29,6 +29,7 @@
 package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.ArrayList;
@@ -315,11 +316,13 @@ public class QueuedTasksExecutor implements Component {
 												if (queuedTask != taskToBeAborted) {
 													taskToBeAborted.aborted = queuedTask.aborted;
 												}
-												runOnlyOnceTasksToBeExecuted.remove(queuedTask.id);
+												queuedTask.removeExecutableAndExecutor();
 												queuedTask.notifyAll();
 												if (queuedTask != taskToBeAborted) {
+													taskToBeAborted.removeExecutableAndExecutor();
 													taskToBeAborted.notifyAll();
 												}
+												runOnlyOnceTasksToBeExecuted.remove(queuedTask.id);
 												return queuedTask.aborted;
 											}
 										}
@@ -535,6 +538,7 @@ public class QueuedTasksExecutor implements Component {
 		boolean started;
 		boolean submited;
 		boolean aborted;
+		boolean finished;
 		E executable;
 		Execution.Mode executionMode;
 		int priority;
@@ -571,7 +575,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public boolean hasFinished() {
-			return executable == null;
+			return finished;
 		}
 		
 		public boolean isAborted() {
@@ -643,6 +647,8 @@ public class QueuedTasksExecutor implements Component {
 			started = true;
 			synchronized (this) {
 				if (aborted) {
+					notifyAll();
+					removeExecutableAndExecutor();
 					return;
 				}
 				notifyAll();
@@ -651,19 +657,30 @@ public class QueuedTasksExecutor implements Component {
 				execute0();					
 			} catch (Throwable exc) {
 				this.exc = exc;
-				logError("Exception occurred while executing " + this, exc);
+				logError(Strings.compile(
+					"Exception occurred while executing {}{}", 
+					this,
+					this.getCreatorInfos() != null ?
+						" that was created by: \n\t" + String.join("\n\t", this.getCreatorInfos().stream().map(sTE -> sTE.toString()).collect(Collectors.toList())) 
+						: "" 
+				), exc);
 			} finally {
 				markAsFinished();
 			}
 			
 		}
-		
-		void markAsFinished() {
+
+		void removeExecutableAndExecutor() {
 			executable = null;
 			executor = null;
+		}
+		
+		void markAsFinished() {
+			finished = true;
 			synchronized(this) {
 				notifyAll();
 			}
+			removeExecutableAndExecutor();			
 		}
 		
 		abstract void execute0() throws Throwable;
@@ -721,7 +738,6 @@ public class QueuedTasksExecutor implements Component {
 		Supplier<Boolean> hasBeenExecutedChecker;
 		boolean runOnlyOnce;
 		public String id;
-		private boolean finished;
 		
 		Task(ThrowingRunnable<? extends Throwable> executable, boolean creationTracking) {
 			super(executable, creationTracking);
@@ -734,14 +750,14 @@ public class QueuedTasksExecutor implements Component {
 		
 		@Override
 		void markAsFinished() {
-			executable = null;
-			executor = null;
+			finished = true;
 			if (runOnlyOnce) {
 				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
 			}
 			synchronized(this) {
 				notifyAll();
 			}
+			removeExecutableAndExecutor();			
 		}
 		
 		@Override
@@ -799,7 +815,6 @@ public class QueuedTasksExecutor implements Component {
 						return finished = task.hasFinished();
 					}
 				}
-				executable = null;
 				return finished = hasBeenExecutedChecker.get();
 			}
 		}
