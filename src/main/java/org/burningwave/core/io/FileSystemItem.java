@@ -800,7 +800,7 @@ public class FileSystemItem implements ManagedLogger {
 					});
 				}
 				if (Cache.pathForContents.get(absolutePath) == null) {
-					reloadContent();
+					reloadContent(false);
 				}
 				return toByteBuffer();		
 			} else {
@@ -818,12 +818,21 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public FileSystemItem reloadContent() {
+		return reloadContent(false);
+	}
+	
+	public FileSystemItem reloadContent(boolean recomputeConventionedAbsolutePath) {
 		Synchronizer.execute(instanceId, () -> {
 			String absolutePath = getAbsolutePath();
 			Cache.pathForContents.remove(absolutePath, true);
+			if (recomputeConventionedAbsolutePath) {
+				this.absolutePath.setValue(null);
+			}
 			if (exists() && !isFolder()) {
 				if (isCompressed()) {
-					try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(getParentContainer().reloadContent().getAbsolutePath())) {
+					try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
+						getParentContainer().reloadContent(recomputeConventionedAbsolutePath).getAbsolutePath())
+					) {
 						iterableZipContainer.findFirst(
 							iteratedZipEntry -> 
 								iteratedZipEntry.getAbsolutePath().equals(absolutePath), 
@@ -1056,8 +1065,8 @@ public class FileSystemItem implements ManagedLogger {
 							logInfo("Trying to reload content of {} and test it again", childAbsolutePath);
 							childAndThis[0].reloadContent();
 						} else if (exc instanceof NullPointerException) {
-							logInfo("Trying to reset {} and test it again", childAbsolutePath);
-							childAndThis[0].reset().toByteBuffer();
+							logInfo("Trying to reload content and conventioned absolute path of {} and test it again", childAbsolutePath);
+							childAndThis[0].reloadContent(true);
 						}
 						return filterPredicate.test(childAndThis);
 					} 
