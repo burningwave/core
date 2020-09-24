@@ -28,6 +28,8 @@
  */
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -137,6 +139,11 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 	
 	public void enableLogging(String clientName) {
 		getLoggerEntry(clientName).getValue().set(LoggingLevel.ALL_LEVEL_ENABLED);
+	}
+	
+	@Override
+	public void logError(Supplier<String> clientNameSupplier, String message, Throwable exc, Object... arguments) {
+		log(clientNameSupplier, LoggingLevel.ERROR, (logger, stackTraceElement) -> logger.error(addDetailsToMessage(Strings.compile(message, arguments), stackTraceElement), exc));		
 	}
 	
 	@Override
