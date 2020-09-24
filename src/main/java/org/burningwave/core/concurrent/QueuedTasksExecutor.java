@@ -1050,16 +1050,16 @@ public class QueuedTasksExecutor implements Component {
 						
 						@Override
 						public QueuedTasksExecutor.Task async() {
-							return setExecutionMode(this::async, QueuedTasksExecutor.TaskAbst.Execution.Mode.PURE_ASYNC);
+							return setExecutionMode(() -> super.async(), QueuedTasksExecutor.TaskAbst.Execution.Mode.ASYNC);
 						}
 						
 						@Override
 						public QueuedTasksExecutor.Task pureAsync() {
-							return setExecutionMode(this::pureAsync, QueuedTasksExecutor.TaskAbst.Execution.Mode.PURE_ASYNC);
+							return setExecutionMode(() -> super.pureAsync(), QueuedTasksExecutor.TaskAbst.Execution.Mode.PURE_ASYNC);
 						}
 						
 						public QueuedTasksExecutor.Task sync() {
-							return setExecutionMode(this::sync, QueuedTasksExecutor.TaskAbst.Execution.Mode.SYNC);
+							return setExecutionMode(() -> super.sync(), QueuedTasksExecutor.TaskAbst.Execution.Mode.SYNC);
 						}
 						
 						private QueuedTasksExecutor.Task setExecutionMode(
