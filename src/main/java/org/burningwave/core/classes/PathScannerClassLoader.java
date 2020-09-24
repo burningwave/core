@@ -111,7 +111,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 				throw Throwables.toRuntimeException(exc);
 			}
 			return false;
-		});
+		}).parallel(false);
 	}
 	
 	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, FileSystemItem.Criteria scanFileCriteria) {

@@ -267,8 +267,9 @@ public class FileSystemItem implements ManagedLogger {
 					return false;
 				}
 			};
-		Set<FileSystemItem> result = Optional.ofNullable(childrenSupplier.get()).map(children -> 
-			children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier))
+		Set<FileSystemItem> result = Optional.ofNullable(childrenSupplier.get()).map(children -> (filter.parallel?
+			children.parallelStream():
+			children.stream()).filter(filterPredicate).collect(Collectors.toCollection(setSupplier))
 		).orElseGet(() -> null);
 		if (!iteratedFISWithErrors.isEmpty()) {
 			for (Map.Entry<FileSystemItem, Throwable> fisWithError : iteratedFISWithErrors.entrySet()) {
@@ -1030,6 +1031,11 @@ public class FileSystemItem implements ManagedLogger {
 	public static class Criteria extends org.burningwave.core.Criteria.Simple<FileSystemItem[], Criteria> {
 		
 		private BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler;
+		private boolean parallel;
+		
+		private Criteria() {
+			parallel = false;
+		}
 		
 		public static Criteria create() {
 			return new Criteria();
@@ -1070,6 +1076,11 @@ public class FileSystemItem implements ManagedLogger {
 		
 		public final Criteria setExceptionHandler(BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler) {
 			this.exceptionHandler = exceptionHandler;
+			return this;
+		}
+		
+		public final Criteria parallel(boolean flag) {
+			this.parallel = flag;
 			return this;
 		}
 		
@@ -1140,6 +1151,7 @@ public class FileSystemItem implements ManagedLogger {
 		public Criteria createCopy() {
 			Criteria copy = super.createCopy();
 			copy.exceptionHandler = this.exceptionHandler;
+			copy.parallel = this.parallel;
 			return copy;
 		}
 
