@@ -30,7 +30,6 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
-import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.IOException;
@@ -59,7 +58,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	Collection<String> loadedPaths;
 	PathHelper pathHelper;
 	FileSystemItem.Criteria classFileCriteriaAndConsumer;
-	Map<String, Task> loadingPathTasks;
 	
 	public static class Configuration {
 		public static class Key {
@@ -101,7 +99,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		this.pathHelper = pathHelper;
 		this.allLoadedPaths = ConcurrentHashMap.newKeySet();
 		this.loadedPaths = ConcurrentHashMap.newKeySet();
-		this.loadingPathTasks = new ConcurrentHashMap<>();
 		this.classFileCriteriaAndConsumer = scanFileCriteria.createCopy().and().allFileThat((child, pathFIS) -> {
 			JavaClass.use(child.toByteBuffer(), javaClass ->
 				addByteCode0(javaClass.getName(), javaClass.getByteCode())
@@ -127,35 +124,30 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	
 	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, Predicate<String> checkForAddedClasses) {
 		Collection<String> scannedPaths = new HashSet<>();
+		Collection<Task> loadingPathTasks = new HashSet<>();
 		try {
 			for (String path : paths) {
 				if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
-					Task loadingPathTask = BackgroundExecutor.createTask(() -> {
-						if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
-							FileSystemItem pathFIS = FileSystemItem.ofPath(path);
-							if (checkForAddedClasses.test(path)) {
-								pathFIS.refresh();
+					loadingPathTasks.add(
+						BackgroundExecutor.createTask(() -> {
+							if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
+								FileSystemItem pathFIS = FileSystemItem.ofPath(path);
+								if (checkForAddedClasses.test(path)) {
+									pathFIS.refresh();
+								}
+								pathFIS.findInAllChildren(classFileCriteriaAndConsumer);
+								loadedPaths.add(path);
+								allLoadedPaths.add(path);
+								scannedPaths.add(path);
 							}
-							pathFIS.findInAllChildren(classFileCriteriaAndConsumer);
-							loadedPaths.add(path);
-							allLoadedPaths.add(path);
-							scannedPaths.add(path);
-						}
-					});
-					loadingPathTask.waitForFinish();
-					Synchronizer.execute(instanceId + "_" + path, () -> {
-						if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
-							FileSystemItem pathFIS = FileSystemItem.ofPath(path);
-							if (checkForAddedClasses.test(path)) {
-								pathFIS.refresh();
-							}
-							pathFIS.findInAllChildren(classFileCriteriaAndConsumer);
-							loadedPaths.add(path);
-							allLoadedPaths.add(path);
-							scannedPaths.add(path);
-						}
-					});
+						}).runOnlyOnce(instanceId + "_" + path, () -> 
+							!checkForAddedClasses.test(path) && hasBeenLoaded(path, !checkForAddedClasses.test(path))
+						).submit()
+					);
 				}
+			}
+			for (Task task : loadingPathTasks) {
+				task.waitForFinish();
 			}
 		} catch (Throwable exc) {
 			if (isClosed) {
