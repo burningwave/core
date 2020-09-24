@@ -107,12 +107,12 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private static Collection<ComponentContainer> instances;
-	protected Map<Class<? extends Component>, Component> components;
+	private Map<Class<? extends Component>, Component> components;
 	private Supplier<java.util.Properties> propertySupplier;
 	private Properties config;
 	private boolean isUndestroyable;
 	private Consumer<ComponentContainer> preAfterInitCall;
-	private QueuedTasksExecutor.Task afterInitTask;
+	private volatile QueuedTasksExecutor.Task afterInitTask;
 	
 	static {
 		instances = ConcurrentHashMap.newKeySet();
@@ -305,17 +305,13 @@ public class ComponentContainer implements ComponentSupplier {
 		T component = (T)components.get(componentType);
 		if (component == null) {
 			component = Synchronizer.execute(getMutexForComponentsId(), () -> {
-				QueuedTasksExecutor.Task afterInitTask = this.afterInitTask;
-				if (afterInitTask != null) {
-					synchronized (afterInitTask) {
-						if (!afterInitTask.isSubmited()) {
-							afterInitTask.submit();
-						}
-						this.afterInitTask = null;
-					}
-				}
 				T componentTemp = (T)components.get(componentType);
 				if (componentTemp == null) {
+					QueuedTasksExecutor.Task afterInitTask = this.afterInitTask;
+					if (afterInitTask != null) {
+						afterInitTask.submit();
+						this.afterInitTask = null;
+					}
 					components.put(componentType, componentTemp = componentSupplier.get());
 				}
 				return componentTemp;
