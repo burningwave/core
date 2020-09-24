@@ -248,7 +248,7 @@ public class FileSystemItem implements ManagedLogger {
 		Predicate<FileSystemItem[]> nativePredicate = filter.getOriginalPredicateOrTruePredicateIfPredicateIsNull();
 		Map<FileSystemItem, Throwable> iteratedFISWithErrors = new ConcurrentHashMap<>();
 		BiFunction<Throwable, FileSystemItem[], Boolean> customExceptionHandler = filter.exceptionHandler;
-		Predicate<FileSystemItem> filterPredicate = filter.exceptionHandler != null ?
+		Predicate<FileSystemItem> filterPredicate = customExceptionHandler != null ?
 			child -> {
 				try {
 					return nativePredicate.test(new FileSystemItem[] { child, this });
