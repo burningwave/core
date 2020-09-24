@@ -32,6 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -46,7 +47,7 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 		PUT, REMOVE
 	}
 	
-	private Collection<Listener> listeners;
+	private Set<Listener> listeners;
 	private String defaultValuesSeparator;
 	
     public Properties(Properties defaults) {
