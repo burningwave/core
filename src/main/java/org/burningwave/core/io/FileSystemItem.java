@@ -51,6 +51,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -234,12 +235,57 @@ public class FileSystemItem implements ManagedLogger {
 
 	private <C extends Set<FileSystemItem>> Set<FileSystemItem> findIn(Supplier<Set<FileSystemItem>> childrenSupplier,
 			FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
-		Predicate<FileSystemItem[]> nativePredicate = filter.getPredicateOrTruePredicateIfPredicateIsNull();
-		Predicate<FileSystemItem> filterPredicate = child -> 
-			nativePredicate.test(new FileSystemItem[] { child, this });
-		return Optional.ofNullable(childrenSupplier.get()).map(children -> 
+		Predicate<FileSystemItem[]> nativePredicate = filter.getOriginalPredicateOrTruePredicateIfPredicateIsNull();
+		Map<FileSystemItem, Throwable> iteratedFISWithErrors = new ConcurrentHashMap<>();
+		BiFunction<Throwable, FileSystemItem[], Boolean> customExceptionHandler = filter.exceptionHandler;
+		Predicate<FileSystemItem> filterPredicate = filter.exceptionHandler != null ?
+			child -> {
+				try {
+					return nativePredicate.test(new FileSystemItem[] { child, this });
+				} catch (Throwable exc) {
+					logWarn("Exception occurred while iterating {}", child);
+					iteratedFISWithErrors.put(child, exc);
+					return false;
+				}
+			} :
+			child -> {
+				try {
+					return nativePredicate.test(new FileSystemItem[] { child, this });
+				} catch (ArrayIndexOutOfBoundsException | NullPointerException exc) {
+					logWarn("Exception occurred while iterating {}", child);
+					iteratedFISWithErrors.put(child, exc);
+					return false;
+				}
+			};
+		Set<FileSystemItem> result = Optional.ofNullable(childrenSupplier.get()).map(children -> 
 			children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier))
 		).orElseGet(() -> null);
+		if (!iteratedFISWithErrors.isEmpty()) {
+			for (Entry<FileSystemItem, Throwable> fisWithError : iteratedFISWithErrors.entrySet()) {
+				Throwable initialExc = fisWithError.getValue();
+				FileSystemItem child = fisWithError.getKey();
+				FileSystemItem[] childAndThis = new FileSystemItem[] { child, this };
+				try {
+					if (initialExc instanceof ArrayIndexOutOfBoundsException) {
+						logInfo("Trying to reload content of {} and test it again", child.getAbsolutePath());
+						child.reloadContent();
+					} else if (initialExc instanceof NullPointerException) {
+						logInfo("Trying to reload content and conventioned absolute path of {} and test it again", child.getAbsolutePath());
+						child.reloadContent(true);
+					}
+					if (nativePredicate.test(childAndThis)) {
+						result.add(child);
+					}
+				} catch (Throwable exc) {
+					if (customExceptionHandler != null && customExceptionHandler.apply(exc, childAndThis)) {
+						result.add(child);
+					}
+					throw exc;
+				}
+			}
+			iteratedFISWithErrors.clear();
+		}
+		return result;
 	}
 
 	public FileSystemItem findFirstInAllChildren() {
@@ -795,10 +841,9 @@ public class FileSystemItem implements ManagedLogger {
 					FileSystemItem superParentContainerFinal = superParentContainer;
 					Synchronizer.execute(superParentContainer.instanceId, () -> {
 						if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
-							superParentContainerFinal.refresh();
+							superParentContainerFinal.refresh().getAllChildren();
 						}
 					});
-					superParentContainerFinal.getAllChildren();
 				}
 				if (Cache.pathForContents.get(absolutePath) == null) {
 					reloadContent(false);
@@ -823,33 +868,35 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public FileSystemItem reloadContent(boolean recomputeConventionedAbsolutePath) {
-		String absolutePath = getAbsolutePath();
-		Cache.pathForContents.remove(absolutePath, true);
-		if (recomputeConventionedAbsolutePath) {
-			this.absolutePath.setValue(null);
-		}
-		if (exists() && !isFolder()) {
-			if (isCompressed()) {
-				try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
-					getParentContainer().reloadContent(recomputeConventionedAbsolutePath).getAbsolutePath())
-				) {
-					iterableZipContainer.findFirst(
-						iteratedZipEntry -> 
-							iteratedZipEntry.getAbsolutePath().equals(absolutePath), 
-						iteratedZipEntry -> 
-							iteratedZipEntry.getAbsolutePath().equals(absolutePath)
-					);
-				}		
-			} else {
-				Cache.pathForContents.getOrUploadIfAbsent(
-					absolutePath, () -> {
-						try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
-							return fIS.toByteBuffer();
-						}						
-					}
-				);
+		Synchronizer.execute(instanceId, () -> {
+			String absolutePath = getAbsolutePath();
+			Cache.pathForContents.remove(absolutePath, true);
+			if (recomputeConventionedAbsolutePath) {
+				this.absolutePath.setValue(null);
 			}
-		}
+			if (exists() && !isFolder()) {
+				if (isCompressed()) {
+					try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
+						getParentContainer().reloadContent(recomputeConventionedAbsolutePath).getAbsolutePath())
+					) {
+						iterableZipContainer.findFirst(
+							iteratedZipEntry -> 
+								iteratedZipEntry.getAbsolutePath().equals(absolutePath), 
+							iteratedZipEntry -> 
+								iteratedZipEntry.getAbsolutePath().equals(absolutePath)
+						);
+					}		
+				} else {
+					Cache.pathForContents.getOrUploadIfAbsent(
+						absolutePath, () -> {
+							try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
+								return fIS.toByteBuffer();
+							}						
+						}
+					);
+				}
+			}
+		});
 		return this;
 	}
 
