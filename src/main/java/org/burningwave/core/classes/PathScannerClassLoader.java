@@ -136,8 +136,8 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 													logInfo("Trying to reload content of {} and test it again", childAbsolutePath);
 													child.reloadContent();
 												} else if (exc instanceof NullPointerException) {
-													logInfo("Trying to reset {} and test it again", childAbsolutePath);
-													child.reset();
+													logInfo("Trying to reload content and conventioned absolute path of {} and test it again", childAbsolutePath);
+													child.reloadContent(true);
 												}
 												JavaClass.use(child.toByteBuffer(), javaClass ->
 													addByteCode0(javaClass.getName(), javaClass.getByteCode())
