@@ -97,7 +97,9 @@ class ZipFile implements IterableZipContainer {
 			 return bBOS.toByteBuffer();
 		} catch (Throwable exc) {
 			if (recursive) {
+				logWarn("Exception occurred while building zip entry {} of {}: {}", zipEntry.getName(), absolutePath, exc.getMessage());
 				this.originalZipFile = null;
+				logInfo("Trying recursive call");
 				return buildZipEntry(absolutePath, content, zipEntry, false);
 			}
 			logError("Could not load content of " + zipEntry.getName() + " of " + absolutePath, exc);
