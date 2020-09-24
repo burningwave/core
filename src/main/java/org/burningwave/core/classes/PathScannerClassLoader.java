@@ -28,8 +28,8 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.IOException;
@@ -128,22 +128,19 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		try {
 			for (String path : paths) {
 				if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
-					loadingPathTasks.add(
-						BackgroundExecutor.createTask(() -> {
-							if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
-								FileSystemItem pathFIS = FileSystemItem.ofPath(path);
-								if (checkForAddedClasses.test(path)) {
-									pathFIS.refresh();
-								}
-								pathFIS.findInAllChildren(classFileCriteriaAndConsumer);
-								loadedPaths.add(path);
-								allLoadedPaths.add(path);
-								scannedPaths.add(path);
+					Synchronizer.execute(instanceId + "_" + path, () -> {
+						if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
+							FileSystemItem pathFIS = FileSystemItem.ofPath(path);
+							if (checkForAddedClasses.test(path)) {
+								pathFIS.refresh();
 							}
-						}).runOnlyOnce(instanceId + "_" + path, () -> 
-							!checkForAddedClasses.test(path) && hasBeenLoaded(path, !checkForAddedClasses.test(path))
-						).async().submit()
-					);
+							pathFIS.findInAllChildren(classFileCriteriaAndConsumer);
+							loadedPaths.add(path);
+							allLoadedPaths.add(path);
+							scannedPaths.add(path);
+						}
+					});
+					
 				}
 			}
 			for (Task task : loadingPathTasks) {

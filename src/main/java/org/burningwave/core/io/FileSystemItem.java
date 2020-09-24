@@ -51,7 +51,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -232,7 +231,18 @@ public class FileSystemItem implements ManagedLogger {
 			Supplier<C> setSupplier) {
 		return findIn(this::getChildren, filter, setSupplier);
 	}
-
+	
+	private <C extends Set<FileSystemItem>> Set<FileSystemItem> findIn(Supplier<Set<FileSystemItem>> childrenSupplier,
+			FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
+		Predicate<FileSystemItem[]> nativePredicate = filter.getPredicateOrTruePredicateIfPredicateIsNull();
+		Predicate<FileSystemItem> filterPredicate = child -> 
+			nativePredicate.test(new FileSystemItem[] { child, this });
+		return Optional.ofNullable(childrenSupplier.get()).map(children -> 
+			children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier))
+		).orElseGet(() -> null);
+	}
+	
+	/*
 	private <C extends Set<FileSystemItem>> Set<FileSystemItem> findIn(Supplier<Set<FileSystemItem>> childrenSupplier,
 			FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
 		Predicate<FileSystemItem[]> nativePredicate = filter.getOriginalPredicateOrTruePredicateIfPredicateIsNull();
@@ -286,7 +296,7 @@ public class FileSystemItem implements ManagedLogger {
 			iteratedFISWithErrors.clear();
 		}
 		return result;
-	}
+	}*/
 
 	public FileSystemItem findFirstInAllChildren() {
 		return findFirstInAllChildren(FileSystemItem.Criteria.create());
