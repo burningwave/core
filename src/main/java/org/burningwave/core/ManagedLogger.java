@@ -80,6 +80,10 @@ public interface ManagedLogger {
 		ManagedLoggersRepository.logWarn(() -> this.getClass().getName(), message, arguments);
 	}
 	
+	default void logError(String message, Throwable exc, Object... arguments) {
+		ManagedLoggersRepository.logError(() -> this.getClass().getName(), message, exc, arguments);
+	}
+	
 	default void logError(String message, Throwable exc) {
 		ManagedLoggersRepository.logError(() -> this.getClass().getName(), message, exc);
 	}
@@ -173,6 +177,8 @@ public interface ManagedLogger {
 		public void disableLogging(String clientName);
 		
 		public void enableLogging(String clientName);
+		
+		public void logError(Supplier<String> clientNameSupplier, String message, Throwable exc, Object... arguments);
 		
 		public void logError(Supplier<String> clientNameSupplier, String message, Throwable exc);
 		

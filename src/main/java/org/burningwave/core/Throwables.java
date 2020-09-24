@@ -28,6 +28,7 @@
  */
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 public class Throwables implements Component {
 	
@@ -43,9 +44,13 @@ public class Throwables implements Component {
 		} else if (obj instanceof String) {
 			return new RuntimeException((String)obj);
 		} else {
-			logError("", (Throwable)obj);
 			return new RuntimeException((Throwable)obj);
 		}
 	}
+	
+	public RuntimeException toRuntimeException(String message, Object... arguments) {
+		return new RuntimeException(Strings.compile(message, arguments));
+	}
+	
 	
 }

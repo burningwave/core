@@ -909,7 +909,7 @@ public class Classes implements Component, MembersRetriever {
 				this.classLoadersPackages.clear();
 				this.classLoadersPackages = null;
 			} else {
-				throw Throwables.toRuntimeException("Could not close singleton instance " + this);
+				throw Throwables.toRuntimeException("Could not close singleton instance {}", this);
 			}
 		}
 	}
