@@ -102,7 +102,7 @@ class ZipFile implements IterableZipContainer {
 				logInfo("Trying recursive call");
 				return buildZipEntry(absolutePath, content, zipEntry, false);
 			}
-			logError("Could not load content of " + zipEntry.getName() + " of " + absolutePath, exc);
+			logError("Could not load content of {} of {}", exc,  zipEntry.getName(), absolutePath);
 			return null;
 		}
 	}
