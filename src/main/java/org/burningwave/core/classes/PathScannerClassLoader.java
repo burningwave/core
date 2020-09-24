@@ -30,7 +30,6 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,7 +47,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 
@@ -99,19 +97,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		this.pathHelper = pathHelper;
 		this.allLoadedPaths = ConcurrentHashMap.newKeySet();
 		this.loadedPaths = ConcurrentHashMap.newKeySet();
-		this.classFileCriteriaAndConsumer = scanFileCriteria.createCopy().and().allFileThat((child, pathFIS) -> {
-			JavaClass.use(child.toByteBuffer(), javaClass ->
-				addByteCode0(javaClass.getName(), javaClass.getByteCode())
-			);			
-			return true;
-		}).setExceptionHandler((exc, childAndPath) -> {
-			if (!isClosed) {
-				logError("Exception occurred while scanning {}", exc, childAndPath[0].getAbsolutePath());
-			} else {
-				throw Throwables.toRuntimeException(exc);
-			}
-			return false;
-		}).parallel(false);
+		this.classFileCriteriaAndConsumer = scanFileCriteria.createCopy();
 	}
 	
 	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, FileSystemItem.Criteria scanFileCriteria) {
@@ -124,7 +110,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	
 	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, Predicate<String> checkForAddedClasses) {
 		Collection<String> scannedPaths = new HashSet<>();
-		Collection<Task> loadingPathTasks = new HashSet<>();
 		try {
 			for (String path : paths) {
 				if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
@@ -134,17 +119,48 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 							if (checkForAddedClasses.test(path)) {
 								pathFIS.refresh();
 							}
-							pathFIS.findInAllChildren(classFileCriteriaAndConsumer);
+							for (FileSystemItem child : pathFIS.getAllChildren()) {
+								if (classFileCriteriaAndConsumer.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(
+									new FileSystemItem [] {child, pathFIS}
+								)){
+									try {
+										try {
+											JavaClass.use(child.toByteBuffer(), javaClass ->
+												addByteCode0(javaClass.getName(), javaClass.getByteCode())
+											);
+										} catch (ArrayIndexOutOfBoundsException | NullPointerException exc) {
+											if (!isClosed){
+												String childAbsolutePath = child.getAbsolutePath();
+												logWarn("Exception occurred while scanning {}", childAbsolutePath);
+												if (exc instanceof ArrayIndexOutOfBoundsException) {
+													logInfo("Trying to reload content of {} and test it again", childAbsolutePath);
+													child.reloadContent();
+												} else if (exc instanceof NullPointerException) {
+													logInfo("Trying to reload content and conventioned absolute path of {} and test it again", childAbsolutePath);
+													child.reloadContent(true);
+												}
+												JavaClass.use(child.toByteBuffer(), javaClass ->
+													addByteCode0(javaClass.getName(), javaClass.getByteCode())
+												);
+											} else {
+												throw exc;
+											}
+										}
+									} catch (Throwable exc) {
+										if (!isClosed) {
+											logError("Exception occurred while scanning " + child.getAbsolutePath(), exc);
+										} else {
+											throw exc;
+										}										
+									}
+								}
+							}
 							loadedPaths.add(path);
 							allLoadedPaths.add(path);
 							scannedPaths.add(path);
 						}
 					});
-					
 				}
-			}
-			for (Task task : loadingPathTasks) {
-				task.waitForFinish();
 			}
 		} catch (Throwable exc) {
 			if (isClosed) {
