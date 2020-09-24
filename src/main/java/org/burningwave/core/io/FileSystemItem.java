@@ -795,9 +795,10 @@ public class FileSystemItem implements ManagedLogger {
 					FileSystemItem superParentContainerFinal = superParentContainer;
 					Synchronizer.execute(superParentContainer.instanceId, () -> {
 						if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
-							superParentContainerFinal.refresh().getAllChildren();
+							superParentContainerFinal.refresh();
 						}
 					});
+					superParentContainerFinal.getAllChildren();
 				}
 				if (Cache.pathForContents.get(absolutePath) == null) {
 					reloadContent(false);
@@ -822,35 +823,33 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public FileSystemItem reloadContent(boolean recomputeConventionedAbsolutePath) {
-		Synchronizer.execute(instanceId, () -> {
-			String absolutePath = getAbsolutePath();
-			Cache.pathForContents.remove(absolutePath, true);
-			if (recomputeConventionedAbsolutePath) {
-				this.absolutePath.setValue(null);
-			}
-			if (exists() && !isFolder()) {
-				if (isCompressed()) {
-					try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
-						getParentContainer().reloadContent(recomputeConventionedAbsolutePath).getAbsolutePath())
-					) {
-						iterableZipContainer.findFirst(
-							iteratedZipEntry -> 
-								iteratedZipEntry.getAbsolutePath().equals(absolutePath), 
-							iteratedZipEntry -> 
-								iteratedZipEntry.getAbsolutePath().equals(absolutePath)
-						);
-					}		
-				} else {
-					Cache.pathForContents.getOrUploadIfAbsent(
-						absolutePath, () -> {
-							try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
-								return fIS.toByteBuffer();
-							}						
-						}
+		String absolutePath = getAbsolutePath();
+		Cache.pathForContents.remove(absolutePath, true);
+		if (recomputeConventionedAbsolutePath) {
+			this.absolutePath.setValue(null);
+		}
+		if (exists() && !isFolder()) {
+			if (isCompressed()) {
+				try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
+					getParentContainer().reloadContent(recomputeConventionedAbsolutePath).getAbsolutePath())
+				) {
+					iterableZipContainer.findFirst(
+						iteratedZipEntry -> 
+							iteratedZipEntry.getAbsolutePath().equals(absolutePath), 
+						iteratedZipEntry -> 
+							iteratedZipEntry.getAbsolutePath().equals(absolutePath)
 					);
-				}
+				}		
+			} else {
+				Cache.pathForContents.getOrUploadIfAbsent(
+					absolutePath, () -> {
+						try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
+							return fIS.toByteBuffer();
+						}						
+					}
+				);
 			}
-		});
+		}
 		return this;
 	}
 
