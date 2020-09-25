@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
@@ -62,6 +63,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("resource")
@@ -248,7 +250,11 @@ public class FileSystemItem implements ManagedLogger {
 		Supplier<Set<FileSystemItem>> childrenSupplier,
 		FileSystemItem.Criteria filter,
 		Supplier<C> setSupplier
-	) {
+	) {	
+		Set<FileSystemItem> children = childrenSupplier.get();
+		if (children == null) {
+			return null;
+		}
 		Predicate<FileSystemItem[]> nativePredicate = filter.getOriginalPredicateOrTruePredicateIfPredicateIsNull();
 		Collection<FileSystemItem> iteratedFISWithErrors = ConcurrentHashMap.newKeySet();
 		BiFunction<Throwable, FileSystemItem[], Boolean> customExceptionHandler = filter.exceptionHandler;
@@ -266,9 +272,7 @@ public class FileSystemItem implements ManagedLogger {
 				return false;
 			}
 		};
-		Set<FileSystemItem> result = Optional.ofNullable(childrenSupplier.get()).map(children -> 
-			children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier))
-		).orElseGet(() -> null);
+		Set<FileSystemItem> result = children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier));
 		if (!iteratedFISWithErrors.isEmpty()) {
 			Predicate<FileSystemItem[]> nativePredicateWithExceptionManaging = filter.getPredicateOrTruePredicateIfPredicateIsNull();
 			for (FileSystemItem child : iteratedFISWithErrors) {
@@ -833,11 +837,12 @@ public class FileSystemItem implements ManagedLogger {
 				if ((Cache.pathForContents.get(randomFIS.getAbsolutePath())) == null) {
 					FileSystemItem finalRandomFIS = randomFIS;
 					FileSystemItem superParentContainerFinal = superParentContainer;
-					Synchronizer.execute(superParentContainer.instanceId, () -> {
-						if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
+					if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
+						QueuedTasksExecutor.Task task = BackgroundExecutor.createTask(() -> {
 							superParentContainerFinal.refresh().getAllChildren();
-						}
-					});
+						}).runOnlyOnce(superParentContainer.instanceId, () -> Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) != null).submit();
+						task.waitForFinish();
+					}
 				}
 				if (Cache.pathForContents.get(absolutePath) == null) {
 					reloadContent(false);
