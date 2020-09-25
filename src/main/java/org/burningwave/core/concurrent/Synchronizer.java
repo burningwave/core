@@ -31,6 +31,7 @@ package org.burningwave.core.concurrent;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -159,11 +160,9 @@ public class Synchronizer implements AutoCloseable {
 	private void logAllThreadsState() {
 		StringBuffer log = new StringBuffer("\n\n");
 		for (Entry<Thread, StackTraceElement[]> threadAndStackTrace : Thread.getAllStackTraces().entrySet()) {
-			log.append("\t" + threadAndStackTrace.getKey() + ":\n\n");
-			for (StackTraceElement stackTrace : threadAndStackTrace.getValue()) {
-				log.append("\t\t" + stackTrace + "\n");
-			}
-			log.append("\n\n");
+			log.append("\t" + threadAndStackTrace.getKey() + ":\n");
+			log.append(Strings.from(threadAndStackTrace.getValue(), 2));
+			log.append("\n\n\n");
 		}
 		ManagedLoggersRepository.logInfo(() -> this.getClass().getName(), "Current threads state: {}", log.toString());
 	}

@@ -30,8 +30,6 @@ package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
-import java.util.stream.Collectors;
-
 public class TaskStateException extends RuntimeException {
 
 	private static final long serialVersionUID = -6504561450589871045L;
@@ -44,7 +42,7 @@ public class TaskStateException extends RuntimeException {
 				task,
 				message,
 				task.getCreatorInfos() != null ?
-					" and was created by: \n\t" + String.join("\n\t", task.getCreatorInfos().stream().map(sTE -> sTE.toString()).collect(Collectors.toList())) 
+					" and was created:" + Strings.from(task.getCreatorInfos())
 					: "" 
 			)			
 		);

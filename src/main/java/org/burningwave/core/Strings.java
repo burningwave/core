@@ -31,6 +31,7 @@ package org.burningwave.core;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.function.ThrowingSupplier;
 
@@ -199,6 +201,34 @@ public class Strings implements Component {
 		.replace(".", "\\.")
 		.replace("$", "\\$");
 	}
+	
+    public String from(StackTraceElement[] stackTrace) {
+        return from(stackTrace, '\t', 1);
+    }
+    
+    public String from(StackTraceElement[] stackTrace, int marginCount) {
+        return from(stackTrace, '\t', marginCount);
+    }
+    
+    public String from(StackTraceElement[] stackTrace, char marginChar, int marginCount) {
+    	return from(Arrays.asList(stackTrace), marginChar, marginCount);
+    }
+    
+    public String from(List<StackTraceElement> stackTrace) {
+    	return from(stackTrace, '\t', 1);
+    }
+    
+    public String from(List<StackTraceElement> stackTrace, int marginCount) {
+    	return from(stackTrace, '\t', marginCount);
+    }
+    
+    public String from(List<StackTraceElement> stackTrace, char marginChar, int marginCount) {
+    	if (stackTrace.isEmpty()) {
+    		return "";
+    	}
+    	String margin = new String(new char[marginCount]).replace('\0', marginChar);
+    	return "\n" + margin + "at " + String.join("\n" + margin + "at ", stackTrace.stream().map(sTE -> sTE.toString()).collect(Collectors.toList()));
+    }
 	
 	public static class Paths {
 		Function<String, String> pathCleaner;
