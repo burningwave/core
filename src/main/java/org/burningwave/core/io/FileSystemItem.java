@@ -259,23 +259,15 @@ public class FileSystemItem implements ManagedLogger {
 				return false;
 			}
 		};
-//		Set<FileSystemItem> result = null;
-//		if (children.size() >= 80 ) {
-//			result = children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier));
-//		} else {
-//			result = children.stream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier));
-//		}
 		final Set<FileSystemItem> result = setSupplier.get();
-		IterableObjectHelper.iterateParallelIf(
+		IterableObjectHelper.iterateParallel(
 			children,
 			fileSystemItem -> {
 				if (filterPredicate.test(fileSystemItem)) {
 					result.add(fileSystemItem);
 				}
-			},
-			items -> items.size() > 400
-		);
-		
+			}
+		);		
 		if (!iteratedFISWithErrors.isEmpty()) {
 			Predicate<FileSystemItem[]> nativePredicateWithExceptionManaging = filter.getPredicateOrTruePredicateIfPredicateIsNull();
 			for (FileSystemItem child : iteratedFISWithErrors) {

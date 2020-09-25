@@ -526,12 +526,8 @@ public class IterableObjectHelper implements Component {
 	}
 	
 	public <T> void iterateParallelIf(Collection<T> items, Consumer<T> itemConsumer, Predicate<Collection<T>> predicate) {
-		iterateParallelIf(items, itemConsumer, predicate, Thread.currentThread().getPriority());
-	}
-	
-	public <T> void iterateParallelIf(Collection<T> items, Consumer<T> itemConsumer, Predicate<Collection<T>> predicate, int threadPriority) {
 		if (predicate.test(items) ) {
-			iterateParallel(items, itemConsumer, threadPriority);
+			iterateParallel(items, itemConsumer);
 		} else {
 			for (T item : items) {
 				itemConsumer.accept(item);
@@ -540,10 +536,6 @@ public class IterableObjectHelper implements Component {
 	}
 	
 	public <T> void iterateParallel(Collection<T> items, Consumer<T> itemConsumer) {
-		iterateParallel(items, itemConsumer, Thread.currentThread().getPriority());
-	}
-	
-	public <T> void iterateParallel(Collection<T> items, Consumer<T> itemConsumer, int threadPriority) {
 		Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
 		Iterator<T> itemIterator = items.iterator();
 		int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items.size());
@@ -561,7 +553,7 @@ public class IterableObjectHelper implements Component {
 						}
 						itemConsumer.accept(item);
 					}
-				}, threadPriority).async().submit()
+				}).async().submit()
 			);
 		}
 		tasks.stream().forEach(task -> task.waitForFinish());
