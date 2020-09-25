@@ -491,12 +491,11 @@ public class PathHelper implements Component {
 	public void close() {
 		closeResources(() -> pathGroups == null, () -> {
 			QueuedTasksExecutor.Task initializerTask = this.initializerTask;
-			if (initializerTask != null) {
-				if (!BackgroundExecutor.abort(initializerTask)) {
-					if (initializerTask.isStarted()) {
-						initializerTask.waitForFinish();
-					}
-				}
+			if (initializerTask != null && 
+				!BackgroundExecutor.abort(initializerTask) && 
+				initializerTask.isStarted()
+			) {
+				initializerTask.waitForFinish();
 			}
 			unregister(config);
 			pathGroups.forEach((key, value) -> {
