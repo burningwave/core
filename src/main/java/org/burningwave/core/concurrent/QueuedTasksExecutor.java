@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
@@ -404,7 +405,7 @@ public class QueuedTasksExecutor implements Component {
 		} else {
 			waitForAsyncTasksEnding(priority);
 			Task supendingTask = createSuspendingTask(priority);
-			changePriorityToAllTaskBefore(supendingTask.submit(), priority);
+			changePriorityToAllTaskBefore(supendingTask.submit(true), priority);
 			supendingTask.waitForFinish(false);
 		}
 		executor.setPriority(this.defaultPriority);
@@ -545,6 +546,7 @@ public class QueuedTasksExecutor implements Component {
 		int priority;
 		Thread executor;
 		Throwable exc;
+		ThrowingBiConsumer<T, Throwable, Throwable> exceptionHandler;
 		
 		public TaskAbst(E executable, boolean creationTracking) {
 			this.executable = executable;
@@ -571,6 +573,11 @@ public class QueuedTasksExecutor implements Component {
 			return creatorInfos;
 		}
 		
+		public T setExceptionHandler(ThrowingBiConsumer<T, Throwable, Throwable> exceptionHandler) {
+			this.exceptionHandler = exceptionHandler;
+			return (T)this;
+		}
+		
 		public boolean isStarted() {
 			return started;
 		}
@@ -583,13 +590,17 @@ public class QueuedTasksExecutor implements Component {
 			return aborted;
 		}
 		
+		public boolean isSubmited() {
+			return submited;
+		}
+		
 		public T waitForStarting() {
 			if (!started) {
 				synchronized (this) {
 					if (!started) {
 						try {
 							if (isAborted()) {
-								throw new TaskAbortedException(this);
+								throw new TaskStateException(this, "is aborted");
 							}
 							wait();
 							waitForStarting();
@@ -617,7 +628,7 @@ public class QueuedTasksExecutor implements Component {
 						(!ignoreThreadCheck && Thread.currentThread() != executor && executor != null))) {
 						try {
 							if (isAborted()) {
-								throw new TaskAbortedException(this);
+								throw new TaskStateException(this, "is aborted");
 							}
 							wait();
 							join0(ignoreThreadCheck);
@@ -655,22 +666,37 @@ public class QueuedTasksExecutor implements Component {
 				notifyAll();
 			}
 			try {
-				execute0();					
+				try {
+					execute0();					
+				} catch (Throwable exc) {
+					this.exc = exc;
+					if (exceptionHandler != null) {
+						exceptionHandler.accept((T)this, exc);
+					} else {
+						throw exc;
+					}
+				}
 			} catch (Throwable exc) {
-				this.exc = exc;
-				logError(Strings.compile(
-					"Exception occurred while executing {}{}", 
-					this,
-					this.getCreatorInfos() != null ?
-						" that was created by: \n\t" + String.join("\n\t", this.getCreatorInfos().stream().map(sTE -> sTE.toString()).collect(Collectors.toList())) 
-						: "" 
-				), exc);
+				logException(exc);
 			} finally {
 				markAsFinished();
 			}
 			
 		}
-
+		
+		private void logException(Throwable exc) {
+			logError(Strings.compile(
+				"Exception occurred while executing {}: \n{}: {}{}{}", 
+				this,
+				exc.toString(),
+				exc.getMessage(),
+				Strings.from(exc.getStackTrace()),
+				this.getCreatorInfos() != null ?
+					"\nthat was created:" + Strings.from(this.getCreatorInfos())
+					: "" 
+			));
+		}
+		
 		void removeExecutableAndExecutor() {
 			executable = null;
 			executor = null;
@@ -708,27 +734,25 @@ public class QueuedTasksExecutor implements Component {
 			return exc;
 		}
 		
-		public boolean endedWithErrors() {
-			return exc != null;
+		public final T submit() {
+			return submit(false);
 		}
 		
-		public final T submit() {
-			if (!submited) {
-				synchronized(this) {
-					if (!submited) {
-						submited = true;
-					} else {
-						throw Throwables.toRuntimeException("Could not submit task {} twice", this);
+		final T submit(boolean ignoreSubmitedCheck) {
+			if (!ignoreSubmitedCheck) {
+				if (!submited) {
+					synchronized(this) {
+						if (!submited) {
+							submited = true;
+						} else {
+							throw new TaskStateException(this, "is already submited");
+						}
 					}
+				} else {
+					throw new TaskStateException(this, "is already submited");
 				}
-			} else {
-				throw Throwables.toRuntimeException("Could not submit task " + this + " twice");
 			}
 			return addToQueue();
-		}
-		
-		public boolean isSubmited() {
-			return submited;
 		}
 		
 		abstract T addToQueue();
