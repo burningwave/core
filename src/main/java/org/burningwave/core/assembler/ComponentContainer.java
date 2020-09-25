@@ -106,8 +106,8 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
-	private static Collection<ComponentContainer> instances;
-	private Map<Class<? extends Component>, Component> components;
+	private volatile static Collection<ComponentContainer> instances;
+	private volatile Map<Class<? extends Component>, Component> components;
 	private Supplier<java.util.Properties> propertySupplier;
 	private Properties config;
 	private boolean isUndestroyable;

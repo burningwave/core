@@ -69,7 +69,7 @@ public class Synchronizer implements AutoCloseable {
 		
 	}
 	
-	Map<String, Object> parallelLockMap;
+	private volatile Map<String, Object> parallelLockMap;
 	Thread allThreadsStateLogger;
 	
 	private Synchronizer() {

@@ -56,7 +56,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 public class QueuedTasksExecutor implements Component {
 	private final static Map<String, Task> runOnlyOnceTasksToBeExecuted;
 	Thread executor;
-	List<TaskAbst<?, ?>> tasksQueue;
+	volatile List<TaskAbst<?, ?>> tasksQueue;
 	List<TaskAbst<?, ?>> asyncTasksInExecution;
 	Boolean supended;
 	private int loggingThreshold;
