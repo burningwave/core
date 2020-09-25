@@ -841,10 +841,12 @@ public class FileSystemItem implements ManagedLogger {
 				if ((Cache.pathForContents.get(randomFIS.getAbsolutePath())) == null) {
 					FileSystemItem finalRandomFIS = randomFIS;
 					FileSystemItem superParentContainerFinal = superParentContainer;
-					QueuedTasksExecutor.Task task = BackgroundExecutor.createTask(() -> {
-						superParentContainerFinal.refresh().getAllChildren();
-					}).runOnlyOnce(superParentContainer.instanceId, () -> Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) != null).submit();
-					task.waitForFinish();
+					if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
+						QueuedTasksExecutor.Task task = BackgroundExecutor.createTask(() -> {
+							superParentContainerFinal.refresh().getAllChildren();
+						}).runOnlyOnce(superParentContainer.instanceId, () -> Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) != null).submit();
+						task.waitForFinish();
+					}
 				}
 				if (Cache.pathForContents.get(absolutePath) == null) {
 					reloadContent(false);
