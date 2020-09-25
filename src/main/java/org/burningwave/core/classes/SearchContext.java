@@ -196,15 +196,17 @@ public class SearchContext<T> implements Component {
 					if (!skippedClassNames.contains(notFoundClassName)) {
 						if (!isARecursiveCall) {
 							if (pathScannerClassLoaderScannedPaths.isEmpty()) {
-								synchronized(pathScannerClassLoaderScannedPaths) {
-									if (pathScannerClassLoaderScannedPaths.isEmpty()) {
-										pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
-											getPathsToBeScanned(),
-											searchConfig.getCheckForAddedClassesPredicate().and(path -> !pathScannerClassLoaderScannedPaths.contains(path))
-										);
-										pathScannerClassLoaderScannedPaths.addAll(getPathsToBeScanned());
-									}
-								}
+								BackgroundExecutor.createTask(() -> {
+									pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
+										getPathsToBeScanned(),
+										searchConfig.getCheckForAddedClassesPredicate().and(path -> !pathScannerClassLoaderScannedPaths.contains(path))
+									);
+									pathScannerClassLoaderScannedPaths.addAll(getPathsToBeScanned());
+								}).runOnlyOnce(
+									pathScannerClassLoader.getId() + "_scanPaths_" + pathScannerClassLoaderScannedPaths.toString(), 
+									() -> 
+										!pathScannerClassLoaderScannedPaths.isEmpty()
+								).async().submit().waitForFinish();
 							}
 							return execute(supplier, defaultValueSupplier, classNameSupplier, true);
 						} else {
