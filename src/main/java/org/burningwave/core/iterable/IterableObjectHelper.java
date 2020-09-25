@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.iterable;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -38,10 +39,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -49,6 +52,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.Properties.Event;
@@ -519,6 +523,47 @@ public class IterableObjectHelper implements Component {
 			}
 		}		
 		return object != null && value != null && object.equals(value);
+	}
+	
+	public <T> void iterateParallelIf(Collection<T> items, Consumer<T> itemConsumer, Predicate<Collection<T>> predicate) {
+		iterateParallelIf(items, itemConsumer, predicate, Thread.currentThread().getPriority());
+	}
+	
+	public <T> void iterateParallelIf(Collection<T> items, Consumer<T> itemConsumer, Predicate<Collection<T>> predicate, int threadPriority) {
+		if (predicate.test(items) ) {
+			iterateParallel(items, itemConsumer, threadPriority);
+		} else {
+			for (T item : items) {
+				itemConsumer.accept(item);
+			}
+		}
+	}
+	
+	public <T> void iterateParallel(Collection<T> items, Consumer<T> itemConsumer) {
+		iterateParallel(items, itemConsumer, Thread.currentThread().getPriority());
+	}
+	
+	public <T> void iterateParallel(Collection<T> items, Consumer<T> itemConsumer, int threadPriority) {
+		Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
+		Iterator<T> itemIterator = items.iterator();
+		for (int i = 1; i < Runtime.getRuntime().availableProcessors(); i++) {
+			tasks.add(
+				BackgroundExecutor.createTask(() -> {
+					while (itemIterator.hasNext()) {
+						T item = null;
+						synchronized (itemIterator) {
+							try {
+								item = itemIterator.next();
+							} catch (NoSuchElementException exc) {
+								break;
+							}
+						}
+						itemConsumer.accept(item);
+					}
+				}, threadPriority).async().submit()
+			);
+		}
+		tasks.stream().forEach(task -> task.waitForFinish());
 	}
 	
 	private String toPrettyKeyValueLabel(Entry<?, ?> entry, String valuesSeparator, int marginTabCount) {

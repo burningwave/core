@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 
 import java.util.Collection;
@@ -145,9 +146,13 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	
 	void searchInFileSystem(C context) {
 		FileSystemItem.Criteria filter = buildFileAndClassTesterAndExecutor(context);
-		context.getSearchConfig().getPaths().parallelStream().forEach(basePath -> {
-			FileSystemItem.ofPath(basePath).refresh().findInAllChildren(filter);
-		});
+		IterableObjectHelper.iterateParallelIf(
+			context.getSearchConfig().getPaths(), 
+			basePath -> {
+				FileSystemItem.ofPath(basePath).refresh().findInAllChildren(filter);
+			},
+			paths -> paths.size() > 1
+		);		
 	}
 	
 	FileSystemItem.Criteria buildFileAndClassTesterAndExecutor(C context) {

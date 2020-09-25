@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.util.Collection;
@@ -118,10 +119,16 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		FileSystemItem.Criteria filterAndExecutor = buildFileAndClassTesterAndExecutor(context);
 		//scanFileCriteria in this point has been changed by the previous method call
 		FileSystemItem.Criteria fileFilter = searchConfig.getScanFileCriteria();
-		context.getSearchConfig().getPaths().parallelStream().forEach(basePath -> {
-			searchInCacheOrInFileSystem(basePath, context,
-					scanFileCriteriaHasNoPredicate, classCriteriaHasNoPredicate, filterAndExecutor, fileFilter);
-		});
+		IterableObjectHelper.iterateParallelIf(
+			context.getSearchConfig().getPaths(), 
+			basePath -> {
+				searchInCacheOrInFileSystem(
+					basePath, context,
+					scanFileCriteriaHasNoPredicate, classCriteriaHasNoPredicate, filterAndExecutor, fileFilter
+				);
+			},
+			paths -> paths.size() > 1
+		);		
 	}
 
 	private void searchInCacheOrInFileSystem(

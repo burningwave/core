@@ -232,23 +232,15 @@ public class FileSystemItem implements ManagedLogger {
 		return findIn(this::getChildren, filter, setSupplier);
 	}
 	
-	/*
-	private <C extends Set<FileSystemItem>> Set<FileSystemItem> findIn(Supplier<Set<FileSystemItem>> childrenSupplier,
-			FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
-		Predicate<FileSystemItem[]> nativePredicate = filter.getPredicateOrTruePredicateIfPredicateIsNull();
-		Predicate<FileSystemItem> filterPredicate = child -> 
-			nativePredicate.test(new FileSystemItem[] { child, this });
-		return Optional.ofNullable(childrenSupplier.get()).map(children -> 
-			children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier))
-		).orElseGet(() -> null);
-	}
-	*/
-	
 	private <C extends Set<FileSystemItem>> Set<FileSystemItem> findIn(
 		Supplier<Set<FileSystemItem>> childrenSupplier,
 		FileSystemItem.Criteria filter,
 		Supplier<C> setSupplier
-	) {
+	) {	
+		Set<FileSystemItem> children = childrenSupplier.get();
+		if (children == null) {
+			return null;
+		}
 		Predicate<FileSystemItem[]> nativePredicate = filter.getOriginalPredicateOrTruePredicateIfPredicateIsNull();
 		Collection<FileSystemItem> iteratedFISWithErrors = ConcurrentHashMap.newKeySet();
 		BiFunction<Throwable, FileSystemItem[], Boolean> customExceptionHandler = filter.exceptionHandler;
@@ -266,9 +258,23 @@ public class FileSystemItem implements ManagedLogger {
 				return false;
 			}
 		};
-		Set<FileSystemItem> result = Optional.ofNullable(childrenSupplier.get()).map(children -> 
-			children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier))
-		).orElseGet(() -> null);
+//		Set<FileSystemItem> result = null;
+//		if (children.size() >= 80 ) {
+//			result = children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier));
+//		} else {
+//			result = children.stream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier));
+//		}
+		final Set<FileSystemItem> result = setSupplier.get();
+		IterableObjectHelper.iterateParallelIf(
+			children,
+			fileSystemItem -> {
+				if (filterPredicate.test(fileSystemItem)) {
+					result.add(fileSystemItem);
+				}
+			},
+			items -> items.size() > 400
+		);
+		
 		if (!iteratedFISWithErrors.isEmpty()) {
 			Predicate<FileSystemItem[]> nativePredicateWithExceptionManaging = filter.getPredicateOrTruePredicateIfPredicateIsNull();
 			for (FileSystemItem child : iteratedFISWithErrors) {
