@@ -56,7 +56,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 public class QueuedTasksExecutor implements Component {
 	private final static Map<String, Task> runOnlyOnceTasksToBeExecuted;
 	Thread executor;
-	volatile List<TaskAbst<?, ?>> tasksQueue;
+	List<TaskAbst<?, ?>> tasksQueue;
 	List<TaskAbst<?, ?>> asyncTasksInExecution;
 	Boolean supended;
 	private int loggingThreshold;
@@ -404,7 +404,7 @@ public class QueuedTasksExecutor implements Component {
 		} else {
 			waitForAsyncTasksEnding(priority);
 			Task supendingTask = createSuspendingTask(priority);
-			changePriorityToAllTaskBefore(supendingTask.submit(), priority);
+			changePriorityToAllTaskBefore(supendingTask.submit(true), priority);
 			supendingTask.waitForFinish(false);
 		}
 		executor.setPriority(this.defaultPriority);
@@ -589,7 +589,7 @@ public class QueuedTasksExecutor implements Component {
 					if (!started) {
 						try {
 							if (isAborted()) {
-								throw new TaskAbortedException(this);
+								throw new TaskStateException(this, "is aborted");
 							}
 							wait();
 							waitForStarting();
@@ -617,7 +617,7 @@ public class QueuedTasksExecutor implements Component {
 						(!ignoreThreadCheck && Thread.currentThread() != executor && executor != null))) {
 						try {
 							if (isAborted()) {
-								throw new TaskAbortedException(this);
+								throw new TaskStateException(this, "is aborted");
 							}
 							wait();
 							join0(ignoreThreadCheck);
@@ -713,16 +713,22 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public final T submit() {
-			if (!submited) {
-				synchronized(this) {
-					if (!submited) {
-						submited = true;
-					} else {
-						throw Throwables.toRuntimeException("Could not submit task {} twice", this);
+			return submit(false);
+		}
+		
+		final T submit(boolean ignoreSubmitedCheck) {
+			if (!ignoreSubmitedCheck) {
+				if (!submited) {
+					synchronized(this) {
+						if (!submited) {
+							submited = true;
+						} else {
+							throw new TaskStateException(this, "is already submited");
+						}
 					}
+				} else {
+					throw new TaskStateException(this, "is already submited");
 				}
-			} else {
-				throw Throwables.toRuntimeException("Could not submit task " + this + " twice");
 			}
 			return addToQueue();
 		}

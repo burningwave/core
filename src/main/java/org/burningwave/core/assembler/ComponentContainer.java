@@ -106,22 +106,24 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
-	private volatile static Collection<ComponentContainer> instances;
-	private volatile Map<Class<? extends Component>, Component> components;
+	private static Collection<ComponentContainer> instances;
+	private Map<Class<? extends Component>, Component> components;
 	private Supplier<java.util.Properties> propertySupplier;
 	private Properties config;
 	private boolean isUndestroyable;
 	private Consumer<ComponentContainer> preAfterInitCall;
-	private volatile QueuedTasksExecutor.Task afterInitTask;
+	private QueuedTasksExecutor.Task afterInitTask;
+	private String instanceId;
 	
 	static {
 		instances = ConcurrentHashMap.newKeySet();
 	}
 	
 	ComponentContainer(Supplier<java.util.Properties> propertySupplier) {
+		this.instanceId = getId();
 		this.propertySupplier = propertySupplier;
 		this.components = new ConcurrentHashMap<>();
-		this.config = new Properties();
+		this.config = new Properties();		
 		listenTo(GlobalProperties);
 		listenTo(this.config);
 		instances.add(this);
@@ -271,7 +273,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 
 	private String getMutexForComponentsId() {
-		return getId() + "_components";
+		return instanceId + "_components";
 	}
 	
 	public void reset() {
@@ -309,8 +311,13 @@ public class ComponentContainer implements ComponentSupplier {
 				if (componentTemp == null) {
 					QueuedTasksExecutor.Task afterInitTask = this.afterInitTask;
 					if (afterInitTask != null) {
-						afterInitTask.submit();
-						this.afterInitTask = null;
+						synchronized (afterInitTask) {
+							afterInitTask = this.afterInitTask;
+							if (afterInitTask != null) {
+								afterInitTask.submit();
+								this.afterInitTask = null;
+							}
+						}
 					}
 					components.put(componentType, componentTemp = componentSupplier.get());
 				}
@@ -520,6 +527,7 @@ public class ComponentContainer implements ComponentSupplier {
 					components = null;
 					propertySupplier = null;
 					config = null;
+					instanceId = null;
 				});
 			});
 		} else {
