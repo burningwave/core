@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
@@ -62,6 +63,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("resource")
@@ -839,11 +841,10 @@ public class FileSystemItem implements ManagedLogger {
 				if ((Cache.pathForContents.get(randomFIS.getAbsolutePath())) == null) {
 					FileSystemItem finalRandomFIS = randomFIS;
 					FileSystemItem superParentContainerFinal = superParentContainer;
-					Synchronizer.execute(superParentContainer.instanceId, () -> {
-						if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
-							superParentContainerFinal.refresh().getAllChildren();
-						}
-					});
+					QueuedTasksExecutor.Task task = BackgroundExecutor.createTask(() -> {
+						superParentContainerFinal.refresh().getAllChildren();
+					}).runOnlyOnce(superParentContainer.instanceId, () -> Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) != null).submit();
+					task.waitForFinish();
 				}
 				if (Cache.pathForContents.get(absolutePath) == null) {
 					reloadContent(false);
