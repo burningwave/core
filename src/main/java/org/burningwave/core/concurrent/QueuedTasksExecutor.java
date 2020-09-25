@@ -60,7 +60,6 @@ public class QueuedTasksExecutor implements Component {
 	List<TaskAbst<?, ?>> tasksQueue;
 	List<TaskAbst<?, ?>> asyncTasksInExecution;
 	Boolean supended;
-	private int loggingThreshold;
 	int defaultPriority;
 	private long executedTasksCount;
 	private boolean isDaemon;
@@ -78,10 +77,9 @@ public class QueuedTasksExecutor implements Component {
 		runOnlyOnceTasksToBeExecuted = new ConcurrentHashMap<>();
 	}
 	
-	QueuedTasksExecutor(String executorName, String asyncExecutorName, int defaultPriority, boolean isDaemon, int loggingThreshold) {
+	QueuedTasksExecutor(String executorName, String asyncExecutorName, int defaultPriority, boolean isDaemon) {
 		tasksQueue = new CopyOnWriteArrayList<>();
 		asyncTasksInExecution = new CopyOnWriteArrayList<>();
-		this.loggingThreshold = loggingThreshold;
 		this.resumeCaller = new Object();
 		this.executingFinishedWaiter = new Object();
 		this.suspensionCaller = new Object();
@@ -130,7 +128,7 @@ public class QueuedTasksExecutor implements Component {
 						}
 						if (executor == this.executor) {
 							task.execute();
-							incrementAndlogExecutedTaskCounter();
+							++this.executedTasksCount;
 							if (executor.getPriority() != this.defaultPriority) {
 								executor.setPriority(this.defaultPriority);
 							}
@@ -178,21 +176,14 @@ public class QueuedTasksExecutor implements Component {
 		return false;
 	}
 	
-	void incrementAndlogExecutedTaskCounter() {
-		long counter = ++this.executedTasksCount;
-		if (counter % loggingThreshold == 0) {
-			logInfo("Executed {} tasks", counter);
-		}
-	}
-	
 	public static QueuedTasksExecutor create(String executorName, String asyncExecutorName, int initialPriority) {
-		return create(executorName, asyncExecutorName, initialPriority, false, 100, false);
+		return create(executorName, asyncExecutorName, initialPriority, false, false);
 	}
 	
-	public static QueuedTasksExecutor create(String executorName, String asyncExecutorName, int initialPriority, boolean daemon, int loggingThreshold, boolean undestroyable) {
+	public static QueuedTasksExecutor create(String executorName, String asyncExecutorName, int initialPriority, boolean daemon, boolean undestroyable) {
 		if (undestroyable) {
 			String creatorClass = Thread.currentThread().getStackTrace()[2].getClassName();
-			return new QueuedTasksExecutor(executorName, asyncExecutorName, initialPriority, daemon, loggingThreshold) {
+			return new QueuedTasksExecutor(executorName, asyncExecutorName, initialPriority, daemon) {
 				
 				@Override
 				public boolean shutDown(boolean waitForTasksTermination) {
@@ -204,7 +195,7 @@ public class QueuedTasksExecutor implements Component {
 				
 			};
 		} else {
-			return new QueuedTasksExecutor(executorName, asyncExecutorName, initialPriority, daemon, loggingThreshold);
+			return new QueuedTasksExecutor(executorName, asyncExecutorName, initialPriority, daemon);
 		}
 	}
 	
@@ -272,7 +263,7 @@ public class QueuedTasksExecutor implements Component {
 				synchronized(task) {
 					task.execute();
 					asyncTasksInExecution.remove(task);
-					incrementAndlogExecutedTaskCounter();
+					++this.executedTasksCount;
 				}
 			}, asyncExecutorName);
 			executor.setPriority(task.priority);
@@ -932,7 +923,7 @@ public class QueuedTasksExecutor implements Component {
 				createQueuedTasksExecutor(
 					name + " - High priority tasks executor",
 					name + " - High priority async tasks executor",
-					Thread.MAX_PRIORITY, isDaemon, 10
+					Thread.MAX_PRIORITY, isDaemon
 				)
 			);
 			queuedTasksExecutors.put(
@@ -940,7 +931,7 @@ public class QueuedTasksExecutor implements Component {
 				createQueuedTasksExecutor(
 					name + " - Normal priority tasks executor", 
 					name + " - Normal priority async tasks executor",
-					Thread.NORM_PRIORITY, isDaemon, 100
+					Thread.NORM_PRIORITY, isDaemon
 				)
 			);
 			queuedTasksExecutors.put(
@@ -948,7 +939,7 @@ public class QueuedTasksExecutor implements Component {
 				createQueuedTasksExecutor(
 					name + " - Low priority tasks executor",
 					name + " - Low priority async tasks executor", 
-					Thread.MIN_PRIORITY, isDaemon, 1000
+					Thread.MIN_PRIORITY, isDaemon
 				)
 			);
 		}
@@ -1014,8 +1005,8 @@ public class QueuedTasksExecutor implements Component {
 			return getByPriority(priority).createTask(executable);
 		}
 		
-		QueuedTasksExecutor createQueuedTasksExecutor(String executorName, String asyncExecutorName, int priority, boolean isDaemon, int loggingThreshold) {
-			return new QueuedTasksExecutor(executorName, asyncExecutorName, priority, isDaemon, loggingThreshold) {
+		QueuedTasksExecutor createQueuedTasksExecutor(String executorName, String asyncExecutorName, int priority, boolean isDaemon) {
+			return new QueuedTasksExecutor(executorName, asyncExecutorName, priority, isDaemon) {
 				
 				<T> Function<ThrowingSupplier<T, ? extends Throwable>, QueuedTasksExecutor.ProducerTask<T>> getProducerTaskSupplier() {
 					return executable -> new QueuedTasksExecutor.ProducerTask<T>(executable, taskCreationTrackingEnabled) {

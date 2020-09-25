@@ -546,7 +546,8 @@ public class IterableObjectHelper implements Component {
 	public <T> void iterateParallel(Collection<T> items, Consumer<T> itemConsumer, int threadPriority) {
 		Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
 		Iterator<T> itemIterator = items.iterator();
-		for (int i = 1; i < Runtime.getRuntime().availableProcessors(); i++) {
+		int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items.size());
+		for (int i = 0; i < taskCount; i++) {
 			tasks.add(
 				BackgroundExecutor.createTask(() -> {
 					while (itemIterator.hasNext()) {
