@@ -586,20 +586,24 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public T waitForStarting() {
-			if (!started) {
-				synchronized (this) {
-					if (!started) {
-						try {
-							if (isAborted()) {
-								throw new TaskStateException(this, "is aborted");
+			if (isSubmited()) {
+				if (!started) {
+					synchronized (this) {
+						if (!started) {
+							try {
+								if (isAborted()) {
+									throw new TaskStateException(this, "is aborted");
+								}
+								wait();
+								waitForStarting();
+							} catch (InterruptedException exc) {
+								throw Throwables.toRuntimeException(exc);
 							}
-							wait();
-							waitForStarting();
-						} catch (InterruptedException exc) {
-							throw Throwables.toRuntimeException(exc);
 						}
 					}
 				}
+			} else {
+				throw new TaskStateException(this, "is not submitted");
 			}
 			return (T)this;
 		}
@@ -630,6 +634,8 @@ public class QueuedTasksExecutor implements Component {
 						}
 					}
 				}
+			} else {
+				throw new TaskStateException(this, "is not submitted");
 			}
 		}		
 		
