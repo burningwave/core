@@ -612,11 +612,11 @@ public class QueuedTasksExecutor implements Component {
 		
 		void join0(boolean ignoreThreadCheck) {
 			if (!hasFinished() && ((ignoreThreadCheck) ||
-				(!ignoreThreadCheck && Thread.currentThread() != executor && executor != null))
+				(!hasFinished() && !ignoreThreadCheck && Thread.currentThread() != executor && executor != null))
 			) {	
 				synchronized (this) {
 					if (!hasFinished() && ((ignoreThreadCheck) ||
-						(!ignoreThreadCheck && Thread.currentThread() != executor && executor != null))) {
+						(!hasFinished() && !ignoreThreadCheck && Thread.currentThread() != executor && executor != null))) {
 						try {
 							if (isAborted()) {
 								throw new TaskStateException(this, "is aborted");
