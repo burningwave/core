@@ -602,6 +602,8 @@ public class QueuedTasksExecutor implements Component {
 						}
 					}
 				}
+			} else {
+				throw new TaskStateException(this, "is not submitted");
 			}
 			return (T)this;
 		}
@@ -632,6 +634,8 @@ public class QueuedTasksExecutor implements Component {
 						}
 					}
 				}
+			} else {
+				throw new TaskStateException(this, "is not submitted");
 			}
 		}		
 		
