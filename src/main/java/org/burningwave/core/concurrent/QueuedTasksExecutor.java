@@ -586,17 +586,19 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public T waitForStarting() {
-			if (!started) {
-				synchronized (this) {
-					if (!started) {
-						try {
-							if (isAborted()) {
-								throw new TaskStateException(this, "is aborted");
+			if (isSubmited()) {
+				if (!started) {
+					synchronized (this) {
+						if (!started) {
+							try {
+								if (isAborted()) {
+									throw new TaskStateException(this, "is aborted");
+								}
+								wait();
+								waitForStarting();
+							} catch (InterruptedException exc) {
+								throw Throwables.toRuntimeException(exc);
 							}
-							wait();
-							waitForStarting();
-						} catch (InterruptedException exc) {
-							throw Throwables.toRuntimeException(exc);
 						}
 					}
 				}
@@ -611,20 +613,22 @@ public class QueuedTasksExecutor implements Component {
 		public abstract T waitForFinish(boolean ignoreThreadCheck);
 		
 		void join0(boolean ignoreThreadCheck) {
-			if (!hasFinished() && ((ignoreThreadCheck) ||
-				(!hasFinished() && !ignoreThreadCheck && Thread.currentThread() != executor && executor != null))
-			) {	
-				synchronized (this) {
-					if (!hasFinished() && ((ignoreThreadCheck) ||
-						(!hasFinished() && !ignoreThreadCheck && Thread.currentThread() != executor && executor != null))) {
-						try {
-							if (isAborted()) {
-								throw new TaskStateException(this, "is aborted");
+			if (isSubmited()) {
+				if (!hasFinished() && ((ignoreThreadCheck) ||
+					(!hasFinished() && !ignoreThreadCheck && Thread.currentThread() != executor && executor != null))
+				) {	
+					synchronized (this) {
+						if (!hasFinished() && ((ignoreThreadCheck) ||
+							(!hasFinished() && !ignoreThreadCheck && Thread.currentThread() != executor && executor != null))) {
+							try {
+								if (isAborted()) {
+									throw new TaskStateException(this, "is aborted");
+								}
+								wait();
+								join0(ignoreThreadCheck);
+							} catch (InterruptedException exc) {
+								throw Throwables.toRuntimeException(exc);
 							}
-							wait();
-							join0(ignoreThreadCheck);
-						} catch (InterruptedException exc) {
-							throw Throwables.toRuntimeException(exc);
 						}
 					}
 				}
