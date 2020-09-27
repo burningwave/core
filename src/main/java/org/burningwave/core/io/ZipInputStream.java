@@ -164,7 +164,11 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 	@Override
 	public void closeEntry() {
 		try {
-			super.closeEntry();
+			Object mutex = this.parent != null?
+				this.parent : this;
+			synchronized (mutex) {
+				super.closeEntry();
+			}
 		} catch (IOException exc) {
 			logWarn("Exception occurred while closing zipEntry {}: {}", Optional.ofNullable(getCurrentZipEntry()).map((zipEntry) -> zipEntry.getAbsolutePath()).orElseGet(() -> "null"), exc.getMessage());
 		}
