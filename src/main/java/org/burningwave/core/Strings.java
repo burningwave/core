@@ -230,6 +230,10 @@ public class Strings implements Component {
     	return "\n" + margin + "at " + String.join("\n" + margin + "at ", stackTrace.stream().map(sTE -> sTE.toString()).collect(Collectors.toList()));
     }
 	
+	public String formatMessage(Throwable exc) {
+		return exc.toString() + ": " + exc.getMessage();
+	}
+    
 	public static class Paths {
 		Function<String, String> pathCleaner;
 		Function<String, String> uRLPathConverter;
@@ -384,4 +388,5 @@ public class Strings implements Component {
 	public String placeHolderToRegEx(String value) {
 		return value.replace("$", "\\$").replace(".", "\\.").replace("{", "\\{").replace("}", "\\}");
 	}
+
 }

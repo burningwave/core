@@ -250,7 +250,15 @@ public class FileSystemItem implements ManagedLogger {
 		FileSystemItem.Criteria filter,
 		Supplier<C> setSupplier
 	) {	
-		Set<FileSystemItem> children = childrenSupplier.get();
+		Set<FileSystemItem> children;
+		try {
+			children = childrenSupplier.get();
+		} catch (Throwable exc) {
+			logWarn("Exception occurred while retrieving children of {}: ", getAbsolutePath(), Strings.formatMessage(exc));
+			logInfo("Trying to reset {} and reload children/all children", getAbsolutePath());
+			reset();
+			children = childrenSupplier.get();
+		}
 		if (children == null) {
 			return null;
 		}
