@@ -164,6 +164,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 	@Override
 	public void closeEntry() {
 		try {
+			//This synchronization is necessary to avoid a jdk bug
 			Object mutex = this.parent != null?
 				this.parent : this;
 			synchronized (mutex) {
