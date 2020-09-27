@@ -836,13 +836,11 @@ public class FileSystemItem implements ManagedLogger {
 				if ((Cache.pathForContents.get(randomFIS.getAbsolutePath())) == null) {
 					FileSystemItem finalRandomFIS = randomFIS;
 					FileSystemItem superParentContainerFinal = superParentContainer;
-					BackgroundExecutor.createTask(() -> {
-						superParentContainerFinal.refresh().getAllChildren();
-					}).runOnlyOnce(
-						superParentContainer.instanceId + "_resetAndReloadAllChildren", 
-						() -> 
-							Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) != null
-					).pureAsync().submit().waitForFinish();
+					Synchronizer.execute(superParentContainer.instanceId + "_resetAndReloadAllChildren", () -> {
+						if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
+							superParentContainerFinal.refresh().getAllChildren();
+						}
+					});
 				}
 				if (Cache.pathForContents.get(absolutePath) == null) {
 					reloadContent(false);
@@ -867,9 +865,9 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public FileSystemItem reloadContent(boolean recomputeConventionedAbsolutePath) {
-		Synchronizer.execute(instanceId, () -> {
-			String absolutePath = getAbsolutePath();
-			Cache.pathForContents.remove(absolutePath, true);
+		String absolutePath = getAbsolutePath();
+		Cache.pathForContents.remove(absolutePath, true);
+		BackgroundExecutor.createTask(() -> {						
 			if (recomputeConventionedAbsolutePath) {
 				this.absolutePath.setValue(null);
 			}
@@ -895,7 +893,11 @@ public class FileSystemItem implements ManagedLogger {
 					);
 				}
 			}
-		});
+		}).runOnlyOnce(
+			instanceId + "_reloadContent",
+			() ->
+				Cache.pathForContents.get(absolutePath) != null
+		).pureAsync().submit().waitForFinish();
 		return this;
 	}
 
