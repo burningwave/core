@@ -55,6 +55,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
@@ -63,6 +64,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("resource")
@@ -260,13 +262,22 @@ public class FileSystemItem implements ManagedLogger {
 			}
 		};
 		final Set<FileSystemItem> result = setSupplier.get();
-		IterableObjectHelper.iterateParallel(
+		IterableObjectHelper.iterateParallelIf(
 			children,
-			fileSystemItem -> {
-				if (filterPredicate.test(fileSystemItem)) {
-					result.add(fileSystemItem);
-				}
-			}
+			result instanceof KeySetView ?
+				fileSystemItem -> {
+					if (filterPredicate.test(fileSystemItem)) {
+						result.add(fileSystemItem);
+					}
+				} :
+				fileSystemItem -> {
+					if (filterPredicate.test(fileSystemItem)) {
+						synchronized (result) {
+							result.add(fileSystemItem);
+						}
+					}
+				},
+			item -> item.size() > 1
 		);		
 		if (!iteratedFISWithErrors.isEmpty()) {
 			Predicate<FileSystemItem[]> nativePredicateWithExceptionManaging = filter.getPredicateOrTruePredicateIfPredicateIsNull();
@@ -833,13 +844,14 @@ public class FileSystemItem implements ManagedLogger {
 					FileSystemItem finalRandomFIS = randomFIS;
 					FileSystemItem superParentContainerFinal = superParentContainer;
 					if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
-						BackgroundExecutor.createTask(() -> {
+						QueuedTasksExecutor.Task task = BackgroundExecutor.createTask(() -> {
 							superParentContainerFinal.refresh().getAllChildren();
 						}).runOnlyOnce(
-							superParentContainer.instanceId + "_hardReloadContent", 
+							superParentContainer.instanceId + "_reloadContent", 
 							() -> 
-								Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) != null
-						).submit().pureAsync().waitForFinish();
+								Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()
+						) != null).submit();
+						task.waitForFinish();
 					}
 				}
 				if (Cache.pathForContents.get(absolutePath) == null) {
@@ -893,7 +905,7 @@ public class FileSystemItem implements ManagedLogger {
 					);
 				}
 			}
-		}).runOnlyOnce(instanceId + "_softReloadContent", () -> Cache.pathForContents.get(absolutePath) != null).pureAsync().waitForFinish();
+		}).runOnlyOnce(instanceId + "_reloadContent", () -> Cache.pathForContents.get(absolutePath) != null).waitForFinish();
 		return this;
 	}
 

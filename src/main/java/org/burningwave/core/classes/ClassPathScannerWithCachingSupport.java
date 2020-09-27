@@ -119,14 +119,15 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		FileSystemItem.Criteria filterAndExecutor = buildFileAndClassTesterAndExecutor(context);
 		//scanFileCriteria in this point has been changed by the previous method call
 		FileSystemItem.Criteria fileFilter = searchConfig.getScanFileCriteria();
-		IterableObjectHelper.iterateParallel(
+		IterableObjectHelper.iterateParallelIf(
 			context.getSearchConfig().getPaths(), 
 			basePath -> {
 				searchInCacheOrInFileSystem(
 					basePath, context,
 					scanFileCriteriaHasNoPredicate, classCriteriaHasNoPredicate, filterAndExecutor, fileFilter
 				);
-			}
+			},
+			item -> item.size() > 1
 		);		
 	}
 
