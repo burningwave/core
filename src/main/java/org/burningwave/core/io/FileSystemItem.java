@@ -837,13 +837,11 @@ public class FileSystemItem implements ManagedLogger {
 					FileSystemItem finalRandomFIS = randomFIS;
 					FileSystemItem superParentContainerFinal = superParentContainer;
 					if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
-						BackgroundExecutor.createTask(() -> {
-							superParentContainerFinal.refresh().getAllChildren();
-						}).runOnlyOnce(
-							superParentContainer.instanceId + "_resetAndReloadAllChildren", 
-							() -> 
-								Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) != null
-						).submit().waitForFinish();
+						Synchronizer.execute(superParentContainer.instanceId, () -> {
+							if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
+								superParentContainerFinal.refresh().getAllChildren();
+							}
+						});
 					}
 				}
 				if (Cache.pathForContents.get(absolutePath) == null) {
