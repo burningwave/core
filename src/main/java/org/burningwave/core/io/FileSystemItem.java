@@ -225,12 +225,12 @@ public class FileSystemItem implements ManagedLogger {
 	}
 
 	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findInChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getChildren, filter, HashSet::new);
+		return findIn(this::getChildren0, filter, HashSet::new);
 	}
 
 	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findInChildren(FileSystemItem.Criteria filter,
 			Supplier<C> setSupplier) {
-		return findIn(this::getChildren, filter, setSupplier);
+		return findIn(this::getChildren0, filter, setSupplier);
 	}
 	
 	private <C extends Set<FileSystemItem>> Set<FileSystemItem> findIn(
@@ -324,7 +324,7 @@ public class FileSystemItem implements ManagedLogger {
 	}
 
 	public Set<FileSystemItem> getAllChildren() {
-		return Optional.ofNullable(getAllChildren0()).map(children -> new HashSet<>(children)).orElseGet(() -> null);
+		return Optional.ofNullable(getAllChildren0()).map(children ->  Collections.unmodifiableSet(children)).orElseGet(() -> null);
 	}
 
 	private Set<FileSystemItem> getAllChildren0() {
@@ -342,7 +342,7 @@ public class FileSystemItem implements ManagedLogger {
 	}
 
 	public Set<FileSystemItem> getChildren() {
-		return Optional.ofNullable(getChildren0()).map(children -> new HashSet<>(children)).orElseGet(() -> null);
+		return Optional.ofNullable(getChildren0()).map(children -> Collections.unmodifiableSet(children)).orElseGet(() -> null);
 	}
 
 	private Set<FileSystemItem> getChildren0() {
