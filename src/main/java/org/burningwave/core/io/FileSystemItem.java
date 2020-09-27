@@ -846,10 +846,10 @@ public class FileSystemItem implements ManagedLogger {
 						BackgroundExecutor.createTask(() -> {
 							superParentContainerFinal.refresh().getAllChildren();
 						}).runOnlyOnce(
-							superParentContainer.instanceId + "_reloadContent", 
+							superParentContainer.instanceId + "_resetAndReloadAllChildren", 
 							() -> 
 								Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) != null
-						).pureAsync().submit().waitForFinish();
+						).submit().waitForFinish();
 					}
 				}
 				if (Cache.pathForContents.get(absolutePath) == null) {
@@ -907,7 +907,7 @@ public class FileSystemItem implements ManagedLogger {
 			instanceId + "_reloadContent",
 			() ->
 				Cache.pathForContents.get(absolutePath) != null
-		).pureAsync().submit().waitForFinish();
+		).submit().waitForFinish();
 		return this;
 	}
 
