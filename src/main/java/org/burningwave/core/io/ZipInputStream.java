@@ -128,9 +128,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 	public IterableZipContainer.Entry getNextEntry(Predicate<IterableZipContainer.Entry> loadZipEntryData) {
 		ThrowingRunnable.run(() -> {
 			try {
-				synchronized (this.inf) {
-					currentZipEntry = (Entry.Attached)super.getNextEntry();
-				}
+				currentZipEntry = (Entry.Attached)super.getNextEntry();
 			} catch (ZipException exc) {
 				String message = exc.getMessage();
 				logWarn("Could not open zipEntry of {}: {}", absolutePath, message);
@@ -166,9 +164,8 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 	@Override
 	public void closeEntry() {
 		try {
+			//This synchronization is necessary to avoid a jdk bug
 			synchronized (this.inf) {
-				//logInfo("Trying closing entry {}", currentZipEntry != null ? currentZipEntry.getAbsolutePath() : "null");
-				this.inf.reset();
 				super.closeEntry();
 			}
 		} catch (IOException exc) {
