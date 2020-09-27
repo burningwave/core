@@ -145,7 +145,8 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	
 	void searchInFileSystem(C context) {
 		FileSystemItem.Criteria filter = buildFileAndClassTesterAndExecutor(context);
-		context.getSearchConfig().getPaths().parallelStream().forEach(basePath -> {
+		Collection<String> paths = context.getSearchConfig().getPaths();
+		(paths.size() > 1 ?paths.parallelStream() : paths.stream()).forEach(basePath -> {
 			FileSystemItem.ofPath(basePath).refresh().findInAllChildren(filter);
 		});
 	}

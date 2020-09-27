@@ -271,7 +271,8 @@ public class FileSystemItem implements ManagedLogger {
 				return false;
 			}
 		};
-		Set<FileSystemItem> result = children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier));
+		Set<FileSystemItem> result = (children.size() > 1?
+			children.parallelStream() : children.stream()).filter(filterPredicate).collect(Collectors.toCollection(setSupplier));
 		if (!iteratedFISWithErrors.isEmpty()) {
 			Predicate<FileSystemItem[]> nativePredicateWithExceptionManaging = filter.getPredicateOrTruePredicateIfPredicateIsNull();
 			for (FileSystemItem child : iteratedFISWithErrors) {
