@@ -225,12 +225,12 @@ public class FileSystemItem implements ManagedLogger {
 	}
 
 	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findInChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getChildren, filter, HashSet::new);
+		return findIn(this::getChildren0, filter, HashSet::new);
 	}
 
 	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findInChildren(FileSystemItem.Criteria filter,
 			Supplier<C> setSupplier) {
-		return findIn(this::getChildren, filter, setSupplier);
+		return findIn(this::getChildren0, filter, setSupplier);
 	}
 	
 	/*
