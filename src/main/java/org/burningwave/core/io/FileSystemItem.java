@@ -55,7 +55,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
@@ -263,7 +262,7 @@ public class FileSystemItem implements ManagedLogger {
 		final Set<FileSystemItem> result = setSupplier.get();
 		IterableObjectHelper.iterateParallelIf(
 			children,
-			result instanceof KeySetView ?
+			result instanceof ConcurrentHashMap.KeySetView ?
 				fileSystemItem -> {
 					if (filterPredicate.test(fileSystemItem)) {
 						result.add(fileSystemItem);
