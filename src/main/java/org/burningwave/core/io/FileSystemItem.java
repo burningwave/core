@@ -837,7 +837,7 @@ public class FileSystemItem implements ManagedLogger {
 					FileSystemItem finalRandomFIS = randomFIS;
 					FileSystemItem superParentContainerFinal = superParentContainer;
 					if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
-						Synchronizer.execute(superParentContainer.instanceId, () -> {
+						Synchronizer.execute(superParentContainer.instanceId + "_resetAndReloadAllChildren", () -> {
 							if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
 								superParentContainerFinal.refresh().getAllChildren();
 							}
@@ -899,7 +899,7 @@ public class FileSystemItem implements ManagedLogger {
 			instanceId + "_reloadContent",
 			() ->
 				Cache.pathForContents.get(absolutePath) != null
-		).submit().waitForFinish();
+		).pureAsync().submit().waitForFinish();
 		return this;
 	}
 
