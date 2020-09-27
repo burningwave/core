@@ -293,39 +293,39 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public <E, T extends TaskAbst<E, T>> boolean abort(T task) {
-		synchronized (task) {
-			if (!task.isStarted()) {
-				if (task instanceof Task) {
-					Task taskToBeAborted = (Task)task;
-					if (taskToBeAborted.runOnlyOnce) {
-						for (TaskAbst<?, ?> queuedTaskAbst : tasksQueue) {
-							if (queuedTaskAbst instanceof Task) {
-								Task queuedTask = (Task)queuedTaskAbst;
-								if (taskToBeAborted.id.equals(queuedTask.id)) {
+		if (!task.isStarted()) {
+			if (task instanceof Task) {
+				Task taskToBeAborted = (Task)task;
+				if (taskToBeAborted.runOnlyOnce) {
+					for (TaskAbst<?, ?> queuedTaskAbst : tasksQueue) {
+						if (queuedTaskAbst instanceof Task) {
+							Task queuedTask = (Task)queuedTaskAbst;
+							if (taskToBeAborted.id.equals(queuedTask.id)) {
+								synchronized (queuedTask) {
 									if (tasksQueue.remove(queuedTask)) {
-										synchronized (queuedTask) {
-											if (!queuedTask.isStarted()) {
-												queuedTask.aborted = true;
-												if (queuedTask != taskToBeAborted) {
-													taskToBeAborted.aborted = queuedTask.aborted;
-												}
-												queuedTask.removeExecutableAndExecutor();
-												queuedTask.notifyAll();
-												if (queuedTask != taskToBeAborted) {
-													taskToBeAborted.removeExecutableAndExecutor();
-													taskToBeAborted.notifyAll();
-												}
-												runOnlyOnceTasksToBeExecuted.remove(queuedTask.id);
-												return queuedTask.aborted;
+										if (!queuedTask.isStarted()) {
+											queuedTask.aborted = true;
+											if (queuedTask != taskToBeAborted) {
+												taskToBeAborted.aborted = queuedTask.aborted;
 											}
+											queuedTask.removeExecutableAndExecutor();
+											queuedTask.notifyAll();
+											if (queuedTask != taskToBeAborted) {
+												taskToBeAborted.removeExecutableAndExecutor();
+												taskToBeAborted.notifyAll();
+											}
+											runOnlyOnceTasksToBeExecuted.remove(queuedTask.id);
+											return queuedTask.aborted;
 										}
-									}									
+									}
 								}
 							}
 						}
-						return false;
 					}
+					return false;
 				}
+			}
+			synchronized (task) {
 				if (task.aborted = tasksQueue.remove(task)) {
 					task.notifyAll();
 					return task.aborted;
