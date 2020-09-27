@@ -64,7 +64,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.ManagedLogger;
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("resource")
@@ -844,14 +843,13 @@ public class FileSystemItem implements ManagedLogger {
 					FileSystemItem finalRandomFIS = randomFIS;
 					FileSystemItem superParentContainerFinal = superParentContainer;
 					if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
-						QueuedTasksExecutor.Task task = BackgroundExecutor.createTask(() -> {
+						BackgroundExecutor.createTask(() -> {
 							superParentContainerFinal.refresh().getAllChildren();
 						}).runOnlyOnce(
 							superParentContainer.instanceId + "_reloadContent", 
 							() -> 
-								Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()
-						) != null).submit();
-						task.waitForFinish();
+								Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) != null
+						).pureAsync().submit().waitForFinish();
 					}
 				}
 				if (Cache.pathForContents.get(absolutePath) == null) {
@@ -905,7 +903,11 @@ public class FileSystemItem implements ManagedLogger {
 					);
 				}
 			}
-		}).runOnlyOnce(instanceId + "_reloadContent", () -> Cache.pathForContents.get(absolutePath) != null).waitForFinish();
+		}).runOnlyOnce(
+			instanceId + "_reloadContent",
+			() ->
+				Cache.pathForContents.get(absolutePath) != null
+		).pureAsync().submit().waitForFinish();
 		return this;
 	}
 
