@@ -836,10 +836,10 @@ public class FileSystemItem implements ManagedLogger {
 						BackgroundExecutor.createTask(() -> {
 							superParentContainerFinal.refresh().getAllChildren();
 						}).runOnlyOnce(
-							superParentContainer.instanceId + "_reloadContent", 
+							superParentContainer.instanceId + "_hardReloadContent", 
 							() -> 
 								Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) != null
-						).submit().waitForFinish();
+						).submit().pureAsync().waitForFinish();
 					}
 				}
 				if (Cache.pathForContents.get(absolutePath) == null) {
@@ -893,7 +893,7 @@ public class FileSystemItem implements ManagedLogger {
 					);
 				}
 			}
-		}).runOnlyOnce(instanceId + "_reloadContent", () -> Cache.pathForContents.get(absolutePath) != null).waitForFinish();
+		}).runOnlyOnce(instanceId + "_softReloadContent", () -> Cache.pathForContents.get(absolutePath) != null).pureAsync().waitForFinish();
 		return this;
 	}
 
