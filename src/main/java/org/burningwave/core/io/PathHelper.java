@@ -180,22 +180,22 @@ public class PathHelper implements Component {
 		return getPaths(Configuration.Key.MAIN_CLASS_PATHS, Configuration.Key.MAIN_CLASS_PATHS_EXTENSION);
 	}
 	
-	private void waitForInitialization(boolean ignoreThread) {
+	private void waitForInitialization() {
 		QueuedTasksExecutor.Task initializerTask = this.initializerTask;
 		if (initializerTask != null) {
-			initializerTask.waitForFinish(ignoreThread);
+			initializerTask.waitForFinish();
 		}
 	}
 	
 	public Collection<String> getAllPaths() {
-		waitForInitialization(false);
+		waitForInitialization();
 		Collection<String> allPaths = ConcurrentHashMap.newKeySet();
 		allPaths.addAll(this.allPaths);
 		return allPaths;
 	}
 	
 	public Collection<String> getPaths(String... names) {
-		waitForInitialization(false);
+		waitForInitialization();
 		Collection<String> pathGroup = new HashSet<>();
 		if (names != null && names.length > 0) {
 			for (String name : names) {

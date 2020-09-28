@@ -89,7 +89,7 @@ public class SearchContext<T> implements Component {
 		} else {
 			searchTask = BackgroundExecutor.createTask(() -> {
 				searcher.accept(this);
-			}).async().submit();
+			}).submit();
 		}
 	}
 	
@@ -206,7 +206,7 @@ public class SearchContext<T> implements Component {
 									pathScannerClassLoader.getId() + "_scanPaths_" + pathScannerClassLoaderScannedPaths.toString(), 
 									() -> 
 										!pathScannerClassLoaderScannedPaths.isEmpty()
-								).async().submit().waitForFinish();
+								).submit().waitForFinish();
 							}
 							return execute(supplier, defaultValueSupplier, classNameSupplier, true);
 						} else {
