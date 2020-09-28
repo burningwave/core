@@ -193,6 +193,7 @@ public class StaticComponentContainer {
 					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Shuting down BackgroundExecutor");
 					BackgroundExecutor.shutDown(false);
 					Synchronizer.stopLoggingAllThreadsState();
+					org.burningwave.core.concurrent.Thread.shutDownAll();
 				}, "Resources releaser")
 			);
 			FileSystemHelper.startScavenger();
