@@ -125,7 +125,6 @@ public class QueuedTasksExecutor implements Component {
 							currentExecutor.setPriority(currentExecutablePriority);
 						}
 						currentExecutor.start();
-						task.logInfo();
 					}
 				} else {
 					synchronized(executableCollectionFiller) {
