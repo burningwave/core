@@ -114,7 +114,6 @@ public class QueuedTasksExecutor implements Component {
 							if (!tasksQueue.remove(task)) {
 								continue;
 							}
-							tasksInExecution.add(task);
 						}
 						setExecutorOf(task);
 						Thread currentExecutor = task.executor;
@@ -239,6 +238,9 @@ public class QueuedTasksExecutor implements Component {
 
 	private void setExecutorOf(TaskAbst<?, ?> task) {
 		Thread executor = Thread.getOrCreate().setExecutable(() -> {
+			synchronized(task) {
+				tasksInExecution.add(task);
+			}
 			task.execute();
 			synchronized(task) {
 				tasksInExecution.remove(task);
