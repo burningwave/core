@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
@@ -849,14 +848,11 @@ public class FileSystemItem implements ManagedLogger {
 				if ((Cache.pathForContents.get(randomFIS.getAbsolutePath())) == null) {
 					FileSystemItem finalRandomFIS = randomFIS;
 					FileSystemItem superParentContainerFinal = superParentContainer;
-					BackgroundExecutor.createTask(() -> {
-						superParentContainerFinal.refresh().getAllChildren();
-					}).runOnlyOnce(
-						superParentContainer.instanceId + "_resetAndReloadAllChildren", 
-						() -> 
-							Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) != null
-					).submit().waitForFinish();
-				}
+					Synchronizer.execute(superParentContainer.instanceId + "_resetAndReloadAllChildren", () -> {
+						if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
+							superParentContainerFinal.refresh().getAllChildren();
+						}
+					});				}
 				if (Cache.pathForContents.get(absolutePath) == null) {
 					reloadContent(false);
 				}

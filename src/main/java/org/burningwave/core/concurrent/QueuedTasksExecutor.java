@@ -207,15 +207,15 @@ public class QueuedTasksExecutor implements Component {
 			}
 
 			@Override
-			void preparingForStart() {
-				synchronized(this) {
+			void preparingToStart() {
+				synchronized(QueuedTasksExecutor.this.tasksInExecution) {
 					QueuedTasksExecutor.this.tasksInExecution.add(this);
 				}				
 			}
 
 			@Override
-			void preparingForFinishing() {
-				synchronized(this) {
+			void preparingToFinish() {
+				synchronized(QueuedTasksExecutor.this.tasksInExecution) {
 					QueuedTasksExecutor.this.tasksInExecution.remove(this);
 					++QueuedTasksExecutor.this.executedTasksCount;
 				}				
@@ -237,15 +237,15 @@ public class QueuedTasksExecutor implements Component {
 			};
 			
 			@Override
-			void preparingForStart() {
-				synchronized(this) {
+			void preparingToStart() {
+				synchronized(QueuedTasksExecutor.this.tasksInExecution) {
 					QueuedTasksExecutor.this.tasksInExecution.add(this);
 				}				
 			}
 
 			@Override
-			void preparingForFinishing() {
-				synchronized(this) {
+			void preparingToFinish() {
+				synchronized(QueuedTasksExecutor.this.tasksInExecution) {
 					QueuedTasksExecutor.this.tasksInExecution.remove(this);
 					++QueuedTasksExecutor.this.executedTasksCount;
 				}				
@@ -675,12 +675,12 @@ public class QueuedTasksExecutor implements Component {
 			}
 		}
 		
-		abstract void preparingForStart();
+		abstract void preparingToStart();
 		
 		void execute() {
 			synchronized (this) {
 				started = true;
-				preparingForStart();
+				preparingToStart();
 				if (aborted) {
 					notifyAll();
 					removeExecutableAndExecutor();
@@ -738,11 +738,11 @@ public class QueuedTasksExecutor implements Component {
 			executor = null;
 		}
 		
-		abstract void preparingForFinishing();
+		abstract void preparingToFinish();
 		
 		void markAsFinished() {
 			synchronized(this) {
-				preparingForFinishing();
+				preparingToFinish();
 				finished = true;
 				notifyAll();
 			}
@@ -945,19 +945,20 @@ public class QueuedTasksExecutor implements Component {
 						};
 						
 						@Override
-						void preparingForStart() {
-							synchronized(this) {
-								Group.this.getByPriority(this.priority).tasksInExecution.add(this);
-							}				
+						void preparingToStart() {
+							QueuedTasksExecutor queuedTasksExecutor = Group.this.getByPriority(this.priority);
+							synchronized(queuedTasksExecutor.tasksInExecution) {
+								queuedTasksExecutor.tasksInExecution.add(this);
+							}			
 						}
 
 						@Override
-						void preparingForFinishing() {
+						void preparingToFinish() {
 							QueuedTasksExecutor queuedTasksExecutor = Group.this.getByPriority(this.priority);
-							synchronized(this) {
+							synchronized(queuedTasksExecutor.tasksInExecution) {
 								queuedTasksExecutor.tasksInExecution.remove(this);
 								++queuedTasksExecutor.executedTasksCount;
-							}				
+							}					
 						};
 					};
 				}
@@ -977,16 +978,17 @@ public class QueuedTasksExecutor implements Component {
 						};
 						
 						@Override
-						void preparingForStart() {
-							synchronized(this) {
-								Group.this.getByPriority(this.priority).tasksInExecution.add(this);
+						void preparingToStart() {
+							QueuedTasksExecutor queuedTasksExecutor = Group.this.getByPriority(this.priority);
+							synchronized(queuedTasksExecutor.tasksInExecution) {
+								queuedTasksExecutor.tasksInExecution.add(this);
 							}				
 						}
 
 						@Override
-						void preparingForFinishing() {
+						void preparingToFinish() {
 							QueuedTasksExecutor queuedTasksExecutor = Group.this.getByPriority(this.priority);
-							synchronized(this) {
+							synchronized(queuedTasksExecutor.tasksInExecution) {
 								queuedTasksExecutor.tasksInExecution.remove(this);
 								++queuedTasksExecutor.executedTasksCount;
 							}				
