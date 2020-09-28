@@ -126,7 +126,7 @@ public class PathHelper implements Component {
 			} finally {
 				initializerTask = null;
 			}
-		}, Thread.MAX_PRIORITY).pureAsync();
+		}, Thread.MAX_PRIORITY);
 		initializerTask.submit();
 	}
 	

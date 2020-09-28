@@ -205,7 +205,7 @@ public class ComponentContainer implements ComponentSupplier {
 							task.waitForFinish();
 						}
 					}
-				}).pureAsync();
+				});
 			});
 		}
 		return this;
