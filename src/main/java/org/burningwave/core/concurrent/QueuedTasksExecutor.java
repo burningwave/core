@@ -937,6 +937,11 @@ public class QueuedTasksExecutor implements Component {
 						waitForTasksInExecutionEnding(priority);				
 					}
 					if (waitForNewAddedTasks && (!tasksInExecution.isEmpty() || !tasksQueue.isEmpty())) {
+						logInfo("Tasks to be executed:");
+						for (TaskAbst<?,?> task : tasksQueue) {
+							task.logInfo();
+						}
+						logInfo("Tasks in execution:");
 						for (TaskAbst<?,?> task : tasksInExecution) {
 							task.logInfo();
 						}
