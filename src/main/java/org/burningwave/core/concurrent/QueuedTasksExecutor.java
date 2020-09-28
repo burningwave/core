@@ -55,7 +55,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings({"unchecked", "resource"})
 public class QueuedTasksExecutor implements Component {
-	private final static Map<String, Task> runOnlyOnceTasksToBeExecuted;
+	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasksToBeExecuted;
 	Thread queueConsumer;
 	List<TaskAbst<?, ?>> tasksQueue;
 	List<TaskAbst<?, ?>> tasksInExecution;
@@ -243,7 +243,9 @@ public class QueuedTasksExecutor implements Component {
 		Thread executor = new Thread(() -> {
 			synchronized(task) {
 				tasksInExecution.add(task);
-				task.execute();
+			}
+			task.execute();
+			synchronized(task) {
 				tasksInExecution.remove(task);
 				++this.executedTasksCount;
 			}
@@ -254,11 +256,11 @@ public class QueuedTasksExecutor implements Component {
 
 	<E, T extends TaskAbst<E, T>> Object[] canBeExecuted(T task) {
 		Object[] bag = new Object[]{task, true};
-		if (task instanceof Task && ((Task)task).runOnlyOnce) {
-			bag[1] =(!((Task)task).hasBeenExecutedChecker.get() && 
+		if (task.runOnlyOnce) {
+			bag[1] =(!task.hasBeenExecutedChecker.get() && 
 				Optional.ofNullable(runOnlyOnceTasksToBeExecuted.putIfAbsent(
-					((Task)task).id, (Task)task)
-				).map(taskk -> {
+					task.id, task
+				)).map(taskk -> {
 					bag[0] = taskk;
 					return false;
 				}).orElseGet(() -> true)
@@ -331,7 +333,7 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		}
-		waitForAsyncTasksEnding(priority);
+		waitForTasksInExecutionEnding(priority);
 		queueConsumer.setPriority(this.defaultPriority);
 		if (waitForNewAddedTasks && (!tasksQueue.isEmpty() || !tasksInExecution.isEmpty())) {
 			waitForTasksEnding(priority, waitForNewAddedTasks);
@@ -363,7 +365,7 @@ public class QueuedTasksExecutor implements Component {
 		if (immediately) {
 			synchronized (suspensionCaller) {
 				supended = Boolean.TRUE;
-				waitForAsyncTasksEnding(priority);
+				waitForTasksInExecutionEnding(priority);
 				try {
 					synchronized(executableCollectionFiller) {
 						if (this.queueConsumer.getState().equals(Thread.State.WAITING)) {
@@ -376,7 +378,7 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		} else {
-			waitForAsyncTasksEnding(priority);
+			waitForTasksInExecutionEnding(priority);
 			Task supendingTask = createSuspendingTask(priority);
 			changePriorityToAllTaskBefore(supendingTask.submit(true), priority);
 			supendingTask.waitForFinish();
@@ -389,7 +391,7 @@ public class QueuedTasksExecutor implements Component {
 		return createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).runOnlyOnce(getOperationId("suspend"), () -> supended).changePriority(priority);
 	}
 
-	void waitForAsyncTasksEnding(int priority) {
+	void waitForTasksInExecutionEnding(int priority) {
 		tasksInExecution.stream().forEach(asyncTask -> {
 			Thread taskExecutor = asyncTask.executor;
 			if (taskExecutor != null) {
@@ -416,7 +418,7 @@ public class QueuedTasksExecutor implements Component {
 				idx++;
 			}
 		}
-		waitForAsyncTasksEnding(priority);
+		waitForTasksInExecutionEnding(priority);
 	}
 
 	public QueuedTasksExecutor resumeFromSuspension() {
@@ -502,6 +504,9 @@ public class QueuedTasksExecutor implements Component {
 		String name;
 		StackTraceElement[] stackTraceOnCreation;
 		List<StackTraceElement> creatorInfos;
+		boolean runOnlyOnce;
+		Supplier<Boolean> hasBeenExecutedChecker;
+		public String id;
 		boolean started;
 		boolean submited;
 		boolean aborted;
@@ -551,7 +556,21 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public boolean hasFinished() {
-			return finished;
+			if (finished) {
+				return finished;
+			}
+			if (!runOnlyOnce) {
+				return finished;
+			} else {
+				return finished = hasBeenExecutedChecker.get();
+			}
+		}
+		
+		public T runOnlyOnce(String id, Supplier<Boolean> hasBeenExecutedChecker) {
+			runOnlyOnce = true;
+			this.id = id;
+			this.hasBeenExecutedChecker = hasBeenExecutedChecker;
+			return (T)this;
 		}
 		
 		public boolean isAborted() {
@@ -646,10 +665,12 @@ public class QueuedTasksExecutor implements Component {
 		
 		void logInfo() {
 			if (this.getCreatorInfos() != null) {
-				logInfo(Strings.compile(
-					"Task: {}", 
-					"\n" + Strings.from(this.getCreatorInfos())
-				));
+				logInfo(
+					"task status: {} thread of task:{} created by {}", 
+						Strings.compile("isStarted: {}, isAborted: {}, isFinished", isStarted(), isAborted(), hasFinished()),
+						Strings.compile("{}", executor),
+						Strings.from(this.getCreatorInfos())
+				);
 			}
 			
 		}
@@ -674,6 +695,9 @@ public class QueuedTasksExecutor implements Component {
 		
 		void markAsFinished() {
 			finished = true;
+			if (runOnlyOnce) {
+				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
+			}
 			synchronized(this) {
 				notifyAll();
 			}
@@ -730,9 +754,6 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public static abstract class Task extends TaskAbst<ThrowingRunnable<? extends Throwable>, Task> {
-		Supplier<Boolean> hasBeenExecutedChecker;
-		boolean runOnlyOnce;
-		public String id;
 		
 		Task(ThrowingRunnable<? extends Throwable> executable, boolean creationTracking) {
 			super(executable, creationTracking);
@@ -741,37 +762,6 @@ public class QueuedTasksExecutor implements Component {
 		@Override
 		void execute0() throws Throwable {
 			this.executable.run();			
-		}
-		
-		@Override
-		void markAsFinished() {
-			finished = true;
-			if (runOnlyOnce) {
-				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
-			}
-			synchronized(this) {
-				notifyAll();
-			}
-			removeExecutableAndExecutor();			
-		}
-		
-		@Override
-		public boolean hasFinished() {
-			if (finished) {
-				return finished;
-			}
-			if (!runOnlyOnce) {
-				return finished;
-			} else {
-				return finished = hasBeenExecutedChecker.get();
-			}
-		}
-		
-		public Task runOnlyOnce(String id, Supplier<Boolean> hasBeenExecutedChecker) {
-			runOnlyOnce = true;
-			this.id = id;
-			this.hasBeenExecutedChecker = hasBeenExecutedChecker;
-			return this;
 		}
 		
 	}
@@ -944,9 +934,12 @@ public class QueuedTasksExecutor implements Component {
 						});
 					} else {	
 						tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
-						waitForAsyncTasksEnding(priority);				
+						waitForTasksInExecutionEnding(priority);				
 					}
 					if (waitForNewAddedTasks && (!tasksInExecution.isEmpty() || !tasksQueue.isEmpty())) {
+						for (TaskAbst<?,?> task : tasksInExecution) {
+							task.logInfo();
+						}
 						waitForTasksEnding(priority, waitForNewAddedTasks);
 					}
 					return this;
