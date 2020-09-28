@@ -50,6 +50,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger{
 	
 	private Thread(long index) {
 		this.index = index;
+		setDaemon(true);
 	}
 	
 	
