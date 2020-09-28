@@ -50,20 +50,21 @@ public class Thread extends java.lang.Thread implements ManagedLogger{
 	
 	private Thread(long index) {
 		this.index = index;
-		setDaemon(true);
 	}
 	
 	
 	@Override
 	public void run() {
 		while (isAlive) {
-			runningThreads.add(this);
-			executable.run();
-			runningThreads.remove(this);
-			executable = null;
-			sleepingThreads.add(this);
+			synchronized (this) {
+				runningThreads.add(this);
+			}
+			executable.run();				
 			try {
 				synchronized (this) {
+					runningThreads.remove(this);
+					executable = null;
+					sleepingThreads.add(this);
 					wait();
 				}
 			} catch (InterruptedException exc) {
@@ -115,32 +116,27 @@ public class Thread extends java.lang.Thread implements ManagedLogger{
 	void shutDown() {
 		isAlive = false;
 		synchronized(this) {
-			notifyAll();
+			if (sleepingThreads.remove(this) || runningThreads.remove(this)) {
+				notifyAll();
+			}
 		}
 	}
 	
-	public static void shutDownAllSleepingThreads() {
+	public static void shutDownAllSleeping() {
 		Iterator<Thread> itr = sleepingThreads.iterator();
 		while (itr.hasNext()) {
-			Thread thread = itr.next();
-			if (sleepingThreads.remove(thread)) {
-				thread.shutDown();
-			}
+			itr.next().shutDown();
 		}
 	}
 	
 	public static void shutDownAll() {
 		Iterator<Thread> itr = sleepingThreads.iterator();
 		while (itr.hasNext()) {
-			Thread thread = itr.next();
-			sleepingThreads.remove(thread);
-			thread.shutDown();
+			itr.next().shutDown();
 		}
 		itr = runningThreads.iterator();
 		while (itr.hasNext()) {
-			Thread thread = itr.next();
-			runningThreads.remove(thread);
-			thread.shutDown();
+			itr.next().shutDown();
 		}
 	}
 }

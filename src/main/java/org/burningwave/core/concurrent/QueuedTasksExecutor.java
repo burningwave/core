@@ -458,13 +458,19 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public void logQueueInfo() {
-		logInfo("Tasks to be executed:");
-		for (TaskAbst<?,?> task : tasksQueue) {
-			task.logInfo();
+		List<TaskAbst<?, ?>> tasksQueue = this.tasksQueue;
+		if (!tasksQueue.isEmpty()) {
+			logInfo("{} - Tasks to be executed:", queueConsumer);
+			for (TaskAbst<?,?> task : tasksQueue) {
+				task.logInfo();
+			}
 		}
-		logInfo("Tasks in execution:");
-		for (TaskAbst<?,?> task : tasksInExecution) {
-			task.logInfo();
+		tasksQueue = this.tasksInExecution;
+		if (!tasksQueue.isEmpty()) {
+			logInfo("{} - Tasks in execution:", queueConsumer);
+			for (TaskAbst<?,?> task : tasksInExecution) {
+				task.logInfo();
+			}
 		}
 	}
 	
@@ -689,12 +695,12 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		void markAsFinished() {
-			finished = true;
+			synchronized(this) {
+				finished = true;
+				notifyAll();
+			}
 			if (runOnlyOnce) {
 				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
-			}
-			synchronized(this) {
-				notifyAll();
 			}
 			removeExecutableAndExecutor();			
 		}
@@ -932,7 +938,6 @@ public class QueuedTasksExecutor implements Component {
 						waitForTasksInExecutionEnding(priority);				
 					}
 					if (waitForNewAddedTasks && (!tasksInExecution.isEmpty() || !tasksQueue.isEmpty())) {
-						logQueueInfo();
 						waitForTasksEnding(priority, waitForNewAddedTasks);
 					}
 					return this;
