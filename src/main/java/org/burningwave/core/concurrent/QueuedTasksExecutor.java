@@ -56,13 +56,12 @@ import org.burningwave.core.function.ThrowingSupplier;
 @SuppressWarnings({"unchecked", "resource"})
 public class QueuedTasksExecutor implements Component {
 	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasksToBeExecuted;
-	Thread queueConsumer;
+	java.lang.Thread queueConsumer;
 	List<TaskAbst<?, ?>> tasksQueue;
 	List<TaskAbst<?, ?>> tasksInExecution;
 	Boolean supended;
 	int defaultPriority;
 	private long executedTasksCount;
-	private long executorIndex;
 	private boolean isDaemon;
 	private String queueConsumerName;
 	private Boolean terminated;
@@ -101,7 +100,7 @@ public class QueuedTasksExecutor implements Component {
 		supended = Boolean.FALSE;
 		terminated = Boolean.FALSE;
 		executedTasksCount = 0;
-		queueConsumer = new Thread(() -> {
+		queueConsumer = new java.lang.Thread(() -> {
 			while (!terminated) {
 				if (checkAndNotifySuspension()) {
 					continue;
@@ -117,6 +116,7 @@ public class QueuedTasksExecutor implements Component {
 							if (!tasksQueue.remove(task)) {
 								continue;
 							}
+							tasksInExecution.add(task);
 						}
 						setExecutorOf(task);
 						Thread currentExecutor = task.executor;
@@ -124,7 +124,8 @@ public class QueuedTasksExecutor implements Component {
 						if (currentExecutor.getPriority() != currentExecutablePriority) {
 							currentExecutor.setPriority(currentExecutablePriority);
 						}
-						currentExecutor.start();											
+						currentExecutor.start();
+						task.logInfo();
 					}
 				} else {
 					synchronized(executableCollectionFiller) {
@@ -240,16 +241,18 @@ public class QueuedTasksExecutor implements Component {
 	}
 
 	private void setExecutorOf(TaskAbst<?, ?> task) {
-		Thread executor = new Thread(() -> {
-			synchronized(task) {
-				tasksInExecution.add(task);
-			}
+		Thread executor = Thread.getOrCreate().setExecutable(() -> {
 			task.execute();
 			synchronized(task) {
 				tasksInExecution.remove(task);
 				++this.executedTasksCount;
 			}
-		}, queueConsumerName + " -> " + (task.name != null ? task.name : ++executorIndex));
+		});
+		if (task.name != null) {
+			executor.setName(queueConsumerName + " -> " + task.name);
+		} else {
+			executor.setIndexedName(queueConsumerName);
+		}		
 		executor.setPriority(task.priority);
 		task.setExecutor(executor);	
 	}
@@ -435,7 +438,7 @@ public class QueuedTasksExecutor implements Component {
 	
 	public boolean shutDown(boolean waitForTasksTermination) {
 		Collection<TaskAbst<?, ?>> executables = this.tasksQueue;
-		Thread executor = this.queueConsumer;
+		java.lang.Thread executor = this.queueConsumer;
 		if (waitForTasksTermination) {
 			suspend(false);
 		} else {
@@ -665,10 +668,11 @@ public class QueuedTasksExecutor implements Component {
 		
 		void logInfo() {
 			if (this.getCreatorInfos() != null) {
+				Thread executor = this.executor;
 				logInfo(
-					"\n\ttask status: {} \n\tthread of task:{} \n\tcreated by: {}", 
-						Strings.compile("isStarted -> {}, isAborted -> {}, isFinished -> {}", isStarted(), isAborted(), hasFinished()),
-						Strings.compile("{}", executor),
+					"\n\tTask status: {} \n\t{} \n\tcreated by: {}", 
+						Strings.compile("\n\t\tstarted: {}\n\t\taborted: {}\n\t\tfinished: {}", isStarted(), isAborted(), hasFinished()),
+						executor != null ? executor + Strings.from(executor.getStackTrace(),2) : "",
 						Strings.from(this.getCreatorInfos(), 2)
 				);
 			}

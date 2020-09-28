@@ -71,7 +71,7 @@ public class Synchronizer implements AutoCloseable {
 	}
 	
 	Map<String, Object> parallelLockMap;
-	Thread allThreadsStateLogger;
+	java.lang.Thread allThreadsStateLogger;
 	
 	private Synchronizer() {
 		this.parallelLockMap = new ConcurrentHashMap<>();
@@ -136,7 +136,7 @@ public class Synchronizer implements AutoCloseable {
 			stopLoggingAllThreadsState();
 		}
 		AtomicBoolean isAliveWrapper = new AtomicBoolean();
-		allThreadsStateLogger = new Thread(() -> {
+		allThreadsStateLogger = new java.lang.Thread(() -> {
 			isAliveWrapper.set(true);
 			while (isAliveWrapper.get()) {
 				logAllThreadsState();
@@ -159,7 +159,7 @@ public class Synchronizer implements AutoCloseable {
 
 	private void logAllThreadsState() {
 		StringBuffer log = new StringBuffer("\n\n");
-		for (Entry<Thread, StackTraceElement[]> threadAndStackTrace : Thread.getAllStackTraces().entrySet()) {
+		for (Entry<java.lang.Thread, StackTraceElement[]> threadAndStackTrace : java.lang.Thread.getAllStackTraces().entrySet()) {
 			log.append("\t" + threadAndStackTrace.getKey() + ":\n");
 			log.append(Strings.from(threadAndStackTrace.getValue(), 2));
 			log.append("\n\n\n");
