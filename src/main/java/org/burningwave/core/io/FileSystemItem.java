@@ -850,9 +850,7 @@ public class FileSystemItem implements ManagedLogger {
 					FileSystemItem finalRandomFIS = randomFIS;
 					FileSystemItem superParentContainerFinal = superParentContainer;
 					BackgroundExecutor.createTask(() -> {
-						logError("Executor starting: " + Thread.currentThread().getName() + "\n" + superParentContainerFinal.getAbsolutePath());
 						superParentContainerFinal.refresh().getAllChildren();
-						logError("Executor finished: " + Thread.currentThread().getName() + "\n" + superParentContainerFinal.getAbsolutePath());
 					}).runOnlyOnce(
 						superParentContainer.instanceId + "_resetAndReloadAllChildren", 
 						() -> 

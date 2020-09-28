@@ -118,6 +118,7 @@ public class QueuedTasksExecutor implements Component {
 								continue;
 							}
 						}
+						setExecutorOf(task);
 						Thread currentExecutor = task.executor;
 						int currentExecutablePriority = task.getPriority();
 						if (currentExecutor.getPriority() != currentExecutablePriority) {
@@ -227,7 +228,6 @@ public class QueuedTasksExecutor implements Component {
 		Object[] canBeExecutedBag = null;
 		if (skipCheck || (Boolean)(canBeExecutedBag = canBeExecuted(task))[1]) {
 			try {
-				setExecutorOf(task);
 				tasksQueue.add(task);
 				synchronized(executableCollectionFiller) {
 					executableCollectionFiller.notifyAll();
@@ -239,7 +239,7 @@ public class QueuedTasksExecutor implements Component {
 		return canBeExecutedBag != null ? (T)canBeExecutedBag[0] : task;
 	}
 
-	private <E, T extends TaskAbst<E, T>> void setExecutorOf(T task) {
+	private void setExecutorOf(TaskAbst<?, ?> task) {
 		Thread executor = new Thread(() -> {
 			synchronized(task) {
 				tasksInExecution.add(task);
@@ -247,7 +247,7 @@ public class QueuedTasksExecutor implements Component {
 				tasksInExecution.remove(task);
 				++this.executedTasksCount;
 			}
-		}, queueConsumerName + " -> " + ++executorIndex);
+		}, queueConsumerName + " -> " + (task.name != null ? task.name : ++executorIndex));
 		executor.setPriority(task.priority);
 		task.setExecutor(executor);	
 	}
@@ -499,6 +499,7 @@ public class QueuedTasksExecutor implements Component {
 	
 	public static abstract class TaskAbst<E, T extends TaskAbst<E, T>> implements ManagedLogger {
 		
+		String name;
 		StackTraceElement[] stackTraceOnCreation;
 		List<StackTraceElement> creatorInfos;
 		boolean started;
@@ -515,7 +516,6 @@ public class QueuedTasksExecutor implements Component {
 			this.executable = executable;
 			if (creationTracking) {
 				stackTraceOnCreation = Thread.currentThread().getStackTrace();
-				getCreatorInfos();
 			}
 		}
 		
@@ -534,6 +534,11 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 			return creatorInfos;
+		}
+		
+		public T setName(String name) {
+			this.name = name;
+			return (T)this;
 		}
 		
 		public T setExceptionHandler(ThrowingBiConsumer<T, Throwable, Throwable> exceptionHandler) {
