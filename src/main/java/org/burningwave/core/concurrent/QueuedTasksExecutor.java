@@ -666,10 +666,10 @@ public class QueuedTasksExecutor implements Component {
 		void logInfo() {
 			if (this.getCreatorInfos() != null) {
 				logInfo(
-					"task status: {} thread of task:{} created by {}", 
-						Strings.compile("isStarted: {}, isAborted: {}, isFinished", isStarted(), isAborted(), hasFinished()),
+					"\n\ttask status: {} \n\tthread of task:{} \n\tcreated by: {}", 
+						Strings.compile("isStarted -> {}, isAborted -> {}, isFinished -> {}", isStarted(), isAborted(), hasFinished()),
 						Strings.compile("{}", executor),
-						Strings.from(this.getCreatorInfos())
+						Strings.from(this.getCreatorInfos(), 2)
 				);
 			}
 			
