@@ -32,7 +32,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,7 +44,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
@@ -458,22 +456,14 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public void logQueueInfo() {
-		List<TaskAbst<?, ?>> tasks = new ArrayList<>(tasksQueue);
-		tasks.addAll(this.tasksInExecution);
-		logQueueInfo(this.executedTasksCount, tasks);
-	}
-	
-	private void logQueueInfo(Long executedTasksCount, Collection<TaskAbst<?, ?>> executables) {
-		Collection<String> executablesLog = executables.stream().map(task -> "\t" + task.executable.toString()).collect(Collectors.toList());
-		StringBuffer log = new StringBuffer(this.queueConsumer + " - Executed tasks: ")
-			.append(executedTasksCount).append(", Unexecuted tasks: ")
-			.append(executablesLog.size());
-			
-		if (executablesLog.size() > 0) {
-			log.append(":\n\t")
-			.append(String.join("\n\t", executablesLog));
-		}		
-		logInfo(log.toString());
+		logInfo("Tasks to be executed:");
+		for (TaskAbst<?,?> task : tasksQueue) {
+			task.logInfo();
+		}
+		logInfo("Tasks in execution:");
+		for (TaskAbst<?,?> task : tasksInExecution) {
+			task.logInfo();
+		}
 	}
 	
 	@Override
@@ -940,14 +930,7 @@ public class QueuedTasksExecutor implements Component {
 						waitForTasksInExecutionEnding(priority);				
 					}
 					if (waitForNewAddedTasks && (!tasksInExecution.isEmpty() || !tasksQueue.isEmpty())) {
-						logInfo("Tasks to be executed:");
-						for (TaskAbst<?,?> task : tasksQueue) {
-							task.logInfo();
-						}
-						logInfo("Tasks in execution:");
-						for (TaskAbst<?,?> task : tasksInExecution) {
-							task.logInfo();
-						}
+						logQueueInfo();
 						waitForTasksEnding(priority, waitForNewAddedTasks);
 					}
 					return this;

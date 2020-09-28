@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.concurrent;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
@@ -165,6 +166,7 @@ public class Synchronizer implements AutoCloseable {
 			log.append("\n\n\n");
 		}
 		ManagedLoggersRepository.logInfo(() -> this.getClass().getName(), "Current threads state: {}", log.toString());
+		BackgroundExecutor.logQueuesInfo();
 	}
 	
 	public Thread[] getAllThreads() {
