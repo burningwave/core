@@ -40,7 +40,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	
 	Runnable executable;
 	private final long index;
-	volatile boolean isAlive;
+	boolean isAlive;
 	Pool pool;
 	
 	private Thread(Pool pool, long index) {

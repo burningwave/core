@@ -30,8 +30,8 @@ package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 import static org.burningwave.core.assembler.StaticComponentContainer.ThreadPool;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -418,8 +418,8 @@ public class QueuedTasksExecutor implements Component {
 			if (taskExecutor != null) {
 				taskExecutor.setPriority(priority);
 			}
-			logInfo("{}", queueConsumer);
-			task.logInfo();
+			//logInfo("{}", queueConsumer);
+			//task.logInfo();
 			task.join0();
 		});
 	}
@@ -545,13 +545,13 @@ public class QueuedTasksExecutor implements Component {
 		StackTraceElement[] stackTraceOnCreation;
 		List<StackTraceElement> creatorInfos;
 		Supplier<Boolean> hasBeenExecutedChecker;
-		volatile boolean runOnlyOnce;		
-		volatile String id;
-		volatile int priority;
-		volatile boolean started;
-		volatile boolean submited;
-		volatile boolean aborted;
-		volatile boolean finished;
+		boolean runOnlyOnce;		
+		String id;
+		int priority;
+		boolean started;
+		boolean submited;
+		boolean aborted;
+		boolean finished;
 		E executable;		
 		Thread executor;
 		Throwable exc;
@@ -991,8 +991,8 @@ public class QueuedTasksExecutor implements Component {
 							}
 						}
 						tasksInExecution.stream().forEach(task -> {
-							logInfo("{}", queueConsumer);
-							task.logInfo();
+							//logInfo("{}", queueConsumer);
+							//task.logInfo();
 							task.join0();
 						});
 					} else {	
