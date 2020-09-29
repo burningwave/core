@@ -421,8 +421,8 @@ public class QueuedTasksExecutor implements Component {
 			if (taskExecutor != null) {
 				taskExecutor.setPriority(priority);
 			}
-			//logInfo("{}", queueConsumer);
-			//task.logInfo();
+			logInfo("{}", queueConsumer);
+			task.logInfo();
 			task.join0();
 		});
 	}
@@ -983,8 +983,8 @@ public class QueuedTasksExecutor implements Component {
 							}
 						}
 						tasksInExecution.stream().forEach(task -> {
-							//logInfo("{}", queueConsumer);
-							//task.logInfo();
+							logInfo("{}", queueConsumer);
+							task.logInfo();
 							task.join0();
 						});
 					} else {	
