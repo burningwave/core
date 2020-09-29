@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
@@ -876,9 +877,9 @@ public class FileSystemItem implements ManagedLogger {
 	}
 	
 	public FileSystemItem reloadContent(boolean recomputeConventionedAbsolutePath) {
-		Synchronizer.execute(instanceId, () -> {
-			String absolutePath = getAbsolutePath();
-			Cache.pathForContents.remove(absolutePath, true);
+		String absolutePath = getAbsolutePath();
+		Cache.pathForContents.remove(absolutePath, true);
+		BackgroundExecutor.createTask(() -> {						
 			if (recomputeConventionedAbsolutePath) {
 				this.absolutePath.setValue(null);
 			}
@@ -904,7 +905,11 @@ public class FileSystemItem implements ManagedLogger {
 					);
 				}
 			}
-		});
+		}).runOnlyOnce(
+			instanceId + "_reloadContent",
+			() ->
+				Cache.pathForContents.get(absolutePath) != null
+		).submit().waitForFinish();
 		return this;
 	}
 
