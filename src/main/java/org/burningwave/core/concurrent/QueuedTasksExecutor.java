@@ -419,12 +419,13 @@ public class QueuedTasksExecutor implements Component {
 	}
 
 	void waitForTasksInExecutionEnding(int priority) {
-		tasksInExecution.stream().forEach(asyncTask -> {
-			Thread taskExecutor = asyncTask.executor;
+		tasksInExecution.stream().forEach(task -> {
+			Thread taskExecutor = task.executor;
 			if (taskExecutor != null) {
 				taskExecutor.setPriority(priority);
 			}
-			asyncTask.join0();
+			task.logInfo();
+			task.join0();
 		});
 	}
 
