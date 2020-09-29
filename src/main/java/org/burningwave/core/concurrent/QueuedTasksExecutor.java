@@ -543,15 +543,15 @@ public class QueuedTasksExecutor implements Component {
 		String name;
 		StackTraceElement[] stackTraceOnCreation;
 		List<StackTraceElement> creatorInfos;
-		boolean runOnlyOnce;
 		Supplier<Boolean> hasBeenExecutedChecker;
-		public String id;
-		boolean started;
-		boolean submited;
-		boolean aborted;
-		boolean finished;
-		E executable;
-		int priority;
+		volatile boolean runOnlyOnce;		
+		volatile String id;
+		volatile int priority;
+		volatile boolean started;
+		volatile boolean submited;
+		volatile boolean aborted;
+		volatile boolean finished;
+		E executable;		
 		Thread executor;
 		Throwable exc;
 		ThrowingBiConsumer<T, Throwable, Throwable> exceptionHandler;
@@ -995,7 +995,9 @@ public class QueuedTasksExecutor implements Component {
 							task.join0();
 						});
 					} else {	
-						tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
+						tasksQueue.stream().forEach(executable ->
+							executable.changePriority(priority)
+						); 
 						waitForTasksInExecutionEnding(priority);				
 					}
 					if (waitForNewAddedTasks && (!tasksInExecution.isEmpty() || !tasksQueue.isEmpty())) {
