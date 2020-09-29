@@ -46,6 +46,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	private Thread(Pool pool, long index) {
 		this.index = index;
 		this.pool = pool;
+		setDaemon(true);
 	}
 	
 	public void setIndexedName(String prefix) {
@@ -56,8 +57,6 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		this.executable = executable;
 		return this;
 	}
-	
-
 	
 	@Override
 	public synchronized void start() {
