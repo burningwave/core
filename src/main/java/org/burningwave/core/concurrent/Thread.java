@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.concurrent;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,8 +39,8 @@ import org.burningwave.core.ManagedLogger;
 public class Thread extends java.lang.Thread implements ManagedLogger{
 	private final static Collection<Thread> runningThreads;
 	private final static Collection<Thread> sleepingThreads;
-	private static long threadCount;
-	
+	private static long threadsCount;
+	private static int maxThreadsCount = 60;
 	static {
 		runningThreads = ConcurrentHashMap.newKeySet();
 		sleepingThreads = ConcurrentHashMap.newKeySet();
@@ -46,31 +48,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger{
 	
 	Runnable executable;
 	private long index;
-	private boolean isAlive;
+	boolean isAlive;
 	
 	private Thread(long index) {
 		this.index = index;
-	}
-	
-	
-	@Override
-	public void run() {
-		while (isAlive) {
-			synchronized (this) {
-				runningThreads.add(this);
-			}
-			executable.run();				
-			try {
-				synchronized (this) {
-					runningThreads.remove(this);
-					executable = null;
-					sleepingThreads.add(this);
-					wait();
-				}
-			} catch (InterruptedException exc) {
-				logError("Exception occurred", exc);
-			}
-		}			
 	}
 	
 	public void setIndexedName(String prefix) {
@@ -83,6 +64,58 @@ public class Thread extends java.lang.Thread implements ManagedLogger{
 	}
 	
 	final static Thread getOrCreate() {
+		Thread thread = get();
+		if (thread != null) {
+			return thread;
+		}
+		if (threadsCount > maxThreadsCount) {
+			if (maxThreadsCount < 1) {
+				return new Thread(++threadsCount) {
+					@Override
+					public void run() {
+						executable.run();
+					}
+				};
+			}
+			synchronized (sleepingThreads) {
+				try {
+					if ((thread = get()) == null) {
+						sleepingThreads.wait();
+						return getOrCreate();
+					}
+				} catch (InterruptedException exc) {
+					ManagedLoggersRepository.logError(() -> Thread.class.getName(), "Exception occurred", exc);
+				}
+			}
+		}
+		return new Thread(++threadsCount) {
+			@Override
+			public void run() {
+				while (isAlive) {
+					synchronized (this) {
+						runningThreads.add(this);
+					}
+					executable.run();				
+					try {
+						synchronized (this) {
+							runningThreads.remove(this);
+							executable = null;
+							sleepingThreads.add(this);
+							synchronized (sleepingThreads) {
+								sleepingThreads.notifyAll();
+							}
+							wait();
+						}
+					} catch (InterruptedException exc) {
+						logError("Exception occurred", exc);
+					}
+				}			
+			}
+			
+		};
+	}
+
+	private static Thread get() {
 		Iterator<Thread> itr = sleepingThreads.iterator();
 		while (itr.hasNext()) {
 			Thread thread = itr.next();
@@ -90,15 +123,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger{
 				return thread;
 			}
 		}
-		if (threadCount > Runtime.getRuntime().availableProcessors()) {
-			return new Thread(++threadCount) {
-				@Override
-				public void run() {
-					executable.run();
-				}
-			};
-		}
-		return new Thread(++threadCount);
+		return null;
 	}
 	
 	@Override
