@@ -1145,20 +1145,21 @@ public class QueuedTasksExecutor implements Component {
 		
 		<E, T extends TaskAbst<E, T>> Group changePriority(T task, int priority) {
 			int oldPriority = task.priority;
-			task.priority = checkAndCorrectPriority(priority);
+			int newPriority = checkAndCorrectPriority(priority);
 			if (oldPriority != priority) {
 				synchronized (task) {
 					if (getByPriority(oldPriority).tasksQueue.remove(task)) {
-						getByPriority(priority).addToQueue(task, true);
+						task.priority = newPriority;
+						getByPriority(newPriority).addToQueue(task, true);
 					}
 				}
 			}
 			return this;
 		}
 		
-		<E, T extends TaskAbst<E, T>> Group changeExecutionMode(T task, QueuedTasksExecutor.TaskAbst.Execution.Mode executionMode) {
-			if (task.executionMode != executionMode) {
-				task.executionMode = executionMode;
+		<E, T extends TaskAbst<E, T>> Group changeExecutionMode(T task, QueuedTasksExecutor.TaskAbst.Execution.Mode newExecutionMode) {
+			if (task.executionMode != newExecutionMode) {
+				task.executionMode = newExecutionMode;
 				synchronized (task) {
 					QueuedTasksExecutor queuedTasksExecutor = getByPriority(task.priority);
 					if (queuedTasksExecutor.tasksQueue.contains(task)) {
