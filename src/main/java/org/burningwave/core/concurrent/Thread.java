@@ -52,7 +52,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		setName(prefix + " -> worker " + index);
 	}
 
-	Thread setExecutable(Runnable executable) {
+	public Thread setExecutable(Runnable executable) {
 		this.executable = executable;
 		return this;
 	}
@@ -76,6 +76,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		synchronized(this) {
 			if (pool.sleepingThreads.remove(this) || pool.runningThreads.remove(this)) {
 				notifyAll();
+				--pool.threadsCount;
 			}
 		}
 	}	
@@ -95,12 +96,12 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			this.waitForAThreadToFreeUp = waitForAThreadToFreeUp;
 		}
 		
-		final Thread getOrCreate() {
+		public final Thread getOrCreate() {
 			Thread thread = get();
 			if (thread != null) {
 				return thread;
 			}
-			if (threadsCount > maxThreadsCount && waitForAThreadToFreeUp) {
+			if (threadsCount >= maxThreadsCount && waitForAThreadToFreeUp) {
 				synchronized (sleepingThreads) {
 					try {
 						if ((thread = get()) == null) {
@@ -111,16 +112,17 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						ManagedLoggersRepository.logError(() -> Thread.class.getName(), "Exception occurred", exc);
 					}
 				}
-			} else if (threadsCount > maxThreadsCount) {
+			} else if (threadsCount >= maxThreadsCount) {
 				return new Thread(this, ++threadsCount) {
 					@Override
 					public void run() {
 						executable.run();
+						--threadsCount;
 					}
 				};
 			}
 			synchronized (this) {
-				if (threadsCount > maxThreadsCount) {
+				if (threadsCount >= maxThreadsCount) {
 					return getOrCreate();
 				}
 				return new Thread(this, ++threadsCount) {

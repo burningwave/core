@@ -30,6 +30,7 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.ThreadPool;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.File;
@@ -225,11 +226,11 @@ public class FileSystemHelper implements Component {
 			this.deletingInterval = deletingInterval;
 			this.waitInterval = waitInterval;
 			this.burningwaveTemporaryFolder = fileSystemHelper.getOrCreateBurningwaveTemporaryFolder();
-			executor = new Thread(() -> {
+			executor = ThreadPool.getOrCreate().setExecutable(() -> {
 				pingAndDelete();				
-			}, "Temporary file scavenger");
+			});
+			executor.setName("Temporary file scavenger");
 			executor.setPriority(Thread.MIN_PRIORITY);
-			executor.setDaemon(true);
 		}
 
 		void pingAndDelete() {

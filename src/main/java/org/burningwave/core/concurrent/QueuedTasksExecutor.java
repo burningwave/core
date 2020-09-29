@@ -102,7 +102,7 @@ public class QueuedTasksExecutor implements Component {
 		supended = Boolean.FALSE;
 		terminated = Boolean.FALSE;
 		executedTasksCount = 0;
-		queueConsumer = new java.lang.Thread(() -> {
+		queueConsumer = ThreadPool.getOrCreate().setExecutable(() -> {
 			while (!terminated) {
 				if (checkAndNotifySuspension()) {
 					continue;
@@ -144,7 +144,8 @@ public class QueuedTasksExecutor implements Component {
 					}
 				}
 			}
-		}, queueConsumerName);
+		});
+		queueConsumer.setName(queueConsumerName);
 		queueConsumer.setPriority(this.defaultPriority);
 		queueConsumer.setDaemon(isDaemon);
 		queueConsumer.start();
@@ -217,7 +218,8 @@ public class QueuedTasksExecutor implements Component {
 			void preparingToFinish() {
 				QueuedTasksExecutor.this.tasksInExecution.remove(this);
 				++QueuedTasksExecutor.this.executedTasksCount;			
-			};
+			}
+
 		};
 	}
 	
@@ -244,6 +246,7 @@ public class QueuedTasksExecutor implements Component {
 				QueuedTasksExecutor.this.tasksInExecution.remove(this);
 				++QueuedTasksExecutor.this.executedTasksCount;			
 			};
+			
 		};
 	}
 
@@ -458,7 +461,6 @@ public class QueuedTasksExecutor implements Component {
 	
 	public boolean shutDown(boolean waitForTasksTermination) {
 		Collection<TaskAbst<?, ?>> executables = this.tasksQueue;
-		java.lang.Thread executor = this.queueConsumer;
 		if (waitForTasksTermination) {
 			suspend(false);
 		} else {
@@ -469,12 +471,7 @@ public class QueuedTasksExecutor implements Component {
 		executables.clear();
 		tasksInExecution.clear();
 		resumeFromSuspension();
-		try {
-			executor.join();
-			closeResources();			
-		} catch (InterruptedException exc) {
-			logError("Exception occurred", exc);
-		}
+		closeResources();			
 		return true;
 	}
 	
@@ -520,16 +517,11 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	void closeResources() {
-		try {
-			queueConsumer.interrupt();
-		} catch (Throwable e) {
-			logWarn("Exception occurred while interrupting thread {} of {}", queueConsumer, this);
-		}
 		queueConsumer = null;
 		tasksQueue = null;
 		tasksInExecution = null;
 		initializer = null;
-		terminated = null;
+		//terminated = null;
 		supended = null;
 		resumeCaller = null;            
 		executingFinishedWaiter = null;    
@@ -697,8 +689,9 @@ public class QueuedTasksExecutor implements Component {
 				}
 			} catch (Throwable exc) {
 				logException(exc);
+			} finally {
+				markAsFinished();
 			}
-			markAsFinished();			
 		}
 		
 		void logInfo() {
@@ -972,7 +965,6 @@ public class QueuedTasksExecutor implements Component {
 							queuedTasksExecutor.tasksInExecution.remove(this);
 							++queuedTasksExecutor.executedTasksCount;				
 						};
-						
 					};
 				}
 				

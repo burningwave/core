@@ -33,13 +33,13 @@ import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProp
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentContainer.ThreadPool;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 public class Synchronizer implements AutoCloseable {
@@ -72,7 +72,8 @@ public class Synchronizer implements AutoCloseable {
 	}
 	
 	Map<String, Object> parallelLockMap;
-	java.lang.Thread allThreadsStateLogger;
+	Thread allThreadsStateLogger;
+	private boolean allThreadsStateLoggerAlive;
 	
 	private Synchronizer() {
 		this.parallelLockMap = new ConcurrentHashMap<>();
@@ -136,25 +137,15 @@ public class Synchronizer implements AutoCloseable {
 		if (allThreadsStateLogger != null) {
 			stopLoggingAllThreadsState();
 		}
-		AtomicBoolean isAliveWrapper = new AtomicBoolean();
-		allThreadsStateLogger = new java.lang.Thread(() -> {
-			isAliveWrapper.set(true);
-			while (isAliveWrapper.get()) {
+		allThreadsStateLogger = ThreadPool.getOrCreate().setExecutable(() -> {
+			allThreadsStateLoggerAlive = true;
+			while (allThreadsStateLoggerAlive) {
 				logAllThreadsState();
 				waitFor(interval);
 			}
-		}, "All threads state logger") {
-			
-			@Override
-			public void interrupt() {
-				isAliveWrapper.set(false);
-				synchronized(allThreadsStateLogger) {
-					allThreadsStateLogger.notifyAll();
-				}
-			}
-		};
+		});
+		allThreadsStateLogger.setName("All threads state logger");
 		allThreadsStateLogger.setPriority(Thread.MIN_PRIORITY);
-		allThreadsStateLogger.setDaemon(true);
 		allThreadsStateLogger.start();
 	}
 
@@ -187,7 +178,10 @@ public class Synchronizer implements AutoCloseable {
 		if (allThreadsStateLogger == null) {
 			return;
 		}
-		allThreadsStateLogger.interrupt();
+		allThreadsStateLoggerAlive = false;
+		synchronized (allThreadsStateLogger) {
+			allThreadsStateLogger.notifyAll();
+		}
 		allThreadsStateLogger = null;
 	}
 	
