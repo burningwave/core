@@ -81,9 +81,8 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	}	
 	
 	public static class Pool {
-		private long threadsCount;
+		private volatile long threadsCount;
 		private int maxThreadsCount;
-		
 		private Collection<Thread> runningThreads;
 		private Collection<Thread> sleepingThreads;
 		private boolean waitForAThreadToFreeUp;
