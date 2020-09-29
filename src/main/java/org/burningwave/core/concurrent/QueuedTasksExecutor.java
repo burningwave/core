@@ -695,23 +695,20 @@ public class QueuedTasksExecutor implements Component {
 				}
 			} catch (Throwable exc) {
 				logException(exc);
-			} finally {
-				markAsFinished();
 			}
-			
+			markAsFinished();			
 		}
 		
 		void logInfo() {
-//			if (this.getCreatorInfos() != null) {
-//				Thread executor = this.executor;
-//				logInfo(
-//					"\n\tTask status: {} \n\t{} \n\tcreated by: {}", 
-//						Strings.compile("\n\t\tstarted: {}\n\t\taborted: {}\n\t\tfinished: {}", isStarted(), isAborted(), hasFinished()),
-//						executor != null ? executor + Strings.from(executor.getStackTrace(),2) : "",
-//						Strings.from(this.getCreatorInfos(), 2)
-//				);
-//			}
-			
+			if (this.getCreatorInfos() != null) {
+				Thread executor = this.executor;
+				logInfo(
+					"\n\tTask status: {} \n\t{} \n\tcreated by: {}", 
+						Strings.compile("\n\t\tstarted: {}\n\t\taborted: {}\n\t\tfinished: {}", isStarted(), isAborted(), hasFinished()),
+						executor != null ? executor + Strings.from(executor.getStackTrace(),2) : "",
+						Strings.from(this.getCreatorInfos(), 2)
+				);
+			}			
 		}
 		
 		private void logException(Throwable exc) {
