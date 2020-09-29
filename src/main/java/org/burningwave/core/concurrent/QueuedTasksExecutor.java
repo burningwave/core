@@ -144,6 +144,10 @@ public class QueuedTasksExecutor implements Component {
 					}
 				}
 			}
+			synchronized(terminated) {
+				queueConsumer = null;
+				terminated.notifyAll();
+			}
 		});
 		queueConsumer.setName(queueConsumerName);
 		queueConsumer.setPriority(this.defaultPriority);
@@ -471,6 +475,17 @@ public class QueuedTasksExecutor implements Component {
 		executables.clear();
 		tasksInExecution.clear();
 		resumeFromSuspension();
+		if (queueConsumer != null) {
+			synchronized (terminated) {
+				if (queueConsumer != null) {
+					try {
+						terminated.wait();
+					} catch (InterruptedException exc) {
+						logError("Exception occurred", exc);
+					}
+				}
+			}
+		}
 		closeResources();			
 		return true;
 	}
@@ -517,11 +532,11 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	void closeResources() {
-		queueConsumer = null;
+		//queueConsumer = null;
 		tasksQueue = null;
 		tasksInExecution = null;
 		initializer = null;
-		//terminated = null;
+		terminated = null;
 		supended = null;
 		resumeCaller = null;            
 		executingFinishedWaiter = null;    
