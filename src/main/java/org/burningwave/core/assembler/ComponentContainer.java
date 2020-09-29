@@ -311,13 +311,8 @@ public class ComponentContainer implements ComponentSupplier {
 				if (componentTemp == null) {
 					QueuedTasksExecutor.Task afterInitTask = this.afterInitTask;
 					if (afterInitTask != null) {
-						synchronized (afterInitTask) {
-							afterInitTask = this.afterInitTask;
-							if (afterInitTask != null) {
-								afterInitTask.submit();
-								this.afterInitTask = null;
-							}
-						}
+						this.afterInitTask = null;
+						afterInitTask.submit();
 					}
 					components.put(componentType, componentTemp = componentSupplier.get());
 				}
