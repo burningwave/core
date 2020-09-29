@@ -1013,6 +1013,7 @@ public class QueuedTasksExecutor implements Component {
 							}
 						}
 						tasksInExecution.stream().forEach(task -> {
+							task.logInfo();
 							task.join0();
 						});
 					} else {	
