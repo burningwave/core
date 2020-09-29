@@ -704,7 +704,7 @@ public class QueuedTasksExecutor implements Component {
 			if (this.getCreatorInfos() != null) {
 				Thread executor = this.executor;
 				logInfo(
-					"\n\t{}\n\tTask status: {} \n\t{} \n\tcreated by: {}", 
+					"\n\tTask status: {} \n\t{} \n\tcreated by: {}", 
 						Strings.compile("\n\t\tpriority: {}\n\t\tstarted: {}\n\t\taborted: {}\n\t\tfinished: {}", priority, isStarted(), isAborted(), hasFinished()),
 						executor != null ? executor + Strings.from(executor.getStackTrace(),2) : "",
 						Strings.from(this.getCreatorInfos(), 2)
