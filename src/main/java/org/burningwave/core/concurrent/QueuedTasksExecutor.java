@@ -400,7 +400,7 @@ public class QueuedTasksExecutor implements Component {
 		} else {
 			waitForTasksInExecutionEnding(priority);
 			Task supendingTask = createSuspendingTask(priority);
-			changePriorityToAllTaskBefore(supendingTask.submit(true), priority);
+			changePriorityToAllTaskBefore(supendingTask.addToQueue(), priority);
 			supendingTask.waitForFinish();
 		}
 		queueConsumer.setPriority(this.defaultPriority);
@@ -417,6 +417,7 @@ public class QueuedTasksExecutor implements Component {
 			if (taskExecutor != null) {
 				taskExecutor.setPriority(priority);
 			}
+			logInfo("{}", queueConsumer);
 			task.logInfo();
 			task.join0();
 		});
@@ -703,7 +704,7 @@ public class QueuedTasksExecutor implements Component {
 			if (this.getCreatorInfos() != null) {
 				Thread executor = this.executor;
 				logInfo(
-					"\n\tTask status: {} \n\t{} \n\tcreated by: {}", 
+					"\n\t{}\n\tTask status: {} \n\t{} \n\tcreated by: {}", 
 						Strings.compile("\n\t\tstarted: {}\n\t\taborted: {}\n\t\tfinished: {}", isStarted(), isAborted(), hasFinished()),
 						executor != null ? executor + Strings.from(executor.getStackTrace(),2) : "",
 						Strings.from(this.getCreatorInfos(), 2)
@@ -768,22 +769,16 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public final T submit() {
-			return submit(false);
-		}
-		
-		final T submit(boolean ignoreSubmitedCheck) {
-			if (!ignoreSubmitedCheck) {
-				if (!submited) {
-					synchronized(this) {
-						if (!submited) {
-							submited = true;
-						} else {
-							throw new TaskStateException(this, "is already submited");
-						}
+			if (!submited) {
+				synchronized(this) {
+					if (!submited) {
+						submited = true;
+					} else {
+						throw new TaskStateException(this, "is already submited");
 					}
-				} else {
-					throw new TaskStateException(this, "is already submited");
 				}
+			} else {
+				throw new TaskStateException(this, "is already submited");
 			}
 			return addToQueue();
 		}
@@ -995,6 +990,7 @@ public class QueuedTasksExecutor implements Component {
 							}
 						}
 						tasksInExecution.stream().forEach(task -> {
+							logInfo("{}", queueConsumer);
 							task.logInfo();
 							task.join0();
 						});
