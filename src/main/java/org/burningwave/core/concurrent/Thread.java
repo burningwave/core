@@ -36,22 +36,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.ManagedLogger;
 
-public class Thread extends java.lang.Thread implements ManagedLogger{
-	private final static Collection<Thread> runningThreads;
-	private final static Collection<Thread> sleepingThreads;
-	private static long threadsCount;
-	private static int maxThreadsCount = 60;
-	static {
-		runningThreads = ConcurrentHashMap.newKeySet();
-		sleepingThreads = ConcurrentHashMap.newKeySet();
-	}
+public class Thread extends java.lang.Thread implements ManagedLogger {
 	
 	Runnable executable;
-	private long index;
-	boolean isAlive;
+	private final long index;
+	volatile boolean isAlive;
+	Pool pool;
 	
-	private Thread(long index) {
+	private Thread(Pool pool, long index) {
 		this.index = index;
+		this.pool = pool;
 	}
 	
 	public void setIndexedName(String prefix) {
@@ -63,68 +57,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger{
 		return this;
 	}
 	
-	final static Thread getOrCreate() {
-		Thread thread = get();
-		if (thread != null) {
-			return thread;
-		}
-		if (threadsCount > maxThreadsCount) {
-			if (maxThreadsCount < 1) {
-				return new Thread(++threadsCount) {
-					@Override
-					public void run() {
-						executable.run();
-					}
-				};
-			}
-			synchronized (sleepingThreads) {
-				try {
-					if ((thread = get()) == null) {
-						sleepingThreads.wait();
-						return getOrCreate();
-					}
-				} catch (InterruptedException exc) {
-					ManagedLoggersRepository.logError(() -> Thread.class.getName(), "Exception occurred", exc);
-				}
-			}
-		}
-		return new Thread(++threadsCount) {
-			@Override
-			public void run() {
-				while (isAlive) {
-					synchronized (this) {
-						runningThreads.add(this);
-					}
-					executable.run();				
-					try {
-						synchronized (this) {
-							runningThreads.remove(this);
-							executable = null;
-							sleepingThreads.add(this);
-							synchronized (sleepingThreads) {
-								sleepingThreads.notifyAll();
-							}
-							wait();
-						}
-					} catch (InterruptedException exc) {
-						logError("Exception occurred", exc);
-					}
-				}			
-			}
-			
-		};
-	}
 
-	private static Thread get() {
-		Iterator<Thread> itr = sleepingThreads.iterator();
-		while (itr.hasNext()) {
-			Thread thread = itr.next();
-			if (sleepingThreads.remove(thread)) {
-				return thread;
-			}
-		}
-		return null;
-	}
 	
 	@Override
 	public synchronized void start() {
@@ -141,27 +74,114 @@ public class Thread extends java.lang.Thread implements ManagedLogger{
 	void shutDown() {
 		isAlive = false;
 		synchronized(this) {
-			if (sleepingThreads.remove(this) || runningThreads.remove(this)) {
+			if (pool.sleepingThreads.remove(this) || pool.runningThreads.remove(this)) {
 				notifyAll();
 			}
 		}
-	}
+	}	
 	
-	public static void shutDownAllSleeping() {
-		Iterator<Thread> itr = sleepingThreads.iterator();
-		while (itr.hasNext()) {
-			itr.next().shutDown();
+	public static class Pool {
+		private long threadsCount;
+		private int maxThreadsCount = 32;
+		
+		private Collection<Thread> runningThreads;
+		private Collection<Thread> sleepingThreads;
+		private boolean waitForAThreadToFreeUp;
+		
+		Pool (int maxThreadsCount, boolean waitForAThreadToFreeUp) {
+			runningThreads = ConcurrentHashMap.newKeySet();
+			sleepingThreads = ConcurrentHashMap.newKeySet();
+			this.maxThreadsCount = maxThreadsCount;
+			this.waitForAThreadToFreeUp = waitForAThreadToFreeUp;
 		}
-	}
-	
-	public static void shutDownAll() {
-		Iterator<Thread> itr = sleepingThreads.iterator();
-		while (itr.hasNext()) {
-			itr.next().shutDown();
+		
+		final Thread getOrCreate() {
+			Thread thread = get();
+			if (thread != null) {
+				return thread;
+			}
+			if (threadsCount > maxThreadsCount && waitForAThreadToFreeUp) {
+				synchronized (sleepingThreads) {
+					try {
+						if ((thread = get()) == null) {
+							sleepingThreads.wait();
+							return getOrCreate();
+						}
+					} catch (InterruptedException exc) {
+						ManagedLoggersRepository.logError(() -> Thread.class.getName(), "Exception occurred", exc);
+					}
+				}
+			} else if (threadsCount > maxThreadsCount) {
+				return new Thread(this, ++threadsCount) {
+					@Override
+					public void run() {
+						executable.run();
+					}
+				};
+			}
+			synchronized (this) {
+				if (threadsCount > maxThreadsCount) {
+					return getOrCreate();
+				}
+				return new Thread(this, ++threadsCount) {
+					@Override
+					public void run() {
+						while (isAlive) {
+							synchronized (this) {
+								runningThreads.add(this);
+							}
+							executable.run();				
+							try {
+								synchronized (this) {
+									runningThreads.remove(this);
+									executable = null;
+									sleepingThreads.add(this);
+									synchronized (sleepingThreads) {
+										sleepingThreads.notifyAll();
+									}
+									wait();
+								}
+							} catch (InterruptedException exc) {
+								logError("Exception occurred", exc);
+							}
+						}			
+					}
+					
+				};
+			}
 		}
-		itr = runningThreads.iterator();
-		while (itr.hasNext()) {
-			itr.next().shutDown();
+
+		private Thread get() {
+			Iterator<Thread> itr = sleepingThreads.iterator();
+			while (itr.hasNext()) {
+				Thread thread = itr.next();
+				if (sleepingThreads.remove(thread)) {
+					return thread;
+				}
+			}
+			return null;
+		}
+		
+		public void shutDownAllSleeping() {
+			Iterator<Thread> itr = sleepingThreads.iterator();
+			while (itr.hasNext()) {
+				itr.next().shutDown();
+			}
+		}
+		
+		public void shutDownAll() {
+			Iterator<Thread> itr = sleepingThreads.iterator();
+			while (itr.hasNext()) {
+				itr.next().shutDown();
+			}
+			itr = runningThreads.iterator();
+			while (itr.hasNext()) {
+				itr.next().shutDown();
+			}
+		}
+
+		public static Pool create(int maxThreadsCount, boolean waitForAThreadToFreeUp) {
+			return new Pool(maxThreadsCount, waitForAThreadToFreeUp);
 		}
 	}
 }

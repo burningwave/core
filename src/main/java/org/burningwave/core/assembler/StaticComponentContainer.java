@@ -90,10 +90,12 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.io.Streams Streams;
 	public static final org.burningwave.core.Strings Strings;
 	public static final org.burningwave.core.concurrent.Synchronizer Synchronizer;
+	public static final  org.burningwave.core.concurrent.Thread.Pool ThreadPool;
 	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
 		try {
+			ThreadPool = org.burningwave.core.concurrent.Thread.Pool.create(48, true);
 			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create();
 			Strings = org.burningwave.core.Strings.create();
 			Throwables = org.burningwave.core.Throwables.create();
@@ -193,7 +195,7 @@ public class StaticComponentContainer {
 					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Shuting down BackgroundExecutor");
 					BackgroundExecutor.shutDown(false);
 					Synchronizer.stopLoggingAllThreadsState();
-					org.burningwave.core.concurrent.Thread.shutDownAll();
+					ThreadPool.shutDownAll();
 				}, "Resources releaser")
 			);
 			FileSystemHelper.startScavenger();

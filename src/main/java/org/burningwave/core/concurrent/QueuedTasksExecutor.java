@@ -31,6 +31,7 @@ package org.burningwave.core.concurrent;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.ThreadPool;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -262,7 +263,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 
 	private void setExecutorOf(TaskAbst<?, ?> task) {
-		Thread executor = Thread.getOrCreate().setExecutable(() -> {
+		Thread executor = ThreadPool.getOrCreate().setExecutable(() -> {
 			task.execute();
 		});
 		if (task.name != null) {
@@ -1021,11 +1022,12 @@ public class QueuedTasksExecutor implements Component {
 		
 		<E, T extends TaskAbst<E, T>> Group changePriority(T task, int priority) {
 			int oldPriority = task.priority;
-			task.priority = checkAndCorrectPriority(priority);
+			int newPriority = checkAndCorrectPriority(priority);
 			if (oldPriority != priority) {
 				synchronized (task) {
 					if (getByPriority(oldPriority).tasksQueue.remove(task)) {
-						getByPriority(priority).addToQueue(task, true);
+						task.priority = newPriority;
+						getByPriority(newPriority).addToQueue(task, true);
 					}
 				}
 			}
