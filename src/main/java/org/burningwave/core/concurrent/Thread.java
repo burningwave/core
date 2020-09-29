@@ -46,13 +46,13 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	private Thread(Pool pool, long index) {
 		this.index = index;
 		this.pool = pool;
-		setDaemon(true);
+		setDaemon(pool.daemon);
 	}
 	
 	public void setIndexedName(String prefix) {
 		setName(prefix + " -> worker " + index);
 	}
-
+	
 	public Thread setExecutable(Runnable executable) {
 		this.executable = executable;
 		return this;
@@ -82,13 +82,15 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	
 	public static class Pool {
 		private long threadsCount;
-		private int maxThreadsCount = 32;
+		private int maxThreadsCount;
 		
 		private Collection<Thread> runningThreads;
 		private Collection<Thread> sleepingThreads;
 		private boolean waitForAThreadToFreeUp;
+		private boolean daemon;
 		
-		Pool (int maxThreadsCount, boolean waitForAThreadToFreeUp) {
+		Pool (int maxThreadsCount, boolean daemon, boolean waitForAThreadToFreeUp) {
+			this.daemon = daemon;
 			runningThreads = ConcurrentHashMap.newKeySet();
 			sleepingThreads = ConcurrentHashMap.newKeySet();
 			this.maxThreadsCount = maxThreadsCount;
@@ -180,9 +182,21 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				itr.next().shutDown();
 			}
 		}
-
-		public static Pool create(int maxThreadsCount, boolean waitForAThreadToFreeUp) {
-			return new Pool(maxThreadsCount, waitForAThreadToFreeUp);
+		
+		public void setDaemon(boolean flag) {
+			daemon = flag;
+			Iterator<Thread> itr = sleepingThreads.iterator();
+			while (itr.hasNext()) {
+				itr.next().setDaemon(flag);
+			}
+			itr = runningThreads.iterator();
+			while (itr.hasNext()) {
+				itr.next().setDaemon(flag);
+			}
+		}
+		
+		public static Pool create(int maxThreadsCount, boolean daemon, boolean waitForAThreadToFreeUp) {
+			return new Pool(maxThreadsCount, daemon, waitForAThreadToFreeUp);
 		}
 	}
 }
