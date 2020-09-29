@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
@@ -58,7 +59,7 @@ public class QueuedTasksExecutor implements Component {
 	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasksToBeExecuted;
 	java.lang.Thread queueConsumer;
 	List<TaskAbst<?, ?>> tasksQueue;
-	List<TaskAbst<?, ?>> tasksInExecution;
+	Set<TaskAbst<?, ?>> tasksInExecution;
 	Boolean supended;
 	int defaultPriority;
 	private long executedTasksCount;
@@ -78,7 +79,7 @@ public class QueuedTasksExecutor implements Component {
 	
 	QueuedTasksExecutor(String executorName, int defaultPriority, boolean isDaemon) {
 		tasksQueue = new CopyOnWriteArrayList<>();
-		tasksInExecution = new CopyOnWriteArrayList<>();
+		tasksInExecution = ConcurrentHashMap.newKeySet();
 		this.resumeCaller = new Object();
 		this.executingFinishedWaiter = new Object();
 		this.suspensionCaller = new Object();
@@ -208,17 +209,13 @@ public class QueuedTasksExecutor implements Component {
 
 			@Override
 			void preparingToStart() {
-				synchronized(QueuedTasksExecutor.this.tasksInExecution) {
-					QueuedTasksExecutor.this.tasksInExecution.add(this);
-				}				
+				QueuedTasksExecutor.this.tasksInExecution.add(this);				
 			}
 
 			@Override
 			void preparingToFinish() {
-				synchronized(QueuedTasksExecutor.this.tasksInExecution) {
-					QueuedTasksExecutor.this.tasksInExecution.remove(this);
-					++QueuedTasksExecutor.this.executedTasksCount;
-				}				
+				QueuedTasksExecutor.this.tasksInExecution.remove(this);
+				++QueuedTasksExecutor.this.executedTasksCount;			
 			};
 		};
 	}
@@ -238,17 +235,13 @@ public class QueuedTasksExecutor implements Component {
 			
 			@Override
 			void preparingToStart() {
-				synchronized(QueuedTasksExecutor.this.tasksInExecution) {
-					QueuedTasksExecutor.this.tasksInExecution.add(this);
-				}				
+				QueuedTasksExecutor.this.tasksInExecution.add(this);				
 			}
 
 			@Override
 			void preparingToFinish() {
-				synchronized(QueuedTasksExecutor.this.tasksInExecution) {
-					QueuedTasksExecutor.this.tasksInExecution.remove(this);
-					++QueuedTasksExecutor.this.executedTasksCount;
-				}				
+				QueuedTasksExecutor.this.tasksInExecution.remove(this);
+				++QueuedTasksExecutor.this.executedTasksCount;			
 			};
 		};
 	}
@@ -503,7 +496,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public void logQueueInfo() {
-		List<TaskAbst<?, ?>> tasksQueue = this.tasksQueue;
+		Collection<TaskAbst<?, ?>> tasksQueue = this.tasksQueue;
 		if (!tasksQueue.isEmpty()) {
 			logInfo("{} - Tasks to be executed:", queueConsumer);
 			for (TaskAbst<?,?> task : tasksQueue) {
@@ -709,15 +702,15 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		void logInfo() {
-			if (this.getCreatorInfos() != null) {
-				Thread executor = this.executor;
-				logInfo(
-					"\n\tTask status: {} \n\t{} \n\tcreated by: {}", 
-						Strings.compile("\n\t\tstarted: {}\n\t\taborted: {}\n\t\tfinished: {}", isStarted(), isAborted(), hasFinished()),
-						executor != null ? executor + Strings.from(executor.getStackTrace(),2) : "",
-						Strings.from(this.getCreatorInfos(), 2)
-				);
-			}
+//			if (this.getCreatorInfos() != null) {
+//				Thread executor = this.executor;
+//				logInfo(
+//					"\n\tTask status: {} \n\t{} \n\tcreated by: {}", 
+//						Strings.compile("\n\t\tstarted: {}\n\t\taborted: {}\n\t\tfinished: {}", isStarted(), isAborted(), hasFinished()),
+//						executor != null ? executor + Strings.from(executor.getStackTrace(),2) : "",
+//						Strings.from(this.getCreatorInfos(), 2)
+//				);
+//			}
 			
 		}
 		
@@ -948,18 +941,14 @@ public class QueuedTasksExecutor implements Component {
 						@Override
 						void preparingToStart() {
 							QueuedTasksExecutor queuedTasksExecutor = Group.this.getByPriority(this.priority);
-							synchronized(queuedTasksExecutor.tasksInExecution) {
-								queuedTasksExecutor.tasksInExecution.add(this);
-							}			
+							queuedTasksExecutor.tasksInExecution.add(this);			
 						}
 
 						@Override
 						void preparingToFinish() {
 							QueuedTasksExecutor queuedTasksExecutor = Group.this.getByPriority(this.priority);
-							synchronized(queuedTasksExecutor.tasksInExecution) {
-								queuedTasksExecutor.tasksInExecution.remove(this);
-								++queuedTasksExecutor.executedTasksCount;
-							}					
+							queuedTasksExecutor.tasksInExecution.remove(this);
+							++queuedTasksExecutor.executedTasksCount;					
 						};
 					};
 				}
@@ -981,18 +970,14 @@ public class QueuedTasksExecutor implements Component {
 						@Override
 						void preparingToStart() {
 							QueuedTasksExecutor queuedTasksExecutor = Group.this.getByPriority(this.priority);
-							synchronized(queuedTasksExecutor.tasksInExecution) {
-								queuedTasksExecutor.tasksInExecution.add(this);
-							}				
+							queuedTasksExecutor.tasksInExecution.add(this);				
 						}
 
 						@Override
 						void preparingToFinish() {
 							QueuedTasksExecutor queuedTasksExecutor = Group.this.getByPriority(this.priority);
-							synchronized(queuedTasksExecutor.tasksInExecution) {
-								queuedTasksExecutor.tasksInExecution.remove(this);
-								++queuedTasksExecutor.executedTasksCount;
-							}				
+							queuedTasksExecutor.tasksInExecution.remove(this);
+							++queuedTasksExecutor.executedTasksCount;				
 						};
 						
 					};
