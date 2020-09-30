@@ -185,7 +185,7 @@ public class ByteCodeHunterTest extends BaseTest {
 	@Test
 	public void findAllWithByteCodeEqualsAndUseDuplicatedPathsTestOne() {
 		Collection<String> disabledLoggers = GlobalProperties.resolveStringValues("managed-logger.repository.logging.warn.disabled-for", ";");
-		disabledLoggers.remove(PathScannerClassLoader.class.getName());
+//		disabledLoggers.remove(PathScannerClassLoader.class.getName());
 		GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
 		findAllSubtypeOfTestOne();
 		findAllWithByteCodeEqualsTestOne();

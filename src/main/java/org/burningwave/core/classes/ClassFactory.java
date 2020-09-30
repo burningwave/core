@@ -682,7 +682,7 @@ public class ClassFactory implements Component {
 					((MemoryClassLoader)classLoader).unregister(this, true);
 				}
 				if (compilationTask != null) {
-					if (!BackgroundExecutor.abort(compilationTask)) {
+					if (!compilationTask.abort().isAborted()) {
 						if (compilationTask.isStarted()) {
 							Compilation.Result compilationResult = compilationTask.join();
 							if (compilationResult != null) {

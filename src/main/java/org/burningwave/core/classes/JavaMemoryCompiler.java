@@ -217,7 +217,7 @@ public class JavaMemoryCompiler implements Component {
 				);
 				return new Compilation.Result(FileSystemItem.ofPath(storedFilesClassPath), compiledFiles, new HashSet<>(context.classPaths));
 			}
-		}).submit();
+		}).async().submit();
 	}	
 	
 	private void sourcesToMemorySources(Collection<String> sources, Collection<MemorySource> memorySources) {

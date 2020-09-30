@@ -89,7 +89,7 @@ public class SearchContext<T> implements Component {
 		} else {
 			searchTask = BackgroundExecutor.createTask(() -> {
 				searcher.accept(this);
-			}).submit();
+			}).async().submit();
 		}
 	}
 	

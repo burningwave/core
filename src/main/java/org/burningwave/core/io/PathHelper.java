@@ -210,9 +210,9 @@ public class PathHelper implements Component {
 					pathsFound = this.pathGroups.get(name);
 					if (pathsFound != null) {
 						pathGroup.addAll(pathsFound);
-					} else {
-						//logWarn("path group named " + name + " is not defined");
-					}
+					} /*else {
+						logWarn("path group named " + name + " is not defined");
+					}*/
 				}
 				
 			}
@@ -492,7 +492,7 @@ public class PathHelper implements Component {
 		closeResources(() -> pathGroups == null, () -> {
 			QueuedTasksExecutor.Task initializerTask = this.initializerTask;
 			if (initializerTask != null && 
-				!BackgroundExecutor.abort(initializerTask) && 
+				!initializerTask.abort().isAborted() && 
 				initializerTask.isStarted()
 			) {
 				initializerTask.waitForFinish();

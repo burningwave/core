@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
@@ -59,7 +60,8 @@ public class QueuedTasksExecutor implements Component {
 	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasksToBeExecuted;
 	java.lang.Thread queueConsumer;
 	List<TaskAbst<?, ?>> tasksQueue;
-	Map<Thread, TaskAbst<?, ?>> tasksInExecution;
+	Set<TaskAbst<?, ?>> tasksInExecution;
+	TaskAbst<?, ?> currentTaskInExecution;
 	Boolean supended;
 	volatile int defaultPriority;
 	private long executedTasksCount;
@@ -79,7 +81,7 @@ public class QueuedTasksExecutor implements Component {
 	
 	QueuedTasksExecutor(String executorName, int defaultPriority, boolean isDaemon) {
 		tasksQueue = new CopyOnWriteArrayList<>();
-		tasksInExecution = new ConcurrentHashMap<>();
+		tasksInExecution = ConcurrentHashMap.newKeySet();
 		this.resumeCaller = new Object();
 		this.executingFinishedWaiter = new Object();
 		this.suspensionCaller = new Object();
@@ -115,8 +117,10 @@ public class QueuedTasksExecutor implements Component {
 						TaskAbst<?, ?> task = taskIterator.next();
 						synchronized (task) {
 							if (!tasksQueue.remove(task)) {
+								currentTaskInExecution = null;
 								continue;
 							}
+							currentTaskInExecution = task;
 						}
 						setExecutorOf(task);
 						Thread currentExecutor = task.executor;
@@ -124,7 +128,22 @@ public class QueuedTasksExecutor implements Component {
 						if (currentExecutor.getPriority() != currentExecutablePriority) {
 							currentExecutor.setPriority(currentExecutablePriority);
 						}
-						currentExecutor.start();
+						
+						if (task.isSync()) {
+							synchronized(queueConsumer) {
+								currentExecutor.start();
+								try {
+									synchronized(task) {
+										task.notifyAll();
+									}
+									queueConsumer.wait();
+								} catch (InterruptedException exc) {
+									logError("Exeption occurred", exc);
+								}
+							}
+						} else {
+							currentExecutor.start();
+						}
 					}
 				} else {
 					synchronized(executableCollectionFiller) {
@@ -153,7 +172,7 @@ public class QueuedTasksExecutor implements Component {
 		queueConsumer.setDaemon(isDaemon);
 		queueConsumer.start();
 	}
-
+	
 	private boolean checkAndNotifySuspension() {
 		if (supended) {
 			synchronized(resumeCaller) {
@@ -170,7 +189,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		return false;
 	}
-	
+
 	public static QueuedTasksExecutor create(String executorName, int initialPriority) {
 		return create(executorName, initialPriority, false, false);
 	}
@@ -289,30 +308,34 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public <E, T extends TaskAbst<E, T>> boolean abort(T task) {
+		synchronized (task) {
+			if (!task.isSubmitted()) {
+				task.aborted = true;
+				task.removeExecutableAndExecutor();
+			}
+		}
 		if (!task.isStarted()) {
-			if (task instanceof Task) {
-				Task taskToBeAborted = (Task)task;
-				if (taskToBeAborted.runOnlyOnce) {
-					for (TaskAbst<?, ?> queuedTaskAbst : tasksQueue) {
-						if (queuedTaskAbst instanceof Task) {
-							Task queuedTask = (Task)queuedTaskAbst;
-							if (taskToBeAborted.id.equals(queuedTask.id)) {
-								synchronized (queuedTask) {
-									if (tasksQueue.remove(queuedTask)) {
-										if (!queuedTask.isStarted()) {
-											queuedTask.aborted = true;
-											queuedTask.removeExecutableAndExecutor();
-											queuedTask.notifyAll();
-											runOnlyOnceTasksToBeExecuted.remove(queuedTask.id);
-											return queuedTask.aborted;
-										}
+			if (task.runOnlyOnce) {
+				for (TaskAbst<?, ?> queuedTask : tasksQueue) {
+					if (task.id.equals(queuedTask.id)) {
+						synchronized (queuedTask) {
+							if (tasksQueue.remove(queuedTask)) {
+								if (!queuedTask.isStarted()) {
+									task.aborted = queuedTask.aborted = true;
+									queuedTask.removeExecutableAndExecutor();
+									task.removeExecutableAndExecutor();
+									queuedTask.notifyAll();
+									synchronized(task) {
+										task.notifyAll();
 									}
+									runOnlyOnceTasksToBeExecuted.remove(queuedTask.id);
+									return task.aborted;
 								}
 							}
 						}
 					}
-					return false;
 				}
+				return task.aborted;
 			}
 			synchronized (task) {
 				if (task.aborted = tasksQueue.remove(task)) {
@@ -321,7 +344,7 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		}
-		return false;
+		return task.aborted;
 	}
 	
 	public QueuedTasksExecutor waitForTasksEnding(int priority, boolean waitForNewAddedTasks) {
@@ -397,7 +420,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 
 	void waitForTasksInExecutionEnding(int priority) {
-		tasksInExecution.values().stream().forEach(task -> {
+		tasksInExecution.stream().forEach(task -> {
 			Thread taskExecutor = task.executor;
 			if (taskExecutor != null) {
 				taskExecutor.setPriority(priority);
@@ -469,7 +492,7 @@ public class QueuedTasksExecutor implements Component {
 	
 	public void logStatus() {
 		List<TaskAbst<?, ?>> tasks = new ArrayList<>(tasksQueue);
-		tasks.addAll(this.tasksInExecution.values());
+		tasks.addAll(this.tasksInExecution);
 		logStatus(this.executedTasksCount, tasks);
 	}
 	
@@ -494,7 +517,7 @@ public class QueuedTasksExecutor implements Component {
 				task.logInfo();
 			}
 		}
-		tasksQueue = this.tasksInExecution.values();
+		tasksQueue = this.tasksInExecution;
 		if (!tasksQueue.isEmpty()) {
 			logInfo("{} - Tasks in execution:", queueConsumer);
 			for (TaskAbst<?,?> task : tasksQueue) {
@@ -533,9 +556,10 @@ public class QueuedTasksExecutor implements Component {
 		volatile String id;
 		volatile int priority;
 		volatile boolean started;
-		volatile boolean submited;
+		volatile boolean submitted;
 		volatile boolean aborted;
 		volatile boolean finished;
+		volatile boolean async;
 		E executable;		
 		Thread executor;
 		Throwable exc;
@@ -565,6 +589,28 @@ public class QueuedTasksExecutor implements Component {
 			return creatorInfos;
 		}
 		
+		public boolean isAsync() {
+			return async;
+		}
+		
+		public boolean isSync() {
+			return !async;
+		}
+		
+		public T async() {
+			return setAsync(true);
+		}
+		
+		public T setAsync(boolean flag) {
+			synchronized (this) {
+				if (isSubmitted()) {
+					throw new TaskStateException(this, "is submitted");
+				}
+				this.async = flag;
+			}
+			return (T)this;
+		}
+		
 		public T setName(String name) {
 			this.name = name;
 			return (T)this;
@@ -588,6 +634,9 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public T runOnlyOnce(String id, Supplier<Boolean> hasBeenExecutedChecker) {
+			if (isSubmitted()) {
+				throw new TaskStateException(this, "is submitted");
+			}
 			runOnlyOnce = true;
 			this.id = id;
 			this.hasBeenExecutedChecker = hasBeenExecutedChecker;
@@ -598,12 +647,16 @@ public class QueuedTasksExecutor implements Component {
 			return aborted;
 		}
 		
-		public boolean isSubmited() {
-			return submited;
+		public boolean isSubmitted() {
+			return submitted;
 		}
 		
 		public T waitForStarting() {
-			if (isSubmited()) {
+			if (Thread.currentThread() == this.executor) {
+				return(T)this;
+			}
+			unlockQueueConsumerIfCurrentExecutedTaskIsSync();
+			if (isSubmitted()) {
 				if (!started) {
 					synchronized (this) {
 						if (!started) {
@@ -634,7 +687,8 @@ public class QueuedTasksExecutor implements Component {
 			if (Thread.currentThread() == this.executor) {
 				return;
 			}
-			if (isSubmited()) {
+			unlockQueueConsumerIfCurrentExecutedTaskIsSync();
+			if (isSubmitted()) {
 				if (!hasFinished()) {	
 					synchronized (this) {
 						if (!hasFinished()) {
@@ -652,6 +706,18 @@ public class QueuedTasksExecutor implements Component {
 				}
 			} else {
 				throw new TaskStateException(this, "is not submitted");
+			}
+		}
+
+		private void unlockQueueConsumerIfCurrentExecutedTaskIsSync() {
+			QueuedTasksExecutor queuedTasksExecutor =  getQueuedTasksExecutor();
+			TaskAbst<?, ?> currentTaskInExecution = queuedTasksExecutor.currentTaskInExecution;
+			if (currentTaskInExecution != null && currentTaskInExecution.isSync()) {
+				if (Thread.currentThread() == currentTaskInExecution.executor) {
+					synchronized(queuedTasksExecutor.queueConsumer) {
+						queuedTasksExecutor.queueConsumer.notifyAll();
+					}
+				}
 			}
 		}
 		
@@ -689,7 +755,7 @@ public class QueuedTasksExecutor implements Component {
 				Thread executor = this.executor;
 				logInfo(
 					"\n\tTask status: {} \n\t{} \n\tcreated by: {}", 
-						Strings.compile("\n\t\tpriority: {}\n\t\tstarted: {}\n\t\taborted: {}\n\t\tfinished: {}", priority, isStarted(), isAborted(), hasFinished()),
+						Strings.compile("\n\t\tpriority: {}\n\t\tasync: {}\n\t\tstarted: {}\n\t\taborted: {}\n\t\tfinished: {}", priority, async, isStarted(), isAborted(), hasFinished()),
 						executor != null ? executor + Strings.from(executor.getStackTrace(),2) : "",
 						Strings.from(this.getCreatorInfos(), 2)
 				);
@@ -719,6 +785,12 @@ public class QueuedTasksExecutor implements Component {
 				preparingToFinish();
 				finished = true;
 				notifyAll();
+				if (isSync()) {
+					QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
+					synchronized(queuedTasksExecutor.queueConsumer) {
+						queuedTasksExecutor.queueConsumer.notifyAll();
+					}
+				}
 			}
 			if (runOnlyOnce) {
 				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
@@ -751,16 +823,19 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public final T submit() {
-			if (!submited) {
+			if (isAborted()) {
+				throw new TaskStateException(this, "is aborted");
+			}
+			if (!submitted) {
 				synchronized(this) {
-					if (!submited) {
-						submited = true;
+					if (!submitted) {
+						submitted = true;
 					} else {
-						throw new TaskStateException(this, "is already submited");
+						throw new TaskStateException(this, "is already submitted");
 					}
 				}
 			} else {
-				throw new TaskStateException(this, "is already submited");
+				throw new TaskStateException(this, "is already submitted");
 			}
 			return addToQueue();
 		}
@@ -770,13 +845,18 @@ public class QueuedTasksExecutor implements Component {
 		}
 
 		void preparingToStart() {
-			getQueuedTasksExecutor().tasksInExecution.put(this.executor, this);				
+			getQueuedTasksExecutor().tasksInExecution.add(this);				
 		}
 
 		void preparingToFinish() {
 			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
-			queuedTasksExecutor.tasksInExecution.remove(this.executor);
+			queuedTasksExecutor.tasksInExecution.remove(this);
 			++queuedTasksExecutor.executedTasksCount;			
+		}
+		
+		public T abort() {
+			getQueuedTasksExecutor().abort((T)this);
+			return (T)this;
 		}
 		
 		abstract QueuedTasksExecutor getQueuedTasksExecutor();
@@ -958,7 +1038,7 @@ public class QueuedTasksExecutor implements Component {
 								}
 							}
 						}
-						tasksInExecution.values().stream().forEach(task -> {
+						tasksInExecution.stream().forEach(task -> {
 							logInfo("{}", queueConsumer);
 							task.logInfo();
 							task.join0();
