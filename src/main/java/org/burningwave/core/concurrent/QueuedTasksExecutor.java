@@ -59,6 +59,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 public class QueuedTasksExecutor implements Component {
 	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasksToBeExecuted;
 	java.lang.Thread queueConsumer;
+	volatile boolean waitingForSyncTaskEnding;
 	List<TaskAbst<?, ?>> tasksQueue;
 	Set<TaskAbst<?, ?>> tasksInExecution;
 	TaskAbst<?, ?> lastLaunchedTask;
@@ -133,7 +134,9 @@ public class QueuedTasksExecutor implements Component {
 							synchronized(queueConsumer) {
 								try {
 									if (task.isSync()) {
+										waitingForSyncTaskEnding = true;
 										queueConsumer.wait();
+										waitingForSyncTaskEnding = false;
 									}
 								} catch (InterruptedException exc) {
 									logError("Exeption occurred", exc);
@@ -714,14 +717,11 @@ public class QueuedTasksExecutor implements Component {
 
 		private void unlockQueueConsumerIfCurrentExecutedTaskIsSync() {
 			QueuedTasksExecutor queuedTasksExecutor =  getQueuedTasksExecutor();
-			synchronized(queuedTasksExecutor.queueConsumer) {
-				TaskAbst<?, ?> currentTaskInExecution = queuedTasksExecutor.lastLaunchedTask;
-				if (isSync() && currentTaskInExecution != this) {
-					this.async = true;
-				}
-				if (currentTaskInExecution != null && currentTaskInExecution.isSync()) {
-					currentTaskInExecution.async = true;
-					queuedTasksExecutor.queueConsumer.notifyAll();
+			if (queuedTasksExecutor.waitingForSyncTaskEnding) {
+				synchronized(queuedTasksExecutor.queueConsumer) {
+					if (queuedTasksExecutor.waitingForSyncTaskEnding) {
+						queuedTasksExecutor.queueConsumer.notifyAll();
+					}
 				}
 			}
 		}
@@ -1081,13 +1081,6 @@ public class QueuedTasksExecutor implements Component {
 						task.priority = newPriority;
 						QueuedTasksExecutor queuedTasksExecutor = getByPriority(newPriority);
 						queuedTasksExecutor.addToQueue(task, true);
-						synchronized (queuedTasksExecutor.queueConsumer) {
-							TaskAbst<?, ?> lastLaunchedTask = queuedTasksExecutor.lastLaunchedTask;
-							if (lastLaunchedTask.isSync()) {
-								lastLaunchedTask.async = true;
-								queuedTasksExecutor.queueConsumer.notifyAll();
-							}
-						}
 					}
 				}
 			}
