@@ -255,6 +255,9 @@ public class QueuedTasksExecutor implements Component {
 				synchronized(executableCollectionFiller) {
 					executableCollectionFiller.notifyAll();
 				}
+				synchronized(task) {
+					task.notifyAll();
+				}
 			} catch (Throwable exc) {
 				logWarn("Exception occurred", exc);
 			}
