@@ -853,7 +853,8 @@ public class FileSystemItem implements ManagedLogger {
 						if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
 							superParentContainerFinal.refresh().getAllChildren();
 						}
-					});				}
+					});
+				}
 				if (Cache.pathForContents.get(absolutePath) == null) {
 					reloadContent(false);
 				}

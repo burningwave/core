@@ -128,18 +128,17 @@ public class QueuedTasksExecutor implements Component {
 						if (currentExecutor.getPriority() != currentExecutablePriority) {
 							currentExecutor.setPriority(currentExecutablePriority);
 						}
-						
+						currentExecutor.start();
 						if (task.isSync()) {
 							synchronized(queueConsumer) {
-								currentExecutor.start();
 								try {
-									queueConsumer.wait();
+									if (task.isSync()) {
+										queueConsumer.wait();
+									}
 								} catch (InterruptedException exc) {
 									logError("Exeption occurred", exc);
 								}
 							}
-						} else {
-							currentExecutor.start();
 						}
 					}
 				} else {
@@ -659,9 +658,9 @@ public class QueuedTasksExecutor implements Component {
 			if (Thread.currentThread() == this.executor) {
 				return(T)this;
 			}
-			unlockQueueConsumerIfCurrentExecutedTaskIsSync();
 			if (isSubmitted()) {
 				if (!started) {
+					unlockQueueConsumerIfCurrentExecutedTaskIsSync();
 					synchronized (this) {
 						if (!started) {
 							try {
@@ -691,9 +690,9 @@ public class QueuedTasksExecutor implements Component {
 			if (Thread.currentThread() == this.executor) {
 				return;
 			}
-			unlockQueueConsumerIfCurrentExecutedTaskIsSync();
 			if (isSubmitted()) {
-				if (!hasFinished()) {	
+				if (!hasFinished()) {
+					unlockQueueConsumerIfCurrentExecutedTaskIsSync();
 					synchronized (this) {
 						if (!hasFinished()) {
 							try {
@@ -717,6 +716,9 @@ public class QueuedTasksExecutor implements Component {
 			QueuedTasksExecutor queuedTasksExecutor =  getQueuedTasksExecutor();
 			synchronized(queuedTasksExecutor.queueConsumer) {
 				TaskAbst<?, ?> currentTaskInExecution = queuedTasksExecutor.lastLaunchedTask;
+				if (isSync() && currentTaskInExecution != this) {
+					this.async = true;
+				}
 				if (currentTaskInExecution != null && currentTaskInExecution.isSync()) {
 					queuedTasksExecutor.queueConsumer.notifyAll();
 				}
@@ -787,10 +789,12 @@ public class QueuedTasksExecutor implements Component {
 				preparingToFinish();
 				finished = true;
 				notifyAll();
-				if (isSync()) {
-					QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
-					synchronized(queuedTasksExecutor.queueConsumer) {
-						queuedTasksExecutor.queueConsumer.notifyAll();
+				QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
+				synchronized(queuedTasksExecutor.queueConsumer) {
+					if (isSync() && queuedTasksExecutor.lastLaunchedTask == this) {
+						synchronized(queuedTasksExecutor.queueConsumer) {
+							queuedTasksExecutor.queueConsumer.notifyAll();
+						}
 					}
 				}
 			}
@@ -1075,7 +1079,6 @@ public class QueuedTasksExecutor implements Component {
 					if (getByPriority(oldPriority).tasksQueue.remove(task)) {
 						task.priority = newPriority;
 						getByPriority(newPriority).addToQueue(task, true);
-						task.notifyAll();
 					}
 				}
 			}
