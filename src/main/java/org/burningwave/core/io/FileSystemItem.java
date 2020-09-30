@@ -909,7 +909,7 @@ public class FileSystemItem implements ManagedLogger {
 			instanceId + "_reloadContent",
 			() ->
 				Cache.pathForContents.get(absolutePath) != null
-		).submit().waitForFinish();
+		).async().submit().waitForFinish();
 		return this;
 	}
 
