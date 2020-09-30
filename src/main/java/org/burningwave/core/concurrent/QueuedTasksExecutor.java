@@ -133,9 +133,9 @@ public class QueuedTasksExecutor implements Component {
 							synchronized(queueConsumer) {
 								currentExecutor.start();
 								try {
-									synchronized(task) {
-										task.notifyAll();
-									}
+//									synchronized(task) {
+//										task.notifyAll();
+//									}
 									queueConsumer.wait();
 								} catch (InterruptedException exc) {
 									logError("Exeption occurred", exc);
@@ -425,8 +425,8 @@ public class QueuedTasksExecutor implements Component {
 			if (taskExecutor != null) {
 				taskExecutor.setPriority(priority);
 			}
-			logInfo("{}", queueConsumer);
-			task.logInfo();
+			//logInfo("{}", queueConsumer);
+			//task.logInfo();
 			task.join0();
 		});
 	}
@@ -1039,8 +1039,8 @@ public class QueuedTasksExecutor implements Component {
 							}
 						}
 						tasksInExecution.stream().forEach(task -> {
-							logInfo("{}", queueConsumer);
-							task.logInfo();
+							//logInfo("{}", queueConsumer);
+							//task.logInfo();
 							task.join0();
 						});
 					} else {	
