@@ -661,13 +661,13 @@ public class QueuedTasksExecutor implements Component {
 			}
 			if (isSubmitted()) {
 				if (!started) {
-					unlockQueueConsumerIfCurrentExecutedTaskIsSync();
 					synchronized (this) {
 						if (!started) {
 							try {
 								if (isAborted()) {
 									throw new TaskStateException(this, "is aborted");
 								}
+								unlockQueueConsumerIfLocked();
 								wait();
 								waitForStarting();
 							} catch (InterruptedException exc) {
@@ -693,13 +693,13 @@ public class QueuedTasksExecutor implements Component {
 			}
 			if (isSubmitted()) {
 				if (!hasFinished()) {
-					unlockQueueConsumerIfCurrentExecutedTaskIsSync();
 					synchronized (this) {
 						if (!hasFinished()) {
 							try {
 								if (isAborted()) {
 									throw new TaskStateException(this, "is aborted");
 								}
+								unlockQueueConsumerIfLocked();
 								wait();
 								join0();
 							} catch (InterruptedException exc) {
@@ -713,7 +713,7 @@ public class QueuedTasksExecutor implements Component {
 			}
 		}
 
-		private void unlockQueueConsumerIfCurrentExecutedTaskIsSync() {
+		void unlockQueueConsumerIfLocked() {
 			QueuedTasksExecutor queuedTasksExecutor =  getQueuedTasksExecutor();
 			if (queuedTasksExecutor.waitingForSyncTaskEnding) {
 				synchronized(queuedTasksExecutor.queueConsumer) {
@@ -1079,6 +1079,7 @@ public class QueuedTasksExecutor implements Component {
 						task.priority = newPriority;
 						QueuedTasksExecutor queuedTasksExecutor = getByPriority(newPriority);
 						queuedTasksExecutor.addToQueue(task, true);
+						task.unlockQueueConsumerIfLocked();
 					}
 				}
 			}
