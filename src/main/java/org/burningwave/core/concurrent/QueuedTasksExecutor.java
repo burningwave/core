@@ -59,14 +59,15 @@ import org.burningwave.core.function.ThrowingSupplier;
 public class QueuedTasksExecutor implements Component {
 	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasksToBeExecuted;
 	java.lang.Thread queueConsumer;
-	volatile boolean waitingForSyncTaskEnding;
+	//volatile boolean waitingForSyncTaskEnding;
 	List<TaskAbst<?, ?>> tasksQueue;
 	Set<TaskAbst<?, ?>> tasksInExecution;
-	TaskAbst<?, ?> lastLaunchedTask;
+	TaskAbst<?, ?> currentLaunchingTask;
 	Boolean supended;
 	volatile int defaultPriority;
 	private long executedTasksCount;
 	private boolean isDaemon;
+	volatile boolean bypassWaitingForSyncTaskEnding;
 	private String queueConsumerName;
 	private Boolean terminated;
 	private Runnable initializer;
@@ -122,10 +123,10 @@ public class QueuedTasksExecutor implements Component {
 						TaskAbst<?, ?> task = taskIterator.next();
 						synchronized (task) {
 							if (!tasksQueue.remove(task)) {
-								lastLaunchedTask = null;
+								currentLaunchingTask = null;
 								continue;
 							}
-							lastLaunchedTask = task;
+							currentLaunchingTask = task;
 						}
 						setExecutorOf(task);
 						Thread currentExecutor = task.executor;
@@ -134,18 +135,16 @@ public class QueuedTasksExecutor implements Component {
 							currentExecutor.setPriority(currentExecutablePriority);
 						}
 						currentExecutor.start();
-						if (task.isSync() && !task.hasFinished()) {
-							synchronized(waitingForSyncTaskEndingMutex) {							
-								try {
-									waitingForSyncTaskEnding = true;
-									if (!task.hasFinished()) {
-										waitingForSyncTaskEndingMutex.wait();
-									}
-									waitingForSyncTaskEnding = false;
-								} catch (InterruptedException exc) {
-									logError("Exeption occurred", exc);
+						synchronized(waitingForSyncTaskEndingMutex) {							
+							try {
+								if (!bypassWaitingForSyncTaskEnding && task.isSync() && !task.hasFinished()) {
+									waitingForSyncTaskEndingMutex.wait();
 								}
+							} catch (InterruptedException exc) {
+								logError("Exeption occurred", exc);
 							}
+							currentLaunchingTask = null;
+							bypassWaitingForSyncTaskEnding = false;
 						}
 					}
 				} else {
@@ -722,12 +721,15 @@ public class QueuedTasksExecutor implements Component {
 
 		void unlockQueueConsumerIfLocked() {
 			QueuedTasksExecutor queuedTasksExecutor =  getQueuedTasksExecutor();
+			this.async = true;
 			queueConsumerUnlockingRequested = true;
-			if (queuedTasksExecutor.waitingForSyncTaskEnding) {
-				synchronized(queuedTasksExecutor.waitingForSyncTaskEndingMutex) {
-					if (queuedTasksExecutor.waitingForSyncTaskEnding) {
-						queuedTasksExecutor.waitingForSyncTaskEndingMutex.notifyAll();
-					}
+			synchronized(queuedTasksExecutor.waitingForSyncTaskEndingMutex) {
+				TaskAbst<?, ?> lastLaunchedTask = queuedTasksExecutor.currentLaunchingTask;
+				if (lastLaunchedTask != null) {
+					lastLaunchedTask.async = true;
+					queuedTasksExecutor.waitingForSyncTaskEndingMutex.notifyAll();
+				} else {
+					queuedTasksExecutor.bypassWaitingForSyncTaskEnding = true;
 				}
 			}
 		}
@@ -797,7 +799,7 @@ public class QueuedTasksExecutor implements Component {
 				finished = true;
 				notifyAll();
 				QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
-				if (isSync() && queuedTasksExecutor.lastLaunchedTask == this) {
+				if (isSync() && queuedTasksExecutor.currentLaunchingTask == this) {
 					synchronized(queuedTasksExecutor.waitingForSyncTaskEndingMutex) {
 						queuedTasksExecutor.waitingForSyncTaskEndingMutex.notifyAll();
 					}
