@@ -799,7 +799,7 @@ public class QueuedTasksExecutor implements Component {
 				finished = true;
 				notifyAll();
 				QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
-				if (isSync() && queuedTasksExecutor.currentLaunchingTask == this) {
+				if (queuedTasksExecutor.currentLaunchingTask == this) {
 					synchronized(queuedTasksExecutor.waitingForSyncTaskEndingMutex) {
 						queuedTasksExecutor.waitingForSyncTaskEndingMutex.notifyAll();
 					}
