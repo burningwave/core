@@ -720,6 +720,7 @@ public class QueuedTasksExecutor implements Component {
 					this.async = true;
 				}
 				if (currentTaskInExecution != null && currentTaskInExecution.isSync()) {
+					currentTaskInExecution.async = true;
 					queuedTasksExecutor.queueConsumer.notifyAll();
 				}
 			}
@@ -1078,7 +1079,15 @@ public class QueuedTasksExecutor implements Component {
 				synchronized (task) {
 					if (getByPriority(oldPriority).tasksQueue.remove(task)) {
 						task.priority = newPriority;
-						getByPriority(newPriority).addToQueue(task, true);
+						QueuedTasksExecutor queuedTasksExecutor = getByPriority(newPriority);
+						queuedTasksExecutor.addToQueue(task, true);
+						synchronized (queuedTasksExecutor.queueConsumer) {
+							TaskAbst<?, ?> lastLaunchedTask = queuedTasksExecutor.lastLaunchedTask;
+							if (lastLaunchedTask.isSync()) {
+								lastLaunchedTask.async = true;
+								queuedTasksExecutor.queueConsumer.notifyAll();
+							}
+						}
 					}
 				}
 			}
