@@ -564,6 +564,7 @@ public class QueuedTasksExecutor implements Component {
 		volatile boolean aborted;
 		volatile boolean finished;
 		volatile boolean async;
+		volatile boolean queueConsumerUnlockingRequested;
 		E executable;		
 		Thread executor;
 		Throwable exc;
@@ -661,13 +662,13 @@ public class QueuedTasksExecutor implements Component {
 			}
 			if (isSubmitted()) {
 				if (!started) {
+					unlockQueueConsumerIfLocked();
 					synchronized (this) {
 						if (!started) {
 							try {
 								if (isAborted()) {
 									throw new TaskStateException(this, "is aborted");
 								}
-								unlockQueueConsumerIfLocked();
 								wait();
 								waitForStarting();
 							} catch (InterruptedException exc) {
@@ -693,13 +694,13 @@ public class QueuedTasksExecutor implements Component {
 			}
 			if (isSubmitted()) {
 				if (!hasFinished()) {
+					unlockQueueConsumerIfLocked();
 					synchronized (this) {
 						if (!hasFinished()) {
 							try {
 								if (isAborted()) {
 									throw new TaskStateException(this, "is aborted");
 								}
-								unlockQueueConsumerIfLocked();
 								wait();
 								join0();
 							} catch (InterruptedException exc) {
@@ -715,6 +716,7 @@ public class QueuedTasksExecutor implements Component {
 
 		void unlockQueueConsumerIfLocked() {
 			QueuedTasksExecutor queuedTasksExecutor =  getQueuedTasksExecutor();
+			queueConsumerUnlockingRequested = true;
 			if (queuedTasksExecutor.waitingForSyncTaskEnding) {
 				synchronized(queuedTasksExecutor.queueConsumer) {
 					if (queuedTasksExecutor.waitingForSyncTaskEnding) {
@@ -1073,14 +1075,18 @@ public class QueuedTasksExecutor implements Component {
 		<E, T extends TaskAbst<E, T>> Group changePriority(T task, int priority) {
 			int oldPriority = task.priority;
 			int newPriority = checkAndCorrectPriority(priority);
+			boolean changedPriority = false;
 			if (oldPriority != priority) {
 				synchronized (task) {
 					if (getByPriority(oldPriority).tasksQueue.remove(task)) {
 						task.priority = newPriority;
 						QueuedTasksExecutor queuedTasksExecutor = getByPriority(newPriority);
 						queuedTasksExecutor.addToQueue(task, true);
-						task.unlockQueueConsumerIfLocked();
+						changedPriority = true;
 					}
+				}
+				if (changedPriority && task.queueConsumerUnlockingRequested) {
+					task.unlockQueueConsumerIfLocked();
 				}
 			}
 			return this;
