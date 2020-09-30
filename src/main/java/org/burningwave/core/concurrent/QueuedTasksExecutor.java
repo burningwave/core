@@ -129,18 +129,16 @@ public class QueuedTasksExecutor implements Component {
 						if (currentExecutor.getPriority() != currentExecutablePriority) {
 							currentExecutor.setPriority(currentExecutablePriority);
 						}
-						currentExecutor.start();
-						if (task.isSync()) {
-							synchronized(queueConsumer) {
-								try {
-									if (task.isSync()) {
-										waitingForSyncTaskEnding = true;
-										queueConsumer.wait();
-										waitingForSyncTaskEnding = false;
-									}
-								} catch (InterruptedException exc) {
-									logError("Exeption occurred", exc);
+						synchronized(queueConsumer) {
+							currentExecutor.start();
+							try {
+								if (task.isSync()) {
+									waitingForSyncTaskEnding = true;
+									queueConsumer.wait();
+									waitingForSyncTaskEnding = false;
 								}
+							} catch (InterruptedException exc) {
+								logError("Exeption occurred", exc);
 							}
 						}
 					}
