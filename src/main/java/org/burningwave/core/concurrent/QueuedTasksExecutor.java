@@ -61,7 +61,7 @@ public class QueuedTasksExecutor implements Component {
 	java.lang.Thread queueConsumer;
 	List<TaskAbst<?, ?>> tasksQueue;
 	Set<TaskAbst<?, ?>> tasksInExecution;
-	TaskAbst<?, ?> currentTaskInExecution;
+	TaskAbst<?, ?> lastLaunchedTask;
 	Boolean supended;
 	volatile int defaultPriority;
 	private long executedTasksCount;
@@ -117,10 +117,10 @@ public class QueuedTasksExecutor implements Component {
 						TaskAbst<?, ?> task = taskIterator.next();
 						synchronized (task) {
 							if (!tasksQueue.remove(task)) {
-								currentTaskInExecution = null;
+								lastLaunchedTask = null;
 								continue;
 							}
-							currentTaskInExecution = task;
+							lastLaunchedTask = task;
 						}
 						setExecutorOf(task);
 						Thread currentExecutor = task.executor;
@@ -133,9 +133,6 @@ public class QueuedTasksExecutor implements Component {
 							synchronized(queueConsumer) {
 								currentExecutor.start();
 								try {
-//									synchronized(task) {
-//										task.notifyAll();
-//									}
 									queueConsumer.wait();
 								} catch (InterruptedException exc) {
 									logError("Exeption occurred", exc);
@@ -348,6 +345,16 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public QueuedTasksExecutor waitForTasksEnding(int priority, boolean waitForNewAddedTasks) {
+		waitForTasksEnding(priority);
+		if (waitForNewAddedTasks) {
+			while (!tasksInExecution.isEmpty() || !tasksQueue.isEmpty()) {
+				waitForTasksEnding(priority);
+			}
+		}
+		return this;
+	}
+	
+	public QueuedTasksExecutor waitForTasksEnding(int priority) {
 		queueConsumer.setPriority(priority);
 		tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
 		if (!tasksQueue.isEmpty()) {
@@ -363,9 +370,6 @@ public class QueuedTasksExecutor implements Component {
 		}
 		waitForTasksInExecutionEnding(priority);
 		queueConsumer.setPriority(this.defaultPriority);
-		if (waitForNewAddedTasks && (!tasksQueue.isEmpty() || !tasksInExecution.isEmpty())) {
-			waitForTasksEnding(priority, waitForNewAddedTasks);
-		}
 		return this;
 	}
 	
@@ -711,12 +715,10 @@ public class QueuedTasksExecutor implements Component {
 
 		private void unlockQueueConsumerIfCurrentExecutedTaskIsSync() {
 			QueuedTasksExecutor queuedTasksExecutor =  getQueuedTasksExecutor();
-			TaskAbst<?, ?> currentTaskInExecution = queuedTasksExecutor.currentTaskInExecution;
-			if (currentTaskInExecution != null && currentTaskInExecution.isSync()) {
-				if (Thread.currentThread() == currentTaskInExecution.executor) {
-					synchronized(queuedTasksExecutor.queueConsumer) {
-						queuedTasksExecutor.queueConsumer.notifyAll();
-					}
+			synchronized(queuedTasksExecutor.queueConsumer) {
+				TaskAbst<?, ?> currentTaskInExecution = queuedTasksExecutor.lastLaunchedTask;
+				if (currentTaskInExecution != null && currentTaskInExecution.isSync()) {
+					queuedTasksExecutor.queueConsumer.notifyAll();
 				}
 			}
 		}
@@ -1023,9 +1025,9 @@ public class QueuedTasksExecutor implements Component {
 						};
 					};
 				}
-				
+
 				@Override
-				public QueuedTasksExecutor waitForTasksEnding(int priority, boolean waitForNewAddedTasks) {
+				public QueuedTasksExecutor waitForTasksEnding(int priority) {
 					if (priority == defaultPriority) {
 						if (!tasksQueue.isEmpty()) {
 							synchronized(executingFinishedWaiter) {
@@ -1048,9 +1050,6 @@ public class QueuedTasksExecutor implements Component {
 							executable.changePriority(priority)
 						); 
 						waitForTasksInExecutionEnding(priority);				
-					}
-					if (waitForNewAddedTasks && (!tasksInExecution.isEmpty() || !tasksQueue.isEmpty())) {
-						waitForTasksEnding(priority, waitForNewAddedTasks);
 					}
 					return this;
 				}
