@@ -44,7 +44,12 @@ public class ComponentContainerTest extends BaseTest {
 		testDoesNotThrow(() -> {
 			logWarn("Total memory before clearAll {}", Runtime.getRuntime().totalMemory());
 			ComponentContainer.clearAll();
-			BackgroundExecutor.waitForTasksEnding(true);
+			try {
+				BackgroundExecutor.waitForTasksEnding(true);
+			} catch (StackOverflowError exc) {
+				BackgroundExecutor.logQueuesInfo();
+				throw new RuntimeException("Stack overflow");
+			}
 			System.gc();
 			logWarn("Total memory after clearAll {}", Runtime.getRuntime().totalMemory());
 		});
