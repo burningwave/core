@@ -42,7 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
@@ -60,7 +59,7 @@ public class QueuedTasksExecutor implements Component {
 	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasksToBeExecuted;
 	java.lang.Thread queueConsumer;
 	List<TaskAbst<?, ?>> tasksQueue;
-	Set<TaskAbst<?, ?>> tasksInExecution;
+	Map<Thread, TaskAbst<?, ?>> tasksInExecution;
 	Boolean supended;
 	volatile int defaultPriority;
 	private long executedTasksCount;
@@ -80,7 +79,7 @@ public class QueuedTasksExecutor implements Component {
 	
 	QueuedTasksExecutor(String executorName, int defaultPriority, boolean isDaemon) {
 		tasksQueue = new CopyOnWriteArrayList<>();
-		tasksInExecution = ConcurrentHashMap.newKeySet();
+		tasksInExecution = new ConcurrentHashMap<>();
 		this.resumeCaller = new Object();
 		this.executingFinishedWaiter = new Object();
 		this.suspensionCaller = new Object();
@@ -208,21 +207,10 @@ public class QueuedTasksExecutor implements Component {
 	
 	<T> Function<ThrowingSupplier<T, ? extends Throwable>, ProducerTask<T>> getProducerTaskSupplier() {
 		return executable -> new ProducerTask<T>(executable, taskCreationTrackingEnabled) {
-			@Override
-			ProducerTask<T> addToQueue() {
-				return QueuedTasksExecutor.this.addToQueue(this, false);
-			}
-
-			@Override
-			void preparingToStart() {
-				QueuedTasksExecutor.this.tasksInExecution.add(this);				
-			}
-
-			@Override
-			void preparingToFinish() {
-				QueuedTasksExecutor.this.tasksInExecution.remove(this);
-				++QueuedTasksExecutor.this.executedTasksCount;			
-			}
+			
+			QueuedTasksExecutor getQueuedTasksExecutor() {
+				return QueuedTasksExecutor.this;
+			};
 
 		};
 	}
@@ -235,20 +223,9 @@ public class QueuedTasksExecutor implements Component {
 	
 	<T> Function<ThrowingRunnable<? extends Throwable> , Task> getTaskSupplier() {
 		return executable -> new Task(executable, taskCreationTrackingEnabled) {
-			@Override
-			Task addToQueue() {
-				return QueuedTasksExecutor.this.addToQueue(this, false);
-			};
 			
-			@Override
-			void preparingToStart() {
-				QueuedTasksExecutor.this.tasksInExecution.add(this);				
-			}
-
-			@Override
-			void preparingToFinish() {
-				QueuedTasksExecutor.this.tasksInExecution.remove(this);
-				++QueuedTasksExecutor.this.executedTasksCount;			
+			QueuedTasksExecutor getQueuedTasksExecutor() {
+				return QueuedTasksExecutor.this;
 			};
 			
 		};
@@ -420,7 +397,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 
 	void waitForTasksInExecutionEnding(int priority) {
-		tasksInExecution.stream().forEach(task -> {
+		tasksInExecution.values().stream().forEach(task -> {
 			Thread taskExecutor = task.executor;
 			if (taskExecutor != null) {
 				taskExecutor.setPriority(priority);
@@ -492,7 +469,7 @@ public class QueuedTasksExecutor implements Component {
 	
 	public void logStatus() {
 		List<TaskAbst<?, ?>> tasks = new ArrayList<>(tasksQueue);
-		tasks.addAll(this.tasksInExecution);
+		tasks.addAll(this.tasksInExecution.values());
 		logStatus(this.executedTasksCount, tasks);
 	}
 	
@@ -517,10 +494,10 @@ public class QueuedTasksExecutor implements Component {
 				task.logInfo();
 			}
 		}
-		tasksQueue = this.tasksInExecution;
+		tasksQueue = this.tasksInExecution.values();
 		if (!tasksQueue.isEmpty()) {
 			logInfo("{} - Tasks in execution:", queueConsumer);
-			for (TaskAbst<?,?> task : tasksInExecution) {
+			for (TaskAbst<?,?> task : tasksQueue) {
 				task.logInfo();
 			}
 		}
@@ -678,8 +655,6 @@ public class QueuedTasksExecutor implements Component {
 			}
 		}
 		
-		abstract void preparingToStart();
-		
 		void execute() {
 			synchronized (this) {
 				started = true;
@@ -738,9 +713,7 @@ public class QueuedTasksExecutor implements Component {
 			executable = null;
 			executor = null;
 		}
-		
-		abstract void preparingToFinish();
-		
+	
 		void markAsFinished() {
 			synchronized(this) {
 				preparingToFinish();
@@ -792,8 +765,21 @@ public class QueuedTasksExecutor implements Component {
 			return addToQueue();
 		}
 		
-		abstract T addToQueue();
+		T addToQueue() {
+			return getQueuedTasksExecutor().addToQueue((T)this, false);
+		}
+
+		void preparingToStart() {
+			getQueuedTasksExecutor().tasksInExecution.put(this.executor, this);				
+		}
+
+		void preparingToFinish() {
+			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
+			queuedTasksExecutor.tasksInExecution.remove(this.executor);
+			++queuedTasksExecutor.executedTasksCount;			
+		}
 		
+		abstract QueuedTasksExecutor getQueuedTasksExecutor();
 	}
 	
 	public static abstract class Task extends TaskAbst<ThrowingRunnable<? extends Throwable>, Task> {
@@ -929,28 +915,16 @@ public class QueuedTasksExecutor implements Component {
 					return executable -> new QueuedTasksExecutor.ProducerTask<T>(executable, taskCreationTrackingEnabled) {
 						
 						@Override
-						QueuedTasksExecutor.ProducerTask<T> addToQueue() {
-							return Group.this.getByPriority(this.priority).addToQueue(this, false);
+						QueuedTasksExecutor getQueuedTasksExecutor() {
+							return Group.this.getByPriority(this.priority);
 						};
-						
+
 						@Override
 						public QueuedTasksExecutor.ProducerTask<T> changePriority(int priority) {
 							Group.this.changePriority(this, priority);
 							return this;
 						};
 						
-						@Override
-						void preparingToStart() {
-							QueuedTasksExecutor queuedTasksExecutor = Group.this.getByPriority(this.priority);
-							queuedTasksExecutor.tasksInExecution.add(this);			
-						}
-
-						@Override
-						void preparingToFinish() {
-							QueuedTasksExecutor queuedTasksExecutor = Group.this.getByPriority(this.priority);
-							queuedTasksExecutor.tasksInExecution.remove(this);
-							++queuedTasksExecutor.executedTasksCount;					
-						};
 					};
 				}
 				
@@ -958,27 +932,14 @@ public class QueuedTasksExecutor implements Component {
 					return executable -> new QueuedTasksExecutor.Task(executable, taskCreationTrackingEnabled) {
 						
 						@Override
-						QueuedTasksExecutor.Task addToQueue() {
-							return Group.this.getByPriority(this.priority).addToQueue(this, false);
+						QueuedTasksExecutor getQueuedTasksExecutor() {
+							return Group.this.getByPriority(this.priority);
 						};
-						
+
 						@Override
 						public QueuedTasksExecutor.Task changePriority(int priority) {
 							Group.this.changePriority(this, priority);
 							return this;
-						};
-						
-						@Override
-						void preparingToStart() {
-							QueuedTasksExecutor queuedTasksExecutor = Group.this.getByPriority(this.priority);
-							queuedTasksExecutor.tasksInExecution.add(this);				
-						}
-
-						@Override
-						void preparingToFinish() {
-							QueuedTasksExecutor queuedTasksExecutor = Group.this.getByPriority(this.priority);
-							queuedTasksExecutor.tasksInExecution.remove(this);
-							++queuedTasksExecutor.executedTasksCount;				
 						};
 					};
 				}
@@ -997,7 +958,7 @@ public class QueuedTasksExecutor implements Component {
 								}
 							}
 						}
-						tasksInExecution.stream().forEach(task -> {
+						tasksInExecution.values().stream().forEach(task -> {
 							logInfo("{}", queueConsumer);
 							task.logInfo();
 							task.join0();
