@@ -736,13 +736,16 @@ public class QueuedTasksExecutor implements Component {
 		
 		void execute() {
 			synchronized (this) {
-				started = true;
-				preparingToStart();
 				if (aborted) {
 					notifyAll();
 					clear();
 					return;
 				}
+
+			}
+			started = true;
+			preparingToExecute();
+			synchronized (this) {
 				notifyAll();
 			}
 			try {
@@ -798,11 +801,12 @@ public class QueuedTasksExecutor implements Component {
 		}
 	
 		void markAsFinished() {
+			finished = true;
 			synchronized(this) {
 				finished = true;
-				notifyAll();
 				queuedTasksExecutor.tasksInExecution.remove(this);
-				++queuedTasksExecutor.executedTasksCount;	
+				++queuedTasksExecutor.executedTasksCount;
+				notifyAll();	
 			}
 			if (queuedTasksExecutor.currentLaunchingTask == this) {
 				synchronized(queuedTasksExecutor.waitingForSyncTaskEndingMutex) {
@@ -858,7 +862,7 @@ public class QueuedTasksExecutor implements Component {
 			return getQueuedTasksExecutor().addToQueue((T)this, false);
 		}
 
-		void preparingToStart() {
+		void preparingToExecute() {
 			queuedTasksExecutor = getQueuedTasksExecutor();
 			queuedTasksExecutor.tasksInExecution.add(this);				
 		}
