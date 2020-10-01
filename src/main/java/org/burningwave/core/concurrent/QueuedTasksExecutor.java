@@ -66,7 +66,6 @@ public class QueuedTasksExecutor implements Component {
 	volatile int defaultPriority;
 	private long executedTasksCount;
 	private boolean isDaemon;
-	volatile boolean bypassWaitingForSyncTaskEnding;
 	private String queueConsumerName;
 	private Boolean terminated;
 	private Runnable initializer;
@@ -134,17 +133,20 @@ public class QueuedTasksExecutor implements Component {
 							currentExecutor.setPriority(currentExecutablePriority);
 						}
 						currentExecutor.start();
-						synchronized(waitingForSyncTaskEndingMutex) {							
-							try {
-								if (!bypassWaitingForSyncTaskEnding && task.isSync() && !task.hasFinished()) {
-									waitingForSyncTaskEndingMutex.wait();
+						if (task.isSync() && !task.hasFinished()) {
+							synchronized(waitingForSyncTaskEndingMutex) {							
+								try {
+									if (task.isSync() && !task.hasFinished()) {
+										waitingForSyncTaskEndingMutex.wait();
+									}
+								} catch (InterruptedException exc) {
+									logError("Exeption occurred", exc);
 								}
-							} catch (InterruptedException exc) {
-								logError("Exeption occurred", exc);
+								currentLaunchingTask = null;
+								continue;
 							}
-							currentLaunchingTask = null;
-							bypassWaitingForSyncTaskEnding = false;
 						}
+						currentLaunchingTask = null;
 					}
 				} else {
 					synchronized(executableCollectionFillerMutex) {
@@ -667,7 +669,9 @@ public class QueuedTasksExecutor implements Component {
 			}
 			if (isSubmitted()) {
 				if (!started) {
-					unlockQueueConsumerIfLocked();
+					if (!queueConsumerUnlockingRequested) {
+						unlockQueueConsumerIfLocked();
+					}
 					synchronized (this) {
 						if (!started) {
 							try {
@@ -699,7 +703,9 @@ public class QueuedTasksExecutor implements Component {
 			}
 			if (isSubmitted()) {
 				if (!hasFinished()) {
-					unlockQueueConsumerIfLocked();
+					if (!queueConsumerUnlockingRequested) {
+						unlockQueueConsumerIfLocked();
+					}
 					synchronized (this) {
 						if (!hasFinished()) {
 							try {
@@ -720,7 +726,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 
 		void unlockQueueConsumerIfLocked() {
-			QueuedTasksExecutor queuedTasksExecutor =  getQueuedTasksExecutor();
+			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
 			this.async = true;
 			queueConsumerUnlockingRequested = true;
 			synchronized(queuedTasksExecutor.waitingForSyncTaskEndingMutex) {
@@ -728,8 +734,6 @@ public class QueuedTasksExecutor implements Component {
 				if (lastLaunchedTask != null) {
 					lastLaunchedTask.async = true;
 					queuedTasksExecutor.waitingForSyncTaskEndingMutex.notifyAll();
-				} else {
-					queuedTasksExecutor.bypassWaitingForSyncTaskEnding = true;
 				}
 			}
 		}
@@ -1008,7 +1012,8 @@ public class QueuedTasksExecutor implements Component {
 						
 						@Override
 						QueuedTasksExecutor getQueuedTasksExecutor() {
-							return Group.this.getByPriority(this.priority);
+							return this.queuedTasksExecutor != null?
+								this.queuedTasksExecutor : Group.this.getByPriority(this.priority);
 						};
 
 						@Override
@@ -1025,7 +1030,8 @@ public class QueuedTasksExecutor implements Component {
 						
 						@Override
 						QueuedTasksExecutor getQueuedTasksExecutor() {
-							return Group.this.getByPriority(this.priority);
+							return this.queuedTasksExecutor != null?
+								this.queuedTasksExecutor : Group.this.getByPriority(this.priority);
 						};
 
 						@Override
