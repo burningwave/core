@@ -424,7 +424,7 @@ public class QueuedTasksExecutor implements Component {
 			}
 			//logInfo("{}", queueConsumer);
 			//task.logInfo();
-			task.join0();
+			task.waitForFinish();
 		});
 	}
 
@@ -677,19 +677,19 @@ public class QueuedTasksExecutor implements Component {
 		}		
 		
 		public T waitForFinish() {
-			join0();
+			while(waitForFinish0()) {}
 			return (T)this;
 		}
-		
-		void join0() {
+
+		private boolean waitForFinish0() {
 			java.lang.Thread currentThread = Thread.currentThread();
 			if (currentThread == this.executor) {
-				return;
+				return false;
 			}
 			if (isSubmitted()) {
 				if (!hasFinished()) {
 					if (!unlockQueueConsumerIfLocked(currentThread)) {
-						return;
+						return false;
 					}
 					synchronized (this) {
 						if (!hasFinished()) {
@@ -698,7 +698,7 @@ public class QueuedTasksExecutor implements Component {
 									throw new TaskStateException(this, "is aborted");
 								}
 								wait();
-								join0();
+								return true;
 							} catch (InterruptedException exc) {
 								throw Throwables.toRuntimeException(exc);
 							}
@@ -708,6 +708,7 @@ public class QueuedTasksExecutor implements Component {
 			} else {
 				throw new TaskStateException(this, "is not submitted");
 			}
+			return false;
 		}
 
 		boolean unlockQueueConsumerIfLocked(java.lang.Thread currentThread) {
@@ -900,7 +901,7 @@ public class QueuedTasksExecutor implements Component {
 
 		
 		public T join() {
-			join0();
+			waitForFinish();
 			return result;
 		}
 		
@@ -1054,7 +1055,7 @@ public class QueuedTasksExecutor implements Component {
 						tasksInExecution.stream().forEach(task -> {
 							//logInfo("{}", queueConsumer);
 							//task.logInfo();
-							task.join0();
+							task.waitForFinish();
 						});
 					} else {	
 						tasksQueue.stream().forEach(executable ->
