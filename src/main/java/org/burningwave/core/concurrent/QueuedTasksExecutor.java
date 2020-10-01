@@ -66,7 +66,6 @@ public class QueuedTasksExecutor implements Component {
 	volatile int defaultPriority;
 	private long executedTasksCount;
 	private boolean isDaemon;
-	volatile boolean bypassWaitingForSyncTaskEnding;
 	private String queueConsumerName;
 	private Boolean terminated;
 	private Runnable initializer;
@@ -75,7 +74,6 @@ public class QueuedTasksExecutor implements Component {
 	Object executingFinishedWaiterMutex;
 	Object suspensionCallerMutex;
 	Object executableCollectionFillerMutex;
-	Object waitingForSyncTaskEndingMutex;
 	Object terminatingMutex;
 	
 	static {
@@ -89,7 +87,6 @@ public class QueuedTasksExecutor implements Component {
 		this.executingFinishedWaiterMutex = new Object();
 		this.suspensionCallerMutex = new Object();
 		this.executableCollectionFillerMutex = new Object();
-		this.waitingForSyncTaskEndingMutex = new Object();
 		this.terminatingMutex = new Object();
 		initializer = () -> {
 			this.queueConsumerName = executorName;
@@ -134,18 +131,11 @@ public class QueuedTasksExecutor implements Component {
 							currentExecutor.setPriority(currentExecutablePriority);
 						}
 						currentExecutor.start();
-						if (task.isSync() && !task.hasFinished()) {
-							synchronized(waitingForSyncTaskEndingMutex) {							
-								try {
-									if (!bypassWaitingForSyncTaskEnding && task.isSync() && !task.hasFinished()) {
-										waitingForSyncTaskEndingMutex.wait();
-									}
-								} catch (InterruptedException exc) {
-									logError("Exeption occurred", exc);
-								}
-								currentLaunchingTask = null;
-								bypassWaitingForSyncTaskEnding = false;
+						if (task.isSync()) {
+							if (task.executor == null) {
+								logDebug("");
 							}
+							task.waitForFinish();
 						}
 					}
 				} else {
@@ -638,11 +628,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public boolean hasFinished() {
-			if (!runOnlyOnce) {
-				return finished;
-			} else {
-				return finished = hasBeenExecutedChecker.get();
-			}
+			return finished;
 		}
 		
 		public T runOnlyOnce(String id, Supplier<Boolean> hasBeenExecutedChecker) {
@@ -664,13 +650,14 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public T waitForStarting() {
-			if (Thread.currentThread() == this.executor) {
-				return(T)this;
+			java.lang.Thread currentThread = Thread.currentThread();
+			if (currentThread == this.executor) {
+				return (T)this;
 			}
 			if (isSubmitted()) {
 				if (!started) {
-					if (!queueConsumerUnlockingRequested) {
-						unlockQueueConsumerIfLocked();
+					if (!unlockQueueConsumerIfLocked(currentThread)) {
+						return (T)this;
 					}
 					synchronized (this) {
 						if (!started) {
@@ -698,13 +685,14 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		void join0() {
-			if (Thread.currentThread() == this.executor) {
+			java.lang.Thread currentThread = Thread.currentThread();
+			if (currentThread == this.executor) {
 				return;
 			}
 			if (isSubmitted()) {
 				if (!hasFinished()) {
-					if (!queueConsumerUnlockingRequested) {
-						unlockQueueConsumerIfLocked();
+					if (!unlockQueueConsumerIfLocked(currentThread)) {
+						return;
 					}
 					synchronized (this) {
 						if (!hasFinished()) {
@@ -725,19 +713,30 @@ public class QueuedTasksExecutor implements Component {
 			}
 		}
 
-		void unlockQueueConsumerIfLocked() {
+		boolean unlockQueueConsumerIfLocked(java.lang.Thread currentThread) {
 			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
-			this.async = true;
-			queueConsumerUnlockingRequested = true;
-			synchronized(queuedTasksExecutor.waitingForSyncTaskEndingMutex) {
+			if (currentThread != queuedTasksExecutor.queueConsumer) {
+				if (!queueConsumerUnlockingRequested) {
+					synchronized (this) {
+						if (!queueConsumerUnlockingRequested) {
+							this.async = true;
+							queueConsumerUnlockingRequested = true;
+						}
+					}
+				}
 				TaskAbst<?, ?> lastLaunchedTask = queuedTasksExecutor.currentLaunchingTask;
 				if (lastLaunchedTask != null) {
-					lastLaunchedTask.async = true;
-					queuedTasksExecutor.waitingForSyncTaskEndingMutex.notifyAll();
-				} else {
-					queuedTasksExecutor.bypassWaitingForSyncTaskEnding = true;
+					synchronized(lastLaunchedTask) {
+						lastLaunchedTask.async = true;
+						lastLaunchedTask.queueConsumerUnlockingRequested = true;
+						lastLaunchedTask.notifyAll();
+					}
 				}
+			} else if (queueConsumerUnlockingRequested) {
+				queuedTasksExecutor.currentLaunchingTask.async = true;
+				return false;
 			}
+			return true;
 		}
 		
 		void execute() {
@@ -812,11 +811,6 @@ public class QueuedTasksExecutor implements Component {
 				queuedTasksExecutor.tasksInExecution.remove(this);
 				++queuedTasksExecutor.executedTasksCount;
 				notifyAll();	
-			}
-			if (queuedTasksExecutor.currentLaunchingTask == this) {
-				synchronized(queuedTasksExecutor.waitingForSyncTaskEndingMutex) {
-					queuedTasksExecutor.waitingForSyncTaskEndingMutex.notifyAll();
-				}
 			}
 			clear();			
 		}
@@ -1094,12 +1088,13 @@ public class QueuedTasksExecutor implements Component {
 					if (getByPriority(oldPriority).tasksQueue.remove(task)) {
 						task.priority = newPriority;
 						QueuedTasksExecutor queuedTasksExecutor = getByPriority(newPriority);
+						task.queuedTasksExecutor = null;
 						queuedTasksExecutor.addToQueue(task, true);
 						changedPriority = true;
 					}
 				}
 				if (changedPriority && task.queueConsumerUnlockingRequested) {
-					task.unlockQueueConsumerIfLocked();
+					task.unlockQueueConsumerIfLocked(Thread.currentThread());
 				}
 			}
 			return this;
