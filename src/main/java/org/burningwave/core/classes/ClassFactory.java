@@ -681,14 +681,10 @@ public class ClassFactory implements Component {
 				if (classLoader instanceof MemoryClassLoader) {
 					((MemoryClassLoader)classLoader).unregister(this, true);
 				}
-				if (compilationTask != null) {
-					if (!compilationTask.abort().isAborted()) {
-						if (compilationTask.isStarted()) {
-							Compilation.Result compilationResult = compilationTask.join();
-							if (compilationResult != null) {
-								compilationResult.close();
-							}
-						}
+				if (compilationTask != null && compilationTask.abortOrWaitForFinish().isStarted()) {
+					Compilation.Result compilationResult = compilationTask.join();
+					if (compilationResult != null) {
+						compilationResult.close();
 					}
 				}
 				compilationConfigSupplier = null;
