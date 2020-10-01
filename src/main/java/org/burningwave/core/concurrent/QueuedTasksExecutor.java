@@ -717,7 +717,7 @@ public class QueuedTasksExecutor implements Component {
 				if (!queueConsumerUnlockingRequested) {
 					synchronized (this) {
 						if (!queueConsumerUnlockingRequested) {
-							this.async = true;
+							//this.async = true;
 							queueConsumerUnlockingRequested = true;
 						}
 					}
