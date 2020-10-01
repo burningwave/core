@@ -29,47 +29,17 @@
 package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
-import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.ThreadPool;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 public class Synchronizer implements AutoCloseable {
-	
-	public static class Configuration {
-		
-		public static class Key {
-			
-			public static final String ALL_THREADS_STATE_LOGGER_ENABLED = "synchronizer.all-threads-state-logger.enabled";
-			public static final String ALL_THREADS_STATE_LOGGER_LOG_INTERVAL = "synchronizer.all-threads-state-logger.log.interval";
-			
-		}
-		
-		public final static Map<String, Object> DEFAULT_VALUES;
-		
-		static {
-			Map<String, Object> defaultValues = new HashMap<>();
-	
-			defaultValues.put(
-				Key.ALL_THREADS_STATE_LOGGER_ENABLED, 
-				"false"
-			);
-			defaultValues.put(
-				Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL,
-				"30000"
-			);				
-			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
-		}
-		
-	}
 	
 	Map<String, Object> parallelLockMap;
 	Thread allThreadsStateLogger;
@@ -129,10 +99,6 @@ public class Synchronizer implements AutoCloseable {
 		parallelLockMap.remove(id);	
 	}
 	
-	public synchronized void startLoggingAllThreadsState() {
-		startLoggingAllThreadsState(Long.valueOf(GlobalProperties.resolveValue(Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL)));
-	}
-	
 	public synchronized void startLoggingAllThreadsState(Long interval) {
 		if (allThreadsStateLogger != null) {
 			stopLoggingAllThreadsState();
@@ -140,8 +106,8 @@ public class Synchronizer implements AutoCloseable {
 		allThreadsStateLogger = ThreadPool.getOrCreate().setExecutable(() -> {
 			allThreadsStateLoggerAlive = true;
 			while (allThreadsStateLoggerAlive) {
-				logAllThreadsState();
 				waitFor(interval);
+				logAllThreadsState();				
 			}
 		});
 		allThreadsStateLogger.setName("All threads state logger");

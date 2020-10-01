@@ -852,7 +852,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public final T submit() {
-			if (isAborted()) {
+			if (aborted) {
 				throw new TaskStateException(this, "is aborted");
 			}
 			if (!submitted) {
