@@ -663,7 +663,7 @@ public class QueuedTasksExecutor implements Component {
 			}
 			if (isSubmitted()) {
 				if (!started) {
-					if (!unlockQueueConsumerIfLocked(currentThread)) {
+					if (!resumeQueueConsumerFromSyncTaskWaiting(currentThread)) {
 						return (T)this;
 					}
 					synchronized (this) {
@@ -698,7 +698,7 @@ public class QueuedTasksExecutor implements Component {
 			}
 			if (isSubmitted()) {
 				if (!hasFinished()) {
-					if (!unlockQueueConsumerIfLocked(currentThread)) {
+					if (!resumeQueueConsumerFromSyncTaskWaiting(currentThread)) {
 						return false;
 					}
 					synchronized (this) {
@@ -721,9 +721,9 @@ public class QueuedTasksExecutor implements Component {
 			return false;
 		}
 
-		boolean unlockQueueConsumerIfLocked(java.lang.Thread thread) {
-			QueuedTasksExecutor queuedTasksExecutor = retrieveQueuedTasksExecutorOf(thread);
-			if (thread != queuedTasksExecutor.queueConsumer) {
+		boolean resumeQueueConsumerFromSyncTaskWaiting(java.lang.Thread thread) {
+			QueuedTasksExecutor queuedTasksExecutorOfClientThread = retrieveQueuedTasksExecutorOf(thread);
+			if (thread != queuedTasksExecutorOfClientThread.queueConsumer) {
 				if (!queueConsumerUnlockingRequested) {
 					synchronized (this) {
 						if (!queueConsumerUnlockingRequested) {
@@ -731,21 +731,29 @@ public class QueuedTasksExecutor implements Component {
 						}
 					}
 				}
-				TaskAbst<?, ?> lastLaunchedTask = queuedTasksExecutor.currentLaunchingTask;
-				if (lastLaunchedTask != null ) {
-					synchronized(lastLaunchedTask) {
-						if (lastLaunchedTask != this) {
-							lastLaunchedTask.async = true;
-							lastLaunchedTask.queueConsumerUnlockingRequested = true;
-						}
-						lastLaunchedTask.notifyAll();
-					}
+				resumeQueueConsumerFromSyncTaskWaiting(queuedTasksExecutorOfClientThread);
+				QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
+				if (queuedTasksExecutor != queuedTasksExecutorOfClientThread) {
+					resumeQueueConsumerFromSyncTaskWaiting(queuedTasksExecutor);
 				}
 			} else if (queueConsumerUnlockingRequested) {
-				queuedTasksExecutor.currentLaunchingTask.async = true;
+				queuedTasksExecutorOfClientThread.currentLaunchingTask.async = true;
 				return false;
 			}
 			return true;
+		}
+
+		private void resumeQueueConsumerFromSyncTaskWaiting(QueuedTasksExecutor queuedTasksExecutor) {
+			TaskAbst<?, ?> lastLaunchedTask = queuedTasksExecutor.currentLaunchingTask;
+			if (lastLaunchedTask != null ) {
+				synchronized(lastLaunchedTask) {
+					if (lastLaunchedTask != this) {
+						lastLaunchedTask.async = true;
+						lastLaunchedTask.queueConsumerUnlockingRequested = true;
+					}
+					lastLaunchedTask.notifyAll();
+				}
+			}
 		}
 		
 		void execute() {
@@ -1115,7 +1123,7 @@ public class QueuedTasksExecutor implements Component {
 					}
 				}
 				if (changedPriority && task.queueConsumerUnlockingRequested) {
-					task.unlockQueueConsumerIfLocked(Thread.currentThread());
+					task.resumeQueueConsumerFromSyncTaskWaiting(Thread.currentThread());
 				}
 			}
 			return this;
