@@ -222,7 +222,7 @@ public class QueuedTasksExecutor implements Component {
 			}
 
 			@Override
-			QueuedTasksExecutor retrieveQueuedTasksExecutorOfCurrentThread() {
+			QueuedTasksExecutor retrieveQueuedTasksExecutorOf(java.lang.Thread thread) {
 				return QueuedTasksExecutor.this;
 			};
 
@@ -243,7 +243,7 @@ public class QueuedTasksExecutor implements Component {
 			};
 			
 			@Override
-			QueuedTasksExecutor retrieveQueuedTasksExecutorOfCurrentThread() {
+			QueuedTasksExecutor retrieveQueuedTasksExecutorOf(java.lang.Thread thread) {
 				return QueuedTasksExecutor.this;
 			};
 			
@@ -721,13 +721,12 @@ public class QueuedTasksExecutor implements Component {
 			return false;
 		}
 
-		boolean unlockQueueConsumerIfLocked(java.lang.Thread currentThread) {
-			QueuedTasksExecutor queuedTasksExecutor = retrieveQueuedTasksExecutorOfCurrentThread();
-			if (currentThread != queuedTasksExecutor.queueConsumer) {
+		boolean unlockQueueConsumerIfLocked(java.lang.Thread thread) {
+			QueuedTasksExecutor queuedTasksExecutor = retrieveQueuedTasksExecutorOf(thread);
+			if (thread != queuedTasksExecutor.queueConsumer) {
 				if (!queueConsumerUnlockingRequested) {
 					synchronized (this) {
 						if (!queueConsumerUnlockingRequested) {
-							//this.async = true;
 							queueConsumerUnlockingRequested = true;
 						}
 					}
@@ -883,7 +882,7 @@ public class QueuedTasksExecutor implements Component {
 		
 		abstract QueuedTasksExecutor getQueuedTasksExecutor();
 		
-		abstract QueuedTasksExecutor retrieveQueuedTasksExecutorOfCurrentThread();
+		abstract QueuedTasksExecutor retrieveQueuedTasksExecutorOf(java.lang.Thread thread);
 	}
 	
 	public static abstract class Task extends TaskAbst<ThrowingRunnable<? extends Throwable>, Task> {
@@ -1031,8 +1030,8 @@ public class QueuedTasksExecutor implements Component {
 						};
 						
 						@Override
-						QueuedTasksExecutor retrieveQueuedTasksExecutorOfCurrentThread() {
-							return Group.this.getByPriority(Thread.currentThread().getPriority());
+						QueuedTasksExecutor retrieveQueuedTasksExecutorOf(java.lang.Thread thread) {
+							return Group.this.getByPriority(thread.getPriority());
 						};
 						
 					};
@@ -1054,8 +1053,8 @@ public class QueuedTasksExecutor implements Component {
 						}
 
 						@Override
-						QueuedTasksExecutor retrieveQueuedTasksExecutorOfCurrentThread() {
-							return Group.this.getByPriority(Thread.currentThread().getPriority());
+						QueuedTasksExecutor retrieveQueuedTasksExecutorOf(java.lang.Thread thread) {
+							return Group.this.getByPriority(thread.getPriority());
 						};
 					};
 				}
