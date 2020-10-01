@@ -59,7 +59,6 @@ import org.burningwave.core.function.ThrowingSupplier;
 public class QueuedTasksExecutor implements Component {
 	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasksToBeExecuted;
 	java.lang.Thread queueConsumer;
-	//volatile boolean waitingForSyncTaskEnding;
 	List<TaskAbst<?, ?>> tasksQueue;
 	Set<TaskAbst<?, ?>> tasksInExecution;
 	TaskAbst<?, ?> currentLaunchingTask;
@@ -313,7 +312,7 @@ public class QueuedTasksExecutor implements Component {
 		synchronized (task) {
 			if (!task.isSubmitted()) {
 				task.aborted = true;
-				task.removeExecutableAndExecutor();
+				task.clear();
 			}
 		}
 		if (!task.isStarted()) {
@@ -324,8 +323,8 @@ public class QueuedTasksExecutor implements Component {
 							if (tasksQueue.remove(queuedTask)) {
 								if (!queuedTask.isStarted()) {
 									task.aborted = queuedTask.aborted = true;
-									queuedTask.removeExecutableAndExecutor();
-									task.removeExecutableAndExecutor();
+									queuedTask.clear();
+									task.clear();
 									queuedTask.notifyAll();
 									synchronized(task) {
 										task.notifyAll();
@@ -574,6 +573,7 @@ public class QueuedTasksExecutor implements Component {
 		Thread executor;
 		Throwable exc;
 		ThrowingBiConsumer<T, Throwable, Throwable> exceptionHandler;
+		QueuedTasksExecutor queuedTasksExecutor;
 		
 		public TaskAbst(E executable, boolean creationTracking) {
 			this.executable = executable;
@@ -740,7 +740,7 @@ public class QueuedTasksExecutor implements Component {
 				preparingToStart();
 				if (aborted) {
 					notifyAll();
-					removeExecutableAndExecutor();
+					clear();
 					return;
 				}
 				notifyAll();
@@ -788,27 +788,28 @@ public class QueuedTasksExecutor implements Component {
 			));
 		}
 		
-		void removeExecutableAndExecutor() {
+		void clear() {
+			if (runOnlyOnce) {
+				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
+			}
 			executable = null;
 			executor = null;
+			queuedTasksExecutor = null;
 		}
 	
 		void markAsFinished() {
 			synchronized(this) {
-				preparingToFinish();
 				finished = true;
 				notifyAll();
-				QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
-				if (queuedTasksExecutor.currentLaunchingTask == this) {
-					synchronized(queuedTasksExecutor.waitingForSyncTaskEndingMutex) {
-						queuedTasksExecutor.waitingForSyncTaskEndingMutex.notifyAll();
-					}
+				queuedTasksExecutor.tasksInExecution.remove(this);
+				++queuedTasksExecutor.executedTasksCount;	
+			}
+			if (queuedTasksExecutor.currentLaunchingTask == this) {
+				synchronized(queuedTasksExecutor.waitingForSyncTaskEndingMutex) {
+					queuedTasksExecutor.waitingForSyncTaskEndingMutex.notifyAll();
 				}
 			}
-			if (runOnlyOnce) {
-				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
-			}
-			removeExecutableAndExecutor();			
+			clear();			
 		}
 		
 		abstract void execute0() throws Throwable;
@@ -858,13 +859,8 @@ public class QueuedTasksExecutor implements Component {
 		}
 
 		void preparingToStart() {
-			getQueuedTasksExecutor().tasksInExecution.add(this);				
-		}
-
-		void preparingToFinish() {
-			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
-			queuedTasksExecutor.tasksInExecution.remove(this);
-			++queuedTasksExecutor.executedTasksCount;			
+			queuedTasksExecutor = getQueuedTasksExecutor();
+			queuedTasksExecutor.tasksInExecution.add(this);				
 		}
 		
 		public T abort() {
