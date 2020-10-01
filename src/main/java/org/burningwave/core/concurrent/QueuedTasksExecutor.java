@@ -219,6 +219,11 @@ public class QueuedTasksExecutor implements Component {
 			
 			QueuedTasksExecutor getQueuedTasksExecutor() {
 				return QueuedTasksExecutor.this;
+			}
+
+			@Override
+			QueuedTasksExecutor retrieveQueuedTasksExecutorOfCurrentThread() {
+				return QueuedTasksExecutor.this;
 			};
 
 		};
@@ -234,6 +239,11 @@ public class QueuedTasksExecutor implements Component {
 		return executable -> new Task(executable, taskCreationTrackingEnabled) {
 			
 			QueuedTasksExecutor getQueuedTasksExecutor() {
+				return QueuedTasksExecutor.this;
+			};
+			
+			@Override
+			QueuedTasksExecutor retrieveQueuedTasksExecutorOfCurrentThread() {
 				return QueuedTasksExecutor.this;
 			};
 			
@@ -712,7 +722,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 
 		boolean unlockQueueConsumerIfLocked(java.lang.Thread currentThread) {
-			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
+			QueuedTasksExecutor queuedTasksExecutor = retrieveQueuedTasksExecutorOfCurrentThread();
 			if (currentThread != queuedTasksExecutor.queueConsumer) {
 				if (!queueConsumerUnlockingRequested) {
 					synchronized (this) {
@@ -872,6 +882,8 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		abstract QueuedTasksExecutor getQueuedTasksExecutor();
+		
+		abstract QueuedTasksExecutor retrieveQueuedTasksExecutorOfCurrentThread();
 	}
 	
 	public static abstract class Task extends TaskAbst<ThrowingRunnable<? extends Throwable>, Task> {
@@ -1018,6 +1030,11 @@ public class QueuedTasksExecutor implements Component {
 							return this;
 						};
 						
+						@Override
+						QueuedTasksExecutor retrieveQueuedTasksExecutorOfCurrentThread() {
+							return Group.this.getByPriority(Thread.currentThread().getPriority());
+						};
+						
 					};
 				}
 				
@@ -1034,6 +1051,11 @@ public class QueuedTasksExecutor implements Component {
 						public QueuedTasksExecutor.Task changePriority(int priority) {
 							Group.this.changePriority(this, priority);
 							return this;
+						}
+
+						@Override
+						QueuedTasksExecutor retrieveQueuedTasksExecutorOfCurrentThread() {
+							return Group.this.getByPriority(Thread.currentThread().getPriority());
 						};
 					};
 				}
