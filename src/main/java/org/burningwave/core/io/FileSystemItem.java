@@ -849,7 +849,7 @@ public class FileSystemItem implements ManagedLogger {
 				if ((Cache.pathForContents.get(randomFIS.getAbsolutePath())) == null) {
 					FileSystemItem finalRandomFIS = randomFIS;
 					FileSystemItem superParentContainerFinal = superParentContainer;
-					Synchronizer.execute(superParentContainer.instanceId + "_resetAndReloadAllChildren", () -> {
+					Synchronizer.execute(superParentContainer.instanceId, () -> {
 						if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
 							superParentContainerFinal.refresh().getAllChildren();
 						}
@@ -879,38 +879,40 @@ public class FileSystemItem implements ManagedLogger {
 	
 	public FileSystemItem reloadContent(boolean recomputeConventionedAbsolutePath) {
 		String absolutePath = getAbsolutePath();
-		Cache.pathForContents.remove(absolutePath, true);
-		BackgroundExecutor.createTask(() -> {						
-			if (recomputeConventionedAbsolutePath) {
-				this.absolutePath.setValue(null);
-			}
-			if (exists() && !isFolder()) {
-				if (isCompressed()) {
-					try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
-						getParentContainer().reloadContent(recomputeConventionedAbsolutePath).getAbsolutePath())
-					) {
-						iterableZipContainer.findFirst(
-							iteratedZipEntry -> 
-								iteratedZipEntry.getAbsolutePath().equals(absolutePath), 
-							iteratedZipEntry -> 
-								iteratedZipEntry.getAbsolutePath().equals(absolutePath)
-						);
-					}		
-				} else {
-					Cache.pathForContents.getOrUploadIfAbsent(
-						absolutePath, () -> {
-							try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
-								return fIS.toByteBuffer();
-							}						
-						}
-					);
+		Synchronizer.execute(instanceId, () -> {
+			Cache.pathForContents.remove(absolutePath, true);
+			BackgroundExecutor.createTask(() -> {						
+				if (recomputeConventionedAbsolutePath) {
+					this.absolutePath.setValue(null);
 				}
-			}
-		}).runOnlyOnce(
-			instanceId + "_reloadContent",
-			() ->
-				Cache.pathForContents.get(absolutePath) != null
-		).async().submit().waitForFinish();
+				if (exists() && !isFolder()) {
+					if (isCompressed()) {
+						try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
+							getParentContainer().reloadContent(recomputeConventionedAbsolutePath).getAbsolutePath())
+						) {
+							iterableZipContainer.findFirst(
+								iteratedZipEntry -> 
+									iteratedZipEntry.getAbsolutePath().equals(absolutePath), 
+								iteratedZipEntry -> 
+									iteratedZipEntry.getAbsolutePath().equals(absolutePath)
+							);
+						}		
+					} else {
+						Cache.pathForContents.getOrUploadIfAbsent(
+							absolutePath, () -> {
+								try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
+									return fIS.toByteBuffer();
+								}						
+							}
+						);
+					}
+				}
+			}).runOnlyOnce(
+				instanceId + "_reloadContent",
+				() ->
+					Cache.pathForContents.get(absolutePath) != null
+			).submit().waitForFinish();
+		});
 		return this;
 	}
 
