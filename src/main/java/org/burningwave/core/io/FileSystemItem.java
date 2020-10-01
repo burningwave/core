@@ -879,12 +879,15 @@ public class FileSystemItem implements ManagedLogger {
 	
 	public FileSystemItem reloadContent(boolean recomputeConventionedAbsolutePath) {
 		String absolutePath = getAbsolutePath();
-		Synchronizer.execute(instanceId, () -> {
-			Cache.pathForContents.remove(absolutePath, true);
-			BackgroundExecutor.createTask(() -> {						
-				if (recomputeConventionedAbsolutePath) {
-					this.absolutePath.setValue(null);
-				}
+//		Synchronizer.execute(instanceId, () -> {
+//			Cache.pathForContents.remove(absolutePath, true);
+//			BackgroundExecutor.createTask(() -> {
+				Synchronizer.execute(instanceId, () -> {
+					Cache.pathForContents.remove(absolutePath, true);
+					if (recomputeConventionedAbsolutePath) {
+						this.absolutePath.setValue(null);
+					}
+				});
 				if (exists() && !isFolder()) {
 					if (isCompressed()) {
 						try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
@@ -907,12 +910,12 @@ public class FileSystemItem implements ManagedLogger {
 						);
 					}
 				}
-			}).runOnlyOnce(
-				instanceId + "_reloadContent",
-				() ->
-					Cache.pathForContents.get(absolutePath) != null
-			).submit().waitForFinish();
-		});
+//			}).runOnlyOnce(
+//				instanceId + "_reloadContent",
+//				() ->
+//					Cache.pathForContents.get(absolutePath) != null
+//			).submit().waitForFinish();
+//		});
 		return this;
 	}
 
