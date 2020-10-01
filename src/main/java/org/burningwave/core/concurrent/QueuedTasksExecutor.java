@@ -123,15 +123,8 @@ public class QueuedTasksExecutor implements Component {
 								continue;
 							}
 							currentLaunchingTask = task;
-						}
-						setExecutorOf(task);
-						Thread currentExecutor = task.executor;
-						int currentExecutablePriority = task.getPriority();
-						if (currentExecutor.getPriority() != currentExecutablePriority) {
-							currentExecutor.setPriority(currentExecutablePriority);
-						}
-						currentExecutor.start();
-						if (task.isSync()) {
+						}	
+						if (task.setExecutor(ThreadPool.getOrCreate()).start().isSync()) { 	
 							task.waitForFinish();
 						}
 					}
@@ -263,19 +256,6 @@ public class QueuedTasksExecutor implements Component {
 			}
 		}
 		return canBeExecutedBag != null ? (T)canBeExecutedBag[0] : task;
-	}
-
-	private void setExecutorOf(TaskAbst<?, ?> task) {
-		Thread executor = ThreadPool.getOrCreate().setExecutable(() -> {
-			task.execute();
-		});
-		if (task.name != null) {
-			executor.setName(queueConsumerName + " -> " + task.name);
-		} else {
-			executor.setIndexedName(queueConsumerName);
-		}		
-		executor.setPriority(task.priority);
-		task.setExecutor(executor);	
 	}
 
 	<E, T extends TaskAbst<E, T>> Object[] canBeExecuted(T task) {
@@ -581,6 +561,11 @@ public class QueuedTasksExecutor implements Component {
 			}
 		}
 		
+		public T start() {
+			executor.start();
+			return (T)this;
+		}
+
 		public List<StackTraceElement> getCreatorInfos() {
 			if (this.creatorInfos == null) {
 				if (stackTraceOnCreation != null) {
@@ -731,10 +716,10 @@ public class QueuedTasksExecutor implements Component {
 						}
 					}
 				}
-				resumeQueueConsumerFromSyncTaskWaiting(queuedTasksExecutorOfClientThread);
+				resumeQueueConsumerFromSyncTaskWaitingOf(queuedTasksExecutorOfClientThread);
 				QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
 				if (queuedTasksExecutor != queuedTasksExecutorOfClientThread) {
-					resumeQueueConsumerFromSyncTaskWaiting(queuedTasksExecutor);
+					resumeQueueConsumerFromSyncTaskWaitingOf(queuedTasksExecutor);
 				}
 			} else if (queueConsumerUnlockingRequested) {
 				queuedTasksExecutorOfClientThread.currentLaunchingTask.async = true;
@@ -743,11 +728,11 @@ public class QueuedTasksExecutor implements Component {
 			return true;
 		}
 
-		private void resumeQueueConsumerFromSyncTaskWaiting(QueuedTasksExecutor queuedTasksExecutor) {
+		private void resumeQueueConsumerFromSyncTaskWaitingOf(QueuedTasksExecutor queuedTasksExecutor) {
 			TaskAbst<?, ?> lastLaunchedTask = queuedTasksExecutor.currentLaunchingTask;
 			if (lastLaunchedTask != null ) {
 				synchronized(lastLaunchedTask) {
-					if (lastLaunchedTask != this) {
+					if (lastLaunchedTask != this && lastLaunchedTask.isSync()) {
 						lastLaunchedTask.async = true;
 						lastLaunchedTask.queueConsumerUnlockingRequested = true;
 					}
@@ -834,13 +819,23 @@ public class QueuedTasksExecutor implements Component {
 		
 		abstract void execute0() throws Throwable;
 		
-		T setExecutor(Thread executor) {
-			this.executor = executor;
+		T setExecutor(Thread thread) {
+			executor = thread.setExecutable(this::execute);
+			executor.setPriority(this.priority);
+			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
+			if (name != null) {
+				executor.setName(queuedTasksExecutor.queueConsumerName + " -> " + name);
+			} else {
+				executor.setIndexedName(queuedTasksExecutor.queueConsumerName);
+			}
 			return (T)this;
 		}
 		
 		public T changePriority(int priority) {
 			this.priority = priority;
+			if (executor != null) {
+				executor.setPriority(this.priority);
+			}
 			return (T)this;
 		}
 		
@@ -881,6 +876,13 @@ public class QueuedTasksExecutor implements Component {
 		void preparingToExecute() {
 			queuedTasksExecutor = getQueuedTasksExecutor();
 			queuedTasksExecutor.tasksInExecution.add(this);				
+		}
+		
+		public T abortOrWaitForFinish() {
+			if (!abort().isAborted() && isStarted()) {
+				waitForFinish();
+			}
+			return (T)this;
 		}
 		
 		public T abort() {
@@ -1118,6 +1120,7 @@ public class QueuedTasksExecutor implements Component {
 						task.priority = newPriority;
 						QueuedTasksExecutor queuedTasksExecutor = getByPriority(newPriority);
 						task.queuedTasksExecutor = null;
+						task.executor = null;
 						queuedTasksExecutor.addToQueue(task, true);
 						changedPriority = true;
 					}
