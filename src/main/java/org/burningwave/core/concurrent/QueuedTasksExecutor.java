@@ -677,7 +677,7 @@ public class QueuedTasksExecutor implements Component {
 		}		
 		
 		public T waitForFinish() {
-			while(waitForFinish0()) {}
+			while(waitForFinish0());
 			return (T)this;
 		}
 
