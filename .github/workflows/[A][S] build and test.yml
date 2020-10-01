@@ -1,8 +1,6 @@
 name: Build and test
 
 on:
-  branches:
-    - experimental
   schedule:
      - cron: "0 6,18 * * *"
 
