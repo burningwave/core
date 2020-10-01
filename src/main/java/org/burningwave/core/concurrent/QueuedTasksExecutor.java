@@ -66,6 +66,7 @@ public class QueuedTasksExecutor implements Component {
 	volatile int defaultPriority;
 	private long executedTasksCount;
 	private boolean isDaemon;
+	volatile boolean bypassWaitingForSyncTaskEnding;
 	private String queueConsumerName;
 	private Boolean terminated;
 	private Runnable initializer;
@@ -136,17 +137,16 @@ public class QueuedTasksExecutor implements Component {
 						if (task.isSync() && !task.hasFinished()) {
 							synchronized(waitingForSyncTaskEndingMutex) {							
 								try {
-									if (task.isSync() && !task.hasFinished()) {
+									if (!bypassWaitingForSyncTaskEnding && task.isSync() && !task.hasFinished()) {
 										waitingForSyncTaskEndingMutex.wait();
 									}
 								} catch (InterruptedException exc) {
 									logError("Exeption occurred", exc);
 								}
 								currentLaunchingTask = null;
-								continue;
+								bypassWaitingForSyncTaskEnding = false;
 							}
 						}
-						currentLaunchingTask = null;
 					}
 				} else {
 					synchronized(executableCollectionFillerMutex) {
@@ -734,6 +734,8 @@ public class QueuedTasksExecutor implements Component {
 				if (lastLaunchedTask != null) {
 					lastLaunchedTask.async = true;
 					queuedTasksExecutor.waitingForSyncTaskEndingMutex.notifyAll();
+				} else {
+					queuedTasksExecutor.bypassWaitingForSyncTaskEnding = true;
 				}
 			}
 		}
