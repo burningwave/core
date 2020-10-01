@@ -132,9 +132,6 @@ public class QueuedTasksExecutor implements Component {
 						}
 						currentExecutor.start();
 						if (task.isSync()) {
-							if (task.executor == null) {
-								logDebug("");
-							}
 							task.waitForFinish();
 						}
 					}
@@ -725,10 +722,12 @@ public class QueuedTasksExecutor implements Component {
 					}
 				}
 				TaskAbst<?, ?> lastLaunchedTask = queuedTasksExecutor.currentLaunchingTask;
-				if (lastLaunchedTask != null) {
+				if (lastLaunchedTask != null ) {
 					synchronized(lastLaunchedTask) {
-						lastLaunchedTask.async = true;
-						lastLaunchedTask.queueConsumerUnlockingRequested = true;
+						if (lastLaunchedTask != this) {
+							lastLaunchedTask.async = true;
+							lastLaunchedTask.queueConsumerUnlockingRequested = true;
+						}
 						lastLaunchedTask.notifyAll();
 					}
 				}
