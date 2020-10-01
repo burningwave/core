@@ -803,7 +803,6 @@ public class QueuedTasksExecutor implements Component {
 		void markAsFinished() {
 			finished = true;
 			synchronized(this) {
-				finished = true;
 				queuedTasksExecutor.tasksInExecution.remove(this);
 				++queuedTasksExecutor.executedTasksCount;
 				notifyAll();	
