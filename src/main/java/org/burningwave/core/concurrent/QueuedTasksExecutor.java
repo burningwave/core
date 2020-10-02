@@ -319,6 +319,7 @@ public class QueuedTasksExecutor implements Component {
 			synchronized (task) {
 				if (task.aborted = tasksQueue.remove(task)) {
 					task.notifyAll();
+					task.clear();
 					return task.aborted;
 				}
 			}
@@ -804,6 +805,7 @@ public class QueuedTasksExecutor implements Component {
 			}
 			if (executorIndex != null) {
 				--queuedTasksExecutor.executorsIndex;
+				executorIndex = null;
 			}
 			executable = null;
 			executor = null;
