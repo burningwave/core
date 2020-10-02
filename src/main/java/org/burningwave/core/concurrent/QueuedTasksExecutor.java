@@ -58,17 +58,17 @@ import org.burningwave.core.function.ThrowingSupplier;
 @SuppressWarnings({"unchecked", "resource"})
 public class QueuedTasksExecutor implements Component {
 	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasksToBeExecuted;
-	java.lang.Thread queueConsumer;
+	String name;
+	java.lang.Thread tasksLauncher;
 	List<TaskAbst<?, ?>> tasksQueue;
 	Set<TaskAbst<?, ?>> tasksInExecution;
 	TaskAbst<?, ?> currentLaunchingTask;
 	Boolean supended;
 	volatile int defaultPriority;
-	private long executedTasksCount;
-	private boolean isDaemon;
-	private String queueConsumerName;
-	private Boolean terminated;
-	private Runnable initializer;
+	long executedTasksCount;
+	boolean isDaemon;
+	Boolean terminated;
+	Runnable initializer;
 	boolean taskCreationTrackingEnabled;
 	Object resumeCallerMutex;
 	Object executingFinishedWaiterMutex;
@@ -80,16 +80,16 @@ public class QueuedTasksExecutor implements Component {
 		runOnlyOnceTasksToBeExecuted = new ConcurrentHashMap<>();
 	}
 	
-	QueuedTasksExecutor(String executorName, int defaultPriority, boolean isDaemon) {
-		tasksQueue = new CopyOnWriteArrayList<>();
-		tasksInExecution = ConcurrentHashMap.newKeySet();
-		this.resumeCallerMutex = new Object();
-		this.executingFinishedWaiterMutex = new Object();
-		this.suspensionCallerMutex = new Object();
-		this.executableCollectionFillerMutex = new Object();
-		this.terminatingMutex = new Object();
+	QueuedTasksExecutor(String name, int defaultPriority, boolean isDaemon) {
 		initializer = () -> {
-			this.queueConsumerName = executorName;
+			tasksQueue = new CopyOnWriteArrayList<>();
+			tasksInExecution = ConcurrentHashMap.newKeySet();
+			this.resumeCallerMutex = new Object();
+			this.executingFinishedWaiterMutex = new Object();
+			this.suspensionCallerMutex = new Object();
+			this.executableCollectionFillerMutex = new Object();
+			this.terminatingMutex = new Object();
+			this.name = name;
 			this.defaultPriority = defaultPriority;
 			this.isDaemon = isDaemon;
 			init0();
@@ -105,7 +105,7 @@ public class QueuedTasksExecutor implements Component {
 		supended = Boolean.FALSE;
 		terminated = Boolean.FALSE;
 		executedTasksCount = 0;
-		queueConsumer = ThreadPool.getOrCreate().setExecutable(() -> {
+		tasksLauncher = ThreadPool.getOrCreate(name + " launcher").setExecutable(() -> {
 			while (!terminated) {
 				if (checkAndNotifySuspension()) {
 					continue;
@@ -146,14 +146,13 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 			synchronized(terminatingMutex) {
-				queueConsumer = null;
+				tasksLauncher = null;
 				terminatingMutex.notifyAll();
 			}
 		});
-		queueConsumer.setName(queueConsumerName);
-		queueConsumer.setPriority(this.defaultPriority);
-		queueConsumer.setDaemon(isDaemon);
-		queueConsumer.start();
+		tasksLauncher.setPriority(this.defaultPriority);
+		tasksLauncher.setDaemon(isDaemon);
+		tasksLauncher.start();
 	}
 	
 	private boolean checkAndNotifySuspension() {
@@ -337,7 +336,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public QueuedTasksExecutor waitForTasksEnding(int priority) {
-		queueConsumer.setPriority(priority);
+		tasksLauncher.setPriority(priority);
 		tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
 		if (!tasksQueue.isEmpty()) {
 			synchronized(executingFinishedWaiterMutex) {
@@ -351,13 +350,13 @@ public class QueuedTasksExecutor implements Component {
 			}
 		}
 		waitForTasksInExecutionEnding(priority);
-		queueConsumer.setPriority(this.defaultPriority);
+		tasksLauncher.setPriority(this.defaultPriority);
 		return this;
 	}
 	
 	public QueuedTasksExecutor changePriority(int priority) {
 		this.defaultPriority = priority;
-		queueConsumer.setPriority(priority);
+		tasksLauncher.setPriority(priority);
 		tasksQueue.stream().forEach(executable -> executable.changePriority(priority));
 		return this;
 	}
@@ -375,14 +374,14 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	QueuedTasksExecutor suspend0(boolean immediately, int priority) {
-		queueConsumer.setPriority(priority);
+		tasksLauncher.setPriority(priority);
 		if (immediately) {
 			synchronized (suspensionCallerMutex) {
 				supended = Boolean.TRUE;
 				waitForTasksInExecutionEnding(priority);
 				try {
 					synchronized(executableCollectionFillerMutex) {
-						if (this.queueConsumer.getState().equals(Thread.State.WAITING)) {
+						if (this.tasksLauncher.getState().equals(Thread.State.WAITING)) {
 							executableCollectionFillerMutex.notifyAll();
 						}
 					}
@@ -397,7 +396,7 @@ public class QueuedTasksExecutor implements Component {
 			changePriorityToAllTaskBefore(supendingTask.addToQueue(), priority);
 			supendingTask.waitForFinish();
 		}
-		queueConsumer.setPriority(this.defaultPriority);
+		tasksLauncher.setPriority(this.defaultPriority);
 		return this;
 	}
 	
@@ -461,9 +460,9 @@ public class QueuedTasksExecutor implements Component {
 		executables.clear();
 		tasksInExecution.clear();
 		resumeFromSuspension();
-		if (queueConsumer != null) {
+		if (tasksLauncher != null) {
 			synchronized (terminatingMutex) {
-				if (queueConsumer != null) {
+				if (tasksLauncher != null) {
 					try {
 						terminatingMutex.wait();
 					} catch (InterruptedException exc) {
@@ -484,7 +483,7 @@ public class QueuedTasksExecutor implements Component {
 	
 	private void logStatus(Long executedTasksCount, Collection<TaskAbst<?, ?>> executables) {
 		Collection<String> executablesLog = executables.stream().map(task -> "\t" + task.executable.toString()).collect(Collectors.toList());
-		StringBuffer log = new StringBuffer(this.queueConsumerName + " - Executed tasks: ")
+		StringBuffer log = new StringBuffer(this.tasksLauncher.getName() + " - Executed tasks: ")
 			.append(executedTasksCount).append(", Unexecuted tasks: ")
 			.append(executablesLog.size());
 			
@@ -498,14 +497,14 @@ public class QueuedTasksExecutor implements Component {
 	public void logQueueInfo() {
 		Collection<TaskAbst<?, ?>> tasksQueue = this.tasksQueue;
 		if (!tasksQueue.isEmpty()) {
-			logInfo("{} - Tasks to be executed:", queueConsumer);
+			logInfo("{} - Tasks to be executed:", tasksLauncher);
 			for (TaskAbst<?,?> task : tasksQueue) {
 				task.logInfo();
 			}
 		}
 		tasksQueue = this.tasksInExecution;
 		if (!tasksQueue.isEmpty()) {
-			logInfo("{} - Tasks in execution:", queueConsumer);
+			logInfo("{} - Tasks in execution:", tasksLauncher);
 			for (TaskAbst<?,?> task : tasksQueue) {
 				task.logInfo();
 			}
@@ -528,8 +527,8 @@ public class QueuedTasksExecutor implements Component {
 		executingFinishedWaiterMutex = null;    
 		suspensionCallerMutex = null;           
 		executableCollectionFillerMutex = null; 
-		logInfo("All resources of '{}' have been closed", queueConsumerName);
-		queueConsumerName = null;		
+		logInfo("All resources of '{}' have been closed", name);
+		name = null;		
 	}
 	
 	public static abstract class TaskAbst<E, T extends TaskAbst<E, T>> implements ManagedLogger {
@@ -707,7 +706,7 @@ public class QueuedTasksExecutor implements Component {
 
 		boolean resumeQueueConsumerFromSyncTaskWaiting(java.lang.Thread thread) {
 			QueuedTasksExecutor queuedTasksExecutorOfClientThread = retrieveQueuedTasksExecutorOf(thread);
-			if (thread != queuedTasksExecutorOfClientThread.queueConsumer) {
+			if (thread != queuedTasksExecutorOfClientThread.tasksLauncher) {
 				if (!queueConsumerUnlockingRequested) {
 					synchronized (this) {
 						if (!queueConsumerUnlockingRequested) {
@@ -823,9 +822,9 @@ public class QueuedTasksExecutor implements Component {
 			executor.setPriority(this.priority);
 			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
 			if (name != null) {
-				executor.setName(queuedTasksExecutor.queueConsumerName + " -> " + name);
+				executor.setName(queuedTasksExecutor.name + " -> " + name);
 			} else {
-				executor.setIndexedName(queuedTasksExecutor.queueConsumerName);
+				executor.setIndexedName(queuedTasksExecutor.name);
 			}
 			return (T)this;
 		}
@@ -939,21 +938,21 @@ public class QueuedTasksExecutor implements Component {
 			queuedTasksExecutors.put(
 				String.valueOf(Thread.MAX_PRIORITY),
 				createQueuedTasksExecutor(
-					name + " - High priority tasks executor",
+					name + " - High priority tasks",
 					Thread.MAX_PRIORITY, isDaemon
 				)
 			);
 			queuedTasksExecutors.put(
 				String.valueOf(Thread.NORM_PRIORITY),
 				createQueuedTasksExecutor(
-					name + " - Normal priority tasks executor", 
+					name + " - Normal priority tasks", 
 					Thread.NORM_PRIORITY, isDaemon
 				)
 			);
 			queuedTasksExecutors.put(
 				String.valueOf(Thread.MIN_PRIORITY),
 				createQueuedTasksExecutor(
-					name + " - Low priority tasks executor",
+					name + " - Low priority tasks",
 					Thread.MIN_PRIORITY, isDaemon
 				)
 			);

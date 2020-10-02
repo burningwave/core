@@ -51,7 +51,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	}
 	
 	public void setIndexedName(String prefix) {
-		setName(prefix + " -> worker " + index);
+		setName(prefix + " -> executor " + index);
 	}
 	
 	public Thread setExecutable(Runnable executable) {
