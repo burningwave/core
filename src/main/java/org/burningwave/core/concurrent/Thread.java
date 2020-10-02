@@ -97,6 +97,12 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			this.waitForAThreadToFreeUp = waitForAThreadToFreeUp;
 		}
 		
+		public Thread getOrCreate(String name) {
+			Thread thread = getOrCreate();
+			thread.setName(name);
+			return thread;
+		}
+		
 		public final Thread getOrCreate() {
 			Thread thread = get();
 			if (thread != null) {
