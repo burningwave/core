@@ -2,7 +2,7 @@ name: Build and test
 
 on:
   schedule:
-     - cron: "45 14 * * *"
+     - cron: "57 14 * * *"
 
 jobs:
     
@@ -17,7 +17,7 @@ jobs:
         java: [8, 9, 10, 11, 12, 13, 14, 15, 16-ea]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v1
         with:
           ref: experimental 
       - name: Set up JDK ${{ matrix.java }}
