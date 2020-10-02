@@ -212,7 +212,7 @@ public class StaticComponentContainer {
 			Runtime.getRuntime().addShutdownHook(
 				new Thread(() -> {
 					try {
-						ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Waiting for all tasks ending");
+						ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "... Waiting for all tasks ending before closing all component containers");
 						BackgroundExecutor.waitForTasksEnding(true);
 						ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Closing all component containers");
 						ComponentContainer.closeAll();
@@ -225,7 +225,7 @@ public class StaticComponentContainer {
 					} catch (Throwable exc) {
 						ManagedLoggersRepository.logError(() -> StaticComponentContainer.class.getName(), "Exception occurred while closing FileSystemHelper", exc);
 					}
-					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Waiting for all tasks ending");
+					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "... Waiting for all tasks ending before shuting down BackgroundExecutor");
 					BackgroundExecutor.waitForTasksEnding(true);
 					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Shuting down BackgroundExecutor");
 					Synchronizer.stopLoggingAllThreadsState(true);
