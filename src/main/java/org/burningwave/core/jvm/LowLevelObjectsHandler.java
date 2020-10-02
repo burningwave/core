@@ -389,6 +389,10 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		);
 	}
 	
+	public void throwException(Throwable exc) {
+		unsafe.throwException(exc);
+	}
+	
 	@Override
 	public void close() {
 		if (this != StaticComponentContainer.LowLevelObjectsHandler) {
