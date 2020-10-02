@@ -562,7 +562,7 @@ public class QueuedTasksExecutor implements Component {
 			}
 		}
 		
-		public T start() {
+		T start() {
 			executor.start();
 			return (T)this;
 		}

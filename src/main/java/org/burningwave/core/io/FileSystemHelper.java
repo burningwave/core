@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.ThreadPool;
@@ -196,7 +197,7 @@ public class FileSystemHelper implements Component {
 	@Override
 	public void close() {
 		if (this != StaticComponentContainer.FileSystemHelper || 
-			Thread.currentThread().getStackTrace()[2].getClassName().equals(StaticComponentContainer.class.getName())
+			Methods.retrieveExternalCallerInfo().getClassName().equals(StaticComponentContainer.class.getName())
 		) {	
 			Scavenger scavenger = this.scavenger;
 			if (scavenger != null) {

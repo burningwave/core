@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.jvm;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
@@ -417,12 +418,12 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		private Field directAllocatedByteBufferAddressField;
 		
 		public ByteBufferHandler() {
-			new Thread(() -> {
+			BackgroundExecutor.createTask(() -> {
 				init();
 				synchronized (this) {
 					this.notifyAll();
 				}
-			}, "ByteBufferHandler initializer").start();
+			}).async().submit();
 		}
 
 		void init() {
