@@ -235,7 +235,7 @@ public class StaticComponentContainer {
 			);
 			FileSystemHelper.startScavenger();
 			if (Objects.toBoolean(
-				GlobalProperties.resolveStringValue(
+				GlobalProperties.resolveValue(
 					Configuration.Key.ALL_THREADS_STATE_LOGGER_ENABLED
 				)
 			)) {
