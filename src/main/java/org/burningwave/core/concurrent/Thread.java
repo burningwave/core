@@ -40,17 +40,19 @@ import org.burningwave.core.ManagedLogger;
 public class Thread extends java.lang.Thread implements ManagedLogger {
 	
 	Runnable executable;
-	private final long index;
+	Long index;
 	boolean isAlive;
 	Pool pool;
 	
-	private Thread(Pool pool, long index) {
-		this.index = index;
+	private Thread(Pool pool) {
 		this.pool = pool;
 		setDaemon(pool.daemon);
 	}
 	
 	public void setIndexedName(String prefix) {
+		if (index == null) {
+			index = ++pool.index;	
+		}
 		setName(prefix + " executor " + index);
 	}
 	
@@ -77,12 +79,16 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			if (pool.sleepingThreads.remove(this) || pool.runningThreads.remove(this)) {
 				notifyAll();
 				--pool.threadsCount;
+				if (index != null) {
+					--pool.index;	
+				}
 			}
 		}
 	}	
 	
 	public static class Pool {
 		private volatile long threadsCount;
+		private volatile long index;
 		private int maxThreadsCount;
 		private Collection<Thread> runningThreads;
 		private Collection<Thread> sleepingThreads;
@@ -108,7 +114,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			if (thread != null) {
 				return thread;
 			}
-			if (threadsCount >= maxThreadsCount && waitForAThreadToFreeUp) {
+			if (threadsCount > maxThreadsCount && waitForAThreadToFreeUp) {
 				synchronized (sleepingThreads) {
 					try {
 						if ((thread = get()) == null) {
@@ -119,20 +125,25 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						ManagedLoggersRepository.logError(() -> Thread.class.getName(), "Exception occurred", exc);
 					}
 				}
-			} else if (threadsCount >= maxThreadsCount) {
-				return new Thread(this, ++threadsCount) {
+			} else if (threadsCount > maxThreadsCount) {
+				++threadsCount;
+				return new Thread(this) {
 					@Override
 					public void run() {
 						executable.run();
 						--threadsCount;
+						if (this.index != null) {
+							--pool.index;	
+						}
 					}
 				};
 			}
 			synchronized (this) {
-				if (threadsCount >= maxThreadsCount) {
+				if (threadsCount > maxThreadsCount) {
 					return getOrCreate();
 				}
-				return new Thread(this, ++threadsCount) {
+				++threadsCount;
+				return new Thread(this) {
 					@Override
 					public void run() {
 						while (isAlive) {
