@@ -483,8 +483,8 @@ public class QueuedTasksExecutor implements Component {
 	
 	private void logStatus(Long executedTasksCount, Collection<TaskAbst<?, ?>> executables) {
 		Collection<String> executablesLog = executables.stream().map(task -> "\t" + task.executable.toString()).collect(Collectors.toList());
-		StringBuffer log = new StringBuffer(this.tasksLauncher.getName() + " - Executed tasks: ")
-			.append(executedTasksCount).append(", Unexecuted tasks: ")
+		StringBuffer log = new StringBuffer(this.tasksLauncher.getName() + " - launched tasks: ")
+			.append(executedTasksCount).append(", not launched tasks: ")
 			.append(executablesLog.size());
 			
 		if (executablesLog.size() > 0) {
