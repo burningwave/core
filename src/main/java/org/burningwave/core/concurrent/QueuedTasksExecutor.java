@@ -66,6 +66,7 @@ public class QueuedTasksExecutor implements Component {
 	Boolean supended;
 	volatile int defaultPriority;
 	long executedTasksCount;
+	long threadIndex;
 	boolean isDaemon;
 	Boolean terminated;
 	Runnable initializer;
@@ -800,6 +801,7 @@ public class QueuedTasksExecutor implements Component {
 			if (runOnlyOnce) {
 				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
 			}
+			--queuedTasksExecutor.threadIndex;
 			executable = null;
 			executor = null;
 			queuedTasksExecutor = null;
@@ -824,7 +826,7 @@ public class QueuedTasksExecutor implements Component {
 			if (name != null) {
 				executor.setName(queuedTasksExecutor.name + " - " + name);
 			} else {
-				executor.setIndexedName(queuedTasksExecutor.name + " executor");
+				executor.setName(queuedTasksExecutor.name + " executor " + ++queuedTasksExecutor.threadIndex);
 			}
 			return (T)this;
 		}

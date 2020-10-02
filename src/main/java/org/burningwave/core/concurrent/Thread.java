@@ -108,7 +108,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			if (thread != null) {
 				return thread;
 			}
-			if (threadsCount >= maxThreadsCount && waitForAThreadToFreeUp) {
+			if (threadsCount > maxThreadsCount && waitForAThreadToFreeUp) {
 				synchronized (sleepingThreads) {
 					try {
 						if ((thread = get()) == null) {
@@ -119,7 +119,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						ManagedLoggersRepository.logError(() -> Thread.class.getName(), "Exception occurred", exc);
 					}
 				}
-			} else if (threadsCount >= maxThreadsCount) {
+			} else if (threadsCount > maxThreadsCount) {
 				return new Thread(this, ++threadsCount) {
 					@Override
 					public void run() {
@@ -129,7 +129,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				};
 			}
 			synchronized (this) {
-				if (threadsCount >= maxThreadsCount) {
+				if (threadsCount > maxThreadsCount) {
 					return getOrCreate();
 				}
 				return new Thread(this, ++threadsCount) {
