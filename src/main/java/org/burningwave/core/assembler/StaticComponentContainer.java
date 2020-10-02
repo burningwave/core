@@ -169,7 +169,7 @@ public class StaticComponentContainer {
 			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED))) {
 				BackgroundExecutor.setTasksCreationTrackingFlag(true);
 			}
-			if (Objects.toBoolean(GlobalProperties.getProperty(Configuration.Key.HIDE_BANNER_ON_INIT))) {
+			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.HIDE_BANNER_ON_INIT))) {
 				showBanner();
 			}
 			ManagedLoggersRepository = ManagedLogger.Repository.create(GlobalProperties);
