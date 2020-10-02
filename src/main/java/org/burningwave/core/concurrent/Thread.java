@@ -33,6 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.ManagedLogger;
@@ -45,13 +46,18 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	Pool pool;
 	
 	private Thread(Pool pool, long index) {
+		super(pool.name + " - executor " + index);
 		this.index = index;
 		this.pool = pool;
 		setDaemon(pool.daemon);
 	}
 	
+	public void setIndexedName() {
+		setIndexedName(null);
+	}
+	
 	public void setIndexedName(String prefix) {
-		setName(prefix + " " + index);
+		setName(Optional.ofNullable(prefix).orElseGet(() -> pool.name + " - executor") + " " + index);
 	}
 	
 	public Thread setExecutable(Runnable executable) {
@@ -82,6 +88,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	}	
 	
 	public static class Pool {
+		private String name;
 		private volatile long threadsCount;
 		private int maxThreadsCount;
 		private Collection<Thread> runningThreads;
@@ -89,10 +96,11 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		private boolean waitForAThreadToFreeUp;
 		private boolean daemon;
 		
-		Pool (int maxThreadsCount, boolean daemon, boolean waitForAThreadToFreeUp) {
+		Pool (String name, int maxThreadsCount, boolean daemon, boolean waitForAThreadToFreeUp) {
+			this.name = name;
 			this.daemon = daemon;
-			runningThreads = ConcurrentHashMap.newKeySet();
-			sleepingThreads = ConcurrentHashMap.newKeySet();
+			this.runningThreads = ConcurrentHashMap.newKeySet();
+			this.sleepingThreads = ConcurrentHashMap.newKeySet();
 			this.maxThreadsCount = maxThreadsCount;
 			this.waitForAThreadToFreeUp = waitForAThreadToFreeUp;
 		}
@@ -144,6 +152,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 								synchronized (this) {
 									runningThreads.remove(this);
 									executable = null;
+									setIndexedName();
 									sleepingThreads.add(this);
 									synchronized (sleepingThreads) {
 										sleepingThreads.notifyAll();
@@ -204,13 +213,13 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 		}
 		
-		public static Pool create(int maxThreadsCount, boolean daemon, boolean waitForAThreadToFreeUp) {
-			return create(maxThreadsCount, daemon, waitForAThreadToFreeUp, false);
+		public static Pool create(String name, int maxThreadsCount, boolean daemon, boolean waitForAThreadToFreeUp) {
+			return create(name, maxThreadsCount, daemon, waitForAThreadToFreeUp, false);
 		}
 		
-		public static Pool create(int maxThreadsCount, boolean daemon, boolean waitForAThreadToFreeUp, boolean undestroyable) {
+		public static Pool create(String name, int maxThreadsCount, boolean daemon, boolean waitForAThreadToFreeUp, boolean undestroyable) {
 			if (undestroyable) {
-				return new Pool(maxThreadsCount, daemon, waitForAThreadToFreeUp) {
+				return new Pool(name, maxThreadsCount, daemon, waitForAThreadToFreeUp) {
 					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();					
 					@Override
 					public void shutDownAll() {
@@ -220,7 +229,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					}
 				};
 			} else {
-				return new Pool(maxThreadsCount, daemon, waitForAThreadToFreeUp);
+				return new Pool(name, maxThreadsCount, daemon, waitForAThreadToFreeUp);
 			}
 		}
 	}
