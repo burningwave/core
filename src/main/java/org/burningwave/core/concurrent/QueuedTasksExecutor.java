@@ -804,8 +804,8 @@ public class QueuedTasksExecutor implements Component {
 				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
 			}
 			if (executorIndex != null) {
-				--queuedTasksExecutor.executorsIndex;
 				executorIndex = null;
+				--queuedTasksExecutor.executorsIndex;
 			}
 			executable = null;
 			executor = null;
