@@ -822,9 +822,9 @@ public class QueuedTasksExecutor implements Component {
 			executor.setPriority(this.priority);
 			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
 			if (name != null) {
-				executor.setName(queuedTasksExecutor.name + " -> " + name);
+				executor.setName(queuedTasksExecutor.name + " - " + name);
 			} else {
-				executor.setIndexedName(queuedTasksExecutor.name);
+				executor.setIndexedName(queuedTasksExecutor.name + " executor");
 			}
 			return (T)this;
 		}
