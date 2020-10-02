@@ -44,6 +44,9 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -525,19 +528,56 @@ public class IterableObjectHelper implements Component {
 		return object != null && value != null && object.equals(value);
 	}
 	
-	public <T> void iterateParallelIf(Collection<T> items, Consumer<T> itemConsumer, Predicate<Collection<T>> predicate) {
-		if (predicate.test(items) ) {
-			iterateParallel(items, itemConsumer);
-		} else {
-			for (T item : items) {
-				itemConsumer.accept(item);
-			}
-		}
+	public <T, O> Collection<O> iterateParallelIf(
+		Collection<T> items, 		
+		Consumer<T> action,
+		Predicate<Collection<T>> predicate
+	) {
+		return iterateParallelIf(items, (item, collector) -> action.accept(item), null, predicate);
 	}
 	
-	public <T> void iterateParallel(Collection<T> items, Consumer<T> itemConsumer) {
-		Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
+	
+	public <T, O> Collection<O> iterateParallelIf(
+		Collection<T> items, 		
+		BiConsumer<T, Consumer<O>> action,
+		Collection<O> outputCollection,
+		Predicate<Collection<T>> predicate
+	) {
+		if (predicate.test(items) ) {
+			return iterateParallel(items, action, outputCollection);
+		} else {
+			Consumer<O> outputItemCollector = outputCollection != null ? 
+				outputItem -> {
+					outputCollection.add(outputItem);
+				} 
+				: null;
+			for (T item : items) {
+				action.accept(item, outputItemCollector);
+			}
+			return outputCollection;
+		}		
+	}
+	
+	public <T, O> Collection<O> iterateParallel(
+		Collection<T> items,
+		BiConsumer<T, Consumer<O>> action,
+		Collection<O> outputCollection
+	) {
 		Iterator<T> itemIterator = items.iterator();
+		Consumer<O> outputItemCollector =
+			outputCollection != null ? 
+				outputCollection instanceof ConcurrentHashMap.KeySetView ||
+				outputCollection instanceof CopyOnWriteArrayList?	
+					outputItem -> {
+						outputCollection.add(outputItem);
+					} : 
+					outputItem -> {
+						synchronized (outputCollection) {
+							outputCollection.add(outputItem);
+						}
+					}
+				: null;
+		Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
 		int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items.size());
 		for (int i = 0; i < taskCount; i++) {
 			tasks.add(
@@ -551,13 +591,15 @@ public class IterableObjectHelper implements Component {
 								break;
 							}
 						}
-						itemConsumer.accept(item);
+						action.accept(item, outputItemCollector);
 					}
 				}).async().submit()
 			);
 		}
 		tasks.stream().forEach(task -> task.waitForFinish());
+		return outputCollection;
 	}
+
 	
 	private String toPrettyKeyValueLabel(Entry<?, ?> entry, String valuesSeparator, int marginTabCount) {
 		String margin = new String(new char[marginTabCount]).replace('\0', '\t');

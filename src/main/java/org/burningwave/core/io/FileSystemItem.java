@@ -151,7 +151,7 @@ public class FileSystemItem implements ManagedLogger {
 		FileSystemItem.Criteria finalFilter = FileSystemItem.Criteria
 				.forAllFileThat(fileSystemItem -> !fileSystemItem.isArchive());
 		finalFilter = filter != null ? finalFilter.and(filter) : finalFilter;
-		Set<FileSystemItem> allChildren = findInAllChildren(finalFilter);
+		Collection<FileSystemItem> allChildren = findInAllChildren(finalFilter);
 		for (FileSystemItem child : allChildren) {
 			FileSystemItem destFile = FileSystemItem
 					.ofPath(folder + child.getAbsolutePath().replaceFirst(this.getAbsolutePath(), ""));
@@ -214,28 +214,30 @@ public class FileSystemItem implements ManagedLogger {
 		}
 	}
 
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter) {
+	public Collection<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter) {
 		return findIn(this::getAllChildren0, filter, HashSet::new);
 	}
 
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter,
-			Supplier<C> setSupplier) {
+	public Collection<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter,
+			Supplier<Collection<FileSystemItem>> setSupplier) {
 		return findIn(this::getAllChildren0, filter, setSupplier);
 	}
 
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findInChildren(FileSystemItem.Criteria filter) {
+	public Collection<FileSystemItem> findInChildren(FileSystemItem.Criteria filter) {
 		return findIn(this::getChildren0, filter, HashSet::new);
 	}
 
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findInChildren(FileSystemItem.Criteria filter,
-			Supplier<C> setSupplier) {
+	public Collection<FileSystemItem> findInChildren(
+		FileSystemItem.Criteria filter,
+		Supplier<Collection<FileSystemItem>> setSupplier
+	) {
 		return findIn(this::getChildren0, filter, setSupplier);
 	}
 	
-	private <C extends Set<FileSystemItem>> Set<FileSystemItem> findIn(
+	private Collection<FileSystemItem> findIn(
 		Supplier<Set<FileSystemItem>> childrenSupplier,
 		FileSystemItem.Criteria filter,
-		Supplier<C> setSupplier
+		Supplier<Collection<FileSystemItem>> outputCollectionSupplier
 	) {	
 		Set<FileSystemItem> children;
 		try {
@@ -266,22 +268,14 @@ public class FileSystemItem implements ManagedLogger {
 				return false;
 			}
 		};
-		final Set<FileSystemItem> result = setSupplier.get();
-		IterableObjectHelper.iterateParallelIf(
+		final Collection<FileSystemItem> result = IterableObjectHelper.iterateParallelIf(
 			children,
-			result instanceof ConcurrentHashMap.KeySetView ?
-				fileSystemItem -> {
-					if (filterPredicate.test(fileSystemItem)) {
-						result.add(fileSystemItem);
-					}
-				} :
-				fileSystemItem -> {
-					if (filterPredicate.test(fileSystemItem)) {
-						synchronized (result) {
-							result.add(fileSystemItem);
-						}
-					}
-				},
+			(child, collector) -> {
+				if (filterPredicate.test(child)) {
+					collector.accept(child);
+				}
+			},
+			outputCollectionSupplier.get(),
 			item -> item.size() > 1
 		);		
 		if (!iteratedFISWithErrors.isEmpty()) {

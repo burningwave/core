@@ -28,9 +28,9 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -49,7 +49,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -319,13 +318,13 @@ public class PathHelper implements Component {
 					if (fileSystemItemParent.exists()) {
 						String childrenSet = groupMap.get(2).get(0);
 						String childrenSetRegEx = groupMap.get(3).get(0);
-						Function<FileSystemItem.Criteria, Set<FileSystemItem>> childrenSupplier =
+						Function<FileSystemItem.Criteria, Collection<FileSystemItem>> childrenSupplier =
 							childrenSet.equalsIgnoreCase("children") ?
 								fileSystemItemParent::findInChildren :
 								childrenSet.equalsIgnoreCase("allChildren") ?
 									fileSystemItemParent::findInAllChildren : null;
 						if (childrenSupplier != null) {
-							Set<FileSystemItem> childrenFound = childrenSupplier.apply(
+							Collection<FileSystemItem> childrenFound = childrenSupplier.apply(
 								FileSystemItem.Criteria.forAllFileThat(
 									fileSystemItem -> fileSystemItem.getAbsolutePath().matches(childrenSetRegEx)
 								)

@@ -59,14 +59,14 @@ public class StaticComponentContainer {
 		static {
 			Map<String, Object> defaultValues =  new HashMap<>(); 
 			
-			defaultValues.put(Key.HIDE_BANNER_ON_INIT, "false");
+			defaultValues.put(Key.HIDE_BANNER_ON_INIT, false);
 			defaultValues.put(
 				Key.ALL_THREADS_STATE_LOGGER_ENABLED, 
-				"false"
+				false
 			);
 			defaultValues.put(
 				Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL,
-				"30000"
+				30000
 			);	
 			defaultValues.put(Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED, "${" + Key.ALL_THREADS_STATE_LOGGER_ENABLED +"}");	
 			
@@ -100,7 +100,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.io.Streams Streams;
 	public static final org.burningwave.core.Strings Strings;
 	public static final org.burningwave.core.concurrent.Synchronizer Synchronizer;
-	public static final  org.burningwave.core.concurrent.Thread.Pool ThreadPool;
+	public static final org.burningwave.core.concurrent.Thread.Pool ThreadPool;
 	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
@@ -131,12 +131,20 @@ public class StaticComponentContainer {
 								Fields.setStaticDirect(StaticComponentContainer.class, "ManagedLoggersRepository", ManagedLogger.Repository.create(config));
 								toBeReplaced.close();
 							} else if (keyAsString.equals(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED)) {
-								BackgroundExecutor.setTasksCreationTrackingFlag(Boolean.valueOf(GlobalProperties.resolveStringValue(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED)));
+								BackgroundExecutor.setTasksCreationTrackingFlag(
+									Objects.toBoolean(
+										GlobalProperties.resolveValue(
+											Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED
+										)
+									)
+								);
 							} else if (keyAsString.equals(Configuration.Key.ALL_THREADS_STATE_LOGGER_ENABLED)) {
-								if (Boolean.valueOf((String)newValue)) {
+								if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.ALL_THREADS_STATE_LOGGER_ENABLED))) {
 									Synchronizer.startLoggingAllThreadsState(
-										Long.valueOf(
-											GlobalProperties.resolveValue(Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL)
+										Objects.toLong(
+											GlobalProperties.resolveValue(
+												Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL
+											)
 										)
 									);
 								} else {
@@ -144,8 +152,10 @@ public class StaticComponentContainer {
 								}
 							} else if (keyAsString.equals(Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL)) {
 								Synchronizer.startLoggingAllThreadsState(
-									Long.valueOf(
-										(String)newValue
+									Objects.toLong(
+										GlobalProperties.resolveValue(
+											Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL
+										)
 									)
 								);
 							}
@@ -224,13 +234,13 @@ public class StaticComponentContainer {
 				}, "Resources releaser")
 			);
 			FileSystemHelper.startScavenger();
-			if (Boolean.valueOf(
+			if (Objects.toBoolean(
 				GlobalProperties.resolveStringValue(
 					Configuration.Key.ALL_THREADS_STATE_LOGGER_ENABLED
 				)
 			)) {
 				Synchronizer.startLoggingAllThreadsState(
-					Long.valueOf(
+					Objects.toLong(
 						GlobalProperties.resolveValue(Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL)
 					)
 				);

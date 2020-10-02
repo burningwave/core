@@ -50,4 +50,19 @@ public class Objects {
 		return targetClass.getName() + "@" + System.identityHashCode(targetClass.getClass());
 	}
 	
+	public long toLong(Object object) {
+		return object instanceof Long ?
+			(Long)object
+			: Long.valueOf(
+				object.toString()
+			);
+	}
+	
+	public boolean toBoolean(Object object) {
+		return object instanceof Boolean ?
+			(Boolean)object
+			: Boolean.valueOf(
+				object.toString()
+			);
+	}
 }

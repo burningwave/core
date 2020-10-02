@@ -30,6 +30,7 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Collections;
@@ -222,7 +223,7 @@ public interface ManagedLogger {
 			abstract void resetSpecificElements();
 			
 			boolean getEnabledLoggingFlag(Properties properties) {
-				return Boolean.parseBoolean(IterableObjectHelper.resolveStringValue(
+				return Objects.toBoolean(IterableObjectHelper.resolveStringValue(
 					properties,
 					Configuration.Key.ENABLED_FLAG
 				));
