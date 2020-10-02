@@ -535,6 +535,7 @@ public class QueuedTasksExecutor implements Component {
 	public static abstract class TaskAbst<E, T extends TaskAbst<E, T>> implements ManagedLogger {
 		
 		String name;
+		Long threadNameIndex;
 		StackTraceElement[] stackTraceOnCreation;
 		List<StackTraceElement> creatorInfos;
 		Supplier<Boolean> hasBeenExecutedChecker;
@@ -801,7 +802,9 @@ public class QueuedTasksExecutor implements Component {
 			if (runOnlyOnce) {
 				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
 			}
-			--queuedTasksExecutor.threadIndex;
+			if (threadNameIndex != null) {
+				--queuedTasksExecutor.threadIndex;
+			}
 			executable = null;
 			executor = null;
 			queuedTasksExecutor = null;
@@ -826,7 +829,8 @@ public class QueuedTasksExecutor implements Component {
 			if (name != null) {
 				executor.setName(queuedTasksExecutor.name + " - " + name);
 			} else {
-				executor.setName(queuedTasksExecutor.name + " executor " + ++queuedTasksExecutor.threadIndex);
+				threadNameIndex = ++queuedTasksExecutor.threadIndex;
+				executor.setName(queuedTasksExecutor.name + " executor " + threadNameIndex);
 			}
 			return (T)this;
 		}
