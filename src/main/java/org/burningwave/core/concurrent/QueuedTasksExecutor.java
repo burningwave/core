@@ -179,12 +179,11 @@ public class QueuedTasksExecutor implements Component {
 	
 	public static QueuedTasksExecutor create(String executorName, int initialPriority, boolean daemon, boolean undestroyable) {
 		if (undestroyable) {
-			String creatorClass = Thread.currentThread().getStackTrace()[2].getClassName();
 			return new QueuedTasksExecutor(executorName, initialPriority, daemon) {
-				
+				StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
 				@Override
 				public boolean shutDown(boolean waitForTasksTermination) {
-					if (Thread.currentThread().getStackTrace()[4].getClassName().equals(creatorClass)) {
+					if (Methods.retrieveExternalCallerInfo().getClassName().equals(Methods.retrieveExternalCallerInfo(stackTraceOnCreation).getClassName())) {
 						return super.shutDown(waitForTasksTermination);
 					}
 					return false;
@@ -968,11 +967,12 @@ public class QueuedTasksExecutor implements Component {
 			if (!undestroyableFromExternal) {
 				return new Group(name, isDaemon);
 			} else {
-				String creatorClass = Thread.currentThread().getStackTrace()[2].getClassName();
 				return new Group(name, isDaemon) {
+					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
+					
 					@Override
 					public boolean shutDown(boolean waitForTasksTermination) {
-						if (Thread.currentThread().getStackTrace()[2].getClassName().equals(creatorClass)) {	
+						if (Methods.retrieveExternalCallerInfo().getClassName().equals(Methods.retrieveExternalCallerInfo(stackTraceOnCreation).getClassName())) {
 							return super.shutDown(waitForTasksTermination);
 						}
 						return false;

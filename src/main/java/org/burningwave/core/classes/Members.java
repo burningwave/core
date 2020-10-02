@@ -383,7 +383,7 @@ public class Members implements Component {
 			}
 			
 			public StackTraceElement retrieveExternalCallerInfo(StackTraceElement[] stackTrace, BiPredicate<StackTraceElement, StackTraceElement> filter, int level) {
-				return retrieveExternalCallersInfo(stackTrace, filter, level).get(level);
+				return retrieveExternalCallersInfo(stackTrace, filter, level).get(level - 1);
 			}
 			
 			public List<StackTraceElement> retrieveExternalCallersInfo(int level) {

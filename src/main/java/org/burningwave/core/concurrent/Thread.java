@@ -29,6 +29,7 @@
 package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -141,6 +142,9 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 									synchronized (sleepingThreads) {
 										sleepingThreads.notifyAll();
 									}
+									if (!isAlive) {
+										continue;
+									}
 									wait();
 								}
 							} catch (InterruptedException exc) {
@@ -195,7 +199,23 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 		
 		public static Pool create(int maxThreadsCount, boolean daemon, boolean waitForAThreadToFreeUp) {
-			return new Pool(maxThreadsCount, daemon, waitForAThreadToFreeUp);
+			return create(maxThreadsCount, daemon, waitForAThreadToFreeUp, false);
+		}
+		
+		public static Pool create(int maxThreadsCount, boolean daemon, boolean waitForAThreadToFreeUp, boolean undestroyable) {
+			if (undestroyable) {
+				return new Pool(maxThreadsCount, daemon, waitForAThreadToFreeUp) {
+					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();					
+					@Override
+					public void shutDownAll() {
+						if (Methods.retrieveExternalCallerInfo().getClassName().equals(Methods.retrieveExternalCallerInfo(stackTraceOnCreation).getClassName())) {
+							super.shutDownAll();
+						}
+					}
+				};
+			} else {
+				return new Pool(maxThreadsCount, daemon, waitForAThreadToFreeUp);
+			}
 		}
 	}
 }

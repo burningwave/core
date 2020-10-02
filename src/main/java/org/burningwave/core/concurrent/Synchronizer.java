@@ -141,12 +141,24 @@ public class Synchronizer implements AutoCloseable {
 	}
 	
 	public synchronized void stopLoggingAllThreadsState() {
+		stopLoggingAllThreadsState(false);
+	}
+	
+	public synchronized void stopLoggingAllThreadsState(boolean waitThreadToFinish) {
 		if (allThreadsStateLogger == null) {
 			return;
 		}
 		allThreadsStateLoggerAlive = false;
 		synchronized (allThreadsStateLogger) {
 			allThreadsStateLogger.notifyAll();
+		}
+		if (waitThreadToFinish) {
+			try {
+				allThreadsStateLogger.shutDown();
+				allThreadsStateLogger.join();
+			} catch (InterruptedException exc) {
+				ManagedLoggersRepository.logError(() -> this.getClass().getName(), "Exception occurred", exc);
+			}
 		}
 		allThreadsStateLogger = null;
 	}
