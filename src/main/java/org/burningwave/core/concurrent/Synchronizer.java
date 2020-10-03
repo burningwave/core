@@ -129,7 +129,11 @@ public class Synchronizer implements AutoCloseable {
 
 	public void removeMutex(Mutex mutex) {
 		if (--mutex.clientCount <= 0) {
-			parallelLockMap.remove(mutex.id);	
+			try {
+				parallelLockMap.remove(mutex.id);
+			} catch (Throwable exc) {
+				
+			}
 		}		
 	}
 	
