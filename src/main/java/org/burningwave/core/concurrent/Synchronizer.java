@@ -60,60 +60,56 @@ public class Synchronizer implements AutoCloseable {
 		Mutex newLock = new Mutex();
 		Mutex lock = parallelLockMap.putIfAbsent(id, newLock);
         if (lock != null) {
-        	lock.clientCount++;
+        	++lock.clientCount;
         	return lock;
         }
         newLock.id = id;
-        newLock.clientCount++;
+        ++newLock.clientCount;
         return newLock;
     }
 	
 	public void execute(String id, Runnable executable) {
 		Mutex mutex = getMutex(id);
-		synchronized (mutex) {
-			try {
+		try {
+			synchronized (mutex) {
 				executable.run();
-			} finally {
-				removeMutex(mutex);
 			}
+		} finally {
+			removeMutexIfUnused(mutex);
 		}
 	}
 	
 	public <E extends Throwable> void executeThrower(String id, ThrowingRunnable<E> executable) throws E {
 		Mutex mutex = getMutex(id);
-		synchronized (mutex) {
-			try {
+		try {
+			synchronized (mutex) {
 				executable.run();
-			} finally {
-				removeMutex(mutex);
 			}
+		} finally {
+			removeMutexIfUnused(mutex);
 		}
 	}
 	
 	public <T> T execute(String id, Supplier<T> executable) {
-		T result = null;
 		Mutex mutex = getMutex(id);
-		synchronized (mutex) {
-			try {
-				result = executable.get();
-			} finally {
-				removeMutex(mutex);
+		try {
+			synchronized (mutex) {
+				return executable.get();
 			}
+		} finally {
+			removeMutexIfUnused(mutex);
 		}
-		return result;
 	}
 	
 	public <T, E extends Throwable> T executeThrower(String id, ThrowingSupplier<T, E> executable) throws E {
-		T result = null;
 		Mutex mutex = getMutex(id);
-		synchronized (mutex) {
-			try {
-				result = executable.get();
-			} finally {
-				removeMutex(mutex);
+		try {
+			synchronized (mutex) {
+				return executable.get();
 			}
+		} finally {
+			removeMutexIfUnused(mutex);
 		}
-		return result;
 	}
 
 	public void clear() {
@@ -127,7 +123,7 @@ public class Synchronizer implements AutoCloseable {
 		parallelLockMap = null;
 	}
 
-	public void removeMutex(Mutex mutex) {
+	public void removeMutexIfUnused(Mutex mutex) {
 		if (--mutex.clientCount <= 0) {
 			try {
 				parallelLockMap.remove(mutex.id);

@@ -81,8 +81,8 @@ public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeab
 					}
 					this.defaultClassLoader = classLoader;
 				}
-				Synchronizer.removeMutex(mutex);
 			}
+			Synchronizer.removeMutexIfUnused(mutex);
 			return classLoader;
 		}
 		if (defaultClassLoader == null) {
@@ -104,7 +104,7 @@ public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeab
 				} else { 
 					return defaultClassLoader;
 				}
-				Synchronizer.removeMutex(mutex);
+				Synchronizer.removeMutexIfUnused(mutex);
 			}
 		}
 		return defaultClassLoader;
