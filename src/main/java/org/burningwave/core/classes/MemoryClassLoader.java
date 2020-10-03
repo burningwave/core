@@ -35,6 +35,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.InputStream;
@@ -195,16 +196,13 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	) throws IllegalArgumentException {
     	Package pkg = null;
     	if (Strings.isNotEmpty(packageName)) {
-    		pkg = ClassLoaders.retrieveLoadedPackage(this, packageName);
-    		if (pkg == null) {
-    			try {
-    				pkg = super.definePackage(packageName, specTitle, specVersion, specVendor, implTitle,
-    		    			implVersion, implVendor, sealBase);
-    			} catch (IllegalArgumentException exc) {
-    				logWarn("Package " + packageName + " already defined");
-    				pkg = ClassLoaders.retrieveLoadedPackage(this, packageName);
-    			}
-    		}
+    		try {
+				pkg = super.definePackage(packageName, specTitle, specVersion, specVendor, implTitle,
+		    			implVersion, implVendor, sealBase);
+			} catch (IllegalArgumentException exc) {
+				logWarn("Package " + packageName + " already defined");
+				pkg = ClassLoaders.retrieveLoadedPackage(this, packageName);
+			}
     	}
     	return pkg;
     }
@@ -215,7 +213,11 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		    	0, cls.getName().lastIndexOf(".")
 		    );
 		    if (ClassLoaders.retrieveLoadedPackage(this, pckgName) == null) {
-		    	definePackage(pckgName, null, null, null, null, null, null, null);
+		    	Synchronizer.execute(instanceId + "_" + pckgName, () -> {
+		    		if (ClassLoaders.retrieveLoadedPackage(this, pckgName) == null) {
+		    			definePackage(pckgName, null, null, null, null, null, null, null);
+		    		}
+		    	});
 			}	
 		}
 	}
@@ -223,11 +225,6 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     @Override
     protected Class<?> loadClass(String className, boolean resolve) throws ClassNotFoundException {
     	Class<?> cls = super.loadClass(className, resolve);
-//    	try {
-//			cls = super.loadClass(className, resolve);
-//		} catch (SecurityException exc) {
-//			cls = Class.forName(className);
-//		}
     	removeNotLoadedBytecode(className);
     	return cls;
     }
