@@ -467,13 +467,13 @@ public class Classes implements Component, MembersRetriever {
 		
 		Object getClassLoadingLock(ClassLoader classLoader, String className) {
 			try {
-				return getClassLoadingLockMethod(classLoader).invoke(classLoader, className);
+				return getGetClassLoadingLockMethod(classLoader).invoke(classLoader, className);
 			} catch (Throwable exc) {
 				return Throwables.throwException(exc);
 			}
 		}
 		
-		public MethodHandle getClassLoadingLockMethod(ClassLoader classLoader) {
+		public MethodHandle getGetClassLoadingLockMethod(ClassLoader classLoader) {
 			return getMethod(
 				Classes.getClassLoader(classLoader.getClass()) + "_" + classLoader + "_" +  "getClassLoadingLock",
 				() -> findGetClassLoadingLockMethodAndMakeItAccesible(classLoader)
