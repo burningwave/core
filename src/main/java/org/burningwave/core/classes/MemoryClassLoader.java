@@ -99,9 +99,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 
 	void addByteCode0(String className, ByteBuffer byteCode) {
 		if (ClassLoaders.retrieveLoadedClass(this, className) == null) {
-			synchronized (notLoadedByteCodes) {
-				notLoadedByteCodes.put(className, byteCode);
-			}
+			notLoadedByteCodes.put(className, byteCode);
 		} else {
 			logWarn("Could not add bytecode for class {} cause it's already defined", className);
 		}
@@ -294,9 +292,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
     protected void addLoadedByteCode(String className, ByteBuffer byteCode) {
     	try {
-    		synchronized (loadedByteCodes) {
-        		loadedByteCodes.put(className, byteCode);
-    		}
+    		loadedByteCodes.put(className, byteCode);
     	} catch (Throwable exc) {
     		if (!isClosed) {
     			throw exc;
@@ -350,9 +346,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 
 	public void removeNotLoadedBytecode(String className) {
 		try {
-			synchronized (notLoadedByteCodes) {
-				notLoadedByteCodes.remove(className);
-			}
+			notLoadedByteCodes.remove(className);
     	} catch (Throwable exc) {
     		if (!isClosed) {
     			throw exc;
