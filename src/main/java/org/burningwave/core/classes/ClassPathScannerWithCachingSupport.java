@@ -51,31 +51,6 @@ import org.burningwave.core.iterable.Properties;
 
 public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>, R extends SearchResult<I>> extends ClassPathScannerAbst<I, C, R> {
 	
-	public static enum PathLoadingLock {
-		FOR_CACHE("forCache"),
-		FOR_PATH("forPath");
-		
-		public static PathLoadingLock forLabel(String label) {
-			for (PathLoadingLock item : PathLoadingLock.values()) { 
-			    if(item.label.equals(label)) {
-			    	return item;
-			    }
-			}
-			return null;
-		}
-		
-		private String label;
-		
-		private PathLoadingLock(String label) {
-			this.label = label;
-		}
-		
-		public String getLabel() {
-			return label;
-		}
-		
-	}
-	
 	Map<String, Map<String, I>> cache;
 	
 	ClassPathScannerWithCachingSupport(
