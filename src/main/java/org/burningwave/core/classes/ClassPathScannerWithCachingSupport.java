@@ -43,6 +43,7 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.classes.SearchContext.InitContext;
+import org.burningwave.core.concurrent.Synchronizer.Mutex;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
@@ -156,7 +157,8 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		if (classesForPath == null) {
 			if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate) {
 				String mutexId = instanceId + "_" + basePath;
-				synchronized(Synchronizer.getMutex(mutexId)) {
+				Mutex mutex = Synchronizer.getMutex(mutexId);
+				synchronized(mutex) {
 					classesForPath = cache.get(basePath);
 					if (classesForPath == null) {
 						currentScannedPath.findInAllChildren(filterAndExecutor);
@@ -166,10 +168,10 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 							itemsForPath.putAll(itemsFound);
 						}
 						this.cache.put(basePath, itemsForPath);
-						Synchronizer.removeMutex(mutexId);
+						Synchronizer.removeMutex(mutex);
 						return;
 					}
-					Synchronizer.removeMutex(mutexId);
+					Synchronizer.removeMutex(mutex);
 				}
 				context.addAllItemsFound(basePath, classesForPath);
 				return;

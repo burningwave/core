@@ -44,7 +44,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 
 public class Synchronizer implements AutoCloseable {
 	
-	Map<String, Object> parallelLockMap;
+	Map<String, Mutex> parallelLockMap;
 	Thread allThreadsStateLogger;
 	private boolean allThreadsStateLoggerAlive;
 	
@@ -56,42 +56,48 @@ public class Synchronizer implements AutoCloseable {
 		return new Synchronizer();
 	}
 	
-	public Object getMutex(String id) {
-		Object newLock = new Object();
-    	Object lock = parallelLockMap.putIfAbsent(id, newLock);
+	public Mutex getMutex(String id) {
+		Mutex newLock = new Mutex();
+		Mutex lock = parallelLockMap.putIfAbsent(id, newLock);
         if (lock != null) {
+        	lock.clientCount++;
         	return lock;
         }
+        newLock.id = id;
+        newLock.clientCount++;
         return newLock;
     }
 	
 	public void execute(String id, Runnable executable) {
-		synchronized (getMutex(id)) {
+		Mutex mutex = getMutex(id);
+		synchronized (mutex) {
 			try {
 				executable.run();
 			} finally {
-				parallelLockMap.remove(id);
+				removeMutex(mutex);
 			}
 		}
 	}
 	
 	public <E extends Throwable> void executeThrower(String id, ThrowingRunnable<E> executable) throws E {
-		synchronized (getMutex(id)) {
+		Mutex mutex = getMutex(id);
+		synchronized (mutex) {
 			try {
 				executable.run();
 			} finally {
-				parallelLockMap.remove(id);
+				removeMutex(mutex);
 			}
 		}
 	}
 	
 	public <T> T execute(String id, Supplier<T> executable) {
 		T result = null;
-		synchronized (getMutex(id)) {
+		Mutex mutex = getMutex(id);
+		synchronized (mutex) {
 			try {
 				result = executable.get();
 			} finally {
-				parallelLockMap.remove(id);
+				removeMutex(mutex);
 			}
 		}
 		return result;
@@ -99,11 +105,12 @@ public class Synchronizer implements AutoCloseable {
 	
 	public <T, E extends Throwable> T executeThrower(String id, ThrowingSupplier<T, E> executable) throws E {
 		T result = null;
-		synchronized (getMutex(id)) {
+		Mutex mutex = getMutex(id);
+		synchronized (mutex) {
 			try {
 				result = executable.get();
 			} finally {
-				parallelLockMap.remove(id);
+				removeMutex(mutex);
 			}
 		}
 		return result;
@@ -120,8 +127,10 @@ public class Synchronizer implements AutoCloseable {
 		parallelLockMap = null;
 	}
 
-	public void removeMutex(String id) {
-		parallelLockMap.remove(id);	
+	public void removeMutex(Mutex mutex) {
+		if (--mutex.clientCount <= 0) {
+			parallelLockMap.remove(mutex.id);	
+		}		
 	}
 	
 	public synchronized void startLoggingAllThreadsState(Long interval) {
@@ -188,4 +197,8 @@ public class Synchronizer implements AutoCloseable {
 		allThreadsStateLogger = null;
 	}
 	
+	public static class Mutex  {
+		String id;
+		volatile int clientCount;
+	}
 }

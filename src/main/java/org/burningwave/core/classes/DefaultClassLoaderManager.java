@@ -35,6 +35,7 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.concurrent.Synchronizer.Mutex;
 
 @SuppressWarnings("unchecked")
 public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeable, ManagedLogger {
@@ -63,7 +64,8 @@ public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeab
 		Supplier<C> defaultClassLoaderSupplier = this.defaultClassLoaderSupplier;
 		if (defaultClassLoaderSupplier != null && (classLoader = defaultClassLoaderSupplier.get()) != defaultClassLoader) {
 			String mutexId = getOperationId(getOperationId("getDefaultClassLoader"));
-			synchronized(Synchronizer.getMutex(mutexId)) {
+			Mutex mutex = Synchronizer.getMutex(mutexId);
+			synchronized(mutex) {
 				defaultClassLoaderSupplier = this.defaultClassLoaderSupplier;
 				if (defaultClassLoaderSupplier != null && (classLoader = defaultClassLoaderSupplier.get()) != defaultClassLoader) {
 					ClassLoader oldClassLoader = this.defaultClassLoader;
@@ -79,13 +81,14 @@ public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeab
 					}
 					this.defaultClassLoader = classLoader;
 				}
-				Synchronizer.removeMutex(mutexId);
+				Synchronizer.removeMutex(mutex);
 			}
 			return classLoader;
 		}
 		if (defaultClassLoader == null) {
 			String mutexId = getOperationId("getDefaultClassLoader");
-			synchronized(Synchronizer.getMutex(mutexId)) {
+			Mutex mutex = Synchronizer.getMutex(mutexId);
+			synchronized(mutex) {
 				if (defaultClassLoader == null) {
 					Object defaultClassLoaderOrDefaultClassLoaderSupplier =
 						((Supplier<?>)this.defaultClassLoaderOrDefaultClassLoaderSupplier).get();
@@ -101,7 +104,7 @@ public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeab
 				} else { 
 					return defaultClassLoader;
 				}
-				Synchronizer.removeMutex(mutexId);
+				Synchronizer.removeMutex(mutex);
 			}
 		}
 		return defaultClassLoader;
