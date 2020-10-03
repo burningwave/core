@@ -162,7 +162,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 	) {
 		return Optional.ofNullable(logicalOperator).map(logOp -> {
 			return logicalOperator.apply(input);
-		}).orElseThrow(() -> 
+		}).orElseGet(() -> 
 			Throwables.throwException(
 				"A call to and/or method is necessary before calling {} at {}",
 				Thread.currentThread().getStackTrace()[10].getMethodName(),
@@ -422,14 +422,14 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 		
 		
 		@SuppressWarnings("hiding")
-		<E, C extends Simple<E, C>> Predicate<E> consumeLogicalOperator(
+		<E, C extends Simple<E, C>> Predicate<E> consumeLogicalOperator (
 			Predicate<E> input,
 			Function<Predicate<E>, 
 			Predicate<E>> logicalOperator
 		) {
 			return Optional.ofNullable(logicalOperator).map(logOp -> {
 				return logicalOperator.apply(input);
-			}).orElseThrow(() -> 
+			}).orElseGet(() -> 
 				Throwables.throwException(
 					"A call to and/or method is necessary before calling {} at {}",
 					Thread.currentThread().getStackTrace()[10].getMethodName(),
