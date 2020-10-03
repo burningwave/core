@@ -36,7 +36,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
-import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.InputStream;
@@ -466,6 +465,21 @@ public class Classes implements Component, MembersRetriever {
 			);
 		}
 		
+		Object getClassLoadingLock(ClassLoader classLoader, String className) {
+			try {
+				return getClassLoadingLockMethod(classLoader).invoke(classLoader, className);
+			} catch (Throwable exc) {
+				return Throwables.throwException(exc);
+			}
+		}
+		
+		public MethodHandle getClassLoadingLockMethod(ClassLoader classLoader) {
+			return getMethod(
+				Classes.getClassLoader(classLoader.getClass()) + "_" + classLoader + "_" +  "getClassLoadingLock",
+				() -> findGetClassLoadingLockMethodAndMakeItAccesible(classLoader)
+			);
+		}
+		
 		private MethodHandle findDefineClassMethodAndMakeItAccesible(ClassLoader classLoader) {
 			Method method = Members.findAll(
 				MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
@@ -475,6 +489,20 @@ public class Classes implements Component, MembersRetriever {
 				).and().parameterTypesAreAssignableFrom(
 					String.class, ByteBuffer.class, ProtectionDomain.class
 				).and().returnType((cls) -> cls.getName().equals(Class.class.getName())),
+				classLoader.getClass()
+			).stream().findFirst().orElse(null);
+			return Methods.convertToMethodHandleBag(method).getValue();
+		}
+		
+		private MethodHandle findGetClassLoadingLockMethodAndMakeItAccesible(ClassLoader classLoader) {
+			Method method = Members.findAll(
+				MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
+					"getClassLoadingLock"::equals
+				).and().parameterTypes(params -> 
+					params.length == 1
+				).and().parameterTypesAreAssignableFrom(
+					String.class
+				),
 				classLoader.getClass()
 			).stream().findFirst().orElse(null);
 			return Methods.convertToMethodHandleBag(method).getValue();
@@ -559,7 +587,7 @@ public class Classes implements Component, MembersRetriever {
 			Map<String, JavaClass> byteCodes,
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
-			return Synchronizer.executeThrower(classLoader + "_" + className, () -> {
+			synchronized (getClassLoadingLock(classLoader, className)) {
 				if (!(classLoader instanceof MemoryClassLoader)) {
 					return loadOrDefineByByteCode(
 						className, clsName -> byteCodes.get(clsName).getByteCode(), classLoader,
@@ -573,7 +601,7 @@ public class Classes implements Component, MembersRetriever {
 					}
 					return (Class<T>) classLoader.loadClass(className);
 				}
-			});
+			}
 		}
 		
 		public Class<?> loadOrDefineByByteCode(ByteBuffer byteCode, ClassLoader classLoader) throws ClassNotFoundException {
@@ -589,7 +617,7 @@ public class Classes implements Component, MembersRetriever {
 			Map<String, ByteBuffer> repository,
 			ClassLoader classLoader
 		) throws ClassNotFoundException {
-			return Synchronizer.executeThrower(classLoader + "_" + className, () -> {
+			synchronized (getClassLoadingLock(classLoader, className)) {
 				if (!(classLoader instanceof MemoryClassLoader)) {
 					return loadOrDefineByByteCode(
 						className, clsName -> repository.get(clsName), classLoader,
@@ -603,7 +631,7 @@ public class Classes implements Component, MembersRetriever {
 					}
 					return (Class<T>) classLoader.loadClass(className);
 				}
-			});
+			}
 		}
 		
 		
@@ -614,7 +642,7 @@ public class Classes implements Component, MembersRetriever {
 			MethodHandle defineClassMethod, 
 			MethodHandle definePackageMethod
 		) throws ClassNotFoundException {
-			return Synchronizer.executeThrower(classLoader + "_" + className, () -> {
+			synchronized (getClassLoadingLock(classLoader, className)) {
 				try {
 					try {
 						return (Class<T>) classLoader.loadClass(className);
@@ -637,7 +665,7 @@ public class Classes implements Component, MembersRetriever {
 						defineClassMethod, definePackageMethod
 	        		);
 				}
-			});
+			}
 	    }
 		
 		public <T> Class<T> loadOrDefine(
@@ -658,7 +686,7 @@ public class Classes implements Component, MembersRetriever {
 			MethodHandle definePackageMethod
 		) throws ClassNotFoundException {
 			String className = toLoad.getName();
-			return Synchronizer.executeThrower(classLoader + "_" + className, () -> {
+			synchronized (getClassLoadingLock(classLoader, className)) {
 				try {
 					try {
 						return (Class<T>)classLoader.loadClass(className);
@@ -682,16 +710,16 @@ public class Classes implements Component, MembersRetriever {
 	        			classLoader, defineClassMethod, definePackageMethod
 	        		);
 				}
-			});
+			}
 	    }
 		
 		public <T> Class<T> defineOrLoad(ClassLoader classLoader, JavaClass javaClass) throws ReflectiveOperationException {
 			String className = javaClass.getName();
-			return Synchronizer.executeThrower(classLoader + "_" + className, () -> {
+			synchronized (getClassLoadingLock(classLoader, className)) {
 				Class<T> definedClass = defineOrLoad(classLoader, getDefineClassMethod(classLoader), className, javaClass.getByteCode());
 				definePackageFor(definedClass, classLoader, getDefinePackageMethod(classLoader));
 				return definedClass;
-			});
+			}
 		}
 		
 
