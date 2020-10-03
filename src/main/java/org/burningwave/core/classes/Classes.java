@@ -534,7 +534,7 @@ public class Classes implements Component, MembersRetriever {
 			
 			}
 			if (packages == null) {
-				throw Throwables.toRuntimeException("Could not find packages Map on {}", classLoader);
+				Throwables.throwException("Could not find packages Map on {}", classLoader);
 			}
 			return packages;
 			
@@ -702,7 +702,7 @@ public class Classes implements Component, MembersRetriever {
 				if (byteCode == null) {
 					throw new ClassNotFoundException(className);
 				}
-				throw Throwables.toRuntimeException(exc);
+				return Throwables.throwException(exc);
 			}
 		}
 		
@@ -912,7 +912,7 @@ public class Classes implements Component, MembersRetriever {
 				this.classLoadersPackages.clear();
 				this.classLoadersPackages = null;
 			} else {
-				throw Throwables.toRuntimeException("Could not close singleton instance {}", this);
+				Throwables.throwException("Could not close singleton instance {}", this);
 			}
 		}
 	}

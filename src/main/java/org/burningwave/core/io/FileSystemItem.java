@@ -426,7 +426,7 @@ public class FileSystemItem implements ManagedLogger {
 		try {
 			return new URL(toURL());
 		} catch (MalformedURLException exc) {
-			throw Throwables.toRuntimeException(exc);
+			return Throwables.throwException(exc);
 		}
 	}
 

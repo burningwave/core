@@ -661,7 +661,7 @@ public class QueuedTasksExecutor implements Component {
 								wait();
 								waitForStarting();
 							} catch (InterruptedException exc) {
-								throw Throwables.toRuntimeException(exc);
+								Throwables.throwException(exc);
 							}
 						}
 					}
@@ -696,7 +696,7 @@ public class QueuedTasksExecutor implements Component {
 								wait();
 								return true;
 							} catch (InterruptedException exc) {
-								throw Throwables.toRuntimeException(exc);
+								Throwables.throwException(exc);
 							}
 						}
 					}

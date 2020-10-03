@@ -163,7 +163,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 		return Optional.ofNullable(logicalOperator).map(logOp -> {
 			return logicalOperator.apply(input);
 		}).orElseThrow(() -> 
-			Throwables.toRuntimeException(
+			Throwables.throwException(
 				"A call to and/or method is necessary before calling {} at {}",
 				Thread.currentThread().getStackTrace()[10].getMethodName(),
 				Thread.currentThread().getStackTrace()[11]
@@ -430,7 +430,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 			return Optional.ofNullable(logicalOperator).map(logOp -> {
 				return logicalOperator.apply(input);
 			}).orElseThrow(() -> 
-				Throwables.toRuntimeException(
+				Throwables.throwException(
 					"A call to and/or method is necessary before calling {} at {}",
 					Thread.currentThread().getStackTrace()[10].getMethodName(),
 					Thread.currentThread().getStackTrace()[11]

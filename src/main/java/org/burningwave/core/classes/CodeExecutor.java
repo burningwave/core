@@ -253,7 +253,7 @@ public class CodeExecutor implements Component {
 				T retrievedElement = executor.executeAndCast(config.getParams());
 				return retrievedElement;
 			} catch (Throwable exc) {
-				throw Throwables.toRuntimeException(exc);
+				return Throwables.throwException(exc);
 			} finally {
 				if (defaultClassLoader instanceof MemoryClassLoader) {
 					((MemoryClassLoader)defaultClassLoader).unregister(executeClient, true);
@@ -276,7 +276,7 @@ public class CodeExecutor implements Component {
 				}
 				return retrievedElement;
 			} catch (Throwable exc) {
-				throw Throwables.toRuntimeException(exc);
+				return Throwables.throwException(exc);
 			} finally {
 				if (defaultClassLoader instanceof MemoryClassLoader) {
 					((MemoryClassLoader)defaultClassLoader).unregister(executeClient, true);

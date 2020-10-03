@@ -109,7 +109,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	
 	public S useAsParentClassLoader(ClassLoader classLoader) {
 		if (classLoader == null)  {
-			throw Throwables.toRuntimeException("Parent class loader could not be null");
+			Throwables.throwException("Parent class loader could not be null");
 		}
 		useDefaultPathScannerClassLoader = false;
 		useDefaultPathScannerClassLoaderAsParent = false;

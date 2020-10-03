@@ -103,7 +103,7 @@ public abstract class PropertyAccessor implements Component {
 			}
 			message = message.substring(0, message.length() - 1);
 			if (exceptions.size() == propertyRetrievers.size()) {
-				throw Throwables.toRuntimeException(message.toString());
+				Throwables.throwException(message.toString());
 			} else {
 				//logDebug("Warning: " + message);
 			}
@@ -149,7 +149,7 @@ public abstract class PropertyAccessor implements Component {
 			} else if (Map.class.isAssignableFrom(property.getClass())) {
 				propertyRetriever = () -> ((Map<?, ?>)property).get(index);
 			} else {
-				throw Throwables.toRuntimeException("indexed property {} of type {} is not supporterd", property, property.getClass());
+				Throwables.throwException("indexed property {} of type {} is not supporterd", property, property.getClass());
 			}
 			return retrieveFromIndexedProperty(
 					propertyRetriever.get(), 
@@ -189,7 +189,7 @@ public abstract class PropertyAccessor implements Component {
 		} else if (Map.class.isAssignableFrom(property.getClass())) {
 			((Map<String, T>)property).put(index, (T)value);
 		} else {
-			throw Throwables.toRuntimeException("indexed property {} of type {} is not supporterd", property, property.getClass());
+			Throwables.throwException("indexed property {} of type {} is not supporterd", property, property.getClass());
 		}
 	}
 

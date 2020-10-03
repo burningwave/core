@@ -155,7 +155,7 @@ public interface ManagedLogger {
 				
 			} catch (Throwable exc) {
 				exc.printStackTrace();
-				throw Throwables.toRuntimeException(exc);
+				return Throwables.throwException(exc);
 			}
 		}
 		

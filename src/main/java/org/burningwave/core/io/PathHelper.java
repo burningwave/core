@@ -345,7 +345,7 @@ public class PathHelper implements Component {
 			}
 			return pathGroup;
 		} else {
-			throw Throwables.toRuntimeException("classPaths parameter is null");
+			return Throwables.throwException("classPaths parameter is null");
 		}
 	}
 	
@@ -401,11 +401,11 @@ public class PathHelper implements Component {
 					filesFound.put(fileSystemItem.getAbsolutePath(), fileSystemItem);
 					filesInfo.append("\t" + System.identityHashCode(file) + ": " + fileSystemItem.getAbsolutePath() + "\n");
 				} else {
-					throw Throwables.toRuntimeException("Found more than one resource under relative path {}",  resourceRelativePath);
+					Throwables.throwException("Found more than one resource under relative path {}",  resourceRelativePath);
 				}
 			}
 			if (filesFound.size() > 1) {
-				throw Throwables.toRuntimeException("Found more than one resource under relative path " + resourceRelativePath + ":\n" + filesInfo.toString());
+				Throwables.throwException("Found more than one resource under relative path " + resourceRelativePath + ":\n" + filesInfo.toString());
 			} else {
 				FileSystemItem fileSystemItem = FileSystemItem.ofPath(filesFound.keySet().stream().findFirst().get());
 				logWarn("Found more than one resource under relative path " + resourceRelativePath + ":\n" + filesInfo.toString() + "\t" +
@@ -481,7 +481,7 @@ public class PathHelper implements Component {
 	public String getPath(Predicate<String> pathPredicate) {
 		Collection<String> classPathsFound = getPaths(pathPredicate);
 		if (classPathsFound.size() > 1) {
-			throw Throwables.toRuntimeException("Found more than one class path for predicate {}", pathPredicate);
+			Throwables.throwException("Found more than one class path for predicate {}", pathPredicate);
 		}
 		return classPathsFound.stream().findFirst().orElseGet(() -> null);
 	}

@@ -59,7 +59,7 @@ public class JavaClass implements AutoCloseable {
 		try {
 			return new JavaClass(byteCode);
 		} catch (IOException exc) {
-			throw Throwables.toRuntimeException(exc);
+			return Throwables.throwException(exc);
 		}
 	}
 	

@@ -70,7 +70,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 			try {
 				return ClassLoaders.loadOrDefine(cls, classSupplier);
 			} catch (ClassNotFoundException exc) {
-				throw Throwables.toRuntimeException(exc);
+				return Throwables.throwException(exc);
 			}
 		};
 		this.byteCodeSupplier = Classes::getByteCode;

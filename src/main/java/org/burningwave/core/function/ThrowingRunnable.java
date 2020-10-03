@@ -39,7 +39,7 @@ public interface ThrowingRunnable<E extends Throwable> {
 		try {
 			runnable.run();
 		} catch (Throwable exc) {
-			throw Throwables.toRuntimeException(exc);
+			Throwables.throwException(exc);
 		}
 	}
     

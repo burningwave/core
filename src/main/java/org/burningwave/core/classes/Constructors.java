@@ -113,7 +113,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 				return membersThatMatch.stream().findFirst().get();
 			}
 		}
-		throw Throwables.toRuntimeException("Constructor not found or found more than one constructor in {}", targetClass.getName());
+		return Throwables.throwException("Constructor not found or found more than one constructor in {}", targetClass.getName());
 	}
 	
 	public Constructor<?> findFirstAndMakeItAccessible(Class<?> targetClass, Class<?>... arguments) {
@@ -127,7 +127,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 			}
 			return members.stream().findFirst().get();
 		}
-		throw Throwables.toRuntimeException("Constructor not found in {}", targetClass.getName());
+		return Throwables.throwException("Constructor not found in {}", targetClass.getName());
 	}
 	
 	public Collection<Constructor<?>> findAllAndMakeThemAccessible(
@@ -187,7 +187,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 					
 			);
 		} catch (NoSuchMethodException | IllegalAccessException exc) {
-			throw Throwables.toRuntimeException(exc);
+			return Throwables.throwException(exc);
 		}
 	}
 

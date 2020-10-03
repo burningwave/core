@@ -83,7 +83,7 @@ class ZipFile implements IterableZipContainer {
 			}
 			originalZipFile = null;
 		} catch (IOException exc) {
-			throw Throwables.toRuntimeException(exc);
+			Throwables.throwException(exc);
 		}
 		entriesIterator = entries.iterator();
 	}
@@ -134,7 +134,7 @@ class ZipFile implements IterableZipContainer {
 					try {
 						originalZipFile = this.originalZipFile = new java.util.zip.ZipFile(file);
 					} catch (IOException exc) {
-						throw Throwables.toRuntimeException(exc);
+						Throwables.throwException(exc);
 					}
 				}
 			}

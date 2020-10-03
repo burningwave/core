@@ -107,7 +107,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			if (!isClosed) {
 				logError("Exception occurred while scanning {}", exc, childAndPath[0].getAbsolutePath());
 			} else {
-				throw Throwables.toRuntimeException(exc);
+				Throwables.throwException(exc);
 			}
 			return false;
 		});

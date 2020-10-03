@@ -112,7 +112,7 @@ public class PojoSourceGenerator {
 	
 	public UnitSourceGenerator create(String className, int options, Class<?>... superClasses) {
 		if (className.contains("$")) {
-			throw Throwables.toRuntimeException("{} Pojo could not be a inner class", className);
+			Throwables.throwException("{} Pojo could not be a inner class", className);
 		}
 		String packageName = Classes.retrievePackageName(className);
 		String classSimpleName = Classes.retrieveSimpleName(className);
@@ -131,7 +131,7 @@ public class PojoSourceGenerator {
 				cls.expands(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), iteratedSuperClass));
 				superClass = iteratedSuperClass;
 			} else {
-				throw Throwables.toRuntimeException("{} Pojo could not extends more than one class", className);
+				Throwables.throwException("{} Pojo could not extends more than one class", className);
 			}
 		}
 		if (superClass != null) {

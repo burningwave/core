@@ -39,7 +39,7 @@ public interface ThrowingSupplier<T, E extends Throwable> {
 		try {
 			return supplier.get();
 		} catch (Throwable exc) {
-			throw Throwables.toRuntimeException(exc);
+			return Throwables.throwException(exc);
 		}
 	}
 }

@@ -226,7 +226,7 @@ public class JavaMemoryCompiler implements Component {
 			try {
 				memorySources.add(new MemorySource(Kind.SOURCE, className, source));
 			} catch (URISyntaxException eXC) {
-				throw Throwables.toRuntimeException("Class name \"{}\" is not valid", className);
+				Throwables.throwException("Class name \"{}\" is not valid", className);
 			}
 		}
 		
@@ -348,7 +348,7 @@ public class JavaMemoryCompiler implements Component {
 			}
 			if (fsObjects == null || fsObjects.isEmpty()) {
 				String classNameOrSimpleName = classNameOrSimpleNameTemp;				
-				throw Throwables.toRuntimeException(
+				Throwables.throwException(
 					Optional.ofNullable(javaClassPredicate).map(jCP -> "Class or package \"" + classNameOrSimpleName + "\" not found").orElseGet(() -> message)
 				);
 			}

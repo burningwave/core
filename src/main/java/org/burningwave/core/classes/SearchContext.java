@@ -101,7 +101,7 @@ public class SearchContext<T> implements Component {
 				this.searchTask = null;
 			}
 		} catch (Throwable exc) {
-			throw Throwables.toRuntimeException(exc);
+			Throwables.throwException(exc);
 		}
 	}
 	

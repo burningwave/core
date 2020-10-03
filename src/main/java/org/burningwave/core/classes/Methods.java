@@ -85,7 +85,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 				return membersThatMatch.stream().findFirst().get();
 			}
 		}
-		throw Throwables.toRuntimeException("Method {} not found or found more than one method in {} hierarchy", memberName, targetClass.getName());
+		return Throwables.throwException("Method {} not found or found more than one method in {} hierarchy", memberName, targetClass.getName());
 	}
 	
 	public Method findFirstAndMakeItAccessible(Class<?> targetClass, String memberName, Class<?>... arguments) {
@@ -99,7 +99,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 			}
 			return members.stream().findFirst().get();
 		}
-		throw Throwables.toRuntimeException("Method {} not found in {} hierarchy", memberName, targetClass.getName());
+		return Throwables.throwException("Method {} not found in {} hierarchy", memberName, targetClass.getName());
 	}
 	
 	public Collection<Method> findAllByExactNameAndMakeThemAccessible(
@@ -262,7 +262,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 					)
 			);
 		} catch (NoSuchMethodException | IllegalAccessException exc) {
-			throw Throwables.toRuntimeException(exc);
+			return Throwables.throwException(exc);
 		}
 	}
 	

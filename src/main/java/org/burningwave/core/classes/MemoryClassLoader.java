@@ -431,7 +431,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		return closeResources(MemoryClassLoader.class.getName() + "@" + System.identityHashCode(this), () -> isClosed, () -> {
 			Collection<Object> clients = this.clients;
 			if (clients != null && !clients.isEmpty()) {
-				throw Throwables.toRuntimeException("Could not close {} because there are {} registered clients", this, clients.size());
+				Throwables.throwException("Could not close {} because there are {} registered clients", this, clients.size());
 			}
 			isClosed = true;
 			ClassLoader parentClassLoader = getParent();
