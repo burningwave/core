@@ -39,6 +39,9 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import org.burningwave.core.function.ThrowingRunnable;
+import org.burningwave.core.function.ThrowingSupplier;
+
 public class Synchronizer implements AutoCloseable {
 	
 	Map<String, Object> parallelLockMap;
@@ -72,7 +75,29 @@ public class Synchronizer implements AutoCloseable {
 		}
 	}
 	
+	public <E extends Throwable> void executeThrower(String id, ThrowingRunnable<E> executable) throws E {
+		synchronized (getMutex(id)) {
+			try {
+				executable.run();
+			} finally {
+				parallelLockMap.remove(id);
+			}
+		}
+	}
+	
 	public <T> T execute(String id, Supplier<T> executable) {
+		T result = null;
+		synchronized (getMutex(id)) {
+			try {
+				result = executable.get();
+			} finally {
+				parallelLockMap.remove(id);
+			}
+		}
+		return result;
+	}
+	
+	public <T, E extends Throwable> T executeThrower(String id, ThrowingSupplier<T, E> executable) throws E {
 		T result = null;
 		synchronized (getMutex(id)) {
 			try {
