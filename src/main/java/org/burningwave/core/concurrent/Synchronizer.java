@@ -68,6 +68,16 @@ public class Synchronizer implements AutoCloseable {
         return newLock;
     }
 	
+	public void removeMutexIfUnused(Mutex mutex) {
+		if (--mutex.clientCount <= 0) {
+			try {
+				parallelLockMap.remove(mutex.id);
+			} catch (Throwable exc) {
+				
+			}
+		}		
+	}
+	
 	public void execute(String id, Runnable executable) {
 		Mutex mutex = getMutex(id);
 		try {
@@ -121,16 +131,6 @@ public class Synchronizer implements AutoCloseable {
 		clear();
 		stopLoggingAllThreadsState();
 		parallelLockMap = null;
-	}
-
-	public void removeMutexIfUnused(Mutex mutex) {
-		if (--mutex.clientCount <= 0) {
-			try {
-				parallelLockMap.remove(mutex.id);
-			} catch (Throwable exc) {
-				
-			}
-		}		
 	}
 	
 	public synchronized void startLoggingAllThreadsState(Long interval) {
