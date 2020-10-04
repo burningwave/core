@@ -46,7 +46,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	boolean looper;
 	boolean looping;
 	private final long index;
-	boolean isAlive;
+	boolean alive;
 	Pool pool;
 	
 	private Thread(Pool pool, long index) {
@@ -87,12 +87,12 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				}
 			};
 		}
-		if (isAlive) {
+		if (alive) {
 			synchronized(this) {
 				notifyAll();
 			}
 		} else {
-			this.isAlive = true;
+			this.alive = true;
 			super.start();
 		}
 	}
@@ -119,7 +119,8 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	}
 	
 	void shutDown() {
-		isAlive = false;
+		alive = false;
+		looping = false;
 		synchronized(this) {
 			if (pool.sleepingThreads.remove(this) || pool.runningThreads.remove(this)) {
 				notifyAll();
@@ -188,7 +189,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				return new Thread(this, ++threadsCount) {
 					@Override
 					public void run() {
-						while (isAlive) {
+						while (alive) {
 							synchronized (this) {
 								runningThreads.add(this);
 							}
@@ -206,7 +207,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 									synchronized (sleepingThreads) {
 										sleepingThreads.notifyAll();
 									}
-									if (!isAlive) {
+									if (!alive) {
 										continue;
 									}
 									wait();

@@ -79,7 +79,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			disableMutexesCleaner();
 		}
 		mutexCleaner = ThreadPool.getOrCreate("Mutexes cleaner").setExecutable(thread -> {
-			thread.waitFor(1000);
+			thread.waitFor(5000);
 			if (thread.isLooping()) {
 				for (Mutex mutex : mutexesMarkedAsDeletable) {
 					if (mutex.clientsCount <= 0) {
@@ -99,19 +99,23 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	}
 	
 	synchronized void disableMutexesCleaner(boolean waitThreadToFinish) {
-		if (mutexCleaner == null) {
+		stop(mutexCleaner, waitThreadToFinish);
+		mutexCleaner = null;
+	}
+	
+	synchronized void stop(Thread thread, boolean waitThreadToFinish) {
+		if (thread == null) {
 			return;
 		}
-		mutexCleaner.stopLooping();
+		thread.stopLooping();
 		if (waitThreadToFinish) {
 			try {
-				mutexCleaner.shutDown();
-				mutexCleaner.join();
+				thread.shutDown();
+				thread.join();
 			} catch (InterruptedException exc) {
 				ManagedLoggersRepository.logError(() -> this.getClass().getName(), "Exception occurred", exc);
 			}
 		}
-		mutexCleaner = null;
 	}
 	
 	public Mutex getMutex(String id) {
@@ -247,18 +251,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	}
 	
 	public synchronized void stopLoggingAllThreadsState(boolean waitThreadToFinish) {
-		if (allThreadsStateLogger == null) {
-			return;
-		}
-		allThreadsStateLogger.stopLooping();
-		if (waitThreadToFinish) {
-			try {
-				allThreadsStateLogger.shutDown();
-				allThreadsStateLogger.join();
-			} catch (InterruptedException exc) {
-				ManagedLoggersRepository.logError(() -> this.getClass().getName(), "Exception occurred", exc);
-			}
-		}
+		stop(allThreadsStateLogger, waitThreadToFinish);
 		allThreadsStateLogger = null;
 	}
 	
