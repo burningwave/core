@@ -48,6 +48,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -613,10 +614,16 @@ public class IterableObjectHelper implements Component {
 		return allValues.entrySet().stream().map(entry -> toPrettyKeyValueLabel(entry, valuesSeparator, marginTabCount)).collect(Collectors.joining("\n"));
 	}	
 	
-	public String toString(Map<?, ?> map, int marginTabCount) {
-		TreeMap<?, ?> allValues = map instanceof TreeMap ? (TreeMap<?, ?>)map : new TreeMap<>(map);
+	public <K, V> String toString(Map<K, V> map, int marginTabCount) {
+		return toString(map, key -> key.toString(), value -> value.toString(), marginTabCount);
+	}
+	
+	public <K, V> String toString(Map<K, V> map, Function<K, String> keyTransformer, Function<V,String> valueTransformer,int marginTabCount) {
+		TreeMap<K, V> allValues = map instanceof TreeMap ? (TreeMap<K, V>)map : new TreeMap<>(map);
 		String margin = new String(new char[marginTabCount]).replace('\0', '\t');
-		return allValues.entrySet().stream().map(entry -> margin + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"));
+		return allValues.entrySet().stream().map(entry -> 
+			margin + keyTransformer.apply(entry.getKey()) + "=" + Optional.ofNullable(entry.getValue()).map(value -> valueTransformer.apply(value)).orElseGet(() -> "null")
+		).collect(Collectors.joining("\n"));
 	}
 	
 	private class ArrayList<E> extends java.util.ArrayList<E> {

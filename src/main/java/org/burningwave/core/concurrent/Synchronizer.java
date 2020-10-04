@@ -29,6 +29,7 @@
 package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -60,16 +61,22 @@ public class Synchronizer implements AutoCloseable {
 		Mutex newLock = new Mutex();
 		Mutex lock = parallelLockMap.putIfAbsent(id, newLock);
         if (lock != null) {
-        	++lock.clientCount;
+        	++lock.clientsCount;
+        	if (!parallelLockMap.containsValue(lock)) {
+        		return getMutex(id);
+        	}
         	return lock;
         }
+        ++newLock.clientsCount;
+        if (!parallelLockMap.containsValue(newLock)) {
+    		return getMutex(id);
+    	}
         newLock.id = id;
-        ++newLock.clientCount;
         return newLock;
     }
 	
 	public void removeMutexIfUnused(Mutex mutex) {
-		if (--mutex.clientCount <= 0) {
+		if (--mutex.clientsCount <= 0) {
 			try {
 				parallelLockMap.remove(mutex.id);
 			} catch (Throwable exc) {
@@ -80,45 +87,45 @@ public class Synchronizer implements AutoCloseable {
 	
 	public void execute(String id, Runnable executable) {
 		Mutex mutex = getMutex(id);
-		try {
-			synchronized (mutex) {
+		synchronized (mutex) {
+			try {
 				executable.run();
+			} finally {
+				removeMutexIfUnused(mutex);
 			}
-		} finally {
-			removeMutexIfUnused(mutex);
 		}
 	}
 	
 	public <E extends Throwable> void executeThrower(String id, ThrowingRunnable<E> executable) throws E {
 		Mutex mutex = getMutex(id);
-		try {
-			synchronized (mutex) {
+		synchronized (mutex) {
+			try {
 				executable.run();
+			} finally {
+				removeMutexIfUnused(mutex);
 			}
-		} finally {
-			removeMutexIfUnused(mutex);
 		}
 	}
 	
 	public <T> T execute(String id, Supplier<T> executable) {
 		Mutex mutex = getMutex(id);
-		try {
-			synchronized (mutex) {
+		synchronized (mutex) {
+			try {
 				return executable.get();
+			} finally {
+				removeMutexIfUnused(mutex);
 			}
-		} finally {
-			removeMutexIfUnused(mutex);
 		}
 	}
 	
 	public <T, E extends Throwable> T executeThrower(String id, ThrowingSupplier<T, E> executable) throws E {
 		Mutex mutex = getMutex(id);
-		try {
-			synchronized (mutex) {
+		synchronized (mutex) {
+			try {
 				return executable.get();
+			} finally {
+				removeMutexIfUnused(mutex);
 			}
-		} finally {
-			removeMutexIfUnused(mutex);
 		}
 	}
 
@@ -158,6 +165,18 @@ public class Synchronizer implements AutoCloseable {
 		}
 		ManagedLoggersRepository.logInfo(() -> this.getClass().getName(), "Current threads state: {}", log.toString());
 		BackgroundExecutor.logQueuesInfo();
+		logParallelLockMap();
+	}
+	
+	private void logParallelLockMap() {
+		ManagedLoggersRepository.logInfo(
+			() -> this.getClass().getName(),
+			Strings.compile(
+				"\n\tParallel lock map size: {}\n{}",
+				parallelLockMap.size(),
+				IterableObjectHelper.toString(parallelLockMap, key -> key, value -> "" + value.clientsCount + " clients", 2)
+			)
+		);
 	}
 	
 	public Thread[] getAllThreads() {
@@ -197,8 +216,8 @@ public class Synchronizer implements AutoCloseable {
 		allThreadsStateLogger = null;
 	}
 	
-	public static class Mutex  {
+	public static class Mutex  {	
 		String id;
-		volatile int clientCount;
+		volatile int clientsCount;
 	}
 }

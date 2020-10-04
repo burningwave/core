@@ -131,9 +131,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		Map<String, I> classesForPath = cache.get(basePath);
 		if (classesForPath == null) {
 			if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate) {
-				String mutexId = instanceId + "_" + basePath;
-				boolean exit = false;
-				Mutex mutex = Synchronizer.getMutex(mutexId);
+				Mutex mutex = Synchronizer.getMutex(instanceId + "_" + basePath);
 				synchronized(mutex) {
 					classesForPath = cache.get(basePath);
 					if (classesForPath == null) {
@@ -143,13 +141,11 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 						if (itemsFound != null) {
 							itemsForPath.putAll(itemsFound);
 						}
-						this.cache.put(basePath, itemsForPath);	
-						exit = true;
+						this.cache.put(basePath, itemsForPath);
+						Synchronizer.removeMutexIfUnused(mutex);
+						return;
 					}
-				}
-				Synchronizer.removeMutexIfUnused(mutex);
-				if (exit) {
-					return;
+					Synchronizer.removeMutexIfUnused(mutex);
 				}
 				context.addAllItemsFound(basePath, classesForPath);
 				return;

@@ -63,8 +63,7 @@ public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeab
 		C classLoader = null;
 		Supplier<C> defaultClassLoaderSupplier = this.defaultClassLoaderSupplier;
 		if (defaultClassLoaderSupplier != null && (classLoader = defaultClassLoaderSupplier.get()) != defaultClassLoader) {
-			String mutexId = getOperationId(getOperationId("getDefaultClassLoader"));
-			Mutex mutex = Synchronizer.getMutex(mutexId);
+			Mutex mutex = Synchronizer.getMutex(getOperationId("getDefaultClassLoader"));
 			synchronized(mutex) {
 				defaultClassLoaderSupplier = this.defaultClassLoaderSupplier;
 				if (defaultClassLoaderSupplier != null && (classLoader = defaultClassLoaderSupplier.get()) != defaultClassLoader) {
@@ -81,13 +80,12 @@ public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeab
 					}
 					this.defaultClassLoader = classLoader;
 				}
+				Synchronizer.removeMutexIfUnused(mutex);
 			}
-			Synchronizer.removeMutexIfUnused(mutex);
 			return classLoader;
 		}
 		if (defaultClassLoader == null) {
-			String mutexId = getOperationId("getDefaultClassLoader");
-			Mutex mutex = Synchronizer.getMutex(mutexId);
+			Mutex mutex = Synchronizer.getMutex(getOperationId("getDefaultClassLoader"));
 			synchronized(mutex) {
 				if (defaultClassLoader == null) {
 					Object defaultClassLoaderOrDefaultClassLoaderSupplier =
@@ -96,12 +94,15 @@ public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeab
 						this.defaultClassLoader = (C)defaultClassLoaderOrDefaultClassLoaderSupplier;
 						((MemoryClassLoader)defaultClassLoader).register(this);
 						((MemoryClassLoader)defaultClassLoader).register(client);
+						Synchronizer.removeMutexIfUnused(mutex);
 						return defaultClassLoader;
 					} else if (defaultClassLoaderOrDefaultClassLoaderSupplier instanceof Supplier) {
 						this.defaultClassLoaderSupplier = (Supplier<C>) defaultClassLoaderOrDefaultClassLoaderSupplier;
+						Synchronizer.removeMutexIfUnused(mutex);
 						return get(client);
 					}
-				} else { 
+				} else {
+					Synchronizer.removeMutexIfUnused(mutex);
 					return defaultClassLoader;
 				}
 				Synchronizer.removeMutexIfUnused(mutex);
@@ -109,6 +110,7 @@ public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeab
 		}
 		return defaultClassLoader;
 	}	
+
 
 	
 	void reset() {
