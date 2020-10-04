@@ -59,31 +59,47 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		mutexesMarkedAsDeletable = ConcurrentHashMap.newKeySet();
 		enableMutexesCleaner();
 	}
-
+	
+	public static Synchronizer create(boolean undestroyable) {
+		if (undestroyable) {
+			return new Synchronizer() {
+				StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
+				@Override
+				public void close() {
+					if (Methods.retrieveExternalCallerInfo().getClassName().equals(Methods.retrieveExternalCallerInfo(stackTraceOnCreation).getClassName())) {
+						super.close();
+					}
+				}
+			};
+		} else {
+			return new Synchronizer();
+		}
+	}
+	
 	synchronized void enableMutexesCleaner() {
 		if (mutexCleaner != null) {
 			disableMutexesCleaner();
 		}
 		mutexCleaner = ThreadPool.getOrCreate("Mutexes cleaner").setExecutable(() -> {
-			try {
-				while (mutexCleanerEnabled) {
-					synchronized (mutexCleaner) {
+			mutexCleanerEnabled = true;
+			while (mutexCleanerEnabled) {
+				synchronized (mutexCleaner) {
+					try {
 						mutexCleaner.wait(1000);
-					}
-					for (Mutex mutex : mutexesMarkedAsDeletable) {
-						if (mutex.clientsCount <= 0) {
-							mutexesMarkedAsDeletable.remove(mutex);
-							mutexes.remove(mutex.id);
-						}
+					} catch (InterruptedException exc) {
+						logError("Exception occurred", exc);
 					}
 				}
-			} catch (InterruptedException exc) {
-				logError("Exception occurred", exc);
+				for (Mutex mutex : mutexesMarkedAsDeletable) {
+					if (mutex.clientsCount <= 0) {
+						mutexesMarkedAsDeletable.remove(mutex);
+						mutexes.remove(mutex.id);
+					}
+				}
 			}
 		});
 		mutexCleaner.setPriority(Thread.MIN_PRIORITY);
 		mutexCleaner.setDaemon(true);
-		mutexCleanerEnabled = true;
 		mutexCleaner.start();
 	}
 	
@@ -108,22 +124,6 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			}
 		}
 		mutexCleaner = null;
-	}
-	
-	public static Synchronizer create(boolean undestroyable) {
-		if (undestroyable) {
-			return new Synchronizer() {
-				StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
-				@Override
-				public void close() {
-					if (Methods.retrieveExternalCallerInfo().getClassName().equals(Methods.retrieveExternalCallerInfo(stackTraceOnCreation).getClassName())) {
-						super.close();
-					}
-				}
-			};
-		} else {
-			return new Synchronizer();
-		}
 	}
 	
 	public Mutex getMutex(String id) {
@@ -210,9 +210,9 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	public void close() {
 		disableMutexesCleaner(true);
 		stopLoggingAllThreadsState();		
-		clear();
-		mutexes = null;
-		mutexesMarkedAsDeletable = null;
+		//clear();
+		//mutexes = null;
+		//mutexesMarkedAsDeletable = null;
 	}
 	
 	public synchronized void startLoggingAllThreadsState(Long interval) {
