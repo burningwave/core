@@ -45,7 +45,7 @@ import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
 public class Synchronizer implements AutoCloseable, ManagedLogger {
-	
+	private String latestLog;
 	Map<String, Mutex> mutexes;
 	Collection<Mutex> mutexesMarkedAsDeletable;
 	Thread mutexCleaner;
@@ -226,6 +226,10 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 				//IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 2)
 			)
 		);
+		if (log.toString().equals(latestLog)) {
+			System.exit(-1);
+		}
+		latestLog = log.toString();
 	}
 	
 	public Thread[] getAllThreads() {
