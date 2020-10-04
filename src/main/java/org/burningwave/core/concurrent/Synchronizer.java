@@ -80,10 +80,12 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		}
 		mutexCleaner = ThreadPool.getOrCreate("Mutexes cleaner").setExecutable(thread -> {
 			thread.waitFor(1000);
-			for (Mutex mutex : mutexesMarkedAsDeletable) {
-				if (mutex.clientsCount <= 0) {
-					mutexesMarkedAsDeletable.remove(mutex);
-					mutexes.remove(mutex.id);
+			if (thread.isLooping()) {
+				for (Mutex mutex : mutexesMarkedAsDeletable) {
+					if (mutex.clientsCount <= 0) {
+						mutexesMarkedAsDeletable.remove(mutex);
+						mutexes.remove(mutex.id);
+					}
 				}
 			}
 		}, true);
@@ -196,9 +198,9 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	public void close() {
 		disableMutexesCleaner(true);
 		stopLoggingAllThreadsState();		
-		//clear();
-		//mutexes = null;
-		//mutexesMarkedAsDeletable = null;
+		clear();
+		mutexes = null;
+		mutexesMarkedAsDeletable = null;
 	}
 	
 	public synchronized void startLoggingAllThreadsState(Long interval) {
@@ -207,7 +209,9 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		}
 		allThreadsStateLogger = ThreadPool.getOrCreate().setExecutable(thread -> {
 			thread.waitFor(interval);
-			logAllThreadsState();
+			if (thread.isLooping()) {
+				logAllThreadsState();
+			}
 		}, true);
 		allThreadsStateLogger.setName("All threads state logger");
 		allThreadsStateLogger.setPriority(Thread.MIN_PRIORITY);
@@ -225,7 +229,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			() -> this.getClass().getName(),
 			"\nCurrent threads state: {}\n\n{}\n\n{}",
 			log.toString(),
-			!BackgroundExecutor.isClosed() ? BackgroundExecutor.getInfoAsString() : "",
+			BackgroundExecutor.getInfoAsString(),
 			Strings.compile(
 				"\n\tMutexes count: {}\n{}",
 				mutexes.size(),

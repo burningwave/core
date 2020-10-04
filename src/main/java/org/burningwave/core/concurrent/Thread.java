@@ -97,11 +97,15 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 	}
 	
-	void stopLooping() {
+	public void stopLooping() {
 		looping = false;
 		synchronized (this) {
 			notifyAll();
 		}
+	}
+	
+	public boolean isLooping() {
+		return looping;
 	}
 	
 	void waitFor(long millis) {
@@ -168,7 +172,11 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				return new Thread(this, ++threadsCount) {
 					@Override
 					public void run() {
-						executable.accept(this);
+						try {
+							executable.accept(this);
+						} catch (Throwable exc) {
+							ManagedLoggersRepository.logError(() -> this.getClass().getName(), "Exception occurred", exc);
+						}
 						--threadsCount;
 					}
 				};
