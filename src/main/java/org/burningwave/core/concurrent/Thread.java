@@ -35,12 +35,16 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 import org.burningwave.core.ManagedLogger;
 
 public class Thread extends java.lang.Thread implements ManagedLogger {
 	
-	Runnable executable;
+	Consumer<Thread> originalExecutable;
+	Consumer<Thread> executable;
+	boolean looper;
+	boolean looping;
 	private final long index;
 	boolean isAlive;
 	Pool pool;
@@ -60,13 +64,29 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		setName(Optional.ofNullable(prefix).orElseGet(() -> pool.name + " - executor") + " " + index);
 	}
 	
-	public Thread setExecutable(Runnable executable) {
-		this.executable = executable;
+	public Thread setExecutable(Consumer<Thread> executable) {
+		this.originalExecutable = executable;
+		return setExecutable(executable, false);
+	}
+	
+	public Thread setExecutable(Consumer<Thread> executable, boolean flag) {
+		this.originalExecutable = executable;
+		this.looper = flag;
 		return this;
 	}
 	
 	@Override
 	public synchronized void start() {
+		if (!looper) {
+			this.executable = originalExecutable;
+		} else {
+			this.executable = thread -> {
+				looping = true;
+				while (looping) {
+					originalExecutable.accept(this);
+				}
+			};
+		}
 		if (isAlive) {
 			synchronized(this) {
 				notifyAll();
@@ -74,6 +94,23 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		} else {
 			this.isAlive = true;
 			super.start();
+		}
+	}
+	
+	void stopLooping() {
+		looping = false;
+		synchronized (this) {
+			notifyAll();
+		}
+	}
+	
+	void waitFor(long millis) {
+		synchronized (this) {
+			try {
+				wait(millis);
+			} catch (InterruptedException exc) {
+				ManagedLoggersRepository.logError(() -> this.getClass().getName(), "Exception occurred", exc);
+			}
 		}
 	}
 	
@@ -131,7 +168,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				return new Thread(this, ++threadsCount) {
 					@Override
 					public void run() {
-						executable.run();
+						executable.accept(this);
 						--threadsCount;
 					}
 				};
@@ -147,7 +184,11 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							synchronized (this) {
 								runningThreads.add(this);
 							}
-							executable.run();				
+							try {
+								executable.accept(this);
+							} catch (Throwable exc) {
+								ManagedLoggersRepository.logError(() -> this.getClass().getName(), "Exception occurred", exc);
+							}				
 							try {
 								synchronized (this) {
 									runningThreads.remove(this);

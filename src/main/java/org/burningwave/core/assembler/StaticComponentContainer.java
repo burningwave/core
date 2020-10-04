@@ -210,7 +210,7 @@ public class StaticComponentContainer {
 			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
 			Runtime.getRuntime().addShutdownHook(
-				ThreadPool.getOrCreate("Resources releaser").setExecutable(() -> {
+				ThreadPool.getOrCreate("Resources releaser").setExecutable(thread -> {
 					try {
 						ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "... Waiting for all tasks ending before closing all component containers");
 						BackgroundExecutor.waitForTasksEnding(true);

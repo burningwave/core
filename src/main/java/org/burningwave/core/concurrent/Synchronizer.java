@@ -51,8 +51,6 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	Collection<Mutex> mutexesMarkedAsDeletable;
 	Thread mutexCleaner;
 	Thread allThreadsStateLogger;
-	boolean allThreadsStateLoggerEnabled;
-	boolean mutexCleanerEnabled;
 	
 	private Synchronizer() {
 		mutexes = new ConcurrentHashMap<>();
@@ -80,24 +78,15 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		if (mutexCleaner != null) {
 			disableMutexesCleaner();
 		}
-		mutexCleaner = ThreadPool.getOrCreate("Mutexes cleaner").setExecutable(() -> {
-			mutexCleanerEnabled = true;
-			while (mutexCleanerEnabled) {
-				synchronized (mutexCleaner) {
-					try {
-						mutexCleaner.wait(1000);
-					} catch (InterruptedException exc) {
-						logError("Exception occurred", exc);
-					}
-				}
-				for (Mutex mutex : mutexesMarkedAsDeletable) {
-					if (mutex.clientsCount <= 0) {
-						mutexesMarkedAsDeletable.remove(mutex);
-						mutexes.remove(mutex.id);
-					}
+		mutexCleaner = ThreadPool.getOrCreate("Mutexes cleaner").setExecutable(thread -> {
+			thread.waitFor(1000);
+			for (Mutex mutex : mutexesMarkedAsDeletable) {
+				if (mutex.clientsCount <= 0) {
+					mutexesMarkedAsDeletable.remove(mutex);
+					mutexes.remove(mutex.id);
 				}
 			}
-		});
+		}, true);
 		mutexCleaner.setPriority(Thread.MIN_PRIORITY);
 		mutexCleaner.setDaemon(true);
 		mutexCleaner.start();
@@ -111,10 +100,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		if (mutexCleaner == null) {
 			return;
 		}
-		mutexCleanerEnabled = false;
-		synchronized (mutexCleaner) {
-			mutexCleaner.notifyAll();
-		}
+		mutexCleaner.stopLooping();
 		if (waitThreadToFinish) {
 			try {
 				mutexCleaner.shutDown();
@@ -219,13 +205,10 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		if (allThreadsStateLogger != null) {
 			stopLoggingAllThreadsState();
 		}
-		allThreadsStateLogger = ThreadPool.getOrCreate().setExecutable(() -> {
-			allThreadsStateLoggerEnabled = true;
-			while (allThreadsStateLoggerEnabled) {
-				waitFor(interval);
-				logAllThreadsState();				
-			}
-		});
+		allThreadsStateLogger = ThreadPool.getOrCreate().setExecutable(thread -> {
+			thread.waitFor(interval);
+			logAllThreadsState();
+		}, true);
 		allThreadsStateLogger.setName("All threads state logger");
 		allThreadsStateLogger.setPriority(Thread.MIN_PRIORITY);
 		allThreadsStateLogger.start();
@@ -255,16 +238,6 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		return Methods.invokeStaticDirect(Thread.class, "getThreads");
 	}
 	
-	private void waitFor(long timeout) {
-		synchronized(allThreadsStateLogger) {
-			try {
-				allThreadsStateLogger.wait(timeout);
-			} catch (InterruptedException exc) {
-				ManagedLoggersRepository.logError(() -> this.getClass().getName(), "Exception occurred", exc);
-			}
-		}
-	}
-	
 	public void stopLoggingAllThreadsState() {
 		stopLoggingAllThreadsState(false);
 	}
@@ -273,10 +246,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		if (allThreadsStateLogger == null) {
 			return;
 		}
-		allThreadsStateLoggerEnabled = false;
-		synchronized (allThreadsStateLogger) {
-			allThreadsStateLogger.notifyAll();
-		}
+		allThreadsStateLogger.stopLooping();
 		if (waitThreadToFinish) {
 			try {
 				allThreadsStateLogger.shutDown();

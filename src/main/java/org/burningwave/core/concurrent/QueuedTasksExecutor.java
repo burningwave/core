@@ -106,7 +106,7 @@ public class QueuedTasksExecutor implements Component {
 		supended = Boolean.FALSE;
 		terminated = Boolean.FALSE;
 		executedTasksCount = 0;
-		tasksLauncher = ThreadPool.getOrCreate(name + " launcher").setExecutable(() -> {
+		tasksLauncher = ThreadPool.getOrCreate(name + " launcher").setExecutable(thread -> {
 			while (!terminated) {
 				if (checkAndNotifySuspension()) {
 					continue;
@@ -840,7 +840,7 @@ public class QueuedTasksExecutor implements Component {
 		abstract void execute0() throws Throwable;
 		
 		T setExecutor(Thread thread) {
-			executor = thread.setExecutable(this::execute);
+			executor = thread.setExecutable(thr -> this.execute());
 			executor.setPriority(this.priority);
 			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
 			if (name != null) {
