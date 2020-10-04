@@ -1168,6 +1168,10 @@ public class QueuedTasksExecutor implements Component {
 			return true;
 		}
 		
+		public boolean isClosed() {
+			return queuedTasksExecutors == null;
+		}
+		
 		public Group waitForTasksEnding() {
 			return waitForTasksEnding(Thread.currentThread().getPriority(), false);
 		}

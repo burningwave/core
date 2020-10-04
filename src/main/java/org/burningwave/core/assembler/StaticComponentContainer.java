@@ -106,7 +106,7 @@ public class StaticComponentContainer {
 	static {
 		try {
 			ThreadPool = org.burningwave.core.concurrent.Thread.Pool.create("Burningwave thread pool", Runtime.getRuntime().availableProcessors(), true, false, true);
-			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create();
+			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(true);
 			Strings = org.burningwave.core.Strings.create();
 			Throwables = org.burningwave.core.Throwables.create();
 			Objects = org.burningwave.core.Objects.create();
@@ -228,8 +228,8 @@ public class StaticComponentContainer {
 					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "... Waiting for all tasks ending before shuting down BackgroundExecutor");
 					BackgroundExecutor.waitForTasksEnding(true);
 					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Shuting down BackgroundExecutor");
-					Synchronizer.stopLoggingAllThreadsState(true);
 					BackgroundExecutor.shutDown(false);
+					Synchronizer.close();
 					ThreadPool.shutDownAll();
 				})
 			);

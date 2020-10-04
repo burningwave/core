@@ -35,42 +35,113 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.ThreadPool;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
-public class Synchronizer implements AutoCloseable {
+public class Synchronizer implements AutoCloseable, ManagedLogger {
 	
-	Map<String, Mutex> parallelLockMap;
+	Map<String, Mutex> mutexes;
+	Collection<Mutex> mutexesMarkedAsDeletable;
+	Thread mutexCleaner;
 	Thread allThreadsStateLogger;
-	private boolean allThreadsStateLoggerAlive;
+	boolean allThreadsStateLoggerEnabled;
+	boolean mutexCleanerEnabled;
 	
 	private Synchronizer() {
-		this.parallelLockMap = new ConcurrentHashMap<>();
+		mutexes = new ConcurrentHashMap<>();
+		mutexesMarkedAsDeletable = ConcurrentHashMap.newKeySet();
+		enableMutexesCleaner();
+	}
+
+	synchronized void enableMutexesCleaner() {
+		if (mutexCleaner != null) {
+			disableMutexesCleaner();
+		}
+		mutexCleaner = ThreadPool.getOrCreate("Mutexes cleaner").setExecutable(() -> {
+			try {
+				while (mutexCleanerEnabled) {
+					synchronized (mutexCleaner) {
+						mutexCleaner.wait(1000);
+					}
+					for (Mutex mutex : mutexesMarkedAsDeletable) {
+						if (mutex.clientsCount <= 0) {
+							mutexesMarkedAsDeletable.remove(mutex);
+							mutexes.remove(mutex.id);
+						}
+					}
+				}
+			} catch (InterruptedException exc) {
+				logError("Exception occurred", exc);
+			}
+		});
+		mutexCleaner.setPriority(Thread.MIN_PRIORITY);
+		mutexCleaner.setDaemon(true);
+		mutexCleanerEnabled = true;
+		mutexCleaner.start();
 	}
 	
-	public static Synchronizer create() {
-		return new Synchronizer();
+	public void disableMutexesCleaner() {
+		disableMutexesCleaner(false);
+	}
+	
+	synchronized void disableMutexesCleaner(boolean waitThreadToFinish) {
+		if (mutexCleaner == null) {
+			return;
+		}
+		mutexCleanerEnabled = false;
+		synchronized (mutexCleaner) {
+			mutexCleaner.notifyAll();
+		}
+		if (waitThreadToFinish) {
+			try {
+				mutexCleaner.shutDown();
+				mutexCleaner.join();
+			} catch (InterruptedException exc) {
+				ManagedLoggersRepository.logError(() -> this.getClass().getName(), "Exception occurred", exc);
+			}
+		}
+		mutexCleaner = null;
+	}
+	
+	public static Synchronizer create(boolean undestroyable) {
+		if (undestroyable) {
+			return new Synchronizer() {
+				StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
+				@Override
+				public void close() {
+					if (Methods.retrieveExternalCallerInfo().getClassName().equals(Methods.retrieveExternalCallerInfo(stackTraceOnCreation).getClassName())) {
+						super.close();
+					}
+				}
+			};
+		} else {
+			return new Synchronizer();
+		}
 	}
 	
 	public Mutex getMutex(String id) {
 		Mutex newLock = new Mutex();
-		Mutex lock = parallelLockMap.putIfAbsent(id, newLock);
+		Mutex lock = mutexes.putIfAbsent(id, newLock);
         if (lock != null) {
         	++lock.clientsCount;
-        	if (!parallelLockMap.containsValue(lock)) {
-        		return getMutex(id);
-        	}
+//        	if (mutexes.get(id) == null) {
+//        		logError("Unvalid mutex: {}" +  id);
+//        		return getMutex(id);
+//        	}
         	return lock;
         }
         ++newLock.clientsCount;
-        if (!parallelLockMap.containsValue(newLock)) {
-    		return getMutex(id);
-    	}
+//        if (mutexes.get(id) == null) {
+//        	logError("Unvalid mutex: {}" +  id);
+//    		return getMutex(id);
+//    	}
         newLock.id = id;
         return newLock;
     }
@@ -78,7 +149,8 @@ public class Synchronizer implements AutoCloseable {
 	public void removeMutexIfUnused(Mutex mutex) {
 		if (--mutex.clientsCount <= 0) {
 			try {
-				parallelLockMap.remove(mutex.id);
+				mutexesMarkedAsDeletable.add(mutex);
+				//parallelLockMap.remove(mutex.id);
 			} catch (Throwable exc) {
 				
 			}
@@ -130,14 +202,17 @@ public class Synchronizer implements AutoCloseable {
 	}
 
 	public void clear() {
-		parallelLockMap.clear();
+		mutexesMarkedAsDeletable.clear();
+		mutexes.clear();
 	}
 	
 	@Override
 	public void close() {
+		disableMutexesCleaner(true);
+		stopLoggingAllThreadsState();		
 		clear();
-		stopLoggingAllThreadsState();
-		parallelLockMap = null;
+		mutexes = null;
+		mutexesMarkedAsDeletable = null;
 	}
 	
 	public synchronized void startLoggingAllThreadsState(Long interval) {
@@ -145,8 +220,8 @@ public class Synchronizer implements AutoCloseable {
 			stopLoggingAllThreadsState();
 		}
 		allThreadsStateLogger = ThreadPool.getOrCreate().setExecutable(() -> {
-			allThreadsStateLoggerAlive = true;
-			while (allThreadsStateLoggerAlive) {
+			allThreadsStateLoggerEnabled = true;
+			while (allThreadsStateLoggerEnabled) {
 				waitFor(interval);
 				logAllThreadsState();				
 			}
@@ -165,20 +240,13 @@ public class Synchronizer implements AutoCloseable {
 		}
 		ManagedLoggersRepository.logInfo(
 			() -> this.getClass().getName(),
-			"\nCurrent threads state: {}\n\n{}",
+			"\nCurrent threads state: {}\n\n{}\n\n{}",
 			log.toString(),
-			BackgroundExecutor.getInfoAsString()
-		);
-		logParallelLockMap();
-	}
-	
-	private void logParallelLockMap() {
-		ManagedLoggersRepository.logInfo(
-			() -> this.getClass().getName(),
+			!BackgroundExecutor.isClosed() ? BackgroundExecutor.getInfoAsString() : "",
 			Strings.compile(
-				"\n\tParallel lock map size: {}\n{}",
-				parallelLockMap.size(),
-				IterableObjectHelper.toString(parallelLockMap, key -> key, value -> "" + value.clientsCount + " clients", 2)
+				"\n\tMutexes count: {}\n{}",
+				mutexes.size(),
+				IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 2)
 			)
 		);
 	}
@@ -197,7 +265,7 @@ public class Synchronizer implements AutoCloseable {
 		}
 	}
 	
-	public synchronized void stopLoggingAllThreadsState() {
+	public void stopLoggingAllThreadsState() {
 		stopLoggingAllThreadsState(false);
 	}
 	
@@ -205,7 +273,7 @@ public class Synchronizer implements AutoCloseable {
 		if (allThreadsStateLogger == null) {
 			return;
 		}
-		allThreadsStateLoggerAlive = false;
+		allThreadsStateLoggerEnabled = false;
 		synchronized (allThreadsStateLogger) {
 			allThreadsStateLogger.notifyAll();
 		}
