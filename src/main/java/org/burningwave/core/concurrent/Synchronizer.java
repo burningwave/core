@@ -227,13 +227,17 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			)
 		);
 		if (log.toString().equals(latestLog)) {
+			ManagedLoggersRepository.logError(
+				() -> this.getClass().getName(),
+				"Deadlock occurs: interrupting all threads and exit"
+			);
 			System.exit(-1);
 		}
 		latestLog = log.toString();
 	}
 	
-	public Thread[] getAllThreads() {
-		return Methods.invokeStaticDirect(Thread.class, "getThreads");
+	public java.lang.Thread[] getAllThreads() {
+		return Methods.invokeStaticDirect(java.lang.Thread.class, "getThreads");
 	}
 	
 	public void stopLoggingAllThreadsState() {
