@@ -159,12 +159,16 @@ public class Synchronizer implements AutoCloseable {
 	private void logAllThreadsState() {
 		StringBuffer log = new StringBuffer("\n\n");
 		for (Entry<java.lang.Thread, StackTraceElement[]> threadAndStackTrace : java.lang.Thread.getAllStackTraces().entrySet()) {
-			log.append("\t" + threadAndStackTrace.getKey() + ":\n");
+			log.append("\t" + threadAndStackTrace.getKey());
 			log.append(Strings.from(threadAndStackTrace.getValue(), 2));
-			log.append("\n\n\n");
+			log.append("\n\n");
 		}
-		ManagedLoggersRepository.logInfo(() -> this.getClass().getName(), "Current threads state: {}", log.toString());
-		BackgroundExecutor.logQueuesInfo();
+		ManagedLoggersRepository.logInfo(
+			() -> this.getClass().getName(),
+			"\nCurrent threads state: {}\n\n{}",
+			log.toString(),
+			BackgroundExecutor.getInfoAsString()
+		);
 		logParallelLockMap();
 	}
 	

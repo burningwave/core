@@ -496,20 +496,29 @@ public class QueuedTasksExecutor implements Component {
 		logInfo(log.toString());
 	}
 	
-	public void logQueueInfo() {
+	public String getInfoAsString() {
+		StringBuffer log = new StringBuffer("");
 		Collection<TaskAbst<?, ?>> tasksQueue = this.tasksQueue;
 		if (!tasksQueue.isEmpty()) {
-			logInfo("{} - Tasks to be executed:", tasksLauncher);
+			log.append(Strings.compile("{} - Tasks to be executed:", tasksLauncher));
 			for (TaskAbst<?,?> task : tasksQueue) {
-				task.logInfo();
+				log.append("\n" + task.getInfoAsString());
 			}
 		}
 		tasksQueue = this.tasksInExecution;
 		if (!tasksQueue.isEmpty()) {
-			logInfo("{} - Tasks in execution:", tasksLauncher);
+			log.append(Strings.compile("{} - Tasks in execution:", tasksLauncher));
 			for (TaskAbst<?,?> task : tasksQueue) {
-				task.logInfo();
+				log.append("\n" + task.getInfoAsString());
 			}
+		}
+		return log.toString();
+	}
+	
+	public void logQueueInfo() {
+		String message = getInfoAsString();
+		if (!message.isEmpty()) {
+			logInfo(message);
 		}
 	}
 	
@@ -774,15 +783,21 @@ public class QueuedTasksExecutor implements Component {
 			}
 		}
 		
-		void logInfo() {
+		String getInfoAsString() {
 			if (this.getCreatorInfos() != null) {
 				Thread executor = this.executor;
-				logInfo(
-					"\n\tTask status: {} \n\t{} \n\tcreated by: {}", 
-						Strings.compile("\n\t\tpriority: {}\n\t\tasync: {}\n\t\tstarted: {}\n\t\taborted: {}\n\t\tfinished: {}", priority, async, isStarted(), isAborted(), hasFinished()),
-						executor != null ? executor + Strings.from(executor.getStackTrace(),2) : "",
-						Strings.from(this.getCreatorInfos(), 2)
+				return Strings.compile("\n\tTask status: {} \n\t{} \n\tcreated by: {}",
+					Strings.compile("\n\t\tpriority: {}\n\t\tasync: {}\n\t\tstarted: {}\n\t\taborted: {}\n\t\tfinished: {}", priority, async, isStarted(), isAborted(), hasFinished()),
+					executor != null ? executor + Strings.from(executor.getStackTrace(),2) : "",
+					Strings.from(this.getCreatorInfos(), 2)
 				);
+			}
+			return "";
+		}
+		
+		void logInfo() {
+			if (this.getCreatorInfos() != null) {
+				logInfo(getInfoAsString());
 			}			
 		}
 		
@@ -938,7 +953,7 @@ public class QueuedTasksExecutor implements Component {
 		
 	}
 	
-	public static class Group {
+	public static class Group implements ManagedLogger{
 		Map<String, QueuedTasksExecutor> queuedTasksExecutors;
 		
 		Group(String name, boolean isDaemon) {
@@ -1200,10 +1215,20 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public Group logQueuesInfo() {
-			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
-				queuedTasksExecutorBox.getValue().logQueueInfo();
+			String loggableMessage = getInfoAsString();
+			loggableMessage = getInfoAsString();
+			if (!loggableMessage.isEmpty()) {
+				logInfo(loggableMessage);
 			}
 			return this;
+		}
+		
+		public String getInfoAsString() {
+			StringBuffer loggableMessage = new StringBuffer("");
+			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+				loggableMessage.append(queuedTasksExecutorBox.getValue().getInfoAsString());
+			}
+			return loggableMessage.toString();
 		}
 
 		public <E, T extends TaskAbst<E, T>> boolean abort(T task) {
