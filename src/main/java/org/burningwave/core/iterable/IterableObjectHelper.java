@@ -559,6 +559,13 @@ public class IterableObjectHelper implements Component {
 		}		
 	}
 	
+	public <T, O> void iterateParallel(
+		Collection<T> items,
+		BiConsumer<T, Consumer<O>> action
+	) {
+		iterateParallel(items, action, null);
+	}
+	
 	public <T, O> Collection<O> iterateParallel(
 		Collection<T> items,
 		BiConsumer<T, Consumer<O>> action,

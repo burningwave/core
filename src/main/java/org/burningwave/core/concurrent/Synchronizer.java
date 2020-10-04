@@ -29,7 +29,6 @@
 package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
-import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -236,8 +235,8 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			BackgroundExecutor.getInfoAsString(),
 			Strings.compile(
 				"\n\tMutexes count: {}\n{}",
-				mutexes.size(),
-				IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 2)
+				mutexes.size()//,
+				//IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 2)
 			)
 		);
 	}
