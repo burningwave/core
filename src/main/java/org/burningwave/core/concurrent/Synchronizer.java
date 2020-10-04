@@ -81,14 +81,14 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			thread.waitFor(2000);
 			if (thread.isLooping()) {
 				for (Mutex mutex : mutexesMarkedAsDeletable) {
+					mutexesMarkedAsDeletable.remove(mutex);
 					if (mutex.clientsCount <= 0) {
-						mutexesMarkedAsDeletable.remove(mutex);
 						mutexes.remove(mutex.id);
 					}
 				}
 			}
 		}, true);
-		mutexCleaner.setPriority(Thread.MIN_PRIORITY);
+		mutexCleaner.setPriority(Thread.NORM_PRIORITY);
 		mutexCleaner.setDaemon(true);
 		mutexCleaner.start();
 	}
@@ -122,29 +122,16 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		Mutex lock = mutexes.putIfAbsent(id, newLock);
         if (lock != null) {
         	++lock.clientsCount;
-//        	if (mutexes.get(id) == null) {
-//        		logError("Unvalid mutex: {}" +  id);
-//        		return getMutex(id);
-//        	}
         	return lock;
         }
         ++newLock.clientsCount;
-//        if (mutexes.get(id) == null) {
-//        	logError("Unvalid mutex: {}" +  id);
-//    		return getMutex(id);
-//    	}
         newLock.id = id;
         return newLock;
     }
 	
-	public void removeMutexIfUnused(Mutex mutex) {
+	public void markAsRemovable(Mutex mutex) {
 		if (--mutex.clientsCount <= 0) {
-			try {
-				mutexesMarkedAsDeletable.add(mutex);
-				//parallelLockMap.remove(mutex.id);
-			} catch (Throwable exc) {
-				
-			}
+			mutexesMarkedAsDeletable.add(mutex);
 		}		
 	}
 	
@@ -154,7 +141,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			try {
 				executable.run();
 			} finally {
-				removeMutexIfUnused(mutex);
+				markAsRemovable(mutex);
 			}
 		}
 	}
@@ -165,7 +152,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			try {
 				executable.run();
 			} finally {
-				removeMutexIfUnused(mutex);
+				markAsRemovable(mutex);
 			}
 		}
 	}
@@ -176,7 +163,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			try {
 				return executable.get();
 			} finally {
-				removeMutexIfUnused(mutex);
+				markAsRemovable(mutex);
 			}
 		}
 	}
@@ -187,7 +174,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			try {
 				return executable.get();
 			} finally {
-				removeMutexIfUnused(mutex);
+				markAsRemovable(mutex);
 			}
 		}
 	}

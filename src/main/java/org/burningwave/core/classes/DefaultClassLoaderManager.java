@@ -80,7 +80,7 @@ public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeab
 					}
 					this.defaultClassLoader = classLoader;
 				}
-				Synchronizer.removeMutexIfUnused(mutex);
+				Synchronizer.markAsRemovable(mutex);
 			}
 			return classLoader;
 		}
@@ -94,18 +94,18 @@ public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeab
 						this.defaultClassLoader = (C)defaultClassLoaderOrDefaultClassLoaderSupplier;
 						((MemoryClassLoader)defaultClassLoader).register(this);
 						((MemoryClassLoader)defaultClassLoader).register(client);
-						Synchronizer.removeMutexIfUnused(mutex);
+						Synchronizer.markAsRemovable(mutex);
 						return defaultClassLoader;
 					} else if (defaultClassLoaderOrDefaultClassLoaderSupplier instanceof Supplier) {
 						this.defaultClassLoaderSupplier = (Supplier<C>) defaultClassLoaderOrDefaultClassLoaderSupplier;
-						Synchronizer.removeMutexIfUnused(mutex);
+						Synchronizer.markAsRemovable(mutex);
 						return get(client);
 					}
 				} else {
-					Synchronizer.removeMutexIfUnused(mutex);
+					Synchronizer.markAsRemovable(mutex);
 					return defaultClassLoader;
 				}
-				Synchronizer.removeMutexIfUnused(mutex);
+				Synchronizer.markAsRemovable(mutex);
 			}
 		}
 		return defaultClassLoader;
