@@ -78,7 +78,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			disableMutexesCleaner();
 		}
 		mutexCleaner = ThreadPool.getOrCreate("Mutexes cleaner").setExecutable(thread -> {
-			thread.waitFor(5000);
+			thread.waitFor(2000);
 			if (thread.isLooping()) {
 				for (Mutex mutex : mutexesMarkedAsDeletable) {
 					if (mutex.clientsCount <= 0) {
