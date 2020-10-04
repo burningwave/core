@@ -62,7 +62,7 @@ public class QueuedTasksExecutor implements Component {
 	java.lang.Thread tasksLauncher;
 	List<TaskAbst<?, ?>> tasksQueue;
 	Set<TaskAbst<?, ?>> tasksInExecution;
-	TaskAbst<?, ?> currentLaunchingTask;
+	TaskAbst<?, ?> currentlyRunningTask;
 	Boolean supended;
 	volatile int defaultPriority;
 	long executedTasksCount;
@@ -120,14 +120,15 @@ public class QueuedTasksExecutor implements Component {
 						TaskAbst<?, ?> task = taskIterator.next();
 						synchronized (task) {
 							if (!tasksQueue.remove(task)) {
-								currentLaunchingTask = null;
+								currentlyRunningTask = null;
 								continue;
 							}
-							currentLaunchingTask = task;
+							currentlyRunningTask = task;
 						}	
 						if (task.setExecutor(ThreadPool.getOrCreate()).start().isSync()) { 	
 							task.waitForFinish();
 						}
+						currentlyRunningTask = null;
 					}
 				} else {
 					synchronized(executableCollectionFillerMutex) {
@@ -512,10 +513,15 @@ public class QueuedTasksExecutor implements Component {
 				log.append("\n" + task.getInfoAsString());
 			}
 		}
+		TaskAbst<?, ?> task = this.currentlyRunningTask;
+		if (task != null) {
+			log.append(Strings.compile("{} - currently running task:", tasksLauncher));
+			log.append("\n" + task.getInfoAsString());
+		}
 		return log.toString();
 	}
 	
-	public void logQueueInfo() {
+	public void logInfo() {
 		String message = getInfoAsString();
 		if (!message.isEmpty()) {
 			logInfo(message);
@@ -732,14 +738,14 @@ public class QueuedTasksExecutor implements Component {
 					resumeQueueConsumerFromSyncTaskWaitingOf(queuedTasksExecutor);
 				}
 			} else if (queueConsumerUnlockingRequested) {
-				queuedTasksExecutorOfClientThread.currentLaunchingTask.async = true;
+				queuedTasksExecutorOfClientThread.currentlyRunningTask.async = true;
 				return false;
 			}
 			return true;
 		}
 
 		private void resumeQueueConsumerFromSyncTaskWaitingOf(QueuedTasksExecutor queuedTasksExecutor) {
-			TaskAbst<?, ?> lastLaunchedTask = queuedTasksExecutor.currentLaunchingTask;
+			TaskAbst<?, ?> lastLaunchedTask = queuedTasksExecutor.currentlyRunningTask;
 			if (lastLaunchedTask != null ) {
 				synchronized(lastLaunchedTask) {
 					if (lastLaunchedTask != this && lastLaunchedTask.isSync()) {
