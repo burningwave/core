@@ -85,7 +85,7 @@ public class StaticComponentContainer {
 			
 			defaultValues.put(
 				Key.THREAD_SUPPLIER_NAME,
-				"Burningwave thread pool"
+				"Burningwave thread supplier"
 			);			
 			
 			defaultValues.put(
@@ -95,7 +95,7 @@ public class StaticComponentContainer {
 			
 			defaultValues.put(
 				Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT,
-				Runtime.getRuntime().availableProcessors() * 6
+				Runtime.getRuntime().availableProcessors() * 6 - (int)defaultValues.get(Key.THREAD_SUPPLIER_MAX_POOLABLE_THREADS_COUNT)
 			);
 			
 			defaultValues.put(
