@@ -87,6 +87,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	
 	public Mutex getMutex(String id) {
 		Mutex newLock = new Mutex();
+		++newLock.clientsCount;
 		Mutex lock = mutexes.putIfAbsent(id, newLock);
         if (lock != null) {
         	++lock.clientsCount;
@@ -96,12 +97,11 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
         	logWarn("Unvalid mutex: {}", id);
         	return getMutex(id);
         }
-        ++newLock.clientsCount;
     	if (mutexes.get(id) == newLock) {
     		newLock.id = id;
     		return newLock;
     	}
-    	logWarn("Unvalid mutex: {}", id);
+    	logWarn("Unvalid new mutex: {}", id);
     	return getMutex(id);
     }
 	
