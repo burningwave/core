@@ -131,7 +131,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		private int maxTemporarilyThreadsCount;
 		private int maxTemporarilyThreadsCountIncreasingStep;
 		private long threadRequestTimeout;
-		private long maxTemporarilyThreadsCountResetThreshold;
+		private long elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount;
 		private Collection<Thread> runningThreads;
 		private Collection<Thread> sleepingThreads;
 		private long timeOfLastIncreaseOfMaxTemporarilyThreadsCount;
@@ -142,9 +142,9 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			int maxThreadsCount,
 			int maxTemporarilyThreadsCount,
 			boolean daemon,
-			int threadRequestTimeout,
+			long threadRequestTimeout,
 			int maxTemporarilyThreadsCountIncreasingStep,
-			int maxTemporarilyThreadsCountResetThreshold
+			long elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount
 		) {
 			this.name = name;
 			this.daemon = daemon;
@@ -159,7 +159,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			this.maxThreadsCount = maxThreadsCount;
 			this.inititialMaxTemporarilyThreadsCount = this.maxTemporarilyThreadsCount = maxTemporarilyThreadsCount;
 			this.threadRequestTimeout = threadRequestTimeout;
-			this.maxTemporarilyThreadsCountResetThreshold = maxTemporarilyThreadsCountResetThreshold;
+			this.elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount = elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount;
 			this.maxTemporarilyThreadsCountIncreasingStep = maxTemporarilyThreadsCountIncreasingStep;
 			this.timeOfLastIncreaseOfMaxTemporarilyThreadsCount = Long.MAX_VALUE;
 		}
@@ -189,7 +189,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							long endWaitTime = System.currentTimeMillis();
 							long waitElapsedTime = endWaitTime - startWaitTime;
 							if (waitElapsedTime < threadRequestTimeout) {
-								if ((System.currentTimeMillis() - timeOfLastIncreaseOfMaxTemporarilyThreadsCount) > maxTemporarilyThreadsCountResetThreshold) {
+								if ((System.currentTimeMillis() - timeOfLastIncreaseOfMaxTemporarilyThreadsCount) > elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount) {
 									ManagedLoggersRepository.logInfo(
 										() -> this.getClass().getName(), 
 										"{}: resetting maxTemporarilyThreadsCount to {}", 
@@ -324,13 +324,13 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 
 		public static Pool create(
-			String name, int maxThreadsCount, int maxNewThreadsCount, boolean daemon, int threadRequestTimeout,
-			int maxTemporarilyThreadsCountIncreasingStep, int maxTemporarilyThreadsCountResetThreshold, boolean undestroyable
+			String name, int maxThreadsCount, int maxNewThreadsCount, boolean daemon, long threadRequestTimeout,
+			int maxTemporarilyThreadsCountIncreasingStep, long elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount, boolean undestroyable
 		) {
 			if (undestroyable) {
 				return new Pool(name, maxThreadsCount, maxNewThreadsCount, daemon, 
 					threadRequestTimeout, maxTemporarilyThreadsCountIncreasingStep,
-					maxTemporarilyThreadsCountResetThreshold
+					elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount
 				) {
 					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();					
 					@Override
@@ -343,7 +343,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			} else {
 				return new Pool(name, maxThreadsCount, maxNewThreadsCount, daemon,
 					threadRequestTimeout, maxTemporarilyThreadsCountIncreasingStep,
-					maxTemporarilyThreadsCountResetThreshold
+					elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount
 				);
 			}
 		}
