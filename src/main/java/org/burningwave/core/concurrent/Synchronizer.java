@@ -93,7 +93,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
         	if (mutexes.get(id) == lock) {
         		return lock;
         	}
-        	logWarn("Unvalid mutex: {}", lock);
+        	logWarn("Unvalid mutex: {}", id);
         	return getMutex(id);
         }
         ++newLock.clientsCount;
@@ -101,7 +101,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
     		newLock.id = id;
     		return newLock;
     	}
-    	logWarn("Unvalid mutex: {}", newLock);
+    	logWarn("Unvalid mutex: {}", id);
     	return getMutex(id);
     }
 	
