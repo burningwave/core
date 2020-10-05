@@ -143,8 +143,8 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			int maxTemporarilyThreadsCount,
 			boolean daemon,
 			int threadRequestTimeout,
-			int maxTemporarilyThreadsCountResetThreshold,
-			int maxTemporarilyThreadsCountIncreasingStep
+			int maxTemporarilyThreadsCountIncreasingStep,
+			int maxTemporarilyThreadsCountResetThreshold
 		) {
 			this.name = name;
 			this.daemon = daemon;
@@ -321,23 +321,15 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				itr.next().setDaemon(flag);
 			}
 		}
-		
-		public static Pool create(String name, int maxThreadsCount, int maxNewThreadsCount, boolean daemon) {
-			return create(name, maxThreadsCount, maxNewThreadsCount, daemon, false);
-		}
-		
-		public static Pool create(String name, int maxThreadsCount, int maxNewThreadsCount, boolean daemon, boolean undestroyable) {
-			return create(name, maxThreadsCount, maxNewThreadsCount, daemon, undestroyable, 5000, 30000, 8);
-		}
 
 		public static Pool create(
-			String name, int maxThreadsCount, int maxNewThreadsCount, boolean daemon, boolean undestroyable,
-			int threadRequestTimeout, int maxTemporarilyThreadsCountResetThreshold, int maxTemporarilyThreadsCountIncreasingStep
+			String name, int maxThreadsCount, int maxNewThreadsCount, boolean daemon, int threadRequestTimeout,
+			int maxTemporarilyThreadsCountIncreasingStep, int maxTemporarilyThreadsCountResetThreshold, boolean undestroyable
 		) {
 			if (undestroyable) {
 				return new Pool(name, maxThreadsCount, maxNewThreadsCount, daemon, 
-					threadRequestTimeout, maxTemporarilyThreadsCountResetThreshold,
-					maxTemporarilyThreadsCountIncreasingStep
+					threadRequestTimeout, maxTemporarilyThreadsCountIncreasingStep,
+					maxTemporarilyThreadsCountResetThreshold
 				) {
 					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();					
 					@Override
@@ -349,8 +341,8 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				};
 			} else {
 				return new Pool(name, maxThreadsCount, maxNewThreadsCount, daemon,
-					threadRequestTimeout, maxTemporarilyThreadsCountResetThreshold,
-					maxTemporarilyThreadsCountIncreasingStep
+					threadRequestTimeout, maxTemporarilyThreadsCountIncreasingStep,
+					maxTemporarilyThreadsCountResetThreshold
 				);
 			}
 		}
