@@ -515,7 +515,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		TaskAbst<?, ?> task = this.currentlyRunningTask;
 		if (task != null) {
-			log.append(Strings.compile("{} - currently running task:", tasksLauncher));
+			log.append(Strings.compile("\n\n{} - currently running task:", tasksLauncher));
 			log.append("\n" + task.getInfoAsString());
 		}
 		return log.toString();
