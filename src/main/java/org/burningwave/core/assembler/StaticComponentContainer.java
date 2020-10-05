@@ -75,7 +75,7 @@ public class StaticComponentContainer {
 			
 			defaultValues.put(
 				Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL,
-				30000
+				120000
 			);	
 			
 			defaultValues.put(
