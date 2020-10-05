@@ -178,8 +178,8 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						} catch (Throwable exc) {
 							ManagedLoggersRepository.logError(() -> this.getClass().getName(), "Exception occurred", exc);
 						}
+						--pool.threadsCount;
 						synchronized (sleepingThreads) {
-							--pool.threadsCount;
 							sleepingThreads.notifyAll();
 						}
 						synchronized(this) {
@@ -222,10 +222,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 								logError("Exception occurred", exc);
 							}
 						}
+						pool.sleepingThreads.remove(this);
+						pool.runningThreads.remove(this);
+						--pool.threadsCount;
 						synchronized (sleepingThreads) {
-							pool.sleepingThreads.remove(this);
-							pool.runningThreads.remove(this);
-							--pool.threadsCount;
 							sleepingThreads.notifyAll();
 						}
 						synchronized(this) {

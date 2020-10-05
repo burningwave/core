@@ -50,8 +50,6 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	Collection<Mutex> mutexesMarkedAsDeletable;
 	Thread mutexCleaner;
 	Thread allThreadsStateLogger;
-	boolean deadlock;
-	private String latestLog;
 	
 	private Synchronizer() {
 		mutexes = new ConcurrentHashMap<>();
@@ -221,37 +219,17 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		
 		log.append("\n\n" + BackgroundExecutor.getInfoAsString());
 		log.append("\n\n");
-//		log.append(
-//			Strings.compile(
-//				"\n\tMutexes count: {}\n{}",
-//				mutexes.size(),
-//				IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 2)
-//			)
-//		);
+		log.append(
+			Strings.compile(
+				"\n\tMutexes count: {}\n{}",
+				mutexes.size(),
+				IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 2)
+			)
+		);
 		ManagedLoggersRepository.logInfo(
 			() -> this.getClass().getName(),
 			log.toString()
 		);
-//		log.append("\n\n");
-//		if (log.toString().equals(latestLog)) {
-//			ManagedLoggersRepository.logError(
-//				() -> this.getClass().getName(),
-//				"Deadlock occurs: interrupting all threads and exit"
-//			);
-//			ManagedLoggersRepository.logInfo(
-//				() -> this.getClass().getName(),
-//				"Deadlock occurs: interrupting all threads and exit:{}",
-//				log.toString()
-//			);
-//			deadlock = true;
-//			//System.exit(-1);
-//		}
-//		if (deadlock) {
-//			for (java.lang.Thread thread : getAllThreads()) {
-//				thread.interrupt();
-//			}
-//		}
-//		latestLog = log.toString();
 	}
 	
 	public java.lang.Thread[] getAllThreads() {
