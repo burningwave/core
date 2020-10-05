@@ -851,9 +851,8 @@ public class QueuedTasksExecutor implements Component {
 			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
 			if (name != null) {
 				executor.setName(queuedTasksExecutor.name + " - " + name);
-			} else {
-				executorIndex = ++queuedTasksExecutor.executorsIndex;
-				executor.setName(queuedTasksExecutor.name + " executor " + executorIndex);
+			} else {				;
+				executor.setName(queuedTasksExecutor.name + " executor " + ++queuedTasksExecutor.executorsIndex);
 			}
 			return (T)this;
 		}
