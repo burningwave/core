@@ -110,7 +110,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			try {
 				mutexes.remove(mutex.id);
 			} catch (Throwable exc) {
-
+				logWarn("Mutex {} has already been removed", mutex.id);
 			}
 		}		
 	}
