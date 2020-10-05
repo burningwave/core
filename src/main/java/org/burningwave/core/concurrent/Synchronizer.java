@@ -212,7 +212,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 
 	private void logAllThreadsState() {
 		StringBuffer log = new StringBuffer("\n\n");
-		log.append("\nCurrent threads state: \n");
+		log.append("Current threads state: \n\n");
 		for (Entry<java.lang.Thread, StackTraceElement[]> threadAndStackTrace : java.lang.Thread.getAllStackTraces().entrySet()) {
 			log.append("\t" + threadAndStackTrace.getKey());
 			log.append(Strings.from(threadAndStackTrace.getValue(), 2));

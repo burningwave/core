@@ -121,30 +121,30 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	void shutDown() {
 		alive = false;
 		looping = false;
-		synchronized(this) {
-			if (pool.sleepingThreads.remove(this) || pool.runningThreads.remove(this)) {
-				notifyAll();
-				--pool.threadsCount;
-			}
-		}
 	}	
 	
 	public static class Pool {
 		private String name;
 		private volatile long threadsCount;
 		private int maxThreadsCount;
+		private int maxNewThreadsCount;
 		private Collection<Thread> runningThreads;
 		private Collection<Thread> sleepingThreads;
-		private boolean waitForAThreadToFreeUp;
 		private boolean daemon;
 		
-		Pool (String name, int maxThreadsCount, boolean daemon, boolean waitForAThreadToFreeUp) {
+		Pool (String name, int maxThreadsCount, int maxNewThreadsCount, boolean daemon) {
 			this.name = name;
 			this.daemon = daemon;
 			this.runningThreads = ConcurrentHashMap.newKeySet();
 			this.sleepingThreads = ConcurrentHashMap.newKeySet();
+			if (maxNewThreadsCount <= 0) {
+				maxNewThreadsCount = Integer.MAX_VALUE;
+			}
+			if (maxNewThreadsCount < maxThreadsCount) {
+				throw new IllegalArgumentException("maxNewThreadsCount must be greater than maxThreadsCount");
+			}
 			this.maxThreadsCount = maxThreadsCount;
-			this.waitForAThreadToFreeUp = waitForAThreadToFreeUp;
+			this.maxNewThreadsCount = maxNewThreadsCount;
 		}
 		
 		public Thread getOrCreate(String name) {
@@ -158,10 +158,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			if (thread != null) {
 				return thread;
 			}
-			if (threadsCount > maxThreadsCount && waitForAThreadToFreeUp) {
+			if (threadsCount > maxThreadsCount && threadsCount > maxNewThreadsCount) {
 				synchronized (sleepingThreads) {
 					try {
-						if ((thread = get()) == null) {
+						if ((thread = get()) == null && threadsCount > maxThreadsCount && threadsCount > maxNewThreadsCount) {
 							sleepingThreads.wait();
 							return getOrCreate();
 						}
@@ -178,11 +178,17 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						} catch (Throwable exc) {
 							ManagedLoggersRepository.logError(() -> this.getClass().getName(), "Exception occurred", exc);
 						}
-						--threadsCount;
+						synchronized (sleepingThreads) {
+							--pool.threadsCount;
+							sleepingThreads.notifyAll();
+						}
+						synchronized(this) {
+							notifyAll();
+						}
 					}
 				};
 			}
-			synchronized (this) {
+			synchronized (sleepingThreads) {
 				if (threadsCount > maxThreadsCount) {
 					return getOrCreate();
 				}
@@ -215,7 +221,16 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							} catch (InterruptedException exc) {
 								logError("Exception occurred", exc);
 							}
-						}			
+						}
+						synchronized (sleepingThreads) {
+							pool.sleepingThreads.remove(this);
+							pool.runningThreads.remove(this);
+							--pool.threadsCount;
+							sleepingThreads.notifyAll();
+						}
+						synchronized(this) {
+							notifyAll();
+						}
 					}
 					
 				};
@@ -263,13 +278,13 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 		}
 		
-		public static Pool create(String name, int maxThreadsCount, boolean daemon, boolean waitForAThreadToFreeUp) {
-			return create(name, maxThreadsCount, daemon, waitForAThreadToFreeUp, false);
+		public static Pool create(String name, int maxThreadsCount, int maxNewThreadsCount, boolean daemon) {
+			return create(name, maxThreadsCount, maxNewThreadsCount, daemon, false);
 		}
 		
-		public static Pool create(String name, int maxThreadsCount, boolean daemon, boolean waitForAThreadToFreeUp, boolean undestroyable) {
+		public static Pool create(String name, int maxThreadsCount, int maxNewThreadsCount, boolean daemon, boolean undestroyable) {
 			if (undestroyable) {
-				return new Pool(name, maxThreadsCount, daemon, waitForAThreadToFreeUp) {
+				return new Pool(name, maxThreadsCount, maxNewThreadsCount, daemon) {
 					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();					
 					@Override
 					public void shutDownAll() {
@@ -279,7 +294,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					}
 				};
 			} else {
-				return new Pool(name, maxThreadsCount, daemon, waitForAThreadToFreeUp);
+				return new Pool(name, maxThreadsCount, maxNewThreadsCount, daemon);
 			}
 		}
 	}
