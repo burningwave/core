@@ -161,6 +161,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			this.threadRequestTimeout = threadRequestTimeout;
 			this.maxTemporarilyThreadsCountResetThreshold = maxTemporarilyThreadsCountResetThreshold;
 			this.maxTemporarilyThreadsCountIncreasingStep = maxTemporarilyThreadsCountIncreasingStep;
+			this.timeOfLastIncreaseOfMaxTemporarilyThreadsCount = System.currentTimeMillis();
 		}
 		
 		public Thread getOrCreate(String name) {
