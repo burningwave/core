@@ -192,7 +192,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 								if ((System.currentTimeMillis() - timeOfLastIncreaseOfMaxTemporarilyThreadsCount) > maxTemporarilyThreadsCountResetThreshold) {
 									ManagedLoggersRepository.logInfo(
 										() -> this.getClass().getName(), 
-										"{}: reseting maxTemporarilyThreadsCount to {}", 
+										"{}: resetting maxTemporarilyThreadsCount to {}", 
 										Thread.currentThread(), inititialMaxTemporarilyThreadsCount
 									);
 									maxTemporarilyThreadsCount = inititialMaxTemporarilyThreadsCount;
