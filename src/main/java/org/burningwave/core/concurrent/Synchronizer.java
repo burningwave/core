@@ -33,7 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
-import static org.burningwave.core.assembler.StaticComponentContainer.ThreadPool;
+import static org.burningwave.core.assembler.StaticComponentContainer.ThreadSupplier;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -174,7 +174,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		if (allThreadsStateLogger != null) {
 			stopLoggingAllThreadsState();
 		}
-		allThreadsStateLogger = ThreadPool.getOrCreate().setExecutable(thread -> {
+		allThreadsStateLogger = ThreadSupplier.getOrCreate().setExecutable(thread -> {
 			try {
 				thread.waitFor(interval);
 				if (thread.isLooping()) {

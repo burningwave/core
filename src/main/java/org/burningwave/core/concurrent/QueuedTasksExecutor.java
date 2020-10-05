@@ -30,7 +30,7 @@ package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
-//import static org.burningwave.core.assembler.StaticComponentContainer.ThreadPool;
+//import static org.burningwave.core.assembler.StaticComponentContainer.threadSupplier;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.ArrayList;
@@ -58,7 +58,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 @SuppressWarnings({"unchecked", "resource"})
 public class QueuedTasksExecutor implements Component {
 	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasksToBeExecuted;
-	Thread.Pool threadPool;
+	Thread.Supplier threadSupplier;
 	String name;
 	java.lang.Thread tasksLauncher;
 	List<TaskAbst<?, ?>> tasksQueue;
@@ -82,9 +82,9 @@ public class QueuedTasksExecutor implements Component {
 		runOnlyOnceTasksToBeExecuted = new ConcurrentHashMap<>();
 	}
 	
-	QueuedTasksExecutor(String name, Thread.Pool threadPool, int defaultPriority, boolean isDaemon) {
+	QueuedTasksExecutor(String name, Thread.Supplier threadSupplier, int defaultPriority, boolean isDaemon) {
 		initializer = () -> {
-			this.threadPool = threadPool;
+			this.threadSupplier = threadSupplier;
 			tasksQueue = new CopyOnWriteArrayList<>();
 			tasksInExecution = ConcurrentHashMap.newKeySet();
 			this.resumeCallerMutex = new Object();
@@ -108,7 +108,7 @@ public class QueuedTasksExecutor implements Component {
 		supended = Boolean.FALSE;
 		terminated = Boolean.FALSE;
 		executedTasksCount = 0;
-		tasksLauncher = threadPool.getOrCreate(name + " launcher").setExecutable(thread -> {
+		tasksLauncher = threadSupplier.getOrCreate(name + " launcher").setExecutable(thread -> {
 			while (!terminated) {
 				if (checkAndNotifySuspension()) {
 					continue;
@@ -127,7 +127,7 @@ public class QueuedTasksExecutor implements Component {
 							}
 							currentlyRunningTask = task;
 						}	
-						if (task.setExecutor(threadPool.getOrCreate()).start().isSync()) { 	
+						if (task.setExecutor(threadSupplier.getOrCreate()).start().isSync()) { 	
 							task.waitForFinish();
 						}
 						currentlyRunningTask = null;
@@ -176,13 +176,13 @@ public class QueuedTasksExecutor implements Component {
 		return false;
 	}
 
-	public static QueuedTasksExecutor create(String executorName, Thread.Pool threadPool, int initialPriority) {
-		return create(executorName, threadPool, initialPriority, false, false);
+	public static QueuedTasksExecutor create(String executorName, Thread.Supplier threadSupplier, int initialPriority) {
+		return create(executorName, threadSupplier, initialPriority, false, false);
 	}
 	
-	public static QueuedTasksExecutor create(String executorName, Thread.Pool threadPool, int initialPriority, boolean daemon, boolean undestroyable) {
+	public static QueuedTasksExecutor create(String executorName, Thread.Supplier threadSupplier, int initialPriority, boolean daemon, boolean undestroyable) {
 		if (undestroyable) {
-			return new QueuedTasksExecutor(executorName, threadPool, initialPriority, daemon) {
+			return new QueuedTasksExecutor(executorName, threadSupplier, initialPriority, daemon) {
 				StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
 				@Override
 				public boolean shutDown(boolean waitForTasksTermination) {
@@ -194,7 +194,7 @@ public class QueuedTasksExecutor implements Component {
 				
 			};
 		} else {
-			return new QueuedTasksExecutor(executorName, threadPool, initialPriority, daemon);
+			return new QueuedTasksExecutor(executorName, threadSupplier, initialPriority, daemon);
 		}
 	}
 	
@@ -540,7 +540,7 @@ public class QueuedTasksExecutor implements Component {
 	
 	void closeResources() {
 		//queueConsumer = null;
-		threadPool = null;
+		threadSupplier = null;
 		tasksQueue = null;
 		tasksInExecution = null;
 		initializer = null;
@@ -967,13 +967,13 @@ public class QueuedTasksExecutor implements Component {
 	public static class Group implements ManagedLogger{
 		Map<String, QueuedTasksExecutor> queuedTasksExecutors;
 		
-		Group(String name, Thread.Pool threadPool, boolean isDaemon) {
+		Group(String name, Thread.Supplier threadSupplier, boolean isDaemon) {
 			queuedTasksExecutors = new HashMap<>();
 			queuedTasksExecutors.put(
 				String.valueOf(Thread.MAX_PRIORITY),
 				createQueuedTasksExecutor(
 					name + " - High priority tasks",
-					threadPool,
+					threadSupplier,
 					Thread.MAX_PRIORITY, isDaemon
 				)
 			);
@@ -981,7 +981,7 @@ public class QueuedTasksExecutor implements Component {
 				String.valueOf(Thread.NORM_PRIORITY),
 				createQueuedTasksExecutor(
 					name + " - Normal priority tasks",
-					threadPool,
+					threadSupplier,
 					Thread.NORM_PRIORITY, isDaemon
 				)
 			);
@@ -989,21 +989,21 @@ public class QueuedTasksExecutor implements Component {
 				String.valueOf(Thread.MIN_PRIORITY),
 				createQueuedTasksExecutor(
 					name + " - Low priority tasks",
-					threadPool,
+					threadSupplier,
 					Thread.MIN_PRIORITY, isDaemon
 				)
 			);
 		}
 		
-		public static Group create(String name, Thread.Pool threadPool, boolean isDaemon) {
-			return create(name, threadPool, isDaemon, false);
+		public static Group create(String name, Thread.Supplier threadSupplier, boolean isDaemon) {
+			return create(name, threadSupplier, isDaemon, false);
 		}
 		
-		public static Group create(String name, Thread.Pool threadPool, boolean isDaemon, boolean undestroyableFromExternal) {
+		public static Group create(String name, Thread.Supplier threadSupplier, boolean isDaemon, boolean undestroyableFromExternal) {
 			if (!undestroyableFromExternal) {
-				return new Group(name, threadPool, isDaemon);
+				return new Group(name, threadSupplier, isDaemon);
 			} else {
-				return new Group(name, threadPool, isDaemon) {
+				return new Group(name, threadSupplier, isDaemon) {
 					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
 					
 					@Override
@@ -1057,8 +1057,8 @@ public class QueuedTasksExecutor implements Component {
 			return getByPriority(priority).createTask(executable);
 		}
 		
-		QueuedTasksExecutor createQueuedTasksExecutor(String executorName, Thread.Pool threadPool, int priority, boolean isDaemon) {
-			return new QueuedTasksExecutor(executorName, threadPool, priority, isDaemon) {
+		QueuedTasksExecutor createQueuedTasksExecutor(String executorName, Thread.Supplier threadSupplier, int priority, boolean isDaemon) {
+			return new QueuedTasksExecutor(executorName, threadSupplier, priority, isDaemon) {
 				
 				<T> Function<ThrowingSupplier<T, ? extends Throwable>, QueuedTasksExecutor.ProducerTask<T>> getProducerTaskSupplier() {
 					return executable -> new QueuedTasksExecutor.ProducerTask<T>(executable, taskCreationTrackingEnabled) {

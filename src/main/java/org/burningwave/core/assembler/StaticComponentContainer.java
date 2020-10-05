@@ -51,12 +51,12 @@ public class StaticComponentContainer {
 			private static final String BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED = "background-executor.task-creation-tracking.enabled";
 			private static final String ALL_THREADS_STATE_LOGGER_ENABLED = "synchronizer.all-threads-state-logger.enabled";
 			private static final String ALL_THREADS_STATE_LOGGER_LOG_INTERVAL = "synchronizer.all-threads-state-logger.log.interval";
-			private static final String THREAD_POOL_NAME = "thread-pool.name";
-			private static final String THREAD_POOL_MAX_THREADS_COUNT = "thread-pool.max-threads-count";
-			private static final String THREAD_POOL_MAX_TEMPORARILY_THREADS_COUNT = "thread-pool.max-temporarily-threads-count";
-			private static final String THREAD_POOL_CLIENT_REQUEST_TIMEOUT = "thread-pool.client.request-timeout";
-			private static final String THREAD_POOL_MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET = "thread-pool.max-temporarily-threads-count.elapsed-time-threshold-for-reset";
-			private static final String THREAD_POOL_MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP = "thread-pool.max-temporarily-threads-count.increasing-step";
+			private static final String THREAD_SUPPLIER_NAME = "thread-supplier.name";
+			private static final String THREAD_SUPPLIER_MAX_POOLABLE_THREADS_COUNT = "thread-supplier.max-poolable-threads-count";
+			private static final String THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT = "thread-supplier.max-temporarily-threads-count";
+			private static final String THREAD_SUPPLIER_CLIENT_REQUEST_TIMEOUT = "thread-supplier.client.request-timeout";
+			private static final String THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET = "thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-for-reset";
+			private static final String THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP = "thread-supplier.max-temporarily-threads-count.increasing-step";
 			                                         
 			
 		}
@@ -84,32 +84,32 @@ public class StaticComponentContainer {
 			);	
 			
 			defaultValues.put(
-				Key.THREAD_POOL_NAME,
+				Key.THREAD_SUPPLIER_NAME,
 				"Burningwave thread pool"
 			);			
 			
 			defaultValues.put(
-				Key.THREAD_POOL_MAX_THREADS_COUNT,
+				Key.THREAD_SUPPLIER_MAX_POOLABLE_THREADS_COUNT,
 				Runtime.getRuntime().availableProcessors() * 2
 			);
 			
 			defaultValues.put(
-				Key.THREAD_POOL_MAX_TEMPORARILY_THREADS_COUNT,
+				Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT,
 				Runtime.getRuntime().availableProcessors() * 6
 			);
 			
 			defaultValues.put(
-				Key.THREAD_POOL_CLIENT_REQUEST_TIMEOUT,
+				Key.THREAD_SUPPLIER_CLIENT_REQUEST_TIMEOUT,
 				6000
 			);
 			
 			defaultValues.put(
-				Key.THREAD_POOL_MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET,
+				Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET,
 				30000
 			);
 			
 			defaultValues.put(
-				Key.THREAD_POOL_MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP,
+				Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP,
 				8
 			);
 			
@@ -143,7 +143,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.io.Streams Streams;
 	public static final org.burningwave.core.Strings Strings;
 	public static final org.burningwave.core.concurrent.Synchronizer Synchronizer;
-	public static final org.burningwave.core.concurrent.Thread.Pool ThreadPool;
+	public static final org.burningwave.core.concurrent.Thread.Supplier ThreadSupplier;
 	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
@@ -206,17 +206,17 @@ public class StaticComponentContainer {
 				
 			}.listenTo(GlobalProperties = propBag.getKey());
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
-			ThreadPool = org.burningwave.core.concurrent.Thread.Pool.create(
-				GlobalProperties.resolveStringValue(Configuration.Key.THREAD_POOL_NAME),
-				Objects.toInt(GlobalProperties.resolveValue(Configuration.Key.THREAD_POOL_MAX_THREADS_COUNT)),
-				Objects.toInt(GlobalProperties.resolveValue(Configuration.Key.THREAD_POOL_MAX_TEMPORARILY_THREADS_COUNT)),
+			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
+				GlobalProperties.resolveStringValue(Configuration.Key.THREAD_SUPPLIER_NAME),
+				Objects.toInt(GlobalProperties.resolveValue(Configuration.Key.THREAD_SUPPLIER_MAX_POOLABLE_THREADS_COUNT)),
+				Objects.toInt(GlobalProperties.resolveValue(Configuration.Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT)),
 				true,
-				Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.THREAD_POOL_CLIENT_REQUEST_TIMEOUT)),
-				Objects.toInt(GlobalProperties.resolveValue(Configuration.Key.THREAD_POOL_MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP)),
-				Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.THREAD_POOL_MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET)),
+				Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.THREAD_SUPPLIER_CLIENT_REQUEST_TIMEOUT)),
+				Objects.toInt(GlobalProperties.resolveValue(Configuration.Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP)),
+				Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET)),
 				true
 			);
-			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create("Background executor", ThreadPool, true, true);
+			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create("Background executor", ThreadSupplier, true, true);
 			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(true);
 			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED))) {
 				BackgroundExecutor.setTasksCreationTrackingFlag(true);
@@ -262,7 +262,7 @@ public class StaticComponentContainer {
 			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
 			Runtime.getRuntime().addShutdownHook(
-				ThreadPool.getOrCreate("Resources releaser").setExecutable(thread -> {
+				ThreadSupplier.getOrCreate("Resources releaser").setExecutable(thread -> {
 					try {
 						ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "... Waiting for all tasks ending before closing all component containers");
 						BackgroundExecutor.waitForTasksEnding(true);
@@ -282,7 +282,7 @@ public class StaticComponentContainer {
 					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Shuting down BackgroundExecutor");
 					BackgroundExecutor.shutDown(false);
 					Synchronizer.close();
-					ThreadPool.shutDownAll();
+					ThreadSupplier.shutDownAll();
 				})
 			);
 			FileSystemHelper.startScavenger();

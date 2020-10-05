@@ -47,12 +47,12 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	boolean looping;
 	private final long index;
 	boolean alive;
-	Pool pool;
+	Supplier supplier;
 	
-	private Thread(Pool pool, long index) {
+	private Thread(Supplier pool, long index) {
 		super(pool.name + " - executor " + index);
 		this.index = index;
-		this.pool = pool;
+		this.supplier = pool;
 		setDaemon(pool.daemon);
 	}
 	
@@ -61,7 +61,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	}
 	
 	public void setIndexedName(String prefix) {
-		setName(Optional.ofNullable(prefix).orElseGet(() -> pool.name + " - executor") + " " + index);
+		setName(Optional.ofNullable(prefix).orElseGet(() -> supplier.name + " - executor") + " " + index);
 	}
 	
 	public Thread setExecutable(Consumer<Thread> executable) {
@@ -123,10 +123,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		stopLooping();
 	}	
 	
-	public static class Pool {
+	public static class Supplier {
 		private String name;
 		private volatile long threadsCount;
-		private int maxThreadsCount;
+		private int maxPoolableThreadsCount;
 		private int inititialMaxTemporarilyThreadsCount;
 		private int maxTemporarilyThreadsCount;
 		private int maxTemporarilyThreadsCountIncreasingStep;
@@ -137,9 +137,9 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		private long timeOfLastIncreaseOfMaxTemporarilyThreadsCount;
 		private boolean daemon;
 		
-		Pool (
+		Supplier (
 			String name,
-			int maxThreadsCount,
+			int maxPoolableThreadsCount,
 			int maxTemporarilyThreadsCount,
 			boolean daemon,
 			long threadRequestTimeout,
@@ -153,10 +153,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			if (maxTemporarilyThreadsCount <= 0) {
 				maxTemporarilyThreadsCount = Integer.MAX_VALUE;
 			}
-			if (maxTemporarilyThreadsCount < maxThreadsCount) {
-				throw new IllegalArgumentException("maxTemporarilyThreadsCount must be greater than maxThreadsCount");
+			if (maxTemporarilyThreadsCount < maxPoolableThreadsCount) {
+				throw new IllegalArgumentException("maxTemporarilyThreadsCount must be greater than maxPoolableThreadsCount");
 			}
-			this.maxThreadsCount = maxThreadsCount;
+			this.maxPoolableThreadsCount = maxPoolableThreadsCount;
 			this.inititialMaxTemporarilyThreadsCount = this.maxTemporarilyThreadsCount = maxTemporarilyThreadsCount;
 			this.threadRequestTimeout = threadRequestTimeout;
 			this.elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount = elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount;
@@ -179,10 +179,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			if (thread != null) {
 				return thread;
 			}
-			if (requestCount > 0 && threadsCount > maxThreadsCount && threadsCount > maxTemporarilyThreadsCount) {
+			if (requestCount > 0 && threadsCount > maxPoolableThreadsCount && threadsCount > maxTemporarilyThreadsCount) {
 				synchronized (sleepingThreads) {
 					try {
-						if ((thread = get()) == null && threadsCount > maxThreadsCount && threadsCount > maxTemporarilyThreadsCount) {
+						if ((thread = get()) == null && threadsCount > maxPoolableThreadsCount && threadsCount > maxTemporarilyThreadsCount) {
 							//This block of code is for preventing dead locks
 							long startWaitTime = System.currentTimeMillis();
 							sleepingThreads.wait(threadRequestTimeout);
@@ -217,7 +217,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						ManagedLoggersRepository.logError(() -> Thread.class.getName(), exc);
 					}
 				}
-			} else if (threadsCount > maxThreadsCount) {
+			} else if (threadsCount > maxPoolableThreadsCount) {
 				return new Thread(this, ++threadsCount) {
 					@Override
 					public void run() {
@@ -226,7 +226,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						} catch (Throwable exc) {
 							ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
 						}
-						--pool.threadsCount;
+						--supplier.threadsCount;
 						synchronized (sleepingThreads) {
 							sleepingThreads.notifyAll();
 						}
@@ -237,7 +237,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				};
 			}
 			synchronized (sleepingThreads) {
-				if (threadsCount > maxThreadsCount) {
+				if (threadsCount > maxPoolableThreadsCount) {
 					return getOrCreate(requestCount);
 				}
 				return new Thread(this, ++threadsCount) {
@@ -270,9 +270,9 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 								logError(exc);
 							}
 						}
-						pool.sleepingThreads.remove(this);
-						pool.runningThreads.remove(this);
-						--pool.threadsCount;
+						supplier.sleepingThreads.remove(this);
+						supplier.runningThreads.remove(this);
+						--supplier.threadsCount;
 						synchronized (sleepingThreads) {
 							sleepingThreads.notifyAll();
 						}
@@ -326,12 +326,12 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 		}
 
-		public static Pool create(
+		public static Supplier create(
 			String name, int maxThreadsCount, int maxNewThreadsCount, boolean daemon, long threadRequestTimeout,
 			int maxTemporarilyThreadsCountIncreasingStep, long elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount, boolean undestroyable
 		) {
 			if (undestroyable) {
-				return new Pool(name, maxThreadsCount, maxNewThreadsCount, daemon, 
+				return new Supplier(name, maxThreadsCount, maxNewThreadsCount, daemon, 
 					threadRequestTimeout, maxTemporarilyThreadsCountIncreasingStep,
 					elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount
 				) {
@@ -344,7 +344,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					}
 				};
 			} else {
-				return new Pool(name, maxThreadsCount, maxNewThreadsCount, daemon,
+				return new Supplier(name, maxThreadsCount, maxNewThreadsCount, daemon,
 					threadRequestTimeout, maxTemporarilyThreadsCountIncreasingStep,
 					elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount
 				);
