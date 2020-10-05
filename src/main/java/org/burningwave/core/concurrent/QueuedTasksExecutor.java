@@ -852,7 +852,7 @@ public class QueuedTasksExecutor implements Component {
 			if (name != null) {
 				executor.setName(queuedTasksExecutor.name + " - " + name);
 			} else {				;
-				executor.setName(queuedTasksExecutor.name + " executor " + ++queuedTasksExecutor.executorsIndex);
+				executor.setName(queuedTasksExecutor.name + " executor " + (executorIndex = ++queuedTasksExecutor.executorsIndex));
 			}
 			return (T)this;
 		}
