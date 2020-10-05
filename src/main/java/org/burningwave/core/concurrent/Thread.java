@@ -189,7 +189,6 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							long endWaitTime = System.currentTimeMillis();
 							long waitElapsedTime = endWaitTime - startWaitTime;
 							if (waitElapsedTime < threadRequestTimeout) {
-								thread = getOrCreate(requestCount);
 								if ((System.currentTimeMillis() - timeOfLastIncreaseOfMaxTemporarilyThreadsCount) > maxTemporarilyThreadsCountResetThreshold) {
 									ManagedLoggersRepository.logWarn(
 										() -> this.getClass().getName(), 
@@ -198,13 +197,13 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 									);
 									maxTemporarilyThreadsCount = inititialMaxTemporarilyThreadsCount;
 								}
-								return thread;
+								return getOrCreate(requestCount);
 							} else {
 								timeOfLastIncreaseOfMaxTemporarilyThreadsCount = System.currentTimeMillis();
 								maxTemporarilyThreadsCount += maxTemporarilyThreadsCountIncreasingStep;
 								ManagedLoggersRepository.logInfo(
 									() -> this.getClass().getName(), 
-									"{}: wait time of {}ms: temporarily increasing maxTemporarilyThreadsCount, new value: {}", 
+									"{}: wait time of {}ms: preventing dead lock by temporarily increasing maxTemporarilyThreadsCount to {}",
 									Thread.currentThread(), waitElapsedTime, maxTemporarilyThreadsCount
 								);
 								return getOrCreate(--requestCount);

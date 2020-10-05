@@ -105,7 +105,7 @@ public class StaticComponentContainer {
 	
 	static {
 		try {
-			ThreadPool = org.burningwave.core.concurrent.Thread.Pool.create("Burningwave thread pool", 16, 48, true, 3000, 8, 30000, true);
+			ThreadPool = org.burningwave.core.concurrent.Thread.Pool.create("Burningwave thread pool", 16, 72, true, 15000, 8, 30000, true);
 			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(true);
 			Strings = org.burningwave.core.Strings.create();
 			Throwables = org.burningwave.core.Throwables.create();
