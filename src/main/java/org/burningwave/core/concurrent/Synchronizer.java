@@ -107,7 +107,11 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	
 	public void removeIfUnused(Mutex mutex) {
 		if (--mutex.clientsCount <= 0) {
-			mutexes.remove(mutex.id);
+			try {
+				mutexes.remove(mutex.id);
+			} catch (Throwable exc) {
+
+			}
 		}		
 	}
 	
