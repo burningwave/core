@@ -87,21 +87,21 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	
 	public Mutex getMutex(String id) {
 		Mutex newLock = new Mutex();
-		++newLock.clientsCount;
 		Mutex lock = mutexes.putIfAbsent(id, newLock);
         if (lock != null) {
         	++lock.clientsCount;
         	if (mutexes.get(id) == lock) {
         		return lock;
         	}
-        	logWarn("Unvalid mutex: {}", id);
+        	logWarn("Unvalid mutex with id {} will be requested again", id);
         	return getMutex(id);
         }
+        ++newLock.clientsCount;
     	if (mutexes.get(id) == newLock) {
     		newLock.id = id;
     		return newLock;
     	}
-    	logWarn("Unvalid new mutex: {}", id);
+    	logWarn("Unvalid mutex with id {} will be requested again", id);
     	return getMutex(id);
     }
 	
@@ -110,7 +110,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			try {
 				mutexes.remove(mutex.id);
 			} catch (Throwable exc) {
-				logWarn("Mutex {} has already been removed", mutex.id);
+				//logWarn("Mutex {} has already been removed", mutex.id);
 			}
 		}		
 	}
