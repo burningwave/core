@@ -36,6 +36,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.ThreadPool;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -212,24 +213,28 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	private void logAllThreadsState() {
 		StringBuffer log = new StringBuffer("\n\n");
 		log.append("Current threads state: \n\n");
-		for (Entry<java.lang.Thread, StackTraceElement[]> threadAndStackTrace : java.lang.Thread.getAllStackTraces().entrySet()) {
+		Iterator<Entry<java.lang.Thread, StackTraceElement[]>> allStackTracesItr = java.lang.Thread.getAllStackTraces().entrySet().iterator();
+		while(allStackTracesItr.hasNext()) {
+			Map.Entry<java.lang.Thread, StackTraceElement[]> threadAndStackTrace = allStackTracesItr.next();
 			log.append("\t" + threadAndStackTrace.getKey());
 			log.append(Strings.from(threadAndStackTrace.getValue(), 2));
-			log.append("\n\n");
+			if (allStackTracesItr.hasNext()) {
+				log.append("\n\n");
+			}
 		}
-		
-		log.append("\n" + BackgroundExecutor.getInfoAsString());
-		log.append("\n\n");
+		log.append(BackgroundExecutor.getInfoAsString());
+		log.append("\n\n\n");
 		log.append(
 			Strings.compile(
-				"\n\tMutexes count: {}",
+				"Mutexes count: {}",
 				mutexes.size()
 			)
 		);
 //		log.append(
 //			":\n" +
-//			IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 2)
+//			IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 1)
 //		);
+		log.append("\n");
 		ManagedLoggersRepository.logInfo(
 			() -> this.getClass().getName(),
 			log.toString()

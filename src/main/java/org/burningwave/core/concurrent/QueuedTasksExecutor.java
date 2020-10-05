@@ -503,13 +503,15 @@ public class QueuedTasksExecutor implements Component {
 		StringBuffer log = new StringBuffer("");
 		Collection<TaskAbst<?, ?>> tasksQueue = this.tasksQueue;
 		if (!tasksQueue.isEmpty()) {
+			log.append("\n\n");
 			log.append(Strings.compile("{} - Tasks to be executed:", tasksLauncher));
 			for (TaskAbst<?,?> task : tasksQueue) {
 				log.append("\n" + task.getInfoAsString());
-			}
+			}			
 		}
 		tasksQueue = this.tasksInExecution;
 		if (!tasksQueue.isEmpty()) {
+			log.append("\n\n");
 			log.append(Strings.compile("{} - Tasks in execution:", tasksLauncher));
 			for (TaskAbst<?,?> task : tasksQueue) {
 				log.append("\n" + task.getInfoAsString());
@@ -517,7 +519,8 @@ public class QueuedTasksExecutor implements Component {
 		}
 		TaskAbst<?, ?> task = this.currentlyRunningTask;
 		if (task != null) {
-			log.append(Strings.compile("\n{} - currently running task:", tasksLauncher));
+			log.append("\n\n");
+			log.append(Strings.compile("{} - currently running task:", tasksLauncher));
 			log.append("\n" + task.getInfoAsString());
 		}
 		return log.toString();
@@ -794,9 +797,9 @@ public class QueuedTasksExecutor implements Component {
 		String getInfoAsString() {
 			if (this.getCreatorInfos() != null) {
 				Thread executor = this.executor;
-				return Strings.compile("\n\tTask status: {} \n\t{} \n\tcreated by: {}",
+				return Strings.compile("\n\tTask status: {} {} \n\tcreated by: {}",
 					Strings.compile("\n\t\tpriority: {}\n\t\tasync: {}\n\t\tstarted: {}\n\t\taborted: {}\n\t\tfinished: {}", priority, async, isStarted(), isAborted(), hasFinished()),
-					executor != null ? executor + Strings.from(executor.getStackTrace(),2) : "",
+					executor != null ? "\n\t" + executor + Strings.from(executor.getStackTrace(),2) : "",
 					Strings.from(this.getCreatorInfos(), 2)
 				);
 			}
