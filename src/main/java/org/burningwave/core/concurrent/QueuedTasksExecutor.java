@@ -517,7 +517,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		TaskAbst<?, ?> task = this.currentlyRunningTask;
 		if (task != null) {
-			log.append(Strings.compile("\n\n{} - currently running task:", tasksLauncher));
+			log.append(Strings.compile("\n{} - currently running task:", tasksLauncher));
 			log.append("\n" + task.getInfoAsString());
 		}
 		return log.toString();
@@ -1228,7 +1228,7 @@ public class QueuedTasksExecutor implements Component {
 			return this;
 		}
 		
-		public Group logQueuesInfo() {
+		public Group logInfo() {
 			String loggableMessage = getInfoAsString();
 			loggableMessage = getInfoAsString();
 			if (!loggableMessage.isEmpty()) {

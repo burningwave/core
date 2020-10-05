@@ -45,6 +45,7 @@ import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
+@SuppressWarnings("unused")
 public class Synchronizer implements AutoCloseable, ManagedLogger {
 	Map<String, Mutex> mutexes;
 	Collection<Mutex> mutexesMarkedAsDeletable;
@@ -88,7 +89,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 				}
 			}
 		}, true);
-		mutexCleaner.setPriority(Thread.NORM_PRIORITY);
+		mutexCleaner.setPriority(Thread.MIN_PRIORITY);
 		mutexCleaner.setDaemon(true);
 		mutexCleaner.start();
 	}
@@ -217,15 +218,18 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			log.append("\n\n");
 		}
 		
-		log.append("\n\n" + BackgroundExecutor.getInfoAsString());
+		log.append("\n" + BackgroundExecutor.getInfoAsString());
 		log.append("\n\n");
 		log.append(
 			Strings.compile(
-				"\n\tMutexes count: {}\n{}",
-				mutexes.size(),
-				IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 2)
+				"\n\tMutexes count: {}",
+				mutexes.size()
 			)
 		);
+//		log.append(
+//			":\n" +
+//			IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 2)
+//		);
 		ManagedLoggersRepository.logInfo(
 			() -> this.getClass().getName(),
 			log.toString()
