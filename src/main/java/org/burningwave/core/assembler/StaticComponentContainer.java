@@ -90,17 +90,17 @@ public class StaticComponentContainer {
 			
 			defaultValues.put(
 				Key.THREAD_POOL_MAX_THREADS_COUNT,
-				Runtime.getRuntime().availableProcessors() * 3
+				Runtime.getRuntime().availableProcessors() * 2
 			);
 			
 			defaultValues.put(
 				Key.THREAD_POOL_MAX_TEMPORARILY_THREADS_COUNT,
-				Runtime.getRuntime().availableProcessors() * 9
+				Runtime.getRuntime().availableProcessors() * 6
 			);
 			
 			defaultValues.put(
 				Key.THREAD_POOL_CLIENT_REQUEST_TIMEOUT,
-				10000
+				6000
 			);
 			
 			defaultValues.put(
