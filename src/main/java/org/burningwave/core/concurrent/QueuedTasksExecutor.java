@@ -540,6 +540,7 @@ public class QueuedTasksExecutor implements Component {
 	
 	void closeResources() {
 		//queueConsumer = null;
+		threadPool = null;
 		tasksQueue = null;
 		tasksInExecution = null;
 		initializer = null;
