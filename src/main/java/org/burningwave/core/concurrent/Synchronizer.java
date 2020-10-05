@@ -49,14 +49,10 @@ import org.burningwave.core.function.ThrowingSupplier;
 @SuppressWarnings("unused")
 public class Synchronizer implements AutoCloseable, ManagedLogger {
 	Map<String, Mutex> mutexes;
-	Collection<Mutex> mutexesMarkedAsDeletable;
-	Thread mutexCleaner;
 	Thread allThreadsStateLogger;
 	
 	private Synchronizer() {
 		mutexes = new ConcurrentHashMap<>();
-		mutexesMarkedAsDeletable = ConcurrentHashMap.newKeySet();
-		enableMutexesCleaner();
 	}
 	
 	public static Synchronizer create(boolean undestroyable) {
@@ -75,43 +71,13 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		}
 	}
 	
-	synchronized void enableMutexesCleaner() {
-		if (mutexCleaner != null) {
-			disableMutexesCleaner();
-		}
-		mutexCleaner = ThreadPool.getOrCreate("Mutexes cleaner").setExecutable(thread -> {
-			thread.waitFor(2000);
-			if (thread.isLooping()) {
-				for (Mutex mutex : mutexesMarkedAsDeletable) {
-					mutexesMarkedAsDeletable.remove(mutex);
-					if (mutex.clientsCount <= 0) {
-						mutexes.remove(mutex.id);
-					}
-				}
-			}
-		}, true);
-		mutexCleaner.setPriority(Thread.MIN_PRIORITY);
-		mutexCleaner.setDaemon(true);
-		mutexCleaner.start();
-	}
-	
-	public void disableMutexesCleaner() {
-		disableMutexesCleaner(false);
-	}
-	
-	synchronized void disableMutexesCleaner(boolean waitThreadToFinish) {
-		stop(mutexCleaner, waitThreadToFinish);
-		mutexCleaner = null;
-	}
-	
 	synchronized void stop(Thread thread, boolean waitThreadToFinish) {
 		if (thread == null) {
 			return;
 		}
-		thread.stopLooping();
+		thread.shutDown();
 		if (waitThreadToFinish) {
-			try {
-				thread.shutDown();
+			try {				
 				thread.join();
 			} catch (InterruptedException exc) {
 				ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
@@ -124,16 +90,25 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		Mutex lock = mutexes.putIfAbsent(id, newLock);
         if (lock != null) {
         	++lock.clientsCount;
-        	return lock;
+        	if (mutexes.get(id) == lock) {
+        		return lock;
+        	}
+        	logWarn("mutex is unvalid: {}", lock);
+        	return getMutex(id);
         }
         ++newLock.clientsCount;
-        newLock.id = id;
-        return newLock;
+    	if (mutexes.get(id) == newLock) {
+    		newLock.id = id;
+    		return newLock;
+    	}
+    	logWarn("mutex is unvalid: {}", newLock);
+    	return getMutex(id);
     }
 	
-	public void markAsRemovable(Mutex mutex) {
+	public void removeMutex(Mutex mutex) {
 		if (--mutex.clientsCount <= 0) {
-			mutexesMarkedAsDeletable.add(mutex);
+			//mutexesMarkedAsDeletable.add(mutex);
+			mutexes.remove(mutex.id);
 		}		
 	}
 	
@@ -143,7 +118,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			try {
 				executable.run();
 			} finally {
-				markAsRemovable(mutex);
+				removeMutex(mutex);
 			}
 		}
 	}
@@ -154,7 +129,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			try {
 				executable.run();
 			} finally {
-				markAsRemovable(mutex);
+				removeMutex(mutex);
 			}
 		}
 	}
@@ -165,7 +140,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			try {
 				return executable.get();
 			} finally {
-				markAsRemovable(mutex);
+				removeMutex(mutex);
 			}
 		}
 	}
@@ -176,23 +151,20 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			try {
 				return executable.get();
 			} finally {
-				markAsRemovable(mutex);
+				removeMutex(mutex);
 			}
 		}
 	}
 
 	public void clear() {
-		mutexesMarkedAsDeletable.clear();
 		mutexes.clear();
 	}
 	
 	@Override
 	public void close() {
-		disableMutexesCleaner(true);
 		stopLoggingAllThreadsState();		
 		clear();
 		mutexes = null;
-		mutexesMarkedAsDeletable = null;
 	}
 	
 	public synchronized void startLoggingAllThreadsState(Long interval) {
