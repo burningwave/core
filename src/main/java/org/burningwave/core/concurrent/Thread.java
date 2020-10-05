@@ -154,10 +154,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 		
 		public final Thread getOrCreate() {
-			return getOrCreate(1);
+			return getOrCreate(1, maxNewThreadsCount);
 		}
 		
-		final Thread getOrCreate(int requestCount) {
+		final Thread getOrCreate(int requestCount, int maxNewThreadsCount) {
 			Thread thread = get();
 			if (thread != null) {
 				return thread;
@@ -172,10 +172,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							long endWaitTime = System.currentTimeMillis();
 							long waitTime = endWaitTime - startWaitTime;
 							if (waitTime < 15000) {
-								return getOrCreate(requestCount);								
+								return getOrCreate(requestCount, maxNewThreadsCount);								
 							} else {
-								ManagedLoggersRepository.logWarn(() -> this.getClass().getName(), "Wait time of {}ms", waitTime);
-								return getOrCreate(--requestCount);
+								ManagedLoggersRepository.logWarn(() -> this.getClass().getName(), "Wait time of {}ms: temporarily increasing maxNewThreadsCount", waitTime);
+								return getOrCreate(--requestCount, maxNewThreadsCount + 8);
 							}
 						}
 					} catch (InterruptedException exc) {
@@ -203,7 +203,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 			synchronized (sleepingThreads) {
 				if (threadsCount > maxThreadsCount) {
-					return getOrCreate(requestCount);
+					return getOrCreate(requestCount, maxNewThreadsCount);
 				}
 				return new Thread(this, ++threadsCount) {
 					@Override
