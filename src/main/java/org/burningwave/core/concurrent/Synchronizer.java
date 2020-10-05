@@ -50,6 +50,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	Collection<Mutex> mutexesMarkedAsDeletable;
 	Thread mutexCleaner;
 	Thread allThreadsStateLogger;
+	boolean deadlock;
 	
 	private Synchronizer() {
 		mutexes = new ConcurrentHashMap<>();
@@ -210,28 +211,43 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 
 	private void logAllThreadsState() {
 		StringBuffer log = new StringBuffer("\n\n");
+		log.append("\nCurrent threads state: ");
 		for (Entry<java.lang.Thread, StackTraceElement[]> threadAndStackTrace : java.lang.Thread.getAllStackTraces().entrySet()) {
 			log.append("\t" + threadAndStackTrace.getKey());
 			log.append(Strings.from(threadAndStackTrace.getValue(), 2));
 			log.append("\n\n");
 		}
+		
+		log.append("\n\n" + BackgroundExecutor.getInfoAsString());
 		ManagedLoggersRepository.logInfo(
 			() -> this.getClass().getName(),
-			"\nCurrent threads state: {}\n\n{}\n\n{}",
-			log.toString(),
-			BackgroundExecutor.getInfoAsString(),
-			Strings.compile(
-				"\n\tMutexes count: {}\n{}",
-				mutexes.size()//,
-				//IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 2)
-			)
+			log.toString()
+//			"\nCurrent threads state: {}\n\n{}\n\n{}",
+//			log.toString(),
+//			BackgroundExecutor.getInfoAsString(),
+//			Strings.compile(
+//				"\n\tMutexes count: {}\n{}",
+//				mutexes.size()//,
+//				//IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 2)
+//			)
 		);
 		if (log.toString().equals(latestLog)) {
 			ManagedLoggersRepository.logError(
 				() -> this.getClass().getName(),
 				"Deadlock occurs: interrupting all threads and exit"
 			);
-			System.exit(-1);
+			ManagedLoggersRepository.logInfo(
+				() -> this.getClass().getName(),
+				"Deadlock occurs: interrupting all threads and exit:{}",
+				log.toString()
+			);
+			deadlock = true;
+			//System.exit(-1);
+		}
+		if (deadlock) {
+			for (java.lang.Thread thread : getAllThreads()) {
+				thread.interrupt();
+			}
 		}
 		latestLog = log.toString();
 	}
