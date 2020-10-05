@@ -93,7 +93,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
         	if (mutexes.get(id) == lock) {
         		return lock;
         	}
-        	logWarn("mutex is unvalid: {}", lock);
+        	logWarn("Unvalid mutex: {}", lock);
         	return getMutex(id);
         }
         ++newLock.clientsCount;
@@ -101,13 +101,12 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
     		newLock.id = id;
     		return newLock;
     	}
-    	logWarn("mutex is unvalid: {}", newLock);
+    	logWarn("Unvalid mutex: {}", newLock);
     	return getMutex(id);
     }
 	
-	public void removeMutex(Mutex mutex) {
+	public void removeIfUnused(Mutex mutex) {
 		if (--mutex.clientsCount <= 0) {
-			//mutexesMarkedAsDeletable.add(mutex);
 			mutexes.remove(mutex.id);
 		}		
 	}
@@ -118,7 +117,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			try {
 				executable.run();
 			} finally {
-				removeMutex(mutex);
+				removeIfUnused(mutex);
 			}
 		}
 	}
@@ -129,7 +128,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			try {
 				executable.run();
 			} finally {
-				removeMutex(mutex);
+				removeIfUnused(mutex);
 			}
 		}
 	}
@@ -140,7 +139,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			try {
 				return executable.get();
 			} finally {
-				removeMutex(mutex);
+				removeIfUnused(mutex);
 			}
 		}
 	}
@@ -151,7 +150,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			try {
 				return executable.get();
 			} finally {
-				removeMutex(mutex);
+				removeIfUnused(mutex);
 			}
 		}
 	}

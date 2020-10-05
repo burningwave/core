@@ -142,10 +142,10 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 							itemsForPath.putAll(itemsFound);
 						}
 						this.cache.put(basePath, itemsForPath);
-						Synchronizer.removeMutex(mutex);
+						Synchronizer.removeIfUnused(mutex);
 						return;
 					}
-					Synchronizer.removeMutex(mutex);
+					Synchronizer.removeIfUnused(mutex);
 				}
 				context.addAllItemsFound(basePath, classesForPath);
 				return;
