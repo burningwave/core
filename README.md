@@ -879,7 +879,7 @@ public static final org.burningwave.core.classes.SourceCodeHandler SourceCodeHan
 public static final org.burningwave.core.io.Streams Streams;
 public static final org.burningwave.core.Strings Strings;
 public static final org.burningwave.core.concurrent.Synchronizer Synchronizer;
-public static final org.burningwave.core.concurrent.Thread.Pool ThreadPool;
+public static final org.burningwave.core.concurrent.Thread.Supplier ThreadSupplier;
 public static final org.burningwave.core.Throwables Throwables;
 ```
 
@@ -924,12 +924,12 @@ streams.default-buffer-size=1024
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
 synchronizer.all-threads-state-logger.enabled=false
 synchronizer.all-threads-state-logger.log.interval=30000
-thread-pool.client.request-timeout=10000
-thread-pool.max-temporarily-threads-count=96
-thread-pool.max-temporarily-threads-count.elapsed-time-threshold-for-reset=30000
-thread-pool.max-temporarily-threads-count.increasing-step=8
-thread-pool.max-threads-count=8
-thread-pool.name=Burningwave thread pool
+thread-supplier.client.request-timeout=6000
+thread-supplier.max-poolable-threads-count=16
+thread-supplier.max-temporarily-threads-count=32
+thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-for-reset=30000
+thread-supplier.max-temporarily-threads-count.increasing-step=8
+thread-supplier.name=Burningwave thread supplier
 ```
 **If in your custom burningwave.static.properties or burningwave.static.default.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 [Here an example of a **burningwave.static.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.static.properties)
