@@ -150,11 +150,11 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			this.daemon = daemon;
 			this.runningThreads = ConcurrentHashMap.newKeySet();
 			this.poolableSleepingThreads = ConcurrentHashMap.newKeySet();
-			if (maxTemporarilyThreadsCount <= 0) {
-				maxTemporarilyThreadsCount = Integer.MAX_VALUE;
+			if (maxPoolableThreadsCount <= 0) {
+				throw new IllegalArgumentException("maxPoolableThreadsCount must be greater than zero");
 			}
-			if (maxTemporarilyThreadsCount < maxPoolableThreadsCount) {
-				throw new IllegalArgumentException("maxTemporarilyThreadsCount must be greater than maxPoolableThreadsCount");
+			if (maxTemporarilyThreadsCount <= 0) {
+				maxTemporarilyThreadsCount = Integer.MAX_VALUE - maxPoolableThreadsCount;
 			}
 			this.maxPoolableThreadsCount = maxPoolableThreadsCount;
 			this.inititialMaxThreadsCount = this.maxThreadsCount = maxPoolableThreadsCount + maxTemporarilyThreadsCount;
