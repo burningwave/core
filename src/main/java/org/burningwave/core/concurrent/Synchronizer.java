@@ -114,7 +114,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 				thread.shutDown();
 				thread.join();
 			} catch (InterruptedException exc) {
-				ManagedLoggersRepository.logError(() -> this.getClass().getName(), "Exception occurred", exc);
+				ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
 			}
 		}
 	}
@@ -200,9 +200,13 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			stopLoggingAllThreadsState();
 		}
 		allThreadsStateLogger = ThreadPool.getOrCreate().setExecutable(thread -> {
-			thread.waitFor(interval);
-			if (thread.isLooping()) {
-				logAllThreadsState();
+			try {
+				thread.waitFor(interval);
+				if (thread.isLooping()) {
+					logAllThreadsState();
+				}
+			} catch (Throwable exc) {
+				logError(exc);
 			}
 		}, true);
 		allThreadsStateLogger.setName("All threads state logger");

@@ -93,6 +93,10 @@ public interface ManagedLogger {
 		ManagedLoggersRepository.logError(() -> this.getClass().getName(), message);
 	}
 	
+	default void logError(Throwable exc) {
+		ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
+	}
+	
 	
 	public static interface Repository extends Closeable {
 		public static class Configuration {			
@@ -184,6 +188,8 @@ public interface ManagedLogger {
 		public void logError(Supplier<String> clientNameSupplier, String message, Throwable exc);
 		
 		public void logError(Supplier<String> clientNameSupplier, String message);
+		
+		public void logError(Supplier<String> clientNameSupplier, Throwable exc);
 		
 		public void logDebug(Supplier<String> clientNameSupplier, String message);
 		

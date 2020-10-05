@@ -113,7 +113,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			try {
 				wait(millis);
 			} catch (InterruptedException exc) {
-				ManagedLoggersRepository.logError(() -> this.getClass().getName(), "Exception occurred", exc);
+				ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
 			}
 		}
 	}
@@ -211,7 +211,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							}
 						}
 					} catch (InterruptedException exc) {
-						ManagedLoggersRepository.logError(() -> Thread.class.getName(), "Exception occurred", exc);
+						ManagedLoggersRepository.logError(() -> Thread.class.getName(), exc);
 					}
 				}
 			} else if (threadsCount > maxThreadsCount) {
@@ -221,7 +221,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						try {
 							executable.accept(this);
 						} catch (Throwable exc) {
-							ManagedLoggersRepository.logError(() -> this.getClass().getName(), "Exception occurred", exc);
+							ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
 						}
 						--pool.threadsCount;
 						synchronized (sleepingThreads) {
@@ -247,7 +247,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							try {
 								executable.accept(this);
 							} catch (Throwable exc) {
-								ManagedLoggersRepository.logError(() -> this.getClass().getName(), "Exception occurred", exc);
+								ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
 							}				
 							try {
 								synchronized (this) {
@@ -264,7 +264,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 									wait();
 								}
 							} catch (InterruptedException exc) {
-								logError("Exception occurred", exc);
+								logError(exc);
 							}
 						}
 						pool.sleepingThreads.remove(this);

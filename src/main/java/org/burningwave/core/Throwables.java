@@ -35,6 +35,7 @@ import java.lang.reflect.Field;
 
 import sun.misc.Unsafe;
 
+@SuppressWarnings("all")
 public class Throwables implements Component {
 	Unsafe unsafe;
 	public Throwables() {

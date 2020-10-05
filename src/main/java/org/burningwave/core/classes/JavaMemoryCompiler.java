@@ -322,8 +322,8 @@ public class JavaMemoryCompiler implements Component {
 			if (javaClassPredicate != null) {
 				try {
 					fsObjects = context.findForClassName(javaClassPredicate);
-				} catch (Exception e) {
-					logError("Exception occurred", e);
+				} catch (Exception exc) {
+					logError(exc);
 				}
 			} else {
 				String packageName = null;
@@ -339,8 +339,8 @@ public class JavaMemoryCompiler implements Component {
 				if (Strings.isNotEmpty(packageName)) {			
 					try {
 						fsObjects = context.findForPackageName(packageName);
-					} catch (Exception e) {
-						logError("Exception occurred", e);
+					} catch (Exception exc) {
+						logError(exc);
 					}
 				} else {
 					throw new UnknownCompilerErrorMessageException(message);

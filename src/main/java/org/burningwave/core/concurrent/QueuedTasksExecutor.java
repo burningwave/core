@@ -143,7 +143,7 @@ public class QueuedTasksExecutor implements Component {
 									executableCollectionFillerMutex.wait();
 								}
 							} catch (InterruptedException exc) {
-								logWarn("Exception occurred", exc);
+								logError(exc);
 							}
 						}
 					}
@@ -169,7 +169,7 @@ public class QueuedTasksExecutor implements Component {
 					resumeCallerMutex.wait();
 					return true;
 				} catch (InterruptedException exc) {
-					logWarn("Exception occurred", exc);
+					logError(exc);
 				}
 			}
 		}
@@ -254,7 +254,7 @@ public class QueuedTasksExecutor implements Component {
 					executableCollectionFillerMutex.notifyAll();
 				}
 			} catch (Throwable exc) {
-				logWarn("Exception occurred", exc);
+				logError(exc);
 			}
 		}
 		return canBeExecutedBag != null ? (T)canBeExecutedBag[0] : task;
@@ -349,7 +349,7 @@ public class QueuedTasksExecutor implements Component {
 					try {
 						executingFinishedWaiterMutex.wait();
 					} catch (InterruptedException exc) {
-						logWarn("Exception occurred", exc);
+						logError(exc);
 					}
 				}
 			}
@@ -392,7 +392,7 @@ public class QueuedTasksExecutor implements Component {
 					}
 					suspensionCallerMutex.wait();
 				} catch (InterruptedException exc) {
-					logWarn("Exception occurred", exc);
+					logError(exc);
 				}
 			}
 		} else {
@@ -447,7 +447,7 @@ public class QueuedTasksExecutor implements Component {
 				supended = Boolean.FALSE;
 				resumeCallerMutex.notifyAll();
 			} catch (Throwable exc) {
-				logWarn("Exception occurred", exc);
+				logError(exc);
 			}
 		}	
 		return this;
@@ -471,7 +471,7 @@ public class QueuedTasksExecutor implements Component {
 					try {
 						terminatingMutex.wait();
 					} catch (InterruptedException exc) {
-						logError("Exception occurred", exc);
+						logError(exc);
 					}
 				}
 			}
@@ -1114,7 +1114,7 @@ public class QueuedTasksExecutor implements Component {
 									try {
 										executingFinishedWaiterMutex.wait();
 									} catch (InterruptedException exc) {
-										logWarn("Exception occurred", exc);
+										logError(exc);
 									}
 								}
 							}

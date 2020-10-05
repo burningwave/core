@@ -152,6 +152,11 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 	}
 	
 	@Override
+	public void logError(Supplier<String> clientNameSupplier, Throwable exc) {
+		log(clientNameSupplier, LoggingLevel.ERROR, (logger, stackTraceElement) -> logger.error(addDetailsToMessage("Exception occurred", stackTraceElement), exc));
+	}
+	
+	@Override
 	public void logError(Supplier<String> clientNameSupplier, String message) {
 		log(clientNameSupplier, LoggingLevel.ERROR, (logger, stackTraceElement) -> logger.error(addDetailsToMessage(message, stackTraceElement)));
 	}
