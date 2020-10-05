@@ -120,7 +120,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	
 	void shutDown() {
 		alive = false;
-		looping = false;
+		stopLooping();
 	}	
 	
 	public static class Pool {
@@ -157,12 +157,12 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			return getOrCreate(1);
 		}
 		
-		public final Thread getOrCreate(int count) {
+		final Thread getOrCreate(int requestCount) {
 			Thread thread = get();
 			if (thread != null) {
 				return thread;
 			}
-			if (count > 0 && threadsCount > maxThreadsCount && threadsCount > maxNewThreadsCount) {
+			if (requestCount > 0 && threadsCount > maxThreadsCount && threadsCount > maxNewThreadsCount) {
 				synchronized (sleepingThreads) {
 					try {
 						if ((thread = get()) == null && threadsCount > maxThreadsCount && threadsCount > maxNewThreadsCount) {
@@ -172,10 +172,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							long endWaitTime = System.currentTimeMillis();
 							long waitTime = endWaitTime - startWaitTime;
 							if (waitTime < 15000) {
-								return getOrCreate(count);								
+								return getOrCreate(requestCount);								
 							} else {
 								ManagedLoggersRepository.logWarn(() -> this.getClass().getName(), "Wait time of {}ms", waitTime);
-								return getOrCreate(--count);
+								return getOrCreate(--requestCount);
 							}
 						}
 					} catch (InterruptedException exc) {
@@ -203,7 +203,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 			synchronized (sleepingThreads) {
 				if (threadsCount > maxThreadsCount) {
-					return getOrCreate(count);
+					return getOrCreate(requestCount);
 				}
 				return new Thread(this, ++threadsCount) {
 					@Override
