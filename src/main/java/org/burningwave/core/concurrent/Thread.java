@@ -127,24 +127,34 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		private String name;
 		private volatile long threadsCount;
 		private int maxThreadsCount;
-		private int maxNewThreadsCount;
+		private int inititialMaxTemporarilyThreadsCount;
+		private int maxTemporarilyThreadsCount;
+		private long threadRequestTimeout;
+		private long maxTemporarilyThreadsCountResetThreshold;
 		private Collection<Thread> runningThreads;
 		private Collection<Thread> sleepingThreads;
+		private long timeOfLastIncreaseOfMaxTemporarilyThreadsCount;
 		private boolean daemon;
 		
-		Pool (String name, int maxThreadsCount, int maxNewThreadsCount, boolean daemon) {
+		Pool (String name, int maxThreadsCount, int maxTemporarilyThreadsCount, boolean daemon) {
+			this(name, maxThreadsCount, maxTemporarilyThreadsCount, daemon, 5000, 30000);
+		}
+		
+		Pool (String name, int maxThreadsCount, int maxTemporarilyThreadsCount, boolean daemon, int threadRequestTimeout, int maxTemporarilyThreadsCountResetThreshold) {
 			this.name = name;
 			this.daemon = daemon;
 			this.runningThreads = ConcurrentHashMap.newKeySet();
 			this.sleepingThreads = ConcurrentHashMap.newKeySet();
-			if (maxNewThreadsCount <= 0) {
-				maxNewThreadsCount = Integer.MAX_VALUE;
+			if (maxTemporarilyThreadsCount <= 0) {
+				maxTemporarilyThreadsCount = Integer.MAX_VALUE;
 			}
-			if (maxNewThreadsCount < maxThreadsCount) {
-				throw new IllegalArgumentException("maxNewThreadsCount must be greater than maxThreadsCount");
+			if (maxTemporarilyThreadsCount < maxThreadsCount) {
+				throw new IllegalArgumentException("maxTemporarilyThreadsCount must be greater than maxThreadsCount");
 			}
 			this.maxThreadsCount = maxThreadsCount;
-			this.maxNewThreadsCount = maxNewThreadsCount;
+			inititialMaxTemporarilyThreadsCount = this.maxTemporarilyThreadsCount = maxTemporarilyThreadsCount;
+			this.threadRequestTimeout = threadRequestTimeout;
+			this.maxTemporarilyThreadsCountResetThreshold = maxTemporarilyThreadsCountResetThreshold;
 		}
 		
 		public Thread getOrCreate(String name) {
@@ -154,28 +164,43 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 		
 		public final Thread getOrCreate() {
-			return getOrCreate(1, maxNewThreadsCount);
+			return getOrCreate(1);
 		}
 		
-		final Thread getOrCreate(int requestCount, int maxNewThreadsCount) {
+		final Thread getOrCreate(int requestCount) {
 			Thread thread = get();
 			if (thread != null) {
 				return thread;
 			}
-			if (requestCount > 0 && threadsCount > maxThreadsCount && threadsCount > maxNewThreadsCount) {
+			if (requestCount > 0 && threadsCount > maxThreadsCount && threadsCount > maxTemporarilyThreadsCount) {
 				synchronized (sleepingThreads) {
 					try {
-						if ((thread = get()) == null && threadsCount > maxThreadsCount && threadsCount > maxNewThreadsCount) {
+						if ((thread = get()) == null && threadsCount > maxThreadsCount && threadsCount > maxTemporarilyThreadsCount) {
 							//This block of code is for preventing dead locks
 							long startWaitTime = System.currentTimeMillis();
-							sleepingThreads.wait(15000);
+							sleepingThreads.wait(threadRequestTimeout);
 							long endWaitTime = System.currentTimeMillis();
-							long waitTime = endWaitTime - startWaitTime;
-							if (waitTime < 15000) {
-								return getOrCreate(requestCount, maxNewThreadsCount);								
+							long waitElapsedTime = endWaitTime - startWaitTime;
+							if (waitElapsedTime < threadRequestTimeout) {
+								thread = getOrCreate(requestCount);
+								if ((System.currentTimeMillis() - timeOfLastIncreaseOfMaxTemporarilyThreadsCount) > maxTemporarilyThreadsCountResetThreshold) {
+									ManagedLoggersRepository.logWarn(
+										() -> this.getClass().getName(), 
+										"{}: reseting maxTemporarilyThreadsCount to {}", 
+										Thread.currentThread(), inititialMaxTemporarilyThreadsCount
+									);
+									maxTemporarilyThreadsCount = inititialMaxTemporarilyThreadsCount;
+								}
+								return thread;
 							} else {
-								ManagedLoggersRepository.logWarn(() -> this.getClass().getName(), "Wait time of {}ms: temporarily increasing maxNewThreadsCount", waitTime);
-								return getOrCreate(--requestCount, maxNewThreadsCount + 8);
+								timeOfLastIncreaseOfMaxTemporarilyThreadsCount = System.currentTimeMillis();
+								maxTemporarilyThreadsCount += 8;
+								ManagedLoggersRepository.logInfo(
+									() -> this.getClass().getName(), 
+									"{}: wait time of {}ms: temporarily increasing maxTemporarilyThreadsCount, new value: {}", 
+									Thread.currentThread(), waitElapsedTime, maxTemporarilyThreadsCount
+								);
+								return getOrCreate(--requestCount);
 							}
 						}
 					} catch (InterruptedException exc) {
@@ -203,7 +228,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 			synchronized (sleepingThreads) {
 				if (threadsCount > maxThreadsCount) {
-					return getOrCreate(requestCount, maxNewThreadsCount);
+					return getOrCreate(requestCount);
 				}
 				return new Thread(this, ++threadsCount) {
 					@Override

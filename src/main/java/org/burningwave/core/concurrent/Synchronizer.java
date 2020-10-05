@@ -222,9 +222,9 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		log.append(
 			Strings.compile(
 				"\n\tMutexes count: {}\n{}",
-				mutexes.size(),
+				mutexes.size()/*,
 				IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 2)
-			)
+			*/)
 		);
 		ManagedLoggersRepository.logInfo(
 			() -> this.getClass().getName(),
