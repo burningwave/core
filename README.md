@@ -45,7 +45,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>7.45.3</version>
+    <version>8.0.0</version>
 </dependency>
 ```
 
@@ -923,13 +923,13 @@ static-component-container.hide-banner-on-init=false
 streams.default-buffer-size=1024
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
 synchronizer.all-threads-state-logger.enabled=false
-synchronizer.all-threads-state-logger.log.interval=30000
-thread-supplier.max-poolable-threads-count=16
-thread-supplier.max-temporarily-threads-count=32
+synchronizer.all-threads-state-logger.log.interval=120000
+thread-supplier.max-poolable-threads-count=auto
+thread-supplier.max-temporarily-threads-count=auto
 thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-for-reset=30000
 thread-supplier.max-temporarily-threads-count.increasing-step=8
 thread-supplier.name=Burningwave thread supplier
-thread-supplier.poolable-thread-request-timeout=6000
+thread-supplier.poolable-thread-request-timeout=3000
 ```
 **If in your custom burningwave.static.properties or burningwave.static.default.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 [Here an example of a **burningwave.static.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.static.properties)
