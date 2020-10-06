@@ -1,4 +1,4 @@
-name: [experimental] Build and test
+name: Build and test (experimental branch)
 
 on:
   schedule:
