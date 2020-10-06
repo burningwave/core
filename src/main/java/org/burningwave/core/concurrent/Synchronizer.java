@@ -242,10 +242,10 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	
 	public static class Mutex  {	
 		String id;
-		Client client = new Client();
+		private final Client client = new Client();
 		
 		public static class Client {
-			int counter = 1;
+			volatile int counter = 1;
 		}
 	}
 }
