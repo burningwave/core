@@ -240,6 +240,6 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	
 	public static class Mutex  {	
 		String id;
-		Integer clientsCount = 1;
+		volatile Integer clientsCount = 1;
 	}
 }

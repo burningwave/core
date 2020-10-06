@@ -153,7 +153,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			this.poolableSleepingThreads = ConcurrentHashMap.newKeySet();
 			
 			int maxPoolableThreadsCountAsInt;
-			int multiplier = 2;
+			int multiplier = 3;
 			try {
 				maxPoolableThreadsCountAsInt = Objects.toInt(maxPoolableThreadsCount);
 			} catch (Throwable exc) {
