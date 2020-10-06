@@ -3,7 +3,7 @@
 
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
-	<version>8.0.0</version>
+	<version>8.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	
 	<name>Burningwave Core</name>
@@ -75,7 +75,7 @@
 		<connection>scm:git:${repository.url}</connection>
 		<developerConnection>scm:git:${repository.url}</developerConnection>
 		<url>https://github.com/burningwave/core</url>
-		<tag>core-8.0.0</tag>
+		<tag>HEAD</tag>
 	</scm>
 	
 	<dependencies>
