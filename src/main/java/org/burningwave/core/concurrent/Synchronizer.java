@@ -85,39 +85,12 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		}
 	}
 	
-//	public Mutex getMutex(String id) {
-//		Mutex newMutex = new Mutex();
-//		while (true) {			
-//			Mutex oldMutex = mutexes.putIfAbsent(id, newMutex);
-//	        if (oldMutex != null) {
-//	        	if (++oldMutex.clientsCount > 1) {
-//		        	if (mutexes.get(id) != oldMutex) {
-//		        		logError("Unvalid mutex with id {}", id);
-//		        		continue;
-//		        	}
-//	        		return oldMutex;
-//	        	}
-//	        	continue;
-//	        }
-//	        newMutex.id = id;
-//        	if (mutexes.get(id) != newMutex) {
-//        		logError("Unvalid new mutex with id {}", id);
-//        		continue;
-//        	}
-//	        return newMutex;
-//		}
-//    }
-
-//Candidate
 	public Mutex getMutex(String id) {
 		Mutex newMutex = new Mutex();
 		while (true) {			
 			Mutex oldMutex = mutexes.putIfAbsent(id, newMutex);
 	        if (oldMutex != null) {
-	        	synchronized (oldMutex.clientsCount) {
-	        		++oldMutex.clientsCount;
-	        	}
-	        	if (oldMutex.clientsCount > 1) {
+	        	if (++oldMutex.clientsCount > 1) {
 		        	if (mutexes.get(id) != oldMutex) {
 		        		logError("Unvalid mutex with id {}", id);
 		        		continue;
@@ -134,19 +107,56 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	        return newMutex;
 		}
     }
-	
+
 	public void removeIfUnused(Mutex mutex) {
 		try {
-			synchronized (mutex.clientsCount) {
-				--mutex.clientsCount;
-			}
-			if (mutex.clientsCount < 1) {
+			if (--mutex.clientsCount < 1) {
 				mutexes.remove(mutex.id);
 			}
 		} catch (Throwable exc) {
 			logError(exc);
 		}
 	}
+	
+//Candidate
+//	public Mutex getMutex(String id) {
+//		Mutex newMutex = new Mutex();
+//		while (true) {			
+//			Mutex oldMutex = mutexes.putIfAbsent(id, newMutex);
+//	        if (oldMutex != null) {
+//	        	synchronized (oldMutex.clientsCount) {
+//	        		++oldMutex.clientsCount;
+//	        	}
+//	        	if (oldMutex.clientsCount > 1) {
+//		        	if (mutexes.get(id) != oldMutex) {
+//		        		logError("Unvalid mutex with id {}", id);
+//		        		continue;
+//		        	}
+//	        		return oldMutex;
+//	        	}
+//	        	continue;
+//	        }
+//	        newMutex.id = id;
+//        	if (mutexes.get(id) != newMutex) {
+//        		logError("Unvalid new mutex with id {}", id);
+//        		continue;
+//        	}
+//	        return newMutex;
+//		}
+//    }
+	
+//	public void removeIfUnused(Mutex mutex) {
+//		try {
+//			synchronized (mutex.clientsCount) {
+//				--mutex.clientsCount;
+//			}
+//			if (mutex.clientsCount < 1) {
+//				mutexes.remove(mutex.id);
+//			}
+//		} catch (Throwable exc) {
+//			logError(exc);
+//		}
+//	}
 	
 	public void execute(String id, Runnable executable) {
 		Mutex mutex = getMutex(id);
