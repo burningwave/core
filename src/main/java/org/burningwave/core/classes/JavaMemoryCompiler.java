@@ -226,7 +226,7 @@ public class JavaMemoryCompiler implements Component {
 			try {
 				memorySources.add(new MemorySource(Kind.SOURCE, className, source));
 			} catch (URISyntaxException eXC) {
-				throw Throwables.toRuntimeException("Class name \"{}\" is not valid", className);
+				Throwables.throwException("Class name \"{}\" is not valid", className);
 			}
 		}
 		
@@ -322,8 +322,8 @@ public class JavaMemoryCompiler implements Component {
 			if (javaClassPredicate != null) {
 				try {
 					fsObjects = context.findForClassName(javaClassPredicate);
-				} catch (Exception e) {
-					logError("Exception occurred", e);
+				} catch (Exception exc) {
+					logError(exc);
 				}
 			} else {
 				String packageName = null;
@@ -339,8 +339,8 @@ public class JavaMemoryCompiler implements Component {
 				if (Strings.isNotEmpty(packageName)) {			
 					try {
 						fsObjects = context.findForPackageName(packageName);
-					} catch (Exception e) {
-						logError("Exception occurred", e);
+					} catch (Exception exc) {
+						logError(exc);
 					}
 				} else {
 					throw new UnknownCompilerErrorMessageException(message);
@@ -348,7 +348,7 @@ public class JavaMemoryCompiler implements Component {
 			}
 			if (fsObjects == null || fsObjects.isEmpty()) {
 				String classNameOrSimpleName = classNameOrSimpleNameTemp;				
-				throw Throwables.toRuntimeException(
+				Throwables.throwException(
 					Optional.ofNullable(javaClassPredicate).map(jCP -> "Class or package \"" + classNameOrSimpleName + "\" not found").orElseGet(() -> message)
 				);
 			}

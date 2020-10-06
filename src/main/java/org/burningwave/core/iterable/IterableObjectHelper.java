@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.iterable;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -38,10 +39,16 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -49,6 +56,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.Properties.Event;
@@ -319,7 +327,7 @@ public class IterableObjectHelper implements Component {
 		if (value instanceof Collection) {
 			Collection<T> values = (Collection<T>)value;
 			if (values.size() > 1) {
-				throw Throwables.toRuntimeException("Found more than one item under key {}", key);
+				Throwables.throwException("Found more than one item under key {}", key);
 			}
 			return (T)values.stream().findFirst().orElseGet(() -> null);
 		} else {
@@ -521,6 +529,86 @@ public class IterableObjectHelper implements Component {
 		return object != null && value != null && object.equals(value);
 	}
 	
+	public <T, O> Collection<O> iterateParallelIf(
+		Collection<T> items, 		
+		Consumer<T> action,
+		Predicate<Collection<T>> predicate
+	) {
+		return iterateParallelIf(items, (item, collector) -> action.accept(item), null, predicate);
+	}
+	
+	
+	public <T, O> Collection<O> iterateParallelIf(
+		Collection<T> items, 		
+		BiConsumer<T, Consumer<O>> action,
+		Collection<O> outputCollection,
+		Predicate<Collection<T>> predicate
+	) {
+		if (predicate.test(items) ) {
+			return iterateParallel(items, action, outputCollection);
+		} else {
+			Consumer<O> outputItemCollector = outputCollection != null ? 
+				outputItem -> {
+					outputCollection.add(outputItem);
+				} 
+				: null;
+			for (T item : items) {
+				action.accept(item, outputItemCollector);
+			}
+			return outputCollection;
+		}		
+	}
+	
+	public <T, O> void iterateParallel(
+		Collection<T> items,
+		BiConsumer<T, Consumer<O>> action
+	) {
+		iterateParallel(items, action, null);
+	}
+	
+	public <T, O> Collection<O> iterateParallel(
+		Collection<T> items,
+		BiConsumer<T, Consumer<O>> action,
+		Collection<O> outputCollection
+	) {
+		Iterator<T> itemIterator = items.iterator();
+		Consumer<O> outputItemCollector =
+			outputCollection != null ? 
+				outputCollection instanceof ConcurrentHashMap.KeySetView ||
+				outputCollection instanceof CopyOnWriteArrayList?	
+					outputItem -> {
+						outputCollection.add(outputItem);
+					} : 
+					outputItem -> {
+						synchronized (outputCollection) {
+							outputCollection.add(outputItem);
+						}
+					}
+				: null;
+		Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
+		int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items.size());
+		for (int i = 0; i < taskCount; i++) {
+			tasks.add(
+				BackgroundExecutor.createTask(() -> {
+					while (itemIterator.hasNext()) {
+						T item = null;
+						synchronized (itemIterator) {
+							try {
+								item = itemIterator.next();
+							} catch (NoSuchElementException exc) {
+								break;
+							}
+						}
+						action.accept(item, outputItemCollector);
+					}
+				}).async().submit()
+			);
+		}
+		tasks.stream().forEach(task -> task.waitForFinish());
+		return outputCollection;
+	}
+
+	
 	private String toPrettyKeyValueLabel(Entry<?, ?> entry, String valuesSeparator, int marginTabCount) {
 		String margin = new String(new char[marginTabCount]).replace('\0', '\t');
 		String keyValueLabel = margin + entry.getKey() + "=\\\n" + margin + "\t" + entry.getValue().toString().replace(valuesSeparator, valuesSeparator + "\\\n" + margin +"\t");
@@ -533,10 +621,16 @@ public class IterableObjectHelper implements Component {
 		return allValues.entrySet().stream().map(entry -> toPrettyKeyValueLabel(entry, valuesSeparator, marginTabCount)).collect(Collectors.joining("\n"));
 	}	
 	
-	public String toString(Map<?, ?> map, int marginTabCount) {
-		TreeMap<?, ?> allValues = map instanceof TreeMap ? (TreeMap<?, ?>)map : new TreeMap<>(map);
+	public <K, V> String toString(Map<K, V> map, int marginTabCount) {
+		return toString(map, key -> key.toString(), value -> value.toString(), marginTabCount);
+	}
+	
+	public <K, V> String toString(Map<K, V> map, Function<K, String> keyTransformer, Function<V,String> valueTransformer,int marginTabCount) {
+		TreeMap<K, V> allValues = map instanceof TreeMap ? (TreeMap<K, V>)map : new TreeMap<>(map);
 		String margin = new String(new char[marginTabCount]).replace('\0', '\t');
-		return allValues.entrySet().stream().map(entry -> margin + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining("\n"));
+		return allValues.entrySet().stream().map(entry -> 
+			margin + keyTransformer.apply(entry.getKey()) + "=" + Optional.ofNullable(entry.getValue()).map(value -> valueTransformer.apply(value)).orElseGet(() -> "null")
+		).collect(Collectors.joining("\n"));
 	}
 	
 	private class ArrayList<E> extends java.util.ArrayList<E> {

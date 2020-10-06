@@ -64,7 +64,7 @@ public class Members implements Component {
 	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
 		Collection<M> members = findAll(criteria, classFrom);
 		if (members.size() > 1) {
-			throw Throwables.toRuntimeException("More than one member found for class {}", classFrom.getName());
+			Throwables.throwException("More than one member found for class {}", classFrom.getName());
 		}
 		return members.stream().findFirst().orElse(null);
 	}
@@ -383,7 +383,7 @@ public class Members implements Component {
 			}
 			
 			public StackTraceElement retrieveExternalCallerInfo(StackTraceElement[] stackTrace, BiPredicate<StackTraceElement, StackTraceElement> filter, int level) {
-				return retrieveExternalCallersInfo(stackTrace, filter, level).get(level);
+				return retrieveExternalCallersInfo(stackTrace, filter, level).get(level - 1);
 			}
 			
 			public List<StackTraceElement> retrieveExternalCallersInfo(int level) {

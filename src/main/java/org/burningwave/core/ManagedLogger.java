@@ -30,6 +30,7 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Collections;
@@ -84,12 +85,20 @@ public interface ManagedLogger {
 		ManagedLoggersRepository.logError(() -> this.getClass().getName(), message, exc, arguments);
 	}
 	
+	default void logError(String message, Object... arguments) {
+		ManagedLoggersRepository.logError(() -> this.getClass().getName(), message, arguments);
+	}
+	
 	default void logError(String message, Throwable exc) {
 		ManagedLoggersRepository.logError(() -> this.getClass().getName(), message, exc);
 	}
 	
 	default void logError(String message) {
 		ManagedLoggersRepository.logError(() -> this.getClass().getName(), message);
+	}
+	
+	default void logError(Throwable exc) {
+		ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
 	}
 	
 	
@@ -154,7 +163,7 @@ public interface ManagedLogger {
 				
 			} catch (Throwable exc) {
 				exc.printStackTrace();
-				throw Throwables.toRuntimeException(exc);
+				return Throwables.throwException(exc);
 			}
 		}
 		
@@ -178,11 +187,15 @@ public interface ManagedLogger {
 		
 		public void enableLogging(String clientName);
 		
+		public void logError(Supplier<String> clientNameSupplier, String message, Object... arguments);
+		
 		public void logError(Supplier<String> clientNameSupplier, String message, Throwable exc, Object... arguments);
 		
 		public void logError(Supplier<String> clientNameSupplier, String message, Throwable exc);
 		
 		public void logError(Supplier<String> clientNameSupplier, String message);
+		
+		public void logError(Supplier<String> clientNameSupplier, Throwable exc);
 		
 		public void logDebug(Supplier<String> clientNameSupplier, String message);
 		
@@ -222,7 +235,7 @@ public interface ManagedLogger {
 			abstract void resetSpecificElements();
 			
 			boolean getEnabledLoggingFlag(Properties properties) {
-				return Boolean.parseBoolean(IterableObjectHelper.resolveStringValue(
+				return Objects.toBoolean(IterableObjectHelper.resolveStringValue(
 					properties,
 					Configuration.Key.ENABLED_FLAG
 				));

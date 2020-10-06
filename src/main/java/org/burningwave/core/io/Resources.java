@@ -62,7 +62,7 @@ public class Resources {
 					propertiesBag.setValue(configFileURL);
 					break;
 				} catch (Throwable exc) {
-					throw Throwables.toRuntimeException(exc);
+					Throwables.throwException(exc);
 				}
 			}
 		}

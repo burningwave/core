@@ -10,7 +10,7 @@ import org.junit.runner.RunWith;
 //@SelectPackages("org.burningwave.core")
 @SelectClasses({
 //	  ByteBufferHandlerTest.class,	
-//	  ByteCodeHunterTest.class,
+	  ByteCodeHunterTest.class,
 //    ClassesTest.class,
 //    ClassFactoryTest.class,
 //    ClassHunterTest.class,
@@ -25,6 +25,7 @@ import org.junit.runner.RunWith;
 //    IterableObjectHelperTest.class,
 //    IterableZipContainerTest.class,
 //    LowLevelObjectsHandlerTest.class,
+    ManagedLoggersRepositoryTest.class,
 //    MembersTest.class,
 //    MemoryClassLoaderTest.class,
 //    MethodsTest.class,

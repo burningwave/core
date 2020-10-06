@@ -879,6 +879,7 @@ public static final org.burningwave.core.classes.SourceCodeHandler SourceCodeHan
 public static final org.burningwave.core.io.Streams Streams;
 public static final org.burningwave.core.Strings Strings;
 public static final org.burningwave.core.concurrent.Synchronizer Synchronizer;
+public static final org.burningwave.core.concurrent.Thread.Supplier ThreadSupplier;
 public static final org.burningwave.core.Throwables Throwables;
 ```
 
@@ -904,7 +905,7 @@ public class UseOfStaticComponentsExample {
 ### Configuration
 The configuration of this type of container is done via **burningwave.static.properties** file or via **burningwave.static.default.properties** file: the library searches for the first file and if it does not find it, then it searches for the second file and if neither this one is found then the library sets the default configuration programmatically. **The default configuration loaded programmatically if no configuration file is found is the following**:
 ```properties
-background-executor.task-creation-tracking.enabled=false
+background-executor.task-creation-tracking.enabled=${synchronizer.all-threads-state-logger.enabled}
 iterable-object-helper.default-values-separator=;
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
 #the SLF4JManagedLoggerRepository will be instantiated, otherwise the SimpleManagedLoggerRepository will be instantiated
@@ -916,12 +917,19 @@ managed-logger.repository.logging.warn.disabled-for=\
 	org.burningwave.core.classes.ClassPathHunter$SearchContext;\
 	org.burningwave.core.jvm.LowLevelObjectsHandler;\
 	org.burningwave.core.classes.MemoryClassLoader;\
-	org.burningwave.core.classes.SearchContext
+	org.burningwave.core.classes.PathScannerClassLoader;\
+	org.burningwave.core.classes.SearchContext;
 static-component-container.hide-banner-on-init=false
 streams.default-buffer-size=1024
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
 synchronizer.all-threads-state-logger.enabled=false
 synchronizer.all-threads-state-logger.log.interval=30000
+thread-supplier.max-poolable-threads-count=16
+thread-supplier.max-temporarily-threads-count=32
+thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-for-reset=30000
+thread-supplier.max-temporarily-threads-count.increasing-step=8
+thread-supplier.name=Burningwave thread supplier
+thread-supplier.poolable-thread-request-timeout=6000
 ```
 **If in your custom burningwave.static.properties or burningwave.static.default.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 [Here an example of a **burningwave.static.properties** file.](https://github.com/burningwave/core/blob/master/src/test/resources/burningwave.static.properties)

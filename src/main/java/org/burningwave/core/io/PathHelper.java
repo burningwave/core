@@ -28,9 +28,9 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -49,7 +49,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -126,7 +125,7 @@ public class PathHelper implements Component {
 			} finally {
 				initializerTask = null;
 			}
-		}, Thread.MAX_PRIORITY).pureAsync();
+		}, Thread.MAX_PRIORITY).async();
 		initializerTask.submit();
 	}
 	
@@ -180,22 +179,22 @@ public class PathHelper implements Component {
 		return getPaths(Configuration.Key.MAIN_CLASS_PATHS, Configuration.Key.MAIN_CLASS_PATHS_EXTENSION);
 	}
 	
-	private void waitForInitialization(boolean ignoreThread) {
+	private void waitForInitialization() {
 		QueuedTasksExecutor.Task initializerTask = this.initializerTask;
 		if (initializerTask != null) {
-			initializerTask.waitForFinish(ignoreThread);
+			initializerTask.waitForFinish();
 		}
 	}
 	
 	public Collection<String> getAllPaths() {
-		waitForInitialization(false);
+		waitForInitialization();
 		Collection<String> allPaths = ConcurrentHashMap.newKeySet();
 		allPaths.addAll(this.allPaths);
 		return allPaths;
 	}
 	
 	public Collection<String> getPaths(String... names) {
-		waitForInitialization(false);
+		waitForInitialization();
 		Collection<String> pathGroup = new HashSet<>();
 		if (names != null && names.length > 0) {
 			for (String name : names) {
@@ -210,9 +209,9 @@ public class PathHelper implements Component {
 					pathsFound = this.pathGroups.get(name);
 					if (pathsFound != null) {
 						pathGroup.addAll(pathsFound);
-					} else {
-						//logWarn("path group named " + name + " is not defined");
-					}
+					} /*else {
+						logWarn("path group named " + name + " is not defined");
+					}*/
 				}
 				
 			}
@@ -319,13 +318,13 @@ public class PathHelper implements Component {
 					if (fileSystemItemParent.exists()) {
 						String childrenSet = groupMap.get(2).get(0);
 						String childrenSetRegEx = groupMap.get(3).get(0);
-						Function<FileSystemItem.Criteria, Set<FileSystemItem>> childrenSupplier =
+						Function<FileSystemItem.Criteria, Collection<FileSystemItem>> childrenSupplier =
 							childrenSet.equalsIgnoreCase("children") ?
 								fileSystemItemParent::findInChildren :
 								childrenSet.equalsIgnoreCase("allChildren") ?
 									fileSystemItemParent::findInAllChildren : null;
 						if (childrenSupplier != null) {
-							Set<FileSystemItem> childrenFound = childrenSupplier.apply(
+							Collection<FileSystemItem> childrenFound = childrenSupplier.apply(
 								FileSystemItem.Criteria.forAllFileThat(
 									fileSystemItem -> fileSystemItem.getAbsolutePath().matches(childrenSetRegEx)
 								)
@@ -346,7 +345,7 @@ public class PathHelper implements Component {
 			}
 			return pathGroup;
 		} else {
-			throw Throwables.toRuntimeException("classPaths parameter is null");
+			return Throwables.throwException("classPaths parameter is null");
 		}
 	}
 	
@@ -402,11 +401,11 @@ public class PathHelper implements Component {
 					filesFound.put(fileSystemItem.getAbsolutePath(), fileSystemItem);
 					filesInfo.append("\t" + System.identityHashCode(file) + ": " + fileSystemItem.getAbsolutePath() + "\n");
 				} else {
-					throw Throwables.toRuntimeException("Found more than one resource under relative path {}",  resourceRelativePath);
+					Throwables.throwException("Found more than one resource under relative path {}",  resourceRelativePath);
 				}
 			}
 			if (filesFound.size() > 1) {
-				throw Throwables.toRuntimeException("Found more than one resource under relative path " + resourceRelativePath + ":\n" + filesInfo.toString());
+				Throwables.throwException("Found more than one resource under relative path " + resourceRelativePath + ":\n" + filesInfo.toString());
 			} else {
 				FileSystemItem fileSystemItem = FileSystemItem.ofPath(filesFound.keySet().stream().findFirst().get());
 				logWarn("Found more than one resource under relative path " + resourceRelativePath + ":\n" + filesInfo.toString() + "\t" +
@@ -482,7 +481,7 @@ public class PathHelper implements Component {
 	public String getPath(Predicate<String> pathPredicate) {
 		Collection<String> classPathsFound = getPaths(pathPredicate);
 		if (classPathsFound.size() > 1) {
-			throw Throwables.toRuntimeException("Found more than one class path for predicate {}", pathPredicate);
+			Throwables.throwException("Found more than one class path for predicate {}", pathPredicate);
 		}
 		return classPathsFound.stream().findFirst().orElseGet(() -> null);
 	}
@@ -491,11 +490,8 @@ public class PathHelper implements Component {
 	public void close() {
 		closeResources(() -> pathGroups == null, () -> {
 			QueuedTasksExecutor.Task initializerTask = this.initializerTask;
-			if (initializerTask != null && 
-				!BackgroundExecutor.abort(initializerTask) && 
-				initializerTask.isStarted()
-			) {
-				initializerTask.waitForFinish();
+			if (initializerTask != null) {	
+				initializerTask.abortOrWaitForFinish();
 			}
 			unregister(config);
 			pathGroups.forEach((key, value) -> {

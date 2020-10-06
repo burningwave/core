@@ -19,6 +19,7 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("unused")
 public class ByteCodeHunterTest extends BaseTest {
 	
 	
@@ -184,13 +185,13 @@ public class ByteCodeHunterTest extends BaseTest {
 	
 	@Test
 	public void findAllWithByteCodeEqualsAndUseDuplicatedPathsTestOne() {
-		Collection<String> disabledLoggers = GlobalProperties.resolveStringValues("managed-logger.repository.logging.warn.disabled-for", ";");
-		disabledLoggers.remove(PathScannerClassLoader.class.getName());
-		GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
+//		Collection<String> disabledLoggers = GlobalProperties.resolveStringValues("managed-logger.repository.logging.warn.disabled-for", ";");
+//		disabledLoggers.remove(PathScannerClassLoader.class.getName());
+//		GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
 		findAllSubtypeOfTestOne();
 		findAllWithByteCodeEqualsTestOne();
-		disabledLoggers.add(PathScannerClassLoader.class.getName());
-		GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
+//		disabledLoggers.add(PathScannerClassLoader.class.getName());
+//		GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
 	}
 	
 	@Test

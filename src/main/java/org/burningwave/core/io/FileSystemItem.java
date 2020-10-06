@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
@@ -110,7 +109,7 @@ public class FileSystemItem implements ManagedLogger {
 	private FileSystemItem(String realAbsolutePath, String conventionedAbsolutePath) {
 		realAbsolutePath = Paths.clean(realAbsolutePath);
 		this.absolutePath = new AbstractMap.SimpleEntry<>(realAbsolutePath, conventionedAbsolutePath);
-		instanceId = instanceIdPrefix + "_" + System.currentTimeMillis() + "_" + absolutePath;
+		instanceId = instanceIdPrefix + "_" + System.currentTimeMillis() + "_" + realAbsolutePath;
 	}
 
 	private String computeConventionedAbsolutePath() {
@@ -152,7 +151,7 @@ public class FileSystemItem implements ManagedLogger {
 		FileSystemItem.Criteria finalFilter = FileSystemItem.Criteria
 				.forAllFileThat(fileSystemItem -> !fileSystemItem.isArchive());
 		finalFilter = filter != null ? finalFilter.and(filter) : finalFilter;
-		Set<FileSystemItem> allChildren = findInAllChildren(finalFilter);
+		Collection<FileSystemItem> allChildren = findInAllChildren(finalFilter);
 		for (FileSystemItem child : allChildren) {
 			FileSystemItem destFile = FileSystemItem
 					.ofPath(folder + child.getAbsolutePath().replaceFirst(this.getAbsolutePath(), ""));
@@ -215,40 +214,30 @@ public class FileSystemItem implements ManagedLogger {
 		}
 	}
 
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter) {
+	public Collection<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter) {
 		return findIn(this::getAllChildren0, filter, HashSet::new);
 	}
 
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter,
-			Supplier<C> setSupplier) {
+	public Collection<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter,
+			Supplier<Collection<FileSystemItem>> setSupplier) {
 		return findIn(this::getAllChildren0, filter, setSupplier);
 	}
 
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findInChildren(FileSystemItem.Criteria filter) {
+	public Collection<FileSystemItem> findInChildren(FileSystemItem.Criteria filter) {
 		return findIn(this::getChildren0, filter, HashSet::new);
 	}
 
-	public <C extends Set<FileSystemItem>> Set<FileSystemItem> findInChildren(FileSystemItem.Criteria filter,
-			Supplier<C> setSupplier) {
+	public Collection<FileSystemItem> findInChildren(
+		FileSystemItem.Criteria filter,
+		Supplier<Collection<FileSystemItem>> setSupplier
+	) {
 		return findIn(this::getChildren0, filter, setSupplier);
 	}
 	
-	/*
-	private <C extends Set<FileSystemItem>> Set<FileSystemItem> findIn(Supplier<Set<FileSystemItem>> childrenSupplier,
-			FileSystemItem.Criteria filter, Supplier<C> setSupplier) {
-		Predicate<FileSystemItem[]> nativePredicate = filter.getPredicateOrTruePredicateIfPredicateIsNull();
-		Predicate<FileSystemItem> filterPredicate = child -> 
-			nativePredicate.test(new FileSystemItem[] { child, this });
-		return Optional.ofNullable(childrenSupplier.get()).map(children -> 
-			children.parallelStream().filter(filterPredicate).collect(Collectors.toCollection(setSupplier))
-		).orElseGet(() -> null);
-	}
-	*/
-	
-	private <C extends Set<FileSystemItem>> Set<FileSystemItem> findIn(
+	private Collection<FileSystemItem> findIn(
 		Supplier<Set<FileSystemItem>> childrenSupplier,
 		FileSystemItem.Criteria filter,
-		Supplier<C> setSupplier
+		Supplier<Collection<FileSystemItem>> outputCollectionSupplier
 	) {	
 		Set<FileSystemItem> children;
 		try {
@@ -279,8 +268,16 @@ public class FileSystemItem implements ManagedLogger {
 				return false;
 			}
 		};
-		Set<FileSystemItem> result = (children.size() > 1?
-			children.parallelStream() : children.stream()).filter(filterPredicate).collect(Collectors.toCollection(setSupplier));
+		final Collection<FileSystemItem> result = IterableObjectHelper.iterateParallelIf(
+			children,
+			(child, collector) -> {
+				if (filterPredicate.test(child)) {
+					collector.accept(child);
+				}
+			},
+			outputCollectionSupplier.get(),
+			item -> item.size() > 1
+		);		
 		if (!iteratedFISWithErrors.isEmpty()) {
 			Predicate<FileSystemItem[]> nativePredicateWithExceptionManaging = filter.getPredicateOrTruePredicateIfPredicateIsNull();
 			for (FileSystemItem child : iteratedFISWithErrors) {
@@ -429,7 +426,7 @@ public class FileSystemItem implements ManagedLogger {
 		try {
 			return new URL(toURL());
 		} catch (MalformedURLException exc) {
-			throw Throwables.toRuntimeException(exc);
+			return Throwables.throwException(exc);
 		}
 	}
 
@@ -845,7 +842,7 @@ public class FileSystemItem implements ManagedLogger {
 				if ((Cache.pathForContents.get(randomFIS.getAbsolutePath())) == null) {
 					FileSystemItem finalRandomFIS = randomFIS;
 					FileSystemItem superParentContainerFinal = superParentContainer;
-					Synchronizer.execute(superParentContainer.instanceId + "_resetAndReloadAllChildren", () -> {
+					Synchronizer.execute(superParentContainer.instanceId, () -> {
 						if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
 							superParentContainerFinal.refresh().getAllChildren();
 						}
@@ -875,38 +872,34 @@ public class FileSystemItem implements ManagedLogger {
 	
 	public FileSystemItem reloadContent(boolean recomputeConventionedAbsolutePath) {
 		String absolutePath = getAbsolutePath();
-		Cache.pathForContents.remove(absolutePath, true);
-		BackgroundExecutor.createTask(() -> {						
+		Synchronizer.execute(instanceId, () -> {
+			Cache.pathForContents.remove(absolutePath, true);
 			if (recomputeConventionedAbsolutePath) {
 				this.absolutePath.setValue(null);
 			}
-			if (exists() && !isFolder()) {
-				if (isCompressed()) {
-					try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
-						getParentContainer().reloadContent(recomputeConventionedAbsolutePath).getAbsolutePath())
-					) {
-						iterableZipContainer.findFirst(
-							iteratedZipEntry -> 
-								iteratedZipEntry.getAbsolutePath().equals(absolutePath), 
-							iteratedZipEntry -> 
-								iteratedZipEntry.getAbsolutePath().equals(absolutePath)
-						);
-					}		
-				} else {
-					Cache.pathForContents.getOrUploadIfAbsent(
-						absolutePath, () -> {
-							try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
-								return fIS.toByteBuffer();
-							}						
-						}
+		});
+		if (exists() && !isFolder()) {
+			if (isCompressed()) {
+				try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
+					getParentContainer().reloadContent(recomputeConventionedAbsolutePath).getAbsolutePath())
+				) {
+					iterableZipContainer.findFirst(
+						iteratedZipEntry -> 
+							iteratedZipEntry.getAbsolutePath().equals(absolutePath), 
+						iteratedZipEntry -> 
+							iteratedZipEntry.getAbsolutePath().equals(absolutePath)
 					);
-				}
+				}		
+			} else {
+				Cache.pathForContents.getOrUploadIfAbsent(
+					absolutePath, () -> {
+						try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
+							return fIS.toByteBuffer();
+						}						
+					}
+				);
 			}
-		}).runOnlyOnce(
-			instanceId + "_reloadContent",
-			() ->
-				Cache.pathForContents.get(absolutePath) != null
-		).pureAsync().submit().waitForFinish();
+		}
 		return this;
 	}
 

@@ -134,6 +134,11 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	}
 	
 	@Override
+	public void logError(Supplier<String> clientNameSupplier, Throwable exc) {
+		log(clientNameSupplier, LoggingLevel.ERROR, System.err, "Exception occurred", exc);
+	}
+	
+	@Override
 	public void logError(Supplier<String> clientNameSupplier, String message, Throwable exc, Object... arguments) {
 		log(clientNameSupplier, LoggingLevel.ERROR, System.err, Strings.compile(message, arguments), exc);		
 	}
@@ -141,6 +146,11 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	@Override
 	public void logError(Supplier<String> clientNameSupplier, String message, Throwable exc) {
 		log(clientNameSupplier, LoggingLevel.ERROR, System.err, message, exc);
+	}
+	
+	@Override
+	public void logError(Supplier<String> clientNameSupplier, String message, Object... arguments) {
+		log(clientNameSupplier, LoggingLevel.ERROR, System.err, Strings.compile(message, arguments), null);		
 	}
 	
 	@Override
@@ -193,6 +203,5 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 		this.loggers.clear();
 		super.close();
 	}
-
 
 }

@@ -253,7 +253,7 @@ public class ClassFactory implements Component {
 				classNames
 			);
 		} catch (Throwable exc) {
-			throw Throwables.toRuntimeException(exc);
+			return Throwables.throwException(exc);
 		}
 	}
 
@@ -606,7 +606,7 @@ public class ClassFactory implements Component {
 		private Compilation.Result getCompilationResult() {
 			Compilation.Result compilationResult = getCompilationTask().join();
 			if (getCompilationTask().getException() != null) {
-				throw Throwables.toRuntimeException(getCompilationTask().getException());
+				Throwables.throwException(getCompilationTask().getException());
 			}
 			return compilationResult;
 		}
@@ -681,14 +681,10 @@ public class ClassFactory implements Component {
 				if (classLoader instanceof MemoryClassLoader) {
 					((MemoryClassLoader)classLoader).unregister(this, true);
 				}
-				if (compilationTask != null) {
-					if (!BackgroundExecutor.abort(compilationTask)) {
-						if (compilationTask.isStarted()) {
-							Compilation.Result compilationResult = compilationTask.join();
-							if (compilationResult != null) {
-								compilationResult.close();
-							}
-						}
+				if (compilationTask != null && compilationTask.abortOrWaitForFinish().isStarted()) {
+					Compilation.Result compilationResult = compilationTask.join();
+					if (compilationResult != null) {
+						compilationResult.close();
 					}
 				}
 				compilationConfigSupplier = null;

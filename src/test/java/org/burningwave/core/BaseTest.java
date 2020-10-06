@@ -188,7 +188,7 @@ public class BaseTest implements Component {
 		try {
 			Thread.sleep(seconds * 1000);
 		} catch (InterruptedException exc) {
-			throw Throwables.toRuntimeException(exc);
+			Throwables.throwException(exc);
 		}
 	}
 	

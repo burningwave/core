@@ -187,7 +187,7 @@ public interface IterableZipContainer extends Component {
 			loadZipEntryData
 		);
 		if (entriesFound.size() > 1) {
-			throw Throwables.toRuntimeException("Found more than one zip entry for predicate {}", zipEntryPredicate);
+			Throwables.throwException("Found more than one zip entry for predicate {}", zipEntryPredicate);
 		}
 		return entriesFound.stream().findFirst().orElseGet(() -> null);
 	}

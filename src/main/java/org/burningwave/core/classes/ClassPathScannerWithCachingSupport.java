@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.util.Collection;
@@ -42,37 +43,13 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.classes.SearchContext.InitContext;
+import org.burningwave.core.concurrent.Synchronizer.Mutex;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
 
 public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>, R extends SearchResult<I>> extends ClassPathScannerAbst<I, C, R> {
-	
-	public static enum PathLoadingLock {
-		FOR_CACHE("forCache"),
-		FOR_PATH("forPath");
-		
-		public static PathLoadingLock forLabel(String label) {
-			for (PathLoadingLock item : PathLoadingLock.values()) { 
-			    if(item.label.equals(label)) {
-			    	return item;
-			    }
-			}
-			return null;
-		}
-		
-		private String label;
-		
-		private PathLoadingLock(String label) {
-			this.label = label;
-		}
-		
-		public String getLabel() {
-			return label;
-		}
-		
-	}
 	
 	Map<String, Map<String, I>> cache;
 	
@@ -118,11 +95,16 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		FileSystemItem.Criteria filterAndExecutor = buildFileAndClassTesterAndExecutor(context);
 		//scanFileCriteria in this point has been changed by the previous method call
 		FileSystemItem.Criteria fileFilter = searchConfig.getScanFileCriteria();
-		Collection<String> paths = context.getSearchConfig().getPaths();
-		(paths.size() > 1 ? paths.parallelStream() : paths.stream()).forEach(basePath -> {
-			searchInCacheOrInFileSystem(basePath, context,
-					scanFileCriteriaHasNoPredicate, classCriteriaHasNoPredicate, filterAndExecutor, fileFilter);
-		});
+		IterableObjectHelper.iterateParallelIf(
+			context.getSearchConfig().getPaths(), 
+			basePath -> {
+				searchInCacheOrInFileSystem(
+					basePath, context,
+					scanFileCriteriaHasNoPredicate, classCriteriaHasNoPredicate, filterAndExecutor, fileFilter
+				);
+			},
+			item -> item.size() > 1
+		);		
 	}
 
 	private void searchInCacheOrInFileSystem(
@@ -149,8 +131,8 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 		Map<String, I> classesForPath = cache.get(basePath);
 		if (classesForPath == null) {
 			if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate) {
-				String mutexId = instanceId + "_" + basePath;
-				synchronized(Synchronizer.getMutex(mutexId)) {
+				Mutex mutex = Synchronizer.getMutex(instanceId + "_" + basePath);
+				synchronized(mutex) {
 					classesForPath = cache.get(basePath);
 					if (classesForPath == null) {
 						currentScannedPath.findInAllChildren(filterAndExecutor);
@@ -160,10 +142,10 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 							itemsForPath.putAll(itemsFound);
 						}
 						this.cache.put(basePath, itemsForPath);
-						Synchronizer.removeMutex(mutexId);
+						Synchronizer.removeIfUnused(mutex);
 						return;
 					}
-					Synchronizer.removeMutex(mutexId);
+					Synchronizer.removeIfUnused(mutex);
 				}
 				context.addAllItemsFound(basePath, classesForPath);
 				return;

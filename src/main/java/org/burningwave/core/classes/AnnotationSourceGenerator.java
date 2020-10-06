@@ -68,13 +68,21 @@ public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public AnnotationSourceGenerator addParameter(String name, VariableSourceGenerator... parameters) {
+		return addParameter(name, false, parameters);
+	}
+	
+	public AnnotationSourceGenerator addParameter(String name, boolean isArray, VariableSourceGenerator... parameters) {
 		this.body = Optional.ofNullable(this.body).orElseGet(() ->
 			BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
 		);
 		BodySourceGenerator innBody = BodySourceGenerator.createSimple().setBodyElementSeparator(", ");
 		if (name != null) {
-			innBody.setDelimiters(name + " = {", "}");
-		} else {
+			if (isArray) {
+				innBody.setDelimiters(name + " = {", "}");
+			} else {
+				innBody.setDelimiters(name + " = ", null);
+			}
+		} else if (isArray) {
 			innBody.setDelimiters("{", "}");
 		}
 		for (VariableSourceGenerator parameter : parameters) {
@@ -85,17 +93,29 @@ public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public AnnotationSourceGenerator addParameter(AnnotationSourceGenerator... parameters) {
-		return addParameter(null, parameters);
+		return addParameter(null, false, parameters);
+	}
+	
+	public AnnotationSourceGenerator addParameter(boolean isArray, AnnotationSourceGenerator... parameters) {
+		return addParameter(null, isArray, parameters);
 	}
 	
 	public AnnotationSourceGenerator addParameter(String name, AnnotationSourceGenerator... parameters) {
+		return addParameter(name, false, parameters);
+	}
+	
+	public AnnotationSourceGenerator addParameter(String name, boolean isArray, AnnotationSourceGenerator... parameters) {
 		this.body = Optional.ofNullable(this.body).orElseGet(() ->
 			BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
 		);
 		BodySourceGenerator innBody = BodySourceGenerator.createSimple().setBodyElementSeparator(", ");
 		if (name != null) {
-			innBody.setDelimiters(name + " = {", "}");
-		} else {
+			if (isArray) {
+				innBody.setDelimiters(name + " = {", "}");
+			} else {
+				innBody.setDelimiters(name + " = ", null);
+			}
+		} else if (isArray) {
 			innBody.setDelimiters("{", "}");
 		}
 		for (AnnotationSourceGenerator parameter : parameters) {

@@ -28,165 +28,210 @@
  */
 package org.burningwave.core.concurrent;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentContainer.ThreadSupplier;
 
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-public class Synchronizer implements AutoCloseable {
-	
-	public static class Configuration {
-		
-		public static class Key {
-			
-			public static final String ALL_THREADS_STATE_LOGGER_ENABLED = "synchronizer.all-threads-state-logger.enabled";
-			public static final String ALL_THREADS_STATE_LOGGER_LOG_INTERVAL = "synchronizer.all-threads-state-logger.log.interval";
-			
-		}
-		
-		public final static Map<String, Object> DEFAULT_VALUES;
-		
-		static {
-			Map<String, Object> defaultValues = new HashMap<>();
-	
-			defaultValues.put(
-				Key.ALL_THREADS_STATE_LOGGER_ENABLED, 
-				"false"
-			);
-			defaultValues.put(
-				Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL,
-				"30000"
-			);				
-			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
-		}
-		
-	}
-	
-	Map<String, Object> parallelLockMap;
+import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.function.ThrowingRunnable;
+import org.burningwave.core.function.ThrowingSupplier;
+
+@SuppressWarnings("unused")
+public class Synchronizer implements AutoCloseable, ManagedLogger {
+	Map<String, Mutex> mutexes;
 	Thread allThreadsStateLogger;
 	
 	private Synchronizer() {
-		this.parallelLockMap = new ConcurrentHashMap<>();
+		mutexes = new ConcurrentHashMap<>();
 	}
 	
-	public static Synchronizer create() {
-		return new Synchronizer();
+	public static Synchronizer create(boolean undestroyable) {
+		if (undestroyable) {
+			return new Synchronizer() {
+				StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
+				@Override
+				public void close() {
+					if (Methods.retrieveExternalCallerInfo().getClassName().equals(Methods.retrieveExternalCallerInfo(stackTraceOnCreation).getClassName())) {
+						super.close();
+					}
+				}
+			};
+		} else {
+			return new Synchronizer();
+		}
 	}
 	
-	public Object getMutex(String id) {
-		Object newLock = new Object();
-    	Object lock = parallelLockMap.putIfAbsent(id, newLock);
-        if (lock != null) {
-        	return lock;
-        }
-        return newLock;
-    }
-	
-	public void execute(String id, Runnable executable) {
-		synchronized (getMutex(id)) {
-			try {
-				executable.run();
-			} finally {
-				parallelLockMap.remove(id);
+	synchronized void stop(Thread thread, boolean waitThreadToFinish) {
+		if (thread == null) {
+			return;
+		}
+		thread.shutDown();
+		if (waitThreadToFinish) {
+			try {				
+				thread.join();
+			} catch (InterruptedException exc) {
+				ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
 			}
 		}
+	}
+	
+	public Mutex getMutex(String id) {
+		Mutex newMutex = new Mutex();
+		while (true) {			
+			Mutex oldMutex = mutexes.putIfAbsent(id, newMutex);
+	        if (oldMutex != null) {
+	        	if (++oldMutex.clientsCount > 1 && mutexes.get(id) == oldMutex) {
+		        	oldMutex.id = id;
+	        		return oldMutex;
+	        	}
+	        	logWarn("Unvalid mutex with id \"{}\": a new mutex will be created", id);
+	        	continue;
+	        }
+	        newMutex.id = id;
+	        return newMutex;
+		}
+    }
+
+	public void removeIfUnused(Mutex mutex) {
+		try {
+			if (--mutex.clientsCount < 1) {
+				mutexes.remove(mutex.id);
+			}
+		} catch (Throwable exc) {
+
+		}
+	}
+	
+	public void execute(String id, Runnable executable) {
+		Mutex mutex = getMutex(id);
+		try {
+			synchronized (mutex) {
+				executable.run();
+			}			
+		} finally {
+			removeIfUnused(mutex);
+		}
+	}
+	
+	public <E extends Throwable> void executeThrower(String id, ThrowingRunnable<E> executable) throws E {
+		Mutex mutex = getMutex(id);
+		try {
+			synchronized (mutex) {
+				executable.run();
+			}			
+		} finally {
+			removeIfUnused(mutex);
+		}	
 	}
 	
 	public <T> T execute(String id, Supplier<T> executable) {
-		T result = null;
-		synchronized (getMutex(id)) {
-			try {
-				result = executable.get();
-			} finally {
-				parallelLockMap.remove(id);
-			}
+		Mutex mutex = getMutex(id);
+		try {
+			synchronized (mutex) {
+				return executable.get();
+			}			
+		} finally {
+			removeIfUnused(mutex);
+		}	
+	}
+	
+	public <T, E extends Throwable> T executeThrower(String id, ThrowingSupplier<T, E> executable) throws E {
+		Mutex mutex = getMutex(id);
+		try {
+			synchronized (mutex) {
+				return executable.get();
+			}			
+		} finally {
+			removeIfUnused(mutex);
 		}
-		return result;
 	}
 
 	public void clear() {
-		parallelLockMap.clear();
+		mutexes.clear();
 	}
 	
 	@Override
 	public void close() {
+		stopLoggingAllThreadsState();		
 		clear();
-		stopLoggingAllThreadsState();
-		parallelLockMap = null;
-	}
-
-	public void removeMutex(String id) {
-		parallelLockMap.remove(id);	
-	}
-	
-	public synchronized void startLoggingAllThreadsState() {
-		startLoggingAllThreadsState(Long.valueOf(GlobalProperties.resolveValue(Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL)));
+		mutexes = null;
 	}
 	
 	public synchronized void startLoggingAllThreadsState(Long interval) {
 		if (allThreadsStateLogger != null) {
 			stopLoggingAllThreadsState();
 		}
-		AtomicBoolean isAliveWrapper = new AtomicBoolean();
-		allThreadsStateLogger = new Thread(() -> {
-			isAliveWrapper.set(true);
-			while (isAliveWrapper.get()) {
-				logAllThreadsState();
-				waitFor(interval);
-			}
-		}, "All threads state logger") {
-			
-			@Override
-			public void interrupt() {
-				isAliveWrapper.set(false);
-				synchronized(allThreadsStateLogger) {
-					allThreadsStateLogger.notifyAll();
+		allThreadsStateLogger = ThreadSupplier.getOrCreate().setExecutable(thread -> {
+			try {
+				thread.waitFor(interval);
+				if (thread.isLooping()) {
+					logAllThreadsState();
 				}
+			} catch (Throwable exc) {
+				logError(exc);
 			}
-		};
+		}, true);
+		allThreadsStateLogger.setName("All threads state logger");
 		allThreadsStateLogger.setPriority(Thread.MIN_PRIORITY);
-		allThreadsStateLogger.setDaemon(true);
 		allThreadsStateLogger.start();
 	}
 
 	private void logAllThreadsState() {
 		StringBuffer log = new StringBuffer("\n\n");
-		for (Entry<Thread, StackTraceElement[]> threadAndStackTrace : Thread.getAllStackTraces().entrySet()) {
-			log.append("\t" + threadAndStackTrace.getKey() + ":\n");
+		log.append("Current threads state: \n\n");
+		Iterator<Entry<java.lang.Thread, StackTraceElement[]>> allStackTracesItr = java.lang.Thread.getAllStackTraces().entrySet().iterator();
+		while(allStackTracesItr.hasNext()) {
+			Map.Entry<java.lang.Thread, StackTraceElement[]> threadAndStackTrace = allStackTracesItr.next();
+			log.append("\t" + threadAndStackTrace.getKey());
 			log.append(Strings.from(threadAndStackTrace.getValue(), 2));
-			log.append("\n\n\n");
-		}
-		ManagedLoggersRepository.logInfo(() -> this.getClass().getName(), "Current threads state: {}", log.toString());
-	}
-	
-	public Thread[] getAllThreads() {
-		return Methods.invokeStaticDirect(Thread.class, "getThreads");
-	}
-	
-	private void waitFor(long timeout) {
-		synchronized(allThreadsStateLogger) {
-			try {
-				allThreadsStateLogger.wait(timeout);
-			} catch (InterruptedException exc) {
-				ManagedLoggersRepository.logError(() -> this.getClass().getName(), "Exception occurred", exc);
+			if (allStackTracesItr.hasNext()) {
+				log.append("\n\n");
 			}
 		}
+		log.append(BackgroundExecutor.getInfoAsString());
+		log.append("\n\n\n");
+		log.append(
+			Strings.compile(
+				"Mutexes count: {}",
+				mutexes.size()
+			)
+		);
+//		log.append(
+//			":\n" +
+//			IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 1)
+//		);
+		log.append("\n");
+		ManagedLoggersRepository.logInfo(
+			() -> this.getClass().getName(),
+			log.toString()
+		);
 	}
 	
-	public synchronized void stopLoggingAllThreadsState() {
-		if (allThreadsStateLogger == null) {
-			return;
-		}
-		allThreadsStateLogger.interrupt();
+	public java.lang.Thread[] getAllThreads() {
+		return Methods.invokeStaticDirect(java.lang.Thread.class, "getThreads");
+	}
+	
+	public void stopLoggingAllThreadsState() {
+		stopLoggingAllThreadsState(false);
+	}
+	
+	public synchronized void stopLoggingAllThreadsState(boolean waitThreadToFinish) {
+		stop(allThreadsStateLogger, waitThreadToFinish);
 		allThreadsStateLogger = null;
 	}
 	
+	public static class Mutex  {	
+		String id;
+		int clientsCount = 1;
+	}
 }

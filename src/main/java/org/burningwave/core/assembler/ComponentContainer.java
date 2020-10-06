@@ -142,12 +142,12 @@ public class ComponentContainer implements ComponentSupplier {
 					}
 					return config;
 				} catch (Throwable exc) {
-					throw Throwables.toRuntimeException(exc);
+					return Throwables.throwException(exc);
 				}
 			}).init();
 		} catch (Throwable exc){
 			ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
-			throw Throwables.toRuntimeException(exc);
+			return Throwables.throwException(exc);
 		}
 	}
 	
@@ -156,7 +156,7 @@ public class ComponentContainer implements ComponentSupplier {
 			return new ComponentContainer(() -> properties).init();
 		} catch (Throwable exc){
 			ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
-			throw Throwables.toRuntimeException(exc);
+			return Throwables.throwException(exc);
 		}
 	}
 	
@@ -205,7 +205,7 @@ public class ComponentContainer implements ComponentSupplier {
 							task.waitForFinish();
 						}
 					}
-				}).pureAsync();
+				}).async();
 			});
 		}
 		return this;
@@ -495,7 +495,7 @@ public class ComponentContainer implements ComponentSupplier {
 						logError("Exception occurred while closing " + component, exc);
 					}
 				}),Thread.MIN_PRIORITY
-			).async().submit();
+			).submit();
 		}
 		return this;
 	}
@@ -526,7 +526,7 @@ public class ComponentContainer implements ComponentSupplier {
 				});
 			});
 		} else {
-			throw Throwables.toRuntimeException("Could not close singleton instance {}", LazyHolder.COMPONENT_CONTAINER_INSTANCE);
+			Throwables.throwException("Could not close singleton instance {}", LazyHolder.COMPONENT_CONTAINER_INSTANCE);
 		}
 	}
 	

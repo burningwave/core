@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.Random;
 
 import org.burningwave.core.ManagedLogger;
-import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
@@ -50,6 +49,16 @@ public class StaticComponentContainer {
 		public static class Key {
 			private static final String HIDE_BANNER_ON_INIT = "static-component-container.hide-banner-on-init";
 			private static final String BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED = "background-executor.task-creation-tracking.enabled";
+			private static final String ALL_THREADS_STATE_LOGGER_ENABLED = "synchronizer.all-threads-state-logger.enabled";
+			private static final String ALL_THREADS_STATE_LOGGER_LOG_INTERVAL = "synchronizer.all-threads-state-logger.log.interval";
+			private static final String THREAD_SUPPLIER_NAME = "thread-supplier.name";
+			private static final String THREAD_SUPPLIER_MAX_POOLABLE_THREADS_COUNT = "thread-supplier.max-poolable-threads-count";
+			private static final String THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT = "thread-supplier.max-temporarily-threads-count";
+			private static final String THREAD_SUPPLIER_POOLABLE_THREAD_REQUEST_TIMEOUT = "thread-supplier.poolable-thread-request-timeout";
+			private static final String THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET = "thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-for-reset";
+			private static final String THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP = "thread-supplier.max-temporarily-threads-count.increasing-step";
+			                                         
+			
 		}
 		
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -57,8 +66,52 @@ public class StaticComponentContainer {
 		static {
 			Map<String, Object> defaultValues =  new HashMap<>(); 
 			
-			defaultValues.put(Key.HIDE_BANNER_ON_INIT, "false");
-			defaultValues.put(Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED, "false");
+			defaultValues.put(Key.HIDE_BANNER_ON_INIT, false);
+			
+			defaultValues.put(
+				Key.ALL_THREADS_STATE_LOGGER_ENABLED, 
+				false
+			);
+			
+			defaultValues.put(
+				Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL,
+				120000
+			);	
+			
+			defaultValues.put(
+				Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED,
+				"${" + Key.ALL_THREADS_STATE_LOGGER_ENABLED +"}"
+			);	
+			
+			defaultValues.put(
+				Key.THREAD_SUPPLIER_NAME,
+				"Burningwave thread supplier"
+			);			
+			
+			defaultValues.put(
+				Key.THREAD_SUPPLIER_MAX_POOLABLE_THREADS_COUNT,
+				"auto"
+			);
+			
+			defaultValues.put(
+				Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT,
+				"auto"
+			);
+			
+			defaultValues.put(
+				Key.THREAD_SUPPLIER_POOLABLE_THREAD_REQUEST_TIMEOUT,
+				3000
+			);
+			
+			defaultValues.put(
+				Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET,
+				30000
+			);
+			
+			defaultValues.put(
+				Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP,
+				8
+			);
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
@@ -90,19 +143,17 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.io.Streams Streams;
 	public static final org.burningwave.core.Strings Strings;
 	public static final org.burningwave.core.concurrent.Synchronizer Synchronizer;
+	public static final org.burningwave.core.concurrent.Thread.Supplier ThreadSupplier;
 	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
 		try {
-			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create();
 			Strings = org.burningwave.core.Strings.create();
 			Throwables = org.burningwave.core.Throwables.create();
 			Objects = org.burningwave.core.Objects.create();
-			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create("Background executor", true, true);
 			Resources = new org.burningwave.core.io.Resources();
 			Properties properties = new Properties();
 			properties.putAll(Configuration.DEFAULT_VALUES);
-			properties.putAll(org.burningwave.core.concurrent.Synchronizer.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.iterable.IterableObjectHelper.Configuration.DEFAULT_VALUES);
@@ -120,7 +171,33 @@ public class StaticComponentContainer {
 								Fields.setStaticDirect(StaticComponentContainer.class, "ManagedLoggersRepository", ManagedLogger.Repository.create(config));
 								toBeReplaced.close();
 							} else if (keyAsString.equals(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED)) {
-								BackgroundExecutor.setTasksCreationTrackingFlag(Boolean.valueOf((String)newValue));
+								BackgroundExecutor.setTasksCreationTrackingFlag(
+									Objects.toBoolean(
+										GlobalProperties.resolveValue(
+											Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED
+										)
+									)
+								);
+							} else if (keyAsString.equals(Configuration.Key.ALL_THREADS_STATE_LOGGER_ENABLED)) {
+								if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.ALL_THREADS_STATE_LOGGER_ENABLED))) {
+									Synchronizer.startLoggingAllThreadsState(
+										Objects.toLong(
+											GlobalProperties.resolveValue(
+												Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL
+											)
+										)
+									);
+								} else {
+									Synchronizer.stopLoggingAllThreadsState();
+								}
+							} else if (keyAsString.equals(Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL)) {
+								Synchronizer.startLoggingAllThreadsState(
+									Objects.toLong(
+										GlobalProperties.resolveValue(
+											Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL
+										)
+									)
+								);
 							}
 						}
 					}
@@ -128,11 +205,23 @@ public class StaticComponentContainer {
 				};
 				
 			}.listenTo(GlobalProperties = propBag.getKey());
-			if (Boolean.valueOf(GlobalProperties.getProperty(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED))) {
+			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
+			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
+				GlobalProperties.resolveStringValue(Configuration.Key.THREAD_SUPPLIER_NAME),
+				GlobalProperties.resolveValue(Configuration.Key.THREAD_SUPPLIER_MAX_POOLABLE_THREADS_COUNT),
+				GlobalProperties.resolveValue(Configuration.Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT),
+				true,
+				Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.THREAD_SUPPLIER_POOLABLE_THREAD_REQUEST_TIMEOUT)),
+				Objects.toInt(GlobalProperties.resolveValue(Configuration.Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP)),
+				Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET)),
+				true
+			);
+			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create("Background executor", ThreadSupplier, true, true);
+			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(true);
+			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED))) {
 				BackgroundExecutor.setTasksCreationTrackingFlag(true);
 			}
-			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
-			if (!Boolean.valueOf(GlobalProperties.getProperty(Configuration.Key.HIDE_BANNER_ON_INIT))) {
+			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.HIDE_BANNER_ON_INIT))) {
 				showBanner();
 			}
 			ManagedLoggersRepository = ManagedLogger.Repository.create(GlobalProperties);
@@ -173,9 +262,9 @@ public class StaticComponentContainer {
 			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
 			Runtime.getRuntime().addShutdownHook(
-				new Thread(() -> {
+				ThreadSupplier.getOrCreate("Resources releaser").setExecutable(thread -> {
 					try {
-						ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Waiting for all tasks ending");
+						ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "... Waiting for all tasks ending before closing all component containers");
 						BackgroundExecutor.waitForTasksEnding(true);
 						ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Closing all component containers");
 						ComponentContainer.closeAll();
@@ -188,22 +277,23 @@ public class StaticComponentContainer {
 					} catch (Throwable exc) {
 						ManagedLoggersRepository.logError(() -> StaticComponentContainer.class.getName(), "Exception occurred while closing FileSystemHelper", exc);
 					}
-					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Waiting for all tasks ending");
+					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "... Waiting for all tasks ending before shuting down BackgroundExecutor");
 					BackgroundExecutor.waitForTasksEnding(true);
 					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Shuting down BackgroundExecutor");
 					BackgroundExecutor.shutDown(false);
-					Synchronizer.stopLoggingAllThreadsState();
-				}, "Resources releaser")
+					Synchronizer.close();
+					ThreadSupplier.shutDownAll();
+				})
 			);
 			FileSystemHelper.startScavenger();
-			if (Boolean.valueOf(
-				GlobalProperties.resolveStringValue(
-					org.burningwave.core.concurrent.Synchronizer.Configuration.Key.ALL_THREADS_STATE_LOGGER_ENABLED
+			if (Objects.toBoolean(
+				GlobalProperties.resolveValue(
+					Configuration.Key.ALL_THREADS_STATE_LOGGER_ENABLED
 				)
 			)) {
 				Synchronizer.startLoggingAllThreadsState(
-					Long.valueOf(
-						GlobalProperties.resolveValue(org.burningwave.core.concurrent.Synchronizer.Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL)
+					Objects.toLong(
+						GlobalProperties.resolveValue(Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL)
 					)
 				);
 			}
@@ -213,7 +303,7 @@ public class StaticComponentContainer {
 		}
 		
 	}
-
+	
 	static void showBanner() {
 		List<String> bannerList = Arrays.asList(
 			Resources.getAsStringBuffer(

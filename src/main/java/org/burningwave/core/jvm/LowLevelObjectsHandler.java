@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.jvm;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
@@ -186,7 +187,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 					methods.stream().skip(methods.size() - 1).findFirst().get()
 				));
 			} catch (Throwable exc) {
-				throw Throwables.toRuntimeException(exc);
+				Throwables.throwException(exc);
 			}
 		}
 		return classLoader;
@@ -222,7 +223,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			try {
 				accessibleSetter.accept(object, flag);
 			} catch (Throwable exc2) {
-				throw Throwables.toRuntimeException(exc2);
+				Throwables.throwException(exc2);
 			}
 		}
 	}
@@ -295,7 +296,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 	
 	public void setFieldValue(Object target, Field field, Object value) {
 		if(value != null && !Classes.isAssignableFrom(field.getType(), value.getClass())) {
-			throw Throwables.toRuntimeException("Value {} is not assignable to {}", value , field.getName());
+			Throwables.throwException("Value {} is not assignable to {}", value , field.getName());
 		}
 		target = Modifier.isStatic(field.getModifiers())?
 			field.getDeclaringClass() :
@@ -388,6 +389,10 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		);
 	}
 	
+	public void throwException(Throwable exc) {
+		unsafe.throwException(exc);
+	}
+	
 	@Override
 	public void close() {
 		if (this != StaticComponentContainer.LowLevelObjectsHandler) {
@@ -409,7 +414,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			classLoaderDelegateClass = null;
 			builtinClassLoaderClass = null;
 		} else {
-			throw Throwables.toRuntimeException("Could not close singleton instance " + this);
+			Throwables.throwException("Could not close singleton instance " + this);
 		}
 	}
 
@@ -417,12 +422,12 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		private Field directAllocatedByteBufferAddressField;
 		
 		public ByteBufferHandler() {
-			new Thread(() -> {
+			BackgroundExecutor.createTask(() -> {
 				init();
 				synchronized (this) {
 					this.notifyAll();
 				}
-			}, "ByteBufferHandler initializer").start();
+			}).setName("ByteBufferHandler initializer").async().submit();
 		}
 
 		void init() {
@@ -440,7 +445,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 					directByteBufferClass = directByteBufferClass.getSuperclass();
 				}
 			} catch (InterruptedException exc) {
-				throw Throwables.toRuntimeException(exc);
+				Throwables.throwException(exc);
 			}
 		}
 		
@@ -503,7 +508,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 						try {
 							this.wait();
 						} catch (InterruptedException exc) {
-							throw Throwables.toRuntimeException(exc);
+							Throwables.throwException(exc);
 						}
 					}
 				}
@@ -649,7 +654,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 				this.lowLevelObjectsHandler.unsafe = (Unsafe)theUnsafeField.get(null);
 			} catch (Throwable exc) {
 				logInfo("Exception while retrieving unsafe");
-				throw Throwables.toRuntimeException(exc);
+				Throwables.throwException(exc);
 			}
 		}	
 		
@@ -721,7 +726,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 					Class.class
 				);
 			} catch (Throwable exc) {
-				throw Throwables.toRuntimeException(exc);
+				Throwables.throwException(exc);
 			}
 		}
 		
@@ -736,18 +741,17 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 
 			private ForJava8(LowLevelObjectsHandler lowLevelObjectsHandler) {
 				super(lowLevelObjectsHandler);
-				Field modes;
 				try {
-					modes = MethodHandles.Lookup.class.getDeclaredField("allowedModes");
+					Field modes = MethodHandles.Lookup.class.getDeclaredField("allowedModes");
+					modes.setAccessible(true);
+					lowLevelObjectsHandler.consulterRetriever = (cls) -> {
+						MethodHandles.Lookup consulter = MethodHandles.lookup().in(cls);
+						modes.setInt(consulter, -1);
+						return consulter;
+					};
 				} catch (NoSuchFieldException | SecurityException exc) {
-					throw Throwables.toRuntimeException(exc);
+					Throwables.throwException(exc);
 				}
-				modes.setAccessible(true);
-				lowLevelObjectsHandler.consulterRetriever = (cls) -> {
-					MethodHandles.Lookup consulter = MethodHandles.lookup().in(cls);
-					modes.setInt(consulter, -1);
-					return consulter;
-				};
 			}
 
 			@Override
@@ -760,14 +764,14 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 						accessibleSetterMethod.invoke(null, accessibleObject, flag);
 				} catch (Throwable exc) {
 					logInfo("method setAccessible0 class not detected on " + AccessibleObject.class.getName());
-					throw Throwables.toRuntimeException(exc);
+					Throwables.throwException(exc);
 				}
 				try {
 					lowLevelObjectsHandler.methodInvoker = Class.forName("sun.reflect.NativeMethodAccessorImpl").getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
 					lowLevelObjectsHandler.setAccessible(lowLevelObjectsHandler.methodInvoker, true);
 				} catch (Throwable exc2) {
 					logError("method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
-					throw Throwables.toRuntimeException(exc2);
+					Throwables.throwException(exc2);
 				}		
 			}
 		}
@@ -800,7 +804,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 				} catch (IllegalArgumentException | NoSuchMethodException
 						| SecurityException | IllegalAccessException exc) {
 					logError("Could not initialize consulter", exc);
-					throw Throwables.toRuntimeException(exc);
+					Throwables.throwException(exc);
 				}
 			}
 
@@ -814,7 +818,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 						accessibleSetterMethod.invoke(accessibleObject, flag);
 				} catch (Throwable exc) {
 					logInfo("method setAccessible0 class not detected on " + AccessibleObject.class.getName());
-					throw Throwables.toRuntimeException(exc);
+					Throwables.throwException(exc);
 				}
 				try {
 					MethodHandles.Lookup classLoaderConsulter = lowLevelObjectsHandler.getConsulter(ClassLoader.class);
@@ -823,7 +827,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 					lowLevelObjectsHandler.packageRetriever = (classLoader, object, packageName) ->
 						(Package)methodHandle.invokeExact(classLoader, packageName);
 				} catch (Throwable exc) {
-					throw Throwables.toRuntimeException(exc);
+					Throwables.throwException(exc);
 				}
 				try {
 					lowLevelObjectsHandler.builtinClassLoaderClass = Class.forName("jdk.internal.loader.BuiltinClassLoader");
@@ -836,7 +840,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 						lowLevelObjectsHandler.setAccessible(lowLevelObjectsHandler.methodInvoker, true);
 					} catch (Throwable exc) {
 						logInfo("method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
-						throw Throwables.toRuntimeException(exc);
+						Throwables.throwException(exc);
 					}
 					try (
 						InputStream inputStream =
@@ -849,18 +853,18 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 							lowLevelObjectsHandler.builtinClassLoaderClass, bBOS.toByteArray(), null
 						);
 					} catch (Throwable exc) {
-						throw Throwables.toRuntimeException(exc);
+						Throwables.throwException(exc);
 					}
 				} catch (Throwable exc) {
 					logInfo("jdk.internal.loader.BuiltinClassLoader class not detected");
-					throw Throwables.toRuntimeException(exc);
+					Throwables.throwException(exc);
 				}
 				try {
 					initDeepConsulter();
 				} catch (IllegalAccessException | NoSuchMethodException | InstantiationException
 						| InvocationTargetException | ClassNotFoundException exc) {
 					logInfo("Could not init deep consulter");
-					throw Throwables.toRuntimeException(exc);
+					Throwables.throwException(exc);
 				}
 			}
 

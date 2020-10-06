@@ -36,6 +36,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.InputStream;
@@ -465,6 +466,21 @@ public class Classes implements Component, MembersRetriever {
 			);
 		}
 		
+		Object getClassLoadingLock(ClassLoader classLoader, String className) {
+			try {
+				return getGetClassLoadingLockMethod(classLoader).invoke(classLoader, className);
+			} catch (Throwable exc) {
+				return Throwables.throwException(exc);
+			}
+		}
+		
+		public MethodHandle getGetClassLoadingLockMethod(ClassLoader classLoader) {
+			return getMethod(
+				Classes.getClassLoader(classLoader.getClass()) + "_" + classLoader + "_" +  "getClassLoadingLock",
+				() -> findGetClassLoadingLockMethodAndMakeItAccesible(classLoader)
+			);
+		}
+		
 		private MethodHandle findDefineClassMethodAndMakeItAccesible(ClassLoader classLoader) {
 			Method method = Members.findAll(
 				MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
@@ -474,6 +490,20 @@ public class Classes implements Component, MembersRetriever {
 				).and().parameterTypesAreAssignableFrom(
 					String.class, ByteBuffer.class, ProtectionDomain.class
 				).and().returnType((cls) -> cls.getName().equals(Class.class.getName())),
+				classLoader.getClass()
+			).stream().findFirst().orElse(null);
+			return Methods.convertToMethodHandleBag(method).getValue();
+		}
+		
+		private MethodHandle findGetClassLoadingLockMethodAndMakeItAccesible(ClassLoader classLoader) {
+			Method method = Members.findAll(
+				MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
+					"getClassLoadingLock"::equals
+				).and().parameterTypes(params -> 
+					params.length == 1
+				).and().parameterTypesAreAssignableFrom(
+					String.class
+				),
 				classLoader.getClass()
 			).stream().findFirst().orElse(null);
 			return Methods.convertToMethodHandleBag(method).getValue();
@@ -533,7 +563,7 @@ public class Classes implements Component, MembersRetriever {
 			
 			}
 			if (packages == null) {
-				throw Throwables.toRuntimeException("Could not find packages Map on {}", classLoader);
+				Throwables.throwException("Could not find packages Map on {}", classLoader);
 			}
 			return packages;
 			
@@ -650,11 +680,12 @@ public class Classes implements Component, MembersRetriever {
 			MethodHandle defineClassMethod, 
 			MethodHandle definePackageMethod
 		) throws ClassNotFoundException {
+			String className = toLoad.getName();
 			try {
 				try {
-					return (Class<T>)classLoader.loadClass(toLoad.getName());
+					return (Class<T>)classLoader.loadClass(className);
 				} catch (ClassNotFoundException | NoClassDefFoundError exc) {
-					Class<T> cls = defineOrLoad(classLoader, defineClassMethod, toLoad.getName(), Streams.shareContent(Classes.getByteCode(toLoad)));
+					Class<T> cls = defineOrLoad(classLoader, defineClassMethod, className, Streams.shareContent(Classes.getByteCode(toLoad)));
 	    			definePackageFor(cls, classLoader, definePackageMethod);
 	    			return cls;
 				}
@@ -668,17 +699,18 @@ public class Classes implements Component, MembersRetriever {
         		);
 				return (Class<T>)loadOrDefine(
         			Class.forName(
-        					toLoad.getName(), false, toLoad.getClassLoader()
+        				className, false, toLoad.getClassLoader()
         			),
         			classLoader, defineClassMethod, definePackageMethod
         		);
 			}
 	    }
 		
-		public <T> Class<T> defineOrLoad(ClassLoader classLoader, JavaClass javaClass) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
-			Class<T> definedClass = defineOrLoad(classLoader, getDefineClassMethod(classLoader), javaClass.getName(), javaClass.getByteCode());
+		public <T> Class<T> defineOrLoad(ClassLoader classLoader, JavaClass javaClass) throws ReflectiveOperationException {
+			String className = javaClass.getName();
+			Class<T> definedClass = defineOrLoad(classLoader, getDefineClassMethod(classLoader), className, javaClass.getByteCode());
 			definePackageFor(definedClass, classLoader, getDefinePackageMethod(classLoader));
-			return definedClass;
+			return definedClass;			
 		}
 		
 
@@ -689,7 +721,9 @@ public class Classes implements Component, MembersRetriever {
 			ByteBuffer byteCode
 		) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
 			try {
-				return (Class<T>)method.invoke(classLoader, className, byteCode, null);
+				synchronized (getClassLoadingLock(classLoader, className)) {
+					return (Class<T>)method.invoke(classLoader, className, byteCode, null);
+				}
 			} catch (InvocationTargetException | ClassNotFoundException | NoClassDefFoundError exc) {
 				throw exc;
 			} catch (java.lang.LinkageError exc) {
@@ -699,7 +733,7 @@ public class Classes implements Component, MembersRetriever {
 				if (byteCode == null) {
 					throw new ClassNotFoundException(className);
 				}
-				throw Throwables.toRuntimeException(exc);
+				return Throwables.throwException(exc);
 			}
 		}
 		
@@ -729,9 +763,12 @@ public class Classes implements Component, MembersRetriever {
 				String pckgName = cls.getName().substring(
 			    	0, cls.getName().lastIndexOf(".")
 			    );
-			    Package pkg = retrieveLoadedPackage(classLoader, pckgName);
-			    if (pkg == null) {
-			    	pkg = definePackage(classLoader, definePackageMethod, pckgName, null, null, null, null, null, null, null);
+			    if (retrieveLoadedPackage(classLoader, pckgName) == null) {
+			    	Synchronizer.execute(classLoader + "_" + pckgName,() -> {
+			    		if (retrieveLoadedPackage(classLoader, pckgName) == null) {
+			    			definePackage(classLoader, definePackageMethod, pckgName, null, null, null, null, null, null, null);
+			    		}
+			    	});
 				}	
 			}
 		}
@@ -909,7 +946,7 @@ public class Classes implements Component, MembersRetriever {
 				this.classLoadersPackages.clear();
 				this.classLoadersPackages = null;
 			} else {
-				throw Throwables.toRuntimeException("Could not close singleton instance {}", this);
+				Throwables.throwException("Could not close singleton instance {}", this);
 			}
 		}
 	}

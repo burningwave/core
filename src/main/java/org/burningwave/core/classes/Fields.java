@@ -175,7 +175,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	public Field findOneAndMakeItAccessible(Class<?> targetClass, String memberName) {
 		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, memberName, null);
 		if (members.size() != 1) {
-			throw Throwables.toRuntimeException("Field {} not found or found more than one field in {} hierarchy", memberName, targetClass.getName());
+			Throwables.throwException("Field {} not found or found more than one field in {} hierarchy", memberName, targetClass.getName());
 		}
 		return members.stream().findFirst().get();
 	}
@@ -183,7 +183,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	public Field findFirstAndMakeItAccessible(Class<?> targetClass, String fieldName, Class<?> valueClass) {
 		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, fieldName, valueClass);
 		if (members.size() < 1) {
-			throw Throwables.toRuntimeException("Field {} not found in {} hierarchy", fieldName, targetClass.getName());
+			Throwables.throwException("Field {} not found in {} hierarchy", fieldName, targetClass.getName());
 		}
 		return members.stream().findFirst().get();
 	}

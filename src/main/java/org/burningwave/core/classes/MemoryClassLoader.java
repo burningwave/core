@@ -35,6 +35,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.InputStream;
@@ -99,9 +100,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 
 	void addByteCode0(String className, ByteBuffer byteCode) {
 		if (ClassLoaders.retrieveLoadedClass(this, className) == null) {
-			synchronized (notLoadedByteCodes) {
-				notLoadedByteCodes.put(className, byteCode);
-			}
+			notLoadedByteCodes.put(className, byteCode);
 		} else {
 			logWarn("Could not add bytecode for class {} cause it's already defined", className);
 		}
@@ -197,16 +196,13 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	) throws IllegalArgumentException {
     	Package pkg = null;
     	if (Strings.isNotEmpty(packageName)) {
-    		pkg = ClassLoaders.retrieveLoadedPackage(this, packageName);
-    		if (pkg == null) {
-    			try {
-    				pkg = super.definePackage(packageName, specTitle, specVersion, specVendor, implTitle,
-    		    			implVersion, implVendor, sealBase);
-    			} catch (IllegalArgumentException exc) {
-    				logWarn("Package " + packageName + " already defined");
-    				pkg = ClassLoaders.retrieveLoadedPackage(this, packageName);
-    			}
-    		}
+    		try {
+				pkg = super.definePackage(packageName, specTitle, specVersion, specVendor, implTitle,
+		    			implVersion, implVendor, sealBase);
+			} catch (IllegalArgumentException exc) {
+				logWarn("Package " + packageName + " already defined");
+				pkg = ClassLoaders.retrieveLoadedPackage(this, packageName);
+			}
     	}
     	return pkg;
     }
@@ -217,19 +213,18 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		    	0, cls.getName().lastIndexOf(".")
 		    );
 		    if (ClassLoaders.retrieveLoadedPackage(this, pckgName) == null) {
-		    	definePackage(pckgName, null, null, null, null, null, null, null);
+		    	Synchronizer.execute(instanceId + "_" + pckgName, () -> {
+		    		if (ClassLoaders.retrieveLoadedPackage(this, pckgName) == null) {
+		    			definePackage(pckgName, null, null, null, null, null, null, null);
+		    		}
+		    	});
 			}	
 		}
 	}
     
     @Override
     protected Class<?> loadClass(String className, boolean resolve) throws ClassNotFoundException {
-    	Class<?> cls = null;
-    	try {
-			cls = super.loadClass(className, resolve);
-		} catch (SecurityException exc) {
-			cls = Class.forName(className);
-		}
+    	Class<?> cls = super.loadClass(className, resolve);
     	removeNotLoadedBytecode(className);
     	return cls;
     }
@@ -294,9 +289,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
     protected void addLoadedByteCode(String className, ByteBuffer byteCode) {
     	try {
-    		synchronized (loadedByteCodes) {
-        		loadedByteCodes.put(className, byteCode);
-    		}
+    		loadedByteCodes.put(className, byteCode);
     	} catch (Throwable exc) {
     		if (!isClosed) {
     			throw exc;
@@ -342,17 +335,17 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	Class<?> _defineClass(String className, java.nio.ByteBuffer byteCode, ProtectionDomain protectionDomain) {
-		Class<?> cls = super.defineClass(className, byteCode, protectionDomain);
-		addLoadedByteCode(className, byteCode);
-		removeNotLoadedBytecode(className);
-		return cls;
+		synchronized(getClassLoadingLock(className)) {
+			Class<?> cls = super.defineClass(className, byteCode, protectionDomain);
+			addLoadedByteCode(className, byteCode);
+			removeNotLoadedBytecode(className);
+			return cls;
+		}
 	}
 
 	public void removeNotLoadedBytecode(String className) {
 		try {
-			synchronized (notLoadedByteCodes) {
-				notLoadedByteCodes.remove(className);
-			}
+			notLoadedByteCodes.remove(className);
     	} catch (Throwable exc) {
     		if (!isClosed) {
     			throw exc;
@@ -437,7 +430,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		return closeResources(MemoryClassLoader.class.getName() + "@" + System.identityHashCode(this), () -> isClosed, () -> {
 			Collection<Object> clients = this.clients;
 			if (clients != null && !clients.isEmpty()) {
-				throw Throwables.toRuntimeException("Could not close {} because there are {} registered clients", this, clients.size());
+				Throwables.throwException("Could not close {} because there are {} registered clients", this, clients.size());
 			}
 			isClosed = true;
 			ClassLoader parentClassLoader = getParent();
