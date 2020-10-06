@@ -30,6 +30,7 @@ package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -130,7 +131,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		private int inititialMaxThreadsCount;
 		private int maxThreadsCount;
 		private int maxTemporarilyThreadsCountIncreasingStep;
-		private long threadRequestTimeout;
+		private long poolableThreadRequestTimeout;
 		private long elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount;
 		private Collection<Thread> runningThreads;
 		private Collection<Thread> poolableSleepingThreads;
@@ -139,10 +140,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		
 		Supplier (
 			String name,
-			int maxPoolableThreadsCount,
-			int maxTemporarilyThreadsCount,
+			Object maxPoolableThreadsCount,
+			Object maxTemporarilyThreadsCount,
 			boolean daemon,
-			long threadRequestTimeout,
+			long poolableThreadRequestTimeout,
 			int maxTemporarilyThreadsCountIncreasingStep,
 			long elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount
 		) {
@@ -150,15 +151,30 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			this.daemon = daemon;
 			this.runningThreads = ConcurrentHashMap.newKeySet();
 			this.poolableSleepingThreads = ConcurrentHashMap.newKeySet();
-			if (maxPoolableThreadsCount <= 0) {
+			
+			int maxPoolableThreadsCountAsInt;			
+			try {
+				maxPoolableThreadsCountAsInt = Objects.toInt(maxPoolableThreadsCount);
+			} catch (Throwable exc) {
+				maxPoolableThreadsCountAsInt = Runtime.getRuntime().availableProcessors() * 2;
+			}			
+			if (maxPoolableThreadsCountAsInt <= 0) {
 				throw new IllegalArgumentException("maxPoolableThreadsCount must be greater than zero");
 			}
-			if (maxTemporarilyThreadsCount <= 0) {
-				maxTemporarilyThreadsCount = Integer.MAX_VALUE - maxPoolableThreadsCount;
+			
+			int maxTemporarilyThreadsCountAsInt;			
+			try {
+				maxTemporarilyThreadsCountAsInt = Objects.toInt(maxTemporarilyThreadsCount);
+			} catch (Throwable exc) {
+				maxTemporarilyThreadsCountAsInt = 
+						(Runtime.getRuntime().availableProcessors() * 6) - (Runtime.getRuntime().availableProcessors() * 2);
+			}			
+			if (maxTemporarilyThreadsCountAsInt <= 0) {
+				maxTemporarilyThreadsCount = Integer.MAX_VALUE - maxPoolableThreadsCountAsInt;
 			}
-			this.maxPoolableThreadsCount = maxPoolableThreadsCount;
-			this.inititialMaxThreadsCount = this.maxThreadsCount = maxPoolableThreadsCount + maxTemporarilyThreadsCount;
-			this.threadRequestTimeout = threadRequestTimeout;
+			this.maxPoolableThreadsCount = maxPoolableThreadsCountAsInt;
+			this.inititialMaxThreadsCount = this.maxThreadsCount = maxPoolableThreadsCountAsInt + maxTemporarilyThreadsCountAsInt;
+			this.poolableThreadRequestTimeout = poolableThreadRequestTimeout;
 			this.elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount = elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount;
 			this.maxTemporarilyThreadsCountIncreasingStep = maxTemporarilyThreadsCountIncreasingStep;
 			this.timeOfLastIncreaseOfMaxTemporarilyThreadsCount = Long.MAX_VALUE;
@@ -185,10 +201,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						if ((thread = get()) == null && threadsCount > maxPoolableThreadsCount && threadsCount > maxThreadsCount) {
 							//This block of code is for preventing dead locks
 							long startWaitTime = System.currentTimeMillis();
-							poolableSleepingThreads.wait(threadRequestTimeout);
+							poolableSleepingThreads.wait(poolableThreadRequestTimeout);
 							long endWaitTime = System.currentTimeMillis();
 							long waitElapsedTime = endWaitTime - startWaitTime;
-							if (waitElapsedTime < threadRequestTimeout) {
+							if (waitElapsedTime < poolableThreadRequestTimeout) {
 								if (inititialMaxThreadsCount < maxThreadsCount &&
 									(System.currentTimeMillis() - timeOfLastIncreaseOfMaxTemporarilyThreadsCount) > 
 										elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount
@@ -330,16 +346,16 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 
 		public static Supplier create(
 				String name,
-				int maxPoolableThreadsCount,
-				int maxTemporarilyThreadsCount,
+				Object maxPoolableThreadsCount,
+				Object maxTemporarilyThreadsCount,
 				boolean daemon,
-				long threadRequestTimeout,
+				long poolableThreadRequestTimeout,
 				int maxTemporarilyThreadsCountIncreasingStep,
 				long elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount, boolean undestroyable
 		) {
 			if (undestroyable) {
 				return new Supplier(name, maxPoolableThreadsCount, maxTemporarilyThreadsCount, daemon, 
-					threadRequestTimeout, maxTemporarilyThreadsCountIncreasingStep,
+					poolableThreadRequestTimeout, maxTemporarilyThreadsCountIncreasingStep,
 					elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount
 				) {
 					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();					
@@ -352,7 +368,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				};
 			} else {
 				return new Supplier(name, maxPoolableThreadsCount, maxTemporarilyThreadsCount, daemon,
-					threadRequestTimeout, maxTemporarilyThreadsCountIncreasingStep,
+					poolableThreadRequestTimeout, maxTemporarilyThreadsCountIncreasingStep,
 					elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount
 				);
 			}
