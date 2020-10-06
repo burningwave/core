@@ -86,39 +86,38 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	}
 	
 	public Mutex getMutex(String id) {
-		Mutex mutex = null;
-		while((mutex = getMutex0(id)) == null) {
-			logWarn("Unvalid mutex with id {} will be requested again", id);
-		}
-		return mutex;
-	}
-	
-	private Mutex getMutex0(String id) {
-		Mutex newLock = new Mutex();
-		Mutex lock = mutexes.putIfAbsent(id, newLock);
-        if (lock != null) {
-        	++lock.clientsCount;
-        	if (mutexes.get(id) == lock) {
-        		return lock;
+		Mutex newMutex = new Mutex();
+		while (true) {			
+			Mutex oldMutex = mutexes.putIfAbsent(id, newMutex);
+	        if (oldMutex != null) {
+	        	synchronized (oldMutex.clientsCount) {
+	        		++oldMutex.clientsCount;
+	        	}
+	        	if (oldMutex.clientsCount > 1) {
+		        	if (mutexes.get(id) != oldMutex) {
+		        		logError("Unvalid mutex with id {}", id);
+		        	}
+	        		return oldMutex;
+	        	}
+	        	continue;
+	        }
+	        newMutex.id = id;
+        	if (mutexes.get(id) != oldMutex) {
+        		logError("Unvalid new mutex with id {}", id);
         	}
-        	return null;
-        }
-    	if (mutexes.get(id) == newLock) {
-    		newLock.id = id;
-    		return newLock;
-    	}
-    	logWarn("Unvalid new mutex with id {} will be requested again", id);
-    	return null;
+	        return newMutex;
+		}
     }
 	
 	public void removeIfUnused(Mutex mutex) {
-		if (--mutex.clientsCount <= 0) {
-			try {
-				mutexes.remove(mutex.id);
-			} catch (Throwable exc) {
-				//logWarn("Mutex {} has already been removed", mutex.id);
+		try {
+			synchronized (mutex.clientsCount) {
+				--mutex.clientsCount;
 			}
-		}		
+			if (mutex.clientsCount < 1) {
+				mutexes.remove(mutex.id);
+			}
+		} catch (Throwable exc) {}
 	}
 	
 	public void execute(String id, Runnable executable) {
@@ -241,6 +240,6 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	
 	public static class Mutex  {	
 		String id;
-		volatile int clientsCount = 1;
+		Integer clientsCount = 1;
 	}
 }
