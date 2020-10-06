@@ -100,7 +100,7 @@ public class StaticComponentContainer {
 			
 			defaultValues.put(
 				Key.THREAD_SUPPLIER_POOLABLE_THREAD_REQUEST_TIMEOUT,
-				6000
+				3000
 			);
 			
 			defaultValues.put(
