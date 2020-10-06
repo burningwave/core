@@ -86,6 +86,12 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	}
 	
 	public Mutex getMutex(String id) {
+		Mutex mutex = null;
+		while((mutex = getMutex0(id)) == null);
+		return mutex;
+	}
+	
+	private Mutex getMutex0(String id) {
 		Mutex newLock = new Mutex();
 		Mutex lock = mutexes.putIfAbsent(id, newLock);
         if (lock != null) {
@@ -94,7 +100,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
         		return lock;
         	}
         	logWarn("Unvalid mutex with id {} will be requested again", id);
-        	return getMutex(id);
+        	return null;
         }
         ++newLock.clientsCount;
     	if (mutexes.get(id) == newLock) {
@@ -102,7 +108,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
     		return newLock;
     	}
     	logWarn("Unvalid mutex with id {} will be requested again", id);
-    	return getMutex(id);
+    	return null;
     }
 	
 	public void removeIfUnused(Mutex mutex) {

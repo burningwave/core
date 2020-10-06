@@ -152,11 +152,12 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			this.runningThreads = ConcurrentHashMap.newKeySet();
 			this.poolableSleepingThreads = ConcurrentHashMap.newKeySet();
 			
-			int maxPoolableThreadsCountAsInt;			
+			int maxPoolableThreadsCountAsInt;
+			int multiplier = 3;
 			try {
 				maxPoolableThreadsCountAsInt = Objects.toInt(maxPoolableThreadsCount);
 			} catch (Throwable exc) {
-				maxPoolableThreadsCountAsInt = Runtime.getRuntime().availableProcessors() * 2;
+				maxPoolableThreadsCountAsInt = Runtime.getRuntime().availableProcessors() * multiplier;
 			}			
 			if (maxPoolableThreadsCountAsInt <= 0) {
 				throw new IllegalArgumentException("maxPoolableThreadsCount must be greater than zero");
@@ -167,7 +168,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				maxTemporarilyThreadsCountAsInt = Objects.toInt(maxTemporarilyThreadsCount);
 			} catch (Throwable exc) {
 				maxTemporarilyThreadsCountAsInt = 
-						(Runtime.getRuntime().availableProcessors() * 6) - (Runtime.getRuntime().availableProcessors() * 2);
+						(Runtime.getRuntime().availableProcessors() * 3 * multiplier) - (Runtime.getRuntime().availableProcessors() * multiplier);
 			}			
 			if (maxTemporarilyThreadsCountAsInt <= 0) {
 				maxTemporarilyThreadsCount = Integer.MAX_VALUE - maxPoolableThreadsCountAsInt;
