@@ -109,7 +109,7 @@ public class FileSystemItem implements ManagedLogger {
 	private FileSystemItem(String realAbsolutePath, String conventionedAbsolutePath) {
 		realAbsolutePath = Paths.clean(realAbsolutePath);
 		this.absolutePath = new AbstractMap.SimpleEntry<>(realAbsolutePath, conventionedAbsolutePath);
-		instanceId = instanceIdPrefix + "_" + System.currentTimeMillis() + "_" + absolutePath;
+		instanceId = instanceIdPrefix + "_" + System.currentTimeMillis() + "_" + realAbsolutePath;
 	}
 
 	private String computeConventionedAbsolutePath() {
