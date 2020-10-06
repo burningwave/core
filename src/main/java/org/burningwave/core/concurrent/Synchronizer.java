@@ -90,14 +90,12 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		while (true) {			
 			Mutex oldMutex = mutexes.putIfAbsent(id, newMutex);
 	        if (oldMutex != null) {
-	        	Mutex.Client client = oldMutex.client;
-	        	synchronized (client) {
-	        		++client.counter;
+	        	synchronized (oldMutex.clientsCount) {
+	        		++oldMutex.clientsCount;
 	        	}
-	        	if (client.counter > 1) {
+	        	if (oldMutex.clientsCount > 1) {
 		        	if (mutexes.get(id) != oldMutex) {
 		        		logError("Unvalid mutex with id {}", id);
-		        		continue;
 		        	}
 	        		return oldMutex;
 	        	}
@@ -106,7 +104,6 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	        newMutex.id = id;
         	if (mutexes.get(id) != newMutex) {
         		logError("Unvalid new mutex with id {}", id);
-        		continue;
         	}
 	        return newMutex;
 		}
@@ -114,57 +111,58 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	
 	public void removeIfUnused(Mutex mutex) {
 		try {
-        	Mutex.Client client = mutex.client;
-        	synchronized (client) {
-        		--client.counter;
-        	}
-			if (client.counter < 1) {
+			synchronized (mutex.clientsCount) {
+				--mutex.clientsCount;
+			}
+			if (mutex.clientsCount < 1) {
 				mutexes.remove(mutex.id);
 			}
-		} catch (Throwable exc) {}
+		} catch (Throwable exc) {
+			logError(exc);
+		}
 	}
 	
 	public void execute(String id, Runnable executable) {
 		Mutex mutex = getMutex(id);
-		synchronized (mutex) {
-			try {
+		try {
+			synchronized (mutex) {
 				executable.run();
-			} finally {
-				removeIfUnused(mutex);
-			}
+			}			
+		} finally {
+			removeIfUnused(mutex);
 		}
 	}
 	
 	public <E extends Throwable> void executeThrower(String id, ThrowingRunnable<E> executable) throws E {
 		Mutex mutex = getMutex(id);
-		synchronized (mutex) {
-			try {
+		try {
+			synchronized (mutex) {
 				executable.run();
-			} finally {
-				removeIfUnused(mutex);
-			}
-		}
+			}			
+		} finally {
+			removeIfUnused(mutex);
+		}	
 	}
 	
 	public <T> T execute(String id, Supplier<T> executable) {
 		Mutex mutex = getMutex(id);
-		synchronized (mutex) {
-			try {
+		try {
+			synchronized (mutex) {
 				return executable.get();
-			} finally {
-				removeIfUnused(mutex);
-			}
-		}
+			}			
+		} finally {
+			removeIfUnused(mutex);
+		}	
 	}
 	
 	public <T, E extends Throwable> T executeThrower(String id, ThrowingSupplier<T, E> executable) throws E {
 		Mutex mutex = getMutex(id);
-		synchronized (mutex) {
-			try {
+		try {
+			synchronized (mutex) {
 				return executable.get();
-			} finally {
-				removeIfUnused(mutex);
-			}
+			}			
+		} finally {
+			removeIfUnused(mutex);
 		}
 	}
 
@@ -244,10 +242,6 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	
 	public static class Mutex  {	
 		String id;
-		volatile Client client = new Client();
-		
-		public static class Client {
-			volatile int counter = 1;
-		}
+		Integer clientsCount = 1;
 	}
 }
