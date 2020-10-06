@@ -102,7 +102,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	        	continue;
 	        }
 	        newMutex.id = id;
-        	if (mutexes.get(id) != oldMutex) {
+        	if (mutexes.get(id) != newMutex) {
         		logError("Unvalid new mutex with id {}", id);
         	}
 	        return newMutex;
