@@ -102,7 +102,6 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
         	logWarn("Unvalid mutex with id {} will be requested again", id);
         	return null;
         }
-        ++newLock.clientsCount;
     	if (mutexes.get(id) == newLock) {
     		newLock.id = id;
     		return newLock;
@@ -241,6 +240,6 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	
 	public static class Mutex  {	
 		String id;
-		volatile int clientsCount;
+		volatile int clientsCount = 1;
 	}
 }
