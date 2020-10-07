@@ -29,17 +29,17 @@
 package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
-import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.ThreadSupplier;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import org.burningwave.core.ManagedLogger;
@@ -85,42 +85,35 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		}
 	}
 	
-	public Mutex getMutex(String id) {
-		Mutex newMutex = new Mutex();
-		while (true) {			
-			Mutex oldMutex = mutexes.putIfAbsent(id, newMutex);
-			try {
-				++oldMutex.clientsCount;
-				if (mutexes.get(id) == oldMutex) {
-		        	oldMutex.id = id;
-	        		return oldMutex;
-	        	}
-	        	logWarn("Unvalid mutex with id \"{}\": a new mutex will be created", id);
-	        	continue;
-			} catch (NullPointerException exc) {
-
-			}
-	        newMutex.id = id;
-	        return newMutex;
-		}
-    }
+	private final static BiFunction<String, Mutex, Mutex> mutexChecker = (key, mutex) -> {
+		if (mutex == null) {
+			return new Mutex(key);
+		};
+		++mutex.clientsCount;
+		return mutex;
+	};
 	
 //	public Mutex getMutex(String id) {
-//		Mutex newMutex = new Mutex();
-//		while (true) {			
-//			Mutex oldMutex = mutexes.putIfAbsent(id, newMutex);
-//	        if (oldMutex != null) {
-//	        	if (++oldMutex.clientsCount > 1 && mutexes.get(id) == oldMutex) {
-//		        	oldMutex.id = id;
-//	        		return oldMutex;
-//	        	}
-//	        	logWarn("Unvalid mutex with id \"{}\": a new mutex will be created", id);
-//	        	continue;
-//	        }
-//	        newMutex.id = id;
-//	        return newMutex;
-//		}
+//		return mutexes.compute(id, mutexChecker);
 //    }
+	
+	public Mutex getMutex(String id) {
+		Mutex newMutex = new Mutex(id);
+		while (true) {			
+			Mutex oldMutex = mutexes.putIfAbsent(id, newMutex);
+	        if (oldMutex == null) {
+		        return newMutex;
+	        }
+	        if (++oldMutex.clientsCount > 1) {
+	        	if (mutexes.get(id) == oldMutex) {
+	        		return oldMutex;
+	        	}
+	        	logWarn("Unvalid counter for id \"{}\"", id);
+        	}
+        	logWarn("Unvalid mutex with id \"{}\": a new mutex will be created", id);
+        	continue;
+		}
+    }
 
 	public void removeIfUnused(Mutex mutex) {
 		try {
@@ -250,8 +243,11 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		allThreadsStateLogger = null;
 	}
 	
-	public static class Mutex  {	
+	public static class Mutex  {
+		Mutex(String id) {
+			this.id = id;
+		}
 		String id;
-		int clientsCount = 1;
+		volatile int clientsCount = 1;
 	}
 }
