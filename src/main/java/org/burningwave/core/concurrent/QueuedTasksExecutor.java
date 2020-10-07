@@ -63,7 +63,6 @@ public class QueuedTasksExecutor implements Component {
 	java.lang.Thread tasksLauncher;
 	List<TaskAbst<?, ?>> tasksQueue;
 	Set<TaskAbst<?, ?>> tasksInExecution;
-	TaskAbst<?, ?> currentlyRunningTask;
 	Boolean supended;
 	volatile int defaultPriority;
 	long executedTasksCount;
@@ -122,15 +121,10 @@ public class QueuedTasksExecutor implements Component {
 						TaskAbst<?, ?> task = taskIterator.next();
 						synchronized (task) {
 							if (!tasksQueue.remove(task)) {
-								currentlyRunningTask = null;
 								continue;
 							}
-							currentlyRunningTask = task;
-						}	
-						if (task.setExecutor(threadSupplier.getOrCreate()).start().isSync()) { 	
-							task.waitForFinish();
 						}
-						currentlyRunningTask = null;
+						task.setExecutor(threadSupplier.getOrCreate()).start();
 					}
 				} else {
 					synchronized(executableCollectionFillerMutex) {
@@ -517,12 +511,6 @@ public class QueuedTasksExecutor implements Component {
 				log.append("\n" + task.getInfoAsString());
 			}
 		}
-		TaskAbst<?, ?> task = this.currentlyRunningTask;
-		if (task != null) {
-			log.append("\n\n");
-			log.append(Strings.compile("{} - currently running task:", tasksLauncher));
-			log.append("\n" + task.getInfoAsString());
-		}
 		return log.toString();
 	}
 	
@@ -568,7 +556,6 @@ public class QueuedTasksExecutor implements Component {
 		volatile boolean submitted;
 		volatile boolean aborted;
 		volatile boolean finished;
-		volatile boolean async;
 		volatile boolean queueConsumerUnlockingRequested;
 		E executable;		
 		Thread executor;
@@ -603,28 +590,6 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 			return creatorInfos;
-		}
-		
-		public boolean isAsync() {
-			return async;
-		}
-		
-		public boolean isSync() {
-			return !async;
-		}
-		
-		public T async() {
-			return setAsync(true);
-		}
-		
-		public T setAsync(boolean flag) {
-			synchronized (this) {
-				if (isSubmitted()) {
-					throw new TaskStateException(this, "is submitted");
-				}
-				this.async = flag;
-			}
-			return (T)this;
 		}
 		
 		public T setName(String name) {
@@ -670,9 +635,6 @@ public class QueuedTasksExecutor implements Component {
 			}
 			if (isSubmitted()) {
 				if (!started) {
-					if (!resumeQueueConsumerFromSyncTaskWaiting(currentThread)) {
-						return (T)this;
-					}
 					synchronized (this) {
 						if (!started) {
 							try {
@@ -705,9 +667,6 @@ public class QueuedTasksExecutor implements Component {
 			}
 			if (isSubmitted()) {
 				if (!hasFinished()) {
-					if (!resumeQueueConsumerFromSyncTaskWaiting(currentThread)) {
-						return false;
-					}
 					synchronized (this) {
 						if (!hasFinished()) {
 							try {
@@ -726,41 +685,6 @@ public class QueuedTasksExecutor implements Component {
 				throw new TaskStateException(this, "is not submitted");
 			}
 			return false;
-		}
-
-		boolean resumeQueueConsumerFromSyncTaskWaiting(java.lang.Thread thread) {
-			QueuedTasksExecutor queuedTasksExecutorOfClientThread = retrieveQueuedTasksExecutorOf(thread);
-			if (thread != queuedTasksExecutorOfClientThread.tasksLauncher) {
-				if (!queueConsumerUnlockingRequested) {
-					synchronized (this) {
-						if (!queueConsumerUnlockingRequested) {
-							queueConsumerUnlockingRequested = true;
-						}
-					}
-				}
-				resumeQueueConsumerFromSyncTaskWaitingOf(queuedTasksExecutorOfClientThread);
-				QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
-				if (queuedTasksExecutor != queuedTasksExecutorOfClientThread) {
-					resumeQueueConsumerFromSyncTaskWaitingOf(queuedTasksExecutor);
-				}
-			} else if (queueConsumerUnlockingRequested) {
-				queuedTasksExecutorOfClientThread.currentlyRunningTask.async = true;
-				return false;
-			}
-			return true;
-		}
-
-		private void resumeQueueConsumerFromSyncTaskWaitingOf(QueuedTasksExecutor queuedTasksExecutor) {
-			TaskAbst<?, ?> lastLaunchedTask = queuedTasksExecutor.currentlyRunningTask;
-			if (lastLaunchedTask != null ) {
-				synchronized(lastLaunchedTask) {
-					if (lastLaunchedTask != this && lastLaunchedTask.isSync()) {
-						lastLaunchedTask.async = true;
-						lastLaunchedTask.queueConsumerUnlockingRequested = true;
-					}
-					lastLaunchedTask.notifyAll();
-				}
-			}
 		}
 		
 		void execute() {
@@ -799,7 +723,7 @@ public class QueuedTasksExecutor implements Component {
 			if (this.getCreatorInfos() != null) {
 				Thread executor = this.executor;
 				return Strings.compile("\n\tTask status: {} {} \n\tcreated by: {}",
-					Strings.compile("\n\t\tpriority: {}\n\t\tasync: {}\n\t\tstarted: {}\n\t\taborted: {}\n\t\tfinished: {}", priority, async, isStarted(), isAborted(), hasFinished()),
+					Strings.compile("\n\t\tpriority: {}\n\t\tstarted: {}\n\t\taborted: {}\n\t\tfinished: {}", priority, isStarted(), isAborted(), hasFinished()),
 					executor != null ? "\n\t" + executor + Strings.from(executor.getStackTrace(),2) : "",
 					Strings.from(this.getCreatorInfos(), 2)
 				);
@@ -967,13 +891,18 @@ public class QueuedTasksExecutor implements Component {
 	public static class Group implements ManagedLogger{
 		Map<String, QueuedTasksExecutor> queuedTasksExecutors;
 		
-		Group(String name, Thread.Supplier threadSupplier, boolean isDaemon) {
+		Group(String name, 
+			Thread.Supplier threadSupplierForHighPriorityTasksExecutor,
+			Thread.Supplier threadSupplierForNormalPriorityTasksExecutor,
+			Thread.Supplier threadSupplierForLowPriorityTasksExecutor
+			, boolean isDaemon
+		) {
 			queuedTasksExecutors = new HashMap<>();
 			queuedTasksExecutors.put(
 				String.valueOf(Thread.MAX_PRIORITY),
 				createQueuedTasksExecutor(
 					name + " - High priority tasks",
-					threadSupplier,
+					threadSupplierForHighPriorityTasksExecutor,
 					Thread.MAX_PRIORITY, isDaemon
 				)
 			);
@@ -981,7 +910,7 @@ public class QueuedTasksExecutor implements Component {
 				String.valueOf(Thread.NORM_PRIORITY),
 				createQueuedTasksExecutor(
 					name + " - Normal priority tasks",
-					threadSupplier,
+					threadSupplierForNormalPriorityTasksExecutor,
 					Thread.NORM_PRIORITY, isDaemon
 				)
 			);
@@ -989,21 +918,61 @@ public class QueuedTasksExecutor implements Component {
 				String.valueOf(Thread.MIN_PRIORITY),
 				createQueuedTasksExecutor(
 					name + " - Low priority tasks",
-					threadSupplier,
+					threadSupplierForLowPriorityTasksExecutor,
 					Thread.MIN_PRIORITY, isDaemon
 				)
 			);
 		}
 		
-		public static Group create(String name, Thread.Supplier threadSupplier, boolean isDaemon) {
-			return create(name, threadSupplier, isDaemon, false);
+		public static Group create(
+			String name,
+			Thread.Supplier threadSupplierForHighPriorityTasksExecutor,
+			Thread.Supplier threadSupplierForNormalPriorityTasksExecutor,
+			Thread.Supplier threadSupplierForLowPriorityTasksExecutor,
+			boolean isDaemon
+		) {
+			return create(
+				name,
+				threadSupplierForHighPriorityTasksExecutor, 
+				threadSupplierForNormalPriorityTasksExecutor,
+				threadSupplierForLowPriorityTasksExecutor,
+				isDaemon,
+				false
+			);
 		}
 		
-		public static Group create(String name, Thread.Supplier threadSupplier, boolean isDaemon, boolean undestroyableFromExternal) {
+		public static Group create(
+			String name,
+			Thread.Supplier threadSupplier,
+			boolean isDaemon,
+			boolean undestroyableFromExternal
+		) {
+			return create(name, threadSupplier, threadSupplier, threadSupplier, isDaemon, undestroyableFromExternal);
+		}
+		
+		public static Group create(
+			String name,
+			Thread.Supplier threadSupplierForHighPriorityTasksExecutor,
+			Thread.Supplier threadSupplierForNormalPriorityTasksExecutor,
+			Thread.Supplier threadSupplierForLowPriorityTasksExecutor,
+			boolean isDaemon,
+			boolean undestroyableFromExternal
+		) {
 			if (!undestroyableFromExternal) {
-				return new Group(name, threadSupplier, isDaemon);
+				return new Group(
+					name, 
+					threadSupplierForHighPriorityTasksExecutor, 
+					threadSupplierForNormalPriorityTasksExecutor,
+					threadSupplierForLowPriorityTasksExecutor,
+					isDaemon
+				);
 			} else {
-				return new Group(name, threadSupplier, isDaemon) {
+				return new Group(name, 
+					threadSupplierForHighPriorityTasksExecutor, 
+					threadSupplierForNormalPriorityTasksExecutor,
+					threadSupplierForLowPriorityTasksExecutor,
+					isDaemon
+				) {
 					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
 					
 					@Override
@@ -1149,7 +1118,6 @@ public class QueuedTasksExecutor implements Component {
 		<E, T extends TaskAbst<E, T>> Group changePriority(T task, int priority) {
 			int oldPriority = task.priority;
 			int newPriority = checkAndCorrectPriority(priority);
-			boolean changedPriority = false;
 			if (oldPriority != priority) {
 				synchronized (task) {
 					if (getByPriority(oldPriority).tasksQueue.remove(task)) {
@@ -1158,11 +1126,7 @@ public class QueuedTasksExecutor implements Component {
 						task.queuedTasksExecutor = null;
 						task.executor = null;
 						queuedTasksExecutor.addToQueue(task, true);
-						changedPriority = true;
 					}
-				}
-				if (changedPriority && task.queueConsumerUnlockingRequested) {
-					task.resumeQueueConsumerFromSyncTaskWaiting(Thread.currentThread());
 				}
 			}
 			return this;

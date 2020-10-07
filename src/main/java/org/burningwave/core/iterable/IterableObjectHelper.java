@@ -601,7 +601,7 @@ public class IterableObjectHelper implements Component {
 						}
 						action.accept(item, outputItemCollector);
 					}
-				}).async().submit()
+				}).submit()
 			);
 		}
 		tasks.stream().forEach(task -> task.waitForFinish());
