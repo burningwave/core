@@ -590,15 +590,15 @@ public class IterableObjectHelper implements Component {
 		for (int i = 0; i < taskCount; i++) {
 			tasks.add(
 				BackgroundExecutor.createTask(() -> {
-					while (itemIterator.hasNext()) {
+					while (true) {
 						T item = null;
-						synchronized (itemIterator) {
-							try {
+						try {
+							synchronized (itemIterator) {
 								item = itemIterator.next();
-							} catch (NoSuchElementException exc) {
-								break;
 							}
-						}
+						} catch (NoSuchElementException exc) {
+							break;
+						}						
 						action.accept(item, outputItemCollector);
 					}
 				}).submit()

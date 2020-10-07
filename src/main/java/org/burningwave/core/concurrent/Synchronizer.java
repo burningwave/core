@@ -93,27 +93,27 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		return mutex;
 	};
 	
-//	public Mutex getMutex(String id) {
-//		return mutexes.compute(id, mutexChecker);
-//    }
-	
 	public Mutex getMutex(String id) {
-		Mutex newMutex = new Mutex(id);
-		while (true) {			
-			Mutex oldMutex = mutexes.putIfAbsent(id, newMutex);
-	        if (oldMutex == null) {
-		        return newMutex;
-	        }
-	        if (++oldMutex.clientsCount > 1) {
-	        	if (mutexes.get(id) == oldMutex) {
-	        		return oldMutex;
-	        	}
-	        	logWarn("Unvalid counter for id \"{}\"", id);
-        	}
-        	logWarn("Unvalid mutex with id \"{}\": a new mutex will be created", id);
-        	continue;
-		}
+		return mutexes.compute(id, mutexChecker);
     }
+	
+//	public Mutex getMutex(String id) {
+//		Mutex newMutex = new Mutex(id);
+//		while (true) {			
+//			Mutex oldMutex = mutexes.putIfAbsent(id, newMutex);
+//	        if (oldMutex == null) {
+//		        return newMutex;
+//	        }
+//	        if (++oldMutex.clientsCount > 1) {
+//	        	if (mutexes.get(id) == oldMutex) {
+//	        		return oldMutex;
+//	        	}
+//	        	//logWarn("Unvalid counter for id \"{}\"", id);
+//        	}
+//        	//logWarn("Unvalid mutex with id \"{}\": a new mutex will be created", id);
+//        	continue;
+//		}
+//    }
 
 	public void removeIfUnused(Mutex mutex) {
 		try {
@@ -248,6 +248,6 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 			this.id = id;
 		}
 		String id;
-		volatile int clientsCount = 1;
+		int clientsCount = 1;
 	}
 }
