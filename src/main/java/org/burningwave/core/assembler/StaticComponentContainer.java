@@ -110,7 +110,7 @@ public class StaticComponentContainer {
 			
 			defaultValues.put(
 				Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP,
-				16
+				8
 			);
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
