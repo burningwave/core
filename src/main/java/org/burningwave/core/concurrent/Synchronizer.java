@@ -85,16 +85,8 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		}
 	}
 	
-	private final static BiFunction<String, Mutex, Mutex> mutexChecker = (key, mutex) -> {
-		if (mutex == null) {
-			return new Mutex(key);
-		};
-		++mutex.clientsCount;
-		return mutex;
-	};
-	
 	public Mutex getMutex(String id) {
-		return mutexes.compute(id, mutexChecker);
+		return mutexes.compute(id, Algorithm.mutexChecker);
     }
 	
 //	public Mutex getMutex(String id) {
@@ -249,5 +241,15 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		}
 		String id;
 		int clientsCount = 1;
+	}
+	
+	private static class Algorithm  {
+		private final static BiFunction<String, Mutex, Mutex> mutexChecker = (key, mutex) -> {
+			if (mutex == null) {
+				return new Mutex(key);
+			};
+			++mutex.clientsCount;
+			return mutex;
+		};
 	}
 }
