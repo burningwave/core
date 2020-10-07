@@ -200,7 +200,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			if (requestCount > 0 && threadsCount > maxPoolableThreadsCount && threadsCount > maxThreadsCount) {
 				synchronized (poolableSleepingThreads) {
 					try {
-						if ((thread = get()) == null && threadsCount > maxPoolableThreadsCount && threadsCount > maxThreadsCount) {
+						if ((thread = get()) != null) {
+							return thread;
+						}
+						if (threadsCount > maxPoolableThreadsCount && threadsCount > maxThreadsCount) {
 							//This block of code is for preventing dead locks
 							long startWaitTime = System.currentTimeMillis();
 							poolableSleepingThreads.wait(poolableThreadRequestTimeout);
