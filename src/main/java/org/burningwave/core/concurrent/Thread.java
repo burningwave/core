@@ -200,7 +200,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			if (requestCount > 0 && threadsCount > maxPoolableThreadsCount && threadsCount > maxThreadsCount) {
 				synchronized (poolableSleepingThreads) {
 					try {
-						if ((thread = get()) == null && threadsCount > maxPoolableThreadsCount && threadsCount > maxThreadsCount) {
+						if ((thread = get()) != null) {
+							return thread;
+						}
+						if (threadsCount > maxPoolableThreadsCount && threadsCount > maxThreadsCount) {
 							//This block of code is for preventing dead locks
 							long startWaitTime = System.currentTimeMillis();
 							poolableSleepingThreads.wait(poolableThreadRequestTimeout);
@@ -211,7 +214,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 									(System.currentTimeMillis() - timeOfLastIncreaseOfMaxTemporarilyThreadsCount) > 
 										elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount
 								) {
-									maxThreadsCount -= maxTemporarilyThreadsCountIncreasingStep;
+									maxThreadsCount -= (maxTemporarilyThreadsCountIncreasingStep / 2);
 									ManagedLoggersRepository.logInfo(
 										() -> this.getClass().getName(), 
 										"{}: decreasing maxTemporarilyThreadsCount to {}", 
@@ -347,13 +350,13 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 
 		public static Supplier create(
-				String name,
-				Object maxPoolableThreadsCount,
-				Object maxTemporarilyThreadsCount,
-				boolean daemon,
-				long poolableThreadRequestTimeout,
-				int maxTemporarilyThreadsCountIncreasingStep,
-				long elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount, boolean undestroyable
+			String name,
+			Object maxPoolableThreadsCount,
+			Object maxTemporarilyThreadsCount,
+			boolean daemon,
+			long poolableThreadRequestTimeout,
+			int maxTemporarilyThreadsCountIncreasingStep,
+			long elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount, boolean undestroyable
 		) {
 			if (undestroyable) {
 				return new Supplier(name, maxPoolableThreadsCount, maxTemporarilyThreadsCount, daemon, 

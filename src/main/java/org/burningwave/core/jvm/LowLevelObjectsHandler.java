@@ -427,7 +427,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 				synchronized (this) {
 					this.notifyAll();
 				}
-			}).setName("ByteBufferHandler initializer").async().submit();
+			}).setName("ByteBufferHandler initializer").submit();
 		}
 
 		void init() {

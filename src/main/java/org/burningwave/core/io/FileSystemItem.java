@@ -276,7 +276,7 @@ public class FileSystemItem implements ManagedLogger {
 				}
 			},
 			outputCollectionSupplier.get(),
-			item -> item.size() > 1
+			items -> items.size() > 1
 		);		
 		if (!iteratedFISWithErrors.isEmpty()) {
 			Predicate<FileSystemItem[]> nativePredicateWithExceptionManaging = filter.getPredicateOrTruePredicateIfPredicateIsNull();

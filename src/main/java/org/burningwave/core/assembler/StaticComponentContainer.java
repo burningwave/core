@@ -216,7 +216,16 @@ public class StaticComponentContainer {
 				Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET)),
 				true
 			);
-			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create("Background executor", ThreadSupplier, true, true);
+			org.burningwave.core.concurrent.Thread.Supplier lowPriorityThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
+				"Burningwave low priority thread supplier", 2, 4, true, 15000, 2, 10000, true
+			);
+			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create(
+				"Background executor",
+				ThreadSupplier, ThreadSupplier, 
+				lowPriorityThreadSupplier,
+				true,
+				true
+			);
 			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(true);
 			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED))) {
 				BackgroundExecutor.setTasksCreationTrackingFlag(true);
@@ -283,6 +292,7 @@ public class StaticComponentContainer {
 					BackgroundExecutor.shutDown(false);
 					Synchronizer.close();
 					ThreadSupplier.shutDownAll();
+					lowPriorityThreadSupplier.shutDownAll();
 				})
 			);
 			FileSystemHelper.startScavenger();
