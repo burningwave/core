@@ -100,7 +100,7 @@ public class StaticComponentContainer {
 			
 			defaultValues.put(
 				Key.THREAD_SUPPLIER_POOLABLE_THREAD_REQUEST_TIMEOUT,
-				6000
+				3000
 			);
 			
 			defaultValues.put(
@@ -110,7 +110,7 @@ public class StaticComponentContainer {
 			
 			defaultValues.put(
 				Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP,
-				8
+				16
 			);
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);

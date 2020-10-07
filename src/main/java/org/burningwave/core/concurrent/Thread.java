@@ -211,7 +211,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 									(System.currentTimeMillis() - timeOfLastIncreaseOfMaxTemporarilyThreadsCount) > 
 										elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount
 								) {
-									maxThreadsCount -= maxTemporarilyThreadsCountIncreasingStep;
+									maxThreadsCount -= (maxTemporarilyThreadsCountIncreasingStep / 2);
 									ManagedLoggersRepository.logInfo(
 										() -> this.getClass().getName(), 
 										"{}: decreasing maxTemporarilyThreadsCount to {}", 
