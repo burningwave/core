@@ -534,7 +534,7 @@ public class IterableObjectHelper implements Component {
 		Consumer<T> action,
 		Predicate<Collection<T>> predicate
 	) {
-		return iterateParallelIf(items, (item, collector) -> action.accept(item), null, predicate);
+		return iterateParallelIf(items, (item, outputItemCollector) -> action.accept(item), null, predicate);
 	}
 	
 	
@@ -561,10 +561,15 @@ public class IterableObjectHelper implements Component {
 	
 	public <T, O> void iterateParallel(
 		Collection<T> items,
-		BiConsumer<T, Consumer<O>> action
+		Consumer<T> action
 	) {
-		iterateParallel(items, action, null);
+		iterateParallel(
+			items, (item, outputItemCollector) -> 
+				action.accept(item), 
+			null
+		);
 	}
+
 	
 	public <T, O> Collection<O> iterateParallel(
 		Collection<T> items,
@@ -638,4 +643,5 @@ public class IterableObjectHelper implements Component {
 		private static final long serialVersionUID = -8096435103182655041L;
 		
 	}
+
 }
