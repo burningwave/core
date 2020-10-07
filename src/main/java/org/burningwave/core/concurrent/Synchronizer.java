@@ -89,18 +89,38 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		Mutex newMutex = new Mutex();
 		while (true) {			
 			Mutex oldMutex = mutexes.putIfAbsent(id, newMutex);
-	        if (oldMutex != null) {
-	        	if (++oldMutex.clientsCount > 1 && mutexes.get(id) == oldMutex) {
+			try {
+				++oldMutex.clientsCount;
+				if (mutexes.get(id) == oldMutex) {
 		        	oldMutex.id = id;
 	        		return oldMutex;
 	        	}
 	        	logWarn("Unvalid mutex with id \"{}\": a new mutex will be created", id);
 	        	continue;
-	        }
+			} catch (NullPointerException exc) {
+
+			}
 	        newMutex.id = id;
 	        return newMutex;
 		}
     }
+	
+//	public Mutex getMutex(String id) {
+//		Mutex newMutex = new Mutex();
+//		while (true) {			
+//			Mutex oldMutex = mutexes.putIfAbsent(id, newMutex);
+//	        if (oldMutex != null) {
+//	        	if (++oldMutex.clientsCount > 1 && mutexes.get(id) == oldMutex) {
+//		        	oldMutex.id = id;
+//	        		return oldMutex;
+//	        	}
+//	        	logWarn("Unvalid mutex with id \"{}\": a new mutex will be created", id);
+//	        	continue;
+//	        }
+//	        newMutex.id = id;
+//	        return newMutex;
+//		}
+//    }
 
 	public void removeIfUnused(Mutex mutex) {
 		try {
