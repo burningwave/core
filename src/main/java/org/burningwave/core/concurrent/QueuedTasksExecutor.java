@@ -30,7 +30,6 @@ package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
-//import static org.burningwave.core.assembler.StaticComponentContainer.threadSupplier;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.ArrayList;
