@@ -47,6 +47,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -600,7 +601,8 @@ public class IterableObjectHelper implements Component {
 		Consumer<O> outputItemCollector =
 			outputCollection != null ? 
 				outputCollection instanceof ConcurrentHashMap.KeySetView ||
-				outputCollection instanceof CopyOnWriteArrayList?	
+				outputCollection instanceof CopyOnWriteArrayList ||
+				outputCollection instanceof CopyOnWriteArraySet ?	
 					outputItem -> {
 						outputCollection.add(outputItem);
 					} : 
