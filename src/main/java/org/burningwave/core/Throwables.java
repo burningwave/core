@@ -29,13 +29,9 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
-import java.lang.reflect.Field;
 
-import sun.misc.Unsafe;
-
-@SuppressWarnings("all")
+@SuppressWarnings("unchecked")
 public class Throwables implements Component {
 	
 	public static Throwables create() {
@@ -65,6 +61,7 @@ public class Throwables implements Component {
 		throwException(exception);
 		return null;
 	}
+	
 	
 	private <E extends Throwable> void throwException(Throwable exc) throws E{
 		throw (E)exc;
