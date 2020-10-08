@@ -907,6 +907,7 @@ The configuration of this type of container is done via **burningwave.static.pro
 ```properties
 background-executor.task-creation-tracking.enabled=${synchronizer.all-threads-state-logger.enabled}
 iterable-object-helper.default-values-separator=;
+iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=auto
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
 #the SLF4JManagedLoggerRepository will be instantiated, otherwise the SimpleManagedLoggerRepository will be instantiated
 managed-logger.repository=autodetect
