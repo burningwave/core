@@ -611,7 +611,7 @@ public class QueuedTasksExecutor implements Component {
 		
 		public T runOnlyOnce(String id, Supplier<Boolean> hasBeenExecutedChecker) {
 			if (isSubmitted()) {
-				throw new TaskStateException(this, "is submitted");
+				Throwables.throwException(new TaskStateException(this, "is submitted"));
 			}
 			runOnlyOnce = true;
 			this.id = id;
@@ -638,7 +638,7 @@ public class QueuedTasksExecutor implements Component {
 						if (!started) {
 							try {
 								if (isAborted()) {
-									throw new TaskStateException(this, "is aborted");
+									Throwables.throwException(new TaskStateException(this, "is aborted"));
 								}
 								wait();
 								waitForStarting();
@@ -649,7 +649,7 @@ public class QueuedTasksExecutor implements Component {
 					}
 				}
 			} else {
-				throw new TaskStateException(this, "is not submitted");
+				Throwables.throwException(new TaskStateException(this, "is not submitted"));
 			}
 			return (T)this;
 		}		
@@ -670,7 +670,7 @@ public class QueuedTasksExecutor implements Component {
 						if (!hasFinished()) {
 							try {
 								if (isAborted()) {
-									throw new TaskStateException(this, "is aborted");
+									Throwables.throwException(new TaskStateException(this, "is aborted"));
 								}
 								wait();
 								return true;
@@ -681,7 +681,7 @@ public class QueuedTasksExecutor implements Component {
 					}
 				}
 			} else {
-				throw new TaskStateException(this, "is not submitted");
+				Throwables.throwException(new TaskStateException(this, "is not submitted"));
 			}
 			return false;
 		}
@@ -808,18 +808,18 @@ public class QueuedTasksExecutor implements Component {
 		
 		public final T submit() {
 			if (aborted) {
-				throw new TaskStateException(this, "is aborted");
+				Throwables.throwException(new TaskStateException(this, "is aborted"));
 			}
 			if (!submitted) {
 				synchronized(this) {
 					if (!submitted) {
 						submitted = true;
 					} else {
-						throw new TaskStateException(this, "is already submitted");
+						Throwables.throwException(new TaskStateException(this, "is already submitted"));
 					}
 				}
 			} else {
-				throw new TaskStateException(this, "is already submitted");
+				Throwables.throwException(new TaskStateException(this, "is already submitted"));
 			}
 			return addToQueue();
 		}

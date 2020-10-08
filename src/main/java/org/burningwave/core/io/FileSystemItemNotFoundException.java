@@ -29,7 +29,7 @@
 package org.burningwave.core.io;
 
 
-public class FileSystemItemNotFoundException extends RuntimeException {
+public class FileSystemItemNotFoundException extends Exception {
 
 	private static final long serialVersionUID = 7265824022880218451L;
 	

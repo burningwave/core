@@ -37,24 +37,12 @@ import sun.misc.Unsafe;
 
 @SuppressWarnings("all")
 public class Throwables implements Component {
-	Unsafe unsafe;
-	public Throwables() {
-		try {
-			Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
-			theUnsafeField.setAccessible(true);
-			unsafe = (Unsafe)theUnsafeField.get(null);
-		} catch (Throwable exc) {
-			logInfo("Exception while retrieving unsafe");
-			Throwables.throwException(exc);
-		}
-		
-	}
 	
 	public static Throwables create() {
 		return new Throwables();
 	}
 	
-	public <T> T throwException(Object obj, Object... arguments) throws RuntimeException{
+	public <T> T throwException(Object obj, Object... arguments) {
 		Throwable exception = null;
 		StackTraceElement[] stackTraceOfException = null;
 		if (obj instanceof String) {
@@ -74,8 +62,12 @@ public class Throwables implements Component {
 			System.arraycopy(stackTrace, 0, stackTraceOfException, 1, stackTrace.length);			
 		}
 		exception.setStackTrace(stackTraceOfException);				
-		unsafe.throwException(exception);
+		throwException(exception);
 		return null;
-	}	
+	}
+	
+	private <E extends Throwable> void throwException(Throwable exc) throws E{
+		throw (E)exc;
+	}
 	
 }
