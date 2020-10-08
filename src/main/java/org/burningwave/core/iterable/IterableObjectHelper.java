@@ -114,7 +114,7 @@ public class IterableObjectHelper implements Component {
 			return Objects.toInt(
 				config.getProperty(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD)
 			);
-		} catch (Exception e) {
+		} catch (Throwable exc) {
 			return Runtime.getRuntime().availableProcessors() * 12;
 		}
 	}
