@@ -45,7 +45,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>8.0.5</version>
+    <version>8.0.6</version>
 </dependency>
 ```
 
@@ -930,7 +930,7 @@ thread-supplier.max-temporarily-threads-count=auto
 thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-for-reset=30000
 thread-supplier.max-temporarily-threads-count.increasing-step=8
 thread-supplier.name=Burningwave thread supplier
-thread-supplier.poolable-thread-request-timeout=3000
+thread-supplier.poolable-thread-request-timeout=6000
 ```
 **If in your custom burningwave.static.properties or burningwave.static.default.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 [Here an example of a **burningwave.static.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.static.properties)
