@@ -29,7 +29,9 @@
 package org.burningwave.core.iterable;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Collection;
@@ -41,7 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -67,6 +68,8 @@ public class IterableObjectHelper implements Component {
 	public static class Configuration {
 		public static class Key {
 			public final static String DEFAULT_VALUES_SEPERATOR = "iterable-object-helper.default-values-separator";
+			public final static String PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD =
+				"iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold";
 		}
 		
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -75,28 +78,45 @@ public class IterableObjectHelper implements Component {
 			Map<String, Object> defaultValues = new HashMap<>();
 
 			defaultValues.put(Key.DEFAULT_VALUES_SEPERATOR, ";");
+			
+			defaultValues.put(Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD, "auto");
 						
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
 	
 	private String defaultValuesSeparator;
+	private int maxThreadCountsForParallelIteration;
 	
-	private IterableObjectHelper(String defaultValuesSeparator) {
+	private IterableObjectHelper(String defaultValuesSeparator, int maxThreadCountsForParallelIteration) {
 		if (defaultValuesSeparator == null || defaultValuesSeparator.isEmpty()) {
 			defaultValuesSeparator = (String)Configuration.DEFAULT_VALUES.get(Configuration.Key.DEFAULT_VALUES_SEPERATOR);
 		}
 		this.defaultValuesSeparator = defaultValuesSeparator;
+		this.maxThreadCountsForParallelIteration = maxThreadCountsForParallelIteration;
 	}
 
 	public String getDefaultValuesSeparator() {
 		return this.defaultValuesSeparator;
 	}
 	
-	public static IterableObjectHelper create(Properties globalproperties) {
-		IterableObjectHelper iterableObjectHelper = new IterableObjectHelper(globalproperties.getProperty(Configuration.Key.DEFAULT_VALUES_SEPERATOR));
-		iterableObjectHelper.listenTo(globalproperties);
+	public static IterableObjectHelper create(Properties config) {
+		IterableObjectHelper iterableObjectHelper = new IterableObjectHelper(
+			config.getProperty(Configuration.Key.DEFAULT_VALUES_SEPERATOR),
+			computeMatxRuntimeThreadsCountThreshold(config)
+		);
+		iterableObjectHelper.listenTo(config);
 		return iterableObjectHelper;
+	}
+
+	private static int computeMatxRuntimeThreadsCountThreshold(Properties config) {
+		try {
+			return Objects.toInt(
+				config.getProperty(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD)
+			);
+		} catch (Exception e) {
+			return Runtime.getRuntime().availableProcessors() * 12;
+		}
 	}
 	
 	@Override
@@ -478,7 +498,7 @@ public class IterableObjectHelper implements Component {
 			if (newValues.containsKey(key)) {
 				V oldValue = newValues.get(key);
 				V newValue = newValues.get(key);
-				if (!Objects.equals(oldValue, newValue)) {
+				if (!java.util.Objects.equals(oldValue, newValue)) {
 					keyAndValuesToBePut.put(key, newValue);
 				}
 			} else {
@@ -544,7 +564,7 @@ public class IterableObjectHelper implements Component {
 		Collection<O> outputCollection,
 		Predicate<Collection<T>> predicate
 	) {
-		if (predicate.test(items) ) {
+		if (predicate.test(items) && maxThreadCountsForParallelIteration >= Synchronizer.getAllThreads().length) {
 			return iterateParallel(items, action, outputCollection);
 		} else {
 			Consumer<O> outputItemCollector = outputCollection != null ? 
