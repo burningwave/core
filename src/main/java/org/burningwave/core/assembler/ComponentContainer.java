@@ -221,8 +221,7 @@ public class ComponentContainer implements ComponentSupplier {
 		componentContainerConfig.putAll(this.config);
 		componentContainerConfig.keySet().removeAll(GlobalProperties.keySet());
 		logInfo(
-			"\nConfiguration values for...\n\n\tStatic components:\n{}\n\n\tDynamic components:\n{}\n\n... Are assumed",
-			GlobalProperties.toSimplePrettyString(2),
+			"\n\n\tConfiguration values for dynamic components:\n\n{}\n\n",
 			componentContainerConfig.toPrettyString(2)
 		);
 	}

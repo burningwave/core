@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.assembler;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
+
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -214,6 +216,10 @@ public class StaticComponentContainer {
 				ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Building static components by using default configuration");
 			}
 			ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Instantiated {}", ManagedLoggersRepository.getClass().getName());
+			ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(),
+				"\n\n\tConfiguration values for static components:\n\n{}\n\n",
+				GlobalProperties.toPrettyString(2)
+			);
 			Paths = org.burningwave.core.Strings.Paths.create();
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create();
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
