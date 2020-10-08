@@ -30,7 +30,7 @@ package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
-public class TaskStateException extends RuntimeException {
+public class TaskStateException extends Exception {
 
 	private static final long serialVersionUID = -6504561450589871045L;
 	

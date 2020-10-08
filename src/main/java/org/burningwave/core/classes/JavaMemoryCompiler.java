@@ -290,7 +290,7 @@ public class JavaMemoryCompiler implements Component {
 		public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
 			String message = diagnostic.getMessage(Locale.ENGLISH);
 			if (context.diagnositListenerInterceptedMessages.contains(message)) {
-				throw new UnknownCompilerErrorMessageException(message);
+				Throwables.throwException(new UnknownCompilerErrorMessageException(message));
 			} else {
 				context.diagnositListenerInterceptedMessages.add(message);
 			}
@@ -343,7 +343,7 @@ public class JavaMemoryCompiler implements Component {
 						logError(exc);
 					}
 				} else {
-					throw new UnknownCompilerErrorMessageException(message);
+					Throwables.throwException(new UnknownCompilerErrorMessageException(message));
 				}
 			}
 			if (fsObjects == null || fsObjects.isEmpty()) {
@@ -359,7 +359,7 @@ public class JavaMemoryCompiler implements Component {
 		
 	}
 	
-	public static class UnknownCompilerErrorMessageException extends RuntimeException {
+	public static class UnknownCompilerErrorMessageException extends Exception {
 
 		private static final long serialVersionUID = 1149980549799104408L;
 

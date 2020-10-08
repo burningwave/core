@@ -744,7 +744,9 @@ public class FileSystemItem implements ManagedLogger {
 		IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);
 		try {
 			if (zIS == null) {
-				throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
+				return Throwables.throwException(
+					new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
+				);
 			}
 			Predicate<IterableZipContainer.Entry> zipEntryPredicate = zEntry -> {
 				return zEntry.getName().equals(relativePath1) || zEntry.getName().equals(relativePath1 + "/");
@@ -775,11 +777,13 @@ public class FileSystemItem implements ManagedLogger {
 						return retrieveConventionedRelativePath(this, zIS2, null, relativePath1);
 					}
 					;
-					throw new FileSystemItemNotFoundException(
-							"Absolute path \"" + absolutePath.getKey() + "\" not exists");
+					return Throwables.throwException(new FileSystemItemNotFoundException(
+							"Absolute path \"" + absolutePath.getKey() + "\" not exists"));
 				}
 			} else {
-				throw new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists");
+				return Throwables.throwException(
+					new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
+				);
 			}
 		} finally {
 			if (zIS != null) {

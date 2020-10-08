@@ -281,7 +281,7 @@ public class StaticComponentContainer {
 			}
 		} catch (Throwable exc){
 			exc.printStackTrace();
-			throw new RuntimeException(exc);
+			throw exc;
 		}
 		
 	}
