@@ -33,7 +33,10 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -41,6 +44,7 @@ import java.util.function.Consumer;
 import org.burningwave.core.ManagedLogger;
 
 public class Thread extends java.lang.Thread implements ManagedLogger {
+
 	
 	Consumer<Thread> originalExecutable;
 	Consumer<Thread> executable;
@@ -125,6 +129,56 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	}	
 	
 	public static class Supplier {
+		public static class Configuration {
+			public static class Key {
+				public static final String NAME = "thread-supplier.name";
+				public static final String MAX_POOLABLE_THREADS_COUNT = "thread-supplier.max-poolable-threads-count";
+				public static final String MAX_TEMPORARILY_THREADS_COUNT = "thread-supplier.max-temporarily-threads-count";
+				public static final String POOLABLE_THREAD_REQUEST_TIMEOUT = "thread-supplier.poolable-thread-request-timeout";
+				public static final String MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET = "thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-for-reset";
+				public static final String MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP = "thread-supplier.max-temporarily-threads-count.increasing-step";                        
+				
+			}
+			
+			public final static Map<String, Object> DEFAULT_VALUES;
+			
+			static {
+				Map<String, Object> defaultValues =  new HashMap<>(); 
+				
+				defaultValues.put(
+					Key.NAME,
+					"Burningwave thread supplier"
+				);			
+				
+				defaultValues.put(
+					Key.MAX_POOLABLE_THREADS_COUNT,
+					"auto"
+				);
+				
+				defaultValues.put(
+					Key.MAX_TEMPORARILY_THREADS_COUNT,
+					"auto"
+				);
+				
+				defaultValues.put(
+					Key.POOLABLE_THREAD_REQUEST_TIMEOUT,
+					6000
+				);
+				
+				defaultValues.put(
+					Key.MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET,
+					30000
+				);
+				
+				defaultValues.put(
+					Key.MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP,
+					8
+				);
+				
+				DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
+			}
+		}		
+		
 		private String name;
 		private volatile long threadsCount;
 		private int maxPoolableThreadsCount;
@@ -153,7 +207,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			this.poolableSleepingThreads = ConcurrentHashMap.newKeySet();
 			
 			int maxPoolableThreadsCountAsInt;
-			double multiplier = 2.5;
+			double multiplier = 3;
 			try {
 				maxPoolableThreadsCountAsInt = Objects.toInt(maxPoolableThreadsCount);
 			} catch (Throwable exc) {

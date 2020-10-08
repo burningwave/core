@@ -51,12 +51,6 @@ public class StaticComponentContainer {
 			private static final String BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED = "background-executor.task-creation-tracking.enabled";
 			private static final String ALL_THREADS_STATE_LOGGER_ENABLED = "synchronizer.all-threads-state-logger.enabled";
 			private static final String ALL_THREADS_STATE_LOGGER_LOG_INTERVAL = "synchronizer.all-threads-state-logger.log.interval";
-			private static final String THREAD_SUPPLIER_NAME = "thread-supplier.name";
-			private static final String THREAD_SUPPLIER_MAX_POOLABLE_THREADS_COUNT = "thread-supplier.max-poolable-threads-count";
-			private static final String THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT = "thread-supplier.max-temporarily-threads-count";
-			private static final String THREAD_SUPPLIER_POOLABLE_THREAD_REQUEST_TIMEOUT = "thread-supplier.poolable-thread-request-timeout";
-			private static final String THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET = "thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-for-reset";
-			private static final String THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP = "thread-supplier.max-temporarily-threads-count.increasing-step";
 			                                         
 			
 		}
@@ -82,36 +76,6 @@ public class StaticComponentContainer {
 				Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED,
 				"${" + Key.ALL_THREADS_STATE_LOGGER_ENABLED +"}"
 			);	
-			
-			defaultValues.put(
-				Key.THREAD_SUPPLIER_NAME,
-				"Burningwave thread supplier"
-			);			
-			
-			defaultValues.put(
-				Key.THREAD_SUPPLIER_MAX_POOLABLE_THREADS_COUNT,
-				"auto"
-			);
-			
-			defaultValues.put(
-				Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT,
-				"auto"
-			);
-			
-			defaultValues.put(
-				Key.THREAD_SUPPLIER_POOLABLE_THREAD_REQUEST_TIMEOUT,
-				6000
-			);
-			
-			defaultValues.put(
-				Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET,
-				30000
-			);
-			
-			defaultValues.put(
-				Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP,
-				8
-			);
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
@@ -155,8 +119,10 @@ public class StaticComponentContainer {
 			Properties properties = new Properties();
 			properties.putAll(Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
-			properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.iterable.IterableObjectHelper.Configuration.DEFAULT_VALUES);
+			properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
+			properties.putAll(org.burningwave.core.concurrent.Thread.Supplier.Configuration.DEFAULT_VALUES);
+			properties.putAll(Configuration.DEFAULT_VALUES);
 			Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
 				Resources.loadFirstOneFound(properties, "burningwave.static.properties", "burningwave.static.default.properties");
 			GlobalPropertiesListener = new org.burningwave.core.iterable.Properties.Listener() {
@@ -207,13 +173,13 @@ public class StaticComponentContainer {
 			}.listenTo(GlobalProperties = propBag.getKey());
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
 			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
-				GlobalProperties.resolveStringValue(Configuration.Key.THREAD_SUPPLIER_NAME),
-				GlobalProperties.resolveValue(Configuration.Key.THREAD_SUPPLIER_MAX_POOLABLE_THREADS_COUNT),
-				GlobalProperties.resolveValue(Configuration.Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT),
+				GlobalProperties.resolveStringValue(org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.NAME),
+				GlobalProperties.resolveValue(org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.MAX_POOLABLE_THREADS_COUNT),
+				GlobalProperties.resolveValue(org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.MAX_TEMPORARILY_THREADS_COUNT),
 				true,
-				Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.THREAD_SUPPLIER_POOLABLE_THREAD_REQUEST_TIMEOUT)),
-				Objects.toInt(GlobalProperties.resolveValue(Configuration.Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP)),
-				Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.THREAD_SUPPLIER_MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET)),
+				Objects.toLong(GlobalProperties.resolveValue(org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.POOLABLE_THREAD_REQUEST_TIMEOUT)),
+				Objects.toInt(GlobalProperties.resolveValue(org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP)),
+				Objects.toLong(GlobalProperties.resolveValue(org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET)),
 				true
 			);
 			org.burningwave.core.concurrent.Thread.Supplier lowPriorityThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
