@@ -907,7 +907,7 @@ The configuration of this type of container is done via **burningwave.static.pro
 ```properties
 background-executor.task-creation-tracking.enabled=${synchronizer.all-threads-state-logger.enabled}
 iterable-object-helper.default-values-separator=;
-iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=auto
+iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=autodetect
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
 #the SLF4JManagedLoggerRepository will be instantiated, otherwise the SimpleManagedLoggerRepository will be instantiated
 managed-logger.repository=autodetect
@@ -925,9 +925,9 @@ streams.default-buffer-size=1024
 streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
 synchronizer.all-threads-state-logger.enabled=false
 synchronizer.all-threads-state-logger.log.interval=120000
-thread-supplier.max-poolable-threads-count=auto
-thread-supplier.max-temporarily-threads-count=auto
-thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-for-reset=30000
+thread-supplier.max-poolable-threads-count=autodetect
+thread-supplier.max-temporarily-threads-count=autodetect
+thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-for-decreasing=30000
 thread-supplier.max-temporarily-threads-count.increasing-step=8
 thread-supplier.name=Burningwave thread supplier
 thread-supplier.poolable-thread-request-timeout=6000
