@@ -282,6 +282,34 @@ public class QueuedTasksExecutor implements Component {
 		return waitForTasksEnding(Thread.currentThread().getPriority(), false);
 	}
 	
+	<E, T extends TaskAbst<E, T>> void kill(T task) {
+		if (task.hasFinished()) {
+			return;
+		}
+		task.aborted = true;
+		tasksQueue.remove(task);
+		tasksInExecution.remove(task);
+		if (task.runOnlyOnce) {
+			TaskAbst<?, ?> runOnlyOnceTask = runOnlyOnceTasksToBeExecuted.get(task.id);
+			if (runOnlyOnceTask != null) {
+				runOnlyOnceTasksToBeExecuted.remove(runOnlyOnceTask.id);
+				tasksQueue.remove(runOnlyOnceTask);
+				tasksInExecution.remove(runOnlyOnceTask);
+				if (!runOnlyOnceTask.hasFinished()) {
+					runOnlyOnceTask.aborted = true;
+					runOnlyOnceTask.clear();
+					synchronized(runOnlyOnceTask) {
+						runOnlyOnceTask.notifyAll();
+					}
+				}
+			}
+		}
+		synchronized (task) {
+			task.clear();
+			task.notifyAll();
+		}
+	}
+	
 	public <E, T extends TaskAbst<E, T>> boolean abort(T task) {
 		synchronized (task) {
 			if (!task.isSubmitted()) {
@@ -1225,6 +1253,12 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 			return false;
+		}
+		
+		<E, T extends TaskAbst<E, T>> void kill(T task) {
+			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+				queuedTasksExecutorBox.getValue().kill(task);
+			}
 		}
 	}
 
