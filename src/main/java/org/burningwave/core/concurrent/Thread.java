@@ -135,7 +135,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				public static final String MAX_POOLABLE_THREADS_COUNT = "thread-supplier.max-poolable-threads-count";
 				public static final String MAX_TEMPORARILY_THREADS_COUNT = "thread-supplier.max-temporarily-threads-count";
 				public static final String POOLABLE_THREAD_REQUEST_TIMEOUT = "thread-supplier.poolable-thread-request-timeout";
-				public static final String MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET = "thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-for-reset";
+				public static final String MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_DECREASING = "thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-for-decreasing";
 				public static final String MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP = "thread-supplier.max-temporarily-threads-count.increasing-step";                        
 				
 			}
@@ -152,12 +152,12 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				
 				defaultValues.put(
 					Key.MAX_POOLABLE_THREADS_COUNT,
-					"auto"
+					"autodetect"
 				);
 				
 				defaultValues.put(
 					Key.MAX_TEMPORARILY_THREADS_COUNT,
-					"auto"
+					"autodetect"
 				);
 				
 				defaultValues.put(
@@ -166,7 +166,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				);
 				
 				defaultValues.put(
-					Key.MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_RESET,
+					Key.MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_DECREASING,
 					30000
 				);
 				
