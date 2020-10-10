@@ -34,6 +34,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
@@ -57,7 +58,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -320,7 +320,7 @@ public class Classes implements Component, MembersRetriever {
 			cls.getName().replace(".", "/") + ".class"
 		);
 		return Streams.toByteBuffer(
-			Objects.requireNonNull(inputStream, "Could not acquire bytecode for class " + cls.getName())
+			java.util.Objects.requireNonNull(inputStream, "Could not acquire bytecode for class " + cls.getName())
 		);
 	}
 	
@@ -721,7 +721,7 @@ public class Classes implements Component, MembersRetriever {
 			ByteBuffer byteCode
 		) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
 			try {
-				return Synchronizer.executeThrower(getOperationId("defineClass_" + className), () -> {
+				return Synchronizer.executeThrower(Objects.getId(classLoader) + "_defineClass_" + className, () -> {
 				//synchronized (getClassLoadingLock(classLoader, className)) {
 					return (Class<T>)method.invoke(classLoader, className, byteCode, null);
 				});
