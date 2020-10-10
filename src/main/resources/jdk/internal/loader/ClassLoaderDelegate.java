@@ -36,8 +36,13 @@ import java.lang.invoke.MethodHandle;
 
 
 public class ClassLoaderDelegate extends BuiltinClassLoader {
+	
 	private ClassLoader classLoader;
 	private MethodHandle loadClassMethod;
+	
+	static {
+        ClassLoader.registerAsParallelCapable();
+    }
 	
 	ClassLoaderDelegate(BuiltinClassLoader parent, ClassLoader classLoader, MethodHandle loadClassMethodHandle) {
 		super("ClassLoaderDelegateOf" + classLoader.toString(), parent, null);
