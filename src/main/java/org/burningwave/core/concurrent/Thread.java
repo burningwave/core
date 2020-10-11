@@ -135,7 +135,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				public static final String MAX_POOLABLE_THREADS_COUNT = "thread-supplier.max-poolable-threads-count";
 				public static final String MAX_TEMPORARILY_THREADS_COUNT = "thread-supplier.max-temporarily-threads-count";
 				public static final String POOLABLE_THREAD_REQUEST_TIMEOUT = "thread-supplier.poolable-thread-request-timeout";
-				public static final String MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_DECREASING = "thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-for-decreasing";
+				public static final String MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE = "thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value";
 				public static final String MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP = "thread-supplier.max-temporarily-threads-count.increasing-step";                        
 				
 			}
@@ -166,7 +166,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				);
 				
 				defaultValues.put(
-					Key.MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_DECREASING,
+					Key.MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE,
 					30000
 				);
 				
@@ -186,7 +186,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		private int maxThreadsCount;
 		private int maxTemporarilyThreadsCountIncreasingStep;
 		private long poolableThreadRequestTimeout;
-		private long elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount;
+		private long elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxTemporarilyThreadsCount;
 		private Collection<Thread> runningThreads;
 		private Collection<Thread> poolableSleepingThreads;
 		private long timeOfLastIncreaseOfMaxTemporarilyThreadsCount;
@@ -199,7 +199,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			boolean daemon,
 			long poolableThreadRequestTimeout,
 			int maxTemporarilyThreadsCountIncreasingStep,
-			long elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount
+			long elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxTemporarilyThreadsCount
 		) {
 			this.name = name;
 			this.daemon = daemon;
@@ -231,7 +231,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			this.maxPoolableThreadsCount = maxPoolableThreadsCountAsInt;
 			this.inititialMaxThreadsCount = this.maxThreadsCount = maxPoolableThreadsCountAsInt + maxTemporarilyThreadsCountAsInt;
 			this.poolableThreadRequestTimeout = poolableThreadRequestTimeout;
-			this.elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount = elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount;
+			this.elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxTemporarilyThreadsCount = elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxTemporarilyThreadsCount;
 			this.maxTemporarilyThreadsCountIncreasingStep = maxTemporarilyThreadsCountIncreasingStep;
 			this.timeOfLastIncreaseOfMaxTemporarilyThreadsCount = Long.MAX_VALUE;
 		}
@@ -266,7 +266,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							if (waitElapsedTime < poolableThreadRequestTimeout) {
 								if (inititialMaxThreadsCount < maxThreadsCount &&
 									(System.currentTimeMillis() - timeOfLastIncreaseOfMaxTemporarilyThreadsCount) > 
-										elapsedTimeThresholdForResetOfMaxTemporarilyThreadsCount
+										elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxTemporarilyThreadsCount
 								) {
 									maxThreadsCount -= (maxTemporarilyThreadsCountIncreasingStep / 2);
 									ManagedLoggersRepository.logInfo(

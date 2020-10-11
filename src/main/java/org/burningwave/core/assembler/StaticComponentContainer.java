@@ -181,7 +181,7 @@ public class StaticComponentContainer {
 				true,
 				Objects.toLong(GlobalProperties.resolveValue(org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.POOLABLE_THREAD_REQUEST_TIMEOUT)),
 				Objects.toInt(GlobalProperties.resolveValue(org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP)),
-				Objects.toLong(GlobalProperties.resolveValue(org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FOR_DECREASING)),
+				Objects.toLong(GlobalProperties.resolveValue(org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE)),
 				true
 			);
 			org.burningwave.core.concurrent.Thread.Supplier lowPriorityThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
