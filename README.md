@@ -905,14 +905,31 @@ public class UseOfStaticComponentsExample {
 ### Configuration
 The configuration of this type of container is done via **burningwave.static.properties** file or via **burningwave.static.default.properties** file: the library searches for the first file and if it does not find it, then it searches for the second file and if neither this one is found then the library sets the default configuration programmatically. **The default configuration loaded programmatically if no configuration file is found is the following**:
 ```properties
-background-executor.task-creation-tracking.enabled=${synchronizer.all-threads-state-logger.enabled}
-iterable-object-helper.default-values-separator=;
-iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=autodetect
+background-executor.all-tasks-monitoring.dead-locked-tasks-killing.enabled=\
+	true
+background-executor.all-tasks-monitoring.interval=\
+	15000
+background-executor.all-tasks-monitoring.logger.enabled=\
+	true
+background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-dead-locked=\
+	60000
+background-executor.task-creation-tracking.enabled=\
+	${background-executor.all-tasks-monitoring.logger.enabled}
+iterable-object-helper.default-values-separator=\
+	;
+iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\
+	autodetect
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
 #the SLF4JManagedLoggerRepository will be instantiated, otherwise the SimpleManagedLoggerRepository will be instantiated
-managed-logger.repository=autodetect
+managed-logger.repository=\
+	autodetect
 #to increase performance set it to false
-managed-logger.repository.enabled=true
+managed-logger.repository.enabled=\
+	true
+managed-logger.repository.logging.debug.disabled-for=\
+	org.burningwave.core.io.FileSystemItem;\
+	org.burningwave.core.classes.MemoryClassLoader;\
+	org.burningwave.core.classes.PathScannerClassLoader;
 managed-logger.repository.logging.warn.disabled-for=\
 	org.burningwave.core.classes.ClassHunter$SearchContext;\
 	org.burningwave.core.classes.ClassPathHunter$SearchContext;\
@@ -920,17 +937,33 @@ managed-logger.repository.logging.warn.disabled-for=\
 	org.burningwave.core.classes.MemoryClassLoader;\
 	org.burningwave.core.classes.PathScannerClassLoader;\
 	org.burningwave.core.classes.SearchContext;
-static-component-container.hide-banner-on-init=false
-streams.default-buffer-size=1024
-streams.default-byte-buffer-allocation-mode=ByteBuffer::allocateDirect
-synchronizer.all-threads-monitoring.enabled=false
-synchronizer.all-threads-monitoring.interval=90000
-thread-supplier.max-poolable-threads-count=autodetect
-thread-supplier.max-temporarily-threads-count=autodetect
-thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value=30000
-thread-supplier.max-temporarily-threads-count.increasing-step=8
-thread-supplier.name=Burningwave thread supplier
-thread-supplier.poolable-thread-request-timeout=6000
+static-component-container.hide-banner-on-init=\
+	false
+streams.default-buffer-size=\
+	0.5Kb
+streams.default-byte-buffer-allocation-mode=\
+	ByteBuffer::allocateDirect
+synchronizer.all-threads-monitoring.enabled=\
+	true
+synchronizer.all-threads-monitoring.interval=\
+	90000
+terable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\
+	autodetect
+thread-supplier.default-daemon-flag-value=\
+	6000
+thread-supplier.max-poolable-threads-count=\
+	autodetect
+thread-supplier.max-temporarily-threads-count=\
+	autodetect
+thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value=\
+	60000
+thread-supplier.max-temporarily-threads-count.increasing-step=\
+	8
+thread-supplier.name=\
+	Burningwave thread supplier
+thread-supplier.poolable-thread-request-timeout=\
+	6000
+
 ```
 **If in your custom burningwave.static.properties or burningwave.static.default.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 [Here an example of a **burningwave.static.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.static.properties)
