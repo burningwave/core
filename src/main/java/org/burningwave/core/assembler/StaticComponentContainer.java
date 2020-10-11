@@ -51,10 +51,12 @@ public class StaticComponentContainer {
 		public static class Key {
 			private static final String HIDE_BANNER_ON_INIT = "static-component-container.hide-banner-on-init";
 			private static final String BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED = "background-executor.task-creation-tracking.enabled";
+			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_DEAD_LOCKED = "background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-dead-locked";
+			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED = "background-executor.all-tasks-monitoring.logger.enabled";
+			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL = "background-executor.all-tasks-monitoring.interval";
+			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_DEAD_LOCKED_TASKS_KILLING_ENABLED = "background-executor.all-tasks-monitoring.dead-locked-tasks-killing.enabled";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED = "synchronizer.all-threads-monitoring.enabled";
-			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";
-			                                         
-			
+			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";	
 		}
 		
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -72,12 +74,32 @@ public class StaticComponentContainer {
 			defaultValues.put(
 				Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL,
 				90000
+			);
+			
+			defaultValues.put(
+				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_DEAD_LOCKED,
+				60000
+			);
+
+			defaultValues.put(
+				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL,
+				15000
+			);	
+			
+			defaultValues.put(
+				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_DEAD_LOCKED,
+				true
 			);	
 			
 			defaultValues.put(
 				Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED,
-				"${" + Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED +"}"
-			);	
+				"${" + Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED +"}"
+			);
+			
+			defaultValues.put(
+				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED,
+				false
+			);
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
@@ -175,29 +197,31 @@ public class StaticComponentContainer {
 			}.listenTo(GlobalProperties = propBag.getKey());
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
 			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
-				GlobalProperties.resolveStringValue(org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.NAME),
-				GlobalProperties.resolveValue(org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.MAX_POOLABLE_THREADS_COUNT),
-				GlobalProperties.resolveValue(org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.MAX_TEMPORARILY_THREADS_COUNT),
-				true,
-				Objects.toLong(GlobalProperties.resolveValue(org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.POOLABLE_THREAD_REQUEST_TIMEOUT)),
-				Objects.toInt(GlobalProperties.resolveValue(org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP)),
-				Objects.toLong(GlobalProperties.resolveValue(org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE)),
-				true
+				GlobalProperties, true
 			);
-			org.burningwave.core.concurrent.Thread.Supplier lowPriorityThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
-				"Burningwave low priority thread supplier", 2, 4, true, 15000, 2, 10000, true
-			);
+			
+//			org.burningwave.core.concurrent.Thread.Supplier lowPriorityThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
+//				"Burningwave low priority thread supplier", 2, 4, true, 15000, 2, 10000, true
+//			);
 			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create(
 				"Background executor",
-				ThreadSupplier, ThreadSupplier, 
-				lowPriorityThreadSupplier,
+				ThreadSupplier,
+				ThreadSupplier, 
+				ThreadSupplier,
 				true,
 				true
 			);
-			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(ThreadSupplier, Arrays.asList(BackgroundExecutor), true);
+			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(ThreadSupplier, true);
 			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED))) {
 				BackgroundExecutor.setTasksCreationTrackingFlag(true);
 			}
+			BackgroundExecutor.startAllTasksMonitoring(
+				Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL)),
+				Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_DEAD_LOCKED)),
+				Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_DEAD_LOCKED_TASKS_KILLING_ENABLED)),
+				Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED))
+			);
+			
 			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.HIDE_BANNER_ON_INIT))) {
 				showBanner();
 			}
@@ -264,7 +288,7 @@ public class StaticComponentContainer {
 					BackgroundExecutor.shutDown(false);
 					Synchronizer.close();
 					ThreadSupplier.shutDownAll();
-					lowPriorityThreadSupplier.shutDownAll();
+					//lowPriorityThreadSupplier.shutDownAll();
 				})
 			);
 			FileSystemHelper.startScavenger();

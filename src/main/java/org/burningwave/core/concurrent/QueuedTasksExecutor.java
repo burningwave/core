@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.concurrent;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -36,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -282,7 +284,7 @@ public class QueuedTasksExecutor implements Component {
 		return waitForTasksEnding(Thread.currentThread().getPriority(), false);
 	}
 	
-	<E, T extends TaskAbst<E, T>> void kill(T task) {
+	void kill(TaskAbst<?, ?> task) {
 		if (task.hasFinished()) {
 			return;
 		}
@@ -585,7 +587,7 @@ public class QueuedTasksExecutor implements Component {
 		volatile boolean runOnlyOnce;		
 		volatile String id;
 		volatile int priority;
-		volatile boolean started;
+		volatile Long startTime;
 		volatile boolean submitted;
 		volatile boolean aborted;
 		volatile boolean finished;
@@ -625,6 +627,10 @@ public class QueuedTasksExecutor implements Component {
 			return creatorInfos;
 		}
 		
+		public Long getStartTime() {
+			return startTime;
+		}
+		
 		public T setName(String name) {
 			this.name = name;
 			return (T)this;
@@ -636,7 +642,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public boolean isStarted() {
-			return started;
+			return startTime != null;
 		}
 		
 		public boolean hasFinished() {
@@ -662,20 +668,25 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public T waitForStarting() {
+			while(waitForStarting0());
+			return (T)this;
+		}
+		
+		public boolean waitForStarting0() {
 			java.lang.Thread currentThread = Thread.currentThread();
 			if (currentThread == this.executor) {
-				return (T)this;
+				return false;
 			}
 			if (isSubmitted()) {
-				if (!started) {
+				if (!isStarted()) {
 					synchronized (this) {
-						if (!started) {
+						if (!isStarted()) {
 							try {
 								if (isAborted()) {
 									Throwables.throwException(new TaskStateException(this, "is aborted"));
 								}
 								wait();
-								waitForStarting();
+								return true;
 							} catch (InterruptedException exc) {
 								Throwables.throwException(exc);
 							}
@@ -685,7 +696,7 @@ public class QueuedTasksExecutor implements Component {
 			} else {
 				Throwables.throwException(new TaskStateException(this, "is not submitted"));
 			}
-			return (T)this;
+			return false;
 		}		
 		
 		public T waitForFinish() {
@@ -729,7 +740,6 @@ public class QueuedTasksExecutor implements Component {
 				}
 
 			}
-			started = true;
 			preparingToExecute();
 			synchronized (this) {
 				notifyAll();
@@ -864,6 +874,7 @@ public class QueuedTasksExecutor implements Component {
 
 		void preparingToExecute() {
 			queuedTasksExecutor = getQueuedTasksExecutor();
+			startTime = System.currentTimeMillis();
 			queuedTasksExecutor.tasksInExecution.add(this);				
 		}
 		
@@ -923,14 +934,17 @@ public class QueuedTasksExecutor implements Component {
 	
 	public static class Group implements ManagedLogger{
 		Map<String, QueuedTasksExecutor> queuedTasksExecutors;
+		Map<TaskAbst<?, ?>, StackTraceElement[]> waitingTasksAndLastStackTrace;
+		Thread allTasksMonitorer;
 		
 		Group(String name, 
 			Thread.Supplier threadSupplierForHighPriorityTasksExecutor,
 			Thread.Supplier threadSupplierForNormalPriorityTasksExecutor,
-			Thread.Supplier threadSupplierForLowPriorityTasksExecutor
-			, boolean isDaemon
+			Thread.Supplier threadSupplierForLowPriorityTasksExecutor,
+			boolean isDaemon
 		) {
 			queuedTasksExecutors = new HashMap<>();
+			waitingTasksAndLastStackTrace = new HashMap<>();
 			queuedTasksExecutors.put(
 				String.valueOf(Thread.MAX_PRIORITY),
 				createQueuedTasksExecutor(
@@ -950,7 +964,7 @@ public class QueuedTasksExecutor implements Component {
 			queuedTasksExecutors.put(
 				String.valueOf(Thread.MIN_PRIORITY),
 				createQueuedTasksExecutor(
-					name + " - Low priority tasks",
+					name + " - Low priority tasks", 
 					threadSupplierForLowPriorityTasksExecutor,
 					Thread.MIN_PRIORITY, isDaemon
 				)
@@ -962,7 +976,10 @@ public class QueuedTasksExecutor implements Component {
 			Thread.Supplier threadSupplierForHighPriorityTasksExecutor,
 			Thread.Supplier threadSupplierForNormalPriorityTasksExecutor,
 			Thread.Supplier threadSupplierForLowPriorityTasksExecutor,
-			boolean isDaemon
+			boolean isDaemon,
+			long allTasksMonitoringInterval,
+			long minimumElapsedTimeToConsiderATaskAsDeadLocked,
+			boolean deadLockedTasksKillingEnabled
 		) {
 			return create(
 				name,
@@ -978,9 +995,12 @@ public class QueuedTasksExecutor implements Component {
 			String name,
 			Thread.Supplier threadSupplier,
 			boolean isDaemon,
+			long allTasksMonitoringInterval,
+			long minimumElapsedTimeToConsiderATaskAsDeadLocked,
+			boolean deadLockedTasksKillingEnabled,
 			boolean undestroyableFromExternal
 		) {
-			return create(name, threadSupplier, threadSupplier, threadSupplier, isDaemon, undestroyableFromExternal);
+			return create(name, threadSupplier, threadSupplier, threadSupplier, isDaemon, allTasksMonitoringInterval, minimumElapsedTimeToConsiderATaskAsDeadLocked, undestroyableFromExternal);
 		}
 		
 		public static Group create(
@@ -1165,20 +1185,6 @@ public class QueuedTasksExecutor implements Component {
 			return this;
 		}
 		
-		public boolean shutDown(boolean waitForTasksTermination) {
-			QueuedTasksExecutor lastToBeWaitedFor = getByPriority(Thread.currentThread().getPriority());
-			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
-				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
-				if (queuedTasksExecutor != lastToBeWaitedFor) {
-					queuedTasksExecutor.shutDown(waitForTasksTermination);
-				}
-			}
-			lastToBeWaitedFor.shutDown(waitForTasksTermination);	
-			queuedTasksExecutors.clear();
-			queuedTasksExecutors = null;
-			return true;
-		}
-		
 		public boolean isClosed() {
 			return queuedTasksExecutors == null;
 		}
@@ -1255,10 +1261,126 @@ public class QueuedTasksExecutor implements Component {
 			return false;
 		}
 		
-		<E, T extends TaskAbst<E, T>> void kill(T task) {
+		public Collection<TaskAbst<?, ?>> getAllTasksInExecution() {
+			Collection<TaskAbst<?, ?>> tasksInExecution = new HashSet<>();
+			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+				tasksInExecution.addAll(
+					queuedTasksExecutorBox.getValue().tasksInExecution
+				);
+			}
+			return tasksInExecution;
+		}
+		
+		void kill(TaskAbst<?,?> task) {
 			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				queuedTasksExecutorBox.getValue().kill(task);
 			}
+		}
+		
+		void checkAndKillForDeadLockedTasks(long minimumElapsedTimeToConsiderATaskAsDeadLocked, boolean killDeadLockedTasks) {
+			Iterator<Entry<TaskAbst<?, ?>, StackTraceElement[]>> tasksAndStackTracesIterator = waitingTasksAndLastStackTrace.entrySet().iterator();
+			while (tasksAndStackTracesIterator.hasNext()) {
+				TaskAbst<?, ?> task = tasksAndStackTracesIterator.next().getKey();
+				if(task.hasFinished() || task.isAborted()) {
+					tasksAndStackTracesIterator.remove();
+				}
+			}
+			long currentTime = System.currentTimeMillis();
+			for (TaskAbst<?, ?> task : getAllTasksInExecution()) {
+				if (currentTime - task.startTime > minimumElapsedTimeToConsiderATaskAsDeadLocked) {
+					java.lang.Thread taskThread = task.executor;
+					if (taskThread != null &&
+					(taskThread.getState().equals(Thread.State.BLOCKED) ||
+					taskThread.getState().equals(Thread.State.WAITING) ||
+					taskThread.getState().equals(Thread.State.TIMED_WAITING))) {
+						StackTraceElement[] previousRegisteredStackTrace = waitingTasksAndLastStackTrace.get(task);
+						if (previousRegisteredStackTrace != null) {
+							if (areStrackTracesEquals(previousRegisteredStackTrace, taskThread.getStackTrace())) {
+								StringBuffer log = new StringBuffer(
+									Strings.compile(
+										"Possible deadlock detected for task:{}\n\t",
+										task.getInfoAsString()
+									)
+								);
+								if (killDeadLockedTasks) {
+									kill(task);
+									if (task.isAborted()) {
+										taskThread.setName("DEADLOCKED THREAD -> " + taskThread.getName());
+										log.append("... So the task has been aborted");
+									}
+								}	
+								ManagedLoggersRepository.logWarn(
+									() -> this.getClass().getName(),
+									log.toString()
+								);
+							}
+						} else {
+							waitingTasksAndLastStackTrace.put(task, taskThread.getStackTrace());
+						}
+					}
+				}
+			}
+		}
+		
+		private boolean areStrackTracesEquals(StackTraceElement[] stackTraceOne, StackTraceElement[] stackTraceTwo) {
+			if (stackTraceOne.length == stackTraceTwo.length) {
+				for (int i = 0; i < stackTraceOne.length; i++) {
+					if (!stackTraceOne[i].toString().equals(stackTraceTwo[i].toString()) ) {
+						return false;
+					}
+				}
+				return true;
+			}
+			return false;
+		}
+		
+		public synchronized void startAllTasksMonitoring(long interval, long minimumElapsedTimeToConsiderATaskAsDeadLocked, boolean killDeadLockedTasks, boolean allTasksLoggerEnabled) {
+			if (allTasksMonitorer != null) {
+				stopAllTasksMonitoring();
+			}
+			allTasksMonitorer = getByPriority(Thread.MIN_PRIORITY).threadSupplier.getOrCreate().setExecutable(thread -> {
+				try {
+					thread.waitFor(interval);
+					if (thread.isLooping()) {
+						if (allTasksLoggerEnabled) {
+							logInfo();
+						}
+						checkAndKillForDeadLockedTasks(minimumElapsedTimeToConsiderATaskAsDeadLocked, killDeadLockedTasks);
+					}
+				} catch (Throwable exc) {
+					logError(exc);
+				}
+			}, true);
+			allTasksMonitorer.setName("All tasks monitorer");
+			allTasksMonitorer.setPriority(Thread.MIN_PRIORITY);
+			allTasksMonitorer.start();
+		}
+		
+		public void stopAllTasksMonitoring() {
+			stopAllTasksMonitoring(false);
+		}
+		
+		public synchronized void stopAllTasksMonitoring(boolean waitThreadToFinish) {
+			if (allTasksMonitorer == null) {
+				return;
+			}
+			allTasksMonitorer.shutDown(waitThreadToFinish);
+			allTasksMonitorer = null;
+		}
+		
+		public boolean shutDown(boolean waitForTasksTermination) {
+			QueuedTasksExecutor lastToBeWaitedFor = getByPriority(Thread.currentThread().getPriority());
+			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
+				if (queuedTasksExecutor != lastToBeWaitedFor) {
+					queuedTasksExecutor.shutDown(waitForTasksTermination);
+				}
+			}
+			lastToBeWaitedFor.shutDown(waitForTasksTermination);
+			this.allTasksMonitorer.shutDown(true);
+			queuedTasksExecutors.clear();
+			queuedTasksExecutors = null;
+			return true;
 		}
 	}
 

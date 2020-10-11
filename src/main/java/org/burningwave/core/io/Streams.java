@@ -29,6 +29,7 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.io.BufferedReader;
@@ -83,14 +84,17 @@ public class Streams implements Component {
 	Function<Integer, ByteBuffer> defaultByteBufferAllocationMode;
 	String instanceId;
 	
-	private Streams(Properties config) {
+	private Streams(java.util.Properties config) {
 		instanceId = getId();
 		setDefaultByteBufferSize(config);
 		setDefaultByteBufferAllocationMode(config);
+		if (config instanceof Properties) {
+			listenTo((Properties)config);
+		}
 	}
 
-	private void setDefaultByteBufferSize(Properties config) {
-		String defaultBufferSize = config.resolveStringValue(Configuration.Key.BYTE_BUFFER_SIZE, Configuration.DEFAULT_VALUES);
+	private void setDefaultByteBufferSize(java.util.Properties config) {
+		String defaultBufferSize = IterableObjectHelper.resolveStringValue(config, Configuration.Key.BYTE_BUFFER_SIZE, Configuration.DEFAULT_VALUES);
 		String unit = defaultBufferSize.substring(defaultBufferSize.length()-2);
 		String value = defaultBufferSize.substring(0, defaultBufferSize.length()-2);
 		if (unit.equalsIgnoreCase("KB")) {
@@ -103,8 +107,8 @@ public class Streams implements Component {
 		logInfo("default buffer size: {} bytes", defaultBufferSize);
 	}
 
-	private void setDefaultByteBufferAllocationMode(Properties config) {
-		String defaultByteBufferAllocationMode = config.resolveStringValue(Configuration.Key.BYTE_BUFFER_ALLOCATION_MODE, Configuration.DEFAULT_VALUES);
+	private void setDefaultByteBufferAllocationMode(java.util.Properties config) {
+		String defaultByteBufferAllocationMode = IterableObjectHelper.resolveStringValue(config, Configuration.Key.BYTE_BUFFER_ALLOCATION_MODE, Configuration.DEFAULT_VALUES);
 		if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
 			this.defaultByteBufferAllocationMode = ByteBufferHandler::allocate;
 			logInfo("default allocation mode: ByteBuffer::allocate");
@@ -129,7 +133,7 @@ public class Streams implements Component {
 	}
 	
 	public static Streams create(Properties config) {
-		return new Streams(config).listenTo(config);
+		return new Streams(config);
 	}
 	
 	public boolean isArchive(File file) throws IOException {

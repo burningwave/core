@@ -32,17 +32,12 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadMXBean;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingRunnable;
@@ -51,27 +46,17 @@ import org.burningwave.core.function.ThrowingSupplier;
 @SuppressWarnings("unused")
 public class Synchronizer implements AutoCloseable, ManagedLogger {
 	Map<String, Mutex> mutexes;
+	Thread allThreadsStateLogger;
 	Thread.Supplier threadSupplier;
-	Thread allThreadsMonitorer;
-	Collection<QueuedTasksExecutor.Group> queuedTasksExecutorGroups;
 	
-	private Synchronizer(Thread.Supplier threadSupplier, Collection<QueuedTasksExecutor.Group> queuedTasksExecutorGroup) {
+	private Synchronizer(Thread.Supplier threadSupplier) {
 		mutexes = new ConcurrentHashMap<>();
 		this.threadSupplier = threadSupplier;
-		queuedTasksExecutorGroups = ConcurrentHashMap.newKeySet();
-		if (queuedTasksExecutorGroup != null && queuedTasksExecutorGroup.size() > 0) {
-			this.queuedTasksExecutorGroups.addAll(queuedTasksExecutorGroup);
-		}
 	}
 	
-	public static Synchronizer create(
-		Thread.Supplier threadSupplier,		
-		Collection<QueuedTasksExecutor.Group> queuedTasksExecutorGroups,
-		boolean undestroyable
-		
-	) {
+	public static Synchronizer create(Thread.Supplier threadSupplier, boolean undestroyable) {
 		if (undestroyable) {
-			return new Synchronizer(threadSupplier, queuedTasksExecutorGroups) {
+			return new Synchronizer(threadSupplier) {
 				StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
 				@Override
 				public void close() {
@@ -81,15 +66,8 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 				}
 			};
 		} else {
-			return new Synchronizer(threadSupplier, queuedTasksExecutorGroups);
+			return new Synchronizer(threadSupplier);
 		}
-	}
-	
-	synchronized void stop(Thread thread, boolean waitThreadToFinish) {
-		if (thread == null) {
-			return;
-		}
-		thread.shutDown(true);
 	}
 	
 	public Mutex getMutex(String id) {
@@ -173,10 +151,10 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	}
 	
 	public synchronized void startAllThreadsMonitoring(Long interval) {
-		if (allThreadsMonitorer != null) {
+		if (allThreadsStateLogger != null) {
 			stopLoggingAllThreadsState();
 		}
-		allThreadsMonitorer = threadSupplier.getOrCreate().setExecutable(thread -> {
+		allThreadsStateLogger = threadSupplier.getOrCreate().setExecutable(thread -> {
 			try {
 				thread.waitFor(interval);
 				if (thread.isLooping()) {
@@ -186,9 +164,9 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 				logError(exc);
 			}
 		}, true);
-		allThreadsMonitorer.setName("All threads state logger");
-		allThreadsMonitorer.setPriority(Thread.MIN_PRIORITY);
-		allThreadsMonitorer.start();
+		allThreadsStateLogger.setName("All threads state logger");
+		allThreadsStateLogger.setPriority(Thread.MIN_PRIORITY);
+		allThreadsStateLogger.start();
 	}
 
 	private void logAllThreadsState() {
@@ -203,9 +181,6 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 				log.append("\n\n");
 			}
 		}
-		if (!queuedTasksExecutorGroups.isEmpty()) {
-			String.join("\n\n", queuedTasksExecutorGroups.stream().map(queuedTasksExecutorGroup -> queuedTasksExecutorGroup.getInfoAsString()).collect(Collectors.toList()));
-		}
 		log.append("\n\n\n");
 		log.append(
 			Strings.compile(
@@ -217,49 +192,27 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 //			":\n" +
 //			IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 1)
 //		);
-		Set<java.lang.Thread> deadlockedThreads = getAllDeadLockedThreads();
-		if (!deadlockedThreads.isEmpty()) {
-			log.append("\nDEADLOCK DETECTED:\n\t");
-			log.append(String.join("\n\t", deadlockedThreads.stream().map(thread -> thread.toString()).collect(Collectors.toSet())));
-		}
 		log.append("\n");
 		ManagedLoggersRepository.logInfo(
 			() -> this.getClass().getName(),
 			log.toString()
 		);
-		
 	}
 	
 	public java.lang.Thread[] getAllThreads() {
 		return Methods.invokeStaticDirect(java.lang.Thread.class, "getThreads");
 	}
 	
-	
-	public Set<java.lang.Thread> getAllDeadLockedThreads() {
-		ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
-		long[] ids = threadMXBean.findDeadlockedThreads();
-		Set<java.lang.Thread> deadLockedThreads = ConcurrentHashMap.newKeySet();
-		if (ids != null) {
-			java.lang.Thread[] allThreads = getAllThreads();
-			for (long id :ids) {
-				for (java.lang.Thread thread :allThreads) {
-					if (id == thread.getId()) {
-						deadLockedThreads.add(thread);
-						break;
-					}
-				}
-			}
-		}
-		return deadLockedThreads;
-	}
-	
 	public void stopLoggingAllThreadsState() {
-		stopAllThreadsMonitoring(false);
+		stopLoggingAllThreadsState(false);
 	}
 	
-	public synchronized void stopAllThreadsMonitoring(boolean waitThreadToFinish) {
-		stop(allThreadsMonitorer, waitThreadToFinish);
-		allThreadsMonitorer = null;
+	public synchronized void stopLoggingAllThreadsState(boolean waitThreadToFinish) {
+		if (allThreadsStateLogger == null) {
+			return;
+		}
+		allThreadsStateLogger.shutDown(waitThreadToFinish);
+		allThreadsStateLogger = null;
 	}
 	
 	public static class Mutex  {
