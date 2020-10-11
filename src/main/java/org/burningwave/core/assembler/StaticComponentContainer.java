@@ -51,8 +51,8 @@ public class StaticComponentContainer {
 		public static class Key {
 			private static final String HIDE_BANNER_ON_INIT = "static-component-container.hide-banner-on-init";
 			private static final String BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED = "background-executor.task-creation-tracking.enabled";
-			private static final String ALL_THREADS_STATE_LOGGER_ENABLED = "synchronizer.all-threads-state-logger.enabled";
-			private static final String ALL_THREADS_STATE_LOGGER_LOG_INTERVAL = "synchronizer.all-threads-state-logger.log.interval";
+			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED = "synchronizer.all-threads-monitoring.enabled";
+			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";
 			                                         
 			
 		}
@@ -65,18 +65,18 @@ public class StaticComponentContainer {
 			defaultValues.put(Key.HIDE_BANNER_ON_INIT, false);
 			
 			defaultValues.put(
-				Key.ALL_THREADS_STATE_LOGGER_ENABLED, 
+				Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED, 
 				false
 			);
 			
 			defaultValues.put(
-				Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL,
-				120000
+				Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL,
+				90000
 			);	
 			
 			defaultValues.put(
 				Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED,
-				"${" + Key.ALL_THREADS_STATE_LOGGER_ENABLED +"}"
+				"${" + Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED +"}"
 			);	
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
@@ -146,23 +146,23 @@ public class StaticComponentContainer {
 										)
 									)
 								);
-							} else if (keyAsString.equals(Configuration.Key.ALL_THREADS_STATE_LOGGER_ENABLED)) {
-								if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.ALL_THREADS_STATE_LOGGER_ENABLED))) {
-									Synchronizer.startLoggingAllThreadsState(
+							} else if (keyAsString.equals(Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED)) {
+								if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED))) {
+									Synchronizer.startAllThreadsMonitoring(
 										Objects.toLong(
 											GlobalProperties.resolveValue(
-												Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL
+												Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL
 											)
 										)
 									);
 								} else {
 									Synchronizer.stopLoggingAllThreadsState();
 								}
-							} else if (keyAsString.equals(Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL)) {
-								Synchronizer.startLoggingAllThreadsState(
+							} else if (keyAsString.equals(Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL)) {
+								Synchronizer.startAllThreadsMonitoring(
 									Objects.toLong(
 										GlobalProperties.resolveValue(
-											Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL
+											Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL
 										)
 									)
 								);
@@ -194,7 +194,7 @@ public class StaticComponentContainer {
 				true,
 				true
 			);
-			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(true);
+			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(ThreadSupplier, Arrays.asList(BackgroundExecutor), true);
 			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED))) {
 				BackgroundExecutor.setTasksCreationTrackingFlag(true);
 			}
@@ -270,12 +270,12 @@ public class StaticComponentContainer {
 			FileSystemHelper.startScavenger();
 			if (Objects.toBoolean(
 				GlobalProperties.resolveValue(
-					Configuration.Key.ALL_THREADS_STATE_LOGGER_ENABLED
+					Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED
 				)
 			)) {
-				Synchronizer.startLoggingAllThreadsState(
+				Synchronizer.startAllThreadsMonitoring(
 					Objects.toLong(
-						GlobalProperties.resolveValue(Configuration.Key.ALL_THREADS_STATE_LOGGER_LOG_INTERVAL)
+						GlobalProperties.resolveValue(Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL)
 					)
 				);
 			}

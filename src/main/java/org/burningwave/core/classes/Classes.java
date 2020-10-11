@@ -721,7 +721,7 @@ public class Classes implements Component, MembersRetriever {
 			ByteBuffer byteCode
 		) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
 			try {
-				return Synchronizer.executeThrower(Objects.getId(classLoader) + "_defineClass_" + className, () -> {
+				return Synchronizer.executeThrower(Objects.getId(classLoader) + "_" + className, () -> {
 				//synchronized (getClassLoadingLock(classLoader, className)) {
 					return (Class<T>)method.invoke(classLoader, className, byteCode, null);
 				});

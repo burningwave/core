@@ -28,15 +28,14 @@
  */
 package org.burningwave.core.concurrent;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
-import static org.burningwave.core.assembler.StaticComponentContainer.ThreadSupplier;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
-import java.util.HashSet;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -52,15 +51,27 @@ import org.burningwave.core.function.ThrowingSupplier;
 @SuppressWarnings("unused")
 public class Synchronizer implements AutoCloseable, ManagedLogger {
 	Map<String, Mutex> mutexes;
-	Thread allThreadsStateLogger;
+	Thread.Supplier threadSupplier;
+	Thread allThreadsMonitorer;
+	Collection<QueuedTasksExecutor.Group> queuedTasksExecutorGroups;
 	
-	private Synchronizer() {
+	private Synchronizer(Thread.Supplier threadSupplier, Collection<QueuedTasksExecutor.Group> queuedTasksExecutorGroup) {
 		mutexes = new ConcurrentHashMap<>();
+		this.threadSupplier = threadSupplier;
+		queuedTasksExecutorGroups = ConcurrentHashMap.newKeySet();
+		if (queuedTasksExecutorGroup != null && queuedTasksExecutorGroup.size() > 0) {
+			this.queuedTasksExecutorGroups.addAll(queuedTasksExecutorGroup);
+		}
 	}
 	
-	public static Synchronizer create(boolean undestroyable) {
+	public static Synchronizer create(
+		Thread.Supplier threadSupplier,		
+		Collection<QueuedTasksExecutor.Group> queuedTasksExecutorGroups,
+		boolean undestroyable
+		
+	) {
 		if (undestroyable) {
-			return new Synchronizer() {
+			return new Synchronizer(threadSupplier, queuedTasksExecutorGroups) {
 				StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
 				@Override
 				public void close() {
@@ -70,7 +81,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 				}
 			};
 		} else {
-			return new Synchronizer();
+			return new Synchronizer(threadSupplier, queuedTasksExecutorGroups);
 		}
 	}
 	
@@ -78,14 +89,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		if (thread == null) {
 			return;
 		}
-		thread.shutDown();
-		if (waitThreadToFinish) {
-			try {				
-				thread.join();
-			} catch (InterruptedException exc) {
-				ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
-			}
-		}
+		thread.shutDown(true);
 	}
 	
 	public Mutex getMutex(String id) {
@@ -168,11 +172,11 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		mutexes = null;
 	}
 	
-	public synchronized void startLoggingAllThreadsState(Long interval) {
-		if (allThreadsStateLogger != null) {
+	public synchronized void startAllThreadsMonitoring(Long interval) {
+		if (allThreadsMonitorer != null) {
 			stopLoggingAllThreadsState();
 		}
-		allThreadsStateLogger = ThreadSupplier.getOrCreate().setExecutable(thread -> {
+		allThreadsMonitorer = threadSupplier.getOrCreate().setExecutable(thread -> {
 			try {
 				thread.waitFor(interval);
 				if (thread.isLooping()) {
@@ -182,9 +186,9 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 				logError(exc);
 			}
 		}, true);
-		allThreadsStateLogger.setName("All threads state logger");
-		allThreadsStateLogger.setPriority(Thread.MIN_PRIORITY);
-		allThreadsStateLogger.start();
+		allThreadsMonitorer.setName("All threads state logger");
+		allThreadsMonitorer.setPriority(Thread.MIN_PRIORITY);
+		allThreadsMonitorer.start();
 	}
 
 	private void logAllThreadsState() {
@@ -199,7 +203,9 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 				log.append("\n\n");
 			}
 		}
-		log.append(BackgroundExecutor.getInfoAsString());
+		if (!queuedTasksExecutorGroups.isEmpty()) {
+			String.join("\n\n", queuedTasksExecutorGroups.stream().map(queuedTasksExecutorGroup -> queuedTasksExecutorGroup.getInfoAsString()).collect(Collectors.toList()));
+		}
 		log.append("\n\n\n");
 		log.append(
 			Strings.compile(
@@ -248,12 +254,12 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	}
 	
 	public void stopLoggingAllThreadsState() {
-		stopLoggingAllThreadsState(false);
+		stopAllThreadsMonitoring(false);
 	}
 	
-	public synchronized void stopLoggingAllThreadsState(boolean waitThreadToFinish) {
-		stop(allThreadsStateLogger, waitThreadToFinish);
-		allThreadsStateLogger = null;
+	public synchronized void stopAllThreadsMonitoring(boolean waitThreadToFinish) {
+		stop(allThreadsMonitorer, waitThreadToFinish);
+		allThreadsMonitorer = null;
 	}
 	
 	public static class Mutex  {

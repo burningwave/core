@@ -124,8 +124,19 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	}
 	
 	void shutDown() {
+		shutDown(false);
+	}
+	
+	void shutDown(boolean waitForFinish) {
 		alive = false;
 		stopLooping();
+		if (waitForFinish) {
+			try {				
+				join();
+			} catch (InterruptedException exc) {
+				logError(exc);
+			}
+		}
 	}	
 	
 	public static class Supplier {
