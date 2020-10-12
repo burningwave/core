@@ -513,16 +513,14 @@ public class ComponentContainer implements ComponentSupplier {
 	void close(boolean force) {
 		if (force || !isUndestroyable) {
 			closeResources(() -> !instances.contains(this),  () -> {
-				Synchronizer.execute(getMutexForComponentsId(), () -> {
-					instances.remove(this);
-					unregister(GlobalProperties);
-					unregister(config);
-					clear();			
-					components = null;
-					propertySupplier = null;
-					config = null;
-					instanceId = null;
-				});
+				instances.remove(this);
+				unregister(GlobalProperties);
+				unregister(config);
+				clear();			
+				components = null;
+				propertySupplier = null;
+				config = null;
+				instanceId = null;
 			});
 		} else {
 			Throwables.throwException("Could not close singleton instance {}", LazyHolder.COMPONENT_CONTAINER_INSTANCE);
