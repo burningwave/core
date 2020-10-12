@@ -200,6 +200,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		
 		private String name;
 		private volatile long threadsCount;
+		private volatile long poolableThreadsCount;
 		private int maxPoolableThreadsCount;
 		private int inititialMaxThreadsCount;
 		private int maxThreadsCount;
@@ -213,9 +214,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		
 		Supplier (
 			Properties config
-		) {
-		
-			
+		) {			
 			this.name = IterableObjectHelper.resolveStringValue(config, Configuration.Key.NAME);
 			this.daemon = Objects.toBoolean(IterableObjectHelper.resolveValue(config, Configuration.Key.DEFAULT_DAEMON_FLAG_VALUE));
 			this.runningThreads = ConcurrentHashMap.newKeySet();
@@ -267,13 +266,13 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			if (thread != null) {
 				return thread;
 			}
-			if (requestCount > 0 && threadsCount > maxPoolableThreadsCount && threadsCount > maxThreadsCount) {
+			if (requestCount > 0 && poolableThreadsCount >= maxPoolableThreadsCount && threadsCount > maxThreadsCount) {
 				synchronized (poolableSleepingThreads) {
 					try {
 						if ((thread = get()) != null) {
 							return thread;
 						}
-						if (threadsCount > maxPoolableThreadsCount && threadsCount > maxThreadsCount) {
+						if (poolableThreadsCount >= maxPoolableThreadsCount && threadsCount > maxThreadsCount) {
 							//This block of code is for preventing dead locks
 							long startWaitTime = System.currentTimeMillis();
 							poolableSleepingThreads.wait(poolableThreadRequestTimeout);
@@ -308,7 +307,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						ManagedLoggersRepository.logError(() -> Thread.class.getName(), exc);
 					}
 				}
-			} else if (threadsCount > maxPoolableThreadsCount) {
+			} else if (poolableThreadsCount >= maxPoolableThreadsCount) {
 				return new Thread(this, ++threadsCount) {
 					@Override
 					public void run() {
@@ -330,9 +329,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				};
 			}
 			synchronized (poolableSleepingThreads) {
-				if (threadsCount > maxPoolableThreadsCount) {
+				if (poolableThreadsCount >= maxPoolableThreadsCount) {
 					return getOrCreate(requestCount);
 				}
+				++poolableThreadsCount;
 				return new Thread(this, ++threadsCount) {
 					@Override
 					public void run() {
@@ -366,6 +366,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						supplier.poolableSleepingThreads.remove(this);
 						supplier.runningThreads.remove(this);
 						--supplier.threadsCount;
+						--supplier.poolableThreadsCount;
 						synchronized (poolableSleepingThreads) {
 							poolableSleepingThreads.notifyAll();
 						}
