@@ -83,12 +83,12 @@ public class StaticComponentContainer {
 
 			defaultValues.put(
 				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL,
-				15000
+				30000
 			);	
 			
 			defaultValues.put(
-				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_DEAD_LOCKED,
-				true
+				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_DEAD_LOCKED_TASKS_KILLING_ENABLED,
+				false
 			);	
 			
 			defaultValues.put(

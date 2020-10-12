@@ -299,6 +299,10 @@ public class QueuedTasksExecutor implements Component {
 				tasksInExecution.remove(runOnlyOnceTask);
 				if (!runOnlyOnceTask.hasFinished()) {
 					runOnlyOnceTask.aborted = true;
+					Thread taskExecutor = runOnlyOnceTask.executor;
+					if (taskExecutor != null) {
+						taskExecutor.interrupt();
+					}
 					runOnlyOnceTask.clear();
 					synchronized(runOnlyOnceTask) {
 						runOnlyOnceTask.notifyAll();
@@ -306,8 +310,12 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		}
+		Thread taskExecutor = task.executor;
+		if (taskExecutor != null) {
+			taskExecutor.interrupt();
+		}
+		task.clear();
 		synchronized (task) {
-			task.clear();
 			task.notifyAll();
 		}
 	}
@@ -1378,6 +1386,7 @@ public class QueuedTasksExecutor implements Component {
 			}
 			lastToBeWaitedFor.shutDown(waitForTasksTermination);
 			this.allTasksMonitorer.shutDown(true);
+			this.allTasksMonitorer = null;
 			queuedTasksExecutors.clear();
 			queuedTasksExecutors = null;
 			return true;
