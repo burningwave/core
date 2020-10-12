@@ -95,16 +95,20 @@ public class Streams implements Component {
 
 	private void setDefaultByteBufferSize(java.util.Properties config) {
 		String defaultBufferSize = IterableObjectHelper.resolveStringValue(config, Configuration.Key.BYTE_BUFFER_SIZE, Configuration.DEFAULT_VALUES);
-		String unit = defaultBufferSize.substring(defaultBufferSize.length()-2);
-		String value = defaultBufferSize.substring(0, defaultBufferSize.length()-2);
-		if (unit.equalsIgnoreCase("KB")) {
-			this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(BufferSize.KILO_BYTE.getValue())).intValue();
-		} else if (unit.equalsIgnoreCase("MB")) {
-			this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(BufferSize.MEGA_BYTE.getValue())).intValue();
-		} else {
-			this.defaultBufferSize = Integer.valueOf(value);
-		};
-		logInfo("default buffer size: {} bytes", defaultBufferSize);
+		try {
+			this.defaultBufferSize = Integer.valueOf(defaultBufferSize);
+		} catch (Throwable exc) {
+			String unit = defaultBufferSize.substring(defaultBufferSize.length()-2);
+			String value = defaultBufferSize.substring(0, defaultBufferSize.length()-2);
+			if (unit.equalsIgnoreCase("KB")) {
+				this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(BufferSize.KILO_BYTE.getValue())).intValue();
+			} else if (unit.equalsIgnoreCase("MB")) {
+				this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(BufferSize.MEGA_BYTE.getValue())).intValue();
+			} else {
+				this.defaultBufferSize = Integer.valueOf(value);
+			};
+		}
+		logInfo("default buffer size: {} bytes", this.defaultBufferSize);
 	}
 
 	private void setDefaultByteBufferAllocationMode(java.util.Properties config) {
