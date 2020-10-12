@@ -294,6 +294,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					}
 				}
 			} else if (poolableThreadsCount >= maxPoolableThreadsCount) {
+				
 				return new Thread(this, ++threadsCount) {
 					@Override
 					public void run() {
@@ -303,8 +304,11 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						} catch (Throwable exc) {
 							ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
 						}
-						runningThreads.remove(this);
-						--supplier.threadsCount;
+						synchronized (this) {
+							if (runningThreads.remove(this)) {
+								--supplier.threadsCount;
+							}
+						}
 						synchronized (poolableSleepingThreads) {
 							poolableSleepingThreads.notifyAll();
 						}
@@ -312,6 +316,27 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							notifyAll();
 						}
 					}
+					
+					@Override
+					public void interrupt() {
+						shutDown();
+						synchronized (this) {
+							if (runningThreads.remove(this)) {
+								--supplier.threadsCount;
+							}
+						}
+						try {
+							super.interrupt();
+						} catch (Throwable exc) {
+							logError("Exception occurred", exc);
+						}
+						synchronized (poolableSleepingThreads) {
+							poolableSleepingThreads.notifyAll();
+						}
+						synchronized(this) {
+							notifyAll();
+						}
+					};
 				};
 			}
 			synchronized (poolableSleepingThreads) {
@@ -320,6 +345,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				}
 				++poolableThreadsCount;
 				return new Thread(this, ++threadsCount) {
+					
 					@Override
 					public void run() {
 						while (alive) {
@@ -349,10 +375,12 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 								logError(exc);
 							}
 						}
-						supplier.poolableSleepingThreads.remove(this);
-						supplier.runningThreads.remove(this);
-						--supplier.threadsCount;
-						--supplier.poolableThreadsCount;
+						synchronized (this) {
+							if (runningThreads.remove(this)) {
+								--supplier.threadsCount;
+								--supplier.poolableThreadsCount;
+							}
+						}
 						synchronized (poolableSleepingThreads) {
 							poolableSleepingThreads.notifyAll();
 						}
@@ -360,6 +388,31 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							notifyAll();
 						}
 					}
+					
+					@Override
+					public void interrupt() {
+						shutDown();
+						synchronized (this) {
+							if (runningThreads.remove(this)) {
+								--supplier.threadsCount;
+								--supplier.poolableThreadsCount;
+							} else if (poolableSleepingThreads.remove(this)) {
+								--supplier.threadsCount;
+								--supplier.poolableThreadsCount;
+							}
+						}
+						try {
+							super.interrupt();
+						} catch (Throwable exc) {
+							logError("Exception occurred", exc);
+						}
+						synchronized (poolableSleepingThreads) {
+							poolableSleepingThreads.notifyAll();
+						}
+						synchronized(this) {
+							notifyAll();
+						}
+					};
 					
 				};
 			}
