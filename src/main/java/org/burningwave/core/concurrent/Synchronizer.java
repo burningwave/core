@@ -164,7 +164,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		Iterator<Entry<java.lang.Thread, StackTraceElement[]>> allStackTracesItr = java.lang.Thread.getAllStackTraces().entrySet().iterator();
 		while(allStackTracesItr.hasNext()) {
 			Map.Entry<java.lang.Thread, StackTraceElement[]> threadAndStackTrace = allStackTracesItr.next();
-			log.append("\t" + threadAndStackTrace.getKey());
+			log.append("\t" + threadAndStackTrace.getKey() + "[" + System.identityHashCode(threadAndStackTrace.getKey()) + "]");
 			log.append(Strings.from(threadAndStackTrace.getValue(), 2));
 			if (allStackTracesItr.hasNext()) {
 				log.append("\n\n");
