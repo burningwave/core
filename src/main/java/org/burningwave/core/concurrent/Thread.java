@@ -310,50 +310,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					}
 				}
 			} else if (poolableThreadsCount >= maxPoolableThreadsCount) {
-				
-				return new Thread(this, ++threadsCount) {
-					@Override
-					public void run() {
-						try {
-							runningThreads.add(this);
-							executable.accept(this);
-						} catch (Throwable exc) {
-							ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
-						}
-						synchronized (this) {
-							if (runningThreads.remove(this)) {
-								--supplier.threadsCount;
-							}
-						}
-						synchronized (poolableSleepingThreads) {
-							poolableSleepingThreads.notifyAll();
-						}
-						synchronized(this) {
-							notifyAll();
-						}
-					}
-					
-					@Override
-					public void interrupt() {
-						shutDown();
-						synchronized (this) {
-							if (runningThreads.remove(this)) {
-								--supplier.threadsCount;
-							}
-						}
-						try {
-							super.interrupt();
-						} catch (Throwable exc) {
-							logError("Exception occurred", exc);
-						}
-						synchronized (poolableSleepingThreads) {
-							poolableSleepingThreads.notifyAll();
-						}
-						synchronized(this) {
-							notifyAll();
-						}
-					};
-				};
+				return createTemporaryThread();
 			}
 			synchronized (poolableSleepingThreads) {
 				if (poolableThreadsCount >= maxPoolableThreadsCount) {
@@ -434,6 +391,52 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 		}
 
+		public Thread createTemporaryThread() {
+			return new Thread(this, ++threadsCount) {
+				@Override
+				public void run() {
+					try {
+						runningThreads.add(this);
+						executable.accept(this);
+					} catch (Throwable exc) {
+						ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
+					}
+					synchronized (this) {
+						if (runningThreads.remove(this)) {
+							--supplier.threadsCount;
+						}
+					}
+					synchronized (poolableSleepingThreads) {
+						poolableSleepingThreads.notifyAll();
+					}
+					synchronized(this) {
+						notifyAll();
+					}
+				}
+				
+				@Override
+				public void interrupt() {
+					shutDown();
+					synchronized (this) {
+						if (runningThreads.remove(this)) {
+							--supplier.threadsCount;
+						}
+					}
+					try {
+						super.interrupt();
+					} catch (Throwable exc) {
+						logError("Exception occurred", exc);
+					}
+					synchronized (poolableSleepingThreads) {
+						poolableSleepingThreads.notifyAll();
+					}
+					synchronized(this) {
+						notifyAll();
+					}
+				};
+			};
+		}
+
 		private Thread get() {
 			Iterator<Thread> itr = poolableSleepingThreads.iterator();
 			while (itr.hasNext()) {
@@ -496,21 +499,21 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			this.threads = new ConcurrentHashMap<>();
 		}
 		
-		public void startLooping(String threadName, int priority, Consumer<Thread> executable) {
-			start(threadName, true, priority, executable);
+		public void startLooping(String threadName, boolean isDaemon, int priority, Consumer<Thread> executable) {
+			start(threadName, isDaemon, true, priority, executable);
 		}
 		
-		public void start(String threadName, int priority, Consumer<Thread> executable) {
-			start(threadName, true, priority, executable);
+		public void start(String threadName, boolean isDaemon, int priority, Consumer<Thread> executable) {
+			start(threadName, isDaemon, true, priority, executable);
 		}
 		
-		private void start(String threadName, boolean isLooper, int priority, Consumer<Thread> executable) {
+		private void start(String threadName, boolean isLooper, boolean isDaemon, int priority, Consumer<Thread> executable) {
 			Synchronizer.execute(threadName, () -> {
 				Thread thr = threads.get(threadName);
 				if (thr != null) {
 					stop(threadName);
 				}
-				thr = threadSupplier.getOrCreate().setExecutable(thread -> {
+				thr = threadSupplier.createTemporaryThread().setExecutable(thread -> {
 					try {
 						executable.accept(thread);
 					} catch (Throwable exc) {
@@ -519,6 +522,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				}, isLooper);
 				thr.setName(threadName);
 				thr.setPriority(priority);
+				thr.setDaemon(isDaemon);
 				threads.put(threadName, thr);
 				thr.start();
 			});
@@ -549,6 +553,14 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					logError(exc);
 				}
 			}
+		}
+		
+		public boolean isAlive(String threadName) {
+			Thread thr = threads.get(threadName);
+			if (thr != null) {
+				return thr.alive;
+			}
+			return false;
 		}
 		
 		@Override

@@ -110,7 +110,7 @@ public class QueuedTasksExecutor implements Component {
 		supended = Boolean.FALSE;
 		terminated = Boolean.FALSE;
 		executedTasksCount = 0;
-		tasksLauncher = threadSupplier.getOrCreate(name + " launcher").setExecutable(thread -> {
+		tasksLauncher = threadSupplier.createTemporaryThread().setExecutable(thread -> {
 			while (!terminated) {
 				if (checkAndNotifySuspension()) {
 					continue;
@@ -151,6 +151,7 @@ public class QueuedTasksExecutor implements Component {
 				terminatingMutex.notifyAll();
 			}
 		});
+		tasksLauncher.setName((name + " launcher"));
 		tasksLauncher.setPriority(this.defaultPriority);
 		tasksLauncher.setDaemon(isDaemon);
 		tasksLauncher.start();
@@ -1307,7 +1308,7 @@ public class QueuedTasksExecutor implements Component {
 							if (areStrackTracesEquals(previousRegisteredStackTrace, taskThread.getStackTrace())) {
 								StringBuffer log = new StringBuffer(
 									Strings.compile(
-										"Possible deadlock detected for task:{}\n\t",
+										"Possible deadlock detected for:{}\n\t",
 										task.getInfoAsString()
 									)
 								);
@@ -1350,7 +1351,7 @@ public class QueuedTasksExecutor implements Component {
 			boolean killDeadLockedTasks,
 			boolean allTasksLoggerEnabled
 		) {
-			ThreadHolder.startLooping("All tasks monitorer", Thread.MIN_PRIORITY, thread -> {
+			ThreadHolder.startLooping("All tasks monitorer", true, Thread.MIN_PRIORITY, thread -> {
 				thread.waitFor(interval);
 				if (thread.isLooping()) {
 					if (allTasksLoggerEnabled) {
