@@ -80,7 +80,7 @@ public class IterableObjectHelper implements Component {
 
 			defaultValues.put(Key.DEFAULT_VALUES_SEPERATOR, ";");
 			
-			defaultValues.put(Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD, "auto");
+			defaultValues.put(Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD, "autodetect");
 						
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}

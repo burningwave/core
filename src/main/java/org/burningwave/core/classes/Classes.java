@@ -57,7 +57,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -320,7 +319,7 @@ public class Classes implements Component, MembersRetriever {
 			cls.getName().replace(".", "/") + ".class"
 		);
 		return Streams.toByteBuffer(
-			Objects.requireNonNull(inputStream, "Could not acquire bytecode for class " + cls.getName())
+			java.util.Objects.requireNonNull(inputStream, "Could not acquire bytecode for class " + cls.getName())
 		);
 	}
 	
