@@ -110,7 +110,7 @@ public class QueuedTasksExecutor implements Component {
 		supended = Boolean.FALSE;
 		terminated = Boolean.FALSE;
 		executedTasksCount = 0;
-		tasksLauncher = threadSupplier.getOrCreate(name + " launcher").setExecutable(thread -> {
+		tasksLauncher = threadSupplier.createTemporaryThread().setExecutable(thread -> {
 			while (!terminated) {
 				if (checkAndNotifySuspension()) {
 					continue;
@@ -284,42 +284,6 @@ public class QueuedTasksExecutor implements Component {
 	
 	public QueuedTasksExecutor waitForTasksEnding() {
 		return waitForTasksEnding(Thread.currentThread().getPriority(), false);
-	}
-	
-	void kill(TaskAbst<?, ?> task) {
-		if (task.hasFinished()) {
-			return;
-		}
-		task.aborted = true;
-		tasksQueue.remove(task);
-		tasksInExecution.remove(task);
-		if (task.runOnlyOnce) {
-			TaskAbst<?, ?> runOnlyOnceTask = runOnlyOnceTasksToBeExecuted.get(task.id);
-			if (runOnlyOnceTask != null) {
-				runOnlyOnceTasksToBeExecuted.remove(runOnlyOnceTask.id);
-				tasksQueue.remove(runOnlyOnceTask);
-				tasksInExecution.remove(runOnlyOnceTask);
-				if (!runOnlyOnceTask.hasFinished()) {
-					runOnlyOnceTask.aborted = true;
-					Thread taskExecutor = runOnlyOnceTask.executor;
-					if (taskExecutor != null) {
-						taskExecutor.interrupt();
-					}
-					runOnlyOnceTask.clear();
-					synchronized(runOnlyOnceTask) {
-						runOnlyOnceTask.notifyAll();
-					}
-				}
-			}
-		}
-		Thread taskExecutor = task.executor;
-		if (taskExecutor != null) {
-			taskExecutor.interrupt();
-		}
-		task.clear();
-		synchronized (task) {
-			task.notifyAll();
-		}
 	}
 	
 	public <E, T extends TaskAbst<E, T>> boolean abort(T task) {
@@ -594,6 +558,7 @@ public class QueuedTasksExecutor implements Component {
 		StackTraceElement[] stackTraceOnCreation;
 		List<StackTraceElement> creatorInfos;
 		Supplier<Boolean> hasBeenExecutedChecker;
+		volatile boolean possibleDeadLocked;
 		volatile boolean runOnlyOnce;		
 		volatile String id;
 		volatile int priority;
@@ -682,6 +647,18 @@ public class QueuedTasksExecutor implements Component {
 			return (T)this;
 		}
 		
+		synchronized void markAsPossibleDeadLocked() {
+			possibleDeadLocked = true;
+			getQueuedTasksExecutor().tasksInExecution.remove(this);
+			if (runOnlyOnce) {
+				runOnlyOnceTasksToBeExecuted.remove(id);
+			}
+			if (executorIndex != null) {
+				executorIndex = null;
+				--queuedTasksExecutor.executorsIndex;
+			}
+		}
+		
 		public boolean waitForStarting0() {
 			java.lang.Thread currentThread = Thread.currentThread();
 			if (currentThread == this.executor) {
@@ -692,6 +669,9 @@ public class QueuedTasksExecutor implements Component {
 					synchronized (this) {
 						if (!isStarted()) {
 							try {
+								if (possibleDeadLocked) {
+									Throwables.throwException(new TaskStateException(this, "could be dead locked"));
+								}
 								if (isAborted()) {
 									Throwables.throwException(new TaskStateException(this, "is aborted"));
 								}
@@ -724,6 +704,10 @@ public class QueuedTasksExecutor implements Component {
 					synchronized (this) {
 						if (!hasFinished()) {
 							try {
+								if (possibleDeadLocked) {
+									logError(new TaskStateException(this, "could be dead locked"));
+									return false;
+								}
 								if (isAborted()) {
 									Throwables.throwException(new TaskStateException(this, "is aborted"));
 								}
@@ -805,7 +789,7 @@ public class QueuedTasksExecutor implements Component {
 		
 		void clear() {
 			if (runOnlyOnce) {
-				runOnlyOnceTasksToBeExecuted.remove(((Task)this).id);
+				runOnlyOnceTasksToBeExecuted.remove(id);
 			}
 			if (executorIndex != null) {
 				executorIndex = null;
@@ -1280,12 +1264,6 @@ public class QueuedTasksExecutor implements Component {
 			return tasksInExecution;
 		}
 		
-		void kill(TaskAbst<?,?> task) {
-			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
-				queuedTasksExecutorBox.getValue().kill(task);
-			}
-		}
-		
 		void checkAndKillForDeadLockedTasks(long minimumElapsedTimeToConsiderATaskAsDeadLocked, boolean killDeadLockedTasks) {
 			Iterator<Entry<TaskAbst<?, ?>, StackTraceElement[]>> tasksAndStackTracesIterator = waitingTasksAndLastStackTrace.entrySet().iterator();
 			while (tasksAndStackTracesIterator.hasNext()) {
@@ -1311,13 +1289,15 @@ public class QueuedTasksExecutor implements Component {
 										task.getInfoAsString()
 									)
 								);
+								task.markAsPossibleDeadLocked();
+								taskThread.setName("POSSIBLE DEAD-LOCKED THREAD -> " + taskThread.getName());
 								if (killDeadLockedTasks) {
-									kill(task);
-									if (task.isAborted()) {
-										taskThread.setName("DEADLOCKED THREAD -> " + taskThread.getName());
-										log.append("... So the task has been aborted");
-									}
-								}	
+									task.aborted = true;
+									taskThread.interrupt();
+								}
+								synchronized(task) {
+									task.notifyAll();
+								}
 								ManagedLoggersRepository.logWarn(
 									() -> this.getClass().getName(),
 									log.toString()
@@ -1350,7 +1330,7 @@ public class QueuedTasksExecutor implements Component {
 			boolean killDeadLockedTasks,
 			boolean allTasksLoggerEnabled
 		) {
-			ThreadHolder.startLooping("All tasks monitorer", Thread.MIN_PRIORITY, thread -> {
+			ThreadHolder.startLooping("All tasks monitorer", true, Thread.MIN_PRIORITY, thread -> {
 				thread.waitFor(interval);
 				if (thread.isLooping()) {
 					if (allTasksLoggerEnabled) {
