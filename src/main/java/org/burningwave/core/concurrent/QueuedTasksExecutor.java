@@ -1350,7 +1350,7 @@ public class QueuedTasksExecutor implements Component {
 			boolean killDeadLockedTasks,
 			boolean allTasksLoggerEnabled
 		) {
-			ThreadHolder.startLooping("All tasks monitorer", true, Thread.MIN_PRIORITY, thread -> {
+			ThreadHolder.startLooping("All tasks monitorer", Thread.MIN_PRIORITY, thread -> {
 				thread.waitFor(interval);
 				if (thread.isLooping()) {
 					if (allTasksLoggerEnabled) {

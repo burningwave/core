@@ -183,7 +183,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				
 				defaultValues.put(
 					Key.DEFAULT_DAEMON_FLAG_VALUE,
-					6000
+					true
 				);				
 				
 				defaultValues.put(
@@ -462,18 +462,6 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				itr.next().shutDown();
 			}
 		}
-		
-		public void setDaemon(boolean flag) {
-			daemon = flag;
-			Iterator<Thread> itr = poolableSleepingThreads.iterator();
-			while (itr.hasNext()) {
-				itr.next().setDaemon(flag);
-			}
-			itr = runningThreads.iterator();
-			while (itr.hasNext()) {
-				itr.next().setDaemon(flag);
-			}
-		}
 
 		public static Supplier create(
 			java.util.Properties config,
@@ -508,15 +496,15 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			this.threads = new ConcurrentHashMap<>();
 		}
 		
-		public void startLooping(String threadName, boolean isDaemon, int priority, Consumer<Thread> executable) {
-			start(threadName, true, isDaemon, priority, executable);
+		public void startLooping(String threadName, int priority, Consumer<Thread> executable) {
+			start(threadName, true, priority, executable);
 		}
 		
-		public void start(String threadName, boolean isDaemon, int priority, Consumer<Thread> executable) {
-			start(threadName, true, isDaemon, priority, executable);
+		public void start(String threadName, int priority, Consumer<Thread> executable) {
+			start(threadName, true, priority, executable);
 		}
 		
-		private void start(String threadName, boolean isLooper, boolean isDaemon, int priority, Consumer<Thread> executable) {
+		private void start(String threadName, boolean isLooper, int priority, Consumer<Thread> executable) {
 			Synchronizer.execute(threadName, () -> {
 				Thread thr = threads.get(threadName);
 				if (thr != null) {
@@ -531,9 +519,6 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				}, isLooper);
 				thr.setName(threadName);
 				thr.setPriority(priority);
-				if (isDaemon) {
-					thr.setDaemon(isDaemon);
-				}
 				threads.put(threadName, thr);
 				thr.start();
 			});
