@@ -514,7 +514,7 @@ public class ComponentContainer implements ComponentSupplier {
 		if (force || !isUndestroyable) {
 			//TODO: remove
 			logInfo("adding closing task for {}", instanceId);
-			closeResources(instanceId, () -> !instances.contains(this),  () -> {
+			closeResources(() -> !instances.contains(this),  () -> {
 				logInfo("removing {}", instanceId);
 				instances.remove(this);
 				logInfo("unregistering from {} {}", instanceId, GlobalProperties);
