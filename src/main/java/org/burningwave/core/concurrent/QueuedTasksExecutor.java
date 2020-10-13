@@ -31,6 +31,7 @@ package org.burningwave.core.concurrent;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentContainer.ThreadHolder;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.ArrayList;
@@ -943,7 +944,6 @@ public class QueuedTasksExecutor implements Component {
 	public static class Group implements ManagedLogger{
 		Map<String, QueuedTasksExecutor> queuedTasksExecutors;
 		Map<TaskAbst<?, ?>, StackTraceElement[]> waitingTasksAndLastStackTrace;
-		Thread allTasksMonitorer;
 		
 		Group(String name, 
 			Thread.Supplier threadSupplierForHighPriorityTasksExecutor,
@@ -1343,25 +1343,15 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public synchronized void startAllTasksMonitoring(long interval, long minimumElapsedTimeToConsiderATaskAsDeadLocked, boolean killDeadLockedTasks, boolean allTasksLoggerEnabled) {
-			if (allTasksMonitorer != null) {
-				stopAllTasksMonitoring();
-			}
-			allTasksMonitorer = getByPriority(Thread.MIN_PRIORITY).threadSupplier.getOrCreate().setExecutable(thread -> {
-				try {
-					thread.waitFor(interval);
-					if (thread.isLooping()) {
-						if (allTasksLoggerEnabled) {
-							logInfo();
-						}
-						checkAndKillForDeadLockedTasks(minimumElapsedTimeToConsiderATaskAsDeadLocked, killDeadLockedTasks);
+			ThreadHolder.startLooping("All tasks monitorer", true, Thread.MIN_PRIORITY, thread -> {
+				thread.waitFor(interval);
+				if (thread.isLooping()) {
+					if (allTasksLoggerEnabled) {
+						logInfo();
 					}
-				} catch (Throwable exc) {
-					logError(exc);
+					checkAndKillForDeadLockedTasks(minimumElapsedTimeToConsiderATaskAsDeadLocked, killDeadLockedTasks);
 				}
-			}, true);
-			allTasksMonitorer.setName("All tasks monitorer");
-			allTasksMonitorer.setPriority(Thread.MIN_PRIORITY);
-			allTasksMonitorer.start();
+			});
 		}
 		
 		public void stopAllTasksMonitoring() {
@@ -1369,11 +1359,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public synchronized void stopAllTasksMonitoring(boolean waitThreadToFinish) {
-			if (allTasksMonitorer == null) {
-				return;
-			}
-			allTasksMonitorer.shutDown(waitThreadToFinish);
-			allTasksMonitorer = null;
+			ThreadHolder.stop("All tasks monitorer");
 		}
 		
 		public boolean shutDown(boolean waitForTasksTermination) {
@@ -1385,8 +1371,6 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 			lastToBeWaitedFor.shutDown(waitForTasksTermination);
-			this.allTasksMonitorer.shutDown(true);
-			this.allTasksMonitorer = null;
 			queuedTasksExecutors.clear();
 			queuedTasksExecutors = null;
 			return true;

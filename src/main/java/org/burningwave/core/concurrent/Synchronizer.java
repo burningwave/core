@@ -31,6 +31,7 @@ package org.burningwave.core.concurrent;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentContainer.ThreadHolder;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -46,17 +47,14 @@ import org.burningwave.core.function.ThrowingSupplier;
 @SuppressWarnings("unused")
 public class Synchronizer implements AutoCloseable, ManagedLogger {
 	Map<String, Mutex> mutexes;
-	Thread allThreadsStateLogger;
-	Thread.Supplier threadSupplier;
 	
-	private Synchronizer(Thread.Supplier threadSupplier) {
+	private Synchronizer() {
 		mutexes = new ConcurrentHashMap<>();
-		this.threadSupplier = threadSupplier;
 	}
 	
-	public static Synchronizer create(Thread.Supplier threadSupplier, boolean undestroyable) {
+	public static Synchronizer create(boolean undestroyable) {
 		if (undestroyable) {
-			return new Synchronizer(threadSupplier) {
+			return new Synchronizer() {
 				StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
 				@Override
 				public void close() {
@@ -66,7 +64,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 				}
 			};
 		} else {
-			return new Synchronizer(threadSupplier);
+			return new Synchronizer();
 		}
 	}
 	
@@ -145,28 +143,18 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	
 	@Override
 	public void close() {
-		stopLoggingAllThreadsState();		
+		stopLoggingAllThreadsState();	
 		clear();
 		mutexes = null;
 	}
 	
 	public synchronized void startAllThreadsMonitoring(Long interval) {
-		if (allThreadsStateLogger != null) {
-			stopLoggingAllThreadsState();
-		}
-		allThreadsStateLogger = threadSupplier.getOrCreate().setExecutable(thread -> {
-			try {
-				thread.waitFor(interval);
-				if (thread.isLooping()) {
-					logAllThreadsState();
-				}
-			} catch (Throwable exc) {
-				logError(exc);
+		ThreadHolder.startLooping("All threads state logger", true, Thread.MIN_PRIORITY, thread -> {
+			thread.waitFor(interval);
+			if (thread.isLooping()) {
+				logAllThreadsState();
 			}
-		}, true);
-		allThreadsStateLogger.setName("All threads state logger");
-		allThreadsStateLogger.setPriority(Thread.MIN_PRIORITY);
-		allThreadsStateLogger.start();
+		});
 	}
 
 	private void logAllThreadsState() {
@@ -208,11 +196,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	}
 	
 	public synchronized void stopLoggingAllThreadsState(boolean waitThreadToFinish) {
-		if (allThreadsStateLogger == null) {
-			return;
-		}
-		allThreadsStateLogger.shutDown(waitThreadToFinish);
-		allThreadsStateLogger = null;
+		ThreadHolder.stop("All threads state logger", waitThreadToFinish);
 	}
 	
 	public static class Mutex  {

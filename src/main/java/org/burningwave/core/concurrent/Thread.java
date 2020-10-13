@@ -32,6 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -43,6 +44,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
+import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
 
 public class Thread extends java.lang.Thread implements ManagedLogger {
@@ -76,9 +78,9 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		return setExecutable(executable, false);
 	}
 	
-	public Thread setExecutable(Consumer<Thread> executable, boolean flag) {
+	public Thread setExecutable(Consumer<Thread> executable, boolean isLooper) {
 		this.originalExecutable = executable;
-		this.looper = flag;
+		this.looper = isLooper;
 		return this;
 	}
 	
@@ -490,6 +492,77 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			} else {
 				return new Supplier(config);
 			}
+		}
+	}
+	
+	public static class Holder implements Component {
+		private Supplier threadSupplier;
+		private Map<String, Thread> threads;
+		
+		public Holder() {
+			this(org.burningwave.core.assembler.StaticComponentContainer.ThreadSupplier);
+		}
+		
+		public Holder(Supplier threadSupplier) {
+			this.threadSupplier = threadSupplier;
+			this.threads = new ConcurrentHashMap<>();
+		}
+		
+		public void startLooping(String threadName, boolean isDaemon, int priority, Consumer<Thread> executable) {
+			start(threadName, true, isDaemon, priority, executable);
+		}
+		
+		public void start(String threadName, boolean isDaemon, int priority, Consumer<Thread> executable) {
+			start(threadName, true, isDaemon, priority, executable);
+		}
+		
+		private void start(String threadName, boolean isLooper, boolean isDaemon, int priority, Consumer<Thread> executable) {
+			Synchronizer.execute(threadName, () -> {
+				Thread thr = threads.get(threadName);
+				if (thr != null) {
+					stop(threadName);
+				}
+				thr = threadSupplier.getOrCreate().setExecutable(thread -> {
+					try {
+						executable.accept(thread);
+					} catch (Throwable exc) {
+						logError(exc);
+					}
+				}, isLooper);
+				thr.setName(threadName);
+				thr.setPriority(priority);
+				if (isDaemon) {
+					thr.setDaemon(isDaemon);
+				}
+				threads.put(threadName, thr);
+				thr.start();
+			});
+		}
+		
+		public void stop(String threadName) {
+			stop(threadName, false);
+		}
+		
+		public void stop(String threadName, boolean waitThreadToFinish) {
+			Synchronizer.execute(threadName, () -> {
+				Thread thr = threads.get(threadName);
+				if (thr == null) {
+					return;
+				}
+				threads.remove(threadName);
+				thr.shutDown(waitThreadToFinish);
+				thr = null;
+			});
+		}
+		
+		@Override
+		public void close() {
+			threads.forEach((threadName, thread) -> {
+				thread.shutDown();
+				threads.remove(threadName);
+			});
+			threads = null;
+			threadSupplier = null;
 		}
 	}
 }

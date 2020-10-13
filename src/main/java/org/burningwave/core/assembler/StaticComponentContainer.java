@@ -28,8 +28,6 @@
  */
 package org.burningwave.core.assembler;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
-
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -78,7 +76,7 @@ public class StaticComponentContainer {
 			
 			defaultValues.put(
 				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_DEAD_LOCKED,
-				60000
+				300000
 			);
 
 			defaultValues.put(
@@ -131,6 +129,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.io.Streams Streams;
 	public static final org.burningwave.core.Strings Strings;
 	public static final org.burningwave.core.concurrent.Synchronizer Synchronizer;
+	public static final org.burningwave.core.concurrent.Thread.Holder ThreadHolder;
 	public static final org.burningwave.core.concurrent.Thread.Supplier ThreadSupplier;
 	public static final org.burningwave.core.Throwables Throwables;
 	
@@ -199,6 +198,7 @@ public class StaticComponentContainer {
 			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
 				GlobalProperties, true
 			);
+			ThreadHolder = new org.burningwave.core.concurrent.Thread.Holder(ThreadSupplier);
 			
 //			org.burningwave.core.concurrent.Thread.Supplier lowPriorityThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
 //				"Burningwave low priority thread supplier", 2, 4, true, 15000, 2, 10000, true
@@ -211,7 +211,7 @@ public class StaticComponentContainer {
 				true,
 				true
 			);
-			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(ThreadSupplier, true);
+			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(true);
 			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED))) {
 				BackgroundExecutor.setTasksCreationTrackingFlag(true);
 			}
@@ -287,6 +287,7 @@ public class StaticComponentContainer {
 					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Shuting down BackgroundExecutor");
 					BackgroundExecutor.shutDown(false);
 					Synchronizer.close();
+					ThreadHolder.close();
 					ThreadSupplier.shutDownAll();
 					//lowPriorityThreadSupplier.shutDownAll();
 				})
