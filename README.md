@@ -907,13 +907,13 @@ public class UseOfStaticComponentsExample {
 The configuration of this type of container is done via **burningwave.static.properties** file or via **burningwave.static.default.properties** file: the library searches for the first file and if it does not find it, then it searches for the second file and if neither this one is found then the library sets the default configuration programmatically. **The default configuration loaded programmatically if no configuration file is found is the following**:
 ```properties
 background-executor.all-tasks-monitoring.dead-locked-tasks-killing.enabled=\
-	true
+	false
 background-executor.all-tasks-monitoring.interval=\
-	15000
+	30000
 background-executor.all-tasks-monitoring.logger.enabled=\
-	true
+	false
 background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-dead-locked=\
-	60000
+	300000
 background-executor.task-creation-tracking.enabled=\
 	${background-executor.all-tasks-monitoring.logger.enabled}
 iterable-object-helper.default-values-separator=\
@@ -927,10 +927,6 @@ managed-logger.repository=\
 #to increase performance set it to false
 managed-logger.repository.enabled=\
 	true
-managed-logger.repository.logging.debug.disabled-for=\
-	org.burningwave.core.io.FileSystemItem;\
-	org.burningwave.core.classes.MemoryClassLoader;\
-	org.burningwave.core.classes.PathScannerClassLoader;
 managed-logger.repository.logging.warn.disabled-for=\
 	org.burningwave.core.classes.ClassHunter$SearchContext;\
 	org.burningwave.core.classes.ClassPathHunter$SearchContext;\
@@ -941,15 +937,13 @@ managed-logger.repository.logging.warn.disabled-for=\
 static-component-container.hide-banner-on-init=\
 	false
 streams.default-buffer-size=\
-	0.5Kb
+	1024
 streams.default-byte-buffer-allocation-mode=\
 	ByteBuffer::allocateDirect
 synchronizer.all-threads-monitoring.enabled=\
-	true
+	false
 synchronizer.all-threads-monitoring.interval=\
 	90000
-terable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\
-	autodetect
 thread-supplier.default-daemon-flag-value=\
 	6000
 thread-supplier.max-poolable-threads-count=\
@@ -957,14 +951,13 @@ thread-supplier.max-poolable-threads-count=\
 thread-supplier.max-temporarily-threads-count=\
 	autodetect
 thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value=\
-	60000
+	30000
 thread-supplier.max-temporarily-threads-count.increasing-step=\
 	8
 thread-supplier.name=\
 	Burningwave thread supplier
 thread-supplier.poolable-thread-request-timeout=\
 	6000
-
 ```
 **If in your custom burningwave.static.properties or burningwave.static.default.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 [Here an example of a **burningwave.static.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.static.properties)
