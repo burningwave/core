@@ -555,6 +555,17 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			});
 		}
 		
+		public void join(String threadName) {
+			Thread thr = threads.get(threadName);
+			if (thr != null) {
+				try {
+					thr.join();
+				} catch (InterruptedException exc) {
+					logError(exc);
+				}
+			}
+		}
+		
 		@Override
 		public void close() {
 			threads.forEach((threadName, thread) -> {

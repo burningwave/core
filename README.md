@@ -915,7 +915,7 @@ background-executor.all-tasks-monitoring.logger.enabled=\
 background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-dead-locked=\
 	300000
 background-executor.task-creation-tracking.enabled=\
-	${background-executor.all-tasks-monitoring.logger.enabled}
+	true
 iterable-object-helper.default-values-separator=\
 	;
 iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\

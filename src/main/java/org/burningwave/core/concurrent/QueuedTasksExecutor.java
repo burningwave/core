@@ -1344,7 +1344,12 @@ public class QueuedTasksExecutor implements Component {
 			return false;
 		}
 		
-		public synchronized void startAllTasksMonitoring(long interval, long minimumElapsedTimeToConsiderATaskAsDeadLocked, boolean killDeadLockedTasks, boolean allTasksLoggerEnabled) {
+		public synchronized void startAllTasksMonitoring(
+			long interval,
+			long minimumElapsedTimeToConsiderATaskAsDeadLocked,
+			boolean killDeadLockedTasks,
+			boolean allTasksLoggerEnabled
+		) {
 			ThreadHolder.startLooping("All tasks monitorer", true, Thread.MIN_PRIORITY, thread -> {
 				thread.waitFor(interval);
 				if (thread.isLooping()) {
@@ -1360,7 +1365,7 @@ public class QueuedTasksExecutor implements Component {
 			stopAllTasksMonitoring(false);
 		}
 		
-		public synchronized void stopAllTasksMonitoring(boolean waitThreadToFinish) {
+		public void stopAllTasksMonitoring(boolean waitThreadToFinish) {
 			ThreadHolder.stop("All tasks monitorer");
 		}
 		
