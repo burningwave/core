@@ -361,13 +361,13 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 								synchronized (this) {
 									runningThreads.remove(this);
 									executable = null;
+									if (!alive) {
+										continue;
+									}
 									setIndexedName();
 									poolableSleepingThreads.add(this);
 									synchronized (poolableSleepingThreads) {
 										poolableSleepingThreads.notifyAll();
-									}
-									if (!alive) {
-										continue;
 									}
 									wait();
 								}
