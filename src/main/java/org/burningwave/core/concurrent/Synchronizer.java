@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.concurrent;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -152,12 +153,12 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		ThreadHolder.startLooping("All threads state logger", true, Thread.MIN_PRIORITY, thread -> {
 			thread.waitFor(interval);
 			if (thread.isLooping()) {
-				logAllThreadsState();
+				logAllThreadsState(false);
 			}
 		});
 	}
 
-	private void logAllThreadsState() {
+	public void logAllThreadsState(boolean logMutexes) {
 		StringBuffer log = new StringBuffer("\n\n");
 		log.append("Current threads state: \n\n");
 		Iterator<Entry<java.lang.Thread, StackTraceElement[]>> allStackTracesItr = java.lang.Thread.getAllStackTraces().entrySet().iterator();
@@ -176,10 +177,12 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 				mutexes.size()
 			)
 		);
-//		log.append(
-//			":\n" +
-//			IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 1)
-//		);
+		if (logMutexes) {
+			log.append(
+				":\n" +
+				IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 1)
+			);
+		}
 		log.append("\n");
 		ManagedLoggersRepository.logInfo(
 			() -> this.getClass().getName(),
