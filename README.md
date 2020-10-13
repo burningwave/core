@@ -45,7 +45,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>8.0.11</version>
+    <version>8.1.0</version>
 </dependency>
 ```
 
@@ -908,10 +908,12 @@ The configuration of this type of container is done via **burningwave.static.pro
 ```properties
 background-executor.all-tasks-monitoring.dead-locked-tasks-killing.enabled=\
 	false
+background-executor.all-tasks-monitoring.enabled=\
+	true
 background-executor.all-tasks-monitoring.interval=\
 	30000
 background-executor.all-tasks-monitoring.logger.enabled=\
-	false
+	${background-executor.all-tasks-monitoring.enabled}
 background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-dead-locked=\
 	300000
 background-executor.task-creation-tracking.enabled=\
@@ -945,7 +947,7 @@ synchronizer.all-threads-monitoring.enabled=\
 synchronizer.all-threads-monitoring.interval=\
 	90000
 thread-supplier.default-daemon-flag-value=\
-	6000
+	true
 thread-supplier.max-poolable-threads-count=\
 	autodetect
 thread-supplier.max-temporarily-threads-count=\
