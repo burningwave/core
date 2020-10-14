@@ -101,7 +101,7 @@ public class QueuedTasksExecutor implements Component {
 		};		
 		init();
 	}
-	
+
 	void init() {
 		initializer.run();
 	}
@@ -272,13 +272,13 @@ public class QueuedTasksExecutor implements Component {
 		return bag;
 	}
 	
-	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task) {
-		return waitFor(task, Thread.currentThread().getPriority());
+	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, boolean ignoreDeadLocked) {
+		return waitFor(task, Thread.currentThread().getPriority(), ignoreDeadLocked);
 	}
 	
-	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, int priority) {
-		changePriorityToAllTaskBefore(task, priority);
-		task.waitForFinish();
+	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, int priority, boolean ignoreDeadLocked) {
+		changePriorityToAllTaskBeforeAndWaitThem(task, priority, ignoreDeadLocked);
+		task.waitForFinish(ignoreDeadLocked);
 		return this;
 	}
 	
@@ -327,17 +327,17 @@ public class QueuedTasksExecutor implements Component {
 		return task.aborted;
 	}
 	
-	public QueuedTasksExecutor waitForTasksEnding(int priority, boolean waitForNewAddedTasks) {
-		waitForTasksEnding(priority);
+	public QueuedTasksExecutor waitForTasksEnding(int priority, boolean waitForNewAddedTasks, boolean ignoreDeadLocked) {
+		waitForTasksEnding(priority, ignoreDeadLocked);
 		if (waitForNewAddedTasks) {
 			while (!tasksInExecution.isEmpty() || !tasksQueue.isEmpty()) {
-				waitForTasksEnding(priority);
+				waitForTasksEnding(priority, ignoreDeadLocked);
 			}
 		}
 		return this;
 	}
 	
-	public QueuedTasksExecutor waitForTasksEnding(int priority) {
+	public QueuedTasksExecutor waitForTasksEnding(int priority, boolean ignoreDeadLocked) {
 		tasksLauncher.setPriority(priority);
 		tasksQueue.stream().forEach(executable -> executable.changePriority(priority)); 
 		if (!tasksQueue.isEmpty()) {
@@ -351,7 +351,7 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		}
-		waitForTasksInExecutionEnding(priority);
+		waitForTasksInExecutionEnding(priority, ignoreDeadLocked);
 		tasksLauncher.setPriority(this.defaultPriority);
 		return this;
 	}
@@ -363,24 +363,20 @@ public class QueuedTasksExecutor implements Component {
 		return this;
 	}
 	
-	public QueuedTasksExecutor suspend() {
-		return suspend(true);
+	public QueuedTasksExecutor suspend(boolean immediately, boolean ignoreDeadLocked) {
+		return suspend0(immediately, Thread.currentThread().getPriority(), ignoreDeadLocked);
 	}
 	
-	public QueuedTasksExecutor suspend(boolean immediately) {
-		return suspend0(immediately, Thread.currentThread().getPriority());
+	public QueuedTasksExecutor suspend(boolean immediately, int priority, boolean ignoreDeadLocked) {
+		return suspend0(immediately, priority, ignoreDeadLocked);
 	}
 	
-	public QueuedTasksExecutor suspend(boolean immediately, int priority) {
-		return suspend0(immediately, priority);
-	}
-	
-	QueuedTasksExecutor suspend0(boolean immediately, int priority) {
+	QueuedTasksExecutor suspend0(boolean immediately, int priority, boolean ignoreDeadLocked) {
 		tasksLauncher.setPriority(priority);
 		if (immediately) {
 			synchronized (suspensionCallerMutex) {
 				supended = Boolean.TRUE;
-				waitForTasksInExecutionEnding(priority);
+				waitForTasksInExecutionEnding(priority, ignoreDeadLocked);
 				try {
 					synchronized(executableCollectionFillerMutex) {
 						if (this.tasksLauncher.getState().equals(Thread.State.WAITING)) {
@@ -393,10 +389,10 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 		} else {
-			waitForTasksInExecutionEnding(priority);
+			waitForTasksInExecutionEnding(priority, ignoreDeadLocked);
 			Task supendingTask = createSuspendingTask(priority);
-			changePriorityToAllTaskBefore(supendingTask.addToQueue(), priority);
-			supendingTask.waitForFinish();
+			changePriorityToAllTaskBeforeAndWaitThem(supendingTask.addToQueue(), priority, ignoreDeadLocked);
+			supendingTask.waitForFinish(ignoreDeadLocked);
 		}
 		tasksLauncher.setPriority(this.defaultPriority);
 		return this;
@@ -406,7 +402,7 @@ public class QueuedTasksExecutor implements Component {
 		return createTask((ThrowingRunnable<?>)() -> supended = Boolean.TRUE).runOnlyOnce(getOperationId("suspend"), () -> supended).changePriority(priority);
 	}
 
-	void waitForTasksInExecutionEnding(int priority) {
+	void waitForTasksInExecutionEnding(int priority, boolean ignoreDeadLocked) {
 		tasksInExecution.stream().forEach(task -> {
 			Thread taskExecutor = task.executor;
 			if (taskExecutor != null) {
@@ -414,11 +410,11 @@ public class QueuedTasksExecutor implements Component {
 			}
 			//logInfo("{}", queueConsumer);
 			//task.logInfo();
-			task.waitForFinish();
+			task.waitForFinish(ignoreDeadLocked);
 		});
 	}
 
-	<E, T extends TaskAbst<E, T>> void changePriorityToAllTaskBefore(T task, int priority) {
+	<E, T extends TaskAbst<E, T>> void changePriorityToAllTaskBeforeAndWaitThem(T task, int priority, boolean ignoreDeadLocked) {
 		int taskIndex = tasksQueue.indexOf(task);
 		if (taskIndex != -1) {
 			Iterator<TaskAbst<?, ?>> taskIterator = tasksQueue.iterator();
@@ -435,7 +431,7 @@ public class QueuedTasksExecutor implements Component {
 				idx++;
 			}
 		}
-		waitForTasksInExecutionEnding(priority);
+		waitForTasksInExecutionEnding(priority, ignoreDeadLocked);
 	}
 
 	public QueuedTasksExecutor resumeFromSuspension() {
@@ -453,9 +449,9 @@ public class QueuedTasksExecutor implements Component {
 	public boolean shutDown(boolean waitForTasksTermination) {
 		Collection<TaskAbst<?, ?>> executables = this.tasksQueue;
 		if (waitForTasksTermination) {
-			suspend(false);
+			suspend(false, true);
 		} else {
-			suspend();
+			suspend(true, true);
 		}
 		this.terminated = Boolean.TRUE;
 		logStatus();
@@ -558,7 +554,7 @@ public class QueuedTasksExecutor implements Component {
 		StackTraceElement[] stackTraceOnCreation;
 		List<StackTraceElement> creatorInfos;
 		Supplier<Boolean> hasBeenExecutedChecker;
-		volatile boolean possibleDeadLocked;
+		volatile boolean probablyDeadLocked;
 		volatile boolean runOnlyOnce;		
 		volatile String id;
 		volatile int priority;
@@ -642,13 +638,12 @@ public class QueuedTasksExecutor implements Component {
 			return submitted;
 		}
 		
-		public T waitForStarting() {
-			while(waitForStarting0());
-			return (T)this;
+		public boolean isProbablyDeadLocked() {
+			return probablyDeadLocked;
 		}
 		
-		synchronized void markAsPossibleDeadLocked() {
-			possibleDeadLocked = true;
+		synchronized void markAsProbablyDeadLocked() {
+			probablyDeadLocked = true;
 			getQueuedTasksExecutor().tasksInExecution.remove(this);
 			if (runOnlyOnce) {
 				runOnlyOnceTasksToBeExecuted.remove(id);
@@ -659,7 +654,12 @@ public class QueuedTasksExecutor implements Component {
 			}
 		}
 		
-		public boolean waitForStarting0() {
+		public T waitForStarting() {
+			while(waitForStarting0(false));
+			return (T)this;
+		}
+		
+		public boolean waitForStarting0(boolean ignoreDeadLocked) {
 			java.lang.Thread currentThread = Thread.currentThread();
 			if (currentThread == this.executor) {
 				return false;
@@ -669,7 +669,10 @@ public class QueuedTasksExecutor implements Component {
 					synchronized (this) {
 						if (!isStarted()) {
 							try {
-								if (possibleDeadLocked) {
+								if (probablyDeadLocked) {
+									if (ignoreDeadLocked) {
+										return false;
+									}
 									Throwables.throwException(new TaskStateException(this, "could be dead locked"));
 								}
 								if (isAborted()) {
@@ -690,11 +693,15 @@ public class QueuedTasksExecutor implements Component {
 		}		
 		
 		public T waitForFinish() {
-			while(waitForFinish0());
+			return waitForFinish(false);
+		}
+		
+		public T waitForFinish(boolean ignoreDeadLocked) {
+			while(waitForFinish0(ignoreDeadLocked));
 			return (T)this;
 		}
 
-		private boolean waitForFinish0() {
+		private boolean waitForFinish0(boolean ignoreDeadLocked) {
 			java.lang.Thread currentThread = Thread.currentThread();
 			if (currentThread == this.executor) {
 				return false;
@@ -704,9 +711,11 @@ public class QueuedTasksExecutor implements Component {
 					synchronized (this) {
 						if (!hasFinished()) {
 							try {
-								if (possibleDeadLocked) {
-									logError(new TaskStateException(this, "could be dead locked"));
-									return false;
+								if (probablyDeadLocked) {
+									if (ignoreDeadLocked) {
+										return false;
+									}
+									Throwables.throwException(new TaskStateException(this, "could be dead locked"));
 								}
 								if (isAborted()) {
 									Throwables.throwException(new TaskStateException(this, "is aborted"));
@@ -873,8 +882,12 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public T abortOrWaitForFinish() {
+			return abortOrWaitForFinish(false);
+		}
+		
+		public T abortOrWaitForFinish(boolean ignoreDeadLocked) {
 			if (!abort().isAborted() && isStarted()) {
-				waitForFinish();
+				waitForFinish(ignoreDeadLocked);
 			}
 			return (T)this;
 		}
@@ -914,9 +927,13 @@ public class QueuedTasksExecutor implements Component {
 			result = executable.get();			
 		}
 
-		
 		public T join() {
-			waitForFinish();
+			return join(false);
+		}
+		
+		
+		public T join(boolean ignoreDeadLocked) {
+			waitForFinish(ignoreDeadLocked);
 			return result;
 		}
 		
@@ -1121,7 +1138,7 @@ public class QueuedTasksExecutor implements Component {
 				}
 
 				@Override
-				public QueuedTasksExecutor waitForTasksEnding(int priority) {
+				public QueuedTasksExecutor waitForTasksEnding(int priority, boolean ignoreDeadLocked) {
 					if (priority == defaultPriority) {
 						if (!tasksQueue.isEmpty()) {
 							synchronized(executingFinishedWaiterMutex) {
@@ -1137,20 +1154,20 @@ public class QueuedTasksExecutor implements Component {
 						tasksInExecution.stream().forEach(task -> {
 							//logInfo("{}", queueConsumer);
 							//task.logInfo();
-							task.waitForFinish();
+							task.waitForFinish(ignoreDeadLocked);
 						});
 					} else {	
 						tasksQueue.stream().forEach(executable ->
 							executable.changePriority(priority)
 						); 
-						waitForTasksInExecutionEnding(priority);				
+						waitForTasksInExecutionEnding(priority, ignoreDeadLocked);				
 					}
 					return this;
 				}
 				
 				@Override
-				public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, int priority) {
-					task.waitForFinish();
+				public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, int priority, boolean ignoreDeadLocked) {
+					task.waitForFinish(ignoreDeadLocked);
 					return this;
 				}
 				
@@ -1183,41 +1200,45 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public Group waitForTasksEnding() {
-			return waitForTasksEnding(Thread.currentThread().getPriority(), false);
+			return waitForTasksEnding(Thread.currentThread().getPriority(), false, false);
 		}
 		
-		public Group waitForTasksEnding(boolean waitForNewAddedTasks) {
-			return waitForTasksEnding(Thread.currentThread().getPriority(), waitForNewAddedTasks);
+		public Group waitForTasksEnding(boolean ignoreDeadLocked) {
+			return waitForTasksEnding(Thread.currentThread().getPriority(), false, ignoreDeadLocked);
 		}
 		
-		public Group waitForTasksEnding(int priority, boolean waitForNewAddedTasks) {
+		public Group waitForTasksEnding(boolean waitForNewAddedTasks, boolean ignoreDeadLocked) {
+			return waitForTasksEnding(Thread.currentThread().getPriority(), waitForNewAddedTasks, ignoreDeadLocked);
+		}
+		
+		public Group waitForTasksEnding(int priority, boolean waitForNewAddedTasks, boolean ignoreDeadLocked) {
 			QueuedTasksExecutor lastToBeWaitedFor = getByPriority(priority);
 			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
 				if (queuedTasksExecutor != lastToBeWaitedFor) {
-					queuedTasksExecutor.waitForTasksEnding(priority, waitForNewAddedTasks);
+					queuedTasksExecutor.waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
 				}
 			}
 			lastToBeWaitedFor.waitForTasksEnding(priority, waitForNewAddedTasks);	
 			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
 				if (waitForNewAddedTasks && (!queuedTasksExecutor.tasksQueue.isEmpty() || !queuedTasksExecutor.tasksInExecution.isEmpty())) {
-					waitForTasksEnding(priority, waitForNewAddedTasks);
+					waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
 					break;
 				}
 			}
 			return this;
 		}
 
-		public <E, T extends TaskAbst<E, T>> Group waitFor(T task) {
-			return waitFor(task, Thread.currentThread().getPriority());	
+		public <E, T extends TaskAbst<E, T>> Group waitFor(T task, boolean ignoreDeadLocked) {
+			return waitFor(task, Thread.currentThread().getPriority(), ignoreDeadLocked);	
 		}
 		
-		public <E, T extends TaskAbst<E, T>> Group waitFor(T task, int priority) {
+		public <E, T extends TaskAbst<E, T>> Group waitFor(T task, int priority, boolean ignoreDeadLocked) {
 			if (task.getPriority() != priority) {
 				task.changePriority(priority);
 			}
-			task.waitForFinish();
+			task.waitForFinish(ignoreDeadLocked);
 			return this;
 		}
 		
@@ -1289,8 +1310,8 @@ public class QueuedTasksExecutor implements Component {
 										task.getInfoAsString()
 									)
 								);
-								task.markAsPossibleDeadLocked();
-								taskThread.setName("POSSIBLE DEAD-LOCKED THREAD -> " + taskThread.getName());
+								task.markAsProbablyDeadLocked();
+								taskThread.setName("PROBABLY DEAD-LOCKED THREAD -> " + taskThread.getName());
 								if (killDeadLockedTasks) {
 									task.aborted = true;
 									taskThread.interrupt();
