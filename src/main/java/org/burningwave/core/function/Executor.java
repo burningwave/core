@@ -34,7 +34,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 public interface Executor {
 
     @SafeVarargs
-	static <E extends Throwable> void executeAndLogExceptions(ThrowingRunnable<? extends Throwable>... runnables) {
+	static <E extends Throwable> void runAndLogExceptions(ThrowingRunnable<? extends Throwable>... runnables) {
 		for (ThrowingRunnable<? extends Throwable> runnable : runnables) {
 	    	try {
 				runnable.run();
