@@ -62,9 +62,9 @@ import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.classes.MembersRetriever;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodCriteria;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingFunction;
-import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.function.ThrowingTriFunction;
 import org.burningwave.core.io.ByteBufferOutputStream;
 
@@ -144,7 +144,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 			return getParent(Fields.getDirect(classLoader, "classLoader"));
 		} else if (isBuiltinClassLoader(classLoader)) {
 			Field builtinClassLoaderClassParentField = Fields.findFirstAndMakeItAccessible(builtinClassLoaderClass, "parent", classLoader.getClass());
-			return ThrowingSupplier.get(() ->(ClassLoader) builtinClassLoaderClassParentField.get(classLoader));
+			return Executor.get(() ->(ClassLoader) builtinClassLoaderClassParentField.get(classLoader));
 		} else {
 			return classLoader.getParent();
 		}
@@ -384,7 +384,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 	}
 	
 	public MethodHandles.Lookup getConsulter(Class<?> cls) {
-		return ThrowingSupplier.get(() ->
+		return Executor.get(() ->
 			consulterRetriever.apply(cls)
 		);
 	}

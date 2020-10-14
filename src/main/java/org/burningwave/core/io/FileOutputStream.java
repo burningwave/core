@@ -33,8 +33,7 @@ import java.io.FileNotFoundException;
 import java.io.Serializable;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.function.ThrowingRunnable;
-import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.function.Executor;
 
 public class FileOutputStream extends java.io.FileOutputStream implements Serializable, Component{
 
@@ -55,11 +54,11 @@ public class FileOutputStream extends java.io.FileOutputStream implements Serial
 	}
 	
 	public static FileOutputStream create(File file, boolean append) {
-		return ThrowingSupplier.get(() -> new FileOutputStream(file, append));
+		return Executor.get(() -> new FileOutputStream(file, append));
 	}
 	
 	public static FileOutputStream create(File file) {
-		return ThrowingSupplier.get(() -> new FileOutputStream(file));
+		return Executor.get(() -> new FileOutputStream(file));
 	}
 	
 	public FileOutputStream(String absolutePath, boolean append)
@@ -74,7 +73,7 @@ public class FileOutputStream extends java.io.FileOutputStream implements Serial
 	
 	@Override
 	public void close() {
-		ThrowingRunnable.run(() -> super.close());
+		Executor.run(() -> super.close());
 		file = null;
 	}
 	

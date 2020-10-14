@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.Random;
 
 import org.burningwave.core.ManagedLogger;
-import org.burningwave.core.function.ProtectedRunnable;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
@@ -249,7 +249,7 @@ public class StaticComponentContainer {
 			if (globalPropertiesFileUrl != null) {
 				ManagedLoggersRepository.logInfo(
 					() -> StaticComponentContainer.class.getName(), 
-					"Building static components by using " + ThrowingSupplier.get(() ->
+					"Building static components by using " + Executor.get(() ->
 						URLDecoder.decode(
 							globalPropertiesFileUrl.toString(), StandardCharsets.UTF_8.name()
 						)
@@ -287,7 +287,7 @@ public class StaticComponentContainer {
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
 			Runtime.getRuntime().addShutdownHook(
 				ThreadSupplier.getOrCreate("Resources releaser").setExecutable(thread -> {
-					ProtectedRunnable.run(
+					Executor.executeAndLogExceptions(
 						() -> {
 							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "... Waiting for all tasks ending before closing all component containers");
 							BackgroundExecutor.waitForTasksEnding(true, true);

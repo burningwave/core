@@ -62,7 +62,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.ManagedLogger;
-import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.function.Executor;
 
 @SuppressWarnings("resource")
 public class FileSystemItem implements ManagedLogger {
@@ -931,7 +931,7 @@ public class FileSystemItem implements ManagedLogger {
 				? url.substring(0, url.lastIndexOf(IterableZipContainer.ZIP_PATH_SEPARATOR))
 				: url;
 		String uRLToRet = url.replace(IterableZipContainer.ZIP_PATH_SEPARATOR, isCompressed() ? "!/" : "/");
-		url = ThrowingSupplier.get(() -> URLEncoder.encode(uRLToRet, StandardCharsets.UTF_8.name())).replace("%3A", ":")
+		url = Executor.get(() -> URLEncoder.encode(uRLToRet, StandardCharsets.UTF_8.name())).replace("%3A", ":")
 				.replace("%21", "!").replace("%2F", "/");
 		url = prefix + url;
 		return isFolder() ? url.endsWith("/") ? url : url + "/"
@@ -955,7 +955,7 @@ public class FileSystemItem implements ManagedLogger {
 						String name = file.getName();
 						return name.endsWith(".zip") || name.endsWith(".jar") || name.endsWith(".war")
 								|| name.endsWith(".ear") || name.endsWith(".jmod");
-					}, file -> ThrowingSupplier.get(() -> !file.isFolder() && Streams.isArchive(file.toByteBuffer())));
+					}, file -> Executor.get(() -> !file.isFolder() && Streams.isArchive(file.toByteBuffer())));
 				}
 			}
 
@@ -966,7 +966,7 @@ public class FileSystemItem implements ManagedLogger {
 						String name = file.getName();
 						return name.endsWith(".class") && !name.endsWith("module-info.class")
 								&& !name.endsWith("package-info.class");
-					}, file -> ThrowingSupplier.get(() -> !file.isFolder() && Streams.isClass(file.toByteBuffer())));
+					}, file -> Executor.get(() -> !file.isFolder() && Streams.isClass(file.toByteBuffer())));
 
 				}
 

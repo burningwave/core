@@ -49,8 +49,7 @@ import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.assembler.StaticComponentContainer;
-import org.burningwave.core.function.ThrowingRunnable;
-import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.function.Executor;
 
 
 public class FileSystemHelper implements Component {
@@ -86,7 +85,7 @@ public class FileSystemHelper implements Component {
 			if (mainTemporaryFolder != null && mainTemporaryFolder.exists()) {
 				return mainTemporaryFolder;
 			}			
-			return mainTemporaryFolder = ThrowingSupplier.get(() -> {
+			return mainTemporaryFolder = Executor.get(() -> {
 				File toDelete = File.createTempFile("_BW_TEMP_", "_temp");
 				File tempFolder = toDelete.getParentFile();
 				File folder = new File(tempFolder.getAbsolutePath() + "/" + "Burningwave" +"/"+id);
@@ -103,14 +102,14 @@ public class FileSystemHelper implements Component {
 	public File getOrCreatePingFile() {
 		File pingFile = new File(Paths.clean(getOrCreateBurningwaveTemporaryFolder() .getAbsolutePath() + "/" + id + ".ping"));
 		if (!pingFile.exists()) {
-			ThrowingRunnable.run(() -> pingFile.createNewFile());
+			Executor.run(() -> pingFile.createNewFile());
 			pingFile.deleteOnExit();
 		}
 		return pingFile;
 	}
 	
 	public File createTemporaryFolder(String folderName) {
-		return ThrowingSupplier.get(() -> {
+		return Executor.get(() -> {
 			File tempFolder = new File(getOrCreateMainTemporaryFolder().getAbsolutePath() + "/" + folderName);
 			if (tempFolder.exists()) {
 				tempFolder.delete();
@@ -122,7 +121,7 @@ public class FileSystemHelper implements Component {
 	
 	@Override
 	public File getOrCreateTemporaryFolder(String folderName) {
-		return ThrowingSupplier.get(() -> {
+		return Executor.get(() -> {
 			File tempFolder = new File(getOrCreateMainTemporaryFolder().getAbsolutePath() + "/" + folderName);
 			if (!tempFolder.exists()) {
 				tempFolder.mkdirs();

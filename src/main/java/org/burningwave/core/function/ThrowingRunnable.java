@@ -28,19 +28,9 @@
  */
 package org.burningwave.core.function;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
-
 @FunctionalInterface
 public interface ThrowingRunnable<E extends Throwable> {
 
     public abstract void run() throws E;
-    
-    static <E extends Throwable> void run(ThrowingRunnable<E> runnable) {
-		try {
-			runnable.run();
-		} catch (Throwable exc) {
-			Throwables.throwException(exc);
-		}
-	}
     
 }

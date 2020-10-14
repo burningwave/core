@@ -56,8 +56,8 @@ import org.burningwave.core.Component;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.JavaMemoryCompiler.Compilation;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.MultiParamsFunction;
-import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
@@ -568,7 +568,7 @@ public class ClassFactory implements Component {
 					);
 				}
 			} catch (ClassNotFoundException | NoClassDefFoundError exc) {
-				return ThrowingSupplier.get(() -> {
+				return Executor.get(() -> {
 					return ClassLoaders.loadOrDefineByByteCode(className, 
 						loadBytecodesFromClassPaths(
 							this.byteCodesWrapper,

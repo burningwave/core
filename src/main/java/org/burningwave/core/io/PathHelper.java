@@ -58,7 +58,7 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
-import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
@@ -429,7 +429,7 @@ public class PathHelper implements Component {
 	}
 	
 	public StringBuffer getResourceAsStringBuffer(String resourceRelativePath) {
-		return ThrowingSupplier.get(() -> {
+		return Executor.get(() -> {
 			try (BufferedReader reader = new BufferedReader(new InputStreamReader(getResourceAsStream(resourceRelativePath)))) {
 				StringBuffer result = new StringBuffer();
 				String sCurrentLine;

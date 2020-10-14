@@ -49,6 +49,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingSupplier;
 
 public class FunctionalInterfaceFactory implements Component {
@@ -86,7 +87,7 @@ public class FunctionalInterfaceFactory implements Component {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(targetMethod.getDeclaringClass()), 
 			getCacheKey(targetMethod), () -> 
-			ThrowingSupplier.get(() ->
+			Executor.get(() ->
 				bindTo(
 					targetMethod, () -> 
 						Modifier.isStatic(targetMethod.getModifiers()) ?
@@ -104,7 +105,7 @@ public class FunctionalInterfaceFactory implements Component {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(targetMethod.getDeclaringClass()),	
 			getCacheKey(targetMethod), () -> 
-			ThrowingSupplier.get(() -> 
+			Executor.get(() -> 
 				bindTo(
 					targetMethod, () -> 
 						Modifier.isStatic(targetMethod.getModifiers()) ?
@@ -122,7 +123,7 @@ public class FunctionalInterfaceFactory implements Component {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(targetMethod.getDeclaringClass()),
 			getCacheKey(targetMethod), () -> 
-			ThrowingSupplier.get(() -> bindTo(
+			Executor.get(() -> bindTo(
 				targetMethod, () -> 
 					new AbstractMap.SimpleEntry<>(
 						retrieveClass(
@@ -149,7 +150,7 @@ public class FunctionalInterfaceFactory implements Component {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(targetMethod.getDeclaringClass()),
 			getCacheKey(targetMethod), () -> 
-			ThrowingSupplier.get(() ->
+			Executor.get(() ->
 				bindTo(
 					targetMethod, () -> 
 						new AbstractMap.SimpleEntry<>(
@@ -175,7 +176,7 @@ public class FunctionalInterfaceFactory implements Component {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(targetMethod.getDeclaringClass()),
 			getCacheKey(targetMethod), () -> 
-			ThrowingSupplier.get(() -> bindTo(
+			Executor.get(() -> bindTo(
 					targetMethod, () -> 
 					new AbstractMap.SimpleEntry<>(
 						retrieveClass(

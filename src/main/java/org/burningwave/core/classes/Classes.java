@@ -66,7 +66,7 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.StaticComponentContainer;
-import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 
 @SuppressWarnings("unchecked")
@@ -569,7 +569,7 @@ public class Classes implements Component, MembersRetriever {
 		}
 		
 		public Package retrieveLoadedPackage(ClassLoader classLoader, Object packageToFind, String packageName) {
-			return ThrowingSupplier.get(() -> LowLevelObjectsHandler.retrieveLoadedPackage(classLoader, packageToFind, packageName));
+			return Executor.get(() -> LowLevelObjectsHandler.retrieveLoadedPackage(classLoader, packageToFind, packageName));
 		}
 		
 		public <T> Class<T> loadOrDefineByJavaClass(
@@ -743,7 +743,7 @@ public class Classes implements Component, MembersRetriever {
 			String implVendor,
 			URL sealBase
 		) throws IllegalArgumentException {
-	    	return ThrowingSupplier.get(() -> {
+	    	return Executor.get(() -> {
 	    		try {
 	    			return (Package) definePackageMethod.invoke(classLoader, name, specTitle, specVersion, specVendor, implTitle,
 	    				implVersion, implVendor, sealBase);

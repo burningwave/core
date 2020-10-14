@@ -51,7 +51,7 @@ import java.util.function.Supplier;
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassPathHunter.SearchResult;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
-import org.burningwave.core.function.ThrowingRunnable;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.FileSystemItem.CheckingOption;
 import org.burningwave.core.iterable.Properties;
@@ -424,7 +424,7 @@ public static class Configuration {
 					fsObject.refresh();
 				}
 				if (fsObject.isCompressed()) {					
-					ThrowingRunnable.run(() -> {
+					Executor.run(() -> {
 						synchronized (this) {
 							FileSystemItem classPath = FileSystemItem.ofPath(
 								classPathsBasePath.getAbsolutePath() + "/" + Paths.toSquaredPath(fsObject.getAbsolutePath(), fsObject.isFolder())

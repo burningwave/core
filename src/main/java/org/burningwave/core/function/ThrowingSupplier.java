@@ -28,18 +28,9 @@
  */
 package org.burningwave.core.function;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
-
 @FunctionalInterface
 public interface ThrowingSupplier<T, E extends Throwable> {
 
 	T get() throws E;
-	
-	static <T, E extends Throwable> T get(ThrowingSupplier<T, ? extends E> supplier) {
-		try {
-			return supplier.get();
-		} catch (Throwable exc) {
-			return Throwables.throwException(exc);
-		}
-	}
+
 }
