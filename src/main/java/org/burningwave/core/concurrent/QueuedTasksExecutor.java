@@ -638,11 +638,6 @@ public class QueuedTasksExecutor implements Component {
 			return submitted;
 		}
 		
-		public T waitForStarting() {
-			while(waitForStarting0());
-			return (T)this;
-		}
-		
 		public boolean isProbablyDeadLocked() {
 			return probablyDeadLocked;
 		}
@@ -659,7 +654,12 @@ public class QueuedTasksExecutor implements Component {
 			}
 		}
 		
-		public boolean waitForStarting0() {
+		public T waitForStarting() {
+			while(waitForStarting0(false));
+			return (T)this;
+		}
+		
+		public boolean waitForStarting0(boolean ignoreDeadLocked) {
 			java.lang.Thread currentThread = Thread.currentThread();
 			if (currentThread == this.executor) {
 				return false;
@@ -670,6 +670,9 @@ public class QueuedTasksExecutor implements Component {
 						if (!isStarted()) {
 							try {
 								if (probablyDeadLocked) {
+									if (ignoreDeadLocked) {
+										return false;
+									}
 									Throwables.throwException(new TaskStateException(this, "could be dead locked"));
 								}
 								if (isAborted()) {
