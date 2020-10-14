@@ -68,7 +68,7 @@ import javax.tools.ToolProvider;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
-import org.burningwave.core.function.ThrowingRunnable;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
@@ -430,7 +430,7 @@ public class JavaMemoryCompiler implements Component {
 	    @Override
 		public void close() {
 	    	if (baos != null) {
-	    		ThrowingRunnable.run(() -> {
+	    		Executor.run(() -> {
 	    			baos.markAsCloseable(true);
 					baos.close();
 				});
@@ -467,7 +467,7 @@ public class JavaMemoryCompiler implements Component {
 				compiledFile.close()
 			);
 			compiledFiles.clear();
-			ThrowingRunnable.run(() -> {
+			Executor.run(() -> {
 				super.close();
 			});
 		}

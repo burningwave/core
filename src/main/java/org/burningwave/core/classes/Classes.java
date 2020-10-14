@@ -34,7 +34,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
-import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
@@ -67,7 +66,7 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.StaticComponentContainer;
-import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 
 @SuppressWarnings("unchecked")
@@ -570,7 +569,7 @@ public class Classes implements Component, MembersRetriever {
 		}
 		
 		public Package retrieveLoadedPackage(ClassLoader classLoader, Object packageToFind, String packageName) {
-			return ThrowingSupplier.get(() -> LowLevelObjectsHandler.retrieveLoadedPackage(classLoader, packageToFind, packageName));
+			return Executor.get(() -> LowLevelObjectsHandler.retrieveLoadedPackage(classLoader, packageToFind, packageName));
 		}
 		
 		public <T> Class<T> loadOrDefineByJavaClass(
@@ -721,10 +720,9 @@ public class Classes implements Component, MembersRetriever {
 			ByteBuffer byteCode
 		) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
 			try {
-				return Synchronizer.executeThrower(Objects.getId(classLoader) + "_" + className, () -> {
-				//synchronized (getClassLoadingLock(classLoader, className)) {
+				synchronized (getClassLoadingLock(classLoader, className)) {
 					return (Class<T>)method.invoke(classLoader, className, byteCode, null);
-				});
+				}
 			} catch (InvocationTargetException | ClassNotFoundException | NoClassDefFoundError exc) {
 				throw exc;
 			} catch (java.lang.LinkageError exc) {
@@ -745,7 +743,7 @@ public class Classes implements Component, MembersRetriever {
 			String implVendor,
 			URL sealBase
 		) throws IllegalArgumentException {
-	    	return ThrowingSupplier.get(() -> {
+	    	return Executor.get(() -> {
 	    		try {
 	    			return (Package) definePackageMethod.invoke(classLoader, name, specTitle, specVersion, specVendor, implTitle,
 	    				implVersion, implVendor, sealBase);

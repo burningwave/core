@@ -42,7 +42,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.function.Executor;
 
 public class Strings implements Component {
 	
@@ -321,7 +321,7 @@ public class Strings implements Component {
 		}
 		
 		private String convertURLPathToAbsolutePath0(String inputURLPath) {
-			String absolutePath = ThrowingSupplier.get(() ->
+			String absolutePath = Executor.get(() ->
 				URLDecoder.decode(
 					inputURLPath, StandardCharsets.UTF_8.name()
 				)
@@ -348,7 +348,7 @@ public class Strings implements Component {
 		}
 		
 		private String convertURLPathToAbsolutePath1(String inputURLPath) {
-			String absolutePath = ThrowingSupplier.get(() ->
+			String absolutePath = Executor.get(() ->
 				URLDecoder.decode(
 					inputURLPath, StandardCharsets.UTF_8.name()
 				)

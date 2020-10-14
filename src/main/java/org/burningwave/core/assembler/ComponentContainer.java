@@ -512,18 +512,11 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	void close(boolean force) {
 		if (force || !isUndestroyable) {
-			//TODO: remove
-			logInfo("adding closing task for {}", instanceId);
 			closeResources(() -> !instances.contains(this),  () -> {
-				logInfo("removing {}", instanceId);
 				instances.remove(this);
-				logInfo("unregistering from {} {}", instanceId, GlobalProperties);
 				unregister(GlobalProperties);
-				logInfo("unregistering from {} {}", instanceId, config);
 				unregister(config);
-				logInfo("clearing components of {}", instanceId);
-				clear();
-				logInfo("closing of {} finished", instanceId);
+				clear();			
 				components = null;
 				propertySupplier = null;
 				config = null;
@@ -546,10 +539,7 @@ public class ComponentContainer implements ComponentSupplier {
 				ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception occurred while closing " + componentContainer, exc);
 			}
 		}
-		//TODO: remove
-		ManagedLoggersRepository.logInfo(() -> ComponentContainer.class.getName(), "Cleaning cache");
 		Cache.clear();
-		ManagedLoggersRepository.logInfo(() -> ComponentContainer.class.getName(), "Cache cleaned");
 		System.gc();
 	}
 	

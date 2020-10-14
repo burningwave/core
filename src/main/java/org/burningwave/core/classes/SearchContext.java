@@ -43,6 +43,7 @@ import java.util.function.Supplier;
 import org.burningwave.core.Component;
 import org.burningwave.core.Context;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingSupplier;
 
 public class SearchContext<T> implements Component {
@@ -187,7 +188,7 @@ public class SearchContext<T> implements Component {
 	}
 	
 	<O> O execute(ThrowingSupplier<O, Throwable> supplier, Supplier<O> defaultValueSupplier, Supplier<String> classNameSupplier, boolean isARecursiveCall) {
-		return ThrowingSupplier.get(() -> {
+		return Executor.get(() -> {
 			try {
 				return supplier.get();
 			} catch (ClassNotFoundException | NoClassDefFoundError exc) {

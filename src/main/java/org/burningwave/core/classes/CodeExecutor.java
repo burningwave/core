@@ -45,7 +45,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.Executable;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
-import org.burningwave.core.function.ThrowingRunnable;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
@@ -137,11 +137,11 @@ public class CodeExecutor implements Component {
 			} else {
 				Properties tempProperties = new Properties();
 				if (config.isAbsoluteFilePath()) {
-					ThrowingRunnable.run(() -> 
+					Executor.run(() -> 
 						tempProperties.load(FileSystemItem.ofPath(config.getFilePath()).toInputStream())
 					);
 				} else {
-					ThrowingRunnable.run(() ->
+					Executor.run(() ->
 						tempProperties.load(pathHelper.getResourceAsStream(config.getFilePath()))
 					);
 				}

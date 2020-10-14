@@ -335,13 +335,12 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	Class<?> _defineClass(String className, java.nio.ByteBuffer byteCode, ProtectionDomain protectionDomain) {
-		return Synchronizer.executeThrower(instanceId + "_" + className, () -> {
-		//synchronized(getClassLoadingLock(className)) {
+		synchronized(getClassLoadingLock(className)) {
 			Class<?> cls = super.defineClass(className, byteCode, protectionDomain);
 			addLoadedByteCode(className, byteCode);
 			removeNotLoadedBytecode(className);
 			return cls;
-		});
+		}
 	}
 
 	public void removeNotLoadedBytecode(String className) {

@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.burningwave.core.assembler.StaticComponentContainer;
-import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
 
 public class Resources {
@@ -88,7 +88,7 @@ public class Resources {
 	}
 	
 	public StringBuffer getAsStringBuffer(ClassLoader resourceClassLoader, String resourceRelativePath) {
-		return ThrowingSupplier.get(() -> {
+		return Executor.get(() -> {
 			ClassLoader classLoader = Optional.ofNullable(resourceClassLoader).orElseGet(() ->
 				ClassLoader.getSystemClassLoader()
 			);

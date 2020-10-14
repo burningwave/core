@@ -37,7 +37,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.TriPredicate;
 
 @SuppressWarnings("unchecked")
@@ -101,7 +101,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 	
 	
 	protected C newInstance() {
-		return ThrowingSupplier.get(() -> {
+		return Executor.get(() -> {
 			return (C)Constructors.newInstanceDirectOf(this.getClass());
 		});
 	}
@@ -500,7 +500,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 		}
 		
 		protected C newInstance() {
-			return ThrowingSupplier.get(() -> {
+			return Executor.get(() -> {
 				return (C)Constructors.newInstanceDirectOf(this.getClass());
 			});
 		}

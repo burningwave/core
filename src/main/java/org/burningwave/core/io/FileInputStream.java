@@ -29,16 +29,16 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
-import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.function.ThrowingRunnable;
+import org.burningwave.core.function.Executor;
 
 public class FileInputStream extends java.io.FileInputStream implements Component {
 	
@@ -78,7 +78,7 @@ public class FileInputStream extends java.io.FileInputStream implements Componen
 	
 	@Override
 	public void close() {
-		ThrowingRunnable.run(() -> super.close());
+		Executor.run(() -> super.close());
 		file = null;
 		absolutePath = null;
 	}

@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Random;
 
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
@@ -248,7 +249,7 @@ public class StaticComponentContainer {
 			if (globalPropertiesFileUrl != null) {
 				ManagedLoggersRepository.logInfo(
 					() -> StaticComponentContainer.class.getName(), 
-					"Building static components by using " + ThrowingSupplier.get(() ->
+					"Building static components by using " + Executor.get(() ->
 						URLDecoder.decode(
 							globalPropertiesFileUrl.toString(), StandardCharsets.UTF_8.name()
 						)
@@ -286,27 +287,40 @@ public class StaticComponentContainer {
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
 			Runtime.getRuntime().addShutdownHook(
 				ThreadSupplier.getOrCreate("Resources releaser").setExecutable(thread -> {
-					try {
-						ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "... Waiting for all tasks ending before closing all component containers");
-						BackgroundExecutor.waitForTasksEnding(true, true);
-						ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Closing all component containers");
-						ComponentContainer.closeAll();
-					} catch (Throwable exc) {
-						ManagedLoggersRepository.logError(() -> StaticComponentContainer.class.getName(), "Exception occurred while closing component containers", exc);
-					}
-					try {
-						ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Closing FileSystemHelper");
-						FileSystemHelper.close();
-					} catch (Throwable exc) {
-						ManagedLoggersRepository.logError(() -> StaticComponentContainer.class.getName(), "Exception occurred while closing FileSystemHelper", exc);
-					}
-					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "... Waiting for all tasks ending before shuting down BackgroundExecutor");
-					BackgroundExecutor.waitForTasksEnding(true, true);
-					ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Shuting down BackgroundExecutor");
-					BackgroundExecutor.shutDown(false);
-					Synchronizer.close();
-					ThreadHolder.close();
-					ThreadSupplier.shutDownAll();
+					Executor.executeAndLogExceptions(
+						() -> {
+							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "... Waiting for all tasks ending before closing all component containers");
+							BackgroundExecutor.waitForTasksEnding(true, true);
+						},
+						() -> {
+							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Closing all component containers");
+							ComponentContainer.closeAll();
+						},
+						() -> {
+							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Closing FileSystemHelper");
+							FileSystemHelper.close();
+						},
+						() -> {
+							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "... Waiting for all tasks ending before shuting down BackgroundExecutor");
+							BackgroundExecutor.waitForTasksEnding(true, true);
+						},
+						() -> {
+							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Shuting down BackgroundExecutor");
+							BackgroundExecutor.shutDown(false);
+						},
+						() -> {
+							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Closing Synchronizer");
+							Synchronizer.close();
+						},
+						() -> {
+							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Closing ThreadHolder");
+							ThreadHolder.close();
+						},
+						() -> {
+							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Shuting down ThreadSupplier");
+							ThreadSupplier.shutDownAll();
+						}
+					);
 				})
 			);
 			FileSystemHelper.startScavenger();

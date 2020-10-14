@@ -42,8 +42,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.burningwave.core.function.ThrowingRunnable;
-import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.function.Executor;
 
 @SuppressWarnings("unchecked")
 public class Fields extends Members.Handler<Field, FieldCriteria> {
@@ -53,11 +52,11 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	}
 	
 	public <T> T getStatic(Field field) {
-		return ThrowingSupplier.get(() -> (T)field.get(null));
+		return Executor.get(() -> (T)field.get(null));
 	}
 	
 	public <T> T get(Object target, Field field) {
-		return ThrowingSupplier.get(() -> (T)field.get(target));
+		return Executor.get(() -> (T)field.get(target));
 	}
 	
 	public <T> T getStatic(Class<?> targetClass, String fieldName) {
@@ -69,11 +68,11 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	}	
 	
 	public <T> T getStaticDirect(Field field) {
-		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(null, field));
+		return Executor.get(() -> (T)LowLevelObjectsHandler.getFieldValue(null, field));
 	}
 	
 	public <T> T getDirect(Object target, Field field) {
-		return ThrowingSupplier.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, field));
+		return Executor.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, field));
 	}
 	
 	public <T> T getStaticDirect(Class<?> targetClass, String fieldName) {
@@ -89,7 +88,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	}
 	
 	public void set(Object target, Field field, Object value) {
-		ThrowingRunnable.run(() -> field.set(target, value));
+		Executor.run(() -> field.set(target, value));
 	}
 	
 	public void setStatic(Class<?> targetClass, String fieldName, Object value) {
@@ -131,7 +130,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 			if (target != null) {
 				fieldValues.put(
 					field,
-					ThrowingSupplier.get(
+					Executor.get(
 						() ->
 							field.get(
 								Modifier.isStatic(field.getModifiers()) ? null : target
@@ -141,7 +140,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 			} else if (Modifier.isStatic(field.getModifiers())) {
 				fieldValues.put(
 					field,
-					ThrowingSupplier.get(
+					Executor.get(
 						() ->
 							field.get(null)
 					)
@@ -166,7 +165,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 		for (Field field : fields) {
 			fieldValues.put(
 				field,
-				ThrowingSupplier.get(() -> LowLevelObjectsHandler.getFieldValue(target, field))
+				Executor.get(() -> LowLevelObjectsHandler.getFieldValue(target, field))
 			);
 		}
 		return fieldValues;

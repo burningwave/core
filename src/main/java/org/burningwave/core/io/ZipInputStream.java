@@ -45,7 +45,7 @@ import java.util.function.Predicate;
 import java.util.zip.ZipException;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.function.ThrowingRunnable;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.ZipInputStream.Entry.Attached;
 
 class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZipContainer, Component {
@@ -126,7 +126,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 	}
 	
 	public IterableZipContainer.Entry getNextEntry(Predicate<IterableZipContainer.Entry> loadZipEntryData) {
-		ThrowingRunnable.run(() -> {
+		Executor.run(() -> {
 			try {
 				currentZipEntry = (Entry.Attached)super.getNextEntry();
 			} catch (ZipException exc) {
@@ -179,7 +179,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 		closeEntry();
 		parent = null;
 		absolutePath = null;
-		ThrowingRunnable.run(() -> super.close());
+		Executor.run(() -> super.close());
 		this.byteBufferInputStream = null;
 	}
 		
@@ -259,7 +259,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 				File destinationFilePath = new File(folder.getAbsolutePath(), this.getName());
 				destinationFilePath.getParentFile().mkdirs();
 				if (!this.isDirectory()) {
-					ThrowingRunnable.run(() -> {
+					Executor.run(() -> {
 						try (BufferedInputStream bis = new BufferedInputStream(this.toInputStream())) {
 							int byteTransferred = 0;
 							byte buffer[] = new byte[Streams.defaultBufferSize];

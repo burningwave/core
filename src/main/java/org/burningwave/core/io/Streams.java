@@ -48,8 +48,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.burningwave.core.Component;
-import org.burningwave.core.function.ThrowingRunnable;
-import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
@@ -201,7 +200,7 @@ public class Streams implements Component {
 	}
 	
 	public StringBuffer getAsStringBuffer(InputStream inputStream) {
-		return ThrowingSupplier.get(() -> {
+		return Executor.get(() -> {
 			try (BufferedReader reader = new BufferedReader(
 					new InputStreamReader(
 						inputStream
@@ -219,7 +218,7 @@ public class Streams implements Component {
 	}
 	
 	public long copy(InputStream input, OutputStream output) {
-		return ThrowingSupplier.get(() -> {
+		return Executor.get(() -> {
 			byte[] buffer = new byte[defaultBufferSize];
 			long count = 0L;
 			int n = 0;
@@ -259,7 +258,7 @@ public class Streams implements Component {
 			} else {
 				file.delete();
 			}
-			ThrowingRunnable.run(() -> {					
+			Executor.run(() -> {					
 				try(ByteBufferInputStream inputStream = new ByteBufferInputStream(content); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
 					copy(inputStream, fileOutputStream);
 				}

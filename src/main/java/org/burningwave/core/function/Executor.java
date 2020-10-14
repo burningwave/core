@@ -28,9 +28,35 @@
  */
 package org.burningwave.core.function;
 
-@FunctionalInterface
-public interface ThrowingSupplier<T, E extends Throwable> {
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
-	T get() throws E;
+public interface Executor {
 
+    @SafeVarargs
+	static <E extends Throwable> void executeAndLogExceptions(ThrowingRunnable<? extends Throwable>... runnables) {
+		for (ThrowingRunnable<? extends Throwable> runnable : runnables) {
+	    	try {
+				runnable.run();
+			} catch (Throwable exc) {
+				ManagedLoggersRepository.logError(() -> Executor.class.getName(), exc);
+			}
+		}
+	}
+    
+    static <E extends Throwable> void run(ThrowingRunnable<E> runnable) {
+		try {
+			runnable.run();
+		} catch (Throwable exc) {
+			Throwables.throwException(exc);
+		}
+	}
+    
+	static <T, E extends Throwable> T get(ThrowingSupplier<T, ? extends E> supplier) {
+		try {
+			return supplier.get();
+		} catch (Throwable exc) {
+			return Throwables.throwException(exc);
+		}
+	}
 }

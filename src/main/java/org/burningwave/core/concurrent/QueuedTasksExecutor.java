@@ -272,6 +272,10 @@ public class QueuedTasksExecutor implements Component {
 		return bag;
 	}
 	
+	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task) {
+		return waitFor(task, Thread.currentThread().getPriority(), false);
+	}
+	
 	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, boolean ignoreDeadLocked) {
 		return waitFor(task, Thread.currentThread().getPriority(), ignoreDeadLocked);
 	}

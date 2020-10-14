@@ -31,7 +31,7 @@ package org.burningwave.core.io;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
-import static org.burningwave.core.assembler.StaticComponentContainer.ThreadSupplier;
+import static org.burningwave.core.assembler.StaticComponentContainer.ThreadHolder;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.File;
@@ -49,8 +49,7 @@ import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.assembler.StaticComponentContainer;
-import org.burningwave.core.function.ThrowingRunnable;
-import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.function.Executor;
 
 
 public class FileSystemHelper implements Component {
@@ -86,7 +85,7 @@ public class FileSystemHelper implements Component {
 			if (mainTemporaryFolder != null && mainTemporaryFolder.exists()) {
 				return mainTemporaryFolder;
 			}			
-			return mainTemporaryFolder = ThrowingSupplier.get(() -> {
+			return mainTemporaryFolder = Executor.get(() -> {
 				File toDelete = File.createTempFile("_BW_TEMP_", "_temp");
 				File tempFolder = toDelete.getParentFile();
 				File folder = new File(tempFolder.getAbsolutePath() + "/" + "Burningwave" +"/"+id);
@@ -103,14 +102,14 @@ public class FileSystemHelper implements Component {
 	public File getOrCreatePingFile() {
 		File pingFile = new File(Paths.clean(getOrCreateBurningwaveTemporaryFolder() .getAbsolutePath() + "/" + id + ".ping"));
 		if (!pingFile.exists()) {
-			ThrowingRunnable.run(() -> pingFile.createNewFile());
+			Executor.run(() -> pingFile.createNewFile());
 			pingFile.deleteOnExit();
 		}
 		return pingFile;
 	}
 	
 	public File createTemporaryFolder(String folderName) {
-		return ThrowingSupplier.get(() -> {
+		return Executor.get(() -> {
 			File tempFolder = new File(getOrCreateMainTemporaryFolder().getAbsolutePath() + "/" + folderName);
 			if (tempFolder.exists()) {
 				tempFolder.delete();
@@ -122,7 +121,7 @@ public class FileSystemHelper implements Component {
 	
 	@Override
 	public File getOrCreateTemporaryFolder(String folderName) {
-		return ThrowingSupplier.get(() -> {
+		return Executor.get(() -> {
 			File tempFolder = new File(getOrCreateMainTemporaryFolder().getAbsolutePath() + "/" + folderName);
 			if (!tempFolder.exists()) {
 				tempFolder.mkdirs();
@@ -183,7 +182,7 @@ public class FileSystemHelper implements Component {
 		if (scavenger == null) {
 			scavenger = new Scavenger(this, 3600000, 30000);
 		}
-		if (!scavenger.isAlive) {
+		if (!scavenger.isAlive()) {
 			scavenger.start();
 		}
 	}
@@ -215,87 +214,82 @@ public class FileSystemHelper implements Component {
 	}
 	
 	public static class Scavenger implements ManagedLogger, Closeable {
-		private boolean isAlive;
 		private FileSystemHelper fileSystemHelper;
 		private long deletingInterval;
 		private long waitInterval;
-		private Thread executor;
 		private File burningwaveTemporaryFolder;
+		long lastDeletionStartTime;
 		
 		private Scavenger(FileSystemHelper fileSystemHelper, long deletingInterval, long waitInterval) {
 			this.fileSystemHelper = fileSystemHelper;
 			this.deletingInterval = deletingInterval;
 			this.waitInterval = waitInterval;
 			this.burningwaveTemporaryFolder = fileSystemHelper.getOrCreateBurningwaveTemporaryFolder();
-			executor = ThreadSupplier.getOrCreate().setExecutable(thread -> {
-				pingAndDelete();				
-			});
-			executor.setName("Temporary file scavenger");
-			executor.setPriority(Thread.MIN_PRIORITY);
+		}
+
+		public boolean isAlive() {
+			return ThreadHolder.isAlive("Temporary file scavenger");
 		}
 
 		void pingAndDelete() {
-			long lastDeletionStartTime = -1;
-			while (isAlive) {
-				try {
-					setPingTime(fileSystemHelper.getOrCreatePingFile().getAbsolutePath());
-				} catch (Throwable exc) {
-					logError("Exception occurred while setting ping time on file " + fileSystemHelper.getOrCreatePingFile().getAbsolutePath());
-					logError(exc.getMessage());
-					logInfo("Current execution id: {}", fileSystemHelper.id);
-				}
-				if (System.currentTimeMillis() - lastDeletionStartTime > deletingInterval) {
-					lastDeletionStartTime = System.currentTimeMillis();
-					for (File fileSystemItem : burningwaveTemporaryFolder.listFiles()) {
-						if (!fileSystemItem.getName().equals(fileSystemHelper.getOrCreateMainTemporaryFolder().getName()) &&
-							!fileSystemItem.getName().equals(fileSystemHelper.getOrCreatePingFile().getName()) 
-						) {
+			try {
+				setPingTime(fileSystemHelper.getOrCreatePingFile().getAbsolutePath());
+			} catch (Throwable exc) {
+				logError("Exception occurred while setting ping time on file " + fileSystemHelper.getOrCreatePingFile().getAbsolutePath());
+				logError(exc.getMessage());
+				logInfo("Current execution id: {}", fileSystemHelper.id);
+			}
+			if (System.currentTimeMillis() - lastDeletionStartTime > deletingInterval) {
+				lastDeletionStartTime = System.currentTimeMillis();
+				for (File fileSystemItem : burningwaveTemporaryFolder.listFiles()) {
+					if (!fileSystemItem.getName().equals(fileSystemHelper.getOrCreateMainTemporaryFolder().getName()) &&
+						!fileSystemItem.getName().equals(fileSystemHelper.getOrCreatePingFile().getName()) 
+					) {
+						try {
 							try {
-								try {
-									if (fileSystemItem.isDirectory()) {
-										File pingFile = new File(
-											burningwaveTemporaryFolder.getAbsolutePath() + "/" + fileSystemItem.getName() + ".ping"
-										);
-										long pingTime = getCreationTime(fileSystemItem.getName());
-										if (pingFile.exists()) {
-											pingTime = getOrSetPingTime(pingFile);
-										}
-										if (System.currentTimeMillis() - pingTime >= deletingInterval) {
-											delete(fileSystemItem);
-										}							
-									} else if (fileSystemItem.getName().endsWith("ping")) {
-										long pingTime = getOrSetPingTime(fileSystemItem);
-										if (System.currentTimeMillis() - pingTime >= deletingInterval) {
-											delete(fileSystemItem);
-										}
+								if (fileSystemItem.isDirectory()) {
+									File pingFile = new File(
+										burningwaveTemporaryFolder.getAbsolutePath() + "/" + fileSystemItem.getName() + ".ping"
+									);
+									long pingTime = getCreationTime(fileSystemItem.getName());
+									if (pingFile.exists()) {
+										pingTime = getOrSetPingTime(pingFile);
 									}
-								} catch (Throwable exc) {
-									logError("Exception occurred while cleaning temporary file system item " + fileSystemItem.getAbsolutePath(), exc);
-									if (fileSystemItem.getName().contains("null")) {
-										logInfo("Trying to force deleting of {}", fileSystemItem.getAbsolutePath());
+									if (System.currentTimeMillis() - pingTime >= deletingInterval) {
 										delete(fileSystemItem);
-									} else {
-										throw exc;
+									}							
+								} else if (fileSystemItem.getName().endsWith("ping")) {
+									long pingTime = getOrSetPingTime(fileSystemItem);
+									if (System.currentTimeMillis() - pingTime >= deletingInterval) {
+										delete(fileSystemItem);
 									}
 								}
 							} catch (Throwable exc) {
-								logInfo("To avoid this error remove {} manually", fileSystemItem.getAbsolutePath());
-								logInfo("Current execution id: {}", fileSystemHelper.id);
+								logError("Exception occurred while cleaning temporary file system item " + fileSystemItem.getAbsolutePath(), exc);
+								if (fileSystemItem.getName().contains("null")) {
+									logInfo("Trying to force deleting of {}", fileSystemItem.getAbsolutePath());
+									delete(fileSystemItem);
+								} else {
+									throw exc;
+								}
 							}
+						} catch (Throwable exc) {
+							logInfo("To avoid this error remove {} manually", fileSystemItem.getAbsolutePath());
+							logInfo("Current execution id: {}", fileSystemHelper.id);
 						}
 					}
 				}
-				try {
-					Thread.sleep(waitInterval);
-				} catch (Throwable exc) {
-					logError("Exception occurred: " + exc.getMessage());
-				}
+			}
+			try {
+				Thread.sleep(waitInterval);
+			} catch (Throwable exc) {
+				logError("Exception occurred: " + exc.getMessage());
 			}
 		}
 		
 		public void start() {
-			isAlive = true;
-			executor.start();
+			lastDeletionStartTime = -1;
+			ThreadHolder.startLooping("Temporary file scavenger", true, Thread.MIN_PRIORITY, thread -> pingAndDelete());
 		}
 
 		long getOrSetPingTime(File pingFile) throws IOException {
@@ -340,16 +334,15 @@ public class FileSystemHelper implements Component {
 		}
 		
 		public void stop() {
-			isAlive = false;
+			ThreadHolder.stop("Temporary file scavenger");
 		}
 		
 		@Override
 		public void close() {
 			closeResources(() -> 
-					executor == null, 
+					burningwaveTemporaryFolder == null, 
 				() -> {
 					stop();
-					executor = null;
 					burningwaveTemporaryFolder = null;
 					fileSystemHelper = null;
 				}

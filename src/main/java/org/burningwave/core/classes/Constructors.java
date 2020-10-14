@@ -46,7 +46,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.function.Executor;
 
 
 @SuppressWarnings("unchecked")
@@ -61,7 +61,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		Object... arguments
 	) {	
 		Constructor<?> ctor = findFirstAndMakeItAccessible(targetClass, Classes.retrieveFrom(arguments));
-		return ThrowingSupplier.get(() -> {
+		return Executor.get(() -> {
 			//logInfo("Invoking " + ctor);
 			return (T)ctor.newInstance(
 				getArgumentArray(
@@ -93,7 +93,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 				);
 			}
 		);
-		return ThrowingSupplier.get(() -> {
+		return Executor.get(() -> {
 				Constructor<?> ctor = (Constructor<?>) methodHandleBag.getKey();
 				//logInfo("Direct invoking of " + ctor);
 				return (T)methodHandleBag.getValue().invokeWithArguments(

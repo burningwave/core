@@ -53,8 +53,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingFunction;
-import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("unchecked")
 public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria> {
@@ -198,7 +198,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 	}
 	
 	private <T> T invoke(Class<?> targetClass, Object target, String methodName, ThrowingFunction<Method, T, Throwable> methodInvoker, Object... arguments) {
-		return ThrowingSupplier.get(() ->(T)methodInvoker.apply(findFirstAndMakeItAccessible(targetClass, methodName, Classes.retrieveFrom(arguments))));
+		return Executor.get(() ->(T)methodInvoker.apply(findFirstAndMakeItAccessible(targetClass, methodName, Classes.retrieveFrom(arguments))));
 	}
 	
 	public 	<T> T invokeStaticDirect(Class<?> targetClass, String methodName, Object... arguments) {
@@ -233,7 +233,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 				);
 			}
 		);
-		return ThrowingSupplier.get(() -> {
+		return Executor.get(() -> {
 				Method method = (Method)methodHandleBag.getKey();
 				List<Object> argumentList = getFlatArgumentList(method, listSupplier, arguments);
 				return (T)methodHandleBag.getValue().invokeWithArguments(argumentList);
