@@ -906,18 +906,19 @@ public class UseOfStaticComponentsExample {
 ### Configuration
 The configuration of this type of container is done via **burningwave.static.properties** file or via **burningwave.static.default.properties** file: the library searches for the first file and if it does not find it, then it searches for the second file and if neither this one is found then the library sets the default configuration programmatically. **The default configuration loaded programmatically if no configuration file is found is the following**:
 ```properties
-background-executor.all-tasks-monitoring.dead-locked-tasks-killing.enabled=\
-	false
 background-executor.all-tasks-monitoring.enabled=\
 	true
 background-executor.all-tasks-monitoring.interval=\
 	30000
 background-executor.all-tasks-monitoring.logger.enabled=\
-	${background-executor.all-tasks-monitoring.enabled}
-background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-dead-locked=\
+	false
+background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-probable-dead-locked=\
 	300000
+#Possible values are: 'mark as probable dead locked', 'abort' or both comma separated
+background-executor.all-tasks-monitoring.probable-dead-locked-tasks-handling.policy=\
+	mark as probable dead locked
 background-executor.task-creation-tracking.enabled=\
-	true
+	${background-executor.all-tasks-monitoring.enabled}
 iterable-object-helper.default-values-separator=\
 	;
 iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\
