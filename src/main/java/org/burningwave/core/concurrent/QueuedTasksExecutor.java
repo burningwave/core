@@ -151,6 +151,7 @@ public class QueuedTasksExecutor implements Component {
 				terminatingMutex.notifyAll();
 			}
 		});
+		tasksLauncher.setName(name + " launcher");
 		tasksLauncher.setPriority(this.defaultPriority);
 		tasksLauncher.setDaemon(isDaemon);
 		tasksLauncher.start();
@@ -946,6 +947,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public static class Group implements ManagedLogger{
+		String name;
 		Map<String, QueuedTasksExecutor> queuedTasksExecutors;
 		Map<TaskAbst<?, ?>, StackTraceElement[]> waitingTasksAndLastStackTrace;
 		
@@ -955,6 +957,7 @@ public class QueuedTasksExecutor implements Component {
 			Thread.Supplier threadSupplierForLowPriorityTasksExecutor,
 			boolean isDaemon
 		) {
+			this.name = name;
 			queuedTasksExecutors = new HashMap<>();
 			waitingTasksAndLastStackTrace = new HashMap<>();
 			queuedTasksExecutors.put(
@@ -1356,11 +1359,15 @@ public class QueuedTasksExecutor implements Component {
 			}
 			return false;
 		}
-
+		
+		private String getAllTasksMonitoringThreadName() {
+			return Optional.ofNullable(name).map(nm -> nm + " - ").orElseGet(() -> "") + "All tasks monitorer";
+		}
+		
 		public synchronized void startAllTasksMonitoring(
 			AllTasksMonitoringConfig config
 		) {	
-			ThreadHolder.startLooping("All tasks monitorer", true, Thread.MIN_PRIORITY, thread -> {
+			ThreadHolder.startLooping(getAllTasksMonitoringThreadName(), true, Thread.MIN_PRIORITY, thread -> {
 				thread.waitFor(config.getInterval());
 				if (thread.isLooping()) {
 					if (config.isAllTasksLoggerEnabled()) {
@@ -1380,7 +1387,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public void stopAllTasksMonitoring(boolean waitThreadToFinish) {
-			ThreadHolder.stop("All tasks monitorer");
+			ThreadHolder.stop(getAllTasksMonitoringThreadName());
 		}
 		
 		public boolean shutDown(boolean waitForTasksTermination) {

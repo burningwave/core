@@ -178,9 +178,9 @@ public class FileSystemHelper implements Component {
 		deleteOnExit(new File(absolutePath));	
 	}
 	
-	public void startScavenger() {
+	public void startScavenger(String name) {
 		if (scavenger == null) {
-			scavenger = new Scavenger(this, 3600000, 30000);
+			scavenger = new Scavenger(this, name, 3600000, 30000);
 		}
 		if (!scavenger.isAlive()) {
 			scavenger.start();
@@ -214,21 +214,23 @@ public class FileSystemHelper implements Component {
 	}
 	
 	public static class Scavenger implements ManagedLogger, Closeable {
+		private String name;
 		private FileSystemHelper fileSystemHelper;
 		private long deletingInterval;
 		private long waitInterval;
 		private File burningwaveTemporaryFolder;
 		long lastDeletionStartTime;
 		
-		private Scavenger(FileSystemHelper fileSystemHelper, long deletingInterval, long waitInterval) {
+		private Scavenger(FileSystemHelper fileSystemHelper, String name, long deletingInterval, long waitInterval) {
 			this.fileSystemHelper = fileSystemHelper;
 			this.deletingInterval = deletingInterval;
 			this.waitInterval = waitInterval;
 			this.burningwaveTemporaryFolder = fileSystemHelper.getOrCreateBurningwaveTemporaryFolder();
+			this.name = name;
 		}
 
 		public boolean isAlive() {
-			return ThreadHolder.isAlive("Temporary file scavenger");
+			return ThreadHolder.isAlive(name);
 		}
 
 		void pingAndDelete() {
@@ -289,7 +291,7 @@ public class FileSystemHelper implements Component {
 		
 		public void start() {
 			lastDeletionStartTime = -1;
-			ThreadHolder.startLooping("Temporary file scavenger", true, Thread.MIN_PRIORITY, thread -> pingAndDelete());
+			ThreadHolder.startLooping(name, true, Thread.MIN_PRIORITY, thread -> pingAndDelete());
 		}
 
 		long getOrSetPingTime(File pingFile) throws IOException {
@@ -334,7 +336,7 @@ public class FileSystemHelper implements Component {
 		}
 		
 		public void stop() {
-			ThreadHolder.stop("Temporary file scavenger");
+			ThreadHolder.stop(name);
 		}
 		
 		@Override

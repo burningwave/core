@@ -163,7 +163,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				
 				defaultValues.put(
 					Key.NAME,
-					"Burningwave thread supplier"
+					"Thread supplier"
 				);			
 				
 				defaultValues.put(
