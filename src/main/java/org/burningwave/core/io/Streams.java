@@ -69,7 +69,7 @@ public class Streams implements Component {
 		static {
 			Map<String, Object> defaultValues = new HashMap<>();
 			
-			defaultValues.put(Key.BYTE_BUFFER_SIZE, String.valueOf(BufferSize.KILO_BYTE.getValue()));
+			defaultValues.put(Key.BYTE_BUFFER_SIZE, "1024");
 			defaultValues.put(
 				Key.BYTE_BUFFER_ALLOCATION_MODE,
 				"ByteBuffer::allocateDirect"
@@ -100,9 +100,9 @@ public class Streams implements Component {
 			String unit = defaultBufferSize.substring(defaultBufferSize.length()-2);
 			String value = defaultBufferSize.substring(0, defaultBufferSize.length()-2);
 			if (unit.equalsIgnoreCase("KB")) {
-				this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(BufferSize.KILO_BYTE.getValue())).intValue();
+				this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(1024)).intValue();
 			} else if (unit.equalsIgnoreCase("MB")) {
-				this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(BufferSize.MEGA_BYTE.getValue())).intValue();
+				this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(1024 * 1024)).intValue();
 			} else {
 				this.defaultBufferSize = Integer.valueOf(value);
 			};

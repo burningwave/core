@@ -28,25 +28,15 @@
  */
 package org.burningwave.core.jvm;
 
-import java.lang.reflect.Method;
-
 import org.burningwave.core.Component;
 
 public class JVMInfo implements Component {
 
-    private final String osArch;
     private boolean is64Bit;
-    private boolean is64BitHotspot;
     private boolean is32Bit;
-    private boolean compressedRefsEnabled;
-    private final String managementFactoryClass;
-    private final String hotSpotBeanClass;
     private int version;
     
     public JVMInfo() {
-    	osArch = System.getProperty("os.arch");
-    	managementFactoryClass = "java.lang.management.ManagementFactory";
-    	hotSpotBeanClass = "com.sun.management.HotSpotDiagnosticMXBean";
     	init();
     }
     
@@ -70,12 +60,11 @@ public class JVMInfo implements Component {
         	}
         }
         this.version = Integer.parseInt(version);
-        boolean is64Bit = false;
-        boolean is32Bit = false;
-        final String x = System.getProperty("sun.arch.data.model");
-        if (x != null) {
-            is64Bit = x.contains("64");
-            is32Bit = x.contains("32");
+        final String arch = System.getProperty("sun.arch.data.model");
+        String osArch = System.getProperty("os.arch");
+        if (arch != null) {
+        	is64Bit =  arch.contains("64");
+            is32Bit = arch.contains("32");
         } else {
             if (osArch != null && osArch.contains("64")) {
                 is64Bit = true;
@@ -83,40 +72,6 @@ public class JVMInfo implements Component {
                 is64Bit = false;
             }
         }
-        boolean compressedOops = false;
-        boolean is64BitHotspot = false;
-
-        if (is64Bit) {
-            try {
-                final Class<?> beanClazz = Class.forName(hotSpotBeanClass);
-                final Object hotSpotBean = Class.forName(managementFactoryClass).getMethod("getPlatformMXBean", Class.class)
-                        .invoke(null, beanClazz);
-                if (hotSpotBean != null) {
-                    is64BitHotspot = true;
-                    final Method getVMOptionMethod = beanClazz.getMethod("getVMOption", String.class);
-                    try {
-                        final Object vmOption = getVMOptionMethod.invoke(hotSpotBean, "UseCompressedOops");
-                        compressedOops = Boolean.parseBoolean(vmOption.getClass().getMethod("getValue").invoke(vmOption).toString());
-                    } catch (ReflectiveOperationException | RuntimeException e) {
-                        is64BitHotspot = false;
-                    }
-                }
-            } catch (ReflectiveOperationException | RuntimeException e) {
-                is64BitHotspot = false;
-            }
-        }
-        this.is64Bit = is64Bit;
-        this.is64BitHotspot = is64BitHotspot;
-        this.is32Bit = is32Bit;
-        this.compressedRefsEnabled = compressedOops;
-    }
-
-    public boolean isCompressedOopsOffOn64BitHotspot() {
-        return is64BitHotspot && !compressedRefsEnabled;
-    }
-    
-    public boolean isCompressedOopsOffOn64Bit() {
-        return is64Bit && !compressedRefsEnabled;
     }
 
     public boolean is32Bit() {
