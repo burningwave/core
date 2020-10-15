@@ -1306,14 +1306,9 @@ public class QueuedTasksExecutor implements Component {
 					taskThread.getState().equals(Thread.State.WAITING) ||
 					taskThread.getState().equals(Thread.State.TIMED_WAITING))) {
 						StackTraceElement[] previousRegisteredStackTrace = waitingTasksAndLastStackTrace.get(task);
+						StackTraceElement[] currentStackTrace = taskThread.getStackTrace();
 						if (previousRegisteredStackTrace != null) {
-							if (areStrackTracesEquals(previousRegisteredStackTrace, taskThread.getStackTrace())) {
-								StringBuffer log = new StringBuffer(
-									Strings.compile(
-										"Possible deadlock detected for task:{}\n\t",
-										task.getInfoAsString()
-									)
-								);
+							if (areStrackTracesEquals(previousRegisteredStackTrace, currentStackTrace)) {
 								task.markAsProbablyDeadLocked();
 								taskThread.setName("PROBABLY DEAD-LOCKED THREAD -> " + taskThread.getName());
 								if (killDeadLockedTasks) {
@@ -1325,12 +1320,16 @@ public class QueuedTasksExecutor implements Component {
 								}
 								ManagedLoggersRepository.logWarn(
 									() -> this.getClass().getName(),
-									log.toString()
+									"Possible deadlock detected for task:{}\n\t{}",
+									task.getInfoAsString(),
+									Synchronizer.getInfoAsString(true)
 								);
 								Synchronizer.logAllThreadsState(true);
+							} else {
+								waitingTasksAndLastStackTrace.put(task, currentStackTrace);
 							}
 						} else {
-							waitingTasksAndLastStackTrace.put(task, taskThread.getStackTrace());
+							waitingTasksAndLastStackTrace.put(task, currentStackTrace);
 						}
 					}
 				}
@@ -1383,6 +1382,7 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 			lastToBeWaitedFor.shutDown(waitForTasksTermination);
+			stopAllTasksMonitoring(waitForTasksTermination);
 			queuedTasksExecutors.clear();
 			queuedTasksExecutors = null;
 			return true;

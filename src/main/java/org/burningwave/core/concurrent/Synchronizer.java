@@ -159,6 +159,13 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	}
 
 	public void logAllThreadsState(boolean logMutexes) {
+		ManagedLoggersRepository.logInfo(
+			() -> this.getClass().getName(),
+			getInfoAsString(logMutexes)
+		);
+	}
+
+	public String getInfoAsString(boolean getMutexesInfo) {
 		StringBuffer log = new StringBuffer("\n\n");
 		log.append("Current threads state: \n\n");
 		Iterator<Entry<java.lang.Thread, StackTraceElement[]>> allStackTracesItr = java.lang.Thread.getAllStackTraces().entrySet().iterator();
@@ -177,17 +184,14 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 				mutexes.size()
 			)
 		);
-		if (logMutexes) {
+		if (getMutexesInfo) {
 			log.append(
 				":\n" +
 				IterableObjectHelper.toString(mutexes, key -> key, value -> "" + value.clientsCount + " clients", 1)
 			);
 		}
 		log.append("\n");
-		ManagedLoggersRepository.logInfo(
-			() -> this.getClass().getName(),
-			log.toString()
-		);
+		return log.toString();
 	}
 	
 	public java.lang.Thread[] getAllThreads() {
