@@ -101,12 +101,12 @@ public class StaticComponentContainer {
 			
 			defaultValues.put(
 				Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED,
-				true
+				"${" + Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED +"}"
 			);
 			
 			defaultValues.put(
 				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED,
-				"${" + Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED +"}"
+				false
 			);
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);

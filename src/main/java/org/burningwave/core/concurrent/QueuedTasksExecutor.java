@@ -1366,7 +1366,11 @@ public class QueuedTasksExecutor implements Component {
 					if (config.isAllTasksLoggerEnabled()) {
 						logInfo();
 					}
-					checkAndHandleProbableDeadLockedTasks(config.getMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked(), config.isMarkAsProablyDeadLocked(), config.isKillProablyDeadLockedTasks());
+					checkAndHandleProbableDeadLockedTasks(
+						config.getMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked(),
+						config.isMarkAsProablyDeadLocked(),
+						config.isKillProablyDeadLockedTasks()
+					);
 				}
 			});
 		}
