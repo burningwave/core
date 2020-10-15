@@ -69,7 +69,7 @@ public class Streams implements Component {
 		static {
 			Map<String, Object> defaultValues = new HashMap<>();
 			
-			defaultValues.put(Key.BYTE_BUFFER_SIZE, "1Kb");
+			defaultValues.put(Key.BYTE_BUFFER_SIZE, "1024");
 			defaultValues.put(
 				Key.BYTE_BUFFER_ALLOCATION_MODE,
 				"ByteBuffer::allocateDirect"
