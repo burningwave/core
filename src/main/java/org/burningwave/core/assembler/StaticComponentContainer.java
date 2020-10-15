@@ -39,6 +39,8 @@ import java.util.Map;
 import java.util.Random;
 
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.QueuedTasksExecutor.Group.AllTasksMonitoringConfig;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.Properties;
@@ -51,10 +53,10 @@ public class StaticComponentContainer {
 			private static final String HIDE_BANNER_ON_INIT = "static-component-container.hide-banner-on-init";
 			private static final String BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED = "background-executor.task-creation-tracking.enabled";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED = "background-executor.all-tasks-monitoring.enabled";
-			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_DEAD_LOCKED = "background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-dead-locked";
+			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_PROBABLE_DEAD_LOCKED = "background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-probable-dead-locked";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED = "background-executor.all-tasks-monitoring.logger.enabled";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL = "background-executor.all-tasks-monitoring.interval";
-			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_DEAD_LOCKED_TASKS_KILLING_ENABLED = "background-executor.all-tasks-monitoring.dead-locked-tasks-killing.enabled";
+			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY = "background-executor.all-tasks-monitoring.probable-dead-locked-tasks-handling.policy";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED = "synchronizer.all-threads-monitoring.enabled";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";	
 		}
@@ -83,7 +85,7 @@ public class StaticComponentContainer {
 			
 			
 			defaultValues.put(
-				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_DEAD_LOCKED,
+				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_PROBABLE_DEAD_LOCKED,
 				300000
 			);
 
@@ -93,8 +95,8 @@ public class StaticComponentContainer {
 			);	
 			
 			defaultValues.put(
-				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_DEAD_LOCKED_TASKS_KILLING_ENABLED,
-				false
+				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY,
+				"mark as probable dead locked"
 			);	
 			
 			defaultValues.put(
@@ -174,10 +176,7 @@ public class StaticComponentContainer {
 									}
 								} else {
 									BackgroundExecutor.startAllTasksMonitoring(
-										Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL)),
-										Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_DEAD_LOCKED)),
-										Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_DEAD_LOCKED_TASKS_KILLING_ENABLED)),
-										Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED))
+										StaticComponentContainer.retrieveAllTasksMonitoringConfig()
 									);
 								}
 							} else if (keyAsString.equals(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED)) {
@@ -212,8 +211,7 @@ public class StaticComponentContainer {
 						}
 					}
 					
-				};
-				
+				}				
 			}.listenTo(GlobalProperties = propBag.getKey());
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
 			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
@@ -234,10 +232,7 @@ public class StaticComponentContainer {
 			}
 			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED))) {
 				BackgroundExecutor.startAllTasksMonitoring(
-					Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL)),
-					Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_DEAD_LOCKED)),
-					Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_DEAD_LOCKED_TASKS_KILLING_ENABLED)),
-					Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED))
+					retrieveAllTasksMonitoringConfig()
 				);
 			}			
 			
@@ -341,6 +336,21 @@ public class StaticComponentContainer {
 		}
 		
 	}
+	
+	private static final AllTasksMonitoringConfig retrieveAllTasksMonitoringConfig() {
+		String probablyDeadLockedThreadsHandlingPolicy = GlobalProperties.resolveStringValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY);
+		return new QueuedTasksExecutor.Group.AllTasksMonitoringConfig().setAllTasksLoggerEnabled(
+			Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED))
+		).setInterval(
+			Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL))
+		).setMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked(
+			Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_PROBABLE_DEAD_LOCKED))
+		).setMarkAsProbableDeadLocked(	
+			probablyDeadLockedThreadsHandlingPolicy.contains("mark as probable dead locked")
+		).setKillProbableDeadLockedTasks(
+			probablyDeadLockedThreadsHandlingPolicy.contains("abort")
+		);
+	};
 	
 	static void showBanner() {
 		List<String> bannerList = Arrays.asList(
