@@ -50,7 +50,10 @@ import org.burningwave.core.iterable.Properties.Event;
 public class StaticComponentContainer {
 	public static class Configuration {
 		public static class Key {
-			private static final String HIDE_BANNER_ON_INIT = "static-component-container.hide-banner-on-init";
+			
+			private static final String PREFIX_FOR_NAMED_ELEMENTS = "prefix-for-named-elements";
+			private static final String HIDE_BANNER_ON_INIT = "hide-banner-on-init";
+			private static final String BACKGROUND_EXECUTOR_NAME = "background-executor.name";
 			private static final String BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED = "background-executor.task-creation-tracking.enabled";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED = "background-executor.all-tasks-monitoring.enabled";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_PROBABLE_DEAD_LOCKED = "background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-probable-dead-locked";
@@ -66,6 +69,11 @@ public class StaticComponentContainer {
 		static {
 			Map<String, Object> defaultValues =  new HashMap<>(); 
 			
+			defaultValues.put(
+				Key.PREFIX_FOR_NAMED_ELEMENTS, 
+				"Burningwave"
+			);
+			
 			defaultValues.put(Key.HIDE_BANNER_ON_INIT, false);
 			
 			defaultValues.put(
@@ -76,6 +84,16 @@ public class StaticComponentContainer {
 			defaultValues.put(
 				Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL,
 				90000
+			);
+			
+			defaultValues.put(
+				org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.NAME, 
+				"${" + Key.PREFIX_FOR_NAMED_ELEMENTS + "}" + " - Thread supplier"
+			);
+			
+			defaultValues.put(
+				Key.BACKGROUND_EXECUTOR_NAME, 
+				"${" + Key.PREFIX_FOR_NAMED_ELEMENTS + "}" + " - Background executor"
 			);
 			
 			defaultValues.put(
@@ -150,7 +168,6 @@ public class StaticComponentContainer {
 			Objects = org.burningwave.core.Objects.create();
 			Resources = new org.burningwave.core.io.Resources();
 			Properties properties = new Properties();
-			properties.putAll(Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.iterable.IterableObjectHelper.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
@@ -219,7 +236,7 @@ public class StaticComponentContainer {
 			);
 			ThreadHolder = new org.burningwave.core.concurrent.Thread.Holder(ThreadSupplier);
 			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create(
-				"Background executor",
+				GlobalProperties.resolveStringValue(Configuration.Key.BACKGROUND_EXECUTOR_NAME),
 				ThreadSupplier,
 				ThreadSupplier, 
 				ThreadSupplier,
@@ -318,7 +335,7 @@ public class StaticComponentContainer {
 					);
 				})
 			);
-			FileSystemHelper.startScavenger();
+			FileSystemHelper.startScavenger(GlobalProperties.resolveStringValue(Configuration.Key.PREFIX_FOR_NAMED_ELEMENTS) + " - Temporary file scavenger");
 			if (Objects.toBoolean(
 				GlobalProperties.resolveValue(
 					Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED
