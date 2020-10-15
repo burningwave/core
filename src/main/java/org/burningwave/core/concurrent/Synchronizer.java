@@ -52,6 +52,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	String name;
 	
 	private Synchronizer(String name) {
+		this.name = name;
 		mutexes = new ConcurrentHashMap<>();
 	}
 	
