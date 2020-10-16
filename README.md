@@ -45,7 +45,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>8.1.0</version>
+    <version>8.2.0</version>
 </dependency>
 ```
 
@@ -914,11 +914,15 @@ background-executor.all-tasks-monitoring.logger.enabled=\
 	false
 background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-probable-dead-locked=\
 	300000
-#Possible values are: 'mark as probable dead locked', 'abort' or both comma separated
+#Other possible values are: 'mark as probable dead locked', 'abort' or both comma separated
 background-executor.all-tasks-monitoring.probable-dead-locked-tasks-handling.policy=\
-	mark as probable dead locked
+	log only
 background-executor.task-creation-tracking.enabled=\
 	${background-executor.all-tasks-monitoring.enabled}
+group-name-for-named-elements=\
+	Burningwave
+hide-banner-on-init=\
+	false
 iterable-object-helper.default-values-separator=\
 	;
 iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\
@@ -937,8 +941,6 @@ managed-logger.repository.logging.warn.disabled-for=\
 	org.burningwave.core.classes.MemoryClassLoader;\
 	org.burningwave.core.classes.PathScannerClassLoader;\
 	org.burningwave.core.classes.SearchContext;
-static-component-container.hide-banner-on-init=\
-	false
 streams.default-buffer-size=\
 	1024
 streams.default-byte-buffer-allocation-mode=\
@@ -949,16 +951,14 @@ synchronizer.all-threads-monitoring.interval=\
 	90000
 thread-supplier.default-daemon-flag-value=\
 	true
+thread-supplier.max-detached-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value=\
+	30000
+thread-supplier.max-detached-threads-count.increasing-step=\
+	8
 thread-supplier.max-poolable-threads-count=\
 	autodetect
 thread-supplier.max-temporarily-threads-count=\
 	autodetect
-thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value=\
-	30000
-thread-supplier.max-temporarily-threads-count.increasing-step=\
-	8
-thread-supplier.name=\
-	Burningwave thread supplier
 thread-supplier.poolable-thread-request-timeout=\
 	6000
 ```
