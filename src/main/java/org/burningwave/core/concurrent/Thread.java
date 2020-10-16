@@ -116,7 +116,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		return looping;
 	}
 	
-	void waitFor(long millis) {
+	public void waitFor(long millis) {
 		synchronized (this) {
 			try {
 				wait(millis);
