@@ -3,7 +3,7 @@
 
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
-	<version>8.2.1-SNAPSHOT</version>
+	<version>8.2.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	
 	<name>Burningwave Core</name>
