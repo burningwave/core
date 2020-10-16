@@ -116,7 +116,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		return looping;
 	}
 	
-	void waitFor(long millis) {
+	public void waitFor(long millis) {
 		synchronized (this) {
 			try {
 				wait(millis);
@@ -494,16 +494,24 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			this.threads = new ConcurrentHashMap<>();
 		}
 		
+		public String startLooping(boolean isDaemon, int priority, Consumer<Thread> executable) {
+			return start(null, true, isDaemon, priority, executable).getName();
+		}
+		
+		public String start(boolean isDaemon, int priority, Consumer<Thread> executable) {
+			return start(null, false, isDaemon, priority, executable).getName();
+		}
+		
 		public void startLooping(String threadName, boolean isDaemon, int priority, Consumer<Thread> executable) {
-			start(threadName, isDaemon, true, priority, executable);
+			start(threadName, true, isDaemon, priority, executable);
 		}
 		
 		public void start(String threadName, boolean isDaemon, int priority, Consumer<Thread> executable) {
-			start(threadName, isDaemon, true, priority, executable);
+			start(threadName, false, isDaemon, priority, executable);
 		}
 		
-		private void start(String threadName, boolean isLooper, boolean isDaemon, int priority, Consumer<Thread> executable) {
-			Synchronizer.execute(threadName, () -> {
+		private Thread start(String threadName, boolean isLooper, boolean isDaemon, int priority, Consumer<Thread> executable) {
+			return Synchronizer.execute(threadName, () -> {
 				Thread thr = threads.get(threadName);
 				if (thr != null) {
 					stop(threadName);
@@ -515,11 +523,14 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						logError(exc);
 					}
 				}, isLooper);
-				thr.setName(threadName);
+				if (threadName != null) {
+					thr.setName(threadName);
+				}
 				thr.setPriority(priority);
 				thr.setDaemon(isDaemon);
 				threads.put(threadName, thr);
 				thr.start();
+				return thr;
 			});
 		}
 		

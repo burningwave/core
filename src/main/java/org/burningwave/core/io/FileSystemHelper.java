@@ -289,16 +289,14 @@ public class FileSystemHelper implements Component {
 					}
 				}
 			}
-			try {
-				Thread.sleep(waitInterval);
-			} catch (Throwable exc) {
-				logError("Exception occurred: " + exc.getMessage());
-			}
 		}
 		
 		public void start() {
 			lastDeletionStartTime = -1;
-			ThreadHolder.startLooping(name, true, Thread.MIN_PRIORITY, thread -> pingAndDelete());
+			ThreadHolder.startLooping(name, true, Thread.MIN_PRIORITY, thread -> {
+				pingAndDelete();
+				thread.waitFor(waitInterval);
+			});
 		}
 
 		long getOrSetPingTime(File pingFile) throws IOException {
