@@ -48,7 +48,6 @@ import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
 
 public class Thread extends java.lang.Thread implements ManagedLogger {
-
 	
 	Consumer<Thread> originalExecutable;
 	Consumer<Thread> executable;
@@ -146,13 +145,12 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	public static class Supplier {
 		public static class Configuration {
 			public static class Key {
-				public static final String NAME = "thread-supplier.name";
 				public static final String MAX_POOLABLE_THREADS_COUNT = "thread-supplier.max-poolable-threads-count";
 				public static final String MAX_TEMPORARILY_THREADS_COUNT = "thread-supplier.max-temporarily-threads-count";
 				public static final String DEFAULT_DAEMON_FLAG_VALUE = "thread-supplier.default-daemon-flag-value";
 				public static final String POOLABLE_THREAD_REQUEST_TIMEOUT = "thread-supplier.poolable-thread-request-timeout";
-				public static final String MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE = "thread-supplier.max-temporarily-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value";
-				public static final String MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP = "thread-supplier.max-temporarily-threads-count.increasing-step";                        
+				public static final String MAX_DETACHED_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE = "thread-supplier.max-detached-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value";
+				public static final String MAX_DETACHED_THREADS_COUNT_INCREASING_STEP = "thread-supplier.max-detached-threads-count.increasing-step";                        
 				
 			}
 			
@@ -160,11 +158,6 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			
 			static {
 				Map<String, Object> defaultValues =  new HashMap<>(); 
-				
-				defaultValues.put(
-					Key.NAME,
-					"Thread supplier"
-				);			
 				
 				defaultValues.put(
 					Key.MAX_POOLABLE_THREADS_COUNT,
@@ -187,12 +180,12 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				);				
 				
 				defaultValues.put(
-					Key.MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE,
+					Key.MAX_DETACHED_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE,
 					30000
 				);
 				
 				defaultValues.put(
-					Key.MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP,
+					Key.MAX_DETACHED_THREADS_COUNT_INCREASING_STEP,
 					8
 				);
 				
@@ -206,18 +199,19 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		private int maxPoolableThreadsCount;
 		private int inititialMaxThreadsCount;
 		private int maxThreadsCount;
-		private int maxTemporarilyThreadsCountIncreasingStep;
+		private int maxDetachedThreadsCountIncreasingStep;
 		private long poolableThreadRequestTimeout;
-		private long elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxTemporarilyThreadsCount;
+		private long elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxDetachedThreadsCount;
 		private Collection<Thread> runningThreads;
 		private Collection<Thread> poolableSleepingThreads;
-		private long timeOfLastIncreaseOfMaxTemporarilyThreadsCount;
+		private long timeOfLastIncreaseOfMaxDetachedThreadsCount;
 		private boolean daemon;
 		
 		Supplier (
+			String name,
 			Properties config
 		) {			
-			this.name = IterableObjectHelper.resolveStringValue(config, Configuration.Key.NAME);
+			this.name = name;
 			this.daemon = Objects.toBoolean(IterableObjectHelper.resolveValue(config, Configuration.Key.DEFAULT_DAEMON_FLAG_VALUE));
 			this.runningThreads = ConcurrentHashMap.newKeySet();
 			this.poolableSleepingThreads = ConcurrentHashMap.newKeySet();
@@ -233,24 +227,24 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				throw new IllegalArgumentException("maxPoolableThreadsCount must be greater than zero");
 			}
 			
-			int maxTemporarilyThreadsCountAsInt;			
+			int maxDetachedThreadsCountAsInt;			
 			try {
-				maxTemporarilyThreadsCountAsInt = Objects.toInt(IterableObjectHelper.resolveValue(config, Configuration.Key.MAX_TEMPORARILY_THREADS_COUNT));
+				maxDetachedThreadsCountAsInt = Objects.toInt(IterableObjectHelper.resolveValue(config, Configuration.Key.MAX_TEMPORARILY_THREADS_COUNT));
 			} catch (Throwable exc) {
-				maxTemporarilyThreadsCountAsInt = 
+				maxDetachedThreadsCountAsInt = 
 					((int)(Runtime.getRuntime().availableProcessors() * 3 * multiplier)) - 
 					((int)(Runtime.getRuntime().availableProcessors() * multiplier));
 			}			
-			if (maxTemporarilyThreadsCountAsInt <= 0) {
-				maxTemporarilyThreadsCountAsInt = Integer.MAX_VALUE - maxPoolableThreadsCountAsInt;
+			if (maxDetachedThreadsCountAsInt <= 0) {
+				maxDetachedThreadsCountAsInt = Integer.MAX_VALUE - maxPoolableThreadsCountAsInt;
 			}
 			this.maxPoolableThreadsCount = maxPoolableThreadsCountAsInt;
-			this.inititialMaxThreadsCount = this.maxThreadsCount = maxPoolableThreadsCountAsInt + maxTemporarilyThreadsCountAsInt;
+			this.inititialMaxThreadsCount = this.maxThreadsCount = maxPoolableThreadsCountAsInt + maxDetachedThreadsCountAsInt;
 			this.poolableThreadRequestTimeout = Objects.toLong(IterableObjectHelper.resolveValue(config, Configuration.Key.POOLABLE_THREAD_REQUEST_TIMEOUT));
-			this.elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxTemporarilyThreadsCount =
-				Objects.toLong(IterableObjectHelper.resolveValue(config, Configuration.Key.MAX_TEMPORARILY_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE));
-			this.maxTemporarilyThreadsCountIncreasingStep = Objects.toInt(IterableObjectHelper.resolveValue(config, Configuration.Key.MAX_TEMPORARILY_THREADS_COUNT_INCREASING_STEP));
-			this.timeOfLastIncreaseOfMaxTemporarilyThreadsCount = Long.MAX_VALUE;
+			this.elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxDetachedThreadsCount =
+				Objects.toLong(IterableObjectHelper.resolveValue(config, Configuration.Key.MAX_DETACHED_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE));
+			this.maxDetachedThreadsCountIncreasingStep = Objects.toInt(IterableObjectHelper.resolveValue(config, Configuration.Key.MAX_DETACHED_THREADS_COUNT_INCREASING_STEP));
+			this.timeOfLastIncreaseOfMaxDetachedThreadsCount = Long.MAX_VALUE;
 		}
 		
 		public Thread getOrCreate(String name) {
@@ -282,21 +276,21 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							long waitElapsedTime = endWaitTime - startWaitTime;
 							if (waitElapsedTime < poolableThreadRequestTimeout) {
 								if (inititialMaxThreadsCount < maxThreadsCount &&
-									(System.currentTimeMillis() - timeOfLastIncreaseOfMaxTemporarilyThreadsCount) > 
-										elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxTemporarilyThreadsCount
+									(System.currentTimeMillis() - timeOfLastIncreaseOfMaxDetachedThreadsCount) > 
+										elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxDetachedThreadsCount
 								) {
-									maxThreadsCount -= (maxTemporarilyThreadsCountIncreasingStep / 2);
+									maxThreadsCount -= (maxDetachedThreadsCountIncreasingStep / 2);
 									ManagedLoggersRepository.logInfo(
 										() -> this.getClass().getName(), 
 										"{}: decreasing maxTemporarilyThreadsCount to {}", 
 										Thread.currentThread(), (maxThreadsCount - maxPoolableThreadsCount)
 									);
-									timeOfLastIncreaseOfMaxTemporarilyThreadsCount = Long.MAX_VALUE;
+									timeOfLastIncreaseOfMaxDetachedThreadsCount = Long.MAX_VALUE;
 								}
 								return getOrCreate(requestCount);
 							} else {
-								timeOfLastIncreaseOfMaxTemporarilyThreadsCount = System.currentTimeMillis();
-								maxThreadsCount += maxTemporarilyThreadsCountIncreasingStep;
+								timeOfLastIncreaseOfMaxDetachedThreadsCount = System.currentTimeMillis();
+								maxThreadsCount += maxDetachedThreadsCountIncreasingStep;
 								ManagedLoggersRepository.logInfo(
 									() -> this.getClass().getName(), 
 									"{} waited for {}ms: maxTemporarilyThreadsCount will be temporarily increased to {} for preventing dead lock",
@@ -310,7 +304,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					}
 				}
 			} else if (poolableThreadsCount >= maxPoolableThreadsCount) {
-				return createTemporaryThread();
+				return createDetachedThread();
 			}
 			synchronized (poolableSleepingThreads) {
 				if (poolableThreadsCount >= maxPoolableThreadsCount) {
@@ -391,7 +385,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 		}
 
-		public Thread createTemporaryThread() {
+		public Thread createDetachedThread() {
 			return new Thread(this, ++threadsCount) {
 				@Override
 				public void run() {
@@ -467,11 +461,12 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 
 		public static Supplier create(
+			String name,
 			java.util.Properties config,
 			boolean undestroyable
 		) {
 			if (undestroyable) {
-				return new Supplier(config) {
+				return new Supplier(name, config) {
 					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();					
 					@Override
 					public void shutDownAll() {
@@ -481,7 +476,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					}
 				};
 			} else {
-				return new Supplier(config);
+				return new Supplier(name, config);
 			}
 		}
 	}
@@ -513,7 +508,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				if (thr != null) {
 					stop(threadName);
 				}
-				thr = threadSupplier.createTemporaryThread().setExecutable(thread -> {
+				thr = threadSupplier.createDetachedThread().setExecutable(thread -> {
 					try {
 						executable.accept(thread);
 					} catch (Throwable exc) {

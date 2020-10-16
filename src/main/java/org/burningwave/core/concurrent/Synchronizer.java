@@ -152,12 +152,12 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		mutexes = null;
 	}
 	
-	private String getAllThreadsMonitoringThreadName() {
+	private String getAllThreadsMonitoringName() {
 		return Optional.ofNullable(name).map(nm -> nm + " - ").orElseGet(() -> "") + "All threads state logger";
 	}
 	
 	public synchronized void startAllThreadsMonitoring(Long interval) {
-		ThreadHolder.startLooping(getAllThreadsMonitoringThreadName(), true, Thread.MIN_PRIORITY, thread -> {
+		ThreadHolder.startLooping(getAllThreadsMonitoringName(), true, Thread.MIN_PRIORITY, thread -> {
 			thread.waitFor(interval);
 			if (thread.isLooping()) {
 				logAllThreadsState(false);
@@ -210,7 +210,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	}
 	
 	public synchronized void stopLoggingAllThreadsState(boolean waitThreadToFinish) {
-		ThreadHolder.stop(getAllThreadsMonitoringThreadName(), waitThreadToFinish);
+		ThreadHolder.stop(getAllThreadsMonitoringName(), waitThreadToFinish);
 	}
 	
 	public static class Mutex  {
