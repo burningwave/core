@@ -104,7 +104,7 @@ public class StaticComponentContainer {
 			
 			defaultValues.put(
 				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY,
-				"mark as probable dead locked"
+				"log only"
 			);	
 			
 			defaultValues.put(
