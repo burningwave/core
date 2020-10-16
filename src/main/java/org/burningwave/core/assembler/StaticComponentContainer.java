@@ -178,7 +178,7 @@ public class StaticComponentContainer {
 								toBeReplaced.close();
 							} else if (keyAsString.startsWith(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED.substring(0, Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED.lastIndexOf(".")))) {
 								if (keyAsString.equals(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED)) {
-									if (!Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED))) {
+									if (!Objects.toBoolean(config.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED))) {
 										BackgroundExecutor.stopAllTasksMonitoring();
 									}
 								} else {
@@ -189,16 +189,16 @@ public class StaticComponentContainer {
 							} else if (keyAsString.equals(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED)) {
 								BackgroundExecutor.setTasksCreationTrackingFlag(
 									Objects.toBoolean(
-										GlobalProperties.resolveValue(
+										config.resolveValue(
 											Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED
 										)
 									)
 								);
 							} else if (keyAsString.equals(Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED)) {
-								if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED))) {
+								if (Objects.toBoolean(config.resolveValue(Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED))) {
 									Synchronizer.startAllThreadsMonitoring(
 										Objects.toLong(
-											GlobalProperties.resolveValue(
+											config.resolveValue(
 												Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL
 											)
 										)
@@ -209,7 +209,7 @@ public class StaticComponentContainer {
 							} else if (keyAsString.equals(Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL)) {
 								Synchronizer.startAllThreadsMonitoring(
 									Objects.toLong(
-										GlobalProperties.resolveValue(
+										config.resolveValue(
 											Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL
 										)
 									)
