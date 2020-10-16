@@ -37,6 +37,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ThreadHold
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -48,14 +49,16 @@ import org.burningwave.core.function.ThrowingSupplier;
 @SuppressWarnings("unused")
 public class Synchronizer implements AutoCloseable, ManagedLogger {
 	Map<String, Mutex> mutexes;
+	String name;
 	
-	private Synchronizer() {
+	private Synchronizer(String name) {
+		this.name = name;
 		mutexes = new ConcurrentHashMap<>();
 	}
 	
-	public static Synchronizer create(boolean undestroyable) {
+	public static Synchronizer create(String name, boolean undestroyable) {
 		if (undestroyable) {
-			return new Synchronizer() {
+			return new Synchronizer(name) {
 				StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
 				@Override
 				public void close() {
@@ -65,7 +68,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 				}
 			};
 		} else {
-			return new Synchronizer();
+			return new Synchronizer(name);
 		}
 	}
 	
@@ -149,8 +152,12 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		mutexes = null;
 	}
 	
+	private String getAllThreadsMonitoringName() {
+		return Optional.ofNullable(name).map(nm -> nm + " - ").orElseGet(() -> "") + "All threads state logger";
+	}
+	
 	public synchronized void startAllThreadsMonitoring(Long interval) {
-		ThreadHolder.startLooping("All threads state logger", true, Thread.MIN_PRIORITY, thread -> {
+		ThreadHolder.startLooping(getAllThreadsMonitoringName(), true, Thread.MIN_PRIORITY, thread -> {
 			thread.waitFor(interval);
 			if (thread.isLooping()) {
 				logAllThreadsState(false);
@@ -203,7 +210,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	}
 	
 	public synchronized void stopLoggingAllThreadsState(boolean waitThreadToFinish) {
-		ThreadHolder.stop("All threads state logger", waitThreadToFinish);
+		ThreadHolder.stop(getAllThreadsMonitoringName(), waitThreadToFinish);
 	}
 	
 	public static class Mutex  {

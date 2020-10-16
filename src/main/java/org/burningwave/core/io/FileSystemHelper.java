@@ -43,6 +43,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.burningwave.core.Closeable;
@@ -53,16 +54,18 @@ import org.burningwave.core.function.Executor;
 
 
 public class FileSystemHelper implements Component {
+	private String name;
 	private File mainTemporaryFolder;
 	private String id;
 	private Scavenger scavenger;
 	
-	private FileSystemHelper() {
+	private FileSystemHelper(String name) {
+		this.name = name;
 		id = UUID.randomUUID().toString() + "_" + System.currentTimeMillis();
 	}
 	
-	public static FileSystemHelper create() {
-		return new FileSystemHelper();
+	public static FileSystemHelper create(String name) {
+		return new FileSystemHelper(name);
 	}
 	
 	public void clearBurningwaveTemporaryFolder() {
@@ -178,13 +181,17 @@ public class FileSystemHelper implements Component {
 		deleteOnExit(new File(absolutePath));	
 	}
 	
-	public void startScavenger(String name) {
+	public void startScavenger() {
 		if (scavenger == null) {
-			scavenger = new Scavenger(this, name, 3600000, 30000);
+			scavenger = new Scavenger(this, getTemporaryFileScavengerThreadName(), 3600000, 30000);
 		}
 		if (!scavenger.isAlive()) {
 			scavenger.start();
 		}
+	}
+	
+	private String getTemporaryFileScavengerThreadName() {
+		return Optional.ofNullable(name).map(nm -> nm + " - ").orElseGet(() -> "") + "Temporary file scavenger";
 	}
 	
 	public void stopScavenger() {

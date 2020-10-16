@@ -110,7 +110,7 @@ public class QueuedTasksExecutor implements Component {
 		supended = Boolean.FALSE;
 		terminated = Boolean.FALSE;
 		executedTasksCount = 0;
-		tasksLauncher = threadSupplier.createTemporaryThread().setExecutable(thread -> {
+		tasksLauncher = threadSupplier.createDetachedThread().setExecutable(thread -> {
 			while (!terminated) {
 				if (checkAndNotifySuspension()) {
 					continue;
@@ -1359,11 +1359,15 @@ public class QueuedTasksExecutor implements Component {
 			}
 			return false;
 		}
-
+		
+		private String getAllTasksMonitoringName() {
+			return Optional.ofNullable(name).map(nm -> nm + " - ").orElseGet(() -> "") + "All tasks monitorer";
+		}
+		
 		public synchronized void startAllTasksMonitoring(
 			AllTasksMonitoringConfig config
 		) {	
-			ThreadHolder.startLooping(name + " - All tasks monitorer", true, Thread.MIN_PRIORITY, thread -> {
+			ThreadHolder.startLooping(getAllTasksMonitoringName(), true, Thread.MIN_PRIORITY, thread -> {
 				thread.waitFor(config.getInterval());
 				if (thread.isLooping()) {
 					if (config.isAllTasksLoggerEnabled()) {
@@ -1383,7 +1387,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public void stopAllTasksMonitoring(boolean waitThreadToFinish) {
-			ThreadHolder.stop(name + " - All tasks monitorer");
+			ThreadHolder.stop(getAllTasksMonitoringName());
 		}
 		
 		public boolean shutDown(boolean waitForTasksTermination) {

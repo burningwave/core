@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 
 import org.burningwave.core.ManagedLogger;
@@ -51,9 +52,8 @@ public class StaticComponentContainer {
 	public static class Configuration {
 		public static class Key {
 			
-			private static final String PREFIX_FOR_NAMED_ELEMENTS = "prefix-for-named-elements";
+			private static final String GROUP_NAME_FOR_NAMED_ELEMENTS = "group-name-for-named-elements";
 			private static final String HIDE_BANNER_ON_INIT = "hide-banner-on-init";
-			private static final String BACKGROUND_EXECUTOR_NAME = "background-executor.name";
 			private static final String BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED = "background-executor.task-creation-tracking.enabled";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED = "background-executor.all-tasks-monitoring.enabled";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_PROBABLE_DEAD_LOCKED = "background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-probable-dead-locked";
@@ -70,7 +70,7 @@ public class StaticComponentContainer {
 			Map<String, Object> defaultValues =  new HashMap<>(); 
 			
 			defaultValues.put(
-				Key.PREFIX_FOR_NAMED_ELEMENTS, 
+				Key.GROUP_NAME_FOR_NAMED_ELEMENTS, 
 				"Burningwave"
 			);
 			
@@ -84,16 +84,6 @@ public class StaticComponentContainer {
 			defaultValues.put(
 				Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL,
 				90000
-			);
-			
-			defaultValues.put(
-				org.burningwave.core.concurrent.Thread.Supplier.Configuration.Key.NAME, 
-				"${" + Key.PREFIX_FOR_NAMED_ELEMENTS + "}" + " - Thread supplier"
-			);
-			
-			defaultValues.put(
-				Key.BACKGROUND_EXECUTOR_NAME, 
-				"${" + Key.PREFIX_FOR_NAMED_ELEMENTS + "}" + " - Background executor"
 			);
 			
 			defaultValues.put(
@@ -114,7 +104,7 @@ public class StaticComponentContainer {
 			
 			defaultValues.put(
 				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY,
-				"mark as probable dead locked"
+				"log only"
 			);	
 			
 			defaultValues.put(
@@ -232,18 +222,23 @@ public class StaticComponentContainer {
 			}.listenTo(GlobalProperties = propBag.getKey());
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
 			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
-				GlobalProperties, true
+				getName("Thread supplier"),
+				GlobalProperties,
+				true
 			);
 			ThreadHolder = new org.burningwave.core.concurrent.Thread.Holder(ThreadSupplier);
 			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create(
-				GlobalProperties.resolveStringValue(Configuration.Key.BACKGROUND_EXECUTOR_NAME),
+				getName("Background executor"),
 				ThreadSupplier,
 				ThreadSupplier, 
 				ThreadSupplier,
 				true,
 				true
 			);
-			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(true);
+			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(
+				Optional.ofNullable(GlobalProperties.resolveStringValue(Configuration.Key.GROUP_NAME_FOR_NAMED_ELEMENTS)).map(nm -> nm + " - ").orElseGet(() -> "") + "Synchronizer", 
+				true
+			);
 			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED))) {
 				BackgroundExecutor.setTasksCreationTrackingFlag(true);
 			}
@@ -276,7 +271,7 @@ public class StaticComponentContainer {
 				GlobalProperties.toPrettyString(2)
 			);
 			Paths = org.burningwave.core.Strings.Paths.create();
-			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create();
+			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create(getName("File system helper"));
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
 			ByteBufferHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler.create();
 			Streams = org.burningwave.core.io.Streams.create(GlobalProperties);
@@ -298,7 +293,7 @@ public class StaticComponentContainer {
 			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
 			Runtime.getRuntime().addShutdownHook(
-				ThreadSupplier.getOrCreate("Resources releaser").setExecutable(thread -> {
+				ThreadSupplier.getOrCreate(Optional.ofNullable(GlobalProperties.resolveStringValue(Configuration.Key.GROUP_NAME_FOR_NAMED_ELEMENTS)).map(nm -> nm + " - ").orElseGet(() -> "") + "Resources releaser").setExecutable(thread -> {
 					Executor.runAndLogExceptions(
 						() -> {
 							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "... Waiting for all tasks ending before closing all component containers");
@@ -335,7 +330,7 @@ public class StaticComponentContainer {
 					);
 				})
 			);
-			FileSystemHelper.startScavenger(GlobalProperties.resolveStringValue(Configuration.Key.PREFIX_FOR_NAMED_ELEMENTS) + " - Temporary file scavenger");
+			FileSystemHelper.startScavenger();
 			if (Objects.toBoolean(
 				GlobalProperties.resolveValue(
 					Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED
@@ -352,6 +347,10 @@ public class StaticComponentContainer {
 			throw exc;
 		}
 		
+	}
+
+	private static String getName(String simpleName) {
+		return Optional.ofNullable(GlobalProperties.resolveStringValue(Configuration.Key.GROUP_NAME_FOR_NAMED_ELEMENTS)).map(nm -> nm + " - ").orElseGet(() -> "") + simpleName;
 	}
 	
 	private static final AllTasksMonitoringConfig retrieveAllTasksMonitoringConfig() {
