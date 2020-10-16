@@ -98,7 +98,6 @@ public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeab
 							this.defaultClassLoader = (C)defaultClassLoaderOrDefaultClassLoaderSupplier;
 							((MemoryClassLoader)defaultClassLoader).register(this);
 							((MemoryClassLoader)defaultClassLoader).register(client);
-							Synchronizer.removeIfUnused(mutex);
 							return defaultClassLoader;
 						} else if (defaultClassLoaderOrDefaultClassLoaderSupplier instanceof Supplier) {
 							this.defaultClassLoaderSupplier = (Supplier<C>) defaultClassLoaderOrDefaultClassLoaderSupplier;
