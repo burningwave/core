@@ -951,13 +951,13 @@ synchronizer.all-threads-monitoring.interval=\
 	90000
 thread-supplier.default-daemon-flag-value=\
 	true
+thread-supplier.max-detached-threads-count=\
+	autodetect
 thread-supplier.max-detached-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value=\
 	30000
 thread-supplier.max-detached-threads-count.increasing-step=\
 	8
 thread-supplier.max-poolable-threads-count=\
-	autodetect
-thread-supplier.max-detached-threads-count=\
 	autodetect
 thread-supplier.poolable-thread-request-timeout=\
 	6000
