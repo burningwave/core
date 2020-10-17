@@ -146,7 +146,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		public static class Configuration {
 			public static class Key {
 				public static final String MAX_POOLABLE_THREADS_COUNT = "thread-supplier.max-poolable-threads-count";
-				public static final String MAX_TEMPORARILY_THREADS_COUNT = "thread-supplier.max-temporarily-threads-count";
+				public static final String MAX_DETACHED_THREADS_COUNT = "thread-supplier.max-detached-threads-count";
 				public static final String DEFAULT_DAEMON_FLAG_VALUE = "thread-supplier.default-daemon-flag-value";
 				public static final String POOLABLE_THREAD_REQUEST_TIMEOUT = "thread-supplier.poolable-thread-request-timeout";
 				public static final String MAX_DETACHED_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE = "thread-supplier.max-detached-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value";
@@ -165,7 +165,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				);
 				
 				defaultValues.put(
-					Key.MAX_TEMPORARILY_THREADS_COUNT,
+					Key.MAX_DETACHED_THREADS_COUNT,
 					"autodetect"
 				);
 				
@@ -229,7 +229,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			
 			int maxDetachedThreadsCountAsInt;			
 			try {
-				maxDetachedThreadsCountAsInt = Objects.toInt(IterableObjectHelper.resolveValue(config, Configuration.Key.MAX_TEMPORARILY_THREADS_COUNT));
+				maxDetachedThreadsCountAsInt = Objects.toInt(IterableObjectHelper.resolveValue(config, Configuration.Key.MAX_DETACHED_THREADS_COUNT));
 			} catch (Throwable exc) {
 				maxDetachedThreadsCountAsInt = 
 					((int)(Runtime.getRuntime().availableProcessors() * 3 * multiplier)) - 
