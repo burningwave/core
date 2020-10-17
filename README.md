@@ -957,7 +957,7 @@ thread-supplier.max-detached-threads-count.increasing-step=\
 	8
 thread-supplier.max-poolable-threads-count=\
 	autodetect
-thread-supplier.max-temporarily-threads-count=\
+thread-supplier.max-detached-threads-count=\
 	autodetect
 thread-supplier.poolable-thread-request-timeout=\
 	6000
