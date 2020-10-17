@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/8)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/310916164)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/312022383)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea%2C%2016ea-blueviolet)](https://github.com/burningwave/core/actions/runs/310916164)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea%2C%2016ea-blueviolet)](https://github.com/burningwave/core/actions/runs/312022383)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -951,13 +951,13 @@ synchronizer.all-threads-monitoring.interval=\
 	90000
 thread-supplier.default-daemon-flag-value=\
 	true
+thread-supplier.max-detached-threads-count=\
+	autodetect
 thread-supplier.max-detached-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value=\
 	30000
 thread-supplier.max-detached-threads-count.increasing-step=\
 	8
 thread-supplier.max-poolable-threads-count=\
-	autodetect
-thread-supplier.max-detached-threads-count=\
 	autodetect
 thread-supplier.poolable-thread-request-timeout=\
 	6000
