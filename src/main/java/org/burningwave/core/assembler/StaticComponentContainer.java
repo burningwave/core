@@ -362,9 +362,9 @@ public class StaticComponentContainer {
 		).setMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked(
 			Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_PROBABLE_DEAD_LOCKED))
 		).setMarkAsProbableDeadLocked(	
-			probablyDeadLockedThreadsHandlingPolicy.contains("mark as probable dead locked")
+			probablyDeadLockedThreadsHandlingPolicy.toLowerCase().contains("mark as probable dead locked")
 		).setKillProbableDeadLockedTasks(
-			probablyDeadLockedThreadsHandlingPolicy.contains("abort")
+			probablyDeadLockedThreadsHandlingPolicy.toLowerCase().contains("abort")
 		);
 	};
 	
