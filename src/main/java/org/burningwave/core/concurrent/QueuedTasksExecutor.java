@@ -1314,7 +1314,7 @@ public class QueuedTasksExecutor implements Component {
 						StackTraceElement[] currentStackTrace = taskThread.getStackTrace();
 						if (previousRegisteredStackTrace != null) {
 							if (areStrackTracesEquals(previousRegisteredStackTrace, currentStackTrace)) {
-								if (!task.hasFinished() || !task.isAborted()) {
+								if (!task.hasFinished() && !task.isAborted()) {
 									if (markAsProbableDeadLocked) {
 										task.markAsProbablyDeadLocked();
 										taskThread.setName("PROBABLY DEAD-LOCKED THREAD -> " + taskThread.getName());
