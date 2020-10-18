@@ -1314,29 +1314,31 @@ public class QueuedTasksExecutor implements Component {
 						StackTraceElement[] currentStackTrace = taskThread.getStackTrace();
 						if (previousRegisteredStackTrace != null) {
 							if (areStrackTracesEquals(previousRegisteredStackTrace, currentStackTrace)) {
-								if (markAsProbableDeadLocked) {
-									task.markAsProbablyDeadLocked();
-									taskThread.setName("PROBABLY DEAD-LOCKED THREAD -> " + taskThread.getName());
-								}
-								if (markAsProbableDeadLocked || killProbableDeadLockedTasks) {
-									task.remove();
-								}
-								if (killProbableDeadLockedTasks) {
-									task.aborted = true;
-									taskThread.interrupt();
-								}
-								if (markAsProbableDeadLocked || killProbableDeadLockedTasks) {
-									synchronized(task) {
-										task.notifyAll();
+								if (!task.hasFinished() || !task.isAborted()) {
+									if (markAsProbableDeadLocked) {
+										task.markAsProbablyDeadLocked();
+										taskThread.setName("PROBABLY DEAD-LOCKED THREAD -> " + taskThread.getName());
 									}
+									if (markAsProbableDeadLocked || killProbableDeadLockedTasks) {
+										task.remove();
+									}
+									if (killProbableDeadLockedTasks && task.hasFinished()) {
+										task.aborted = true;
+										taskThread.interrupt();
+									}
+									if (markAsProbableDeadLocked || killProbableDeadLockedTasks) {
+										synchronized(task) {
+											task.notifyAll();
+										}
+									}
+									ManagedLoggersRepository.logWarn(
+										() -> this.getClass().getName(),
+										"Possible deadlock detected for task:{}\n\t{}",
+										task.getInfoAsString(),
+										Synchronizer.getInfoAsString(true)
+									);
+									Synchronizer.logAllThreadsState(true);
 								}
-								ManagedLoggersRepository.logWarn(
-									() -> this.getClass().getName(),
-									"Possible deadlock detected for task:{}\n\t{}",
-									task.getInfoAsString(),
-									Synchronizer.getInfoAsString(true)
-								);
-								Synchronizer.logAllThreadsState(true);
 							} else {
 								waitingTasksAndLastStackTrace.put(task, currentStackTrace);
 							}
