@@ -1385,7 +1385,7 @@ public class QueuedTasksExecutor implements Component {
 											() -> this.getClass().getName(),
 											"Possible deadlock detected for task:{}\n\t{}",
 											task.getInfoAsString(),
-											Synchronizer.getInfoAsString(true)
+											Synchronizer.getAllThreadsInfoAsString(true)
 										);
 										Synchronizer.logAllThreadsState(true);
 									}

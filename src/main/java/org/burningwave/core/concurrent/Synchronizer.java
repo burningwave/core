@@ -168,11 +168,11 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	public void logAllThreadsState(boolean logMutexes) {
 		ManagedLoggersRepository.logInfo(
 			() -> this.getClass().getName(),
-			getInfoAsString(logMutexes)
+			getAllThreadsInfoAsString(logMutexes)
 		);
 	}
 
-	public String getInfoAsString(boolean getMutexesInfo) {
+	public String getAllThreadsInfoAsString(boolean getMutexesInfo) {
 		StringBuffer log = new StringBuffer("\n\n");
 		log.append("Current threads state: \n\n");
 		Iterator<Entry<java.lang.Thread, StackTraceElement[]>> allStackTracesItr = java.lang.Thread.getAllStackTraces().entrySet().iterator();
