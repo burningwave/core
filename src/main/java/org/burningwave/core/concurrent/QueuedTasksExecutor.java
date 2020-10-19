@@ -52,6 +52,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingBiConsumer;
@@ -949,7 +950,7 @@ public class QueuedTasksExecutor implements Component {
 	public static class Group implements ManagedLogger{
 		String name;
 		Map<String, QueuedTasksExecutor> queuedTasksExecutors;
-		Map<TaskAbst<?, ?>, StackTraceElement[]> waitingTasksAndLastStackTrace;
+		TasksMonitorer allTasksMonitorer;
 		
 		Group(String name, 
 			Thread.Supplier threadSupplierForHighPriorityTasksExecutor,
@@ -959,7 +960,6 @@ public class QueuedTasksExecutor implements Component {
 		) {
 			this.name = name;
 			queuedTasksExecutors = new HashMap<>();
-			waitingTasksAndLastStackTrace = new HashMap<>();
 			queuedTasksExecutors.put(
 				String.valueOf(Thread.MAX_PRIORITY),
 				createQueuedTasksExecutor(
@@ -1290,106 +1290,27 @@ public class QueuedTasksExecutor implements Component {
 			return tasksInExecution;
 		}
 		
-		void checkAndHandleProbableDeadLockedTasks(
-			long minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked,
-			boolean markAsProbableDeadLocked,
-			boolean killProbableDeadLockedTasks
-		) {
-			Iterator<Entry<TaskAbst<?, ?>, StackTraceElement[]>> tasksAndStackTracesIterator = waitingTasksAndLastStackTrace.entrySet().iterator();
-			while (tasksAndStackTracesIterator.hasNext()) {
-				TaskAbst<?, ?> task = tasksAndStackTracesIterator.next().getKey();
-				if(task.hasFinished() || task.isAborted()) {
-					tasksAndStackTracesIterator.remove();
-				}
+		public synchronized Group startAllTasksMonitoring(TasksMonitorer.Config config) {
+			if (allTasksMonitorer != null) {
+				allTasksMonitorer.close();
 			}
-			long currentTime = System.currentTimeMillis();
-			for (TaskAbst<?, ?> task : getAllTasksInExecution()) {
-				if (currentTime - task.startTime > minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked) {
-					java.lang.Thread taskThread = task.executor;
-					if (taskThread != null &&
-					(taskThread.getState().equals(Thread.State.BLOCKED) ||
-					taskThread.getState().equals(Thread.State.WAITING) ||
-					taskThread.getState().equals(Thread.State.TIMED_WAITING))) {
-						StackTraceElement[] previousRegisteredStackTrace = waitingTasksAndLastStackTrace.get(task);
-						StackTraceElement[] currentStackTrace = taskThread.getStackTrace();
-						if (previousRegisteredStackTrace != null) {
-							if (areStrackTracesEquals(previousRegisteredStackTrace, currentStackTrace)) {
-								if (!task.hasFinished() && !task.isAborted()) {
-									if (markAsProbableDeadLocked) {
-										task.markAsProbablyDeadLocked();
-										taskThread.setName("PROBABLY DEAD-LOCKED THREAD -> " + taskThread.getName());
-									}
-									if (markAsProbableDeadLocked || killProbableDeadLockedTasks) {
-										task.remove();
-									}
-									if (killProbableDeadLockedTasks && task.hasFinished()) {
-										task.aborted = true;
-										taskThread.interrupt();
-									}
-									if (markAsProbableDeadLocked || killProbableDeadLockedTasks) {
-										synchronized(task) {
-											task.notifyAll();
-										}
-									}
-									ManagedLoggersRepository.logWarn(
-										() -> this.getClass().getName(),
-										"Possible deadlock detected for task:{}\n\t{}",
-										task.getInfoAsString(),
-										Synchronizer.getInfoAsString(true)
-									);
-									Synchronizer.logAllThreadsState(true);
-								}
-							} else {
-								waitingTasksAndLastStackTrace.put(task, currentStackTrace);
-							}
-						} else {
-							waitingTasksAndLastStackTrace.put(task, currentStackTrace);
-						}
-					}
-				}
+			allTasksMonitorer = new TasksMonitorer(this, config).start();
+			return this;
+		}
+		
+		public synchronized Group startAllTasksMonitoring() {
+			if (allTasksMonitorer != null) {
+				allTasksMonitorer.start();
+				return this;
 			}
+			return Throwables.throwException("All tasks monitorer has not been configured");
 		}
 		
-		private boolean areStrackTracesEquals(StackTraceElement[] stackTraceOne, StackTraceElement[] stackTraceTwo) {
-			if (stackTraceOne.length == stackTraceTwo.length) {
-				for (int i = 0; i < stackTraceOne.length; i++) {
-					if (!stackTraceOne[i].toString().equals(stackTraceTwo[i].toString()) ) {
-						return false;
-					}
-				}
-				return true;
+		public synchronized Group stopAllTasksMonitoring() {
+			if (allTasksMonitorer != null) {
+				allTasksMonitorer.stop();
 			}
-			return false;
-		}
-		
-		private String getAllTasksMonitoringName() {
-			return Optional.ofNullable(name).map(nm -> nm + " - ").orElseGet(() -> "") + "All tasks monitorer";
-		}
-		
-		public synchronized void startAllTasksMonitoring(
-			AllTasksMonitoringConfig config
-		) {	
-			ThreadHolder.startLooping(getAllTasksMonitoringName(), true, Thread.MIN_PRIORITY, thread -> {
-				thread.waitFor(config.getInterval());
-				if (thread.isLooping()) {
-					if (config.isAllTasksLoggerEnabled()) {
-						logInfo();
-					}
-					checkAndHandleProbableDeadLockedTasks(
-						config.getMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked(),
-						config.isMarkAsProablyDeadLocked(),
-						config.isKillProablyDeadLockedTasks()
-					);
-				}
-			});
-		}
-		
-		public void stopAllTasksMonitoring() {
-			stopAllTasksMonitoring(false);
-		}
-		
-		public void stopAllTasksMonitoring(boolean waitThreadToFinish) {
-			ThreadHolder.stop(getAllTasksMonitoringName());
+			return this;
 		}
 		
 		public boolean shutDown(boolean waitForTasksTermination) {
@@ -1401,63 +1322,189 @@ public class QueuedTasksExecutor implements Component {
 				}
 			}
 			lastToBeWaitedFor.shutDown(waitForTasksTermination);
-			stopAllTasksMonitoring(waitForTasksTermination);
+			allTasksMonitorer.close(waitForTasksTermination);
+			allTasksMonitorer = null;
 			queuedTasksExecutors.clear();
 			queuedTasksExecutors = null;
 			return true;
 		}
 		
-		public static class AllTasksMonitoringConfig {
-			private long interval;
-			private long minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked;
-			private boolean markAsProbableDeadLocked;
-			private boolean killProbableDeadLockedTasks;
-			private boolean allTasksLoggerEnabled;
-
-			public long getInterval() {
-				return interval;
+		public static class TasksMonitorer implements Closeable, ManagedLogger {
+			Map<TaskAbst<?, ?>, StackTraceElement[]> waitingTasksAndLastStackTrace;
+			QueuedTasksExecutor.Group queuedTasksExecutorGroup;
+			TasksMonitorer.Config config;
+			
+			TasksMonitorer(QueuedTasksExecutor.Group queuedTasksExecutorGroup, TasksMonitorer.Config config) {
+				waitingTasksAndLastStackTrace = new HashMap<>();
+				this.queuedTasksExecutorGroup = queuedTasksExecutorGroup;
+				this.config = config;
 			}
-
-			public AllTasksMonitoringConfig setInterval(long interval) {
-				this.interval = interval;
+			
+			void checkAndHandleProbableDeadLockedTasks(
+				long minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked,
+				boolean markAsProbableDeadLocked,
+				boolean killProbableDeadLockedTasks
+			) {
+				Iterator<Entry<TaskAbst<?, ?>, StackTraceElement[]>> tasksAndStackTracesIterator = waitingTasksAndLastStackTrace.entrySet().iterator();
+				while (tasksAndStackTracesIterator.hasNext()) {
+					TaskAbst<?, ?> task = tasksAndStackTracesIterator.next().getKey();
+					if(task.hasFinished() || task.isAborted()) {
+						tasksAndStackTracesIterator.remove();
+					}
+				}
+				long currentTime = System.currentTimeMillis();
+				for (TaskAbst<?, ?> task : queuedTasksExecutorGroup.getAllTasksInExecution()) {
+					if (currentTime - task.startTime > minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked) {
+						java.lang.Thread taskThread = task.executor;
+						if (taskThread != null &&
+						(taskThread.getState().equals(Thread.State.BLOCKED) ||
+						taskThread.getState().equals(Thread.State.WAITING) ||
+						taskThread.getState().equals(Thread.State.TIMED_WAITING))) {
+							StackTraceElement[] previousRegisteredStackTrace = waitingTasksAndLastStackTrace.get(task);
+							StackTraceElement[] currentStackTrace = taskThread.getStackTrace();
+							if (previousRegisteredStackTrace != null) {
+								if (areStrackTracesEquals(previousRegisteredStackTrace, currentStackTrace)) {
+									if (!task.hasFinished() && !task.isAborted()) {
+										if (markAsProbableDeadLocked) {
+											task.markAsProbablyDeadLocked();
+											taskThread.setName("PROBABLY DEAD-LOCKED THREAD -> " + taskThread.getName());
+										}
+										if (markAsProbableDeadLocked || killProbableDeadLockedTasks) {
+											task.remove();
+										}
+										if (killProbableDeadLockedTasks && task.hasFinished()) {
+											task.aborted = true;
+											taskThread.interrupt();
+										}
+										if (markAsProbableDeadLocked || killProbableDeadLockedTasks) {
+											synchronized(task) {
+												task.notifyAll();
+											}
+										}
+										ManagedLoggersRepository.logWarn(
+											() -> this.getClass().getName(),
+											"Possible deadlock detected for task:{}\n\t{}",
+											task.getInfoAsString(),
+											Synchronizer.getInfoAsString(true)
+										);
+										Synchronizer.logAllThreadsState(true);
+									}
+								} else {
+									waitingTasksAndLastStackTrace.put(task, currentStackTrace);
+								}
+							} else {
+								waitingTasksAndLastStackTrace.put(task, currentStackTrace);
+							}
+						}
+					}
+				}
+			}
+			
+			private boolean areStrackTracesEquals(StackTraceElement[] stackTraceOne, StackTraceElement[] stackTraceTwo) {
+				if (stackTraceOne.length == stackTraceTwo.length) {
+					for (int i = 0; i < stackTraceOne.length; i++) {
+						if (!stackTraceOne[i].toString().equals(stackTraceTwo[i].toString()) ) {
+							return false;
+						}
+					}
+					return true;
+				}
+				return false;
+			}
+			
+			private String getName() {
+				return Optional.ofNullable(queuedTasksExecutorGroup.name).map(nm -> nm + " - ").orElseGet(() -> "") + "All tasks monitorer";
+			}
+			
+			public synchronized TasksMonitorer start() {	
+				ThreadHolder.startLooping(getName(), true, Thread.MIN_PRIORITY, thread -> {
+					thread.waitFor(config.getInterval());
+					if (thread.isLooping()) {
+						if (config.isAllTasksLoggerEnabled()) {
+							queuedTasksExecutorGroup.logInfo();
+						}
+						checkAndHandleProbableDeadLockedTasks(
+							config.getMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked(),
+							config.isMarkAsProablyDeadLocked(),
+							config.isKillProablyDeadLockedTasks()
+						);
+					}
+				});
 				return this;
 			}
-
-			public long getMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked() {
-				return minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked;
+			
+			public void stop() {
+				stop(false);
 			}
-
-			public AllTasksMonitoringConfig setMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked(
-					long minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked) {
-				this.minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked = minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked;
-				return this;
+			
+			public void stop(boolean waitThreadToFinish) {
+				ThreadHolder.stop(getName());
 			}
-
-			public boolean isMarkAsProablyDeadLocked() {
-				return markAsProbableDeadLocked;
+			
+			@Override
+			public void close() {
+				close(false);
 			}
-
-			public AllTasksMonitoringConfig setMarkAsProbableDeadLocked(boolean markAsProablyDeadLocked) {
-				this.markAsProbableDeadLocked = markAsProablyDeadLocked;
-				return this;
+			
+			public void close(boolean waitForTasksTermination) {
+				stop(waitForTasksTermination);
+				this.queuedTasksExecutorGroup = null;
+				this.waitingTasksAndLastStackTrace.clear();
+				this.waitingTasksAndLastStackTrace = null;
 			}
-
-			public boolean isKillProablyDeadLockedTasks() {
-				return killProbableDeadLockedTasks;
-			}
-
-			public AllTasksMonitoringConfig setKillProbableDeadLockedTasks(boolean killProablyDeadLockedTasks) {
-				this.killProbableDeadLockedTasks = killProablyDeadLockedTasks;
-				return this;
-			}
-
-			public boolean isAllTasksLoggerEnabled() {
-				return allTasksLoggerEnabled;
-			}
-
-			public AllTasksMonitoringConfig setAllTasksLoggerEnabled(boolean allTasksLoggerEnabled) {
-				this.allTasksLoggerEnabled = allTasksLoggerEnabled;
-				return this;
+			
+			public static class Config {
+				private long interval;
+				private long minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked;
+				private boolean markAsProbableDeadLocked;
+				private boolean killProbableDeadLockedTasks;
+				private boolean allTasksLoggerEnabled;
+	
+				public long getInterval() {
+					return interval;
+				}
+	
+				public TasksMonitorer.Config setInterval(long interval) {
+					this.interval = interval;
+					return this;
+				}
+	
+				public long getMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked() {
+					return minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked;
+				}
+	
+				public TasksMonitorer.Config setMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked(
+						long minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked) {
+					this.minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked = minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked;
+					return this;
+				}
+	
+				public boolean isMarkAsProablyDeadLocked() {
+					return markAsProbableDeadLocked;
+				}
+	
+				public TasksMonitorer.Config setMarkAsProbableDeadLocked(boolean markAsProablyDeadLocked) {
+					this.markAsProbableDeadLocked = markAsProablyDeadLocked;
+					return this;
+				}
+	
+				public boolean isKillProablyDeadLockedTasks() {
+					return killProbableDeadLockedTasks;
+				}
+	
+				public TasksMonitorer.Config setKillProbableDeadLockedTasks(boolean killProablyDeadLockedTasks) {
+					this.killProbableDeadLockedTasks = killProablyDeadLockedTasks;
+					return this;
+				}
+	
+				public boolean isAllTasksLoggerEnabled() {
+					return allTasksLoggerEnabled;
+				}
+	
+				public TasksMonitorer.Config setAllTasksLoggerEnabled(boolean allTasksLoggerEnabled) {
+					this.allTasksLoggerEnabled = allTasksLoggerEnabled;
+					return this;
+				}
 			}
 		}
 	}

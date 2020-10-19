@@ -181,7 +181,7 @@ public class FileSystemHelper implements Component {
 		deleteOnExit(new File(absolutePath));	
 	}
 	
-	public void startScavenger() {
+	public void startSweeping() {
 		if (scavenger == null) {
 			scavenger = new Scavenger(this, getTemporaryFileScavengerThreadName(), 3600000, 30000);
 		}
@@ -194,7 +194,7 @@ public class FileSystemHelper implements Component {
 		return Optional.ofNullable(name).map(nm -> nm + " - ").orElseGet(() -> "") + "Temporary file scavenger";
 	}
 	
-	public void stopScavenger() {
+	public void stopSweeping() {
 		if (scavenger != null) {
 			scavenger.stop();
 		}
