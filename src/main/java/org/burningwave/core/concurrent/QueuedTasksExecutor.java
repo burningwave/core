@@ -1425,8 +1425,8 @@ public class QueuedTasksExecutor implements Component {
 						}
 						checkAndHandleProbableDeadLockedTasks(
 							config.getMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked(),
-							config.isMarkAsProablyDeadLocked(),
-							config.isKillProablyDeadLockedTasks()
+							config.isMarkAsProablyDeadLockedEnabled(),
+							config.isKillProablyDeadLockedTasksEnabled()
 						);
 					}
 				});
@@ -1479,7 +1479,7 @@ public class QueuedTasksExecutor implements Component {
 					return this;
 				}
 	
-				public boolean isMarkAsProablyDeadLocked() {
+				public boolean isMarkAsProablyDeadLockedEnabled() {
 					return markAsProbableDeadLocked;
 				}
 	
@@ -1488,7 +1488,7 @@ public class QueuedTasksExecutor implements Component {
 					return this;
 				}
 	
-				public boolean isKillProablyDeadLockedTasks() {
+				public boolean isKillProablyDeadLockedTasksEnabled() {
 					return killProbableDeadLockedTasks;
 				}
 	
