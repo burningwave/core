@@ -837,7 +837,7 @@ public class FileSystemItem implements ManagedLogger {
 				while (superParentContainer.getParentContainer() != null && superParentContainer.getParentContainer().isArchive()) {
 					superParentContainer = superParentContainer.getParentContainer();
 				}
-				Collection<FileSystemItem> parentAllChildren = parentContainer.getAllChildren();
+				Collection<FileSystemItem> parentAllChildren = superParentContainer.getAllChildren();
 				FileSystemItem randomFIS = IterableObjectHelper.getRandom(parentAllChildren);
 				while (randomFIS.getAbsolutePath() == this.getAbsolutePath() && parentAllChildren.size() > 1) {
 					randomFIS = IterableObjectHelper.getRandom(parentAllChildren);
@@ -854,24 +854,24 @@ public class FileSystemItem implements ManagedLogger {
 						() -> Cache.pathForContents.get(absolutePath) != null
 					).submit().waitForFinish();
 				}
-				if (Cache.pathForContents.get(randomFIS.getAbsolutePath()) != null &&
-					Cache.pathForContents.get(absolutePath) == null) {
-					FileSystemItem finalRandomFIS = randomFIS;
-					FileSystemItem superParentContainerFinal = superParentContainer;
-					BackgroundExecutor.createTask(() -> {
-						if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) != null) && 
-							Cache.pathForContents.get(absolutePath) == null) {
-							superParentContainerFinal.refresh().getAllChildren();
-						}
-					}).runOnlyOnce(
-						superParentContainer.instanceId,
-						() -> Cache.pathForContents.get(absolutePath) != null
-					).submit().waitForFinish();
-				}
+//				if (Cache.pathForContents.get(randomFIS.getAbsolutePath()) != null &&
+//					Cache.pathForContents.get(absolutePath) == null) {
+//					FileSystemItem finalRandomFIS = randomFIS;
+//					FileSystemItem superParentContainerFinal = superParentContainer;
+//					BackgroundExecutor.createTask(() -> {
+//						if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) != null) && 
+//							Cache.pathForContents.get(absolutePath) == null) {
+//							superParentContainerFinal.refresh().getAllChildren();
+//						}
+//					}).runOnlyOnce(
+//						superParentContainer.instanceId,
+//						() -> Cache.pathForContents.get(absolutePath) != null
+//					).submit().waitForFinish();
+//				}
 				if (Cache.pathForContents.get(absolutePath) == null) {
 					reloadContent(false);
 				}
-				return toByteBuffer();		
+				return Cache.pathForContents.get(absolutePath);		
 			} else {
 				return Cache.pathForContents.getOrUploadIfAbsent(
 					absolutePath, () -> {
