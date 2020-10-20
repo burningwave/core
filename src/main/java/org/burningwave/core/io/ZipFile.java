@@ -264,6 +264,7 @@ class ZipFile implements IterableZipContainer {
 	
 	public static class Entry implements IterableZipContainer.Entry {
 		private ZipFile zipMemoryContainer;
+		private String cleanedName;
 		private String name;
 		private String absolutePath;
 		private Supplier<ByteBuffer> zipEntryContentSupplier;
@@ -279,7 +280,25 @@ class ZipFile implements IterableZipContainer {
 		public <C extends IterableZipContainer> C getParentContainer() {
 			return (C) zipMemoryContainer;
 		}
-
+		
+		@Override
+		public String getCleanedName() {
+			if (cleanedName != null) {
+				return cleanedName;
+			}
+			String cleanedName = name;
+			if (!cleanedName.startsWith("/")) {
+				this.cleanedName = cleanedName;
+			} else {
+				if (!cleanedName.equals("/")) {
+					this.cleanedName =  cleanedName.substring(1, cleanedName.length());
+				} else {
+					this.cleanedName = "";
+				}
+			}
+			return this.cleanedName;
+		}
+		
 		@Override
 		public String getName() {
 			return name;
@@ -303,6 +322,7 @@ class ZipFile implements IterableZipContainer {
 		public void destroy() {
 			this.absolutePath = null;
 			this.name = null;
+			this.cleanedName = null;
 			this.zipEntryContentSupplier = null;
 			this.zipMemoryContainer = null;
 		}

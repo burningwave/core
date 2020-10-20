@@ -764,8 +764,12 @@ public class FileSystemItem implements ManagedLogger {
 			}
 			Set<IterableZipContainer.Entry> zipEntries = zIS.findAll(zipEntryPredicate, zEntry -> false);
 			if (!zipEntries.isEmpty()) {
-				IterableZipContainer.Entry zipEntry = Collections.max(zipEntries,
-						Comparator.comparing(zipEntryW -> zipEntryW.getName().split("/").length));
+				IterableZipContainer.Entry zipEntry = Collections.max(
+					zipEntries,
+					Comparator.comparing(zipEntryW -> 
+						zipEntryW.getName().split("/").length
+					)
+				);
 				return retrieveConventionedRelativePath(this, zIS, zipEntry, relativePath1);
 			} else if (Streams.isJModArchive(zipInputStreamAsBytes)) {
 				try (IterableZipContainer zIS2 = IterableZipContainer.create(zipInputStreamName,

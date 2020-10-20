@@ -193,6 +193,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 		static class Attached extends java.util.zip.ZipEntry implements Entry {
 			private ZipInputStream zipInputStream;
 			private String absolutePath;
+			private String cleanedName;
 			
 			public Attached(Entry.Attached e, ZipInputStream zIS) {
 				super(e);
@@ -208,6 +209,24 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			@SuppressWarnings("unchecked")
 			public ZipInputStream getParentContainer() {
 				return zipInputStream;
+			}
+			
+			@Override
+			public String getCleanedName() {
+				if (cleanedName != null) {
+					return cleanedName;
+				}
+				String cleanedName = super.getName();
+				if (!cleanedName.startsWith("/")) {
+					this.cleanedName = cleanedName;
+				} else {
+					if (!cleanedName.equals("/")) {
+						this.cleanedName =  cleanedName.substring(1, cleanedName.length());
+					} else {
+						this.cleanedName = "";
+					}
+				}
+				return this.cleanedName;
 			}
 			
 			@Override
@@ -296,6 +315,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 	
 		public static class Detached implements Entry {
 			private String name;
+			private String cleanedName;
 			private String absolutePath;
 			private Boolean isDirectory;
 			private IterableZipContainer zipInputStream;
@@ -327,6 +347,24 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			}
 			
 			@Override
+			public String getCleanedName() {
+				if (cleanedName != null) {
+					return cleanedName;
+				}
+				String cleanedName = name;
+				if (!cleanedName.startsWith("/")) {
+					this.cleanedName = cleanedName;
+				} else {
+					if (!cleanedName.equals("/")) {
+						this.cleanedName =  cleanedName.substring(1, cleanedName.length());
+					} else {
+						this.cleanedName = "";
+					}
+				}
+				return this.cleanedName;
+			}
+			
+			@Override
 			public String getName() {
 				return name;
 			}
@@ -343,6 +381,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			@Override
 			public void close() {
 				name = null;
+				cleanedName = null;
 				absolutePath = null;
 				isDirectory = null;
 				zipInputStream.close();

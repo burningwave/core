@@ -242,8 +242,10 @@ public interface IterableZipContainer extends Component {
 		public <C extends IterableZipContainer> C getParentContainer();
 		
 		public default String getConventionedAbsolutePath() {
-			return getParentContainer().getConventionedAbsolutePath() + getName();
+			return getParentContainer().getConventionedAbsolutePath() + getCleanedName();
 		}
+		
+		public String getCleanedName();
 		
 		public String getName();
 		
