@@ -329,14 +329,12 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			private String name;
 			private String cleanedName;
 			private String absolutePath;
-			private Boolean isDirectory;
 			private IterableZipContainer zipInputStream;
 			private Boolean archive;
 			
 			Detached(IterableZipContainer.Entry zipEntry) {
 				this.name = zipEntry.getName();
 				this.absolutePath = zipEntry.getAbsolutePath();
-				this.isDirectory = zipEntry.isDirectory();
 				this.zipInputStream = zipEntry.getParentContainer().duplicate();
 			}
 			
@@ -396,7 +394,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			
 			@Override
 			public boolean isDirectory() {
-				return isDirectory;
+				return name.endsWith("/");
 			}
 			
 			@Override
@@ -405,7 +403,6 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 				archive = null;
 				cleanedName = null;
 				absolutePath = null;
-				isDirectory = null;
 				zipInputStream.close();
 				zipInputStream = null;
 			}
