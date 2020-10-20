@@ -42,6 +42,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.function.Executor;
 
 public interface IterableZipContainer extends Component {
 	
@@ -64,9 +65,11 @@ public interface IterableZipContainer extends Component {
 	@SuppressWarnings("resource")
 	public static IterableZipContainer create(String absolutePath, ByteBuffer bytes) {
 		if (Streams.isJModArchive(bytes)) {
-			return Cache.pathForIterableZipContainers.getOrUploadIfAbsent(
-				absolutePath, () -> new ZipFile(absolutePath, bytes)
-			).duplicate();
+			return Executor.get(() -> {
+				return Cache.pathForIterableZipContainers.getOrUploadIfAbsent(
+						absolutePath, () -> new ZipFile(absolutePath, bytes)
+					).duplicate();
+			}, 2);
 		} else if (Streams.isArchive(bytes)) {
 			return new ZipInputStream(absolutePath, new ByteBufferInputStream(bytes));
 		}

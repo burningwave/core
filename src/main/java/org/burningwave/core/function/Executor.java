@@ -52,11 +52,37 @@ public interface Executor {
 		}
 	}
     
+    static <E extends Throwable> void run(ThrowingRunnable<E> runnable, int attemptsNumber) {
+		while (true) {
+			try {
+				runnable.run();
+			} catch (Throwable exc) {
+				if (attemptsNumber > 1) {
+					Throwables.throwException(exc);
+				}
+			}
+			--attemptsNumber;
+		}
+	}
+    
 	static <T, E extends Throwable> T get(ThrowingSupplier<T, ? extends E> supplier) {
 		try {
 			return supplier.get();
 		} catch (Throwable exc) {
 			return Throwables.throwException(exc);
+		}
+	}
+	
+	static <T, E extends Throwable> T get(ThrowingSupplier<T, ? extends E> supplier, int attemptsNumber) {
+		while (true) {
+			try {
+				return supplier.get();
+			} catch (Throwable exc) {
+				if (attemptsNumber > 1) {
+					Throwables.throwException(exc);
+				}
+			}
+			--attemptsNumber;
 		}
 	}
 }

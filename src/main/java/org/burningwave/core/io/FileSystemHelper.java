@@ -183,21 +183,23 @@ public class FileSystemHelper implements Component {
 	
 	public void startSweeping() {
 		if (scavenger == null) {
-			scavenger = new Scavenger(this, getTemporaryFileScavengerThreadName(), 3600000, 30000);
+			synchronized(this) {
+				if (scavenger == null) {
+					scavenger = new Scavenger(this, getTemporaryFileScavengerThreadName(), 3600000, 30000);
+				}
+			}
 		}
-		if (!scavenger.isAlive()) {
-			scavenger.start();
-		}
-	}
-	
-	private String getTemporaryFileScavengerThreadName() {
-		return Optional.ofNullable(name).map(nm -> nm + " - ").orElseGet(() -> "") + "Temporary file scavenger";
+		scavenger.start();
 	}
 	
 	public void stopSweeping() {
 		if (scavenger != null) {
 			scavenger.stop();
 		}
+	}
+	
+	private String getTemporaryFileScavengerThreadName() {
+		return Optional.ofNullable(name).map(nm -> nm + " - ").orElseGet(() -> "") + "Temporary file scavenger";
 	}
 	
 	@Override

@@ -202,7 +202,7 @@ public class StaticComponentContainer {
 										)
 									);
 								} else {
-									Synchronizer.stopLoggingAllThreadsState();
+									Synchronizer.stopAllThreadsMonitoring();
 								}
 							} else if (keyAsString.equals(Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL)) {
 								Synchronizer.startAllThreadsMonitoring(
@@ -226,7 +226,7 @@ public class StaticComponentContainer {
 			);
 			ThreadHolder = new org.burningwave.core.concurrent.Thread.Holder(ThreadSupplier);
 			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create(
-				getName("Background executor"),
+				getName("BackgroundExecutor"),
 				ThreadSupplier,
 				ThreadSupplier, 
 				ThreadSupplier,
@@ -269,7 +269,7 @@ public class StaticComponentContainer {
 				GlobalProperties.toPrettyString(2)
 			);
 			Paths = org.burningwave.core.Strings.Paths.create();
-			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create(getName("File system helper"));
+			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create(getName("FileSystemHelper"));
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
 			ByteBufferHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler.create();
 			Streams = org.burningwave.core.io.Streams.create(GlobalProperties);

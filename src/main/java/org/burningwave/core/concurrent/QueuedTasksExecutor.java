@@ -1290,15 +1290,17 @@ public class QueuedTasksExecutor implements Component {
 			return tasksInExecution;
 		}
 		
-		public synchronized Group startAllTasksMonitoring(TasksMonitorer.Config config) {
+		public Group startAllTasksMonitoring(TasksMonitorer.Config config) {
+			TasksMonitorer allTasksMonitorer = this.allTasksMonitorer;
 			if (allTasksMonitorer != null) {
 				allTasksMonitorer.close();
 			}
-			allTasksMonitorer = new TasksMonitorer(this, config).start();
+			this.allTasksMonitorer = new TasksMonitorer(this, config).start();
 			return this;
 		}
 		
-		public synchronized Group startAllTasksMonitoring() {
+		public Group startAllTasksMonitoring() {
+			TasksMonitorer allTasksMonitorer = this.allTasksMonitorer;
 			if (allTasksMonitorer != null) {
 				allTasksMonitorer.start();
 				return this;
@@ -1306,7 +1308,8 @@ public class QueuedTasksExecutor implements Component {
 			return Throwables.throwException("All tasks monitorer has not been configured");
 		}
 		
-		public synchronized Group stopAllTasksMonitoring() {
+		public Group stopAllTasksMonitoring() {
+			TasksMonitorer allTasksMonitorer = this.allTasksMonitorer;
 			if (allTasksMonitorer != null) {
 				allTasksMonitorer.stop();
 			}
@@ -1367,7 +1370,7 @@ public class QueuedTasksExecutor implements Component {
 									if (!task.hasFinished() && !task.isAborted()) {
 										if (markAsProbableDeadLocked) {
 											task.markAsProbablyDeadLocked();
-											taskThread.setName("PROBABLY DEAD-LOCKED THREAD -> " + taskThread.getName());
+											taskThread.setName("PROBABLE DEAD-LOCKED THREAD -> " + taskThread.getName());
 										}
 										if (markAsProbableDeadLocked || killProbableDeadLockedTasks) {
 											task.remove();
@@ -1416,7 +1419,7 @@ public class QueuedTasksExecutor implements Component {
 				return Optional.ofNullable(queuedTasksExecutorGroup.name).map(nm -> nm + " - ").orElseGet(() -> "") + "All tasks monitorer";
 			}
 			
-			public synchronized TasksMonitorer start() {	
+			public TasksMonitorer start() {	
 				ThreadHolder.startLooping(getName(), true, Thread.MIN_PRIORITY, thread -> {
 					thread.waitFor(config.getInterval());
 					if (thread.isLooping()) {
