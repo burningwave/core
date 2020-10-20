@@ -823,7 +823,7 @@ public class FileSystemItem implements ManagedLogger {
 			return iZC.getAbsolutePath() + IterableZipContainer.ZIP_PATH_SEPARATOR + relativePath1 + "/";
 		}
 	}
-
+/*
 	public ByteBuffer toByteBuffer() {
 		String absolutePath = getAbsolutePath();
 		ByteBuffer resource = Cache.pathForContents.get(absolutePath); 
@@ -872,6 +872,52 @@ public class FileSystemItem implements ManagedLogger {
 					reloadContent(false);
 				}
 				return Cache.pathForContents.get(absolutePath);		
+			} else {
+				return Cache.pathForContents.getOrUploadIfAbsent(
+					absolutePath, () -> {
+						try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
+							return fIS.toByteBuffer();
+						}						
+					}
+				);
+				
+			}
+		}
+		return resource;
+	}
+*/
+	
+	public ByteBuffer toByteBuffer() {
+		String absolutePath = getAbsolutePath();
+		ByteBuffer resource = Cache.pathForContents.get(absolutePath); 
+		if (resource != null) {
+			return resource;
+		}
+		if (exists() && !isFolder()) {
+			if (isCompressed()) {
+				FileSystemItem parentContainer = getParentContainer();
+				FileSystemItem superParentContainer = parentContainer;
+				while (superParentContainer.getParentContainer() != null && superParentContainer.getParentContainer().isArchive()) {
+					superParentContainer = superParentContainer.getParentContainer();
+				}
+				Collection<FileSystemItem> superParentAllChildren = superParentContainer.getAllChildren();
+				FileSystemItem randomFIS = IterableObjectHelper.getRandom(superParentAllChildren);
+				while (randomFIS.getAbsolutePath() == this.getAbsolutePath() && superParentAllChildren.size() > 1) {
+					randomFIS = IterableObjectHelper.getRandom(superParentAllChildren);
+				}
+				if ((Cache.pathForContents.get(randomFIS.getAbsolutePath())) == null) {
+					FileSystemItem finalRandomFIS = randomFIS;
+					FileSystemItem superParentContainerFinal = superParentContainer;
+					Synchronizer.execute(superParentContainer.instanceId, () -> {
+						if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
+							superParentContainerFinal.refresh().getAllChildren();
+						}
+					});
+				}
+				if (Cache.pathForContents.get(absolutePath) == null) {
+					reloadContent(false);
+				}
+				return toByteBuffer();		
 			} else {
 				return Cache.pathForContents.getOrUploadIfAbsent(
 					absolutePath, () -> {
