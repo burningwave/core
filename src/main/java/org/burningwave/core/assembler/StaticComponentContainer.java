@@ -41,9 +41,7 @@ import java.util.Random;
 
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
-import org.burningwave.core.concurrent.QueuedTasksExecutor.Group.AllTasksMonitoringConfig;
 import org.burningwave.core.function.Executor;
-import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
@@ -204,7 +202,7 @@ public class StaticComponentContainer {
 										)
 									);
 								} else {
-									Synchronizer.stopLoggingAllThreadsState();
+									Synchronizer.stopAllThreadsMonitoring();
 								}
 							} else if (keyAsString.equals(Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL)) {
 								Synchronizer.startAllThreadsMonitoring(
@@ -228,7 +226,7 @@ public class StaticComponentContainer {
 			);
 			ThreadHolder = new org.burningwave.core.concurrent.Thread.Holder(ThreadSupplier);
 			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create(
-				getName("Background executor"),
+				getName("BackgroundExecutor"),
 				ThreadSupplier,
 				ThreadSupplier, 
 				ThreadSupplier,
@@ -271,7 +269,7 @@ public class StaticComponentContainer {
 				GlobalProperties.toPrettyString(2)
 			);
 			Paths = org.burningwave.core.Strings.Paths.create();
-			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create(getName("File system helper"));
+			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create(getName("FileSystemHelper"));
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
 			ByteBufferHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler.create();
 			Streams = org.burningwave.core.io.Streams.create(GlobalProperties);
@@ -330,7 +328,7 @@ public class StaticComponentContainer {
 					);
 				})
 			);
-			FileSystemHelper.startScavenger();
+			FileSystemHelper.startSweeping();
 			if (Objects.toBoolean(
 				GlobalProperties.resolveValue(
 					Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED
@@ -353,9 +351,9 @@ public class StaticComponentContainer {
 		return Optional.ofNullable(GlobalProperties.resolveStringValue(Configuration.Key.GROUP_NAME_FOR_NAMED_ELEMENTS)).map(nm -> nm + " - ").orElseGet(() -> "") + simpleName;
 	}
 	
-	private static final AllTasksMonitoringConfig retrieveAllTasksMonitoringConfig() {
+	private static final QueuedTasksExecutor.Group.TasksMonitorer.Config retrieveAllTasksMonitoringConfig() {
 		String probablyDeadLockedThreadsHandlingPolicy = GlobalProperties.resolveStringValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY);
-		return new QueuedTasksExecutor.Group.AllTasksMonitoringConfig().setAllTasksLoggerEnabled(
+		return new QueuedTasksExecutor.Group.TasksMonitorer.Config().setAllTasksLoggerEnabled(
 			Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED))
 		).setInterval(
 			Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL))

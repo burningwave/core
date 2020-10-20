@@ -181,23 +181,25 @@ public class FileSystemHelper implements Component {
 		deleteOnExit(new File(absolutePath));	
 	}
 	
-	public void startScavenger() {
+	public void startSweeping() {
 		if (scavenger == null) {
-			scavenger = new Scavenger(this, getTemporaryFileScavengerThreadName(), 3600000, 30000);
+			synchronized(this) {
+				if (scavenger == null) {
+					scavenger = new Scavenger(this, getTemporaryFileScavengerThreadName(), 3600000, 30000);
+				}
+			}
 		}
-		if (!scavenger.isAlive()) {
-			scavenger.start();
+		scavenger.start();
+	}
+	
+	public void stopSweeping() {
+		if (scavenger != null) {
+			scavenger.stop();
 		}
 	}
 	
 	private String getTemporaryFileScavengerThreadName() {
 		return Optional.ofNullable(name).map(nm -> nm + " - ").orElseGet(() -> "") + "Temporary file scavenger";
-	}
-	
-	public void stopScavenger() {
-		if (scavenger != null) {
-			scavenger.stop();
-		}
 	}
 	
 	@Override

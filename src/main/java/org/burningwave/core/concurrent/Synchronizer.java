@@ -39,17 +39,18 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
+import org.burningwave.core.Closeable;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("resource")
 public class Synchronizer implements AutoCloseable, ManagedLogger {
 	Map<String, Mutex> mutexes;
 	String name;
+	ThreadsMonitorer allThreadsMonitorer;
 	
 	private Synchronizer(String name) {
 		this.name = name;
@@ -147,32 +148,22 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 	
 	@Override
 	public void close() {
-		stopLoggingAllThreadsState();	
+		if (this.allThreadsMonitorer != null) {
+			this.allThreadsMonitorer.close();
+			this.allThreadsMonitorer = null;
+		}
 		clear();
 		mutexes = null;
-	}
-	
-	private String getAllThreadsMonitoringName() {
-		return Optional.ofNullable(name).map(nm -> nm + " - ").orElseGet(() -> "") + "All threads state logger";
-	}
-	
-	public synchronized void startAllThreadsMonitoring(Long interval) {
-		ThreadHolder.startLooping(getAllThreadsMonitoringName(), true, Thread.MIN_PRIORITY, thread -> {
-			thread.waitFor(interval);
-			if (thread.isLooping()) {
-				logAllThreadsState(false);
-			}
-		});
 	}
 
 	public void logAllThreadsState(boolean logMutexes) {
 		ManagedLoggersRepository.logInfo(
 			() -> this.getClass().getName(),
-			getInfoAsString(logMutexes)
+			getAllThreadsInfoAsString(logMutexes)
 		);
 	}
 
-	public String getInfoAsString(boolean getMutexesInfo) {
+	public String getAllThreadsInfoAsString(boolean getMutexesInfo) {
 		StringBuffer log = new StringBuffer("\n\n");
 		log.append("Current threads state: \n\n");
 		Iterator<Entry<java.lang.Thread, StackTraceElement[]>> allStackTracesItr = java.lang.Thread.getAllStackTraces().entrySet().iterator();
@@ -205,19 +196,72 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		return Methods.invokeStaticDirect(java.lang.Thread.class, "getThreads");
 	}
 	
-	public void stopLoggingAllThreadsState() {
-		stopLoggingAllThreadsState(false);
+	public void startAllThreadsMonitoring(Long interval) {
+		ThreadsMonitorer allThreadsMonitorer = this.allThreadsMonitorer;
+		if (allThreadsMonitorer == null) {
+			synchronized(this) {
+				allThreadsMonitorer = this.allThreadsMonitorer;
+				if (allThreadsMonitorer == null) {
+					this.allThreadsMonitorer = new ThreadsMonitorer(this);
+				}
+			}
+		}
+		this.allThreadsMonitorer.start(interval);
 	}
 	
-	public synchronized void stopLoggingAllThreadsState(boolean waitThreadToFinish) {
-		ThreadHolder.stop(getAllThreadsMonitoringName(), waitThreadToFinish);
+	public void stopAllThreadsMonitoring() {
+		stopAllThreadsMonitoring(false);
 	}
 	
-	public static class Mutex  {
+	public void stopAllThreadsMonitoring(boolean waitThreadToFinish) {
+		ThreadsMonitorer allThreadsMonitorer = this.allThreadsMonitorer;
+		if (allThreadsMonitorer != null) {
+			allThreadsMonitorer.close();
+		}
+		allThreadsMonitorer.stop(waitThreadToFinish);
+	}
+	
+	public static class Mutex {
 		Mutex(String id) {
 			this.id = id;
 		}
 		String id;
 		int clientsCount = 1;
+	}
+	
+	static class ThreadsMonitorer implements Closeable {
+		Synchronizer synchronizer;
+		
+		ThreadsMonitorer(Synchronizer synchronizer) {
+			this.synchronizer = synchronizer;
+		}
+		
+		public ThreadsMonitorer start(Long interval) {
+			ThreadHolder.startLooping(getName(), true, Thread.MIN_PRIORITY, thread -> {
+				thread.waitFor(interval);
+				if (thread.isLooping()) {
+					synchronizer.logAllThreadsState(false);
+				}
+			});
+			return this;
+		}
+		
+		private String getName() {
+			return Optional.ofNullable(synchronizer.name).map(nm -> nm + " - ").orElseGet(() -> "") + "All threads state logger";
+		}
+		
+		public void stop(boolean waitThreadToFinish) {
+			ThreadHolder.stop(getName());
+		}
+		
+		@Override
+		public void close() {
+			close(false);
+		}
+		
+		public void close(boolean waitForTasksTermination) {
+			stop(waitForTasksTermination);
+			synchronizer = null;
+		}
 	}
 }

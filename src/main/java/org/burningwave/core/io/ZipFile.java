@@ -59,6 +59,7 @@ class ZipFile implements IterableZipContainer {
 	Runnable temporaryFileDeleter;
 	java.util.zip.ZipFile originalZipFile;
 	Boolean isDestroyed;
+	Supplier<ByteBuffer> contentSupplier;
 	
 	static {
 		classId = Objects.getClassId(ZipFile.class);
@@ -68,6 +69,7 @@ class ZipFile implements IterableZipContainer {
 		isDestroyed = Boolean.FALSE;				
 		this.absolutePath = Paths.clean(absolutePath);
 		entries = ConcurrentHashMap.newKeySet();
+		this.contentSupplier = () -> content;
 		try (java.util.zip.ZipFile zipFile = retrieveFile(absolutePath, content)) {
 			Enumeration<? extends ZipEntry> entriesIterator = zipFile.entries();
 			while (entriesIterator.hasMoreElements()) {
@@ -142,15 +144,16 @@ class ZipFile implements IterableZipContainer {
 		return originalZipFile;
 	}
 	
-	private ZipFile(String absolutePath, Collection<Entry> entries) {
+	private ZipFile(String absolutePath, Collection<Entry> entries, Supplier<ByteBuffer> contentSupplier) {
 		this.absolutePath = absolutePath;
 		this.entries = entries;
 		this.entriesIterator = entries.iterator();
+		this.contentSupplier = contentSupplier;
 	}
 	
 	@Override
 	public IterableZipContainer duplicate() {
-		return new ZipFile(absolutePath, entries);
+		return new ZipFile(absolutePath, entries, contentSupplier);
 	}
 	
 	@Override
@@ -190,7 +193,7 @@ class ZipFile implements IterableZipContainer {
 
 	@Override
 	public ByteBuffer toByteBuffer() {
-		return Cache.pathForContents.get(absolutePath);
+		return Cache.pathForContents.getOrUploadIfAbsent(getAbsolutePath(), contentSupplier);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -244,9 +247,8 @@ class ZipFile implements IterableZipContainer {
 			}
 		}
 		if (destroy) {
-			if (removeFromCache) {
-				IterableZipContainer.super.destroy(removeFromCache);
-			}		
+			contentSupplier = null;
+			IterableZipContainer.super.destroy(removeFromCache);		
 			for (Entry entry : entries) {
 				entry.destroy();
 			}

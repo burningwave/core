@@ -30,6 +30,7 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.File;
@@ -64,13 +65,30 @@ public interface IterableZipContainer extends Component {
 	@SuppressWarnings("resource")
 	public static IterableZipContainer create(String absolutePath, ByteBuffer bytes) {
 		if (Streams.isJModArchive(bytes)) {
-			return Cache.pathForIterableZipContainers.getOrUploadIfAbsent(
-				absolutePath, () -> new ZipFile(absolutePath, bytes)
-			).duplicate();
+			return createZipFile(absolutePath, bytes);
 		} else if (Streams.isArchive(bytes)) {
 			return new ZipInputStream(absolutePath, new ByteBufferInputStream(bytes));
 		}
 		return null;
+	}
+
+	static IterableZipContainer createZipFile(String absolutePath, ByteBuffer bytes) {
+		final ZipFile zipFile = (ZipFile)Cache.pathForIterableZipContainers.getOrUploadIfAbsent(
+			absolutePath, () -> new ZipFile(absolutePath, bytes)
+		);
+		try {
+			return zipFile.duplicate();
+		} catch (Throwable exc) {
+			Synchronizer.execute(ZipFile.class.getName() + "_" + absolutePath, () -> {
+				ZipFile oldZipFile = (ZipFile)Cache.pathForIterableZipContainers.get(absolutePath);
+				if (oldZipFile == null || oldZipFile == zipFile || oldZipFile.isDestroyed) {
+					Cache.pathForIterableZipContainers.upload(
+						absolutePath, () -> new ZipFile(absolutePath, bytes), true
+					);
+				}
+			});
+			return Cache.pathForIterableZipContainers.get(absolutePath).duplicate();
+		}
 	}
 	
 	@SuppressWarnings("resource")
@@ -85,9 +103,7 @@ public interface IterableZipContainer extends Component {
 			iS = new ByteBufferInputStream(Streams.toByteBuffer(inputStream));
 		}
 		if (Streams.isJModArchive(iS.toByteBuffer())) {
-			return Cache.pathForIterableZipContainers.getOrUploadIfAbsent(
-				absolutePath, () -> new ZipFile(absolutePath, iS.toByteBuffer())
-			).duplicate();
+			return createZipFile(absolutePath, iS.toByteBuffer());
 		} else if (Streams.isArchive(iS.toByteBuffer())) {
 			return new ZipInputStream(absolutePath, new ByteBufferInputStream(iS.toByteBuffer()));
 		}

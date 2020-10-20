@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
@@ -123,8 +124,7 @@ public class FileSystemItem implements ManagedLogger {
 				if (conventionedAbsolutePathTemp == null || parentContainerTemp == null) {
 					if (parentContainerTemp != null && parentContainerTemp.isArchive()) {
 						ByteBuffer parentContainerContent = parentContainerTemp.toByteBuffer();
-						String relativePath = absolutePath.replace(parentContainer.getAbsolutePath() + "/",
-								"");
+						String relativePath = absolutePath.replace(parentContainer.getAbsolutePath() + "/", "");
 						conventionedAbsolutePathTemp = parentContainer.computeConventionedAbsolutePath()
 								+ retrieveConventionedRelativePath(parentContainerContent,
 										parentContainer.getAbsolutePath(), relativePath);
@@ -794,7 +794,6 @@ public class FileSystemItem implements ManagedLogger {
 
 	synchronized String retrieveConventionedRelativePath(FileSystemItem fileSystemItem, IterableZipContainer iZC,
 			IterableZipContainer.Entry zipEntry, String relativePath1) {
-
 		if (zipEntry != null) {
 			String relativePath2 = zipEntry.getName();
 			if (relativePath2.endsWith("/")) {
@@ -838,19 +837,36 @@ public class FileSystemItem implements ManagedLogger {
 				while (superParentContainer.getParentContainer() != null && superParentContainer.getParentContainer().isArchive()) {
 					superParentContainer = superParentContainer.getParentContainer();
 				}
-				Collection<FileSystemItem> superParentAllChildren = superParentContainer.getAllChildren();
-				FileSystemItem randomFIS = IterableObjectHelper.getRandom(superParentAllChildren);
-				while (randomFIS.getAbsolutePath() == this.getAbsolutePath() && superParentAllChildren.size() > 1) {
-					randomFIS = IterableObjectHelper.getRandom(superParentAllChildren);
+				Collection<FileSystemItem> parentAllChildren = parentContainer.getAllChildren();
+				FileSystemItem randomFIS = IterableObjectHelper.getRandom(parentAllChildren);
+				while (randomFIS.getAbsolutePath() == this.getAbsolutePath() && parentAllChildren.size() > 1) {
+					randomFIS = IterableObjectHelper.getRandom(parentAllChildren);
 				}
 				if ((Cache.pathForContents.get(randomFIS.getAbsolutePath())) == null) {
 					FileSystemItem finalRandomFIS = randomFIS;
 					FileSystemItem superParentContainerFinal = superParentContainer;
-					Synchronizer.execute(superParentContainer.instanceId, () -> {
-						if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null)) {
+					BackgroundExecutor.createTask(() -> {
+						if (Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null) {
 							superParentContainerFinal.refresh().getAllChildren();
 						}
-					});
+					}).runOnlyOnce(
+						superParentContainer.instanceId,
+						() -> Cache.pathForContents.get(absolutePath) != null
+					).submit().waitForFinish();
+				}
+				if (Cache.pathForContents.get(randomFIS.getAbsolutePath()) != null &&
+					Cache.pathForContents.get(absolutePath) == null) {
+					FileSystemItem finalRandomFIS = randomFIS;
+					FileSystemItem superParentContainerFinal = superParentContainer;
+					BackgroundExecutor.createTask(() -> {
+						if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) != null) && 
+							Cache.pathForContents.get(absolutePath) == null) {
+							superParentContainerFinal.refresh().getAllChildren();
+						}
+					}).runOnlyOnce(
+						superParentContainer.instanceId,
+						() -> Cache.pathForContents.get(absolutePath) != null
+					).submit().waitForFinish();
 				}
 				if (Cache.pathForContents.get(absolutePath) == null) {
 					reloadContent(false);

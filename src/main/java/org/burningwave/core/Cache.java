@@ -30,10 +30,9 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
-import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;
@@ -269,20 +268,15 @@ public class Cache implements Component {
 				resource;
 		}
 		
-		public R upload(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
-			R resource = Synchronizer.execute(instanceId + "_mutexManagerForLoadedResources_" + path, () -> {
-				R resourceTemp = null;
-				if (resourceSupplier != null) {
-					resourceTemp = resourceSupplier.get();
-					if (resourceTemp != null) {
-						loadedResources.put(path, resourceTemp = sharer.apply(resourceTemp));
-					}
+		public R upload(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier, boolean destroy) {
+			R oldResource = remove(path, destroy);
+			Synchronizer.execute(instanceId + "_mutexManagerForLoadedResources_" + path, () -> {
+				R resourceTemp = resourceSupplier.get();
+				if (resourceTemp != null) {
+					loadedResources.put(path, resourceTemp = sharer.apply(resourceTemp));
 				}
-				return resourceTemp;
 			});
-			return resource != null? 
-				sharer.apply(resource) :
-				resource;
+			return oldResource;
 		}
 		
 		Map<String, Map<String, R>> retrievePartition(Map<Long, Map<String, Map<String, R>>> partitionedResources, Long partitionIndex) {
@@ -299,17 +293,15 @@ public class Cache implements Component {
 			return resources;
 		}
 		
-		public R upload(String path, Supplier<R> resourceSupplier) {
-			path = Paths.clean(path);
+		public R upload(String path, Supplier<R> resourceSupplier, boolean destroy) {
 			Long occurences = path.chars().filter(ch -> ch == '/').count();
 			Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
 			Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
 			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
-			return upload(nestedPartition, path, resourceSupplier);
+			return upload(nestedPartition, path, resourceSupplier, destroy);
 		}
 		
 		public R getOrUploadIfAbsent(String path, Supplier<R> resourceSupplier) {
-			path = Paths.clean(path);
 			Long occurences = path.chars().filter(ch -> ch == '/').count();
 			Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
 			Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
@@ -322,12 +314,13 @@ public class Cache implements Component {
 		}
 		
 		public R remove(String path, boolean destroy) {
-			path = Paths.clean(path);
 			Long occurences = path.chars().filter(ch -> ch == '/').count();
 			Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
 			Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
 			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
-			R item = nestedPartition.remove(path);
+			R item = Synchronizer.execute(instanceId + "_mutexManagerForLoadedResources_" + path, () -> {
+				return nestedPartition.remove(path);
+			});
 			if (itemDestroyer != null && destroy && item != null) {
 				String finalPath = path;
 				BackgroundExecutor.createTask(() -> 
