@@ -268,6 +268,7 @@ class ZipFile implements IterableZipContainer {
 		private String name;
 		private String absolutePath;
 		private Supplier<ByteBuffer> zipEntryContentSupplier;
+		private Boolean archive;
 
 		public Entry(ZipFile zipMemoryContainer, String entryName, Supplier<ByteBuffer> zipEntryContentSupplier) {
 			this.zipMemoryContainer = zipMemoryContainer;
@@ -275,7 +276,16 @@ class ZipFile implements IterableZipContainer {
 			this.absolutePath = Paths.clean(zipMemoryContainer.getAbsolutePath() + "/" + entryName);
 			this.zipEntryContentSupplier = zipEntryContentSupplier;
 		}
-
+		
+		@Override
+		public boolean isArchive() {
+			if (archive != null) {
+				return archive;
+			}
+			ByteBuffer content = toByteBuffer();
+			return archive = content != null ? Streams.isArchive(content) : false;
+		}
+		
 		@Override
 		public <C extends IterableZipContainer> C getParentContainer() {
 			return (C) zipMemoryContainer;
@@ -322,6 +332,7 @@ class ZipFile implements IterableZipContainer {
 		public void destroy() {
 			this.absolutePath = null;
 			this.name = null;
+			this.archive = null;
 			this.cleanedName = null;
 			this.zipEntryContentSupplier = null;
 			this.zipMemoryContainer = null;

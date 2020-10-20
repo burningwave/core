@@ -49,6 +49,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.ZipInputStream.Entry.Attached;
 
+@SuppressWarnings("unchecked")
 class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZipContainer, Component {
 	String absolutePath;
 	String conventionedAbsolutePath;
@@ -123,7 +124,6 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 	
 	
 	@Override
-	@SuppressWarnings("unchecked")
 	public Entry.Attached getNextEntry() {
 		return (Attached)getNextEntry((zEntry) -> false);
 	}
@@ -194,6 +194,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			private ZipInputStream zipInputStream;
 			private String absolutePath;
 			private String cleanedName;
+			private Boolean archive;
 			
 			public Attached(Entry.Attached e, ZipInputStream zIS) {
 				super(e);
@@ -206,7 +207,15 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			}
 			
 			@Override
-			@SuppressWarnings("unchecked")
+			public boolean isArchive() {
+				if (archive != null) {
+					return archive;
+				}
+				ByteBuffer content = toByteBuffer();
+				return archive = content != null ? Streams.isArchive(content) : false;
+			}
+			
+			@Override
 			public ZipInputStream getParentContainer() {
 				return zipInputStream;
 			}
@@ -310,6 +319,9 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			@Override
 			public void close() {
 				zipInputStream = null;
+				absolutePath = null;
+				cleanedName = null;
+				archive = null;
 			}
 		}
 	
@@ -319,6 +331,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			private String absolutePath;
 			private Boolean isDirectory;
 			private IterableZipContainer zipInputStream;
+			private Boolean archive;
 			
 			Detached(IterableZipContainer.Entry zipEntry) {
 				this.name = zipEntry.getName();
@@ -328,7 +341,15 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			}
 			
 			@Override
-			@SuppressWarnings("unchecked")
+			public boolean isArchive() {
+				if (archive != null) {
+					return archive;
+				}
+				ByteBuffer content = toByteBuffer();
+				return archive = content != null ? Streams.isArchive(content) : false;
+			}
+			
+			@Override
 			public IterableZipContainer getParentContainer() {
 				return zipInputStream.duplicate();
 			}
@@ -381,6 +402,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			@Override
 			public void close() {
 				name = null;
+				archive = null;
 				cleanedName = null;
 				absolutePath = null;
 				isDirectory = null;

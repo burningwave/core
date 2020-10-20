@@ -817,7 +817,7 @@ public class FileSystemItem implements ManagedLogger {
 							.ofPath(zipEntry.getParentContainer().getAbsolutePath());
 				}
 				return zipEntryCleanedName
-					+ (!zipEntry.isDirectory() && zipEntry.isArchive() ? IterableZipContainer.ZIP_PATH_SEPARATOR
+					+ (zipEntry.isArchive() ? IterableZipContainer.ZIP_PATH_SEPARATOR
 								: "");
 			} else {
 				return zipEntryCleanedName + IterableZipContainer.ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
