@@ -30,6 +30,7 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -214,13 +215,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 				if (absolutePath != null) {
 					return absolutePath;
 				}
-				String cleanedName = getName();
-				cleanedName = cleanedName.endsWith("/") ? cleanedName.substring(0, cleanedName.length() -1) : cleanedName;
-				return absolutePath = 
-					zipInputStream.getAbsolutePath() +
-					(cleanedName.startsWith("/") ?
-						cleanedName	:
-						"/" + cleanedName);
+				return absolutePath = Paths.clean(zipInputStream.getAbsolutePath() + "/" + getName());
 			}
 			
 			private ByteBufferOutputStream createDataBytesContainer() {

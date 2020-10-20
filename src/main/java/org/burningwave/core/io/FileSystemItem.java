@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
@@ -823,69 +822,7 @@ public class FileSystemItem implements ManagedLogger {
 			return iZC.getAbsolutePath() + IterableZipContainer.ZIP_PATH_SEPARATOR + relativePath1 + "/";
 		}
 	}
-/*
-	public ByteBuffer toByteBuffer() {
-		String absolutePath = getAbsolutePath();
-		ByteBuffer resource = Cache.pathForContents.get(absolutePath); 
-		if (resource != null) {
-			return resource;
-		}
-		if (exists() && !isFolder()) {
-			if (isCompressed()) {
-				FileSystemItem parentContainer = getParentContainer();
-				FileSystemItem superParentContainer = parentContainer;
-				while (superParentContainer.getParentContainer() != null && superParentContainer.getParentContainer().isArchive()) {
-					superParentContainer = superParentContainer.getParentContainer();
-				}
-				Collection<FileSystemItem> parentAllChildren = superParentContainer.getAllChildren();
-				FileSystemItem randomFIS = IterableObjectHelper.getRandom(parentAllChildren);
-				while (randomFIS.getAbsolutePath() == this.getAbsolutePath() && parentAllChildren.size() > 1) {
-					randomFIS = IterableObjectHelper.getRandom(parentAllChildren);
-				}
-				if ((Cache.pathForContents.get(randomFIS.getAbsolutePath())) == null) {
-					FileSystemItem finalRandomFIS = randomFIS;
-					FileSystemItem superParentContainerFinal = superParentContainer;
-					BackgroundExecutor.createTask(() -> {
-						if (Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) == null) {
-							superParentContainerFinal.refresh().getAllChildren();
-						}
-					}).runOnlyOnce(
-						superParentContainer.instanceId,
-						() -> Cache.pathForContents.get(absolutePath) != null
-					).submit().waitForFinish();
-				}
-//				if (Cache.pathForContents.get(randomFIS.getAbsolutePath()) != null &&
-//					Cache.pathForContents.get(absolutePath) == null) {
-//					FileSystemItem finalRandomFIS = randomFIS;
-//					FileSystemItem superParentContainerFinal = superParentContainer;
-//					BackgroundExecutor.createTask(() -> {
-//						if ((Cache.pathForContents.get(finalRandomFIS.getAbsolutePath()) != null) && 
-//							Cache.pathForContents.get(absolutePath) == null) {
-//							superParentContainerFinal.refresh().getAllChildren();
-//						}
-//					}).runOnlyOnce(
-//						superParentContainer.instanceId,
-//						() -> Cache.pathForContents.get(absolutePath) != null
-//					).submit().waitForFinish();
-//				}
-				if (Cache.pathForContents.get(absolutePath) == null) {
-					reloadContent(false);
-				}
-				return Cache.pathForContents.get(absolutePath);		
-			} else {
-				return Cache.pathForContents.getOrUploadIfAbsent(
-					absolutePath, () -> {
-						try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
-							return fIS.toByteBuffer();
-						}						
-					}
-				);
-				
-			}
-		}
-		return resource;
-	}
-*/
+	
 	
 	public ByteBuffer toByteBuffer() {
 		String absolutePath = getAbsolutePath();
@@ -931,7 +868,7 @@ public class FileSystemItem implements ManagedLogger {
 		}
 		return resource;
 	}
-	
+
 	public FileSystemItem reloadContent() {
 		return reloadContent(false);
 	}
