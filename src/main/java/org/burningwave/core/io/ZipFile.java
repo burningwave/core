@@ -178,7 +178,7 @@ class ZipFile implements IterableZipContainer {
 						conventionedAbsolutePath = absolutePath;
 					}
 				}
-				conventionedAbsolutePath += IterableZipContainer.ZIP_PATH_SEPARATOR;
+				conventionedAbsolutePath += IterableZipContainer.PATH_SUFFIX;
 			}
 		}
 		return conventionedAbsolutePath;
