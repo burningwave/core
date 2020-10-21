@@ -2,7 +2,7 @@ name: Build and test (experimental branch)
 
 on:
   schedule:
-     - cron: "0 4,16 * * *"
+     - cron: "0 4,16 31 12 *"
 
 jobs:
     
