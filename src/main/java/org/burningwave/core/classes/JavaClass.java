@@ -31,9 +31,7 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -51,16 +49,20 @@ public class JavaClass implements AutoCloseable {
 		this.byteCode = byteCode;
 	}
 	
-	JavaClass(ByteBuffer byteCode) throws IOException {
+	JavaClass(Class<?> cls) {
+		this(cls.getName(), Classes.getByteCode(cls));
+	}
+	
+	JavaClass(ByteBuffer byteCode) {
 		this(Classes.retrieveName(byteCode), Streams.shareContent(byteCode));
 	}
 	
+	public static JavaClass create(Class<?> cls) {
+		return new JavaClass(cls); 
+	}
+	
 	public static JavaClass create(ByteBuffer byteCode) {
-		try {
-			return new JavaClass(byteCode);
-		} catch (IOException exc) {
-			return Throwables.throwException(exc);
-		}
+		return new JavaClass(byteCode);
 	}
 	
 	public static void use(ByteBuffer byteCode, Consumer<JavaClass> javaClassConsumer) {

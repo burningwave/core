@@ -30,6 +30,7 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
@@ -154,7 +155,7 @@ public class PathHelper implements Component {
 			loadPaths(Configuration.Key.MAIN_CLASS_PATHS);
 			addPaths(
 				Configuration.Key.MAIN_CLASS_PATHS,
-				ClassLoaders.getAllLoadedPaths(this.getClass().getClassLoader())
+				ClassLoaders.getAllLoadedPaths(Classes.getClassLoader(this.getClass()))
 			);
 		}
 	}
