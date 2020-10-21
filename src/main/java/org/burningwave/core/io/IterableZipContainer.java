@@ -255,8 +255,10 @@ public interface IterableZipContainer extends Component {
 		public <C extends IterableZipContainer> C getParentContainer();
 		
 		public default String getConventionedAbsolutePath() {
-			return getParentContainer().getConventionedAbsolutePath() + getName();
+			return getParentContainer().getConventionedAbsolutePath() + getCleanedName();
 		}
+		
+		public String getCleanedName();
 		
 		public String getName();
 		
@@ -270,10 +272,7 @@ public interface IterableZipContainer extends Component {
 			return Streams.toByteArray(toByteBuffer());
 		}
 		
-		default public boolean isArchive() {
-			ByteBuffer content = toByteBuffer();
-			return content != null ? Streams.isArchive(content) : false;
-		}
+		public boolean isArchive();
 		
 		default public InputStream toInputStream() {
 			return new ByteBufferInputStream(toByteBuffer());

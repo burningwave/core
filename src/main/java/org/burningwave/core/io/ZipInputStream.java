@@ -30,6 +30,7 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -48,6 +49,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.ZipInputStream.Entry.Attached;
 
+@SuppressWarnings("unchecked")
 class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZipContainer, Component {
 	String absolutePath;
 	String conventionedAbsolutePath;
@@ -122,7 +124,6 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 	
 	
 	@Override
-	@SuppressWarnings("unchecked")
 	public Entry.Attached getNextEntry() {
 		return (Attached)getNextEntry((zEntry) -> false);
 	}
@@ -192,6 +193,8 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 		static class Attached extends java.util.zip.ZipEntry implements Entry {
 			private ZipInputStream zipInputStream;
 			private String absolutePath;
+			private String cleanedName;
+			private Boolean archive;
 			
 			public Attached(Entry.Attached e, ZipInputStream zIS) {
 				super(e);
@@ -204,9 +207,35 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			}
 			
 			@Override
-			@SuppressWarnings("unchecked")
+			public boolean isArchive() {
+				if (archive != null) {
+					return archive;
+				}
+				ByteBuffer content = toByteBuffer();
+				return archive = content != null ? Streams.isArchive(content) : false;
+			}
+			
+			@Override
 			public ZipInputStream getParentContainer() {
 				return zipInputStream;
+			}
+			
+			@Override
+			public String getCleanedName() {
+				if (cleanedName != null) {
+					return cleanedName;
+				}
+				String cleanedName = super.getName();
+				if (!cleanedName.startsWith("/")) {
+					this.cleanedName = cleanedName;
+				} else {
+					if (!cleanedName.equals("/")) {
+						this.cleanedName =  cleanedName.substring(1, cleanedName.length());
+					} else {
+						this.cleanedName = "";
+					}
+				}
+				return this.cleanedName;
 			}
 			
 			@Override
@@ -214,13 +243,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 				if (absolutePath != null) {
 					return absolutePath;
 				}
-				String cleanedName = getName();
-				cleanedName = cleanedName.endsWith("/") ? cleanedName.substring(0, cleanedName.length() -1) : cleanedName;
-				return absolutePath = 
-					zipInputStream.getAbsolutePath() +
-					(cleanedName.startsWith("/") ?
-						cleanedName	:
-						"/" + cleanedName);
+				return absolutePath = Paths.clean(zipInputStream.getAbsolutePath() + "/" + getName());
 			}
 			
 			private ByteBufferOutputStream createDataBytesContainer() {
@@ -296,24 +319,35 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			@Override
 			public void close() {
 				zipInputStream = null;
+				absolutePath = null;
+				cleanedName = null;
+				archive = null;
 			}
 		}
 	
 		public static class Detached implements Entry {
 			private String name;
+			private String cleanedName;
 			private String absolutePath;
-			private Boolean isDirectory;
 			private IterableZipContainer zipInputStream;
+			private Boolean archive;
 			
 			Detached(IterableZipContainer.Entry zipEntry) {
 				this.name = zipEntry.getName();
 				this.absolutePath = zipEntry.getAbsolutePath();
-				this.isDirectory = zipEntry.isDirectory();
 				this.zipInputStream = zipEntry.getParentContainer().duplicate();
 			}
 			
 			@Override
-			@SuppressWarnings("unchecked")
+			public boolean isArchive() {
+				if (archive != null) {
+					return archive;
+				}
+				ByteBuffer content = toByteBuffer();
+				return archive = content != null ? Streams.isArchive(content) : false;
+			}
+			
+			@Override
 			public IterableZipContainer getParentContainer() {
 				return zipInputStream.duplicate();
 			}
@@ -332,6 +366,24 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			}
 			
 			@Override
+			public String getCleanedName() {
+				if (cleanedName != null) {
+					return cleanedName;
+				}
+				String cleanedName = name;
+				if (!cleanedName.startsWith("/")) {
+					this.cleanedName = cleanedName;
+				} else {
+					if (!cleanedName.equals("/")) {
+						this.cleanedName =  cleanedName.substring(1, cleanedName.length());
+					} else {
+						this.cleanedName = "";
+					}
+				}
+				return this.cleanedName;
+			}
+			
+			@Override
 			public String getName() {
 				return name;
 			}
@@ -342,14 +394,15 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			
 			@Override
 			public boolean isDirectory() {
-				return isDirectory;
+				return name.endsWith("/");
 			}
 			
 			@Override
 			public void close() {
 				name = null;
+				archive = null;
+				cleanedName = null;
 				absolutePath = null;
-				isDirectory = null;
 				zipInputStream.close();
 				zipInputStream = null;
 			}

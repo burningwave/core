@@ -48,6 +48,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 
+@SuppressWarnings("unchecked")
 class ZipFile implements IterableZipContainer {
 	private final static String classId;
 	String absolutePath;
@@ -196,7 +197,6 @@ class ZipFile implements IterableZipContainer {
 		return Cache.pathForContents.getOrUploadIfAbsent(getAbsolutePath(), contentSupplier);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public <Z extends IterableZipContainer.Entry> Z getNextEntry() {
 		return (Z) (currentZipEntry = entriesIterator.hasNext()? entriesIterator.next() : null);
@@ -264,9 +264,11 @@ class ZipFile implements IterableZipContainer {
 	
 	public static class Entry implements IterableZipContainer.Entry {
 		private ZipFile zipMemoryContainer;
+		private String cleanedName;
 		private String name;
 		private String absolutePath;
 		private Supplier<ByteBuffer> zipEntryContentSupplier;
+		private Boolean archive;
 
 		public Entry(ZipFile zipMemoryContainer, String entryName, Supplier<ByteBuffer> zipEntryContentSupplier) {
 			this.zipMemoryContainer = zipMemoryContainer;
@@ -274,13 +276,39 @@ class ZipFile implements IterableZipContainer {
 			this.absolutePath = Paths.clean(zipMemoryContainer.getAbsolutePath() + "/" + entryName);
 			this.zipEntryContentSupplier = zipEntryContentSupplier;
 		}
-
+		
 		@Override
-		@SuppressWarnings("unchecked")
+		public boolean isArchive() {
+			if (archive != null) {
+				return archive;
+			}
+			ByteBuffer content = toByteBuffer();
+			return archive = content != null ? Streams.isArchive(content) : false;
+		}
+		
+		@Override
 		public <C extends IterableZipContainer> C getParentContainer() {
 			return (C) zipMemoryContainer;
 		}
-
+		
+		@Override
+		public String getCleanedName() {
+			if (cleanedName != null) {
+				return cleanedName;
+			}
+			String cleanedName = name;
+			if (!cleanedName.startsWith("/")) {
+				this.cleanedName = cleanedName;
+			} else {
+				if (!cleanedName.equals("/")) {
+					this.cleanedName =  cleanedName.substring(1, cleanedName.length());
+				} else {
+					this.cleanedName = "";
+				}
+			}
+			return this.cleanedName;
+		}
+		
 		@Override
 		public String getName() {
 			return name;
@@ -304,6 +332,8 @@ class ZipFile implements IterableZipContainer {
 		public void destroy() {
 			this.absolutePath = null;
 			this.name = null;
+			this.archive = null;
+			this.cleanedName = null;
 			this.zipEntryContentSupplier = null;
 			this.zipMemoryContainer = null;
 		}
