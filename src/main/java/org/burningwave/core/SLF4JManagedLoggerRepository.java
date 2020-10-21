@@ -125,18 +125,22 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 		return isEnabled;
 	}
 	
+	@Override
 	public void disableLogging() {
 		isEnabled = false;	
 	}
 
+	@Override
 	public void enableLogging() {
 		isEnabled = true;		
 	}
 	
+	@Override
 	public void disableLogging(String clientName) {
 		getLoggerEntry(clientName).getValue().set(LoggingLevel.ALL_LEVEL_DISABLED);
 	}
 	
+	@Override
 	public void enableLogging(String clientName) {
 		getLoggerEntry(clientName).getValue().set(LoggingLevel.ALL_LEVEL_ENABLED);
 	}

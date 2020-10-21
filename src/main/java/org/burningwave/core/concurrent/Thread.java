@@ -283,7 +283,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 									ManagedLoggersRepository.logInfo(
 										() -> this.getClass().getName(), 
 										"{}: decreasing maxTemporarilyThreadsCount to {}", 
-										Thread.currentThread(), (maxThreadsCount - maxPoolableThreadsCount)
+										java.lang.Thread.currentThread(), (maxThreadsCount - maxPoolableThreadsCount)
 									);
 									timeOfLastIncreaseOfMaxDetachedThreadsCount = Long.MAX_VALUE;
 								}
@@ -294,7 +294,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 								ManagedLoggersRepository.logInfo(
 									() -> this.getClass().getName(), 
 									"{} waited for {}ms: maxTemporarilyThreadsCount will be temporarily increased to {} for preventing dead lock",
-									Thread.currentThread(), waitElapsedTime, (maxThreadsCount - maxPoolableThreadsCount)
+									java.lang.Thread.currentThread(), waitElapsedTime, (maxThreadsCount - maxPoolableThreadsCount)
 								);
 								return getOrCreate(--requestCount);
 							}

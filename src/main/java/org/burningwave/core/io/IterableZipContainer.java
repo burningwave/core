@@ -46,6 +46,8 @@ import org.burningwave.core.Component;
 
 public interface IterableZipContainer extends Component {
 	
+	public final static String PATH_SUFFIX = "///";
+	
 	public static IterableZipContainer create(FileInputStream file) {
 		return create(file.getAbsolutePath(), file);
 	}
@@ -109,8 +111,6 @@ public interface IterableZipContainer extends Component {
 		}
 		return null;
 	}
-
-	String ZIP_PATH_SEPARATOR = "///";
 	
 	public default <T> Set<T> findAllAndConvert(
 		Predicate<IterableZipContainer.Entry> zipEntryPredicate, 

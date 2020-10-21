@@ -388,8 +388,8 @@ public class FileSystemItem implements ManagedLogger {
 			if (conventionedPath != null) {
 				if (conventionedPath.endsWith("/")) {
 					int offset = -1;
-					if (conventionedPath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR)) {
-						offset = -IterableZipContainer.ZIP_PATH_SEPARATOR.length();
+					if (conventionedPath.endsWith(IterableZipContainer.PATH_SUFFIX)) {
+						offset = -IterableZipContainer.PATH_SUFFIX.length();
 					}
 					conventionedPath = conventionedPath.substring(0, conventionedPath.length() + offset);
 				}
@@ -431,7 +431,7 @@ public class FileSystemItem implements ManagedLogger {
 
 	public boolean isArchive() {
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
-		return conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR);
+		return conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX);
 	}
 
 	public boolean isChildOf(FileSystemItem fileSystemItem) {
@@ -448,13 +448,13 @@ public class FileSystemItem implements ManagedLogger {
 
 	public boolean isCompressed() {
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
-		return (conventionedAbsolutePath.contains(IterableZipContainer.ZIP_PATH_SEPARATOR)
-				&& !conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR))
-				|| (conventionedAbsolutePath.contains(IterableZipContainer.ZIP_PATH_SEPARATOR)
-						&& conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR)
+		return (conventionedAbsolutePath.contains(IterableZipContainer.PATH_SUFFIX)
+				&& !conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX))
+				|| (conventionedAbsolutePath.contains(IterableZipContainer.PATH_SUFFIX)
+						&& conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX)
 						&& conventionedAbsolutePath
-								.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR) != conventionedAbsolutePath
-										.lastIndexOf(IterableZipContainer.ZIP_PATH_SEPARATOR));
+								.indexOf(IterableZipContainer.PATH_SUFFIX) != conventionedAbsolutePath
+										.lastIndexOf(IterableZipContainer.PATH_SUFFIX));
 	}
 
 	public boolean isContainer() {
@@ -469,7 +469,7 @@ public class FileSystemItem implements ManagedLogger {
 	public boolean isFolder() {
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
 		return conventionedAbsolutePath.endsWith("/")
-				&& !conventionedAbsolutePath.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR);
+				&& !conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX);
 	}
 
 	public boolean isParentOf(FileSystemItem fileSystemItem) {
@@ -567,19 +567,19 @@ public class FileSystemItem implements ManagedLogger {
 							.create(parentContainer.getAbsolutePath(), parentContainer.toByteBuffer());
 					return retrieveChildren(zipInputStreamSupplier,
 							conventionedAbsolutePath.substring(
-								conventionedAbsolutePath.lastIndexOf(IterableZipContainer.ZIP_PATH_SEPARATOR)
-									+ IterableZipContainer.ZIP_PATH_SEPARATOR.length()
+								conventionedAbsolutePath.lastIndexOf(IterableZipContainer.PATH_SUFFIX)
+									+ IterableZipContainer.PATH_SUFFIX.length()
 							)
 					);
 				}
 			} else if (isArchive()) {
 				String zipFilePath = conventionedAbsolutePath.substring(0,
-						conventionedAbsolutePath.indexOf(IterableZipContainer.ZIP_PATH_SEPARATOR));
+						conventionedAbsolutePath.indexOf(IterableZipContainer.PATH_SUFFIX));
 				File file = new File(zipFilePath);
 				if (file.exists()) {
 					try (FileInputStream fIS = FileInputStream.create(file)) {
 						return retrieveChildren(() -> IterableZipContainer.create(fIS), conventionedAbsolutePath
-							.replaceFirst(zipFilePath + IterableZipContainer.ZIP_PATH_SEPARATOR, ""));
+							.replaceFirst(zipFilePath + IterableZipContainer.PATH_SUFFIX, ""));
 					}
 				}
 			} else {
@@ -713,7 +713,7 @@ public class FileSystemItem implements ManagedLogger {
 				} else {
 					try {
 						if (Streams.isArchive(file)) {
-							return realAbsolutePath + IterableZipContainer.ZIP_PATH_SEPARATOR;
+							return realAbsolutePath + IterableZipContainer.PATH_SUFFIX;
 						} else {
 							return realAbsolutePath;
 						}
@@ -725,7 +725,7 @@ public class FileSystemItem implements ManagedLogger {
 				}
 			} else {
 				try (FileInputStream fileInputStream = FileInputStream.create(file)) {
-					return fileInputStream.getAbsolutePath() + IterableZipContainer.ZIP_PATH_SEPARATOR
+					return fileInputStream.getAbsolutePath() + IterableZipContainer.PATH_SUFFIX
 							+ retrieveConventionedRelativePath(fileInputStream.toByteBuffer(),
 									fileInputStream.getAbsolutePath(), relativePath);
 				} catch (Throwable exc) {
@@ -817,10 +817,10 @@ public class FileSystemItem implements ManagedLogger {
 							.ofPath(zipEntry.getParentContainer().getAbsolutePath());
 				}
 				return zipEntryCleanedName
-					+ (zipEntry.isArchive() ? IterableZipContainer.ZIP_PATH_SEPARATOR
+					+ (zipEntry.isArchive() ? IterableZipContainer.PATH_SUFFIX
 								: "");
 			} else {
-				return zipEntryCleanedName + IterableZipContainer.ZIP_PATH_SEPARATOR + retrieveConventionedRelativePath(
+				return zipEntryCleanedName + IterableZipContainer.PATH_SUFFIX + retrieveConventionedRelativePath(
 					zipEntry.toByteBuffer(), zipEntry.getAbsolutePath(), relativePath2);
 			}
 			// in case of JMod files folder
@@ -828,7 +828,7 @@ public class FileSystemItem implements ManagedLogger {
 			if (fileSystemItem.parentContainer == null) {
 				fileSystemItem.parentContainer = FileSystemItem.ofPath(iZC.getAbsolutePath());
 			}
-			return iZC.getAbsolutePath() + IterableZipContainer.ZIP_PATH_SEPARATOR + relativePath1 + "/";
+			return iZC.getAbsolutePath() + IterableZipContainer.PATH_SUFFIX + relativePath1 + "/";
 		}
 	}
 	
@@ -938,10 +938,10 @@ public class FileSystemItem implements ManagedLogger {
 			// getParentContainer().getExtension() +
 					":" + prefix;
 		}
-		url = url.endsWith(IterableZipContainer.ZIP_PATH_SEPARATOR)
-				? url.substring(0, url.lastIndexOf(IterableZipContainer.ZIP_PATH_SEPARATOR))
+		url = url.endsWith(IterableZipContainer.PATH_SUFFIX)
+				? url.substring(0, url.lastIndexOf(IterableZipContainer.PATH_SUFFIX))
 				: url;
-		String uRLToRet = url.replace(IterableZipContainer.ZIP_PATH_SEPARATOR, isCompressed() ? "!/" : "/");
+		String uRLToRet = url.replace(IterableZipContainer.PATH_SUFFIX, isCompressed() ? "!/" : "/");
 		url = Executor.get(() -> URLEncoder.encode(uRLToRet, StandardCharsets.UTF_8.name())).replace("%3A", ":")
 				.replace("%21", "!").replace("%2F", "/");
 		url = prefix + url;

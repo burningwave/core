@@ -114,7 +114,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 			)
 		);
 		targetCriteria.collectMembers = leftCriteria.collectMembers || rightCriteria.collectMembers;
-		return super.logicOperation((ClassCriteria)leftCriteria, rightCriteria, binaryOperator, targetCriteria);
+		return super.logicOperation(leftCriteria, rightCriteria, binaryOperator, targetCriteria);
 	}	
 	
 	public ClassCriteria packageName(final Predicate<String> predicate) {
@@ -215,6 +215,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		return !members.isEmpty();
 	}
 	
+	@Override
 	public ClassCriteria createCopy() {
 		ClassCriteria copy = super.createCopy();
 		this.memberCriterias.entrySet().stream().collect(

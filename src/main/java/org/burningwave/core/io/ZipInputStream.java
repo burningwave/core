@@ -102,7 +102,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 						conventionedAbsolutePath = absolutePath;
 					}
 				}
-				conventionedAbsolutePath += IterableZipContainer.ZIP_PATH_SEPARATOR;
+				conventionedAbsolutePath += IterableZipContainer.PATH_SUFFIX;
 			}
 		}
 		return conventionedAbsolutePath;

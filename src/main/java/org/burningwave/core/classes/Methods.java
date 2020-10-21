@@ -198,7 +198,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 	}
 	
 	private <T> T invoke(Class<?> targetClass, Object target, String methodName, ThrowingFunction<Method, T, Throwable> methodInvoker, Object... arguments) {
-		return Executor.get(() ->(T)methodInvoker.apply(findFirstAndMakeItAccessible(targetClass, methodName, Classes.retrieveFrom(arguments))));
+		return Executor.get(() ->methodInvoker.apply(findFirstAndMakeItAccessible(targetClass, methodName, Classes.retrieveFrom(arguments))));
 	}
 	
 	public 	<T> T invokeStaticDirect(Class<?> targetClass, String methodName, Object... arguments) {

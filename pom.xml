@@ -3,9 +3,9 @@
 
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
-	<version>8.2.4-SNAPSHOT</version>
+	<version>8.3.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
-	
+
 	<name>Burningwave Core</name>
 	<description>
 		An advanced and highly optimized Java building frameworks library: it is useful for scanning 
@@ -21,12 +21,12 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
-	
+
 	<organization>
 		<name>Burningwave</name>
 		<url>https://www.burningwave.org/</url>
 	</organization>
-	
+
 	<developers>
 		<developer>
 			<name>Roberto Gentili</name>
@@ -40,11 +40,12 @@
 			</roles>
 		</developer>
 	</developers>
-	
+
 	<properties>
 		<copyright.holder>Roberto Gentili</copyright.holder>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<!-- Can be changed with one of this values: 9, 10, 11, 12, 13, 14, 15, 16 -->
+		<!-- Can be changed with one of this values: 9, 10, 11, 12, 13, 14, 15, 
+			16 -->
 		<project_jdk_version>8</project_jdk_version>
 		<javadocExecutable.relativePath>bin/javadoc</javadocExecutable.relativePath>
 		<skipTests>true</skipTests>
@@ -53,7 +54,7 @@
 		<project.test.excludes>**/*Test.java</project.test.excludes>
 		<project.generated.artifacts.prefix>bw</project.generated.artifacts.prefix>
 		<repository.url>https://burningwave@github.com/burningwave/core.git</repository.url>
-		
+
 		<coveralls-maven-plugin.version>4.3.0</coveralls-maven-plugin.version>
 		<logback.version>1.2.3</logback.version>
 		<jacoco-maven-plugin.version>0.7.6.201602180812</jacoco-maven-plugin.version>
@@ -73,12 +74,12 @@
 		<nexus-staging-maven-plugin.version>1.6.7</nexus-staging-maven-plugin.version>
 		<slf4j.version>1.7.30</slf4j.version>
 	</properties>
-	
+
 	<issueManagement>
-        <system>github.com</system>
-        <url>https://github.com/burningwave/core/issues</url>
-    </issueManagement>
-	
+		<system>github.com</system>
+		<url>https://github.com/burningwave/core/issues</url>
+	</issueManagement>
+
 	<distributionManagement>
 		<snapshotRepository>
 			<id>ossrh</id>
@@ -96,7 +97,7 @@
 		<url>https://github.com/burningwave/core</url>
 		<tag>HEAD</tag>
 	</scm>
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -105,14 +106,14 @@
 			<scope>provided</scope>
 			<optional>true</optional>
 		</dependency>
-		
+
 		<dependency>
-		    <groupId>org.slf4j</groupId>
-		    <artifactId>jul-to-slf4j</artifactId>
-		    <version>${slf4j.version}</version>
-		    <scope>test</scope>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jul-to-slf4j</artifactId>
+			<version>${slf4j.version}</version>
+			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-core</artifactId>
@@ -163,7 +164,7 @@
 		</dependency>
 
 	</dependencies>
-	
+
 	<build>
 		<finalName>${project.generated.artifacts.prefix}-${project.artifactId}-${project.version}</finalName>
 		<resources>
@@ -214,7 +215,7 @@
 				<version>${maven-surefire-plugin.version}</version>
 				<configuration>
 					<systemProperties>
-						<property> 
+						<property>
 							<name>java.util.logging.config.file</name>
 							<value>src/test/resources/logging.properties</value>
 						</property>

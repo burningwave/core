@@ -57,14 +57,16 @@ public final class ByteBufferInputStream extends InputStream {
     	buffer = ByteBufferHandler.duplicate(toByteBuffer());
     }
     
-    public int read() {
+    @Override
+	public int read() {
         if (!buffer.hasRemaining()) {
             return -1;
         }
         return buffer.get() & 0xFF;
     }
 
-    public int read(byte[] bytes, int off, int len) {
+    @Override
+	public int read(byte[] bytes, int off, int len) {
         if (!buffer.hasRemaining()) {
             return -1;
         }

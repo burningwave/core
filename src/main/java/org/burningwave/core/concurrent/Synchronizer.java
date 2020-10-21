@@ -237,7 +237,7 @@ public class Synchronizer implements AutoCloseable, ManagedLogger {
 		}
 		
 		public ThreadsMonitorer start(Long interval) {
-			ThreadHolder.startLooping(getName(), true, Thread.MIN_PRIORITY, thread -> {
+			ThreadHolder.startLooping(getName(), true, java.lang.Thread.MIN_PRIORITY, thread -> {
 				thread.waitFor(interval);
 				if (thread.isLooping()) {
 					synchronizer.logAllThreadsState(false);

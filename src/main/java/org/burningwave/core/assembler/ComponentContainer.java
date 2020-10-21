@@ -302,6 +302,7 @@ public class ComponentContainer implements ComponentSupplier {
 		return config.remove(propertyName);
 	}
 	
+	@Override
 	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
 		T component = (T)components.get(componentType);
 		if (component == null) {
@@ -358,6 +359,7 @@ public class ComponentContainer implements ComponentSupplier {
 		);	
 	}
 	
+	@Override
 	public CodeExecutor getCodeExecutor() {
 		return getOrCreate(CodeExecutor.class, () -> 
 			CodeExecutor.create(
@@ -462,7 +464,7 @@ public class ComponentContainer implements ComponentSupplier {
 		} else if (object instanceof Function) {
 			return (T)(Supplier<?>)() -> ((Function<ComponentSupplier, ?>)object).apply(this);
 		} else {
-			return (T)object;
+			return object;
 		}
 	}
 	
@@ -527,6 +529,7 @@ public class ComponentContainer implements ComponentSupplier {
 		}
 	}
 	
+	@Override
 	public void close() {
 		close(false);
 	}

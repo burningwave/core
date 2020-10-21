@@ -1,11 +1,8 @@
 package org.burningwave.core;
 
 
-import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
-
 import java.io.Closeable;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -13,7 +10,6 @@ import java.util.stream.Stream;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
-import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.service.Service;

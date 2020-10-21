@@ -73,12 +73,14 @@ public class ByteBufferOutputStream extends OutputStream {
     	this.closeable = closeable;
     }
     
-    public void write(int b) {
+    @Override
+	public void write(int b) {
         ensureRemaining(1);
         buffer.put((byte) b);
     }
 
-    public void write(byte[] bytes, int off, int len) {
+    @Override
+	public void write(byte[] bytes, int off, int len) {
         ensureRemaining(len);
         buffer.put(bytes, off, len);
     }

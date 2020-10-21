@@ -270,7 +270,7 @@ public interface ManagedLogger {
 			}
 			
 			protected void removeLoggingLevels(Properties properties, String configKey, LoggingLevel... loggingLevels) {
-				String loggerDisabledFor = (String)properties.getProperty(configKey);
+				String loggerDisabledFor = properties.getProperty(configKey);
 				if (loggerDisabledFor != null) {
 					for (LoggingLevel loggingLevel : loggingLevels) {
 						removeLoggingLevelFor(loggingLevel, loggerDisabledFor.split(";"));
@@ -279,7 +279,7 @@ public interface ManagedLogger {
 			}
 			
 			protected void addLoggingLevels(Properties properties, String configKey, LoggingLevel... loggingLevels) {
-				String loggerEnabledFor = (String)properties.getProperty(configKey);
+				String loggerEnabledFor = properties.getProperty(configKey);
 				if (loggerEnabledFor != null) {
 					for (LoggingLevel loggingLevel : loggingLevels) {
 						addLoggingLevelFor(loggingLevel, loggerEnabledFor.split(";"));
@@ -292,10 +292,12 @@ public interface ManagedLogger {
 				return isEnabled;
 			}
 			
+			@Override
 			public void disableLogging() {
 				isEnabled = false;	
 			}
 
+			@Override
 			public void enableLogging() {
 				isEnabled = true;		
 			}
