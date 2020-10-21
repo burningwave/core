@@ -832,8 +832,12 @@ public class FileSystemItem implements ManagedLogger {
 		}
 	}
 	
-	
 	public ByteBuffer toByteBuffer() {
+		return Executor.get(this::toByteBuffer0, 2);
+	}
+	
+	
+	private ByteBuffer toByteBuffer0() {
 		String absolutePath = getAbsolutePath();
 		ByteBuffer resource = Cache.pathForContents.get(absolutePath); 
 		if (resource != null) {
@@ -863,7 +867,7 @@ public class FileSystemItem implements ManagedLogger {
 				if (Cache.pathForContents.get(absolutePath) == null) {
 					reloadContent(false);
 				}
-				return toByteBuffer();		
+				return Cache.pathForContents.get(absolutePath);		
 			} else {
 				return Cache.pathForContents.getOrUploadIfAbsent(
 					absolutePath, () -> {
@@ -871,11 +875,10 @@ public class FileSystemItem implements ManagedLogger {
 							return fIS.toByteBuffer();
 						}						
 					}
-				);
-				
+				);				
 			}
 		}
-		return resource;
+		return null;
 	}
 
 	public FileSystemItem reloadContent() {
