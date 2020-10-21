@@ -31,6 +31,7 @@ package org.burningwave.core.classes;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.UUID;
 
 public class CompilationConfig {
 	private Collection<String> sources;
@@ -41,12 +42,11 @@ public class CompilationConfig {
 	private Collection<String> classRepositories;
 	private Collection<String> additionalClassRepositories;
 	
-	private boolean storingCompiledClassesEnabled;
-	private boolean storingCompiledClassesToNewFolderEnabled;
+	private String compiledClassesStorage;
 	
 	private CompilationConfig() {
 		this.sources = new HashSet<>();
-		storingCompiledClassesEnabled = true;
+		compiledClassesStorage = "/common";
 	}
 	
 	@SafeVarargs
@@ -64,15 +64,21 @@ public class CompilationConfig {
 	}
 	
 	public CompilationConfig storeCompiledClasses(boolean flag) {
-		this.storingCompiledClassesEnabled = flag;
+		if (flag) {
+			compiledClassesStorage = "common";
+		} else {
+			compiledClassesStorage = null;
+		}
 		return this;
 	}
 	
-	public CompilationConfig storeCompiledClassesToNewFolder(boolean flag) {
-		if (flag) {
-			storeCompiledClasses(flag);
-		}
-		this.storingCompiledClassesToNewFolderEnabled = flag;
+	public CompilationConfig storeCompiledClassesTo(String folderName) {
+		compiledClassesStorage = folderName;
+		return this;
+	}
+	
+	public CompilationConfig storeCompiledClassesToNewFolder() {
+		compiledClassesStorage = UUID.randomUUID().toString();
 		return this;
 	}
 
@@ -172,12 +178,11 @@ public class CompilationConfig {
 	}
 	
 	boolean isStoringCompiledClassesEnabled() {
-		return storingCompiledClassesEnabled;
+		return compiledClassesStorage != null;
 	}
 	
-	boolean isStoringCompiledClassesToNewFolderEnabled() {
-		return storingCompiledClassesToNewFolderEnabled;
+	String getCompiledClassesStorage() {
+		return compiledClassesStorage;
 	}
-
 }
 
