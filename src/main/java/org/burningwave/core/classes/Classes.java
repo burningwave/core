@@ -323,6 +323,7 @@ public class Classes implements Component, MembersRetriever {
 		);
 	}
 	
+	@Override
 	public Field[] getDeclaredFields(Class<?> cls)  {
 		return Cache.classLoaderForFields.getOrUploadIfAbsent(
 			getClassLoader(cls), cls.getName().replace(".", "/"),
@@ -330,6 +331,7 @@ public class Classes implements Component, MembersRetriever {
 		);
 	}
 	
+	@Override
 	public <T> Constructor<T>[] getDeclaredConstructors(Class<T> cls)  {
 		return (Constructor<T>[]) Cache.classLoaderForConstructors.getOrUploadIfAbsent(
 			getClassLoader(cls), cls.getName().replace(".", "/"),
@@ -337,6 +339,7 @@ public class Classes implements Component, MembersRetriever {
 		);
 	}
 	
+	@Override
 	public Method[] getDeclaredMethods(Class<?> cls)  {
 		return Cache.classLoaderForMethods.getOrUploadIfAbsent(
 			getClassLoader(cls), cls.getName().replace(".", "/"),
@@ -556,7 +559,7 @@ public class Classes implements Component, MembersRetriever {
 				synchronized (classLoadersPackages) {
 					packages = classLoadersPackages.get(classLoader);
 					if (packages == null) {
-						classLoadersPackages.put(classLoader, (packages = (Map<String, ?>)LowLevelObjectsHandler.retrieveLoadedPackages(classLoader)));
+						classLoadersPackages.put(classLoader, (packages = LowLevelObjectsHandler.retrieveLoadedPackages(classLoader)));
 					}
 				}
 			

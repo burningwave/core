@@ -87,7 +87,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 		if (!useDefaultClassLoaderAsParentIfParentClassLoaderIsNullHasBeenCalled) {
 			useDefaultClassLoaderAsParentIfParentClassLoaderIsNull = false;
 		}
-		return (C) super.useClassLoader(classLoader);
+		return super.useClassLoader(classLoader);
 	}
 
 	Object[] getParams() {

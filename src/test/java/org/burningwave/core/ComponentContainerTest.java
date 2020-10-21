@@ -63,7 +63,7 @@ public class ComponentContainerTest extends BaseTest {
 	@Order(1)
 	public void putPropertyOne() {
 		testDoesNotThrow(() -> {
-			ComponentContainer componentContainer = ((ComponentContainer)getComponentSupplier());
+			ComponentContainer componentContainer = (getComponentSupplier());
 			componentContainer.getPathScannerClassLoader();
 			componentContainer.setConfigProperty(
 				PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
@@ -76,7 +76,7 @@ public class ComponentContainerTest extends BaseTest {
 	@Order(2)
 	public void putPropertyTwo() {
 		testDoesNotThrow(() -> {
-			ComponentContainer componentContainer = ((ComponentContainer)getComponentSupplier());
+			ComponentContainer componentContainer = (getComponentSupplier());
 			componentContainer.setConfigProperty(
 				PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION,
 				FileSystemItem.CheckingOption.FOR_SIGNATURE_AND_NAME.getLabel()
@@ -88,7 +88,7 @@ public class ComponentContainerTest extends BaseTest {
 	@Order(4)
 	public void putPropertyThree() {
 		testDoesNotThrow(() -> {
-			ComponentContainer componentContainer = ((ComponentContainer)getComponentSupplier());
+			ComponentContainer componentContainer = (getComponentSupplier());
 			componentContainer.setConfigProperty(
 				ClassFactory.Configuration.Key.DEFAULT_CLASS_LOADER,
 				"PathScannerClassLoader classLoader = PathScannerClassLoader.create(" +
@@ -108,7 +108,7 @@ public class ComponentContainerTest extends BaseTest {
 	@Order(6)
 	public void putPropertyFour() {
 		testDoesNotThrow(() -> {
-			ComponentContainer componentContainer = ((ComponentContainer)getComponentSupplier());
+			ComponentContainer componentContainer = (getComponentSupplier());
 			componentContainer.setConfigProperty(
 				ClassHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER,
 				"PathScannerClassLoader classLoader = PathScannerClassLoader.create(" +

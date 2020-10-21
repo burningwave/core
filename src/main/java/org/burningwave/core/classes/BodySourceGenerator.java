@@ -139,7 +139,7 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 	
 	@Override
 	public String make() {
-		return getOrEmpty(startingDelimiter, getOrEmpty((Collection<?>)bodyGenerators, (String)Optional.ofNullable(elementSeparator).orElse(EMPTY_SPACE)), endingDelimiter);
+		return getOrEmpty(startingDelimiter, getOrEmpty(bodyGenerators, Optional.ofNullable(elementSeparator).orElse(EMPTY_SPACE)), endingDelimiter);
 	}
 	
 }

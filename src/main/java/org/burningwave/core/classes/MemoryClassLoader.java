@@ -422,6 +422,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		return false;
 	}
 	
+	@Override
 	public void close() {
 		closeResources();
 	}

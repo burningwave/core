@@ -211,6 +211,7 @@ public class QueuedTasksExecutor implements Component {
 	<T> Function<ThrowingSupplier<T, ? extends Throwable>, ProducerTask<T>> getProducerTaskSupplier() {
 		return executable -> new ProducerTask<T>(executable, taskCreationTrackingEnabled) {
 			
+			@Override
 			QueuedTasksExecutor getQueuedTasksExecutor() {
 				return QueuedTasksExecutor.this;
 			}
@@ -224,7 +225,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public Task createTask(ThrowingRunnable<? extends Throwable> executable) {
-		Task task = getTaskSupplier().apply((ThrowingRunnable<? extends Throwable>) executable);
+		Task task = getTaskSupplier().apply(executable);
 		task.priority = this.defaultPriority;
 		return task;
 	}
@@ -232,6 +233,7 @@ public class QueuedTasksExecutor implements Component {
 	<T> Function<ThrowingRunnable<? extends Throwable> , Task> getTaskSupplier() {
 		return executable -> new Task(executable, taskCreationTrackingEnabled) {
 			
+			@Override
 			QueuedTasksExecutor getQueuedTasksExecutor() {
 				return QueuedTasksExecutor.this;
 			};
@@ -275,11 +277,11 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task) {
-		return waitFor(task, Thread.currentThread().getPriority(), false);
+		return waitFor(task, java.lang.Thread.currentThread().getPriority(), false);
 	}
 	
 	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, boolean ignoreDeadLocked) {
-		return waitFor(task, Thread.currentThread().getPriority(), ignoreDeadLocked);
+		return waitFor(task, java.lang.Thread.currentThread().getPriority(), ignoreDeadLocked);
 	}
 	
 	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, int priority, boolean ignoreDeadLocked) {
@@ -289,7 +291,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public QueuedTasksExecutor waitForTasksEnding() {
-		return waitForTasksEnding(Thread.currentThread().getPriority(), false);
+		return waitForTasksEnding(java.lang.Thread.currentThread().getPriority(), false);
 	}
 	
 	public <E, T extends TaskAbst<E, T>> boolean abort(T task) {
@@ -370,7 +372,7 @@ public class QueuedTasksExecutor implements Component {
 	}
 	
 	public QueuedTasksExecutor suspend(boolean immediately, boolean ignoreDeadLocked) {
-		return suspend0(immediately, Thread.currentThread().getPriority(), ignoreDeadLocked);
+		return suspend0(immediately, java.lang.Thread.currentThread().getPriority(), ignoreDeadLocked);
 	}
 	
 	public QueuedTasksExecutor suspend(boolean immediately, int priority, boolean ignoreDeadLocked) {
@@ -578,7 +580,7 @@ public class QueuedTasksExecutor implements Component {
 		public TaskAbst(E executable, boolean creationTracking) {
 			this.executable = executable;
 			if (creationTracking) {
-				stackTraceOnCreation = Thread.currentThread().getStackTrace();
+				stackTraceOnCreation = java.lang.Thread.currentThread().getStackTrace();
 			}
 		}
 		
@@ -670,7 +672,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public boolean waitForStarting0(boolean ignoreDeadLocked) {
-			java.lang.Thread currentThread = Thread.currentThread();
+			java.lang.Thread currentThread = java.lang.Thread.currentThread();
 			if (currentThread == this.executor) {
 				return false;
 			}
@@ -712,7 +714,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 
 		private boolean waitForFinish0(boolean ignoreDeadLocked) {
-			java.lang.Thread currentThread = Thread.currentThread();
+			java.lang.Thread currentThread = java.lang.Thread.currentThread();
 			if (currentThread == this.executor) {
 				return false;
 			}
@@ -846,7 +848,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public T setPriorityToCurrentThreadPriority() {
-			return changePriority(Thread.currentThread().getPriority());
+			return changePriority(java.lang.Thread.currentThread().getPriority());
 		}
 		
 		public int getPriority() {
@@ -961,27 +963,27 @@ public class QueuedTasksExecutor implements Component {
 			this.name = name;
 			queuedTasksExecutors = new HashMap<>();
 			queuedTasksExecutors.put(
-				String.valueOf(Thread.MAX_PRIORITY),
+				String.valueOf(java.lang.Thread.MAX_PRIORITY),
 				createQueuedTasksExecutor(
 					name + " - High priority tasks",
 					threadSupplierForHighPriorityTasksExecutor,
-					Thread.MAX_PRIORITY, isDaemon
+					java.lang.Thread.MAX_PRIORITY, isDaemon
 				)
 			);
 			queuedTasksExecutors.put(
-				String.valueOf(Thread.NORM_PRIORITY),
+				String.valueOf(java.lang.Thread.NORM_PRIORITY),
 				createQueuedTasksExecutor(
 					name + " - Normal priority tasks",
 					threadSupplierForNormalPriorityTasksExecutor,
-					Thread.NORM_PRIORITY, isDaemon
+					java.lang.Thread.NORM_PRIORITY, isDaemon
 				)
 			);
 			queuedTasksExecutors.put(
-				String.valueOf(Thread.MIN_PRIORITY),
+				String.valueOf(java.lang.Thread.MIN_PRIORITY),
 				createQueuedTasksExecutor(
 					name + " - Low priority tasks", 
 					threadSupplierForLowPriorityTasksExecutor,
-					Thread.MIN_PRIORITY, isDaemon
+					java.lang.Thread.MIN_PRIORITY, isDaemon
 				)
 			);
 		}
@@ -1055,7 +1057,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public <T> ProducerTask<T> createTask(ThrowingSupplier<T, ? extends Throwable> executable) {
-			return createTask(executable, Thread.currentThread().getPriority());
+			return createTask(executable, java.lang.Thread.currentThread().getPriority());
 		}
 		
 		public <T> ProducerTask<T> createTask(ThrowingSupplier<T, ? extends Throwable> executable, int priority) {
@@ -1071,23 +1073,23 @@ public class QueuedTasksExecutor implements Component {
 		}
 
 		int checkAndCorrectPriority(int priority) {
-			if (priority != Thread.MIN_PRIORITY || 
-				priority != Thread.NORM_PRIORITY || 
-				priority != Thread.MAX_PRIORITY	
+			if (priority != java.lang.Thread.MIN_PRIORITY || 
+				priority != java.lang.Thread.NORM_PRIORITY || 
+				priority != java.lang.Thread.MAX_PRIORITY	
 			) {
-				if (priority < Thread.NORM_PRIORITY) {
-					return Thread.MIN_PRIORITY;
-				} else if (priority < Thread.MAX_PRIORITY) {
-					return Thread.NORM_PRIORITY;
+				if (priority < java.lang.Thread.NORM_PRIORITY) {
+					return java.lang.Thread.MIN_PRIORITY;
+				} else if (priority < java.lang.Thread.MAX_PRIORITY) {
+					return java.lang.Thread.NORM_PRIORITY;
 				} else {
-					return Thread.MAX_PRIORITY;
+					return java.lang.Thread.MAX_PRIORITY;
 				}
 			}
 			return priority;
 		}
 		
 		public Task createTask(ThrowingRunnable<? extends Throwable> executable) {
-			return createTask(executable, Thread.currentThread().getPriority());
+			return createTask(executable, java.lang.Thread.currentThread().getPriority());
 		}
 		
 		public Task createTask(ThrowingRunnable<? extends Throwable> executable, int priority) {
@@ -1097,6 +1099,7 @@ public class QueuedTasksExecutor implements Component {
 		QueuedTasksExecutor createQueuedTasksExecutor(String executorName, Thread.Supplier threadSupplier, int priority, boolean isDaemon) {
 			return new QueuedTasksExecutor(executorName, threadSupplier, priority, isDaemon) {
 				
+				@Override
 				<T> Function<ThrowingSupplier<T, ? extends Throwable>, QueuedTasksExecutor.ProducerTask<T>> getProducerTaskSupplier() {
 					return executable -> new QueuedTasksExecutor.ProducerTask<T>(executable, taskCreationTrackingEnabled) {
 						
@@ -1120,6 +1123,7 @@ public class QueuedTasksExecutor implements Component {
 					};
 				}
 				
+				@Override
 				<T> Function<ThrowingRunnable<? extends Throwable> , QueuedTasksExecutor.Task> getTaskSupplier() {
 					return executable -> new QueuedTasksExecutor.Task(executable, taskCreationTrackingEnabled) {
 						
@@ -1205,15 +1209,15 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public Group waitForTasksEnding() {
-			return waitForTasksEnding(Thread.currentThread().getPriority(), false, false);
+			return waitForTasksEnding(java.lang.Thread.currentThread().getPriority(), false, false);
 		}
 		
 		public Group waitForTasksEnding(boolean ignoreDeadLocked) {
-			return waitForTasksEnding(Thread.currentThread().getPriority(), false, ignoreDeadLocked);
+			return waitForTasksEnding(java.lang.Thread.currentThread().getPriority(), false, ignoreDeadLocked);
 		}
 		
 		public Group waitForTasksEnding(boolean waitForNewAddedTasks, boolean ignoreDeadLocked) {
-			return waitForTasksEnding(Thread.currentThread().getPriority(), waitForNewAddedTasks, ignoreDeadLocked);
+			return waitForTasksEnding(java.lang.Thread.currentThread().getPriority(), waitForNewAddedTasks, ignoreDeadLocked);
 		}
 		
 		public Group waitForTasksEnding(int priority, boolean waitForNewAddedTasks, boolean ignoreDeadLocked) {
@@ -1236,7 +1240,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 
 		public <E, T extends TaskAbst<E, T>> Group waitFor(T task, boolean ignoreDeadLocked) {
-			return waitFor(task, Thread.currentThread().getPriority(), ignoreDeadLocked);	
+			return waitFor(task, java.lang.Thread.currentThread().getPriority(), ignoreDeadLocked);	
 		}
 		
 		public <E, T extends TaskAbst<E, T>> Group waitFor(T task, int priority, boolean ignoreDeadLocked) {
@@ -1317,7 +1321,7 @@ public class QueuedTasksExecutor implements Component {
 		}
 		
 		public boolean shutDown(boolean waitForTasksTermination) {
-			QueuedTasksExecutor lastToBeWaitedFor = getByPriority(Thread.currentThread().getPriority());
+			QueuedTasksExecutor lastToBeWaitedFor = getByPriority(java.lang.Thread.currentThread().getPriority());
 			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
 				if (queuedTasksExecutor != lastToBeWaitedFor) {
@@ -1420,7 +1424,7 @@ public class QueuedTasksExecutor implements Component {
 			}
 			
 			public TasksMonitorer start() {	
-				ThreadHolder.startLooping(getName(), true, Thread.MIN_PRIORITY, thread -> {
+				ThreadHolder.startLooping(getName(), true, java.lang.Thread.MIN_PRIORITY, thread -> {
 					thread.waitFor(config.getInterval());
 					if (thread.isLooping()) {
 						if (config.isAllTasksLoggerEnabled()) {

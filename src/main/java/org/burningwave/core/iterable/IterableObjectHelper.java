@@ -350,7 +350,7 @@ public class IterableObjectHelper implements Component {
 			if (values.size() > 1) {
 				Throwables.throwException("Found more than one item under key {}", key);
 			}
-			return (T)values.stream().findFirst().orElseGet(() -> null);
+			return values.stream().findFirst().orElseGet(() -> null);
 		} else {
 			return (T)value;
 		}	

@@ -356,6 +356,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		}
 	}
 	
+	@Override
 	public Field[] getDeclaredFields(Class<?> cls)  {
 		try {
 			return (Field[])getDeclaredFieldsRetriever.invoke(cls, false);
@@ -365,6 +366,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		}		
 	}
 	
+	@Override
 	public <T> Constructor<T>[] getDeclaredConstructors(Class<T> cls) {
 		try {
 			return (Constructor<T>[])getDeclaredConstructorsRetriever.invoke(cls, false);
@@ -374,6 +376,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 		}
 	}
 	
+	@Override
 	public Method[] getDeclaredMethods(Class<?> cls)  {
 		try {
 			return (Method[])getDeclaredMethodsRetriever.invoke(cls, false);
@@ -881,7 +884,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 				Field fullPowerModeConstant = lowLevelObjectsHandler.getDeclaredField(MethodHandles.Lookup.class, field -> "FULL_POWER_MODES".equals(field.getName()));
 				lowLevelObjectsHandler.setAccessible(fullPowerModeConstant, true);
 				int fullPowerModeConstantValue = fullPowerModeConstant.getInt(null);
-				MethodHandle mthHandle = ((MethodHandles.Lookup)lookupCtor.newInstance(MethodHandles.Lookup.class, fullPowerModeConstantValue)).findConstructor(
+				MethodHandle mthHandle = lookupCtor.newInstance(MethodHandles.Lookup.class, fullPowerModeConstantValue).findConstructor(
 					MethodHandles.Lookup.class, MethodType.methodType(void.class, Class.class, int.class)
 				);
 				lowLevelObjectsHandler.consulterRetriever = cls ->

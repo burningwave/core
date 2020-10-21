@@ -382,7 +382,8 @@ public class JavaMemoryCompiler implements Component {
 	        this.content = content;
 	    }
 	    
-	    public String getName() {
+	    @Override
+		public String getName() {
 	    	return this.name;
 	    }
 	    
@@ -410,7 +411,8 @@ public class JavaMemoryCompiler implements Component {
 	    	return uri.getPath();
 	    }
 	    
-	    public String getName() {
+	    @Override
+		public String getName() {
 	    	return this.name;
 	    }
 	    
@@ -624,6 +626,7 @@ public class JavaMemoryCompiler implements Component {
 			}
 
 
+			@Override
 			public void close() {
 				compiledFiles.clear();
 				dependencies.clear();

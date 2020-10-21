@@ -66,11 +66,11 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 	}
 	
 	public C and(C criteria) {
-		return logicOperation((C)this.createCopy(), criteria.createCopy(), (predicate) -> predicate::and, newInstance());
+		return logicOperation(this.createCopy(), criteria.createCopy(), (predicate) -> predicate::and, newInstance());
 	}
 	
 	public C or(C criteria) {
-		return logicOperation((C)this.createCopy(), criteria.createCopy(), (predicate) -> predicate::or, newInstance());
+		return logicOperation(this.createCopy(), criteria.createCopy(), (predicate) -> predicate::or, newInstance());
 	}
 	
 	protected C logicOperation(C leftCriteria, C rightCriteria, 
@@ -87,7 +87,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 	}
 	
 	public C allThat(final Predicate<E> predicate) {
-		return (C)allThat((context, entity) -> predicate.test(entity)) ;
+		return allThat((context, entity) -> predicate.test(entity)) ;
 	}
 	
 	
@@ -178,25 +178,25 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 	public T testWithFalseResultForNullEntityOrTrueResultForNullPredicate(E entity) {
 		T context = createTestContext();
 		testWithFalseResultForNullEntityOrTrueResultForNullPredicate(context, entity);
-		return (T)context;
+		return context;
 	}
 	
 	public T testWithTrueResultForNullEntityOrTrueResultForNullPredicate(E entity) {
 		T context = createTestContext();
 		testWithTrueResultForNullEntityOrTrueResultForNullPredicate(context, entity);
-		return (T)context;
+		return context;
 	}
 	
 	public T testWithFalseResultForNullEntityOrFalseResultForNullPredicate(E entity) {
 		T context = createTestContext();
 		testWithFalseResultForNullEntityOrFalseResultForNullPredicate(context, entity);
-		return (T)context;
+		return context;
 	}
 	
 	public T testWithTrueResultForNullEntityOrFalseResultForNullPredicate(E entity) {
 		T context = createTestContext();
 		testWithTrueResultForNullEntityOrFalseResultForNullPredicate(context, entity);
-		return (T)context;
+		return context;
 	}
 	
 	public Predicate<E> getPredicateOrFalsePredicateIfPredicateIsNull() {
@@ -286,7 +286,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 		}
 		
 		public static <E, C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> TestContext<E, C> create(C criteria) {
-			return (TestContext<E, C>)new TestContext<>(criteria);
+			return new TestContext<>(criteria);
 		}
 		
 		public C getCriteria() {
@@ -344,11 +344,11 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 		}
 		
 		public C and(C criteria) {
-			return logicOperation((C)this.createCopy(), criteria.createCopy(), (predicate) -> predicate::and, newInstance());
+			return logicOperation(this.createCopy(), criteria.createCopy(), (predicate) -> predicate::and, newInstance());
 		}
 		
 		public C or(C criteria) {
-			return logicOperation((C)this.createCopy(), criteria.createCopy(), (predicate) -> predicate::or, newInstance());
+			return logicOperation(this.createCopy(), criteria.createCopy(), (predicate) -> predicate::or, newInstance());
 		}
 		
 		protected C logicOperation(C leftCriteria, C rightCriteria, 

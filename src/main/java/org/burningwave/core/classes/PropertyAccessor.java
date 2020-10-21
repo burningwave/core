@@ -231,6 +231,7 @@ public abstract class PropertyAccessor implements Component {
 			return new ByFieldOrByMethod();
 		}
 
+		@Override
 		List<ThrowingBiFunction<Object, String, Object, Throwable>> getPropertyRetrievers() {
 			List<ThrowingBiFunction<Object, String, Object, Throwable>> propertyRetrievers = new ArrayList<>();
 			propertyRetrievers.add((object, propertyName) -> retrievePropertyByField(object, propertyName));
@@ -238,6 +239,7 @@ public abstract class PropertyAccessor implements Component {
 			return propertyRetrievers;
 		}
 
+		@Override
 		List<ThrowingFunction<Object[], Boolean, Throwable>> getPropertySetters() {
 			List<ThrowingFunction<Object[], Boolean, Throwable>> propertySetters  = new ArrayList<>();
 			propertySetters.add(objects -> setPropertyByField(objects[0], (String)objects[1], objects[2]));
@@ -257,6 +259,7 @@ public abstract class PropertyAccessor implements Component {
 			return new ByMethodOrByField();
 		}
 
+		@Override
 		List<ThrowingBiFunction<Object, String, Object, Throwable>> getPropertyRetrievers() {
 			List<ThrowingBiFunction<Object, String, Object, Throwable>> propertyRetrievers = new ArrayList<>();
 			propertyRetrievers.add((object, propertyName) -> retrievePropertyByGetterMethod(object, propertyName));
@@ -264,6 +267,7 @@ public abstract class PropertyAccessor implements Component {
 			return propertyRetrievers;
 		}
 
+		@Override
 		List<ThrowingFunction<Object[], Boolean, Throwable>> getPropertySetters() {
 			List<ThrowingFunction<Object[], Boolean, Throwable>> propertySetters  = new ArrayList<>();
 			propertySetters.add(objects -> setPropertyByMethod(objects[0], (String)objects[1], objects[2]));
