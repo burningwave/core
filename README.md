@@ -460,7 +460,7 @@ public class Finder {
 <br>
 
 # Performing different tasks in parallel and with different priorities
-By using the **BackgroundExecutor** component you can launch different Runnables or Suppliers in a parallel way and wait for them starting or finishing. The BackgroundExecutor uses the **ThreadSupplier** component to fetch threads that can be customized in the [burningwave.static.properties](https://github.com/burningwave/core#configuration) file.
+By using the **BackgroundExecutor** component you can launch different Runnables or Suppliers in a parallel way and wait for them starting or finishing. The BackgroundExecutor uses the **ThreadSupplier** component to fetch threads that can be customized in the [burningwave.static.properties](#configuration) file.
 ```java
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 
