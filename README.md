@@ -24,6 +24,7 @@ And now we will see:
 * [**executing stringified source code**](#Executing-stringified-source-code)
 * [**retrieving classes of runtime class paths or of other paths through the ClassHunter**](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
 * [**finding where a class is loaded from**](#Finding-where-a-class-is-loaded-from)
+* [**performing different tasks in parallel and with different priorities**](#Performing-different-tasks-in-parallel-and-with-different-priorities)
 * [**reaching a resource of the file system**](#Reaching-a-resource-of-the-file-system)
 * [**resolving, collecting or retrieving paths**](#Resolving-collecting-or-retrieving-paths)
 * [**retrieving placeholdered items from map and properties file**](#Retrieving-placeholdered-items-from-map-and-properties-file)
@@ -453,6 +454,65 @@ public class Finder {
         return searchResult.getClassPaths();
     }
 
+}
+```
+
+<br>
+
+# Performing different tasks in parallel and with different priorities
+By using the **BackgroundExecutor** component you can launch different Runnables or Suppliers in a parallel way and wait for them starting or finishing. The BackgroundExecutor uses the **ThreadSupplier** component to fetch threads that can be customized in the [burningwave.static.properties](https://github.com/burningwave/core#configuration) file.
+```java
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+
+import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
+import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
+
+
+public class TaskLauncher implements ManagedLogger{
+    
+    public void launch() {
+        
+        ProducerTask<Long> taskOne = BackgroundExecutor.createTask(() -> {
+            Long startTime = System.currentTimeMillis();
+            logInfo("task one started");
+            synchronized (this) {                
+                wait(5000);
+            }
+            Task internalTask = BackgroundExecutor.createTask(() -> {
+                logInfo("internal task started");    
+                synchronized (this) {                
+                    wait(5000);
+                }
+                logInfo("internal task finished");    
+            }, Thread.MAX_PRIORITY).submit();
+            internalTask.waitForFinish();
+            logInfo("task one finished");
+            return startTime;
+        }, Thread.MAX_PRIORITY).submit();
+
+        Task taskTwo = BackgroundExecutor.createTask(() -> {
+            logInfo("task two started and wait for task one finishing");
+            taskOne.waitForFinish();
+            logInfo("task two finished");    
+        }, Thread.NORM_PRIORITY).submit();
+
+        ProducerTask<Long> taskThree = BackgroundExecutor.createTask(() -> {
+            logInfo("task three started and wait for task two finishing");
+            taskTwo.waitForFinish();
+            logInfo("task two finished");
+            return System.currentTimeMillis();
+        }, Thread.MIN_PRIORITY).submit();
+
+        taskThree.waitForFinish();
+
+        logInfo("Elapsed time: {}ms", taskThree.join() - taskOne.join());
+    }
+    
+    public static void main(String[] args) {
+        new TaskLauncher().launch();
+    }
+    
 }
 ```
 
@@ -1126,6 +1186,16 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 [Here an example of a **burningwave.properties** file.](https://github.com/burningwave/core/blob/master/src/test/resources/burningwave.properties)
 
 ### Other examples of using some components:
+<details open>
+	<summary><b>BackgroundExecutor</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Performing-different-tasks-in-parallel-and-with-different-priorities">
+			<b>USE CASE</b>: performing different tasks in parallel and with different priorities
+			</a>
+		</li>
+	</ul>
+</details>
 <details open>
 	<summary><b>ClassFactory</b></summary>
 	<ul>
