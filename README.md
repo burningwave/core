@@ -450,8 +450,9 @@ public class Finder {
             )
         );        
 
-        SearchResult searchResult = classPathHunter.loadInCache(searchConfig).find();
-        return searchResult.getClassPaths();
+        try (SearchResult searchResult = classPathHunter.loadInCache(searchConfig).find()) {
+            return searchResult.getClassPaths();
+        }
     }
 
 }
