@@ -44,8 +44,7 @@
 	<properties>
 		<copyright.holder>Roberto Gentili</copyright.holder>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<!-- Can be changed with one of this values: 9, 10, 11, 12, 13, 14, 15, 
-			16 -->
+		<!-- Can be changed with one of this values: 9, 10, 11, 12, 13, 14, 15, 16 -->
 		<project_jdk_version>8</project_jdk_version>
 		<javadocExecutable.relativePath>bin/javadoc</javadocExecutable.relativePath>
 		<skipTests>true</skipTests>
