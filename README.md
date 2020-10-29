@@ -1191,8 +1191,8 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 	<summary><b>BackgroundExecutor</b></summary>
 	<ul>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/Performing-different-tasks-in-parallel-and-with-different-priorities">
-			<b>USE CASE</b>: performing different tasks in parallel and with different priorities
+			<a href="https://github.com/burningwave/core/wiki/Performing-tasks-in-parallel-with-different-priorities">
+			<b>USE CASE</b>: performing tasks in parallel with different priorities
 			</a>
 		</li>
 	</ul>
