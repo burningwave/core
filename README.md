@@ -24,7 +24,7 @@ And now we will see:
 * [**executing stringified source code**](#Executing-stringified-source-code)
 * [**retrieving classes of runtime class paths or of other paths through the ClassHunter**](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
 * [**finding where a class is loaded from**](#Finding-where-a-class-is-loaded-from)
-* [**performing different tasks in parallel and with different priorities**](#Performing-different-tasks-in-parallel-and-with-different-priorities)
+* [**performing different tasks in parallel with different priorities**](#Performing-different-tasks-in-parallel-with-different-priorities)
 * [**reaching a resource of the file system**](#Reaching-a-resource-of-the-file-system)
 * [**resolving, collecting or retrieving paths**](#Resolving-collecting-or-retrieving-paths)
 * [**retrieving placeholdered items from map and properties file**](#Retrieving-placeholdered-items-from-map-and-properties-file)
@@ -460,7 +460,7 @@ public class Finder {
 
 <br>
 
-# Performing different tasks in parallel and with different priorities
+# Performing different tasks in parallel with different priorities
 By using the **BackgroundExecutor** component you can launch different Runnables or Suppliers in a parallel way and wait for them starting or finishing. For obtaining threads the BackgroundExecutor uses the **ThreadSupplier** component which can be customized in the [burningwave.static.properties](#configuration) file. The ThreadSupplier provides a fixed number of reusable threads indicated by the '**thread-supplier.max-poolable-threads-count**' property and, if these threads have already been assigned, new non-reusable threads will be created whose quantity maximum is indicated by the '**thread-supplier.max-detached-threads-count**' property. Once this limit is reached if the request for a new thread exceeds the waiting time indicated by the '**thread-supplier.poolable-thread-request-timeout**' property, the ThreadSupplier will proceed to increase the limit indicated by the 'thread-supplier.max-detached-threads-count' property for the quantity indicated by the '**thread-supplier.max-detached-threads-count.increasing-step**' property. Resetting the 'thread-supplier.max-detached-threads-count' property to its initial value, will occur gradually only when there have been no more waits on thread requests for an amount of time indicated by the '**thread-supplier.max-detached-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value**' property.
 ```java
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
