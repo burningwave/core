@@ -501,7 +501,7 @@ public class TaskLauncher implements ManagedLogger {
         ProducerTask<Long> taskThree = BackgroundExecutor.createTask(() -> {
             logInfo("task three started and wait for task two finishing");
             taskTwo.waitForFinish();
-            logInfo("task two finished");
+            logInfo("task three finished");
             return System.currentTimeMillis();
         }, Thread.MIN_PRIORITY).submit();
 
