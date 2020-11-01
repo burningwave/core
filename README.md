@@ -1208,7 +1208,7 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 	</ul>
 </details>
 <details open>
-	<summary><b>ClassHunter</b></summary>
+	<summary><a href="#class-hunter-examples"></a><b>ClassHunter</b></summary>
 	<ul>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/How-to-retrieve-all-classes-of-the-classpath">
