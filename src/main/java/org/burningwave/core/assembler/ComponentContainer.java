@@ -91,15 +91,15 @@ public class ComponentContainer implements ComponentSupplier {
 		static {
 			Map<String, Object> defaultValues = new HashMap<>();
 
-			defaultValues.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
+			defaultValues.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_IMPORTS_SUFFIX,
 				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
 				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR +
 				Arrays.class.getName() + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
 				SearchResult.class.getName() + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR
 			);
 			defaultValues.put(
-				Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, 
-				ComponentContainer.class.getPackage().getName() + ".AfterInitOperations"
+				Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_EXECUTOR_NAME_SUFFIX, 
+				ComponentContainer.class.getPackage().getName() + ".AfterInitOperationsExecutor"
 			);
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
