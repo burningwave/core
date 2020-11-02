@@ -151,6 +151,7 @@ public class StaticComponentContainer {
 	
 	static {
 		try {
+			long startTime = System.nanoTime();
 			Strings = org.burningwave.core.Strings.create();
 			Throwables = org.burningwave.core.Throwables.create();
 			Objects = org.burningwave.core.Objects.create();
@@ -340,6 +341,12 @@ public class StaticComponentContainer {
 					)
 				);
 			}
+			ManagedLoggersRepository.logInfo(() -> 
+				StaticComponentContainer.class.getName(), 
+				"{} initialized in {} seconds",
+				StaticComponentContainer.class.getName(),
+				Double.valueOf(((double) (System.nanoTime() - startTime)) / 1_000_000_000).toString()
+			);
 		} catch (Throwable exc){
 			exc.printStackTrace();
 			throw exc;
