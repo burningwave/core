@@ -1092,7 +1092,7 @@ class-factory.default-class-loader.imports=\
 	${code-executor.common.imports};\
 	${class-factory.default-class-loader.additional-imports};\
 	org.burningwave.core.classes.PathScannerClassLoader;
-class-factory.default-class-loader.name=\
+class-factory.default-class-loader.supplier.name=\
 	org.burningwave.core.classes.DefaultClassLoaderRetrieverForClassFactory
 class-hunter.default-path-scanner-class-loader=\
 	(Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
@@ -1103,7 +1103,7 @@ class-hunter.default-path-scanner-class-loader.imports=\
 	${code-executor.common.imports};\
 	${class-hunter.default-path-scanner-class-loader.additional-imports};\
 	org.burningwave.core.classes.PathScannerClassLoader;
-class-hunter.default-path-scanner-class-loader.name=\
+class-hunter.default-path-scanner-class-loader.supplier.name=\
 	org.burningwave.core.classes.DefaultPathScannerClassLoaderRetrieverForClassHunter
 class-hunter.new-isolated-path-scanner-class-loader.search-config.check-file-option=\
 	${hunters.default-search-config.check-file-option}
@@ -1126,7 +1126,7 @@ component-container.after-init.operations.imports=\
 	${code-executor.common.imports};\
 	${component-container.after-init.operations.additional-imports};\
 	org.burningwave.core.classes.SearchResult;
-component-container.after-init.operations.name=\
+component-container.after-init.operations.executor.name=\
 	org.burningwave.core.assembler.AfterInitOperations
 hunters.default-search-config.check-file-option=\
 	${path-scanner-class-loader.search-config.check-file-option}
@@ -1135,7 +1135,7 @@ path-scanner-class-loader.parent=\
 path-scanner-class-loader.parent.imports=\
 	${code-executor.common.imports};\
 	${path-scanner-class-loader.parent.additional-imports};
-path-scanner-class-loader.parent.name=\
+path-scanner-class-loader.parent.supplier.name=\
 	org.burningwave.core.classes.ParentClassLoaderRetrieverForPathScannerClassLoader
 #other possible values are: checkFileName, checkFileName|checkFileSignature, checkFileName&checkFileSignature
 path-scanner-class-loader.search-config.check-file-option=checkFileName
@@ -1208,7 +1208,7 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 	</ul>
 </details>
 <details open>
-	<summary><b>ClassHunter</b></summary>
+	<summary></a><b>ClassHunter</b><a id="class-hunter-examples" href="#class-hunter-examples">&nbsp;</summary>
 	<ul>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/How-to-retrieve-all-classes-of-the-classpath">
