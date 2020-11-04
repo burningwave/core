@@ -39,7 +39,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.classes.SearchContext.InitContext;
@@ -54,17 +53,17 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	Map<String, Map<String, I>> cache;
 	
 	ClassPathScannerWithCachingSupport(
-		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
 		Function<InitContext, C> contextSupplier,
-		Function<C, R> resultSupplier, 
+		Function<C, R> resultSupplier,
+		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 		Properties config
 	) {
 		super(
-			classHunterSupplier,
 			pathHelper,
 			contextSupplier,
 			resultSupplier,
+			defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 			config
 		);
 		this.cache = new ConcurrentHashMap<>();
@@ -268,16 +267,7 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	}
 	
 	public void clearCache(boolean closeSearchResults) {
-		ClassHunter classHunter = this.classHunter;
-		//this check is necessary to avoid infinite recursion
-		if (classHunter != null && this != classHunter && !classHunter.isClosed()) {
-			try {
-				//clearing the cache and resetting the class loader (owned  by the ClassHunter)
-				classHunter.clearCache(closeSearchResults);
-			} catch (Throwable exc) {
-				logWarn("Exception occurred while trying to clear the cache of {}: {}", classHunter, exc.getMessage());
-			}
-		}
+		this.defaultPathScannerClassLoaderManager.reset();
 		if (closeSearchResults) {
 			closeSearchResults();
 		}

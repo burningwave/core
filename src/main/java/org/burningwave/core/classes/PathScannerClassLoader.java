@@ -89,7 +89,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
         ClassLoader.registerAsParallelCapable();
     }
 	
-	PathScannerClassLoader(
+	protected PathScannerClassLoader(
 		ClassLoader parentClassLoader,
 		PathHelper pathHelper,
 		FileSystemItem.Criteria scanFileCriteria

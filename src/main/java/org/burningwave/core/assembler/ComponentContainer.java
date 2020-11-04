@@ -66,11 +66,11 @@ import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
-import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchResult;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.io.FileSystemItem.Criteria;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
@@ -172,7 +172,9 @@ public class ComponentContainer implements ComponentSupplier {
 		defaultProperties.putAll(PathHelper.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(JavaMemoryCompiler.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassFactory.Configuration.DEFAULT_VALUES);
+		defaultProperties.putAll(ByteCodeHunter.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
+		defaultProperties.putAll(ClassPathHunter.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassPathScannerAbst.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassPathHelper.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(PathScannerClassLoader.Configuration.DEFAULT_VALUES);
@@ -325,7 +327,7 @@ public class ComponentContainer implements ComponentSupplier {
 	@Override
 	public PathScannerClassLoader getPathScannerClassLoader() {
 		return getOrCreate(PathScannerClassLoader.class, () -> {
-				PathScannerClassLoader classLoader = PathScannerClassLoader.create(
+				PathScannerClassLoader classLoader = new PathScannerClassLoader(
 					resolveProperty(
 						this.config,
 						PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
@@ -336,8 +338,24 @@ public class ComponentContainer implements ComponentSupplier {
 							PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION
 						)
 					)
-				);
+				) {
+
+					@Override
+					public void markAsCloseable() {
+						Synchronizer.execute(getMutexForComponentsId(), () -> {
+							PathScannerClassLoader classLoader = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
+							if (classLoader != null) {
+								classLoader.unregister(this, true);
+							}
+						});						
+					}
+				};
 				classLoader.register(this);
+				Collection<String> disabledLoggers = GlobalProperties.resolveStringValues("managed-logger.repository.logging.warn.disabled-for", ";");
+				if (disabledLoggers.contains(PathScannerClassLoader.class.getName()) ) {
+					disabledLoggers.add(classLoader.getClass().getName());
+				}
+				GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
 				return classLoader;
 			}
 		);
@@ -352,8 +370,9 @@ public class ComponentContainer implements ComponentSupplier {
 				getJavaMemoryCompiler(),
 				getPathHelper(),
 				getClassPathHelper(),
-				(Supplier<?>)() -> resolveProperty(this.config, ClassFactory.Configuration.Key.DEFAULT_CLASS_LOADER, ClassFactory.Configuration.DEFAULT_VALUES),
-				getClassLoaderResetter(),
+				(Supplier<?>)() -> resolveProperty(
+					this.config, ClassFactory.Configuration.Key.DEFAULT_CLASS_LOADER
+				),
 				config
 			)
 		);	
@@ -384,10 +403,11 @@ public class ComponentContainer implements ComponentSupplier {
 	public ClassHunter getClassHunter() {
 		return getOrCreate(ClassHunter.class, () -> {
 			return ClassHunter.create(
-				() -> getClassHunter(),
 				getPathHelper(),
-				(Supplier<?>)() -> resolveProperty(this.config, ClassHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER, ClassHunter.Configuration.DEFAULT_VALUES),
-				getClassLoaderResetter(),
+				(Supplier<?>)() -> resolveProperty(
+					this.config,
+					ClassHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER
+				),
 				config
 			);
 		});
@@ -407,8 +427,11 @@ public class ComponentContainer implements ComponentSupplier {
 	public ClassPathHunter getClassPathHunter() {
 		return getOrCreate(ClassPathHunter.class, () -> 
 			ClassPathHunter.create(
-				() -> getClassHunter(),
 				getPathHelper(),
+				(Supplier<?>)() -> resolveProperty(
+					this.config,
+					ClassPathHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER
+				),
 				config
 			)
 		);
@@ -418,8 +441,11 @@ public class ComponentContainer implements ComponentSupplier {
 	public ByteCodeHunter getByteCodeHunter() {
 		return getOrCreate(ByteCodeHunter.class, () -> 
 			ByteCodeHunter.create(
-				() -> getClassHunter(),
 				getPathHelper(),
+				(Supplier<?>)() -> resolveProperty(
+					this.config,
+					ByteCodeHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER
+				),
 				config
 			)
 		);
@@ -466,15 +492,6 @@ public class ComponentContainer implements ComponentSupplier {
 		} else {
 			return object;
 		}
-	}
-	
-	private Consumer<ClassLoader> getClassLoaderResetter() {
-		return classLoader -> {
-			PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class);
-			if (classLoader == pathScannerClassLoader) {
-				resetPathScannerClassLoader();
-			}
-		};
 	}
 	
 	@Override
@@ -587,15 +604,7 @@ public class ComponentContainer implements ComponentSupplier {
 			classPathHunter.clearCache(closeHuntersResults);
 		}
 	}
-	
-	private void resetPathScannerClassLoader() {
-		Synchronizer.execute(getMutexForComponentsId(), () -> {
-			PathScannerClassLoader classLoader = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
-			if (classLoader != null) {
-				classLoader.unregister(this, true);
-			}
-		});
-	}
+
 	
 	private static class LazyHolder {
 		private static final ComponentContainer COMPONENT_CONTAINER_INSTANCE = ComponentContainer.create("burningwave.properties").markAsUndestroyable();
@@ -607,5 +616,16 @@ public class ComponentContainer implements ComponentSupplier {
 
 	public boolean isClosed() {
 		return !instances.contains(this);
+	}
+	
+	
+	public static abstract class PathScannerClassLoader extends org.burningwave.core.classes.PathScannerClassLoader {
+
+		PathScannerClassLoader(ClassLoader parentClassLoader, PathHelper pathHelper,
+				Criteria scanFileCriteria) {
+			super(parentClassLoader, pathHelper, scanFileCriteria);
+		}
+		
+		public abstract void markAsCloseable(); 
 	}
 }

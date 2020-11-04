@@ -30,28 +30,25 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.concurrent.Synchronizer.Mutex;
 
 @SuppressWarnings("unchecked")
 class ClassLoaderManager<C extends ClassLoader> implements Closeable, ManagedLogger {
 	
 	
-	private Consumer<ClassLoader> classLoaderResetter;
 	private Supplier<C> classLoaderSupplier;
 	private Object classLoaderOrClassLoaderSupplier;
 	private C classLoader;	
 	
 	ClassLoaderManager(
-		Object classLoaderOrClassLoaderSupplier,
-		Consumer<ClassLoader> classLoaderResetter
+		Object classLoaderOrClassLoaderSupplier
 	) {
 		this.classLoaderOrClassLoaderSupplier = classLoaderOrClassLoaderSupplier;
-		this.classLoaderResetter = classLoaderResetter;
 	}
 	
 	
@@ -126,7 +123,9 @@ class ClassLoaderManager<C extends ClassLoader> implements Closeable, ManagedLog
 					((MemoryClassLoader)classLoader).unregister(this, true);
 				}
 				try {
-					classLoaderResetter.accept(classLoader);
+					if (classLoader instanceof ComponentContainer.PathScannerClassLoader) {
+						((ComponentContainer.PathScannerClassLoader)classLoader).markAsCloseable();
+					}
 				} catch (Throwable exc) {
 					logWarn("Exception occurred while resetting default path scanner classloader: {}", exc.getMessage());
 				}
@@ -139,7 +138,6 @@ class ClassLoaderManager<C extends ClassLoader> implements Closeable, ManagedLog
 		this.classLoaderOrClassLoaderSupplier = null;
 		reset();
 		this.classLoaderSupplier = null;
-		this.classLoaderResetter = null;
 		this.classLoader = null;
 	}
 

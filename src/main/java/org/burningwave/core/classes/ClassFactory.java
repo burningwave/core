@@ -48,7 +48,6 @@ import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -130,7 +129,6 @@ public class ClassFactory implements Component {
 		PathHelper pathHelper,
 		ClassPathHelper classPathHelper,
 		Object defaultClassLoaderOrDefaultClassLoaderSupplier,
-		Consumer<ClassLoader> classLoaderResetter,
 		Properties config
 	) {	
 		this.byteCodeHunter = byteCodeHunter;
@@ -140,8 +138,7 @@ public class ClassFactory implements Component {
 		this.classPathHelper = classPathHelper;
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
 		this.defaultClassLoaderManager = new ClassLoaderManager<>(
-			defaultClassLoaderOrDefaultClassLoaderSupplier,
-			classLoaderResetter
+			defaultClassLoaderOrDefaultClassLoaderSupplier
 		);
 		this.classRetrievers = new CopyOnWriteArrayList<>();
 		this.config = config;
@@ -155,7 +152,6 @@ public class ClassFactory implements Component {
 		PathHelper pathHelper,
 		ClassPathHelper classPathHelper,
 		Object defaultClassLoaderSupplier,
-		Consumer<ClassLoader> classLoaderResetter,
 		Properties config
 	) {
 		return new ClassFactory(
@@ -165,7 +161,6 @@ public class ClassFactory implements Component {
 			pathHelper,
 			classPathHelper,
 			defaultClassLoaderSupplier,
-			classLoaderResetter,
 			config
 		);
 	}

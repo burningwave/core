@@ -33,10 +33,13 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
@@ -44,32 +47,77 @@ import org.burningwave.core.iterable.Properties;
 
 public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass, SearchContext<JavaClass>, ByteCodeHunter.SearchResult> {
 	
+	public static class Configuration {
+		
+		public static class Key {
+			
+			public final static String DEFAULT_PATH_SCANNER_CLASS_LOADER = "byte-code-hunter.default-path-scanner-class-loader";
+			public final static String PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "byte-code-hunter.new-isolated-path-scanner-class-loader.search-config.check-file-option";
+			
+		}
+		
+		public final static Map<String, Object> DEFAULT_VALUES;
+		
+		static {
+			Map<String, Object> defaultValues = new HashMap<>();
+			
+			defaultValues.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_IMPORTS_SUFFIX,
+				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
+				"${"+ Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + ".additional-imports}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR +
+				PathScannerClassLoader.class.getName() + ";"
+			);
+			defaultValues.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_NAME_SUFFIX, ClassHunter.class.getPackage().getName() + ".DefaultPathScannerClassLoaderRetrieverForByteCodeHunter");
+			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
+			defaultValues.put(
+				Key.DEFAULT_PATH_SCANNER_CLASS_LOADER, 
+				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) -> 
+					componentSupplier.getPathScannerClassLoader()
+			);
+			defaultValues.put(
+				Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+				"${" + ClassPathScannerAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
+			);
+			
+			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
+		}
+	}
+	
 	private ByteCodeHunter(
-		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
+		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 		Properties config
 	) {
 		super(
-			classHunterSupplier,
 			pathHelper,
 			(initContext) -> SearchContext.<JavaClass>create(
 				initContext
 			),
 			(context) -> new ByteCodeHunter.SearchResult(context),
+			defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 			config
 		);
 	}
 	
 	public static ByteCodeHunter create(
-		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
+		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 		Properties config
 	) {
 		return new ByteCodeHunter(
-			classHunterSupplier, 
-			pathHelper, 
+			pathHelper,
+			defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 			config
 		);
+	}
+	
+	@Override
+	String getDefaultPathScannerClassLoaderConfigPropertyName() {
+		return Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER;
+	}
+	
+	@Override
+	String getDefaultPathScannerClassLoaderCheckFileOptionsConfigPropertyName() {
+		return Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS;
 	}
 	
 	@Override

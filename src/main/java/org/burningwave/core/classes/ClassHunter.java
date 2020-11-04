@@ -37,9 +37,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Criteria;
@@ -48,7 +46,6 @@ import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
-import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings("unchecked")
 public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, ClassHunter.SearchContext, ClassHunter.SearchResult> {
@@ -88,58 +85,41 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		}
 	}
 	
-	private ClassLoaderManager<PathScannerClassLoader> defaultPathScannerClassLoaderManager;
-	
 	ClassHunter(
-		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-		Consumer<ClassLoader> pathScannerClassLoaderResetter,
 		Properties config
 	) {
 		super(
-			classHunterSupplier,	
 			pathHelper,
 			(initContext) -> ClassHunter.SearchContext._create(
 				initContext
 			),
 			(context) -> new ClassHunter.SearchResult(context),
+			defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 			config
 		);
-		this.defaultPathScannerClassLoaderManager = new ClassLoaderManager<>(
-			defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-			pathScannerClassLoaderResetter
-		);
-	}
-	
-	@Override
-	public <K, V> void processChangeNotification(Properties properties, Event event, K key, V newValue,
-			V previousValue) {
-		if (event.name().equals(Event.PUT.name())) {
-			if (key instanceof String) {
-				String keyAsString = (String)key;
-				if (keyAsString.equals(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER)) {
-					this.defaultPathScannerClassLoaderManager.reset();
-				}
-			}
-		}
 	}
 	
 	public static ClassHunter create(
-		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier,
-		Consumer<ClassLoader> pathScannerClassLoaderResetter,
 		Properties config
 	) {
 		return new ClassHunter(
-			classHunterSupplier, pathHelper, defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier, pathScannerClassLoaderResetter, config
+			pathHelper, defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier, config
 		);
+	}	
+	
+	@Override
+	String getDefaultPathScannerClassLoaderConfigPropertyName() {
+		return Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER;
 	}
 	
-	PathScannerClassLoader getDefaultPathScannerClassLoader(Object client) {
-		return defaultPathScannerClassLoaderManager.get(client);
-	}	
+	@Override
+	String getDefaultPathScannerClassLoaderCheckFileOptionsConfigPropertyName() {
+		return Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS;
+	}
 	
 	@Override
 	public CacheScanner<Class<?>, SearchResult> loadInCache(CacheableSearchConfig searchConfig) {
