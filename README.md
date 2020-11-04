@@ -1074,7 +1074,7 @@ byte-code-hunter.default-path-scanner-class-loader.imports=\
 	${byte-code-hunter.default-path-scanner-class-loader.additional-imports};\
 	org.burningwave.core.classes.PathScannerClassLoader;
 byte-code-hunter.default-path-scanner-class-loader.supplier.name=\
-	org.burningwave.core.classes.DefaultPathScannerClassLoaderRetrieverForClassHunter
+	org.burningwave.core.classes.DefaultPathScannerClassLoaderRetrieverForByteCodeHunter
 byte-code-hunter.new-isolated-path-scanner-class-loader.search-config.check-file-option=\
 	${hunters.default-search-config.check-file-option}
 class-factory.byte-code-hunter.search-config.check-file-option=\
@@ -1116,7 +1116,7 @@ class-path-hunter.default-path-scanner-class-loader.imports=\
 	${class-path-hunter.default-path-scanner-class-loader.additional-imports};\
 	org.burningwave.core.classes.PathScannerClassLoader;
 class-path-hunter.default-path-scanner-class-loader.supplier.name=\
-	org.burningwave.core.classes.DefaultPathScannerClassLoaderRetrieverForClassHunter
+	org.burningwave.core.classes.DefaultPathScannerClassLoaderRetrieverForClassPathHunter
 class-path-hunter.new-isolated-path-scanner-class-loader.search-config.check-file-option=\
 	${hunters.default-search-config.check-file-option}
 #This variable is empty by default and can be valorized by developer and it is
