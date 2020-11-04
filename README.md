@@ -19,7 +19,6 @@
 Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER** for criteria based classes search: it’s possible to search classes by every criteria that your imagination can make by using lambda expressions; **scan engine is highly optimized using direct allocated ByteBuffers to avoid heap saturation; searches are executed in multithreading context and are not affected by “_the issue of the same class loaded by different classloaders_”** (normally if you try to execute "isAssignableFrom" method on a same class loaded from different classloader it returns false).
 
 And now we will see:
-* [**including Burningwave Core in your project**](#Including-Burningwave-Core-in-your-project)
 * [**generating classes at runtime and invoking their methods with and without the use of reflection**](#Generating-classes-at-runtime-and-invoking-their-methods-with-and-without-the-use-of-reflection)
 * [**executing stringified source code**](#Executing-stringified-source-code)
 * [**retrieving classes of runtime class paths or of other paths through the ClassHunter**](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
@@ -36,19 +35,6 @@ And now we will see:
 <br/>
 
 **For assistance you can [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to/) or you can ask on [Stack Overflow](https://stackoverflow.com/questions/tagged/burningwave)**.
-
-<br/>
-
-# Including Burningwave Core in your project 
-To include Burningwave Core library in your projects simply use with **Apache Maven**:
-
-```xml
-<dependency>
-    <groupId>org.burningwave</groupId>
-    <artifactId>core</artifactId>
-    <version>8.3.0</version>
-</dependency>
-```
 
 <br/>
 
