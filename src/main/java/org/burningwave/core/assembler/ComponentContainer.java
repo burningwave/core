@@ -327,38 +327,37 @@ public class ComponentContainer implements ComponentSupplier {
 	@Override
 	public PathScannerClassLoader getPathScannerClassLoader() {
 		return getOrCreate(PathScannerClassLoader.class, () -> {
-				PathScannerClassLoader classLoader = new PathScannerClassLoader(
-					resolveProperty(
-						this.config,
-						PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
-						PathScannerClassLoader.Configuration.DEFAULT_VALUES
-					), getPathHelper(),
-					FileSystemItem.Criteria.forClassTypeFiles(
-						config.resolveStringValue(
-							PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION
-						)
+			PathScannerClassLoader classLoader = new PathScannerClassLoader(
+				resolveProperty(
+					this.config,
+					PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
+					PathScannerClassLoader.Configuration.DEFAULT_VALUES
+				), getPathHelper(),
+				FileSystemItem.Criteria.forClassTypeFiles(
+					config.resolveStringValue(
+						PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION
 					)
-				) {
+				)
+			) {
 
-					@Override
-					public void markAsCloseable() {
-						Synchronizer.execute(getMutexForComponentsId(), () -> {
-							PathScannerClassLoader classLoader = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
-							if (classLoader != null) {
-								classLoader.unregister(this, true);
-							}
-						});						
-					}
-				};
-				classLoader.register(this);
-				Collection<String> disabledLoggers = GlobalProperties.resolveStringValues("managed-logger.repository.logging.warn.disabled-for", ";");
-				if (disabledLoggers.contains(PathScannerClassLoader.class.getName()) ) {
-					disabledLoggers.add(classLoader.getClass().getName());
+				@Override
+				public void markAsCloseable() {
+					Synchronizer.execute(getMutexForComponentsId(), () -> {
+						PathScannerClassLoader classLoader = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
+						if (classLoader != null) {
+							classLoader.unregister(this, true);
+						}
+					});						
 				}
-				GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
-				return classLoader;
+			};
+			classLoader.register(this);
+			Collection<String> disabledLoggers = GlobalProperties.resolveStringValues("managed-logger.repository.logging.warn.disabled-for", ";");
+			if (disabledLoggers.contains(PathScannerClassLoader.class.getName()) ) {
+				disabledLoggers.add(classLoader.getClass().getName());
 			}
-		);
+			GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
+			return classLoader;
+		});
 	}
 	
 	@Override
