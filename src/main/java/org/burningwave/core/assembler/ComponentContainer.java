@@ -611,6 +611,11 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	
 	public static class PathScannerClassLoader extends org.burningwave.core.classes.PathScannerClassLoader {
+		
+		static {
+	        ClassLoader.registerAsParallelCapable();
+	    }
+		
 		Runnable markAsCloseableAlgorithm;
 		PathScannerClassLoader(ClassLoader parentClassLoader, PathHelper pathHelper,
 			Criteria scanFileCriteria, Runnable markAsCloseableAlgorithm
