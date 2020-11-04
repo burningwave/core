@@ -1066,6 +1066,17 @@ The configuration of this type of container can be done via Properties file or p
 If you use the singleton instance obtained via ComponentContainer.getInstance() method, you must create a **burningwave.properties** file and put it on base path of your classpath project.
 **The default configuration automatically loaded if no configuration file is found is the following**:
 ```properties
+#This variable is empty by default and can be valorized by developer and it is
+#included by 'byte-code-hunter.default-path-scanner-class-loader.imports' property
+byte-code-hunter.default-path-scanner-class-loader.additional-imports=
+byte-code-hunter.default-path-scanner-class-loader.imports=\
+	${code-executor.common.imports};\
+	${byte-code-hunter.default-path-scanner-class-loader.additional-imports};\
+	org.burningwave.core.classes.PathScannerClassLoader;
+byte-code-hunter.default-path-scanner-class-loader.supplier.name=\
+	org.burningwave.core.classes.DefaultPathScannerClassLoaderRetrieverForClassHunter
+byte-code-hunter.new-isolated-path-scanner-class-loader.search-config.check-file-option=\
+	${hunters.default-search-config.check-file-option}
 class-factory.byte-code-hunter.search-config.check-file-option=\
 	${hunters.default-search-config.check-file-option}
 #default classloader used by the ClassFactory to load generated classes
@@ -1094,6 +1105,19 @@ class-hunter.default-path-scanner-class-loader.supplier.name=\
 class-hunter.new-isolated-path-scanner-class-loader.search-config.check-file-option=\
 	${hunters.default-search-config.check-file-option}
 class-path-helper.class-path-hunter.search-config.check-file-option=\
+	${hunters.default-search-config.check-file-option}
+class-hunter.default-path-scanner-class-loader=\
+	(Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
+#This variable is empty by default and can be valorized by developer and it is
+#included by 'class-path-hunter.default-path-scanner-class-loader.imports' property
+class-path-hunter.default-path-scanner-class-loader.additional-imports=
+class-path-hunter.default-path-scanner-class-loader.imports=\
+	${code-executor.common.imports};\
+	${class-path-hunter.default-path-scanner-class-loader.additional-imports};\
+	org.burningwave.core.classes.PathScannerClassLoader;
+class-path-hunter.default-path-scanner-class-loader.supplier.name=\
+	org.burningwave.core.classes.DefaultPathScannerClassLoaderRetrieverForClassHunter
+class-path-hunter.new-isolated-path-scanner-class-loader.search-config.check-file-option=\
 	${hunters.default-search-config.check-file-option}
 #This variable is empty by default and can be valorized by developer and it is
 #included by 'code-executor.common.import' property
