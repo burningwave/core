@@ -38,90 +38,90 @@ import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.concurrent.Synchronizer.Mutex;
 
 @SuppressWarnings("unchecked")
-public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeable, ManagedLogger {
+class ClassLoaderManager<C extends ClassLoader> implements Closeable, ManagedLogger {
 	
 	
 	private Consumer<ClassLoader> classLoaderResetter;
-	private Supplier<C> defaultClassLoaderSupplier;
-	private Object defaultClassLoaderOrDefaultClassLoaderSupplier;
-	private C defaultClassLoader;	
+	private Supplier<C> classLoaderSupplier;
+	private Object classLoaderOrClassLoaderSupplier;
+	private C classLoader;	
 	
-	DefaultClassLoaderManager(
-		Object defaultClassLoaderOrDefaultClassLoaderSupplier,
+	ClassLoaderManager(
+		Object classLoaderOrClassLoaderSupplier,
 		Consumer<ClassLoader> classLoaderResetter
 	) {
-		this.defaultClassLoaderOrDefaultClassLoaderSupplier = defaultClassLoaderOrDefaultClassLoaderSupplier;
+		this.classLoaderOrClassLoaderSupplier = classLoaderOrClassLoaderSupplier;
 		this.classLoaderResetter = classLoaderResetter;
 	}
 	
 	
 	C get() {
-		return this.defaultClassLoader;
+		return this.classLoader;
 	}
 	
 	C get(Object client) {
-		C classLoader = null;
-		Supplier<C> defaultClassLoaderSupplier = this.defaultClassLoaderSupplier;
-		if (defaultClassLoaderSupplier != null && (classLoader = defaultClassLoaderSupplier.get()) != defaultClassLoader) {
+		C classLoaderTemp = null;
+		Supplier<C> defaultClassLoaderSupplier = this.classLoaderSupplier;
+		if (defaultClassLoaderSupplier != null && (classLoaderTemp = defaultClassLoaderSupplier.get()) != classLoader) {
 			Mutex mutex = Synchronizer.getMutex(getOperationId("getDefaultClassLoader"));
 			try {
 				synchronized(mutex) {
-					defaultClassLoaderSupplier = this.defaultClassLoaderSupplier;
-					if (defaultClassLoaderSupplier != null && (classLoader = defaultClassLoaderSupplier.get()) != defaultClassLoader) {
-						ClassLoader oldClassLoader = this.defaultClassLoader;
+					defaultClassLoaderSupplier = this.classLoaderSupplier;
+					if (defaultClassLoaderSupplier != null && (classLoaderTemp = defaultClassLoaderSupplier.get()) != classLoader) {
+						ClassLoader oldClassLoader = this.classLoader;
 						if (oldClassLoader != null && oldClassLoader instanceof MemoryClassLoader) {
 							((MemoryClassLoader)oldClassLoader).unregister(this, true);
 						}
-						if (classLoader instanceof MemoryClassLoader) {
-							if (!((MemoryClassLoader)classLoader).register(this)) {
-								classLoader = get(client);
+						if (classLoaderTemp instanceof MemoryClassLoader) {
+							if (!((MemoryClassLoader)classLoaderTemp).register(this)) {
+								classLoaderTemp = get(client);
 							} else {
-								((MemoryClassLoader)classLoader).register(client);
+								((MemoryClassLoader)classLoaderTemp).register(client);
 							}
 						}
-						this.defaultClassLoader = classLoader;
+						this.classLoader = classLoaderTemp;
 					}
 				}
 			} finally {
 				Synchronizer.removeIfUnused(mutex);
 			}
-			return classLoader;
+			return classLoaderTemp;
 		}
-		if (defaultClassLoader == null) {
+		if (classLoader == null) {
 			Mutex mutex = Synchronizer.getMutex(getOperationId("getDefaultClassLoader"));
 			try {
 				synchronized(mutex) {
-					if (defaultClassLoader == null) {
+					if (classLoader == null) {
 						Object defaultClassLoaderOrDefaultClassLoaderSupplier =
-							((Supplier<?>)this.defaultClassLoaderOrDefaultClassLoaderSupplier).get();
+							((Supplier<?>)this.classLoaderOrClassLoaderSupplier).get();
 						if (defaultClassLoaderOrDefaultClassLoaderSupplier instanceof PathScannerClassLoader) {
-							this.defaultClassLoader = (C)defaultClassLoaderOrDefaultClassLoaderSupplier;
-							((MemoryClassLoader)defaultClassLoader).register(this);
-							((MemoryClassLoader)defaultClassLoader).register(client);
-							return defaultClassLoader;
+							this.classLoader = (C)defaultClassLoaderOrDefaultClassLoaderSupplier;
+							((MemoryClassLoader)classLoader).register(this);
+							((MemoryClassLoader)classLoader).register(client);
+							return classLoader;
 						} else if (defaultClassLoaderOrDefaultClassLoaderSupplier instanceof Supplier) {
-							this.defaultClassLoaderSupplier = (Supplier<C>) defaultClassLoaderOrDefaultClassLoaderSupplier;
+							this.classLoaderSupplier = (Supplier<C>) defaultClassLoaderOrDefaultClassLoaderSupplier;
 							return get(client);
 						}
 					} else {						
-						return defaultClassLoader;
+						return classLoader;
 					}
 				}
 			} finally {
 				Synchronizer.removeIfUnused(mutex);
 			}
 		}
-		return defaultClassLoader;
+		return classLoader;
 	}	
 
 
 	
 	void reset() {
 		Synchronizer.execute(getOperationId("getDefaultClassLoader"), () -> {
-			C classLoader = this.defaultClassLoader;
+			C classLoader = this.classLoader;
 			if (classLoader != null) {
-				this.defaultClassLoaderSupplier = null;
-				this.defaultClassLoader = null;
+				this.classLoaderSupplier = null;
+				this.classLoader = null;
 				if (classLoader instanceof MemoryClassLoader) {
 					((MemoryClassLoader)classLoader).unregister(this, true);
 				}
@@ -136,11 +136,11 @@ public class DefaultClassLoaderManager<C extends ClassLoader> implements Closeab
 	
 	@Override
 	public void close() {
-		this.defaultClassLoaderOrDefaultClassLoaderSupplier = null;
+		this.classLoaderOrClassLoaderSupplier = null;
 		reset();
-		this.defaultClassLoaderSupplier = null;
+		this.classLoaderSupplier = null;
 		this.classLoaderResetter = null;
-		this.defaultClassLoader = null;
+		this.classLoader = null;
 	}
 
 }

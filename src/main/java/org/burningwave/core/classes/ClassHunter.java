@@ -88,7 +88,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		}
 	}
 	
-	private DefaultClassLoaderManager<PathScannerClassLoader> defaultClassLoaderManager;
+	private ClassLoaderManager<PathScannerClassLoader> defaultPathScannerClassLoaderManager;
 	
 	ClassHunter(
 		Supplier<ClassHunter> classHunterSupplier,
@@ -106,7 +106,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			(context) -> new ClassHunter.SearchResult(context),
 			config
 		);
-		this.defaultClassLoaderManager = new DefaultClassLoaderManager<>(
+		this.defaultPathScannerClassLoaderManager = new ClassLoaderManager<>(
 			defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 			pathScannerClassLoaderResetter
 		);
@@ -119,7 +119,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 			if (key instanceof String) {
 				String keyAsString = (String)key;
 				if (keyAsString.equals(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER)) {
-					this.defaultClassLoaderManager.reset();
+					this.defaultPathScannerClassLoaderManager.reset();
 				}
 			}
 		}
@@ -138,7 +138,7 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	}
 	
 	PathScannerClassLoader getDefaultPathScannerClassLoader(Object client) {
-		return defaultClassLoaderManager.get(client);
+		return defaultPathScannerClassLoaderManager.get(client);
 	}	
 	
 	@Override
@@ -287,16 +287,16 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	
 	@Override
 	public void clearCache(boolean closeSearchResults) {
-		this.defaultClassLoaderManager.reset();
+		this.defaultPathScannerClassLoaderManager.reset();
 		super.clearCache(closeSearchResults);
 	}
 	
 	@Override
 	public void close() {
 		closeResources(() -> isClosed(), () -> {
-			this.defaultClassLoaderManager.close();
+			this.defaultPathScannerClassLoaderManager.close();
 			super.close();
-			this.defaultClassLoaderManager = null;
+			this.defaultPathScannerClassLoaderManager = null;
 		});
 	}
 

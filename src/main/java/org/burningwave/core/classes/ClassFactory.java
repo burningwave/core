@@ -119,7 +119,7 @@ public class ClassFactory implements Component {
 	private ByteCodeHunter byteCodeHunter;
 	private ClassPathHunter classPathHunter;
 	private Supplier<ClassPathHunter> classPathHunterSupplier;
-	private DefaultClassLoaderManager<ClassLoader> defaultClassLoaderManager;
+	private ClassLoaderManager<ClassLoader> defaultClassLoaderManager;
 	private Collection<ClassRetriever> classRetrievers;
 	private Properties config;
 	
@@ -139,7 +139,7 @@ public class ClassFactory implements Component {
 		this.pathHelper = pathHelper;
 		this.classPathHelper = classPathHelper;
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
-		this.defaultClassLoaderManager = new DefaultClassLoaderManager<>(
+		this.defaultClassLoaderManager = new ClassLoaderManager<>(
 			defaultClassLoaderOrDefaultClassLoaderSupplier,
 			classLoaderResetter
 		);
