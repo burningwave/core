@@ -327,7 +327,7 @@ public class ComponentContainer implements ComponentSupplier {
 	@Override
 	public PathScannerClassLoader getPathScannerClassLoader() {
 		return getOrCreate(PathScannerClassLoader.class, () -> {
-			PathScannerClassLoader classLoader = new PathScannerClassLoader(
+			PathScannerClassLoader classLoader = new ComponentContainer.PathScannerClassLoader(
 				resolveProperty(
 					this.config,
 					PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
@@ -337,25 +337,17 @@ public class ComponentContainer implements ComponentSupplier {
 					config.resolveStringValue(
 						PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION
 					)
-				)
-			) {
-
-				@Override
-				public void markAsCloseable() {
+				),
+				() -> {
 					Synchronizer.execute(getMutexForComponentsId(), () -> {
-						PathScannerClassLoader classLoader = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
-						if (classLoader != null) {
-							classLoader.unregister(this, true);
+						PathScannerClassLoader cL = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
+						if (cL != null) {
+							cL.unregister(this, true);
 						}
-					});						
+					});
 				}
-			};
+			);
 			classLoader.register(this);
-			Collection<String> disabledLoggers = GlobalProperties.resolveStringValues("managed-logger.repository.logging.warn.disabled-for", ";");
-			if (disabledLoggers.contains(PathScannerClassLoader.class.getName()) ) {
-				disabledLoggers.add(classLoader.getClass().getName());
-			}
-			GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
 			return classLoader;
 		});
 	}
@@ -618,13 +610,16 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	
-	public static abstract class PathScannerClassLoader extends org.burningwave.core.classes.PathScannerClassLoader {
-
+	public static class PathScannerClassLoader extends org.burningwave.core.classes.PathScannerClassLoader {
+		Runnable markAsCloseableExecutor;
 		PathScannerClassLoader(ClassLoader parentClassLoader, PathHelper pathHelper,
-				Criteria scanFileCriteria) {
+			Criteria scanFileCriteria, Runnable markAsCloseableExecutor
+		) {
 			super(parentClassLoader, pathHelper, scanFileCriteria);
 		}
 		
-		public abstract void markAsCloseable(); 
+		public void markAsCloseable() {
+			markAsCloseableExecutor.run();
+		}
 	}
 }
