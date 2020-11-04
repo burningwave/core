@@ -611,15 +611,15 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	
 	public static class PathScannerClassLoader extends org.burningwave.core.classes.PathScannerClassLoader {
-		Runnable markAsCloseableExecutor;
+		Runnable markAsCloseableAlgorithm;
 		PathScannerClassLoader(ClassLoader parentClassLoader, PathHelper pathHelper,
-			Criteria scanFileCriteria, Runnable markAsCloseableExecutor
+			Criteria scanFileCriteria, Runnable markAsCloseableAlgorithm
 		) {
 			super(parentClassLoader, pathHelper, scanFileCriteria);
 		}
 		
 		public void markAsCloseable() {
-			markAsCloseableExecutor.run();
+			markAsCloseableAlgorithm.run();
 		}
 	}
 }
