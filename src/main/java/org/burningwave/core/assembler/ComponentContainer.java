@@ -250,8 +250,7 @@ public class ComponentContainer implements ComponentSupplier {
 						if (pathScannerClassLoader != null) {
 							ClassLoaders.setAsParent(pathScannerClassLoader, resolveProperty(
 								this.config,
-								PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
-								PathScannerClassLoader.Configuration.DEFAULT_VALUES
+								PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER
 							));
 						}
 					} else if (keyAsString.equals(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)) {
@@ -330,8 +329,7 @@ public class ComponentContainer implements ComponentSupplier {
 			PathScannerClassLoader classLoader = new ComponentContainer.PathScannerClassLoader(
 				resolveProperty(
 					this.config,
-					PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
-					PathScannerClassLoader.Configuration.DEFAULT_VALUES
+					PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER
 				), getPathHelper(),
 				FileSystemItem.Criteria.forClassTypeFiles(
 					config.resolveStringValue(
