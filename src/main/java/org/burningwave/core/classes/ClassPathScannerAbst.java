@@ -115,16 +115,18 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		if (event.name().equals(Event.PUT.name())) {
 			if (key instanceof String) {
 				String keyAsString = (String)key;
-				if (keyAsString.equals(getDefaultPathScannerClassLoaderConfigPropertyName())) {
+				if (keyAsString.startsWith(getNameInConfigProperties() + ".default-path-scanner-class-loader")) {
 					this.defaultPathScannerClassLoaderManager.reset();
 				}
 			}
 		}
 	}	
 	
-	abstract String getDefaultPathScannerClassLoaderConfigPropertyName();
+	abstract String getNameInConfigProperties();
 	
-	abstract String getDefaultPathScannerClassLoaderCheckFileOptionsConfigPropertyName();
+	abstract String getDefaultPathScannerClassLoaderNameInConfigProperties();
+	
+	abstract String getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties();
 
 	PathScannerClassLoader getDefaultPathScannerClassLoader(Object client) {
 		return defaultPathScannerClassLoaderManager.get(client);
@@ -230,7 +232,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 						searchConfig.getScanFileCriteria().hasNoPredicate() ? 
 							FileSystemItem.Criteria.forClassTypeFiles(
 								config.resolveStringValue(
-									getDefaultPathScannerClassLoaderCheckFileOptionsConfigPropertyName()
+									getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()
 								)
 							)	
 							: searchConfig.getScanFileCriteria()

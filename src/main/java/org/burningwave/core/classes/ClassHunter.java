@@ -54,8 +54,9 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 		
 		public static class Key {
 			
-			public final static String DEFAULT_PATH_SCANNER_CLASS_LOADER = "class-hunter.default-path-scanner-class-loader";
-			public final static String PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "class-hunter.new-isolated-path-scanner-class-loader.search-config.check-file-option";
+			public final static String NAME_IN_CONFIG_PROPERTIES = "class-hunter";
+			public final static String DEFAULT_PATH_SCANNER_CLASS_LOADER = NAME_IN_CONFIG_PROPERTIES + ".default-path-scanner-class-loader";
+			public final static String PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = NAME_IN_CONFIG_PROPERTIES + ".new-isolated-path-scanner-class-loader.search-config.check-file-option";
 			
 		}
 		
@@ -112,12 +113,17 @@ public class ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, Cl
 	}	
 	
 	@Override
-	String getDefaultPathScannerClassLoaderConfigPropertyName() {
+	String getNameInConfigProperties() {
+		return Configuration.Key.NAME_IN_CONFIG_PROPERTIES;
+	}
+	
+	@Override
+	String getDefaultPathScannerClassLoaderNameInConfigProperties() {
 		return Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER;
 	}
 	
 	@Override
-	String getDefaultPathScannerClassLoaderCheckFileOptionsConfigPropertyName() {
+	String getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties() {
 		return Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS;
 	}
 	
