@@ -171,7 +171,9 @@ public class StaticComponentContainer {
 					if (key instanceof String) {
 						String keyAsString = (String)key;
 						if (event.name().equals(Event.PUT.name())) {
-							if (keyAsString.equals(ManagedLogger.Repository.Configuration.Key.TYPE)) {
+							if (keyAsString.startsWith("thread-supplier.")) {
+								Throwables.throwException("The reconfiguration of property '{}' is not allowed", key);
+							} else if (keyAsString.equals(ManagedLogger.Repository.Configuration.Key.TYPE)) {
 								ManagedLogger.Repository toBeReplaced = ManagedLoggersRepository;
 								Fields.setStaticDirect(StaticComponentContainer.class, "ManagedLoggersRepository", ManagedLogger.Repository.create(config));
 								toBeReplaced.close();
