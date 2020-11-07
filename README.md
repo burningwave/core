@@ -403,7 +403,7 @@ public class Finder {
         //as input. It is possible to clear the cache individually for every hunter (ClassHunter, 
         //ByteCodeHunter and ClassPathHunter) with clearCache method but to avoid inconsistencies 
         //it is recommended to perform this cleaning using the clearHuntersCache method of the ComponentSupplier.
-        //To perform searches that do not use the cache you must intantiate the search configuration with 
+        //To perform searches that do not use the cache you must instantiate the search configuration with 
         //SearchConfig.withoutUsingCache() method
         try(SearchResult searchResult = classHunter.loadInCache(searchConfig).find()) {
             return searchResult.getClasses();
