@@ -321,7 +321,7 @@ public class SourceCodeExecutor {
 <br/>
 
 # Retrieving classes of runtime class paths or of other paths through the ClassHunter
-The components of the class paths scanning engine are: **ByteCodeHunter**, [**ClassHunter**](https://github.com/burningwave/core/wiki/In-depth-look-to-and-configuration-guide) and the **ClassPathHunter**. Now we are going to use the ClassHunter to search for all classes that have package name that matches a regex. So in this example we're looking for all classes whose package name contains "springframework" string in the runtime class paths:
+The components of the class paths scanning engine are: **ByteCodeHunter**, [**ClassHunter**](https://github.com/burningwave/core/wiki/In-depth-look-to-ClassHunter-and-configuration-guide) and the **ClassPathHunter**. Now we are going to use the ClassHunter to search for all classes that have package name that matches a regex. So in this example we're looking for all classes whose package name contains "springframework" string in the runtime class paths:
 
 ```java
 import java.util.Collection;
@@ -343,7 +343,7 @@ public class Finder {
         //runtime class paths plus, on java 9 and later, the jmods folder of the Java home.
         //The default configured paths are indicated in the 'paths.hunters.default-search-config.paths'
         //property of burningwave.properties file
-        //(see https://github.com/burningwave/core/wiki/In-depth-look-to-and-configuration-guide)
+        //(see https://github.com/burningwave/core/wiki/In-depth-look-to-ClassHunter-and-configuration-guide)
         try (SearchResult searchResult = classHunter.loadInCache(SearchConfig.byCriteria(
             ClassCriteria.create().allThat((cls) -> {
                 return cls.getPackage().getName().matches(".*springframework.*");
@@ -385,7 +385,7 @@ public class Finder {
             //an ear file that contains nested war with nested jar files
             //With the rows below the search will be executed on runtime class paths and
             //on java 9 and later also on .jmod files contained in jmods folder of the Java home
-            //(see https://github.com/burningwave/core/wiki/In-depth-look-to-and-configuration-guide)
+            //(see https://github.com/burningwave/core/wiki/In-depth-look-to-ClassHunter-and-configuration-guide)
             pathHelper.getAllMainClassPaths(),
             pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES)
             //If you want to scan only one jar you can replace the two line of code above with:
