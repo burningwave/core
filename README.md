@@ -1211,7 +1211,7 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 	<summary></a><b>ClassHunter</b><a id="class-hunter-examples" href="#class-hunter-examples">&nbsp;</summary>
 	<ul>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/In-depth-look-to-and-configuration-guide">
+			<a href="https://github.com/burningwave/core/wiki/In-depth-look-to-ClassHunter-and-configuration-guide">
 			<b>In depth look to and configuration guide</b>
 			</a>
 		</li>
