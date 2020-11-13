@@ -15,10 +15,6 @@
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
 
 [![Gitter](https://badges.gitter.im/burningwave/core.svg)](https://gitter.im/burningwave/core?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-
-<img src="http://hits.dwyl.com/burningwave/all.svg" style="border-radius: 5px;">
-
-
 [![HitCount](http://hits.dwyl.com/burningwave/all.svg)](http://hits.dwyl.com/burningwave/all)
 
 **Tested on Java versions ranging from 8 to 16-ea, Burningwave Core** is a fully independent, advanced, free and open source Java frameworks building library and it is useful for scanning class paths, generating classes at runtime, facilitating the use of reflection, scanning the filesystem, executing stringified source code and much more...
