@@ -17,7 +17,7 @@
 
 <div style="width:150px; height:100px">
 	
-[HitCount](http://hits.dwyl.com/burningwave/all.svg)
+![HitCount](http://hits.dwyl.com/burningwave/all.svg)
 
 </div>
 
