@@ -220,13 +220,16 @@ public class PathHelper implements Component {
 		return pathGroup;
 	}
 	
-	private Collection<String> getOrCreatePathGroup(String name) {
+	private Collection<String> getOrCreatePathGroup(String groupName) {
+		groupName = groupName.startsWith(Configuration.Key.PATHS_PREFIX) ?
+			groupName.substring(Configuration.Key.PATHS_PREFIX.length()):
+			groupName;
 		Collection<String> classPathsGroup = null;
-		if ((classPathsGroup = this.pathGroups.get(name)) == null) {
+		if ((classPathsGroup = this.pathGroups.get(groupName)) == null) {
 			synchronized(this.pathGroups) {
-				if ((classPathsGroup = this.pathGroups.get(name)) == null) {
+				if ((classPathsGroup = this.pathGroups.get(groupName)) == null) {
 					classPathsGroup = ConcurrentHashMap.newKeySet();
-					this.pathGroups.put(name, classPathsGroup);
+					this.pathGroups.put(groupName, classPathsGroup);
 				}
 			}
 		}
@@ -308,9 +311,6 @@ public class PathHelper implements Component {
 	}
 	
 	private Collection<String> addPaths(String groupName, Collection<String> paths) {
-		groupName = groupName.startsWith(Configuration.Key.PATHS_PREFIX) ?
-			groupName.substring(Configuration.Key.PATHS_PREFIX.length()):
-			groupName;
 		if (paths != null) {
 			Collection<String> pathGroup = getOrCreatePathGroup(groupName);
 			for (String path : paths) {
