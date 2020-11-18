@@ -1347,4 +1347,46 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
+	
+	@Test
+	public void findByPackageNameTestOne() {
+		testNotEmpty(() -> {
+			ComponentSupplier componentSupplier = getComponentSupplier();
+	        PathHelper pathHelper = componentSupplier.getPathHelper();
+	        ClassHunter classHunter = componentSupplier.getClassHunter();
+	        
+	        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+	            pathHelper.getPaths(path -> path.matches(".*?junit-platform-engine-1.7.0.jar"))
+	        ).by(
+	            ClassCriteria.create().allThat((cls) -> {
+	                return cls.getPackage().getName().equals("org.junit.platform.engine");
+	            })
+	        );
+	        try (ClassHunter.SearchResult searchResult = classHunter.loadInCache(searchConfig).find()) {
+	            return searchResult.getClasses();
+	        }
+		}, true);
+	}
+	
+	
+	@Test
+	public void findByPackageNameTestTwo() {
+		testNotEmpty(() -> {
+			ComponentSupplier componentSupplier = getComponentSupplier();
+	        PathHelper pathHelper = componentSupplier.getPathHelper();
+	        ClassHunter classHunter = componentSupplier.getClassHunter();
+	        
+	        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+	            pathHelper.loadPaths("custom", "//${paths.custom-class-path}/ESC-Lib.ear/APP-INF/lib//children:.*?activation-1.1\\.jar;")
+	        ).by(
+	            ClassCriteria.create().allThat((cls) -> {
+	            	logDebug(cls.getPackage().getName());
+	                return cls.getPackage().getName().matches(".*?activation");
+	            })
+	        );
+	        try (ClassHunter.SearchResult searchResult = classHunter.loadInCache(searchConfig).find()) {
+	            return searchResult.getClasses();
+	        }
+		}, true);
+	}
 }
