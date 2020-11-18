@@ -172,7 +172,22 @@ public class StaticComponentContainer {
 						String keyAsString = (String)key;
 						if (event.name().equals(Event.PUT.name())) {
 							if (keyAsString.startsWith("thread-supplier.")) {
-								Throwables.throwException("The reconfiguration of property '{}' is not allowed", key);
+								boolean calledByThreadSupplier = false;
+								boolean mustThrowException = true;
+								//Check that parameter has not modified by org.burningwave.core.concurrent.Thread.Supplier constructor
+								for (StackTraceElement stackTraceElement : Thread.currentThread().getStackTrace()) {
+									if (stackTraceElement.getClassName().equals(org.burningwave.core.concurrent.Thread.Supplier.class.getName())) {
+										calledByThreadSupplier = true;
+										if (stackTraceElement.getMethodName().equals("<init>")) {
+											mustThrowException = false;
+										}
+									} else if (calledByThreadSupplier) {
+										break;
+									}
+								}
+								if (mustThrowException) {
+									Throwables.throwException("The reconfiguration of property '{}' is not allowed", key);
+								}
 							} else if (keyAsString.equals(ManagedLogger.Repository.Configuration.Key.TYPE)) {
 								ManagedLogger.Repository toBeReplaced = ManagedLoggersRepository;
 								Fields.setStaticDirect(StaticComponentContainer.class, "ManagedLoggersRepository", ManagedLogger.Repository.create(config));

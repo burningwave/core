@@ -161,11 +161,12 @@ public class PathHelper implements Component {
 	}
 	
 	private void loadAllPaths() {
-		config.forEach((pathGroupName, value) -> {
-			if (((String)pathGroupName).startsWith(Configuration.Key.PATHS_PREFIX)) {
-				loadPaths((String)pathGroupName);
+		for (Object pathGroupNameObject : config.keySet()) {
+			String pathGroupName = (String) pathGroupNameObject;
+			if ((pathGroupName.startsWith(Configuration.Key.PATHS_PREFIX))) {
+				loadPaths(pathGroupName);
 			}
-		});
+		}
 	}
 	
 	public String getBurningwaveRuntimeClassPath() {
@@ -195,7 +196,6 @@ public class PathHelper implements Component {
 	}
 	
 	public Collection<String> getPaths(String... names) {
-		waitForInitialization();
 		Collection<String> pathGroup = new HashSet<>();
 		if (names != null && names.length > 0) {
 			for (String name : names) {
@@ -238,6 +238,7 @@ public class PathHelper implements Component {
 	}
 	
 	public Collection<String> loadPaths(String pathGroupName, String paths) {
+		waitForInitialization();
 		String pathGroupPropertyName = pathGroupName.startsWith(Configuration.Key.PATHS_PREFIX) ?
 			pathGroupName :
 			Configuration.Key.PATHS_PREFIX + pathGroupName;
