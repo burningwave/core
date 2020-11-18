@@ -1203,7 +1203,7 @@ If you create a component container instance through method ComponentContainer.c
 ```java
 ComponentContainer.create("org/burningwave/custom-config-file.properties")
 ```
-[Here an example of a **burningwave.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.properties)
+[Here an example of a **burningwave.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.properties#L1)
 
 ### Other examples of using some components:
 <details open>
