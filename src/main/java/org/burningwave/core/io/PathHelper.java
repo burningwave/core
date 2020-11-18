@@ -196,6 +196,7 @@ public class PathHelper implements Component {
 	}
 	
 	public Collection<String> getPaths(String... names) {
+		waitForInitialization();
 		Collection<String> pathGroup = new HashSet<>();
 		if (names != null && names.length > 0) {
 			for (String name : names) {
