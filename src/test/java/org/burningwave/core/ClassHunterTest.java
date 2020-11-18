@@ -1380,7 +1380,6 @@ public class ClassHunterTest extends BaseTest {
 	            pathHelper.loadPaths("custom", "//${paths.custom-class-path}/ESC-Lib.ear/APP-INF/lib//children:.*?activation-1.1\\.jar;")
 	        ).by(
 	            ClassCriteria.create().allThat((cls) -> {
-	            	logDebug(cls.getPackage().getName());
 	                return cls.getPackage().getName().matches(".*?activation");
 	            })
 	        );
