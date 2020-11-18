@@ -30,6 +30,7 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
@@ -135,7 +136,7 @@ public class PathHelper implements Component {
 			String propertyKey = (String)key;
 			if (propertyKey.startsWith(Configuration.Key.PATHS_PREFIX)) {
 				if (event.name().equals(Event.PUT.name())) {
-					loadPaths(propertyKey);
+					loadAndMapPaths(propertyKey, null);
 				} else if (event.name().equals(Event.REMOVE.name())) {
 					launchAllPathsLoadingTask();
 				}
@@ -151,20 +152,21 @@ public class PathHelper implements Component {
 	private void loadMainClassPaths() {
 		Collection<String> placeHolders = config.getAllPlaceHolders(Configuration.Key.MAIN_CLASS_PATHS);
 		if (placeHolders.contains("${system.properties:java.class.path}")) {
-			loadPaths(Configuration.Key.MAIN_CLASS_PATHS);
+			loadAndMapPaths(Configuration.Key.MAIN_CLASS_PATHS, null);
 			addPaths(
 				Configuration.Key.MAIN_CLASS_PATHS,
-				ClassLoaders.getAllLoadedPaths(this.getClass().getClassLoader())
+				ClassLoaders.getAllLoadedPaths(Classes.getClassLoader(this.getClass()))
 			);
 		}
 	}
 	
 	private void loadAllPaths() {
-		config.forEach((pathGroupName, value) -> {
-			if (((String)pathGroupName).startsWith(Configuration.Key.PATHS_PREFIX)) {
-				loadPaths((String)pathGroupName);
+		for (Object pathGroupNameObject : config.keySet()) {
+			String pathGroupName = (String) pathGroupNameObject;
+			if ((pathGroupName.startsWith(Configuration.Key.PATHS_PREFIX))) {
+				loadAndMapPaths(pathGroupName, null);
 			}
-		});
+		}
 	}
 	
 	public String getBurningwaveRuntimeClassPath() {
@@ -205,7 +207,7 @@ public class PathHelper implements Component {
 				if (pathsFound != null) {
 					pathGroup.addAll(pathsFound);
 				} else {
-					loadPaths(name);
+					loadAndMapPaths(name, null);
 					pathsFound = this.pathGroups.get(name);
 					if (pathsFound != null) {
 						pathGroup.addAll(pathsFound);
@@ -219,24 +221,24 @@ public class PathHelper implements Component {
 		return pathGroup;
 	}
 	
-	private Collection<String> getOrCreatePathGroup(String name) {
+	private Collection<String> getOrCreatePathGroup(String groupName) {
+		groupName = groupName.startsWith(Configuration.Key.PATHS_PREFIX) ?
+			groupName.substring(Configuration.Key.PATHS_PREFIX.length()):
+			groupName;
 		Collection<String> classPathsGroup = null;
-		if ((classPathsGroup = this.pathGroups.get(name)) == null) {
+		if ((classPathsGroup = this.pathGroups.get(groupName)) == null) {
 			synchronized(this.pathGroups) {
-				if ((classPathsGroup = this.pathGroups.get(name)) == null) {
+				if ((classPathsGroup = this.pathGroups.get(groupName)) == null) {
 					classPathsGroup = ConcurrentHashMap.newKeySet();
-					this.pathGroups.put(name, classPathsGroup);
+					this.pathGroups.put(groupName, classPathsGroup);
 				}
 			}
 		}
 		return classPathsGroup;
 	}
 	
-	private void loadPaths(String pathGroupName) {
-		loadPaths(pathGroupName, null);
-	}
-	
-	public Collection<String> loadPaths(String pathGroupName, String paths) {
+	public Collection<String> loadAndMapPaths(String pathGroupName, String paths) {
+		waitForInitialization();
 		String pathGroupPropertyName = pathGroupName.startsWith(Configuration.Key.PATHS_PREFIX) ?
 			pathGroupName :
 			Configuration.Key.PATHS_PREFIX + pathGroupName;
@@ -291,24 +293,13 @@ public class PathHelper implements Component {
 			configWithResolvedPaths.putAll(defaultValues);
 			Collection<String> computedPaths = configWithResolvedPaths.resolveStringValues(pathGroupPropertyName, pathsSeparator, true);
 			if (computedPaths != null) {
-				for (String path : computedPaths) {
-					if (Strings.isNotEmpty(path)) {
-						groupPaths.addAll(addPath(pathGroupName, path));
-					}
-				}
+				groupPaths.addAll(addPaths(pathGroupName, computedPaths));
 			}
 		}
 		return groupPaths;
 	}	
 	
-	private Collection<String> addPath(String name, String classPaths) {
-		return addPaths(name, Arrays.asList(classPaths));
-	}
-	
 	private Collection<String> addPaths(String groupName, Collection<String> paths) {
-		groupName = groupName.startsWith(Configuration.Key.PATHS_PREFIX) ?
-			groupName.substring(Configuration.Key.PATHS_PREFIX.length()):
-			groupName;
 		if (paths != null) {
 			Collection<String> pathGroup = getOrCreatePathGroup(groupName);
 			for (String path : paths) {

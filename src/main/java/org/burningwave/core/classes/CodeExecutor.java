@@ -59,9 +59,13 @@ public class CodeExecutor implements Component {
 		public static class Key {
 			public static final String COMMON_IMPORTS = "code-executor.common.imports";
 			public static final String ADDITIONAL_COMMON_IMPORTS = "code-executor.common.additional-imports";
-			public static final String PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX = ".imports";
-			public static final String PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX = ".name";
-			public static final String PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_SUFFIX = ".simple-name";
+			public static final String PROPERTIES_FILE_IMPORTS_SUFFIX = ".imports";
+			public static final String PROPERTIES_FILE_CLASS_NAME_SUFFIX = ".name";
+			public static final String PROPERTIES_FILE_SUPPLIER_NAME_SUFFIX = ".supplier" + PROPERTIES_FILE_CLASS_NAME_SUFFIX;
+			public static final String PROPERTIES_FILE_EXECUTOR_NAME_SUFFIX = ".executor" + PROPERTIES_FILE_CLASS_NAME_SUFFIX;
+			public static final String PROPERTIES_FILE_CLASS_SIMPLE_NAME_SUFFIX = ".simple-name";
+			public static final String PROPERTIES_FILE_SUPPLIER_SIMPLE_NAME_SUFFIX = ".supplier" + PROPERTIES_FILE_CLASS_SIMPLE_NAME_SUFFIX;
+			public static final String PROPERTIES_FILE_EXECUTOR_SIMPLE_NAME_SUFFIX = ".executor" + PROPERTIES_FILE_CLASS_SIMPLE_NAME_SUFFIX;
 			
 		}
 		
@@ -160,7 +164,7 @@ public class CodeExecutor implements Component {
 		}
 		String importFromConfig = IterableObjectHelper.resolveStringValue(
 			properties, 
-			config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX, 
+			config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_IMPORTS_SUFFIX, 
 			null, 
 			Configuration.Value.CODE_LINE_SEPARATOR,
 			true,
@@ -173,23 +177,20 @@ public class CodeExecutor implements Component {
 				}
 			});
 		}
-		String executorName = IterableObjectHelper.resolveStringValue(
-			properties, 
-			config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX,
-			null,
-			Configuration.Value.CODE_LINE_SEPARATOR,
-			true,
-			config.getDefaultValues()
-		);
-		String executorSimpleName = IterableObjectHelper.resolveStringValue(
+		String executorName = retrieveClassName(
+			config,
 			properties,
-			config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_SIMPLE_NAME_SUFFIX,
-			null, 
-			Configuration.Value.CODE_LINE_SEPARATOR,
-			true,
-			config.getDefaultValues()
+			Configuration.Key.PROPERTIES_FILE_CLASS_NAME_SUFFIX,
+			Configuration.Key.PROPERTIES_FILE_SUPPLIER_NAME_SUFFIX,
+			Configuration.Key.PROPERTIES_FILE_EXECUTOR_NAME_SUFFIX
 		);
-
+		String executorSimpleName = retrieveClassName(
+			config,
+			properties,
+			Configuration.Key.PROPERTIES_FILE_CLASS_SIMPLE_NAME_SUFFIX,
+			Configuration.Key.PROPERTIES_FILE_SUPPLIER_SIMPLE_NAME_SUFFIX,
+			Configuration.Key.PROPERTIES_FILE_EXECUTOR_SIMPLE_NAME_SUFFIX
+		);
 		if (Strings.isNotEmpty(executorName)) {
 			config.setName(executorName);
 		} else if (Strings.isNotEmpty(executorSimpleName)) {
@@ -225,6 +226,23 @@ public class CodeExecutor implements Component {
 		return execute(
 			(E)config
 		);
+	}
+
+	private String retrieveClassName(ExecuteConfig.ForProperties config, java.util.Properties properties, String... suffixes) {
+		for (String suffix : suffixes) {
+			String executorName = IterableObjectHelper.resolveStringValue(
+				properties, 
+				config.getPropertyName() + suffix,
+				null,
+				Configuration.Value.CODE_LINE_SEPARATOR,
+				true,
+				config.getDefaultValues()
+			);
+			if (executorName != null) {
+				return executorName;
+			}
+		}
+		return null;
 	}		
 	
 	public <E extends ExecuteConfig<E>, T> T execute(BodySourceGenerator body) {

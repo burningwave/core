@@ -48,7 +48,6 @@ import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -84,12 +83,12 @@ public class ClassFactory implements Component {
 			Map<String, Object> defaultValues = new HashMap<>();
 			
 			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
-			defaultValues.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_IMPORTS_SUFFIX,
+			defaultValues.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_IMPORTS_SUFFIX,
 				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
 				"${"+ Configuration.Key.DEFAULT_CLASS_LOADER + ".additional-imports}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
 				PathScannerClassLoader.class.getName() + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR
 			);
-			defaultValues.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_CODE_EXECUTOR_NAME_SUFFIX, ClassFactory.class.getPackage().getName() + ".DefaultClassLoaderRetrieverForClassFactory");
+			defaultValues.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_NAME_SUFFIX, ClassFactory.class.getPackage().getName() + ".DefaultClassLoaderRetrieverForClassFactory");
 			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, "(Supplier<ClassLoader>)() -> ((ComponentSupplier)parameter[0]).getClassHunter().getPathScannerClassLoader()");
 			defaultValues.put(
 				Key.DEFAULT_CLASS_LOADER,
@@ -119,7 +118,7 @@ public class ClassFactory implements Component {
 	private ByteCodeHunter byteCodeHunter;
 	private ClassPathHunter classPathHunter;
 	private Supplier<ClassPathHunter> classPathHunterSupplier;
-	private DefaultClassLoaderManager<ClassLoader> defaultClassLoaderManager;
+	private ClassLoaderManager<ClassLoader> defaultClassLoaderManager;
 	private Collection<ClassRetriever> classRetrievers;
 	private Properties config;
 	
@@ -130,7 +129,6 @@ public class ClassFactory implements Component {
 		PathHelper pathHelper,
 		ClassPathHelper classPathHelper,
 		Object defaultClassLoaderOrDefaultClassLoaderSupplier,
-		Consumer<ClassLoader> classLoaderResetter,
 		Properties config
 	) {	
 		this.byteCodeHunter = byteCodeHunter;
@@ -139,9 +137,8 @@ public class ClassFactory implements Component {
 		this.pathHelper = pathHelper;
 		this.classPathHelper = classPathHelper;
 		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
-		this.defaultClassLoaderManager = new DefaultClassLoaderManager<>(
-			defaultClassLoaderOrDefaultClassLoaderSupplier,
-			classLoaderResetter
+		this.defaultClassLoaderManager = new ClassLoaderManager<>(
+			defaultClassLoaderOrDefaultClassLoaderSupplier
 		);
 		this.classRetrievers = new CopyOnWriteArrayList<>();
 		this.config = config;
@@ -155,7 +152,6 @@ public class ClassFactory implements Component {
 		PathHelper pathHelper,
 		ClassPathHelper classPathHelper,
 		Object defaultClassLoaderSupplier,
-		Consumer<ClassLoader> classLoaderResetter,
 		Properties config
 	) {
 		return new ClassFactory(
@@ -165,7 +161,6 @@ public class ClassFactory implements Component {
 			pathHelper,
 			classPathHelper,
 			defaultClassLoaderSupplier,
-			classLoaderResetter,
 			config
 		);
 	}

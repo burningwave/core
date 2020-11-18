@@ -151,6 +151,7 @@ public class StaticComponentContainer {
 	
 	static {
 		try {
+			long startTime = System.nanoTime();
 			Strings = org.burningwave.core.Strings.create();
 			Throwables = org.burningwave.core.Throwables.create();
 			Objects = org.burningwave.core.Objects.create();
@@ -170,7 +171,24 @@ public class StaticComponentContainer {
 					if (key instanceof String) {
 						String keyAsString = (String)key;
 						if (event.name().equals(Event.PUT.name())) {
-							if (keyAsString.equals(ManagedLogger.Repository.Configuration.Key.TYPE)) {
+							if (keyAsString.startsWith("thread-supplier.")) {
+								boolean calledByThreadSupplier = false;
+								boolean mustThrowException = true;
+								//Check that parameter has not modified by org.burningwave.core.concurrent.Thread.Supplier constructor
+								for (StackTraceElement stackTraceElement : Thread.currentThread().getStackTrace()) {
+									if (stackTraceElement.getClassName().equals(org.burningwave.core.concurrent.Thread.Supplier.class.getName())) {
+										calledByThreadSupplier = true;
+										if (stackTraceElement.getMethodName().equals("<init>")) {
+											mustThrowException = false;
+										}
+									} else if (calledByThreadSupplier) {
+										break;
+									}
+								}
+								if (mustThrowException) {
+									Throwables.throwException("The reconfiguration of property '{}' is not allowed", key);
+								}
+							} else if (keyAsString.equals(ManagedLogger.Repository.Configuration.Key.TYPE)) {
 								ManagedLogger.Repository toBeReplaced = ManagedLoggersRepository;
 								Fields.setStaticDirect(StaticComponentContainer.class, "ManagedLoggersRepository", ManagedLogger.Repository.create(config));
 								toBeReplaced.close();
@@ -340,6 +358,12 @@ public class StaticComponentContainer {
 					)
 				);
 			}
+			ManagedLoggersRepository.logInfo(() -> 
+				StaticComponentContainer.class.getName(), 
+				"{} initialized in {} seconds",
+				StaticComponentContainer.class.getName(),
+				Double.valueOf(((double) (System.nanoTime() - startTime)) / 1_000_000_000).toString()
+			);
 		} catch (Throwable exc){
 			exc.printStackTrace();
 			throw exc;

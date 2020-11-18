@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.function.Supplier;
 
+import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.MemoryClassLoader;
@@ -131,6 +132,7 @@ public interface ManagedLogger {
 				defaultValues.put(Key.WARN_LOGGING_DISABLED_FOR,
 					ClassHunter.SearchContext.class.getName() + ";" +
 					ClassPathHunter.SearchContext.class.getName() + ";" +
+					ComponentContainer.PathScannerClassLoader.class.getName() + ";" +
 					LowLevelObjectsHandler.class.getName() + ";" +
 					MemoryClassLoader.class.getName() + ";" +
 					PathScannerClassLoader.class.getName() + ";" +

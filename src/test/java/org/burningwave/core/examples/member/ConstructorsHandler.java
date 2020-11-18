@@ -5,14 +5,13 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Constructo
 import org.burningwave.core.classes.MemoryClassLoader;
 
 
-@SuppressWarnings("unused")
 public class ConstructorsHandler {
     
     public static void execute() {
-        //Inoking constructor by using reflection
+        //Invoking constructor by using reflection
         MemoryClassLoader classLoader = Constructors.newInstanceOf(MemoryClassLoader.class, Thread.currentThread().getContextClassLoader());
         
-        //Inoking constructor with a null parameter value by using MethodHandle
+        //Invoking constructor with a null parameter value by using MethodHandle
         classLoader = Constructors.newInstanceDirectOf(MemoryClassLoader.class, new Object[] {null});
         System.out.println(classLoader);
     }

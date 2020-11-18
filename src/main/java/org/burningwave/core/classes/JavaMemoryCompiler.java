@@ -51,7 +51,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -149,8 +148,7 @@ public class JavaMemoryCompiler implements Component {
 			config.getSources(),
 			getClassPathsFrom(config),
 			getClassRepositoriesFrom(config),
-			config.isStoringCompiledClassesEnabled(),
-			config.isStoringCompiledClassesToNewFolderEnabled()
+			config.getCompiledClassesStorage()
 		);
 	}
 
@@ -182,8 +180,7 @@ public class JavaMemoryCompiler implements Component {
 		Collection<String> sources, 
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
-		boolean storeCompiledClasses,
-		boolean storeCompiledClassesToNewFolder
+		String compiledClassesStorage
 	) {	
 		return BackgroundExecutor.createTask(() -> {
 			logInfo("Try to compile: \n\n{}\n", String.join("\n", SourceCodeHandler.addLineCounter(sources)));
@@ -197,11 +194,10 @@ public class JavaMemoryCompiler implements Component {
 				)
 			) {
 				Map<String, ByteBuffer> compiledFiles = compile(context);
-				String storedFilesClassPath = compiledClassesRepository.getAbsolutePath() + 
-					(storeCompiledClassesToNewFolder?
-						"/" + UUID.randomUUID().toString() :
-						"");
-				if (!compiledFiles.isEmpty() && storeCompiledClasses) {
+				String storedFilesClassPath = compiledClassesStorage != null ?
+					compiledClassesRepository.getAbsolutePath() + "/" + compiledClassesStorage :
+					null;
+				if (!compiledFiles.isEmpty() && compiledClassesStorage != null ) {
 					compiledFiles.forEach((className, byteCode) -> {
 						JavaClass.use(byteCode, (javaClass) -> javaClass.storeToClassPath(storedFilesClassPath));
 					});
@@ -215,7 +211,10 @@ public class JavaMemoryCompiler implements Component {
 						String.join(", ", classNames):
 						classNames.stream().findFirst().orElseGet(() -> "")
 				);
-				return new Compilation.Result(FileSystemItem.ofPath(storedFilesClassPath), compiledFiles, new HashSet<>(context.classPaths));
+				return new Compilation.Result(
+					storedFilesClassPath  != null ? FileSystemItem.ofPath(storedFilesClassPath) : null, 
+					compiledFiles, new HashSet<>(context.classPaths)
+				);
 			}
 		}).submit();
 	}	

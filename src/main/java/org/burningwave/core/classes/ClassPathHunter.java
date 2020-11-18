@@ -29,6 +29,7 @@
 package org.burningwave.core.classes;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -36,40 +37,93 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
 public class ClassPathHunter extends ClassPathScannerWithCachingSupport<Collection<Class<?>>, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
+	
+	public static class Configuration {
+		
+		public static class Key {
+			
+			public final static String NAME_IN_CONFIG_PROPERTIES = "class-path-hunter";
+			public final static String DEFAULT_PATH_SCANNER_CLASS_LOADER = NAME_IN_CONFIG_PROPERTIES + ".default-path-scanner-class-loader";
+			public final static String PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = NAME_IN_CONFIG_PROPERTIES + ".new-isolated-path-scanner-class-loader.search-config.check-file-option";
+				
+		}
+		
+		public final static Map<String, Object> DEFAULT_VALUES;
+		
+		static {
+			Map<String, Object> defaultValues = new HashMap<>();
+			
+			defaultValues.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_IMPORTS_SUFFIX,
+				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
+				"${"+ Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + ".additional-imports}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR +
+				PathScannerClassLoader.class.getName() + ";"
+			);
+			defaultValues.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_NAME_SUFFIX, ClassHunter.class.getPackage().getName() + ".DefaultPathScannerClassLoaderRetrieverForClassPathHunter");
+			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
+			defaultValues.put(
+				Key.DEFAULT_PATH_SCANNER_CLASS_LOADER, 
+				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) -> 
+					componentSupplier.getPathScannerClassLoader()
+			);
+			defaultValues.put(
+				Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+				"${" + ClassPathScannerAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
+			);
+			
+			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
+		}
+	}
+	
 	private ClassPathHunter(
-		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
+		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 		Properties config
 	) {
-		super(
-			classHunterSupplier,		
+		super(	
 			pathHelper,
 			(initContext) -> SearchContext._create(initContext),
 			(context) -> new ClassPathHunter.SearchResult(context),
+			defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 			config
 		);
 	}
 	
 	public static ClassPathHunter create(
-		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
+		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 		Properties config
 	) {
 		return new ClassPathHunter(
-			classHunterSupplier,	
 			pathHelper,
+			defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 			config
 		);
+	}
+	
+	@Override
+	String getNameInConfigProperties() {
+		return Configuration.Key.NAME_IN_CONFIG_PROPERTIES;
+	}
+	
+	@Override
+	String getDefaultPathScannerClassLoaderNameInConfigProperties() {
+		return Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER;
+	}
+	
+	@Override
+	String getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties() {
+		return Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS;
 	}
 	
 	@Override

@@ -40,13 +40,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
+import org.burningwave.core.iterable.Properties.Event;
 
 
 @SuppressWarnings("unchecked")
@@ -79,37 +79,57 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
-	
-	Supplier<ClassHunter> classHunterSupplier;
-	ClassHunter classHunter;
+
 	PathHelper pathHelper;
 	Function<InitContext, C> contextSupplier;
 	Function<C, R> resultSupplier;
 	Properties config;
 	Collection<SearchResult<I>> searchResults;
 	String instanceId;
-
+	ClassLoaderManager<PathScannerClassLoader> defaultPathScannerClassLoaderManager;
+	
 	ClassPathScannerAbst(
-		Supplier<ClassHunter> classHunterSupplier,
 		PathHelper pathHelper,
 		Function<InitContext, C> contextSupplier,
 		Function<C, R> resultSupplier,
+		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 		Properties config
 	) {
-		this.classHunterSupplier = classHunterSupplier;
 		this.pathHelper = pathHelper;
 		this.contextSupplier = contextSupplier;
 		this.resultSupplier = resultSupplier;
 		this.config = config;
 		this.searchResults = ConcurrentHashMap.newKeySet();
 		instanceId = Objects.getCurrentId(this);
+		this.defaultPathScannerClassLoaderManager = new ClassLoaderManager<>(
+			defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier
+		);
 		listenTo(config);
 	}
 	
-	ClassHunter getClassHunter() {
-		return classHunter != null ?
-			classHunter	:
-			(classHunter = classHunterSupplier.get());
+	@Override
+	public <K, V> void processChangeNotification(
+		Properties properties, Event event, K key, V newValue,
+		V previousValue
+	) {
+		if (event.name().equals(Event.PUT.name())) {
+			if (key instanceof String) {
+				String keyAsString = (String)key;
+				if (keyAsString.startsWith(getNameInConfigProperties() + ".default-path-scanner-class-loader")) {
+					this.defaultPathScannerClassLoaderManager.reset();
+				}
+			}
+		}
+	}	
+	
+	abstract String getNameInConfigProperties();
+	
+	abstract String getDefaultPathScannerClassLoaderNameInConfigProperties();
+	
+	abstract String getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties();
+
+	PathScannerClassLoader getDefaultPathScannerClassLoader(Object client) {
+		return defaultPathScannerClassLoaderManager.get(client);
 	}
 	
 	public R find() {
@@ -197,7 +217,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 	
 	C createContext(SearchConfigAbst<?> searchConfig) {
-		PathScannerClassLoader defaultPathScannerClassLoader = getClassHunter().getDefaultPathScannerClassLoader(searchConfig);
+		PathScannerClassLoader defaultPathScannerClassLoader = getDefaultPathScannerClassLoader(searchConfig);
 		if (searchConfig.useDefaultPathScannerClassLoaderAsParent) {
 			searchConfig.parentClassLoaderForPathScannerClassLoader = defaultPathScannerClassLoader;
 		}
@@ -212,8 +232,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 						searchConfig.getScanFileCriteria().hasNoPredicate() ? 
 							FileSystemItem.Criteria.forClassTypeFiles(
 								config.resolveStringValue(
-									ClassHunter.Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS, 
-									ClassHunter.Configuration.DEFAULT_VALUES
+									getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()
 								)
 							)	
 							: searchConfig.getScanFileCriteria()
@@ -265,7 +284,5 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		config = null;
 		closeSearchResults();
 		this.searchResults = null;
-		this.classHunterSupplier = null;
-		this.classHunter = null;
 	}
 }

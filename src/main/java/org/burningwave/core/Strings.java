@@ -177,7 +177,7 @@ public class Strings implements Component {
 					}					
 					foundString.add(matcher.group(i));
 				} catch (IndexOutOfBoundsException exc) {
-					logDebug("group " + i + " not found on string \"" + target + "\" using pattern " + pattern.pattern());
+					logInfo("group " + i + " not found on string \"" + target + "\" using pattern " + pattern.pattern());
 				}
 			}
 		}

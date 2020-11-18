@@ -244,6 +244,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			this.elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxDetachedThreadsCount =
 				Objects.toLong(IterableObjectHelper.resolveValue(config, Configuration.Key.MAX_DETACHED_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE));
 			this.maxDetachedThreadsCountIncreasingStep = Objects.toInt(IterableObjectHelper.resolveValue(config, Configuration.Key.MAX_DETACHED_THREADS_COUNT_INCREASING_STEP));
+			if (maxDetachedThreadsCountIncreasingStep < 1) {
+				poolableThreadRequestTimeout = 0;
+				config.put(Configuration.Key.POOLABLE_THREAD_REQUEST_TIMEOUT, poolableThreadRequestTimeout);
+			}
 			this.timeOfLastIncreaseOfMaxDetachedThreadsCount = Long.MAX_VALUE;
 		}
 		
@@ -257,21 +261,28 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			return getOrCreate(1);
 		}
 		
-		final Thread getOrCreate(int requestCount) {
+		public final Thread getOrCreate(int requestCount) {
+			return getOrCreate(requestCount, requestCount);
+		}
+		
+		final Thread getOrCreate(int initialValue, int requestCount) {
 			Thread thread = get();
 			if (thread != null) {
 				return thread;
 			}
-			if (requestCount > 0 && poolableThreadsCount >= maxPoolableThreadsCount && threadsCount > maxThreadsCount) {
+			if (requestCount > 0 && poolableThreadsCount >= maxPoolableThreadsCount && threadsCount >= maxThreadsCount) {
 				synchronized (poolableSleepingThreads) {
 					try {
 						if ((thread = get()) != null) {
 							return thread;
 						}
-						if (poolableThreadsCount >= maxPoolableThreadsCount && threadsCount > maxThreadsCount) {
+						if (poolableThreadsCount >= maxPoolableThreadsCount && threadsCount >= maxThreadsCount) {
 							//This block of code is for preventing dead locks
 							long startWaitTime = System.currentTimeMillis();
 							poolableSleepingThreads.wait(poolableThreadRequestTimeout);
+							if (maxDetachedThreadsCountIncreasingStep < 1) {
+								return getOrCreate(initialValue, requestCount);
+							}
 							long endWaitTime = System.currentTimeMillis();
 							long waitElapsedTime = endWaitTime - startWaitTime;
 							if (waitElapsedTime < poolableThreadRequestTimeout) {
@@ -287,7 +298,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 									);
 									timeOfLastIncreaseOfMaxDetachedThreadsCount = Long.MAX_VALUE;
 								}
-								return getOrCreate(requestCount);
+								return getOrCreate(initialValue, requestCount);
 							} else {
 								timeOfLastIncreaseOfMaxDetachedThreadsCount = System.currentTimeMillis();
 								maxThreadsCount += maxDetachedThreadsCountIncreasingStep;
@@ -296,7 +307,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 									"{} waited for {}ms: maxTemporarilyThreadsCount will be temporarily increased to {} for preventing dead lock",
 									java.lang.Thread.currentThread(), waitElapsedTime, (maxThreadsCount - maxPoolableThreadsCount)
 								);
-								return getOrCreate(--requestCount);
+								return getOrCreate(initialValue, --requestCount);
 							}
 						}
 					} catch (InterruptedException exc) {
@@ -304,88 +315,96 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					}
 				}
 			} else if (poolableThreadsCount >= maxPoolableThreadsCount) {
-				return createDetachedThread();
+				if (threadsCount < maxThreadsCount) {
+					return createDetachedThread();
+				} else {
+					return getOrCreate(initialValue, initialValue);					
+				}
 			}
 			synchronized (poolableSleepingThreads) {
 				if (poolableThreadsCount >= maxPoolableThreadsCount) {
-					return getOrCreate(requestCount);
+					return getOrCreate(initialValue, requestCount);
 				}
 				++poolableThreadsCount;
-				return new Thread(this, ++threadsCount) {
-					
-					@Override
-					public void run() {
-						while (alive) {
-							synchronized (this) {
-								runningThreads.add(this);
-							}
-							try {
-								executable.accept(this);
-							} catch (Throwable exc) {
-								ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
-							}				
-							try {
-								synchronized (this) {
-									runningThreads.remove(this);
-									executable = null;
-									if (!alive) {
-										continue;
-									}
-									setIndexedName();
-									poolableSleepingThreads.add(this);
-									synchronized (poolableSleepingThreads) {
-										poolableSleepingThreads.notifyAll();
-									}
-									wait();
-								}
-							} catch (InterruptedException exc) {
-								logError(exc);
-							}
-						}
-						synchronized (this) {
-							if (runningThreads.remove(this)) {
-								--supplier.threadsCount;
-								--supplier.poolableThreadsCount;
-							}
-						}
-						synchronized (poolableSleepingThreads) {
-							poolableSleepingThreads.notifyAll();
-						}
-						synchronized(this) {
-							notifyAll();
-						}
-					}
-					
-					@Override
-					public void interrupt() {
-						shutDown();
-						synchronized (this) {
-							if (runningThreads.remove(this)) {
-								--supplier.threadsCount;
-								--supplier.poolableThreadsCount;
-							} else if (poolableSleepingThreads.remove(this)) {
-								--supplier.threadsCount;
-								--supplier.poolableThreadsCount;
-							}
-						}
-						try {
-							super.interrupt();
-						} catch (Throwable exc) {
-							logError("Exception occurred", exc);
-						}
-						synchronized (poolableSleepingThreads) {
-							poolableSleepingThreads.notifyAll();
-						}
-						synchronized(this) {
-							notifyAll();
-						}
-					};
-					
-				};
+				return createPoolableThread();
 			}
 		}
 
-		public Thread createDetachedThread() {
+		Thread createPoolableThread() {
+			return new Thread(this, ++threadsCount) {
+				
+				@Override
+				public void run() {
+					while (alive) {
+						synchronized (this) {
+							runningThreads.add(this);
+						}
+						try {
+							executable.accept(this);
+						} catch (Throwable exc) {
+							ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
+						}				
+						try {
+							synchronized (this) {
+								runningThreads.remove(this);
+								executable = null;
+								if (!alive) {
+									continue;
+								}
+								setIndexedName();
+								poolableSleepingThreads.add(this);
+								synchronized (poolableSleepingThreads) {
+									poolableSleepingThreads.notifyAll();
+								}
+								wait();
+							}
+						} catch (InterruptedException exc) {
+							logError(exc);
+						}
+					}
+					synchronized (this) {
+						if (runningThreads.remove(this)) {
+							--supplier.threadsCount;
+							--supplier.poolableThreadsCount;
+						}
+					}
+					synchronized (poolableSleepingThreads) {
+						poolableSleepingThreads.notifyAll();
+					}
+					synchronized(this) {
+						notifyAll();
+					}
+				}
+				
+				@Override
+				public void interrupt() {
+					shutDown();
+					synchronized (this) {
+						if (runningThreads.remove(this)) {
+							--supplier.threadsCount;
+							--supplier.poolableThreadsCount;
+						} else if (poolableSleepingThreads.remove(this)) {
+							--supplier.threadsCount;
+							--supplier.poolableThreadsCount;
+						}
+					}
+					try {
+						super.interrupt();
+					} catch (Throwable exc) {
+						logError("Exception occurred", exc);
+					}
+					synchronized (poolableSleepingThreads) {
+						poolableSleepingThreads.notifyAll();
+					}
+					synchronized(this) {
+						notifyAll();
+					}
+				};
+				
+			};
+		}
+
+		Thread createDetachedThread() {
 			return new Thread(this, ++threadsCount) {
 				@Override
 				public void run() {
