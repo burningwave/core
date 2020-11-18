@@ -136,7 +136,7 @@ public class PathHelper implements Component {
 			String propertyKey = (String)key;
 			if (propertyKey.startsWith(Configuration.Key.PATHS_PREFIX)) {
 				if (event.name().equals(Event.PUT.name())) {
-					loadPaths(propertyKey);
+					loadAndMapPaths(propertyKey, null);
 				} else if (event.name().equals(Event.REMOVE.name())) {
 					launchAllPathsLoadingTask();
 				}
@@ -152,7 +152,7 @@ public class PathHelper implements Component {
 	private void loadMainClassPaths() {
 		Collection<String> placeHolders = config.getAllPlaceHolders(Configuration.Key.MAIN_CLASS_PATHS);
 		if (placeHolders.contains("${system.properties:java.class.path}")) {
-			loadPaths(Configuration.Key.MAIN_CLASS_PATHS);
+			loadAndMapPaths(Configuration.Key.MAIN_CLASS_PATHS, null);
 			addPaths(
 				Configuration.Key.MAIN_CLASS_PATHS,
 				ClassLoaders.getAllLoadedPaths(Classes.getClassLoader(this.getClass()))
@@ -164,7 +164,7 @@ public class PathHelper implements Component {
 		for (Object pathGroupNameObject : config.keySet()) {
 			String pathGroupName = (String) pathGroupNameObject;
 			if ((pathGroupName.startsWith(Configuration.Key.PATHS_PREFIX))) {
-				loadPaths(pathGroupName);
+				loadAndMapPaths(pathGroupName, null);
 			}
 		}
 	}
@@ -207,7 +207,7 @@ public class PathHelper implements Component {
 				if (pathsFound != null) {
 					pathGroup.addAll(pathsFound);
 				} else {
-					loadPaths(name);
+					loadAndMapPaths(name, null);
 					pathsFound = this.pathGroups.get(name);
 					if (pathsFound != null) {
 						pathGroup.addAll(pathsFound);
@@ -237,11 +237,7 @@ public class PathHelper implements Component {
 		return classPathsGroup;
 	}
 	
-	private void loadPaths(String pathGroupName) {
-		loadPaths(pathGroupName, null);
-	}
-	
-	public Collection<String> loadPaths(String pathGroupName, String paths) {
+	public Collection<String> loadAndMapPaths(String pathGroupName, String paths) {
 		waitForInitialization();
 		String pathGroupPropertyName = pathGroupName.startsWith(Configuration.Key.PATHS_PREFIX) ?
 			pathGroupName :
@@ -297,19 +293,11 @@ public class PathHelper implements Component {
 			configWithResolvedPaths.putAll(defaultValues);
 			Collection<String> computedPaths = configWithResolvedPaths.resolveStringValues(pathGroupPropertyName, pathsSeparator, true);
 			if (computedPaths != null) {
-				for (String path : computedPaths) {
-					if (Strings.isNotEmpty(path)) {
-						groupPaths.addAll(addPath(pathGroupName, path));
-					}
-				}
+				groupPaths.addAll(addPaths(pathGroupName, computedPaths));
 			}
 		}
 		return groupPaths;
 	}	
-	
-	private Collection<String> addPath(String name, String classPaths) {
-		return addPaths(name, Arrays.asList(classPaths));
-	}
 	
 	private Collection<String> addPaths(String groupName, Collection<String> paths) {
 		if (paths != null) {
