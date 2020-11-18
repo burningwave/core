@@ -520,8 +520,8 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	void close(boolean force) {
 		if (force || !isUndestroyable) {
-			closeResources(() -> !instances.contains(this),  () -> {
-				instances.remove(this);
+			instances.remove(this);
+			closeResources(() -> instanceId == null,  () -> {
 				unregister(GlobalProperties);
 				unregister(config);
 				clear();			
