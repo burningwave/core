@@ -1377,7 +1377,7 @@ public class ClassHunterTest extends BaseTest {
 	        ClassHunter classHunter = componentSupplier.getClassHunter();
 	        
 	        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
-	            pathHelper.loadPaths("custom", "//${paths.custom-class-path}/ESC-Lib.ear/APP-INF/lib//children:.*?activation-1.1\\.jar;")
+	            pathHelper.loadAndMapPaths("custom", "//${paths.custom-class-path}/ESC-Lib.ear/APP-INF/lib//children:.*?activation-1.1\\.jar;")
 	        ).by(
 	            ClassCriteria.create().allThat((cls) -> {
 	                return cls.getPackage().getName().matches(".*?activation");
