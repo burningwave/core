@@ -235,7 +235,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					((int)(Runtime.getRuntime().availableProcessors() * 3 * multiplier)) - 
 					((int)(Runtime.getRuntime().availableProcessors() * multiplier));
 			}			
-			if (maxDetachedThreadsCountAsInt <= 0) {
+			if (maxDetachedThreadsCountAsInt < 0) {
 				maxDetachedThreadsCountAsInt = Integer.MAX_VALUE - maxPoolableThreadsCountAsInt;
 			}
 			this.maxPoolableThreadsCount = maxPoolableThreadsCountAsInt;
@@ -325,12 +325,12 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				if (poolableThreadsCount >= maxPoolableThreadsCount) {
 					return getOrCreate(initialValue, requestCount);
 				}
-				++poolableThreadsCount;
 				return createPoolableThread();
 			}
 		}
 
 		Thread createPoolableThread() {
+			++poolableThreadsCount;
 			return new Thread(this, ++threadsCount) {
 				
 				@Override
