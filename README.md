@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/8)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/319394608)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/374711756)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea%2C%2016ea-blueviolet)](https://github.com/burningwave/core/actions/runs/319394608)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015ea%2C%2016ea-blueviolet)](https://github.com/burningwave/core/actions/runs/374711756)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -51,7 +51,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>8.4.1</version>
+    <version>8.5.0</version>
 </dependency>
 ```
 
@@ -734,9 +734,19 @@ public class FieldsHandler {
 ```
 For methods handling we are going to use **Methods** component:
 ```java
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
+import java.security.ProtectionDomain;
+import java.util.Collection;
 
+import org.burningwave.core.classes.MethodCriteria;
+
+
+@SuppressWarnings("unused")
 public class MethodsHandler {
     
     public static void execute() {
@@ -748,6 +758,34 @@ public class MethodsHandler {
         
         //Invoking method by using MethodHandle
         Methods.invokeDirect(System.out, "println", number);
+        
+        //Filtering and obtaining a MethodHandle reference
+        MethodHandle methodHandle = Methods.findFirstDirectHandle(
+            MethodCriteria.byScanUpTo((cls) ->
+            //We only analyze the ClassLoader class and not all of its hierarchy (default behavior)
+                cls.getName().equals(ClassLoader.class.getName())
+            ).name(
+                "defineClass"::equals
+            ).and().parameterTypes(params -> 
+                params.length == 3
+            ).and().parameterTypesAreAssignableFrom(
+                String.class, ByteBuffer.class, ProtectionDomain.class
+            ).and().returnType((cls) -> 
+                cls.getName().equals(Class.class.getName())
+            ), ClassLoader.class
+        );        
+        
+        //Filtering and obtaining all methods of ClassLoader class that have at least
+        //one input parameter of Class type
+        Collection<Method> methods = Methods.findAll(
+            MethodCriteria.byScanUpTo((cls) ->
+            	//We only analyze the ClassLoader class and not all of its hierarchy (default behavior)
+                cls.getName().equals(ClassLoader.class.getName())
+            ).parameter((params, idx) -> {
+                return Classes.isAssignableFrom(params[idx].getType(), Class.class);
+            }), ClassLoader.class
+        );
+        methods.stream();
     }
     
     public static void main(String[] args) {
