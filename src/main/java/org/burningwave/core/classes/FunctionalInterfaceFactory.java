@@ -31,6 +31,7 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
@@ -63,7 +64,11 @@ public class FunctionalInterfaceFactory implements Component {
 	}
 	
 	public <T> T getOrCreate(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
-		return getOrCreate(Methods.findOneAndMakeItAccessible(targetClass, methodName, argumentTypes));
+		Method method = Methods.findOneAndMakeItAccessible(targetClass, methodName, argumentTypes);
+		if (method == null) {
+			Throwables.throwException("Method {} not found or found more than one method in {} hierarchy", methodName, targetClass.getName());
+		}		
+		return getOrCreate(method);
 	}
 	
 	public <F> F getOrCreate(Method targetMethod) {
