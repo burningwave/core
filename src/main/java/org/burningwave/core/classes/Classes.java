@@ -32,7 +32,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
-import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
@@ -447,7 +446,7 @@ public class Classes implements Component, MembersRetriever {
 		}	
 		
 		private MethodHandle findDefinePackageMethodAndMakeItAccesible(ClassLoader classLoader) {
-			Method method = Members.findAll(
+			return Methods.findFirstDirectHandle(
 				MethodCriteria.byScanUpTo((cls) -> 
 					cls.getName().equals(ClassLoader.class.getName())
 				).name(
@@ -455,10 +454,8 @@ public class Classes implements Component, MembersRetriever {
 				).and().parameterTypesAreAssignableFrom(
 					String.class, String.class, String.class, String.class,
 					String.class, String.class, String.class, URL.class
-				),
-				classLoader.getClass()
-			).stream().findFirst().orElse(null);
-			return Methods.convertToMethodHandleBag(method).getValue();
+				), classLoader.getClass()
+			);
 		}
 		
 		public MethodHandle getDefineClassMethod(ClassLoader classLoader) {
@@ -484,7 +481,7 @@ public class Classes implements Component, MembersRetriever {
 		}
 		
 		private MethodHandle findDefineClassMethodAndMakeItAccesible(ClassLoader classLoader) {
-			Method method = Members.findAll(
+			return Methods.findFirstDirectHandle(
 				MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
 					(classLoader instanceof MemoryClassLoader? "_defineClass" : "defineClass")::equals
 				).and().parameterTypes(params -> 
@@ -493,12 +490,11 @@ public class Classes implements Component, MembersRetriever {
 					String.class, ByteBuffer.class, ProtectionDomain.class
 				).and().returnType((cls) -> cls.getName().equals(Class.class.getName())),
 				classLoader.getClass()
-			).stream().findFirst().orElse(null);
-			return Methods.convertToMethodHandleBag(method).getValue();
+			);
 		}
 		
 		private MethodHandle findGetClassLoadingLockMethodAndMakeItAccesible(ClassLoader classLoader) {
-			Method method = Members.findAll(
+			return Methods.findFirstDirectHandle(
 				MethodCriteria.byScanUpTo((cls) -> cls.getName().equals(ClassLoader.class.getName())).name(
 					"getClassLoadingLock"::equals
 				).and().parameterTypes(params -> 
@@ -507,8 +503,7 @@ public class Classes implements Component, MembersRetriever {
 					String.class
 				),
 				classLoader.getClass()
-			).stream().findFirst().orElse(null);
-			return Methods.convertToMethodHandleBag(method).getValue();
+			);
 		}
 		
 		private MethodHandle getMethod(String key, Supplier<MethodHandle> methodSupplier) {

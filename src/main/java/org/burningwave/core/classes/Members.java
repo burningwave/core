@@ -28,10 +28,16 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Array;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Member;
@@ -83,7 +89,7 @@ public class Members implements Component {
 				result :
 				resultPredicate.test(result)?
 					result :
-					new LinkedHashSet<M>();
+					new LinkedHashSet<>();
 	}
 	
 	private <M extends Member> Collection<M> findAll(
@@ -94,13 +100,11 @@ public class Members implements Component {
 		Predicate<M> predicate,
 		Collection<M> collection
 	) {	
-		Stream.of(
-			memberSupplier.apply(initialClsFrom, clsFrom)
-		).filter(
-			predicate
-		).collect(
-			Collectors.toCollection(() -> collection)
-		);
+		for (M member : memberSupplier.apply(initialClsFrom, clsFrom)) {
+			if (predicate.test(member)) {
+				collection.add(member);
+			}
+		}
 		return clsFrom.getSuperclass() == null || clsPredicate.test(initialClsFrom, clsFrom) ?
 			collection :
 			findAll((Class<?>) initialClsFrom, clsFrom.getSuperclass(), clsPredicate, memberSupplier, predicate, collection);
@@ -121,14 +125,17 @@ public class Members implements Component {
 				criteria.getPredicateOrTruePredicateIfPredicateIsNull()
 			);
 		} else {
-			return findAll(
+			Collection<M> result = findAll(
 				classFrom,
 				classFrom,
 				criteria.getScanUpToPredicate(), 
 				criteria.getMembersSupplier(),
 				criteria.getPredicateOrTruePredicateIfPredicateIsNull(),
 				new LinkedHashSet<>()
-			).stream().findFirst().orElseGet(() -> null);
+			);
+			return resultPredicate.test(result) ?
+				result.stream().findFirst().orElseGet(() -> null) :
+				null;
 		}
 	}
 	
@@ -138,18 +145,18 @@ public class Members implements Component {
 			BiPredicate<Class<?>, Class<?>> clsPredicate,
 			BiFunction<Class<?>, Class<?>, M[]> 
 			memberSupplier, Predicate<M> predicate) {
-		M member = Stream.of(
-			memberSupplier.apply(initialClsFrom, clsFrom)
-		).filter(
-			predicate
-		).findFirst().orElse(null);
-		return member != null? member :
+		for (M member : memberSupplier.apply(initialClsFrom, clsFrom)) {
+			if (predicate.test(member)) {
+				return member;
+			}
+		}
+		return 
 			(clsPredicate.test(initialClsFrom, clsFrom) || clsFrom.getSuperclass() == null) ?
 				null :
 				findFirst(initialClsFrom, clsFrom.getSuperclass(), clsPredicate, memberSupplier, predicate);
 	}
 	
-	static abstract class Handler<M extends Member, C extends MemberCriteria<M, C, ?>> {	
+	public static abstract class Handler<M extends Member, C extends MemberCriteria<M, C, ?>> {	
 
 		public M findOne(C criteria, Class<?> classFrom) {
 			return Members.findOne(criteria, classFrom);
@@ -166,7 +173,7 @@ public class Members implements Component {
 		public M findFirst(C criteria, Class<?> classFrom) {
 			return Members.findFirst(criteria, classFrom);
 		}
-
+		
 		Collection<M> findAllAndApply(C criteria, Class<?> targetClass, Consumer<M>... consumers) {
 			Collection<M> members = findAll(criteria, targetClass);
 			Optional.ofNullable(consumers).ifPresent(cnsms -> 
@@ -196,6 +203,17 @@ public class Members implements Component {
 			return member;
 		}
 		
+		public Collection<M> findAllAndMakeThemAccessible(
+			C criteria,
+			Class<?> targetClass
+		) {
+			return findAllAndApply(
+				criteria, targetClass, (member) -> {
+					LowLevelObjectsHandler.setAccessible((AccessibleObject)member, true);
+				}
+			);
+		}
+		
 		String getCacheKey(Class<?> targetClass, String groupName, Class<?>... arguments) {
 			if (arguments == null) {
 				arguments = new Class<?>[] {null};
@@ -214,7 +232,7 @@ public class Members implements Component {
 			return cacheKey;		
 		}
 		
-		static abstract class OfExecutable<E extends Executable, C extends ExecutableMemberCriteria<E, C, ?>> extends Members.Handler<E, C> {
+		public static abstract class OfExecutable<E extends Executable, C extends ExecutableMemberCriteria<E, C, ?>> extends Members.Handler<E, C> {
 			private Collection<String> classNamesToIgnoreToDetectTheCallingMethod;
 			
 			public OfExecutable() {
@@ -431,7 +449,77 @@ public class Members implements Component {
 					}
 				}		
 				return clientMethodCallersSTE;
-			}	
+			}
+			
+			public MethodHandle findDirectHandle(E executable) {
+				return findDirectHandleBox(executable).getHandler();
+			}
+			
+			Members.Handler.OfExecutable.Box<E> findDirectHandleBox(E executable) {
+				Class<?> targetClass = executable.getDeclaringClass();
+				ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
+				String cacheKey = getCacheKey(targetClass, "equals " + retrieveNameForCaching(executable), executable.getParameterTypes());
+				return findDirectHandleBox(executable, targetClassClassLoader, cacheKey);
+			}
+			
+			Members.Handler.OfExecutable.Box<E> findDirectHandleBox(E executable, ClassLoader classLoader, String cacheKey) {
+				return (Box<E>)Cache.uniqueKeyForExecutableAndMethodHandle.getOrUploadIfAbsent(classLoader, cacheKey, () -> {
+					try {
+						Class<?> methodDeclaringClass = executable.getDeclaringClass();
+						MethodHandles.Lookup consulter = LowLevelObjectsHandler.getConsulter(methodDeclaringClass);
+						return new Members.Handler.OfExecutable.Box<>(consulter,
+							executable,
+							retrieveMethodHandle(consulter, executable)
+						);
+					} catch (NoSuchMethodException | IllegalAccessException exc) {
+						return Throwables.throwException(exc);
+					}
+				});	
+			}
+			
+			public Collection<MethodHandle> findAllDirectHandle(C criteria, Class<?> clsFrom) {
+				return findAll(
+					criteria, clsFrom
+				).stream().map(this::findDirectHandle).collect(Collectors.toSet());
+			}
+			
+			public MethodHandle findFirstDirectHandle(C criteria, Class<?> clsFrom) {
+				return Optional.ofNullable(findFirst(criteria, clsFrom)).map(this::findDirectHandle).orElseGet(() -> null);
+			}
+			
+			public MethodHandle findOneDirectHandle(C criteria, Class<?> clsFrom) {
+				return Optional.ofNullable(findOne(criteria, clsFrom)).map(this::findDirectHandle).orElseGet(() -> null);
+			}
+			
+			abstract String retrieveNameForCaching(E executable);
+			
+			abstract MethodHandle retrieveMethodHandle(MethodHandles.Lookup consulter, E executable) throws NoSuchMethodException, IllegalAccessException; 
+			
+			public static class Box<E extends Executable> {
+				Lookup consulter;
+				E executable;
+				MethodHandle handler;
+				
+				Box(Lookup consulter, E executable, MethodHandle handler) {
+					super();
+					this.consulter = consulter;
+					this.executable = executable;
+					this.handler = handler;
+				}
+
+				public Lookup getConsulter() {
+					return consulter;
+				}
+
+				public E getExecutable() {
+					return executable;
+				}
+
+				public MethodHandle getHandler() {
+					return handler;
+				}				
+				
+			}
 		}
 	}
 	

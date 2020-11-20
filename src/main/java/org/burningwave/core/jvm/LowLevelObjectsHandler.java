@@ -183,7 +183,7 @@ public class LowLevelObjectsHandler implements Component, MembersRetriever {
 						String.class, boolean.class
 					), classLoader.getClass()
 				);					
-				classLoader = (ClassLoader)Constructors.newInstanceOf(classLoaderDelegateClass, null, classLoader, Methods.convertToMethodHandle(
+				classLoader = (ClassLoader)Constructors.newInstanceOf(classLoaderDelegateClass, null, classLoader, Methods.findDirectHandle(
 					methods.stream().skip(methods.size() - 1).findFirst().get()
 				));
 			} catch (Throwable exc) {

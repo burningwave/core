@@ -32,7 +32,7 @@ public class ConstructorsTest extends BaseTest {
 	@Test
 	public void convertToMethodHandleTestOne() {
 		testNotNull(() ->
-			Constructors.convertToMethodHandle(
+			Constructors.findDirectHandle(
 				Constructors.findOneAndMakeItAccessible(ExtendedService.class)
 			).invoke()			
 		);

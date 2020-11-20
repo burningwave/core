@@ -38,9 +38,8 @@ import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.function.Supplier;
 
 import org.burningwave.core.function.Executor;
 
@@ -116,17 +115,21 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	}
 	
 	public Map<Field, ?> getAllStatic(Class<?> targetClass) {
-		return getAll(targetClass, null);
+		return getAll(() -> findAllAndMakeThemAccessible(targetClass), null);
 	}
 	
 	public Map<Field, ?> getAll(Object target) {
-		return getAll(Classes.retrieveFrom(target), target);
+		return getAll(() -> findAllAndMakeThemAccessible(Classes.retrieveFrom(target)), target);
 	}
 	
-	private Map<Field, ?> getAll(Class<?> targetClass, Object target) {
+	public Map<Field, ?> getAll(FieldCriteria criteria, Object target) {
+		return getAll(() -> findAllAndMakeThemAccessible(criteria, Classes.retrieveFrom(target)), target);
+	}
+
+
+	private Map<Field, Object> getAll(Supplier<Collection<Field>> fieldsSupplier, Object target) {
 		Map<Field, Object> fieldValues = new HashMap<>();
-		Collection<Field> fields = findAllAndMakeThemAccessible(targetClass);
-		for (Field field : fields) {
+		for (Field field : fieldsSupplier.get()) {
 			if (target != null) {
 				fieldValues.put(
 					field,
@@ -145,24 +148,26 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 							field.get(null)
 					)
 				);
-			}
-			
+			}			
 		}
 		return fieldValues;
 	}
 	
 	public Map<Field, ?> getAllStaticDirect(Class<?> targetClass) {
-		return getAllDirect(targetClass, null);
+		return getAllDirect(() -> findAllAndMakeThemAccessible(targetClass), null);
 	}
 	
 	public Map<Field, ?> getAllDirect(Object target) {
-		return getAllDirect(Classes.retrieveFrom(target), target);
+		return getAllDirect(() -> findAllAndMakeThemAccessible(Classes.retrieveFrom(target)), target);
 	}
 	
-	private Map<Field, ?> getAllDirect(Class<?> targetClass, Object target) {
+	public Map<Field, ?> getAllDirect(FieldCriteria criteria, Object target) {
+		return getAllDirect(() -> findAllAndMakeThemAccessible(criteria, Classes.retrieveFrom(target)), target);
+	}
+	
+	private Map<Field, ?> getAllDirect(Supplier<Collection<Field>> fieldsSupplier, Object target) {
 		Map<Field, ?> fieldValues = new HashMap<>();
-		Collection<Field> fields = findAllAndMakeThemAccessible(targetClass);
-		for (Field field : fields) {
+		for (Field field : fieldsSupplier.get()) {
 			fieldValues.put(
 				field,
 				Executor.get(() -> LowLevelObjectsHandler.getFieldValue(target, field))
@@ -186,26 +191,35 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 		}
 		return members.stream().findFirst().get();
 	}
-
+	
+	public Collection<Field> findAllByExactNameAndMakeThemAccessible(
+		Class<?> targetClass,
+		String fieldName
+	) {
+		return findAllByExactNameAndMakeThemAccessible(targetClass, fieldName, null);
+	}
+	
 	public Collection<Field> findAllByExactNameAndMakeThemAccessible(
 		Class<?> targetClass,
 		String fieldName, 
-		Class<?> valueClass
+		Class<?> valueType
 	) {	
-		String cacheKey = getCacheKey(targetClass, "equals " + fieldName, valueClass);
+		String cacheKey = getCacheKey(targetClass, "equals " + fieldName, valueType);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		return Cache.uniqueKeyForFields.getOrUploadIfAbsent(
 			targetClassClassLoader,
 			cacheKey, 
 			() -> 
 				Collections.unmodifiableCollection(
-					findAllAndMakeThemAccessible(targetClass).stream().filter(field -> {
-						if (valueClass == null) {
-							return field.getName().equals(fieldName);
-						} else {
-							return field.getName().equals(fieldName) && Classes.isAssignableFrom(field.getType(), valueClass);
-						}
-					}).collect(Collectors.toCollection(LinkedHashSet::new))
+					findAllAndMakeThemAccessible(
+						FieldCriteria.create().allThat(field -> {
+							if (valueType == null) {
+								return field.getName().equals(fieldName);
+							} else {
+								return field.getName().equals(fieldName) && Classes.isAssignableFrom(field.getType(), valueType);
+							}
+						}), targetClass
+					)
 				)
 		);
 	}
@@ -220,12 +234,8 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 			cacheKey, 
 			() -> 
 				Collections.unmodifiableCollection(
-					findAllAndApply(
-						FieldCriteria.create(),
-						targetClass,
-						(member) -> {
-							LowLevelObjectsHandler.setAccessible(member, true);
-						}
+					findAllAndMakeThemAccessible(
+						FieldCriteria.create(), targetClass
 					)
 				)
 			
