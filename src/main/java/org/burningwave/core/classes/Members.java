@@ -99,13 +99,11 @@ public class Members implements Component {
 		Predicate<M> predicate,
 		Collection<M> collection
 	) {	
-		Stream.of(
-			memberSupplier.apply(initialClsFrom, clsFrom)
-		).filter(
-			predicate
-		).collect(
-			Collectors.toCollection(() -> collection)
-		);
+		for (M member : memberSupplier.apply(initialClsFrom, clsFrom)) {
+			if (predicate.test(member)) {
+				collection.add(member);
+			}
+		}
 		return clsFrom.getSuperclass() == null || clsPredicate.test(initialClsFrom, clsFrom) ?
 			collection :
 			findAll((Class<?>) initialClsFrom, clsFrom.getSuperclass(), clsPredicate, memberSupplier, predicate, collection);
@@ -126,14 +124,17 @@ public class Members implements Component {
 				criteria.getPredicateOrTruePredicateIfPredicateIsNull()
 			);
 		} else {
-			return findAll(
+			Collection<M> result = findAll(
 				classFrom,
 				classFrom,
 				criteria.getScanUpToPredicate(), 
 				criteria.getMembersSupplier(),
 				criteria.getPredicateOrTruePredicateIfPredicateIsNull(),
 				new LinkedHashSet<>()
-			).stream().findFirst().orElseGet(() -> null);
+			);
+			return resultPredicate.test(result) ?
+				result.stream().findFirst().orElseGet(() -> null) :
+				null;
 		}
 	}
 	
@@ -143,12 +144,12 @@ public class Members implements Component {
 			BiPredicate<Class<?>, Class<?>> clsPredicate,
 			BiFunction<Class<?>, Class<?>, M[]> 
 			memberSupplier, Predicate<M> predicate) {
-		M member = Stream.of(
-			memberSupplier.apply(initialClsFrom, clsFrom)
-		).filter(
-			predicate
-		).findFirst().orElse(null);
-		return member != null? member :
+		for (M member : memberSupplier.apply(initialClsFrom, clsFrom)) {
+			if (predicate.test(member)) {
+				return member;
+			}
+		}
+		return 
 			(clsPredicate.test(initialClsFrom, clsFrom) || clsFrom.getSuperclass() == null) ?
 				null :
 				findFirst(initialClsFrom, clsFrom.getSuperclass(), clsPredicate, memberSupplier, predicate);
