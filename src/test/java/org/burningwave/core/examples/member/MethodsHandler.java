@@ -25,9 +25,8 @@ public class MethodsHandler {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		
         //Filtering and obtaining a MethodHandle reference
-        
-		MethodHandle methodHandle = Methods.findAll(
-			MethodCriteria.byScanUpTo((cls) -> 
+        Methods.findFirstDirectHandle(
+        	MethodCriteria.byScanUpTo((cls) -> 
 				cls.getName().equals(ClassLoader.class.getName())
 			).name(
 				"defineClass"::equals
@@ -37,9 +36,8 @@ public class MethodsHandler {
 				String.class, ByteBuffer.class, ProtectionDomain.class
 			).and().returnType((cls) -> 
 				cls.getName().equals(Class.class.getName())
-			),
-			classLoader.getClass()
-		).stream().findFirst().map(Methods::findDirectHandle).get();
+			), classLoader.getClass()
+        );
 
     }
     

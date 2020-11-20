@@ -78,7 +78,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 				return membersThatMatch.stream().findFirst().get();
 			}
 		}
-		return Throwables.throwException("Method {} not found or found more than one method in {} hierarchy", memberName, targetClass.getName());
+		return null;
 	}
 	
 	public Method findFirstAndMakeItAccessible(Class<?> targetClass, String memberName, Class<?>... arguments) {
@@ -92,7 +92,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 			}
 			return members.stream().findFirst().get();
 		}
-		return Throwables.throwException("Method {} not found in {} hierarchy", memberName, targetClass.getName());
+		return null;
 	}
 	
 	public Collection<Method> findAllByExactNameAndMakeThemAccessible(
@@ -189,7 +189,13 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 	}
 	
 	private <T> T invoke(Class<?> targetClass, Object target, String methodName, ThrowingFunction<Method, T, Throwable> methodInvoker, Object... arguments) {
-		return Executor.get(() ->methodInvoker.apply(findFirstAndMakeItAccessible(targetClass, methodName, Classes.retrieveFrom(arguments))));
+		return Executor.get(() -> {
+			Method method = findFirstAndMakeItAccessible(targetClass, methodName, Classes.retrieveFrom(arguments));
+			if (method == null) {
+				Throwables.throwException("Method {} not found in {} hierarchy", methodName, targetClass.getName());
+			}
+			return methodInvoker.apply(method);
+		});
 	}
 	
 	public 	<T> T invokeStaticDirect(Class<?> targetClass, String methodName, Object... arguments) {
@@ -230,6 +236,9 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 			(Box<Method>)Cache.uniqueKeyForExecutableAndMethodHandle.get(targetClassClassLoader, cacheKey);
 		if (entry == null) {
 			Method method = findFirstAndMakeItAccessible(targetClass, methodName, argsType);
+			if (method == null) {
+				Throwables.throwException("Method {} not found in {} hierarchy", methodName, targetClass.getName());
+			}
 			entry = findDirectHandleBox(
 				method, targetClassClassLoader, cacheKey
 			);

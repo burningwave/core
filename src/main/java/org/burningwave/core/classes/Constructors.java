@@ -56,6 +56,9 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		Object... arguments
 	) {	
 		Constructor<?> ctor = findFirstAndMakeItAccessible(targetClass, Classes.retrieveFrom(arguments));
+		if (ctor == null) {
+			Throwables.throwException("Constructor not found in {}", targetClass.getName());
+		}
 		return Executor.get(() -> {
 			//logInfo("Invoking " + ctor);
 			return (T)ctor.newInstance(
@@ -95,7 +98,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 				return membersThatMatch.stream().findFirst().get();
 			}
 		}
-		return Throwables.throwException("Constructor not found or found more than one constructor in {}", targetClass.getName());
+		return null; 
 	}
 	
 	public Constructor<?> findFirstAndMakeItAccessible(Class<?> targetClass, Class<?>... arguments) {
@@ -109,7 +112,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 			}
 			return members.stream().findFirst().get();
 		}
-		return Throwables.throwException("Constructor not found in {}", targetClass.getName());
+		return null;
 	}
 	
 	public Collection<Constructor<?>> findAllAndMakeThemAccessible(
