@@ -36,19 +36,14 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
-import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -219,51 +214,55 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 	
 	private <T> T invokeDirect(Class<?> targetClass, Object target, String methodName, Supplier<List<Object>> listSupplier,  Object... arguments) {
 		Class<?>[] argsType = Classes.retrieveFrom(arguments);
+		Members.Handler.OfExecutable.Box<Method> methodHandleBox = findDirectHandleBox(targetClass, methodName, argsType);
+		return Executor.get(() -> {
+				Method method = methodHandleBox.getExecutable();
+				List<Object> argumentList = getFlatArgumentList(method, listSupplier, arguments);
+				return (T)methodHandleBox.getHandler().invokeWithArguments(argumentList);
+			}
+		);
+	}
+	
+	public MethodHandle findDirectHandle(Method method) {
+		return findDirectHandleBox(method).getHandler();
+	}
+	
+	public MethodHandle findDirectHandle(Class<?> targetClass, String methodName, Class<?>... arguments) {
+		return findDirectHandleBox(targetClass, methodName, arguments).getHandler();
+	}
+	
+	private Members.Handler.OfExecutable.Box<Method> findDirectHandleBox(Class<?> targetClass, String methodName, Class<?>... argsType) {
 		String cacheKey = getCacheKey(targetClass, "equals " + methodName, argsType);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
-		Entry<Executable, MethodHandle> methodHandleBag = Cache.uniqueKeyForExecutableAndMethodHandle.getOrUploadIfAbsent(
-			targetClassClassLoader, cacheKey, 
-			() -> {
-				Method method = findFirstAndMakeItAccessible(targetClass, methodName, argsType);
-				return new AbstractMap.SimpleEntry<>(
-					method, 
-					convertToMethodHandle(
-						method
-					)
-				);
-			}
-		);
-		return Executor.get(() -> {
-				Method method = (Method)methodHandleBag.getKey();
-				List<Object> argumentList = getFlatArgumentList(method, listSupplier, arguments);
-				return (T)methodHandleBag.getValue().invokeWithArguments(argumentList);
-			}
-		);
-	}
-	
-	public MethodHandle convertToMethodHandle(Method method) {
-		return convertToMethodHandleBag(method).getValue();
-	}
-	
-	public Map.Entry<Lookup, MethodHandle> convertToMethodHandleBag(Method method) {
-		try {
-			Class<?> methodDeclaringClass = method.getDeclaringClass();
-			MethodHandles.Lookup consulter = LowLevelObjectsHandler.getConsulter(methodDeclaringClass);
-			return new AbstractMap.SimpleEntry<>(consulter,
-				!Modifier.isStatic(method.getModifiers())?
-					consulter.findSpecial(
-						methodDeclaringClass, method.getName(),
-						MethodType.methodType(method.getReturnType(), method.getParameterTypes()),
-						methodDeclaringClass
-					):
-					consulter.findStatic(
-						methodDeclaringClass, method.getName(),
-						MethodType.methodType(method.getReturnType(), method.getParameterTypes())
-					)
+		Members.Handler.OfExecutable.Box<Method> entry =
+			(Box<Method>)Cache.uniqueKeyForExecutableAndMethodHandle.get(targetClassClassLoader, cacheKey);
+		if (entry == null) {
+			Method method = findFirstAndMakeItAccessible(targetClass, methodName, argsType);
+			entry = findDirectHandleBox(
+				method, targetClassClassLoader, cacheKey
 			);
-		} catch (NoSuchMethodException | IllegalAccessException exc) {
-			return Throwables.throwException(exc);
 		}
+		return entry;
 	}
 	
+	
+	@Override
+	MethodHandle retrieveMethodHandle(MethodHandles.Lookup consulter, Method method) throws NoSuchMethodException, IllegalAccessException {
+		Class<?> methodDeclaringClass = method.getDeclaringClass(); 
+		return !Modifier.isStatic(method.getModifiers())?
+			consulter.findSpecial(
+				methodDeclaringClass, retrieveNameForCaching(method),
+				MethodType.methodType(method.getReturnType(), method.getParameterTypes()),
+				methodDeclaringClass
+			):
+			consulter.findStatic(
+				methodDeclaringClass, retrieveNameForCaching(method),
+				MethodType.methodType(method.getReturnType(), method.getParameterTypes())
+			);
+	}
+	
+	@Override
+	String retrieveNameForCaching(Method method) {
+		return method.getName();
+	}
 }

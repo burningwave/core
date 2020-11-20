@@ -34,7 +34,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
-import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -50,6 +49,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.burningwave.core.classes.Members;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.IterableZipContainer;
 
@@ -65,16 +65,16 @@ public class Cache implements Component {
 	public final ObjectAndPathForResources<ClassLoader, Collection<Constructor<?>>> uniqueKeyForConstructors;
 	public final ObjectAndPathForResources<ClassLoader, Collection<Method>> uniqueKeyForMethods;
 	public final ObjectAndPathForResources<ClassLoader, Object> bindedFunctionalInterfaces;
-	public final ObjectAndPathForResources<ClassLoader, Map.Entry<java.lang.reflect.Executable, MethodHandle>> uniqueKeyForExecutableAndMethodHandle;
+	public final ObjectAndPathForResources<ClassLoader, Members.Handler.OfExecutable.Box<?>> uniqueKeyForExecutableAndMethodHandle;
 	
 	private Cache() {
 		logInfo("Building cache");
-		pathForContents = new PathForResources<ByteBuffer>(Streams::shareContent);
-		pathForFileSystemItems = new PathForResources<FileSystemItem>(
+		pathForContents = new PathForResources<>(Streams::shareContent);
+		pathForFileSystemItems = new PathForResources<>(
 			(path, fileSystemItem) -> 
 				fileSystemItem.destroy()
 		);
-		pathForIterableZipContainers = new PathForResources<IterableZipContainer>(
+		pathForIterableZipContainers = new PathForResources<>(
 			(path, zipFileContainer) -> 
 				zipFileContainer.destroy()
 		);
@@ -111,7 +111,7 @@ public class Cache implements Component {
 		
 		public ObjectAndPathForResources(Long partitionStartLevel, Function<R, R> sharer, BiConsumer<String, R> itemDestroyer) {
 			this.resources = new HashMap<>();
-			this.pathForResourcesSupplier = () -> new PathForResources<R>(partitionStartLevel, sharer, itemDestroyer);
+			this.pathForResourcesSupplier = () -> new PathForResources<>(partitionStartLevel, sharer, itemDestroyer);
 			this.instanceId = Objects.getId(this);
 		}
 

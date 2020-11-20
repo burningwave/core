@@ -34,7 +34,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -201,11 +200,11 @@ public class FunctionalInterfaceFactory implements Component {
 		ThrowingSupplier<Map.Entry<Class<?>, String>, Throwable> functionalInterfaceBagSupplier,
 		Function<MethodHandle, MethodType> functionalInterfaceSignatureSupplier
 	) throws Throwable {
-		Map.Entry<Lookup, MethodHandle> methodHandleBag = Methods.convertToMethodHandleBag(targetMethod);
-		MethodHandle methodHandle = methodHandleBag.getValue();
+		Members.Handler.OfExecutable.Box<Method> methodHandleBag = Methods.findDirectHandleBox(targetMethod);
+		MethodHandle methodHandle = methodHandleBag.getHandler();
 		Map.Entry<Class<?>, String> functionalInterfaceBag = functionalInterfaceBagSupplier.get();
 		return (F)LambdaMetafactory.metafactory(
-			methodHandleBag.getKey(),
+			methodHandleBag.getConsulter(),
 			functionalInterfaceBag.getValue(),
 		    MethodType.methodType(functionalInterfaceBag.getKey()),
 		    functionalInterfaceSignatureSupplier.apply(methodHandle),

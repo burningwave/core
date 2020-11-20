@@ -35,15 +35,12 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.function.Executor;
@@ -79,24 +76,11 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		Object... arguments
 	) {
 		Class<?>[] argsType = Classes.retrieveFrom(arguments);
-		String cacheKey = getCacheKey(targetClass, "equals " + Classes.retrieveSimpleName(targetClass.getName()), argsType);
-		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
-		Map.Entry<java.lang.reflect.Executable, MethodHandle> methodHandleBag = Cache.uniqueKeyForExecutableAndMethodHandle.getOrUploadIfAbsent(
-			targetClassClassLoader, cacheKey, 
-			() -> {
-				Constructor<?> constructor = findFirstAndMakeItAccessible(targetClass, argsType);
-				return new AbstractMap.SimpleEntry<>(
-					constructor,
-					convertToMethodHandle(
-						constructor
-					)
-				);
-			}
-		);
+		Members.Handler.OfExecutable.Box<Constructor<?>> methodHandleBox = findDirectHandleBox(targetClass, argsType);
 		return Executor.get(() -> {
-				Constructor<?> ctor = (Constructor<?>) methodHandleBag.getKey();
+				Constructor<?> ctor = methodHandleBox.getExecutable();
 				//logInfo("Direct invoking of " + ctor);
-				return (T)methodHandleBag.getValue().invokeWithArguments(
+				return (T)methodHandleBox.getHandler().invokeWithArguments(
 					getFlatArgumentList(ctor, ArrayList::new, arguments)
 				);
 			}
@@ -171,24 +155,43 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		return members;
 	}
 	
-	public MethodHandle convertToMethodHandle(Constructor<?> constructor) {
-		return convertToMethodHandleBag(constructor).getValue();
+	public MethodHandle findDirectHandle(Constructor<?> ctor) {
+		return findDirectHandleBox(ctor).getHandler();
 	}
 	
-	public Map.Entry<Lookup, MethodHandle> convertToMethodHandleBag(Constructor<?> constructor) {
-		try {
-			Class<?> constructorDeclaringClass = constructor.getDeclaringClass();
-			MethodHandles.Lookup consulter = LowLevelObjectsHandler.getConsulter(constructorDeclaringClass);
-			return new AbstractMap.SimpleEntry<>(consulter,
-				consulter.findConstructor(
-					constructorDeclaringClass,
-					MethodType.methodType(void.class, constructor.getParameterTypes())
-				)
-					
-			);
-		} catch (NoSuchMethodException | IllegalAccessException exc) {
-			return Throwables.throwException(exc);
-		}
+	public MethodHandle findDirectHandle(Class<?> targetClass, Class<?>... arguments) {
+		return findDirectHandleBox(targetClass, arguments).getHandler();
 	}
-
+	
+	private Members.Handler.OfExecutable.Box<Constructor<?>> findDirectHandleBox(Class<?> targetClass, Class<?>... argsType) {
+		String nameForCaching = retrieveNameForCaching(targetClass);
+		String cacheKey = getCacheKey(targetClass, "equals " + nameForCaching, argsType);
+		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
+		Members.Handler.OfExecutable.Box<Constructor<?>> entry =
+			(Box<Constructor<?>>)Cache.uniqueKeyForExecutableAndMethodHandle.get(targetClassClassLoader, cacheKey);
+		if (entry == null) {
+			Constructor<?> ctor = findFirstAndMakeItAccessible(targetClass, argsType);
+			entry = findDirectHandleBox(
+				ctor, targetClassClassLoader, cacheKey
+			);
+		}
+		return entry;
+	}	
+	
+	@Override
+	MethodHandle retrieveMethodHandle(MethodHandles.Lookup consulter, Constructor<?> constructor) throws NoSuchMethodException, IllegalAccessException {
+		return consulter.findConstructor(
+			constructor.getDeclaringClass(),
+			MethodType.methodType(void.class, constructor.getParameterTypes())
+		);
+	}
+	
+	@Override
+	String retrieveNameForCaching(Constructor<?> constructor) {
+		return retrieveNameForCaching(constructor.getDeclaringClass());
+	}
+	
+	String retrieveNameForCaching(Class<?> cls) {
+		return Classes.retrieveSimpleName(cls.getName());
+	}
 }

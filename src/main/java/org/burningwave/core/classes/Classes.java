@@ -458,7 +458,7 @@ public class Classes implements Component, MembersRetriever {
 				),
 				classLoader.getClass()
 			).stream().findFirst().orElse(null);
-			return Methods.convertToMethodHandleBag(method).getValue();
+			return Methods.findDirectHandle(method);
 		}
 		
 		public MethodHandle getDefineClassMethod(ClassLoader classLoader) {
@@ -494,7 +494,7 @@ public class Classes implements Component, MembersRetriever {
 				).and().returnType((cls) -> cls.getName().equals(Class.class.getName())),
 				classLoader.getClass()
 			).stream().findFirst().orElse(null);
-			return Methods.convertToMethodHandleBag(method).getValue();
+			return Methods.findDirectHandle(method);
 		}
 		
 		private MethodHandle findGetClassLoadingLockMethodAndMakeItAccesible(ClassLoader classLoader) {
@@ -508,7 +508,7 @@ public class Classes implements Component, MembersRetriever {
 				),
 				classLoader.getClass()
 			).stream().findFirst().orElse(null);
-			return Methods.convertToMethodHandleBag(method).getValue();
+			return Methods.findDirectHandle(method);
 		}
 		
 		private MethodHandle getMethod(String key, Supplier<MethodHandle> methodSupplier) {

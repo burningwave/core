@@ -28,10 +28,15 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Array;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Member;
@@ -83,7 +88,7 @@ public class Members implements Component {
 				result :
 				resultPredicate.test(result)?
 					result :
-					new LinkedHashSet<M>();
+					new LinkedHashSet<>();
 	}
 	
 	private <M extends Member> Collection<M> findAll(
@@ -149,7 +154,7 @@ public class Members implements Component {
 				findFirst(initialClsFrom, clsFrom.getSuperclass(), clsPredicate, memberSupplier, predicate);
 	}
 	
-	static abstract class Handler<M extends Member, C extends MemberCriteria<M, C, ?>> {	
+	public static abstract class Handler<M extends Member, C extends MemberCriteria<M, C, ?>> {	
 
 		public M findOne(C criteria, Class<?> classFrom) {
 			return Members.findOne(criteria, classFrom);
@@ -214,7 +219,7 @@ public class Members implements Component {
 			return cacheKey;		
 		}
 		
-		static abstract class OfExecutable<E extends Executable, C extends ExecutableMemberCriteria<E, C, ?>> extends Members.Handler<E, C> {
+		public static abstract class OfExecutable<E extends Executable, C extends ExecutableMemberCriteria<E, C, ?>> extends Members.Handler<E, C> {
 			private Collection<String> classNamesToIgnoreToDetectTheCallingMethod;
 			
 			public OfExecutable() {
@@ -431,7 +436,59 @@ public class Members implements Component {
 					}
 				}		
 				return clientMethodCallersSTE;
-			}	
+			}
+			
+			Members.Handler.OfExecutable.Box<E> findDirectHandleBox(E executable) {
+				Class<?> targetClass = executable.getDeclaringClass();
+				ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
+				String cacheKey = getCacheKey(targetClass, "equals " + retrieveNameForCaching(executable), executable.getParameterTypes());
+				return findDirectHandleBox(executable, targetClassClassLoader, cacheKey);
+			}
+			
+			Members.Handler.OfExecutable.Box<E> findDirectHandleBox(E executable, ClassLoader classLoader, String cacheKey) {
+				return (Box<E>)Cache.uniqueKeyForExecutableAndMethodHandle.getOrUploadIfAbsent(classLoader, cacheKey, () -> {
+					try {
+						Class<?> methodDeclaringClass = executable.getDeclaringClass();
+						MethodHandles.Lookup consulter = LowLevelObjectsHandler.getConsulter(methodDeclaringClass);
+						return new Members.Handler.OfExecutable.Box<>(consulter,
+							executable,
+							retrieveMethodHandle(consulter, executable)
+						);
+					} catch (NoSuchMethodException | IllegalAccessException exc) {
+						return Throwables.throwException(exc);
+					}
+				});	
+			}
+			
+			abstract String retrieveNameForCaching(E executable);
+			
+			abstract MethodHandle retrieveMethodHandle(MethodHandles.Lookup consulter, E executable) throws NoSuchMethodException, IllegalAccessException; 
+			
+			public static class Box<E extends Executable> {
+				Lookup consulter;
+				E executable;
+				MethodHandle handler;
+				
+				Box(Lookup consulter, E executable, MethodHandle handler) {
+					super();
+					this.consulter = consulter;
+					this.executable = executable;
+					this.handler = handler;
+				}
+
+				public Lookup getConsulter() {
+					return consulter;
+				}
+
+				public E getExecutable() {
+					return executable;
+				}
+
+				public MethodHandle getHandler() {
+					return handler;
+				}				
+				
+			}
 		}
 	}
 	
