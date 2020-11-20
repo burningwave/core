@@ -42,11 +42,9 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingFunction;
@@ -131,10 +129,10 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 			MethodCriteria finalCriteria = criteria;
 			return Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> 
 				Collections.unmodifiableCollection(
-					findAllAndMakeThemAccessible(targetClass).stream().filter(
-						finalCriteria.getPredicateOrTruePredicateIfPredicateIsNull()
-					).collect(
-						Collectors.toCollection(LinkedHashSet::new)
+					findAllAndApply(
+							finalCriteria, targetClass, (member) -> {
+							LowLevelObjectsHandler.setAccessible(member, true);
+						}
 					)
 				)
 			);
@@ -149,10 +147,8 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		Collection<Method> members = Cache.uniqueKeyForMethods.getOrUploadIfAbsent(
 			targetClassClassLoader, cacheKey, () -> {
 				return Collections.unmodifiableCollection(
-					findAllAndApply(
-						MethodCriteria.create(), targetClass, (member) -> {
-							LowLevelObjectsHandler.setAccessible(member, true);
-						}
+					findAllAndMakeThemAccessible(
+						MethodCriteria.create(), targetClass
 					)
 				);
 			}

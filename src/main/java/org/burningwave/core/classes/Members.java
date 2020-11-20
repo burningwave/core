@@ -37,6 +37,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Array;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Member;
@@ -172,7 +173,7 @@ public class Members implements Component {
 		public M findFirst(C criteria, Class<?> classFrom) {
 			return Members.findFirst(criteria, classFrom);
 		}
-
+		
 		Collection<M> findAllAndApply(C criteria, Class<?> targetClass, Consumer<M>... consumers) {
 			Collection<M> members = findAll(criteria, targetClass);
 			Optional.ofNullable(consumers).ifPresent(cnsms -> 
@@ -200,6 +201,17 @@ public class Members implements Component {
 				)
 			);
 			return member;
+		}
+		
+		public Collection<M> findAllAndMakeThemAccessible(
+			C criteria,
+			Class<?> targetClass
+		) {
+			return findAllAndApply(
+				criteria, targetClass, (member) -> {
+					LowLevelObjectsHandler.setAccessible((AccessibleObject)member, true);
+				}
+			);
 		}
 		
 		String getCacheKey(Class<?> targetClass, String groupName, Class<?>... arguments) {

@@ -40,8 +40,6 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.stream.Collectors;
 
 import org.burningwave.core.function.Executor;
 
@@ -121,15 +119,18 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		String cacheKey = getCacheKey(targetClass, "all constructors with input parameters", arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		return Cache.uniqueKeyForConstructors.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> {
-			ConstructorCriteria criteria = ConstructorCriteria.create().parameterTypesAreAssignableFrom(arguments);
+			ConstructorCriteria criteria = ConstructorCriteria.byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
+                return lastClassInHierarchy.equals(currentScannedClass);
+            }).parameterTypesAreAssignableFrom(arguments);
 			if (arguments != null && arguments.length == 0) {
 				criteria.or().parameter((parameters, idx) -> parameters.length == 1 && parameters[0].isVarArgs());
 			}
 			return Collections.unmodifiableCollection(
-				findAllAndMakeThemAccessible(targetClass).stream().filter(
-					criteria.getPredicateOrTruePredicateIfPredicateIsNull()
-				).collect(
-					Collectors.toCollection(LinkedHashSet::new)
+				findAllAndApply(
+					criteria, 
+					targetClass,
+					(member) -> 
+						LowLevelObjectsHandler.setAccessible(member, true)
 				)
 			);
 		});

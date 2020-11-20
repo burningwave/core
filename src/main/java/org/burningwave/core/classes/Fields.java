@@ -38,9 +38,7 @@ import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.burningwave.core.function.Executor;
 
@@ -199,13 +197,15 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 			cacheKey, 
 			() -> 
 				Collections.unmodifiableCollection(
-					findAllAndMakeThemAccessible(targetClass).stream().filter(field -> {
-						if (valueClass == null) {
-							return field.getName().equals(fieldName);
-						} else {
-							return field.getName().equals(fieldName) && Classes.isAssignableFrom(field.getType(), valueClass);
-						}
-					}).collect(Collectors.toCollection(LinkedHashSet::new))
+					findAllAndMakeThemAccessible(
+						FieldCriteria.create().allThat(field -> {
+							if (valueClass == null) {
+								return field.getName().equals(fieldName);
+							} else {
+								return field.getName().equals(fieldName) && Classes.isAssignableFrom(field.getType(), valueClass);
+							}
+						}), targetClass
+					)
 				)
 		);
 	}
@@ -220,12 +220,8 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 			cacheKey, 
 			() -> 
 				Collections.unmodifiableCollection(
-					findAllAndApply(
-						FieldCriteria.create(),
-						targetClass,
-						(member) -> {
-							LowLevelObjectsHandler.setAccessible(member, true);
-						}
+					findAllAndMakeThemAccessible(
+						FieldCriteria.create(), targetClass
 					)
 				)
 			
