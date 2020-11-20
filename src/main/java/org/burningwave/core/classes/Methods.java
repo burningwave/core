@@ -223,10 +223,6 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		);
 	}
 	
-	public MethodHandle findDirectHandle(Method method) {
-		return findDirectHandleBox(method).getHandler();
-	}
-	
 	public MethodHandle findDirectHandle(Class<?> targetClass, String methodName, Class<?>... arguments) {
 		return findDirectHandleBox(targetClass, methodName, arguments).getHandler();
 	}

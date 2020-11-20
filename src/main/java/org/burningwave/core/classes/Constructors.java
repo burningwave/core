@@ -155,10 +155,6 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		return members;
 	}
 	
-	public MethodHandle findDirectHandle(Constructor<?> ctor) {
-		return findDirectHandleBox(ctor).getHandler();
-	}
-	
 	public MethodHandle findDirectHandle(Class<?> targetClass, Class<?>... arguments) {
 		return findDirectHandleBox(targetClass, arguments).getHandler();
 	}

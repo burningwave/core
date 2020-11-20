@@ -438,6 +438,10 @@ public class Members implements Component {
 				return clientMethodCallersSTE;
 			}
 			
+			public MethodHandle findDirectHandle(E executable) {
+				return findDirectHandleBox(executable).getHandler();
+			}
+			
 			Members.Handler.OfExecutable.Box<E> findDirectHandleBox(E executable) {
 				Class<?> targetClass = executable.getDeclaringClass();
 				ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
@@ -458,6 +462,20 @@ public class Members implements Component {
 						return Throwables.throwException(exc);
 					}
 				});	
+			}
+			
+			public Collection<MethodHandle> findAllDirectHandle(C criteria, Class<?> clsFrom) {
+				return findAll(
+					criteria, clsFrom
+				).stream().map(this::findDirectHandle).collect(Collectors.toSet());
+			}
+			
+			public MethodHandle findFirstDirectHandle(C criteria, Class<?> clsFrom) {
+				return Optional.ofNullable(findFirst(criteria, clsFrom)).map(this::findDirectHandle).orElseGet(() -> null);
+			}
+			
+			public MethodHandle findOneDirectHandle(C criteria, Class<?> clsFrom) {
+				return Optional.ofNullable(findOne(criteria, clsFrom)).map(this::findDirectHandle).orElseGet(() -> null);
 			}
 			
 			abstract String retrieveNameForCaching(E executable);
