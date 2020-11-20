@@ -1,8 +1,10 @@
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
 
@@ -226,5 +228,19 @@ public class MethodsTest extends BaseTest {
 		testDoesNotThrow(() -> {
 			Methods.invokeDirect(new Service(), "methodWithVarArgs", "Hello!");
 		});
+	}
+	
+	@Test
+	public void findAllTestOne() {
+        testNotEmpty(() -> 
+	        Methods.findAll(
+	            MethodCriteria.byScanUpTo((cls) ->
+	            	//We only analyze the ClassLoader class and not all of its hierarchy (default behavior)
+	                cls.getName().equals(ClassLoader.class.getName())
+	            ).parameter((params, idx) -> {
+	                return Classes.isAssignableFrom(params[idx].getType(), Class.class);
+	            }), ClassLoader.class
+	        ), true
+	    );
 	}
 }
