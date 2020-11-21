@@ -695,6 +695,7 @@ import java.util.Map;
 import org.burningwave.core.classes.FieldCriteria;
 
 
+@SuppressWarnings("unused")
 public class FieldsHandler {
     
     public static void execute() {
@@ -710,23 +711,23 @@ public class FieldsHandler {
         values = Fields.getAll(classLoader);
         
         Object obj = new Object() {
-			volatile List<Object> objectValue;
-			volatile int intValue;
-			volatile long longValue;
-			volatile float floatValue;
-			volatile double doubleValue;
-			volatile boolean booleanValue;
-			volatile byte byteValue;
-			volatile char charValue;
-		};
-		
-		//Get all filtered field values of an object through memory address access
-		Fields.getAllDirect(
-			FieldCriteria.create().allThat(field -> {
-				return field.getType().isPrimitive();
-			}), 
-			obj
-		).values();
+            volatile List<Object> objectValue;
+            volatile int intValue;
+            volatile long longValue;
+            volatile float floatValue;
+            volatile double doubleValue;
+            volatile boolean booleanValue;
+            volatile byte byteValue;
+            volatile char charValue;
+        };
+        
+        //Get all filtered field values of an object through memory address access
+        Fields.getAllDirect(
+            FieldCriteria.create().allThat(field -> {
+                return field.getType().isPrimitive();
+            }), 
+            obj
+        ).values();
     }
     
     public static void main(String[] args) {
