@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.classes.FieldCriteria;
 import org.junit.jupiter.api.Test;
 
 
@@ -112,5 +113,25 @@ public class FieldsTest extends BaseTest {
 			char charValue = Fields.getDirect(obj, "charValue");
 			assertTrue(charValue == 'a');
 		});
+	}
+	
+	
+	@Test
+	public void getAllTestTwo() {
+		testNotEmpty(() -> {
+			Object obj = new Object() {
+				volatile List<Object> objectValue;
+				volatile int intValue;
+				volatile long longValue;
+				volatile float floatValue;
+				volatile double doubleValue;
+				volatile boolean booleanValue;
+				volatile byte byteValue;
+				volatile char charValue;
+			};
+			return Fields.getAll(FieldCriteria.create().allThat(field -> {
+				return field.getType().isPrimitive();
+			}), obj).values();
+		}, true);
 	}
 }
