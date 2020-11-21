@@ -699,8 +699,6 @@ Through **Fields**, **Constructors** and **Methods** components it is possible t
 Members handlers use to cache all members for faster access.
 For fields handling we are going to use **Fields** component:
 ```java
-package org.burningwave.core.examples.member;
-
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 
 import java.lang.reflect.Field;
