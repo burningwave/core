@@ -110,7 +110,7 @@ public class FunctionalInterfaceFactory implements Component {
 						() -> Constructors.findDirectHandleBox((Constructor<?>)executable) :
 						() -> Methods.findDirectHandleBox((Method)executable);
 				return bindTo(
-						methodHandleBoxSupplier, () -> 
+					methodHandleBoxSupplier, () -> 
 					Modifier.isStatic(executable.getModifiers()) || executable instanceof Constructor ?
 						new AbstractMap.SimpleEntry<>(Runnable.class, "run") :
 						new AbstractMap.SimpleEntry<>(Consumer.class, "accept"),
