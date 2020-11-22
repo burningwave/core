@@ -1,7 +1,9 @@
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -10,6 +12,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.MultiParamsConsumer;
 import org.burningwave.core.function.MultiParamsFunction;
@@ -207,6 +210,35 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 			);
 			Runnable virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.run();
+		});
+	}
+	
+	@Test
+	public void getOrBuildSupplierClassTestFour() throws Throwable {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testDoesNotThrow(() -> {
+			Constructor<?> ctor = Constructors.findFirst(
+				ConstructorCriteria.create().parameterTypes(params -> params.length == 0),
+				Service.class				
+			);
+			Supplier<Service> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(ctor);
+			Service service = virtualObj.get();
+			service.printName();
+		});
+	}
+	
+	@Test
+	public void getOrBuildSupplierClassTestFive() throws Throwable {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testDoesNotThrow(() -> {
+			Constructor<?> ctor = Constructors.findFirst(
+				ConstructorCriteria.create().parameterTypes(params -> params.length == 1).and()
+				.parameterType((params, idx) -> idx == 0 && params[idx].equals(String.class)),
+				Service.class				
+			);
+			Function<String, Service> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(ctor);
+			Service service = virtualObj.apply("John");
+			service.printName();
 		});
 	}
 }

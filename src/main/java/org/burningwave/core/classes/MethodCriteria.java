@@ -61,6 +61,15 @@ public class MethodCriteria extends ExecutableMemberCriteria<
 		return criteria;
 	}
 	
+	public MethodCriteria name(final Predicate<String> predicate) {
+		this.predicate = concat(
+			this.predicate,
+			(context, member) ->
+				predicate.test(member.getName())
+		);
+		return this;
+	}	
+	
 	public static MethodCriteria byScanUpTo(TriPredicate<Map<Class<?>, Class<?>>, Class<?>, Class<?>> predicate) {
 		return MethodCriteria.create().scanUpTo(predicate);
 	}
