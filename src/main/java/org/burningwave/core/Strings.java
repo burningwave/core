@@ -149,7 +149,7 @@ public class Strings implements Component {
 	}	
 	
 	public String replace(String text, Map<String, String> params) {
-		AtomicReference<String> template = new AtomicReference<String>(text);
+		AtomicReference<String> template = new AtomicReference<>(text);
 		params.forEach((key, value) -> 
 			template.set(
 				template.get().replaceAll(
@@ -172,7 +172,7 @@ public class Strings implements Component {
 				try {
 					List<String> foundString = null;
 					if ((foundString = found.get(i)) == null) {
-						foundString = new ArrayList<String>();
+						foundString = new ArrayList<>();
 						found.put(i, foundString);
 					}					
 					foundString.add(matcher.group(i));
@@ -193,7 +193,7 @@ public class Strings implements Component {
 	
 	private String clear(String text) {
 		return text
-		.replace("\\", "\\")
+		.replace("\\", "\\\\\\")
 		.replace("{", "\\{")
 		.replace("}", "\\}")
 		.replace("(", "\\(")
