@@ -8,6 +8,24 @@ import org.slf4j.LoggerFactory;
 public class Service implements Component {
 	private final static Logger LOGGER = LoggerFactory.getLogger(Service.class);
 	
+	private String name;
+	
+	public Service() {
+		this("Default name");
+	}
+	
+	public Service(String name) {
+		this.name = name;
+	}
+	
+	public String getName() {
+		return this.name;
+	}
+	
+	public void printName() {
+		LOGGER.info("My name is {}", this.name);
+	}
+	
 	public static Object retrieve() {
 		LOGGER.info("static retrieve");
 		return new Object();
