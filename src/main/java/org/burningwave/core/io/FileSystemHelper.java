@@ -276,16 +276,16 @@ public class FileSystemHelper implements Component {
 									}
 								}
 							} catch (Throwable exc) {
-								logError("Exception occurred while cleaning temporary file system item " + fileSystemItem.getAbsolutePath(), exc);
+								logWarn("Exception occurred while cleaning temporary file system item '{}'", fileSystemItem.getAbsolutePath());
 								if (fileSystemItem.getName().contains("null")) {
-									logInfo("Trying to force deleting of {}", fileSystemItem.getAbsolutePath());
+									logInfo("Trying to force deleting of '{}'", fileSystemItem.getAbsolutePath());
 									delete(fileSystemItem);
 								} else {
 									throw exc;
 								}
 							}
 						} catch (Throwable exc) {
-							logInfo("To avoid this error remove {} manually", fileSystemItem.getAbsolutePath());
+							logError("Could not delete '{}' automatically, To avoid this error remove it manually", fileSystemItem.getAbsolutePath());
 							logInfo("Current execution id: {}", fileSystemHelper.id);
 						}
 					}
