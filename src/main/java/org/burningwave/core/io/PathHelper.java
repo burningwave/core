@@ -340,6 +340,19 @@ public class PathHelper implements Component {
 		}
 	}
 	
+	public Collection<FileSystemItem> findResources(Predicate<String> absolutePathPredicate) {
+		Collection<FileSystemItem> resources = new HashSet<>();
+		FileSystemItem.Criteria criteria = FileSystemItem.Criteria.forAllFileThat(fSI -> absolutePathPredicate.test(fSI.getAbsolutePath()));
+		for (String path : getAllPaths()) {
+			resources.addAll(FileSystemItem.ofPath(path).findInAllChildren(criteria));
+		}
+		return resources;
+	}
+	
+	public Collection<String> getAbsolutePathsOfResources(Predicate<String> absolutePathPredicate) {
+		return findResources(absolutePathPredicate).stream().map(fSI -> fSI.getAbsolutePath()).collect(Collectors.toSet());
+	}
+	
 	public String getAbsolutePathOfResource(String resourceRelativePath) {
 		return Optional.ofNullable(
 			getResource(resourceRelativePath)
