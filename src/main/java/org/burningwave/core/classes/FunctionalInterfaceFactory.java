@@ -246,8 +246,11 @@ public class FunctionalInterfaceFactory implements Component {
 	
 	Class<?> retrieveClass(Class<?> cls, Function<Integer, Class<?>> classRetriever, int parametersCount) throws ClassNotFoundException {
 		if (parametersCount < 3) {
+			String className = parametersCount == 2 ?
+				Optional.ofNullable(cls.getPackage()).map(pkg -> pkg.getName() + ".").orElse("") + "Bi" + cls.getSimpleName() :
+				cls.getName();
 			return Class.forName(
-				retrieveClassName(cls, parametersCount), 
+				className, 
 				true,
 				Classes.getClassLoader(cls)
 			);	
@@ -255,16 +258,6 @@ public class FunctionalInterfaceFactory implements Component {
 			return classRetriever.apply(parametersCount);
 		}
 	}
-	
-	String retrieveClassName(Class<?>cls, int parametersCount) {
-		switch (parametersCount) {
-        	case 2:
-        		return Optional.ofNullable(cls.getPackage()).map(pkg -> pkg.getName() + ".").orElse("") + "Bi" + cls.getSimpleName();
-        	default : 
-        		return cls.getName();
-		}
-	}
-	
 	String getCacheKey(Executable executable) {
 		Class<?> targetMethodDeclaringClass = executable.getDeclaringClass();
 		Parameter[] parameters = executable.getParameters();
