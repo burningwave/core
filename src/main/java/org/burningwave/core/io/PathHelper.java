@@ -351,6 +351,10 @@ public class PathHelper implements Component {
 		});
 	}
 	
+	public Collection<String> getAbsolutePathsOfResource(String... resourceRelativePath) {
+		return getResources(resourceRelativePath).stream().map(fSI -> fSI.getAbsolutePath()).collect(Collectors.toSet());
+	}
+	
 	public Collection<FileSystemItem> getResources(String... resourcesRelativePaths) {
 		return getResources((coll, file) -> coll.add(file), resourcesRelativePaths);
 	}
