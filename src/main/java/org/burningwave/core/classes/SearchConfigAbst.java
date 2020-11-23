@@ -89,19 +89,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return (S)this;
 	}
 	
-	public S includePathsThatMatch(String pathRegex) {
-		if (scanFileCriteriaModifier == null) {
-			scanFileCriteriaModifier = FileSystemItem.Criteria.create().allFileThat(file -> 
-				file.getAbsolutePath().matches(pathRegex)
-			);
-		} else {
-			scanFileCriteriaModifier.or().allFileThat(file -> 
-				file.getAbsolutePath().matches(pathRegex)
-			);
-		}
-		return (S)this;
-	}
-	
 	public S notRecursiveOnPath(String path, boolean isAbsolute) {
 		path = Paths.clean(path);
 		if (!isAbsolute) {
@@ -111,7 +98,16 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 			path += "/";
 		}
 		String regex = isAbsolute ? "" :".*?" + path.replace("/", "\\/") + "[^\\/]*";
-		return includePathsThatMatch(regex);
+		if (scanFileCriteriaModifier == null) {
+			scanFileCriteriaModifier = FileSystemItem.Criteria.create().allFileThat(file -> 
+				file.getAbsolutePath().matches(regex)
+			);
+		} else {
+			scanFileCriteriaModifier.or().allFileThat(file -> 
+				file.getAbsolutePath().matches(regex)
+			);
+		}
+		return (S)this;
 	}
 	
 	public S withScanFileCriteria(FileSystemItem.Criteria scanFileCriteria) {
@@ -215,6 +211,12 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	public void close() {
 		this.classCriteria.close();
 		this.classCriteria = null;
+		this.scanFileCriteria.close();
+		this.scanFileCriteria = null;
+		if (this.scanFileCriteriaModifier != null) {
+			this.scanFileCriteriaModifier.close();
+			this.scanFileCriteriaModifier = null;
+		}
 		this.paths.clear();
 		this.paths = null;
 		this.parentClassLoaderForPathScannerClassLoader = null;
