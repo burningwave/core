@@ -180,12 +180,15 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		if (searchConfig.getScanFileCriteria().hasNoPredicate()) {
 			searchConfig.withScanFileCriteria(
 				FileSystemItem.Criteria.forClassTypeFiles(
-					config.resolveStringValue(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS, Configuration.DEFAULT_VALUES)
+					config.resolveStringValue(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS)
 				)
 			);
 		}
-
-		Predicate<FileSystemItem[]> classFilePredicate = searchConfig.getScanFileCriteria().getOriginalPredicateOrTruePredicateIfPredicateIsNull();
+		FileSystemItem.Criteria classTesterAndExecutor = searchConfig.getScanFileCriteria();
+		if (searchConfig.getScanFileCriteriaModifier() != null) {
+			classTesterAndExecutor = classTesterAndExecutor.and(searchConfig.getScanFileCriteriaModifier());
+		}
+		Predicate<FileSystemItem[]> classFilePredicate = classTesterAndExecutor.getOriginalPredicateOrTruePredicateIfPredicateIsNull();
 		FileSystemItem.Criteria criteria = FileSystemItem.Criteria.forAllFileThat(
 			(child, basePath) -> {
 				boolean isClass = false;
@@ -229,18 +232,26 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 					PathScannerClassLoader.create(
 						searchConfig.parentClassLoaderForPathScannerClassLoader, 
 						pathHelper, 
-						searchConfig.getScanFileCriteria().hasNoPredicate() ? 
-							FileSystemItem.Criteria.forClassTypeFiles(
-								config.resolveStringValue(
-									getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()
-								)
-							)	
-							: searchConfig.getScanFileCriteria()
+						getScanFileCriteria(searchConfig)
 					),
 				searchConfig
 			)		
 		);
 		return context;
+	}
+
+	private FileSystemItem.Criteria getScanFileCriteria(SearchConfigAbst<?> searchConfig) {
+		FileSystemItem.Criteria criteria = searchConfig.getScanFileCriteria().hasNoPredicate() ? 
+			FileSystemItem.Criteria.forClassTypeFiles(
+				config.resolveStringValue(
+					getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()
+				)
+			)	
+			: searchConfig.getScanFileCriteria();
+		if (searchConfig.getScanFileCriteriaModifier() != null) {
+			criteria = criteria.and(searchConfig.getScanFileCriteriaModifier());
+		}
+		return criteria;
 	}
 	
 	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testClassCriteria(C context, JavaClass javaClass) {

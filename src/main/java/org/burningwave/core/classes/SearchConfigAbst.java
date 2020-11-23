@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Arrays;
@@ -50,6 +51,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	boolean useDefaultPathScannerClassLoaderAsParent;
 	boolean waitForSearchEnding;
 	protected Predicate<String> checkForAddedClassesForAllPathThat;
+	protected FileSystemItem.Criteria scanFileCriteriaModifier;
 	
 
 	SearchConfigAbst(Collection<String>... pathsColl) {
@@ -87,6 +89,31 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return (S)this;
 	}
 	
+	public S notRecursiveOnPath(String regex) {
+		if (scanFileCriteriaModifier == null) {
+			scanFileCriteriaModifier = FileSystemItem.Criteria.create().allFileThat(file -> 
+				file.getAbsolutePath().matches(regex)
+			);
+		} else {
+			scanFileCriteriaModifier.or().allFileThat(file -> 
+				file.getAbsolutePath().matches(regex)
+			);
+		}
+		return (S)this;
+	}
+	
+	public S notRecursiveOnPath(String path, boolean isAbsolute) {
+		path = Paths.clean(path);
+		if (!isAbsolute) {
+			path = "/" + path;
+		}
+		if (!path.endsWith("/")) {
+			path += "/";
+		}
+		String regex = isAbsolute ? "" :".*?" + path.replace("/", "\\/") + "[^\\/]*";
+		return notRecursiveOnPath(regex);
+	}
+	
 	public S withScanFileCriteria(FileSystemItem.Criteria scanFileCriteria) {
 		this.scanFileCriteria = scanFileCriteria;
 		return (S)this;
@@ -94,6 +121,10 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	
 	FileSystemItem.Criteria getScanFileCriteria(){
 		return this.scanFileCriteria;
+	}
+	
+	FileSystemItem.Criteria getScanFileCriteriaModifier() {
+		return this.scanFileCriteriaModifier;
 	}
 	
 	ClassCriteria getClassCriteria() {
@@ -164,6 +195,9 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		destConfig.paths = new HashSet<>();
 		destConfig.paths.addAll(this.paths);
 		destConfig.scanFileCriteria = this.scanFileCriteria.createCopy();
+		if (this.scanFileCriteriaModifier != null) {
+			destConfig.scanFileCriteriaModifier = this.scanFileCriteriaModifier.createCopy();
+		}
 		destConfig.optimizePaths = this.optimizePaths;
 		destConfig.useDefaultPathScannerClassLoader = this.useDefaultPathScannerClassLoader;
 		destConfig.parentClassLoaderForPathScannerClassLoader = this.parentClassLoaderForPathScannerClassLoader;
