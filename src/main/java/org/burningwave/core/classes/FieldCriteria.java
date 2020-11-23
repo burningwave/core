@@ -62,15 +62,6 @@ public class FieldCriteria extends MemberCriteria<
 		return criteria;
 	}
 	
-	public FieldCriteria name(final Predicate<String> predicate) {
-		this.predicate = concat(
-			this.predicate,
-			(context, member) ->
-				predicate.test(member.getName())
-		);
-		return this;
-	}
-	
 	public static FieldCriteria byScanUpTo(BiPredicate<Class<?>, Class<?>> predicate) {
 		return FieldCriteria.create().scanUpTo(predicate);
 	}

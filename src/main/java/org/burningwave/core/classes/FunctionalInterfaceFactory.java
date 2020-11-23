@@ -69,7 +69,7 @@ public class FunctionalInterfaceFactory implements Component {
 	}
 	
 	public <T> T getOrCreate(Class<?> targetClass, Class<?>... argumentTypes) {
-		Constructor<?> ctor = Constructors.findOneAndMakeItAccessible(targetClass, argumentTypes);
+		Constructor<?> ctor = Constructors.findFirstAndMakeItAccessible(targetClass, argumentTypes);
 		if (ctor == null) {
 			Throwables.throwException(
 				"Constructor with argument types {} not found in {} class",
@@ -81,7 +81,7 @@ public class FunctionalInterfaceFactory implements Component {
 	}
 	
 	public <T> T getOrCreate(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
-		Method method = Methods.findOneAndMakeItAccessible(targetClass, methodName, argumentTypes);
+		Method method = Methods.findFirstAndMakeItAccessible(targetClass, methodName, argumentTypes);
 		if (method == null) {
 			Throwables.throwException(
 				"Method named {} with argument types {} not found in {} hierarchy",
