@@ -40,11 +40,13 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingFunction;
@@ -77,6 +79,12 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 			if (membersThatMatch.size() == 1) {
 				return membersThatMatch.stream().findFirst().get();
 			}
+			Throwables.throwException(
+				"Found more than one of method named {} with argument types {} in {} hierarchy",
+				memberName,
+				String.join(", ", Arrays.asList(argumentTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),
+				targetClass.getName()
+			);
 		}
 		return null;
 	}

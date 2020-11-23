@@ -43,12 +43,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
@@ -66,10 +68,27 @@ public class FunctionalInterfaceFactory implements Component {
 		return new FunctionalInterfaceFactory(classFactory);
 	}
 	
+	public <T> T getOrCreate(Class<?> targetClass, Class<?>... argumentTypes) {
+		Constructor<?> ctor = Constructors.findOneAndMakeItAccessible(targetClass, argumentTypes);
+		if (ctor == null) {
+			Throwables.throwException(
+				"Constructor with argument types {} not found in {} class",
+				String.join(", ", Arrays.asList(argumentTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),
+				targetClass.getName()
+			);
+		}		
+		return getOrCreate(ctor);
+	}
+	
 	public <T> T getOrCreate(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
 		Method method = Methods.findOneAndMakeItAccessible(targetClass, methodName, argumentTypes);
 		if (method == null) {
-			Throwables.throwException("Method {} not found or found more than one method in {} hierarchy", methodName, targetClass.getName());
+			Throwables.throwException(
+				"Method named {} with argument types {} not found in {} hierarchy",
+				methodName,
+				String.join(", ", Arrays.asList(argumentTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),
+				targetClass.getName()
+			);
 		}		
 		return getOrCreate(method);
 	}
