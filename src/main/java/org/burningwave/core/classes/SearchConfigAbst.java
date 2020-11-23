@@ -89,7 +89,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return (S)this;
 	}
 	
-	public S notRecursiveOnPath(String regex) {
+	public S pathMatches(String regex) {
 		if (scanFileCriteriaModifier == null) {
 			scanFileCriteriaModifier = FileSystemItem.Criteria.create().allFileThat(file -> 
 				file.getAbsolutePath().matches(regex)
@@ -111,7 +111,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 			path += "/";
 		}
 		String regex = isAbsolute ? "" :".*?" + path.replace("/", "\\/") + "[^\\/]*";
-		return notRecursiveOnPath(regex);
+		return pathMatches(regex);
 	}
 	
 	public S withScanFileCriteria(FileSystemItem.Criteria scanFileCriteria) {
