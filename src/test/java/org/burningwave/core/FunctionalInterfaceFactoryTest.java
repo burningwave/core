@@ -217,11 +217,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	public void getOrBuildSupplierClassTestFour() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
-			Constructor<?> ctor = Constructors.findFirst(
-				ConstructorCriteria.create().parameterTypes(params -> params.length == 0),
-				Service.class				
-			);
-			Supplier<Service> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(ctor);
+			Supplier<Service> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(Service.class);
 			Service service = virtualObj.get();
 			service.printName();
 		});
