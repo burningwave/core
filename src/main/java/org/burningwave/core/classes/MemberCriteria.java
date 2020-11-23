@@ -145,6 +145,16 @@ public abstract class MemberCriteria<M extends Member, C extends MemberCriteria<
 		return (C)this;
 	}	
 	
+	@SuppressWarnings("unchecked")
+	public C name(final Predicate<String> predicate) {
+		this.predicate = concat(
+			this.predicate,
+			(context, member) ->
+				predicate.test(member.getName())
+		);
+		return (C)this;
+	}	
+	
 	@Override
 	public C createCopy() {
 		C copy = super.createCopy();

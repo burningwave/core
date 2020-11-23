@@ -38,8 +38,10 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.function.Executor;
 
@@ -88,15 +90,20 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		);
 	}
 
-	public Constructor<?> findOneAndMakeItAccessible(Class<?> targetClass, Class<?>... arguments) {
-		Collection<Constructor<?>> members = findAllAndMakeThemAccessible(targetClass, arguments);
+	public Constructor<?> findOneAndMakeItAccessible(Class<?> targetClass, Class<?>... argumentTypes) {
+		Collection<Constructor<?>> members = findAllAndMakeThemAccessible(targetClass, argumentTypes);
 		if (members.size() == 1) {
 			return members.stream().findFirst().get();
 		} else if (members.size() > 1) {
-			Collection<Constructor<?>> membersThatMatch = searchForExactMatch(members, arguments);
+			Collection<Constructor<?>> membersThatMatch = searchForExactMatch(members, argumentTypes);
 			if (membersThatMatch.size() == 1) {
 				return membersThatMatch.stream().findFirst().get();
 			}
+			Throwables.throwException(
+				"Found more than one of constructor with argument types {} in {} class",
+				String.join(", ", Arrays.asList(argumentTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),
+				targetClass.getName()
+			);
 		}
 		return null; 
 	}
