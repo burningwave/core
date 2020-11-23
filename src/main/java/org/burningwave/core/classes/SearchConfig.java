@@ -73,8 +73,7 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 	@SafeVarargs
 	public static CacheableSearchConfig forResources(ClassLoader classLoader, String... paths) {
 		return forResources(classLoader, Arrays.asList(paths)); 
-	}
-	
+	}	
 	
 	@SafeVarargs
 	public static CacheableSearchConfig forResources(Collection<String>... pathCollections) {
