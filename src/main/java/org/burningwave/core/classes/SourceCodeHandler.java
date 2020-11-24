@@ -244,7 +244,7 @@ public class SourceCodeHandler implements Component {
 			temp = temp / 10;
 			++maxDigitCount; 
 		}
-		for (int lineCounter = 1; lineCounter < lines.length; lineCounter++) {
+		for (int lineCounter = 1; lineCounter <= lines.length; lineCounter++) {
 			newSource.append(String.format(" %0" + maxDigitCount + "d", lineCounter) + " | \t" + lines[lineCounter - 1] + "\n");
 		}		
 		return newSource.substring(0, newSource.length() -1);
