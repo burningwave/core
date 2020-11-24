@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.io.FileSystemItem;
@@ -44,7 +45,8 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	ClassCriteria classCriteria;
 	Collection<String> paths;
 	ClassLoader parentClassLoaderForPathScannerClassLoader;
-	FileSystemItem.Criteria scanFileCriteria;
+	Supplier<FileSystemItem.Criteria> defaultScanFileCriteriaSupplier;
+	Supplier<FileSystemItem.Criteria> scanFileCriteriaSupplier;
 	boolean optimizePaths;
 	boolean useDefaultPathScannerClassLoader;
 	boolean useDefaultPathScannerClassLoaderAsParent;
@@ -59,7 +61,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		paths = new HashSet<>();
 		addPaths(pathsColl);
 		classCriteria = ClassCriteria.create();
-		scanFileCriteria = FileSystemItem.Criteria.create();
 		checkForAddedClassesForAllPathThat = (path) -> false;
 	}
 	
@@ -106,17 +107,30 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return (S)this;
 	}
 	
-	public S withScanFileCriteria(FileSystemItem.Criteria scanFileCriteria) {
-		this.scanFileCriteria = scanFileCriteria;
+	S withDefaultScanFileCriteria(FileSystemItem.Criteria scanFileCriteria) {
+		defaultScanFileCriteriaSupplier = () -> scanFileCriteria;
 		return (S)this;
 	}
 	
-	FileSystemItem.Criteria getScanFileCriteria(){
-		return this.scanFileCriteria;
+	public S withScanFileCriteria(FileSystemItem.Criteria scanFileCriteria) {
+		this.scanFileCriteriaSupplier = () -> scanFileCriteria;
+		return (S)this;
 	}
 	
-	FileSystemItem.Criteria getScanFileCriteriaModifier() {
-		return this.scanFileCriteriaModifier;
+	FileSystemItem.Criteria buildScanFileCriteria(){
+		FileSystemItem.Criteria criteria = 
+			scanFileCriteriaSupplier == null ?
+				defaultScanFileCriteriaSupplier.get() :
+				scanFileCriteriaSupplier.get();
+			
+		if (scanFileCriteriaModifier != null) {
+			criteria = criteria.and(scanFileCriteriaModifier);
+		}
+		return criteria;
+	}
+	
+	boolean scanFileCriteriaHasNoPredicate() {
+		return scanFileCriteriaSupplier == null && scanFileCriteriaModifier == null;
 	}
 	
 	ClassCriteria getClassCriteria() {
@@ -186,7 +200,8 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		destConfig.classCriteria = this.classCriteria.createCopy();
 		destConfig.paths = new HashSet<>();
 		destConfig.paths.addAll(this.paths);
-		destConfig.scanFileCriteria = this.scanFileCriteria.createCopy();
+		destConfig.scanFileCriteriaSupplier = this.scanFileCriteriaSupplier;
+		destConfig.defaultScanFileCriteriaSupplier = this.defaultScanFileCriteriaSupplier;
 		if (this.scanFileCriteriaModifier != null) {
 			destConfig.scanFileCriteriaModifier = this.scanFileCriteriaModifier.createCopy();
 		}
@@ -207,8 +222,8 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	public void close() {
 		this.classCriteria.close();
 		this.classCriteria = null;
-		this.scanFileCriteria.close();
-		this.scanFileCriteria = null;
+		this.scanFileCriteriaSupplier = null;
+		this.defaultScanFileCriteriaSupplier = null;
 		if (this.scanFileCriteriaModifier != null) {
 			this.scanFileCriteriaModifier.close();
 			this.scanFileCriteriaModifier = null;

@@ -142,6 +142,11 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 
 	R findBy(SearchConfigAbst<?> input, Consumer<C> searcher) {
+		input.withDefaultScanFileCriteria(
+			FileSystemItem.Criteria.forClassTypeFiles(
+				config.resolveStringValue(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS)
+			)
+		);
 		SearchConfigAbst<?> searchConfig = input.createCopy();
 		Collection<String> paths = searchConfig.getPaths();
 		if (paths == null || paths.isEmpty()) {
@@ -165,7 +170,8 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 	
 	void searchInFileSystem(C context) {
-		FileSystemItem.Criteria filter = buildFileAndClassTesterAndExecutor(context);
+		SearchConfigAbst<?> searchConfig = context.getSearchConfig();
+		FileSystemItem.Criteria filter = buildFileAndClassTesterAndExecutor(context, searchConfig.buildScanFileCriteria());
 		IterableObjectHelper.iterateParallelIf(
 			context.getSearchConfig().getPaths(), 
 			basePath -> {
@@ -175,21 +181,9 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		);		
 	}
 	
-	FileSystemItem.Criteria buildFileAndClassTesterAndExecutor(C context) {
-		SearchConfigAbst<?> searchConfig = context.getSearchConfig();
-		if (searchConfig.getScanFileCriteria().hasNoPredicate()) {
-			searchConfig.withScanFileCriteria(
-				FileSystemItem.Criteria.forClassTypeFiles(
-					config.resolveStringValue(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS)
-				)
-			);
-		}
-		FileSystemItem.Criteria classTesterAndExecutor = searchConfig.getScanFileCriteria();
-		if (searchConfig.getScanFileCriteriaModifier() != null) {
-			classTesterAndExecutor = classTesterAndExecutor.and(searchConfig.getScanFileCriteriaModifier());
-		}
-		Predicate<FileSystemItem[]> classFilePredicate = classTesterAndExecutor.getOriginalPredicateOrTruePredicateIfPredicateIsNull();
-		FileSystemItem.Criteria criteria = FileSystemItem.Criteria.forAllFileThat(
+	FileSystemItem.Criteria buildFileAndClassTesterAndExecutor(C context, FileSystemItem.Criteria fileFilter) {
+		Predicate<FileSystemItem[]> classFilePredicate = fileFilter.getOriginalPredicateOrTruePredicateIfPredicateIsNull();
+		FileSystemItem.Criteria classTesterAndExecutor = FileSystemItem.Criteria.forAllFileThat(
 			(child, basePath) -> {
 				boolean isClass = false;
 				if (isClass = classFilePredicate.test(new FileSystemItem[]{child, basePath})) {
@@ -199,13 +193,13 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			}
 		);
 		
-		if (searchConfig.getScanFileCriteria().hasNoExceptionHandler()) {
-			criteria.setDefaultExceptionHandler();
+		if (fileFilter.hasNoExceptionHandler()) {
+			classTesterAndExecutor.setDefaultExceptionHandler();
 		} else {
-			criteria.setExceptionHandler(searchConfig.getScanFileCriteria().getExceptionHandler());
+			classTesterAndExecutor.setExceptionHandler(fileFilter.getExceptionHandler());
 		}
 		
-		return criteria;
+		return classTesterAndExecutor;
 	}
 
 	void analyzeAndAddItemsToContext(C context, FileSystemItem child, FileSystemItem basePath) {
@@ -231,27 +225,20 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 					defaultPathScannerClassLoader :
 					PathScannerClassLoader.create(
 						searchConfig.parentClassLoaderForPathScannerClassLoader, 
-						pathHelper, 
-						getScanFileCriteria(searchConfig)
+						pathHelper,
+						searchConfig.withDefaultScanFileCriteria(
+							FileSystemItem.Criteria.forClassTypeFiles(
+								config.resolveStringValue(
+										getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()
+								)
+							)
+						).buildScanFileCriteria()
+							
 					),
 				searchConfig
 			)		
 		);
 		return context;
-	}
-
-	private FileSystemItem.Criteria getScanFileCriteria(SearchConfigAbst<?> searchConfig) {
-		FileSystemItem.Criteria criteria = searchConfig.getScanFileCriteria().hasNoPredicate() ? 
-			FileSystemItem.Criteria.forClassTypeFiles(
-				config.resolveStringValue(
-					getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()
-				)
-			)	
-			: searchConfig.getScanFileCriteria();
-		if (searchConfig.getScanFileCriteriaModifier() != null) {
-			criteria = criteria.and(searchConfig.getScanFileCriteriaModifier());
-		}
-		return criteria;
 	}
 	
 	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testClassCriteria(C context, JavaClass javaClass) {
