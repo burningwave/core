@@ -38,6 +38,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.AccessibleObject;
@@ -51,6 +52,7 @@ import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -62,6 +64,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.StaticComponentContainer;
@@ -926,6 +929,30 @@ public class Classes implements Component, MembersRetriever {
 				return ((PathScannerClassLoader)classLoader).getURLs();
 			}
 			return null;
+		}
+		
+		@SafeVarargs
+		public final Collection<FileSystemItem> getResources(ClassLoader classLoader, String... paths) {
+			return getResources(classLoader, Arrays.asList(paths)); 
+		}	
+		
+		@SafeVarargs
+		public final Collection<FileSystemItem> getResources(ClassLoader classLoader, Collection<String>... pathCollections) {
+			Collection<FileSystemItem> paths = new HashSet<>();
+			for (Collection<String> pathCollection : pathCollections) {
+				for (String path : pathCollection) {
+					try {
+						paths.addAll(
+							Collections.list(classLoader.getResources(path)).stream().map(url ->
+								FileSystemItem.of(url)
+							).collect(Collectors.toSet())
+						);
+					} catch (IOException exc) {
+						Throwables.throwException(exc);
+					}
+				}
+			}
+			return paths;
 		}
 		
 		public void unregister(ClassLoader classLoader) {

@@ -88,21 +88,11 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 	}
 	
 	void searchInCacheOrInFileSystem(C context) {
-		CacheableSearchConfig searchConfig = context.getSearchConfig();
-		boolean scanFileCriteriaHasNoPredicate = searchConfig.getScanFileCriteria().hasNoPredicate() && searchConfig.getScanFileCriteriaModifier() == null;
-		boolean classCriteriaHasNoPredicate = searchConfig.getClassCriteria().hasNoPredicate();		
-		FileSystemItem.Criteria filterAndExecutor = buildFileAndClassTesterAndExecutor(context);
-		//scanFileCriteria in this point has been changed by the previous method call
-		FileSystemItem.Criteria fileFilter =
-			searchConfig.getScanFileCriteriaModifier() != null ?
-				searchConfig.getScanFileCriteria().and(searchConfig.getScanFileCriteriaModifier()) :
-			searchConfig.getScanFileCriteria();
 		IterableObjectHelper.iterateParallelIf(
 			context.getSearchConfig().getPaths(), 
 			basePath -> {
 				searchInCacheOrInFileSystem(
-					basePath, context,
-					scanFileCriteriaHasNoPredicate, classCriteriaHasNoPredicate, filterAndExecutor, fileFilter
+					basePath, context
 				);
 			},
 			item -> item.size() > 1
@@ -111,15 +101,15 @@ public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchCont
 
 	private void searchInCacheOrInFileSystem(
 		String basePath,
-		C context,
-		boolean scanFileCriteriaHasNoPredicate,
-		boolean classCriteriaHasNoPredicate,
-		FileSystemItem.Criteria filterAndExecutor,
-		FileSystemItem.Criteria fileFilter
-	) {
+		C context
+	) {	
 		CacheableSearchConfig searchConfig = context.getSearchConfig();
-		FileSystemItem currentScannedPath;
-		currentScannedPath = FileSystemItem.ofPath(basePath);
+		FileSystemItem.Criteria fileFilter = searchConfig.buildScanFileCriteria();
+		FileSystemItem.Criteria filterAndExecutor = buildFileAndClassTesterAndExecutor(context, fileFilter);
+		boolean scanFileCriteriaHasNoPredicate = searchConfig.scanFileCriteriaHasNoPredicate();
+		boolean classCriteriaHasNoPredicate = searchConfig.getClassCriteria().hasNoPredicate();	
+		
+		FileSystemItem currentScannedPath = FileSystemItem.ofPath(basePath);
 		Predicate<String> refreshCache = searchConfig.getCheckForAddedClassesPredicate();
 		if (refreshCache != null && refreshCache.test(basePath)) {
 			Synchronizer.execute(instanceId + "_" + basePath, () -> {

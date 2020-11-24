@@ -128,13 +128,11 @@ public static class Configuration {
 	
 	public Supplier<Map<String, String>> computeByClassesSearching(CacheableSearchConfig searchConfig) {
 		return compute(searchConfig.getPaths(), (toBeAdjuested) -> {
-			if (searchConfig.scanFileCriteria.hasNoPredicate()) {
-				searchConfig.withScanFileCriteria(
-					FileSystemItem.Criteria.forClassTypeFiles(
-						getClassFileCheckingOption()
-					)
-				);
-			}
+			searchConfig.withDefaultScanFileCriteria(
+				FileSystemItem.Criteria.forClassTypeFiles(
+					getClassFileCheckingOption()
+				)
+			);
 			try(SearchResult result = classPathHunter.loadInCache(
 					searchConfig
 				).find()

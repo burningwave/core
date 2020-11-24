@@ -1076,6 +1076,33 @@ public class FileSystemItem implements ManagedLogger {
 			return this.allThat(childAndSuperParent -> predicate.test(childAndSuperParent[0], childAndSuperParent[1]));
 		}
 		
+		public Criteria excludePathsThatMatch(String regex) {
+			return allFileThat(file -> {
+				return !file.getAbsolutePath().matches(regex);
+			});
+		}
+		
+		public Criteria notRecursiveOnPath(String path, boolean isAbsolute) {
+			path = Paths.clean(path);
+			if (!isAbsolute) {
+				path = "/" + path;
+			}
+			if (!path.endsWith("/")) {
+				path += "/";
+			}
+			String slashedPath = path;
+			String regex = isAbsolute ? "" :".*?" + path.replace("/", "\\/") + "[^\\/]*";
+			return allFileThat(file -> {
+				String absolutePath = file.getAbsolutePath();
+				String slashedAbsolutePath = absolutePath + "/"; 
+				boolean isContained = 
+					isAbsolute?
+						slashedAbsolutePath.startsWith(slashedPath) :
+						slashedAbsolutePath.contains(slashedPath);
+				return !isContained || absolutePath.matches(regex);
+			});
+		}
+		
 		public final Criteria setExceptionHandler(BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler) {
 			this.exceptionHandler = exceptionHandler;
 			return this;

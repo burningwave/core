@@ -28,13 +28,13 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.io.FileSystemItem;
@@ -45,7 +45,8 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	ClassCriteria classCriteria;
 	Collection<String> paths;
 	ClassLoader parentClassLoaderForPathScannerClassLoader;
-	FileSystemItem.Criteria scanFileCriteria;
+	Supplier<FileSystemItem.Criteria> defaultScanFileCriteriaSupplier;
+	Supplier<FileSystemItem.Criteria> scanFileCriteriaSupplier;
 	boolean optimizePaths;
 	boolean useDefaultPathScannerClassLoader;
 	boolean useDefaultPathScannerClassLoaderAsParent;
@@ -60,7 +61,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		paths = new HashSet<>();
 		addPaths(pathsColl);
 		classCriteria = ClassCriteria.create();
-		scanFileCriteria = FileSystemItem.Criteria.create();
 		checkForAddedClassesForAllPathThat = (path) -> false;
 	}
 	
@@ -89,42 +89,48 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return (S)this;
 	}
 	
-	public S notRecursiveOnPath(String regex) {
+	public S excludePathsThatMatch(String regex) {
 		if (scanFileCriteriaModifier == null) {
-			scanFileCriteriaModifier = FileSystemItem.Criteria.create().allFileThat(file -> 
-				file.getAbsolutePath().matches(regex)
-			);
+			scanFileCriteriaModifier = FileSystemItem.Criteria.create().excludePathsThatMatch(regex);
 		} else {
-			scanFileCriteriaModifier.or().allFileThat(file -> 
-				file.getAbsolutePath().matches(regex)
-			);
+			scanFileCriteriaModifier.and().excludePathsThatMatch(regex);
 		}
 		return (S)this;
 	}
 	
 	public S notRecursiveOnPath(String path, boolean isAbsolute) {
-		path = Paths.clean(path);
-		if (!isAbsolute) {
-			path = "/" + path;
+		if (scanFileCriteriaModifier == null) {
+			scanFileCriteriaModifier = FileSystemItem.Criteria.create().notRecursiveOnPath(path, isAbsolute);
+		} else {
+			scanFileCriteriaModifier.and().notRecursiveOnPath(path, isAbsolute);
 		}
-		if (!path.endsWith("/")) {
-			path += "/";
-		}
-		String regex = isAbsolute ? "" :".*?" + path.replace("/", "\\/") + "[^\\/]*";
-		return notRecursiveOnPath(regex);
-	}
-	
-	public S withScanFileCriteria(FileSystemItem.Criteria scanFileCriteria) {
-		this.scanFileCriteria = scanFileCriteria;
 		return (S)this;
 	}
 	
-	FileSystemItem.Criteria getScanFileCriteria(){
-		return this.scanFileCriteria;
+	S withDefaultScanFileCriteria(FileSystemItem.Criteria scanFileCriteria) {
+		defaultScanFileCriteriaSupplier = () -> scanFileCriteria;
+		return (S)this;
 	}
 	
-	FileSystemItem.Criteria getScanFileCriteriaModifier() {
-		return this.scanFileCriteriaModifier;
+	public S withScanFileCriteria(FileSystemItem.Criteria scanFileCriteria) {
+		this.scanFileCriteriaSupplier = () -> scanFileCriteria;
+		return (S)this;
+	}
+	
+	FileSystemItem.Criteria buildScanFileCriteria(){
+		FileSystemItem.Criteria criteria = 
+			scanFileCriteriaSupplier == null ?
+				defaultScanFileCriteriaSupplier.get() :
+				scanFileCriteriaSupplier.get();
+			
+		if (scanFileCriteriaModifier != null) {
+			criteria = criteria.and(scanFileCriteriaModifier);
+		}
+		return criteria;
+	}
+	
+	boolean scanFileCriteriaHasNoPredicate() {
+		return scanFileCriteriaSupplier == null && scanFileCriteriaModifier == null;
 	}
 	
 	ClassCriteria getClassCriteria() {
@@ -194,7 +200,8 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		destConfig.classCriteria = this.classCriteria.createCopy();
 		destConfig.paths = new HashSet<>();
 		destConfig.paths.addAll(this.paths);
-		destConfig.scanFileCriteria = this.scanFileCriteria.createCopy();
+		destConfig.scanFileCriteriaSupplier = this.scanFileCriteriaSupplier;
+		destConfig.defaultScanFileCriteriaSupplier = this.defaultScanFileCriteriaSupplier;
 		if (this.scanFileCriteriaModifier != null) {
 			destConfig.scanFileCriteriaModifier = this.scanFileCriteriaModifier.createCopy();
 		}
@@ -215,6 +222,12 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 	public void close() {
 		this.classCriteria.close();
 		this.classCriteria = null;
+		this.scanFileCriteriaSupplier = null;
+		this.defaultScanFileCriteriaSupplier = null;
+		if (this.scanFileCriteriaModifier != null) {
+			this.scanFileCriteriaModifier.close();
+			this.scanFileCriteriaModifier = null;
+		}
 		this.paths.clear();
 		this.paths = null;
 		this.parentClassLoaderForPathScannerClassLoader = null;

@@ -28,17 +28,13 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.burningwave.core.io.FileSystemItem;
 
 public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 	
@@ -82,21 +78,9 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 	
 	@SafeVarargs
 	public static CacheableSearchConfig forResources(ClassLoader classLoader, Collection<String>... pathCollections) {
-		Collection<String> paths = new HashSet<>();
-		for (Collection<String> pathCollection : pathCollections) {
-			for (String path : pathCollection) {
-				try {
-					paths.addAll(
-						Collections.list(classLoader.getResources(path)).stream().map(url ->
-							FileSystemItem.of(url).getAbsolutePath()
-						).collect(Collectors.toSet())
-					);
-				} catch (IOException exc) {
-					Throwables.throwException(exc);
-				}
-			}
-		}
-		return forPaths(paths);
+		return forPaths(
+			ClassLoaders.getResources(classLoader, pathCollections).stream().map(file -> file.getAbsolutePath()).collect(Collectors.toSet())
+		);
 	}
 	
 	public static CacheableSearchConfig byCriteria(ClassCriteria classCriteria) {
