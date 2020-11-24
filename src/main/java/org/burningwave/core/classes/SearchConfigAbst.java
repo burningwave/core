@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.util.Arrays;
@@ -89,23 +88,20 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 		return (S)this;
 	}
 	
-	public S notRecursiveOnPath(String path, boolean isAbsolute) {
-		path = Paths.clean(path);
-		if (!isAbsolute) {
-			path = "/" + path;
-		}
-		if (!path.endsWith("/")) {
-			path += "/";
-		}
-		String regex = isAbsolute ? "" :".*?" + path.replace("/", "\\/") + "[^\\/]*";
+	public S excludePathsThatMatch(String regex) {
 		if (scanFileCriteriaModifier == null) {
-			scanFileCriteriaModifier = FileSystemItem.Criteria.create().allFileThat(file -> 
-				file.getAbsolutePath().matches(regex)
-			);
+			scanFileCriteriaModifier = FileSystemItem.Criteria.create().excludePathsThatMatch(regex);
 		} else {
-			scanFileCriteriaModifier.or().allFileThat(file -> 
-				file.getAbsolutePath().matches(regex)
-			);
+			scanFileCriteriaModifier.and().excludePathsThatMatch(regex);
+		}
+		return (S)this;
+	}
+	
+	public S notRecursiveOnPath(String path, boolean isAbsolute) {
+		if (scanFileCriteriaModifier == null) {
+			scanFileCriteriaModifier = FileSystemItem.Criteria.create().notRecursiveOnPath(path, isAbsolute);
+		} else {
+			scanFileCriteriaModifier.and().notRecursiveOnPath(path, isAbsolute);
 		}
 		return (S)this;
 	}
