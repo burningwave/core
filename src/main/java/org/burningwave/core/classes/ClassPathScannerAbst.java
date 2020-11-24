@@ -150,17 +150,20 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			);
 		}
 		SearchConfigAbst<?> searchConfig = input.createCopy();
-		Collection<String> paths = searchConfig.getPaths();
-		if (paths == null || paths.isEmpty()) {
-			searchConfig.addPaths(pathHelper.getPaths(Configuration.Key.DEFAULT_SEARCH_CONFIG_PATHS));
-		}
-		if (searchConfig.optimizePaths) {
-			pathHelper.optimize(searchConfig.getPaths());
-		}
 		C context = createContext(
 			searchConfig
 		);
 		searchConfig.init(context.pathScannerClassLoader);
+		Collection<String> paths = searchConfig.getPaths();
+		if (searchConfig.getResourceSupllier() != null) {
+			searchConfig.getResourceSupllier().accept(context.pathScannerClassLoader, paths);
+		}
+		if (paths.isEmpty()) {
+			searchConfig.addPaths(pathHelper.getPaths(Configuration.Key.DEFAULT_SEARCH_CONFIG_PATHS));
+		}
+		if (searchConfig.optimizePaths) {
+			pathHelper.optimize(paths);
+		}
 		context.executeSearch((Consumer<SearchContext<I>>)searcher);
 		Collection<String> skippedClassesNames = context.getSkippedClassNames();
 		if (!skippedClassesNames.isEmpty()) {
@@ -231,7 +234,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 						searchConfig.withDefaultScanFileCriteria(
 							FileSystemItem.Criteria.forClassTypeFiles(
 								config.resolveStringValue(
-										getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()
+									getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()
 								)
 							)
 						).buildScanFileCriteria()

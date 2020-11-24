@@ -28,8 +28,6 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -63,7 +61,7 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 	}
 	@SafeVarargs
 	public static CacheableSearchConfig forResources(String... paths) {
-		return forResources(Thread.currentThread().getContextClassLoader(), paths);
+		return forResources(null, paths);
 	}
 	
 	@SafeVarargs
@@ -73,14 +71,13 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 	
 	@SafeVarargs
 	public static CacheableSearchConfig forResources(Collection<String>... pathCollections) {
-		return forResources(Thread.currentThread().getContextClassLoader(), pathCollections);
+		return forResources(null, pathCollections);
 	}
 	
+	@SuppressWarnings("resource")
 	@SafeVarargs
 	public static CacheableSearchConfig forResources(ClassLoader classLoader, Collection<String>... pathCollections) {
-		return forPaths(
-			ClassLoaders.getResources(classLoader, pathCollections).stream().map(file -> file.getAbsolutePath()).collect(Collectors.toSet())
-		);
+		return new CacheableSearchConfig(new HashSet<>()).addResources(classLoader, pathCollections);
 	}
 	
 	public static CacheableSearchConfig byCriteria(ClassCriteria classCriteria) {
