@@ -142,13 +142,6 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 
 	R findBy(SearchConfigAbst<?> input, Consumer<C> searcher) {
-		if (input.defaultScanFileCriteriaSupplier == null) {
-			input.withDefaultScanFileCriteria(
-				FileSystemItem.Criteria.forClassTypeFiles(
-					config.resolveStringValue(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS)
-				)
-			);
-		}
 		SearchConfigAbst<?> searchConfig = input.createCopy();
 		Collection<String> paths = searchConfig.getPaths();
 		if (paths == null || paths.isEmpty()) {
@@ -160,7 +153,6 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		C context = createContext(
 			searchConfig
 		);
-		searchConfig.init(context.pathScannerClassLoader);
 		context.executeSearch((Consumer<SearchContext<I>>)searcher);
 		Collection<String> skippedClassesNames = context.getSkippedClassNames();
 		if (!skippedClassesNames.isEmpty()) {
@@ -231,7 +223,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 						searchConfig.withDefaultScanFileCriteria(
 							FileSystemItem.Criteria.forClassTypeFiles(
 								config.resolveStringValue(
-										getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()
+									getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()
 								)
 							)
 						).buildScanFileCriteria()
@@ -240,6 +232,14 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 				searchConfig
 			)		
 		);
+		if (searchConfig.defaultScanFileCriteriaSupplier == null) {
+			searchConfig.withDefaultScanFileCriteria(
+				FileSystemItem.Criteria.forClassTypeFiles(
+					config.resolveStringValue(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS)
+				)
+			);
+		}
+		searchConfig.init(context.pathScannerClassLoader);
 		return context;
 	}
 	
