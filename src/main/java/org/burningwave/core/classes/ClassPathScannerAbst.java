@@ -142,11 +142,13 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 	}
 
 	R findBy(SearchConfigAbst<?> input, Consumer<C> searcher) {
-		input.withDefaultScanFileCriteria(
-			FileSystemItem.Criteria.forClassTypeFiles(
-				config.resolveStringValue(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS)
-			)
-		);
+		if (input.defaultScanFileCriteriaSupplier == null) {
+			input.withDefaultScanFileCriteria(
+				FileSystemItem.Criteria.forClassTypeFiles(
+					config.resolveStringValue(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS)
+				)
+			);
+		}
 		SearchConfigAbst<?> searchConfig = input.createCopy();
 		Collection<String> paths = searchConfig.getPaths();
 		if (paths == null || paths.isEmpty()) {
