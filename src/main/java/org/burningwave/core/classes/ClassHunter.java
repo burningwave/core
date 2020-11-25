@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import org.burningwave.core.Criteria;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria.TestContext;
-import org.burningwave.core.classes.ClassPathScannerWithCachingSupportAbst.CacheScanner;
+import org.burningwave.core.classes.ClassPathScannerWithCachingSupport.CacheScanner;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
@@ -86,7 +86,7 @@ public interface ClassHunter {
 
 	public void clearCache(boolean closeSearchResults);
 	
-	static class Impl extends ClassPathScannerWithCachingSupportAbst<Class<?>, SearchContext, ClassHunter.SearchResult> implements ClassHunter {
+	static class Impl extends ClassPathScannerWithCachingSupport.Abst<Class<?>, SearchContext, ClassHunter.SearchResult> implements ClassHunter {
 		
 		Impl(
 			PathHelper pathHelper,

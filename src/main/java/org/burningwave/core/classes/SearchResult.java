@@ -41,13 +41,13 @@ import org.burningwave.core.Criteria;
 
 public class SearchResult<E> implements Component {
 	SearchContext<E> context;
-	ClassPathScannerAbst<E, ?, ?> classPathScanner;
+	ClassPathScanner.Abst<E, ?, ?> classPathScanner;
 	
 	SearchResult(SearchContext<E> context) {
 		this.context = context;
 	}
 	
-	void setClassPathScanner(ClassPathScannerAbst<E, ?, ?> classPathScanner) {
+	void setClassPathScanner(ClassPathScanner.Abst<E, ?, ?> classPathScanner) {
 		this.classPathScanner = classPathScanner;
 		classPathScanner.register(this);
 	}

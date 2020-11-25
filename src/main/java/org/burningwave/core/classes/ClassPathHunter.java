@@ -43,11 +43,12 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria.TestContext;
+import org.burningwave.core.classes.ClassPathScannerWithCachingSupport.CacheScanner;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
-public class ClassPathHunter extends ClassPathScannerWithCachingSupportAbst<Collection<Class<?>>, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> {
+public interface ClassPathHunter { 
 	
 	public static class Configuration {
 		
@@ -85,122 +86,142 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupportAbst<Coll
 		}
 	}
 	
-	private ClassPathHunter(
-		PathHelper pathHelper,
-		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-		Properties config
-	) {
-		super(	
-			pathHelper,
-			(initContext) -> SearchContext._create(initContext),
-			(context) -> new ClassPathHunter.SearchResult(context),
-			defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-			config
-		);
-	}
-	
 	public static ClassPathHunter create(
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 		Properties config
 	) {
-		return new ClassPathHunter(
+		return new Impl(
 			pathHelper,
 			defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 			config
 		);
 	}
 	
-	@Override
-	String getNameInConfigProperties() {
-		return Configuration.Key.NAME_IN_CONFIG_PROPERTIES;
-	}
+	public CacheScanner<Collection<Class<?>>, SearchResult> loadInCache(CacheableSearchConfig searchConfig);
+
+	public SearchResult findBy(SearchConfig searchConfig);
+
+	public SearchResult findBy(CacheableSearchConfig searchConfig);
 	
-	@Override
-	String getDefaultPathScannerClassLoaderNameInConfigProperties() {
-		return Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER;
-	}
+	public SearchResult find();
+
+	public SearchResult findAndCache();
 	
-	@Override
-	String getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties() {
-		return Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS;
-	}
+	public void closeSearchResults();
+
+	public void clearCache();
+
+	public void clearCache(boolean closeSearchResults);	
 	
-	@Override
-	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(
-		SearchContext context, String baseAbsolutePath, String currentScannedItemAbsolutePath, Collection<Class<?>> classes
-	) {
-		ClassCriteria.TestContext testContext;
-		for (Class<?> cls : classes) {
-			if ((testContext = context.test(context.retrieveClass(cls))).getResult()) {
-				return testContext;
-			}
-		}		
-		return testContext = context.test(null);
-	}
-	
-	@Override
-	TestContext testPathAndCachedItem(
-		SearchContext context,
-		FileSystemItem[] cachedItemPathAndBasePath, 
-		Collection<Class<?>> classes, 
-		Predicate<FileSystemItem[]> fileFilterPredicate
-	) {
-		AtomicReference<ClassCriteria.TestContext> criteriaTestContextAR = new AtomicReference<>();
-		cachedItemPathAndBasePath[0].findFirstInAllChildren(
-			FileSystemItem.Criteria.forAllFileThat(
-				(child, basePath) -> {
-					boolean matchPredicate = false;
-					if (matchPredicate = fileFilterPredicate.test(new FileSystemItem[]{child, basePath})) {
-						criteriaTestContextAR.set(
-							testCachedItem(
-								context, cachedItemPathAndBasePath[1].getAbsolutePath(), cachedItemPathAndBasePath[0].getAbsolutePath(), classes
-							)
-						);
+	static class Impl extends ClassPathScannerWithCachingSupport.Abst<Collection<Class<?>>, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> implements ClassPathHunter {
+		
+		private Impl(
+			PathHelper pathHelper,
+			Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
+			Properties config
+		) {
+			super(	
+				pathHelper,
+				(initContext) -> SearchContext._create(initContext),
+				(context) -> new ClassPathHunter.SearchResult(context),
+				defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
+				config
+			);
+		}
+		
+		@Override
+		String getNameInConfigProperties() {
+			return ClassPathHunter.Configuration.Key.NAME_IN_CONFIG_PROPERTIES;
+		}
+		
+		@Override
+		String getDefaultPathScannerClassLoaderNameInConfigProperties() {
+			return ClassPathHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER;
+		}
+		
+		@Override
+		String getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties() {
+			return ClassPathHunter.Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS;
+		}
+		
+		@Override
+		<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(
+			SearchContext context, String baseAbsolutePath, String currentScannedItemAbsolutePath, Collection<Class<?>> classes
+		) {
+			ClassCriteria.TestContext testContext;
+			for (Class<?> cls : classes) {
+				if ((testContext = context.test(context.retrieveClass(cls))).getResult()) {
+					return testContext;
+				}
+			}		
+			return testContext = context.test(null);
+		}
+		
+		@Override
+		TestContext testPathAndCachedItem(
+			SearchContext context,
+			FileSystemItem[] cachedItemPathAndBasePath, 
+			Collection<Class<?>> classes, 
+			Predicate<FileSystemItem[]> fileFilterPredicate
+		) {
+			AtomicReference<ClassCriteria.TestContext> criteriaTestContextAR = new AtomicReference<>();
+			cachedItemPathAndBasePath[0].findFirstInAllChildren(
+				FileSystemItem.Criteria.forAllFileThat(
+					(child, basePath) -> {
+						boolean matchPredicate = false;
+						if (matchPredicate = fileFilterPredicate.test(new FileSystemItem[]{child, basePath})) {
+							criteriaTestContextAR.set(
+								testCachedItem(
+									context, cachedItemPathAndBasePath[1].getAbsolutePath(), cachedItemPathAndBasePath[0].getAbsolutePath(), classes
+								)
+							);
+						}
+						return matchPredicate;
 					}
-					return matchPredicate;
-				}
-			)
-		);
-		return criteriaTestContextAR.get() != null? criteriaTestContextAR.get() : context.test(null);
-	}
-	
-	@Override
-	void iterateAndTestCachedPaths(
-		SearchContext context,
-		String basePath,
-		Map<String, Collection<Class<?>>> itemsForPath,
-		FileSystemItem.Criteria fileFilter
-	) {
-		if (fileFilter.hasNoExceptionHandler()) {
-			fileFilter = fileFilter.createCopy().setDefaultExceptionHandler();
+				)
+			);
+			return criteriaTestContextAR.get() != null? criteriaTestContextAR.get() : context.test(null);
 		}
-		for (Entry<String, Collection<Class<?>>> cachedItemAsEntry : itemsForPath.entrySet()) {
-			String absolutePathOfItem = cachedItemAsEntry.getKey();
-			try {
-				if (FileSystemItem.ofPath(absolutePathOfItem).findFirstInAllChildren(fileFilter) != null) {
-					context.addItemFound(basePath, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
+		
+		@Override
+		void iterateAndTestCachedPaths(
+			SearchContext context,
+			String basePath,
+			Map<String, Collection<Class<?>>> itemsForPath,
+			FileSystemItem.Criteria fileFilter
+		) {
+			if (fileFilter.hasNoExceptionHandler()) {
+				fileFilter = fileFilter.createCopy().setDefaultExceptionHandler();
+			}
+			for (Entry<String, Collection<Class<?>>> cachedItemAsEntry : itemsForPath.entrySet()) {
+				String absolutePathOfItem = cachedItemAsEntry.getKey();
+				try {
+					if (FileSystemItem.ofPath(absolutePathOfItem).findFirstInAllChildren(fileFilter) != null) {
+						context.addItemFound(basePath, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
+					}
+				} catch (Throwable exc) {
+					logError("Could not test cached entry of path " + absolutePathOfItem, exc);
 				}
-			} catch (Throwable exc) {
-				logError("Could not test cached entry of path " + absolutePathOfItem, exc);
 			}
 		}
-	}
+		
+		@Override
+		void addToContext(SearchContext context, TestContext criteriaTestContext,
+			String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
+		) {
+			String classPath = fileSystemItem.getAbsolutePath();
+			FileSystemItem classPathAsFIS = FileSystemItem.ofPath(classPath.substring(0, classPath.lastIndexOf(javaClass.getPath())));
+			context.addItemFound(basePath, classPathAsFIS.getAbsolutePath(), context.loadClass(javaClass.getName()));		
+		}
+		
+		@Override
+		public void close() {
+			closeResources(() -> this.cache == null, () -> {
+				super.close();
+			});
+		}
 	
-	@Override
-	void addToContext(SearchContext context, TestContext criteriaTestContext,
-		String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
-	) {
-		String classPath = fileSystemItem.getAbsolutePath();
-		FileSystemItem classPathAsFIS = FileSystemItem.ofPath(classPath.substring(0, classPath.lastIndexOf(javaClass.getPath())));
-		context.addItemFound(basePath, classPathAsFIS.getAbsolutePath(), context.loadClass(javaClass.getName()));		
-	}
-	
-	@Override
-	public void close() {
-		closeResources(() -> this.cache == null, () -> {
-			super.close();
-		});
 	}
 	
 	public static class SearchContext extends org.burningwave.core.classes.SearchContext<Collection<Class<?>>> {
@@ -284,5 +305,4 @@ public class ClassPathHunter extends ClassPathScannerWithCachingSupportAbst<Coll
 			super.close();
 		}
 	}
-
 }

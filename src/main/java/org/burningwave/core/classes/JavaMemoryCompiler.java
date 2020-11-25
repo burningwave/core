@@ -117,7 +117,7 @@ public class JavaMemoryCompiler implements Component {
 		this.pathHelper = pathHelper;
 		this.classPathHelper = classPathHelper;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
-		this.compiledClassesRepository = FileSystemItem.of(classPathHelper.getOrCreateTemporaryFolder("compiledClassesRepository"));
+		this.compiledClassesRepository = FileSystemItem.of(((ClassPathHelper.Impl)classPathHelper).getOrCreateTemporaryFolder("compiledClassesRepository"));
 	}	
 	
 	public static JavaMemoryCompiler create(
@@ -236,7 +236,7 @@ public class JavaMemoryCompiler implements Component {
 		if (!context.classPaths.isEmpty()) {
 			logInfo("... Using class paths:\n\t{}",String.join("\n\t", context.classPaths));
 		}
-		List<String> options = new ArrayList<String>();
+		List<String> options = new ArrayList<>();
 		if (!context.options.isEmpty()) {
 			context.options.forEach((key, val) -> {
 				options.add(key);

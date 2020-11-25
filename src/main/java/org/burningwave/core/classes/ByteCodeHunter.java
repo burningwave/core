@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria.TestContext;
-import org.burningwave.core.classes.ClassPathScannerWithCachingSupportAbst.CacheScanner;
+import org.burningwave.core.classes.ClassPathScannerWithCachingSupport.CacheScanner;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
@@ -112,7 +112,7 @@ public interface ByteCodeHunter {
 		);
 	}
 	
-	static class Impl extends ClassPathScannerWithCachingSupportAbst<JavaClass, SearchContext<JavaClass>, ByteCodeHunter.SearchResult> implements ByteCodeHunter {
+	static class Impl extends ClassPathScannerWithCachingSupport.Abst<JavaClass, SearchContext<JavaClass>, ByteCodeHunter.SearchResult> implements ByteCodeHunter {
 		private Impl(
 			PathHelper pathHelper,
 			Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
@@ -131,17 +131,17 @@ public interface ByteCodeHunter {
 		
 		@Override
 		String getNameInConfigProperties() {
-			return Configuration.Key.NAME_IN_CONFIG_PROPERTIES;
+			return ByteCodeHunter.Configuration.Key.NAME_IN_CONFIG_PROPERTIES;
 		}
 		
 		@Override
 		String getDefaultPathScannerClassLoaderNameInConfigProperties() {
-			return Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER;
+			return ByteCodeHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER;
 		}
 		
 		@Override
 		String getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties() {
-			return Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS;
+			return ByteCodeHunter.Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS;
 		}
 		
 		@Override

@@ -57,11 +57,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.burningwave.core.Component;
+import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.TriFunction;
 
 @SuppressWarnings("unchecked")
-public class Members implements Component {
+public class Members implements ManagedLogger {
 	
 	public static Members create() {
 		return new Members();
