@@ -28,9 +28,7 @@
  */
 package org.burningwave.core.jvm;
 
-import org.burningwave.core.Component;
-
-public class JVMInfo implements Component {
+public class JVMInfo {
 
     private boolean is64Bit;
     private boolean is32Bit;
