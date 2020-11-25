@@ -40,13 +40,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.burningwave.core.Component;
+import org.burningwave.core.Closeable;
 import org.burningwave.core.Context;
+import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingSupplier;
 
-public class SearchContext<T> implements Component {
+public class SearchContext<T> implements Closeable, ManagedLogger {
 
 	SearchConfigAbst<?> searchConfig;
 	Map<String, T> itemsFoundFlatMap;

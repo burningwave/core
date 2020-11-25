@@ -36,10 +36,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import org.burningwave.core.Component;
+import org.burningwave.core.Closeable;
 import org.burningwave.core.Criteria;
+import org.burningwave.core.ManagedLogger;
 
-public class SearchResult<E> implements Component {
+public class SearchResult<E> implements Closeable, ManagedLogger {
 	SearchContext<E> context;
 	ClassPathScanner.Abst<E, ?, ?> classPathScanner;
 	
