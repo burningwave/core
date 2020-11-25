@@ -23,7 +23,7 @@ public class ConstructorsTest extends BaseTest {
 	public void newInstanceOfTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> Constructors.newInstanceDirectOf(
-				FunctionalInterfaceFactory.class, 
+				FunctionalInterfaceFactory.Impl.class, 
 				componentSupplier.getClassFactory()
 			)
 		);
