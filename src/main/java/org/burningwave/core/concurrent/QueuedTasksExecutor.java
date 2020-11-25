@@ -53,14 +53,13 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Closeable;
-import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings({"unchecked", "resource"})
-public class QueuedTasksExecutor implements Component {
+public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasksToBeExecuted;
 	Thread.Supplier threadSupplier;
 	String name;
