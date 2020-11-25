@@ -256,7 +256,7 @@ public class CodeExecutor implements Component {
 		ClassLoader defaultClassLoader = null;
 		ClassLoader parentClassLoader = config.getParentClassLoader();
 		if (parentClassLoader == null && config.isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull()) {
-			parentClassLoader = defaultClassLoader = getClassFactory().getDefaultClassLoader(executeClient);
+			parentClassLoader = defaultClassLoader = ((ClassFactory.Impl)getClassFactory()).getDefaultClassLoader(executeClient);
 		}
 		if (config.getClassLoader() == null) {
 			MemoryClassLoader memoryClassLoader = MemoryClassLoader.create(

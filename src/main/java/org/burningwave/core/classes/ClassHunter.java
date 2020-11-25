@@ -86,7 +86,7 @@ public interface ClassHunter {
 
 	public void clearCache(boolean closeSearchResults);
 	
-	public static class Impl extends ClassPathScannerWithCachingSupportAbst<Class<?>, SearchContext, ClassHunter.SearchResult> implements ClassHunter {
+	static class Impl extends ClassPathScannerWithCachingSupportAbst<Class<?>, SearchContext, ClassHunter.SearchResult> implements ClassHunter {
 		
 		Impl(
 			PathHelper pathHelper,
@@ -120,6 +120,22 @@ public interface ClassHunter {
 		}
 		
 		@Override
+		<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(Impl.SearchContext context, String path, String key, Class<?> cls) {
+			return context.test(context.retrieveClass(cls));
+		}
+		
+		@Override
+		void addToContext(SearchContext context, TestContext criteriaTestContext,
+			String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
+		) {
+			context.addItemFound(
+				basePath,
+				fileSystemItem.getAbsolutePath(),
+				criteriaTestContext.getEntity()
+			);
+		}
+		
+		@Override
 		public CacheScanner<Class<?>, SearchResult> loadInCache(CacheableSearchConfig searchConfig) {
 			searchConfig.getClassCriteria().collectMembers(true);
 			return super.loadInCache(searchConfig);
@@ -136,23 +152,6 @@ public interface ClassHunter {
 			searchConfig.getClassCriteria().collectMembers(true);
 			return super.findBy(searchConfig);
 		}
-		
-		@Override
-		<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(Impl.SearchContext context, String path, String key, Class<?> cls) {
-			return context.test(context.retrieveClass(cls));
-		}
-		
-		@Override
-		void addToContext(SearchContext context, TestContext criteriaTestContext,
-			String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
-		) {
-			context.addItemFound(
-				basePath,
-				fileSystemItem.getAbsolutePath(),
-				criteriaTestContext.getEntity()
-			);
-		}
-
 		
 		@Override
 		public void clearCache(boolean closeSearchResults) {

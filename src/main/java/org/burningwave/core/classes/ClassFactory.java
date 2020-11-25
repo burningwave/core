@@ -51,8 +51,11 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
+import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.ClassFactory.Impl.PojoSubTypeRetriever;
 import org.burningwave.core.classes.JavaMemoryCompiler.Compilation;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
 import org.burningwave.core.function.Executor;
@@ -63,7 +66,7 @@ import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings("unchecked")
-public class ClassFactory implements Component {
+public interface ClassFactory {
 	
 	public static class Configuration {
 		
@@ -110,41 +113,6 @@ public class ClassFactory implements Component {
 		}
 	}
 	
-	
-	private PathHelper pathHelper;
-	private ClassPathHelper classPathHelper;
-	private JavaMemoryCompiler javaMemoryCompiler;
-	private PojoSubTypeRetriever pojoSubTypeRetriever;	
-	private ByteCodeHunter byteCodeHunter;
-	private ClassPathHunter classPathHunter;
-	private Supplier<ClassPathHunter> classPathHunterSupplier;
-	private ClassLoaderManager<ClassLoader> defaultClassLoaderManager;
-	private Collection<ClassRetriever> classRetrievers;
-	private Properties config;
-	
-	private ClassFactory(
-		ByteCodeHunter byteCodeHunter,
-		Supplier<ClassPathHunter> classPathHunterSupplier,
-		JavaMemoryCompiler javaMemoryCompiler,
-		PathHelper pathHelper,
-		ClassPathHelper classPathHelper,
-		Object defaultClassLoaderOrDefaultClassLoaderSupplier,
-		Properties config
-	) {	
-		this.byteCodeHunter = byteCodeHunter;
-		this.classPathHunterSupplier = classPathHunterSupplier;
-		this.javaMemoryCompiler = javaMemoryCompiler;
-		this.pathHelper = pathHelper;
-		this.classPathHelper = classPathHelper;
-		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
-		this.defaultClassLoaderManager = new ClassLoaderManager<>(
-			defaultClassLoaderOrDefaultClassLoaderSupplier
-		);
-		this.classRetrievers = new CopyOnWriteArrayList<>();
-		this.config = config;
-		listenTo(config);
-	}
-	
 	public static ClassFactory create(
 		ByteCodeHunter byteCodeHunter,
 		Supplier<ClassPathHunter> classPathHunterSupplier,
@@ -154,7 +122,7 @@ public class ClassFactory implements Component {
 		Object defaultClassLoaderSupplier,
 		Properties config
 	) {
-		return new ClassFactory(
+		return new Impl(
 			byteCodeHunter,
 			classPathHunterSupplier,
 			javaMemoryCompiler, 
@@ -165,207 +133,240 @@ public class ClassFactory implements Component {
 		);
 	}
 	
-	@Override
-	public <K, V> void processChangeNotification(Properties properties, Event event, K key, V newValue,
-			V previousValue) {
-		if (event.name().equals(Event.PUT.name())) {
-			if (key instanceof String) {
-				String keyAsString = (String)key;
-				if (keyAsString.equals(Configuration.Key.DEFAULT_CLASS_LOADER)) {
-					this.defaultClassLoaderManager.reset();
+	public ClassRetriever loadOrBuildAndDefine(UnitSourceGenerator... unitsCode);
+
+	public <L extends LoadOrBuildAndDefineConfigAbst<L>> ClassRetriever loadOrBuildAndDefine(L config);
+
+	public PojoSubTypeRetriever createPojoSubTypeRetriever(PojoSourceGenerator sourceGenerator);
+
+	public <T> Class<T> loadOrBuildAndDefinePojoSubType(String className, Class<?>... superClasses);
+
+	public <T> Class<T> loadOrBuildAndDefinePojoSubType(String className, int options, Class<?>... superClasses);
+
+	public <T> Class<T> loadOrBuildAndDefinePojoSubType(ClassLoader classLoader, String className, int options, Class<?>... superClasses);
+
+	public <T> Class<T> loadOrBuildAndDefinePojoSubType(ClassLoader classLoader, String className, Class<?>... superClasses);
+
+	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(int parametersCount);
+
+	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(ClassLoader classLoader, int parametersLength);
+
+	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(int parametersCount);
+
+	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(ClassLoader classLoader, int parametersLength);
+
+	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(int parametersLength);
+
+	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(ClassLoader classLoader, int parametersLength);
+
+	public void closeClassRetrievers();
+
+	public void reset(boolean closeClassRetrievers);
+	
+	static class Impl implements ClassFactory, Component {
+		private PathHelper pathHelper;
+		private ClassPathHelper classPathHelper;
+		private JavaMemoryCompiler javaMemoryCompiler;
+		private PojoSubTypeRetriever pojoSubTypeRetriever;	
+		private ByteCodeHunter byteCodeHunter;
+		private ClassPathHunter classPathHunter;
+		private Supplier<ClassPathHunter> classPathHunterSupplier;
+		private ClassLoaderManager<ClassLoader> defaultClassLoaderManager;
+		private Collection<ClassRetriever> classRetrievers;
+		private Properties config;
+		
+		private Impl(
+			ByteCodeHunter byteCodeHunter,
+			Supplier<ClassPathHunter> classPathHunterSupplier,
+			JavaMemoryCompiler javaMemoryCompiler,
+			PathHelper pathHelper,
+			ClassPathHelper classPathHelper,
+			Object defaultClassLoaderOrDefaultClassLoaderSupplier,
+			Properties config
+		) {	
+			this.byteCodeHunter = byteCodeHunter;
+			this.classPathHunterSupplier = classPathHunterSupplier;
+			this.javaMemoryCompiler = javaMemoryCompiler;
+			this.pathHelper = pathHelper;
+			this.classPathHelper = classPathHelper;
+			this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
+			this.defaultClassLoaderManager = new ClassLoaderManager<>(
+				defaultClassLoaderOrDefaultClassLoaderSupplier
+			);
+			this.classRetrievers = new CopyOnWriteArrayList<>();
+			this.config = config;
+			listenTo(config);
+		}
+		
+		@Override
+		public <K, V> void processChangeNotification(Properties properties, Event event, K key, V newValue,
+				V previousValue) {
+			if (event.name().equals(Event.PUT.name())) {
+				if (key instanceof String) {
+					String keyAsString = (String)key;
+					if (keyAsString.equals(Configuration.Key.DEFAULT_CLASS_LOADER)) {
+						this.defaultClassLoaderManager.reset();
+					}
 				}
 			}
 		}
-	}
-	
-	ClassLoader getDefaultClassLoader(Object client) {
-		return this.defaultClassLoaderManager.get(client);
-	}
-	
-	private ClassPathHunter getClassPathHunter() {
-		return classPathHunter != null? classPathHunter :
-			(classPathHunter = classPathHunterSupplier.get());
-	}
-	
-	public ClassRetriever loadOrBuildAndDefine(UnitSourceGenerator... unitsCode) {
-		return loadOrBuildAndDefine(LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitsCode));
-	}
-	
-	public <L extends LoadOrBuildAndDefineConfigAbst<L>> ClassRetriever loadOrBuildAndDefine(L config) {
-		if (config.isVirtualizeClassesEnabled()) {
-			config.addClassPaths(pathHelper.getBurningwaveRuntimeClassPath());
+		
+		ClassLoader getDefaultClassLoader(Object client) {
+			return this.defaultClassLoaderManager.get(client);
 		}
-		return loadOrBuildAndDefine(
-			config.getClassesName(),
-			config.getCompileConfigSupplier(),			
-			config.isUseOneShotJavaCompilerEnabled(),
-			IterableObjectHelper.merge(
-				() -> config.getClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(),
-				() -> config.getAdditionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(),
-				() -> {
-					Collection<String> classRepositoriesForNotFoundClasses = pathHelper.getPaths(
-						Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER
-					);
-					if (!classRepositoriesForNotFoundClasses.isEmpty()) {
-						config.addClassRepositoriesWhereToSearchNotFoundClasses(classRepositoriesForNotFoundClasses);
-					}
-					return classRepositoriesForNotFoundClasses;
-				}
-			),
-			(client) -> Optional.ofNullable(
-				config.getClassLoader()
-			).orElseGet(() -> 
-				getDefaultClassLoader(client)
-			)
-		);
-	}
-	
-	private ClassRetriever loadOrBuildAndDefine(
-		Collection<String> classNames,
-		Supplier<CompilationConfig> compileConfigSupplier,		
-		boolean useOneShotJavaCompiler,
-		Collection<String> additionalClassRepositoriesForClassLoader,
-		Function<Object, ClassLoader> classLoaderSupplier
-	) {
-		try {
-			Object temporaryClient = new Object(){};
-			ClassLoader classLoader = classLoaderSupplier.apply(temporaryClient);			
-			return new ClassRetriever(
-				this,
-				 (classRetriever) -> {
-					if (classLoader instanceof MemoryClassLoader) {
-						((MemoryClassLoader)classLoader).register(classRetriever);
-						((MemoryClassLoader)classLoader).unregister(temporaryClient, true);
-						if (classLoader != this.defaultClassLoaderManager.get()) {
-							((MemoryClassLoader) classLoader).unregister(this, true);
+		
+		private ClassPathHunter getClassPathHunter() {
+			return classPathHunter != null? classPathHunter :
+				(classPathHunter = classPathHunterSupplier.get());
+		}
+		
+		@Override
+		public ClassRetriever loadOrBuildAndDefine(UnitSourceGenerator... unitsCode) {
+			return loadOrBuildAndDefine(LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitsCode));
+		}
+		
+		@Override
+		public <L extends LoadOrBuildAndDefineConfigAbst<L>> ClassRetriever loadOrBuildAndDefine(L config) {
+			if (config.isVirtualizeClassesEnabled()) {
+				config.addClassPaths(pathHelper.getBurningwaveRuntimeClassPath());
+			}
+			return loadOrBuildAndDefine(
+				config.getClassesName(),
+				config.getCompileConfigSupplier(),			
+				config.isUseOneShotJavaCompilerEnabled(),
+				IterableObjectHelper.merge(
+					() -> config.getClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(),
+					() -> config.getAdditionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(),
+					() -> {
+						Collection<String> classRepositoriesForNotFoundClasses = pathHelper.getPaths(
+							Configuration.Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER
+						);
+						if (!classRepositoriesForNotFoundClasses.isEmpty()) {
+							config.addClassRepositoriesWhereToSearchNotFoundClasses(classRepositoriesForNotFoundClasses);
 						}
+						return classRepositoriesForNotFoundClasses;
 					}
-					return classLoader;
-				},
-				compileConfigSupplier,
-				useOneShotJavaCompiler,
-				additionalClassRepositoriesForClassLoader,
-				classNames
+				),
+				(client) -> Optional.ofNullable(
+					config.getClassLoader()
+				).orElseGet(() -> 
+					getDefaultClassLoader(client)
+				)
 			);
-		} catch (Throwable exc) {
-			return Throwables.throwException(exc);
 		}
-	}
-
-	
-	public PojoSubTypeRetriever createPojoSubTypeRetriever(PojoSourceGenerator sourceGenerator) {
-		return PojoSubTypeRetriever.create(this, sourceGenerator);
-	}
-	
-	public <T> Class<T> loadOrBuildAndDefinePojoSubType(String className, Class<?>... superClasses) {
-		return loadOrBuildAndDefinePojoSubType(null, className, superClasses);
-	}
-	
-	public <T> Class<T> loadOrBuildAndDefinePojoSubType(String className, int options, Class<?>... superClasses) {
-		return loadOrBuildAndDefinePojoSubType(null, className, options, superClasses);
-	}
-	
-	public <T> Class<T> loadOrBuildAndDefinePojoSubType(ClassLoader classLoader, String className, int options, Class<?>... superClasses) {
-		return pojoSubTypeRetriever.loadOrBuildAndDefine(classLoader, className, options, superClasses);
-	}
-	
-	public <T> Class<T> loadOrBuildAndDefinePojoSubType(ClassLoader classLoader, String className, Class<?>... superClasses) {
-		return pojoSubTypeRetriever.loadOrBuildAndDefine(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
-	}
-	
-	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(int parametersCount) {
-		return loadOrBuildAndDefineFunctionSubType(null, parametersCount);
-	}
-	
-	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(ClassLoader classLoader, int parametersLength) {
-		return loadOrBuildAndDefineFunctionInterfaceSubType(
-			classLoader, "FunctionFor", "Parameters", parametersLength,
-			(className, paramsL) -> SourceCodeHandler.generateFunction(className, paramsL)
-		);
-	}
-	
-	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(int parametersCount) {
-		return loadOrBuildAndDefineConsumerSubType(null, parametersCount);
-	}
-	
-	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(ClassLoader classLoader, int parametersLength) {
-		return loadOrBuildAndDefineFunctionInterfaceSubType(
-			classLoader, "ConsumerFor", "Parameters", parametersLength,
-			(className, paramsL) -> SourceCodeHandler.generateConsumer(className, paramsL)
-		);
-	}
-	
-	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(int parametersLength) {
-		return loadOrBuildAndDefinePredicateSubType(null, parametersLength);
-	}
-	
-	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(ClassLoader classLoader, int parametersLength) {
-		return loadOrBuildAndDefineFunctionInterfaceSubType(
-			classLoader, "PredicateFor", "Parameters", parametersLength,
-			(className, paramsL) -> SourceCodeHandler.generatePredicate(className, paramsL)
-		);
-	}
-	
-	private <T> Class<T> loadOrBuildAndDefineFunctionInterfaceSubType(
-		ClassLoader classLoader,
-		String classNamePrefix, 
-		String classNameSuffix,
-		int parametersLength,
-		BiFunction<String, Integer, UnitSourceGenerator> unitSourceGeneratorSupplier
-	) {
-		String functionalInterfaceName = classNamePrefix + parametersLength +	classNameSuffix;
-		String packageName = MultiParamsFunction.class.getPackage().getName();
-		String className = packageName + "." + functionalInterfaceName;
-		ClassRetriever classRetriever = loadOrBuildAndDefine(
-			LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
-				unitSourceGeneratorSupplier.apply(className, parametersLength)
-			).useClassLoader(
-				classLoader
-			)
-		);
-		Class<T> cls = (Class<T>)classRetriever.get(className);
-		classRetriever.close();
-		return cls;
-	}
-	
-	
-	
-	public static class PojoSubTypeRetriever {
-		private ClassFactory classFactory;
-		private PojoSourceGenerator sourceGenerator;
 		
-		private PojoSubTypeRetriever(
-			ClassFactory classFactory,
-			PojoSourceGenerator sourceGenerator
+		private ClassRetriever loadOrBuildAndDefine(
+			Collection<String> classNames,
+			Supplier<CompilationConfig> compileConfigSupplier,		
+			boolean useOneShotJavaCompiler,
+			Collection<String> additionalClassRepositoriesForClassLoader,
+			Function<Object, ClassLoader> classLoaderSupplier
 		) {
-			this.classFactory = classFactory;
-			this.sourceGenerator = sourceGenerator;
+			try {
+				Object temporaryClient = new Object(){};
+				ClassLoader classLoader = classLoaderSupplier.apply(temporaryClient);			
+				return new ClassRetriever(
+					this,
+					 (classRetriever) -> {
+						if (classLoader instanceof MemoryClassLoader) {
+							((MemoryClassLoader)classLoader).register(classRetriever);
+							((MemoryClassLoader)classLoader).unregister(temporaryClient, true);
+							if (classLoader != this.defaultClassLoaderManager.get()) {
+								((MemoryClassLoader) classLoader).unregister(this, true);
+							}
+						}
+						return classLoader;
+					},
+					compileConfigSupplier,
+					useOneShotJavaCompiler,
+					additionalClassRepositoriesForClassLoader,
+					classNames
+				);
+			} catch (Throwable exc) {
+				return Throwables.throwException(exc);
+			}
+		}
+	
+		
+		@Override
+		public PojoSubTypeRetriever createPojoSubTypeRetriever(PojoSourceGenerator sourceGenerator) {
+			return PojoSubTypeRetriever.create(this, sourceGenerator);
 		}
 		
-		public static PojoSubTypeRetriever create(ClassFactory classFactory, PojoSourceGenerator sourceGenerator) {
-			return new PojoSubTypeRetriever(classFactory, sourceGenerator) ;
-		}
-
-		public static PojoSubTypeRetriever createDefault(ClassFactory classFactory) {
-			return new PojoSubTypeRetriever(classFactory, PojoSourceGenerator.createDefault());
+		@Override
+		public <T> Class<T> loadOrBuildAndDefinePojoSubType(String className, Class<?>... superClasses) {
+			return loadOrBuildAndDefinePojoSubType(null, className, superClasses);
 		}
 		
-		public <T> Class<T> getOrBuild(
-				ClassLoader classLoader,
-			String className,
-			Class<?>... superClasses
+		@Override
+		public <T> Class<T> loadOrBuildAndDefinePojoSubType(String className, int options, Class<?>... superClasses) {
+			return loadOrBuildAndDefinePojoSubType(null, className, options, superClasses);
+		}
+		
+		@Override
+		public <T> Class<T> loadOrBuildAndDefinePojoSubType(ClassLoader classLoader, String className, int options, Class<?>... superClasses) {
+			return pojoSubTypeRetriever.loadOrBuildAndDefine(classLoader, className, options, superClasses);
+		}
+		
+		@Override
+		public <T> Class<T> loadOrBuildAndDefinePojoSubType(ClassLoader classLoader, String className, Class<?>... superClasses) {
+			return pojoSubTypeRetriever.loadOrBuildAndDefine(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
+		}
+		
+		@Override
+		public <T> Class<T> loadOrBuildAndDefineFunctionSubType(int parametersCount) {
+			return loadOrBuildAndDefineFunctionSubType(null, parametersCount);
+		}
+		
+		@Override
+		public <T> Class<T> loadOrBuildAndDefineFunctionSubType(ClassLoader classLoader, int parametersLength) {
+			return loadOrBuildAndDefineFunctionInterfaceSubType(
+				classLoader, "FunctionFor", "Parameters", parametersLength,
+				(className, paramsL) -> SourceCodeHandler.generateFunction(className, paramsL)
+			);
+		}
+		
+		@Override
+		public <T> Class<T> loadOrBuildAndDefineConsumerSubType(int parametersCount) {
+			return loadOrBuildAndDefineConsumerSubType(null, parametersCount);
+		}
+		
+		@Override
+		public <T> Class<T> loadOrBuildAndDefineConsumerSubType(ClassLoader classLoader, int parametersLength) {
+			return loadOrBuildAndDefineFunctionInterfaceSubType(
+				classLoader, "ConsumerFor", "Parameters", parametersLength,
+				(className, paramsL) -> SourceCodeHandler.generateConsumer(className, paramsL)
+			);
+		}
+		
+		@Override
+		public <T> Class<T> loadOrBuildAndDefinePredicateSubType(int parametersLength) {
+			return loadOrBuildAndDefinePredicateSubType(null, parametersLength);
+		}
+		
+		@Override
+		public <T> Class<T> loadOrBuildAndDefinePredicateSubType(ClassLoader classLoader, int parametersLength) {
+			return loadOrBuildAndDefineFunctionInterfaceSubType(
+				classLoader, "PredicateFor", "Parameters", parametersLength,
+				(className, paramsL) -> SourceCodeHandler.generatePredicate(className, paramsL)
+			);
+		}
+		
+		private <T> Class<T> loadOrBuildAndDefineFunctionInterfaceSubType(
+			ClassLoader classLoader,
+			String classNamePrefix, 
+			String classNameSuffix,
+			int parametersLength,
+			BiFunction<String, Integer, UnitSourceGenerator> unitSourceGeneratorSupplier
 		) {
-			return loadOrBuildAndDefine(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
-		}	
-		
-		public <T> Class<T> loadOrBuildAndDefine(
-			String className,
-			int options, 
-			Class<?>... superClasses
-		) {	
-			ClassRetriever classRetriever = classFactory.loadOrBuildAndDefine(
+			String functionalInterfaceName = classNamePrefix + parametersLength +	classNameSuffix;
+			String packageName = MultiParamsFunction.class.getPackage().getName();
+			String className = packageName + "." + functionalInterfaceName;
+			ClassRetriever classRetriever = loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
-					sourceGenerator.create(className, options, superClasses)
+					unitSourceGeneratorSupplier.apply(className, parametersLength)
+				).useClassLoader(
+					classLoader
 				)
 			);
 			Class<T> cls = (Class<T>)classRetriever.get(className);
@@ -373,74 +374,124 @@ public class ClassFactory implements Component {
 			return cls;
 		}
 		
-		public <T> Class<T> loadOrBuildAndDefine(
-			ClassLoader classLoader,
-			String className,
-			int options, 
-			Class<?>... superClasses
-		) {	
-			ClassRetriever classRetriever = classFactory.loadOrBuildAndDefine(
-				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
-					sourceGenerator.create(className, options, superClasses)
-				).useClassLoader(classLoader)
-			);
-			Class<T> cls = (Class<T>)classRetriever.get(className);
-			classRetriever.close();
-			return cls;
-		}
+		
+		
+		public static class PojoSubTypeRetriever {
+			private ClassFactory classFactory;
+			private PojoSourceGenerator sourceGenerator;
 			
-	}
-	
-	boolean register(ClassRetriever classRetriever) {
-		classRetrievers.add(classRetriever);
-		return true;
-	}
-	
-	boolean unregister(ClassRetriever classRetriever) {
-		classRetrievers.remove(classRetriever);
-		return true;
-	}
-	
-	public void closeClassRetrievers() {
-		Synchronizer.execute(getOperationId("closeClassRetrievers"), () -> {
-			Collection<ClassRetriever> classRetrievers = this.classRetrievers;
-			if (classRetrievers != null) {
-				Iterator<ClassRetriever> classRetrieverIterator = classRetrievers.iterator();		
-				while(classRetrieverIterator.hasNext()) {
-					ClassRetriever classRetriever = classRetrieverIterator.next();
-					classRetriever.close();
-				}
+			private PojoSubTypeRetriever(
+				ClassFactory classFactory,
+				PojoSourceGenerator sourceGenerator
+			) {
+				this.classFactory = classFactory;
+				this.sourceGenerator = sourceGenerator;
 			}
-		});
-	}
+			
+			public static PojoSubTypeRetriever create(ClassFactory classFactory, PojoSourceGenerator sourceGenerator) {
+				return new PojoSubTypeRetriever(classFactory, sourceGenerator) ;
+			}
 	
-	public void reset(boolean closeClassRetrievers) {
-		if (closeClassRetrievers) {
-			closeClassRetrievers();
+			public static PojoSubTypeRetriever createDefault(ClassFactory classFactory) {
+				return new PojoSubTypeRetriever(classFactory, PojoSourceGenerator.createDefault());
+			}
+			
+			public <T> Class<T> getOrBuild(
+					ClassLoader classLoader,
+				String className,
+				Class<?>... superClasses
+			) {
+				return loadOrBuildAndDefine(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
+			}	
+			
+			public <T> Class<T> loadOrBuildAndDefine(
+				String className,
+				int options, 
+				Class<?>... superClasses
+			) {	
+				ClassRetriever classRetriever = classFactory.loadOrBuildAndDefine(
+					LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+						sourceGenerator.create(className, options, superClasses)
+					)
+				);
+				Class<T> cls = (Class<T>)classRetriever.get(className);
+				classRetriever.close();
+				return cls;
+			}
+			
+			public <T> Class<T> loadOrBuildAndDefine(
+				ClassLoader classLoader,
+				String className,
+				int options, 
+				Class<?>... superClasses
+			) {	
+				ClassRetriever classRetriever = classFactory.loadOrBuildAndDefine(
+					LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+						sourceGenerator.create(className, options, superClasses)
+					).useClassLoader(classLoader)
+				);
+				Class<T> cls = (Class<T>)classRetriever.get(className);
+				classRetriever.close();
+				return cls;
+			}
+				
 		}
-		this.defaultClassLoaderManager.reset();		
+		
+		boolean register(ClassRetriever classRetriever) {
+			classRetrievers.add(classRetriever);
+			return true;
+		}
+		
+		boolean unregister(ClassRetriever classRetriever) {
+			classRetrievers.remove(classRetriever);
+			return true;
+		}
+		
+		@Override
+		public void closeClassRetrievers() {
+			Synchronizer.execute(getOperationId("closeClassRetrievers"), () -> {
+				Collection<ClassRetriever> classRetrievers = this.classRetrievers;
+				if (classRetrievers != null) {
+					Iterator<ClassRetriever> classRetrieverIterator = classRetrievers.iterator();		
+					while(classRetrieverIterator.hasNext()) {
+						ClassRetriever classRetriever = classRetrieverIterator.next();
+						classRetriever.close();
+					}
+				}
+			});
+		}
+		
+		@Override
+		public void reset(boolean closeClassRetrievers) {
+			if (closeClassRetrievers) {
+				closeClassRetrievers();
+			}
+			this.defaultClassLoaderManager.reset();		
+		}
+		
+		@Override
+		public void close() {
+			closeResources(() -> this.classRetrievers == null, () -> {
+				this.defaultClassLoaderManager.close();
+				unregister(config);
+				closeClassRetrievers();
+				BackgroundExecutor.createTask(() -> {
+					this.classRetrievers = null;
+				}).submit();
+				pathHelper = null;
+				javaMemoryCompiler = null;
+				pojoSubTypeRetriever = null;	
+				byteCodeHunter = null;
+				classPathHunter = null;
+				classPathHunterSupplier = null;	
+				config = null;
+			});
+		}
+	
+		
 	}
 	
-	@Override
-	public void close() {
-		closeResources(() -> this.classRetrievers == null, () -> {
-			this.defaultClassLoaderManager.close();
-			unregister(config);
-			closeClassRetrievers();
-			BackgroundExecutor.createTask(() -> {
-				this.classRetrievers = null;
-			}).submit();
-			pathHelper = null;
-			javaMemoryCompiler = null;
-			pojoSubTypeRetriever = null;	
-			byteCodeHunter = null;
-			classPathHunter = null;
-			classPathHunterSupplier = null;	
-			config = null;
-		});
-	}
-
-	public static class ClassRetriever implements Component {
+	public static class ClassRetriever implements Closeable, ManagedLogger {
 		ClassLoader classLoader;
 		ClassFactory classFactory;
 		Supplier<CompilationConfig> compilationConfigSupplier;
@@ -457,7 +508,7 @@ public class ClassFactory implements Component {
 		ClassPathHelper classPathHelper;
 		JavaMemoryCompiler compiler;
 		
-		private ClassRetriever(
+		private ClassRetriever (
 			ClassFactory classFactory,
 			Function<ClassRetriever, ClassLoader> classLoaderSupplier,
 			Supplier<CompilationConfig> compileConfigSupplier,
@@ -467,7 +518,7 @@ public class ClassFactory implements Component {
 		) {
 			this.classLoader = classLoaderSupplier.apply(this);
 			this.classFactory = classFactory;
-			this.classFactory.register(this);
+			((ClassFactory.Impl)this.classFactory).register(this);
 			this.byteCodesWrapper = new AtomicReference<>();
 			this.isItPossibleToAddClassPaths = ClassLoaders.isItPossibleToAddClassPaths(classLoader);
 			this.classesSearchedInAdditionalClassRepositoriesForClassLoader = new HashSet<>();
@@ -580,15 +631,15 @@ public class ClassFactory implements Component {
 			if (this.compilationTask == null) {
 				synchronized (compilationConfigSupplier) {
 					if (this.compilationTask == null) {
-						classPathHelper = !useOneShotJavaCompiler ? classFactory.classPathHelper : ClassPathHelper.create(
-							this.classFactory.getClassPathHunter(),
-							this.classFactory.config
+						classPathHelper = !useOneShotJavaCompiler ? ((ClassFactory.Impl)this.classFactory).classPathHelper : ClassPathHelper.create(
+							((ClassFactory.Impl)this.classFactory).getClassPathHunter(),
+							((ClassFactory.Impl)this.classFactory).config
 						);
 					
 						compiler = !useOneShotJavaCompiler ?
-							classFactory.javaMemoryCompiler :
+							((ClassFactory.Impl)this.classFactory).javaMemoryCompiler :
 							JavaMemoryCompiler.create(
-								classFactory.pathHelper,
+								((ClassFactory.Impl)this.classFactory).pathHelper,
 								classPathHelper
 							);
 						this.compilationTask = compiler.compile(getCompilationConfig());
@@ -625,12 +676,12 @@ public class ClassFactory implements Component {
 			Collection<String>... classPaths
 		) {
 			if (retrievedBytecodes.get() == null) {
-				try(ByteCodeHunter.SearchResult result = classFactory.byteCodeHunter.loadInCache(
+				try(ByteCodeHunter.SearchResult result = ((ClassFactory.Impl)this.classFactory).byteCodeHunter.loadInCache(
 					SearchConfig.forPaths(
 						classPaths
 					).withScanFileCriteria(
 						FileSystemItem.Criteria.forClassTypeFiles(
-							classFactory.config.resolveStringValue(
+							((ClassFactory.Impl)this.classFactory).config.resolveStringValue(
 								Configuration.Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 								Configuration.DEFAULT_VALUES
 							)
@@ -709,7 +760,7 @@ public class ClassFactory implements Component {
 				additionalClassRepositoriesForClassLoader.clear();
 				additionalClassRepositoriesForClassLoader = null; 
  				try {
-					this.classFactory.unregister(this);
+ 					((ClassFactory.Impl)this.classFactory).unregister(this);
 				} catch (NullPointerException exc) {
 					logWarn("Exception while unregistering {}: classFactory is closed", this);
 				}
