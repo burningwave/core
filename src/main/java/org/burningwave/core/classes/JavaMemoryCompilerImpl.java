@@ -38,7 +38,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component{
 		this.pathHelper = pathHelper;
 		this.classPathHelper = classPathHelper;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
-		this.compiledClassesRepository = FileSystemItem.of(((JavaMemoryCompilerImpl)classPathHelper).getOrCreateTemporaryFolder("compiledClassesRepository"));
+		this.compiledClassesRepository = FileSystemItem.of(((ClassPathHelperImpl)classPathHelper).getOrCreateTemporaryFolder("compiledClassesRepository"));
 	}	
 	
 	@Override
