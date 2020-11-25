@@ -6,16 +6,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Criteria;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.ClassCriteria.TestContext;
-import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
@@ -63,174 +58,22 @@ public interface ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>
 		Object defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier,
 		Properties config
 	) {
-		return new Impl(
+		return new ClassHunterImpl(
 			pathHelper, defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier, config
 		);		
 	}	
 	
-	static class Impl extends ClassPathScannerWithCachingSupport.Abst<Class<?>, SearchContext, ClassHunter.SearchResult> implements ClassHunter {
-		
-		Impl(
-			PathHelper pathHelper,
-			Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-			Properties config
-		) {
-			super(
-				pathHelper,
-				(initContext) -> SearchContext._create(
-					initContext
-				),
-				(context) -> new ClassHunter.SearchResult(context),
-				defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-				config
-			);
-		}
-		
-		@Override
-		String getNameInConfigProperties() {
-			return ClassHunter.Configuration.Key.NAME_IN_CONFIG_PROPERTIES;
-		}
-		
-		@Override
-		String getDefaultPathScannerClassLoaderNameInConfigProperties() {
-			return ClassHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER;
-		}
-		
-		@Override
-		String getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties() {
-			return ClassHunter.Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS;
-		}
-		
-		@Override
-		<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(Impl.SearchContext context, String path, String key, Class<?> cls) {
-			return context.test(context.retrieveClass(cls));
-		}
-		
-		@Override
-		void addToContext(SearchContext context, TestContext criteriaTestContext,
-			String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
-		) {
-			context.addItemFound(
-				basePath,
-				fileSystemItem.getAbsolutePath(),
-				criteriaTestContext.getEntity()
-			);
-		}
-		
-		@Override
-		public CacheScanner<Class<?>, SearchResult> loadInCache(CacheableSearchConfig searchConfig) {
-			searchConfig.getClassCriteria().collectMembers(true);
-			return super.loadInCache(searchConfig);
-		}
-		
-		@Override
-		public ClassHunter.SearchResult findBy(SearchConfig searchConfig) {
-			searchConfig.getClassCriteria().collectMembers(true);
-			return super.findBy(searchConfig);
-		}
-		
-		@Override
-		public ClassHunter.SearchResult findBy(CacheableSearchConfig searchConfig) {
-			searchConfig.getClassCriteria().collectMembers(true);
-			return super.findBy(searchConfig);
-		}
-		
-		@Override
-		public void clearCache(boolean closeSearchResults) {
-			this.defaultPathScannerClassLoaderManager.reset();
-			super.clearCache(closeSearchResults);
-		}
-		
-		@Override
-		public void close() {
-			closeResources(() -> isClosed(), () -> {
-				this.defaultPathScannerClassLoaderManager.close();
-				super.close();
-				this.defaultPathScannerClassLoaderManager = null;
-			});
-		}
-
-	}
-	
-	static class SearchContext extends org.burningwave.core.classes.SearchContext<Class<?>> {
-		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound;
-		Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap;
-		
-		static SearchContext _create(InitContext initContext) {
-			return new SearchContext(initContext);
-		}
-		
-		SearchContext(InitContext initContext) {
-			super(initContext);
-		}
-		
-		void addAllMembersFound(Class<?> cls, Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFound) {
-			this.membersFound.put(cls, membersFound);
-			this.membersFoundFlatMap.putAll(membersFound);
-		}
-		
-		
-		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> getMembersFound() {
-			if (membersFound == null) {
-				loadMemberMaps();
-			}
-			return membersFound;
-		}
-		
-		public Map<MemberCriteria<?, ?, ?>, Collection<Member>> getMembersFoundFlatMap() {
-			if (membersFoundFlatMap == null) {
-				loadMemberMaps();
-			}
-			return membersFoundFlatMap;
-		}
-
-		private void loadMemberMaps() {
-			ClassCriteria classCriteria = searchConfig.getClassCriteria();
-			if (!classCriteria.memberCriterias.isEmpty() && (membersFound == null || membersFoundFlatMap == null)) {
-				synchronized(this) {
-					if (membersFound == null || membersFoundFlatMap == null) {
-						Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound = new ConcurrentHashMap<>();
-						Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap = new ConcurrentHashMap<>();
-						for (Entry<String, Class<?>> pathAndItem : itemsFoundFlatMap.entrySet()) {
-							ClassCriteria.TestContext testContext = test(pathAndItem.getValue());
-							testContext.getMembersFound();
-							Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersForCriteria = testContext.getMembersFound();
-							membersFound.put(testContext.getEntity(), membersForCriteria);
-							membersForCriteria.forEach((criteria, memberList) -> {
-								Collection<Member> coll = membersFoundFlatMap.get(criteria);
-								if (coll == null) {								
-									coll = new CopyOnWriteArrayList<>();
-									membersFoundFlatMap.put(criteria, coll);
-								}
-								coll.addAll(memberList);
-							});
-						}
-						this.membersFound = membersFound;
-						this.membersFoundFlatMap = membersFoundFlatMap;
-					}
-				}
-			}
-		}
-		
-		@Override
-		public void close() {
-			membersFound = null;
-			membersFoundFlatMap = null;		
-			super.close();
-		}
-	}
-	
 	public static class SearchResult extends org.burningwave.core.classes.SearchResult<Class<?>> {
-		SearchResult(Impl.SearchContext context) {
+		SearchResult(ClassHunterImpl.SearchContext context) {
 			super(context);
 		}
 		
 		public Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> getMembers() {
-			return ((Impl.SearchContext)this.context).getMembersFound();
+			return ((ClassHunterImpl.SearchContext)this.context).getMembersFound();
 		}
 		
 		public Map<MemberCriteria<?, ?, ?>, Collection<Member>> getMembersFlatMap() {
-			return ((Impl.SearchContext)this.context).getMembersFoundFlatMap();
+			return ((ClassHunterImpl.SearchContext)this.context).getMembersFoundFlatMap();
 		}
 		
 		public Collection<Class<?>> getClasses() {
@@ -248,7 +91,7 @@ public interface ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>
 			} else {
 				try (C criteriaCopy = createCriteriaCopy(criteria)) {
 					final Collection<Member> membersFoundByCriteriaFinal = new HashSet<>();
-					((Impl.SearchContext)this.context).getMembersFoundFlatMap().values().forEach((membersCollection) -> {
+					((ClassHunterImpl.SearchContext)this.context).getMembersFoundFlatMap().values().forEach((membersCollection) -> {
 						membersCollection.stream().filter(
 							(member) ->
 								criteriaCopy.testWithFalseResultForNullEntityOrTrueResultForNullPredicate((M)member).getResult()

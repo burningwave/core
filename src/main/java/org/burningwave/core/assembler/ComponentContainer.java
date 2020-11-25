@@ -585,7 +585,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		if (byteCodeHunter != null) {
 			byteCodeHunter.clearCache(closeHuntersResults);
 		}
-		ClassHunter classHunter = (ClassHunter)components.get(ClassHunter.Impl.class.getName());
+		ClassHunter classHunter = (ClassHunter)components.get(ClassHunter.class.getName());
 		if (classHunter != null) {
 			classHunter.clearCache(closeHuntersResults);
 		}

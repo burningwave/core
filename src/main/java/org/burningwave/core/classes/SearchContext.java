@@ -47,7 +47,7 @@ import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingSupplier;
 
-public class SearchContext<T> implements Closeable, ManagedLogger {
+class SearchContext<T> implements Closeable, ManagedLogger {
 
 	SearchConfigAbst<?> searchConfig;
 	Map<String, T> itemsFoundFlatMap;
