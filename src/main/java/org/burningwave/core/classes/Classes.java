@@ -66,7 +66,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.burningwave.core.Component;
+import org.burningwave.core.Closeable;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.function.Executor;
@@ -389,7 +389,7 @@ public class Classes implements ManagedLogger, MembersRetriever {
 		return cls;
 	}
 	
-	public static class Loaders implements Component {
+	public static class Loaders implements ManagedLogger, Closeable {
 		protected Map<ClassLoader, Collection<Class<?>>> classLoadersClasses;
 		protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 		protected Map<String, MethodHandle> classLoadersMethods;
