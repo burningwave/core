@@ -271,7 +271,7 @@ public interface CodeExecutor {
 			ClassLoader defaultClassLoader = null;
 			ClassLoader parentClassLoader = config.getParentClassLoader();
 			if (parentClassLoader == null && config.isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull()) {
-				parentClassLoader = defaultClassLoader = ((ClassFactory.Impl)getClassFactory()).getDefaultClassLoader(executeClient);
+				parentClassLoader = defaultClassLoader = ((ClassFactoryImpl)getClassFactory()).getDefaultClassLoader(executeClient);
 			}
 			if (config.getClassLoader() == null) {
 				MemoryClassLoader memoryClassLoader = MemoryClassLoader.create(
