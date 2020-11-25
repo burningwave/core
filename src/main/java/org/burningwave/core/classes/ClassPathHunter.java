@@ -43,12 +43,11 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria.TestContext;
-import org.burningwave.core.classes.ClassPathScannerWithCachingSupport.CacheScanner;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
-public interface ClassPathHunter { 
+public interface ClassPathHunter extends ClassPathScannerWithCachingSupport<Collection<Class<?>>, ClassPathHunter.SearchResult> { 
 	
 	public static class Configuration {
 		
@@ -97,22 +96,6 @@ public interface ClassPathHunter {
 			config
 		);
 	}
-	
-	public CacheScanner<Collection<Class<?>>, SearchResult> loadInCache(CacheableSearchConfig searchConfig);
-
-	public SearchResult findBy(SearchConfig searchConfig);
-
-	public SearchResult findBy(CacheableSearchConfig searchConfig);
-	
-	public SearchResult find();
-
-	public SearchResult findAndCache();
-	
-	public void closeSearchResults();
-
-	public void clearCache();
-
-	public void clearCache(boolean closeSearchResults);	
 	
 	static class Impl extends ClassPathScannerWithCachingSupport.Abst<Collection<Class<?>>, ClassPathHunter.SearchContext, ClassPathHunter.SearchResult> implements ClassPathHunter {
 		
@@ -305,4 +288,5 @@ public interface ClassPathHunter {
 			super.close();
 		}
 	}
+
 }

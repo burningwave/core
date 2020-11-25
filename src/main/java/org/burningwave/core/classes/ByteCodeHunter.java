@@ -41,12 +41,11 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria.TestContext;
-import org.burningwave.core.classes.ClassPathScannerWithCachingSupport.CacheScanner;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
-public interface ByteCodeHunter {
+public interface ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass, ByteCodeHunter.SearchResult> {
 	
 	public static class Configuration {
 		
@@ -83,22 +82,6 @@ public interface ByteCodeHunter {
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
-	
-	public CacheScanner<JavaClass, SearchResult> loadInCache(CacheableSearchConfig searchConfig);
-
-	public SearchResult findBy(SearchConfig searchConfig);
-
-	public SearchResult findBy(CacheableSearchConfig searchConfig);
-	
-	public SearchResult find();
-
-	public SearchResult findAndCache();
-	
-	public void closeSearchResults();
-
-	public void clearCache();
-
-	public void clearCache(boolean closeSearchResults);	
 	
 	public static ByteCodeHunter create(
 		PathHelper pathHelper,

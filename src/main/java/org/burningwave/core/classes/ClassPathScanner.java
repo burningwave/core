@@ -56,7 +56,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 	//Not cached search
 	public R findBy(SearchConfig searchConfig);
 	
-	static abstract class Abst<I, C extends SearchContext<I>, R extends SearchResult<I>> implements Component, ClassPathScanner<I, R> {
+	static abstract class Abst<I, C extends SearchContext<I>, R extends SearchResult<I>> implements Component {
 
 		PathHelper pathHelper;
 		Function<InitContext, C> contextSupplier;
@@ -110,13 +110,11 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			return defaultPathScannerClassLoaderManager.get(client);
 		}
 		
-		@Override
 		public R find() {
 			return findBy(SearchConfig.withoutUsingCache());
 		}
 		
 		//Not cached search
-		@Override
 		public R findBy(SearchConfig searchConfig) {
 			return findBy(searchConfig, this::searchInFileSystem);
 		}

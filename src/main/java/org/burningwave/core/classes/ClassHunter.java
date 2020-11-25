@@ -15,14 +15,13 @@ import java.util.stream.Collectors;
 import org.burningwave.core.Criteria;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria.TestContext;
-import org.burningwave.core.classes.ClassPathScannerWithCachingSupport.CacheScanner;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
 
 @SuppressWarnings("unchecked")
-public interface ClassHunter {
+public interface ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, ClassHunter.SearchResult> {
 	
 	public static class Configuration {
 		
@@ -68,23 +67,6 @@ public interface ClassHunter {
 			pathHelper, defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier, config
 		);		
 	}	
-	
-	//Not cached search
-	public CacheScanner<Class<?>, SearchResult> loadInCache(CacheableSearchConfig searchConfig);
-
-	public SearchResult findBy(SearchConfig searchConfig);
-
-	public SearchResult findBy(CacheableSearchConfig searchConfig);
-	
-	public SearchResult find();
-
-	public SearchResult findAndCache();
-	
-	public void closeSearchResults();
-
-	public void clearCache();
-
-	public void clearCache(boolean closeSearchResults);
 	
 	static class Impl extends ClassPathScannerWithCachingSupport.Abst<Class<?>, SearchContext, ClassHunter.SearchResult> implements ClassHunter {
 		

@@ -48,7 +48,7 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
 
-public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>> {
+public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>> extends ClassPathScanner<I, R>{
 	
 	public void clearCache();
 	
@@ -60,7 +60,7 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 	
 	public void clearCache(boolean closeSearchResults);
 	
-	abstract class Abst<I, C extends SearchContext<I>, R extends SearchResult<I>> extends ClassPathScanner.Abst<I, C, R> implements ClassPathScannerWithCachingSupport<I, R> {
+	abstract class Abst<I, C extends SearchContext<I>, R extends SearchResult<I>> extends ClassPathScanner.Abst<I, C, R> {
 		
 		Map<String, Map<String, I>> cache;
 		
@@ -81,12 +81,10 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 			this.cache = new ConcurrentHashMap<>();
 		}
 		
-		@Override
 		public void clearCache() {
 			clearCache(false);
 		}
 		
-		@Override
 		public CacheScanner<I, R> loadInCache(CacheableSearchConfig searchConfig) {
 			try (R result = findBy(
 				SearchConfig.forPaths(
@@ -97,17 +95,14 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 				findBy(srcCfg == null? searchConfig : srcCfg);
 		}
 		
-		@Override
 		public R findAndCache() {
 			return findBy(SearchConfig.create());
 		}
 	
-		@Override
 		public R findBy(CacheableSearchConfig searchConfig) {
 			return findBy(searchConfig, this::searchInCacheOrInFileSystem);
 		}
 		
-		@Override
 		public void clearCache(boolean closeSearchResults) {
 			this.defaultPathScannerClassLoaderManager.reset();
 			if (closeSearchResults) {
