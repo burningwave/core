@@ -98,7 +98,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements AutoCl
 			}
 			return (S)this;
 		}
-		return addPaths(ClassLoaders.getResources(classLoader, paths).stream().map(file -> file.getAbsolutePath()).collect(Collectors.toSet()));
+		return addPaths(ClassLoaders.getResources(classLoader, pathColls).stream().map(file -> file.getAbsolutePath()).collect(Collectors.toSet()));
 	}
 	
 	@SafeVarargs
