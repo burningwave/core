@@ -57,7 +57,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
+import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.classes.MembersRetriever;
 import org.burningwave.core.classes.MemoryClassLoader;
@@ -71,7 +73,7 @@ import org.burningwave.core.io.ByteBufferOutputStream;
 import sun.misc.Unsafe;
 
 @SuppressWarnings({"all"})
-public class LowLevelObjectsHandler implements Component, MembersRetriever {
+public class LowLevelObjectsHandler implements Closeable, ManagedLogger, MembersRetriever {
 
 	Unsafe unsafe;
 	Runnable illegalAccessLoggerEnabler;

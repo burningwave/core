@@ -36,10 +36,11 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import org.burningwave.core.Closeable;
 import org.burningwave.core.function.ThrowingFunction;
 import org.burningwave.core.io.FileSystemItem;
 
-public class JavaClass implements AutoCloseable {
+public class JavaClass implements Closeable {
 	private ByteBuffer byteCode;
 	private String classNameSlashed;
 	private String className;

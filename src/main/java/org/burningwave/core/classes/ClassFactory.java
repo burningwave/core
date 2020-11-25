@@ -673,8 +673,8 @@ public interface ClassFactory {
 				compilationConfig = null;
 				compilationTask = null;
 				if (useOneShotJavaCompiler) {
-					compiler.close();
-					((ClassPathHelper.Impl)classPathHelper).close();
+					((Closeable)compiler).close();
+					((Closeable)classPathHelper).close();
 				}
 				compiler = null;
 				classPathHelper = null;
