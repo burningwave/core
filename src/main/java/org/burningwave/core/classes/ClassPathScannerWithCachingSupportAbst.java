@@ -48,11 +48,11 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
 
-public abstract class ClassPathScannerWithCachingSupport<I, C extends SearchContext<I>, R extends SearchResult<I>> extends ClassPathScannerAbst<I, C, R> {
+abstract class ClassPathScannerWithCachingSupportAbst<I, C extends SearchContext<I>, R extends SearchResult<I>> extends ClassPathScannerAbst<I, C, R> {
 	
 	Map<String, Map<String, I>> cache;
 	
-	ClassPathScannerWithCachingSupport(
+	ClassPathScannerWithCachingSupportAbst(
 		PathHelper pathHelper,
 		Function<InitContext, C> contextSupplier,
 		Function<C, R> resultSupplier,

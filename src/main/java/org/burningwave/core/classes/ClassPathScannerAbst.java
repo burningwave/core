@@ -32,10 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -50,35 +47,7 @@ import org.burningwave.core.iterable.Properties.Event;
 
 
 @SuppressWarnings("unchecked")
-public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends SearchResult<I>> implements Component {
-	
-	public static class Configuration {
-		public static class Key {
-			
-			public final static String DEFAULT_CHECK_FILE_OPTIONS = "hunters.default-search-config.check-file-option";		
-			public static final String DEFAULT_SEARCH_CONFIG_PATHS = PathHelper.Configuration.Key.PATHS_PREFIX + "hunters.default-search-config.paths";
-						
-		}
-		
-		public final static Map<String, Object> DEFAULT_VALUES;
-	
-		static {
-			Map<String, Object> defaultValues = new HashMap<>();
-	
-			defaultValues.put(
-				Key.DEFAULT_SEARCH_CONFIG_PATHS, 
-				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + PathHelper.Configuration.getPathsSeparator() +
-				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.getPathsSeparator() + 
-				"${" + PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.getPathsSeparator()
-			);
-			defaultValues.put(
-				Key.DEFAULT_CHECK_FILE_OPTIONS,
-				"${" + PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION + "}"
-			);
-			
-			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
-		}
-	}
+abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R extends SearchResult<I>> implements Component {
 
 	PathHelper pathHelper;
 	Function<InitContext, C> contextSupplier;
@@ -145,7 +114,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 		if (input.defaultScanFileCriteriaSupplier == null) {
 			input.withDefaultScanFileCriteria(
 				FileSystemItem.Criteria.forClassTypeFiles(
-					config.resolveStringValue(Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS)
+					config.resolveStringValue(ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS)
 				)
 			);
 		}
@@ -159,7 +128,7 @@ public abstract class ClassPathScannerAbst<I, C extends SearchContext<I>, R exte
 			searchConfig.getResourceSupllier().accept(context.pathScannerClassLoader, paths);
 		}
 		if (paths.isEmpty()) {
-			searchConfig.addPaths(pathHelper.getPaths(Configuration.Key.DEFAULT_SEARCH_CONFIG_PATHS));
+			searchConfig.addPaths(pathHelper.getPaths(ClassPathScanner.Configuration.Key.DEFAULT_SEARCH_CONFIG_PATHS));
 		}
 		if (searchConfig.optimizePaths) {
 			pathHelper.optimize(paths);

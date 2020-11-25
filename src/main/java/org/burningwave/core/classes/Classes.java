@@ -67,12 +67,13 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 
 @SuppressWarnings("unchecked")
-public class Classes implements Component, MembersRetriever {
+public class Classes implements ManagedLogger, MembersRetriever {
 	public static class Symbol{
 		public static class Tag {
 			static final byte UTF8 = 1;

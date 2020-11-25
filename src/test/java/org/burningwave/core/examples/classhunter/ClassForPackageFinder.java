@@ -7,7 +7,6 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
-import org.burningwave.core.classes.ClassHunter.SearchResult;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.PathHelper;
     
@@ -43,7 +42,7 @@ public class ClassForPackageFinder {
         //it is recommended to perform this cleaning using the clearHuntersCache method of the ComponentSupplier.
         //To perform searches that do not use the cache you must intantiate the search configuration with 
         //SearchConfig.withoutUsingCache() method
-        try (SearchResult searchResult = classHunter.loadInCache(searchConfig).find()) {
+        try (ClassHunter.SearchResult searchResult = classHunter.loadInCache(searchConfig).find()) {
             return searchResult.getClasses();
         }
     }

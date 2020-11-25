@@ -41,11 +41,12 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria.TestContext;
+import org.burningwave.core.classes.ClassPathScannerWithCachingSupportAbst.CacheScanner;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
-public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass, SearchContext<JavaClass>, ByteCodeHunter.SearchResult> {
+public interface ByteCodeHunter {
 	
 	public static class Configuration {
 		
@@ -67,7 +68,7 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 				"${"+ Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + ".additional-imports}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR +
 				PathScannerClassLoader.class.getName() + ";"
 			);
-			defaultValues.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_NAME_SUFFIX, ClassHunter.class.getPackage().getName() + ".DefaultPathScannerClassLoaderRetrieverForByteCodeHunter");
+			defaultValues.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_NAME_SUFFIX, ByteCodeHunter.class.getPackage().getName() + ".DefaultPathScannerClassLoaderRetrieverForByteCodeHunter");
 			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
 			defaultValues.put(
 				Key.DEFAULT_PATH_SCANNER_CLASS_LOADER, 
@@ -76,93 +77,112 @@ public class ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass
 			);
 			defaultValues.put(
 				Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-				"${" + ClassPathScannerAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
+				"${" + ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
 			);
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
 	
-	private ByteCodeHunter(
-		PathHelper pathHelper,
-		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-		Properties config
-	) {
-		super(
-			pathHelper,
-			(initContext) -> SearchContext.<JavaClass>create(
-				initContext
-			),
-			(context) -> new ByteCodeHunter.SearchResult(context),
-			defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-			config
-		);
-	}
+	public CacheScanner<JavaClass, SearchResult> loadInCache(CacheableSearchConfig searchConfig);
+
+	public SearchResult findBy(SearchConfig searchConfig);
+
+	public SearchResult findBy(CacheableSearchConfig searchConfig);
+	
+	public SearchResult find();
+
+	public SearchResult findAndCache();
+	
+	public void closeSearchResults();
+
+	public void clearCache();
+
+	public void clearCache(boolean closeSearchResults);	
 	
 	public static ByteCodeHunter create(
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 		Properties config
 	) {
-		return new ByteCodeHunter(
+		return new Impl(
 			pathHelper,
 			defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 			config
 		);
 	}
 	
-	@Override
-	String getNameInConfigProperties() {
-		return Configuration.Key.NAME_IN_CONFIG_PROPERTIES;
-	}
+	static class Impl extends ClassPathScannerWithCachingSupportAbst<JavaClass, SearchContext<JavaClass>, ByteCodeHunter.SearchResult> implements ByteCodeHunter {
+		private Impl(
+			PathHelper pathHelper,
+			Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
+			Properties config
+		) {
+			super(
+				pathHelper,
+				(initContext) -> SearchContext.<JavaClass>create(
+					initContext
+				),
+				(context) -> new ByteCodeHunter.SearchResult(context),
+				defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
+				config
+			);
+		}
+		
+		@Override
+		String getNameInConfigProperties() {
+			return Configuration.Key.NAME_IN_CONFIG_PROPERTIES;
+		}
+		
+		@Override
+		String getDefaultPathScannerClassLoaderNameInConfigProperties() {
+			return Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER;
+		}
+		
+		@Override
+		String getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties() {
+			return Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS;
+		}
+		
+		@Override
+		<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testClassCriteria(SearchContext<JavaClass> context, JavaClass javaClass) {
+			return context.getSearchConfig().getClassCriteria().hasNoPredicate() ?
+				context.getSearchConfig().getClassCriteria().testWithTrueResultForNullEntityOrTrueResultForNullPredicate(null) :
+				super.testClassCriteria(context, javaClass);
+		}
+		
+		@Override
+		<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext<JavaClass> context, String path, String key, JavaClass javaClass) {
+			return context.getSearchConfig().getClassCriteria().hasNoPredicate() ?
+				context.getSearchConfig().getClassCriteria().testWithTrueResultForNullEntityOrTrueResultForNullPredicate(null) :				
+				super.testClassCriteria(context, javaClass);
+		}
+		
+		@Override
+		void addToContext(SearchContext<JavaClass> context, TestContext criteriaTestContext,
+			String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
+		) {
+			context.addItemFound(basePath, fileSystemItem.getAbsolutePath(), javaClass.duplicate());		
+		}
+		
+		@Override
+		void clearItemsForPath(Map<String, JavaClass> items) {
+			BackgroundExecutor.createTask(() -> {
+				IterableObjectHelper.deepClear(items, (path, javaClass) -> javaClass.close());
+			}, Thread.MIN_PRIORITY).submit();
+		}
+		
+		@Override
+		public void close() {
+			closeResources(() -> this.cache == null, () -> {
+				super.close();
+			});
+		}
 	
-	@Override
-	String getDefaultPathScannerClassLoaderNameInConfigProperties() {
-		return Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER;
-	}
-	
-	@Override
-	String getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties() {
-		return Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS;
-	}
-	
-	@Override
-	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testClassCriteria(SearchContext<JavaClass> context, JavaClass javaClass) {
-		return context.getSearchConfig().getClassCriteria().hasNoPredicate() ?
-			context.getSearchConfig().getClassCriteria().testWithTrueResultForNullEntityOrTrueResultForNullPredicate(null) :
-			super.testClassCriteria(context, javaClass);
-	}
-	
-	@Override
-	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext<JavaClass> context, String path, String key, JavaClass javaClass) {
-		return context.getSearchConfig().getClassCriteria().hasNoPredicate() ?
-			context.getSearchConfig().getClassCriteria().testWithTrueResultForNullEntityOrTrueResultForNullPredicate(null) :				
-			super.testClassCriteria(context, javaClass);
-	}
-	
-	@Override
-	void addToContext(SearchContext<JavaClass> context, TestContext criteriaTestContext,
-		String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
-	) {
-		context.addItemFound(basePath, fileSystemItem.getAbsolutePath(), javaClass.duplicate());		
-	}
-	
-	@Override
-	void clearItemsForPath(Map<String, JavaClass> items) {
-		BackgroundExecutor.createTask(() -> {
-			IterableObjectHelper.deepClear(items, (path, javaClass) -> javaClass.close());
-		}, Thread.MIN_PRIORITY).submit();
-	}
-	
-	@Override
-	public void close() {
-		closeResources(() -> this.cache == null, () -> {
-			super.close();
-		});
 	}
 	
 	public static class SearchResult extends org.burningwave.core.classes.SearchResult<JavaClass> {
-
+		
 		public SearchResult(SearchContext<JavaClass> context) {
 			super(context);
 		}

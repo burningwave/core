@@ -61,7 +61,7 @@ import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHelper;
 import org.burningwave.core.classes.ClassPathHunter;
-import org.burningwave.core.classes.ClassPathScannerAbst;
+import org.burningwave.core.classes.ClassPathScanner;
 import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
@@ -107,7 +107,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private static Collection<ComponentContainer> instances;
-	private Map<Class<? extends Component>, Component> components;
+	private Map<String, Component> components;
 	private Supplier<java.util.Properties> propertySupplier;
 	private Properties config;
 	private boolean isUndestroyable;
@@ -175,7 +175,7 @@ public class ComponentContainer implements ComponentSupplier {
 		defaultProperties.putAll(ByteCodeHunter.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassPathHunter.Configuration.DEFAULT_VALUES);
-		defaultProperties.putAll(ClassPathScannerAbst.Configuration.DEFAULT_VALUES);
+		defaultProperties.putAll(ClassPathScanner.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassPathHelper.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(PathScannerClassLoader.Configuration.DEFAULT_VALUES);
 				
@@ -246,7 +246,7 @@ public class ComponentContainer implements ComponentSupplier {
 				if (key instanceof String) {
 					String keyAsString = (String)key;
 					if (keyAsString.equals(PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER)) {
-						PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class);
+						PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class.getName());
 						if (pathScannerClassLoader != null) {
 							ClassLoaders.setAsParent(pathScannerClassLoader, resolveProperty(
 								this.config,
@@ -254,7 +254,7 @@ public class ComponentContainer implements ComponentSupplier {
 							));
 						}
 					} else if (keyAsString.equals(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)) {
-						PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class);
+						PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class.getName());
 						if (pathScannerClassLoader != null) {
 							Fields.setDirect(
 								pathScannerClassLoader,
@@ -304,18 +304,18 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	@Override
-	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
-		T component = (T)components.get(componentType);
+	public <T extends Component> T getOrCreate(String name, Supplier<?> componentSupplier) {
+		T component = (T)components.get(name);
 		if (component == null) {
 			component = Synchronizer.execute(getMutexForComponentsId(), () -> {
-				T componentTemp = (T)components.get(componentType);
+				T componentTemp = (T)components.get(name);
 				if (componentTemp == null) {
 					QueuedTasksExecutor.Task afterInitTask = this.afterInitTask;
 					if (afterInitTask != null) {
 						this.afterInitTask = null;
 						afterInitTask.submit();
 					}
-					components.put(componentType, componentTemp = componentSupplier.get());
+					components.put(name, componentTemp = (T)componentSupplier.get());
 				}
 				return componentTemp;
 			});
@@ -325,7 +325,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public PathScannerClassLoader getPathScannerClassLoader() {
-		return getOrCreate(PathScannerClassLoader.class, () -> {
+		return getOrCreate(PathScannerClassLoader.class.getName(), () -> {
 			PathScannerClassLoader classLoader = new ComponentContainer.PathScannerClassLoader(
 				resolveProperty(
 					this.config,
@@ -338,7 +338,7 @@ public class ComponentContainer implements ComponentSupplier {
 				),
 				() -> {
 					Synchronizer.execute(getMutexForComponentsId(), () -> {
-						PathScannerClassLoader cL = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
+						PathScannerClassLoader cL = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class.getName());
 						if (cL != null) {
 							cL.unregister(this, true);
 						}
@@ -352,7 +352,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public ClassFactory getClassFactory() {
-		return getOrCreate(ClassFactory.class, () -> 
+		return getOrCreate(ClassFactory.class.getName(), () -> 
 			ClassFactory.create(
 				getByteCodeHunter(),
 				() -> getClassPathHunter(),
@@ -369,7 +369,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public CodeExecutor getCodeExecutor() {
-		return getOrCreate(CodeExecutor.class, () -> 
+		return getOrCreate(CodeExecutor.class.getName(), () -> 
 			CodeExecutor.create(
 				() -> getClassFactory(),
 				getPathHelper(),
@@ -380,7 +380,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public JavaMemoryCompiler getJavaMemoryCompiler() {
-		return getOrCreate(JavaMemoryCompiler.class, () ->
+		return getOrCreate(JavaMemoryCompiler.class.getName(), () ->
 			JavaMemoryCompiler.create(
 				getPathHelper(),
 				getClassPathHelper()
@@ -390,7 +390,7 @@ public class ComponentContainer implements ComponentSupplier {
 
 	@Override
 	public ClassHunter getClassHunter() {
-		return getOrCreate(ClassHunter.class, () -> {
+		return getOrCreate(ClassHunter.class.getName(), () -> {
 			return ClassHunter.create(
 				getPathHelper(),
 				(Supplier<?>)() -> resolveProperty(
@@ -404,7 +404,7 @@ public class ComponentContainer implements ComponentSupplier {
 
 	@Override
 	public ClassPathHelper getClassPathHelper() {
-		return getOrCreate(ClassPathHelper.class, () ->
+		return getOrCreate(ClassPathHelper.class.getName(), () ->
 			ClassPathHelper.create(
 				getClassPathHunter(),
 				config
@@ -414,7 +414,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public ClassPathHunter getClassPathHunter() {
-		return getOrCreate(ClassPathHunter.class, () -> 
+		return getOrCreate(ClassPathHunter.class.getName(), () -> 
 			ClassPathHunter.create(
 				getPathHelper(),
 				(Supplier<?>)() -> resolveProperty(
@@ -428,7 +428,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public ByteCodeHunter getByteCodeHunter() {
-		return getOrCreate(ByteCodeHunter.class, () -> 
+		return getOrCreate(ByteCodeHunter.class.getName(), () -> 
 			ByteCodeHunter.create(
 				getPathHelper(),
 				(Supplier<?>)() -> resolveProperty(
@@ -442,7 +442,7 @@ public class ComponentContainer implements ComponentSupplier {
 
 	@Override
 	public FunctionalInterfaceFactory getFunctionalInterfaceFactory() {
-		return getOrCreate(FunctionalInterfaceFactory.class, () -> 
+		return getOrCreate(FunctionalInterfaceFactory.class.getName(), () -> 
 			FunctionalInterfaceFactory.create(
 				getClassFactory()
 			)
@@ -451,7 +451,7 @@ public class ComponentContainer implements ComponentSupplier {
 
 	@Override
 	public PathHelper getPathHelper() {
-		return getOrCreate(PathHelper.class, () ->
+		return getOrCreate(PathHelper.class.getName(), () ->
 			PathHelper.create(
 				config
 			)
@@ -485,7 +485,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public ComponentContainer clear() {
-		Map<Class<? extends Component>, Component> components = this.components;
+		Map<String, Component> components = this.components;
 		Synchronizer.execute(getMutexForComponentsId(), () -> { 
 			this.components = new ConcurrentHashMap<>();
 		});
@@ -571,7 +571,7 @@ public class ComponentContainer implements ComponentSupplier {
 	@Override
 	public void clearCache(boolean closeHuntersResults, boolean closeClassRetrievers) {
 		clearHuntersCache(closeHuntersResults);
-		ClassFactory classFactory = (ClassFactory)components.get(ClassFactory.class);
+		ClassFactory classFactory = (ClassFactory)components.get(ClassFactory.class.getName());
 		if (classFactory != null) {
 			classFactory.reset(closeClassRetrievers);
 		}
@@ -580,15 +580,15 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public void clearHuntersCache(boolean closeHuntersResults) {
-		ByteCodeHunter byteCodeHunter = (ByteCodeHunter)components.get(ByteCodeHunter.class);
+		ByteCodeHunter byteCodeHunter = (ByteCodeHunter)components.get(ByteCodeHunter.class.getName());
 		if (byteCodeHunter != null) {
 			byteCodeHunter.clearCache(closeHuntersResults);
 		}
-		ClassHunter classHunter = (ClassHunter)components.get(ClassHunter.class);
+		ClassHunter classHunter = (ClassHunter)components.get(ClassHunter.Impl.class.getName());
 		if (classHunter != null) {
 			classHunter.clearCache(closeHuntersResults);
 		}
-		ClassPathHunter classPathHunter = (ClassPathHunter)components.get(ClassPathHunter.class);
+		ClassPathHunter classPathHunter = (ClassPathHunter)components.get(ClassPathHunter.class.getName());
 		if (classPathHunter != null) {
 			classPathHunter.clearCache(closeHuntersResults);
 		}

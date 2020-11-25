@@ -5,8 +5,8 @@ import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.CacheableSearchConfig;
+import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassHunter.SearchResult;
 import org.burningwave.core.classes.SearchConfig;

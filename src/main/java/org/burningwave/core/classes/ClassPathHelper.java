@@ -73,7 +73,7 @@ public static class Configuration {
 			
 			defaultValues.put(
 				Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-				"${" + ClassPathScannerAbst.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
+				"${" + ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
 			);
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
