@@ -47,6 +47,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -112,7 +113,7 @@ public interface JavaMemoryCompiler {
 	
 	public 	ProducerTask<Compilation.Result> compile(Collection<String> sources, boolean storeCompiledClasses);
 	
-	public ProducerTask<Compilation.Result> compile(CompilationConfig config);
+	public ProducerTask<Compilation.Result> compile(Compilation.Config config);
 
 	static class DiagnosticListener implements javax.tools.DiagnosticListener<JavaFileObject>, Serializable, Component {
 		
@@ -314,6 +315,160 @@ public interface JavaMemoryCompiler {
 	}
 	
 	public static class Compilation {
+		
+		public static class Config {
+			private Collection<String> sources;
+			
+			private Collection<String> classPaths;
+			private Collection<String> additionalClassPaths;
+			
+			private Collection<String> classRepositories;
+			private Collection<String> additionalClassRepositories;
+			
+			private String compiledClassesStorage;
+			
+			private Config() {
+				this.sources = new HashSet<>();
+				compiledClassesStorage = "/common";
+			}
+			
+			@SafeVarargs
+			public final static Config withSources(Collection<String>... sourceCollections) {
+				Config compileConfig = new Config();
+				for (Collection<String> sourceCollection : sourceCollections) {
+					compileConfig.sources.addAll(sourceCollection);
+				}
+				return compileConfig;
+			}
+			
+			@SafeVarargs
+			public final static Config withSource(String... sources) {
+				return withSources(Arrays.asList(sources));
+			}
+			
+			public Config storeCompiledClasses(boolean flag) {
+				if (flag) {
+					compiledClassesStorage = "common";
+				} else {
+					compiledClassesStorage = null;
+				}
+				return this;
+			}
+			
+			public Config storeCompiledClassesTo(String folderName) {
+				compiledClassesStorage = folderName;
+				return this;
+			}
+			
+			public Config storeCompiledClassesToNewFolder() {
+				compiledClassesStorage = UUID.randomUUID().toString();
+				return this;
+			}
+
+
+		////////////////////	
+			
+			@SafeVarargs
+			public final Config setClassPaths(Collection<String>... classPathCollections) {
+				if (classPaths == null) {
+					classPaths = new HashSet<>();
+				}
+				for (Collection<String> classPathCollection : classPathCollections) {
+					classPaths.addAll(classPathCollection);
+				}
+				return this;
+			}
+			
+			@SafeVarargs
+			public final Config setClassPaths(String... classPaths) {
+				return setClassPaths(Arrays.asList(classPaths));
+			}
+
+		////////////////////	
+			
+			@SafeVarargs
+			public final Config addClassPaths(Collection<String>... classPathCollections) {
+				if (additionalClassPaths == null) {
+					additionalClassPaths = new HashSet<>();
+				}
+				for (Collection<String> classPathCollection : classPathCollections) {
+					additionalClassPaths.addAll(classPathCollection);
+				}
+				return this;
+			}
+			
+			@SafeVarargs
+			public final Config addClassPaths(String... classPaths) {
+				return addClassPaths(Arrays.asList(classPaths));
+			}
+
+		////////////////////	
+			
+			@SafeVarargs
+			public final Config setClassRepositories(Collection<String>... classPathCollections) {
+				if (classRepositories == null) {
+					classRepositories = new HashSet<>();
+				}
+				for (Collection<String> classPathCollection : classPathCollections) {
+					classRepositories.addAll(classPathCollection);
+				}
+				return this;
+			}
+			
+			@SafeVarargs
+			public final Config setClassRepository(String... classPaths) {
+				return setClassRepositories(Arrays.asList(classPaths));
+			}
+
+		////////////////////	
+			
+			@SafeVarargs
+			public final Config addClassRepositories(Collection<String>... classPathCollections) {
+				if (additionalClassRepositories == null) {
+					additionalClassRepositories = new HashSet<>();
+				}
+				for (Collection<String> classPathCollection : classPathCollections) {
+					additionalClassRepositories.addAll(classPathCollection);
+				}
+				return this;
+			}
+			
+			@SafeVarargs
+			public final Config addClassRepository(String... classPaths) {
+				return addClassRepositories(Arrays.asList(classPaths));
+			}
+
+		////////////////////	
+			
+			Collection<String> getSources() {
+				return sources;
+			}
+
+			Collection<String> getClassPaths() {
+				return classPaths;
+			}
+
+			Collection<String> getAdditionalClassPaths() {
+				return additionalClassPaths;
+			}
+
+			Collection<String> getClassRepositories() {
+				return classRepositories;
+			}
+
+			Collection<String> getAdditionalClassRepositories() {
+				return additionalClassRepositories;
+			}
+			
+			boolean isStoringCompiledClassesEnabled() {
+				return compiledClassesStorage != null;
+			}
+			
+			String getCompiledClassesStorage() {
+				return compiledClassesStorage;
+			}
+		}
+		
 		static class Context implements Closeable, ManagedLogger {
 			
 			Collection<String> classPaths;

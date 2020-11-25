@@ -154,8 +154,8 @@ public interface ClassFactory {
 	public static class ClassRetriever implements Closeable, ManagedLogger {
 		ClassLoader classLoader;
 		ClassFactory classFactory;
-		Supplier<CompilationConfig> compilationConfigSupplier;
-		CompilationConfig compilationConfig;
+		Supplier<Compilation.Config> compilationConfigSupplier;
+		Compilation.Config compilationConfig;
 		AtomicReference<Map<String, ByteBuffer>> byteCodesWrapper;
 		Collection<String> uSGClassNames;
 		boolean compilationClassPathHasBeenAdded;
@@ -171,7 +171,7 @@ public interface ClassFactory {
 		ClassRetriever (
 			ClassFactory classFactory,
 			Function<ClassRetriever, ClassLoader> classLoaderSupplier,
-			Supplier<CompilationConfig> compileConfigSupplier,
+			Supplier<Compilation.Config> compileConfigSupplier,
 			boolean useOneShotJavaCompiler,
 			Collection<String> additionalClassRepositoriesForClassLoader,
 			Collection<String> uSGClassNames
@@ -317,7 +317,7 @@ public interface ClassFactory {
 			return compilationResult;
 		}
 
-		private CompilationConfig getCompilationConfig() {
+		private Compilation.Config getCompilationConfig() {
 			if (compilationConfig == null) {
 				synchronized (compilationConfigSupplier) {
 					if (compilationConfig == null) {

@@ -1,3 +1,31 @@
+/*
+ * This file is part of Burningwave Core.
+ *
+ * Author: Roberto Gentili
+ *
+ * Hosted at: https://github.com/burningwave/core
+ *
+ * --
+ *
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2019 Roberto Gentili
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without
+ * limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial
+ * portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+ * EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+ * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+ * OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
@@ -49,7 +77,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component{
 	@Override
 	public 	ProducerTask<Compilation.Result> compile(Collection<String> sources, boolean storeCompiledClasses) {
 		return compile(
-			CompilationConfig.withSources(sources).setClassPaths(
+			Compilation.Config.withSources(sources).setClassPaths(
 				pathHelper.getAllMainClassPaths()
 			).storeCompiledClasses(
 				storeCompiledClasses
@@ -60,7 +88,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component{
 	
 	
 	@Override
-	public ProducerTask<Compilation.Result> compile(CompilationConfig config) {
+	public ProducerTask<Compilation.Result> compile(Compilation.Config config) {
 		return compile(
 			config.getSources(),
 			getClassPathsFrom(config),
@@ -69,7 +97,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component{
 		);
 	}
 
-	Collection<String> getClassRepositoriesFrom(CompilationConfig config) {
+	Collection<String> getClassRepositoriesFrom(Compilation.Config config) {
 		return IterableObjectHelper.merge(
 			config::getClassRepositories,
 			config::getAdditionalClassRepositories,
@@ -82,7 +110,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component{
 		);
 	}
 
-	Collection<String> getClassPathsFrom(CompilationConfig config) {
+	Collection<String> getClassPathsFrom(Compilation.Config config) {
 		return IterableObjectHelper.merge(
 			config::getClassPaths,
 			config::getAdditionalClassPaths,
