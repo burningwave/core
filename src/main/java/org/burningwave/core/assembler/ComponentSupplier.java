@@ -50,7 +50,7 @@ public interface ComponentSupplier extends Cleanable, Closeable {
 		return ComponentContainer.getInstance();
 	}
 
-	public<T extends Component> T getOrCreate(String name, Supplier<?> componentSupplier);
+	public<I, T extends Component> T getOrCreate(Class<I> cls, Supplier<I> componentSupplier);
 	
 	public ByteCodeHunter getByteCodeHunter();
 
