@@ -54,7 +54,7 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.IterableZipContainer;
 
 @SuppressWarnings("unchecked")
-public class Cache implements Component {
+public class Cache implements ManagedLogger {
 	public final PathForResources<ByteBuffer> pathForContents;
 	public final PathForResources<FileSystemItem> pathForFileSystemItems;
 	public final PathForResources<IterableZipContainer> pathForIterableZipContainers;
@@ -411,14 +411,5 @@ public class Cache implements Component {
 				((PathForResources<?>)cache).clear(destroyItems);
 			}
 		}
-	}
-	
-	@Override
-	public void close() {
-		close(false);
-	}
-	
-	public void close(boolean destroyItem) {
-		clear(destroyItem);
 	}
 }
