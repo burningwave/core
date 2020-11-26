@@ -28,7 +28,7 @@
  */
 package org.burningwave.core;
 
-public class LoggingLevel {
+class LoggingLevel {
 	public final static int ALL_LEVEL_ENABLED = 0b11111;
 	public final static int ALL_LEVEL_DISABLED = 0b00000;
 	public final static int TRACE_ENABLED = 0b00001;
@@ -50,19 +50,19 @@ public class LoggingLevel {
 	
 	Integer flags;
 	
-	public LoggingLevel(int flags){
+	LoggingLevel(int flags){
 		this.flags = flags;
 	}
 	
-	public boolean matchPartialy(Integer flags) {
+	boolean matchPartialy(Integer flags) {
 		return (this.flags & flags) != 0;
 	}
 	
-	public boolean partialyMatch(LoggingLevel level) {
+	boolean partialyMatch(LoggingLevel level) {
 		return matchPartialy(level.flags);
 	}
 	
-	public static LoggingLevel fromLabel(String label) {
+	static LoggingLevel fromLabel(String label) {
 		if (label.toLowerCase().contains(Label.TRACE.name().toLowerCase())) {
 			return TRACE;
 		} else if (label.toLowerCase().contains(Label.DEBUG.name().toLowerCase())) {
@@ -79,21 +79,21 @@ public class LoggingLevel {
 		return null;
 	}
 	
-	public static class Mutable extends LoggingLevel{
+	static class Mutable extends LoggingLevel{
 
-		public Mutable(int flags) {
+		Mutable(int flags) {
 			super(flags);
 		}
 		
-		public void add(Integer flags) {
+		void add(Integer flags) {
 			this.flags |= flags;
 		}
 		
-		public void remove(Integer flags) {
+		void remove(Integer flags) {
 			this.flags &= ALL_LEVEL_ENABLED ^ flags;
 		}
 		
-		public void set(Integer flags) {
+		void set(Integer flags) {
 			this.flags = flags;
 		}
 	}

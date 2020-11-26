@@ -45,12 +45,11 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.zip.ZipException;
 
-import org.burningwave.core.Component;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.ZipInputStream.Entry.Attached;
 
 @SuppressWarnings("unchecked")
-class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZipContainer, Component {
+class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZipContainer {
 	String absolutePath;
 	String conventionedAbsolutePath;
 	IterableZipContainer parent;
@@ -296,17 +295,18 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			
 			public void unzipToFolder(File folder) {
 				File destinationFilePath = new File(folder.getAbsolutePath(), this.getName());
+				int defaultBufferSize = ((StreamsImpl)Streams).defaultBufferSize;
 				destinationFilePath.getParentFile().mkdirs();
 				if (!this.isDirectory()) {
 					Executor.run(() -> {
 						try (BufferedInputStream bis = new BufferedInputStream(this.toInputStream())) {
 							int byteTransferred = 0;
-							byte buffer[] = new byte[Streams.defaultBufferSize];
+							byte buffer[] = new byte[defaultBufferSize];
 							try (
 								FileOutputStream fos = FileOutputStream.create(destinationFilePath);
-								BufferedOutputStream bos = new BufferedOutputStream(fos, Streams.defaultBufferSize)
+								BufferedOutputStream bos = new BufferedOutputStream(fos, defaultBufferSize)
 							) {
-								while ((byteTransferred = bis.read(buffer, 0, Streams.defaultBufferSize)) != -1) {
+								while ((byteTransferred = bis.read(buffer, 0, defaultBufferSize)) != -1) {
 									bos.write(buffer, 0, byteTransferred);
 								}
 								bos.flush();

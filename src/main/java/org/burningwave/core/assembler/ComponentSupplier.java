@@ -30,6 +30,8 @@ package org.burningwave.core.assembler;
 
 import java.util.function.Supplier;
 
+import org.burningwave.core.Cleanable;
+import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ByteCodeHunter;
 import org.burningwave.core.classes.ClassFactory;
@@ -42,13 +44,13 @@ import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.io.PathHelper;
 
-public interface ComponentSupplier extends Component {
+public interface ComponentSupplier extends Cleanable, Closeable {
 	
 	public static ComponentSupplier getInstance() {
 		return ComponentContainer.getInstance();
 	}
 
-	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier);
+	public<I, T extends Component> T getOrCreate(Class<I> cls, Supplier<I> componentSupplier);
 	
 	public ByteCodeHunter getByteCodeHunter();
 

@@ -56,12 +56,13 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Executable;
+import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.classes.ByteCodeHunter;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHelper;
 import org.burningwave.core.classes.ClassPathHunter;
-import org.burningwave.core.classes.ClassPathScannerAbst;
+import org.burningwave.core.classes.ClassPathScanner;
 import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
@@ -76,7 +77,7 @@ import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings({"unchecked", "resource"})
-public class ComponentContainer implements ComponentSupplier {
+public class ComponentContainer implements ComponentSupplier, Properties.Listener, ManagedLogger {
 	
 	public static class Configuration {
 		
@@ -107,7 +108,7 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	private static Collection<ComponentContainer> instances;
-	private Map<Class<? extends Component>, Component> components;
+	private Map<Class<?>, Component> components;
 	private Supplier<java.util.Properties> propertySupplier;
 	private Properties config;
 	private boolean isUndestroyable;
@@ -175,7 +176,7 @@ public class ComponentContainer implements ComponentSupplier {
 		defaultProperties.putAll(ByteCodeHunter.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassHunter.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassPathHunter.Configuration.DEFAULT_VALUES);
-		defaultProperties.putAll(ClassPathScannerAbst.Configuration.DEFAULT_VALUES);
+		defaultProperties.putAll(ClassPathScanner.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassPathHelper.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(PathScannerClassLoader.Configuration.DEFAULT_VALUES);
 				
@@ -304,18 +305,18 @@ public class ComponentContainer implements ComponentSupplier {
 	}
 	
 	@Override
-	public<T extends Component> T getOrCreate(Class<T> componentType, Supplier<T> componentSupplier) {
-		T component = (T)components.get(componentType);
+	public <I, T extends Component> T getOrCreate(Class<I> cls, Supplier<I> componentSupplier) {
+		T component = (T)components.get(cls);
 		if (component == null) {
 			component = Synchronizer.execute(getMutexForComponentsId(), () -> {
-				T componentTemp = (T)components.get(componentType);
+				T componentTemp = (T)components.get(cls);
 				if (componentTemp == null) {
 					QueuedTasksExecutor.Task afterInitTask = this.afterInitTask;
 					if (afterInitTask != null) {
 						this.afterInitTask = null;
 						afterInitTask.submit();
 					}
-					components.put(componentType, componentTemp = componentSupplier.get());
+					components.put(cls, componentTemp = (T)componentSupplier.get());
 				}
 				return componentTemp;
 			});
@@ -485,7 +486,7 @@ public class ComponentContainer implements ComponentSupplier {
 	
 	@Override
 	public ComponentContainer clear() {
-		Map<Class<? extends Component>, Component> components = this.components;
+		Map<Class<?>, Component> components = this.components;
 		Synchronizer.execute(getMutexForComponentsId(), () -> { 
 			this.components = new ConcurrentHashMap<>();
 		});

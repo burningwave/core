@@ -45,7 +45,7 @@ public interface SourceGenerator extends ManagedLogger {
 		return make();
 	}
 	
-	public static abstract class Abst implements SourceGenerator {
+	static abstract class Abst implements SourceGenerator {
 		static final String EMPTY_SPACE = " ";
 		static final String COMMA = ",";
 		static final String SEMICOLON = ";";

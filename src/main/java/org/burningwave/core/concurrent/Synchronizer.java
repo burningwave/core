@@ -46,8 +46,8 @@ import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
-@SuppressWarnings("resource")
-public class Synchronizer implements AutoCloseable, ManagedLogger {
+
+public class Synchronizer implements Closeable, ManagedLogger {
 	Map<String, Mutex> mutexes;
 	String name;
 	ThreadsMonitorer allThreadsMonitorer;

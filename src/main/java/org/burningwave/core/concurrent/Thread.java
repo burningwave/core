@@ -44,7 +44,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-import org.burningwave.core.Component;
+import org.burningwave.core.Closeable;
 import org.burningwave.core.ManagedLogger;
 
 public class Thread extends java.lang.Thread implements ManagedLogger {
@@ -500,7 +500,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 	}
 	
-	public static class Holder implements Component {
+	public static class Holder implements Closeable, ManagedLogger {
 		private Supplier threadSupplier;
 		private Map<String, Thread> threads;
 		

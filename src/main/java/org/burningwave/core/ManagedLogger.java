@@ -44,7 +44,6 @@ import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.PathScannerClassLoader;
-import org.burningwave.core.classes.SearchContext;
 import org.burningwave.core.iterable.Properties.Event;
 import org.burningwave.core.jvm.LowLevelObjectsHandler;
 
@@ -130,13 +129,13 @@ public interface ManagedLogger {
 				defaultValues.put(Key.TYPE, "autodetect");
 				defaultValues.put(Key.ENABLED_FLAG, String.valueOf(true));
 				defaultValues.put(Key.WARN_LOGGING_DISABLED_FOR,
-					ClassHunter.SearchContext.class.getName() + ";" +
-					ClassPathHunter.SearchContext.class.getName() + ";" +
+					ClassHunter.class.getName() + "Impl$SearchContext;" +
+					ClassPathHunter.class.getName() + "Impl$SearchContext;" +
 					ComponentContainer.PathScannerClassLoader.class.getName() + ";" +
 					LowLevelObjectsHandler.class.getName() + ";" +
 					MemoryClassLoader.class.getName() + ";" +
 					PathScannerClassLoader.class.getName() + ";" +
-					SearchContext.class.getName() + ";"
+					ClassHunter.class.getPackage().getName() + ".SearchContext;"
 				);				
 				
 				DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);

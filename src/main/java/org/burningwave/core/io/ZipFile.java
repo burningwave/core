@@ -48,8 +48,10 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 
+import org.burningwave.core.Memorizer;
+
 @SuppressWarnings("unchecked")
-class ZipFile implements IterableZipContainer {
+class ZipFile implements IterableZipContainer, Memorizer {
 	private final static String classId;
 	String absolutePath;
 	String conventionedAbsolutePath;

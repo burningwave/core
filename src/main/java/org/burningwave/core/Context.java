@@ -31,7 +31,8 @@ package org.burningwave.core;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Context implements Component {
+@SuppressWarnings("unchecked")
+public class Context implements Closeable {
 	protected Map<Enum<?>, Object> context;
 
 	protected Context() {
@@ -51,7 +52,6 @@ public class Context implements Component {
 		return this;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public <T> T get(Enum<?> name) {
 		return ((T)context.get(name));
 	}

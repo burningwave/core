@@ -5,7 +5,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Constructo
 import java.util.Arrays;
 
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.service.ExtendedService;
@@ -23,7 +22,7 @@ public class ConstructorsTest extends BaseTest {
 	public void newInstanceOfTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> Constructors.newInstanceDirectOf(
-				FunctionalInterfaceFactory.class, 
+				Class.forName("org.burningwave.core.classes.FunctionalInterfaceFactoryImpl"), 
 				componentSupplier.getClassFactory()
 			)
 		);
