@@ -42,9 +42,11 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
+import org.burningwave.core.ManagedLogger;
 
-public interface IterableZipContainer extends Component {
+public interface IterableZipContainer extends Closeable, ManagedLogger {
 	
 	public final static String PATH_SUFFIX = "///";
 	
