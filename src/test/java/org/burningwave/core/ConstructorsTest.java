@@ -17,17 +17,17 @@ public class ConstructorsTest extends BaseTest {
 	public void newInstanceOfTestOne() {
 		testNotNull(() -> Constructors.newInstanceDirectOf(ExtendedService.class));
 	}
-	/*
+	
 	@Test
 	public void newInstanceOfTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> Constructors.newInstanceDirectOf(
-				FunctionalInterfaceFactoryImpl.class, 
+				Class.forName("org.burningwave.core.classes.FunctionalInterfaceFactoryImpl"), 
 				componentSupplier.getClassFactory()
 			)
 		);
 	}
-	*/
+	
 	@Test
 	public void convertToMethodHandleTestOne() {
 		testNotNull(() ->
