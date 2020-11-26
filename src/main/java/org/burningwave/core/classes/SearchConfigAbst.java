@@ -126,13 +126,23 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		return (S)this;
 	}
 	
-	public S excludePathsThatMatch(String regex) {
-		if (scanFileCriteriaModifier == null) {
-			scanFileCriteriaModifier = FileSystemItem.Criteria.create().excludePathsThatMatch(regex);
-		} else {
-			scanFileCriteriaModifier.and().excludePathsThatMatch(regex);
+	@SafeVarargs
+	public final S excludePathsThatMatch(Collection<String>... pathRegExCollections) {
+		for(Collection<String> pathRegExCollection : pathRegExCollections) {
+			for(String pathRegEx : pathRegExCollection) {
+				if (scanFileCriteriaModifier == null) {
+					scanFileCriteriaModifier = FileSystemItem.Criteria.create().excludePathsThatMatch(pathRegEx);
+				} else {
+					scanFileCriteriaModifier.and().excludePathsThatMatch(pathRegEx);
+				}
+			}
 		}
 		return (S)this;
+	}
+	
+	@SafeVarargs
+	public final S excludePathsThatMatch(String... regex) {
+		return excludePathsThatMatch(Arrays.asList(regex));
 	}
 	
 	public S notRecursiveOnPath(String path, boolean isAbsolute) {
