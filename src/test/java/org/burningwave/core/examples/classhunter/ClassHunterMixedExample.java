@@ -7,6 +7,7 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
+import org.burningwave.core.classes.ClassHunter.SearchResult;
 import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.MethodCriteria;
@@ -35,7 +36,7 @@ public class ClassHunterMixedExample {
                 return cls.getPackage().getName().matches(packageNameRegex);
             })
         );
-        ClassHunter.SearchResult searchResult = classHunter.loadInCache(searchConfig).find();
+        SearchResult searchResult = classHunter.loadInCache(searchConfig).find();
         
         return searchResult.getClasses();
     }
@@ -74,7 +75,7 @@ public class ClassHunterMixedExample {
             )
         );
 
-        ClassHunter.SearchResult searchResult = classHunter.loadInCache(searchConfig).find();
+        SearchResult searchResult = classHunter.loadInCache(searchConfig).find();
 
         //If you need all annotated fields, methods and constructor you can iterate the collection below
         searchResult.getMembersFlatMap().values();

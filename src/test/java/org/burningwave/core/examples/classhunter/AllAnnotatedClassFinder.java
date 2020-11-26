@@ -7,6 +7,7 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
+import org.burningwave.core.classes.ClassHunter.SearchResult;
 import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.MethodCriteria;
@@ -50,7 +51,7 @@ public class AllAnnotatedClassFinder {
             )
         );
 
-        try (ClassHunter.SearchResult searchResult = classHunter.loadInCache(searchConfig).find()) {
+        try (SearchResult searchResult = classHunter.loadInCache(searchConfig).find()) {
 	
 	    //If you need all annotaded methods unconment this
 	    //searchResult.getMembersFlatMap().values();
