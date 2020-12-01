@@ -53,15 +53,6 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 
 <br/>
 
-
-```xml
-<dependency>
-    <groupId>org.burningwave</groupId>
-    <artifactId>core</artifactId>
-    <version>8.9.0</version>
-</dependency>
-```
-
 <br/>
 
 # Generating classes at runtime and invoking their methods with and without the use of reflection
