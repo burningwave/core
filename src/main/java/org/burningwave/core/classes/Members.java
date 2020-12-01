@@ -45,10 +45,12 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.TreeSet;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -363,10 +365,36 @@ public class Members implements ManagedLogger {
 			
 
 			Collection<E> searchForExactMatch(Collection<E> members, Class<?>... arguments) {
-				Collection<E> membersThatMatch = new LinkedHashSet<>();
-				Collection<E> membersWithVarargsThatMatch = new LinkedHashSet<>();
-				for (E executable : members) {
-					List<Class<?>> argumentsClassesAsList = Arrays.asList(arguments);
+				List<Class<?>> argumentsClassesAsList = Arrays.asList(arguments);
+				//Collection<E> membersThatMatch = new LinkedHashSet<>();
+				Collection<E> membersThatMatch = new TreeSet<E>(new Comparator<E>() {
+					@Override
+					public int compare(E executableOne, E executableTwo) {
+						Parameter[] executableOneParameters = executableOne.getParameters();
+						Parameter[] executableTwoParameters = executableTwo.getParameters();
+						if (executableOneParameters.length == argumentsClassesAsList.size()) {
+							if (executableTwoParameters.length == argumentsClassesAsList.size()) {
+								if (executableOneParameters.length > 0 && executableOneParameters[executableOneParameters.length - 1].isVarArgs()) {
+									if (executableTwoParameters.length > 0 && executableTwoParameters[executableTwoParameters.length - 1].isVarArgs()) {
+										return 0;
+									}
+									return 1;
+								} else if (executableTwoParameters.length > 0 && executableTwoParameters[executableTwoParameters.length - 1].isVarArgs()) {
+									return -1;
+								} else {
+									return 0;
+								}
+							}
+							return -1;
+						} else if (executableTwoParameters.length == argumentsClassesAsList.size()) {
+							return 1;
+						}						
+						return 0;
+					}
+					
+				});
+			
+				for (E executable : members) {					
 					Class<?>[] parameterTypes = retrieveParameterTypes(executable, argumentsClassesAsList);
 					boolean exactMatch = true;
 					for (int i = 0; i < parameterTypes.length; i++) {
@@ -377,15 +405,9 @@ public class Members implements ManagedLogger {
 						}
 					}
 					if (exactMatch) {
-						Parameter[] parameters = executable.getParameters();
-						if (parameters.length > 0 && parameters[parameters.length - 1].isVarArgs()) {
-							membersWithVarargsThatMatch.add(executable);
-						} else {
-							membersThatMatch.add(executable);
-						}
+						membersThatMatch.add(executable);
 					}
 				}
-				membersThatMatch.addAll(membersWithVarargsThatMatch);
 				return membersThatMatch;
 			}
 			
