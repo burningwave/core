@@ -348,7 +348,7 @@ public class Members implements ManagedLogger {
 							memberParameterTypes[j] = varArgsType;
 						}
 					} else if (memberParameter.length - 1 <= argumentsClassesAsList.size()) {
-						memberParameterTypes = new Class<?>[Math.max(argumentsClassesAsList.size(), memberParameter.length)];
+						memberParameterTypes = new Class<?>[argumentsClassesAsList.size()];
 						for (int j = 0; j < memberParameterTypes.length; j++) {
 							if (j < (memberParameter.length - 1)) {
 								memberParameterTypes[j] = memberParameter[j].getType();
@@ -364,6 +364,7 @@ public class Members implements ManagedLogger {
 
 			Collection<E> searchForExactMatch(Collection<E> members, Class<?>... arguments) {
 				Collection<E> membersThatMatch = new LinkedHashSet<>();
+				Collection<E> membersWithVarargsThatMatch = new LinkedHashSet<>();
 				for (E executable : members) {
 					List<Class<?>> argumentsClassesAsList = Arrays.asList(arguments);
 					Class<?>[] parameterTypes = retrieveParameterTypes(executable, argumentsClassesAsList);
@@ -376,9 +377,15 @@ public class Members implements ManagedLogger {
 						}
 					}
 					if (exactMatch) {
-						membersThatMatch.add(executable);
+						Parameter[] parameters = executable.getParameters();
+						if (parameters.length > 0 && parameters[parameters.length - 1].isVarArgs()) {
+							membersWithVarargsThatMatch.add(executable);
+						} else {
+							membersThatMatch.add(executable);
+						}
 					}
 				}
+				membersThatMatch.addAll(membersWithVarargsThatMatch);
 				return membersThatMatch;
 			}
 			
