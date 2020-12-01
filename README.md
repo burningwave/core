@@ -47,11 +47,13 @@ And now we will see:
 # Including Burningwave Core in your project 
 To include Burningwave Core library in your projects simply use with **Apache Maven**:
 
-<br/>
-
-<script src="https://gist.github.com/burningwave/b708b6ece7e47eb79817b8fcb1d76b5b.js"></script>
-
-<br/>
+```xml
+<dependency>
+    <groupId>org.burningwave</groupId>
+    <artifactId>core</artifactId>
+    <version>8.9.0</version>
+</dependency>
+```
 
 <br/>
 
