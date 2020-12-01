@@ -1407,6 +1407,16 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 	</ul>
 </details>
 <details open>
+	<summary><b>FunctionalInterfaceFactory</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/How-to-bind-methods-or-constructors-to-functional-interfaces">
+			<b>USE CASE</b>: How to bind methods or constructors to functional interfaces
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
 	<summary><b>Methods</b></summary>
 	<ul>
 		<li>
