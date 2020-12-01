@@ -348,7 +348,7 @@ public class Members implements ManagedLogger {
 							memberParameterTypes[j] = varArgsType;
 						}
 					} else if (memberParameter.length - 1 <= argumentsClassesAsList.size()) {
-						memberParameterTypes = new Class<?>[argumentsClassesAsList.size()];
+						memberParameterTypes = new Class<?>[Math.max(argumentsClassesAsList.size(), memberParameter.length)];
 						for (int j = 0; j < memberParameterTypes.length; j++) {
 							if (j < (memberParameter.length - 1)) {
 								memberParameterTypes[j] = memberParameter[j].getType();
