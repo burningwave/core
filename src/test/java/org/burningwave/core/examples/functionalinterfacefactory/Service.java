@@ -123,4 +123,44 @@ public class Service implements ManagedLogger {
         logInfo("\nNo parameter void method:\n\tname: {}", this.name);
     }
     
+    private boolean resetWithBooleanReturn(String id, String name, String... items) {
+        this.id = id;
+        this.name = name;
+        this.items = items;
+        logInfo("\nMultiparameter method with boolean return:\n\tid: {}\n\tname: {} \n\titems: {}", this.id, this.name, String.join(", ", this.items));
+        return true;
+    }
+    
+    private boolean resetWithBooleanReturn(String name, String... items) {
+        this.id = UUID.randomUUID().toString();
+        this.name = name;
+        this.items = items;
+        logInfo("\nMultiparameter method with boolean return:\n\tid: {}\n\tname: {} \n\titems: {}", this.id, this.name, String.join(", ", this.items));
+        return true;
+    }
+    
+    private boolean resetWithBooleanReturn(String... name) {
+        this.id = UUID.randomUUID().toString();
+        this.name = name[0];
+        this.items = null;
+        logInfo("\nSingle parameter varargs method with boolean return:\n\tname: {}", this.name);
+        return true;
+    }
+    
+    private boolean resetWithBooleanReturn(String name) {
+        this.id = UUID.randomUUID().toString();
+        this.name = name;
+        this.items = null;
+        logInfo("\nSingle parameter method with boolean return:\n\tname: {}", this.name);
+        return true;
+    }
+    
+    private boolean resetWithBooleanReturn() {
+        this.id = UUID.randomUUID().toString();
+        this.name = "no name";
+        this.items = null;
+        logInfo("\nNo parameter method with boolean return:\n\tname: {}", this.name);
+        return true;
+    }
+    
 }
