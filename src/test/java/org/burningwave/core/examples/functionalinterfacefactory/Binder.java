@@ -3,14 +3,17 @@ package org.burningwave.core.examples.functionalinterfacefactory;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.function.MultiParamsConsumer;
 import org.burningwave.core.function.MultiParamsFunction;
+import org.burningwave.core.function.MultiParamsPredicate;
 
 @SuppressWarnings("unused")
 public class Binder {
@@ -78,12 +81,33 @@ public class Binder {
         methodInvokerFour.accept(service);
     }
     
+    private void testMethodsWithBooleanReturnBinding(Service service) {
+        ComponentContainer componentContainer = ComponentContainer.getInstance();
+        FunctionalInterfaceFactory fIF = componentContainer.getFunctionalInterfaceFactory();
+        
+        MultiParamsPredicate methodInvokerZero = fIF.getOrCreate(Service.class, "resetWithBooleanReturn", String.class, String.class, String[].class);
+        boolean executed = methodInvokerZero.test(service, UUID.randomUUID().toString(), "Service Zero New Name", new String[] {"item 3", "item 4"});
+        
+        MultiParamsPredicate methodInvokerOne = fIF.getOrCreate(Service.class, "resetWithBooleanReturn", String.class, String[].class);
+        executed = methodInvokerOne.test(service, "Service One", new String[] {"item 1", "item 2"});
+        
+        BiPredicate<Service, String[]> methodInvokerTwo = fIF.getOrCreate(Service.class, "resetWithBooleanReturn", String[].class);
+        executed = methodInvokerTwo.test(service, new String[] {"Service Two"});
+        
+        BiPredicate<Service, String> methodInvokerThree = fIF.getOrCreate(Service.class, "resetWithBooleanReturn", String.class);
+        executed = methodInvokerThree.test(service, "Service Three");
+        
+        Predicate<Service> methodInvokerFour = fIF.getOrCreate(Service.class, "resetWithBooleanReturn");
+        executed = methodInvokerFour.test(service);
+    }
+    
     
     public static void main(String[] args) {
         Binder binder = new Binder();
         Service service = binder.testConstructorsBinding();
         binder.testMethodsBinding(service);
         binder.testVoidMethodsBinding(service);
+        binder.testMethodsWithBooleanReturnBinding(service);
     }
     
 }
