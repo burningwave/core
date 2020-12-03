@@ -1,3 +1,4 @@
+
 package org.burningwave.core.examples.functionalinterfacefactory;
 
 import java.util.UUID;
