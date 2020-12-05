@@ -78,7 +78,31 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	}
 	
 	@Override
+	public <T> T getOrCreateFunction(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
+		return getOrCreateBindedFunction(retrieveMethod(targetClass, methodName, argumentTypes));
+	}
+	
+	@Override
+	public <T> T getOrCreateSupplier(Class<?> targetClass, String methodName) {
+		return getOrCreateBindedSupplier(retrieveMethod(targetClass, methodName));
+	}
+	
+	@Override
+	public <T> T getOrCreatePredicate(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
+		return getOrCreateBindedPredicate(retrieveMethod(targetClass, methodName, argumentTypes));
+	}
+	
+	@Override
+	public <T> T getOrCreateConsumer(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
+		return getOrCreateBindedConsumer(retrieveMethod(targetClass, methodName, argumentTypes));
+	}
+	
+	@Override
 	public <T> T getOrCreate(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
+		return getOrCreate(retrieveMethod(targetClass, methodName, argumentTypes));
+	}
+	
+	private Method retrieveMethod(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
 		Method method = Methods.findFirstAndMakeItAccessible(targetClass, methodName, argumentTypes);
 		if (method == null) {
 			Throwables.throwException(
@@ -87,8 +111,8 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 				String.join(", ", Arrays.asList(argumentTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),
 				targetClass.getName()
 			);
-		}		
-		return getOrCreate(method);
+		}
+		return method;
 	}
 	
 	@Override

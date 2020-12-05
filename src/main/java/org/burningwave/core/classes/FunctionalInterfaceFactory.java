@@ -41,4 +41,14 @@ public interface FunctionalInterfaceFactory {
 	public <T> T getOrCreate(Class<?> targetClass, String methodName, Class<?>... argumentTypes);
 	
 	public <F> F getOrCreate(Executable executable);
+
+	public <T> T getOrCreateFunction(Class<?> targetClass, String methodName, Class<?>... argumentTypes);
+
+	public <T> T getOrCreatePredicate(Class<?> targetClass, String methodName, Class<?>... argumentTypes);
+	
+	public <T> T getOrCreateConsumer(Class<?> targetClass, String methodName, Class<?>... argumentTypes);
+	
+	public <T> T getOrCreateSupplier(Class<?> targetClass, String methodName);
+
+	
 }
