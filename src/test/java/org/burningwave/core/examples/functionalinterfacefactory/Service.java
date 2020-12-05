@@ -1,5 +1,6 @@
-
 package org.burningwave.core.examples.functionalinterfacefactory;
+
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 
 import java.util.UUID;
 
@@ -162,6 +163,107 @@ public class Service implements ManagedLogger {
         this.items = null;
         logInfo("\nNo parameter method with boolean return:\n\tname: {}", this.name);
         return true;
+    }
+    
+    // Static methods
+    private static Long staticDoSomething(String id, String name, String... items) {
+    	ManagedLoggersRepository.logInfo(() -> Service.class.getName(), "\nMultiparameter static method:\n\tid: {}\n\tname: {} \n\titems: {}", id, name, String.join(", ", items));
+        return System.currentTimeMillis();
+    }
+    
+    private static Long staticDoSomething(String name, String... items) {
+        ManagedLoggersRepository.logInfo(
+        	() -> Service.class.getName(),
+        	"\nMultiparameter static method:\n\tid: {}\n\tname: {} \n\titems: {}",
+        	UUID.randomUUID().toString(), name, String.join(", ", items)
+        );
+        return System.currentTimeMillis();
+    }
+    
+    private static Long staticDoSomething(String... name) {
+    	 ManagedLoggersRepository.logInfo(
+    	     () -> Service.class.getName(), "\nSingle parameter static varargs method:\n\tname: {}", name[0]
+    	 );
+        return System.currentTimeMillis();
+    }
+    
+    private static Long staticDoSomething(String name) {
+   	    ManagedLoggersRepository.logInfo(
+    	    () -> Service.class.getName(), "\nSingle parameter static method:\n\tname: {}", name
+    	);
+        return System.currentTimeMillis();
+    }
+
+    private static Long staticDoSomething() {
+   	    ManagedLoggersRepository.logInfo(
+   	    	() -> Service.class.getName(), "\nNo parameter static  method:\n\tname: {}", "no name"
+   	    );
+        return System.currentTimeMillis();
+    }
+    
+    private static void staticVoidDoSomething(String id, String name, String... items) {
+    	ManagedLoggersRepository.logInfo(() -> Service.class.getName(), "\nMultiparameter static void method:\n\tid: {}\n\tname: {} \n\titems: {}", id, name, String.join(", ", items));
+    }
+    
+    private static void staticVoidDoSomething(String name, String... items) {
+        ManagedLoggersRepository.logInfo(
+        	() -> Service.class.getName(),
+        	"\nMultiparameter static void method:\n\tid: {}\n\tname: {} \n\titems: {}",
+        	UUID.randomUUID().toString(), name, String.join(", ", items)
+        );
+    }
+    
+    private static void staticVoidDoSomething(String... name) {
+    	 ManagedLoggersRepository.logInfo(
+    	     () -> Service.class.getName(), "\nSingle parameter static void varargs method:\n\tname: {}", name[0]
+    	 );
+    }
+    
+    private static void staticVoidDoSomething(String name) {
+   	    ManagedLoggersRepository.logInfo(
+    	    () -> Service.class.getName(), "\nSingle parameter static void method:\n\tname: {}", name
+    	);
+    }
+
+    private static void staticVoidDoSomething() {
+   	    ManagedLoggersRepository.logInfo(
+   	    	() -> Service.class.getName(), "\nNo parameter static  void method:\n\tname: {}", "no name"
+   	    );
+    }
+    
+    private static boolean staticDoSomethingWithBooleanReturn(String id, String name, String... items) {
+    	ManagedLoggersRepository.logInfo(() -> Service.class.getName(), "\nMultiparameter static method:\n\tid: {}\n\tname: {} \n\titems: {}", id, name, String.join(", ", items));
+        return true;
+    }
+    
+    private static boolean staticDoSomethingWithBooleanReturn(String name, String... items) {
+        ManagedLoggersRepository.logInfo(
+        	() -> Service.class.getName(),
+        	"\nMultiparameter static method:\n\tid: {}\n\tname: {} \n\titems: {}",
+        	UUID.randomUUID().toString(), name, String.join(", ", items)
+        );
+        return true;
+    }
+    
+    private static boolean staticDoSomethingWithBooleanReturn(String... name) {
+    	 ManagedLoggersRepository.logInfo(
+    	     () -> Service.class.getName(), "\nSingle parameter static varargs method:\n\tname: {}", name[0]
+    	 );
+    	 return true;
+    }
+    
+    private static boolean staticDoSomethingWithBooleanReturn(String name) {
+   	    ManagedLoggersRepository.logInfo(
+    	    () -> Service.class.getName(), "\nSingle parameter static method:\n\tname: {}", name
+    	);
+   	    return true;
+    }
+
+    private static boolean staticDoSomethingWithBooleanReturn() {
+   	    ManagedLoggersRepository.logInfo(
+   	    	() -> Service.class.getName(), "\nNo parameter static  method:\n\tname: {}", "no name"
+   	    );
+   	    return true;
     }
     
 }
