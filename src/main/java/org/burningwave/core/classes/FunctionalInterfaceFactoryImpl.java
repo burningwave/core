@@ -96,31 +96,31 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 		if (executable instanceof Method) {
 			Method targetMethod = (Method)executable;
 			if (targetMethod.getParameterTypes().length == 0 && targetMethod.getReturnType() == void.class) {
-				return getBindedRunnable(targetMethod);
+				return getOrCreateBindedRunnable(targetMethod);
 			} else if ((targetMethod.getReturnType() == boolean.class || targetMethod.getReturnType() == Boolean.class) && 
 				(targetMethod.getParameterTypes().length > 0 || (targetMethod.getParameterTypes().length == 0 && !Modifier.isStatic(targetMethod.getModifiers())))
 			) {
-				return getBindedPredicate(targetMethod);
+				return getOrCreateBindedPredicate(targetMethod);
 			} else if (targetMethod.getParameterTypes().length == 0 && targetMethod.getReturnType() != void.class) {
-				return getBindedSupplier(targetMethod);
+				return getOrCreateBindedSupplier(targetMethod);
 			} else if (targetMethod.getParameterTypes().length > 0 && targetMethod.getReturnType() == void.class) {
-				return getBindedConsumer(targetMethod);
+				return getOrCreateBindedConsumer(targetMethod);
 			} else if (targetMethod.getParameterTypes().length > 0 && targetMethod.getReturnType() != void.class) {
-				return getBindedFunction(targetMethod);
+				return getOrCreateBindedFunction(targetMethod);
 			}
 		} else if (executable instanceof Constructor) {
 			Constructor<?> targetConstructor = (Constructor<?>)executable;
 			if (targetConstructor.getParameterTypes().length == 0) {
-				return getBindedSupplier(targetConstructor);
+				return getOrCreateBindedSupplier(targetConstructor);
 			} else {
-				return getBindedFunction(targetConstructor);
+				return getOrCreateBindedFunction(targetConstructor);
 			}
 		}
 		return null;
 	}
 
 	@SuppressWarnings("unchecked")
-	<F> F getBindedRunnable(Executable executable) {
+	<F> F getOrCreateBindedRunnable(Executable executable) {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(executable.getDeclaringClass()), 
 			getCacheKey(executable), () -> 
@@ -142,7 +142,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	}
 
 	@SuppressWarnings("unchecked")
-	<F> F getBindedSupplier(Executable executable) {
+	<F> F getOrCreateBindedSupplier(Executable executable) {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(executable.getDeclaringClass()),	
 			getCacheKey(executable), () -> 
@@ -164,7 +164,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	}
 
 	@SuppressWarnings("unchecked")
-	<F> F getBindedFunction(Executable executable) {
+	<F> F getOrCreateBindedFunction(Executable executable) {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(executable.getDeclaringClass()),
 			getCacheKey(executable), () -> 
@@ -196,7 +196,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	}
 
 	@SuppressWarnings("unchecked")
-	<F> F getBindedConsumer(Method targetMethod) {
+	<F> F getOrCreateBindedConsumer(Method targetMethod) {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(targetMethod.getDeclaringClass()),
 			getCacheKey(targetMethod), () -> 
@@ -222,7 +222,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	}
 
 	@SuppressWarnings("unchecked")
-	<F> F getBindedPredicate(Method targetMethod) {
+	<F> F getOrCreateBindedPredicate(Method targetMethod) {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(targetMethod.getDeclaringClass()),
 			getCacheKey(targetMethod), () -> 
