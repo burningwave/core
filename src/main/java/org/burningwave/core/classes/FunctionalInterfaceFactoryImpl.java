@@ -97,7 +97,9 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 			Method targetMethod = (Method)executable;
 			if (targetMethod.getParameterTypes().length == 0 && targetMethod.getReturnType() == void.class) {
 				return getBindedRunnable(targetMethod);
-			} else if (targetMethod.getReturnType() == boolean.class || targetMethod.getReturnType() == Boolean.class) {
+			} else if ((targetMethod.getReturnType() == boolean.class || targetMethod.getReturnType() == Boolean.class) && 
+				(targetMethod.getParameterTypes().length > 0 || (targetMethod.getParameterTypes().length == 0 && !Modifier.isStatic(targetMethod.getModifiers())))
+			) {
 				return getBindedPredicate(targetMethod);
 			} else if (targetMethod.getParameterTypes().length == 0 && targetMethod.getReturnType() != void.class) {
 				return getBindedSupplier(targetMethod);
