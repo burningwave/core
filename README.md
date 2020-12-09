@@ -19,10 +19,6 @@
 
 [![Gitter](https://badges.gitter.im/burningwave/core.svg)](https://gitter.im/burningwave/core?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-<a href="https://dev.to/bw_software">
-  <img src="https://d2fltix0v2e0sb.cloudfront.net/dev-badge.svg" alt="Burningwave's DEV Profile" height="30" width="30">
-</a>
-
 **Tested on Java versions ranging from 8 to 16-ea, Burningwave Core** is a fully independent, advanced, free and open source Java frameworks building library and it is useful for scanning class paths, generating classes at runtime, facilitating the use of reflection, scanning the filesystem, executing stringified source code and much more...
 
 Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER**: it’s possible to search classes by every criteria that your imagination can make by using lambda expressions; **scan engine is highly optimized using direct allocated ByteBuffers to avoid heap saturation; searches are executed in multithreading context and are not affected by “_the issue of the same class loaded by different classloaders_”** (normally if you try to execute "isAssignableFrom" method on a same class loaded from different classloader it returns false).
