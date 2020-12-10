@@ -51,7 +51,6 @@ public class MethodsHandler {
                 return Classes.isAssignableFrom(params[idx].getType(), Class.class);
             }), ClassLoader.class
         );
-        methods.stream();
     }
     
     public static void main(String[] args) {
