@@ -620,6 +620,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			Criteria scanFileCriteria, Runnable markAsCloseableAlgorithm
 		) {
 			super(parentClassLoader, pathHelper, scanFileCriteria);
+			this.markAsCloseableAlgorithm = markAsCloseableAlgorithm;
 		}
 		
 		public void markAsCloseable() {
