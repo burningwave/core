@@ -46,7 +46,7 @@ public class ConstructorCriteria extends ExecutableMemberCriteria<
 		super();
 	}
 	
-	public static ConstructorCriteria withoutScanningParentClasses() {
+	public static ConstructorCriteria withoutConsideringParentClasses() {
 		return byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
             return lastClassInHierarchy.equals(currentScannedClass);
         });

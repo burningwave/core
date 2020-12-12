@@ -47,7 +47,7 @@ public class MethodCriteria extends ExecutableMemberCriteria<
 		super();
 	}
 	
-	public static MethodCriteria withoutScanningParentClasses() {
+	public static MethodCriteria withoutConsideringParentClasses() {
 		return byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
             return lastClassInHierarchy.equals(currentScannedClass);
         });

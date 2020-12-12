@@ -48,7 +48,7 @@ public class FieldCriteria extends MemberCriteria<
 		super();
 	}
 	
-	public static FieldCriteria withoutScanningParentClasses() {
+	public static FieldCriteria withoutConsideringParentClasses() {
 		return byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
             return lastClassInHierarchy.equals(currentScannedClass);
         });

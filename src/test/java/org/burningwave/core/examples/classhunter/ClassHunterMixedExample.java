@@ -53,17 +53,17 @@ public class ClassHunterMixedExample {
                 return cls.getAnnotations() != null && cls.getAnnotations().length > 0;
             }).or().byMembers(
             	//Search all annotated methods
-                MethodCriteria.withoutScanningParentClasses().allThat((method) -> {
+                MethodCriteria.withoutConsideringParentClasses().allThat((method) -> {
                     return method.getAnnotations() != null && method.getAnnotations().length > 0;
                 })
             ).or().byMembers(
             	//Search all annotated fields
-                FieldCriteria.withoutScanningParentClasses().allThat((field) -> {
+                FieldCriteria.withoutConsideringParentClasses().allThat((field) -> {
                     return field.getAnnotations() != null && field.getAnnotations().length > 0;
                 })
             ).or().byMembers(
             	//Search all annotated constructors
-                ConstructorCriteria.withoutScanningParentClasses().allThat((ctor) -> {
+                ConstructorCriteria.withoutConsideringParentClasses().allThat((ctor) -> {
                     return ctor.getAnnotations() != null && ctor.getAnnotations().length > 0;
                 })
             )

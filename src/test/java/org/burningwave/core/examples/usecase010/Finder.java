@@ -21,13 +21,13 @@ public class Finder {
         PathHelper pathHelper = componentSupplier.getPathHelper();
         ClassHunter classHunter = componentSupplier.getClassHunter();
         
-        MethodCriteria methodCriteria = MethodCriteria.withoutScanningParentClasses().name((methodName) ->
+        MethodCriteria methodCriteria = MethodCriteria.withoutConsideringParentClasses().name((methodName) ->
             methodName.startsWith("set")
         ).result((methodFounds) ->
             methodFounds.size() >= 2
         );    
         
-        ConstructorCriteria constructorCriteria = ConstructorCriteria.withoutScanningParentClasses()
+        ConstructorCriteria constructorCriteria = ConstructorCriteria.withoutConsideringParentClasses()
             .parameterType((uploadedClasses, array, idx) ->
                 idx == 0 && array[idx].equals(uploadedClasses.get(Date.class)
             )
