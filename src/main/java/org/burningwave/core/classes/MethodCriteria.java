@@ -47,10 +47,10 @@ public class MethodCriteria extends ExecutableMemberCriteria<
 		super();
 	}
 	
-	public static MethodCriteria withoutScanningParentClasses() {
-		MethodCriteria criteria = new MethodCriteria();
-		criteria.scanUpToPredicate = (crit, initialClassFrom, currentClass) -> crit.retrieveClass(currentClass).equals(crit.retrieveClass(initialClassFrom));
-		return criteria;
+	public static MethodCriteria withoutConsideringParentClasses() {
+		return byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
+            return lastClassInHierarchy.equals(currentScannedClass);
+        });
 	}
 	
 	@Override

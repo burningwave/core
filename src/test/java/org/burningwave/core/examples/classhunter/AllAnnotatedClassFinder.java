@@ -31,26 +31,26 @@ public class AllAnnotatedClassFinder {
             ClassCriteria.create().allThat((cls) -> {
                 return cls.getAnnotations() != null && cls.getAnnotations().length > 0;
             }).or().byMembers(
-                MethodCriteria.withoutScanningParentClasses().allThat((method) -> {
+                MethodCriteria.withoutConsideringParentClasses().allThat((method) -> {
                     return method.getAnnotations() != null && method.getAnnotations().length > 0;
                 })
             ).or().byMembers(
-                FieldCriteria.withoutScanningParentClasses().allThat((field) -> {
+                FieldCriteria.withoutConsideringParentClasses().allThat((field) -> {
                     return field.getAnnotations() != null && field.getAnnotations().length > 0;
                 })
             ).or().byMembers(
-                ConstructorCriteria.withoutScanningParentClasses().allThat((ctor) -> {
+                ConstructorCriteria.withoutConsideringParentClasses().allThat((ctor) -> {
                     return ctor.getAnnotations() != null && ctor.getAnnotations().length > 0;
                 })
             )
         );
 
         try (SearchResult searchResult = classHunter.loadInCache(searchConfig).find()) {
-	
-	    //If you need all annotaded methods unconment this
-	    //searchResult.getMembersFlatMap().values();
-	
-	    return searchResult.getClasses();
+    
+            //If you need all annotaded methods unconment this
+            //searchResult.getMembersFlatMap().values();
+    
+            return searchResult.getClasses();
         }
     }
 }

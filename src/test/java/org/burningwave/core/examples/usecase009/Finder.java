@@ -21,7 +21,7 @@ public class Finder {
 		PathHelper pathHelper = componentSupplier.getPathHelper();
 		ClassHunter classHunter = componentSupplier.getClassHunter();
 
-		FieldCriteria fieldCriteria = FieldCriteria.withoutScanningParentClasses().allThat((field) -> {
+		FieldCriteria fieldCriteria = FieldCriteria.withoutConsideringParentClasses().allThat((field) -> {
 			return Modifier.isProtected(field.getModifiers());
 		}).result((foundFields) -> {
 			return foundFields.size() >= 2;
