@@ -18,20 +18,18 @@ public class FieldAnnotatedClassOfPackageFinder {
         ClassHunter classHunter = componentSupplier.getClassHunter();
         
         try (
-        	SearchResult result = classHunter.findBy(
-	            //Highly optimized scanning by filtering resources before loading from ClassLoader
-	            SearchConfig.forResources(
-	                "org/springframework"
-	            ).by(
-	            	ClassCriteria.create().byMembers(
-                        FieldCriteria.byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
-                            return lastClassInHierarchy.equals(currentScannedClass);
-                        }).allThat((field) -> {
-                        	return field.getAnnotation(NotNull.class) != null;
+            SearchResult result = classHunter.findBy(
+                //Highly optimized scanning by filtering resources before loading from ClassLoader
+                SearchConfig.forResources(
+                    "org/springframework"
+                ).by(
+                    ClassCriteria.create().byMembers(
+                        FieldCriteria.create().allThat((field) -> {
+                            return field.getAnnotation(NotNull.class) != null;
                         })
                     )
-	            )
-        	)
+                )
+            )
         ) {
             return result.getClasses();
         }
