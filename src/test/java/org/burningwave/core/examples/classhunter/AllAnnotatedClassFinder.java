@@ -46,11 +46,11 @@ public class AllAnnotatedClassFinder {
         );
 
         try (SearchResult searchResult = classHunter.loadInCache(searchConfig).find()) {
-	
-	    //If you need all annotaded methods unconment this
-	    //searchResult.getMembersFlatMap().values();
-	
-	    return searchResult.getClasses();
+    
+            //If you need all annotaded methods unconment this
+            //searchResult.getMembersFlatMap().values();
+    
+            return searchResult.getClasses();
         }
     }
 }
