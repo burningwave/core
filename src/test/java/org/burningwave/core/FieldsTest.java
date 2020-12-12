@@ -129,7 +129,7 @@ public class FieldsTest extends BaseTest {
 				volatile byte byteValue;
 				volatile char charValue;
 			};
-			return Fields.getAll(FieldCriteria.create().allThat(field -> {
+			return Fields.getAll(FieldCriteria.forAllClassHierarchy().allThat(field -> {
 				return field.getType().isPrimitive();
 			}), obj).values();
 		}, true);

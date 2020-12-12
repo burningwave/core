@@ -52,7 +52,7 @@ public class ConstructorCriteria extends ExecutableMemberCriteria<
 		return criteria;
 	}
 	
-	public static ConstructorCriteria create() {
+	public static ConstructorCriteria forAllClassHierarchy() {
 		return new ConstructorCriteria();
 	}
 	

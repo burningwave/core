@@ -54,7 +54,7 @@ public class FieldCriteria extends MemberCriteria<
 		return criteria;
 	}
 	
-	public static FieldCriteria create() {
+	public static FieldCriteria forAllClassHierarchy() {
 		return new FieldCriteria();
 	}
 	

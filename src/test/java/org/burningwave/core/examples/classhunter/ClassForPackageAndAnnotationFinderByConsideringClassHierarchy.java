@@ -33,15 +33,15 @@ public class ClassForPackageAndAnnotationFinderByConsideringClassHierarchy {
                         }
                         return false;
                     }).or().byMembers(
-                        MethodCriteria.create().allThat((method) -> {
+                        MethodCriteria.forAllClassHierarchy().allThat((method) -> {
                             return method.getAnnotations() != null && method.getAnnotations().length > 0;
                         })
                     ).or().byMembers(
-                        FieldCriteria.create().allThat((field) -> {
+                        FieldCriteria.forAllClassHierarchy().allThat((field) -> {
                             return field.getAnnotations() != null && field.getAnnotations().length > 0;
                         })
                     ).or().byMembers(
-                        ConstructorCriteria.create().allThat((ctor) -> {
+                        ConstructorCriteria.forAllClassHierarchy().allThat((ctor) -> {
                             return ctor.getAnnotations() != null && ctor.getAnnotations().length > 0;
                         })
                     )

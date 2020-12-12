@@ -548,7 +548,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllSubtypeOfWithMethodsTestSix() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		MethodCriteria methodCriteria = MethodCriteria.create().name(
+		MethodCriteria methodCriteria = MethodCriteria.forAllClassHierarchy().name(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
@@ -588,7 +588,7 @@ public class ClassHunterTest extends BaseTest {
 			classes.get(Object.class) == examinedClass
 		);
 		
-		MethodCriteria methodCriteria_02 = MethodCriteria.create().name(
+		MethodCriteria methodCriteria_02 = MethodCriteria.forAllClassHierarchy().name(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
@@ -621,7 +621,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllSubtypeOfWithConstructorTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
-		ConstructorCriteria constructorCriteria = ConstructorCriteria.create().parameterType(
+		ConstructorCriteria constructorCriteria = ConstructorCriteria.forAllClassHierarchy().parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(Date.class))
 		).skip((classes, initialClass, examinedClass) -> 
@@ -653,7 +653,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllSubtypeOfWithMethodsByAsyncModeTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		
-		MethodCriteria methodCriteria = MethodCriteria.create().name(
+		MethodCriteria methodCriteria = MethodCriteria.forAllClassHierarchy().name(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
@@ -1091,7 +1091,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllSubtypeOfWithMethodsTestSixByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		MethodCriteria methodCriteria = MethodCriteria.create().name(
+		MethodCriteria methodCriteria = MethodCriteria.forAllClassHierarchy().name(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
@@ -1132,7 +1132,7 @@ public class ClassHunterTest extends BaseTest {
 			classes.get(Object.class) == examinedClass
 		);
 		
-		MethodCriteria methodCriteria_02 = MethodCriteria.create().name(
+		MethodCriteria methodCriteria_02 = MethodCriteria.forAllClassHierarchy().name(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
@@ -1196,7 +1196,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllSubtypeOfWithMethodsByAsyncModeTestOneByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		
-		MethodCriteria methodCriteria = MethodCriteria.create().name(
+		MethodCriteria methodCriteria = MethodCriteria.forAllClassHierarchy().name(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->

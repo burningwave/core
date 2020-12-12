@@ -58,7 +58,7 @@ public class MethodCriteria extends ExecutableMemberCriteria<
 		return  Classes::getDeclaredMethods;
 	}
 	
-	public static MethodCriteria create() {
+	public static MethodCriteria forAllClassHierarchy() {
 		return new MethodCriteria();
 	}
 	
