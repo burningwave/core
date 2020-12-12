@@ -20,7 +20,7 @@ public class Finder {
 		PathHelper pathHelper = componentSupplier.getPathHelper();
 		ClassHunter classHunter = componentSupplier.getClassHunter();
 
-		MethodCriteria methodCriteria = MethodCriteria.forAllClassHierarchy().allThat(method -> 
+		MethodCriteria methodCriteria = MethodCriteria.forEntireClassHierarchy().allThat(method -> 
 			method.getName().startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->

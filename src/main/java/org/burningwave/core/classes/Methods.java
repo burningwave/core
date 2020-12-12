@@ -128,11 +128,11 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		String cacheKey = getCacheKey(targetClass, cacheKeyPrefix, arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		return Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> {
-			MethodCriteria criteria = MethodCriteria.forAllClassHierarchy()
+			MethodCriteria criteria = MethodCriteria.forEntireClassHierarchy()
 				.name(namePredicate)
 				.and().parameterTypesAreAssignableFrom(arguments);			
 			if (arguments != null && arguments.length == 0) {
-				criteria = criteria.or(MethodCriteria.forAllClassHierarchy().name(namePredicate).and().parameter((parameters, idx) -> parameters.length == 1 && parameters[0].isVarArgs()));
+				criteria = criteria.or(MethodCriteria.forEntireClassHierarchy().name(namePredicate).and().parameter((parameters, idx) -> parameters.length == 1 && parameters[0].isVarArgs()));
 			}
 			MethodCriteria finalCriteria = criteria;
 			return Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> 
@@ -156,7 +156,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 			targetClassClassLoader, cacheKey, () -> {
 				return Collections.unmodifiableCollection(
 					findAllAndMakeThemAccessible(
-						MethodCriteria.forAllClassHierarchy(), targetClass
+						MethodCriteria.forEntireClassHierarchy(), targetClass
 					)
 				);
 			}

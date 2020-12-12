@@ -48,13 +48,13 @@ public class FieldCriteria extends MemberCriteria<
 		super();
 	}
 	
-	public static FieldCriteria withoutConsideringClassHierarchy() {
+	public static FieldCriteria withoutScanningParentClasses() {
 		FieldCriteria criteria = new FieldCriteria();
 		criteria.scanUpToPredicate = (crit, initialClassFrom, currentClass) -> crit.retrieveClass(currentClass).equals(crit.retrieveClass(initialClassFrom));
 		return criteria;
 	}
 	
-	public static FieldCriteria forAllClassHierarchy() {
+	public static FieldCriteria forEntireClassHierarchy() {
 		return new FieldCriteria();
 	}
 	

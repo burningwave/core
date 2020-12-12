@@ -31,15 +31,15 @@ public class AllAnnotatedClassFinder {
             ClassCriteria.create().allThat((cls) -> {
                 return cls.getAnnotations() != null && cls.getAnnotations().length > 0;
             }).or().byMembers(
-                MethodCriteria.withoutConsideringClassHierarchy().allThat((method) -> {
+                MethodCriteria.withoutScanningParentClasses().allThat((method) -> {
                     return method.getAnnotations() != null && method.getAnnotations().length > 0;
                 })
             ).or().byMembers(
-                FieldCriteria.withoutConsideringClassHierarchy().allThat((field) -> {
+                FieldCriteria.withoutScanningParentClasses().allThat((field) -> {
                     return field.getAnnotations() != null && field.getAnnotations().length > 0;
                 })
             ).or().byMembers(
-                ConstructorCriteria.withoutConsideringClassHierarchy().allThat((ctor) -> {
+                ConstructorCriteria.withoutScanningParentClasses().allThat((ctor) -> {
                     return ctor.getAnnotations() != null && ctor.getAnnotations().length > 0;
                 })
             )

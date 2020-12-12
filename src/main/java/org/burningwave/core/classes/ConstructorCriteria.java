@@ -46,13 +46,13 @@ public class ConstructorCriteria extends ExecutableMemberCriteria<
 		super();
 	}
 	
-	public static ConstructorCriteria withoutConsideringClassHierarchy() {
+	public static ConstructorCriteria withoutScanningParentClasses() {
 		ConstructorCriteria criteria = new ConstructorCriteria();
 		criteria.scanUpToPredicate = (crit, initialClassFrom, currentClass) -> crit.retrieveClass(currentClass).equals(crit.retrieveClass(initialClassFrom));
 		return criteria;
 	}
 	
-	public static ConstructorCriteria forAllClassHierarchy() {
+	public static ConstructorCriteria forEntireClassHierarchy() {
 		return new ConstructorCriteria();
 	}
 	

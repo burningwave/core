@@ -63,7 +63,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
 			Method mth = Members.findOne(
-				MethodCriteria.withoutConsideringClassHierarchy()
+				MethodCriteria.withoutScanningParentClasses()
 				.name((name) -> name.matches("test"))
 				.and().parameterType((params, idx) -> idx == 0 && params[idx].equals(Object.class))
 				.and().parameterType((params, idx) -> idx == 1 && params[idx].equals(String.class))
@@ -80,7 +80,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
 			Method mth = Members.findOne(
-				MethodCriteria.withoutConsideringClassHierarchy()
+				MethodCriteria.withoutScanningParentClasses()
 				.name((name) -> name.matches("apply"))
 				.and().parameterType((params, idx) -> idx == 0 && params[idx].equals(String.class))
 				.and().parameterTypes((params) -> params.length == 1),
@@ -98,7 +98,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
 			Method mth = Members.findOne(
-				MethodCriteria.withoutConsideringClassHierarchy()
+				MethodCriteria.withoutScanningParentClasses()
 				.name((name) -> name.matches("staticApply"))
 				.and().parameterTypes(params -> params.length == 3)
 				.and().parameterType((params, idx) -> idx == 0 && params[idx].equals(Object.class))
@@ -116,7 +116,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
 			Method mth = Members.findOne(
-				MethodCriteria.withoutConsideringClassHierarchy()
+				MethodCriteria.withoutScanningParentClasses()
 				.name((name) -> name.matches("retrieve")).and().parameterTypes(params -> params.length == 0),
 				Service.class				
 			);
@@ -130,7 +130,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
 			Method mth = Members.findOne(
-				MethodCriteria.withoutConsideringClassHierarchy()
+				MethodCriteria.withoutScanningParentClasses()
 				.name((name) -> name.matches("supply")).and().parameterTypes(params -> params.length == 0),
 				Service.class				
 			);
@@ -145,7 +145,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
 			Method mth = Members.findOne(
-				MethodCriteria.withoutConsideringClassHierarchy()
+				MethodCriteria.withoutScanningParentClasses()
 				.name((name) -> name.matches("accept"))
 				.and().parameterType((params, idx) -> idx == 0 && params[idx].equals(String.class))
 				.and().parameterType((params, idx) -> idx == 1 && params[idx].equals(String.class))
@@ -162,7 +162,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
 			Method mth = Members.findOne(
-				MethodCriteria.withoutConsideringClassHierarchy()
+				MethodCriteria.withoutScanningParentClasses()
 				.name((name) -> name.matches("accept")).and().parameterTypes(params -> params.length == 1),
 				Service.class				
 			);
@@ -176,7 +176,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
 			Method mth = Members.findOne(
-				MethodCriteria.withoutConsideringClassHierarchy()
+				MethodCriteria.withoutScanningParentClasses()
 				.name((name) -> name.matches("staticAccept")).and().parameterTypes(params -> params.length == 4),
 				Service.class				
 			);
@@ -190,7 +190,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
 			Method mth = Members.findOne(
-				MethodCriteria.withoutConsideringClassHierarchy()
+				MethodCriteria.withoutScanningParentClasses()
 				.name((name) -> name.matches("run")).and().parameterTypes(params -> params.length == 0),
 				Service.class				
 			);
@@ -204,7 +204,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
 			Method mth = Members.findOne(
-				MethodCriteria.withoutConsideringClassHierarchy()
+				MethodCriteria.withoutScanningParentClasses()
 				.name((name) -> name.matches("staticRun")).and().parameterTypes(params -> params.length == 0),
 				Service.class				
 			);
@@ -228,7 +228,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testDoesNotThrow(() -> {
 			Constructor<?> ctor = Constructors.findFirst(
-				ConstructorCriteria.withoutConsideringClassHierarchy().parameterTypes(params -> params.length == 1).and()
+				ConstructorCriteria.withoutScanningParentClasses().parameterTypes(params -> params.length == 1).and()
 				.parameterType((params, idx) -> idx == 0 && params[idx].equals(String.class)),
 				Service.class				
 			);

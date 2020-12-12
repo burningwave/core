@@ -24,7 +24,7 @@ public class FieldAnnotatedClassOfPackageFinder {
                     "org/springframework"
                 ).by(
                     ClassCriteria.create().byMembers(
-                        FieldCriteria.withoutConsideringClassHierarchy().allThat((field) -> {
+                        FieldCriteria.withoutScanningParentClasses().allThat((field) -> {
                             return field.getAnnotation(NotNull.class) != null;
                         })
                     )
