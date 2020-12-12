@@ -164,7 +164,7 @@ public abstract class MemberCriteria<M extends Member, C extends MemberCriteria<
 		return copy;
 	}
 	
-	public abstract Function<Class<?>, M[]> getMembersSupplierFunction();
+	abstract Function<Class<?>, M[]> getMembersSupplierFunction();
 	
 	@SuppressWarnings("unchecked")
 	public BiFunction<Class<?>, Class<?>, M[]> getMembersSupplier() {

@@ -548,7 +548,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllSubtypeOfWithMethodsTestSix() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		MethodCriteria methodCriteria = MethodCriteria.forName(
+		MethodCriteria methodCriteria = MethodCriteria.forEntireClassHierarchy().name(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
@@ -588,7 +588,7 @@ public class ClassHunterTest extends BaseTest {
 			classes.get(Object.class) == examinedClass
 		);
 		
-		MethodCriteria methodCriteria_02 = MethodCriteria.forName(
+		MethodCriteria methodCriteria_02 = MethodCriteria.forEntireClassHierarchy().name(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
@@ -621,7 +621,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllSubtypeOfWithConstructorTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
-		ConstructorCriteria constructorCriteria = ConstructorCriteria.create().parameterType(
+		ConstructorCriteria constructorCriteria = ConstructorCriteria.forEntireClassHierarchy().parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(Date.class))
 		).skip((classes, initialClass, examinedClass) -> 
@@ -653,7 +653,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllSubtypeOfWithMethodsByAsyncModeTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		
-		MethodCriteria methodCriteria = MethodCriteria.forName(
+		MethodCriteria methodCriteria = MethodCriteria.forEntireClassHierarchy().name(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
@@ -764,9 +764,7 @@ public class ClassHunterTest extends BaseTest {
 					ClassCriteria.create().allThat((cls) -> {
 						return cls.getAnnotations() != null && cls.getAnnotations().length > 0;
 					}).or().byMembers(
-						MethodCriteria.byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
-							return lastClassInHierarchy.equals(currentScannedClass);
-						}).allThat((method) -> {
+						MethodCriteria.withoutScanningParentClasses().allThat((method) -> {
 							return method.getAnnotations() != null && method.getAnnotations().length > 0;
 						})
 					)
@@ -795,9 +793,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				)
 			),
-			(result) -> result.getMembersBy(MethodCriteria.byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
-					return lastClassInHierarchy.equals(currentScannedClass);
-				}).allThat((method) -> {
+			(result) -> result.getMembersBy(MethodCriteria.withoutScanningParentClasses().allThat((method) -> {
 					return method.getAnnotations() != null && method.getAnnotations().length > 0;
 				})
 			)
@@ -1095,7 +1091,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllSubtypeOfWithMethodsTestSixByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		MethodCriteria methodCriteria = MethodCriteria.forName(
+		MethodCriteria methodCriteria = MethodCriteria.forEntireClassHierarchy().name(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
@@ -1136,7 +1132,7 @@ public class ClassHunterTest extends BaseTest {
 			classes.get(Object.class) == examinedClass
 		);
 		
-		MethodCriteria methodCriteria_02 = MethodCriteria.forName(
+		MethodCriteria methodCriteria_02 = MethodCriteria.forEntireClassHierarchy().name(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
@@ -1169,7 +1165,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllSubtypeOfWithConstructorTestOneByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
-		ConstructorCriteria constructorCriteria = ConstructorCriteria.create().parameterType(
+		ConstructorCriteria constructorCriteria = ConstructorCriteria.withoutScanningParentClasses().parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(Date.class))
 		).skip((classes, initialClass, examinedClass) -> 
@@ -1200,7 +1196,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllSubtypeOfWithMethodsByAsyncModeTestOneByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		
-		MethodCriteria methodCriteria = MethodCriteria.forName(
+		MethodCriteria methodCriteria = MethodCriteria.forEntireClassHierarchy().name(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->

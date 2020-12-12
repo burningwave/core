@@ -39,6 +39,7 @@ import java.util.function.Predicate;
 import org.burningwave.core.Criteria;
 import org.burningwave.core.function.TriPredicate;
 
+@SuppressWarnings("resource")
 public class MethodCriteria extends ExecutableMemberCriteria<
 	Method, MethodCriteria, Criteria.TestContext<Method, MethodCriteria>
 > {
@@ -46,37 +47,31 @@ public class MethodCriteria extends ExecutableMemberCriteria<
 		super();
 	}
 	
-	public static MethodCriteria create() {
-		return new MethodCriteria();
+	public static MethodCriteria withoutScanningParentClasses() {
+		MethodCriteria criteria = new MethodCriteria();
+		criteria.scanUpToPredicate = (crit, initialClassFrom, currentClass) -> crit.retrieveClass(currentClass).equals(crit.retrieveClass(initialClassFrom));
+		return criteria;
 	}
 	
 	@Override
-	public Function<Class<?>, Method[]> getMembersSupplierFunction() {
+	Function<Class<?>, Method[]> getMembersSupplierFunction() {
 		return  Classes::getDeclaredMethods;
 	}
 	
-	public static MethodCriteria forName(Predicate<String> predicate) {
-		MethodCriteria criteria = MethodCriteria.create();
-		criteria.predicate = (context, member) -> predicate.test(member.getName());
-		return criteria;
+	public static MethodCriteria forEntireClassHierarchy() {
+		return new MethodCriteria();
 	}
 	
 	public static MethodCriteria byScanUpTo(TriPredicate<Map<Class<?>, Class<?>>, Class<?>, Class<?>> predicate) {
-		return MethodCriteria.create().scanUpTo(predicate);
+		return new MethodCriteria().scanUpTo(predicate);
 	}
 	
 	public static MethodCriteria byScanUpTo(BiPredicate<Class<?>, Class<?>> predicate) {
-		return MethodCriteria.create().scanUpTo(predicate);
+		return new MethodCriteria().scanUpTo(predicate);
 	}
-	
+
 	public static MethodCriteria byScanUpTo(Predicate<Class<?>> predicate) {
-		return MethodCriteria.create().scanUpTo(predicate);
-	}
-	
-	public static MethodCriteria on(Object obj) {
-		MethodCriteria criteria = MethodCriteria.create();
-		criteria.scanUpToPredicate = (crit, initialClassFrom, currentClass) -> crit.retrieveClass(currentClass).equals(crit.retrieveClass(initialClassFrom));
-		return criteria;
+		return new MethodCriteria().scanUpTo(predicate);
 	}
 
 	public MethodCriteria returnType(final Predicate<Class<?>> predicate) {

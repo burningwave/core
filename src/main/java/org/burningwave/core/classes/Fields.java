@@ -212,7 +212,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 			() -> 
 				Collections.unmodifiableCollection(
 					findAllAndMakeThemAccessible(
-						FieldCriteria.create().allThat(field -> {
+						FieldCriteria.forEntireClassHierarchy().allThat(field -> {
 							if (valueType == null) {
 								return field.getName().equals(fieldName);
 							} else {
@@ -235,7 +235,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 			() -> 
 				Collections.unmodifiableCollection(
 					findAllAndMakeThemAccessible(
-						FieldCriteria.create(), targetClass
+						FieldCriteria.forEntireClassHierarchy(), targetClass
 					)
 				)
 			

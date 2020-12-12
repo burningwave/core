@@ -16,7 +16,7 @@ public class MembersTest extends BaseTest {
 	public void findOneTestOne() {
 		testNotNull(() ->
 			Members.findOne(
-				MethodCriteria.forName((name) ->
+				MethodCriteria.forEntireClassHierarchy().name((name) ->
 					name.matches("apply")
 				).and().parameterType((params, idx) -> 
 					idx == 0 && params[idx].equals(Object.class)
@@ -35,7 +35,7 @@ public class MembersTest extends BaseTest {
 	public void findOneTestTwo() {
 		testNotNull(() ->
 			Members.findOne(
-				MethodCriteria.create()
+				MethodCriteria.forEntireClassHierarchy()
 				.name((name) -> name.matches("apply"))
 				.and().parameterType((params, idx) -> 
 					idx == 0 && params[idx].equals(Object.class)
@@ -57,7 +57,7 @@ public class MembersTest extends BaseTest {
 	public void matchOneTestOne() {
 		assertTrue(
 			Members.match(
-				MethodCriteria.create()
+				MethodCriteria.forEntireClassHierarchy()
 				.name((name) -> name.matches("apply"))
 				.and().parameterType((params, idx) -> 
 					idx == 0 && params[idx].equals(Object.class)
@@ -79,7 +79,7 @@ public class MembersTest extends BaseTest {
 	public void findAllTestOne() {
 		testNotEmpty(() ->
 			Members.findAll(
-				MethodCriteria.forName((name) ->
+				MethodCriteria.forEntireClassHierarchy().name((name) ->
 					name.matches("loadClass")
 				),
 				PathScannerClassLoader.class
@@ -91,7 +91,7 @@ public class MembersTest extends BaseTest {
 	public void findFirstTestOne() {
 		testNotNull(() ->
 			Members.findFirst(
-				MethodCriteria.forName((name) ->
+				MethodCriteria.forEntireClassHierarchy().name((name) ->
 					name.matches("loadClass")
 				),
 				PathScannerClassLoader.class

@@ -8,9 +8,9 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
+import org.burningwave.core.classes.ClassHunter.SearchResult;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.classes.SearchConfig;
-import org.burningwave.core.classes.ClassHunter.SearchResult;
 import org.burningwave.core.io.PathHelper;
 
 public class Finder {	   
@@ -20,8 +20,8 @@ public class Finder {
 		PathHelper pathHelper = componentSupplier.getPathHelper();
 		ClassHunter classHunter = componentSupplier.getClassHunter();
 
-		MethodCriteria methodCriteria = MethodCriteria.forName(
-			(methodName) -> methodName.startsWith("set")
+		MethodCriteria methodCriteria = MethodCriteria.forEntireClassHierarchy().allThat(method -> 
+			method.getName().startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(Date.class))
