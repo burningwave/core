@@ -49,9 +49,9 @@ public class FieldCriteria extends MemberCriteria<
 	}
 	
 	public static FieldCriteria withoutScanningParentClasses() {
-		FieldCriteria criteria = new FieldCriteria();
-		criteria.scanUpToPredicate = (crit, initialClassFrom, currentClass) -> crit.retrieveClass(currentClass).equals(crit.retrieveClass(initialClassFrom));
-		return criteria;
+		return byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
+            return lastClassInHierarchy.equals(currentScannedClass);
+        });
 	}
 	
 	public static FieldCriteria forEntireClassHierarchy() {
