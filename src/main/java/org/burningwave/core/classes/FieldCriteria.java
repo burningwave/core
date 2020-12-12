@@ -40,6 +40,7 @@ import org.burningwave.core.Criteria;
 import org.burningwave.core.function.TriPredicate;
 
 
+@SuppressWarnings("resource")
 public class FieldCriteria extends MemberCriteria<
 	Field, FieldCriteria, Criteria.TestContext<Field, FieldCriteria>
 > {
@@ -47,34 +48,29 @@ public class FieldCriteria extends MemberCriteria<
 		super();
 	}
 	
+	public static FieldCriteria withoutConsideringClassHierarchy() {
+		FieldCriteria criteria = new FieldCriteria();
+		criteria.scanUpToPredicate = (crit, initialClassFrom, currentClass) -> crit.retrieveClass(currentClass).equals(crit.retrieveClass(initialClassFrom));
+		return criteria;
+	}
+	
 	public static FieldCriteria create() {
 		return new FieldCriteria();
 	}
 	
 	@Override
-	public Function<Class<?>, Field[]> getMembersSupplierFunction() {
+	Function<Class<?>, Field[]> getMembersSupplierFunction() {
 		return Classes::getDeclaredFields;
 	}
-	
-	public static FieldCriteria forName(Predicate<String> predicate) {
-		FieldCriteria criteria = FieldCriteria.create();
-		criteria.predicate = (context, member) -> predicate.test(member.getName());
-		return criteria;
-	}
-	
+
 	public static FieldCriteria byScanUpTo(BiPredicate<Class<?>, Class<?>> predicate) {
-		return FieldCriteria.create().scanUpTo(predicate);
+		return new FieldCriteria().scanUpTo(predicate);
 	}
 	
 	public static FieldCriteria byScanUpTo(TriPredicate<Map<Class<?>, Class<?>>, Class<?>, Class<?>> predicate) {
-		return FieldCriteria.create().scanUpTo(predicate);
+		return new FieldCriteria().scanUpTo(predicate);
 	}
 	
-	public static FieldCriteria on(Object obj) {
-		FieldCriteria criteria = FieldCriteria.create();
-		criteria.scanUpToPredicate = (crit, initialClassFrom, currentClass) -> crit.retrieveClass(currentClass).equals(crit.retrieveClass(initialClassFrom));
-		return criteria;
-	}
 	
 	public FieldCriteria type(final Predicate<Class<?>> predicate) {
 		this.predicate = concat(
