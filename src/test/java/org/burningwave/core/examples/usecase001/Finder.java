@@ -27,7 +27,7 @@ public class Finder {
             //With the row below the search will be executed on runtime Classpaths
             pathHelper.getMainClassPaths()
         ).by(
-            ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+            ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
                 //[1]here you recall the uploaded class by "useClasses" method.
                 //In this case we're looking for all classes that implement java.io.Closeable or java.io.Serializable
                 uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass) ||

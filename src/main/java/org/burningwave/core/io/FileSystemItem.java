@@ -30,6 +30,7 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -61,11 +62,10 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.Executor;
 
 @SuppressWarnings("resource")
-public class FileSystemItem implements ManagedLogger {
+public class FileSystemItem {
 	private final static String instanceIdPrefix;
 	
 	private Map.Entry<String, String> absolutePath;
@@ -242,8 +242,8 @@ public class FileSystemItem implements ManagedLogger {
 		try {
 			children = childrenSupplier.get();
 		} catch (Throwable exc) {
-			logWarn("Exception occurred while retrieving children of {}: ", getAbsolutePath(), Strings.formatMessage(exc));
-			logInfo("Trying to reset {} and reload children/all children", getAbsolutePath());
+			ManagedLoggersRepository.logWarn(this.getClass()::getName, "Exception occurred while retrieving children of {}: ", getAbsolutePath(), Strings.formatMessage(exc));
+			ManagedLoggersRepository.logInfo(this.getClass()::getName, "Trying to reset {} and reload children/all children", getAbsolutePath());
 			reset();
 			children = childrenSupplier.get();
 		}
@@ -718,7 +718,7 @@ public class FileSystemItem implements ManagedLogger {
 							return realAbsolutePath;
 						}
 					} catch (IOException exc) {
-						logWarn("Exception occurred while calling isArchive on file {}: {}", file.getAbsolutePath(),
+						ManagedLoggersRepository.logWarn(this.getClass()::getName, "Exception occurred while calling isArchive on file {}: {}", file.getAbsolutePath(),
 								exc.getMessage());
 						return realAbsolutePath;
 					}
@@ -1045,11 +1045,11 @@ public class FileSystemItem implements ManagedLogger {
 
 		public final static Criteria forAllFileThat(final BiPredicate<FileSystemItem, FileSystemItem> predicate) {
 			return new Criteria()
-					.allThat(childAndSuperParent -> predicate.test(childAndSuperParent[0], childAndSuperParent[1]));
+					.allThoseThat(childAndSuperParent -> predicate.test(childAndSuperParent[0], childAndSuperParent[1]));
 		}
 
 		public final static Criteria forAllFileThat(final Predicate<FileSystemItem> predicate) {
-			return new Criteria().allThat(childAndSuperParent -> predicate.test(childAndSuperParent[0]));
+			return new Criteria().allThoseThat(childAndSuperParent -> predicate.test(childAndSuperParent[0]));
 		}
 
 		public final static Criteria forArchiveTypeFiles(CheckingOption checkingOption) {
@@ -1069,11 +1069,11 @@ public class FileSystemItem implements ManagedLogger {
 		}
 
 		public final Criteria allFileThat(final Predicate<FileSystemItem> predicate) {
-			return this.allThat(childAndSuperParent -> predicate.test(childAndSuperParent[0]));
+			return this.allThoseThat(childAndSuperParent -> predicate.test(childAndSuperParent[0]));
 		}
 
 		public final Criteria allFileThat(final BiPredicate<FileSystemItem, FileSystemItem> predicate) {
-			return this.allThat(childAndSuperParent -> predicate.test(childAndSuperParent[0], childAndSuperParent[1]));
+			return this.allThoseThat(childAndSuperParent -> predicate.test(childAndSuperParent[0], childAndSuperParent[1]));
 		}
 		
 		public Criteria excludePathsThatMatch(String regex) {
@@ -1110,7 +1110,7 @@ public class FileSystemItem implements ManagedLogger {
 		
 		public final Criteria setDefaultExceptionHandler() {
 			return setExceptionHandler((exception, childAndParent) -> {
-				logError("Could not scan " + childAndParent[0].getAbsolutePath(), exception);
+				ManagedLoggersRepository.logError(this.getClass()::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
 				return false;
 			});
 		}		
@@ -1151,12 +1151,12 @@ public class FileSystemItem implements ManagedLogger {
 						return filterPredicate.test(childAndThis);
 					} catch (ArrayIndexOutOfBoundsException | NullPointerException exc) {
 						String childAbsolutePath = childAndThis[0].getAbsolutePath();
-						logWarn("Exception occurred while analyzing {}", childAbsolutePath);
+						ManagedLoggersRepository.logWarn(this.getClass()::getName, "Exception occurred while analyzing {}", childAbsolutePath);
 						if (exc instanceof ArrayIndexOutOfBoundsException) {
-							logInfo("Trying to reload content of {} and test it again", childAbsolutePath);
+							ManagedLoggersRepository.logInfo(this.getClass()::getName, "Trying to reload content of {} and test it again", childAbsolutePath);
 							childAndThis[0].reloadContent();
 						} else if (exc instanceof NullPointerException) {
-							logInfo("Trying to reload content and conventioned absolute path of {} and test it again", childAbsolutePath);
+							ManagedLoggersRepository.logInfo(this.getClass()::getName, "Trying to reload content and conventioned absolute path of {} and test it again", childAbsolutePath);
 							childAndThis[0].reloadContent(true);
 						}
 						return filterPredicate.test(childAndThis);

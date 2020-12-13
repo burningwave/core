@@ -26,7 +26,7 @@ public class Finder {
 			//With the row below the search will be executed on runtime Classpaths
 			pathHelper.getMainClassPaths()
 		).by(
-			ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+			ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 				//[1]here you recall the uploaded class by "useClasses" method. In this case we find all class who extends java.util.AbstractList
 				uploadedClasses.get(AbstractList.class).isAssignableFrom(currentScannedClass)
 			).useClasses(

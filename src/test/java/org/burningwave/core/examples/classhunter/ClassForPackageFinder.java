@@ -29,7 +29,7 @@ public class ClassForPackageFinder {
             //this commented line of code instead "pathHelper.getMainClassPaths()":
             //pathHelper.getPaths(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
         ).by(
-            ClassCriteria.create().allThat((cls) -> {
+            ClassCriteria.create().allThoseThatMatch((cls) -> {
                 return cls.getPackage().getName().matches(".*springframework.*");
             })
         );

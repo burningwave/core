@@ -26,7 +26,7 @@ public class Finder {
 			//With the row below the search will be executed on runtime Classpaths
 			pathHelper.getMainClassPaths()
 		).by(
-			ClassCriteria.create().allThat(cls ->
+			ClassCriteria.create().allThoseThatMatch(cls ->
 				cls.getName().equals("Finder")	  
 			)
 		);		

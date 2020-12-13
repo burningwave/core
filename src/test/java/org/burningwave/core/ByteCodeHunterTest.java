@@ -27,7 +27,7 @@ public class ByteCodeHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, targetClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
 					).useClasses(
 						Closeable.class
@@ -66,7 +66,7 @@ public class ByteCodeHunterTest extends BaseTest {
 		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear")
 		).by(
-			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 
+			ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) -> 
 				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
 			).useClasses(
 				Closeable.class
@@ -95,7 +95,7 @@ public class ByteCodeHunterTest extends BaseTest {
 		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		).by(
-			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 
+			ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) -> 
 				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
 			).useClasses(
 				Closeable.class
@@ -118,7 +118,7 @@ public class ByteCodeHunterTest extends BaseTest {
 		SearchConfig searchConfig = SearchConfig.withoutUsingCache().addPaths(
 			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		).by(
-			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 
+			ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) -> 
 				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
 			).useClasses(
 				Closeable.class
@@ -139,7 +139,7 @@ public class ByteCodeHunterTest extends BaseTest {
 		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		).by(
-			ClassCriteria.create().byClasses((uploadedClasses, targetClass) -> 
+			ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) -> 
 				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
 			).useClasses(
 				Closeable.class
@@ -200,7 +200,7 @@ public class ByteCodeHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/classes"))
 				).by(
-					ClassCriteria.create().allThat((targetClass) -> 
+					ClassCriteria.create().allThoseThatMatch((targetClass) -> 
 						Object.class.isAssignableFrom(targetClass)
 					)
 				)
