@@ -365,7 +365,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 		}
 		
 		
-		public C allThoseThat(final Predicate<E> predicate) {
+		public C allThoseThatMatch(final Predicate<E> predicate) {
 			this.predicate = concat(
 				this.predicate,
 				(entity) -> predicate.test(entity)

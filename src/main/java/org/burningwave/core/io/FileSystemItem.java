@@ -1045,11 +1045,11 @@ public class FileSystemItem {
 
 		public final static Criteria forAllFileThat(final BiPredicate<FileSystemItem, FileSystemItem> predicate) {
 			return new Criteria()
-					.allThoseThat(childAndSuperParent -> predicate.test(childAndSuperParent[0], childAndSuperParent[1]));
+					.allThoseThatMatch(childAndSuperParent -> predicate.test(childAndSuperParent[0], childAndSuperParent[1]));
 		}
 
 		public final static Criteria forAllFileThat(final Predicate<FileSystemItem> predicate) {
-			return new Criteria().allThoseThat(childAndSuperParent -> predicate.test(childAndSuperParent[0]));
+			return new Criteria().allThoseThatMatch(childAndSuperParent -> predicate.test(childAndSuperParent[0]));
 		}
 
 		public final static Criteria forArchiveTypeFiles(CheckingOption checkingOption) {
@@ -1069,11 +1069,11 @@ public class FileSystemItem {
 		}
 
 		public final Criteria allFileThat(final Predicate<FileSystemItem> predicate) {
-			return this.allThoseThat(childAndSuperParent -> predicate.test(childAndSuperParent[0]));
+			return this.allThoseThatMatch(childAndSuperParent -> predicate.test(childAndSuperParent[0]));
 		}
 
 		public final Criteria allFileThat(final BiPredicate<FileSystemItem, FileSystemItem> predicate) {
-			return this.allThoseThat(childAndSuperParent -> predicate.test(childAndSuperParent[0], childAndSuperParent[1]));
+			return this.allThoseThatMatch(childAndSuperParent -> predicate.test(childAndSuperParent[0], childAndSuperParent[1]));
 		}
 		
 		public Criteria excludePathsThatMatch(String regex) {
