@@ -24,14 +24,8 @@ public class ClassForPackageAndAnnotationFinderByConsideringClassHierarchy {
                 SearchConfig.forResources(
                     "org/springframework"
                 ).by(
-                    ClassCriteria.create().allThoseThatMatch((cls) -> {
-                        while (cls != null) {
-                            if (cls.getAnnotations() != null && cls.getAnnotations().length > 0) {
-                                return true;
-                            }
-                            cls = cls.getSuperclass();
-                        }
-                        return false;
+                    ClassCriteria.create().allThoseThatHaveAMatchInHierarchy((cls) -> {
+                        return cls.getAnnotations() != null && cls.getAnnotations().length > 0;
                     }).or().byMembers(
                         MethodCriteria.forEntireClassHierarchy().allThoseThatMatch((method) -> {
                             return method.getAnnotations() != null && method.getAnnotations().length > 0;
