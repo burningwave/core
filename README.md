@@ -51,7 +51,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>8.11.0</version>
+    <version>8.12.0</version>
 </dependency>
 ```
 
@@ -350,7 +350,7 @@ public class Finder {
         //property of burningwave.properties file
         //(see https://github.com/burningwave/core/wiki/In-depth-look-to-ClassHunter-and-configuration-guide)
         try (SearchResult searchResult = classHunter.loadInCache(SearchConfig.byCriteria(
-            ClassCriteria.create().allThoseThat((cls) -> {
+            ClassCriteria.create().allThoseThatMatch((cls) -> {
                 return cls.getPackage().getName().matches(".*springframework.*");
             })
         )).find()
@@ -396,7 +396,7 @@ public class Finder {
             //If you want to scan only one jar you can replace the two line of code above with:
             //pathHelper.getPaths(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
         ).by(
-            ClassCriteria.create().allThoseThat((cls) -> {
+            ClassCriteria.create().allThoseThatMatch((cls) -> {
                 return cls.getPackage().getName().matches(".*springframework.*");
             })
         );
@@ -450,7 +450,7 @@ public class Finder {
             //With the row below the search will be executed on runtime Classpaths
             pathHelper.getMainClassPaths()
         ).by(
-            ClassCriteria.create().allThoseThat(cls ->
+            ClassCriteria.create().allThoseThatMatch(cls ->
                 cls.getName().equals("Finder")      
             )
         );        
@@ -737,7 +737,7 @@ public class FieldsHandler {
         
         //Get all filtered field values of an object through memory address access
         Fields.getAllDirect(
-            FieldCriteria.forEntireClassHierarchy().allThoseThat(field -> {
+            FieldCriteria.forEntireClassHierarchy().allThoseThatMatch(field -> {
                 return field.getType().isPrimitive();
             }), 
             obj
