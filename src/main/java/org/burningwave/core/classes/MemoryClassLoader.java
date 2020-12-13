@@ -224,7 +224,12 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
     @Override
     protected Class<?> loadClass(String className, boolean resolve) throws ClassNotFoundException {
-    	Class<?> cls = super.loadClass(className, resolve);
+    	Class<?> cls = null;
+    	try {
+			cls = super.loadClass(className, resolve);
+		} catch (SecurityException exc) {
+			cls = Class.forName(className);
+		}
     	removeNotLoadedBytecode(className);
     	return cls;
     }
