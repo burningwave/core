@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/8)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/417974096)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/419317156)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015%2C%2016ea-blueviolet)](https://github.com/burningwave/core/actions/runs/417974096)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015%2C%2016ea-blueviolet)](https://github.com/burningwave/core/actions/runs/419317156)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -51,7 +51,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>8.10.0</version>
+    <version>8.11.0</version>
 </dependency>
 ```
 
@@ -350,7 +350,7 @@ public class Finder {
         //property of burningwave.properties file
         //(see https://github.com/burningwave/core/wiki/In-depth-look-to-ClassHunter-and-configuration-guide)
         try (SearchResult searchResult = classHunter.loadInCache(SearchConfig.byCriteria(
-            ClassCriteria.create().allThat((cls) -> {
+            ClassCriteria.create().allThoseThat((cls) -> {
                 return cls.getPackage().getName().matches(".*springframework.*");
             })
         )).find()
@@ -396,7 +396,7 @@ public class Finder {
             //If you want to scan only one jar you can replace the two line of code above with:
             //pathHelper.getPaths(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
         ).by(
-            ClassCriteria.create().allThat((cls) -> {
+            ClassCriteria.create().allThoseThat((cls) -> {
                 return cls.getPackage().getName().matches(".*springframework.*");
             })
         );
@@ -450,7 +450,7 @@ public class Finder {
             //With the row below the search will be executed on runtime Classpaths
             pathHelper.getMainClassPaths()
         ).by(
-            ClassCriteria.create().allThat(cls ->
+            ClassCriteria.create().allThoseThat(cls ->
                 cls.getName().equals("Finder")      
             )
         );        
@@ -737,7 +737,7 @@ public class FieldsHandler {
         
         //Get all filtered field values of an object through memory address access
         Fields.getAllDirect(
-            FieldCriteria.forEntireClassHierarchy().allThat(field -> {
+            FieldCriteria.forEntireClassHierarchy().allThoseThat(field -> {
                 return field.getType().isPrimitive();
             }), 
             obj
