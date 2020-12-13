@@ -1308,7 +1308,7 @@ public class ClassHunterTest extends BaseTest {
 //				SearchConfig.forPaths(
 //					componentSupplier.getPathHelper().getMainClassPaths()
 //				).by(
-//					ClassCriteria.create().allThoseThat((currentScannedClass) ->
+//					ClassCriteria.create().allThoseThatMatch((currentScannedClass) ->
 //						currentScannedClass.getModule().getName() != null && 
 //						currentScannedClass.getModule().getName().equals("jdk.xml.dom")
 //					)
