@@ -38,7 +38,7 @@ public class FieldsHandler {
 		
 		//Get all filtered field values of an object through memory address access
 		Fields.getAllDirect(
-			FieldCriteria.withoutConsideringParentClasses().allThat(field -> {
+			FieldCriteria.withoutConsideringParentClasses().allThoseThatMatch(field -> {
 				return field.getType().isPrimitive();
 			}), 
 			obj

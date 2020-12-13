@@ -41,18 +41,18 @@ import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.TriPredicate;
 
 @SuppressWarnings("unchecked")
-public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> implements Closeable, ManagedLogger {
+public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> implements Closeable {
 	protected BiPredicate<T, E> predicate;
 	protected Function<BiPredicate<T, E>, BiPredicate<T, E>> logicalOperator;
 	
 	@SuppressWarnings("resource")
 	public final static <E, C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> Criteria<E, C, T> of(final BiPredicate<T, E> predicate) {
-		return new Criteria<E, C, T>().allThat(predicate);
+		return new Criteria<E, C, T>().allThoseThatMatch(predicate);
 	}
 	
 	@SuppressWarnings("resource")
 	public final static <E, C extends Criteria<E, C, T>, T extends Criteria.TestContext<E, C>> Criteria<E, C, T> of(final Predicate<E> predicate) {
-		return new Criteria<E, C, T>().allThat(predicate);
+		return new Criteria<E, C, T>().allThoseThatMatch(predicate);
 	}
 	
 	public C and(){
@@ -86,12 +86,12 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 		return targetCriteria;
 	}
 	
-	public C allThat(final Predicate<E> predicate) {
-		return allThat((context, entity) -> predicate.test(entity)) ;
+	public C allThoseThatMatch(final Predicate<E> predicate) {
+		return allThoseThatMatch((context, entity) -> predicate.test(entity)) ;
 	}
 	
 	
-	public C allThat(final BiPredicate<T, E> predicate) {
+	public C allThoseThatMatch(final BiPredicate<T, E> predicate) {
 		this.predicate = concat(
 			this.predicate,
 			(context, entity) -> predicate.test(context, entity)
@@ -329,7 +329,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 	}
 	
 	
-	public static class Simple<E, C extends Simple<E, C>> implements Closeable, ManagedLogger {
+	public static class Simple<E, C extends Simple<E, C>> implements Closeable {
 		protected Predicate<E> predicate;
 		protected Function<Predicate<E>, Predicate<E>> logicalOperator;
 		

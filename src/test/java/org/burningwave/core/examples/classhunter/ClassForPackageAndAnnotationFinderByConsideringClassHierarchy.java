@@ -24,7 +24,7 @@ public class ClassForPackageAndAnnotationFinderByConsideringClassHierarchy {
                 SearchConfig.forResources(
                     "org/springframework"
                 ).by(
-                    ClassCriteria.create().allThat((cls) -> {
+                    ClassCriteria.create().allThoseThatMatch((cls) -> {
                         while (cls != null) {
                             if (cls.getAnnotations() != null && cls.getAnnotations().length > 0) {
                                 return true;
@@ -33,15 +33,15 @@ public class ClassForPackageAndAnnotationFinderByConsideringClassHierarchy {
                         }
                         return false;
                     }).or().byMembers(
-                        MethodCriteria.forEntireClassHierarchy().allThat((method) -> {
+                        MethodCriteria.forEntireClassHierarchy().allThoseThatMatch((method) -> {
                             return method.getAnnotations() != null && method.getAnnotations().length > 0;
                         })
                     ).or().byMembers(
-                        FieldCriteria.forEntireClassHierarchy().allThat((field) -> {
+                        FieldCriteria.forEntireClassHierarchy().allThoseThatMatch((field) -> {
                             return field.getAnnotations() != null && field.getAnnotations().length > 0;
                         })
                     ).or().byMembers(
-                        ConstructorCriteria.forEntireClassHierarchy().allThat((ctor) -> {
+                        ConstructorCriteria.forEntireClassHierarchy().allThoseThatMatch((ctor) -> {
                             return ctor.getAnnotations() != null && ctor.getAnnotations().length > 0;
                         })
                     )

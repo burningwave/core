@@ -169,7 +169,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllSubtypeOfTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		ClassCriteria classCriteria = ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+		ClassCriteria classCriteria = ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 			//[1]here you recall the uploaded class by "useClasses" method. In this case we're looking for all classes that extend com.github.burningwave.core.Item
 			uploadedClasses.get(Complex.Data.Item.class).isAssignableFrom(currentScannedClass)
 		).useClasses(
@@ -201,7 +201,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
 						Serializable.class
@@ -221,7 +221,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						//[1]here you recall the uploaded class by "useClasses" method.
 						//In this case we're looking for all classes that implements java.io.Closeable or java.io.Serializable
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass) ||
@@ -250,7 +250,7 @@ public class ClassHunterTest extends BaseTest {
 					//both folders, zip and jar will be scanned recursively
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						//[1]here you recall the uploaded class by "useClasses" method. In this case we're looking for all classes that extend java.util.AbstractList
 						uploadedClasses.get(AbstractList.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
@@ -276,7 +276,7 @@ public class ClassHunterTest extends BaseTest {
 				).addPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src")
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
 						Serializable.class
@@ -298,12 +298,12 @@ public class ClassHunterTest extends BaseTest {
 				).addPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src")
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
 						Serializable.class
 					).and(
-						ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+						ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 							uploadedClasses.get(Comparable.class).isAssignableFrom(currentScannedClass)
 						).useClasses(
 							Comparable.class
@@ -322,7 +322,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> classHunter.findBy(
 				SearchConfig.byCriteria(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass) ||
 						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
 					).and().byMembers(
@@ -354,7 +354,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass) ||
 						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
 					).and().byMembers(
@@ -384,7 +384,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass) ||
 						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
@@ -399,7 +399,7 @@ public class ClassHunterTest extends BaseTest {
 				)
 			).find(),
 			(result) -> result.getClasses(
-				ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+				ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 					uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
 				).useClasses(
 					Serializable.class
@@ -416,7 +416,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass) ||
 						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
 					).and().byMembers(
@@ -451,7 +451,7 @@ public class ClassHunterTest extends BaseTest {
 					componentSupplier.getPathHelper().getMainClassPaths(),
 					Arrays.asList(pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip"))
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
 					).and().byMembers(
 						MethodCriteria.byScanUpTo(
@@ -494,7 +494,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAllPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
 					).and().byMembers(
 						methodCriteria
@@ -529,7 +529,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAllPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Object.class).isAssignableFrom(currentScannedClass)
 					).and().byMembers(
 						methodCriteria
@@ -602,7 +602,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAllPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Object.class).isAssignableFrom(currentScannedClass)
 					).and().byMembers(
 						methodCriteria_01.or(methodCriteria_02)
@@ -697,7 +697,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 		searchConfig.by(
-			ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> 
+			ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) -> 
 				uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
 			).useClasses(
 				Closeable.class
@@ -720,7 +720,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 		searchConfig.by(
-			ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> 
+			ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) -> 
 				uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
 			).useClasses(
 				Closeable.class
@@ -741,7 +741,7 @@ public class ClassHunterTest extends BaseTest {
 					componentSupplier.getPathHelper().getPath((path) ->
 					path.endsWith("target/classes"))
 				).by(
-					ClassCriteria.create().allThat((currentScannedClass) -> 
+					ClassCriteria.create().allThoseThatMatch((currentScannedClass) -> 
 						currentScannedClass.getPackage() != null &&
 						currentScannedClass.getPackage().getName().startsWith("org.burningwave")
 					)
@@ -761,10 +761,10 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 						componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
-					ClassCriteria.create().allThat((cls) -> {
+					ClassCriteria.create().allThoseThatMatch((cls) -> {
 						return cls.getAnnotations() != null && cls.getAnnotations().length > 0;
 					}).or().byMembers(
-						MethodCriteria.withoutConsideringParentClasses().allThat((method) -> {
+						MethodCriteria.withoutConsideringParentClasses().allThoseThatMatch((method) -> {
 							return method.getAnnotations() != null && method.getAnnotations().length > 0;
 						})
 					)
@@ -782,18 +782,18 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 						componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
-					ClassCriteria.create().allThat((cls) -> {
+					ClassCriteria.create().allThoseThatMatch((cls) -> {
 						return cls.getAnnotations() != null && cls.getAnnotations().length > 0;
 					}).or().byMembers(
 						MethodCriteria.byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
 							return lastClassInHierarchy.equals(currentScannedClass);
-						}).allThat((method) -> {
+						}).allThoseThatMatch((method) -> {
 							return method.getAnnotations() != null && method.getAnnotations().length > 0;
 						})
 					)
 				)
 			),
-			(result) -> result.getMembersBy(MethodCriteria.withoutConsideringParentClasses().allThat((method) -> {
+			(result) -> result.getMembersBy(MethodCriteria.withoutConsideringParentClasses().allThoseThatMatch((method) -> {
 					return method.getAnnotations() != null && method.getAnnotations().length > 0;
 				})
 			)
@@ -824,7 +824,7 @@ public class ClassHunterTest extends BaseTest {
 					//both folders, zip and jar will be scanned recursively
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						//[1]here you recall the uploaded class by "useClasses" method. In this case we're looking for all classes that extend com.github.burningwave.core.Item
 						uploadedClasses.get(Complex.Data.Item.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
@@ -849,7 +849,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
 						Serializable.class
@@ -870,7 +870,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						//[1]here you recall the uploaded class by "useClasses" method.
 						//In this case we're looking for all classes that implements java.io.Closeable or java.io.Serializable
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass) ||
@@ -900,7 +900,7 @@ public class ClassHunterTest extends BaseTest {
 					//both folders, zip and jar will be scanned recursively
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						//[1]here you recall the uploaded class by "useClasses" method. In this case we're looking for all classes that extend java.util.AbstractList
 						uploadedClasses.get(AbstractList.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
@@ -924,7 +924,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass) ||
 						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
 					).and().byMembers(
@@ -955,7 +955,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass) ||
 						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
 					).and().byMembers(
@@ -991,7 +991,7 @@ public class ClassHunterTest extends BaseTest {
 					componentSupplier.getPathHelper().getMainClassPaths(),
 					Arrays.asList(pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip"))
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> {
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) -> {
 							return uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass);
 						}
 					).and().byMembers(
@@ -1036,7 +1036,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAllPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
 					).and().byMembers(
 						methodCriteria
@@ -1071,7 +1071,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAllPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Object.class).isAssignableFrom(currentScannedClass)
 					).and().byMembers(
 						methodCriteria
@@ -1146,7 +1146,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAllPaths()
 				).by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) ->
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Object.class).isAssignableFrom(currentScannedClass)
 					).and().byMembers(
 						methodCriteria_01.or(methodCriteria_02)
@@ -1240,7 +1240,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 		searchConfig.by(
-			ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> 
+			ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) -> 
 				uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
 			).useClasses(
 				Closeable.class
@@ -1267,7 +1267,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(() -> 
 			componentSupplier.getClassHunter().findBy(
 				searchConfig.by(
-					ClassCriteria.create().byClasses((uploadedClasses, currentScannedClass) -> 
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) -> 
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
 						Closeable.class
@@ -1288,7 +1288,7 @@ public class ClassHunterTest extends BaseTest {
 					componentSupplier.getPathHelper().getPath((path) ->
 					path.endsWith("target/classes"))
 				).by(
-					ClassCriteria.create().allThat((currentScannedClass) -> 
+					ClassCriteria.create().allThoseThatMatch((currentScannedClass) -> 
 						currentScannedClass.getPackage() != null &&
 						currentScannedClass.getPackage().getName().startsWith("org.burningwave")
 					)
@@ -1328,12 +1328,12 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 						componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
-					ClassCriteria.create().allThat((cls) -> {
+					ClassCriteria.create().allThoseThatMatch((cls) -> {
 						return cls.getAnnotations() != null && cls.getAnnotations().length > 0;
 					}).or().byMembers(
 						MethodCriteria.byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
 							return lastClassInHierarchy.equals(currentScannedClass);
-						}).allThat((method) -> {
+						}).allThoseThatMatch((method) -> {
 							return method.getAnnotations() != null && method.getAnnotations().length > 0;
 						})
 					)
@@ -1354,7 +1354,7 @@ public class ClassHunterTest extends BaseTest {
 	        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 	            pathHelper.getPaths(path -> path.matches(".*?junit-platform-engine-1.7.0.jar"))
 	        ).by(
-	            ClassCriteria.create().allThat((cls) -> {
+	            ClassCriteria.create().allThoseThatMatch((cls) -> {
 	                return cls.getPackage().getName().equals("org.junit.platform.engine");
 	            })
 	        );
@@ -1375,7 +1375,7 @@ public class ClassHunterTest extends BaseTest {
 	        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
 	            pathHelper.loadAndMapPaths("custom", "//${paths.custom-class-path}/ESC-Lib.ear/APP-INF/lib//children:.*?activation-1.1\\.jar;")
 	        ).by(
-	            ClassCriteria.create().allThat((cls) -> {
+	            ClassCriteria.create().allThoseThatMatch((cls) -> {
 	                return cls.getPackage().getName().matches(".*?activation");
 	            })
 	        );

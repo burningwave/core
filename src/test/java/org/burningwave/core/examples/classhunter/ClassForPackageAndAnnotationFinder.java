@@ -24,18 +24,18 @@ public class ClassForPackageAndAnnotationFinder {
 	            SearchConfig.forResources(
 	                "org/springframework"
 	            ).by(
-	                    ClassCriteria.create().allThat((cls) -> {
+	                    ClassCriteria.create().allThoseThatMatch((cls) -> {
 	                        return cls.getAnnotations() != null && cls.getAnnotations().length > 0;
 	                    }).or().byMembers(
-	                        MethodCriteria.withoutConsideringParentClasses().allThat((method) -> {
+	                        MethodCriteria.withoutConsideringParentClasses().allThoseThatMatch((method) -> {
 	                            return method.getAnnotations() != null && method.getAnnotations().length > 0;
 	                        })
 	                    ).or().byMembers(
-	                        FieldCriteria.withoutConsideringParentClasses().allThat((field) -> {
+	                        FieldCriteria.withoutConsideringParentClasses().allThoseThatMatch((field) -> {
 	                            return field.getAnnotations() != null && field.getAnnotations().length > 0;
 	                        })
 	                    ).or().byMembers(
-	                        ConstructorCriteria.withoutConsideringParentClasses().allThat((ctor) -> {
+	                        ConstructorCriteria.withoutConsideringParentClasses().allThoseThatMatch((ctor) -> {
 	                            return ctor.getAnnotations() != null && ctor.getAnnotations().length > 0;
 	                        })
 	                    )
