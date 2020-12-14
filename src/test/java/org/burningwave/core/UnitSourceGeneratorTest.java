@@ -1,5 +1,7 @@
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -109,7 +111,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 					.addMethod(method)).addOuterCodeLine("@Annotation").addOuterCodeLine("@Annotation2");
 			unit.addClass(cls);
 			unit.addClass(cls);
-			logDebug(unit.make());
+			ManagedLoggersRepository.logDebug(getClass()::getName, unit.make());
 		});
 	}
 	

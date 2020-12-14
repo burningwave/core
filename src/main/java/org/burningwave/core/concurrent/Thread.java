@@ -137,7 +137,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			try {				
 				join();
 			} catch (InterruptedException exc) {
-				logError(exc);
+				ManagedLoggersRepository.logError(getClass()::getName, exc);
 			}
 		}
 	}	
@@ -359,7 +359,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 								wait();
 							}
 						} catch (InterruptedException exc) {
-							logError(exc);
+							ManagedLoggersRepository.logError(getClass()::getName, exc);
 						}
 					}
 					synchronized (this) {
@@ -391,7 +391,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					try {
 						super.interrupt();
 					} catch (Throwable exc) {
-						logError("Exception occurred", exc);
+						ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);
 					}
 					synchronized (poolableSleepingThreads) {
 						poolableSleepingThreads.notifyAll();
@@ -438,7 +438,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					try {
 						super.interrupt();
 					} catch (Throwable exc) {
-						logError("Exception occurred", exc);
+						ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);
 					}
 					synchronized (poolableSleepingThreads) {
 						poolableSleepingThreads.notifyAll();
@@ -539,7 +539,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					try {
 						executable.accept(thread);
 					} catch (Throwable exc) {
-						logError(exc);
+						ManagedLoggersRepository.logError(getClass()::getName, exc);
 					}
 				}, isLooper);
 				if (threadName != null) {
@@ -575,7 +575,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				try {
 					thr.join();
 				} catch (InterruptedException exc) {
-					logError(exc);
+					ManagedLoggersRepository.logError(getClass()::getName, exc);
 				}
 			}
 		}

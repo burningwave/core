@@ -34,6 +34,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Constructo
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
 import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
@@ -363,7 +364,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 		try {
 			return (Field[])getDeclaredFieldsRetriever.invoke(cls, false);
 		} catch (Throwable exc) {
-			logWarn("Could not retrieve fields of class {}. Cause: {}", cls.getName(), exc.getMessage());
+			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not retrieve fields of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return emtpyFieldsArray;
 		}		
 	}
@@ -373,7 +374,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 		try {
 			return (Constructor<T>[])getDeclaredConstructorsRetriever.invoke(cls, false);
 		} catch (Throwable exc) {
-			logWarn("Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
+			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return (Constructor<T>[])emptyConstructorsArray;
 		}
 	}
@@ -383,7 +384,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 		try {
 			return (Method[])getDeclaredMethodsRetriever.invoke(cls, false);
 		} catch (Throwable exc) {
-			logWarn("Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
+			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
 			return emptyMethodsArray;
 		}
 	}
@@ -658,7 +659,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 				theUnsafeField.setAccessible(true);
 				this.lowLevelObjectsHandler.unsafe = (Unsafe)theUnsafeField.get(null);
 			} catch (Throwable exc) {
-				logInfo("Exception while retrieving unsafe");
+				ManagedLoggersRepository.logInfo(getClass()::getName, "Exception while retrieving unsafe");
 				Throwables.throwException(exc);
 			}
 		}	
@@ -768,14 +769,14 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 					lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) ->
 						accessibleSetterMethod.invoke(null, accessibleObject, flag);
 				} catch (Throwable exc) {
-					logInfo("method setAccessible0 class not detected on " + AccessibleObject.class.getName());
+					ManagedLoggersRepository.logInfo(getClass()::getName, "method setAccessible0 class not detected on " + AccessibleObject.class.getName());
 					Throwables.throwException(exc);
 				}
 				try {
 					lowLevelObjectsHandler.methodInvoker = Class.forName("sun.reflect.NativeMethodAccessorImpl").getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
 					lowLevelObjectsHandler.setAccessible(lowLevelObjectsHandler.methodInvoker, true);
 				} catch (Throwable exc2) {
-					logError("method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
+					ManagedLoggersRepository.logError(getClass()::getName, "method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
 					Throwables.throwException(exc2);
 				}		
 			}
@@ -808,7 +809,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 						(MethodHandles.Lookup)consulterRetrieverMethod.invoke(cls, MethodHandles.lookup());
 				} catch (IllegalArgumentException | NoSuchMethodException
 						| SecurityException | IllegalAccessException exc) {
-					logError("Could not initialize consulter", exc);
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize consulter", exc);
 					Throwables.throwException(exc);
 				}
 			}
@@ -822,7 +823,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 					lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) ->
 						accessibleSetterMethod.invoke(accessibleObject, flag);
 				} catch (Throwable exc) {
-					logInfo("method setAccessible0 class not detected on " + AccessibleObject.class.getName());
+					ManagedLoggersRepository.logInfo(getClass()::getName, "method setAccessible0 class not detected on " + AccessibleObject.class.getName());
 					Throwables.throwException(exc);
 				}
 				try {
@@ -844,7 +845,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 						);
 						lowLevelObjectsHandler.setAccessible(lowLevelObjectsHandler.methodInvoker, true);
 					} catch (Throwable exc) {
-						logInfo("method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
+						ManagedLoggersRepository.logInfo(getClass()::getName, "method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
 						Throwables.throwException(exc);
 					}
 					try (
@@ -861,14 +862,14 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 						Throwables.throwException(exc);
 					}
 				} catch (Throwable exc) {
-					logInfo("jdk.internal.loader.BuiltinClassLoader class not detected");
+					ManagedLoggersRepository.logInfo(getClass()::getName, "jdk.internal.loader.BuiltinClassLoader class not detected");
 					Throwables.throwException(exc);
 				}
 				try {
 					initDeepConsulter();
 				} catch (IllegalAccessException | NoSuchMethodException | InstantiationException
 						| InvocationTargetException | ClassNotFoundException exc) {
-					logInfo("Could not init deep consulter");
+					ManagedLoggersRepository.logInfo(getClass()::getName, "Could not init deep consulter");
 					Throwables.throwException(exc);
 				}
 			}

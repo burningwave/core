@@ -30,6 +30,7 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
@@ -68,7 +69,7 @@ public class Cache implements ManagedLogger {
 	public final ObjectAndPathForResources<ClassLoader, Members.Handler.OfExecutable.Box<?>> uniqueKeyForExecutableAndMethodHandle;
 	
 	private Cache() {
-		logInfo("Building cache");
+		ManagedLoggersRepository.logInfo(getClass()::getName, "Building cache");
 		pathForContents = new PathForResources<>(Streams::shareContent);
 		pathForFileSystemItems = new PathForResources<>(
 			(path, fileSystemItem) -> 

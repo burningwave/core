@@ -30,6 +30,7 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
@@ -102,12 +103,12 @@ class ZipFile implements IterableZipContainer, Memorizer {
 			 return bBOS.toByteBuffer();
 		} catch (Throwable exc) {
 			if (recursive) {
-				logWarn("Exception occurred while building zip entry {} of {}: {}", zipEntry.getName(), absolutePath, exc.getMessage());
+				ManagedLoggersRepository.logWarn(getClass()::getName, "Exception occurred while building zip entry {} of {}: {}", zipEntry.getName(), absolutePath, exc.getMessage());
 				this.originalZipFile = null;
-				logInfo("Trying recursive call");
+				ManagedLoggersRepository.logInfo(getClass()::getName, "Trying recursive call");
 				return buildZipEntry(absolutePath, content, zipEntry, false);
 			}
-			logError("Could not load content of {} of {}", exc, zipEntry.getName(), absolutePath);
+			ManagedLoggersRepository.logError(getClass()::getName, "Could not load content of {} of {}", exc, zipEntry.getName(), absolutePath);
 			return null;
 		}
 	}
@@ -232,7 +233,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 			try {
 				originalZipFile.close();
 			} catch (IOException exc) {
-				logError("Exception while closing " + getAbsolutePath(), exc);
+				ManagedLoggersRepository.logError(getClass()::getName, "Exception while closing " + getAbsolutePath(), exc);
 			}
 		}
 		this.absolutePath = null;

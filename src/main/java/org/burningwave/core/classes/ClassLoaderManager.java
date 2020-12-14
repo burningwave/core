@@ -28,17 +28,17 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.util.function.Supplier;
 
 import org.burningwave.core.Closeable;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.concurrent.Synchronizer.Mutex;
 
 @SuppressWarnings("unchecked")
-class ClassLoaderManager<C extends ClassLoader> implements Closeable, ManagedLogger {
+class ClassLoaderManager<C extends ClassLoader> implements Closeable {
 	
 	
 	private Supplier<C> classLoaderSupplier;
@@ -127,7 +127,7 @@ class ClassLoaderManager<C extends ClassLoader> implements Closeable, ManagedLog
 						((ComponentContainer.PathScannerClassLoader)classLoader).markAsCloseable();
 					}
 				} catch (Throwable exc) {
-					logWarn("Exception occurred while resetting default path scanner classloader: {}", exc.getMessage());
+					ManagedLoggersRepository.logWarn(getClass()::getName, "Exception occurred while resetting default path scanner classloader: {}", exc.getMessage());
 				}
 			}
 		});

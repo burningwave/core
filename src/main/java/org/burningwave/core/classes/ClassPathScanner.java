@@ -1,6 +1,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 
 import java.util.Collection;
@@ -145,7 +146,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			context.executeSearch((Consumer<SearchContext<I>>)searcher);
 			Collection<String> skippedClassesNames = context.getSkippedClassNames();
 			if (!skippedClassesNames.isEmpty()) {
-				logWarn("Skipped classes count: {}", skippedClassesNames.size());
+				ManagedLoggersRepository.logWarn(getClass()::getName, "Skipped classes count: {}", skippedClassesNames.size());
 			}
 			R searchResult = resultSupplier.apply(context);
 			searchResult.setClassPathScanner(this);

@@ -223,7 +223,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		Properties componentContainerConfig = new Properties();
 		componentContainerConfig.putAll(this.config);
 		componentContainerConfig.keySet().removeAll(GlobalProperties.keySet());
-		logInfo(
+		ManagedLoggersRepository.logInfo(getClass()::getName,
 			"\n\n\tConfiguration values for dynamic components:\n\n{}\n\n",
 			componentContainerConfig.toPrettyString(2)
 		);
@@ -500,7 +500,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 							((PathScannerClassLoader)component).unregister(this, true);
 						}					
 					} catch (Throwable exc) {
-						logError("Exception occurred while closing " + component, exc);
+						ManagedLoggersRepository.logError(getClass()::getName,"Exception occurred while closing " + component, exc);
 					}
 				}),Thread.MIN_PRIORITY
 			).submit();

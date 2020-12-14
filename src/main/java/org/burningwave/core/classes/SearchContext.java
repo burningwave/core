@@ -30,6 +30,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.nio.ByteBuffer;
@@ -215,11 +216,11 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 						}
 					} 
 				} else {
-					logError("Could not retrieve className from exception", exc);
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not retrieve className from exception", exc);
 				}
 				return defaultValueSupplier.get();
 			} catch (LinkageError | SecurityException | InternalError exc) {
-				logWarn("Could not load class {}: {}", classNameSupplier.get(), exc.toString());
+				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not load class {}: {}", classNameSupplier.get(), exc.toString());
 			}
 			return defaultValueSupplier.get();
 		});

@@ -28,6 +28,8 @@
  */
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -177,7 +179,7 @@ public class Strings implements ManagedLogger {
 					}					
 					foundString.add(matcher.group(i));
 				} catch (IndexOutOfBoundsException exc) {
-					logInfo("group " + i + " not found on string \"" + target + "\" using pattern " + pattern.pattern());
+					ManagedLoggersRepository.logInfo(getClass()::getName, "group " + i + " not found on string \"" + target + "\" using pattern " + pattern.pattern());
 				}
 			}
 		}

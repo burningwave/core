@@ -3,6 +3,7 @@ package org.burningwave.core.io;
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -298,7 +299,7 @@ class PathHelperImpl implements Component, PathHelper {
 		).map(resource -> {
 			return resource.getAbsolutePath();
 		}).orElseGet(() -> {
-			logInfo("Could not find file {}", resourceRelativePath);
+			ManagedLoggersRepository.logInfo(getClass()::getName, "Could not find file {}", resourceRelativePath);
 			return null;
 		});
 	}
@@ -360,7 +361,7 @@ class PathHelperImpl implements Component, PathHelper {
 				Throwables.throwException("Found more than one resource under relative path " + resourceRelativePath + ":\n" + filesInfo.toString());
 			} else {
 				FileSystemItem fileSystemItem = FileSystemItem.ofPath(filesFound.keySet().stream().findFirst().get());
-				logWarn("Found more than one resource under relative path " + resourceRelativePath + ":\n" + filesInfo.toString() + "\t" +
+				ManagedLoggersRepository.logWarn(getClass()::getName, "Found more than one resource under relative path " + resourceRelativePath + ":\n" + filesInfo.toString() + "\t" +
 					System.identityHashCode(fileSystemItem) + ": " + fileSystemItem.getAbsolutePath() + "\twill be assumed\n"
 				);
 				return (T)fileSystemItem;

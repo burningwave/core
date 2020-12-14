@@ -1,5 +1,6 @@
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -63,7 +64,7 @@ public class PathHelperTest extends BaseTest {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			PathHelper pathHelper = componentSupplier.getPathHelper();
 			StringBuffer fileAsString = pathHelper.getResourceAsStringBuffer("burningwave.properties");
-			logDebug(fileAsString.toString());
+			ManagedLoggersRepository.logDebug(getClass()::getName, fileAsString.toString());
 			return fileAsString;
 		});
 	}

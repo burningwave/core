@@ -31,6 +31,7 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 
@@ -307,10 +308,10 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 						pathsToBeRefreshed != null && pathsToBeRefreshed.contains(absolutePath),
 					classPath
 				).isEmpty()) {
-					logInfo("Added class path {} to {}", classPath, targetClassLoader.toString());
+					ManagedLoggersRepository.logInfo(getClass()::getName, "Added class path {} to {}", classPath, targetClassLoader.toString());
 					addedClassPathsForClassLoader.put(classPath, targetClassLoader);
 				} else {
-					logInfo("Class path {} already present in {}", classPath, targetClassLoader.toString());
+					ManagedLoggersRepository.logInfo(getClass()::getName, "Class path {} already present in {}", classPath, targetClassLoader.toString());
 				}
 			}
 		} else {

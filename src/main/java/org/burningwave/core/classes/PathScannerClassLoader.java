@@ -29,6 +29,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -105,7 +106,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			return true;
 		}).setExceptionHandler((exc, childAndPath) -> {
 			if (!isClosed) {
-				logError("Exception occurred while scanning {}", exc, childAndPath[0].getAbsolutePath());
+				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred while scanning {}", exc, childAndPath[0].getAbsolutePath());
 			} else {
 				Throwables.throwException(exc);
 			}
@@ -147,7 +148,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			}
 		} catch (Throwable exc) {
 			if (isClosed) {
-				logWarn("Could not execute scanPathsAndAddAllByteCodesFound because {} has been closed", this.toString());
+				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute scanPathsAndAddAllByteCodesFound because {} has been closed", this.toString());
 			} else {
 				throw exc;
 			}
