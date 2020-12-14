@@ -216,9 +216,8 @@ public class Synchronizer implements Closeable, ManagedLogger {
 	public void stopAllThreadsMonitoring(boolean waitThreadToFinish) {
 		ThreadsMonitorer allThreadsMonitorer = this.allThreadsMonitorer;
 		if (allThreadsMonitorer != null) {
-			allThreadsMonitorer.close();
-		}
-		allThreadsMonitorer.stop(waitThreadToFinish);
+			allThreadsMonitorer.stop(waitThreadToFinish);
+		}		
 	}
 	
 	public static class Mutex {
