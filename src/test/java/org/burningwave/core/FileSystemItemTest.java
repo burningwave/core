@@ -1,5 +1,7 @@
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+
 import java.net.URL;
 
 import org.burningwave.core.assembler.ComponentSupplier;
@@ -397,7 +399,7 @@ public class FileSystemItemTest extends BaseTest {
 			URL url = FileSystemItem.ofPath(
 				basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
 			).getURL();
-			logDebug(url.toString());
+			ManagedLoggersRepository.logDebug(getClass()::getName, url.toString());
 			return url;
 		});
 	}

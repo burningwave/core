@@ -7,7 +7,7 @@ import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 
 
-public class TaskLauncher implements ManagedLogger{
+public class TaskLauncher implements ManagedLogger {
     
     public void launch() {
         ProducerTask<Long> taskOne = BackgroundExecutor.createTask(() -> {

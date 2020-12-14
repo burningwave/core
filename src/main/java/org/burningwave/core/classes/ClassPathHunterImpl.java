@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -127,7 +129,7 @@ class ClassPathHunterImpl extends ClassPathScannerWithCachingSupport.Abst<Collec
 					context.addItemFound(basePath, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 				}
 			} catch (Throwable exc) {
-				logError("Could not test cached entry of path " + absolutePathOfItem, exc);
+				ManagedLoggersRepository.logError(getClass()::getName, "Could not test cached entry of path " + absolutePathOfItem, exc);
 			}
 		}
 	}

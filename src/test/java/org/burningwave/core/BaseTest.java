@@ -1,5 +1,6 @@
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -79,11 +80,11 @@ public class BaseTest implements Component {
 	public void testNotNull(ThrowingSupplier<?> supplier) {
 		Object object = null;
 		try {
-			logInfo(getCallerMethod() + " - start execution");
+			ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - start execution");
 			object = supplier.get();
-			logInfo(getCallerMethod() + " - end execution");
+			ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - end execution");
 		} catch (Throwable exc) {
-			logError(getCallerMethod() + " - Exception occurred", exc);
+			ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 		}
 		assertNotNull(object);
 	}
@@ -98,17 +99,17 @@ public class BaseTest implements Component {
 		boolean isNotEmpty = false;
 		try {
 			coll = supplier.get();
-			logInfo(getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 			isNotEmpty = !coll.isEmpty();
 			if (isNotEmpty && printAllElements) {
 				for (Object obj : coll) {
 					if (obj != null) {
-						logDebug("{}", obj);
+						ManagedLoggersRepository.logDebug(getClass()::getName, "{}", obj);
 					}
 				}
 			}
 		} catch (Throwable exc) {
-			logError(getCallerMethod() + " - Exception occurred", exc);
+			ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 		}
 		assertTrue(!coll.isEmpty());
 	}
@@ -134,15 +135,15 @@ public class BaseTest implements Component {
 		boolean isNotEmpty = false;
 		try (T collectionSupplier = autoCloaseableSupplier.get()){
 			coll = collSupplier.apply(collectionSupplier);
-			logInfo(getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 			isNotEmpty = !coll.isEmpty();
 			if (isNotEmpty && printAllElements) {
-				coll.forEach(element -> logDebug(
+				coll.forEach(element -> ManagedLoggersRepository.logDebug(getClass()::getName, 
 					Optional.ofNullable(element.toString()).orElseGet(() -> null)
 				));
 			}
 		} catch (Throwable exc) {
-			logError(getCallerMethod() + " - Exception occurred", exc);
+			ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 		}
 		assertTrue(isNotEmpty);
 	}
@@ -155,9 +156,9 @@ public class BaseTest implements Component {
 		long initialTime = System.currentTimeMillis();
 		try (T autoCloseable = autoCloseableSupplier.get()) {
 			assertNotNull(objectSupplier.apply(autoCloseable));
-			logInfo(getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 		} catch (Throwable exc) {
-			logError(getCallerMethod() + " - Exception occurred", exc);
+			ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 		}		
 	}
 	
@@ -166,11 +167,11 @@ public class BaseTest implements Component {
 		Throwable throwable = null;
 		long initialTime = System.currentTimeMillis();
 		try {
-			logDebug(getCallerMethod() + " - Initializing logger");
+			ManagedLoggersRepository.logDebug(getClass()::getName, getCallerMethod() + " - Initializing logger");
 			executable.execute();
-			logInfo(getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 		} catch (Throwable exc) {
-			logError(getCallerMethod() + " - Exception occurred", exc);
+			ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 			throwable = exc;
 		}
 		assertNull(throwable);

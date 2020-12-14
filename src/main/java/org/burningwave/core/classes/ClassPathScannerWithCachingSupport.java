@@ -29,6 +29,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.util.Collection;
@@ -208,7 +209,7 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 						context.addItemFound(basePath, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
 					}
 				} catch (Throwable exc) {
-					logError("Could not test cached entry of path " + absolutePathOfItem, exc);
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not test cached entry of path " + absolutePathOfItem, exc);
 				}
 			}
 		}
@@ -236,7 +237,7 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 						addCachedItemToContext(context, testContext, basePath, cachedItemAsEntry);
 					}
 				} catch (Throwable exc) {
-					logError("Could not test cached entry of path " + absolutePathOfItem, exc);
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not test cached entry of path " + absolutePathOfItem, exc);
 				}
 			}
 		}
@@ -250,7 +251,7 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 						addCachedItemToContext(context, testContext, basePath, cachedItemAsEntry);
 					}
 				} catch (Throwable exc) {
-					logError("Could not test cached entry of path " + absolutePathOfItem, exc);
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not test cached entry of path " + absolutePathOfItem, exc);
 				}
 			}
 		}

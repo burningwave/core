@@ -30,7 +30,7 @@ package org.burningwave.core;
 
 import org.burningwave.core.iterable.Properties;
 
-public interface Component extends Closeable, Cleanable, ManagedLogger, Properties.Listener, Memorizer {
+public interface Component extends Closeable, Cleanable, Properties.Listener, Memorizer {
 	
 
 }

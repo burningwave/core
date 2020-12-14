@@ -50,47 +50,47 @@ import org.burningwave.core.jvm.LowLevelObjectsHandler;
 public interface ManagedLogger {	
 	
 	default void logTrace(String message) {
-		ManagedLoggersRepository.logTrace(() -> this.getClass().getName(), message);
+		ManagedLoggersRepository.logTrace(getClass()::getName, message);
 	}
 	
 	default void logTrace(String message, Object... arguments) {
-		ManagedLoggersRepository.logTrace(() -> this.getClass().getName(), message, arguments);
+		ManagedLoggersRepository.logTrace(getClass()::getName, message, arguments);
 	}
 	
 	default void logDebug(String message) {
-		ManagedLoggersRepository.logDebug(() -> this.getClass().getName(), message);
+		ManagedLoggersRepository.logDebug(getClass()::getName, message);
 	}
 	
 	default void logDebug(String message, Object... arguments) {
-		ManagedLoggersRepository.logDebug(() -> this.getClass().getName(), message, arguments);
+		ManagedLoggersRepository.logDebug(getClass()::getName, message, arguments);
 	}
 	
 	default void logInfo(String message) {
-		ManagedLoggersRepository.logInfo(() -> this.getClass().getName(), message);
+		ManagedLoggersRepository.logInfo(getClass()::getName, message);
 	}
 	
 	default void logInfo(String message, Object... arguments) {
-		ManagedLoggersRepository.logInfo(() -> this.getClass().getName(), message, arguments);
+		ManagedLoggersRepository.logInfo(getClass()::getName, message, arguments);
 	}
 	
 	default void logWarn(String message) {
-		ManagedLoggersRepository.logWarn(() -> this.getClass().getName(), message);
+		ManagedLoggersRepository.logWarn(getClass()::getName, message);
 	}
 	
 	default void logWarn(String message, Object... arguments) {
-		ManagedLoggersRepository.logWarn(() -> this.getClass().getName(), message, arguments);
+		ManagedLoggersRepository.logWarn(getClass()::getName, message, arguments);
 	}
 	
 	default void logError(String message, Throwable exc, Object... arguments) {
-		ManagedLoggersRepository.logError(() -> this.getClass().getName(), message, exc, arguments);
+		ManagedLoggersRepository.logError(getClass()::getName, message, exc, arguments);
 	}
 	
 	default void logError(String message, Object... arguments) {
-		ManagedLoggersRepository.logError(() -> this.getClass().getName(), message, arguments);
+		ManagedLoggersRepository.logError(getClass()::getName, message, arguments);
 	}
 	
 	default void logError(String message, Throwable exc) {
-		ManagedLoggersRepository.logError(() -> this.getClass().getName(), message, exc);
+		ManagedLoggersRepository.logError(getClass()::getName, message, exc);
 	}
 	
 	default void logError(String message) {

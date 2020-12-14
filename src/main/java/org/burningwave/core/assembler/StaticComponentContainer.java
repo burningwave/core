@@ -332,8 +332,8 @@ public class StaticComponentContainer {
 							BackgroundExecutor.shutDown(false);
 						},
 						() -> {
-							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Closing Synchronizer");
-							Synchronizer.close();
+							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Stopping all threads monitoring thread");
+							Synchronizer.stopAllThreadsMonitoring(false);
 						},
 						() -> {
 							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Closing ThreadHolder");
@@ -342,6 +342,10 @@ public class StaticComponentContainer {
 						() -> {
 							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Shuting down ThreadSupplier");
 							ThreadSupplier.shutDownAll();
+						},
+						() -> {
+							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Closing Synchronizer");
+							Synchronizer.close();
 						}
 					);
 				})

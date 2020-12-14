@@ -30,6 +30,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -73,7 +74,7 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
-public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component{
+public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 	private PathHelper pathHelper;
 	ClassPathHelper classPathHelper;
 	private JavaCompiler compiler;
@@ -148,7 +149,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component{
 		String compiledClassesStorage
 	) {	
 		return BackgroundExecutor.createTask(() -> {
-			logInfo("Try to compile: \n\n{}\n", String.join("\n", SourceCodeHandler.addLineCounter(sources)));
+			ManagedLoggersRepository.logInfo(getClass()::getName, "Try to compile: \n\n{}\n", String.join("\n", SourceCodeHandler.addLineCounter(sources)));
 			Collection<MemorySource> memorySources = new ArrayList<>();
 			sourcesToMemorySources(sources, memorySources);
 			try (Compilation.Context context = Compilation.Context.create(
@@ -168,7 +169,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component{
 					});
 				}
 				Collection<String> classNames = compiledFiles.keySet();
-				logInfo(
+				ManagedLoggersRepository.logInfo(getClass()::getName, 
 					classNames.size() > 1?	
 						"Classes {} have been succesfully compiled":
 						"Class {} has been succesfully compiled",
@@ -198,7 +199,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component{
 
 	private Map<String, ByteBuffer> compile(Compilation.Context context) {
 		if (!context.classPaths.isEmpty()) {
-			logInfo("... Using class paths:\n\t{}",String.join("\n\t", context.classPaths));
+			ManagedLoggersRepository.logInfo(getClass()::getName, "... Using class paths:\n\t{}",String.join("\n\t", context.classPaths));
 		}
 		List<String> options = new ArrayList<>();
 		if (!context.options.isEmpty()) {
@@ -296,7 +297,7 @@ static class DiagnosticListener implements javax.tools.DiagnosticListener<JavaFi
 				try {
 					fsObjects = context.findForClassName(javaClassPredicate);
 				} catch (Exception exc) {
-					logError(exc);
+					ManagedLoggersRepository.logError(getClass()::getName, exc);
 				}
 			} else {
 				String packageName = null;
@@ -313,7 +314,7 @@ static class DiagnosticListener implements javax.tools.DiagnosticListener<JavaFi
 					try {
 						fsObjects = context.findForPackageName(packageName);
 					} catch (Exception exc) {
-						logError(exc);
+						ManagedLoggersRepository.logError(getClass()::getName, exc);
 					}
 				} else {
 					Throwables.throwException(new UnknownCompilerErrorMessageException(message));

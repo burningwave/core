@@ -2,6 +2,7 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.io.BufferedReader;
@@ -51,17 +52,17 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener, Managed
 				this.defaultBufferSize = Integer.valueOf(value);
 			};
 		}
-		logInfo("default buffer size: {} bytes", this.defaultBufferSize);
+		ManagedLoggersRepository.logInfo(getClass()::getName, "default buffer size: {} bytes", this.defaultBufferSize);
 	}
 	
 	private void setDefaultByteBufferAllocationMode(java.util.Properties config) {
 		String defaultByteBufferAllocationMode = IterableObjectHelper.resolveStringValue(config, Configuration.Key.BYTE_BUFFER_ALLOCATION_MODE, Configuration.DEFAULT_VALUES);
 		if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
 			this.defaultByteBufferAllocator = ByteBufferHandler::allocate;
-			logInfo("default allocation mode: ByteBuffer::allocate");
+			ManagedLoggersRepository.logInfo(getClass()::getName, "default allocation mode: ByteBuffer::allocate");
 		} else {
 			this.defaultByteBufferAllocator = ByteBufferHandler::allocateDirect;
-			logInfo("default allocation mode: ByteBuffer::allocateDirect");
+			ManagedLoggersRepository.logInfo(getClass()::getName, "default allocation mode: ByteBuffer::allocateDirect");
 		}
 	}
 	

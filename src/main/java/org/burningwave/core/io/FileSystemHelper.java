@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
@@ -246,9 +247,9 @@ public class FileSystemHelper implements Component {
 			try {
 				setPingTime(fileSystemHelper.getOrCreatePingFile().getAbsolutePath());
 			} catch (Throwable exc) {
-				logError("Exception occurred while setting ping time on file " + fileSystemHelper.getOrCreatePingFile().getAbsolutePath());
-				logError(exc.getMessage());
-				logInfo("Current execution id: {}", fileSystemHelper.id);
+				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred while setting ping time on file " + fileSystemHelper.getOrCreatePingFile().getAbsolutePath());
+				ManagedLoggersRepository.logError(getClass()::getName, exc.getMessage());
+				ManagedLoggersRepository.logInfo(getClass()::getName, "Current execution id: {}", fileSystemHelper.id);
 			}
 			if (System.currentTimeMillis() - lastDeletionStartTime > deletingInterval) {
 				lastDeletionStartTime = System.currentTimeMillis();
@@ -276,17 +277,17 @@ public class FileSystemHelper implements Component {
 									}
 								}
 							} catch (Throwable exc) {
-								logWarn("Exception occurred while cleaning temporary file system item '{}'", fileSystemItem.getAbsolutePath());
+								ManagedLoggersRepository.logWarn(getClass()::getName, "Exception occurred while cleaning temporary file system item '{}'", fileSystemItem.getAbsolutePath());
 								if (fileSystemItem.getName().contains("null")) {
-									logInfo("Trying to force deleting of '{}'", fileSystemItem.getAbsolutePath());
+									ManagedLoggersRepository.logInfo(getClass()::getName, "Trying to force deleting of '{}'", fileSystemItem.getAbsolutePath());
 									delete(fileSystemItem);
 								} else {
 									throw exc;
 								}
 							}
 						} catch (Throwable exc) {
-							logError("Could not delete '{}' automatically, To avoid this error remove it manually", fileSystemItem.getAbsolutePath());
-							logInfo("Current execution id: {}", fileSystemHelper.id);
+							ManagedLoggersRepository.logError(getClass()::getName, "Could not delete '{}' automatically, To avoid this error remove it manually", fileSystemItem.getAbsolutePath());
+							ManagedLoggersRepository.logInfo(getClass()::getName, "Current execution id: {}", fileSystemHelper.id);
 						}
 					}
 				}
@@ -306,11 +307,11 @@ public class FileSystemHelper implements Component {
 			try {
 				pingTime = getPingTime(pingFile);
 			} catch (Throwable exc) {
-				logError("Exception occurred while getting ping time on file " + pingFile.getAbsolutePath());
-				logError(exc.getMessage());
-				logInfo("Current execution id: {}", fileSystemHelper.id);
+				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred while getting ping time on file " + pingFile.getAbsolutePath());
+				ManagedLoggersRepository.logError(getClass()::getName, exc.getMessage());
+				ManagedLoggersRepository.logInfo(getClass()::getName, "Current execution id: {}", fileSystemHelper.id);
 				pingTime = setPingTime(pingFile.getAbsolutePath());
-				logInfo("Ping time reset to {} for file {}", pingTime, pingFile.getAbsolutePath());
+				ManagedLoggersRepository.logInfo(getClass()::getName, "Ping time reset to {} for file {}", pingTime, pingFile.getAbsolutePath());
 			}
 			return pingTime;
 		}

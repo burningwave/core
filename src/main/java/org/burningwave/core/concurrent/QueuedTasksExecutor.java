@@ -140,7 +140,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 									executableCollectionFillerMutex.wait();
 								}
 							} catch (InterruptedException exc) {
-								logError(exc);
+								ManagedLoggersRepository.logError(getClass()::getName, exc);
 							}
 						}
 					}
@@ -167,7 +167,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					resumeCallerMutex.wait();
 					return true;
 				} catch (InterruptedException exc) {
-					logError(exc);
+					ManagedLoggersRepository.logError(getClass()::getName, exc);
 				}
 			}
 		}
@@ -254,7 +254,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					executableCollectionFillerMutex.notifyAll();
 				}
 			} catch (Throwable exc) {
-				logError(exc);
+				ManagedLoggersRepository.logError(getClass()::getName, exc);
 			}
 		}
 		return canBeExecutedBag != null ? (T)canBeExecutedBag[0] : task;
@@ -353,7 +353,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					try {
 						executingFinishedWaiterMutex.wait();
 					} catch (InterruptedException exc) {
-						logError(exc);
+						ManagedLoggersRepository.logError(getClass()::getName, exc);
 					}
 				}
 			}
@@ -392,7 +392,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					}
 					suspensionCallerMutex.wait();
 				} catch (InterruptedException exc) {
-					logError(exc);
+					ManagedLoggersRepository.logError(getClass()::getName, exc);
 				}
 			}
 		} else {
@@ -447,7 +447,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				supended = Boolean.FALSE;
 				resumeCallerMutex.notifyAll();
 			} catch (Throwable exc) {
-				logError(exc);
+				ManagedLoggersRepository.logError(getClass()::getName, exc);
 			}
 		}	
 		return this;
@@ -471,7 +471,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					try {
 						terminatingMutex.wait();
 					} catch (InterruptedException exc) {
-						logError(exc);
+						ManagedLoggersRepository.logError(getClass()::getName, exc);
 					}
 				}
 			}
@@ -502,7 +502,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			log.append(":\n\t")
 			.append(String.join("\n\t", executablesLog));
 		}		
-		logInfo(log.toString());
+		ManagedLoggersRepository.logInfo(getClass()::getName, log.toString());
 	}
 	
 	public String getInfoAsString() {
@@ -529,7 +529,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 	public void logInfo() {
 		String message = getInfoAsString();
 		if (!message.isEmpty()) {
-			logInfo(message);
+			ManagedLoggersRepository.logInfo(getClass()::getName, message);
 		}
 	}
 	
@@ -550,7 +550,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		executingFinishedWaiterMutex = null;    
 		suspensionCallerMutex = null;           
 		executableCollectionFillerMutex = null; 
-		logInfo("All resources of '{}' have been closed", name);
+		ManagedLoggersRepository.logInfo(getClass()::getName, "All resources of '{}' have been closed", name);
 		name = null;		
 	}
 	
@@ -599,7 +599,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 						)
 					);
 				} else {
-					logWarn("Tasks creation tracking was disabled when {} was created", this);
+					ManagedLoggersRepository.logWarn(getClass()::getName, "Tasks creation tracking was disabled when {} was created", this);
 				}
 			}
 			return creatorInfos;
@@ -790,12 +790,12 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		
 		void logInfo() {
 			if (this.getCreatorInfos() != null) {
-				logInfo(getInfoAsString());
+				ManagedLoggersRepository.logInfo(getClass()::getName, getInfoAsString());
 			}			
 		}
 		
 		private void logException(Throwable exc) {
-			logError(Strings.compile(
+			ManagedLoggersRepository.logError(getClass()::getName, Strings.compile(
 				"Exception occurred while executing {}: \n{}: {}{}{}", 
 				this,
 				exc.toString(),
@@ -948,7 +948,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		
 	}
 	
-	public static class Group implements ManagedLogger{
+	public static class Group {
 		String name;
 		Map<String, QueuedTasksExecutor> queuedTasksExecutors;
 		TasksMonitorer allTasksMonitorer;
@@ -1154,7 +1154,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 									try {
 										executingFinishedWaiterMutex.wait();
 									} catch (InterruptedException exc) {
-										logError(exc);
+										ManagedLoggersRepository.logError(getClass()::getName, exc);
 									}
 								}
 							}
@@ -1261,7 +1261,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			String loggableMessage = getInfoAsString();
 			loggableMessage = getInfoAsString();
 			if (!loggableMessage.isEmpty()) {
-				logInfo(loggableMessage);
+				ManagedLoggersRepository.logInfo(getClass()::getName, loggableMessage);
 			}
 			return this;
 		}

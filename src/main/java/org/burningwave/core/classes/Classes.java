@@ -32,6 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
@@ -67,13 +68,12 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Closeable;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 
 @SuppressWarnings("unchecked")
-public class Classes implements ManagedLogger, MembersRetriever {
+public class Classes implements MembersRetriever {
 	public static class Symbol{
 		public static class Tag {
 			static final byte UTF8 = 1;
@@ -389,7 +389,7 @@ public class Classes implements ManagedLogger, MembersRetriever {
 		return cls;
 	}
 	
-	public static class Loaders implements ManagedLogger, Closeable {
+	public static class Loaders implements Closeable {
 		protected Map<ClassLoader, Collection<Class<?>>> classLoadersClasses;
 		protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 		protected Map<String, MethodHandle> classLoadersMethods;
@@ -539,7 +539,7 @@ public class Classes implements ManagedLogger, MembersRetriever {
 					}
 				}
 			}
-			logWarn("'classes' collection has not been initialized on {}: trying recursive call", classLoader);
+			ManagedLoggersRepository.logWarn(getClass()::getName, "'classes' collection has not been initialized on {}: trying recursive call", classLoader);
 			return retrieveLoadedClasses(classLoader);
 		}
 		
@@ -728,7 +728,7 @@ public class Classes implements ManagedLogger, MembersRetriever {
 			} catch (InvocationTargetException | ClassNotFoundException | NoClassDefFoundError exc) {
 				throw exc;
 			} catch (java.lang.LinkageError exc) {
-				logWarn("Class {} is already defined", className);
+				ManagedLoggersRepository.logWarn(getClass()::getName, "Class {} is already defined", className);
 				return (Class<T>)classLoader.loadClass(className);
 			} catch (Throwable exc) {
 				if (byteCode == null) {
@@ -750,7 +750,7 @@ public class Classes implements ManagedLogger, MembersRetriever {
 	    			return (Package) definePackageMethod.invoke(classLoader, name, specTitle, specVersion, specVendor, implTitle,
 	    				implVersion, implVendor, sealBase);
 	    		} catch (IllegalArgumentException exc) {
-	    			logWarn("Package " + name + " already defined");
+	    			ManagedLoggersRepository.logWarn(getClass()::getName, "Package " + name + " already defined");
 	    			return retrieveLoadedPackage(classLoader, name);
 	    		}
 			});
