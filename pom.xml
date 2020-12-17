@@ -180,7 +180,7 @@
 					<include>**</include>
 				</includes>
 				<excludes>
-					<exclude>compileClassLoaderDelegate.cmd</exclude>
+					<exclude>compileExternalClasses.cmd</exclude>
 					<exclude>jdk/internal/loader/BuiltinClassLoader.class</exclude>
 					<exclude>jdk/internal/loader/URLClassPath.class</exclude>
 				</excludes>
@@ -294,7 +294,9 @@
 				<version>${maven-source-plugin.version}</version>
 				<configuration>
 					<excludes>
+						<exclude>org/burningwave/core/classes/AccessibleSetterRetriever.bwc</exclude>
 						<exclude>org/burningwave/core/classes/ClassLoaderDelegate.bwc</exclude>
+						<exclude>org/burningwave/core/classes/ConsulterRetriever.bwc</exclude>
 					</excludes>
 				</configuration>
 				<executions>

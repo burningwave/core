@@ -56,6 +56,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import org.burningwave.core.Closeable;
@@ -701,7 +702,9 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			try (Initializer initializer =
 					JVMInfo.getVersion() > 8 ?
 						JVMInfo.getVersion() > 13 ?
-							new ForJava14(lowLevelObjectsHandler):
+							JVMInfo.getVersion() > 16 ?
+								new ForJava17(lowLevelObjectsHandler):
+								new ForJava14(lowLevelObjectsHandler):
 							new ForJava9(lowLevelObjectsHandler):
 						new ForJava8(lowLevelObjectsHandler)) {
 				initializer.init();
@@ -763,6 +766,17 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			@Override
 			void initSpecificElements() {
 				lowLevelObjectsHandler.packageRetriever = (classLoader, object, packageName) -> (Package)object;
+				initAccessibleSetter();
+				try {
+					lowLevelObjectsHandler.methodInvoker = Class.forName("sun.reflect.NativeMethodAccessorImpl").getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
+					lowLevelObjectsHandler.setAccessible(lowLevelObjectsHandler.methodInvoker, true);
+				} catch (Throwable exc2) {
+					ManagedLoggersRepository.logError(getClass()::getName, "method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
+					Throwables.throwException(exc2);
+				}		
+			}
+
+			void initAccessibleSetter() {
 				try {
 					final Method accessibleSetterMethod = AccessibleObject.class.getDeclaredMethod("setAccessible0", AccessibleObject.class, boolean.class);
 					accessibleSetterMethod.setAccessible(true);
@@ -772,13 +786,6 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 					ManagedLoggersRepository.logInfo(getClass()::getName, "method setAccessible0 class not detected on " + AccessibleObject.class.getName());
 					Throwables.throwException(exc);
 				}
-				try {
-					lowLevelObjectsHandler.methodInvoker = Class.forName("sun.reflect.NativeMethodAccessorImpl").getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
-					lowLevelObjectsHandler.setAccessible(lowLevelObjectsHandler.methodInvoker, true);
-				} catch (Throwable exc2) {
-					ManagedLoggersRepository.logError(getClass()::getName, "method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
-					Throwables.throwException(exc2);
-				}		
 			}
 		}
 		
@@ -799,6 +806,11 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			    	
 			    }
 				lowLevelObjectsHandler.disableIllegalAccessLogger();
+				initConsulterRetriever(lowLevelObjectsHandler);
+			}
+
+
+			void initConsulterRetriever(LowLevelObjectsHandler lowLevelObjectsHandler) {
 				try {
 					MethodHandles.Lookup consulter = MethodHandles.lookup();
 					MethodHandle consulterRetrieverMethod = consulter.findStatic(
@@ -817,15 +829,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			
 			@Override
 			void initSpecificElements() {
-				try {
-					final Method accessibleSetterMethod = AccessibleObject.class.getDeclaredMethod("setAccessible0", boolean.class);
-					accessibleSetterMethod.setAccessible(true);
-					lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) ->
-						accessibleSetterMethod.invoke(accessibleObject, flag);
-				} catch (Throwable exc) {
-					ManagedLoggersRepository.logInfo(getClass()::getName, "method setAccessible0 class not detected on " + AccessibleObject.class.getName());
-					Throwables.throwException(exc);
-				}
+				initAccessibleSetter();
 				try {
 					MethodHandles.Lookup classLoaderConsulter = lowLevelObjectsHandler.getConsulter(ClassLoader.class);
 					MethodType methodType = MethodType.methodType(Package.class, String.class);
@@ -870,6 +874,19 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 				} catch (IllegalAccessException | NoSuchMethodException | InstantiationException
 						| InvocationTargetException | ClassNotFoundException exc) {
 					ManagedLoggersRepository.logInfo(getClass()::getName, "Could not init deep consulter");
+					Throwables.throwException(exc);
+				}
+			}
+
+
+			void initAccessibleSetter() {
+				try {
+					final Method accessibleSetterMethod = AccessibleObject.class.getDeclaredMethod("setAccessible0", boolean.class);
+					accessibleSetterMethod.setAccessible(true);
+					lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) ->
+						accessibleSetterMethod.invoke(accessibleObject, flag);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logInfo(getClass()::getName, "method setAccessible0 class not detected on " + AccessibleObject.class.getName());
 					Throwables.throwException(exc);
 				}
 			}
@@ -927,6 +944,62 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 					(MethodHandles.Lookup)mthHandle.invoke(cls, null, fullPowerModeConstantValue);
 			}
 		}
+		
+		private static class ForJava17 extends ForJava14 {
+			
+			ForJava17(LowLevelObjectsHandler lowLevelObjectsHandler) {
+				super(lowLevelObjectsHandler);
+			}
+
+			@Override
+			void initConsulterRetriever(LowLevelObjectsHandler lowLevelObjectsHandler) {
+				try (
+					InputStream inputStream =
+						Resources.getAsInputStream(this.getClass().getClassLoader(), "org/burningwave/core/classes/ConsulterRetriever.bwc"
+					);
+					ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
+				) {
+					Streams.copy(inputStream, bBOS);
+					Class<?> methodHandleWrapperClass = lowLevelObjectsHandler.unsafe.defineAnonymousClass(
+						MethodHandles.Lookup.class, bBOS.toByteArray(), null
+					);
+					Object obj = lowLevelObjectsHandler.unsafe.allocateInstance(methodHandleWrapperClass);
+					lowLevelObjectsHandler.consulterRetriever = cls ->
+						((Function<Class<?>, MethodHandles.Lookup>)obj).apply(cls);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize consulter", exc);
+					Throwables.throwException(exc);
+				}
+			}
+			
+			@Override
+			void initAccessibleSetter() {
+				try (
+					InputStream inputStream =
+						Resources.getAsInputStream(this.getClass().getClassLoader(), "org/burningwave/core/classes/AccessibleSetterRetriever.bwc"
+					);
+					ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
+				) {
+					Streams.copy(inputStream, bBOS);
+					Class<?> methodHandleWrapperClass = lowLevelObjectsHandler.unsafe.defineAnonymousClass(
+						AccessibleObject.class, bBOS.toByteArray(), null
+					);
+					Object obj = lowLevelObjectsHandler.unsafe.allocateInstance(methodHandleWrapperClass);
+					lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) ->
+						((BiConsumer<AccessibleObject, Boolean>)obj).accept(accessibleObject, flag);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize consulter", exc);
+					Throwables.throwException(exc);
+				}
+			}
+			
+			private MethodHandles.Lookup invoke(Function<Class<?>, MethodHandles.Lookup> consulterRetriever, Class<?> cls) {
+				MethodHandles.Lookup obj = consulterRetriever.apply(cls);
+				return obj;
+			}
+			
+		}
+		
 		
 	}
 }
