@@ -67,8 +67,6 @@ import org.burningwave.core.classes.MembersRetriever;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.Executor;
-import org.burningwave.core.function.ThrowingBiConsumer;
-import org.burningwave.core.function.ThrowingFunction;
 import org.burningwave.core.function.ThrowingTriFunction;
 import org.burningwave.core.io.ByteBufferOutputStream;
 
@@ -90,8 +88,8 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 	MethodHandle getDeclaredConstructorsRetriever;
 	ThrowingTriFunction<ClassLoader, Object, String, Package, Throwable> packageRetriever;	
 	Method methodInvoker;
-	ThrowingBiConsumer<AccessibleObject, Boolean, Throwable> accessibleSetter;
-	ThrowingFunction<Class<?>, MethodHandles.Lookup, Throwable> consulterRetriever;
+	BiConsumer<AccessibleObject, Boolean> accessibleSetter;
+	Function<Class<?>, MethodHandles.Lookup> consulterRetriever;
 	
 	Long loadedPackagesMapMemoryOffset;
 	Long loadedClassesVectorMemoryOffset;	
@@ -755,7 +753,11 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 					modes.setAccessible(true);
 					lowLevelObjectsHandler.consulterRetriever = (cls) -> {
 						MethodHandles.Lookup consulter = MethodHandles.lookup().in(cls);
-						modes.setInt(consulter, -1);
+						try {
+							modes.setInt(consulter, -1);
+						} catch (IllegalArgumentException | IllegalAccessException exc) {
+							return Throwables.throwException(exc);
+						}
 						return consulter;
 					};
 				} catch (NoSuchFieldException | SecurityException exc) {
@@ -780,8 +782,13 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 				try {
 					final Method accessibleSetterMethod = AccessibleObject.class.getDeclaredMethod("setAccessible0", AccessibleObject.class, boolean.class);
 					accessibleSetterMethod.setAccessible(true);
-					lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) ->
-						accessibleSetterMethod.invoke(null, accessibleObject, flag);
+					lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) -> {
+						try {
+							accessibleSetterMethod.invoke(null, accessibleObject, flag);
+						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException exc) {
+							Throwables.throwException(exc);
+						}
+					};
 				} catch (Throwable exc) {
 					ManagedLoggersRepository.logInfo(getClass()::getName, "method setAccessible0 class not detected on " + AccessibleObject.class.getName());
 					Throwables.throwException(exc);
@@ -817,8 +824,13 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 						MethodHandles.class, "privateLookupIn",
 						MethodType.methodType(MethodHandles.Lookup.class, Class.class, MethodHandles.Lookup.class)
 					);
-					lowLevelObjectsHandler.consulterRetriever = cls ->
-						(MethodHandles.Lookup)consulterRetrieverMethod.invoke(cls, MethodHandles.lookup());
+					lowLevelObjectsHandler.consulterRetriever = cls -> {
+						try {
+							return (MethodHandles.Lookup)consulterRetrieverMethod.invoke(cls, MethodHandles.lookup());
+						} catch (Throwable exc) {
+							return Throwables.throwException(exc);
+						}
+					};
 				} catch (IllegalArgumentException | NoSuchMethodException
 						| SecurityException | IllegalAccessException exc) {
 					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize consulter", exc);
@@ -883,8 +895,13 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 				try {
 					final Method accessibleSetterMethod = AccessibleObject.class.getDeclaredMethod("setAccessible0", boolean.class);
 					accessibleSetterMethod.setAccessible(true);
-					lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) ->
-						accessibleSetterMethod.invoke(accessibleObject, flag);
+					lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) -> {
+						try {
+							accessibleSetterMethod.invoke(accessibleObject, flag);
+						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException exc) {
+							Throwables.throwException(exc);
+						}
+					};
 				} catch (Throwable exc) {
 					ManagedLoggersRepository.logInfo(getClass()::getName, "method setAccessible0 class not detected on " + AccessibleObject.class.getName());
 					Throwables.throwException(exc);
@@ -907,8 +924,13 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 				MethodHandle mthHandle = lookupCtor.newInstance(MethodHandles.Lookup.class, fullPowerModeConstantValue).findConstructor(
 					MethodHandles.Lookup.class, MethodType.methodType(void.class, Class.class, int.class)
 				);
-				lowLevelObjectsHandler.consulterRetriever = cls ->
-					(MethodHandles.Lookup)mthHandle.invoke(cls, fullPowerModeConstantValue);
+				lowLevelObjectsHandler.consulterRetriever = cls -> {
+					try {
+						return (MethodHandles.Lookup)mthHandle.invoke(cls, fullPowerModeConstantValue);
+					} catch (Throwable exc) {
+						return Throwables.throwException(exc);
+					}
+				};
 			}
 			
 			@Override
@@ -940,8 +962,13 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 				MethodHandle mthHandle = ((MethodHandles.Lookup)lookupCtor.newInstance(MethodHandles.Lookup.class, null, fullPowerModeConstantValue)).findConstructor(
 					MethodHandles.Lookup.class, MethodType.methodType(void.class, Class.class, Class.class, int.class)
 				);
-				lowLevelObjectsHandler.consulterRetriever = cls ->
-					(MethodHandles.Lookup)mthHandle.invoke(cls, null, fullPowerModeConstantValue);
+				lowLevelObjectsHandler.consulterRetriever = cls -> {
+					try {
+						return (MethodHandles.Lookup)mthHandle.invoke(cls, null, fullPowerModeConstantValue);
+					} catch (Throwable exc) {
+						return Throwables.throwException(exc);
+					}
+				};
 			}
 		}
 		
@@ -963,9 +990,8 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 					Class<?> methodHandleWrapperClass = lowLevelObjectsHandler.unsafe.defineAnonymousClass(
 						MethodHandles.Lookup.class, bBOS.toByteArray(), null
 					);
-					Object obj = lowLevelObjectsHandler.unsafe.allocateInstance(methodHandleWrapperClass);
-					lowLevelObjectsHandler.consulterRetriever = cls ->
-						((Function<Class<?>, MethodHandles.Lookup>)obj).apply(cls);
+					lowLevelObjectsHandler.consulterRetriever =
+						(Function<Class<?>, MethodHandles.Lookup>)lowLevelObjectsHandler.unsafe.allocateInstance(methodHandleWrapperClass);
 				} catch (Throwable exc) {
 					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize consulter", exc);
 					Throwables.throwException(exc);
@@ -984,9 +1010,8 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 					Class<?> methodHandleWrapperClass = lowLevelObjectsHandler.unsafe.defineAnonymousClass(
 						AccessibleObject.class, bBOS.toByteArray(), null
 					);
-					Object obj = lowLevelObjectsHandler.unsafe.allocateInstance(methodHandleWrapperClass);
-					lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) ->
-						((BiConsumer<AccessibleObject, Boolean>)obj).accept(accessibleObject, flag);
+					lowLevelObjectsHandler.accessibleSetter =
+						(BiConsumer<AccessibleObject, Boolean>)lowLevelObjectsHandler.unsafe.allocateInstance(methodHandleWrapperClass);
 				} catch (Throwable exc) {
 					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize consulter", exc);
 					Throwables.throwException(exc);
