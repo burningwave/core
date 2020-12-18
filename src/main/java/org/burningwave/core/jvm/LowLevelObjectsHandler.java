@@ -863,7 +863,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 					lowLevelObjectsHandler.builtinClassLoaderClass = Class.forName("jdk.internal.loader.BuiltinClassLoader");
 					try (
 						InputStream inputStream =
-							Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/ClassLoaderDelegate.bwc"
+							Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/ClassLoaderDelegateForJDK9.bwc"
 						);
 						ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 					) {

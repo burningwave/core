@@ -295,7 +295,7 @@
 				<configuration>
 					<excludes>
 						<exclude>org/burningwave/core/jvm/AccessibleSetterRetrieverForJDK16.bwc</exclude>
-						<exclude>org/burningwave/core/jvm/ClassLoaderDelegate.bwc</exclude>
+						<exclude>org/burningwave/core/jvm/ClassLoaderDelegateForJDK9.bwc</exclude>
 						<exclude>org/burningwave/core/jvm/ConsulterRetrieverForJDK16.bwc</exclude>
 					</excludes>
 				</configuration>
