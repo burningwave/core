@@ -405,6 +405,11 @@
 								</goals>
 							</execution>
 						</executions>
+						<configuration>
+					        <excludes>
+					            <exclude>**/*.java</exclude>
+					        </excludes>
+					    </configuration>
 					</plugin>
 				</plugins>
 			</build>
