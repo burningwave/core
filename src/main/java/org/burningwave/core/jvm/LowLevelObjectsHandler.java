@@ -856,15 +856,6 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 				}
 				try {
 					lowLevelObjectsHandler.builtinClassLoaderClass = Class.forName("jdk.internal.loader.BuiltinClassLoader");
-					try {
-						Class<?> nativeMethodAccessorImplClass = Class.forName("jdk.internal.reflect.NativeMethodAccessorImpl");
-						Method invoker = nativeMethodAccessorImplClass.getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
-						lowLevelObjectsHandler.setAccessible(invoker, true);
-						MethodHandles.Lookup consulter = lowLevelObjectsHandler.getConsulter(nativeMethodAccessorImplClass);
-					} catch (Throwable exc) {
-						ManagedLoggersRepository.logInfo(getClass()::getName, "method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
-						Throwables.throwException(exc);
-					}
 					try (
 						InputStream inputStream =
 							Resources.getAsInputStream(this.getClass().getClassLoader(), "org/burningwave/core/classes/ClassLoaderDelegate.bwc"
@@ -887,6 +878,15 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 				} catch (IllegalAccessException | NoSuchMethodException | InstantiationException
 						| InvocationTargetException | ClassNotFoundException exc) {
 					ManagedLoggersRepository.logInfo(getClass()::getName, "Could not init deep consulter");
+					Throwables.throwException(exc);
+				}
+				try {
+					Class<?> nativeMethodAccessorImplClass = Class.forName("jdk.internal.reflect.NativeMethodAccessorImpl");
+					Method invoker = nativeMethodAccessorImplClass.getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
+					lowLevelObjectsHandler.setAccessible(invoker, true);
+					MethodHandles.Lookup consulter = lowLevelObjectsHandler.getConsulter(nativeMethodAccessorImplClass);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logInfo(getClass()::getName, "method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
 					Throwables.throwException(exc);
 				}
 			}
