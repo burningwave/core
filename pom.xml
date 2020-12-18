@@ -407,8 +407,10 @@
 						</executions>
 						<configuration>
 					        <excludes>
-					            <exclude>**/*.java</exclude>
-					        </excludes>
+						        <exclude>**/*AccessibleSetterRetrieverForJDK16</exclude>
+						        <exclude>**/*ClassLoaderDelegateForJDK9</exclude>
+						        <exclude>**/*ConsulterRetrieverForJDK16</exclude>
+						    </excludes>
 					    </configuration>
 					</plugin>
 				</plugins>
