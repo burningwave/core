@@ -67,7 +67,7 @@ import org.burningwave.core.classes.MembersRetriever;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.function.Executor;
-import org.burningwave.core.function.ThrowingTriFunction;
+import org.burningwave.core.function.TriFunction;
 import org.burningwave.core.io.ByteBufferOutputStream;
 
 import sun.misc.Unsafe;
@@ -87,7 +87,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 	MethodHandle getDeclaredMethodsRetriever;
 	MethodHandle getDeclaredConstructorsRetriever;
 	MethodHandle methodInvoker;
-	ThrowingTriFunction<ClassLoader, Object, String, Package, Throwable> packageRetriever;	
+	TriFunction<ClassLoader, Object, String, Package> packageRetriever;	
 	BiConsumer<AccessibleObject, Boolean> accessibleSetter;
 	Function<Class<?>, MethodHandles.Lookup> consulterRetriever;
 	
@@ -849,8 +849,13 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 					MethodHandles.Lookup classLoaderConsulter = lowLevelObjectsHandler.getConsulter(ClassLoader.class);
 					MethodType methodType = MethodType.methodType(Package.class, String.class);
 					MethodHandle methodHandle = classLoaderConsulter.findSpecial(ClassLoader.class, "getDefinedPackage", methodType, ClassLoader.class);
-					lowLevelObjectsHandler.packageRetriever = (classLoader, object, packageName) ->
-						(Package)methodHandle.invokeExact(classLoader, packageName);
+					lowLevelObjectsHandler.packageRetriever = (classLoader, object, packageName) -> {
+						try {
+							return (Package)methodHandle.invokeExact(classLoader, packageName);
+						} catch (Throwable exc) {
+							return Throwables.throwException(exc);
+						}
+					};
 				} catch (Throwable exc) {
 					Throwables.throwException(exc);
 				}
