@@ -86,8 +86,8 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 	MethodHandle getDeclaredFieldsRetriever;
 	MethodHandle getDeclaredMethodsRetriever;
 	MethodHandle getDeclaredConstructorsRetriever;
+	MethodHandle methodInvoker;
 	ThrowingTriFunction<ClassLoader, Object, String, Package, Throwable> packageRetriever;	
-	Method methodInvoker;
 	BiConsumer<AccessibleObject, Boolean> accessibleSetter;
 	Function<Class<?>, MethodHandles.Lookup> consulterRetriever;
 	
@@ -230,7 +230,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 		}
 	}
 	
-	public Object invoke(Object target, Method method, Object... params) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	public Object invoke(Object target, Method method, Object... params) throws Throwable {
 		if (params == null) {
 			params = new Object[] {null};
 		}
@@ -770,8 +770,11 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 				lowLevelObjectsHandler.packageRetriever = (classLoader, object, packageName) -> (Package)object;
 				initAccessibleSetter();
 				try {
-					lowLevelObjectsHandler.methodInvoker = Class.forName("sun.reflect.NativeMethodAccessorImpl").getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
-					lowLevelObjectsHandler.setAccessible(lowLevelObjectsHandler.methodInvoker, true);
+					Class<?> nativeMethodAccessorImplClass =Class.forName("sun.reflect.NativeMethodAccessorImpl");
+					Method invoker = nativeMethodAccessorImplClass.getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
+					lowLevelObjectsHandler.setAccessible(invoker, true);
+					MethodHandles.Lookup consulter = lowLevelObjectsHandler.getConsulter(nativeMethodAccessorImplClass);
+					lowLevelObjectsHandler.methodInvoker = consulter.unreflect(invoker);
 				} catch (Throwable exc2) {
 					ManagedLoggersRepository.logError(getClass()::getName, "method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
 					Throwables.throwException(exc2);
@@ -854,12 +857,10 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 				try {
 					lowLevelObjectsHandler.builtinClassLoaderClass = Class.forName("jdk.internal.loader.BuiltinClassLoader");
 					try {
-						lowLevelObjectsHandler.methodInvoker = Class.forName(
-							"jdk.internal.reflect.NativeMethodAccessorImpl"
-						).getDeclaredMethod(
-							"invoke0", Method.class, Object.class, Object[].class
-						);
-						lowLevelObjectsHandler.setAccessible(lowLevelObjectsHandler.methodInvoker, true);
+						Class<?> nativeMethodAccessorImplClass = Class.forName("jdk.internal.reflect.NativeMethodAccessorImpl");
+						Method invoker = nativeMethodAccessorImplClass.getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
+						lowLevelObjectsHandler.setAccessible(invoker, true);
+						MethodHandles.Lookup consulter = lowLevelObjectsHandler.getConsulter(nativeMethodAccessorImplClass);
 					} catch (Throwable exc) {
 						ManagedLoggersRepository.logInfo(getClass()::getName, "method invoke0 of class jdk.internal.reflect.NativeMethodAccessorImpl not detected");
 						Throwables.throwException(exc);
