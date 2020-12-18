@@ -858,7 +858,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 					lowLevelObjectsHandler.builtinClassLoaderClass = Class.forName("jdk.internal.loader.BuiltinClassLoader");
 					try (
 						InputStream inputStream =
-							Resources.getAsInputStream(this.getClass().getClassLoader(), "org/burningwave/core/classes/ClassLoaderDelegate.bwc"
+							Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/ClassLoaderDelegate.bwc"
 						);
 						ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 					) {
@@ -983,7 +983,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			void initConsulterRetriever(LowLevelObjectsHandler lowLevelObjectsHandler) {
 				try (
 					InputStream inputStream =
-						Resources.getAsInputStream(this.getClass().getClassLoader(), "org/burningwave/core/classes/ConsulterRetriever.bwc"
+						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/ConsulterRetriever.bwc"
 					);
 					ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 				) {
@@ -1003,7 +1003,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			void initAccessibleSetter() {
 				try (
 					InputStream inputStream =
-						Resources.getAsInputStream(this.getClass().getClassLoader(), "org/burningwave/core/classes/AccessibleSetterRetriever.bwc"
+						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/AccessibleSetterRetriever.bwc"
 					);
 					ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 				) {

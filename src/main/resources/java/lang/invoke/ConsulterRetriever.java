@@ -1,4 +1,4 @@
-package jdk.internal;
+package java.lang.invoke;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;

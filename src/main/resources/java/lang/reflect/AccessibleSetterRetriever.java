@@ -1,4 +1,4 @@
-package jdk.internal;
+package java.lang.reflect;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.InvocationTargetException;
