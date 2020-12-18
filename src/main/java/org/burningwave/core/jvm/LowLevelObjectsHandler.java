@@ -988,7 +988,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			void initConsulterRetriever(LowLevelObjectsHandler lowLevelObjectsHandler) {
 				try (
 					InputStream inputStream =
-						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/ConsulterRetriever.bwc"
+						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/ConsulterRetrieverForJDK16.bwc"
 					);
 					ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 				) {
@@ -1008,7 +1008,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			void initAccessibleSetter() {
 				try (
 					InputStream inputStream =
-						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/AccessibleSetterRetriever.bwc"
+						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/AccessibleSetterRetrieverForJDK16.bwc"
 					);
 					ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 				) {

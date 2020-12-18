@@ -7,7 +7,7 @@ import java.lang.invoke.MethodType;
 import java.util.function.Function;
 
 @SuppressWarnings("unchecked")
-public class ConsulterRetriever implements Function<Class<?>, MethodHandles.Lookup> {
+public class ConsulterRetrieverForJDK16 implements Function<Class<?>, MethodHandles.Lookup> {
 	private static MethodHandle consulterRetrieverMethod;
 	
 	static {
