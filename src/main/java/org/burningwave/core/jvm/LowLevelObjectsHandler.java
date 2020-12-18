@@ -87,9 +87,9 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 	MethodHandle getDeclaredMethodsRetriever;
 	MethodHandle getDeclaredConstructorsRetriever;
 	MethodHandle methodInvoker;
-	TriFunction<ClassLoader, Object, String, Package> packageRetriever;	
 	BiConsumer<AccessibleObject, Boolean> accessibleSetter;
 	Function<Class<?>, MethodHandles.Lookup> consulterRetriever;
+	TriFunction<ClassLoader, Object, String, Package> packageRetriever;
 	
 	Long loadedPackagesMapMemoryOffset;
 	Long loadedClassesVectorMemoryOffset;	
