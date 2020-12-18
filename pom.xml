@@ -234,6 +234,7 @@
 				<configuration>
 					<excludes>
 						<exclude>jdk/</exclude>
+						<exclude>java/</exclude>
 						<exclude>META-INF/maven/</exclude>
 					</excludes>
 					<archive>
