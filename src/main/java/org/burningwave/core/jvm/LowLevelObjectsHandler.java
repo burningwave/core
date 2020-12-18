@@ -700,8 +700,8 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			try (Initializer initializer =
 					JVMInfo.getVersion() > 8 ?
 						JVMInfo.getVersion() > 13 ?
-							JVMInfo.getVersion() > 16 ?
-								new ForJava17(lowLevelObjectsHandler):
+							JVMInfo.getVersion() > 15 ?
+								new ForJava16(lowLevelObjectsHandler):
 								new ForJava14(lowLevelObjectsHandler):
 							new ForJava9(lowLevelObjectsHandler):
 						new ForJava8(lowLevelObjectsHandler)) {
@@ -972,9 +972,9 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			}
 		}
 		
-		private static class ForJava17 extends ForJava14 {
+		private static class ForJava16 extends ForJava14 {
 			
-			ForJava17(LowLevelObjectsHandler lowLevelObjectsHandler) {
+			ForJava16(LowLevelObjectsHandler lowLevelObjectsHandler) {
 				super(lowLevelObjectsHandler);
 			}
 
