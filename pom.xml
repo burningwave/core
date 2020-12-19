@@ -407,9 +407,9 @@
 						</executions>
 						<configuration>
 					        <excludes>
-						        <exclude>**/*AccessibleSetterRetrieverForJDK16.*</exclude>
+						        <exclude>**/*AccessibleSetterRetrieverForJDK9.*</exclude>
 						        <exclude>**/*ClassLoaderDelegateForJDK9.*</exclude>
-						        <exclude>**/*ConsulterRetrieverForJDK16.*</exclude>
+						        <exclude>**/*ConsulterRetrieverForJDK9.*</exclude>
 						    </excludes>
 					    </configuration>
 					</plugin>
