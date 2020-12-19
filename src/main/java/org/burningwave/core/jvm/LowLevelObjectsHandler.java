@@ -388,9 +388,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 	}
 	
 	public MethodHandles.Lookup getConsulter(Class<?> cls) {
-		return Executor.get(() ->
-			consulterRetriever.apply(cls)
-		);
+		return consulterRetriever.apply(cls);
 	}
 	
 	public void throwException(Throwable exc) {
