@@ -339,14 +339,22 @@ public class Driver implements Closeable {
 				Throwables.throwException(exc);
 			}
 		}	
-		
+
 		void init() {
+			initConsulterRetriever();
 			initMembersRetrievers();
+			initAccessibleSetter();
 			initSpecificElements();			
 			initClassesVectorField();
 			initPackagesMapField();
 		}
 
+		abstract void initConsulterRetriever();
+		
+		abstract void initAccessibleSetter();
+		
+		abstract void initSpecificElements();
+		
 
 		private void initPackagesMapField() {
 			try {
@@ -410,8 +418,6 @@ public class Driver implements Closeable {
 			}
 		}
 		
-		abstract void initSpecificElements();
-		
 		@Override
 		public void close() {
 			this.driver = null;
@@ -421,6 +427,9 @@ public class Driver implements Closeable {
 
 			private ForJava8(Driver driver) {
 				super(driver);
+			}
+
+			void initConsulterRetriever() {
 				try {
 					Field modes = MethodHandles.Lookup.class.getDeclaredField("allowedModes");
 					modes.setAccessible(true);
@@ -434,26 +443,11 @@ public class Driver implements Closeable {
 						return consulter;
 					};
 				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize consulter retriever");
 					Throwables.throwException(exc);
 				}
 			}
-
-			@Override
-			void initSpecificElements() {
-				driver.packageRetriever = (classLoader, object, packageName) -> (Package)object;
-				initAccessibleSetter();
-				try {
-					Class<?> nativeMethodAccessorImplClass =Class.forName("sun.reflect.NativeMethodAccessorImpl");
-					Method invoker = nativeMethodAccessorImplClass.getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
-					driver.setAccessible(invoker, true);
-					MethodHandles.Lookup consulter = driver.consulterRetriever.apply(nativeMethodAccessorImplClass);
-					driver.methodInvoker = consulter.unreflect(invoker);
-				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize method invoker");
-					Throwables.throwException(exc);
-				}		
-			}
-
+			
 			void initAccessibleSetter() {
 				try {
 					final Method accessibleSetterMethod = AccessibleObject.class.getDeclaredMethod("setAccessible0", AccessibleObject.class, boolean.class);
@@ -469,6 +463,21 @@ public class Driver implements Closeable {
 					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize accessible setter");
 					Throwables.throwException(exc);
 				}
+			}
+
+			@Override
+			void initSpecificElements() {
+				driver.packageRetriever = (classLoader, object, packageName) -> (Package)object;
+				try {
+					Class<?> nativeMethodAccessorImplClass = Class.forName("sun.reflect.NativeMethodAccessorImpl");
+					Method invoker = nativeMethodAccessorImplClass.getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
+					driver.setAccessible(invoker, true);
+					MethodHandles.Lookup consulter = driver.consulterRetriever.apply(nativeMethodAccessorImplClass);
+					driver.methodInvoker = consulter.unreflect(invoker);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize method invoker");
+					Throwables.throwException(exc);
+				}		
 			}
 		}
 		
@@ -489,16 +498,9 @@ public class Driver implements Closeable {
 			    } catch (Throwable e) {
 			    	
 			    }
-				try {
-					initConsulterRetriever(driver);
-				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize consulter retriever");
-					Throwables.throwException(exc);
-				}
 			}
 
-
-			void initConsulterRetriever(Driver driver) throws Throwable {
+			void initConsulterRetriever() {
 				try (
 					InputStream inputStream =
 						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/ConsulterRetrieverForJDK9.bwc"
@@ -521,10 +523,14 @@ public class Driver implements Closeable {
 					
 					driver.consulterRetriever =
 						(Function<Class<?>, MethodHandles.Lookup>)driver.unsafe.allocateInstance(methodHandleWrapperClass);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize consulter retriever");
+					Throwables.throwException(exc);
 				}
+				
 			}
 			
-			void initAccessibleSetter() throws Throwable {
+			void initAccessibleSetter() {
 				try (
 					InputStream inputStream =
 						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/AccessibleSetterRetrieverForJDK9.bwc"
@@ -537,18 +543,15 @@ public class Driver implements Closeable {
 					);
 					driver.accessibleSetter =
 						(BiConsumer<AccessibleObject, Boolean>)driver.unsafe.allocateInstance(methodHandleWrapperClass);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize accessible setter");
+					Throwables.throwException(exc);
 				}
 			}
 
 			
 			@Override
 			void initSpecificElements() {
-				try {
-					initAccessibleSetter();
-				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize accessible setter");
-					Throwables.throwException(exc);
-				}
 				try {
 					MethodHandles.Lookup classLoaderConsulter = driver.consulterRetriever.apply(ClassLoader.class);
 					MethodType methodType = MethodType.methodType(Package.class, String.class);
