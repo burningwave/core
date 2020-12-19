@@ -699,8 +699,6 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			try (Initializer initializer =
 					JVMInfo.getVersion() > 8 ?
 						JVMInfo.getVersion() > 13 ?
-							JVMInfo.getVersion() > 14 ?
-								new ForJava15(lowLevelObjectsHandler):
 								new ForJava14(lowLevelObjectsHandler):
 							new ForJava9(lowLevelObjectsHandler):
 						new ForJava8(lowLevelObjectsHandler)) {
@@ -825,18 +823,45 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 
 
 			void initConsulterRetriever(LowLevelObjectsHandler lowLevelObjectsHandler) throws Throwable {
-				MethodHandles.Lookup consulter = MethodHandles.lookup();
-				MethodHandle consulterRetrieverMethod = consulter.findStatic(
-					MethodHandles.class, "privateLookupIn",
-					MethodType.methodType(MethodHandles.Lookup.class, Class.class, MethodHandles.Lookup.class)
-				);
-				lowLevelObjectsHandler.consulterRetriever = cls -> {
-					try {
-						return (MethodHandles.Lookup)consulterRetrieverMethod.invoke(cls, MethodHandles.lookup());
-					} catch (Throwable exc) {
-						return Throwables.throwException(exc);
-					}
-				};
+				try (
+					InputStream inputStream =
+						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/ConsulterRetrieverForJDK9.bwc"
+					);
+					ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
+				) {
+					Streams.copy(inputStream, bBOS);
+					Class<?> methodHandleWrapperClass = lowLevelObjectsHandler.unsafe.defineAnonymousClass(
+						Class.class, bBOS.toByteArray(), null
+					);
+					MethodHandles.Lookup consulter = MethodHandles.lookup();
+					MethodHandle methodHandle = consulter.findStatic(
+						MethodHandles.class, "privateLookupIn",
+						MethodType.methodType(MethodHandles.Lookup.class, Class.class, MethodHandles.Lookup.class)
+					);
+					lowLevelObjectsHandler.unsafe.putObject(methodHandleWrapperClass,
+						lowLevelObjectsHandler.unsafe.staticFieldOffset(methodHandleWrapperClass.getDeclaredField("consulterRetrieverMethod")),
+						methodHandle
+					);
+					
+					lowLevelObjectsHandler.consulterRetriever =
+						(Function<Class<?>, MethodHandles.Lookup>)lowLevelObjectsHandler.unsafe.allocateInstance(methodHandleWrapperClass);
+				}
+			}
+			
+			void initAccessibleSetter() throws Throwable {
+				try (
+					InputStream inputStream =
+						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/AccessibleSetterRetrieverForJDK9.bwc"
+					);
+					ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
+				) {
+					Streams.copy(inputStream, bBOS);
+					Class<?> methodHandleWrapperClass = lowLevelObjectsHandler.unsafe.defineAnonymousClass(
+						AccessibleObject.class, bBOS.toByteArray(), null
+					);
+					lowLevelObjectsHandler.accessibleSetter =
+						(BiConsumer<AccessibleObject, Boolean>)lowLevelObjectsHandler.unsafe.allocateInstance(methodHandleWrapperClass);
+				}
 			}
 
 			
@@ -899,19 +924,6 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			}
 
 
-			void initAccessibleSetter() throws Throwable {
-				final Method accessibleSetterMethod = AccessibleObject.class.getDeclaredMethod("setAccessible0", boolean.class);
-				accessibleSetterMethod.setAccessible(true);
-				lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) -> {
-					try {
-						accessibleSetterMethod.invoke(accessibleObject, flag);
-					} catch (Throwable exc) {
-						Throwables.throwException(exc);
-					}
-				};
-			}
-
-
 			void initDeepConsulterRetriever() throws Throwable {
 				Constructor<MethodHandles.Lookup> lookupCtor = lowLevelObjectsHandler.getDeclaredConstructor(
 					MethodHandles.Lookup.class, ctor -> 
@@ -971,55 +983,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 					}
 				};
 			}
-		}
-		
-		private static class ForJava15 extends ForJava14 {
-			
-			ForJava15(LowLevelObjectsHandler lowLevelObjectsHandler) {
-				super(lowLevelObjectsHandler);
-			}
-
-			@Override
-			void initConsulterRetriever(LowLevelObjectsHandler lowLevelObjectsHandler) throws Throwable {
-				try (
-					InputStream inputStream =
-						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/ConsulterRetrieverForJDK15.bwc"
-					);
-					ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
-				) {
-					Streams.copy(inputStream, bBOS);
-					Class<?> methodHandleWrapperClass = lowLevelObjectsHandler.unsafe.defineAnonymousClass(
-						MethodHandles.Lookup.class, bBOS.toByteArray(), null
-					);
-					lowLevelObjectsHandler.consulterRetriever =
-						(Function<Class<?>, MethodHandles.Lookup>)lowLevelObjectsHandler.unsafe.allocateInstance(methodHandleWrapperClass);
-				}
-			}
-			
-			@Override
-			void initAccessibleSetter() throws Throwable {
-				try (
-					InputStream inputStream =
-						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/AccessibleSetterRetrieverForJDK15.bwc"
-					);
-					ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
-				) {
-					Streams.copy(inputStream, bBOS);
-					Class<?> methodHandleWrapperClass = lowLevelObjectsHandler.unsafe.defineAnonymousClass(
-						AccessibleObject.class, bBOS.toByteArray(), null
-					);
-					lowLevelObjectsHandler.accessibleSetter =
-						(BiConsumer<AccessibleObject, Boolean>)lowLevelObjectsHandler.unsafe.allocateInstance(methodHandleWrapperClass);
-				}
-			}
-			
-			private MethodHandles.Lookup invoke(Function<Class<?>, MethodHandles.Lookup> consulterRetriever, Class<?> cls) {
-				MethodHandles.Lookup obj = consulterRetriever.apply(cls);
-				return obj;
-			}
-			
-		}
-		
+		}		
 		
 	}
 }
