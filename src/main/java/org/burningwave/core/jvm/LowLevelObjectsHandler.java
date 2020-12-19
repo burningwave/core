@@ -699,9 +699,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			try (Initializer initializer =
 					JVMInfo.getVersion() > 8 ?
 						JVMInfo.getVersion() > 13 ?
-							JVMInfo.getVersion() > 15 ?
-								new ForJava16(lowLevelObjectsHandler):
-								new ForJava14(lowLevelObjectsHandler):
+							new ForJava14(lowLevelObjectsHandler):
 							new ForJava9(lowLevelObjectsHandler):
 						new ForJava8(lowLevelObjectsHandler)) {
 				initializer.init();
@@ -971,14 +969,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 					}
 				};
 			}
-		}
-		
-		private static class ForJava16 extends ForJava14 {
 			
-			ForJava16(LowLevelObjectsHandler lowLevelObjectsHandler) {
-				super(lowLevelObjectsHandler);
-			}
-
 			@Override
 			void initConsulterRetriever(LowLevelObjectsHandler lowLevelObjectsHandler) throws Throwable {
 				try (
@@ -1017,9 +1008,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 				MethodHandles.Lookup obj = consulterRetriever.apply(cls);
 				return obj;
 			}
-			
-		}
-		
+		}		
 		
 	}
 }
