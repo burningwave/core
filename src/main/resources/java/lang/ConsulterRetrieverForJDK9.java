@@ -1,4 +1,4 @@
-package java.lang.invoke;
+package java.lang;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -7,25 +7,8 @@ import java.lang.invoke.MethodType;
 import java.util.function.Function;
 
 @SuppressWarnings("unchecked")
-public class ConsulterRetrieverForJDK16 implements Function<Class<?>, MethodHandles.Lookup> {
+public class ConsulterRetrieverForJDK9 implements Function<Class<?>, MethodHandles.Lookup> {
 	private static MethodHandle consulterRetrieverMethod;
-	
-	static {
-		try {
-			MethodHandles.Lookup consulter = MethodHandles.lookup();
-			try {
-				consulterRetrieverMethod = consulter.findStatic(
-					MethodHandles.class, "privateLookupIn",
-					MethodType.methodType(MethodHandles.Lookup.class, Class.class, MethodHandles.Lookup.class)
-				);
-			} catch (IllegalAccessException exc) {
-				throwException(exc);
-			}			
-		} catch (NoSuchMethodException | SecurityException exc) {
-			throwException(exc);
-		}
-		
-	}
 	
 	@Override
 	public Lookup apply(Class<?> cls) {

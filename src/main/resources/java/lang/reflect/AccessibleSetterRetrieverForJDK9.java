@@ -6,7 +6,7 @@ import java.lang.reflect.Method;
 import java.util.function.BiConsumer;
 
 @SuppressWarnings("unchecked")
-public class AccessibleSetterRetrieverForJDK16 implements BiConsumer<AccessibleObject, Boolean> {
+public class AccessibleSetterRetrieverForJDK9 implements BiConsumer<AccessibleObject, Boolean> {
 	private static Method accessibleSetterMethod;
 	
 	static {
