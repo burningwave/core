@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
@@ -120,6 +121,15 @@ public class Driver implements Closeable {
 		} catch (Throwable exc) {
 			return Throwables.throwException(exc);
 		}			
+	}
+	
+	public Field getDeclaredField(Class<?> cls, String name) {
+		for (Field field : getDeclaredFields(cls)) {
+			if (field.getName().equals(name)) {
+				return field;
+			}
+		}
+		return null;
 	}
 	
 	public Field[] getDeclaredFields(Class<?> cls)  {
@@ -310,8 +320,8 @@ public class Driver implements Closeable {
 
 		private void initPackagesMapField() {
 			try {
-				this.driver.loadedClassesVectorMemoryOffset = driver.unsafe.objectFieldOffset(
-					ClassLoader.class.getDeclaredField("classes")
+				this.driver.loadedPackagesMapMemoryOffset = driver.unsafe.objectFieldOffset(
+					this.driver.getDeclaredField(ClassLoader.class, "packages")
 				);
 			} catch (Throwable exc) {
 				ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize field memory offset of loaded classes vector");
@@ -321,8 +331,8 @@ public class Driver implements Closeable {
 
 		private void initClassesVectorField() {
 			try {
-				this.driver.loadedPackagesMapMemoryOffset = driver.unsafe.objectFieldOffset(
-					ClassLoader.class.getDeclaredField("packages")
+				this.driver.loadedClassesVectorMemoryOffset = driver.unsafe.objectFieldOffset(
+					this.driver.getDeclaredField(ClassLoader.class, "classes")
 				);
 			} catch (Throwable exc) {
 				ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize field memory offset of packages map");
