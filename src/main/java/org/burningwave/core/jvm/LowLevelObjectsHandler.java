@@ -204,7 +204,11 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 		if (params == null) {
 			params = new Object[] {null};
 		}
-		return driver.invoke(method, target, params);
+		try {
+			return method.invoke(target, params);
+		} catch (Throwable exc) {
+			return driver.invoke(method, target, params);
+		}
 	}
 	
 	public <T> T getFieldValue(Object target, Field field) {

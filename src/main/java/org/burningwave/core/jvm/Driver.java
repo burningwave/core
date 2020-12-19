@@ -147,7 +147,7 @@ public class Driver implements Closeable {
 	
 	public Object invoke(Method method, Object target, Object[] params) {
 		try {
-			return methodInvoker.invoke(null, method, target, params);
+			return methodInvoker.invoke(method, target, params);
 		} catch (Throwable exc) {
 			return Throwables.throwException(exc);
 		}			
@@ -344,6 +344,7 @@ public class Driver implements Closeable {
 			initConsulterRetriever();
 			initMembersRetrievers();
 			initAccessibleSetter();
+			initMethodInvoker();
 			initSpecificElements();			
 			initClassesVectorField();
 			initPackagesMapField();
@@ -354,6 +355,8 @@ public class Driver implements Closeable {
 		abstract void initAccessibleSetter();
 		
 		abstract void initSpecificElements();
+		
+		abstract void initMethodInvoker();
 		
 
 		private void initPackagesMapField() {
@@ -464,10 +467,8 @@ public class Driver implements Closeable {
 					Throwables.throwException(exc);
 				}
 			}
-
-			@Override
-			void initSpecificElements() {
-				driver.packageRetriever = (classLoader, object, packageName) -> (Package)object;
+			
+			void initMethodInvoker() {
 				try {
 					Class<?> nativeMethodAccessorImplClass = Class.forName("sun.reflect.NativeMethodAccessorImpl");
 					Method invoker = nativeMethodAccessorImplClass.getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
@@ -477,8 +478,14 @@ public class Driver implements Closeable {
 				} catch (Throwable exc) {
 					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize method invoker");
 					Throwables.throwException(exc);
-				}		
+				}
 			}
+			
+			@Override
+			void initSpecificElements() {
+				driver.packageRetriever = (classLoader, object, packageName) -> (Package)object;	
+			}
+			
 		}
 		
 		private static class ForJava9 extends Initializer {
@@ -548,6 +555,19 @@ public class Driver implements Closeable {
 					Throwables.throwException(exc);
 				}
 			}
+			
+			void initMethodInvoker() {
+				try {
+					Class<?> nativeMethodAccessorImplClass = Class.forName("jdk.internal.reflect.NativeMethodAccessorImpl");
+					Method invoker = nativeMethodAccessorImplClass.getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
+					driver.setAccessible(invoker, true);
+					MethodHandles.Lookup consulter = driver.consulterRetriever.apply(nativeMethodAccessorImplClass);
+					driver.methodInvoker = consulter.unreflect(invoker);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize method invoker");
+					Throwables.throwException(exc);
+				}
+			}
 
 			
 			@Override
@@ -590,18 +610,7 @@ public class Driver implements Closeable {
 					ManagedLoggersRepository.logInfo(getClass()::getName, "Could not initialize deep consulter retriever");
 					Throwables.throwException(exc);
 				}
-				try {
-					Class<?> nativeMethodAccessorImplClass = Class.forName("jdk.internal.reflect.NativeMethodAccessorImpl");
-					Method invoker = nativeMethodAccessorImplClass.getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
-					driver.setAccessible(invoker, true);
-					MethodHandles.Lookup consulter = driver.consulterRetriever.apply(nativeMethodAccessorImplClass);
-					driver.methodInvoker = consulter.unreflect(invoker);
-				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize method invoker");
-					Throwables.throwException(exc);
-				}
 			}
-
 
 			void initDeepConsulterRetriever() throws Throwable {
 				Constructor<MethodHandles.Lookup> lookupCtor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class, int.class);
