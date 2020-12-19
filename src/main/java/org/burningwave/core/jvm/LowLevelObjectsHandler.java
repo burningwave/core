@@ -811,38 +811,43 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			        	lowLevelObjectsHandler.unsafe.putObjectVolatile(cls, loggerFieldOffset, null);
 			        lowLevelObjectsHandler.illegalAccessLoggerEnabler = () ->
 			        	lowLevelObjectsHandler.unsafe.putObjectVolatile(cls, loggerFieldOffset, illegalAccessLogger);
+			        lowLevelObjectsHandler.disableIllegalAccessLogger();
 			    } catch (Throwable e) {
 			    	
 			    }
-				lowLevelObjectsHandler.disableIllegalAccessLogger();
-				initConsulterRetriever(lowLevelObjectsHandler);
+				try {
+					initConsulterRetriever(lowLevelObjectsHandler);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize consulter retriever");
+					Throwables.throwException(exc);
+				}
 			}
 
 
-			void initConsulterRetriever(LowLevelObjectsHandler lowLevelObjectsHandler) {
-				try {
-					MethodHandles.Lookup consulter = MethodHandles.lookup();
-					MethodHandle consulterRetrieverMethod = consulter.findStatic(
-						MethodHandles.class, "privateLookupIn",
-						MethodType.methodType(MethodHandles.Lookup.class, Class.class, MethodHandles.Lookup.class)
-					);
-					lowLevelObjectsHandler.consulterRetriever = cls -> {
-						try {
-							return (MethodHandles.Lookup)consulterRetrieverMethod.invoke(cls, MethodHandles.lookup());
-						} catch (Throwable exc) {
-							return Throwables.throwException(exc);
-						}
-					};
-				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize consulter", exc);
-					Throwables.throwException(exc);
-				}
+			void initConsulterRetriever(LowLevelObjectsHandler lowLevelObjectsHandler) throws Throwable {
+				MethodHandles.Lookup consulter = MethodHandles.lookup();
+				MethodHandle consulterRetrieverMethod = consulter.findStatic(
+					MethodHandles.class, "privateLookupIn",
+					MethodType.methodType(MethodHandles.Lookup.class, Class.class, MethodHandles.Lookup.class)
+				);
+				lowLevelObjectsHandler.consulterRetriever = cls -> {
+					try {
+						return (MethodHandles.Lookup)consulterRetrieverMethod.invoke(cls, MethodHandles.lookup());
+					} catch (Throwable exc) {
+						return Throwables.throwException(exc);
+					}
+				};
 			}
 
 			
 			@Override
 			void initSpecificElements() {
-				initAccessibleSetter();
+				try {
+					initAccessibleSetter();
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize accessible setter");
+					Throwables.throwException(exc);
+				}
 				try {
 					MethodHandles.Lookup classLoaderConsulter = lowLevelObjectsHandler.getConsulter(ClassLoader.class);
 					MethodType methodType = MethodType.methodType(Package.class, String.class);
@@ -855,6 +860,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 						}
 					};
 				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize package retriever");
 					Throwables.throwException(exc);
 				}
 				try {
@@ -875,9 +881,9 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 					Throwables.throwException(exc);
 				}
 				try {
-					initDeepConsulter();
+					initDeepConsulterRetriever();
 				} catch (Throwable exc) {
-					ManagedLoggersRepository.logInfo(getClass()::getName, "Could not initialize deep consulter");
+					ManagedLoggersRepository.logInfo(getClass()::getName, "Could not initialize deep consulter retriever");
 					Throwables.throwException(exc);
 				}
 				try {
@@ -893,25 +899,20 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			}
 
 
-			void initAccessibleSetter() {
-				try {
-					final Method accessibleSetterMethod = AccessibleObject.class.getDeclaredMethod("setAccessible0", boolean.class);
-					accessibleSetterMethod.setAccessible(true);
-					lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) -> {
-						try {
-							accessibleSetterMethod.invoke(accessibleObject, flag);
-						} catch (Throwable exc) {
-							Throwables.throwException(exc);
-						}
-					};
-				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize accessible setter");
-					Throwables.throwException(exc);
-				}
+			void initAccessibleSetter() throws Throwable {
+				final Method accessibleSetterMethod = AccessibleObject.class.getDeclaredMethod("setAccessible0", boolean.class);
+				accessibleSetterMethod.setAccessible(true);
+				lowLevelObjectsHandler.accessibleSetter = (accessibleObject, flag) -> {
+					try {
+						accessibleSetterMethod.invoke(accessibleObject, flag);
+					} catch (Throwable exc) {
+						Throwables.throwException(exc);
+					}
+				};
 			}
 
 
-			void initDeepConsulter() throws Throwable {
+			void initDeepConsulterRetriever() throws Throwable {
 				Constructor<MethodHandles.Lookup> lookupCtor = lowLevelObjectsHandler.getDeclaredConstructor(
 					MethodHandles.Lookup.class, ctor -> 
 						ctor.getParameters().length == 2 && 
@@ -947,7 +948,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			}
 			
 			@Override
-			void initDeepConsulter() throws Throwable {
+			void initDeepConsulterRetriever() throws Throwable {
 				Constructor<?> lookupCtor = lowLevelObjectsHandler.getDeclaredConstructor(
 					MethodHandles.Lookup.class, ctor -> 
 						ctor.getParameters().length == 3 && 
@@ -979,7 +980,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			}
 
 			@Override
-			void initConsulterRetriever(LowLevelObjectsHandler lowLevelObjectsHandler) {
+			void initConsulterRetriever(LowLevelObjectsHandler lowLevelObjectsHandler) throws Throwable {
 				try (
 					InputStream inputStream =
 						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/ConsulterRetrieverForJDK16.bwc"
@@ -992,14 +993,11 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 					);
 					lowLevelObjectsHandler.consulterRetriever =
 						(Function<Class<?>, MethodHandles.Lookup>)lowLevelObjectsHandler.unsafe.allocateInstance(methodHandleWrapperClass);
-				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize consulter");
-					Throwables.throwException(exc);
 				}
 			}
 			
 			@Override
-			void initAccessibleSetter() {
+			void initAccessibleSetter() throws Throwable {
 				try (
 					InputStream inputStream =
 						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/AccessibleSetterRetrieverForJDK16.bwc"
@@ -1012,9 +1010,6 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 					);
 					lowLevelObjectsHandler.accessibleSetter =
 						(BiConsumer<AccessibleObject, Boolean>)lowLevelObjectsHandler.unsafe.allocateInstance(methodHandleWrapperClass);
-				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize accessible setter");
-					Throwables.throwException(exc);
 				}
 			}
 			
