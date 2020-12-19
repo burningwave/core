@@ -699,7 +699,9 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			try (Initializer initializer =
 					JVMInfo.getVersion() > 8 ?
 						JVMInfo.getVersion() > 13 ?
-							new ForJava14(lowLevelObjectsHandler):
+							JVMInfo.getVersion() > 14 ?
+								new ForJava15(lowLevelObjectsHandler):
+								new ForJava14(lowLevelObjectsHandler):
 							new ForJava9(lowLevelObjectsHandler):
 						new ForJava8(lowLevelObjectsHandler)) {
 				initializer.init();
@@ -969,12 +971,19 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 					}
 				};
 			}
+		}
+		
+		private static class ForJava15 extends ForJava14 {
 			
+			ForJava15(LowLevelObjectsHandler lowLevelObjectsHandler) {
+				super(lowLevelObjectsHandler);
+			}
+
 			@Override
 			void initConsulterRetriever(LowLevelObjectsHandler lowLevelObjectsHandler) throws Throwable {
 				try (
 					InputStream inputStream =
-						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/ConsulterRetrieverForJDK16.bwc"
+						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/ConsulterRetrieverForJDK15.bwc"
 					);
 					ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 				) {
@@ -991,7 +1000,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			void initAccessibleSetter() throws Throwable {
 				try (
 					InputStream inputStream =
-						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/AccessibleSetterRetrieverForJDK16.bwc"
+						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/AccessibleSetterRetrieverForJDK15.bwc"
 					);
 					ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 				) {
@@ -1008,7 +1017,9 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 				MethodHandles.Lookup obj = consulterRetriever.apply(cls);
 				return obj;
 			}
-		}		
+			
+		}
+		
 		
 	}
 }
