@@ -295,9 +295,9 @@
 				<version>${maven-source-plugin.version}</version>
 				<configuration>
 					<excludes>
-						<exclude>org/burningwave/core/jvm/AccessibleSetterRetrieverForJDK16.bwc</exclude>
+						<exclude>org/burningwave/core/jvm/AccessibleSetterRetrieverForJDK9.bwc</exclude>
 						<exclude>org/burningwave/core/jvm/ClassLoaderDelegateForJDK9.bwc</exclude>
-						<exclude>org/burningwave/core/jvm/ConsulterRetrieverForJDK16.bwc</exclude>
+						<exclude>org/burningwave/core/jvm/ConsulterRetrieverForJDK9.bwc</exclude>
 					</excludes>
 				</configuration>
 				<executions>
