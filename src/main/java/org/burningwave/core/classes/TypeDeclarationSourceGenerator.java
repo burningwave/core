@@ -39,6 +39,7 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	private String name;
 	private String simpleName;
 	private Collection<GenericSourceGenerator> generics;
+	private BodySourceGenerator parametersForAnonymousClass;
 	
 	private TypeDeclarationSourceGenerator(String name, String simpleName) {
 		this.name = name;
@@ -69,6 +70,38 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	
 	public static TypeDeclarationSourceGenerator create(GenericSourceGenerator... generics) {
 		return new TypeDeclarationSourceGenerator().addGeneric(generics);
+	}
+	
+	public static TypeDeclarationSourceGenerator createAnonymous(GenericSourceGenerator... generics) {
+		TypeDeclarationSourceGenerator typeDeclarationSG = new TypeDeclarationSourceGenerator().addGeneric(generics);
+		typeDeclarationSG.parametersForAnonymousClass = BodySourceGenerator.create().setDelimiters("(", ")").setElementPrefix("");
+		return typeDeclarationSG;
+	}
+	
+	public TypeDeclarationSourceGenerator setAnonymous(boolean flag) {
+		if (flag) {
+			if (parametersForAnonymousClass == null) {
+				parametersForAnonymousClass = BodySourceGenerator.create().setDelimiters("(", ")").setElementPrefix("");
+			}
+		} else {
+			parametersForAnonymousClass = null;
+		}
+		return this;
+	}
+	
+	boolean isAnonymous() {
+		return parametersForAnonymousClass != null;
+	}
+	
+	public TypeDeclarationSourceGenerator addParameterForAnonymousType(String... parameters) {
+		if (parametersForAnonymousClass == null) {
+			setAnonymous(true);
+		}
+		if (!parametersForAnonymousClass.make().equals("( )")) {
+			parametersForAnonymousClass.addCode(",");
+		}
+		parametersForAnonymousClass.addCode(String.join(", ", parameters));		
+		return this;
 	}
 	
 	public TypeDeclarationSourceGenerator setSimpleName(String simpleName) {
@@ -107,7 +140,10 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	
 	@Override
 	public String make() {
-		return getOrEmpty(simpleName)  + Optional.ofNullable(generics).map(generics -> 
-		"<" + getOrEmpty(generics, COMMA + EMPTY_SPACE) + ">").orElseGet(() -> "");
+		return getOrEmpty(simpleName)  + 
+			Optional.ofNullable(generics).map(generics -> 
+				"<" + getOrEmpty(generics, COMMA + EMPTY_SPACE) + ">"
+			).orElseGet(() -> "") +
+			Optional.ofNullable(parametersForAnonymousClass).map(BodySourceGenerator::make).orElseGet(() -> "");
 	}	
 }

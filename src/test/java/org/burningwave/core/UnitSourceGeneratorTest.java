@@ -197,7 +197,12 @@ public class UnitSourceGeneratorTest extends BaseTest {
                 .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create("T")))
                 .addModifier(Modifier.PUBLIC)
                 .addOuterCodeLine("@Override")
-                .addBodyCodeLine("return (Comparable<T>)new Date();")
+                .addBodyCodeLine("Object obj = new").addBodyElement(
+                	ClassSourceGenerator.create(
+                		TypeDeclarationSourceGenerator.create("Object").addGeneric(GenericSourceGenerator.create(""))
+                		.addParameterForAnonymousType("2", "3").addParameterForAnonymousType("2", "3")
+                	)
+                ).addBodyCodeLine("return (Comparable<T>)new Date();")
                 .useType(Date.class)
             ).addConcretizedType(
                 MyInterface.class

@@ -265,25 +265,27 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		String constructorsCode = getFunctionCode(constructors);
 		String methodsCode = getFunctionCode(methods);
 		String innerClassesCode = getInnerClassesCode();
-		return
-			getOrEmpty(
-				getOuterCode(),
-				annotations,
-				Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
-				classType,
-				typeDeclaration,
-				expands,
-				expandedType,
-				concretize,
-				getOrEmpty(concretizedTypes, ", "), 
-				"{",
-				staticInitializerCode != null? "\n\n" + staticInitializerCode : null, 
-				fieldsCode != null? "\n\n" + fieldsCode : null,
-				constructorsCode != null? "\n\n" + constructorsCode : null,
-				methodsCode != null? "\n\n" + methodsCode : null,
-				innerClassesCode != null? "\n\n" + innerClassesCode : null,
-				"\n\n}"
-			);
+		String code = getOrEmpty(
+			getOuterCode(),
+			annotations,
+			Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
+			!typeDeclaration.isAnonymous()? classType : "",
+			typeDeclaration,				
+			expands,
+			expandedType,
+			concretize,
+			getOrEmpty(concretizedTypes, ", "), 
+			"{",
+			staticInitializerCode != null? "\n\n" + staticInitializerCode : null, 
+			fieldsCode != null? "\n\n" + fieldsCode : null,
+			constructorsCode != null? "\n\n" + constructorsCode : null,
+			methodsCode != null? "\n\n" + methodsCode : null,
+			innerClassesCode != null? "\n\n" + innerClassesCode : null,
+			"\n\n}"
+		);
+		
+		return !typeDeclaration.isAnonymous()? code : code.replaceAll("\n(.)", "\n\t$1");
+			
 	}
 
 	String getOuterCode() {
