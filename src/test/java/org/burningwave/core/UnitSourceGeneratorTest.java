@@ -19,6 +19,7 @@ import org.burningwave.core.classes.GenericSourceGenerator;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
 import org.burningwave.core.classes.VariableSourceGenerator;
+import java.util.function.Supplier;
 import org.burningwave.core.examples.classfactory.RuntimeClassExtenderTwo.MyInterface;
 import org.burningwave.core.examples.classfactory.RuntimeClassExtenderTwo.ToBeExtended;
 import org.junit.jupiter.api.Test;
@@ -154,7 +155,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
             ClassSourceGenerator.create(
                 TypeDeclarationSourceGenerator.create("MyExtendedClass")
             ).addAnnotation(
-            	AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameter(
+            	AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameter("value", true, 
             		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
             			VariableSourceGenerator.create("message").setValue("\"Person name should not be empty\"")
             		).addParameter(
@@ -197,13 +198,18 @@ public class UnitSourceGeneratorTest extends BaseTest {
                 .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create("T")))
                 .addModifier(Modifier.PUBLIC)
                 .addOuterCodeLine("@Override")
-                .addBodyCodeLine("Object obj = new").addBodyElement(
+                .addBodyCodeLine("Supplier<Date> dateSupplier = new").addBodyElement(
                 	ClassSourceGenerator.create(
-                		TypeDeclarationSourceGenerator.create("Object").addGeneric(GenericSourceGenerator.create(""))
-                		.addParameterForAnonymousType("2", "3").addParameterForAnonymousType("2", "3")
-                	)
-                ).addBodyCodeLine("return (Comparable<T>)new Date();")
-                .useType(Date.class)
+                		TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class))
+                		.setAnonymous(true)
+                	).addMethod(
+	                    FunctionSourceGenerator.create("get")
+	                    .setReturnType(TypeDeclarationSourceGenerator.create(Date.class))
+	                    .addModifier(Modifier.PUBLIC)
+	                    .addOuterCodeLine("@Override")
+	                    .addBodyCodeLine("return new Date();")
+	                )
+                ).addBodyCode(";").addBodyCodeLine("return (Comparable<T>)dateSupplier.get();")
             ).addConcretizedType(
                 MyInterface.class
             ).expands(ToBeExtended.class)
