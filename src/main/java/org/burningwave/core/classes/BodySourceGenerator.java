@@ -67,7 +67,7 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public BodySourceGenerator addElement(SourceGenerator... generators) {
-		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.bodyGenerators).orElseGet(() -> this.bodyGenerators = new ArrayList<>());
 		for (SourceGenerator generator : generators) {
 			this.bodyGenerators.add(generator);
 		}
@@ -75,7 +75,7 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public BodySourceGenerator addCode(String... elements) {
-		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.bodyGenerators).orElseGet(() -> this.bodyGenerators = new ArrayList<>());
 		for (String element : elements) {
 			this.bodyGenerators.add(new SourceGenerator() {
 				@Override
@@ -95,7 +95,7 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public BodySourceGenerator addAllElements(Collection<? extends SourceGenerator> generators) {
-		this.bodyGenerators = Optional.ofNullable(this.bodyGenerators).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.bodyGenerators).orElseGet(() -> this.bodyGenerators = new ArrayList<>());
 		generators.forEach(generator -> {
 			addElement(generator);
 		});
@@ -122,7 +122,7 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public BodySourceGenerator useType(java.lang.Class<?>... classes) {
-		this.usedTypes = Optional.ofNullable(this.usedTypes).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.usedTypes).orElseGet(() -> this.usedTypes = new ArrayList<>());
 		for (java.lang.Class<?> cls : classes) {			
 			this.usedTypes.add(TypeDeclarationSourceGenerator.create(cls));
 		}
@@ -130,7 +130,7 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public BodySourceGenerator useType(String... classes) {
-		this.usedTypes = Optional.ofNullable(this.usedTypes).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.usedTypes).orElseGet(() -> this.usedTypes = new ArrayList<>());
 		for (String cls : classes) {			
 			this.usedTypes.add(TypeDeclarationSourceGenerator.create(cls, null));
 		}

@@ -60,7 +60,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public UnitSourceGenerator addImport(String... imports) {
-		this.imports = Optional.ofNullable(this.imports).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.imports).orElseGet(() -> this.imports = new ArrayList<>());
 		for (String imprt : imports) {
 			this.imports.add(imprt);
 		}
@@ -75,7 +75,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public UnitSourceGenerator addStaticImport(String... imports) {
-		this.imports = Optional.ofNullable(this.imports).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.imports).orElseGet(() -> this.imports = new ArrayList<>());
 		for (String imprt : imports) {
 			this.imports.add("static " + imprt);
 		}
@@ -94,7 +94,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public UnitSourceGenerator addClass(ClassSourceGenerator... clazzes) {
-		this.classes = Optional.ofNullable(this.classes).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.classes).orElseGet(() -> this.classes = new ArrayList<>());
 		for (ClassSourceGenerator cls : clazzes) {
 			classes.add(cls);
 		}

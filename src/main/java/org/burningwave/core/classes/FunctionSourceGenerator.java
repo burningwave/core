@@ -107,7 +107,7 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public FunctionSourceGenerator addParameter(VariableSourceGenerator... parameters) {
-		this.parameters = Optional.ofNullable(this.parameters).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.parameters).orElseGet(() -> this.parameters = new ArrayList<>());
 		for (VariableSourceGenerator parameter : parameters) {
 			this.parameters.add(parameter.setDelimiter(null));
 		}
@@ -115,7 +115,7 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public FunctionSourceGenerator addThrowable(TypeDeclarationSourceGenerator... throwables) {
-		this.throwables = Optional.ofNullable(this.throwables).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.throwables).orElseGet(() -> this.throwables = new ArrayList<>());
 		for (TypeDeclarationSourceGenerator throwable : throwables) {
 			this.throwables.add(throwable);
 		}
@@ -127,7 +127,7 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public FunctionSourceGenerator addOuterCodeLine(String... codes) {
-		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.outerCode).orElseGet(() -> this.outerCode = new ArrayList<>());
 		for (String code : codes) {
 			if (!this.outerCode.isEmpty()) {
 				this.outerCode.add("\n" + code);
@@ -139,7 +139,7 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public FunctionSourceGenerator addAnnotation(AnnotationSourceGenerator... annotations) {
-		this.annotations = Optional.ofNullable(this.annotations).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.annotations).orElseGet(() -> this.annotations = new ArrayList<>());
 		for (AnnotationSourceGenerator annotation : annotations) {
 			this.annotations.add(annotation);
 		}
@@ -147,19 +147,19 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public FunctionSourceGenerator addBodyCode(String... codes) {
-		this.body = Optional.ofNullable(this.body).orElseGet(BodySourceGenerator::create);
+		Optional.ofNullable(this.body).orElseGet(() -> this.body = BodySourceGenerator.create());
 		this.body.addCode(codes);
 		return this;
 	}
 	
 	public FunctionSourceGenerator addBodyCodeLine(String... code) {
-		this.body = Optional.ofNullable(this.body).orElseGet(BodySourceGenerator::create);
+		Optional.ofNullable(this.body).orElseGet(() -> this.body = BodySourceGenerator.create());
 		this.body.addCodeLine(code);
 		return this;
 	}
 	
 	public FunctionSourceGenerator addBodyElement(SourceGenerator... generators) {
-		this.body = Optional.ofNullable(this.body).orElseGet(BodySourceGenerator::create);
+		Optional.ofNullable(this.body).orElseGet(() -> this.body = BodySourceGenerator.create());
 		for (SourceGenerator generator : generators) {
 			this.body.addElement(generator);
 		}
@@ -167,7 +167,7 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public FunctionSourceGenerator useType(java.lang.Class<?>... classes) {
-		this.usedTypes = Optional.ofNullable(this.usedTypes).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.usedTypes).orElseGet(() -> this.usedTypes = new ArrayList<>());
 		for (Class<?> cls : classes) {
 			usedTypes.add(TypeDeclarationSourceGenerator.create(cls));
 		}

@@ -85,7 +85,7 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public TypeDeclarationSourceGenerator addGeneric(GenericSourceGenerator... generics) {
-		this.generics = Optional.ofNullable(this.generics).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.generics).orElseGet(() -> this.generics = new ArrayList<>());
 		this.generics.addAll(Arrays.asList(generics));
 		return this;
 	}

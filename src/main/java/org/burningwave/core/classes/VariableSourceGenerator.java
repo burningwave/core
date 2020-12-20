@@ -73,13 +73,12 @@ public class VariableSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public VariableSourceGenerator addOuterCode(String code) {
-		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
-		this.outerCode.add(code);
+		Optional.ofNullable(this.outerCode).orElseGet(() -> this.outerCode = new ArrayList<>()).add(code);
 		return this;
 	}
 	
 	public VariableSourceGenerator addOuterCodeLine(String code) {
-		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.outerCode).orElseGet(() -> this.outerCode = new ArrayList<>());
 		if (!this.outerCode.isEmpty()) {
 			this.outerCode.add("\n" + code);
 		} else {
@@ -89,8 +88,7 @@ public class VariableSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public VariableSourceGenerator addAnnotation(AnnotationSourceGenerator annotation) {
-		this.annotations = Optional.ofNullable(this.annotations).orElseGet(ArrayList::new);
-		this.annotations.add(annotation);
+		Optional.ofNullable(this.annotations).orElseGet(() -> this.annotations = new ArrayList<>()).add(annotation);
 		return this;
 	}
 	
@@ -133,7 +131,7 @@ public class VariableSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public VariableSourceGenerator useType(java.lang.Class<?>... classes) {
-		this.usedTypes = Optional.ofNullable(this.usedTypes).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.usedTypes).orElseGet(() -> this.usedTypes = new ArrayList<>());
 		for (java.lang.Class<?> cls : classes) {			
 			this.usedTypes.add(TypeDeclarationSourceGenerator.create(cls));
 		}
