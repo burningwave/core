@@ -42,7 +42,6 @@ public class AccessibleSetterInvokerForJDK9 implements BiConsumer<AccessibleObje
 	static {
 		try {
 			Method accessibleSetterMethod = AccessibleObject.class.getDeclaredMethod("setAccessible0", boolean.class);
-			accessibleSetterMethod.setAccessible(true);
 			accessibleSetterMethodHandle = methodHandleRetriever.unreflect(accessibleSetterMethod);
 		} catch (Throwable exc) {
 			throwException(exc);

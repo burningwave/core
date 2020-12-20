@@ -466,10 +466,10 @@ public class Driver implements Closeable {
 			void initAccessibleSetter() {
 				try {
 					final Method accessibleSetterMethod = AccessibleObject.class.getDeclaredMethod("setAccessible0", AccessibleObject.class, boolean.class);
-					accessibleSetterMethod.setAccessible(true);
+					MethodHandle accessibleSetterMethodHandle = driver.getConsulter(AccessibleObject.class).unreflect(accessibleSetterMethod);
 					driver.accessibleSetter = (accessibleObject, flag) -> {
 						try {
-							accessibleSetterMethod.invoke(null, accessibleObject, flag);
+							accessibleSetterMethodHandle.invoke(accessibleObject, flag);
 						} catch (Throwable exc) {
 							Throwables.throwException(exc);
 						}
@@ -485,7 +485,6 @@ public class Driver implements Closeable {
 				try {
 					Class<?> nativeAccessorImplClass = Class.forName("sun.reflect.NativeConstructorAccessorImpl");
 					Method method = nativeAccessorImplClass.getDeclaredMethod("newInstance0", Constructor.class, Object[].class);
-					driver.setAccessible(method, true);
 					MethodHandles.Lookup consulter = driver.getConsulter(nativeAccessorImplClass);
 					driver.constructorInvoker = consulter.unreflect(method);
 				} catch (Throwable exc) {
@@ -498,7 +497,6 @@ public class Driver implements Closeable {
 				try {
 					Class<?> nativeAccessorImplClass = Class.forName("sun.reflect.NativeMethodAccessorImpl");
 					Method method = nativeAccessorImplClass.getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
-					driver.setAccessible(method, true);
 					MethodHandles.Lookup consulter = driver.getConsulter(nativeAccessorImplClass);
 					driver.methodInvoker = consulter.unreflect(method);
 				} catch (Throwable exc) {
@@ -591,7 +589,6 @@ public class Driver implements Closeable {
 				try {
 					Class<?> nativeAccessorImplClass = Class.forName("jdk.internal.reflect.NativeConstructorAccessorImpl");
 					Method method = nativeAccessorImplClass.getDeclaredMethod("newInstance0", Constructor.class, Object[].class);
-					driver.setAccessible(method, true);
 					MethodHandles.Lookup consulter = driver.getConsulter(nativeAccessorImplClass);
 					driver.constructorInvoker = consulter.unreflect(method);
 				} catch (Throwable exc) {
@@ -604,7 +601,6 @@ public class Driver implements Closeable {
 				try {
 					Class<?> nativeMethodAccessorImplClass = Class.forName("jdk.internal.reflect.NativeMethodAccessorImpl");
 					Method invoker = nativeMethodAccessorImplClass.getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
-					driver.setAccessible(invoker, true);
 					MethodHandles.Lookup consulter = driver.getConsulter(nativeMethodAccessorImplClass);
 					driver.methodInvoker = consulter.unreflect(invoker);
 				} catch (Throwable exc) {
@@ -665,12 +661,12 @@ public class Driver implements Closeable {
 				Field fullPowerModeConstant = MethodHandles.Lookup.class.getDeclaredField("FULL_POWER_MODES");
 				driver.setAccessible(fullPowerModeConstant, true);
 				int fullPowerModeConstantValue = fullPowerModeConstant.getInt(null);
-				MethodHandle mthHandle = lookupCtor.newInstance(MethodHandles.Lookup.class, fullPowerModeConstantValue).findConstructor(
+				MethodHandle methodHandle = lookupCtor.newInstance(MethodHandles.Lookup.class, fullPowerModeConstantValue).findConstructor(
 					MethodHandles.Lookup.class, MethodType.methodType(void.class, Class.class, int.class)
 				);
 				driver.consulterRetriever = cls -> {
 					try {
-						return (MethodHandles.Lookup)mthHandle.invoke(cls, fullPowerModeConstantValue);
+						return (MethodHandles.Lookup)methodHandle.invoke(cls, fullPowerModeConstantValue);
 					} catch (Throwable exc) {
 						return Throwables.throwException(exc);
 					}
