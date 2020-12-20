@@ -200,7 +200,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 		}
 	}
 	
-	public Object invoke(Object target, Method method, Object... params) throws Throwable {
+	public Object invoke(Object target, Method method, Object... params) {
 		if (params == null) {
 			params = new Object[] {null};
 		}
@@ -208,6 +208,17 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			return method.invoke(target, params);
 		} catch (Throwable exc) {
 			return driver.invoke(method, target, params);
+		}
+	}
+	
+	public <T> T newInstance(Constructor<T> ctor, Object... params) {
+		if (params == null) {
+			params = new Object[] {null};
+		}
+		try {
+			return ctor.newInstance(ctor, params);
+		} catch (Throwable exc) {
+			return driver.newInstance(ctor, params);
 		}
 	}
 	
