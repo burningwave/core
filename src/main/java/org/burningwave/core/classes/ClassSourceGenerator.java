@@ -49,6 +49,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	private Collection<FunctionSourceGenerator> constructors;
 	private Collection<FunctionSourceGenerator> methods;
 	private Collection<ClassSourceGenerator> innerClasses;
+	private BodySourceGenerator staticInitializer;
 	
 	private ClassSourceGenerator(String classType, TypeDeclarationSourceGenerator typeDeclaration) {
 		this.classType = classType;
@@ -113,7 +114,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		} else {
 			concretize = "implements";
 		}
-		this.concretizedTypes = Optional.ofNullable(this.concretizedTypes).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.concretizedTypes).orElseGet(() -> this.concretizedTypes = new ArrayList<>());
 		for (Class<?> cls : concretizedTypes) {
 			if (!isAlreadyAdded(cls.getName())) {
 				this.concretizedTypes.add(TypeDeclarationSourceGenerator.create(cls));
@@ -128,7 +129,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		} else {
 			concretize = "implements";
 		}
-		this.concretizedTypes = Optional.ofNullable(this.concretizedTypes).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.concretizedTypes).orElseGet(() -> this.concretizedTypes = new ArrayList<>());
 		for (TypeDeclarationSourceGenerator typeDeclarationSG : concretizedTypes) {
 			if (!isAlreadyAdded(typeDeclarationSG.getName())) {
 				this.concretizedTypes.add(typeDeclarationSG);
@@ -148,8 +149,18 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		return isAlreadyAdded;
 	}
 	
+	public ClassSourceGenerator addStaticInitializerCodeLine(String... codes) {
+		Optional.ofNullable(this.staticInitializer).orElseGet(() -> this.staticInitializer = BodySourceGenerator.create().setDelimiters("static {", "\n}").setElementPrefix("\t")).addCodeLine(codes);
+		return this;
+	}
+	
+	public ClassSourceGenerator addStaticInitializerCode(String... codes) {
+		Optional.ofNullable(this.staticInitializer).orElseGet(() -> this.staticInitializer = BodySourceGenerator.create().setDelimiters("static {", "\n}").setElementPrefix("\t")).addCode(codes);
+		return this;
+	}
+	
 	public ClassSourceGenerator addOuterCodeLine(String... codes) {
-		this.outerCode = Optional.ofNullable(this.outerCode).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.outerCode).orElseGet(() -> this.outerCode = new ArrayList<>());
 		for (String code : codes) {
 			if (!this.outerCode.isEmpty()) {
 				this.outerCode.add("\n" + code);
@@ -161,7 +172,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public ClassSourceGenerator addAnnotation(AnnotationSourceGenerator... annotations) {
-		this.annotations = Optional.ofNullable(this.annotations).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.annotations).orElseGet(() -> this.annotations = new ArrayList<>());
 		for (AnnotationSourceGenerator annotation : annotations) {
 			this.annotations.add(annotation);
 		}
@@ -169,7 +180,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public ClassSourceGenerator addField(VariableSourceGenerator... fields) {
-		this.fields = Optional.ofNullable(this.fields).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.fields).orElseGet(() -> this.fields = new ArrayList<>());
 		for (VariableSourceGenerator field : fields) {
 			this.fields.add(field);
 			if (classType.equals("enum")) {
@@ -181,7 +192,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public ClassSourceGenerator addConstructor(FunctionSourceGenerator... constructors) {
-		this.constructors = Optional.ofNullable(this.constructors).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.constructors).orElseGet(() -> this.constructors = new ArrayList<>());
 		for (FunctionSourceGenerator constructor : constructors) {
 			this.constructors.add(constructor);
 			constructor.setName(this.typeDeclaration.getSimpleName());
@@ -191,7 +202,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public ClassSourceGenerator addMethod(FunctionSourceGenerator... methods) {
-		this.methods = Optional.ofNullable(this.methods).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.methods).orElseGet(() -> this.methods = new ArrayList<>());
 		for (FunctionSourceGenerator method : methods) {
 			this.methods.add(method);
 		}
@@ -199,7 +210,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public ClassSourceGenerator addInnerClass(ClassSourceGenerator... classes) {
-		this.innerClasses = Optional.ofNullable(this.innerClasses).orElseGet(ArrayList::new);
+		Optional.ofNullable(this.innerClasses).orElseGet(() -> this.innerClasses = new ArrayList<>());
 		for (ClassSourceGenerator cls : classes) {
 			this.innerClasses.add(cls);
 		}
@@ -212,6 +223,10 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	
 	private String getFieldsCode() {
 		return Optional.ofNullable(fields).map(flds -> "\t" + getOrEmpty(flds, "\n").replace("\n", "\n\t")).orElseGet(() -> null);
+	}
+	
+	private String getStaticInitializer() {
+		return Optional.ofNullable(staticInitializer).map(stIn ->  "\t" + getOrEmpty(stIn).replace("\n", "\n\t")).orElseGet(() -> null);
 	}
 	
 	private String getFunctionCode(Collection<FunctionSourceGenerator> functions) {
@@ -245,6 +260,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	@Override
 	public String make() {
 		String annotations = getAnnotations();
+		String staticInitializerCode = getStaticInitializer();
 		String fieldsCode = getFieldsCode();
 		String constructorsCode = getFunctionCode(constructors);
 		String methodsCode = getFunctionCode(methods);
@@ -261,6 +277,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 				concretize,
 				getOrEmpty(concretizedTypes, ", "), 
 				"{",
+				staticInitializerCode != null? "\n\n" + staticInitializerCode : null, 
 				fieldsCode != null? "\n\n" + fieldsCode : null,
 				constructorsCode != null? "\n\n" + constructorsCode : null,
 				methodsCode != null? "\n\n" + methodsCode : null,

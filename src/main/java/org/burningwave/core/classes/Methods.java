@@ -183,9 +183,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		return invoke(
 			Classes.retrieveFrom(target), 
 			null, methodName, method -> 
-				(T)method.invoke(
-					target,
-					getArgumentArray(
+				(T)LowLevelObjectsHandler.invoke(target, method, getArgumentArray(
 						method,
 						this::getArgumentListWithArrayForVarArgs,
 						ArrayList::new, 

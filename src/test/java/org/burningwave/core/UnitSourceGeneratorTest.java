@@ -61,6 +61,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 									.parentOf(TypeDeclarationSourceGenerator.create("Free").addGeneric(GenericSourceGenerator.create("S"))
 											.addGeneric(GenericSourceGenerator.create("Y")))))
 					.addModifier(Modifier.PUBLIC).expands(Object.class)
+					.addStaticInitializerCodeLine("System.out.println(\"Hello World\");")
 					.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Integer.class), "index1").setValue("new Integer(1)")
 							.addModifier(Modifier.PRIVATE).addOuterCodeLine("@Field").addOuterCodeLine("@Annotation2"))
 					.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Collection.class).addGeneric(GenericSourceGenerator.create("String").addOuterCode("@NotNull")), "collection")
