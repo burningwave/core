@@ -63,7 +63,8 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		}
 		return Executor.get(() -> {
 			//logInfo("Invoking " + ctor);
-			return (T)ctor.newInstance(
+			return (T)LowLevelObjectsHandler.newInstance(
+				ctor,
 				getArgumentArray(
 					ctor,
 					this::getArgumentListWithArrayForVarArgs,

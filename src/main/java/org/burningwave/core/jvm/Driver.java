@@ -71,6 +71,7 @@ public class Driver implements Closeable {
 	MethodHandle getDeclaredMethodsRetriever;
 	MethodHandle getDeclaredConstructorsRetriever;
 	MethodHandle methodInvoker;
+	MethodHandle constructorInvoker;
 	BiConsumer<AccessibleObject, Boolean> accessibleSetter;
 	Function<Class<?>, MethodHandles.Lookup> consulterRetriever;
 	TriFunction<ClassLoader, Object, String, Package> packageRetriever;
@@ -148,6 +149,14 @@ public class Driver implements Closeable {
 	public Object invoke(Method method, Object target, Object[] params) {
 		try {
 			return methodInvoker.invoke(method, target, params);
+		} catch (Throwable exc) {
+			return Throwables.throwException(exc);
+		}			
+	}
+	
+	public <T> T newInstance(Constructor<T> ctor, Object[] params) {
+		try {
+			return (T)constructorInvoker.invoke(ctor, params);
 		} catch (Throwable exc) {
 			return Throwables.throwException(exc);
 		}			
@@ -344,6 +353,7 @@ public class Driver implements Closeable {
 			initConsulterRetriever();
 			initMembersRetrievers();
 			initAccessibleSetter();
+			initConstructorInvoker();
 			initMethodInvoker();
 			initSpecificElements();			
 			initClassesVectorField();
@@ -356,8 +366,9 @@ public class Driver implements Closeable {
 		
 		abstract void initSpecificElements();
 		
-		abstract void initMethodInvoker();
+		abstract void initConstructorInvoker();	
 		
+		abstract void initMethodInvoker();			
 
 		private void initPackagesMapField() {
 			try {
@@ -468,13 +479,27 @@ public class Driver implements Closeable {
 				}
 			}
 			
+			@Override
+			void initConstructorInvoker() {
+				try {
+					Class<?> nativeAccessorImplClass = Class.forName("sun.reflect.NativeConstructorAccessorImpl");
+					Method method = nativeAccessorImplClass.getDeclaredMethod("newInstance0", Constructor.class, Object[].class);
+					driver.setAccessible(method, true);
+					MethodHandles.Lookup consulter = driver.consulterRetriever.apply(nativeAccessorImplClass);
+					driver.constructorInvoker = consulter.unreflect(method);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize constructor invoker");
+					Throwables.throwException(exc);
+				}				
+			}			
+			
 			void initMethodInvoker() {
 				try {
-					Class<?> nativeMethodAccessorImplClass = Class.forName("sun.reflect.NativeMethodAccessorImpl");
-					Method invoker = nativeMethodAccessorImplClass.getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
-					driver.setAccessible(invoker, true);
-					MethodHandles.Lookup consulter = driver.consulterRetriever.apply(nativeMethodAccessorImplClass);
-					driver.methodInvoker = consulter.unreflect(invoker);
+					Class<?> nativeAccessorImplClass = Class.forName("sun.reflect.NativeMethodAccessorImpl");
+					Method method = nativeAccessorImplClass.getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
+					driver.setAccessible(method, true);
+					MethodHandles.Lookup consulter = driver.consulterRetriever.apply(nativeAccessorImplClass);
+					driver.methodInvoker = consulter.unreflect(method);
 				} catch (Throwable exc) {
 					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize method invoker");
 					Throwables.throwException(exc);
@@ -556,6 +581,21 @@ public class Driver implements Closeable {
 				}
 			}
 			
+
+			@Override
+			void initConstructorInvoker() {
+				try {
+					Class<?> nativeAccessorImplClass = Class.forName("jdk.internal.reflect.NativeConstructorAccessorImpl");
+					Method method = nativeAccessorImplClass.getDeclaredMethod("newInstance0", Constructor.class, Object[].class);
+					driver.setAccessible(method, true);
+					MethodHandles.Lookup consulter = driver.consulterRetriever.apply(nativeAccessorImplClass);
+					driver.constructorInvoker = consulter.unreflect(method);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize constructor invoker");
+					Throwables.throwException(exc);
+				}	
+			}
+			
 			void initMethodInvoker() {
 				try {
 					Class<?> nativeMethodAccessorImplClass = Class.forName("jdk.internal.reflect.NativeMethodAccessorImpl");
@@ -589,17 +629,20 @@ public class Driver implements Closeable {
 				}
 				try {
 					driver.builtinClassLoaderClass = Class.forName("jdk.internal.loader.BuiltinClassLoader");
-					try (
-						InputStream inputStream =
-							Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/ClassLoaderDelegateForJDK9.bwc"
-						);
-						ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
-					) {
-						Streams.copy(inputStream, bBOS);
-						driver.classLoaderDelegateClass = driver.unsafe.defineAnonymousClass(
-							driver.builtinClassLoaderClass, bBOS.toByteArray(), null
-						);
-					}
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize builtin class loader class");
+					Throwables.throwException(exc);
+				}
+				try (
+					InputStream inputStream =
+						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/ClassLoaderDelegateForJDK9.bwc"
+					);
+					ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
+				) {
+					Streams.copy(inputStream, bBOS);
+					driver.classLoaderDelegateClass = driver.unsafe.defineAnonymousClass(
+						driver.builtinClassLoaderClass, bBOS.toByteArray(), null
+					);
 				} catch (Throwable exc) {
 					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize class loader delegate class");
 					Throwables.throwException(exc);
@@ -634,6 +677,7 @@ public class Driver implements Closeable {
 			public void close() {
 				super.close();
 			}
+
 		}
 		
 		private static class ForJava14 extends ForJava9 {

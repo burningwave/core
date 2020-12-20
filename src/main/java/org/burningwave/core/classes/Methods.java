@@ -167,7 +167,8 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 	public 	<T> T invokeStatic(Class<?> targetClass, String methodName, Object... arguments) {
 		return invoke(
 			targetClass, null, methodName, method -> 
-				(T)method.invoke(null, 
+				(T)LowLevelObjectsHandler.invoke(null,
+					method,
 					getArgumentArray(
 						method,
 						this::getArgumentListWithArrayForVarArgs,
@@ -183,7 +184,8 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		return invoke(
 			Classes.retrieveFrom(target), 
 			null, methodName, method -> 
-				(T)LowLevelObjectsHandler.invoke(target, method, getArgumentArray(
+				(T)LowLevelObjectsHandler.invoke(
+						target, method, getArgumentArray(
 						method,
 						this::getArgumentListWithArrayForVarArgs,
 						ArrayList::new, 

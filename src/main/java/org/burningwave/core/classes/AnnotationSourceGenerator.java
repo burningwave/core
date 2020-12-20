@@ -72,8 +72,8 @@ public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public AnnotationSourceGenerator addParameter(String name, boolean isArray, VariableSourceGenerator... parameters) {
-		this.body = Optional.ofNullable(this.body).orElseGet(() ->
-			BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
+		Optional.ofNullable(this.body).orElseGet(() ->
+			this.body =BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
 		);
 		BodySourceGenerator innBody = BodySourceGenerator.createSimple().setBodyElementSeparator(", ");
 		if (name != null) {
@@ -105,8 +105,8 @@ public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public AnnotationSourceGenerator addParameter(String name, boolean isArray, AnnotationSourceGenerator... parameters) {
-		this.body = Optional.ofNullable(this.body).orElseGet(() ->
-			BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
+		Optional.ofNullable(this.body).orElseGet(() ->
+			this.body =BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
 		);
 		BodySourceGenerator innBody = BodySourceGenerator.createSimple().setBodyElementSeparator(", ");
 		if (name != null) {
@@ -126,8 +126,8 @@ public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public AnnotationSourceGenerator useType(java.lang.Class<?>... classes) {
-		this.body = Optional.ofNullable(this.body).orElseGet(() ->
-			BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
+		Optional.ofNullable(this.body).orElseGet(() ->
+			this.body =BodySourceGenerator.createSimple().setDelimiters("(", ")").setBodyElementSeparator(", ")
 		);
 		body.useType(classes);
 		return this;	
