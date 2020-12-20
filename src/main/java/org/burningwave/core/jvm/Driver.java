@@ -328,6 +328,7 @@ public class Driver implements Closeable {
 		getDeclaredConstructorsRetriever = null;
 		packageRetriever = null;	
 		methodInvoker = null;
+		constructorInvoker = null;
 		accessibleSetter = null;	
 		consulterRetriever = null;
 		classLoaderDelegateClass = null;
@@ -406,7 +407,7 @@ public class Driver implements Closeable {
 		
 		private void initMembersRetrievers() {
 			try {
-				MethodHandles.Lookup consulter = driver.consulterRetriever.apply(Class.class);
+				MethodHandles.Lookup consulter = driver.getConsulter(Class.class);
 				driver.getDeclaredFieldsRetriever = consulter.findSpecial(
 					Class.class,
 					"getDeclaredFields0",
@@ -485,7 +486,7 @@ public class Driver implements Closeable {
 					Class<?> nativeAccessorImplClass = Class.forName("sun.reflect.NativeConstructorAccessorImpl");
 					Method method = nativeAccessorImplClass.getDeclaredMethod("newInstance0", Constructor.class, Object[].class);
 					driver.setAccessible(method, true);
-					MethodHandles.Lookup consulter = driver.consulterRetriever.apply(nativeAccessorImplClass);
+					MethodHandles.Lookup consulter = driver.getConsulter(nativeAccessorImplClass);
 					driver.constructorInvoker = consulter.unreflect(method);
 				} catch (Throwable exc) {
 					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize constructor invoker");
@@ -498,7 +499,7 @@ public class Driver implements Closeable {
 					Class<?> nativeAccessorImplClass = Class.forName("sun.reflect.NativeMethodAccessorImpl");
 					Method method = nativeAccessorImplClass.getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
 					driver.setAccessible(method, true);
-					MethodHandles.Lookup consulter = driver.consulterRetriever.apply(nativeAccessorImplClass);
+					MethodHandles.Lookup consulter = driver.getConsulter(nativeAccessorImplClass);
 					driver.methodInvoker = consulter.unreflect(method);
 				} catch (Throwable exc) {
 					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize method invoker");
@@ -540,7 +541,7 @@ public class Driver implements Closeable {
 					ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 				) {
 					Streams.copy(inputStream, bBOS);
-					Class<?> methodHandleWrapperClass = driver.unsafe.defineAnonymousClass(
+					Class<?> methodHandleWrapperClass = driver.defineAnonymousClass(
 						Class.class, bBOS.toByteArray(), null
 					);
 					MethodHandles.Lookup consulter = MethodHandles.lookup();
@@ -551,8 +552,7 @@ public class Driver implements Closeable {
 					driver.unsafe.putObject(methodHandleWrapperClass,
 						driver.unsafe.staticFieldOffset(methodHandleWrapperClass.getDeclaredField("consulterRetrieverMethod")),
 						methodHandle
-					);
-					
+					);					
 					driver.consulterRetriever =
 						(Function<Class<?>, MethodHandles.Lookup>)driver.unsafe.allocateInstance(methodHandleWrapperClass);
 				} catch (Throwable exc) {
@@ -565,14 +565,18 @@ public class Driver implements Closeable {
 			void initAccessibleSetter() {
 				try (
 					InputStream inputStream =
-						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/AccessibleSetterRetrieverForJDK9.bwc"
+						Resources.getAsInputStream(this.getClass().getClassLoader(), this.getClass().getPackage().getName().replace(".", "/") + "/AccessibleSetterInvokerForJDK9.bwc"
 					);
 					ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 				) {
 					Streams.copy(inputStream, bBOS);
-					Class<?> methodHandleWrapperClass = driver.unsafe.defineAnonymousClass(
+					Class<?> methodHandleWrapperClass = driver.defineAnonymousClass(
 						AccessibleObject.class, bBOS.toByteArray(), null
 					);
+					driver.unsafe.putObject(methodHandleWrapperClass,
+						driver.unsafe.staticFieldOffset(methodHandleWrapperClass.getDeclaredField("consulterRetrieverMethod")),
+						driver.getConsulter(methodHandleWrapperClass)
+					);					
 					driver.accessibleSetter =
 						(BiConsumer<AccessibleObject, Boolean>)driver.unsafe.allocateInstance(methodHandleWrapperClass);
 				} catch (Throwable exc) {
@@ -588,7 +592,7 @@ public class Driver implements Closeable {
 					Class<?> nativeAccessorImplClass = Class.forName("jdk.internal.reflect.NativeConstructorAccessorImpl");
 					Method method = nativeAccessorImplClass.getDeclaredMethod("newInstance0", Constructor.class, Object[].class);
 					driver.setAccessible(method, true);
-					MethodHandles.Lookup consulter = driver.consulterRetriever.apply(nativeAccessorImplClass);
+					MethodHandles.Lookup consulter = driver.getConsulter(nativeAccessorImplClass);
 					driver.constructorInvoker = consulter.unreflect(method);
 				} catch (Throwable exc) {
 					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize constructor invoker");
@@ -601,7 +605,7 @@ public class Driver implements Closeable {
 					Class<?> nativeMethodAccessorImplClass = Class.forName("jdk.internal.reflect.NativeMethodAccessorImpl");
 					Method invoker = nativeMethodAccessorImplClass.getDeclaredMethod("invoke0", Method.class, Object.class, Object[].class);
 					driver.setAccessible(invoker, true);
-					MethodHandles.Lookup consulter = driver.consulterRetriever.apply(nativeMethodAccessorImplClass);
+					MethodHandles.Lookup consulter = driver.getConsulter(nativeMethodAccessorImplClass);
 					driver.methodInvoker = consulter.unreflect(invoker);
 				} catch (Throwable exc) {
 					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize method invoker");
@@ -640,7 +644,7 @@ public class Driver implements Closeable {
 					ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 				) {
 					Streams.copy(inputStream, bBOS);
-					driver.classLoaderDelegateClass = driver.unsafe.defineAnonymousClass(
+					driver.classLoaderDelegateClass = driver.defineAnonymousClass(
 						driver.builtinClassLoaderClass, bBOS.toByteArray(), null
 					);
 				} catch (Throwable exc) {
