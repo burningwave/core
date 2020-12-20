@@ -216,7 +216,7 @@ public class LowLevelObjectsHandler implements Closeable, ManagedLogger, Members
 			params = new Object[] {null};
 		}
 		try {
-			return ctor.newInstance(ctor, params);
+			return ctor.newInstance(params);
 		} catch (Throwable exc) {
 			return driver.newInstance(ctor, params);
 		}

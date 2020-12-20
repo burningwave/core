@@ -486,7 +486,7 @@ public class Driver implements Closeable {
 					Method method = nativeAccessorImplClass.getDeclaredMethod("newInstance0", Constructor.class, Object[].class);
 					driver.setAccessible(method, true);
 					MethodHandles.Lookup consulter = driver.consulterRetriever.apply(nativeAccessorImplClass);
-					driver.methodInvoker = consulter.unreflect(method);
+					driver.constructorInvoker = consulter.unreflect(method);
 				} catch (Throwable exc) {
 					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize constructor invoker");
 					Throwables.throwException(exc);
@@ -589,7 +589,7 @@ public class Driver implements Closeable {
 					Method method = nativeAccessorImplClass.getDeclaredMethod("newInstance0", Constructor.class, Object[].class);
 					driver.setAccessible(method, true);
 					MethodHandles.Lookup consulter = driver.consulterRetriever.apply(nativeAccessorImplClass);
-					driver.methodInvoker = consulter.unreflect(method);
+					driver.constructorInvoker = consulter.unreflect(method);
 				} catch (Throwable exc) {
 					ManagedLoggersRepository.logError(getClass()::getName, "Could not initialize constructor invoker");
 					Throwables.throwException(exc);
