@@ -37,13 +37,13 @@ import java.util.function.BiConsumer;
 @SuppressWarnings("unchecked")
 public class AccessibleSetterInvokerForJDK9 implements BiConsumer<AccessibleObject, Boolean> {
 	private static MethodHandle accessibleSetterMethodHandle;
-	private static MethodHandles.Lookup consulterRetrieverMethod;
+	private static MethodHandles.Lookup methodHandleRetriever;
 	
 	static {
 		try {
 			Method accessibleSetterMethod = AccessibleObject.class.getDeclaredMethod("setAccessible0", boolean.class);
 			accessibleSetterMethod.setAccessible(true);
-			accessibleSetterMethodHandle = consulterRetrieverMethod.unreflect(accessibleSetterMethod);
+			accessibleSetterMethodHandle = methodHandleRetriever.unreflect(accessibleSetterMethod);
 		} catch (Throwable exc) {
 			throwException(exc);
 		}

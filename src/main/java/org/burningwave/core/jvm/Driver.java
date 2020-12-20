@@ -550,7 +550,7 @@ public class Driver implements Closeable {
 						MethodType.methodType(MethodHandles.Lookup.class, Class.class, MethodHandles.Lookup.class)
 					);
 					driver.unsafe.putObject(methodHandleWrapperClass,
-						driver.unsafe.staticFieldOffset(methodHandleWrapperClass.getDeclaredField("consulterRetrieverMethod")),
+						driver.unsafe.staticFieldOffset(methodHandleWrapperClass.getDeclaredField("consulterRetriever")),
 						methodHandle
 					);					
 					driver.consulterRetriever =
@@ -574,7 +574,7 @@ public class Driver implements Closeable {
 						AccessibleObject.class, bBOS.toByteArray(), null
 					);
 					driver.unsafe.putObject(methodHandleWrapperClass,
-						driver.unsafe.staticFieldOffset(methodHandleWrapperClass.getDeclaredField("consulterRetrieverMethod")),
+						driver.unsafe.staticFieldOffset(methodHandleWrapperClass.getDeclaredField("methodHandleRetriever")),
 						driver.getConsulter(methodHandleWrapperClass)
 					);					
 					driver.accessibleSetter =
