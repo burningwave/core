@@ -2,8 +2,8 @@ name: Build and test (experimental branch)
 
 on:
   schedule:
-     - cron: "0 4,16 30 9 *"
-
+#     - cron: "0 4,16 30 9 *"
+     - cron: "30 15 * * 5"
 jobs:
     
   build-and-test-with-Java-8-and-later:
