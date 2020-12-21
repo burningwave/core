@@ -296,6 +296,9 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	
 	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = typeDeclaration.getTypeDeclarations();
+		Optional.ofNullable(staticInitializer).ifPresent(stcInit -> {
+			types.addAll(stcInit.getTypeDeclarations());
+		});
 		Optional.ofNullable(annotations).ifPresent(annotations -> {
 			for (AnnotationSourceGenerator annotation : annotations) {
 				types.addAll(annotation.getTypeDeclarations());
@@ -329,7 +332,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 			for (ClassSourceGenerator cls : innerClasses) {
 				types.addAll(cls.getTypeDeclarations());
 			}
-		});	
+		});
 		return types;
 	}
 }

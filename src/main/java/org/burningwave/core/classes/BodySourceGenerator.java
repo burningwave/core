@@ -116,6 +116,9 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 				if (generator instanceof AnnotationSourceGenerator) {
 					types.addAll(((AnnotationSourceGenerator)generator).getTypeDeclarations());
 				}
+				if (generator instanceof ClassSourceGenerator) {
+					types.addAll(((ClassSourceGenerator)generator).getTypeDeclarations());
+				}
 			}
 		});
 		return types;
