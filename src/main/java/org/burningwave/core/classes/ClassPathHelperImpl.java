@@ -102,7 +102,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	
 	@Override
 	public Supplier<Map<String, String>> computeByClassesSearching(CacheableSearchConfig searchConfig) {
-		return compute(searchConfig.getPaths(), (toBeAdjuested) -> {
+		return compute(((ClassPathHunterImpl)classPathHunter).retrievePathsToBeScanned(searchConfig), (toBeAdjuested) -> {
 			searchConfig.withDefaultScanFileCriteria(
 				FileSystemItem.Criteria.forClassTypeFiles(
 					getClassFileCheckingOption()
