@@ -211,11 +211,15 @@ public class Members implements ManagedLogger {
 		) {
 			return findAllAndApply(
 				criteria, targetClass, (member) -> {
-					LowLevelObjectsHandler.setAccessible((AccessibleObject)member, true);
+					setAccessible(member, true);
 				}
 			);
 		}
 		
+		public void setAccessible(M member, boolean flag) {
+			LowLevelObjectsHandler.setAccessible((AccessibleObject)member, flag);			
+		}
+
 		String getCacheKey(Class<?> targetClass, String groupName, Class<?>... arguments) {
 			if (arguments == null) {
 				arguments = new Class<?>[] {null};

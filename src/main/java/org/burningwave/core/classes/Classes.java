@@ -42,7 +42,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandle;
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -349,10 +348,6 @@ public class Classes implements MembersRetriever {
 			() -> LowLevelObjectsHandler.getDeclaredMethods(cls)
 		);
 	}	
-
-	public void setAccessible(AccessibleObject object, boolean flag) {
-		LowLevelObjectsHandler.setAccessible(object, flag);
-	}
 	
 	public boolean isLoadedBy(Class<?> cls, ClassLoader classLoader) {
 		if (cls.getClassLoader() == classLoader) {

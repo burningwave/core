@@ -10,7 +10,7 @@ public class ClassesTest extends BaseTest {
 	@Test
 	public void getDeclaredMethodTestOne() {
 		testNotNull(() ->
-			Classes.getDeclaredMethod(Classes.getClass(), method -> method.getName().equals("setAccessible"))
+			Classes.getDeclaredMethod(Classes.getClass(), method -> method.getName().equals("retrieveNames"))
 		);
 	}
 	

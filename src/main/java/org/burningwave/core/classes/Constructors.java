@@ -130,9 +130,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		String cacheKey = getCacheKey(targetClass, "all constructors with input parameters", arguments);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		return Cache.uniqueKeyForConstructors.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> {
-			ConstructorCriteria criteria = ConstructorCriteria.byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
-                return lastClassInHierarchy.equals(currentScannedClass);
-            }).parameterTypesAreAssignableFrom(arguments);
+			ConstructorCriteria criteria = ConstructorCriteria.withoutConsideringParentClasses().parameterTypesAreAssignableFrom(arguments);
 			if (arguments != null && arguments.length == 0) {
 				criteria.or().parameter((parameters, idx) -> parameters.length == 1 && parameters[0].isVarArgs());
 			}
@@ -141,7 +139,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 					criteria, 
 					targetClass,
 					(member) -> 
-						LowLevelObjectsHandler.setAccessible(member, true)
+						setAccessible(member, true)
 				)
 			);
 		});
@@ -156,10 +154,8 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 			targetClassClassLoader, cacheKey, () -> {
 				return Collections.unmodifiableCollection(
 					findAllAndApply(
-						ConstructorCriteria.byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
-		                    return lastClassInHierarchy.equals(currentScannedClass);
-		                }), targetClass, (member) -> 
-							LowLevelObjectsHandler.setAccessible(member, true)
+						ConstructorCriteria.withoutConsideringParentClasses(), targetClass, (member) -> 
+							setAccessible(member, true)
 					)
 				);
 			}
