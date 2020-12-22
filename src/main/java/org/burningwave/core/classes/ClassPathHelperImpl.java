@@ -223,17 +223,17 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	}
 	
 	@Override
-	public Map<String, ClassLoader> computeClassPathsAndAddThemToClassLoader(
+	public Map<String, ClassLoader> computeAndAddAllToClassLoader(
 		ClassLoader classLoader,
 		Collection<String> classRepositories,
 		String className,
 		Collection<String> notFoundClasses
 	) {
-		return computeClassPathsAndAddThemToClassLoader(classLoader, classRepositories, null, className, notFoundClasses);
+		return computeAndAddAllToClassLoader(classLoader, classRepositories, null, className, notFoundClasses);
 	}
 	
 	@Override
-	public Map<String, ClassLoader> computeClassPathsAndAddThemToClassLoader(
+	public Map<String, ClassLoader> computeAndAddAllToClassLoader(
 		ClassLoader classLoader,
 		Collection<String> classRepositories,
 		Collection<String> pathsToBeRefreshed,

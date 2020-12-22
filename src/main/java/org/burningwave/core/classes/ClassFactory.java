@@ -231,7 +231,7 @@ public interface ClassFactory {
 							String absolutePathOfCompiledFilesClassPath = getCompilationResult().getClassPath().getAbsolutePath();
 							whereToFind.add(absolutePathOfCompiledFilesClassPath);
 							classesSearchedInAdditionalClassRepositoriesForClassLoader.addAll(notFoundClasses);
-							if (!classPathHelper.computeClassPathsAndAddThemToClassLoader(
+							if (!classPathHelper.computeAndAddAllToClassLoader(
 								classLoader, whereToFind, 
 								Arrays.asList(absolutePathOfCompiledFilesClassPath),
 								className,
@@ -258,7 +258,7 @@ public interface ClassFactory {
 							classPathsToBeRefreshed.add(compilationResultAbsolutePath);
 						}										
 						classesSearchedInCompilationDependenciesPaths.addAll(notFoundClasses);
-						if (!classPathHelper.computeClassPathsAndAddThemToClassLoader(
+						if (!classPathHelper.computeAndAddAllToClassLoader(
 							classLoader, classPaths, classPathsToBeRefreshed, className, notFoundClasses
 						).isEmpty()) {
 							return get(className);
