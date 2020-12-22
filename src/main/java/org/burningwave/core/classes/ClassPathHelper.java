@@ -94,10 +94,10 @@ public interface ClassPathHelper {
 	public Supplier<Map<String, String>> compute(Collection<String> classRepositories,
 			BiPredicate<FileSystemItem, JavaClass> javaClassProcessor);
 
-	public Map<String, ClassLoader> computeClassPathsAndAddThemToClassLoader(ClassLoader classLoader,
+	public Map<String, ClassLoader> computeAndAddAllToClassLoader(ClassLoader classLoader,
 			Collection<String> classRepositories, String className, Collection<String> notFoundClasses);
 
-	public Map<String, ClassLoader> computeClassPathsAndAddThemToClassLoader(ClassLoader classLoader,
+	public Map<String, ClassLoader> computeAndAddAllToClassLoader(ClassLoader classLoader,
 			Collection<String> classRepositories, Collection<String> pathsToBeRefreshed, String className,
 			Collection<String> notFoundClasses);
 
