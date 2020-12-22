@@ -139,7 +139,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 				Collections.unmodifiableCollection(
 					findAllAndApply(
 							finalCriteria, targetClass, (member) -> {
-							LowLevelObjectsHandler.setAccessible(member, true);
+							setAccessible(member, true);
 						}
 					)
 				)
