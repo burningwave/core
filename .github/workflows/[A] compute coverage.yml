@@ -5,8 +5,8 @@ on:
     branches:
       - master
     paths: 
-      - "src/main/**"
-      - "src/test/**"
+      - "src/main/**.java"
+      - "src/test/**.java"
 #      - ".github/workflows/**"
       - "**.properties"
       - "**.xml"
