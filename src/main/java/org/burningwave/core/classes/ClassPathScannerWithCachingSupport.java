@@ -88,9 +88,8 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 		
 		public CacheScanner<I, R> loadInCache(CacheableSearchConfig searchConfig) {
 			CacheableSearchConfig flatSearchConfig = SearchConfig.forPaths(
-				searchConfig.getPaths()
+				retrievePathsToBeScanned(searchConfig)
 			);
-			flatSearchConfig.resourceSupplier = searchConfig.resourceSupplier;
 			try (R result = findBy(
 				flatSearchConfig
 			)){};

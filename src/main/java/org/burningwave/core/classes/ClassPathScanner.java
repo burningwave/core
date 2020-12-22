@@ -7,6 +7,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -151,6 +152,22 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			R searchResult = resultSupplier.apply(context);
 			searchResult.setClassPathScanner(this);
 			return searchResult;
+		}
+		
+		Collection<String> retrievePathsToBeScanned(SearchConfigAbst<?> searchConfig) {
+			Collection<String> paths = new HashSet<>(searchConfig.getPaths());
+			if (searchConfig.getResourceSupllier() != null) {
+				searchConfig = searchConfig.createCopy();
+				try (C context = createContext(
+					searchConfig
+				)) {
+					searchConfig.getResourceSupllier().accept(context.pathScannerClassLoader, paths);
+				}
+			}
+			if (paths.isEmpty()) {
+				paths.addAll(pathHelper.getPaths(ClassPathScanner.Configuration.Key.DEFAULT_SEARCH_CONFIG_PATHS));
+			}
+			return paths;
 		}
 		
 		void searchInFileSystem(C context) {
