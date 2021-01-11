@@ -1,5 +1,4 @@
-
-name: Broken Link Checker
+name: Clear Camo Cache
 
 on:
   schedule:
