@@ -6,7 +6,7 @@ on:
 
 jobs:
      
-  clear:
+  clr:
     runs-on: ubuntu-latest
     steps:
     - name: clear cache
