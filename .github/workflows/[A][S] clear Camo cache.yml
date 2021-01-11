@@ -2,16 +2,12 @@ name: Clear Camo cache
 
 on:
  schedule:
- - cron: "* * * * *"
+  - cron: "0 11 * * *"
+
 jobs: 
-  compute-coverage:
-    name: Compute coverage
+     
+  clr:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-java@v1
-        with:
-          java-version: 8
-          architecture: x64
-      - name: Build and test
-        run: mvn clean test -DskipTests=false -Dproject_jdk_version=8 -P run-coveralls jacoco:report coveralls:report -DrepoToken=${{ secrets.coveralls_repo_token }}
+    - name: clear cache
+      run: curl -X PURGE https://camo.githubusercontent.com/07a0d977b53e6c2bf8412197f02f792018a6fc77da2d28f1db8744815be87603/68747470733a2f2f7777772e6275726e696e67776176652e6f72672f67656e657261746f72732f67656e65726174652d6275726e696e67776176652d61727469666163742d646f776e6c6f6164732d62616467652e7068703f747970653d73766726617274696661637449643d636f7265
