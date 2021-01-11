@@ -3,7 +3,7 @@ name: Clear Camo cache
 on:
   schedule:
 #     - cron: "0 10,22 30 9 *"
-     - cron: "10 10 * * *"
+     - cron: "7 10 * * *"
 
 jobs:
   clear:
