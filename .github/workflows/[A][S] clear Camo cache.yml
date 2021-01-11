@@ -1,4 +1,4 @@
-name: Clear Camo Cache
+name: Clear Camo cache
 
 on:
   schedule:
