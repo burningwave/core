@@ -3,7 +3,7 @@
 on:
   schedule:
 #     - cron: "0 10,22 30 9 *"
-     - cron: "0 9 * * *"
+     - cron: "2 10 * * *"
 
 jobs:
   greet:
