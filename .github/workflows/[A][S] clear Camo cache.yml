@@ -2,7 +2,7 @@ name: Clear Camo cache
 
 on:
   schedule:
-    - cron: "0 11 * * *"
+    - cron: "0 * * * *"
 
 jobs:
  clear-cache:
