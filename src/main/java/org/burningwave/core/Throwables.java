@@ -63,7 +63,7 @@ public class Throwables {
 	}
 	
 	
-	private <E extends Throwable> void throwException(Throwable exc) throws E{
+	private <E extends Throwable> void throwException(Throwable exc) throws E {
 		throw (E)exc;
 	}
 	
