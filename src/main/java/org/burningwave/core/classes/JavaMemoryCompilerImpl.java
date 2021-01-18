@@ -190,7 +190,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			try {
 				memorySources.add(new MemorySource(Kind.SOURCE, className, source));
 			} catch (URISyntaxException exc) {
-				throw new CompilerErrorMessageException(Strings.compile("Class name \"{}\" is not valid", className), exc);
+				throw new JavaMemoryCompiler.Compilation.Exception(Strings.compile("Class name \"{}\" is not valid", className), exc);
 			}
 		}
 		
@@ -263,7 +263,7 @@ static class DiagnosticListener implements javax.tools.DiagnosticListener<JavaFi
 		public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
 			String message = diagnostic.getMessage(Locale.ENGLISH);
 			if (context.diagnositListenerInterceptedMessages.contains(message)) {
-				throw new CompilerErrorMessageException(message);
+				throw new JavaMemoryCompiler.Compilation.Exception(message);
 			} else {
 				context.diagnositListenerInterceptedMessages.add(message);
 			}
@@ -316,12 +316,12 @@ static class DiagnosticListener implements javax.tools.DiagnosticListener<JavaFi
 						ManagedLoggersRepository.logError(getClass()::getName, exc);
 					}
 				} else {
-					throw new CompilerErrorMessageException(message);
+					throw new JavaMemoryCompiler.Compilation.Exception(message);
 				}
 			}
 			if (fsObjects == null || fsObjects.isEmpty()) {
 				String classNameOrSimpleName = classNameOrSimpleNameTemp;				
-				throw new CompilerErrorMessageException(
+				throw new JavaMemoryCompiler.Compilation.Exception(
 					Optional.ofNullable(javaClassPredicate).map(jCP -> "Class or package \"" + classNameOrSimpleName + "\" not found").orElseGet(() -> message)
 				);
 			}
