@@ -12,7 +12,8 @@
 [![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015%2C%2016ea%2C%2017ea-blueviolet)](https://github.com/burningwave/core/actions/runs/493990289)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
-[![GitHub issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
+[![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
+[![GitHub closed issues](https://img.shields.io/github/issues-closed/burningwave/core)](https://github.com/burningwave/core/issues?q=is%3Aissue+is%3Aclosed)
 
 [![ArtifactDownload](https://www.burningwave.org/generators/generate-burningwave-artifact-downloads-badge.php?type=svg&artifactId=core)](https://www.burningwave.org/artifact-downloads/?show-monthly-trend-chart=false)
 [![HitCount](http://hits.dwyl.com/burningwave/all.svg)](http://hits.dwyl.com/burningwave/all)
