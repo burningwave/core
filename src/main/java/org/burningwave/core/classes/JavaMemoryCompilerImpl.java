@@ -34,7 +34,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.Serializable;
 import java.net.URI;
@@ -190,8 +189,8 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			String className = SourceCodeHandler.extractClassName(source);
 			try {
 				memorySources.add(new MemorySource(Kind.SOURCE, className, source));
-			} catch (URISyntaxException eXC) {
-				Throwables.throwException("Class name \"{}\" is not valid", className);
+			} catch (URISyntaxException exc) {
+				throw new CompilerErrorMessageException(Strings.compile("Class name \"{}\" is not valid", className), exc);
 			}
 		}
 		
@@ -264,7 +263,7 @@ static class DiagnosticListener implements javax.tools.DiagnosticListener<JavaFi
 		public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
 			String message = diagnostic.getMessage(Locale.ENGLISH);
 			if (context.diagnositListenerInterceptedMessages.contains(message)) {
-				Throwables.throwException(new UnknownCompilerErrorMessageException(message));
+				throw new CompilerErrorMessageException(message);
 			} else {
 				context.diagnositListenerInterceptedMessages.add(message);
 			}
@@ -317,12 +316,12 @@ static class DiagnosticListener implements javax.tools.DiagnosticListener<JavaFi
 						ManagedLoggersRepository.logError(getClass()::getName, exc);
 					}
 				} else {
-					Throwables.throwException(new UnknownCompilerErrorMessageException(message));
+					throw new CompilerErrorMessageException(message);
 				}
 			}
 			if (fsObjects == null || fsObjects.isEmpty()) {
 				String classNameOrSimpleName = classNameOrSimpleNameTemp;				
-				Throwables.throwException(
+				throw new CompilerErrorMessageException(
 					Optional.ofNullable(javaClassPredicate).map(jCP -> "Class or package \"" + classNameOrSimpleName + "\" not found").orElseGet(() -> message)
 				);
 			}
