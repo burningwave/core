@@ -89,15 +89,18 @@ public interface JavaMemoryCompiler {
 	public ProducerTask<Compilation.Result> compile(Compilation.Config config);
 
 	
-	
-	public static class UnknownCompilerErrorMessageException extends Exception {
+	public static class CompilerErrorMessageException extends RuntimeException {
 
-		private static final long serialVersionUID = 1149980549799104408L;
+		private static final long serialVersionUID = 4515340268068466479L;
 
-		public UnknownCompilerErrorMessageException(String s) {
+		public CompilerErrorMessageException(String s) {
 			super(s);
 		}
-	}		
+		
+		public CompilerErrorMessageException(String s, Throwable cause) {
+			super(s, cause);
+		}
+	}	
 	
 	
 	public static class Compilation {
