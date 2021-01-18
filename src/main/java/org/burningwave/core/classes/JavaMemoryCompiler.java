@@ -86,22 +86,7 @@ public interface JavaMemoryCompiler {
 	
 	public 	ProducerTask<Compilation.Result> compile(Collection<String> sources, boolean storeCompiledClasses);
 	
-	public ProducerTask<Compilation.Result> compile(Compilation.Config config);
-
-	
-	public static class CompilerErrorMessageException extends RuntimeException {
-
-		private static final long serialVersionUID = 4515340268068466479L;
-
-		public CompilerErrorMessageException(String s) {
-			super(s);
-		}
-		
-		public CompilerErrorMessageException(String s, Throwable cause) {
-			super(s, cause);
-		}
-	}	
-	
+	public ProducerTask<Compilation.Result> compile(Compilation.Config config);	
 	
 	public static class Compilation {
 		
@@ -256,6 +241,7 @@ public interface JavaMemoryCompiler {
 			String getCompiledClassesStorage() {
 				return compiledClassesStorage;
 			}
+			
 		}
 		
 		
@@ -296,5 +282,18 @@ public interface JavaMemoryCompiler {
 			}	
 			
 		}
+		
+		public static class Exception extends RuntimeException {
+
+			private static final long serialVersionUID = 4515340268068466479L;
+
+			public Exception(String s) {
+				super(s);
+			}
+			
+			public Exception(String s, Throwable cause) {
+				super(s, cause);
+			}
+		}	
 	}
 }
