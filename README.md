@@ -603,12 +603,12 @@ public class ResourceReacher {
 # Resolving, collecting or retrieving paths
 
 Through **PathHelper** we can resolve or collect paths or retrieving resources even through supported archive files (zip, jar, jmod, ear and war).
-So we can create a path collection by adding an entry in **[burningwave.properties](#configuration-1)** file that **starts with 'paths.' prefix (this is a fundamental requirement to allow PathHelper to load the paths)**, e.g.:
+So we can create a path collection by adding an entry in **[burningwave.properties](#configuration-1)** file that **starts with `paths.` prefix (this is a fundamental requirement to allow PathHelper to load the paths)**, e.g.:
 ```properties
 paths.my-collection=c:/some folder;C:/some folder 2/ some folder 3;
 paths.my-collection-2=c:/some folder 4;C:/some folder 6;
 ```
-These paths could be retrieved through **PathHelper.getPaths** method and we can find a resource in all configured paths plus the runtime class paths (that is automatically loaded under the entry named **'paths.main-class-paths'**) by using **PathHelper.getResource** method, e.g.:
+These paths could be retrieved through **`PathHelper.getPaths`** method and we can find a resource in all configured paths plus the runtime class paths (that is automatically loaded under the entry named **`paths.main-class-paths`**) by using **PathHelper.getResource** method, e.g.:
 ```java
 ComponentSupplier componentSupplier = ComponentContainer.getInstance();
 PathHelper pathHelper = componentSupplier.getPathHelper();
@@ -1138,7 +1138,7 @@ public class RetrievingDynamicComponentContainerAndComponents {
 ```
 ### Configuration
 The configuration of this type of container can be done via Properties file or programmatically via a Properties object.
-If you use the singleton instance obtained via ComponentContainer.getInstance() method, you must create a **burningwave.properties** file and put it on base path of your classpath project.
+If you use the singleton instance obtained via **`ComponentContainer.getInstance()`** method, you must create a **burningwave.properties** file and put it on base path of your classpath project.
 **The default configuration automatically loaded if no configuration file is found is the following**:
 ```properties
 byte-code-hunter.default-path-scanner-class-loader=\
@@ -1269,7 +1269,7 @@ paths.main-class-repositories=\
 ```
 **If in your custom burningwave.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 
-If you create a component container instance through method ComponentContainer.create(String relativeConfigFileName), you can specify the file name of your properties file and you can locate it everywhere in your classpath project but remember to use a relative path in this case, i.e.: if you name your file "custom-config-file.properties" and put it in package "org.burningwave" you must create the component container as follow: 
+If you create a component container instance through method **`ComponentContainer.create(String relativeConfigFileName)`**, you can specify the file name of your properties file and you can locate it everywhere in your classpath project but remember to use a relative path in this case, i.e.: if you name your file "custom-config-file.properties" and put it in package "org.burningwave" you must create the component container as follow: 
 ```java
 ComponentContainer.create("org/burningwave/custom-config-file.properties")
 ```
