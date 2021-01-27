@@ -60,7 +60,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 
 # Generating classes at runtime and invoking their methods with and without the use of reflection
 
-For this purpose is necessary the use of **ClassFactory** component and of the **sources generating components**. Once the sources have been set in **UnitSourceGenerator** objects, they must be passed to **`loadOrBuildAndDefine`** method of ClassFactory with the ClassLoader where you want to define new generated classes. This method performs the following operations: tries to load all the classes present in the UnitSourceGenerator through the class loader, if at least one of these is not found it proceeds to compiling all the UnitSourceGenerators and uploading their classes on class loader: **in this case, keep in mind that if a class with the same name was previously loaded by the class loader, the compiled class will not be uploaded**. Once the classes have been compiled and loaded, it is possible to invoke their methods in severals ways as shown at the end of the example below.
+For this purpose is necessary the use of **ClassFactory** component and of the **sources generating components**. Once the sources have been set in **UnitSourceGenerator** objects, they must be passed to **`loadOrBuildAndDefine`** method of ClassFactory with the ClassLoader where you want to define new generated classes. This method performs the following operations: tries to load all the classes present in the UnitSourceGenerator through the class loader, if at least one of these is not found it proceeds to compiling all the UnitSourceGenerators and uploading their classes on class loader: **in this case, keep in mind that if a class with the same name was previously loaded by the class loader, the compiled class will not be uploaded**.
 
 **If you need more information you can**:
 * see a [**complete example about source code generators**](https://github.com/burningwave/core/blob/bd4b7cc20c0363ec3b88ddf8d7c4af97775e195d/src/test/java/org/burningwave/core/UnitSourceGeneratorTest.java#L153)
@@ -68,6 +68,9 @@ For this purpose is necessary the use of **ClassFactory** component and of the *
 * go [**here**](https://github.com/burningwave/core/tree/master/src/test/java/org/burningwave/core/examples/classfactory) for more examples
 * ask for assistance at the [**official forum**](https://www.burningwave.org/forum/) (topic [**"How to do?"**](https://www.burningwave.org/forum/forum/how-to/))
 * [**ask Stack Overflow for assistance**](https://stackoverflow.com/search?q=burningwave)
+
+Once the classes have been compiled and loaded, it is possible to invoke their methods in severals ways as shown at the end of the example below.
+
 ```java
 package org.burningwave.core.examples.classfactory;
 
