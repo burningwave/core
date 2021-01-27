@@ -7,21 +7,21 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 import org.burningwave.core.classes.AnnotationSourceGenerator;
+import org.burningwave.core.classes.BodySourceGenerator;
 import org.burningwave.core.classes.ClassSourceGenerator;
 import org.burningwave.core.classes.FunctionSourceGenerator;
 import org.burningwave.core.classes.GenericSourceGenerator;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
 import org.burningwave.core.classes.VariableSourceGenerator;
-import java.util.function.Supplier;
-import org.burningwave.core.examples.classfactory.RuntimeClassExtenderTwo.MyInterface;
-import org.burningwave.core.examples.classfactory.RuntimeClassExtenderTwo.ToBeExtended;
 import org.junit.jupiter.api.Test;
 
 public class UnitSourceGeneratorTest extends BaseTest {
@@ -171,8 +171,9 @@ public class UnitSourceGeneratorTest extends BaseTest {
                 	AnnotationSourceGenerator.create(SuppressWarnings.class).addParameter(VariableSourceGenerator.create("\"unchecked\""))
             ).addModifier(
                 Modifier.PUBLIC
-            //generating new method that override MyInterface.now()
-            ).addField(
+            )
+            .addField(VariableSourceGenerator.create(long.class, "serialVersionUID").addModifier(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL).setValue("1L"))
+            .addField(
             	VariableSourceGenerator.create(
             		TypeDeclarationSourceGenerator.create(
             			Map.class
@@ -185,6 +186,23 @@ public class UnitSourceGeneratorTest extends BaseTest {
                 	),
             		"map"
             	).addAnnotation(AnnotationSourceGenerator.create(NotEmpty.class))
+            	.setValue(
+            		BodySourceGenerator.createSimple().addCode("new").addElement(
+            			ClassSourceGenerator.create(
+	                		TypeDeclarationSourceGenerator.create(HashMap.class).addGeneric(
+	                			GenericSourceGenerator.create(String.class),
+	                			GenericSourceGenerator.create(String.class)
+	                	).setAnonymous(true)
+	                	).addMethod(
+		                    FunctionSourceGenerator.create("get")
+		                    .setReturnType(TypeDeclarationSourceGenerator.create(String.class))
+		                    .addModifier(Modifier.PUBLIC)
+		                    .addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Object.class), "key"))
+		                    .addOuterCodeLine("@Override")
+		                    .addBodyCodeLine("return super.get(key);")
+		                )
+            		)
+            	)
             ).addMethod(
                 FunctionSourceGenerator.create("now")
                 .setTypeDeclaration(
@@ -197,7 +215,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
                 )
                 .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create("T")))
                 .addModifier(Modifier.PUBLIC)
-                .addOuterCodeLine("@Override")
+                .addOuterCodeLine("//Comment")
                 .addBodyCodeLine("Supplier<Date> dateSupplier = new").addBodyElement(
                 	ClassSourceGenerator.create(
                 		TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class))
@@ -211,8 +229,8 @@ public class UnitSourceGeneratorTest extends BaseTest {
 	                )
                 ).addBodyCode(";").addBodyCodeLine("return (Comparable<T>)dateSupplier.get();")
             ).addConcretizedType(
-                MyInterface.class
-            ).expands(ToBeExtended.class)
+                Serializable.class
+            ).expands(Object.class)
         );
 		unitSG.storeToClassPath(System.getProperty("user.home") + "/Desktop/bw-tests");
         System.out.println("\nGenerated code:\n" + unitSG.make());
