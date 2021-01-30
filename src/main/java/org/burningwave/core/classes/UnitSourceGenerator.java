@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import org.burningwave.core.io.FileSystemItem;
 
@@ -170,11 +171,19 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 	public FileSystemItem storeToClassPath(String classPathFolder) {
 		classPathFolder = Paths.clean(classPathFolder);
 		String classRelativePath = packageName != null? packageName.replace(".", "/") : "";
+		String fileName = null;
 		for (ClassSourceGenerator cSG : classes) {
-			if (cSG.getModifier() != null && Modifier.isPublic(cSG.getModifier())) {
-				classRelativePath += "/" + cSG.getSimpleName() + ".java";
-				break;
+			if (fileName == null || (cSG.getModifier() != null && Modifier.isPublic(cSG.getModifier()))) {
+				fileName = cSG.getSimpleName() + ".java";
+				if (cSG.getModifier() != null && Modifier.isPublic(cSG.getModifier())) {
+					break;
+				}
 			}
+		}
+		if (fileName != null) {
+			classRelativePath += "/" + fileName;
+		} else {
+			classRelativePath += "/" + UUID.randomUUID().toString() + ".java";
 		}
 		return Streams.store(classPathFolder + "/" + classRelativePath, make().getBytes());
 	}
