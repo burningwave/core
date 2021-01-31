@@ -67,6 +67,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	
 	FunctionalInterfaceFactoryImpl(ClassFactory classFactory) {
 		this.classFactory = classFactory;
+		this.sourceCodeGenerator = FunctionalInterfaceSourceGenerator.create();
 	}
 	
 	@Override
