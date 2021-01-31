@@ -450,7 +450,7 @@ public interface ClassFactory {
 			return new PojoSubTypeRetriever(classFactory, PojoSourceGenerator.createDefault());
 		}
 		
-		public <T> Class<T> getOrBuild(
+		public <T> Class<T> loadOrBuildAndDefine(
 				ClassLoader classLoader,
 			String className,
 			Class<?>... superClasses

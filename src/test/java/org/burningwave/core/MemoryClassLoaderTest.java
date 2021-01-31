@@ -3,7 +3,6 @@ package org.burningwave.core;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.assembler.StaticComponentContainer;
@@ -74,7 +73,11 @@ public class MemoryClassLoaderTest extends BaseTest {
 			try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
 				ComponentSupplier componentSupplier = getComponentSupplier();
 				JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
-				memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).join().getCompiledFiles().entrySet());
+				memoryClassLoader.addByteCodes(
+					jMC.compile(
+						JavaMemoryCompiler.Compilation.Config.withSource(generateSources().make())
+					).join().getCompiledFiles().entrySet()
+				);
 				return memoryClassLoader.loadClass("tryyy.ReTry$ReReTry");
 			}
 		});
@@ -86,7 +89,11 @@ public class MemoryClassLoaderTest extends BaseTest {
 			try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
 				ComponentSupplier componentSupplier = getComponentSupplier();
 				JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
-				memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).join().getCompiledFiles().entrySet());
+				memoryClassLoader.addByteCodes(
+					jMC.compile(
+						JavaMemoryCompiler.Compilation.Config.withSource(generateSources().make())
+					).join().getCompiledFiles().entrySet()
+				);
 				return memoryClassLoader.forceBytecodesLoading();
 			}
 		});
@@ -98,7 +105,11 @@ public class MemoryClassLoaderTest extends BaseTest {
 			try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
 				ComponentSupplier componentSupplier = getComponentSupplier();
 				JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
-				memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).join().getCompiledFiles().entrySet());
+				memoryClassLoader.addByteCodes(
+					jMC.compile(
+						JavaMemoryCompiler.Compilation.Config.withSource(generateSources().make())
+					).join().getCompiledFiles().entrySet()
+				);
 				return memoryClassLoader.getNotLoadedByteCode("tryyy.ReTry$ReReTry");
 			}
 		});
@@ -110,7 +121,11 @@ public class MemoryClassLoaderTest extends BaseTest {
 			try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
 				ComponentSupplier componentSupplier = getComponentSupplier();
 				JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
-				memoryClassLoader.addByteCodes(jMC.compile(Arrays.asList(generateSources().make())).join().getCompiledFiles().entrySet());
+				memoryClassLoader.addByteCodes(
+					jMC.compile(
+						JavaMemoryCompiler.Compilation.Config.withSource(generateSources().make())
+					).join().getCompiledFiles().entrySet()
+				);
 				return memoryClassLoader.getByteCodeOf("tryyy.ReTry$ReReTry");
 			}
 		});

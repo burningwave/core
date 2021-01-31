@@ -81,11 +81,7 @@ public interface JavaMemoryCompiler {
 	) {
 		return new JavaMemoryCompilerImpl(pathHelper, classPathHelper);
 	}
-	
-	public 	ProducerTask<Compilation.Result> compile(Collection<String> sources);
-	
-	public 	ProducerTask<Compilation.Result> compile(Collection<String> sources, boolean storeCompiledClasses);
-	
+
 	public ProducerTask<Compilation.Result> compile(Compilation.Config config);	
 	
 	public static class Compilation {
@@ -100,10 +96,11 @@ public interface JavaMemoryCompiler {
 			private Collection<String> additionalClassRepositories;
 			
 			private String compiledClassesStorage;
+			private boolean useTemporaryFolderForStoring;
 			
 			private Config() {
 				this.sources = new HashSet<>();
-				compiledClassesStorage = "/common";
+				storeCompiledClassesToTemporaryFolder("common");
 			}
 			
 			@SafeVarargs
@@ -122,21 +119,29 @@ public interface JavaMemoryCompiler {
 			
 			public Config storeCompiledClasses(boolean flag) {
 				if (flag) {
-					compiledClassesStorage = "common";
+					if (compiledClassesStorage == null) {
+						storeCompiledClassesToTemporaryFolder("common");
+					}
 				} else {
 					compiledClassesStorage = null;
 				}
 				return this;
 			}
 			
-			public Config storeCompiledClassesTo(String folderName) {
+			public Config storeCompiledClassesToTemporaryFolder(String folderName) {
 				compiledClassesStorage = folderName;
+				useTemporaryFolderForStoring = true;
 				return this;
 			}
 			
-			public Config storeCompiledClassesToNewFolder() {
-				compiledClassesStorage = UUID.randomUUID().toString();
+			public Config storeCompiledClassesTo(String folderName) {
+				compiledClassesStorage = folderName;
+				useTemporaryFolderForStoring = false;
 				return this;
+			}
+			
+			public Config storeCompiledClassesToNewTemporaryFolder() {
+				return storeCompiledClassesToTemporaryFolder(UUID.randomUUID().toString());
 			}
 
 
@@ -241,7 +246,11 @@ public interface JavaMemoryCompiler {
 			String getCompiledClassesStorage() {
 				return compiledClassesStorage;
 			}
-			
+
+			boolean useTemporaryFolderForStoring() {
+				return useTemporaryFolderForStoring;
+			}
+		
 		}
 		
 		
