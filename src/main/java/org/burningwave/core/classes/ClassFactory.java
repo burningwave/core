@@ -54,7 +54,6 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
-@SuppressWarnings("unchecked")
 public interface ClassFactory {
 	
 	public static class Configuration {
@@ -125,16 +124,6 @@ public interface ClassFactory {
 	public ClassRetriever loadOrBuildAndDefine(UnitSourceGenerator... unitsCode);
 
 	public <L extends LoadOrBuildAndDefineConfigAbst<L>> ClassRetriever loadOrBuildAndDefine(L config);
-
-	public PojoSubTypeRetriever createPojoSubTypeRetriever(PojoSourceGenerator sourceGenerator);
-
-	public <T> Class<T> loadOrBuildAndDefinePojoSubType(String className, Class<?>... superClasses);
-
-	public <T> Class<T> loadOrBuildAndDefinePojoSubType(String className, int options, Class<?>... superClasses);
-
-	public <T> Class<T> loadOrBuildAndDefinePojoSubType(ClassLoader classLoader, String className, int options, Class<?>... superClasses);
-
-	public <T> Class<T> loadOrBuildAndDefinePojoSubType(ClassLoader classLoader, String className, Class<?>... superClasses);
 
 	public void closeClassRetrievers();
 
@@ -417,7 +406,7 @@ public interface ClassFactory {
 			});
 		}
 	}
-	
+	/*
 	public static class PojoSubTypeRetriever {
 		private ClassFactory classFactory;
 		private PojoSourceGenerator sourceGenerator;
@@ -477,5 +466,5 @@ public interface ClassFactory {
 			return cls;
 		}
 			
-	}
+	}*/
 }

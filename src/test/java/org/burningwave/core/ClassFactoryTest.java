@@ -37,30 +37,50 @@ public class ClassFactoryTest extends BaseTest {
 	
 	@Test
 	public void getOrBuildPojoClassTestOne() throws Exception {
-		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> 
-			componentSupplier.getClassFactory().loadOrBuildAndDefinePojoSubType(
-				Thread.currentThread().getContextClassLoader(), this.getClass().getPackage().getName() + ".SimpleVirtual"
-			)
-		);
+		testNotNull(() -> {
+			String className = this.getClass().getPackage().getName() + ".SimpleVirtual";
+			ComponentSupplier componentSupplier = getComponentSupplier();
+			return componentSupplier.getClassFactory().loadOrBuildAndDefine(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+					UnitSourceGenerator.create(Classes.retrievePackageName(className)).
+					addClass(
+						PojoSourceGenerator.create().generate(
+							className					
+						)
+					)
+				)
+			).get(className);
+		});
 	}
 	
 	
 	@Test
 	public void getOrBuildPojoClassTestTwo() throws Exception {
+		String className = this.getClass().getPackage().getName() + ".TestTwoPojoImpl";
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		java.lang.Class<?> cls = componentSupplier.getClassFactory().loadOrBuildAndDefinePojoSubType(
-			Thread.currentThread().getContextClassLoader(),
-			this.getClass().getPackage().getName() + ".TestTwoPojoImpl",
-			PojoSourceGenerator.BUILDING_METHODS_CREATION_ENABLED,
-			Complex.Data.Item.class,
-			PojoInterface.class
-		);
+		java.lang.Class<?> cls = componentSupplier.getClassFactory().loadOrBuildAndDefine(
+			LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+				UnitSourceGenerator.create(Classes.retrievePackageName(className)).
+				addClass(PojoSourceGenerator.create().generate(
+					className,
+					PojoSourceGenerator.BUILDING_METHODS_CREATION_ENABLED,
+					Complex.Data.Item.class,
+					PojoInterface.class
+				))
+			).useClassLoader(Thread.currentThread().getContextClassLoader())
+		).get(className);
 		testNotNull(() -> {
-			Class<?> reloadedCls = componentSupplier.getClassFactory().loadOrBuildAndDefinePojoSubType(
-				Thread.currentThread().getContextClassLoader(), cls.getPackage().getName() + ".ExtendedPojoImpl",
-				PojoSourceGenerator.BUILDING_METHODS_CREATION_ENABLED, cls
-			);
+			String classNameTwo = cls.getPackage().getName() + ".ExtendedPojoImpl";
+			Class<?> reloadedCls = componentSupplier.getClassFactory().loadOrBuildAndDefine(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+					UnitSourceGenerator.create(Classes.retrievePackageName(classNameTwo)).
+					addClass(PojoSourceGenerator.create().generate(
+						classNameTwo,
+						PojoSourceGenerator.BUILDING_METHODS_CREATION_ENABLED,
+						cls
+					))
+				).useClassLoader(Thread.currentThread().getContextClassLoader())
+			).get(classNameTwo);
 			Method createMethod = Classes.getDeclaredMethods(reloadedCls, method -> 
 				method.getName().equals("create") &&
 				method.getParameterTypes()[0].equals(String.class)).stream().findFirst().orElse(null);
@@ -390,11 +410,18 @@ public class ClassFactoryTest extends BaseTest {
 	public void getOrBuildPojoClassTestThree() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> {
-			java.lang.Class<?> virtualClass = componentSupplier.getClassFactory().loadOrBuildAndDefinePojoSubType(
-				Thread.currentThread().getContextClassLoader(), this.getClass().getPackage().getName() + ".TestThreePojoImpl", 
-				Service.class,
-				PojoInterface.class
-			);
+			String classNameTwo = this.getClass().getPackage().getName() + ".TestThreePojoImpl";
+			Class<?> virtualClass = componentSupplier.getClassFactory().loadOrBuildAndDefine(
+				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+					UnitSourceGenerator.create(Classes.retrievePackageName(classNameTwo)).
+					addClass(PojoSourceGenerator.create().generate(
+						classNameTwo,
+						PojoSourceGenerator.BUILDING_METHODS_CREATION_ENABLED,
+						Service.class,
+						PojoInterface.class
+					))
+				).useClassLoader(Thread.currentThread().getContextClassLoader())
+			).get(classNameTwo);
 			Virtual virtual = (Virtual)Constructors.newInstanceDirectOf(virtualClass);
 			virtual.invokeDirect("setList", new ArrayList<>());
 			virtual.invoke("setList", new ArrayList<>());

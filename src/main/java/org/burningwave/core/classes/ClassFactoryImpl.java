@@ -50,7 +50,6 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 	PathHelper pathHelper;
 	ClassPathHelper classPathHelper;
 	JavaMemoryCompiler javaMemoryCompiler;
-	private PojoSubTypeRetriever pojoSubTypeRetriever;	
 	ByteCodeHunter byteCodeHunter;
 	private ClassPathHunter classPathHunter;
 	private Supplier<ClassPathHunter> classPathHunterSupplier;
@@ -72,7 +71,6 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 		this.javaMemoryCompiler = javaMemoryCompiler;
 		this.pathHelper = pathHelper;
 		this.classPathHelper = classPathHelper;
-		this.pojoSubTypeRetriever = PojoSubTypeRetriever.createDefault(this);
 		this.defaultClassLoaderManager = new ClassLoaderManager<>(
 			defaultClassLoaderOrDefaultClassLoaderSupplier
 		);
@@ -169,33 +167,6 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 			return Throwables.throwException(exc);
 		}
 	}
-
-	
-	@Override
-	public PojoSubTypeRetriever createPojoSubTypeRetriever(PojoSourceGenerator sourceGenerator) {
-		return PojoSubTypeRetriever.create(this, sourceGenerator);
-	}
-	
-	@Override
-	public <T> Class<T> loadOrBuildAndDefinePojoSubType(String className, Class<?>... superClasses) {
-		return loadOrBuildAndDefinePojoSubType(null, className, superClasses);
-	}
-	
-	@Override
-	public <T> Class<T> loadOrBuildAndDefinePojoSubType(String className, int options, Class<?>... superClasses) {
-		return loadOrBuildAndDefinePojoSubType(null, className, options, superClasses);
-	}
-	
-	@Override
-	public <T> Class<T> loadOrBuildAndDefinePojoSubType(ClassLoader classLoader, String className, int options, Class<?>... superClasses) {
-		return pojoSubTypeRetriever.loadOrBuildAndDefine(classLoader, className, options, superClasses);
-	}
-	
-	@Override
-	public <T> Class<T> loadOrBuildAndDefinePojoSubType(ClassLoader classLoader, String className, Class<?>... superClasses) {
-		return pojoSubTypeRetriever.loadOrBuildAndDefine(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
-	}
-
 	
 	boolean register(ClassRetriever classRetriever) {
 		classRetrievers.add(classRetriever);
@@ -240,7 +211,6 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 			}).submit();
 			pathHelper = null;
 			javaMemoryCompiler = null;
-			pojoSubTypeRetriever = null;	
 			byteCodeHunter = null;
 			classPathHunter = null;
 			classPathHunterSupplier = null;	

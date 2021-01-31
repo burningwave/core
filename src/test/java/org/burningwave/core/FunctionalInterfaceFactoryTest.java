@@ -32,7 +32,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 	@Test
 	public void getOrBuildConsumerClassTest() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> componentSupplier.getFunctionalInterfaceFactory().loadOrBuildAndDefineConsumerSubType(Thread.currentThread().getContextClassLoader(), 2));
+		testNotNull(() -> componentSupplier.getFunctionalInterfaceFactory().loadOrBuildAndDefineConsumerSubType(Thread.currentThread().getContextClassLoader(), 5));
 	}
 	
 	@Test
