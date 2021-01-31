@@ -136,18 +136,6 @@ public interface ClassFactory {
 
 	public <T> Class<T> loadOrBuildAndDefinePojoSubType(ClassLoader classLoader, String className, Class<?>... superClasses);
 
-	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(int parametersCount);
-
-	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(ClassLoader classLoader, int parametersLength);
-
-	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(int parametersCount);
-
-	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(ClassLoader classLoader, int parametersLength);
-
-	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(int parametersLength);
-
-	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(ClassLoader classLoader, int parametersLength);
-
 	public void closeClassRetrievers();
 
 	public void reset(boolean closeClassRetrievers);
@@ -465,7 +453,7 @@ public interface ClassFactory {
 		) {	
 			ClassRetriever classRetriever = classFactory.loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
-					sourceGenerator.create(className, options, superClasses)
+					sourceGenerator.generate(className, options, superClasses)
 				)
 			);
 			Class<T> cls = (Class<T>)classRetriever.get(className);
@@ -481,7 +469,7 @@ public interface ClassFactory {
 		) {	
 			ClassRetriever classRetriever = classFactory.loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
-					sourceGenerator.create(className, options, superClasses)
+					sourceGenerator.generate(className, options, superClasses)
 				).useClassLoader(classLoader)
 			);
 			Class<T> cls = (Class<T>)classRetriever.get(className);

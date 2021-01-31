@@ -49,6 +49,18 @@ public interface FunctionalInterfaceFactory {
 	public <T> T getOrCreateConsumer(Class<?> targetClass, String methodName, Class<?>... argumentTypes);
 	
 	public <T> T getOrCreateSupplier(Class<?> targetClass, String methodName);
+	
+	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(int parametersCount);
+
+	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(ClassLoader classLoader, int parametersLength);
+
+	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(int parametersCount);
+
+	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(ClassLoader classLoader, int parametersLength);
+
+	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(int parametersLength);
+
+	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(ClassLoader classLoader, int parametersLength);
 
 	
 }

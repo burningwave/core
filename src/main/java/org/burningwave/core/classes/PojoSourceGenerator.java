@@ -110,7 +110,7 @@ public class PojoSourceGenerator {
 		return this;
 	}
 	
-	public UnitSourceGenerator create(String className, int options, Class<?>... superClasses) {
+	public UnitSourceGenerator generate(String className, int options, Class<?>... superClasses) {
 		if (className.contains("$")) {
 			Throwables.throwException("{} Pojo could not be a inner class", className);
 		}

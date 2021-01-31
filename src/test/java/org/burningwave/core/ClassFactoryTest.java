@@ -34,24 +34,6 @@ import org.junit.jupiter.api.Test;
 
 public class ClassFactoryTest extends BaseTest {
 	
-	@Test
-	public void getOrBuildFunctionClassTestOne() {
-		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> componentSupplier.getClassFactory().loadOrBuildAndDefineFunctionSubType(Thread.currentThread().getContextClassLoader(), 10));
-	}	
-	
-	@Test
-	public void getOrBuildConsumerClassTestOne() {
-		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> componentSupplier.getClassFactory().loadOrBuildAndDefineConsumerSubType(Thread.currentThread().getContextClassLoader(), 2));
-	}
-	
-	@Test
-	public void getOrBuildPredicateClassTestOne() {
-		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotNull(() -> componentSupplier.getClassFactory().loadOrBuildAndDefinePredicateSubType(Thread.currentThread().getContextClassLoader(), 10));
-	}
-	
 	
 	@Test
 	public void getOrBuildPojoClassTestOne() throws Exception {
