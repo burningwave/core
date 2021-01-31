@@ -54,7 +54,6 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
-@SuppressWarnings("unchecked")
 public interface ClassFactory {
 	
 	public static class Configuration {
@@ -125,28 +124,6 @@ public interface ClassFactory {
 	public ClassRetriever loadOrBuildAndDefine(UnitSourceGenerator... unitsCode);
 
 	public <L extends LoadOrBuildAndDefineConfigAbst<L>> ClassRetriever loadOrBuildAndDefine(L config);
-
-	public PojoSubTypeRetriever createPojoSubTypeRetriever(PojoSourceGenerator sourceGenerator);
-
-	public <T> Class<T> loadOrBuildAndDefinePojoSubType(String className, Class<?>... superClasses);
-
-	public <T> Class<T> loadOrBuildAndDefinePojoSubType(String className, int options, Class<?>... superClasses);
-
-	public <T> Class<T> loadOrBuildAndDefinePojoSubType(ClassLoader classLoader, String className, int options, Class<?>... superClasses);
-
-	public <T> Class<T> loadOrBuildAndDefinePojoSubType(ClassLoader classLoader, String className, Class<?>... superClasses);
-
-	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(int parametersCount);
-
-	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(ClassLoader classLoader, int parametersLength);
-
-	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(int parametersCount);
-
-	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(ClassLoader classLoader, int parametersLength);
-
-	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(int parametersLength);
-
-	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(ClassLoader classLoader, int parametersLength);
 
 	public void closeClassRetrievers();
 
@@ -429,7 +406,7 @@ public interface ClassFactory {
 			});
 		}
 	}
-	
+	/*
 	public static class PojoSubTypeRetriever {
 		private ClassFactory classFactory;
 		private PojoSourceGenerator sourceGenerator;
@@ -450,7 +427,7 @@ public interface ClassFactory {
 			return new PojoSubTypeRetriever(classFactory, PojoSourceGenerator.createDefault());
 		}
 		
-		public <T> Class<T> getOrBuild(
+		public <T> Class<T> loadOrBuildAndDefine(
 				ClassLoader classLoader,
 			String className,
 			Class<?>... superClasses
@@ -465,7 +442,7 @@ public interface ClassFactory {
 		) {	
 			ClassRetriever classRetriever = classFactory.loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
-					sourceGenerator.create(className, options, superClasses)
+					sourceGenerator.generate(className, options, superClasses)
 				)
 			);
 			Class<T> cls = (Class<T>)classRetriever.get(className);
@@ -481,7 +458,7 @@ public interface ClassFactory {
 		) {	
 			ClassRetriever classRetriever = classFactory.loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
-					sourceGenerator.create(className, options, superClasses)
+					sourceGenerator.generate(className, options, superClasses)
 				).useClassLoader(classLoader)
 			);
 			Class<T> cls = (Class<T>)classRetriever.get(className);
@@ -489,5 +466,5 @@ public interface ClassFactory {
 			return cls;
 		}
 			
-	}
+	}*/
 }

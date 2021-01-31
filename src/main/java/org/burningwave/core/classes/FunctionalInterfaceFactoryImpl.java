@@ -46,6 +46,7 @@ import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -54,11 +55,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.classes.ClassFactory.ClassRetriever;
 import org.burningwave.core.function.Executor;
+import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.ThrowingSupplier;
 
+@SuppressWarnings("unchecked")
 class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Component { 
 	private ClassFactory classFactory;
+	private FunctionalInterfaceSourceGenerator sourceCodeGenerator;
 	
 	FunctionalInterfaceFactoryImpl(ClassFactory classFactory) {
 		this.classFactory = classFactory;
@@ -143,7 +148,6 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	<F> F getOrCreateBindedRunnable(Executable executable) {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(executable.getDeclaringClass()), 
@@ -165,7 +169,6 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 		);
 	}
 
-	@SuppressWarnings("unchecked")
 	<F> F getOrCreateBindedSupplier(Executable executable) {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(executable.getDeclaringClass()),	
@@ -187,7 +190,6 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 		);
 	}
 
-	@SuppressWarnings("unchecked")
 	<F> F getOrCreateBindedFunction(Executable executable) {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(executable.getDeclaringClass()),
@@ -203,7 +205,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 							retrieveClass(
 								Function.class,
 								(parameterCount) -> 
-									classFactory.loadOrBuildAndDefineFunctionSubType(
+									loadOrBuildAndDefineFunctionSubType(
 										executable.getDeclaringClass().getClassLoader(), parameterCount
 									),
 								Modifier.isStatic(executable.getModifiers()) || executable instanceof Constructor ?
@@ -219,7 +221,6 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 		);
 	}
 
-	@SuppressWarnings("unchecked")
 	<F> F getOrCreateBindedConsumer(Method targetMethod) {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(targetMethod.getDeclaringClass()),
@@ -231,7 +232,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 						retrieveClass(
 							Consumer.class,
 							(parameterCount) ->
-								classFactory.loadOrBuildAndDefineConsumerSubType(targetMethod.getDeclaringClass().getClassLoader(), parameterCount),
+								loadOrBuildAndDefineConsumerSubType(targetMethod.getDeclaringClass().getClassLoader(), parameterCount),
 							Modifier.isStatic(targetMethod.getModifiers()) ?
 								targetMethod.getParameterCount() : 
 								targetMethod.getParameterCount() + 1
@@ -245,7 +246,6 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 		);
 	}
 
-	@SuppressWarnings("unchecked")
 	<F> F getOrCreateBindedPredicate(Method targetMethod) {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(targetMethod.getDeclaringClass()),
@@ -256,7 +256,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 						retrieveClass(
 							Predicate.class,
 							(parameterCount) ->
-								classFactory.loadOrBuildAndDefinePredicateSubType(targetMethod.getDeclaringClass().getClassLoader(), parameterCount),
+								loadOrBuildAndDefinePredicateSubType(targetMethod.getDeclaringClass().getClassLoader(), parameterCount),
 							Modifier.isStatic(targetMethod.getModifiers()) ?
 								targetMethod.getParameterCount() : 
 								targetMethod.getParameterCount() + 1
@@ -268,6 +268,67 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 				)
 			)
 		);
+	}
+	
+	
+	@Override
+	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(int parametersCount) {
+		return loadOrBuildAndDefineFunctionSubType(null, parametersCount);
+	}
+	
+	@Override
+	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(ClassLoader classLoader, int parametersLength) {
+		return loadOrBuildAndDefineFunctionInterfaceSubType(
+			classLoader, "FunctionFor", "Parameters", parametersLength,
+			(className, paramsL) -> UnitSourceGenerator.create(Classes.retrievePackageName(className)).addClass(sourceCodeGenerator.generateFunction(className, paramsL))
+		);
+	}
+	
+	@Override
+	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(int parametersCount) {
+		return loadOrBuildAndDefineConsumerSubType(null, parametersCount);
+	}
+	
+	@Override
+	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(ClassLoader classLoader, int parametersLength) {
+		return loadOrBuildAndDefineFunctionInterfaceSubType(
+			classLoader, "ConsumerFor", "Parameters", parametersLength,
+			(className, paramsL) -> UnitSourceGenerator.create(Classes.retrievePackageName(className)).addClass(sourceCodeGenerator.generateConsumer(className, paramsL))
+		);
+	}
+	
+	@Override
+	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(int parametersLength) {
+		return loadOrBuildAndDefinePredicateSubType(null, parametersLength);
+	}
+	
+	@Override
+	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(ClassLoader classLoader, int parametersLength) {
+		return loadOrBuildAndDefineFunctionInterfaceSubType(
+			classLoader, "PredicateFor", "Parameters", parametersLength,
+			(className, paramsL) -> UnitSourceGenerator.create(Classes.retrievePackageName(className)).addClass(sourceCodeGenerator.generatePredicate(className, paramsL))
+		);
+	}	
+	
+	private <T> Class<T> loadOrBuildAndDefineFunctionInterfaceSubType(
+		ClassLoader classLoader,
+		String classNamePrefix, 
+		String classNameSuffix,
+		int parametersLength,
+		BiFunction<String, Integer, UnitSourceGenerator> unitSourceGeneratorSupplier
+	) {
+		String functionalInterfaceName = classNamePrefix + parametersLength +	classNameSuffix;
+		String packageName = MultiParamsFunction.class.getPackage().getName();
+		String className = packageName + "." + functionalInterfaceName;
+		try (ClassRetriever classRetriever = classFactory.loadOrBuildAndDefine(
+			LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+				unitSourceGeneratorSupplier.apply(className, parametersLength)
+			).useClassLoader(
+				classLoader
+			)
+		)) {
+			return (Class<T>)classRetriever.get(className);
+		}
 	}
 	
 	private <F> F bindTo(
@@ -318,4 +379,5 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 			argumentsKey;
 		return cacheKey;		
 	}
+
 }

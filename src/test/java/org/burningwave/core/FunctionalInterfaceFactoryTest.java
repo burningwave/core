@@ -22,6 +22,25 @@ import org.junit.jupiter.api.Test;
 
 public class FunctionalInterfaceFactoryTest extends BaseTest {
 	
+	
+	@Test
+	public void getOrBuildFunctionClassTest() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotNull(() -> componentSupplier.getFunctionalInterfaceFactory().loadOrBuildAndDefineFunctionSubType(Thread.currentThread().getContextClassLoader(), 10));
+	}	
+	
+	@Test
+	public void getOrBuildConsumerClassTest() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotNull(() -> componentSupplier.getFunctionalInterfaceFactory().loadOrBuildAndDefineConsumerSubType(Thread.currentThread().getContextClassLoader(), 5));
+	}
+	
+	@Test
+	public void getOrBuildPredicateClassTest() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotNull(() -> componentSupplier.getFunctionalInterfaceFactory().loadOrBuildAndDefinePredicateSubType(Thread.currentThread().getContextClassLoader(), 10));
+	}
+	
 	@Test
 	public void getOrBuildFunctionClassTestOne() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();

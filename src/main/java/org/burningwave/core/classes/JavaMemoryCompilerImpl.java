@@ -89,23 +89,6 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 		this.compiledClassesRepository = FileSystemItem.of(((ClassPathHelperImpl)classPathHelper).getOrCreateTemporaryFolder("compiledClassesRepository"));
 	}	
 	
-	@Override
-	public 	ProducerTask<JavaMemoryCompiler.Compilation.Result> compile(Collection<String> sources) {
-		return compile(sources, true);
-	}
-	
-	@Override
-	public 	ProducerTask<JavaMemoryCompiler.Compilation.Result> compile(Collection<String> sources, boolean storeCompiledClasses) {
-		return compile(
-				JavaMemoryCompiler.Compilation.Config.withSources(sources).setClassPaths(
-				pathHelper.getAllMainClassPaths()
-			).storeCompiledClasses(
-				storeCompiledClasses
-			)
-		);
-	}
-	
-	
 	
 	@Override
 	public ProducerTask<JavaMemoryCompiler.Compilation.Result> compile(JavaMemoryCompiler.Compilation.Config config) {
@@ -113,7 +96,8 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			config.getSources(),
 			getClassPathsFrom(config),
 			getClassRepositoriesFrom(config),
-			config.getCompiledClassesStorage()
+			config.getCompiledClassesStorage(),
+			config.useTemporaryFolderForStoring()
 		);
 	}
 
@@ -145,7 +129,8 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 		Collection<String> sources, 
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
-		String compiledClassesStorage
+		String compiledClassesStorage,
+		boolean useTemporaryFolderForStoring
 	) {	
 		return BackgroundExecutor.createTask(() -> {
 			ManagedLoggersRepository.logInfo(getClass()::getName, "Try to compile: \n\n{}\n", String.join("\n", SourceCodeHandler.addLineCounter(sources)));
@@ -159,9 +144,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 				)
 			) {
 				Map<String, ByteBuffer> compiledFiles = compile(context);
-				String storedFilesClassPath = compiledClassesStorage != null ?
-					compiledClassesRepository.getAbsolutePath() + "/" + compiledClassesStorage :
-					null;
+				String storedFilesClassPath = retrieveCompiledClassesStorage(compiledClassesStorage, useTemporaryFolderForStoring);
 				if (!compiledFiles.isEmpty() && compiledClassesStorage != null ) {
 					compiledFiles.forEach((className, byteCode) -> {
 						JavaClass.use(byteCode, (javaClass) -> javaClass.storeToClassPath(storedFilesClassPath));
@@ -182,6 +165,19 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 				);
 			}
 		}).submit();
+	}
+
+
+	private String retrieveCompiledClassesStorage(String compiledClassesStorage, boolean useTemporaryFolderForStoring) {
+		String storedFilesClassPath = null;
+		if (compiledClassesStorage != null) {
+			if (useTemporaryFolderForStoring) {
+				storedFilesClassPath = compiledClassesRepository.getAbsolutePath() + "/" + compiledClassesStorage;
+			} else {
+				storedFilesClassPath = compiledClassesStorage;
+			}
+		}
+		return storedFilesClassPath;
 	}	
 	
 	private void sourcesToMemorySources(Collection<String> sources, Collection<MemorySource> memorySources) {

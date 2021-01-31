@@ -46,7 +46,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
-import org.burningwave.core.function.QuadConsumer;
+import org.burningwave.core.function.PentaConsumer;
 import org.burningwave.core.function.TriConsumer;
 
 public class PojoSourceGenerator {
@@ -54,16 +54,16 @@ public class PojoSourceGenerator {
 	public static int BUILDING_METHODS_CREATION_ENABLED = 0b00000001;
 	public static int USE_OF_FULLY_QUALIFIED_CLASS_NAMES_ENABLED = 0b00000010;
 	
-	private BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder;
-	private TriConsumer<FunctionSourceGenerator, Method, Integer> setterMethodsBodyBuilder;
-	private TriConsumer<FunctionSourceGenerator, Method, Integer> getterMethodsBodyBuilder;
-	private QuadConsumer<UnitSourceGenerator, Class<?>, Collection<Class<?>>, Integer> extraElementsBuilder;
+	private TriConsumer<PojoSourceGenerator, ClassSourceGenerator, Map<String, VariableSourceGenerator>> fieldsBuilder;
+	private PentaConsumer<PojoSourceGenerator, ClassSourceGenerator, FunctionSourceGenerator, Method, Integer> setterMethodsBodyBuilder;
+	private PentaConsumer<PojoSourceGenerator, ClassSourceGenerator, FunctionSourceGenerator, Method, Integer> getterMethodsBodyBuilder;
+	private PentaConsumer<PojoSourceGenerator, ClassSourceGenerator, Class<?>, Collection<Class<?>>, Integer> extraElementsBuilder;
 	
 	private PojoSourceGenerator(
-		BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder,
-		TriConsumer<FunctionSourceGenerator, Method, Integer> setterMethodsBodyBuilder,
-		TriConsumer<FunctionSourceGenerator, Method, Integer> getterMethodsBodyBuilder,
-		QuadConsumer<UnitSourceGenerator, Class<?>, Collection<Class<?>>, Integer> extraElementsBuilder
+		TriConsumer<PojoSourceGenerator, ClassSourceGenerator, Map<String, VariableSourceGenerator>> fieldsBuilder,
+		PentaConsumer<PojoSourceGenerator, ClassSourceGenerator, FunctionSourceGenerator, Method, Integer> setterMethodsBodyBuilder,
+		PentaConsumer<PojoSourceGenerator, ClassSourceGenerator, FunctionSourceGenerator, Method, Integer> getterMethodsBodyBuilder,
+		PentaConsumer<PojoSourceGenerator, ClassSourceGenerator, Class<?>, Collection<Class<?>>, Integer> extraElementsBuilder
 	) {
 		this.fieldsBuilder = fieldsBuilder;
 		this.setterMethodsBodyBuilder = setterMethodsBodyBuilder;
@@ -71,16 +71,16 @@ public class PojoSourceGenerator {
 		this.extraElementsBuilder = extraElementsBuilder;
 	}
 	
-	public static PojoSourceGenerator createDefault() {
+	public static PojoSourceGenerator create() {
 		return new PojoSourceGenerator(
-			(fieldsMap, cls) -> {
+			(pSG, cls, fieldsMap) -> {
 				fieldsMap.entrySet().forEach(entry -> {
 					cls.addField(entry.getValue().addModifier(Modifier.PRIVATE));
 				});
-			}, (methodSG, method, options) -> {
+			}, (pSG, cls, methodSG, method, options) -> {
 				String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst("set", ""));
 				methodSG.addBodyCodeLine("this." + fieldName + " = " + fieldName + ";");
-			}, (methodSG, method, options) -> {
+			}, (pSG, cls, methodSG, method, options) -> {
 				String prefix = method.getName().startsWith("get")? "get" : "is";
 				String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst(prefix, ""));
 				methodSG.addBodyCodeLine("return this." + fieldName + ";");
@@ -88,29 +88,33 @@ public class PojoSourceGenerator {
 		);
 	}
 	
-	public PojoSourceGenerator setFieldsBuilder(BiConsumer<Map<String, VariableSourceGenerator>, ClassSourceGenerator> fieldsBuilder) {
+	public PojoSourceGenerator setFieldsBuilder(TriConsumer<PojoSourceGenerator, ClassSourceGenerator, Map<String, VariableSourceGenerator>> fieldsBuilder) {
 		this.fieldsBuilder = fieldsBuilder;
 		return this;
 	}
 
-	public PojoSourceGenerator setSetterMethodsBodyBuilder(TriConsumer<FunctionSourceGenerator, Method, Integer> setterMethodsBodyBuilder) {
+	public PojoSourceGenerator setSetterMethodsBodyBuilder(PentaConsumer<PojoSourceGenerator, ClassSourceGenerator, FunctionSourceGenerator, Method, Integer> setterMethodsBodyBuilder) {
 		this.setterMethodsBodyBuilder = setterMethodsBodyBuilder;
 		return this;
 	}
 
-	public PojoSourceGenerator setGetterMethodsBodyBuilder(TriConsumer<FunctionSourceGenerator, Method, Integer> getterMethodsBodyBuilder) {
+	public PojoSourceGenerator setGetterMethodsBodyBuilder(PentaConsumer<PojoSourceGenerator, ClassSourceGenerator, FunctionSourceGenerator, Method, Integer> getterMethodsBodyBuilder) {
 		this.getterMethodsBodyBuilder = getterMethodsBodyBuilder;
 		return this;
 	}
 
 	public PojoSourceGenerator setExtraElementsBuilder(
-		QuadConsumer<UnitSourceGenerator, Class<?>, Collection<Class<?>>, Integer> extraElementsBuilder
+		PentaConsumer<PojoSourceGenerator, ClassSourceGenerator, Class<?>, Collection<Class<?>>, Integer> extraElementsBuilder
 	) {
 		this.extraElementsBuilder = extraElementsBuilder;
 		return this;
 	}
 	
-	public UnitSourceGenerator create(String className, int options, Class<?>... superClasses) {
+	public ClassSourceGenerator generate(String className, Class<?>... superClasses) {
+		return generate(className, ALL_OPTIONS_DISABLED, superClasses);
+	}
+	
+	public ClassSourceGenerator generate(String className, int options, Class<?>... superClasses) {
 		if (className.contains("$")) {
 			Throwables.throwException("{} Pojo could not be a inner class", className);
 		}
@@ -187,27 +191,26 @@ public class PojoSourceGenerator {
 					fieldsMap.put(fieldName, VariableSourceGenerator.create(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), paramType), fieldName));
 					methodSG.addParameter(VariableSourceGenerator.create(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), paramType), fieldName));
 					if (setterMethodsBodyBuilder != null) {
-						setterMethodsBodyBuilder.accept(methodSG, method, options);
+						setterMethodsBodyBuilder.accept(this, cls, methodSG, method, options);
 					}
 				} else if (method.getName().startsWith("get") || method.getName().startsWith("is")) {
 					String prefix = method.getName().startsWith("get")? "get" : "is";
 					String fieldName = Strings.lowerCaseFirstCharacter(method.getName().replaceFirst(prefix, ""));
 					fieldsMap.put(fieldName, VariableSourceGenerator.create(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), method.getReturnType()), fieldName));
 					if (getterMethodsBodyBuilder != null) {
-						getterMethodsBodyBuilder.accept(methodSG, method, options);
+						getterMethodsBodyBuilder.accept(this, cls, methodSG, method, options);
 					}
 				}
 				cls.addMethod(methodSG);
 			}
 			if (fieldsBuilder != null) {
-				fieldsBuilder.accept(fieldsMap, cls);
+				fieldsBuilder.accept(this, cls, fieldsMap);
 			}
 		}
-		UnitSourceGenerator unit = UnitSourceGenerator.create(packageName).addClass(cls);
 		if (extraElementsBuilder != null) {
-			extraElementsBuilder.accept(unit, superClass, interfaces, options);
+			extraElementsBuilder.accept(this, cls, superClass, interfaces, options);
 		}
-		return unit;
+		return cls;
 	}
 	
 	public boolean isUseFullyQualifiedClassNamesEnabled(int options) {
