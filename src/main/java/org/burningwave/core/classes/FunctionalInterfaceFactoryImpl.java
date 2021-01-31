@@ -320,16 +320,15 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 		String functionalInterfaceName = classNamePrefix + parametersLength +	classNameSuffix;
 		String packageName = MultiParamsFunction.class.getPackage().getName();
 		String className = packageName + "." + functionalInterfaceName;
-		ClassRetriever classRetriever = classFactory.loadOrBuildAndDefine(
+		try (ClassRetriever classRetriever = classFactory.loadOrBuildAndDefine(
 			LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
 				unitSourceGeneratorSupplier.apply(className, parametersLength)
 			).useClassLoader(
 				classLoader
 			)
-		);
-		Class<T> cls = (Class<T>)classRetriever.get(className);
-		classRetriever.close();
-		return cls;
+		)) {
+			return (Class<T>)classRetriever.get(className);
+		}
 	}
 	
 	private <F> F bindTo(
