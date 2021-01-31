@@ -31,7 +31,6 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
-import static org.burningwave.core.assembler.StaticComponentContainer.FunctionalInterfaceSourceGenerator;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -64,9 +63,11 @@ import org.burningwave.core.function.ThrowingSupplier;
 @SuppressWarnings("unchecked")
 class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Component { 
 	private ClassFactory classFactory;
+	private FunctionalInterfaceSourceGenerator sourceCodeGenerator;
 	
 	FunctionalInterfaceFactoryImpl(ClassFactory classFactory) {
 		this.classFactory = classFactory;
+		this.sourceCodeGenerator = FunctionalInterfaceSourceGenerator.create();
 	}
 	
 	@Override
@@ -280,7 +281,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(ClassLoader classLoader, int parametersLength) {
 		return loadOrBuildAndDefineFunctionInterfaceSubType(
 			classLoader, "FunctionFor", "Parameters", parametersLength,
-			(className, paramsL) -> UnitSourceGenerator.create(Classes.retrievePackageName(className)).addClass(FunctionalInterfaceSourceGenerator.generateFunction(className, paramsL))
+			(className, paramsL) -> UnitSourceGenerator.create(Classes.retrievePackageName(className)).addClass(sourceCodeGenerator.generateFunction(className, paramsL))
 		);
 	}
 	
@@ -293,7 +294,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(ClassLoader classLoader, int parametersLength) {
 		return loadOrBuildAndDefineFunctionInterfaceSubType(
 			classLoader, "ConsumerFor", "Parameters", parametersLength,
-			(className, paramsL) -> UnitSourceGenerator.create(Classes.retrievePackageName(className)).addClass(FunctionalInterfaceSourceGenerator.generateConsumer(className, paramsL))
+			(className, paramsL) -> UnitSourceGenerator.create(Classes.retrievePackageName(className)).addClass(sourceCodeGenerator.generateConsumer(className, paramsL))
 		);
 	}
 	
@@ -306,7 +307,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(ClassLoader classLoader, int parametersLength) {
 		return loadOrBuildAndDefineFunctionInterfaceSubType(
 			classLoader, "PredicateFor", "Parameters", parametersLength,
-			(className, paramsL) -> UnitSourceGenerator.create(Classes.retrievePackageName(className)).addClass(FunctionalInterfaceSourceGenerator.generatePredicate(className, paramsL))
+			(className, paramsL) -> UnitSourceGenerator.create(Classes.retrievePackageName(className)).addClass(sourceCodeGenerator.generatePredicate(className, paramsL))
 		);
 	}	
 	

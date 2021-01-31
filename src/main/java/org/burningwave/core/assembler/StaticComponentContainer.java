@@ -131,7 +131,6 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.classes.Constructors Constructors;
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.classes.Fields Fields;
-	public static final org.burningwave.core.classes.FunctionalInterfaceSourceGenerator FunctionalInterfaceSourceGenerator;
 	public static final org.burningwave.core.iterable.Properties GlobalProperties;
 	public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
 	public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
@@ -308,7 +307,6 @@ public class StaticComponentContainer {
 			}			
 			ByFieldOrByMethodPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByFieldOrByMethod.create();
 			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
-			FunctionalInterfaceSourceGenerator = org.burningwave.core.classes.FunctionalInterfaceSourceGenerator.create();
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
 			Runtime.getRuntime().addShutdownHook(
 				ThreadSupplier.getOrCreate(getName("Resource releaser")).setExecutable(thread -> {

@@ -29,7 +29,6 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.FunctionalInterfaceSourceGenerator;
 
 import java.util.Collection;
 
@@ -60,7 +59,7 @@ public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<L
 		ForCodeExecutorAbst(String executorName, BodySourceGenerator bodySG) {
 			super(
 				UnitSourceGenerator.create(Classes.retrievePackageName(executorName))
-				.addClass(FunctionalInterfaceSourceGenerator.generateExecutor(executorName, bodySG))
+				.addClass(FunctionalInterfaceSourceGenerator.create().generateExecutor(executorName, bodySG))
 			);
 			this.body = bodySG;
 			body.setElementPrefix("\t");
