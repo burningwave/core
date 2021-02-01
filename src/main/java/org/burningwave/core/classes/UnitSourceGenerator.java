@@ -63,14 +63,14 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 	public UnitSourceGenerator addImport(String... imports) {
 		Optional.ofNullable(this.imports).orElseGet(() -> this.imports = new ArrayList<>());
 		for (String imprt : imports) {
-			this.imports.add(imprt);
+			this.imports.add(normalize(imprt));
 		}
 		return this;
 	}
 	
 	public UnitSourceGenerator addStaticImport(java.lang.Class<?> cls, String... innerElements) {
 		for (String innerElement : innerElements) {
-			addStaticImport(cls.getName() + "." + innerElement);
+			addStaticImport(normalize(cls.getName()) + "." + innerElement);
 		}
 		return this;
 	}
@@ -78,7 +78,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 	public UnitSourceGenerator addStaticImport(String... imports) {
 		Optional.ofNullable(this.imports).orElseGet(() -> this.imports = new ArrayList<>());
 		for (String imprt : imports) {
-			this.imports.add("static " + imprt);
+			this.imports.add("static " + normalize(imprt));
 		}
 		return this;
 	}
@@ -86,7 +86,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 	public UnitSourceGenerator addImport(java.lang.Class<?>... classes) {
 		for (java.lang.Class<?> cls : classes) {
 			if (Modifier.isPublic(cls.getModifiers())) {
-				this.addImport(cls.getName());
+				this.addImport(normalize(cls.getName()));
 			} else {
 				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not import {} because its modifier is not public", cls.getName());
 			}
@@ -106,7 +106,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		List<String> imports = new ArrayList<>();
 		Optional.ofNullable(this.imports).ifPresent(imprts -> {
 			imprts.forEach(imprt -> {
-				imports.add("import " + imprt.replace("$", ".") + ";");
+				imports.add("import " + normalize(imprt.replace("$", ".")) + ";");
 			});
 		});
 		
@@ -115,7 +115,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 			String className = typeDeclaration.getName();
 			if (isPublic == null || isPublic) {	
 				Optional.ofNullable(className).ifPresent(clsName -> {
-					imports.add("import " + clsName.replace("$", ".") + ";");
+					imports.add("import " + normalize(clsName.replace("$", ".")) + ";");
 				});
 			} else {
 				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not import {} because its modifier is not public", className);
@@ -159,6 +159,13 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 	
 	ClassSourceGenerator getClass(String className) {
 		return getAllClasses().get(className);
+	}
+	
+	private String normalize(String imprt) {
+		if (imprt.contains("[L")) {
+			imprt = imprt.substring(imprt.indexOf("[L") + 2, imprt.lastIndexOf(";"));
+		}
+		return imprt;
 	}
 	
 	@Override
