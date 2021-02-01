@@ -245,7 +245,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 		});
 	}
 	
-static class DiagnosticListener implements javax.tools.DiagnosticListener<JavaFileObject>, Serializable, Component {
+	static class DiagnosticListener implements javax.tools.DiagnosticListener<JavaFileObject>, Serializable, Component {
 		
 		private static final long serialVersionUID = 4404913684967693355L;
 		
