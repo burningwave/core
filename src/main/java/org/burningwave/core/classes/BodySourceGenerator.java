@@ -43,7 +43,7 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 	BodySourceGenerator() {}
 	
 	public static BodySourceGenerator create() {
-		return new BodySourceGenerator().setDelimiters("{", "\n}").setElementPrefix("\t");
+		return new BodySourceGenerator().setDelimiters("{\n\t", "\n}").setElementPrefix("\t");
 	}
 	
 	public static BodySourceGenerator createSimple() {
@@ -89,7 +89,7 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 
 	public BodySourceGenerator addCodeLine(String... codes) {
 		for (String code : codes) {
-			addCode("\n" + Optional.ofNullable(elementPrefix).orElseGet(() -> "") + code);	
+			addCode((bodyGenerators != null && !bodyGenerators.isEmpty()? "\n" : "") + Optional.ofNullable(elementPrefix).orElseGet(() -> "") + code);	
 		}
 		return this;	
 	}

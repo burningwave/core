@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
@@ -115,6 +116,20 @@ public interface JavaMemoryCompiler {
 			@SafeVarargs
 			public final static Config withSource(String... sources) {
 				return withSources(Arrays.asList(sources));
+			}
+			
+			@SafeVarargs
+			public final static Config forUnitSourceGenerator(UnitSourceGenerator... sources) {
+				return forUnitSourceGenerators(Arrays.asList(sources));
+			}
+			
+			@SafeVarargs
+			public final static Config forUnitSourceGenerators(Collection<UnitSourceGenerator>... sourceCollections) {
+				Config compileConfig = new Config();
+				for (Collection<UnitSourceGenerator> sourceCollection : sourceCollections) {
+					compileConfig.sources.addAll(sourceCollection.stream().map(source -> source.make()).collect(Collectors.toList()));
+				}
+				return compileConfig;
 			}
 			
 			public Config storeCompiledClasses(boolean flag) {

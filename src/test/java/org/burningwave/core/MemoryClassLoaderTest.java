@@ -75,7 +75,7 @@ public class MemoryClassLoaderTest extends BaseTest {
 				JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
 				memoryClassLoader.addByteCodes(
 					jMC.compile(
-						JavaMemoryCompiler.Compilation.Config.withSource(generateSources().make())
+						JavaMemoryCompiler.Compilation.Config.forUnitSourceGenerator(generateSources())
 					).join().getCompiledFiles().entrySet()
 				);
 				return memoryClassLoader.loadClass("tryyy.ReTry$ReReTry");
@@ -91,7 +91,7 @@ public class MemoryClassLoaderTest extends BaseTest {
 				JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
 				memoryClassLoader.addByteCodes(
 					jMC.compile(
-						JavaMemoryCompiler.Compilation.Config.withSource(generateSources().make())
+						JavaMemoryCompiler.Compilation.Config.forUnitSourceGenerator(generateSources())
 					).join().getCompiledFiles().entrySet()
 				);
 				return memoryClassLoader.forceBytecodesLoading();
@@ -107,7 +107,7 @@ public class MemoryClassLoaderTest extends BaseTest {
 				JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
 				memoryClassLoader.addByteCodes(
 					jMC.compile(
-						JavaMemoryCompiler.Compilation.Config.withSource(generateSources().make())
+						JavaMemoryCompiler.Compilation.Config.forUnitSourceGenerator(generateSources())
 					).join().getCompiledFiles().entrySet()
 				);
 				return memoryClassLoader.getNotLoadedByteCode("tryyy.ReTry$ReReTry");
@@ -123,7 +123,7 @@ public class MemoryClassLoaderTest extends BaseTest {
 				JavaMemoryCompiler jMC = componentSupplier.getJavaMemoryCompiler();
 				memoryClassLoader.addByteCodes(
 					jMC.compile(
-						JavaMemoryCompiler.Compilation.Config.withSource(generateSources().make())
+						JavaMemoryCompiler.Compilation.Config.forUnitSourceGenerator(generateSources())
 					).join().getCompiledFiles().entrySet()
 				);
 				return memoryClassLoader.getByteCodeOf("tryyy.ReTry$ReReTry");
