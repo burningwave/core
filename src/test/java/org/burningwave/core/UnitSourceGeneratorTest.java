@@ -199,7 +199,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 						TypeDeclarationSourceGenerator.create(HashMap.class).addGeneric(
 							GenericSourceGenerator.create(String.class),
 							GenericSourceGenerator.create(String.class)
-					).setAnonymous(true)
+					).setAsAnonymous(true)
 					).addMethod(
 						FunctionSourceGenerator.create("get")
 						.setReturnType(TypeDeclarationSourceGenerator.create(String.class))
@@ -224,13 +224,15 @@ public class UnitSourceGeneratorTest extends BaseTest {
 			)
 		)
 		.addConstructor(
-			FunctionSourceGenerator.create().addBodyCode("mapTwo = ").addBodyElement(
+			FunctionSourceGenerator.create().addParameter(
+					VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(String.class).setAsVarArgs(true), "values")
+				).addBodyCode("mapTwo = ").addBodyElement(
 				BodySourceGenerator.createSimple().addCode("new").addElement(
 					ClassSourceGenerator.create(
 						TypeDeclarationSourceGenerator.create(HashMap.class).addGeneric(
 							GenericSourceGenerator.create(String.class),
 							GenericSourceGenerator.create(String.class)
-					).setAnonymous(true)
+					).setAsAnonymous(true)
 					).addMethod(
 						FunctionSourceGenerator.create("get")
 						.setReturnType(TypeDeclarationSourceGenerator.create(String.class))
@@ -265,7 +267,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 					BodySourceGenerator.createSimple().addCode("new").addElement(
 						ClassSourceGenerator.create(
 							TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true)
-							.setAnonymous(true)
+							.setAsAnonymous(true)
 						).addMethod(
 							FunctionSourceGenerator.create("get")
 							.setReturnType(TypeDeclarationSourceGenerator.create(Date.class))
