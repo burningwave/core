@@ -98,17 +98,17 @@ public class UnitSourceGeneratorTest extends BaseTest {
 							.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Integer.class), "index2")
 									.addModifier(Modifier.PRIVATE))
 							.addAnnotation(
-					            	AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameter(
-					            		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
-					            			VariableSourceGenerator.create("message").setValue("\"Person name should not be empty\"")
-					            		).addParameter(
-					            			VariableSourceGenerator.create("groups").setValue(this.getClass().getSimpleName() + ".class").useType(this.getClass())
-					            		),
-					            		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
-					            			VariableSourceGenerator.create("message").setValue("\"Company name should not be empty\"")
-					            		)
-					            	)
-					            )
+									AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameter(
+										AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
+											VariableSourceGenerator.create("message").setValue("\"Person name should not be empty\"")
+										).addParameter(
+											VariableSourceGenerator.create("groups").setValue(this.getClass().getSimpleName() + ".class").useType(this.getClass())
+										),
+										AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
+											VariableSourceGenerator.create("message").setValue("\"Company name should not be empty\"")
+										)
+									)
+								)
 							)
 					.addMethod(method)).addOuterCodeLine("@Annotation").addOuterCodeLine("@Annotation2");
 			unit.addClass(cls);
@@ -152,15 +152,15 @@ public class UnitSourceGeneratorTest extends BaseTest {
 	@Test
 	public void generateUnitTwo() throws Throwable {
 		UnitSourceGenerator unitSG = UnitSourceGenerator.create("org.burningwave.core.examples.classfactory").addClass(
-            createClass("MyExtendedClass").addInnerClass( createClass("MyExtendedInnerClass").addModifier(Modifier.STATIC))
-        );
+			createClass("MyExtendedClass").addInnerClass( createClass("MyExtendedInnerClass").addModifier(Modifier.STATIC))
+		);
 		unitSG.storeToClassPath(System.getProperty("user.home") + "/Desktop/bw-tests");
-        System.out.println("\nGenerated code:\n" + unitSG.make());
+		System.out.println("\nGenerated code:\n" + unitSG.make());
 	}
 
 	private ClassSourceGenerator createClass(String className) {
 		return ClassSourceGenerator.create(
-		    TypeDeclarationSourceGenerator.create(className)
+			TypeDeclarationSourceGenerator.create(className)
 		).addAnnotation(
 			AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameter("value", true, 
 				AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
@@ -173,11 +173,11 @@ public class UnitSourceGeneratorTest extends BaseTest {
 				)
 			)
 		).addAnnotation(
-		    	AnnotationSourceGenerator.create(NotNull.class)
+				AnnotationSourceGenerator.create(NotNull.class)
 		).addAnnotation(
-		    	AnnotationSourceGenerator.create(SuppressWarnings.class).addParameter(VariableSourceGenerator.create("\"unchecked\""))
+				AnnotationSourceGenerator.create(SuppressWarnings.class).addParameter(VariableSourceGenerator.create("\"unchecked\""))
 		).addModifier(
-		    Modifier.PUBLIC
+			Modifier.PUBLIC
 		)
 		.addField(VariableSourceGenerator.create(long.class, "serialVersionUID").addModifier(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL))
 		.addField(
@@ -190,24 +190,24 @@ public class UnitSourceGeneratorTest extends BaseTest {
 					)
 				).addGeneric(
 					GenericSourceGenerator.create(String.class)
-		    	),
+				),
 				"mapOne"
 			).addAnnotation(AnnotationSourceGenerator.create(NotEmpty.class))
 			.setValue(
 				BodySourceGenerator.createSimple().addCode("new").addElement(
 					ClassSourceGenerator.create(
-		        		TypeDeclarationSourceGenerator.create(HashMap.class).addGeneric(
-		        			GenericSourceGenerator.create(String.class),
-		        			GenericSourceGenerator.create(String.class)
-		        	).setAnonymous(true)
-		        	).addMethod(
-		                FunctionSourceGenerator.create("get")
-		                .setReturnType(TypeDeclarationSourceGenerator.create(String.class))
-		                .addModifier(Modifier.PUBLIC)
-		                .addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Object.class), "key"))
-		                .addOuterCodeLine("@Override")
-		                .addBodyCodeLine("return super.get(key);")
-		            )
+						TypeDeclarationSourceGenerator.create(HashMap.class).addGeneric(
+							GenericSourceGenerator.create(String.class),
+							GenericSourceGenerator.create(String.class)
+					).setAnonymous(true)
+					).addMethod(
+						FunctionSourceGenerator.create("get")
+						.setReturnType(TypeDeclarationSourceGenerator.create(String.class))
+						.addModifier(Modifier.PUBLIC)
+						.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Object.class), "key"))
+						.addOuterCodeLine("@Override")
+						.addBodyCodeLine("return super.get(key);")
+					)
 				)
 			)
 		)
@@ -219,7 +219,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 					GenericSourceGenerator.create(String.class)
 				).addGeneric(
 					GenericSourceGenerator.create(String.class)
-		    	),
+				),
 				"mapTwo"
 			)
 		)
@@ -227,58 +227,58 @@ public class UnitSourceGeneratorTest extends BaseTest {
 			FunctionSourceGenerator.create().addBodyCode("mapTwo = ").addBodyElement(
 				BodySourceGenerator.createSimple().addCode("new").addElement(
 					ClassSourceGenerator.create(
-		        		TypeDeclarationSourceGenerator.create(HashMap.class).addGeneric(
-		        			GenericSourceGenerator.create(String.class),
-		        			GenericSourceGenerator.create(String.class)
-		        	).setAnonymous(true)
-		        	).addMethod(
-		                FunctionSourceGenerator.create("get")
-		                .setReturnType(TypeDeclarationSourceGenerator.create(String.class))
-		                .addModifier(Modifier.PUBLIC)
-		                .addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Object.class), "key"))
-		                .addOuterCodeLine("@Override")
-		                .addBodyCodeLine("return super.get(key);")
-		            )
+						TypeDeclarationSourceGenerator.create(HashMap.class).addGeneric(
+							GenericSourceGenerator.create(String.class),
+							GenericSourceGenerator.create(String.class)
+					).setAnonymous(true)
+					).addMethod(
+						FunctionSourceGenerator.create("get")
+						.setReturnType(TypeDeclarationSourceGenerator.create(String.class))
+						.addModifier(Modifier.PUBLIC)
+						.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Object.class), "key"))
+						.addOuterCodeLine("@Override")
+						.addBodyCodeLine("return super.get(key);")
+					)
 				)		
 			).addBodyCode(";")
 			
 		)
 		.addStaticInitializerElement(BodySourceGenerator.createSimple().setElementPrefix("\t").addCodeLine("serialVersionUID = 1L;"))
 		.addMethod(
-		    FunctionSourceGenerator.create("now")
-		    .setTypeDeclaration(
-		    	TypeDeclarationSourceGenerator.create(
-		    		GenericSourceGenerator.create("T").expands(
-		    			TypeDeclarationSourceGenerator.create(Cloneable.class),
-		    			TypeDeclarationSourceGenerator.create(Serializable.class)
-		    		)
-		    	)
-		    )
-		    .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create("T")))
-		    .addModifier(Modifier.PUBLIC)
-		    .addOuterCodeLine("//Comment")
-		    .addBodyElement(
-		    	VariableSourceGenerator.create(
-		        	TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true),
-		        	"dateSupplier"
-		        ).setValue(
-		        	BodySourceGenerator.createSimple().addCode("new").addElement(
-		    			ClassSourceGenerator.create(
-		            		TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true)
-		            		.setAnonymous(true)
-		            	).addMethod(
-		                    FunctionSourceGenerator.create("get")
-		                    .setReturnType(TypeDeclarationSourceGenerator.create(Date.class))
-		                    .addModifier(Modifier.PUBLIC)
-		                    .addOuterCodeLine("@Override")
-		                    .addBodyCodeLine("return new Date();")
-		                )
-		        	)
-		        
-		        )
-		    ).addBodyCodeLine("return (Comparable<T>)dateSupplier.get();")
+			FunctionSourceGenerator.create("now")
+			.setTypeDeclaration(
+				TypeDeclarationSourceGenerator.create(
+					GenericSourceGenerator.create("T").expands(
+						TypeDeclarationSourceGenerator.create(Cloneable.class),
+						TypeDeclarationSourceGenerator.create(Serializable.class)
+					)
+				)
+			)
+			.setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create("T")))
+			.addModifier(Modifier.PUBLIC)
+			.addOuterCodeLine("//Comment")
+			.addBodyElement(
+				VariableSourceGenerator.create(
+					TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true),
+					"dateSupplier"
+				).setValue(
+					BodySourceGenerator.createSimple().addCode("new").addElement(
+						ClassSourceGenerator.create(
+							TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true)
+							.setAnonymous(true)
+						).addMethod(
+							FunctionSourceGenerator.create("get")
+							.setReturnType(TypeDeclarationSourceGenerator.create(Date.class))
+							.addModifier(Modifier.PUBLIC)
+							.addOuterCodeLine("@Override")
+							.addBodyCodeLine("return new Date();")
+						)
+					)
+				
+				)
+			).addBodyCodeLine("return (Comparable<T>)dateSupplier.get();")
 		).addConcretizedType(
-		    Serializable.class
+			Serializable.class
 		).expands(Object.class);
 	}
 }
