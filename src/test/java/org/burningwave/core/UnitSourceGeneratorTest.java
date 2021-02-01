@@ -224,7 +224,9 @@ public class UnitSourceGeneratorTest extends BaseTest {
 			)
 		)
 		.addConstructor(
-			FunctionSourceGenerator.create().addBodyCode("mapTwo = ").addBodyElement(
+			FunctionSourceGenerator.create().addParameter(
+					VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(String.class).setAsVarArgs(true), "values")
+				).addBodyCodeLine("mapTwo = ").addBodyElement(
 				BodySourceGenerator.createSimple().addCode("new").addElement(
 					ClassSourceGenerator.create(
 						TypeDeclarationSourceGenerator.create(HashMap.class).addGeneric(
@@ -257,12 +259,13 @@ public class UnitSourceGeneratorTest extends BaseTest {
 			.setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create("T")))
 			.addModifier(Modifier.PUBLIC)
 			.addOuterCodeLine("//Comment")
+			.addBodyCodeLine()
 			.addBodyElement(
 				VariableSourceGenerator.create(
 					TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true),
 					"dateSupplier"
 				).setValue(
-					BodySourceGenerator.createSimple().addCode("new").addElement(
+					BodySourceGenerator.createSimple().addCodeLine("new").addElement(
 						ClassSourceGenerator.create(
 							TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true)
 							.setAsAnonymous(true)
