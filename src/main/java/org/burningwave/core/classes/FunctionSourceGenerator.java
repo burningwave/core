@@ -254,7 +254,7 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 			name + getParametersCode(),
 			getThrowables(),
 			body,
-			Optional.ofNullable(body).map(mod -> null).orElseGet(() -> ";")
+			Optional.ofNullable(body).map(mod -> "").orElseGet(() -> ";")
 		);
 	}
 }

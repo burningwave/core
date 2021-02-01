@@ -155,7 +155,12 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	public ClassSourceGenerator addStaticInitializerCode(String... codes) {
-		Optional.ofNullable(this.staticInitializer).orElseGet(() -> this.staticInitializer = BodySourceGenerator.create().setDelimiters("static {", "\n}").setElementPrefix("\t")).addCode(codes);
+		Optional.ofNullable(this.staticInitializer).orElseGet(() -> this.staticInitializer = BodySourceGenerator.create().setDelimiters("static {\n", "\n}")).addCode(codes);
+		return this;
+	}
+	
+	public ClassSourceGenerator addStaticInitializerElement(BodySourceGenerator... generators) {
+		Optional.ofNullable(this.staticInitializer).orElseGet(() -> this.staticInitializer = BodySourceGenerator.create().setDelimiters("static {\n", "\n}")).addElement(generators);
 		return this;
 	}
 	
@@ -276,8 +281,8 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 			concretize,
 			getOrEmpty(concretizedTypes, ", "), 
 			"{",
-			staticInitializerCode != null? "\n\n" + staticInitializerCode : null, 
 			fieldsCode != null? "\n\n" + fieldsCode : null,
+			staticInitializerCode != null? "\n\n" + staticInitializerCode : null, 
 			constructorsCode != null? "\n\n" + constructorsCode : null,
 			methodsCode != null? "\n\n" + methodsCode : null,
 			innerClassesCode != null? "\n\n" + innerClassesCode : null,

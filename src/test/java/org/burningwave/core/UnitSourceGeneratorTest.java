@@ -98,17 +98,17 @@ public class UnitSourceGeneratorTest extends BaseTest {
 							.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Integer.class), "index2")
 									.addModifier(Modifier.PRIVATE))
 							.addAnnotation(
-					            	AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameter(
-					            		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
-					            			VariableSourceGenerator.create("message").setValue("\"Person name should not be empty\"")
-					            		).addParameter(
-					            			VariableSourceGenerator.create("groups").setValue(this.getClass().getSimpleName() + ".class").useType(this.getClass())
-					            		),
-					            		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
-					            			VariableSourceGenerator.create("message").setValue("\"Company name should not be empty\"")
-					            		)
-					            	)
-					            )
+									AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameter(
+										AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
+											VariableSourceGenerator.create("message").setValue("\"Person name should not be empty\"")
+										).addParameter(
+											VariableSourceGenerator.create("groups").setValue(this.getClass().getSimpleName() + ".class").useType(this.getClass())
+										),
+										AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
+											VariableSourceGenerator.create("message").setValue("\"Company name should not be empty\"")
+										)
+									)
+								)
 							)
 					.addMethod(method)).addOuterCodeLine("@Annotation").addOuterCodeLine("@Annotation2");
 			unit.addClass(cls);
@@ -152,87 +152,133 @@ public class UnitSourceGeneratorTest extends BaseTest {
 	@Test
 	public void generateUnitTwo() throws Throwable {
 		UnitSourceGenerator unitSG = UnitSourceGenerator.create("org.burningwave.core.examples.classfactory").addClass(
-            ClassSourceGenerator.create(
-                TypeDeclarationSourceGenerator.create("MyExtendedClass")
-            ).addAnnotation(
-            	AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameter("value", true, 
-            		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
-            			VariableSourceGenerator.create("message").setValue("\"Person name should not be empty\"")
-            		).addParameter(
-            			VariableSourceGenerator.create("groups").setValue(this.getClass().getSimpleName() + ".class").useType(this.getClass())
-            		),
-            		AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
-            			VariableSourceGenerator.create("message").setValue("\"Company name should not be empty\"")
-            		)
-            	)
-            ).addAnnotation(
-                	AnnotationSourceGenerator.create(NotNull.class)
-            ).addAnnotation(
-                	AnnotationSourceGenerator.create(SuppressWarnings.class).addParameter(VariableSourceGenerator.create("\"unchecked\""))
-            ).addModifier(
-                Modifier.PUBLIC
-            )
-            .addField(VariableSourceGenerator.create(long.class, "serialVersionUID").addModifier(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL).setValue("1L"))
-            .addField(
-            	VariableSourceGenerator.create(
-            		TypeDeclarationSourceGenerator.create(
-            			Map.class
-            		).addGeneric(
-            			GenericSourceGenerator.create(String.class).addAnnotation(
-            				AnnotationSourceGenerator.create(NotEmpty.class)
-            			)
-            		).addGeneric(
-            			GenericSourceGenerator.create(String.class)
-                	),
-            		"map"
-            	).addAnnotation(AnnotationSourceGenerator.create(NotEmpty.class))
-            	.setValue(
-            		BodySourceGenerator.createSimple().addCode("new").addElement(
-            			ClassSourceGenerator.create(
-	                		TypeDeclarationSourceGenerator.create(HashMap.class).addGeneric(
-	                			GenericSourceGenerator.create(String.class),
-	                			GenericSourceGenerator.create(String.class)
-	                	).setAnonymous(true)
-	                	).addMethod(
-		                    FunctionSourceGenerator.create("get")
-		                    .setReturnType(TypeDeclarationSourceGenerator.create(String.class))
-		                    .addModifier(Modifier.PUBLIC)
-		                    .addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Object.class), "key"))
-		                    .addOuterCodeLine("@Override")
-		                    .addBodyCodeLine("return super.get(key);")
-		                )
-            		)
-            	)
-            ).addMethod(
-                FunctionSourceGenerator.create("now")
-                .setTypeDeclaration(
-                	TypeDeclarationSourceGenerator.create(
-                		GenericSourceGenerator.create("T").expands(
-                			TypeDeclarationSourceGenerator.create(Cloneable.class),
-                			TypeDeclarationSourceGenerator.create(Serializable.class)
-                		)
-                	)
-                )
-                .setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create("T")))
-                .addModifier(Modifier.PUBLIC)
-                .addOuterCodeLine("//Comment")
-                .addBodyCodeLine("Supplier<Date> dateSupplier = new").addBodyElement(
-                	ClassSourceGenerator.create(
-                		TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true)
-                		.setAnonymous(true)
-                	).addMethod(
-	                    FunctionSourceGenerator.create("get")
-	                    .setReturnType(TypeDeclarationSourceGenerator.create(Date.class))
-	                    .addModifier(Modifier.PUBLIC)
-	                    .addOuterCodeLine("@Override")
-	                    .addBodyCodeLine("return new Date();")
-	                )
-                ).addBodyCode(";").addBodyCodeLine("return (Comparable<T>)dateSupplier.get();")
-            ).addConcretizedType(
-                Serializable.class
-            ).expands(Object.class)
-        );
+			createClass("MyExtendedClass").addInnerClass( createClass("MyExtendedInnerClass").addModifier(Modifier.STATIC))
+		);
 		unitSG.storeToClassPath(System.getProperty("user.home") + "/Desktop/bw-tests");
-        System.out.println("\nGenerated code:\n" + unitSG.make());
+		System.out.println("\nGenerated code:\n" + unitSG.make());
+	}
+
+	private ClassSourceGenerator createClass(String className) {
+		return ClassSourceGenerator.create(
+			TypeDeclarationSourceGenerator.create(className)
+		).addAnnotation(
+			AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameter("value", true, 
+				AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
+					VariableSourceGenerator.create("message").setValue("\"Person name should not be empty\"")
+				).addParameter(
+					VariableSourceGenerator.create("groups").setValue(this.getClass().getSimpleName() + ".class").useType(this.getClass())
+				),
+				AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
+					VariableSourceGenerator.create("message").setValue("\"Company name should not be empty\"")
+				)
+			)
+		).addAnnotation(
+				AnnotationSourceGenerator.create(NotNull.class)
+		).addAnnotation(
+				AnnotationSourceGenerator.create(SuppressWarnings.class).addParameter(VariableSourceGenerator.create("\"unchecked\""))
+		).addModifier(
+			Modifier.PUBLIC
+		)
+		.addField(VariableSourceGenerator.create(long.class, "serialVersionUID").addModifier(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL))
+		.addField(
+			VariableSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create(
+					Map.class
+				).addGeneric(
+					GenericSourceGenerator.create(String.class).addAnnotation(
+						AnnotationSourceGenerator.create(NotEmpty.class)
+					)
+				).addGeneric(
+					GenericSourceGenerator.create(String.class)
+				),
+				"mapOne"
+			).addAnnotation(AnnotationSourceGenerator.create(NotEmpty.class))
+			.setValue(
+				BodySourceGenerator.createSimple().addCode("new").addElement(
+					ClassSourceGenerator.create(
+						TypeDeclarationSourceGenerator.create(HashMap.class).addGeneric(
+							GenericSourceGenerator.create(String.class),
+							GenericSourceGenerator.create(String.class)
+					).setAnonymous(true)
+					).addMethod(
+						FunctionSourceGenerator.create("get")
+						.setReturnType(TypeDeclarationSourceGenerator.create(String.class))
+						.addModifier(Modifier.PUBLIC)
+						.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Object.class), "key"))
+						.addOuterCodeLine("@Override")
+						.addBodyCodeLine("return super.get(key);")
+					)
+				)
+			)
+		)
+		.addField(
+			VariableSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create(
+					Map.class
+				).addGeneric(
+					GenericSourceGenerator.create(String.class)
+				).addGeneric(
+					GenericSourceGenerator.create(String.class)
+				),
+				"mapTwo"
+			)
+		)
+		.addConstructor(
+			FunctionSourceGenerator.create().addBodyCode("mapTwo = ").addBodyElement(
+				BodySourceGenerator.createSimple().addCode("new").addElement(
+					ClassSourceGenerator.create(
+						TypeDeclarationSourceGenerator.create(HashMap.class).addGeneric(
+							GenericSourceGenerator.create(String.class),
+							GenericSourceGenerator.create(String.class)
+					).setAnonymous(true)
+					).addMethod(
+						FunctionSourceGenerator.create("get")
+						.setReturnType(TypeDeclarationSourceGenerator.create(String.class))
+						.addModifier(Modifier.PUBLIC)
+						.addParameter(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Object.class), "key"))
+						.addOuterCodeLine("@Override")
+						.addBodyCodeLine("return super.get(key);")
+					)
+				)		
+			).addBodyCode(";")
+			
+		)
+		.addStaticInitializerElement(BodySourceGenerator.createSimple().setElementPrefix("\t").addCodeLine("serialVersionUID = 1L;"))
+		.addMethod(
+			FunctionSourceGenerator.create("now")
+			.setTypeDeclaration(
+				TypeDeclarationSourceGenerator.create(
+					GenericSourceGenerator.create("T").expands(
+						TypeDeclarationSourceGenerator.create(Cloneable.class),
+						TypeDeclarationSourceGenerator.create(Serializable.class)
+					)
+				)
+			)
+			.setReturnType(TypeDeclarationSourceGenerator.create(Comparable.class).addGeneric(GenericSourceGenerator.create("T")))
+			.addModifier(Modifier.PUBLIC)
+			.addOuterCodeLine("//Comment")
+			.addBodyElement(
+				VariableSourceGenerator.create(
+					TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true),
+					"dateSupplier"
+				).setValue(
+					BodySourceGenerator.createSimple().addCode("new").addElement(
+						ClassSourceGenerator.create(
+							TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true)
+							.setAnonymous(true)
+						).addMethod(
+							FunctionSourceGenerator.create("get")
+							.setReturnType(TypeDeclarationSourceGenerator.create(Date.class))
+							.addModifier(Modifier.PUBLIC)
+							.addOuterCodeLine("@Override")
+							.addBodyCodeLine("return new Date();")
+						)
+					)
+				
+				)
+			).addBodyCodeLine("return (Comparable<T>)dateSupplier.get();")
+		).addConcretizedType(
+			Serializable.class
+		).expands(Object.class);
 	}
 }
