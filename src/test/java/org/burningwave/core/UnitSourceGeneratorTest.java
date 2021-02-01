@@ -218,7 +218,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
                 .addOuterCodeLine("//Comment")
                 .addBodyCodeLine("Supplier<Date> dateSupplier = new").addBodyElement(
                 	ClassSourceGenerator.create(
-                		TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class))
+                		TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true)
                 		.setAnonymous(true)
                 	).addMethod(
 	                    FunctionSourceGenerator.create("get")

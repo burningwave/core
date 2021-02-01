@@ -35,6 +35,8 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
+	
+	private boolean useFullyQualifiedName;
 	private Boolean publicFlag;
 	private String name;
 	private String simpleName;
@@ -109,11 +111,16 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
+	public TypeDeclarationSourceGenerator useFullyQualifiedName(boolean flag) {
+		this.useFullyQualifiedName = flag;
+		return this;
+	}
+	
 	String getName() {
 		return name;
 	}
 
-	public String getSimpleName() {
+	String getSimpleName() {
 		return simpleName;
 	}
 	
@@ -125,7 +132,9 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	
 	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
-		types.add(this);
+		if (!(useFullyQualifiedName && name != null)) {
+			types.add(this);
+		}
 		Optional.ofNullable(generics).ifPresent(generics -> {
 			generics.forEach(generic -> {
 				types.addAll(generic.getTypesDeclarations());
@@ -140,7 +149,11 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	
 	@Override
 	public String make() {
-		return getOrEmpty(simpleName)  + 
+		return 
+			(useFullyQualifiedName && name != null ?
+				getOrEmpty(name) :
+				getOrEmpty(simpleName)
+			)  + 
 			Optional.ofNullable(generics).map(generics -> 
 				"<" + getOrEmpty(generics, COMMA + EMPTY_SPACE) + ">"
 			).orElseGet(() -> "") +

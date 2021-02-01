@@ -62,16 +62,14 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 			unitSourceGenerators.addAll(unitsCode);
 		}
 		compilationConfigSupplier = (compileConfig) -> {
-			Collection<String> sources = new HashSet<>();
 			for (UnitSourceGenerator unitCode : this.unitSourceGenerators) {
 				unitCode.getAllClasses().entrySet().forEach(entry -> {
 					if (virtualizeClasses) {
 						entry.getValue().addConcretizedType(TypeDeclarationSourceGenerator.create(Virtual.class));
 					}
 				});
-				sources.add(unitCode.make());
 			}
-			return Compilation.Config.withSources(sources);
+			return Compilation.Config.forUnitSourceGenerators(unitSourceGenerators);
 		};
 	}
 	
