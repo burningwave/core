@@ -36,6 +36,7 @@ import java.util.Optional;
 
 public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	
+	private boolean isVarArgs;
 	private boolean useFullyQualifiedName;
 	private Boolean publicFlag;
 	private String name;
@@ -74,13 +75,7 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		return new TypeDeclarationSourceGenerator().addGeneric(generics);
 	}
 	
-	public static TypeDeclarationSourceGenerator createAnonymous(GenericSourceGenerator... generics) {
-		TypeDeclarationSourceGenerator typeDeclarationSG = new TypeDeclarationSourceGenerator().addGeneric(generics);
-		typeDeclarationSG.parametersForAnonymousClass = BodySourceGenerator.create().setDelimiters("(", ")").setElementPrefix("");
-		return typeDeclarationSG;
-	}
-	
-	public TypeDeclarationSourceGenerator setAnonymous(boolean flag) {
+	public TypeDeclarationSourceGenerator setAsAnonymous(boolean flag) {
 		if (flag) {
 			if (parametersForAnonymousClass == null) {
 				parametersForAnonymousClass = BodySourceGenerator.create().setDelimiters("(", ")").setElementPrefix("");
@@ -91,13 +86,18 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
+	public TypeDeclarationSourceGenerator setAsVarArgs(boolean flag) {
+		this.isVarArgs = flag;
+		return this;
+	}
+	
 	boolean isAnonymous() {
 		return parametersForAnonymousClass != null;
 	}
 	
 	public TypeDeclarationSourceGenerator addParameterForAnonymousType(String... parameters) {
 		if (parametersForAnonymousClass == null) {
-			setAnonymous(true);
+			setAsAnonymous(true);
 		}
 		if (!parametersForAnonymousClass.make().equals("( )")) {
 			parametersForAnonymousClass.addCode(",");
@@ -157,6 +157,7 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 			Optional.ofNullable(generics).map(generics -> 
 				"<" + getOrEmpty(generics, COMMA + EMPTY_SPACE) + ">"
 			).orElseGet(() -> "") +
-			Optional.ofNullable(parametersForAnonymousClass).map(BodySourceGenerator::make).orElseGet(() -> "");
+			Optional.ofNullable(parametersForAnonymousClass).map(BodySourceGenerator::make).orElseGet(() -> "") +
+			(isVarArgs ? "..." : "");
 	}	
 }
