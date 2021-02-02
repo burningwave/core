@@ -231,6 +231,13 @@ public class MethodsTest extends BaseTest {
 	}
 	
 	@Test
+	public void invokeDirectMethodWithArrayTestOne() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invokeDirect(new Service(), "withArray", new Object[] {new String[] {"methodWithArray"}});
+		});
+	}
+	
+	@Test
 	public void findAllTestOne() {
         testNotEmpty(() -> 
 	        Methods.findAll(
