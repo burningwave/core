@@ -897,26 +897,29 @@ public class Classes implements MembersRetriever {
 		public Collection<String> addClassPaths(ClassLoader classLoader, Collection<String>... classPathCollections) {
 			return addClassPaths(classLoader, (path) -> true, classPathCollections);
 		}
-
-		public Collection<String> getAllLoadedPaths(ClassLoader classLoader) {
-			return getAllLoadedPaths(classLoader, true);
-		}
 		
-		public Collection<String> getAllLoadedPaths(ClassLoader classLoader, boolean considerThePathsLoadedByURLClassLoaderPathsAndBuiltinClassLoaderAsLoadeded) {
-			Collection<String> allLoadedPaths = new LinkedHashSet<>();
-			while((classLoader = getParent(classLoader)) != null) {
-				if (classLoader instanceof PathScannerClassLoader) {
-					allLoadedPaths.addAll(((PathScannerClassLoader)classLoader).loadedPaths);
-				} else if (considerThePathsLoadedByURLClassLoaderPathsAndBuiltinClassLoaderAsLoadeded) {
-					URL[] resUrl = getURLs(classLoader);
-					if (resUrl != null) {
-						for (int i = 0; i < resUrl.length; i++) {
-							allLoadedPaths.add(Paths.convertURLPathToAbsolutePath(resUrl[i].getPath()));
-						}
+		public Collection<String> getLoadedPaths(ClassLoader classLoader) {
+			Collection<String> paths = new LinkedHashSet<>();
+			if (classLoader instanceof PathScannerClassLoader) {
+				paths.addAll(((PathScannerClassLoader)classLoader).loadedPaths);
+			} else {
+				URL[] resUrl = getURLs(classLoader);
+				if (resUrl != null) {
+					for (int i = 0; i < resUrl.length; i++) {
+						paths.add(Paths.convertURLPathToAbsolutePath(resUrl[i].getPath()));
 					}
 				}
 			}
-			return allLoadedPaths;
+			return paths;
+		}
+		
+		public Collection<String> getAllLoadedPaths(ClassLoader classLoader) {
+			Collection<String> paths = new LinkedHashSet<>();
+			while(classLoader != null) {
+				paths.addAll(getLoadedPaths(classLoader));
+				classLoader = getParent(classLoader);
+			}
+			return paths;
 		}
 		
 		public boolean isBuiltinClassLoader(ClassLoader classLoader) {
