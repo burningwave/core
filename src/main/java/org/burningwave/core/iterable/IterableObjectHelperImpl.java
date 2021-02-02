@@ -374,7 +374,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								Pattern.compile(regExpPattern), stringValue 
 							);
 							if (placeHolderedValues.isEmpty()) {
-								regExpPattern = "("+Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?)";
+								regExpPattern = "(.*?"+ Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?)";
 								placeHolderedValues = Strings.extractAllGroups(
 									Pattern.compile(regExpPattern), stringValue 
 								);
