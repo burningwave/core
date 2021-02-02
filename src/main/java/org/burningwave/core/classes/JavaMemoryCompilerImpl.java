@@ -234,7 +234,13 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			}
 		} catch (Throwable exc) {
 			if (!options.isEmpty()) {
-				ManagedLoggersRepository.logInfo(getClass()::getName, "Used options:\n\t {}", String.join("\n\t", options));
+				ManagedLoggersRepository.logInfo(getClass()::getName, "Used options:");
+				for (String option : options) {
+					for (String split : option.split(";")) {
+						ManagedLoggersRepository.logInfo(getClass()::getName, "\n\t", String.join("\n\t", split));
+					}
+				}
+				
 			}
 			throw exc;
 		}
