@@ -232,6 +232,11 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 					)
 				);
 			}
+		} catch (Throwable exc) {
+			if (!options.isEmpty()) {
+				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred with options:\n\t {}", String.join("\n\t", options));
+			}
+			throw exc;
 		}
 	}	
 	
