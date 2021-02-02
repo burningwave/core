@@ -37,6 +37,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -858,16 +859,16 @@ public class Classes implements MembersRetriever {
 		public Collection<String> addClassPaths(ClassLoader classLoader, Predicate<String> checkForAddedClasses, Collection<String>... classPathCollections) {
 			if (!(classLoader instanceof URLClassLoader || isBuiltinClassLoader(classLoader) || classLoader instanceof PathScannerClassLoader)) {
 				if (!isItPossibleToAddClassPaths(classLoader)) {
-					Throwables.throwException(
-						"Could not add class paths to {} because the type {} is not supported",
-						Objects.getId(classLoader), classLoader.getClass()
+					throw new UnsupportedException(
+						Strings.compile("Could not add class paths to {} because the type {} is not supported",
+								Objects.getId(classLoader), classLoader.getClass())
 					);
 				} else {
 					return addClassPaths(getParent(classLoader), checkForAddedClasses, classPathCollections);
 				}
 			}
 			if (LowLevelObjectsHandler.isClassLoaderDelegate(classLoader)) {
-				return addClassPaths(Fields.getDirect(classLoader, "classLoader"));
+				return addClassPaths(Fields.getDirect(classLoader, "classLoader"), checkForAddedClasses, classPathCollections);
 			}
 			Collection<String> paths = new HashSet<>();
 			for (Collection<String> classPaths : classPathCollections) {
@@ -894,7 +895,7 @@ public class Classes implements MembersRetriever {
 		}
 		
 		public Collection<String> addClassPaths(ClassLoader classLoader, Collection<String>... classPathCollections) {
-			return addClassPaths(classLoader, (path) -> false, classPathCollections);
+			return addClassPaths(classLoader, (path) -> true, classPathCollections);
 		}
 
 		public Collection<String> getAllLoadedPaths(ClassLoader classLoader) {
@@ -980,6 +981,19 @@ public class Classes implements MembersRetriever {
 				Throwables.throwException("Could not close singleton instance {}", this);
 			}
 		}
+		
+		public static class UnsupportedException extends RuntimeException {
+			
+			private static final long serialVersionUID = 8964839983768809586L;
+
+			public UnsupportedException(String s) {
+				super(s);
+			}
+			
+			public UnsupportedException(String s, Throwable cause) {
+				super(s, cause);
+			}
+		}	
 	}
 
 }
