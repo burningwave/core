@@ -149,18 +149,8 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		return isAlreadyAdded;
 	}
 	
-	public ClassSourceGenerator addStaticInitializerCodeLine(String... codes) {
-		Optional.ofNullable(this.staticInitializer).orElseGet(() -> this.staticInitializer = BodySourceGenerator.create().setDelimiters("static {", "\n}").setElementPrefix("\t")).addCodeLine(codes);
-		return this;
-	}
-	
-	public ClassSourceGenerator addStaticInitializerCode(String... codes) {
-		Optional.ofNullable(this.staticInitializer).orElseGet(() -> this.staticInitializer = BodySourceGenerator.create().setDelimiters("static {\n", "\n}")).addCode(codes);
-		return this;
-	}
-	
-	public ClassSourceGenerator addStaticInitializerElement(BodySourceGenerator... generators) {
-		Optional.ofNullable(this.staticInitializer).orElseGet(() -> this.staticInitializer = BodySourceGenerator.create().setDelimiters("static {\n", "\n}")).addElement(generators);
+	public ClassSourceGenerator setStaticInitializer(BodySourceGenerator initializer) {
+		this.staticInitializer = initializer.setDelimiters("static {\n", "\n}").setElementPrefix("\t");
 		return this;
 	}
 	

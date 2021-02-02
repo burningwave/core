@@ -30,7 +30,9 @@ public class UnitSourceGeneratorTest extends BaseTest {
 	public void generateUnitTestOne() throws Throwable {
 		testDoesNotThrow(() -> {
 			UnitSourceGenerator unit = UnitSourceGenerator.create("code.generator.try");
-			unit.addClass(ClassSourceGenerator.createEnum(TypeDeclarationSourceGenerator.create("MyEnum")).addField(VariableSourceGenerator.create((TypeDeclarationSourceGenerator)null, "FIRST_VALUE")).addField(VariableSourceGenerator.create((TypeDeclarationSourceGenerator)null, "SECOND_VALUE")));
+			unit.addClass(ClassSourceGenerator.createEnum(TypeDeclarationSourceGenerator.create("MyEnum"))
+				.addField(VariableSourceGenerator.create((TypeDeclarationSourceGenerator)null, "FIRST_VALUE"))
+				.addField(VariableSourceGenerator.create((TypeDeclarationSourceGenerator)null, "SECOND_VALUE")));
 			FunctionSourceGenerator method = FunctionSourceGenerator.create("find").addModifier(Modifier.PUBLIC)
 					.setTypeDeclaration(TypeDeclarationSourceGenerator.create(GenericSourceGenerator.create("F"), GenericSourceGenerator.create("G")))
 					.setReturnType(TypeDeclarationSourceGenerator.create(Long.class))
@@ -62,7 +64,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 									.parentOf(TypeDeclarationSourceGenerator.create("Free").addGeneric(GenericSourceGenerator.create("S"))
 											.addGeneric(GenericSourceGenerator.create("Y")))))
 					.addModifier(Modifier.PUBLIC).expands(Object.class)
-					.addStaticInitializerCodeLine("System.out.println(\"Hello World\");")
+					.setStaticInitializer(BodySourceGenerator.create().addCodeLine("System.out.println(\"Hello World\");"))
 					.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Integer.class), "index1").setValue("new Integer(1)")
 							.addModifier(Modifier.PRIVATE).addOuterCodeLine("@Field").addOuterCodeLine("@Annotation2"))
 					.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Collection.class).addGeneric(GenericSourceGenerator.create("String").addOuterCode("@NotNull")), "collection")
@@ -245,7 +247,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 			).addBodyCode(";")
 			
 		)
-		.addStaticInitializerElement(BodySourceGenerator.createSimple().setElementPrefix("\t").addCodeLine("serialVersionUID = 1L;"))
+		.setStaticInitializer(BodySourceGenerator.create().addCodeLine("serialVersionUID = 1L;"))
 		.addMethod(
 			FunctionSourceGenerator.create("now")
 			.setTypeDeclaration(
