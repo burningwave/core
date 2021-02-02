@@ -504,7 +504,7 @@ static class MemoryFileObject extends SimpleJavaFileObject implements Component 
 			void addToClassPath(String path) {
 				if (Strings.isNotBlank(path)) {
 					if (blackListedClassPaths.contains(path)) {
-						logWarn("path {} is black listed", path);
+						logWarn("Could not add {} to class path because it is black listed", path);
 						return;
 					}
 					String classPath = Paths.clean(path);
