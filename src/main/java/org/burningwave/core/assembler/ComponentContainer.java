@@ -384,7 +384,8 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		return getOrCreate(JavaMemoryCompiler.class, () ->
 			JavaMemoryCompiler.create(
 				getPathHelper(),
-				getClassPathHelper()
+				getClassPathHelper(),
+				config
 			)
 		);
 	}

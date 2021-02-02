@@ -278,7 +278,8 @@ public interface ClassFactory {
 							((ClassFactoryImpl)this.classFactory).javaMemoryCompiler :
 							JavaMemoryCompiler.create(
 								((ClassFactoryImpl)this.classFactory).pathHelper,
-								classPathHelper
+								classPathHelper,
+								((ClassFactoryImpl)this.classFactory).config
 							);
 						this.compilationTask = compiler.compile(getCompilationConfig());
 					}

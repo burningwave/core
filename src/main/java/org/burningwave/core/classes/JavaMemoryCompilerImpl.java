@@ -66,27 +66,32 @@ import javax.tools.ToolProvider;
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.classes.JavaMemoryCompiler.Compilation.Config;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.iterable.Properties;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
-	private PathHelper pathHelper;
+	PathHelper pathHelper;
 	ClassPathHelper classPathHelper;
-	private JavaCompiler compiler;
+	JavaCompiler compiler;
 	FileSystemItem compiledClassesRepository;
+	Properties config;
 	
 	JavaMemoryCompilerImpl(
 		PathHelper pathHelper,
-		ClassPathHelper classPathHelper
+		ClassPathHelper classPathHelper,
+		Properties config
 	) {
 		this.pathHelper = pathHelper;
 		this.classPathHelper = classPathHelper;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
 		this.compiledClassesRepository = FileSystemItem.of(((ClassPathHelperImpl)classPathHelper).getOrCreateTemporaryFolder("compiledClassesRepository"));
+		this.config = config;
 	}	
 	
 	
@@ -96,10 +101,25 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			config.getSources(),
 			getClassPathsFrom(config),
 			getClassRepositoriesFrom(config),
+			getBlackListedClassPaths(config),
 			config.getCompiledClassesStorage(),
 			config.useTemporaryFolderForStoring()
 		);
 	}
+
+	private Collection<String> getBlackListedClassPaths(Config config) {
+		return IterableObjectHelper.merge(
+			config::getBlackListedClassPaths,
+			config::getAdditionalBlackListedClassPaths,
+			() -> {
+				Collection<String> blackListedClassPaths = pathHelper.getPaths(
+					Configuration.Key.BLACK_LISTED_CLASS_PATHS
+				);
+				return blackListedClassPaths;
+			}
+		);
+	}
+
 
 	Collection<String> getClassRepositoriesFrom(JavaMemoryCompiler.Compilation.Config config) {
 		return IterableObjectHelper.merge(
@@ -126,9 +146,10 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 	}
 	
 	private ProducerTask<JavaMemoryCompiler.Compilation.Result> compile(
-		Collection<String> sources, 
+		Collection<String> sources,
 		Collection<String> classPaths, 
 		Collection<String> classRepositoriesPaths,
+		Collection<String> blackListedClassPaths,
 		String compiledClassesStorage,
 		boolean useTemporaryFolderForStoring
 	) {	
@@ -140,7 +161,8 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 					this,
 					memorySources, 
 					new ArrayList<>(classPaths), 
-					new ArrayList<>(classRepositoriesPaths)
+					new ArrayList<>(classRepositoriesPaths),
+					new ArrayList<>(blackListedClassPaths)
 				)
 			) {
 				Map<String, ByteBuffer> compiledFiles = compile(context);
@@ -440,6 +462,7 @@ static class MemoryFileObject extends SimpleJavaFileObject implements Component 
 		static class Context implements Closeable, ManagedLogger {
 			
 			Collection<String> classPaths;
+			Collection<String> blackListedClassPaths;
 			Map<String, String> options;
 			Collection<MemorySource> sources;
 			private Collection<String> classRepositories;
@@ -451,11 +474,13 @@ static class MemoryFileObject extends SimpleJavaFileObject implements Component 
 				JavaMemoryCompiler javaMemoryCompiler,
 				Collection<MemorySource> sources,
 				Collection<String> classPaths,
-				Collection<String> classRepositories
+				Collection<String> classRepositories,
+				Collection<String>  blackListedClassPaths
 			) {
 				this.javaMemoryCompiler = javaMemoryCompiler;
 				options =  new LinkedHashMap<>();
 				this.classPaths = new HashSet<>();
+				this.blackListedClassPaths = new HashSet<>(blackListedClassPaths);
 				this.sources = sources;
 				if (classPaths != null) {
 					for(String classPath : classPaths) {
@@ -470,13 +495,18 @@ static class MemoryFileObject extends SimpleJavaFileObject implements Component 
 				JavaMemoryCompiler javaMemoryCompiler,
 				Collection<MemorySource> sources,
 				Collection<String> classPaths,
-				Collection<String> classRepositories
+				Collection<String> classRepositories,
+				Collection<String> blackListedClassPaths
 			) {
-				return new Context(javaMemoryCompiler, sources, classPaths, classRepositories);
+				return new Context(javaMemoryCompiler, sources, classPaths, classRepositories, blackListedClassPaths);
 			}
 			
 			void addToClassPath(String path) {
 				if (Strings.isNotBlank(path)) {
+					if (blackListedClassPaths.contains(path)) {
+						logWarn("path {} is black listed", path);
+						return;
+					}
 					String classPath = Paths.clean(path);
 					options.put("-classpath", Optional.ofNullable(options.get("-classpath")).orElse("") + classPath + System.getProperty("path.separator"));
 					classPaths.add(classPath);
