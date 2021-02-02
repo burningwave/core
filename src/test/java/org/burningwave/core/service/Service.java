@@ -1,5 +1,7 @@
 package org.burningwave.core.service;
 
+import java.util.Arrays;
+
 import org.burningwave.core.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,6 +113,10 @@ public class Service implements Component {
 	
 	public static void staticAccept(Service service, String value_01, String value_02, String value_03) {
 		LOGGER.info("QuadConsumer: " + value_01 + " " + value_02 + " " + value_03);
+	}
+	
+	public void withArray(String[] values) {
+		LOGGER.info("withArray: " + String.join(", ", Arrays.asList(values)));
 	}
 	
 }

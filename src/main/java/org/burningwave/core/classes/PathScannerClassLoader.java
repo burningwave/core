@@ -54,7 +54,6 @@ import org.burningwave.core.io.PathHelper;
 
 
 public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryClassLoader {
-	Collection<String> allLoadedPaths;
 	Collection<String> loadedPaths;
 	PathHelper pathHelper;
 	FileSystemItem.Criteria classFileCriteriaAndConsumer;
@@ -97,7 +96,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	) {
 		super(parentClassLoader);
 		this.pathHelper = pathHelper;
-		this.allLoadedPaths = ConcurrentHashMap.newKeySet();
 		this.loadedPaths = ConcurrentHashMap.newKeySet();
 		this.classFileCriteriaAndConsumer = scanFileCriteria.createCopy().and().allFileThat((child, pathFIS) -> {
 			JavaClass.use(child.toByteBuffer(), javaClass ->
@@ -126,9 +124,9 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		Collection<String> scannedPaths = new HashSet<>();
 		try {
 			for (String path : paths) {
-				if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
+				if (checkForAddedClasses.test(path) || !hasBeenLoaded(path)) {
 					Synchronizer.execute(instanceId + "_" + path, () -> {
-						if (checkForAddedClasses.test(path) || !hasBeenLoaded(path, !checkForAddedClasses.test(path))) {
+						if (checkForAddedClasses.test(path) || !hasBeenLoaded(path)) {
 							FileSystemItem pathFIS = FileSystemItem.ofPath(path);
 							if (checkForAddedClasses.test(path)) {
 								pathFIS.refresh();
@@ -140,7 +138,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 								);
 							}
 							loadedPaths.add(path);
-							allLoadedPaths.add(path);
 							scannedPaths.add(path);
 						}
 					});
@@ -255,18 +252,13 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	}
 	
 	public boolean hasBeenLoaded(String path) {
-		return hasBeenLoaded(path, true);
-	}
-	
-	public boolean hasBeenLoaded(String path, boolean considerURLClassLoaderPathsAsLoadedPaths) {
-		if (allLoadedPaths.contains(path)) {
+		if (loadedPaths.contains(path)) {
 			return true;
 		}
 		FileSystemItem pathFIS = FileSystemItem.ofPath(path);
-		for (String loadedPath : ClassLoaders.getAllLoadedPaths(this, considerURLClassLoaderPathsAsLoadedPaths)) {
+		for (String loadedPath : ClassLoaders.getAllLoadedPaths(this.getParent())) {
 			FileSystemItem loadedPathFIS = FileSystemItem.ofPath(loadedPath);
 			if (pathFIS.isChildOf(loadedPathFIS) || pathFIS.equals(loadedPathFIS)) {
-				allLoadedPaths.add(path);
 				return true;
 			}
 		}
@@ -279,8 +271,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			super.close();
 			this.loadedPaths.clear();
 			this.loadedPaths = null;
-			this.allLoadedPaths.clear();
-			this.allLoadedPaths = null;
 			pathHelper = null;
 			classFileCriteriaAndConsumer = null;
 		});

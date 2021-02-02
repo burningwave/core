@@ -34,8 +34,10 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -855,8 +857,18 @@ public class Classes implements MembersRetriever {
 		}
 		
 		public Collection<String> addClassPaths(ClassLoader classLoader, Predicate<String> checkForAddedClasses, Collection<String>... classPathCollections) {
+			if (!(classLoader instanceof URLClassLoader || isBuiltinClassLoader(classLoader) || classLoader instanceof PathScannerClassLoader)) {
+				if (!isItPossibleToAddClassPaths(classLoader)) {
+					throw new UnsupportedException(
+						Strings.compile("Could not add class paths to {} because the type {} is not supported",
+								Objects.getId(classLoader), classLoader.getClass())
+					);
+				} else {
+					return addClassPaths(getParent(classLoader), checkForAddedClasses, classPathCollections);
+				}
+			}
 			if (LowLevelObjectsHandler.isClassLoaderDelegate(classLoader)) {
-				return addClassPaths(Fields.getDirect(classLoader, "classLoader"));
+				return addClassPaths(Fields.getDirect(classLoader, "classLoader"), checkForAddedClasses, classPathCollections);
 			}
 			Collection<String> paths = new HashSet<>();
 			for (Collection<String> classPaths : classPathCollections) {
@@ -883,28 +895,31 @@ public class Classes implements MembersRetriever {
 		}
 		
 		public Collection<String> addClassPaths(ClassLoader classLoader, Collection<String>... classPathCollections) {
-			return addClassPaths(classLoader, (path) -> false, classPathCollections);
-		}
-
-		public Collection<String> getAllLoadedPaths(ClassLoader classLoader) {
-			return getAllLoadedPaths(classLoader, true);
+			return addClassPaths(classLoader, (path) -> true, classPathCollections);
 		}
 		
-		public Collection<String> getAllLoadedPaths(ClassLoader classLoader, boolean considerThePathsLoadedByURLClassLoaderPathsAndBuiltinClassLoaderAsLoadeded) {
-			Collection<String> allLoadedPaths = new LinkedHashSet<>();
-			while((classLoader = getParent(classLoader)) != null) {
-				if (classLoader instanceof PathScannerClassLoader) {
-					allLoadedPaths.addAll(((PathScannerClassLoader)classLoader).loadedPaths);
-				} else if (considerThePathsLoadedByURLClassLoaderPathsAndBuiltinClassLoaderAsLoadeded) {
-					URL[] resUrl = getURLs(classLoader);
-					if (resUrl != null) {
-						for (int i = 0; i < resUrl.length; i++) {
-							allLoadedPaths.add(Paths.convertURLPathToAbsolutePath(resUrl[i].getPath()));
-						}
+		public Collection<String> getLoadedPaths(ClassLoader classLoader) {
+			Collection<String> paths = new LinkedHashSet<>();
+			if (classLoader instanceof PathScannerClassLoader) {
+				paths.addAll(((PathScannerClassLoader)classLoader).loadedPaths);
+			} else {
+				URL[] resUrl = getURLs(classLoader);
+				if (resUrl != null) {
+					for (int i = 0; i < resUrl.length; i++) {
+						paths.add(Paths.convertURLPathToAbsolutePath(resUrl[i].getPath()));
 					}
 				}
 			}
-			return allLoadedPaths;
+			return paths;
+		}
+		
+		public Collection<String> getAllLoadedPaths(ClassLoader classLoader) {
+			Collection<String> paths = new LinkedHashSet<>();
+			while(classLoader != null) {
+				paths.addAll(getLoadedPaths(classLoader));
+				classLoader = getParent(classLoader);
+			}
+			return paths;
 		}
 		
 		public boolean isBuiltinClassLoader(ClassLoader classLoader) {
@@ -969,6 +984,19 @@ public class Classes implements MembersRetriever {
 				Throwables.throwException("Could not close singleton instance {}", this);
 			}
 		}
+		
+		public static class UnsupportedException extends RuntimeException {
+			
+			private static final long serialVersionUID = 8964839983768809586L;
+
+			public UnsupportedException(String s) {
+				super(s);
+			}
+			
+			public UnsupportedException(String s, Throwable cause) {
+				super(s, cause);
+			}
+		}	
 	}
 
 }
