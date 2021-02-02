@@ -7,7 +7,7 @@ on:
     paths: 
       - "src/main/**.java"
       - "src/test/**.java"
-#      - ".github/workflows/**"
+      - ".github/workflows/**"
       - "**.properties"
       - "**.xml"
 
@@ -21,8 +21,8 @@ jobs:
       matrix:
 #        architecture: [x64, x64, x64, x64, x64]
         architecture: [x64]
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-#        os: [windows-latest]
+#        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [windows-latest]
         java: [8, 9, 10, 11, 12, 13, 14, 15, 16-ea, 17-ea]
     runs-on: ${{ matrix.os }}
     steps:
