@@ -42,14 +42,15 @@ import org.burningwave.core.Closeable;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.iterable.Properties;
 
 public interface JavaMemoryCompiler {
 	
 	public static class Configuration {
 		
 		public static class Key {
-			
 			public static final String CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-paths";
+			public static final String BLACK_LISTED_CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-paths.black-listed";
 			public static final String ADDITIONAL_CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.additional-class-paths";
 			public static final String CLASS_REPOSITORIES =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-repositories";
 			public static final String ADDITIONAL_CLASS_REPOSITORIES =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.additional-class-repositories";
@@ -71,6 +72,10 @@ public interface JavaMemoryCompiler {
 				"${" + PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.getPathsSeparator() +
 				"${" + Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.getPathsSeparator()
 			);
+			defaultValues.put(
+				Key.BLACK_LISTED_CLASS_PATHS,
+				"//${paths.main-class-paths}/..//children:.*?surefirebooter\\d{0,}\\.jar;"
+			);			
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
@@ -78,9 +83,10 @@ public interface JavaMemoryCompiler {
 	
 	public static JavaMemoryCompiler create(
 		PathHelper pathHelper,
-		ClassPathHelper classPathHelper
+		ClassPathHelper classPathHelper,
+		Properties config
 	) {
-		return new JavaMemoryCompilerImpl(pathHelper, classPathHelper);
+		return new JavaMemoryCompilerImpl(pathHelper, classPathHelper, config);
 	}
 
 	public ProducerTask<Compilation.Result> compile(Compilation.Config config);	
@@ -92,6 +98,9 @@ public interface JavaMemoryCompiler {
 			
 			private Collection<String> classPaths;
 			private Collection<String> additionalClassPaths;
+			
+			private Collection<String> blackListedClassPaths;
+			private Collection<String> additionalBlackListedClassPaths;
 			
 			private Collection<String> classRepositories;
 			private Collection<String> additionalClassRepositories;
@@ -232,7 +241,45 @@ public interface JavaMemoryCompiler {
 				return addClassRepositories(Arrays.asList(classPaths));
 			}
 
+		////////////////////
+			
 		////////////////////	
+			
+			@SafeVarargs
+			public final Config setBlackListedClassPaths(Collection<String>... classPathCollections) {
+				if (blackListedClassPaths == null) {
+					blackListedClassPaths = new HashSet<>();
+				}
+				for (Collection<String> classPathCollection : classPathCollections) {
+					blackListedClassPaths.addAll(classPathCollection);
+				}
+				return this;
+			}
+			
+			@SafeVarargs
+			public final Config setBlackListedClassPaths(String... classPaths) {
+				return setBlackListedClassPaths(Arrays.asList(classPaths));
+			}
+
+		////////////////////	
+			
+			@SafeVarargs
+			public final Config addBlackListedClassPaths(Collection<String>... classPathCollections) {
+				if (additionalBlackListedClassPaths == null) {
+					additionalBlackListedClassPaths = new HashSet<>();
+				}
+				for (Collection<String> classPathCollection : classPathCollections) {
+					additionalBlackListedClassPaths.addAll(classPathCollection);
+				}
+				return this;
+			}
+			
+			@SafeVarargs
+			public final Config addBlackListedClassPaths(String... classPaths) {
+				return addBlackListedClassPaths(Arrays.asList(classPaths));
+			}
+
+		////////////////////
 			
 			Collection<String> getSources() {
 				return sources;
@@ -252,6 +299,14 @@ public interface JavaMemoryCompiler {
 
 			Collection<String> getAdditionalClassRepositories() {
 				return additionalClassRepositories;
+			}
+			
+			Collection<String> getBlackListedClassPaths() {
+				return blackListedClassPaths;
+			}
+
+			Collection<String> getAdditionalBlackListedClassPaths() {
+				return additionalBlackListedClassPaths;
 			}
 			
 			boolean isStoringCompiledClassesEnabled() {

@@ -369,7 +369,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							} else {
 								replacements.add(valueObjects);
 							}
-							String regExpPattern = "("+Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?" + valuesSeparatorForSplitting +")";
+							String regExpPattern = "(.*?" +Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?" + valuesSeparatorForSplitting +")";
 							Map<Integer, List<String>> placeHolderedValues = Strings.extractAllGroups(
 								Pattern.compile(regExpPattern), stringValue 
 							);
