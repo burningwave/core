@@ -1253,6 +1253,8 @@ paths.hunters.default-search-config.paths=\
 #This variable is empty by default and can be valorized by developer and it is
 #included by 'paths.paths.java-memory-compiler.class-paths' property
 paths.java-memory-compiler.additional-class-paths=
+paths.java-memory-compiler.black-listed-class-paths=\
+	//${paths.main-class-paths}/..//children:.*?surefirebooter\d{0,}\.jar;
 #this variable indicates all the class paths used by the JavaMemoryCompiler
 #component for compiling
 paths.java-memory-compiler.class-paths=\
@@ -1262,8 +1264,6 @@ paths.java-memory-compiler.class-paths=\
 #This variable is empty by default and can be valorized by developer. and it is
 #included by 'paths.java-memory-compiler.class-repositories' property
 paths.java-memory-compiler.additional-class-repositories=
-paths.java-memory-compiler.class-paths.black-listed=\
-	//${paths.main-class-paths}/..//children:.*?surefirebooter\d{0,}\.jar;
 #All paths inserted here will be analyzed by JavaMemoryCompiler component in case 
 #of compilation failure to search for class paths of all classes imported by sources 
 paths.java-memory-compiler.class-repositories=\
