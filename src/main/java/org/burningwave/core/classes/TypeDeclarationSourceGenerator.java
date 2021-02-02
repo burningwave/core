@@ -42,7 +42,7 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	private String name;
 	private String simpleName;
 	private Collection<GenericSourceGenerator> generics;
-	private BodySourceGenerator parametersForAnonymousClass;
+	private BodySourceGenerator parameters;
 	
 	private TypeDeclarationSourceGenerator(String name, String simpleName) {
 		this.name = name;
@@ -75,13 +75,13 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		return new TypeDeclarationSourceGenerator().addGeneric(generics);
 	}
 	
-	public TypeDeclarationSourceGenerator setAsAnonymous(boolean flag) {
+	public TypeDeclarationSourceGenerator setAsParameterizable(boolean flag) {
 		if (flag) {
-			if (parametersForAnonymousClass == null) {
-				parametersForAnonymousClass = BodySourceGenerator.create().setDelimiters("(", ")").setElementPrefix("");
+			if (parameters == null) {
+				parameters = BodySourceGenerator.create().setDelimiters("(", ")").setElementPrefix("");
 			}
 		} else {
-			parametersForAnonymousClass = null;
+			parameters = null;
 		}
 		return this;
 	}
@@ -91,18 +91,33 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
-	boolean isAnonymous() {
-		return parametersForAnonymousClass != null;
+	boolean isParameterizable() {
+		return parameters != null;
 	}
 	
-	public TypeDeclarationSourceGenerator addParameterForAnonymousType(String... parameters) {
-		if (parametersForAnonymousClass == null) {
-			setAsAnonymous(true);
+	public TypeDeclarationSourceGenerator addParameter(String... parameters) {
+		if (this.parameters == null) {
+			setAsParameterizable(true);
 		}
-		if (!parametersForAnonymousClass.make().equals("( )")) {
-			parametersForAnonymousClass.addCode(",");
+		if (!this.parameters.make().equals("( )")) {
+			this.parameters.addCode(",");
 		}
-		parametersForAnonymousClass.addCode(String.join(", ", parameters));		
+		this.parameters.addCode(String.join(", ", parameters));		
+		return this;
+	}
+	
+	public TypeDeclarationSourceGenerator addParameter(SourceGenerator ... parameters) {
+		if (this.parameters == null) {
+			setAsParameterizable(true);
+		}
+		if (!this.parameters.make().equals("( )")) {
+			this.parameters.addCode(",");
+		}
+		for (int i = 0; i < parameters.length - 1; i++) {
+			this.parameters.addElement(parameters[i]);
+			this.parameters.addCode(",");
+		}
+		this.parameters.addElement(parameters[parameters.length - 1]);	
 		return this;
 	}
 	
@@ -140,6 +155,9 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 				types.addAll(generic.getTypesDeclarations());
 			});
 		});
+		Optional.ofNullable(this.parameters).ifPresent(parameters -> {
+			types.addAll(parameters.getTypeDeclarations());
+		});
 		return types;
 	}
 	
@@ -157,7 +175,7 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 			Optional.ofNullable(generics).map(generics -> 
 				"<" + getOrEmpty(generics, COMMA + EMPTY_SPACE) + ">"
 			).orElseGet(() -> "") +
-			Optional.ofNullable(parametersForAnonymousClass).map(BodySourceGenerator::make).orElseGet(() -> "") +
+			Optional.ofNullable(parameters).map(BodySourceGenerator::make).orElseGet(() -> "") +
 			(isVarArgs ? "..." : "");
 	}	
 }

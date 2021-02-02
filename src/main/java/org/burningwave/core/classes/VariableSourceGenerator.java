@@ -59,6 +59,10 @@ public class VariableSourceGenerator extends SourceGenerator.Abst {
 		return new VariableSourceGenerator(type, name);
 	}
 	
+	public static VariableSourceGenerator create(TypeDeclarationSourceGenerator type) {
+		return new VariableSourceGenerator(type, null);
+	}
+	
 	public static VariableSourceGenerator create(String name) {
 		return new VariableSourceGenerator(null, name);
 	}
