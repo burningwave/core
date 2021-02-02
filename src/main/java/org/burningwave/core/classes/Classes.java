@@ -34,6 +34,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
@@ -855,6 +856,16 @@ public class Classes implements MembersRetriever {
 		}
 		
 		public Collection<String> addClassPaths(ClassLoader classLoader, Predicate<String> checkForAddedClasses, Collection<String>... classPathCollections) {
+			if (!(classLoader instanceof URLClassLoader || isBuiltinClassLoader(classLoader) || classLoader instanceof PathScannerClassLoader)) {
+				if (!isItPossibleToAddClassPaths(classLoader)) {
+					Throwables.throwException(
+						"Could not add class paths to {} because the type {} is not supported",
+						Objects.getId(classLoader), classLoader.getClass()
+					);
+				} else {
+					return addClassPaths(getParent(classLoader), checkForAddedClasses, classPathCollections);
+				}
+			}
 			if (LowLevelObjectsHandler.isClassLoaderDelegate(classLoader)) {
 				return addClassPaths(Fields.getDirect(classLoader, "classLoader"));
 			}
