@@ -1277,7 +1277,7 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 	<ul>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Performing-tasks-in-parallel-with-different-priorities">
-			<b>USE CASE</b>: performing tasks in parallel with different priorities
+			<b>USE CASE</b>: performing different tasks in parallel and with different priorities
 			</a>
 		</li>
 	</ul>
@@ -1293,7 +1293,7 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 	</ul>
 </details>
 <details open>
-	<summary></a><b>ClassHunter</b><a id="class-hunter-examples" href="#class-hunter-examples">&nbsp;</summary>
+	<summary><b>ClassHunter</b></summary>
 	<ul>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/In-depth-look-to-ClassHunter-and-configuration-guide">
@@ -1302,12 +1302,12 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 		</li>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/How-to-retrieve-all-classes-of-the-classpath">
-			<b>USE CASE</b>: how to retrieve all classes of the classpath
+			<b>USE CASE</b>: retrieving  all classes of the classpath
 			</a>
 		</li>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/How-retrieve-all-classes-that-implement-one-or-more-interfaces">
-			<b>USE CASE</b>: how to retrieve all classes that implement one or more interfaces
+			<b>USE CASE</b>: retrieving all classes that implement one or more interfaces
 			</a>
 		</li>
 		<li>
@@ -1317,7 +1317,7 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 		</li>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/How-to-search-for-all-classes-that-have-package-name-that-matches-a-regex">
-			<b>USE CASE</b>: how to search for all classes that have package name that matches a regex
+			<b>USE CASE</b>: searching for all classes that have package name that matches a regex
 			</a>
 		</li>
 		<li>
@@ -1337,12 +1337,12 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 		</li>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/How-to-search-for-all-classes-with-a-constructor-that-takes-a-specific-type-as-first-parameter-and-with-at-least-2-methods-that-begin-for-a-given-string">
-			<b>USE CASE</b>: how to search for all classes with a constructor that takes a specific type as first parameter and with at least 2 methods that begin for a given string
+			<b>USE CASE</b>: searching for all classes with a constructor that takes a specific type as first parameter and with at least 2 methods that begin for a given string
 			</a>
 		</li>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/How-to-search-for-all-classes-with-methods-whose-name-begins-for-a-given-string-and-that-takes-a-specific-type-as-its-first-parameter">
-			<b>USE CASE</b>: how to search for all classes with methods whose name begins for a given string and that takes a specific type as its first parameter
+			<b>USE CASE</b>: searching for all classes with methods whose name begins for a given string and that takes a specific type as its first parameter
 			</a>
 		</li>
 		<li>
@@ -1413,21 +1413,31 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 	</ul>
 </details>
 <details open>
-	<summary><b>Methods</b></summary>
-	<ul>
-		<li>
-			<a href="https://github.com/burningwave/core/wiki/Handling-privates-and-all-other-methods-of-an-object">
-			<b>USE CASE</b>: handling privates and all other methods of an object
-			</a>
-		</li>
-	</ul>
-</details>
-<details open>
 	<summary><b>IterableObjectHelper</b></summary>
 	<ul>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Retrieving-placeholdered-items-from-map-and-properties-file">
 			<b>USE CASE</b>: retrieving placeholdered items from map and properties file
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
+	<summary><b>JavaMemoryCompiler</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/How-to-compile-sources-at-runtime">
+			<b>USE CASE</b>: compiling sources at runtime
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
+	<summary><b>Methods</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/Handling-privates-and-all-other-methods-of-an-object">
+			<b>USE CASE</b>: handling privates and all other methods of an object
 			</a>
 		</li>
 	</ul>
@@ -1448,6 +1458,16 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Getting-and-setting-properties-of-a-Java-bean-through-path">
 			<b>USE CASE</b>: getting and setting properties of a Java bean through path
+			</a>
+		</li>
+	</ul>
+</details>
+<details open>
+	<summary><b>UnitSourceGenerator</b></summary>
+	<ul>
+		<li>
+			<a href="https://github.com/burningwave/core/wiki/How-to-generate-sources-at-runtime">
+			<b>USE CASE</b>: generating sources at runtime
 			</a>
 		</li>
 	</ul>
