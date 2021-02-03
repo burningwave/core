@@ -179,19 +179,15 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		String arraysDelimiters = "";
 		if (usingFullyQualifiedName) {
 			name = this.name;
-			if (isArray()) {
-				name = name.substring(name.indexOf("[L") + 2, name.lastIndexOf(";"));
-				arraysDelimiters = "[]";
-				for (int i = 0; i < (this.name.substring(0, this.name.lastIndexOf("[") + 1).length() - 1); i++) {
-					arraysDelimiters += "[]";
-				}
-			}
 		} else if (simpleName != null) {
 			name = simpleName;
-			if (isArray()) {
-				name = simpleName.substring(0, simpleName.indexOf("["));
-				arraysDelimiters = simpleName.substring(simpleName.indexOf("["));
+		}
+		if (isArray()) {
+			long dimension = name.chars().filter(ch -> ch == '[').count();
+			for (long i = 0; i < dimension; i++) {
+				arraysDelimiters += "[]";
 			}
+			name = name.replace("[L", "").replace("[", "").replace("]", "").replace(";", "");
 		}
 		return name + 
 			Optional.ofNullable(generics).map(generics -> 

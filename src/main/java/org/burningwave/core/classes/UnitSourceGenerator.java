@@ -165,8 +165,8 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	private String normalize(String imprt) {
-		if (imprt.contains("[L")) {
-			imprt = imprt.substring(imprt.indexOf("[L") + 2, imprt.lastIndexOf(";"));
+		if (imprt.contains("[")) {
+			imprt = imprt.replace("[L", "").replace("[", "").replace("]", "").replace(";", "");
 		}
 		return imprt;
 	}
