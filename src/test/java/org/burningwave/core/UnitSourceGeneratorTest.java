@@ -398,11 +398,11 @@ public class UnitSourceGeneratorTest extends BaseTest {
 				)
 			)
 		).addField(
-			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Supplier.class)
+			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Supplier[].class).useFullyQualifiedName(true)
 			.addGeneric(GenericSourceGenerator.create(Date.class)), "dateSupplier")
 			.addModifier(Modifier.PRIVATE)
 		).addConstructor(FunctionSourceGenerator.create().addParameter(
-			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Supplier.class).setAsVarArgs(true)
+			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Supplier.class).setAsVarArgs(true).useFullyQualifiedName(true)
 			.addGeneric(GenericSourceGenerator.create(Date.class)), "dateSupplier")).addBodyCodeLine("this.dateSupplier = dateSupplier;")
 		).addMethod(FunctionSourceGenerator.create("toLowerCase").addModifier(Modifier.ABSTRACT | Modifier.PUBLIC).setReturnType(String.class));
 	}

@@ -139,9 +139,7 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	
 	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
-		if (!(useFullyQualifiedName && name != null)) {
-			types.add(this);
-		}
+		types.add(this);
 		Optional.ofNullable(generics).ifPresent(generics -> {
 			generics.forEach(generic -> {
 				types.addAll(generic.getTypesDeclarations());
@@ -157,6 +155,10 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		return publicFlag;
 	}
 	
+	boolean useFullyQualifiedName() {
+		return this.useFullyQualifiedName;
+	}
+	
 	private String getParametersCode() {
 		if (parameters != null && parameters.isEmpty()) {
 			parameters.setDelimiters("(", ")");
@@ -164,17 +166,39 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		return Optional.ofNullable(parameters).map(BodySourceGenerator::make).orElseGet(() -> "");
 	}
 	
+	boolean isArray() {
+		return
+			(this.name != null && this.name.contains("[")) ||
+			(this.simpleName != null && this.simpleName.contains("["));
+	}
+	
 	@Override
 	public String make() {
-		return 
-			(useFullyQualifiedName && name != null ?
-				getOrEmpty(name) :
-				getOrEmpty(simpleName)
-			)  + 
+		boolean usingFullyQualifiedName = useFullyQualifiedName && this.name != null;
+		String name = "";
+		String arraysDelimiters = "";
+		if (usingFullyQualifiedName) {
+			name = this.name;
+			if (isArray()) {
+				name = name.substring(name.indexOf("[L") + 2, name.lastIndexOf(";"));
+				arraysDelimiters = "[]";
+				for (int i = 0; i < (this.name.substring(0, this.name.lastIndexOf("[") + 1).length() - 1); i++) {
+					arraysDelimiters += "[]";
+				}
+			}
+		} else if (simpleName != null) {
+			name = simpleName;
+			if (isArray()) {
+				name = simpleName.substring(0, simpleName.indexOf("["));
+				arraysDelimiters = simpleName.substring(simpleName.indexOf("["));
+			}
+		}
+		return name + 
 			Optional.ofNullable(generics).map(generics -> 
 				"<" + getOrEmpty(generics, COMMA + EMPTY_SPACE) + ">"
 			).orElseGet(() -> "") +
 			getParametersCode() +
+			arraysDelimiters +
 			(isVarArgs ? "..." : "");
 	}	
 }
