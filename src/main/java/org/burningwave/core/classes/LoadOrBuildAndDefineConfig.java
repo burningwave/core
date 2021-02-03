@@ -62,7 +62,6 @@ public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<L
 				.addClass(FunctionalInterfaceSourceGenerator.create().generateExecutor(executorName, bodySG))
 			);
 			this.body = bodySG;
-			body.setElementPrefix("\t");
 			modifyCompilationConfig(compileConfig -> compileConfig.storeCompiledClasses(false));
 		}
 		
