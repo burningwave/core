@@ -335,8 +335,9 @@ public class UnitSourceGeneratorTest extends BaseTest {
 					.addBodyCodeLine("return FIRST_VALUE.toString().toLowerCase();")
 				)
 			)
-		).addEnumConstant(VariableSourceGenerator.create(
-			TypeDeclarationSourceGenerator.create("SECOND_VALUE").addParameter(
+		).addEnumConstant(
+			VariableSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("SECOND_VALUE").addParameter(
 					BodySourceGenerator.createSimple().addCodeLine("new").addElement(
 						ClassSourceGenerator.create(
 							TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true)
@@ -352,19 +353,56 @@ public class UnitSourceGeneratorTest extends BaseTest {
 				)
 			).setValue(
 				BodySourceGenerator.create().addElement(
-						FunctionSourceGenerator.create("toLowerCase")
-						.addOuterCodeLine("@Override")
-						.addModifier(Modifier.PUBLIC)
-						.setReturnType(String.class)
-						.addBodyCodeLine("return SECOND_VALUE.toString().toLowerCase();")
+					FunctionSourceGenerator.create("toLowerCase")
+					.addOuterCodeLine("@Override")
+					.addModifier(Modifier.PUBLIC)
+					.setReturnType(String.class)
+					.addBodyCodeLine("return SECOND_VALUE.toString().toLowerCase();")
+				)
+			)
+		).addEnumConstant(
+			VariableSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("THIRD_VALUE").addParameter(
+					BodySourceGenerator.createSimple().addCodeLine("new").addElement(
+						ClassSourceGenerator.create(
+							TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true)
+							.setAsParameterizable(true)
+						).addMethod(
+							FunctionSourceGenerator.create("get")
+							.setReturnType(TypeDeclarationSourceGenerator.create(Date.class))
+							.addModifier(Modifier.PUBLIC)
+							.addOuterCodeLine("@Override")
+							.addBodyCodeLine("return new Date();")
+						)
+					),
+					BodySourceGenerator.createSimple().addCodeLine("new").addElement(
+						ClassSourceGenerator.create(
+							TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true)
+							.setAsParameterizable(true)
+						).addMethod(
+							FunctionSourceGenerator.create("get")
+							.setReturnType(TypeDeclarationSourceGenerator.create(Date.class))
+							.addModifier(Modifier.PUBLIC)
+							.addOuterCodeLine("@Override")
+							.addBodyCodeLine("return new Date();")
+						)
 					)
 				)
+			).setValue(
+				BodySourceGenerator.create().addElement(
+					FunctionSourceGenerator.create("toLowerCase")
+					.addOuterCodeLine("@Override")
+					.addModifier(Modifier.PUBLIC)
+					.setReturnType(String.class)
+					.addBodyCodeLine("return SECOND_VALUE.toString().toLowerCase();")
+				)
+			)
 		).addField(
 			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Supplier.class)
 			.addGeneric(GenericSourceGenerator.create(Date.class)), "dateSupplier")
 			.addModifier(Modifier.PRIVATE)
 		).addConstructor(FunctionSourceGenerator.create().addParameter(
-			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Supplier.class)
+			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Supplier.class).setAsVarArgs(true)
 			.addGeneric(GenericSourceGenerator.create(Date.class)), "dateSupplier")).addBodyCodeLine("this.dateSupplier = dateSupplier;")
 		).addMethod(FunctionSourceGenerator.create("toLowerCase").addModifier(Modifier.ABSTRACT | Modifier.PUBLIC).setReturnType(String.class));
 	}
