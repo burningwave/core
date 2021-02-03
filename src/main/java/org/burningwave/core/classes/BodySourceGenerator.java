@@ -66,6 +66,16 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
+	public BodySourceGenerator setStartingDelimiter(String startingDelimiter) {
+		this.startingDelimiter = startingDelimiter;
+		return this;
+	}
+
+	public BodySourceGenerator setEndingDelimiter(String endingDelimiter) {
+		this.endingDelimiter = endingDelimiter;
+		return this;
+	}
+	
 	public BodySourceGenerator addElement(SourceGenerator... generators) {
 		Optional.ofNullable(this.bodyGenerators).orElseGet(() -> this.bodyGenerators = new ArrayList<>());
 		for (SourceGenerator generator : generators) {
@@ -140,6 +150,25 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 		return this;		
 	}
 	
+	String getStartingDelimiter() {
+		return startingDelimiter;
+	}
+	
+	String getEndingDelimiter() {
+		return endingDelimiter;
+	}
+	
+	String getBodyCode() {
+		String elementPrefix = !isEmpty()? this.elementPrefix : null;
+		String bodyCode =
+			Optional.ofNullable(elementPrefix).orElseGet(() -> "") +
+			getOrEmpty(bodyGenerators, Optional.ofNullable(elementSeparator).orElse(EMPTY_SPACE))
+			.replaceAll("\n(.)", "\n" + Optional.ofNullable(elementPrefix).orElseGet(() -> "") + "$1");
+		return bodyCode;
+	}
+	
+	
+	
 	public BodySourceGenerator useType(String... classes) {
 		Optional.ofNullable(this.usedTypes).orElseGet(() -> this.usedTypes = new ArrayList<>());
 		for (String cls : classes) {			
@@ -150,12 +179,7 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 	
 	@Override
 	public String make() {
-		String elementPrefix = !isEmpty()? this.elementPrefix : null;
-		String bodyCode =
-			Optional.ofNullable(elementPrefix).orElseGet(() -> "") +
-			getOrEmpty(bodyGenerators, Optional.ofNullable(elementSeparator).orElse(EMPTY_SPACE))
-			.replaceAll("\n(.)", "\n" + Optional.ofNullable(elementPrefix).orElseGet(() -> "") + "$1");
-		return getOrEmpty(startingDelimiter, bodyCode, endingDelimiter);
+		return getOrEmpty(startingDelimiter, getBodyCode(), endingDelimiter);
 	}
 	
 }

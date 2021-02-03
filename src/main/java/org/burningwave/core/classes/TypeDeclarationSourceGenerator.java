@@ -78,7 +78,7 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	public TypeDeclarationSourceGenerator setAsParameterizable(boolean flag) {
 		if (flag) {
 			if (parameters == null) {
-				parameters = BodySourceGenerator.create().setDelimiters("(\n", "\n)").setElementPrefix("\t").setBodyElementSeparator(",");
+				parameters = BodySourceGenerator.create().setDelimiters("(\n", "\n)").setElementPrefix("\t").setBodyElementSeparator(", ");
 			}
 		} else {
 			parameters = null;
