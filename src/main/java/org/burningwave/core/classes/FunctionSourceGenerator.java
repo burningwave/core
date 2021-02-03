@@ -146,6 +146,11 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
+	public FunctionSourceGenerator setBody(BodySourceGenerator body) {
+		this.body = body.setDelimiters("{\n", "\n}").setElementPrefix("\t");
+		return this;
+	}
+	
 	public FunctionSourceGenerator addBodyCode(String... codes) {
 		Optional.ofNullable(this.body).orElseGet(() -> this.body = BodySourceGenerator.create());
 		this.body.addCode(codes);

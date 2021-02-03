@@ -30,7 +30,9 @@ public class UnitSourceGeneratorTest extends BaseTest {
 	public void generateUnitTestOne() throws Throwable {
 		testDoesNotThrow(() -> {
 			UnitSourceGenerator unit = UnitSourceGenerator.create("code.generator.try");
-			unit.addClass(ClassSourceGenerator.createEnum(TypeDeclarationSourceGenerator.create("MyEnum")).addField(VariableSourceGenerator.create((TypeDeclarationSourceGenerator)null, "FIRST_VALUE")).addField(VariableSourceGenerator.create((TypeDeclarationSourceGenerator)null, "SECOND_VALUE")));
+			unit.addClass(ClassSourceGenerator.createEnum(TypeDeclarationSourceGenerator.create("MyEnum"))
+				.addEnumConstant(VariableSourceGenerator.create("FIRST_VALUE"))
+				.addEnumConstant(VariableSourceGenerator.create("SECOND_VALUE")));
 			FunctionSourceGenerator method = FunctionSourceGenerator.create("find").addModifier(Modifier.PUBLIC)
 					.setTypeDeclaration(TypeDeclarationSourceGenerator.create(GenericSourceGenerator.create("F"), GenericSourceGenerator.create("G")))
 					.setReturnType(TypeDeclarationSourceGenerator.create(Long.class))
@@ -62,7 +64,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 									.parentOf(TypeDeclarationSourceGenerator.create("Free").addGeneric(GenericSourceGenerator.create("S"))
 											.addGeneric(GenericSourceGenerator.create("Y")))))
 					.addModifier(Modifier.PUBLIC).expands(Object.class)
-					.addStaticInitializerCodeLine("System.out.println(\"Hello World\");")
+					.setStaticInitializer(BodySourceGenerator.create().addCodeLine("System.out.println(\"Hello World\");"))
 					.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Integer.class), "index1").setValue("new Integer(1)")
 							.addModifier(Modifier.PRIVATE).addOuterCodeLine("@Field").addOuterCodeLine("@Annotation2"))
 					.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Collection.class).addGeneric(GenericSourceGenerator.create("String").addOuterCode("@NotNull")), "collection")
@@ -152,7 +154,14 @@ public class UnitSourceGeneratorTest extends BaseTest {
 	@Test
 	public void generateUnitTwo() throws Throwable {
 		UnitSourceGenerator unitSG = UnitSourceGenerator.create("org.burningwave.core.examples.classfactory").addClass(
-			createClass("MyExtendedClass").addInnerClass( createClass("MyExtendedInnerClass").addModifier(Modifier.STATIC))
+			createClass("MyExtendedClass")
+			.addInnerClass(
+				createClass("MyExtendedInnerClass")
+				.addModifier(Modifier.PUBLIC | Modifier.STATIC)
+				.addInnerClass(
+					createEnum().addModifier(Modifier.PUBLIC | Modifier.STATIC)
+				)
+			)
 		);
 		unitSG.storeToClassPath(System.getProperty("user.home") + "/Desktop/bw-tests");
 		System.out.println("\nGenerated code:\n" + unitSG.make());
@@ -199,7 +208,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 						TypeDeclarationSourceGenerator.create(HashMap.class).addGeneric(
 							GenericSourceGenerator.create(String.class),
 							GenericSourceGenerator.create(String.class)
-					).setAsAnonymous(true)
+					).setAsParameterizable(true)
 					).addMethod(
 						FunctionSourceGenerator.create("get")
 						.setReturnType(TypeDeclarationSourceGenerator.create(String.class))
@@ -232,7 +241,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 						TypeDeclarationSourceGenerator.create(HashMap.class).addGeneric(
 							GenericSourceGenerator.create(String.class),
 							GenericSourceGenerator.create(String.class)
-					).setAsAnonymous(true)
+					).setAsParameterizable(true)
 					).addMethod(
 						FunctionSourceGenerator.create("get")
 						.setReturnType(TypeDeclarationSourceGenerator.create(String.class))
@@ -245,7 +254,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 			).addBodyCode(";")
 			
 		)
-		.addStaticInitializerElement(BodySourceGenerator.createSimple().setElementPrefix("\t").addCodeLine("serialVersionUID = 1L;"))
+		.setStaticInitializer(BodySourceGenerator.create().addCodeLine("serialVersionUID = 1L;"))
 		.addMethod(
 			FunctionSourceGenerator.create("now")
 			.setTypeDeclaration(
@@ -268,7 +277,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 					BodySourceGenerator.createSimple().addCodeLine("new").addElement(
 						ClassSourceGenerator.create(
 							TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true)
-							.setAsAnonymous(true)
+							.setAsParameterizable(true)
 						).addMethod(
 							FunctionSourceGenerator.create("get")
 							.setReturnType(TypeDeclarationSourceGenerator.create(Date.class))
@@ -283,5 +292,141 @@ public class UnitSourceGeneratorTest extends BaseTest {
 		).addConcretizedType(
 			Serializable.class
 		).expands(Object.class);
+	}
+	
+	@Test
+	public void testEnum() {
+		try {
+			UnitSourceGenerator unitSG = UnitSourceGenerator.create("org.burningwave.core.examples.classfactory").addClass(
+				createEnum()				
+			);
+			unitSG.storeToClassPath(System.getProperty("user.home") + "/Desktop/bw-tests");
+			System.out.println("\nGenerated code:\n" + unitSG.make());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private ClassSourceGenerator createEnum() {
+		return ClassSourceGenerator.createEnum(TypeDeclarationSourceGenerator.create("MyEnum"))
+		.addEnumConstant(
+			VariableSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("FIRST_VALUE").addParameter(
+					BodySourceGenerator.createSimple().addCodeLine("new").addElement(
+						ClassSourceGenerator.create(
+							TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true)
+							.setAsParameterizable(true)
+						).addMethod(
+							FunctionSourceGenerator.create("get")
+							.setReturnType(TypeDeclarationSourceGenerator.create(Date.class))
+							.addModifier(Modifier.PUBLIC)
+							.addOuterCodeLine("@Override")
+							.addBodyCodeLine("return new Date();")
+						)
+					)
+				)
+			).setValue(
+				BodySourceGenerator.create().addElement(
+					FunctionSourceGenerator.create("toLowerCase")
+					.addOuterCodeLine("@Override")
+					.addModifier(Modifier.PUBLIC)
+					.setReturnType(String.class)
+					.addBodyCodeLine("return FIRST_VALUE.toString().toLowerCase();")
+				)
+			)
+		).addEnumConstant(
+			VariableSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("SECOND_VALUE").addParameter(
+					BodySourceGenerator.createSimple().addCodeLine("new").addElement(
+						ClassSourceGenerator.create(
+							TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true)
+							.setAsParameterizable(true)
+						).addMethod(
+							FunctionSourceGenerator.create("get")
+							.setReturnType(TypeDeclarationSourceGenerator.create(Date.class))
+							.addModifier(Modifier.PUBLIC)
+							.addOuterCodeLine("@Override")
+							.addBodyCodeLine("return new Date();")
+						)
+					)
+				)
+			).setValue(
+				BodySourceGenerator.create().addElement(
+					FunctionSourceGenerator.create("toLowerCase")
+					.addOuterCodeLine("@Override")
+					.addModifier(Modifier.PUBLIC)
+					.setReturnType(String.class)
+					.addBodyCodeLine("return SECOND_VALUE.toString().toLowerCase();")
+				)
+			)
+		).addEnumConstant(
+			VariableSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("THIRD_VALUE").addParameter(
+					BodySourceGenerator.createSimple().addCodeLine("new").addElement(
+						ClassSourceGenerator.create(
+							TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true)
+							.setAsParameterizable(true)
+						).addMethod(
+							FunctionSourceGenerator.create("get")
+							.setReturnType(TypeDeclarationSourceGenerator.create(Date.class))
+							.addModifier(Modifier.PUBLIC)
+							.addOuterCodeLine("@Override")
+							.addBodyCodeLine("return new Date();")
+						)
+					),
+					BodySourceGenerator.createSimple().addCodeLine("new").addElement(
+						ClassSourceGenerator.create(
+							TypeDeclarationSourceGenerator.create(Supplier.class).addGeneric(GenericSourceGenerator.create(Date.class)).useFullyQualifiedName(true)
+							.setAsParameterizable(true)
+						).addMethod(
+							FunctionSourceGenerator.create("get")
+							.setReturnType(TypeDeclarationSourceGenerator.create(Date.class))
+							.addModifier(Modifier.PUBLIC)
+							.addOuterCodeLine("@Override")
+							.addBodyCodeLine("return new Date();")
+						)
+					)
+				)
+			).setValue(
+				BodySourceGenerator.create().addElement(
+					FunctionSourceGenerator.create("toLowerCase")
+					.addOuterCodeLine("@Override")
+					.addModifier(Modifier.PUBLIC)
+					.setReturnType(String.class)
+					.addBodyCodeLine("return SECOND_VALUE.toString().toLowerCase();")
+				)
+			)
+		).addField(
+			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Supplier[].class).useFullyQualifiedName(true)
+			.addGeneric(GenericSourceGenerator.create(Date.class)), "dateSupplier")
+			.addModifier(Modifier.PRIVATE)
+		).addConstructor(FunctionSourceGenerator.create().addParameter(
+			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Supplier.class).setAsVarArgs(true).useFullyQualifiedName(true)
+			.addGeneric(GenericSourceGenerator.create(Date.class)), "dateSupplier")).addBodyCodeLine("this.dateSupplier = dateSupplier;")
+		).addMethod(FunctionSourceGenerator.create("toLowerCase").addModifier(Modifier.ABSTRACT | Modifier.PUBLIC).setReturnType(String.class));
+	}
+}
+
+enum MyEnum { 
+
+	FIRST_VALUE( new java.util.function.Supplier<Date>( ) { 
+	
+			@Override
+			public Date get() {
+				return new Date(); 
+			} 
+	
+		} , new java.util.function.Supplier<Date>( ) { 
+	
+			@Override
+			public Date get() {
+				return new Date(); 
+			} 
+	
+		} ),
+	SECOND_VALUE(null, null); 
+	MyEnum(java.util.function.Supplier<Date> f, java.util.function.Supplier<Date> g) {
+		
 	}
 }

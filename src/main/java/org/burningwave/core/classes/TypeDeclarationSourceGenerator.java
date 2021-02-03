@@ -42,7 +42,7 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	private String name;
 	private String simpleName;
 	private Collection<GenericSourceGenerator> generics;
-	private BodySourceGenerator parametersForAnonymousClass;
+	private BodySourceGenerator parameters;
 	
 	private TypeDeclarationSourceGenerator(String name, String simpleName) {
 		this.name = name;
@@ -75,13 +75,13 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		return new TypeDeclarationSourceGenerator().addGeneric(generics);
 	}
 	
-	public TypeDeclarationSourceGenerator setAsAnonymous(boolean flag) {
+	public TypeDeclarationSourceGenerator setAsParameterizable(boolean flag) {
 		if (flag) {
-			if (parametersForAnonymousClass == null) {
-				parametersForAnonymousClass = BodySourceGenerator.create().setDelimiters("(", ")").setElementPrefix("");
+			if (parameters == null) {
+				parameters = BodySourceGenerator.create().setDelimiters("(\n", "\n)").setElementPrefix("\t").setBodyElementSeparator(", ");
 			}
 		} else {
-			parametersForAnonymousClass = null;
+			parameters = null;
 		}
 		return this;
 	}
@@ -91,18 +91,25 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
-	boolean isAnonymous() {
-		return parametersForAnonymousClass != null;
+	boolean isParameterizable() {
+		return parameters != null;
 	}
 	
-	public TypeDeclarationSourceGenerator addParameterForAnonymousType(String... parameters) {
-		if (parametersForAnonymousClass == null) {
-			setAsAnonymous(true);
+	public TypeDeclarationSourceGenerator addParameter(String... parameters) {
+		if (this.parameters == null) {
+			setAsParameterizable(true);
 		}
-		if (!parametersForAnonymousClass.make().equals("( )")) {
-			parametersForAnonymousClass.addCode(",");
+		this.parameters.addCode(String.join(", ", parameters));		
+		return this;
+	}
+	
+	public TypeDeclarationSourceGenerator addParameter(SourceGenerator ... parameters) {
+		if (this.parameters == null) {
+			setAsParameterizable(true);
 		}
-		parametersForAnonymousClass.addCode(String.join(", ", parameters));		
+		for (int i = 0; i < parameters.length; i++) {
+			this.parameters.addElement(parameters[i]);
+		}
 		return this;
 	}
 	
@@ -132,13 +139,14 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	
 	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
-		if (!(useFullyQualifiedName && name != null)) {
-			types.add(this);
-		}
+		types.add(this);
 		Optional.ofNullable(generics).ifPresent(generics -> {
 			generics.forEach(generic -> {
 				types.addAll(generic.getTypesDeclarations());
 			});
+		});
+		Optional.ofNullable(this.parameters).ifPresent(parameters -> {
+			types.addAll(parameters.getTypeDeclarations());
 		});
 		return types;
 	}
@@ -147,17 +155,50 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		return publicFlag;
 	}
 	
+	boolean useFullyQualifiedName() {
+		return this.useFullyQualifiedName;
+	}
+	
+	private String getParametersCode() {
+		if (parameters != null && parameters.isEmpty()) {
+			parameters.setDelimiters("(", ")");
+		}
+		return Optional.ofNullable(parameters).map(BodySourceGenerator::make).orElseGet(() -> "");
+	}
+	
+	boolean isArray() {
+		return
+			(this.name != null && this.name.contains("[")) ||
+			(this.simpleName != null && this.simpleName.contains("["));
+	}
+	
 	@Override
 	public String make() {
-		return 
-			(useFullyQualifiedName && name != null ?
-				getOrEmpty(name) :
-				getOrEmpty(simpleName)
-			)  + 
+		boolean usingFullyQualifiedName = useFullyQualifiedName && this.name != null;
+		String name = "";
+		String arraysDelimiters = "";
+		if (usingFullyQualifiedName) {
+			name = this.name;
+			if (isArray()) {
+				name = name.substring(name.indexOf("[L") + 2, name.lastIndexOf(";"));
+				arraysDelimiters = "[]";
+				for (int i = 0; i < (this.name.substring(0, this.name.lastIndexOf("[") + 1).length() - 1); i++) {
+					arraysDelimiters += "[]";
+				}
+			}
+		} else if (simpleName != null) {
+			name = simpleName;
+			if (isArray()) {
+				name = simpleName.substring(0, simpleName.indexOf("["));
+				arraysDelimiters = simpleName.substring(simpleName.indexOf("["));
+			}
+		}
+		return name + 
 			Optional.ofNullable(generics).map(generics -> 
 				"<" + getOrEmpty(generics, COMMA + EMPTY_SPACE) + ">"
 			).orElseGet(() -> "") +
-			Optional.ofNullable(parametersForAnonymousClass).map(BodySourceGenerator::make).orElseGet(() -> "") +
+			getParametersCode() +
+			arraysDelimiters +
 			(isVarArgs ? "..." : "");
 	}	
 }

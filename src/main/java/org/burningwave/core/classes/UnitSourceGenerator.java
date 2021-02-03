@@ -114,9 +114,12 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 			Boolean isPublic = typeDeclaration.isPublic();
 			String className = typeDeclaration.getName();
 			if (isPublic == null || isPublic) {	
-				Optional.ofNullable(className).ifPresent(clsName -> {
-					imports.add("import " + normalize(clsName.replace("$", ".")) + ";");
-				});
+				boolean useFullyQualifiedName = typeDeclaration.useFullyQualifiedName();
+				if (!useFullyQualifiedName) {
+					Optional.ofNullable(className).ifPresent(clsName -> {
+						imports.add("import " + normalize(clsName.replace("$", ".")) + ";");
+					});
+				}
 			} else {
 				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not import {} because its modifier is not public", className);
 			}

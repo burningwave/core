@@ -45,6 +45,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	private TypeDeclarationSourceGenerator expandedType;
 	private String concretize;
 	private Collection<TypeDeclarationSourceGenerator> concretizedTypes;
+	private Collection<VariableSourceGenerator> enumConstants;
 	private Collection<VariableSourceGenerator> fields;
 	private Collection<FunctionSourceGenerator> constructors;
 	private Collection<FunctionSourceGenerator> methods;
@@ -149,18 +150,8 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		return isAlreadyAdded;
 	}
 	
-	public ClassSourceGenerator addStaticInitializerCodeLine(String... codes) {
-		Optional.ofNullable(this.staticInitializer).orElseGet(() -> this.staticInitializer = BodySourceGenerator.create().setDelimiters("static {", "\n}").setElementPrefix("\t")).addCodeLine(codes);
-		return this;
-	}
-	
-	public ClassSourceGenerator addStaticInitializerCode(String... codes) {
-		Optional.ofNullable(this.staticInitializer).orElseGet(() -> this.staticInitializer = BodySourceGenerator.create().setDelimiters("static {\n", "\n}")).addCode(codes);
-		return this;
-	}
-	
-	public ClassSourceGenerator addStaticInitializerElement(BodySourceGenerator... generators) {
-		Optional.ofNullable(this.staticInitializer).orElseGet(() -> this.staticInitializer = BodySourceGenerator.create().setDelimiters("static {\n", "\n}")).addElement(generators);
+	public ClassSourceGenerator setStaticInitializer(BodySourceGenerator initializer) {
+		this.staticInitializer = initializer.setDelimiters("static {\n", "\n}").setElementPrefix("\t");
 		return this;
 	}
 	
@@ -187,11 +178,22 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	public ClassSourceGenerator addField(VariableSourceGenerator... fields) {
 		Optional.ofNullable(this.fields).orElseGet(() -> this.fields = new ArrayList<>());
 		for (VariableSourceGenerator field : fields) {
+			field.setElementPrefix("\t");
 			this.fields.add(field);
-			if (classType.equals("enum")) {
-				field.setAssignementOperator(null);
-				field.setDelimiter(COMMA);
-			}
+		}
+		return this;
+	}
+	
+	public ClassSourceGenerator addEnumConstant(VariableSourceGenerator... enumConstants) {
+		Optional.ofNullable(this.enumConstants).orElseGet(() -> this.enumConstants = new ArrayList<>());
+		for (VariableSourceGenerator enumConstant : enumConstants) {
+			enumConstant.setAssignementOperator("");
+			enumConstant.setDelimiter(COMMA);
+			this.enumConstants.add(enumConstant);
+		}
+		((ArrayList<VariableSourceGenerator>)this.enumConstants).get((this.enumConstants.size() - 1)).setDelimiter(SEMICOLON);
+		if (this.enumConstants.size() > 1) {
+			((ArrayList<VariableSourceGenerator>)this.enumConstants).get((this.enumConstants.size() - 2)).setDelimiter(COMMA);
 		}
 		return this;
 	}
@@ -227,7 +229,11 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	private String getFieldsCode() {
-		return Optional.ofNullable(fields).map(flds -> "\t" + getOrEmpty(flds, "\n").replace("\n", "\n\t")).orElseGet(() -> null);
+		return Optional.ofNullable(fields).map(flds -> getOrEmpty(flds, "\n")).orElseGet(() -> null);
+	}
+	
+	private String getEnumConstantsCode() {
+		return Optional.ofNullable(enumConstants).map(enumCnts -> "\t" + getOrEmpty(enumCnts, "\n").replace("\n", "\n\t")).orElseGet(() -> null);
 	}
 	
 	private String getStaticInitializer() {
@@ -267,20 +273,22 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		String annotations = getAnnotations();
 		String staticInitializerCode = getStaticInitializer();
 		String fieldsCode = getFieldsCode();
+		String enumConstantsCode = getEnumConstantsCode();
 		String constructorsCode = getFunctionCode(constructors);
 		String methodsCode = getFunctionCode(methods);
 		String innerClassesCode = getInnerClassesCode();
-		String code = getOrEmpty(
+		return getOrEmpty(
 			getOuterCode(),
 			annotations,
 			Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
-			!typeDeclaration.isAnonymous()? classType : "",
+			!typeDeclaration.isParameterizable()? classType : "",
 			typeDeclaration,				
 			expands,
 			expandedType,
 			concretize,
 			getOrEmpty(concretizedTypes, ", "), 
 			"{",
+			enumConstantsCode != null? "\n\n" + enumConstantsCode : null,
 			fieldsCode != null? "\n\n" + fieldsCode : null,
 			staticInitializerCode != null? "\n\n" + staticInitializerCode : null, 
 			constructorsCode != null? "\n\n" + constructorsCode : null,
@@ -288,8 +296,6 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 			innerClassesCode != null? "\n\n" + innerClassesCode : null,
 			"\n\n}"
 		);
-		
-		return !typeDeclaration.isAnonymous()? code : code.replaceAll("\n(.)", "\n\t$1");
 			
 	}
 
@@ -321,6 +327,11 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		Optional.ofNullable(fields).ifPresent(fields -> {
 			for (VariableSourceGenerator field : fields) {
 				types.addAll(field.getTypeDeclarations());
+			}
+		});
+		Optional.ofNullable(enumConstants).ifPresent(enumConstants -> {
+			for (VariableSourceGenerator enumConstant : enumConstants) {
+				types.addAll(enumConstant.getTypeDeclarations());
 			}
 		});
 		Optional.ofNullable(constructors).ifPresent(constructors -> {
