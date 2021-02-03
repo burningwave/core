@@ -242,7 +242,7 @@ public interface ClassFactory {
 						}
 						throw exc;
 					}
-				} catch (ClassNotFoundException | NoClassDefFoundError exc) {
+				} catch (ClassNotFoundException | NoClassDefFoundError | Classes.Loaders.UnsupportedException exc) {
 					return ClassLoaders.loadOrDefineByByteCode(className, 
 						loadBytecodesFromClassPaths(
 							this.byteCodesWrapper,
