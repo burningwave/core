@@ -90,10 +90,10 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 	public BodySourceGenerator addCodeLine(String... codes) {
 		if (codes.length > 0) {
 			for (String code : codes) {
-				addCode((bodyGenerators != null && !bodyGenerators.isEmpty()? "\n" : "") + Optional.ofNullable(elementPrefix).orElseGet(() -> "") + code);	
+				addCode((bodyGenerators != null && !bodyGenerators.isEmpty()? "\n" : "") + code);	
 			}
 		} else {
-			addCode((bodyGenerators != null && !bodyGenerators.isEmpty()? "\n" : "") + Optional.ofNullable(elementPrefix).orElseGet(() -> "") + "");
+			addCode((bodyGenerators != null && !bodyGenerators.isEmpty()? "\n" : ""));
 		}
 		return this;	
 	}
@@ -146,7 +146,9 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 	
 	@Override
 	public String make() {
-		return getOrEmpty(startingDelimiter, getOrEmpty(bodyGenerators, Optional.ofNullable(elementSeparator).orElse(EMPTY_SPACE)), endingDelimiter);
+		String bodyCode = Optional.ofNullable(elementPrefix).orElseGet(() -> "") + getOrEmpty(bodyGenerators, Optional.ofNullable(elementSeparator).orElse(EMPTY_SPACE))
+		.replaceAll("\n(.)", "\n" + Optional.ofNullable(elementPrefix).orElseGet(() -> "") + "$1");
+		return getOrEmpty(startingDelimiter, bodyCode, endingDelimiter);
 	}
 	
 }
