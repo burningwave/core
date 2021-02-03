@@ -178,6 +178,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	public ClassSourceGenerator addField(VariableSourceGenerator... fields) {
 		Optional.ofNullable(this.fields).orElseGet(() -> this.fields = new ArrayList<>());
 		for (VariableSourceGenerator field : fields) {
+			field.setElementPrefix("\t");
 			this.fields.add(field);
 		}
 		return this;
@@ -228,7 +229,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	}
 	
 	private String getFieldsCode() {
-		return Optional.ofNullable(fields).map(flds -> "\t" + getOrEmpty(flds, "\n").replace("\n", "\n\t")).orElseGet(() -> null);
+		return Optional.ofNullable(fields).map(flds -> getOrEmpty(flds, "\n")).orElseGet(() -> null);
 	}
 	
 	private String getEnumConstantsCode() {
@@ -276,7 +277,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		String constructorsCode = getFunctionCode(constructors);
 		String methodsCode = getFunctionCode(methods);
 		String innerClassesCode = getInnerClassesCode();
-		String code = getOrEmpty(
+		return getOrEmpty(
 			getOuterCode(),
 			annotations,
 			Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null),
@@ -295,8 +296,6 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 			innerClassesCode != null? "\n\n" + innerClassesCode : null,
 			"\n\n}"
 		);
-		
-		return !typeDeclaration.isParameterizable()? code : code.replaceAll("\n(.)", "\n\t$1");
 			
 	}
 

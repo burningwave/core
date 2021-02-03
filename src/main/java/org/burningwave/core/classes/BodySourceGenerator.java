@@ -86,7 +86,11 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 		}
 		return this;
 	}
-
+	
+	boolean isEmpty() {
+		return bodyGenerators == null || bodyGenerators.isEmpty();
+	}
+	
 	public BodySourceGenerator addCodeLine(String... codes) {
 		if (codes.length > 0) {
 			for (String code : codes) {
@@ -146,8 +150,11 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 	
 	@Override
 	public String make() {
-		String bodyCode = Optional.ofNullable(elementPrefix).orElseGet(() -> "") + getOrEmpty(bodyGenerators, Optional.ofNullable(elementSeparator).orElse(EMPTY_SPACE))
-		.replaceAll("\n(.)", "\n" + Optional.ofNullable(elementPrefix).orElseGet(() -> "") + "$1");
+		String elementPrefix = !isEmpty()? this.elementPrefix : null;
+		String bodyCode =
+			Optional.ofNullable(elementPrefix).orElseGet(() -> "") +
+			getOrEmpty(bodyGenerators, Optional.ofNullable(elementSeparator).orElse(EMPTY_SPACE))
+			.replaceAll("\n(.)", "\n" + Optional.ofNullable(elementPrefix).orElseGet(() -> "") + "$1");
 		return getOrEmpty(startingDelimiter, bodyCode, endingDelimiter);
 	}
 	

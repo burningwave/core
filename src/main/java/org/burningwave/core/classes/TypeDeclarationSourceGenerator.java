@@ -78,7 +78,7 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	public TypeDeclarationSourceGenerator setAsParameterizable(boolean flag) {
 		if (flag) {
 			if (parameters == null) {
-				parameters = BodySourceGenerator.create().setDelimiters("(", ")").setElementPrefix("");
+				parameters = BodySourceGenerator.create().setDelimiters("(\n", "\n)").setElementPrefix("\t").setBodyElementSeparator(",");
 			}
 		} else {
 			parameters = null;
@@ -99,9 +99,6 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		if (this.parameters == null) {
 			setAsParameterizable(true);
 		}
-		if (!this.parameters.make().equals("( )")) {
-			this.parameters.addCode(",");
-		}
 		this.parameters.addCode(String.join(", ", parameters));		
 		return this;
 	}
@@ -110,14 +107,9 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		if (this.parameters == null) {
 			setAsParameterizable(true);
 		}
-		if (!this.parameters.make().equals("( )")) {
-			this.parameters.addCode(",");
-		}
-		for (int i = 0; i < parameters.length - 1; i++) {
+		for (int i = 0; i < parameters.length; i++) {
 			this.parameters.addElement(parameters[i]);
-			this.parameters.addCode(",");
 		}
-		this.parameters.addElement(parameters[parameters.length - 1]);	
 		return this;
 	}
 	
@@ -165,6 +157,13 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		return publicFlag;
 	}
 	
+	private String getParametersCode() {
+		if (parameters != null && parameters.isEmpty()) {
+			parameters.setDelimiters("(", ")");
+		}
+		return Optional.ofNullable(parameters).map(BodySourceGenerator::make).orElseGet(() -> "");
+	}
+	
 	@Override
 	public String make() {
 		return 
@@ -175,7 +174,7 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 			Optional.ofNullable(generics).map(generics -> 
 				"<" + getOrEmpty(generics, COMMA + EMPTY_SPACE) + ">"
 			).orElseGet(() -> "") +
-			Optional.ofNullable(parameters).map(BodySourceGenerator::make).orElseGet(() -> "") +
+			getParametersCode() +
 			(isVarArgs ? "..." : "");
 	}	
 }
