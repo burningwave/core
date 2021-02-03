@@ -296,16 +296,13 @@ public class UnitSourceGeneratorTest extends BaseTest {
 	
 	@Test
 	public void testEnum() {
-		try {
+		testDoesNotThrow(() -> {
 			UnitSourceGenerator unitSG = UnitSourceGenerator.create("org.burningwave.core.examples.classfactory").addClass(
 				createEnum()				
 			);
 			unitSG.storeToClassPath(System.getProperty("user.home") + "/Desktop/bw-tests");
 			System.out.println("\nGenerated code:\n" + unitSG.make());
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		});
 	}
 
 	private ClassSourceGenerator createEnum() {
@@ -405,28 +402,5 @@ public class UnitSourceGeneratorTest extends BaseTest {
 			VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Supplier.class).setAsVarArgs(true).useFullyQualifiedName(true)
 			.addGeneric(GenericSourceGenerator.create(Date.class)), "dateSupplier")).addBodyCodeLine("this.dateSupplier = dateSupplier;")
 		).addMethod(FunctionSourceGenerator.create("toLowerCase").addModifier(Modifier.ABSTRACT | Modifier.PUBLIC).setReturnType(String.class));
-	}
-}
-
-enum MyEnum { 
-
-	FIRST_VALUE( new java.util.function.Supplier<Date>( ) { 
-	
-			@Override
-			public Date get() {
-				return new Date(); 
-			} 
-	
-		} , new java.util.function.Supplier<Date>( ) { 
-	
-			@Override
-			public Date get() {
-				return new Date(); 
-			} 
-	
-		} ),
-	SECOND_VALUE(null, null); 
-	MyEnum(java.util.function.Supplier<Date> f, java.util.function.Supplier<Date> g) {
-		
 	}
 }
