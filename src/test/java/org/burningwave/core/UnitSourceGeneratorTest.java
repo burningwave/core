@@ -170,7 +170,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 	private ClassSourceGenerator createClass(String className) {
 		return ClassSourceGenerator.create(
 			TypeDeclarationSourceGenerator.create(className)
-		).addAnnotation(
+		).addOuterCodeLine("//Comment").addAnnotation(
 			AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameter("value", true, 
 				AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
 					VariableSourceGenerator.create("message").setValue("\"Person name should not be empty\"")
@@ -188,6 +188,11 @@ public class UnitSourceGeneratorTest extends BaseTest {
 		).addModifier(
 			Modifier.PUBLIC
 		)
+		.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Date[][].class).useFullyQualifiedName(true), "multiTimesZero").addModifier(Modifier.PRIVATE))
+		.addField(VariableSourceGenerator.create(Date[][][].class, "multiTimesOne").addModifier(Modifier.PRIVATE))		
+		.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Date[][][][].class), "multiTimesTwo").addModifier(Modifier.PRIVATE))
+		.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("java.util.Date[][][][][]", "Date[][][][][]"), "multiTimesThree").addModifier(Modifier.PRIVATE))
+		.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("java.util.Date[][][][][][]", "Date[][][][][][]").useFullyQualifiedName(true), "multiTimesFour").addModifier(Modifier.PRIVATE))
 		.addField(VariableSourceGenerator.create(long.class, "serialVersionUID").addModifier(Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL))
 		.addField(
 			VariableSourceGenerator.create(
