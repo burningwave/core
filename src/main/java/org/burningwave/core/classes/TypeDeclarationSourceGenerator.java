@@ -142,7 +142,7 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		types.add(this);
 		Optional.ofNullable(generics).ifPresent(generics -> {
 			generics.forEach(generic -> {
-				types.addAll(generic.getTypesDeclarations());
+				types.addAll(generic.getTypeDeclarations());
 			});
 		});
 		Optional.ofNullable(this.parameters).ifPresent(parameters -> {

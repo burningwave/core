@@ -125,18 +125,28 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 		Optional.ofNullable(usedTypes).ifPresent(usedTypes -> types.addAll(usedTypes));
 		Optional.ofNullable(bodyGenerators).ifPresent(bodyGenerators -> {
 			for (SourceGenerator generator : bodyGenerators) {
-				if (generator instanceof BodySourceGenerator) {
-					types.addAll(((BodySourceGenerator)generator).getTypeDeclarations());
-				}
-				if (generator instanceof VariableSourceGenerator) {
-					types.addAll(((VariableSourceGenerator)generator).getTypeDeclarations());
-				}
 				if (generator instanceof AnnotationSourceGenerator) {
 					types.addAll(((AnnotationSourceGenerator)generator).getTypeDeclarations());
+				}
+				if (generator instanceof BodySourceGenerator) {
+					types.addAll(((BodySourceGenerator)generator).getTypeDeclarations());
 				}
 				if (generator instanceof ClassSourceGenerator) {
 					types.addAll(((ClassSourceGenerator)generator).getTypeDeclarations());
 				}
+				if (generator instanceof FunctionSourceGenerator) {
+					types.addAll(((FunctionSourceGenerator)generator).getTypeDeclarations());
+				}
+				if (generator instanceof GenericSourceGenerator) {
+					types.addAll(((GenericSourceGenerator)generator).getTypeDeclarations());
+				}
+				if (generator instanceof TypeDeclarationSourceGenerator) {
+					types.addAll(((TypeDeclarationSourceGenerator)generator).getTypeDeclarations());
+				}
+				if (generator instanceof VariableSourceGenerator) {
+					types.addAll(((VariableSourceGenerator)generator).getTypeDeclarations());
+				}
+
 			}
 		});
 		return types;

@@ -90,7 +90,7 @@ public class GenericSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 	
-	Collection<TypeDeclarationSourceGenerator> getTypesDeclarations() {
+	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(annotations).ifPresent(annotations -> {
 			for (AnnotationSourceGenerator annotation : annotations) {
