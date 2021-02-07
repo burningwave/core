@@ -1152,11 +1152,11 @@ If you use the singleton instance obtained via **`ComponentContainer.getInstance
 byte-code-hunter.default-path-scanner-class-loader=\
 	(Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
 #This variable is empty by default and can be valorized by developer and it is
-#included by 'byte-code-hunter.default-path-scanner-class-loader.imports' property
-byte-code-hunter.default-path-scanner-class-loader.additional-imports=
-byte-code-hunter.default-path-scanner-class-loader.imports=\
+#included by 'byte-code-hunter.default-path-scanner-class-loader.supplier.imports' property
+byte-code-hunter.default-path-scanner-class-loader.supplier.additional-imports=
+byte-code-hunter.default-path-scanner-class-loader.supplier.imports=\
 	${code-executor.common.imports};\
-	${byte-code-hunter.default-path-scanner-class-loader.additional-imports};\
+	${byte-code-hunter.default-path-scanner-class-loader.supplier.additional-imports};\
 	org.burningwave.core.classes.PathScannerClassLoader;
 byte-code-hunter.default-path-scanner-class-loader.supplier.name=\
 	org.burningwave.core.classes.DefaultPathScannerClassLoaderRetrieverForByteCodeHunter
@@ -1168,22 +1168,22 @@ class-factory.byte-code-hunter.search-config.check-file-option=\
 class-factory.default-class-loader=\
 	(Supplier<ClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
 #This variable is empty by default and can be valorized by developer and it is
-#included by 'class-factory.default-class-loader.imports' property
-class-factory.default-class-loader.additional-imports=
-class-factory.default-class-loader.imports=\
+#included by 'class-factory.default-class-loader.supplier.imports' property
+class-factory.default-class-loader.supplier.additional-imports=
+class-factory.default-class-loader.supplier.imports=\
 	${code-executor.common.imports};\
-	${class-factory.default-class-loader.additional-imports};\
+	${class-factory.default-class-loader.supplier.additional-imports};\
 	org.burningwave.core.classes.PathScannerClassLoader;
 class-factory.default-class-loader.supplier.name=\
 	org.burningwave.core.classes.DefaultClassLoaderRetrieverForClassFactory
 class-hunter.default-path-scanner-class-loader=\
 	(Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
 #This variable is empty by default and can be valorized by developer and it is
-#included by 'class-hunter.default-path-scanner-class-loader.imports' property
-class-hunter.default-path-scanner-class-loader.additional-imports=
-class-hunter.default-path-scanner-class-loader.imports=\
+#included by 'class-hunter.default-path-scanner-class-loader.supplier.imports' property
+class-hunter.default-path-scanner-class-loader.supplier.additional-imports=
+class-hunter.default-path-scanner-class-loader.supplier.imports=\
 	${code-executor.common.imports};\
-	${class-hunter.default-path-scanner-class-loader.additional-imports};\
+	${class-hunter.default-path-scanner-class-loader.supplier.additional-imports};\
 	org.burningwave.core.classes.PathScannerClassLoader;
 class-hunter.default-path-scanner-class-loader.supplier.name=\
 	org.burningwave.core.classes.DefaultPathScannerClassLoaderRetrieverForClassHunter
@@ -1196,11 +1196,11 @@ class-hunter.default-path-scanner-class-loader=\
 class-path-hunter.default-path-scanner-class-loader=\
 	(Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
 #This variable is empty by default and can be valorized by developer and it is
-#included by 'class-path-hunter.default-path-scanner-class-loader.imports' property
-class-path-hunter.default-path-scanner-class-loader.additional-imports=
-class-path-hunter.default-path-scanner-class-loader.imports=\
+#included by 'class-path-hunter.default-path-scanner-class-loader.supplier.imports' property
+class-path-hunter.default-path-scanner-class-loader.supplier.additional-imports=
+class-path-hunter.default-path-scanner-class-loader.supplier.imports=\
 	${code-executor.common.imports};\
-	${class-path-hunter.default-path-scanner-class-loader.additional-imports};\
+	${class-path-hunter.default-path-scanner-class-loader.supplier.additional-imports};\
 	org.burningwave.core.classes.PathScannerClassLoader;
 class-path-hunter.default-path-scanner-class-loader.supplier.name=\
 	org.burningwave.core.classes.DefaultPathScannerClassLoaderRetrieverForClassPathHunter
@@ -1229,9 +1229,12 @@ hunters.default-search-config.check-file-option=\
 	${path-scanner-class-loader.search-config.check-file-option}
 path-scanner-class-loader.parent=\
 	Thread.currentThread().getContextClassLoader()
-path-scanner-class-loader.parent.imports=\
+#This variable is empty by default and can be valorized by developer and it is
+#included by 'path-scanner-class-loader.parent.supplier.imports' property
+path-scanner-class-loader.parent.supplier.additional-imports=\
+path-scanner-class-loader.parent.supplier.imports=\
 	${code-executor.common.imports};\
-	${path-scanner-class-loader.parent.additional-imports};
+	${path-scanner-class-loader.parent.supplier.additional-imports};
 path-scanner-class-loader.parent.supplier.name=\
 	org.burningwave.core.classes.ParentClassLoaderRetrieverForPathScannerClassLoader
 #other possible values are: checkFileName, checkFileName|checkFileSignature, checkFileName&checkFileSignature
