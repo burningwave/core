@@ -5,13 +5,13 @@
 </a>
 
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/8)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
-[![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
+[![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/experimental/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/545601635)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/538296425)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015%2C%2016ea%2C%2017ea-blueviolet)](https://github.com/burningwave/core/actions/runs/545601635)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015%2C%2016ea%2C%2017ea-blueviolet)](https://github.com/burningwave/core/actions/runs/538296425)
 
-[![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
+[![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/experimental)](https://coveralls.io/github/burningwave/core?branch=experimental)
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
 [![GitHub closed issues](https://img.shields.io/github/issues-closed/burningwave/core)](https://github.com/burningwave/core/issues?q=is%3Aissue+is%3Aclosed)
 
@@ -25,7 +25,6 @@
 Burningwave Core contains **THE MOST POWERFUL CLASSPATH SCANNER**: it’s possible to search classes by every criteria that your imagination can make by using lambda expressions; **scan engine is highly optimized using direct allocated ByteBuffers to avoid heap saturation; searches are executed in multithreading context and are not affected by “_the issue of the same class loaded by different classloaders_”** (normally if you try to execute "isAssignableFrom" method on a same class loaded from different classloader it returns false).
 
 And now we will see:
-* [**including Burningwave Core in your project**](#Including-Burningwave-Core-in-your-project)
 * [**generating classes at runtime and invoking their methods with and without the use of reflection**](#Generating-classes-at-runtime-and-invoking-their-methods-with-and-without-the-use-of-reflection)
 * [**executing stringified source code**](#Executing-stringified-source-code)
 * [**retrieving classes of runtime class paths or of other paths through the ClassHunter**](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
@@ -45,25 +44,12 @@ And now we will see:
 
 <br/>
 
-# Including Burningwave Core in your project 
-To include Burningwave Core library in your projects simply use with **Apache Maven**:
-
-```xml
-<dependency>
-    <groupId>org.burningwave</groupId>
-    <artifactId>core</artifactId>
-    <version>8.20.4</version>
-</dependency>
-```
-
-<br/>
-
 # Generating classes at runtime and invoking their methods with and without the use of reflection
 
 For this purpose is necessary the use of **ClassFactory** component and of the **sources generating components**. Once the sources have been set in **UnitSourceGenerator** objects, they must be passed to **`loadOrBuildAndDefine`** method of ClassFactory with the ClassLoader where you want to define new generated classes. This method performs the following operations: tries to load all the classes present in the UnitSourceGenerator through the class loader, if at least one of these is not found it proceeds to compiling all the UnitSourceGenerators and uploading their classes on class loader: **in this case, keep in mind that if a class with the same name was previously loaded by the class loader, the compiled class will not be uploaded**. **If you need more information you can**:
-* see a [**complete example about source code generators**](https://github.com/burningwave/core/blob/master/src/test/java/org/burningwave/core/UnitSourceGeneratorTest.java#L153)
+* see a [**complete example about source code generators**](https://github.com/burningwave/core/blob/experimental/src/test/java/org/burningwave/core/UnitSourceGeneratorTest.java#L153)
 * read this [**guide**](https://www.burningwave.org/forum/topic/how-can-i-use-classes-outside-the-runtime-class-path-in-my-generated-sources/) where you also can find a link to an [**example about generating classes by using libraries located outside the runtime class paths**](https://github.com/burningwave/core/blob/master/src/test/java/org/burningwave/core/examples/classfactory/ExternalClassRuntimeExtender.java)
-* go [**here**](https://github.com/burningwave/core/tree/master/src/test/java/org/burningwave/core/examples/classfactory) for more examples
+* go [**here**](https://github.com/burningwave/core/tree/experimental/src/test/java/org/burningwave/core/examples/classfactory) for more examples
 * ask for assistance at the [**official forum**](https://www.burningwave.org/forum/) (topic [**"How to do?"**](https://www.burningwave.org/forum/forum/how-to/))
 * [**ask Stack Overflow for assistance**](https://stackoverflow.com/search?q=burningwave)
 
@@ -1093,7 +1079,7 @@ thread-supplier.poolable-thread-request-timeout=\
 	6000
 ```
 **If in your custom burningwave.static.properties or burningwave.static.default.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
-[Here an example of a **burningwave.static.properties** file.](https://github.com/burningwave/core/blob/master/src/test/resources/burningwave.static.properties#L1)
+[Here an example of a **burningwave.static.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.static.properties)
 <br/>
 
 ## Dynamic component container
@@ -1286,7 +1272,7 @@ If you create a component container instance through method **`ComponentContaine
 ```java
 ComponentContainer.create("org/burningwave/custom-config-file.properties")
 ```
-[Here an example of a **burningwave.properties** file.](https://github.com/burningwave/core/blob/master/src/test/resources/burningwave.properties#L1)
+[Here an example of a **burningwave.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.properties#L1)
 
 ### Other examples of using some components:
 <details open>
