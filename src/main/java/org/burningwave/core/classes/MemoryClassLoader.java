@@ -229,7 +229,11 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     	try {
 			cls = super.loadClass(className, resolve);
 		} catch (SecurityException exc) {
-			cls = Class.forName(className);
+			if (className.startsWith("java.")) {
+				cls = Class.forName(className);
+			} else {
+				Throwables.throwException(exc);
+			}			
 		}
     	removeNotLoadedBytecode(className);
     	return cls;
