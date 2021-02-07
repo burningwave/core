@@ -50,6 +50,8 @@ public interface CodeExecutor {
 			public static final String COMMON_IMPORTS = "code-executor.common.imports";
 			public static final String ADDITIONAL_COMMON_IMPORTS = "code-executor.common.additional-imports";
 			public static final String PROPERTIES_FILE_IMPORTS_SUFFIX = ".imports";
+			public static final String PROPERTIES_FILE_SUPPLIER_IMPORTS_SUFFIX = ".supplier" + PROPERTIES_FILE_IMPORTS_SUFFIX;
+			public static final String PROPERTIES_FILE_EXECUTOR_IMPORTS_SUFFIX = ".executor" + PROPERTIES_FILE_IMPORTS_SUFFIX;
 			public static final String PROPERTIES_FILE_CLASS_NAME_SUFFIX = ".name";
 			public static final String PROPERTIES_FILE_SUPPLIER_NAME_SUFFIX = ".supplier" + PROPERTIES_FILE_CLASS_NAME_SUFFIX;
 			public static final String PROPERTIES_FILE_EXECUTOR_NAME_SUFFIX = ".executor" + PROPERTIES_FILE_CLASS_NAME_SUFFIX;

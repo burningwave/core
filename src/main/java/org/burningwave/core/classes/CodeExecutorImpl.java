@@ -76,13 +76,12 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 				}
 			}
 		}
-		String importFromConfig = IterableObjectHelper.resolveStringValue(
-			properties, 
-			config.getPropertyName() + Configuration.Key.PROPERTIES_FILE_IMPORTS_SUFFIX, 
-			null, 
-			Configuration.Value.CODE_LINE_SEPARATOR,
-			true,
-			config.getDefaultValues()
+		String importFromConfig = retrieveValue(
+			config,
+			properties,
+			Configuration.Key.PROPERTIES_FILE_IMPORTS_SUFFIX,
+			Configuration.Key.PROPERTIES_FILE_SUPPLIER_IMPORTS_SUFFIX,
+			Configuration.Key.PROPERTIES_FILE_EXECUTOR_IMPORTS_SUFFIX
 		);
 		if (Strings.isNotEmpty(importFromConfig)) {
 			Arrays.stream(importFromConfig.replaceAll(";{2,}", ";").split(";")).forEach(imp -> {
@@ -91,14 +90,14 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 				}
 			});
 		}
-		String executorName = retrieveClassName(
+		String executorName = retrieveValue(
 			config,
 			properties,
 			Configuration.Key.PROPERTIES_FILE_CLASS_NAME_SUFFIX,
 			Configuration.Key.PROPERTIES_FILE_SUPPLIER_NAME_SUFFIX,
 			Configuration.Key.PROPERTIES_FILE_EXECUTOR_NAME_SUFFIX
 		);
-		String executorSimpleName = retrieveClassName(
+		String executorSimpleName = retrieveValue(
 			config,
 			properties,
 			Configuration.Key.PROPERTIES_FILE_CLASS_SIMPLE_NAME_SUFFIX,
@@ -142,9 +141,9 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 		);
 	}
 
-	private String retrieveClassName(ExecuteConfig.ForProperties config, java.util.Properties properties, String... suffixes) {
+	private String retrieveValue(ExecuteConfig.ForProperties config, java.util.Properties properties, String... suffixes) {
 		for (String suffix : suffixes) {
-			String executorName = IterableObjectHelper.resolveStringValue(
+			String value = IterableObjectHelper.resolveStringValue(
 				properties, 
 				config.getPropertyName() + suffix,
 				null,
@@ -152,8 +151,8 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 				true,
 				config.getDefaultValues()
 			);
-			if (executorName != null) {
-				return executorName;
+			if (value != null) {
+				return value;
 			}
 		}
 		return null;
