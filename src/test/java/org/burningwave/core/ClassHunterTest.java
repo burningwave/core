@@ -179,7 +179,7 @@ public class ClassHunterTest extends BaseTest {
 			//If you call this method, you must retrieve the uploaded class in all methods that support this feature like in the point[1]
 			Complex.Data.Item.class
 		);
-		testNotNull(
+		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					//Search in the runtime Classpaths. Here you can add all absolute path you want:
@@ -189,7 +189,7 @@ public class ClassHunterTest extends BaseTest {
 					classCriteria
 				)
 			),
-			(result) -> result.getUnique(classCriteria)
+			(result) -> result.getClasses()
 		);
 	}
 	
