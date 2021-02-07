@@ -359,7 +359,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							}
 							if (valueObjects == null) {
 								if (deleteUnresolvedPlaceHolder) {
-									stringValue = stringValue.replaceAll(Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?" + valuesSeparatorForSplitting, "");
+									stringValue = stringValue.replaceAll("[^{" + valuesSeparatorForSplitting + "}]*?" + Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?" + valuesSeparatorForSplitting, "");
 								}
 								continue;
 							}
@@ -369,16 +369,15 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							} else {
 								replacements.add(valueObjects);
 							}
-							String regExpPattern = "(.*?" +Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?" + valuesSeparatorForSplitting +")";
+							String regExpPattern = null;
+							if (stringValue.contains(valuesSeparatorForSplitting)) {
+								regExpPattern = "([^{" + valuesSeparatorForSplitting + "}]*?" + Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?" + valuesSeparatorForSplitting +")";
+							} else {
+								regExpPattern = "(.*?"+ Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?)";
+							}
 							Map<Integer, List<String>> placeHolderedValues = Strings.extractAllGroups(
 								Pattern.compile(regExpPattern), stringValue 
-							);
-							if (placeHolderedValues.isEmpty()) {
-								regExpPattern = "(.*?"+ Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?)";
-								placeHolderedValues = Strings.extractAllGroups(
-									Pattern.compile(regExpPattern), stringValue 
-								);
-							}									
+							);					
 							for (Map.Entry<Integer, List<String>> placeHolderedValuesEntry : placeHolderedValues.entrySet()) {												
 								for (String placeHolderedValue : placeHolderedValuesEntry.getValue()) {
 									String newReplacement = "";
