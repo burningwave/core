@@ -228,7 +228,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     	Class<?> cls = null;
     	try {
 			cls = super.loadClass(className, resolve);
-		} catch (SecurityException exc) {
+		} catch (Throwable exc) {
 			if (className.startsWith("java.")) {
 				cls = Class.forName(className);
 			} else {
