@@ -7,7 +7,7 @@ on:
     paths: 
       - "src/main/**.java"
       - "src/test/**.java"
-      - ".github/workflows/**"
+#      - ".github/workflows/**"
       - "**.properties"
       - "**.xml"
 
