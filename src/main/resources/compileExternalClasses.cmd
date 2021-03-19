@@ -1,5 +1,5 @@
 @echo off
-set JAVA_HOME=F:\Shared\Programmi\Java\jdk\15.0.1
+set JAVA_HOME=F:\Shared\Programmi\Java\jdk\16
 
 del %~dp0org\burningwave\core\jvm\*.bwc
 
