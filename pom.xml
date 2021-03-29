@@ -39,6 +39,16 @@
 				<role>Developer</role>
 			</roles>
 		</developer>
+		<developer>
+			<name>Alessio Perrotta</name>
+			<email>info@burningwave.org</email>
+			<organization>Burningwave</organization>
+			<organizationUrl>https://www.burningwave.org/</organizationUrl>
+			<roles>
+				<role>External relationship manager</role>
+				<role>Developer</role>
+			</roles>
+		</developer>
 	</developers>
 
 	<properties>
