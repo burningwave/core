@@ -33,6 +33,10 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class AnnotationSourceGenerator extends SourceGenerator.Abst {
+
+	private static final long serialVersionUID = -6466348844734237149L;
+	
+	
 	private TypeDeclarationSourceGenerator type;
 	private String name;
 	private BodySourceGenerator body;

@@ -28,6 +28,13 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,7 +42,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Optional;
 
-public interface SourceGenerator {
+import org.burningwave.core.io.FileInputStream;
+import org.burningwave.core.io.FileOutputStream;
+
+public interface SourceGenerator extends Serializable {
 	
 	public String make();
 	
@@ -43,7 +53,43 @@ public interface SourceGenerator {
 		return make();
 	}
 	
+	public default void serializeToPath(String absolutePath) { 
+		try (FileOutputStream outputStream = FileOutputStream.create(absolutePath)) {
+			serialize(outputStream);
+		} catch (Throwable exc) {
+			Throwables.throwException(exc);
+		}
+	}
+	
+	public static <S extends SourceGenerator> S deserializeFromPath(String absolutePath) { 
+		try (FileInputStream outputStream = FileInputStream.create(absolutePath)) {
+			return deserialize(outputStream);
+		} catch (Throwable exc) {
+			return Throwables.throwException(exc);
+		}
+	}
+		
+	public default void serialize(OutputStream outputStream) {
+		try (ObjectOutputStream out = new ObjectOutputStream(outputStream)) {
+	        out.writeObject(this);          
+		} catch (Throwable exc) {
+			Throwables.throwException(exc);
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <S extends SourceGenerator> S deserialize(InputStream inputStream) {
+		try (ObjectInputStream in = new ObjectInputStream(inputStream)) {
+            return (S) in.readObject();           
+		} catch (Throwable exc) {
+			return Throwables.throwException(exc);
+		}
+	}
+	
 	static abstract class Abst implements SourceGenerator {
+
+		private static final long serialVersionUID = -6189371616365377165L;
+		
 		static final String EMPTY_SPACE = " ";
 		static final String COMMA = ",";
 		static final String SEMICOLON = ";";

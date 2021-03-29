@@ -35,6 +35,9 @@ import java.util.Iterator;
 import java.util.Optional;
 
 public class FunctionSourceGenerator extends SourceGenerator.Abst {
+
+	private static final long serialVersionUID = -701718231919943913L;
+	
 	private Collection<TypeDeclarationSourceGenerator> usedTypes;
 	private Collection<String> outerCode;
 	private Collection<AnnotationSourceGenerator> annotations;
