@@ -3,7 +3,7 @@
 
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
-	<version>8.20.5-SNAPSHOT</version>
+	<version>8.21.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Burningwave Core</name>
@@ -36,6 +36,16 @@
 			<organizationUrl>https://www.burningwave.org/</organizationUrl>
 			<roles>
 				<role>Administrator</role>
+				<role>Developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<name>Alessio Perrotta</name>
+			<email>info@burningwave.org</email>
+			<organization>Burningwave</organization>
+			<organizationUrl>https://www.burningwave.org/</organizationUrl>
+			<roles>
+				<role>External relationship manager</role>
 				<role>Developer</role>
 			</roles>
 		</developer>
