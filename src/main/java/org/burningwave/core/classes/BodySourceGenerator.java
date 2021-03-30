@@ -33,6 +33,9 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class BodySourceGenerator extends SourceGenerator.Abst {
+
+	private static final long serialVersionUID = 5923611245424078711L;
+	
 	private Collection<TypeDeclarationSourceGenerator> usedTypes;
 	private String startingDelimiter;
 	private String endingDelimiter;
@@ -88,6 +91,9 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 		Optional.ofNullable(this.bodyGenerators).orElseGet(() -> this.bodyGenerators = new ArrayList<>());
 		for (String element : elements) {
 			this.bodyGenerators.add(new SourceGenerator() {
+
+				private static final long serialVersionUID = 5843006583153055991L;
+
 				@Override
 				public String make() {
 					return element;

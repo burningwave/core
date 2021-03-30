@@ -36,6 +36,9 @@ import java.util.Map;
 import java.util.Optional;
 
 public class ClassSourceGenerator extends SourceGenerator.Abst {
+
+	private static final long serialVersionUID = -4865516517027747031L;
+	
 	private Collection<AnnotationSourceGenerator> annotations;
 	private Collection<String> outerCode;
 	private Integer modifier;

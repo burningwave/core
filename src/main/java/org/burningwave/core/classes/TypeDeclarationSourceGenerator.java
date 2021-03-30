@@ -35,6 +35,8 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
+
+	private static final long serialVersionUID = -7814557670243517814L;
 	
 	private boolean isVarArgs;
 	private boolean useFullyQualifiedName;

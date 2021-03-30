@@ -34,6 +34,9 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class VariableSourceGenerator extends SourceGenerator.Abst {
+
+	private static final long serialVersionUID = -1218339549136277345L;
+	
 	private Collection<String> outerCode;
 	private String elementPrefix;
 	private Collection<AnnotationSourceGenerator> annotations;

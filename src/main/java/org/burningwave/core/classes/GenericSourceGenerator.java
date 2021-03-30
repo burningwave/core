@@ -33,6 +33,9 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class GenericSourceGenerator extends SourceGenerator.Abst {
+
+	private static final long serialVersionUID = -7508101348682677540L;
+	
 	private Collection<String> outerCode;
 	private Collection<AnnotationSourceGenerator> annotations;
 	private TypeDeclarationSourceGenerator type;

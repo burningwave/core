@@ -19,6 +19,7 @@ import org.burningwave.core.classes.BodySourceGenerator;
 import org.burningwave.core.classes.ClassSourceGenerator;
 import org.burningwave.core.classes.FunctionSourceGenerator;
 import org.burningwave.core.classes.GenericSourceGenerator;
+import org.burningwave.core.classes.SourceGenerator;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
 import org.burningwave.core.classes.VariableSourceGenerator;
@@ -164,6 +165,9 @@ public class UnitSourceGeneratorTest extends BaseTest {
 			)
 		);
 		unitSG.storeToClassPath(System.getProperty("user.home") + "/Desktop/bw-tests");
+		System.out.println("\nGenerated code:\n" + unitSG.make());
+		unitSG.serializeToPath(System.getProperty("user.home") + "/Desktop/bw-tests/GenerateUnitTwo.UnitSourceGenerator.ser");
+		unitSG = SourceGenerator.deserializeFromPath(System.getProperty("user.home") + "/Desktop/bw-tests/GenerateUnitTwo.UnitSourceGenerator.ser");
 		System.out.println("\nGenerated code:\n" + unitSG.make());
 	}
 

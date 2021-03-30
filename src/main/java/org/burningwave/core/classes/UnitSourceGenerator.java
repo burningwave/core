@@ -48,6 +48,9 @@ import java.util.UUID;
 import org.burningwave.core.io.FileSystemItem;
 
 public class UnitSourceGenerator extends SourceGenerator.Abst {
+
+	private static final long serialVersionUID = -954913599817628229L;
+	
 	private String packageName;
 	private Collection<String> imports;
 	private Collection<ClassSourceGenerator> classes;	
