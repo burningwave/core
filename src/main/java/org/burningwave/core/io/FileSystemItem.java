@@ -31,6 +31,7 @@ package org.burningwave.core.io;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -40,6 +41,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -187,7 +189,7 @@ public class FileSystemItem {
 		}
 		return destination;
 	}
-
+	
 	@Override
 	public boolean equals(Object obj) {
 		return this == obj || obj instanceof FileSystemItem
@@ -836,7 +838,6 @@ public class FileSystemItem {
 		return Executor.get(this::toByteBuffer0, 2);
 	}
 	
-	
 	private ByteBuffer toByteBuffer0() {
 		String absolutePath = getAbsolutePath();
 		ByteBuffer resource = Cache.pathForContents.get(absolutePath); 
@@ -880,6 +881,14 @@ public class FileSystemItem {
 		}
 		return null;
 	}
+	
+	public <S extends Serializable> S toObject() {
+		try (InputStream inputStream = toInputStream()) {
+			return Objects.deserialize(inputStream);
+		} catch (Throwable exc) {
+			return Throwables.throwException(exc);
+		}
+	}	
 
 	public FileSystemItem reloadContent() {
 		return reloadContent(false);

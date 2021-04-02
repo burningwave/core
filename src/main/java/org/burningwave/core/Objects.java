@@ -36,7 +36,6 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 
-import org.burningwave.core.io.FileInputStream;
 import org.burningwave.core.io.FileOutputStream;
 import org.burningwave.core.io.FileSystemItem;
 
@@ -113,10 +112,6 @@ public class Objects {
 	}
 	
 	public <S extends Serializable> S deserializeFromPath(String absolutePath) { 
-		try (FileInputStream outputStream = FileInputStream.create(absolutePath)) {
-			return deserialize(outputStream);
-		} catch (Throwable exc) {
-			return Throwables.throwException(exc);
-		}
+		return FileSystemItem.ofPath(absolutePath).toObject();
 	}
 }
