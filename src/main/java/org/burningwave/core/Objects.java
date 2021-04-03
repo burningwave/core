@@ -28,6 +28,18 @@
  */
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+
+import org.burningwave.core.io.FileOutputStream;
+import org.burningwave.core.io.FileSystemItem;
+
+@SuppressWarnings("unchecked")
 public class Objects {
 	
 	public static Objects create() {
@@ -72,5 +84,34 @@ public class Objects {
 			: Boolean.valueOf(
 				object.toString()
 			);
+	}
+	
+	public <S> void serialize(S object, OutputStream outputStream) {
+		try (ObjectOutputStream out = new ObjectOutputStream(outputStream)) {
+	        out.writeObject(object);          
+		} catch (Throwable exc) {
+			Throwables.throwException(exc);
+		}
+	}
+	
+	public <S extends Serializable> S deserialize(InputStream inputStream) {
+		try (ObjectInputStream in = new ObjectInputStream(inputStream)) {
+            return (S) in.readObject();           
+		} catch (Throwable exc) {
+			return Throwables.throwException(exc);
+		}
+	}
+	
+	public <S extends Serializable> FileSystemItem serializeToPath(S object, String absolutePath) { 
+		try (FileOutputStream outputStream = FileOutputStream.create(absolutePath)) {
+			serialize(object, outputStream);
+		} catch (Throwable exc) {
+			Throwables.throwException(exc);
+		}
+		return FileSystemItem.ofPath(absolutePath);
+	}
+	
+	public <S extends Serializable> S deserializeFromPath(String absolutePath) { 
+		return FileSystemItem.ofPath(absolutePath).toObject();
 	}
 }

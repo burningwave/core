@@ -27,12 +27,9 @@
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package org.burningwave.core.classes;
-
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -42,8 +39,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Optional;
 
-import org.burningwave.core.io.FileInputStream;
-import org.burningwave.core.io.FileOutputStream;
+import org.burningwave.core.io.FileSystemItem;
 
 public interface SourceGenerator extends Serializable {
 	
@@ -53,37 +49,21 @@ public interface SourceGenerator extends Serializable {
 		return make();
 	}
 	
-	public default void serializeToPath(String absolutePath) { 
-		try (FileOutputStream outputStream = FileOutputStream.create(absolutePath)) {
-			serialize(outputStream);
-		} catch (Throwable exc) {
-			Throwables.throwException(exc);
-		}
+	public default FileSystemItem serializeToPath(String absolutePath) { 
+		return Objects.serializeToPath(this, absolutePath);
 	}
 	
 	public static <S extends SourceGenerator> S deserializeFromPath(String absolutePath) { 
-		try (FileInputStream outputStream = FileInputStream.create(absolutePath)) {
-			return deserialize(outputStream);
-		} catch (Throwable exc) {
-			return Throwables.throwException(exc);
-		}
+		return Objects.deserializeFromPath(absolutePath);
 	}
 		
 	public default void serialize(OutputStream outputStream) {
-		try (ObjectOutputStream out = new ObjectOutputStream(outputStream)) {
-	        out.writeObject(this);          
-		} catch (Throwable exc) {
-			Throwables.throwException(exc);
-		}
+		Objects.serialize(this, outputStream);
 	}
 	
 	@SuppressWarnings("unchecked")
 	public static <S extends SourceGenerator> S deserialize(InputStream inputStream) {
-		try (ObjectInputStream in = new ObjectInputStream(inputStream)) {
-            return (S) in.readObject();           
-		} catch (Throwable exc) {
-			return Throwables.throwException(exc);
-		}
+		return (S)Objects.deserialize(inputStream);
 	}
 	
 	static abstract class Abst implements SourceGenerator {
