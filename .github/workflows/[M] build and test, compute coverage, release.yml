@@ -17,7 +17,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-and-test-with-Java-8-and-later:
-    if: ${{ false }}  # disable for now
     name: Build -> Test (JVM ${{ matrix.java }}, ${{ matrix.os }})
     needs: [ask-for-authorization]
     strategy:
