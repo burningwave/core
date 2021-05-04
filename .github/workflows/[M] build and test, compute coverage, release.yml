@@ -57,8 +57,8 @@ jobs:
   release:
     name: Release
     needs: [build-and-test-with-Java-8-and-later]
+    if: ${{ false }}  # disabled for now
     runs-on: ubuntu-latest
-    if: ${{ false }}  # disable for now
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 15
