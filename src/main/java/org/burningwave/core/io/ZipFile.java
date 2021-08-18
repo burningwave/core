@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 Roberto Gentili
+ * Copyright (c) 2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -97,10 +97,8 @@ class ZipFile implements IterableZipContainer, Memorizer {
 	private ByteBuffer buildZipEntry(String absolutePath, ByteBuffer content, ZipEntry zipEntry, boolean recursive) {
 		try (
 			InputStream zipEntryIS = retrieveFile(absolutePath, content).getInputStream(zipEntry);
-			ByteBufferOutputStream bBOS = new ByteBufferOutputStream()
 		){
-			 Streams.copy(zipEntryIS, bBOS);
-			 return bBOS.toByteBuffer();
+			 return Streams.toByteBuffer(zipEntryIS);
 		} catch (Throwable exc) {
 			if (recursive) {
 				ManagedLoggersRepository.logWarn(getClass()::getName, "Exception occurred while building zip entry {} of {}: {}", zipEntry.getName(), absolutePath, exc.getMessage());

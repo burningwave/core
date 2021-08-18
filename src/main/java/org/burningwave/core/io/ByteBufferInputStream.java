@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 Roberto Gentili
+ * Copyright (c) 2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -28,8 +28,7 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
-import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,8 +39,8 @@ public final class ByteBufferInputStream extends InputStream {
     private ByteBuffer bufferCopy;
 
     public ByteBufferInputStream(ByteBuffer buffer) {
-        this.buffer = Streams.shareContent(buffer);
-        this.bufferCopy = Streams.shareContent(buffer);
+        this.buffer = BufferHandler.shareContent(buffer);
+        this.bufferCopy = BufferHandler.shareContent(buffer);
     }
     
     public ByteBuffer getBuffer() {
@@ -49,12 +48,12 @@ public final class ByteBufferInputStream extends InputStream {
     }
     
     public ByteBuffer toByteBuffer() {
-		return ByteBufferHandler.duplicate(bufferCopy);
+		return BufferHandler.duplicate(bufferCopy);
 	}
     
     @Override
     public synchronized void reset() throws IOException {
-    	buffer = ByteBufferHandler.duplicate(toByteBuffer());
+    	buffer = BufferHandler.duplicate(toByteBuffer());
     }
     
     @Override

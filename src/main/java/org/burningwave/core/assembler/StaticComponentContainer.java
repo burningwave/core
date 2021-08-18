@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 Roberto Gentili
+ * Copyright (c) 2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -44,6 +44,7 @@ import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
+import org.burningwave.core.jvm.BufferHandler;
 
 @SuppressWarnings("unused")
 public class StaticComponentContainer {
@@ -51,13 +52,15 @@ public class StaticComponentContainer {
 		public static class Key {
 			
 			private static final String GROUP_NAME_FOR_NAMED_ELEMENTS = "group-name-for-named-elements";
-			private static final String HIDE_BANNER_ON_INIT = "hide-banner-on-init";
+			private static final String BANNER_HIDE = "banner.hide";
+			private static final String BANNER_FILE = "banner.file";
 			private static final String BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED = "background-executor.task-creation-tracking.enabled";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED = "background-executor.all-tasks-monitoring.enabled";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_PROBABLE_DEAD_LOCKED = "background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-probable-dead-locked";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED = "background-executor.all-tasks-monitoring.logger.enabled";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL = "background-executor.all-tasks-monitoring.interval";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY = "background-executor.all-tasks-monitoring.probable-dead-locked-tasks-handling.policy";
+			private static final String LOW_LEVEL_OBJECTS_HANDLER_DRIVER = "low-level-objects-handler.driver";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED = "synchronizer.all-threads-monitoring.enabled";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";	
 		}
@@ -72,7 +75,9 @@ public class StaticComponentContainer {
 				"Burningwave"
 			);
 			
-			defaultValues.put(Key.HIDE_BANNER_ON_INIT, false);
+			defaultValues.put(Key.BANNER_HIDE, false);
+			
+			defaultValues.put(Key.BANNER_FILE, "org/burningwave/banner.bwb");
 			
 			defaultValues.put(
 				Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED, 
@@ -115,6 +120,8 @@ public class StaticComponentContainer {
 				false
 			);
 			
+			defaultValues.put(Key.LOW_LEVEL_OBJECTS_HANDLER_DRIVER, "org.burningwave.core.jvm.DefaultDriver");
+			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
@@ -122,9 +129,9 @@ public class StaticComponentContainer {
 	private static final org.burningwave.core.iterable.Properties.Listener GlobalPropertiesListener;
 	
 	public static final org.burningwave.core.concurrent.QueuedTasksExecutor.Group BackgroundExecutor;
+	public static final org.burningwave.core.jvm.BufferHandler BufferHandler;
 	public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
-	public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler ByteBufferHandler;
 	public static final org.burningwave.core.Cache Cache;
 	public static final org.burningwave.core.classes.Classes Classes;
 	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
@@ -157,7 +164,7 @@ public class StaticComponentContainer {
 			Objects = org.burningwave.core.Objects.create();
 			Resources = new org.burningwave.core.io.Resources();
 			Properties properties = new Properties();
-			properties.putAll(org.burningwave.core.io.Streams.Configuration.DEFAULT_VALUES);
+			properties.putAll(org.burningwave.core.jvm.BufferHandler.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.iterable.IterableObjectHelper.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.concurrent.Thread.Supplier.Configuration.DEFAULT_VALUES);
@@ -264,7 +271,7 @@ public class StaticComponentContainer {
 				);
 			}			
 			
-			if (!Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.HIDE_BANNER_ON_INIT))) {
+			if (!Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BANNER_HIDE))) {
 				showBanner();
 			}
 			ManagedLoggersRepository = ManagedLogger.Repository.create(GlobalProperties);
@@ -289,10 +296,14 @@ public class StaticComponentContainer {
 			Paths = org.burningwave.core.Strings.Paths.create();
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create(getName("FileSystemHelper"));
 			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
-			ByteBufferHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler.create();
-			Streams = org.burningwave.core.io.Streams.create(GlobalProperties);
+			BufferHandler = org.burningwave.core.jvm.BufferHandler.create(GlobalProperties);
+			Streams = org.burningwave.core.io.Streams.create();
 			synchronized (org.burningwave.core.jvm.LowLevelObjectsHandler.class) {
-				LowLevelObjectsHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.create();
+				LowLevelObjectsHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.create(
+					GlobalProperties.resolveValue(
+						Configuration.Key.LOW_LEVEL_OBJECTS_HANDLER_DRIVER
+					)
+				);
 				org.burningwave.core.jvm.LowLevelObjectsHandler.class.notifyAll();
 			}
 			Classes = org.burningwave.core.classes.Classes.create();
@@ -310,7 +321,7 @@ public class StaticComponentContainer {
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
 			Runtime.getRuntime().addShutdownHook(
 				ThreadSupplier.getOrCreate(getName("Resource releaser")).setExecutable(thread -> {
-					Executor.runAndLogExceptions(
+					Executor.runAndIgnoreExceptions(
 						() -> {
 							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "... Waiting for all tasks ending before closing all component containers");
 							BackgroundExecutor.waitForTasksEnding(true, true);
@@ -393,7 +404,7 @@ public class StaticComponentContainer {
 	static void showBanner() {
 		List<String> bannerList = Arrays.asList(
 			Resources.getAsStringBuffer(
-				StaticComponentContainer.class.getClassLoader(), "org/burningwave/banner.bwb"
+				StaticComponentContainer.class.getClassLoader(), GlobalProperties.resolveValue(Configuration.Key.BANNER_FILE)
 			).toString().split("-------------------------------------------------------------------------------------------------------------")	
 		);
 		Collections.shuffle(bannerList);

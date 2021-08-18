@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -1348,11 +1349,10 @@ public class ClassHunterTest extends BaseTest {
 	public void findByPackageNameTestOne() {
 		testNotEmpty(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
-	        PathHelper pathHelper = componentSupplier.getPathHelper();
 	        ClassHunter classHunter = componentSupplier.getClassHunter();
 	        
 	        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
-	            pathHelper.getPaths(path -> path.matches(".*?junit-platform-engine-1.7.0.jar"))
+	            new ArrayList<String>()
 	        ).by(
 	            ClassCriteria.create().allThoseThatMatch((cls) -> {
 	                return cls.getPackage().getName().equals("org.junit.platform.engine");

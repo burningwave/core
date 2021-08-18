@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 Roberto Gentili
+ * Copyright (c) 2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -37,11 +37,16 @@ import java.util.function.Function;
 @SuppressWarnings("unchecked")
 public class ConsulterRetrieverForJDK9 implements Function<Class<?>, MethodHandles.Lookup> {
 	private static MethodHandle consulterRetriever;
+	private static MethodHandles.Lookup mainConsulter;
+	
+	static {
+		mainConsulter = MethodHandles.lookup();
+	}
 	
 	@Override
 	public Lookup apply(Class<?> cls) {
 		try {
-			return (MethodHandles.Lookup)consulterRetriever.invoke(cls, MethodHandles.lookup());
+			return (MethodHandles.Lookup)consulterRetriever.invoke(cls, mainConsulter);
 		} catch (Throwable exc) {
 			return throwExceptionWithReturn(exc);
 		}

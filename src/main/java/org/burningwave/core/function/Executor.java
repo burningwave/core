@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 Roberto Gentili
+ * Copyright (c) 2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -40,6 +40,17 @@ public interface Executor {
 				runnable.run();
 			} catch (Throwable exc) {
 				ManagedLoggersRepository.logError(() -> Executor.class.getName(), exc);
+			}
+		}
+	}
+    
+    @SafeVarargs
+	static <E extends Throwable> void runAndIgnoreExceptions(ThrowingRunnable<? extends Throwable>... runnables) {
+		for (ThrowingRunnable<? extends Throwable> runnable : runnables) {
+	    	try {
+				runnable.run();
+			} catch (Throwable exc) {
+				
 			}
 		}
 	}

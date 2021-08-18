@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 Roberto Gentili
+ * Copyright (c) 2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
@@ -164,7 +164,7 @@ public abstract class CriteriaWithClassElementsSupplyingSupport<
 			synchronized (this) {
 				Map<Class<?>, byte[]> loadedBytecode = new HashMap<>();
 				for (Class<?> cls : classesToBeUploaded) {
-					loadedBytecode.put(cls, Streams.toByteArray(byteCodeSupplier.apply(cls)));
+					loadedBytecode.put(cls, BufferHandler.toByteArray(byteCodeSupplier.apply(cls)));
 				}
 				this.loadedBytecode = loadedBytecode;
 			}

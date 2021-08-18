@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 Roberto Gentili
+ * Copyright (c) 2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -29,8 +29,7 @@
 package org.burningwave.core.io;
 
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
-import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,114 +38,74 @@ import java.nio.ByteBuffer;
 
 public class ByteBufferOutputStream extends OutputStream {
 
-    private static final float REALLOCATION_FACTOR = 1.1f;
-
     private Integer initialCapacity;
     private Integer initialPosition;
     private ByteBuffer buffer;
-    private Boolean closeable;
     
-    public ByteBufferOutputStream() {
-    	this(((StreamsImpl)Streams).defaultBufferSize);
-    }
-    
-    public ByteBufferOutputStream(boolean closeable) {
-    	this(((StreamsImpl)Streams).defaultBufferSize, closeable);
-    }
-
-    public ByteBufferOutputStream(ByteBuffer buffer, boolean closeable) {
+    public ByteBufferOutputStream(ByteBuffer buffer) {
         this.buffer = buffer;
-        this.initialPosition = ByteBufferHandler.position(buffer);
-        this.initialCapacity = ByteBufferHandler.capacity(buffer);
-        this.closeable = closeable;
-    }
-    
-    public ByteBufferOutputStream(int initialCapacity) {
-        this(initialCapacity, true);
+        this.initialPosition = BufferHandler.position(buffer);
+        this.initialCapacity = BufferHandler.capacity(buffer);
     }
 
-    public ByteBufferOutputStream(int initialCapacity, boolean closeable) {
-        this(((StreamsImpl)Streams).defaultByteBufferAllocator.apply(initialCapacity), closeable);
-    }
-    
-    public void markAsCloseable(boolean closeable) {
-    	this.closeable = closeable;
+    public ByteBufferOutputStream(int initialCapacity) {
+        this(BufferHandler.allocate(initialCapacity));
     }
     
     @Override
 	public void write(int b) {
-        ensureRemaining(1);
+    	buffer = BufferHandler.ensureRemaining(buffer, 1, initialPosition);
         buffer.put((byte) b);
     }
 
     @Override
 	public void write(byte[] bytes, int off, int len) {
-        ensureRemaining(len);
+    	buffer = BufferHandler.ensureRemaining(buffer, len, initialPosition);
         buffer.put(bytes, off, len);
     }
 
     public void write(ByteBuffer sourceBuffer) {
-        ensureRemaining(sourceBuffer.remaining());
+    	buffer = BufferHandler.ensureRemaining(buffer, BufferHandler.remaining(sourceBuffer), initialPosition);
         buffer.put(sourceBuffer);
     }
 
     public int position() {
-        return ByteBufferHandler.position(buffer);
+        return BufferHandler.position(buffer);
     }
 
     public int remaining() {
-        return ByteBufferHandler.remaining(buffer);
+        return BufferHandler.remaining(buffer);
     }
 
     public int limit() {
-        return ByteBufferHandler.limit(buffer);
+        return BufferHandler.limit(buffer);
     }
 
     public void position(int position) {
-        ensureRemaining(position - ByteBufferHandler.position(buffer));
-        ByteBufferHandler.position(buffer, position);
+    	buffer = BufferHandler.ensureRemaining(buffer, position - BufferHandler.position(buffer), initialPosition);
+        BufferHandler.position(buffer, position);
     }
 
     public int initialCapacity() {
         return initialCapacity;
-    }
-
-    public void ensureRemaining(int remainingBytesRequired) {
-        if (remainingBytesRequired > buffer.remaining())
-            expandBuffer(remainingBytesRequired);
-    }
-
-    private void expandBuffer(int remainingRequired) {
-        int expandSize = Math.max((int) (ByteBufferHandler.limit(buffer) * REALLOCATION_FACTOR), ByteBufferHandler.position(buffer) + remainingRequired);
-        ByteBuffer temp = ((StreamsImpl)Streams).defaultByteBufferAllocator.apply(expandSize);
-        int limit = limit();
-        ByteBufferHandler.flip(buffer);
-        temp.put(buffer);
-        ByteBufferHandler.limit(buffer, limit);
-        ByteBufferHandler.position(buffer, initialPosition);
-        buffer = temp;
-    }
-    
+    }  
     
     InputStream toBufferedInputStream() {
         return new ByteBufferInputStream(buffer);
     }
     
-    @Override
-    public void close() {
-    	if (closeable) {
-    		this.initialCapacity = null;
-    		this.initialPosition = null;
-    		this.buffer = null;
-    		this.closeable = null;
-    	}
-    }
-
 	public ByteBuffer toByteBuffer() {
-		return Streams.shareContent(buffer);
+		return BufferHandler.shareContent(buffer);
 	}
 
 	public byte[] toByteArray() {
-		return Streams.toByteArray(toByteBuffer());
+		return BufferHandler.toByteArray(toByteBuffer());
 	}
+    
+    @Override
+    public void close() {
+    	this.initialCapacity = null;
+		this.initialPosition = null;
+		this.buffer = null;
+    }
 }

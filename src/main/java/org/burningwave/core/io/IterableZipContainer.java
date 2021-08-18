@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 Roberto Gentili
+ * Copyright (c) 2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
@@ -271,7 +272,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		public ByteBuffer toByteBuffer();
 		
 		default public byte[] toByteArray() {
-			return Streams.toByteArray(toByteBuffer());
+			return BufferHandler.toByteArray(toByteBuffer());
 		}
 		
 		public boolean isArchive();

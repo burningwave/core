@@ -13,7 +13,7 @@ public class LowLevelObjectsHandlerTest extends BaseTest {
 	@Test
 	public void createAndCloseTest() {
 		testDoesNotThrow(() -> {
-			org.burningwave.core.jvm.LowLevelObjectsHandler.create().close();
+			org.burningwave.core.jvm.LowLevelObjectsHandler.create("org.burningwave.core.jvm.DefaultDriver").close();
 		});
 	}
 	

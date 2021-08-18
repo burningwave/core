@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 Roberto Gentili
+ * Copyright (c) 2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -33,42 +33,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Predicate;
-
-import org.burningwave.core.iterable.Properties;
 
 
 public interface Streams {
-	public static class Configuration {
-		
-		public static class Key {
-		
-			static final String BYTE_BUFFER_SIZE = "streams.default-buffer-size";
-			static final String BYTE_BUFFER_ALLOCATION_MODE = "streams.default-byte-buffer-allocation-mode";
-		
-		}
-		
-		public final static Map<String, Object> DEFAULT_VALUES;
-		
-		static {
-			Map<String, Object> defaultValues = new HashMap<>();
-			
-			defaultValues.put(Key.BYTE_BUFFER_SIZE, "1024");
-			defaultValues.put(
-				Key.BYTE_BUFFER_ALLOCATION_MODE,
-				"ByteBuffer::allocateDirect"
-			);
-			
-			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
-		}
-	}
 	
-	
-	public static Streams create(Properties config) {
-		return new StreamsImpl(config);
+	public static Streams create() {
+		return new StreamsImpl();
 	}
 	
 	public boolean isArchive(File file) throws IOException;
@@ -86,16 +57,14 @@ public interface Streams {
 	public boolean is(File file, Predicate<Integer> predicate) throws IOException;
 
 	public byte[] toByteArray(InputStream inputStream);
-
+	
+	public ByteBuffer toByteBuffer(InputStream inputStream, int size);
+	
 	public ByteBuffer toByteBuffer(InputStream inputStream);
 
 	public StringBuffer getAsStringBuffer(InputStream inputStream);
 
-	public long copy(InputStream input, OutputStream output);
-
-	public byte[] toByteArray(ByteBuffer byteBuffer);
-
-	public ByteBuffer shareContent(ByteBuffer byteBuffer);
+	public void copy(InputStream input, OutputStream output);
 
 	public FileSystemItem store(String fileAbsolutePath, byte[] bytes);
 

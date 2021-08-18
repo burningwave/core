@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 Roberto Gentili
+ * Copyright (c) 2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
+import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
@@ -114,7 +114,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 	}
 
 	public byte[] toByteArray() {
-		return Streams.toByteArray(toByteBuffer());
+		return BufferHandler.toByteArray(toByteBuffer());
 	}
 
 	@Override
@@ -246,20 +246,11 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 				return absolutePath = Paths.clean(zipInputStream.getAbsolutePath() + "/" + getName());
 			}
 			
-			private ByteBufferOutputStream createDataBytesContainer() {
-				int currEntrySize = (int)super.getSize();
-				if (currEntrySize != -1) {
-					return new ByteBufferOutputStream(currEntrySize);
-				} else {
-					return new ByteBufferOutputStream();
-				}
-			}
-			
 			@Override
 			public long getSize() {
 				long size = super.getSize();
 				if (size < 0) {
-					size = ByteBufferHandler.limit(toByteBuffer());
+					size = BufferHandler.limit(toByteBuffer());
 				}
 				return size;
 			}		
@@ -271,9 +262,8 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 						if (zipInputStream.getCurrentZipEntry() != this) {
 							Throwables.throwException("{} and his ZipInputStream are not aligned", Attached.class.getSimpleName());
 						}
-						try (ByteBufferOutputStream bBOS = createDataBytesContainer()) {
-							Streams.copy(zipInputStream, bBOS);
-						    return bBOS.toByteBuffer();
+						try {
+						    return Streams.toByteBuffer(zipInputStream, (int)super.getSize());
 						} catch (Throwable exc) {
 							ManagedLoggersRepository.logError(getClass()::getName, "Could not load content of {} of {}", exc, getName(), zipInputStream.getAbsolutePath());
 							return null;
@@ -296,7 +286,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			
 			public void unzipToFolder(File folder) {
 				File destinationFilePath = new File(folder.getAbsolutePath(), this.getName());
-				int defaultBufferSize = ((StreamsImpl)Streams).defaultBufferSize;
+				int defaultBufferSize = BufferHandler.getDefaultBufferSize();
 				destinationFilePath.getParentFile().mkdirs();
 				if (!this.isDirectory()) {
 					Executor.run(() -> {
@@ -361,7 +351,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 							entry.getName().equals(getName()), zEntry -> 
 							zEntry.toByteBuffer(), zEntry -> true
 						);
-						return Streams.shareContent(content);
+						return BufferHandler.shareContent(content);
 					}
 				});			
 			}

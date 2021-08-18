@@ -1,83 +1,59 @@
+/*
+ * This file is part of Burningwave Core.
+ *
+ * Author: Roberto Gentili
+ *
+ * Hosted at: https://github.com/burningwave/core
+ *
+ * --
+ *
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2019 Roberto Gentili
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without
+ * limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial
+ * portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+ * EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+ * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+ * OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ByteBufferHandler;
-import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.math.BigDecimal;
 import java.nio.ByteBuffer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.burningwave.core.Identifiable;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
-import org.burningwave.core.iterable.Properties.Event;
 
 class StreamsImpl implements Streams, Identifiable, Properties.Listener, ManagedLogger {
-	int defaultBufferSize;
-	Function<Integer, ByteBuffer> defaultByteBufferAllocator;
+
 	String instanceId;
 	
-	StreamsImpl(java.util.Properties config) {
+	StreamsImpl() {
 		instanceId = getId();
-		setDefaultByteBufferSize(config);
-		setDefaultByteBufferAllocationMode(config);
-		if (config instanceof Properties) {
-			listenTo((Properties)config);
-		}
-	}
-
-	private void setDefaultByteBufferSize(java.util.Properties config) {
-		String defaultBufferSize = IterableObjectHelper.resolveStringValue(config, Configuration.Key.BYTE_BUFFER_SIZE, Configuration.DEFAULT_VALUES);
-		try {
-			this.defaultBufferSize = Integer.valueOf(defaultBufferSize);
-		} catch (Throwable exc) {
-			String unit = defaultBufferSize.substring(defaultBufferSize.length()-2);
-			String value = defaultBufferSize.substring(0, defaultBufferSize.length()-2);
-			if (unit.equalsIgnoreCase("KB")) {
-				this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(1024)).intValue();
-			} else if (unit.equalsIgnoreCase("MB")) {
-				this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(1024 * 1024)).intValue();
-			} else {
-				this.defaultBufferSize = Integer.valueOf(value);
-			};
-		}
-		ManagedLoggersRepository.logInfo(getClass()::getName, "default buffer size: {} bytes", this.defaultBufferSize);
-	}
-	
-	private void setDefaultByteBufferAllocationMode(java.util.Properties config) {
-		String defaultByteBufferAllocationMode = IterableObjectHelper.resolveStringValue(config, Configuration.Key.BYTE_BUFFER_ALLOCATION_MODE, Configuration.DEFAULT_VALUES);
-		if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
-			this.defaultByteBufferAllocator = ByteBufferHandler::allocate;
-			ManagedLoggersRepository.logInfo(getClass()::getName, "default allocation mode: ByteBuffer::allocate");
-		} else {
-			this.defaultByteBufferAllocator = ByteBufferHandler::allocateDirect;
-			ManagedLoggersRepository.logInfo(getClass()::getName, "default allocation mode: ByteBuffer::allocateDirect");
-		}
-	}
-	
-	@Override
-	public <K, V> void processChangeNotification(Properties config, Event event, K key, V newValue, V previousValue) {
-		if (event.name().equals(Event.PUT.name())) {
-			if (key instanceof String) {
-				String keyAsString = (String)key;
-				if (keyAsString.equals(Configuration.Key.BYTE_BUFFER_SIZE)) {
-					setDefaultByteBufferSize(config);
-				} else if (keyAsString.equals(Configuration.Key.BYTE_BUFFER_ALLOCATION_MODE)) {
-					setDefaultByteBufferAllocationMode(config);
-				}
-			}
-		}
 	}
 	
 	@Override
@@ -118,7 +94,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener, Managed
 	}
 	
 	private boolean is(ByteBuffer bytes, Predicate<Integer> predicate) {
-		return bytes.capacity() > 4 && bytes.limit() > 4 && predicate.test(ByteBufferHandler.duplicate(bytes).getInt());
+		return bytes.capacity() > 4 && bytes.limit() > 4 && predicate.test(BufferHandler.duplicate(bytes).getInt());
 	}
 	
 	private boolean isArchive(int fileSignature) {
@@ -135,18 +111,36 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener, Managed
 
 	@Override
 	public byte[] toByteArray(InputStream inputStream) {
-		try (ByteBufferOutputStream output = new ByteBufferOutputStream()) {
-			copy(inputStream, output);
-			return output.toByteArray();
+		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+			copy(inputStream, outputStream);
+			return outputStream.toByteArray();
+		} catch (Throwable exc) {
+			return Throwables.throwException(exc);
 		}
 	}
-
+	
+	@Override
+	public ByteBuffer toByteBuffer(InputStream inputStream, int streamSize) {
+		/*try (ByteBufferOutputStream outputStream = ByteBufferHandler.newByteBufferOutputStream(streamSize)) {
+			copy(inputStream, outputStream);
+			return outputStream.toByteBuffer();
+		}*/
+		try {
+			byte[] heapBuffer = BufferHandler.newByteArrayWithDefaultSize();
+			int bytesRead;
+			ByteBuffer byteBuffer = BufferHandler.newByteBuffer(streamSize);
+			while (-1 != (bytesRead = inputStream.read(heapBuffer))) {
+				byteBuffer = BufferHandler.put(byteBuffer, heapBuffer, bytesRead);
+			}
+			return BufferHandler.shareContent(byteBuffer);
+		} catch (Throwable exc) {
+			return Throwables.throwException(exc);
+		}
+	}
+	
 	@Override
 	public ByteBuffer toByteBuffer(InputStream inputStream) {
-		try (ByteBufferOutputStream output = new ByteBufferOutputStream()) {
-			copy(inputStream, output);
-			return output.toByteBuffer();
-		}
+		return toByteBuffer(inputStream, -1);
 	}
 	
 	@Override
@@ -169,44 +163,24 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener, Managed
 	}
 	
 	@Override
-	public long copy(InputStream input, OutputStream output) {
-		return Executor.get(() -> {
-			byte[] buffer = new byte[defaultBufferSize];
-			long count = 0L;
-			int n = 0;
-			while (-1 != (n = input.read(buffer))) {
-				output.write(buffer, 0, n);
-				count += n;
+	public void copy(InputStream input, OutputStream output) {
+		Executor.run(() -> {
+			byte[] buffer = BufferHandler.newByteArrayWithDefaultSize();
+			int bytesRead = 0;
+			while (-1 != (bytesRead = input.read(buffer))) {
+				output.write(buffer, 0, bytesRead);
 			}
-			return count;
 		});
 	}
 	
 	@Override
-	public byte[] toByteArray(ByteBuffer byteBuffer) {
-    	byteBuffer = shareContent(byteBuffer);
-    	byte[] result = new byte[ByteBufferHandler.limit(byteBuffer)];
-    	byteBuffer.get(result, 0, result.length);
-        return result;
-    }
-
-	@Override
-	public ByteBuffer shareContent(ByteBuffer byteBuffer) {
-		ByteBuffer duplicated = ByteBufferHandler.duplicate(byteBuffer);
-		if (ByteBufferHandler.position(byteBuffer) > 0) {
-			ByteBufferHandler.flip(duplicated);
-		}		
-		return duplicated;
-	}
-	
-	@Override
 	public FileSystemItem store(String fileAbsolutePath, byte[] bytes) {
-		return store(fileAbsolutePath, defaultByteBufferAllocator.apply(bytes.length).put(bytes, 0, bytes.length));
+		return store(fileAbsolutePath, BufferHandler.allocate(bytes.length).put(bytes, 0, bytes.length));
 	}
 	
 	@Override
 	public FileSystemItem store(String fileAbsolutePath, ByteBuffer bytes) {
-		ByteBuffer content = shareContent(bytes);
+		ByteBuffer content = BufferHandler.shareContent(bytes);
 		File file = new File(fileAbsolutePath);
 		Synchronizer.execute(fileAbsolutePath, () -> {
 			if (!file.exists()) {
