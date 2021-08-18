@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 Roberto Gentili
+ * Copyright (c) 2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -125,10 +125,10 @@ public class FileSystemItem {
 				if (conventionedAbsolutePathTemp == null || parentContainerTemp == null) {
 					if (parentContainerTemp != null && parentContainerTemp.isArchive()) {
 						ByteBuffer parentContainerContent = parentContainerTemp.toByteBuffer();
-						String relativePath = absolutePath.replace(parentContainer.getAbsolutePath() + "/", "");
-						conventionedAbsolutePathTemp = parentContainer.computeConventionedAbsolutePath()
+						String relativePath = absolutePath.replace(parentContainerTemp.getAbsolutePath() + "/", "");
+						conventionedAbsolutePathTemp = parentContainerTemp.computeConventionedAbsolutePath()
 								+ retrieveConventionedRelativePath(parentContainerContent,
-										parentContainer.getAbsolutePath(), relativePath);
+										parentContainerTemp.getAbsolutePath(), relativePath);
 						this.absolutePath.setValue(conventionedAbsolutePathTemp);
 					} else {
 						conventionedAbsolutePathTemp = retrieveConventionedAbsolutePath(absolutePath, "");
