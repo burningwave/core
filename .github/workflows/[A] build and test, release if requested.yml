@@ -21,7 +21,7 @@ jobs:
       matrix:
         architecture: [x64]
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        java: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17-ea]
+        java: [8, 9, 10, 11, 12, 13, 14, 15, 16]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -30,12 +30,8 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.architecture }}
-      - if: endsWith(matrix.java, '-ea') != true 
-        name: Build and test with final version JDK
+      - name: Build and test with final version JDK
         run: mvn -B clean test -Dproject_jdk_version=${{ matrix.java }} -DskipTests=false --file pom.xml
-      - if: endsWith(matrix.java, '17-ea') == true 
-        name: Build and test with early access version JDK
-        run: mvn -B clean test -Dproject_jdk_version=17 -DskipTests=false --file pom.xml
         
         
   release:
