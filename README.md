@@ -51,7 +51,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>8.21.2</version>
+    <version>8.22.0</version>
 </dependency>
 ```
 
@@ -1043,19 +1043,28 @@ background-executor.all-tasks-monitoring.logger.enabled=\
 	false
 background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-probable-dead-locked=\
 	300000
+banner.hide=\
+	false
+banner.file=\
+	org/burningwave/banner.bwb
 #Other possible values are: 'mark as probable dead locked', 'abort' or both comma separated
 background-executor.all-tasks-monitoring.probable-dead-locked-tasks-handling.policy=\
 	log only
 background-executor.task-creation-tracking.enabled=\
 	${background-executor.all-tasks-monitoring.enabled}
+buffer-handler.default-buffer-size=\
+	1024
+buffer-handler.default-allocation-mode=\
+	ByteBuffer::allocateDirect
 group-name-for-named-elements=\
 	Burningwave
-hide-banner-on-init=\
-	false
 iterable-object-helper.default-values-separator=\
 	;
 iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\
 	autodetect
+#It is possible to use a custom JVM driver which extends the abstract class org.burningwave.core.jvm.Driver
+low-level-objects-handler.driver=\
+	org.burningwave.core.jvm.DefaultDriver
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
 #the SLF4JManagedLoggerRepository will be instantiated, otherwise the SimpleManagedLoggerRepository will be instantiated
 managed-logger.repository=\
@@ -1070,10 +1079,6 @@ managed-logger.repository.logging.warn.disabled-for=\
 	org.burningwave.core.classes.MemoryClassLoader;\
 	org.burningwave.core.classes.PathScannerClassLoader;\
 	org.burningwave.core.classes.SearchContext;
-streams.default-buffer-size=\
-	1024
-streams.default-byte-buffer-allocation-mode=\
-	ByteBuffer::allocateDirect
 synchronizer.all-threads-monitoring.enabled=\
 	false
 synchronizer.all-threads-monitoring.interval=\
