@@ -986,9 +986,9 @@ More than one dynamic container can be created, while only one static container 
 It is represented by the **org.burningwave.core.assembler.StaticComponentContainer** class that provides the following fields for each component supplied:
 ```java
 public static final org.burningwave.core.concurrent.QueuedTasksExecutor.Group BackgroundExecutor;
+public static final org.burningwave.core.jvm.BufferHandler BufferHandler;
 public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
 public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
-public static final org.burningwave.core.jvm.LowLevelObjectsHandler.ByteBufferHandler ByteBufferHandler;
 public static final org.burningwave.core.Cache Cache;
 public static final org.burningwave.core.classes.Classes Classes;
 public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
