@@ -9,7 +9,7 @@
 	                                                                                                            
 	The MIT License (MIT)                                                                                       
 	                                                                                                            
-	Copyright (c) 2021 Roberto Gentili                                                                          
+	Copyright (c) 2019-2021 Roberto Gentili                                                                          
 	                                                                                                            
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 	documentation files (the "Software"), to deal in the Software without restriction, including without        
@@ -31,7 +31,7 @@
 
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
-	<version>8.22.1-SNAPSHOT</version>
+	<version>9.0.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Burningwave Core</name>
@@ -98,6 +98,7 @@
 		<jakarta.validation.version>2.0.2</jakarta.validation.version>
 		<junit-jupiter.version>5.7.0</junit-jupiter.version>
 		<junit.version>1.7.0</junit.version>
+		<jvm-driver.version>0.18.1</jvm-driver.version>
 		<maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
 		<maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
 		<maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
@@ -136,6 +137,11 @@
 	</scm>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.burningwave</groupId>
+			<artifactId>jvm-driver</artifactId>
+			<version>${jvm-driver.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
@@ -217,11 +223,6 @@
 				<includes>
 					<include>**</include>
 				</includes>
-				<excludes>
-					<exclude>compileExternalClasses.cmd</exclude>
-					<exclude>jdk/internal/loader/BuiltinClassLoader.class</exclude>
-					<exclude>jdk/internal/loader/URLClassPath.class</exclude>
-				</excludes>
 			</resource>
 		</resources>
 		<testResources>
@@ -331,13 +332,6 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
 				<version>${maven-source-plugin.version}</version>
-				<configuration>
-					<excludes>
-						<exclude>org/burningwave/core/jvm/AccessibleSetterRetrieverForJDK9.bwc</exclude>
-						<exclude>org/burningwave/core/jvm/ClassLoaderDelegateForJDK9.bwc</exclude>
-						<exclude>org/burningwave/core/jvm/ConsulterRetrieverForJDK9.bwc</exclude>
-					</excludes>
-				</configuration>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -443,13 +437,6 @@
 								</goals>
 							</execution>
 						</executions>
-						<configuration>
-					        <excludes>
-						        <exclude>**/*AccessibleSetterInvokerForJDK9.*</exclude>
-						        <exclude>**/*ClassLoaderDelegateForJDK9.*</exclude>
-						        <exclude>**/*ConsulterRetrieverForJDK9.*</exclude>
-						    </excludes>
-					    </configuration>
 					</plugin>
 				</plugins>
 			</build>
