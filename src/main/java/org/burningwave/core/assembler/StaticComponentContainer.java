@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2021 Roberto Gentili
+ * Copyright (c) 2019-2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -45,6 +45,7 @@ import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 import org.burningwave.core.jvm.BufferHandler;
+import org.burningwave.jvm.Driver;
 
 @SuppressWarnings("unused")
 public class StaticComponentContainer {
@@ -60,7 +61,7 @@ public class StaticComponentContainer {
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED = "background-executor.all-tasks-monitoring.logger.enabled";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL = "background-executor.all-tasks-monitoring.interval";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY = "background-executor.all-tasks-monitoring.probable-dead-locked-tasks-handling.policy";
-			private static final String LOW_LEVEL_OBJECTS_HANDLER_DRIVER = "low-level-objects-handler.driver";
+			private static final String JVM_DRIVER = "jvm.driver";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED = "synchronizer.all-threads-monitoring.enabled";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";	
 		}
@@ -120,7 +121,7 @@ public class StaticComponentContainer {
 				false
 			);
 			
-			defaultValues.put(Key.LOW_LEVEL_OBJECTS_HANDLER_DRIVER, "org.burningwave.core.jvm.DefaultDriver");
+			defaultValues.put(Key.JVM_DRIVER, "org.burningwave.jvm.DefaultDriver");
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
@@ -135,13 +136,13 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Cache Cache;
 	public static final org.burningwave.core.classes.Classes Classes;
 	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
+	public static final org.burningwave.jvm.Driver Driver;
 	public static final org.burningwave.core.classes.Constructors Constructors;
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.classes.Fields Fields;
 	public static final org.burningwave.core.iterable.Properties GlobalProperties;
 	public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
-	public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
-	public static final org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;
+	public static final org.burningwave.jvm.JVMInfo JVMInfo;
 	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 	public static final org.burningwave.core.classes.Members Members;
 	public static final org.burningwave.core.classes.Methods Methods;
@@ -159,6 +160,7 @@ public class StaticComponentContainer {
 	static {
 		try {
 			long startTime = System.nanoTime();
+			JVMInfo = org.burningwave.jvm.JVMInfo.getInstance();
 			Strings = org.burningwave.core.Strings.create();
 			Throwables = org.burningwave.core.Throwables.create();
 			Objects = org.burningwave.core.Objects.create();
@@ -244,6 +246,11 @@ public class StaticComponentContainer {
 				}				
 			}.listenTo(GlobalProperties = propBag.getKey());
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
+			Driver = Executor.get(() -> (Driver)StaticComponentContainer.class.getClassLoader().loadClass(
+				GlobalProperties.resolveValue(
+					Configuration.Key.JVM_DRIVER
+				)
+			).getDeclaredConstructor().newInstance());
 			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
 				getName("Thread supplier"),
 				GlobalProperties,
@@ -295,27 +302,15 @@ public class StaticComponentContainer {
 			);
 			Paths = org.burningwave.core.Strings.Paths.create();
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create(getName("FileSystemHelper"));
-			JVMInfo = org.burningwave.core.jvm.JVMInfo.create();
 			BufferHandler = org.burningwave.core.jvm.BufferHandler.create(GlobalProperties);
 			Streams = org.burningwave.core.io.Streams.create();
-			synchronized (org.burningwave.core.jvm.LowLevelObjectsHandler.class) {
-				LowLevelObjectsHandler = org.burningwave.core.jvm.LowLevelObjectsHandler.create(
-					GlobalProperties.resolveValue(
-						Configuration.Key.LOW_LEVEL_OBJECTS_HANDLER_DRIVER
-					)
-				);
-				org.burningwave.core.jvm.LowLevelObjectsHandler.class.notifyAll();
-			}
-			Classes = org.burningwave.core.classes.Classes.create();
-			ClassLoaders = org.burningwave.core.classes.Classes.Loaders.create();
+			Classes = org.burningwave.core.classes.Classes.create();			
 			Cache = org.burningwave.core.Cache.create();
-			synchronized (org.burningwave.core.classes.Members.class) {
-				Members = org.burningwave.core.classes.Members.create();
-				Fields = org.burningwave.core.classes.Fields.create();
-				Constructors = org.burningwave.core.classes.Constructors.create();
-				Methods = org.burningwave.core.classes.Methods.create();
-				org.burningwave.core.classes.Members.class.notifyAll();
-			}			
+			Members = org.burningwave.core.classes.Members.create();
+			Fields = org.burningwave.core.classes.Fields.create();
+			Constructors = org.burningwave.core.classes.Constructors.create();
+			Methods = org.burningwave.core.classes.Methods.create();
+			ClassLoaders = org.burningwave.core.classes.Classes.Loaders.create();
 			ByFieldOrByMethodPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByFieldOrByMethod.create();
 			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();

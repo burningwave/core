@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2021 Roberto Gentili
+ * Copyright (c) 2019-2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -58,7 +58,31 @@ public abstract class ExecutableMemberCriteria<
 	}
 	
 	
-	public C parameterTypesAreAssignableFrom(Class<?>... arguments) {
+	public C parameterTypesAreAssignableFrom(Class<?>... argumentsClasses) {
+		return parameterTypesMatch(
+			(argClasses, paramTypes, innerIdx) -> 
+				(argClasses.get(innerIdx) == null || Classes.isAssignableFrom(paramTypes[innerIdx], argClasses.get(innerIdx))),
+			argumentsClasses
+		);
+	}
+	
+	public C parameterTypesExactlyMatch(Class<?>... argumentsClasses) {
+		return parameterTypesMatch(
+			(argClasses, paramTypes, innerIdx) -> 
+				(argClasses.get(innerIdx) == null || Classes.getClassOrWrapper(paramTypes[innerIdx]).equals(Classes.getClassOrWrapper(argClasses.get(innerIdx)))),
+			argumentsClasses
+		);
+	}
+	
+	public C parameterTypesAreAssignableFromTypesOf(Object... arguments) {
+		return parameterTypesAreAssignableFrom(Classes.retrieveFrom(arguments));
+	}
+	
+	public C parameterTypesExactlyMatchTypesOf(Object... arguments) {
+		return parameterTypesAreAssignableFrom(Classes.retrieveFrom(arguments));
+	}
+	
+	private C parameterTypesMatch(TriPredicate<List<Class<?>>, Class<?>[], Integer> predicate, Class<?>... arguments) {
 		if (arguments == null) {
 			arguments = new Class<?>[]{null};
 		}
@@ -79,8 +103,6 @@ public abstract class ExecutableMemberCriteria<
 						}
 						Class<?>[] memberParameterTypes = Methods.retrieveParameterTypes(member, argumentsClassesAsList);	
 						if (argumentsClassesAsList.size() == memberParameterTypes.length) {							
-							TriPredicate<List<Class<?>>, Class<?>[], Integer> predicate = (argClasses, paramTypes, innerIdx) -> 
-								(argClasses.get(innerIdx) == null || Classes.isAssignableFrom(paramTypes[innerIdx], argClasses.get(innerIdx)));
 							if (context.getCriteria().getClassSupplier() == null) {
 								return predicate.test(argumentsClassesAsList, memberParameterTypes, index);
 							} else {
@@ -102,11 +124,6 @@ public abstract class ExecutableMemberCriteria<
 			);
 		}
 		return (C)this;
-	}
-	
-	
-	public C parameterTypesAreAssignableFromTypeOf(Object... arguments) {
-		return parameterTypesAreAssignableFrom(Classes.retrieveFrom(arguments));
 	}
 	
 	public C parameterType(final BiPredicate<Class<?>[], Integer> predicate) {

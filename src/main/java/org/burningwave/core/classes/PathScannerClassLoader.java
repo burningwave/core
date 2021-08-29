@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2021 Roberto Gentili
+ * Copyright (c) 2019-2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -160,7 +160,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	
 	@Override
 	public URL getResource(String name) {
-		ClassLoader parentClassLoader = getParent();
+		ClassLoader parentClassLoader = ClassLoaders.getParent(this);
 		URL url = null;
 		if (parentClassLoader != null) {
 			url = parentClassLoader.getResource(name);
@@ -202,7 +202,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	}
 
 	List<URL> getResourcesURLFromParent(String name) throws IOException {
-		ClassLoader parentClassLoader = getParent();
+		ClassLoader parentClassLoader = ClassLoaders.getParent(this);
 		List<URL> resourcesFound = new CopyOnWriteArrayList<>();
 		if (parentClassLoader != null) {
 			Enumeration<URL> urlEnum = parentClassLoader.getResources(name);
@@ -256,7 +256,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			return true;
 		}
 		FileSystemItem pathFIS = FileSystemItem.ofPath(path);
-		for (String loadedPath : ClassLoaders.getAllLoadedPaths(this.getParent())) {
+		for (String loadedPath : ClassLoaders.getAllLoadedPaths(ClassLoaders.getParent(this))) {
 			FileSystemItem loadedPathFIS = FileSystemItem.ofPath(loadedPath);
 			if (pathFIS.isChildOf(loadedPathFIS) || pathFIS.equals(loadedPathFIS)) {
 				return true;

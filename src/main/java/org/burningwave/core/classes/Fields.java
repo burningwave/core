@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2021 Roberto Gentili
+ * Copyright (c) 2019-2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -30,7 +30,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.reflect.Field;
@@ -67,11 +67,11 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	}	
 	
 	public <T> T getStaticDirect(Field field) {
-		return Executor.get(() -> (T)LowLevelObjectsHandler.getFieldValue(null, field));
+		return Executor.get(() -> (T)Driver.getFieldValue(null, field));
 	}
 	
 	public <T> T getDirect(Object target, Field field) {
-		return Executor.get(() -> (T)LowLevelObjectsHandler.getFieldValue(target, field));
+		return Executor.get(() -> (T)Driver.getFieldValue(target, field));
 	}
 	
 	public <T> T getStaticDirect(Class<?> targetClass, String fieldName) {
@@ -99,7 +99,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	}
 	
 	public void setDirect(Object target, Field field, Object value) {
-		LowLevelObjectsHandler.setFieldValue(target, field, value);
+		Driver.setFieldValue(target, field, value);
 	}
 	
 	private void setDirect(Class<?> targetClass, Object target, String fieldName, Object value) {
@@ -170,7 +170,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 		for (Field field : fieldsSupplier.get()) {
 			fieldValues.put(
 				field,
-				Executor.get(() -> LowLevelObjectsHandler.getFieldValue(target, field))
+				Executor.get(() -> Driver.getFieldValue(target, field))
 			);
 		}
 		return fieldValues;
@@ -184,8 +184,8 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 		return members.stream().findFirst().get();
 	}
 	
-	public Field findFirstAndMakeItAccessible(Class<?> targetClass, String fieldName, Class<?> valueClass) {
-		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, fieldName, valueClass);
+	public Field findFirstAndMakeItAccessible(Class<?> targetClass, String fieldName, Class<?> fieldTypeOrSubType) {
+		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, fieldName, fieldTypeOrSubType);
 		if (members.size() < 1) {
 			Throwables.throwException("Field {} not found in {} hierarchy", fieldName, targetClass.getName());
 		}

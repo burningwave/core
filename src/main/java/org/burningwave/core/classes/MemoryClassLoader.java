@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2021 Roberto Gentili
+ * Copyright (c) 2019-2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -255,7 +255,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
     @Override
     public InputStream getResourceAsStream(String name) {
-    	ClassLoader parentClassLoader = getParent();
+    	ClassLoader parentClassLoader = ClassLoaders.getParent(this);
     	InputStream inputStream = null;
     	if (parentClassLoader != null) {
     		inputStream = parentClassLoader.getResourceAsStream(name);
@@ -444,7 +444,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 				Throwables.throwException("Could not close {} because there are {} registered clients", this, clients.size());
 			}
 			isClosed = true;
-			ClassLoader parentClassLoader = getParent();
+			ClassLoader parentClassLoader = ClassLoaders.getParent(this);
 			if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
 				((MemoryClassLoader)parentClassLoader).unregister(this,true);
 			}

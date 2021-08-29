@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2021 Roberto Gentili
+ * Copyright (c) 2019 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -28,10 +28,9 @@
  */
 package org.burningwave.core.jvm;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
@@ -94,30 +93,10 @@ public class BufferHandler implements Component {
 		if (config instanceof Properties) {
 			listenTo((Properties)config);
 		}
-		BackgroundExecutor.createTask(() -> {
-			deferredInit(config);
-			synchronized (this) {
-				this.notifyAll();
-			}
-		}).setName("ByteBufferHandler initializer").submit();
-	}
-
-	void deferredInit(java.util.Properties config) {
-		try {
-			if (LowLevelObjectsHandler == null) {
-				synchronized (LowLevelObjectsHandler.class) {
-					if (LowLevelObjectsHandler == null) {							
-						LowLevelObjectsHandler.class.wait();
-					}
-				}
-			}
-			Class<?> directByteBufferClass = ByteBuffer.allocateDirect(0).getClass();
-			while (directByteBufferClass != null && directAllocatedByteBufferAddressField == null) {
-				directAllocatedByteBufferAddressField = LowLevelObjectsHandler.getDeclaredField(directByteBufferClass, field -> "address".equals(field.getName()));
-				directByteBufferClass = directByteBufferClass.getSuperclass();
-			}
-		} catch (InterruptedException exc) {
-			Throwables.throwException(exc);
+		Class<?> directByteBufferClass = ByteBuffer.allocateDirect(0).getClass();		
+		while (directByteBufferClass != null && directAllocatedByteBufferAddressField == null) {
+			directAllocatedByteBufferAddressField = Driver.getDeclaredField(directByteBufferClass, "address");
+			directByteBufferClass = directByteBufferClass.getSuperclass();
 		}
 	}
 	
@@ -272,9 +251,9 @@ public class BufferHandler implements Component {
 	
 	public <T extends Buffer> long getAddress(T buffer) {
 		try {
-			return (long)LowLevelObjectsHandler.getFieldValue(buffer, directAllocatedByteBufferAddressField);
+			return (long)Driver.getFieldValue(buffer, directAllocatedByteBufferAddressField);
 		} catch (NullPointerException exc) {
-			return (long)LowLevelObjectsHandler.getFieldValue(buffer, getDirectAllocatedByteBufferAddressField());
+			return (long)Driver.getFieldValue(buffer, getDirectAllocatedByteBufferAddressField());
 		}
 	}
 	
