@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2021 Roberto Gentili
+ * Copyright (c) 2019-2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -30,7 +30,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -70,31 +70,31 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		return methodName;
 	}
 	
-	public Method findOneAndMakeItAccessible(Class<?> targetClass, String memberName, Class<?>... argumentTypes) {
-		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(targetClass, memberName, argumentTypes);
+	public Method findOneAndMakeItAccessible(Class<?> targetClass, String memberName, Class<?>... inputParameterTypesOrSubTypes) {
+		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(targetClass, memberName, inputParameterTypesOrSubTypes);
 		if (members.size() == 1) {
 			return members.stream().findFirst().get();
 		} else if (members.size() > 1) {
-			Collection<Method> membersThatMatch = searchForExactMatch(members, argumentTypes);
+			Collection<Method> membersThatMatch = searchForExactMatch(members, inputParameterTypesOrSubTypes);
 			if (membersThatMatch.size() == 1) {
 				return membersThatMatch.stream().findFirst().get();
 			}
 			Throwables.throwException(
 				"Found more than one of method named {} with argument types {} in {} hierarchy",
 				memberName,
-				String.join(", ", Arrays.asList(argumentTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),
+				String.join(", ", Arrays.asList(inputParameterTypesOrSubTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),
 				targetClass.getName()
 			);
 		}
 		return null;
 	}
 	
-	public Method findFirstAndMakeItAccessible(Class<?> targetClass, String memberName, Class<?>... arguments) {
-		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(targetClass, memberName, arguments);
+	public Method findFirstAndMakeItAccessible(Class<?> targetClass, String memberName, Class<?>... inputParameterTypesOrSubTypes) {
+		Collection<Method> members = findAllByExactNameAndMakeThemAccessible(targetClass, memberName, inputParameterTypesOrSubTypes);
 		if (members.size() == 1) {
 			return members.stream().findFirst().get();
 		} else if (members.size() > 1) {
-			Collection<Method> membersThatMatch = searchForExactMatch(members, arguments);
+			Collection<Method> membersThatMatch = searchForExactMatch(members, inputParameterTypesOrSubTypes);
 			if (!membersThatMatch.isEmpty()) {
 				return membersThatMatch.stream().findFirst().get();
 			}
@@ -106,32 +106,32 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 	public Collection<Method> findAllByExactNameAndMakeThemAccessible(
 		Class<?> targetClass,
 		String methodName,
-		Class<?>... argumentTypes
+		Class<?>... inputParameterTypesOrSubTypes
 	) {	
-		return findAllByNamePredicateAndMakeThemAccessible(targetClass, "equals " + methodName, methodName::equals, argumentTypes);
+		return findAllByNamePredicateAndMakeThemAccessible(targetClass, "equals " + methodName, methodName::equals, inputParameterTypesOrSubTypes);
 	}
 	
 	public Collection<Method> findAllByMatchedNameAndMakeThemAccessible(
 		Class<?> targetClass,
 		String methodName,
-		Class<?>... argumentTypes
+		Class<?>... inputParameterTypesOrSubTypes
 	) {	
-		return findAllByNamePredicateAndMakeThemAccessible(targetClass, "match " + methodName, methodName::matches, argumentTypes);
+		return findAllByNamePredicateAndMakeThemAccessible(targetClass, "match " + methodName, methodName::matches, inputParameterTypesOrSubTypes);
 	}
 	
 	private Collection<Method> findAllByNamePredicateAndMakeThemAccessible(
 		Class<?> targetClass,
 		String cacheKeyPrefix,
 		Predicate<String> namePredicate,
-		Class<?>... arguments
+		Class<?>... inputParameterTypesOrSubTypes
 	) {	
-		String cacheKey = getCacheKey(targetClass, cacheKeyPrefix, arguments);
+		String cacheKey = getCacheKey(targetClass, cacheKeyPrefix, inputParameterTypesOrSubTypes);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		return Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> {
 			MethodCriteria criteria = MethodCriteria.forEntireClassHierarchy()
 				.name(namePredicate)
-				.and().parameterTypesAreAssignableFrom(arguments);			
-			if (arguments != null && arguments.length == 0) {
+				.and().parameterTypesAreAssignableFrom(inputParameterTypesOrSubTypes);			
+			if (inputParameterTypesOrSubTypes != null && inputParameterTypesOrSubTypes.length == 0) {
 				criteria = criteria.or(MethodCriteria.forEntireClassHierarchy().name(namePredicate).and().parameter((parameters, idx) -> parameters.length == 1 && parameters[0].isVarArgs()));
 			}
 			MethodCriteria finalCriteria = criteria;
@@ -167,7 +167,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 	public 	<T> T invokeStatic(Class<?> targetClass, String methodName, Object... arguments) {
 		return invoke(
 			targetClass, null, methodName, method -> 
-				(T)LowLevelObjectsHandler.invoke(null,
+				(T)invoke(null,
 					method,
 					getArgumentArray(
 						method,
@@ -184,7 +184,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		return invoke(
 			Classes.retrieveFrom(target), 
 			null, methodName, method -> 
-				(T)LowLevelObjectsHandler.invoke(
+				invoke(
 						target, method, getArgumentArray(
 						method,
 						this::getArgumentListWithArrayForVarArgs,
@@ -194,6 +194,17 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 				),
 			arguments
 		);
+	}
+	
+	private <T> T invoke(Object target, Method method, Object... params) {
+		if (params == null) {
+			params = new Object[] {null};
+		}
+		try {
+			return (T)method.invoke(target, params);
+		} catch (Throwable exc) {
+			return Driver.invoke(method, target, params);
+		}
 	}
 	
 	private <T> T invoke(Class<?> targetClass, Object target, String methodName, ThrowingFunction<Method, T, Throwable> methodInvoker, Object... arguments) {
@@ -233,17 +244,17 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		);
 	}
 	
-	public MethodHandle findDirectHandle(Class<?> targetClass, String methodName, Class<?>... arguments) {
-		return findDirectHandleBox(targetClass, methodName, arguments).getHandler();
+	public MethodHandle findDirectHandle(Class<?> targetClass, String methodName, Class<?>... inputParameterTypesOrSubTypes) {
+		return findDirectHandleBox(targetClass, methodName, inputParameterTypesOrSubTypes).getHandler();
 	}
 	
-	private Members.Handler.OfExecutable.Box<Method> findDirectHandleBox(Class<?> targetClass, String methodName, Class<?>... argsType) {
-		String cacheKey = getCacheKey(targetClass, "equals " + methodName, argsType);
+	private Members.Handler.OfExecutable.Box<Method> findDirectHandleBox(Class<?> targetClass, String methodName, Class<?>... inputParameterTypesOrSubTypes) {
+		String cacheKey = getCacheKey(targetClass, "equals " + methodName, inputParameterTypesOrSubTypes);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		Members.Handler.OfExecutable.Box<Method> entry =
 			(Box<Method>)Cache.uniqueKeyForExecutableAndMethodHandle.get(targetClassClassLoader, cacheKey);
 		if (entry == null) {
-			Method method = findFirstAndMakeItAccessible(targetClass, methodName, argsType);
+			Method method = findFirstAndMakeItAccessible(targetClass, methodName, inputParameterTypesOrSubTypes);
 			if (method == null) {
 				Throwables.throwException("Method {} not found in {} hierarchy", methodName, targetClass.getName());
 			}

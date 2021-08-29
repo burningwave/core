@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2021 Roberto Gentili
+ * Copyright (c) 2019-2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -30,7 +30,6 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.invoke.MethodHandle;
@@ -63,7 +62,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		}
 		return Executor.get(() -> {
 			//logInfo("Invoking " + ctor);
-			return (T)LowLevelObjectsHandler.newInstance(
+			return (T)Classes.newInstance(
 				ctor,
 				getArgumentArray(
 					ctor,
@@ -109,12 +108,12 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		return null; 
 	}
 	
-	public Constructor<?> findFirstAndMakeItAccessible(Class<?> targetClass, Class<?>... arguments) {
-		Collection<Constructor<?>> members = findAllAndMakeThemAccessible(targetClass, arguments);
+	public Constructor<?> findFirstAndMakeItAccessible(Class<?> targetClass, Class<?>... inputParameterTypesOrSubTypes) {
+		Collection<Constructor<?>> members = findAllAndMakeThemAccessible(targetClass, inputParameterTypesOrSubTypes);
 		if (members.size() == 1) {
 			return members.stream().findFirst().get();
 		} else if (members.size() > 1) {
-			Collection<Constructor<?>> membersThatMatch = searchForExactMatch(members, arguments);
+			Collection<Constructor<?>> membersThatMatch = searchForExactMatch(members, inputParameterTypesOrSubTypes);
 			if (!membersThatMatch.isEmpty()) {
 				return membersThatMatch.stream().findFirst().get();
 			}
@@ -125,13 +124,13 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 	
 	public Collection<Constructor<?>> findAllAndMakeThemAccessible(
 		Class<?> targetClass,
-		Class<?>... arguments
+		Class<?>... inputParameterTypesOrSubTypes
 	) {	
-		String cacheKey = getCacheKey(targetClass, "all constructors with input parameters", arguments);
+		String cacheKey = getCacheKey(targetClass, "all constructors by input parameters assignable from", inputParameterTypesOrSubTypes);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		return Cache.uniqueKeyForConstructors.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> {
-			ConstructorCriteria criteria = ConstructorCriteria.withoutConsideringParentClasses().parameterTypesAreAssignableFrom(arguments);
-			if (arguments != null && arguments.length == 0) {
+			ConstructorCriteria criteria = ConstructorCriteria.withoutConsideringParentClasses().parameterTypesAreAssignableFrom(inputParameterTypesOrSubTypes);
+			if (inputParameterTypesOrSubTypes != null && inputParameterTypesOrSubTypes.length == 0) {
 				criteria.or().parameter((parameters, idx) -> parameters.length == 1 && parameters[0].isVarArgs());
 			}
 			return Collections.unmodifiableCollection(
@@ -163,18 +162,18 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		return members;
 	}
 	
-	public MethodHandle findDirectHandle(Class<?> targetClass, Class<?>... arguments) {
-		return findDirectHandleBox(targetClass, arguments).getHandler();
+	public MethodHandle findDirectHandle(Class<?> targetClass, Class<?>... inputParameterTypesOrSubTypes) {
+		return findDirectHandleBox(targetClass, inputParameterTypesOrSubTypes).getHandler();
 	}
 	
-	private Members.Handler.OfExecutable.Box<Constructor<?>> findDirectHandleBox(Class<?> targetClass, Class<?>... argsType) {
+	private Members.Handler.OfExecutable.Box<Constructor<?>> findDirectHandleBox(Class<?> targetClass, Class<?>... inputParameterTypesOrSubTypes) {
 		String nameForCaching = retrieveNameForCaching(targetClass);
-		String cacheKey = getCacheKey(targetClass, "equals " + nameForCaching, argsType);
+		String cacheKey = getCacheKey(targetClass, "equals " + nameForCaching, inputParameterTypesOrSubTypes);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		Members.Handler.OfExecutable.Box<Constructor<?>> entry =
 			(Box<Constructor<?>>)Cache.uniqueKeyForExecutableAndMethodHandle.get(targetClassClassLoader, cacheKey);
 		if (entry == null) {
-			Constructor<?> ctor = findFirstAndMakeItAccessible(targetClass, argsType);
+			Constructor<?> ctor = findFirstAndMakeItAccessible(targetClass, inputParameterTypesOrSubTypes);
 			entry = findDirectHandleBox(
 				ctor, targetClassClassLoader, cacheKey
 			);

@@ -111,7 +111,7 @@ public class BaseTest implements Component {
 		} catch (Throwable exc) {
 			ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 		}
-		assertTrue(!coll.isEmpty());
+		assertTrue(coll != null && !coll.isEmpty());
 	}
 	
 	private String getCallerMethod() {

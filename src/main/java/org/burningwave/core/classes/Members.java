@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2021 Roberto Gentili
+ * Copyright (c) 2019-2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -30,7 +30,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
@@ -183,9 +183,8 @@ public class Members implements ManagedLogger {
 					Stream.of(cnsms).filter(consumer -> 
 						consumer != null
 					).forEach(consumer -> {
-							consumer.accept(member);
-						}
-					)
+						consumer.accept(member);
+					})
 				)
 			);
 			return members;
@@ -217,7 +216,7 @@ public class Members implements ManagedLogger {
 		}
 		
 		public void setAccessible(M member, boolean flag) {
-			LowLevelObjectsHandler.setAccessible((AccessibleObject)member, flag);			
+			Driver.setAccessible((AccessibleObject)member, flag);			
 		}
 
 		String getCacheKey(Class<?> targetClass, String groupName, Class<?>... arguments) {
@@ -499,7 +498,7 @@ public class Members implements ManagedLogger {
 				return (Box<E>)Cache.uniqueKeyForExecutableAndMethodHandle.getOrUploadIfAbsent(classLoader, cacheKey, () -> {
 					try {
 						Class<?> methodDeclaringClass = executable.getDeclaringClass();
-						MethodHandles.Lookup consulter = LowLevelObjectsHandler.getConsulter(methodDeclaringClass);
+						MethodHandles.Lookup consulter = Driver.getConsulter(methodDeclaringClass);
 						return new Members.Handler.OfExecutable.Box<>(consulter,
 							executable,
 							retrieveMethodHandle(consulter, executable)

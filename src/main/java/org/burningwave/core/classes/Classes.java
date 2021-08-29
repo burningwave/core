@@ -9,7 +9,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2021 Roberto Gentili
+ * Copyright (c) 2019-2021 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -31,9 +31,12 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
-import static org.burningwave.core.assembler.StaticComponentContainer.LowLevelObjectsHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
@@ -74,7 +77,7 @@ import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "resource"})
 public class Classes implements MembersRetriever {
 	public static class Symbol{
 		public static class Tag {
@@ -99,7 +102,15 @@ public class Classes implements MembersRetriever {
 	    }		
 	}
 	
-	private Classes() {}
+	Field[] emtpyFieldsArray;
+	Method[] emptyMethodsArray;
+	Constructor<?>[] emptyConstructorsArray;
+	
+	private Classes() {
+		emtpyFieldsArray = new Field[]{};
+		emptyMethodsArray = new Method[]{};
+		emptyConstructorsArray = new Constructor<?>[]{};
+	}
 	
 	public static Classes create() {
 		return new Classes();
@@ -328,35 +339,72 @@ public class Classes implements MembersRetriever {
 		);
 	}
 	
+	public <T> T newInstance(Constructor<T> ctor, Object... params) {
+		if (params == null) {
+			params = new Object[] {null};
+		}
+		try {
+			return ctor.newInstance(params);
+		} catch (Throwable exc) {
+			return Driver.newInstance(ctor, params);
+		}
+	}
+	
 	@Override
 	public Field[] getDeclaredFields(Class<?> cls)  {
 		return Cache.classLoaderForFields.getOrUploadIfAbsent(
-			getClassLoader(cls), cls.getName().replace(".", "/"),
-			() -> LowLevelObjectsHandler.getDeclaredFields(cls)
+			getClassLoader(cls), getCacheKey(cls),
+			() -> {
+				try {
+					return Driver.getDeclaredFields(cls);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logWarn(getClass()::getName, "Could not retrieve fields of class {}. Cause: {}", cls.getName(), exc.getMessage());
+					return emtpyFieldsArray;
+				}	
+			}
 		);
 	}
 	
 	@Override
 	public <T> Constructor<T>[] getDeclaredConstructors(Class<T> cls)  {
 		return (Constructor<T>[]) Cache.classLoaderForConstructors.getOrUploadIfAbsent(
-			getClassLoader(cls), cls.getName().replace(".", "/"),
-			() -> LowLevelObjectsHandler.getDeclaredConstructors(cls)
+			getClassLoader(cls), getCacheKey(cls),
+			() -> {
+				try {
+					return Driver.getDeclaredConstructors(cls);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logWarn(getClass()::getName, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
+					return (Constructor<T>[])emptyConstructorsArray;
+				}
+			}
 		);
 	}
 	
 	@Override
 	public Method[] getDeclaredMethods(Class<?> cls)  {
 		return Cache.classLoaderForMethods.getOrUploadIfAbsent(
-			getClassLoader(cls), cls.getName().replace(".", "/"),
-			() -> LowLevelObjectsHandler.getDeclaredMethods(cls)
+			getClassLoader(cls), getCacheKey(cls),
+			() -> {
+				try {
+					return Driver.getDeclaredMethods(cls);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logWarn(getClass()::getName, "Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
+					return emptyMethodsArray;
+				}
+			}
 		);
-	}	
+	}
+	
+	String getCacheKey(Class<?> cls) {
+		return cls.getName().replace(".", "/");
+	}
 	
 	public boolean isLoadedBy(Class<?> cls, ClassLoader classLoader) {
+		ClassLoader parentClassLoader = null;
 		if (cls.getClassLoader() == classLoader) {
 			return true;
-		} else if (classLoader != null && classLoader.getParent() != null) {
-			return isLoadedBy(cls, classLoader.getParent());
+		} else if (classLoader != null && (parentClassLoader = ClassLoaders.getParent(classLoader)) != null) {
+			return isLoadedBy(cls, parentClassLoader);
 		} else {
 			return false;
 		}
@@ -391,11 +439,15 @@ public class Classes implements MembersRetriever {
 		protected Map<ClassLoader, Collection<Class<?>>> classLoadersClasses;
 		protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 		protected Map<String, MethodHandle> classLoadersMethods;
-		
+		protected Field builtinClassLoaderClassParentField;
 		private Loaders() {
 			this.classLoadersClasses = new HashMap<>();
 			this.classLoadersPackages = new HashMap<>();
 			this.classLoadersMethods = new HashMap<>();
+			Class<?> builtinClassLoaderClass = Driver.getBuiltinClassLoaderClass();
+			if (builtinClassLoaderClass != null) {
+				this.builtinClassLoaderClassParentField = Fields.findFirstAndMakeItAccessible(builtinClassLoaderClass, "parent", builtinClassLoaderClass);
+			}
 		}
 		
 		public static Loaders create() {
@@ -422,20 +474,89 @@ public class Classes implements MembersRetriever {
 		}
 		
 		public Function<Boolean, ClassLoader> setAsMaster(ClassLoader classLoader, ClassLoader futureParent) {
-			return LowLevelObjectsHandler.setAsParent(getMaster(classLoader), futureParent);
+			return setAsParent(getMaster(classLoader), futureParent);
 		}
 		
-		public Function<Boolean, ClassLoader> setAsParent(ClassLoader classLoader, ClassLoader futureParent) {
-			return LowLevelObjectsHandler.setAsParent(classLoader, futureParent);
+		public Function<Boolean, ClassLoader> setAsParent(ClassLoader target, ClassLoader originalFutureParent) {
+			if (Driver.isClassLoaderDelegate(target)) {
+				return setAsParent(Fields.getDirect(target, "classLoader"), originalFutureParent);
+			}
+			ClassLoader futureParentTemp = originalFutureParent;
+			if (isBuiltinClassLoader(target)) {
+				futureParentTemp = checkAndConvertBuiltinClassLoader(futureParentTemp);
+			}
+			ClassLoader targetExParent = Fields.get(target, "parent");
+			ClassLoader futureParent = futureParentTemp;
+			checkAndRegisterOrUnregisterMemoryClassLoaders(target, targetExParent, originalFutureParent);		
+			Fields.setDirect(target, "parent", futureParent);
+			return (reset) -> {
+				if (reset) {
+					checkAndRegisterOrUnregisterMemoryClassLoaders(target, originalFutureParent, targetExParent);
+					Fields.setDirect(target, "parent", targetExParent);
+				}
+				return targetExParent;
+			};
+		}
+		
+		private void checkAndRegisterOrUnregisterMemoryClassLoaders(ClassLoader target, ClassLoader exParent, ClassLoader futureParent) {
+			if (Driver.isClassLoaderDelegate(target)) {
+				target = Fields.getDirect(target, "classLoader");
+			}
+			if (exParent != null && Driver.isClassLoaderDelegate(exParent)) {
+				exParent = Fields.getDirect(exParent, "classLoader");
+			}
+			if (futureParent != null && Driver.isClassLoaderDelegate(futureParent)) {
+				futureParent = Fields.getDirect(futureParent, "classLoader");
+			}
+			MemoryClassLoader exParentMC = exParent instanceof MemoryClassLoader? (MemoryClassLoader)exParent : null;
+			MemoryClassLoader futureParentMC = futureParent instanceof MemoryClassLoader? (MemoryClassLoader)futureParent : null;
+			MemoryClassLoader targetMemoryClassLoader = target instanceof MemoryClassLoader? (MemoryClassLoader)target : null;
+			if (targetMemoryClassLoader != null) {
+				if (futureParentMC != null) {
+					futureParentMC.register(targetMemoryClassLoader);
+				}
+				if (exParentMC != null) {
+					exParentMC.unregister(targetMemoryClassLoader, false);
+				}
+			}
+		}
+		
+		private ClassLoader checkAndConvertBuiltinClassLoader(ClassLoader classLoader) {
+			if (!isBuiltinClassLoader(classLoader)) {
+				try {
+					Collection<Method> methods = Members.findAll(
+						MethodCriteria.byScanUpTo(
+							cls -> cls.getName().equals(ClassLoader.class.getName())
+						).name(
+							"loadClass"::equals
+						).and().parameterTypesAreAssignableFrom(
+							String.class, boolean.class
+						), classLoader.getClass()
+					);					
+					classLoader = (ClassLoader)Constructors.newInstanceOf(Driver.getClassLoaderDelegateClass(), null, classLoader, Methods.findDirectHandle(
+						methods.stream().skip(methods.size() - 1).findFirst().get()
+					));
+				} catch (Throwable exc) {
+					Throwables.throwException(exc);
+				}
+			}
+			return classLoader;
 		}
 		
 		public ClassLoader getParent(ClassLoader classLoader) {
-			return LowLevelObjectsHandler.getParent(classLoader);
+			if (Driver.isClassLoaderDelegate(classLoader)) {
+				return getParent(Fields.getDirect(classLoader, "classLoader"));
+			} else if (isBuiltinClassLoader(classLoader)) {
+				return Executor.get(() ->(ClassLoader) builtinClassLoaderClassParentField.get(classLoader));
+			} else {
+				return classLoader.getParent();
+			}
 		}
 		
 		public  ClassLoader getMaster(ClassLoader classLoader) {
-			while (getParent(classLoader) != null) {
-				classLoader = getParent(classLoader); 
+			ClassLoader parentClassLoader = null;
+			while ((parentClassLoader = getParent(classLoader)) != null) {
+				classLoader = parentClassLoader; 
 			}
 			return classLoader;
 		}
@@ -531,7 +652,7 @@ public class Classes implements MembersRetriever {
 					synchronized (classLoadersClasses) {
 						classes = classLoadersClasses.get(classLoader);
 						if (classes == null) {
-							classLoadersClasses.put(classLoader, (classes = LowLevelObjectsHandler.retrieveLoadedClasses(classLoader)));
+							classLoadersClasses.put(classLoader, (classes = Driver.retrieveLoadedClasses(classLoader)));
 							return classes;
 						}
 					}
@@ -544,8 +665,9 @@ public class Classes implements MembersRetriever {
 		public Collection<Class<?>> retrieveAllLoadedClasses(ClassLoader classLoader) {
 			Collection<Class<?>> allLoadedClasses = new LinkedHashSet<>();
 			allLoadedClasses.addAll(retrieveLoadedClasses(classLoader));
-			if (classLoader.getParent() != null) {
-				allLoadedClasses.addAll(retrieveAllLoadedClasses(classLoader.getParent()));
+			ClassLoader parentClassLoader = getParent(classLoader);
+			if (parentClassLoader != null) {
+				allLoadedClasses.addAll(retrieveAllLoadedClasses(parentClassLoader));
 			}
 			return allLoadedClasses;
 		}
@@ -556,7 +678,7 @@ public class Classes implements MembersRetriever {
 				synchronized (classLoadersPackages) {
 					packages = classLoadersPackages.get(classLoader);
 					if (packages == null) {
-						classLoadersPackages.put(classLoader, (packages = LowLevelObjectsHandler.retrieveLoadedPackages(classLoader)));
+						classLoadersPackages.put(classLoader, (packages = Driver.retrieveLoadedPackages(classLoader)));
 					}
 				}
 			
@@ -566,10 +688,6 @@ public class Classes implements MembersRetriever {
 			}
 			return packages;
 			
-		}
-		
-		public Package retrieveLoadedPackage(ClassLoader classLoader, Object packageToFind, String packageName) {
-			return Executor.get(() -> LowLevelObjectsHandler.retrieveLoadedPackage(classLoader, packageToFind, packageName));
 		}
 		
 		public <T> Class<T> loadOrDefineByJavaClass(
@@ -783,8 +901,9 @@ public class Classes implements MembersRetriever {
 					}
 				}
 			}
-			if (classLoader.getParent() != null) {
-				return retrieveLoadedClass(classLoader.getParent(), className);
+			ClassLoader parentClassLoader = getParent(classLoader);
+			if (parentClassLoader != null) {
+				return retrieveLoadedClass(parentClassLoader, className);
 			}
 			return null;
 		}	
@@ -802,8 +921,9 @@ public class Classes implements MembersRetriever {
 					}
 				}
 			}
-			if (classLoader.getParent() != null) {
-				classesFound.addAll(retrieveLoadedClassesForPackage(classLoader.getParent(), packagePredicate));
+			ClassLoader parentClassLoader = getParent(classLoader);
+			if (parentClassLoader != null) {
+				classesFound.addAll(retrieveLoadedClassesForPackage(parentClassLoader, packagePredicate));
 			}
 			return classesFound;
 		}
@@ -811,10 +931,15 @@ public class Classes implements MembersRetriever {
 		public Package retrieveLoadedPackage(ClassLoader classLoader, String packageName) {
 			Map<String, ?> packages = retrieveLoadedPackages(classLoader);
 			Object packageToFind = packages.get(packageName);
+			ClassLoader parentClassLoader = null;
 			if (packageToFind != null) {
-				return retrieveLoadedPackage(classLoader, packageToFind, packageName);
-			} else if (classLoader.getParent() != null) {
-				return retrieveLoadedPackage(classLoader.getParent(), packageName);
+				if (packageToFind instanceof Package) {
+					return (Package)packageToFind;
+				} else {
+					return Driver.getPackage(classLoader, packageName);
+				}
+			} else if ((parentClassLoader = getParent(classLoader)) != null) {
+				return retrieveLoadedPackage(parentClassLoader, packageName);
 			} else {
 				return null;
 			}
@@ -868,14 +993,14 @@ public class Classes implements MembersRetriever {
 					return addClassPaths(getParent(classLoader), checkForAddedClasses, classPathCollections);
 				}
 			}
-			if (LowLevelObjectsHandler.isClassLoaderDelegate(classLoader)) {
+			if (Driver.isClassLoaderDelegate(classLoader)) {
 				return addClassPaths(Fields.getDirect(classLoader, "classLoader"), checkForAddedClasses, classPathCollections);
 			}
 			Collection<String> paths = new HashSet<>();
 			for (Collection<String> classPaths : classPathCollections) {
 				paths.addAll(classPaths);
 			}
-			if (classLoader instanceof URLClassLoader || LowLevelObjectsHandler.isBuiltinClassLoader(classLoader)) {	
+			if (classLoader instanceof URLClassLoader || Driver.isBuiltinClassLoader(classLoader)) {	
 				paths.removeAll(getAllLoadedPaths(classLoader));
 				if (!paths.isEmpty()) {
 					Object target = classLoader instanceof URLClassLoader ?
@@ -924,15 +1049,15 @@ public class Classes implements MembersRetriever {
 		}
 		
 		public boolean isBuiltinClassLoader(ClassLoader classLoader) {
-			return LowLevelObjectsHandler.isBuiltinClassLoader(classLoader);
+			return Driver.isBuiltinClassLoader(classLoader);
 		}
 		
 		public URL[] getURLs(ClassLoader classLoader) {
 			if (classLoader instanceof URLClassLoader) {
 				return ((URLClassLoader)classLoader).getURLs();
-			} else if (LowLevelObjectsHandler.isClassLoaderDelegate(classLoader)) {
+			} else if (Driver.isClassLoaderDelegate(classLoader)) {
 				return getURLs(Fields.getDirect(classLoader, "classLoader"));
-			} else if (LowLevelObjectsHandler.isBuiltinClassLoader(classLoader)) {
+			} else if (Driver.isBuiltinClassLoader(classLoader)) {
 				Object urlClassPath = Fields.getDirect(classLoader, "ucp");
 				if (urlClassPath != null) {
 					return Methods.invoke(urlClassPath, "getURLs");
@@ -981,6 +1106,7 @@ public class Classes implements MembersRetriever {
 				this.classLoadersMethods = null;
 				this.classLoadersPackages.clear();
 				this.classLoadersPackages = null;
+				this.builtinClassLoaderClassParentField = null;
 			} else {
 				Throwables.throwException("Could not close singleton instance {}", this);
 			}
