@@ -1,4 +1,4 @@
-# Burningwave Core [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=%40Burningwave_fw%20Core%2C%20the%20%23Java%20frameworks%20building%20library%20%28works%20on%20%23Java8%20%23Java9%20%23Java10%20%23Java11%20%23Java12%20%23Java13%20%23Java14%20%23Java15%20%23Java16%29&url=https://github.com/burningwave/core%23burningwave-core-)
+# Burningwave Core [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=%40Burningwave_fw%20Core%2C%20the%20%23Java%20frameworks%20building%20library%20%28works%20on%20%23Java8%20%23Java9%20%23Java10%20%23Java11%20%23Java12%20%23Java13%20%23Java14%20%23Java15%20%23Java16%20%23Java17%29&url=https://github.com/burningwave/core%23burningwave-core-)
 
 <a href="https://www.burningwave.org">
 <img src="https://raw.githubusercontent.com/burningwave/core/master/Burningwave-logo.png" alt="Burningwave-logo.png" height="180px" align="right"/>
@@ -9,7 +9,7 @@
 
 [![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Max%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1143779388)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015%2C%2016-blueviolet)](https://github.com/burningwave/core/actions/runs/809066503)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015%2C%2016%2C%2017-blueviolet)](https://github.com/burningwave/core/actions/runs/809066503)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -993,12 +993,12 @@ public static final org.burningwave.core.Cache Cache;
 public static final org.burningwave.core.classes.Classes Classes;
 public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
 public static final org.burningwave.core.classes.Constructors Constructors;
+	public static final org.burningwave.jvm.Driver Driver;
 public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 public static final org.burningwave.core.classes.Fields Fields;
 public static final org.burningwave.core.iterable.Properties GlobalProperties;
 public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
 public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
-public static final org.burningwave.core.jvm.LowLevelObjectsHandler LowLevelObjectsHandler;
 public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 public static final org.burningwave.core.classes.Members Members;
 public static final org.burningwave.core.classes.Methods Methods;
@@ -1063,9 +1063,9 @@ iterable-object-helper.default-values-separator=\
 	;
 iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\
 	autodetect
-#It is possible to use a custom JVM driver which extends the abstract class org.burningwave.core.jvm.Driver
-low-level-objects-handler.driver=\
-	org.burningwave.core.jvm.DefaultDriver
+#It is possible to use a custom JVM driver which extends the abstract class org.burningwave.jvm.Driver
+jvm.driver=\
+	org.burningwave.jvm.DefaultDriver
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
 #the SLF4JManagedLoggerRepository will be instantiated, otherwise the SimpleManagedLoggerRepository will be instantiated
 managed-logger.repository=\
@@ -1076,7 +1076,6 @@ managed-logger.repository.enabled=\
 managed-logger.repository.logging.warn.disabled-for=\
 	org.burningwave.core.classes.ClassHunter$SearchContext;\
 	org.burningwave.core.classes.ClassPathHunter$SearchContext;\
-	org.burningwave.core.jvm.LowLevelObjectsHandler;\
 	org.burningwave.core.classes.MemoryClassLoader;\
 	org.burningwave.core.classes.PathScannerClassLoader;\
 	org.burningwave.core.classes.SearchContext;
