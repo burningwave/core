@@ -417,7 +417,7 @@ public class FileSystemItemTest extends BaseTest {
 					})
 				);
 				return files;
-			}
+			}, true
 		);
 	}
 }
