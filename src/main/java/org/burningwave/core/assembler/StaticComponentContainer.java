@@ -271,12 +271,7 @@ public class StaticComponentContainer {
 			);
 			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED))) {
 				BackgroundExecutor.setTasksCreationTrackingFlag(true);
-			}
-			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED))) {
-				BackgroundExecutor.startAllTasksMonitoring(
-					retrieveAllTasksMonitoringConfig()
-				);
-			}			
+			}		
 			
 			if (!Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BANNER_HIDE))) {
 				showBanner();
@@ -353,6 +348,12 @@ public class StaticComponentContainer {
 				})
 			);
 			FileSystemHelper.startSweeping();
+			ManagedLoggersRepository.logInfo(() -> 
+				StaticComponentContainer.class.getName(), 
+				"{} initialized in {} seconds",
+				StaticComponentContainer.class.getName(),
+				Double.valueOf(((double) (System.nanoTime() - startTime)) / 1_000_000_000).toString()
+			);
 			if (Objects.toBoolean(
 				GlobalProperties.resolveValue(
 					Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED
@@ -364,12 +365,11 @@ public class StaticComponentContainer {
 					)
 				);
 			}
-			ManagedLoggersRepository.logInfo(() -> 
-				StaticComponentContainer.class.getName(), 
-				"{} initialized in {} seconds",
-				StaticComponentContainer.class.getName(),
-				Double.valueOf(((double) (System.nanoTime() - startTime)) / 1_000_000_000).toString()
-			);
+			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED))) {
+				BackgroundExecutor.startAllTasksMonitoring(
+					retrieveAllTasksMonitoringConfig()
+				);
+			}	
 		} catch (Throwable exc){
 			exc.printStackTrace();
 			throw exc;
