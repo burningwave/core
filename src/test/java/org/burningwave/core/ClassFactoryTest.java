@@ -7,6 +7,8 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -431,8 +433,56 @@ public class ClassFactoryTest extends BaseTest {
 			List<?> list = virtual.getValueOf("list");
 			list = virtual.getDirectValueOf("list");
 			return list;
-			}
-		);
+		});
+	}
+	
+	@Test
+	public void regenerateClassesTest() throws Exception {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotEmpty(() -> {
+			ClassSourceGenerator ClassSG = ClassSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("ClassOne")
+			).addModifier(
+				Modifier.PUBLIC
+			).addInnerClass(
+				ClassSourceGenerator.create(
+					TypeDeclarationSourceGenerator.create("InnerClass")
+				).addModifier(
+					Modifier.PUBLIC | Modifier.STATIC
+				)
+			);
+			UnitSourceGenerator unitSG = UnitSourceGenerator.create("classfactory.tests").addClass(
+				ClassSG
+			);
+			LoadOrBuildAndDefineConfig config = LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+				unitSG
+			).useClassLoader(new URLClassLoader(new URL[]{}, Thread.currentThread().getContextClassLoader()));
+			
+			componentSupplier.getClassFactory().loadOrBuildAndDefine(
+				config
+			).get(
+				"classfactory.tests.ClassOne"
+			);
+			Collection<Class<?>> classes = componentSupplier.getClassFactory().loadOrBuildAndDefine(unitSG).get(
+				"classfactory.tests.ClassOne",
+				"classfactory.tests.ClassOne$InnerClass"
+			);
+			
+			config = LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+				unitSG
+			).useClassLoader(new URLClassLoader(new URL[]{}, Thread.currentThread().getContextClassLoader()));
+			
+			componentSupplier.getClassFactory().loadOrBuildAndDefine(
+				config
+			).get(
+				"classfactory.tests.ClassOne"
+			);
+			classes = componentSupplier.getClassFactory().loadOrBuildAndDefine(unitSG).get(
+				"classfactory.tests.ClassOne",
+				"classfactory.tests.ClassOne$InnerClass"
+			);
+			return classes;
+		});
 	}
 	
 	public static class Repeat extends ClassFactoryTest {
