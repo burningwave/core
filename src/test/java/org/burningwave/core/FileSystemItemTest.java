@@ -5,6 +5,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 import java.net.URL;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.io.FileSystemItem;
@@ -409,14 +410,14 @@ public class FileSystemItemTest extends BaseTest {
 	@Test
 	public void javaHomeTreeTest() {
 		testNotEmpty(() -> {
-				Set<String> files = new TreeSet<>();
+				Set<String> files = ConcurrentHashMap.newKeySet();
 				FileSystemItem.ofPath(System.getProperty("java.home")).findInAllChildren(
 					FileSystemItem.Criteria.forAllFileThat(fileSystemItem -> {
 						files.add(fileSystemItem.getAbsolutePath());
 						return true;
 					})
 				);
-				return files;
+				return new TreeSet<>(files);
 			}, true
 		);
 	}
