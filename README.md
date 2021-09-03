@@ -1063,7 +1063,8 @@ iterable-object-helper.default-values-separator=\
 	;
 iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\
 	autodetect
-#It is possible to use a custom JVM driver which extends the abstract class org.burningwave.jvm.Driver. Other possible value is: org.burningwave.jvm.HybridDriver
+#It is possible to use a custom JVM driver which extends the abstract class org.burningwave.jvm.Driver.
+#Other possible value is: org.burningwave.jvm.HybridDriver
 jvm.driver=\
 	org.burningwave.jvm.DefaultDriver
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
