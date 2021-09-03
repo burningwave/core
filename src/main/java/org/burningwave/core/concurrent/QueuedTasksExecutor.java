@@ -1433,11 +1433,18 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 						if (config.isAllTasksLoggerEnabled()) {
 							queuedTasksExecutorGroup.logInfo();
 						}
-						checkAndHandleProbableDeadLockedTasks(
-							config.getMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked(),
-							config.isMarkAsProablyDeadLockedEnabled(),
-							config.isKillProablyDeadLockedTasksEnabled()
-						);
+						try {
+							checkAndHandleProbableDeadLockedTasks(
+								config.getMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked(),
+								config.isMarkAsProablyDeadLockedEnabled(),
+								config.isKillProablyDeadLockedTasksEnabled()
+							);
+						} catch (Throwable exc) {
+							ManagedLoggersRepository.logError(
+								() -> this.getClass().getName(),
+								"Exception occurred while checking dead locked tasks", exc
+							);
+						}
 					}
 				});
 				return this;
