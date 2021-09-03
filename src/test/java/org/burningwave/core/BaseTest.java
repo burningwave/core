@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -103,9 +102,7 @@ public class BaseTest implements Component {
 			ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 			isNotEmpty = !coll.isEmpty();
 			if (isNotEmpty && printAllElements) {
-				Iterator<?> itr = coll.iterator();
-				for (int i = 0; i < coll.size(); i++) {
-					Object obj = itr.next();
+				for (Object obj : coll) {
 					if (obj != null) {
 						ManagedLoggersRepository.logDebug(getClass()::getName, "{}", obj);
 					}
