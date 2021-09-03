@@ -149,7 +149,7 @@ public abstract class PropertyAccessor implements Component {
 			} else if (Map.class.isAssignableFrom(property.getClass())) {
 				propertyRetriever = () -> ((Map<?, ?>)property).get(index);
 			} else {
-				Throwables.throwException("indexed property {} of type {} is not supporterd", property, property.getClass());
+				return Throwables.throwException("indexed property {} of type {} is not supporterd", property, property.getClass());
 			}
 			return retrieveFromIndexedProperty(
 					propertyRetriever.get(), 
