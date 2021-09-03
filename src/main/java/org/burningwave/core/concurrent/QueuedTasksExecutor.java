@@ -1422,7 +1422,11 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				return Optional.ofNullable(queuedTasksExecutorGroup.name).map(nm -> nm + " - ").orElseGet(() -> "") + "All tasks monitorer";
 			}
 			
-			public TasksMonitorer start() {	
+			public TasksMonitorer start() {
+				ManagedLoggersRepository.logInfo(
+					() -> this.getClass().getName(),
+					"Starting {}", getName()
+				);
 				ThreadHolder.startLooping(getName(), true, java.lang.Thread.MIN_PRIORITY, thread -> {
 					thread.waitFor(config.getInterval());
 					if (thread.isLooping()) {
@@ -1444,6 +1448,10 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			}
 			
 			public void stop(boolean waitThreadToFinish) {
+				ManagedLoggersRepository.logInfo(
+					() -> this.getClass().getName(),
+					"Starting {}", getName()
+				);
 				ThreadHolder.stop(getName());
 			}
 			
