@@ -454,32 +454,28 @@ public class ClassFactoryTest extends BaseTest {
 			UnitSourceGenerator unitSG = UnitSourceGenerator.create("classfactory.tests").addClass(
 				ClassSG
 			);
-			LoadOrBuildAndDefineConfig config = LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+		
+			Collection<Class<?>> classes = componentSupplier.getClassFactory().loadOrBuildAndDefine( LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
 				unitSG
-			).useClassLoader(new URLClassLoader(new URL[]{}, Thread.currentThread().getContextClassLoader()));
-			
-			componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				config
-			).get(
-				"classfactory.tests.ClassOne"
-			);
-			Collection<Class<?>> classes = componentSupplier.getClassFactory().loadOrBuildAndDefine(unitSG).get(
+			).useClassLoader(new URLClassLoader(new URL[]{}, Thread.currentThread().getContextClassLoader()))).get(
 				"classfactory.tests.ClassOne",
 				"classfactory.tests.ClassOne$InnerClass"
 			);
 			
-			config = LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
-				unitSG
-			).useClassLoader(new URLClassLoader(new URL[]{}, Thread.currentThread().getContextClassLoader()));
-			
-			componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				config
-			).get(
-				"classfactory.tests.ClassOne"
+			ClassSG.addInnerClass(
+				ClassSourceGenerator.create(
+					TypeDeclarationSourceGenerator.create("InnerClassTwo")
+				).addModifier(
+					Modifier.PUBLIC | Modifier.STATIC
+				)
 			);
-			classes = componentSupplier.getClassFactory().loadOrBuildAndDefine(unitSG).get(
+			
+			classes = componentSupplier.getClassFactory().loadOrBuildAndDefine( LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+				unitSG
+			).useClassLoader(new URLClassLoader(new URL[]{}, Thread.currentThread().getContextClassLoader()))).get(
 				"classfactory.tests.ClassOne",
-				"classfactory.tests.ClassOne$InnerClass"
+				"classfactory.tests.ClassOne$InnerClass",
+				"classfactory.tests.ClassOne$InnerClassTwo"
 			);
 			return classes;
 		});
