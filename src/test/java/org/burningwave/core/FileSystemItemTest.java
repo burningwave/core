@@ -406,7 +406,7 @@ public class FileSystemItemTest extends BaseTest {
 		});
 	}
 	
-	@Test
+	//@Test
 	public void javaHomeTreeTest() {
 		testNotEmpty(() -> {
 				Set<String> files = new TreeSet<>();
