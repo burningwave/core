@@ -7,6 +7,8 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -431,8 +433,52 @@ public class ClassFactoryTest extends BaseTest {
 			List<?> list = virtual.getValueOf("list");
 			list = virtual.getDirectValueOf("list");
 			return list;
-			}
-		);
+		});
+	}
+	
+	@Test
+	public void regenerateClassesTest() throws Exception {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotEmpty(() -> {
+			ClassSourceGenerator ClassSG = ClassSourceGenerator.create(
+				TypeDeclarationSourceGenerator.create("ClassOne")
+			).addModifier(
+				Modifier.PUBLIC
+			).addInnerClass(
+				ClassSourceGenerator.create(
+					TypeDeclarationSourceGenerator.create("InnerClass")
+				).addModifier(
+					Modifier.PUBLIC | Modifier.STATIC
+				)
+			);
+			UnitSourceGenerator unitSG = UnitSourceGenerator.create("classfactory.tests").addClass(
+				ClassSG
+			);
+		
+			Collection<Class<?>> classes = componentSupplier.getClassFactory().loadOrBuildAndDefine( LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+				unitSG
+			).useClassLoader(new URLClassLoader(new URL[]{}, Thread.currentThread().getContextClassLoader()))).get(
+				"classfactory.tests.ClassOne",
+				"classfactory.tests.ClassOne$InnerClass"
+			);
+			
+			ClassSG.addInnerClass(
+				ClassSourceGenerator.create(
+					TypeDeclarationSourceGenerator.create("InnerClassTwo")
+				).addModifier(
+					Modifier.PUBLIC | Modifier.STATIC
+				)
+			);
+			
+			classes = componentSupplier.getClassFactory().loadOrBuildAndDefine( LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+				unitSG
+			).useClassLoader(new URLClassLoader(new URL[]{}, Thread.currentThread().getContextClassLoader()))).get(
+				"classfactory.tests.ClassOne",
+				"classfactory.tests.ClassOne$InnerClass",
+				"classfactory.tests.ClassOne$InnerClassTwo"
+			);
+			return classes;
+		});
 	}
 	
 	public static class Repeat extends ClassFactoryTest {
