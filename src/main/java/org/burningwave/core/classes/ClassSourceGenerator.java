@@ -32,6 +32,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 
@@ -250,9 +251,14 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	String getInnerClassesCode() {
 		String innerClassesAsString = null;
 		if (innerClasses != null) {
+			Iterator<ClassSourceGenerator> innerClassesItr = 
+				innerClasses.iterator();
 			innerClassesAsString = "\t";
-			for (ClassSourceGenerator cls : innerClasses) {
-				innerClassesAsString += (cls.make()).replaceAll("\n(.)", "\n\t$1");
+			while(innerClassesItr.hasNext()) {
+				innerClassesAsString += (innerClassesItr.next().make()).replaceAll("\n(.)", "\n\t$1");
+				if (innerClassesItr.hasNext()) {
+					innerClassesAsString += "\n\n\t";
+				}
 			}
 		}
 		return innerClassesAsString;
