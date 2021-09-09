@@ -721,13 +721,13 @@ public class FieldsHandler {
         
         Object obj = new Object() {
             volatile List<Object> objectValue;
-            volatile int intValue;
-            volatile long longValue;
-            volatile float floatValue;
-            volatile double doubleValue;
-            volatile boolean booleanValue;
-            volatile byte byteValue;
-            volatile char charValue;
+            volatile int intValue = 1;
+            volatile long longValue = 2l;
+            volatile float floatValue = 3f;
+            volatile double doubleValue = 4.1d;
+            volatile boolean booleanValue = true;
+            volatile byte byteValue = (byte)5;
+            volatile char charValue = 'c';
         };
         
         //Get all filtered field values of an object through memory address access
