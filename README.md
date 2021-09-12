@@ -334,7 +334,7 @@ public class SourceCodeExecutor {
 
 <br/>
 
-# Retrieving classes of runtime class paths or of other paths through the ClassHunter
+# <a name="Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter"></a>Retrieving classes of runtime class paths or of other paths through the ClassHunter
 The components of the class paths scanning engine are: **ByteCodeHunter**, [**ClassHunter**](https://github.com/burningwave/core/wiki/In-depth-look-to-ClassHunter-and-configuration-guide) and the **ClassPathHunter**. Now we are going to use the ClassHunter to search for all classes that have package name that matches a regex. So in this example we're looking for all classes whose package name contains "springframework" string in the runtime class paths:
 
 ```java
