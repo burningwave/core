@@ -107,6 +107,7 @@ public interface JavaMemoryCompiler {
 			
 			private String compiledClassesStorage;
 			private boolean useTemporaryFolderForStoring;
+			private String version;
 			
 			private Config() {
 				this.sources = new HashSet<>();
@@ -166,6 +167,11 @@ public interface JavaMemoryCompiler {
 			
 			public Config storeCompiledClassesToNewTemporaryFolder() {
 				return storeCompiledClassesToTemporaryFolder(UUID.randomUUID().toString());
+			}
+			
+			public Config setVersion(String version) {
+				this.version = version;
+				return this;
 			}
 
 
@@ -241,8 +247,6 @@ public interface JavaMemoryCompiler {
 				return addClassRepositories(Arrays.asList(classPaths));
 			}
 
-		////////////////////
-			
 		////////////////////	
 			
 			@SafeVarargs
@@ -319,6 +323,10 @@ public interface JavaMemoryCompiler {
 
 			boolean useTemporaryFolderForStoring() {
 				return useTemporaryFolderForStoring;
+			}
+			
+			String getVersion() {
+				return version;
 			}
 		
 		}
