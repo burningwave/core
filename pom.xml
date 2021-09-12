@@ -40,7 +40,7 @@
 		class paths, generating classes at runtime, facilitating the use of reflection, scanning 
 		the filesystem, executing stringified code and much more...
 	</description>
-	<url>https://www.burningwave.org/</url>
+	<url>https://burningwave.github.io/core/</url>
 
 	<licenses>
 		<license>
