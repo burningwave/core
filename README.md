@@ -846,7 +846,7 @@ public class ConstructorsHandler {
 
 <br>
 
-# <a name="Getting-and-setting-properties-of-a-Java-bean-through-path></a>Getting and setting properties of a Java bean through path
+# <a name="Getting-and-setting-properties-of-a-Java-bean-through-path"></a>Getting and setting properties of a Java bean through path
 Through **ByFieldOrByMethodPropertyAccessor** and **ByMethodOrByFieldPropertyAccessor** it is possible to get and set properties of a Java bean by using path. So for this example we will use these Java beans:
 
 ```java
