@@ -439,20 +439,14 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 	    }
 	}
 
-	// to make the --release parameter work you we to implement the StandardJavaFileManager interface
+	// to make the --release parameter work we to implement the StandardJavaFileManager interface
 	static class MemoryFileManager extends ForwardingJavaFileManager implements Component, StandardJavaFileManager {
 		
 		private List<MemoryFileObject> compiledFiles;
-		private Object locations;
 		
 		MemoryFileManager(JavaCompiler compiler) {
 	        super(compiler.getStandardFileManager(null, null, null));
 	        compiledFiles = new CopyOnWriteArrayList<>();
-	        try {
-				locations = Constructors.newInstanceDirectOf(Class.forName("com.sun.tools.javac.file.Locations"));
-			} catch (ClassNotFoundException exc) {
-				Throwables.throwException(exc);
-			}
 	    }
 		
 		@Override
