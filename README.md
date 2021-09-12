@@ -172,7 +172,7 @@ public class RuntimeClassExtender {
 
 <br/>
 
-# Executing stringified source code
+# <a name="Executing-stringified-source-code"></a>Executing stringified source code
 It is possible to execute stringified source code by using the **CodeExecutor** in three three different ways:
 * [through **BodySourceGenerator**](#Executing-code-with-BodySourceGenerator)
 * [through a property located in Burningwave configuration file](#Executing-code-of-a-property-located-in-Burningwave-configuration-file)
@@ -180,7 +180,7 @@ It is possible to execute stringified source code by using the **CodeExecutor** 
 
 <br/>
 
-## Executing code with BodySourceGenerator
+## <a name="Executing-code-with-BodySourceGenerator"></a>Executing code with BodySourceGenerator
 For first way we must create a **ExecuteConfig** by using the within static method **`forBodySourceGenerator`** to which must be passed the **BodySourceGenerator** that contains the source code with the parameters used within: after that we must pass the created configuration to the **`execute`** method of CodeExecutor as shown below:
 ```java
 package org.burningwave.core.examples.codeexecutor;
@@ -220,7 +220,7 @@ public class SourceCodeExecutor {
 
 <br/>
 
-## Executing code of a property located in Burningwave configuration file
+## <a name="Executing-code-of-a-property-located-in-Burningwave-configuration-file"></a>Executing code of a property located in Burningwave configuration file
 To execute code from Burningwave configuration file ([**burningwave.properties**](#configuration-1) or other file that we have used to create the ComponentContainer: [**see architectural overview and configuration**](#Architectural-overview-and-configuration)) we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
 ```properties
 code-block-1=\
@@ -271,7 +271,7 @@ public class SourceCodeExecutor {
 
 <br/>
 
-## Executing code of a property located in a custom properties file
+## <a name="Executing-code-of-a-property-located-in-a-custom-properties-file"></a>Executing code of a property located in a custom properties file
 To execute code from a custom properties file we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
 ```properties
 code-block-1=\
