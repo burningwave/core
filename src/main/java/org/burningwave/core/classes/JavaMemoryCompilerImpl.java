@@ -30,12 +30,16 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
+import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.URI;
@@ -45,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -63,6 +68,7 @@ import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.SimpleJavaFileObject;
+import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 import org.burningwave.core.Closeable;
@@ -75,6 +81,7 @@ import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
+
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
@@ -99,13 +106,18 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 	
 	@Override
 	public ProducerTask<JavaMemoryCompiler.Compilation.Result> compile(JavaMemoryCompiler.Compilation.Config config) {
+		Map<String, String> extraOptions = new LinkedHashMap<>();
+		if (config.getVersion() != null) {
+			extraOptions.put("--release", config.getVersion());
+		}
 		return compile(
 			config.getSources(),
 			getClassPathsFrom(config),
 			getClassRepositoriesFrom(config),
 			getBlackListedClassPaths(config),
 			config.getCompiledClassesStorage(),
-			config.useTemporaryFolderForStoring()
+			config.useTemporaryFolderForStoring(),
+			extraOptions
 		);
 	}
 
@@ -153,7 +165,8 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 		Collection<String> classRepositoriesPaths,
 		Collection<String> blackListedClassPaths,
 		String compiledClassesStorage,
-		boolean useTemporaryFolderForStoring
+		boolean useTemporaryFolderForStoring,
+		Map<String, String> extraOptions
 	) {	
 		return BackgroundExecutor.createTask(() -> {
 			ManagedLoggersRepository.logInfo(getClass()::getName, "Try to compile: \n\n{}\n", String.join("\n", SourceCodeHandler.addLineCounter(sources)));
@@ -164,7 +177,8 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 					memorySources, 
 					new ArrayList<>(classPaths), 
 					new ArrayList<>(classRepositoriesPaths),
-					new ArrayList<>(blackListedClassPaths)
+					new ArrayList<>(blackListedClassPaths),
+					extraOptions
 				)
 			) {
 				Map<String, ByteBuffer> compiledFiles = compile(context);
@@ -352,87 +366,94 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 		
 	}
 	
-static class MemorySource extends SimpleJavaFileObject implements Serializable {
-
-	private static final long serialVersionUID = 4669403234662034315L;
+	static class MemorySource extends SimpleJavaFileObject implements Serializable {
 	
-	private final String content;
-	private final String name;
+		private static final long serialVersionUID = 4669403234662034315L;
+		
+		private final String content;
+		private final String name;
+		
+	    final static String PREFIX = "memo:///";
+	    public MemorySource(Kind kind, String name, String content) throws URISyntaxException {
+	        super(new URI(PREFIX + name.replace('.', '/') + kind.extension), kind);
+	        this.name = name;
+	        this.content = content;
+	    }
+	    
+	    @Override
+		public String getName() {
+	    	return this.name;
+	    }
+	    
+	    @Override
+	    public CharSequence getCharContent(boolean ignore) {
+	        return this.content;
+	    }
+	    
+	    public String getContent() {
+	        return this.content;
+	    }
+	}
 	
-    final static String PREFIX = "memo:///";
-    public MemorySource(Kind kind, String name, String content) throws URISyntaxException {
-        super(new URI(PREFIX + name.replace('.', '/') + kind.extension), kind);
-        this.name = name;
-        this.content = content;
-    }
-    
-    @Override
-	public String getName() {
-    	return this.name;
-    }
-    
-    @Override
-    public CharSequence getCharContent(boolean ignore) {
-        return this.content;
-    }
-    
-    public String getContent() {
-        return this.content;
-    }
-}
-
-static class MemoryFileObject extends SimpleJavaFileObject implements Component {
+	static class MemoryFileObject extends SimpleJavaFileObject implements Component {
+		
+		private String name;
+		private ByteBuffer content;
+		
+	    MemoryFileObject(String name, Kind kind) {
+	        super(URI.create("memory:///" + name.replace('.', '/') + kind.extension), kind);
+	        this.name = name;
+	    }
+	    
+	    public String getPath() {
+	    	return uri.getPath();
+	    }
+	    
+	    @Override
+		public String getName() {
+	    	return this.name;
+	    }
+	    
+	    public ByteBuffer toByteBuffer() {
+	    	return BufferHandler.shareContent(content);
+	    }
+	    
+	    public byte[] toByteArray() {
+	    	return BufferHandler.toByteArray(content);
+	    }
 	
-	private String name;
-	private ByteBuffer content;
-	
-    MemoryFileObject(String name, Kind kind) {
-        super(URI.create("memory:///" + name.replace('.', '/') + kind.extension), kind);
-        this.name = name;
-    }
-    
-    public String getPath() {
-    	return uri.getPath();
-    }
-    
-    @Override
-	public String getName() {
-    	return this.name;
-    }
-    
-    public ByteBuffer toByteBuffer() {
-    	return BufferHandler.shareContent(content);
-    }
-    
-    public byte[] toByteArray() {
-    	return BufferHandler.toByteArray(content);
-    }
+	    @Override
+	    public OutputStream openOutputStream() {
+	        return new ByteBufferOutputStream(BufferHandler.getDefaultBufferSize()) {
+	    		@Override
+	    		public void close() {
+	    			content = this.toByteBuffer();
+	    			super.close();
+	    		}
+	    	};
+	    }
+	    
+	    @Override
+		public void close() {
+	    	name = null;
+	    	content = null;
+	    }
+	}
 
-    @Override
-    public OutputStream openOutputStream() {
-        return new ByteBufferOutputStream(BufferHandler.getDefaultBufferSize()) {
-    		@Override
-    		public void close() {
-    			content = this.toByteBuffer();
-    			super.close();
-    		}
-    	};
-    }
-    
-    @Override
-	public void close() {
-    	name = null;
-    	content = null;
-    }
-}
-
-	static class MemoryFileManager extends ForwardingJavaFileManager implements Component {
+	// to make the --release parameter work you we to implement the StandardJavaFileManager interface
+	static class MemoryFileManager extends ForwardingJavaFileManager implements Component, StandardJavaFileManager {
 		
 		private List<MemoryFileObject> compiledFiles;
+		private Object locations;
 		
 		MemoryFileManager(JavaCompiler compiler) {
 	        super(compiler.getStandardFileManager(null, null, null));
 	        compiledFiles = new CopyOnWriteArrayList<>();
+	        try {
+				locations = Constructors.newInstanceDirectOf(Class.forName("com.sun.tools.javac.file.Locations"));
+			} catch (ClassNotFoundException exc) {
+				Throwables.throwException(exc);
+			}
 	    }
 		
 		@Override
@@ -457,6 +478,41 @@ static class MemoryFileObject extends SimpleJavaFileObject implements Component 
 				super.close();
 			});
 		}
+
+		@Override
+		public Iterable<? extends JavaFileObject> getJavaFileObjectsFromFiles(Iterable<? extends File> files) {
+			throw new JavaMemoryCompiler.Compilation.Exception("Unsupported operation");
+		}
+
+		@Override
+		public Iterable<? extends JavaFileObject> getJavaFileObjects(File... files) {
+			throw new JavaMemoryCompiler.Compilation.Exception("Unsupported operation");
+		}
+
+		@Override
+		public Iterable<? extends JavaFileObject> getJavaFileObjectsFromStrings(Iterable<String> names) {
+			throw new JavaMemoryCompiler.Compilation.Exception("Unsupported operation");
+		}
+
+		@Override
+		public Iterable<? extends JavaFileObject> getJavaFileObjects(String... names) {
+			throw new JavaMemoryCompiler.Compilation.Exception("Unsupported operation");
+		}
+
+		@Override
+		public void setLocation(Location location, Iterable<? extends File> paths) throws IOException {
+			/*Iterator<? extends File> filesItr = paths.iterator();
+			while(filesItr.hasNext()) {
+				System.out.println(filesItr.next().toPath());
+			}
+			throw new JavaMemoryCompiler.Compilation.Exception("Unsupported operation");*/		
+		}
+
+		@Override
+		public Iterable<? extends File> getLocation(Location location) {
+			throw new JavaMemoryCompiler.Compilation.Exception("Unsupported operation");
+		}
+	   
 	}
 
 
@@ -478,10 +534,14 @@ static class MemoryFileObject extends SimpleJavaFileObject implements Component 
 				Collection<MemorySource> sources,
 				Collection<String> classPaths,
 				Collection<String> classRepositories,
-				Collection<String>  blackListedClassPaths
+				Collection<String>  blackListedClassPaths,
+				Map<String, String> extraOptions
 			) {
 				this.javaMemoryCompiler = javaMemoryCompiler;
 				options =  new LinkedHashMap<>();
+				if (extraOptions != null) {
+					options.putAll(extraOptions);
+				}
 				this.classPaths = new HashSet<>();
 				this.blackListedClassPaths = new HashSet<>(blackListedClassPaths);
 				this.sources = sources;
@@ -499,9 +559,10 @@ static class MemoryFileObject extends SimpleJavaFileObject implements Component 
 				Collection<MemorySource> sources,
 				Collection<String> classPaths,
 				Collection<String> classRepositories,
-				Collection<String> blackListedClassPaths
+				Collection<String> blackListedClassPaths,
+				Map<String, String> extraOptions
 			) {
-				return new Context(javaMemoryCompiler, sources, classPaths, classRepositories, blackListedClassPaths);
+				return new Context(javaMemoryCompiler, sources, classPaths, classRepositories, blackListedClassPaths, extraOptions);
 			}
 			
 			void addToClassPath(String path) {

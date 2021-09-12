@@ -50,7 +50,7 @@ public class ClassFactoryTest extends BaseTest {
 							className					
 						)
 					)
-				)
+				).modifyCompilationConfig(config -> config.setVersion("8"))
 			).get(className);
 		});
 	}
