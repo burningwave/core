@@ -643,7 +643,7 @@ A **FSIL** expression encloses in a couple of double slash an absolute path or a
 
 <br/>
 
-# Retrieving placeholdered items from map and properties file
+# <a name="Retrieving-placeholdered-items-from-map-and-properties-file"></a>Retrieving placeholdered items from map and properties file
 
 With **IterableObjectHelper** component it is possible to retrieve items from map by using placeholder or not. In the following example we are going to show how to retrieve strings or objects from **[burningwave.properties](#configuration-1)** file and from maps.
 
@@ -703,7 +703,7 @@ public class ItemFromMapRetriever {
 ```
 <br>
 
-# Handling privates and all other members of an object
+# <a name="Handling-privates-and-all-other-members-of-an-object"></a>Handling privates and all other members of an object
 Through **Fields**, **Constructors** and **Methods** components it is possible to get or set fields value, invoking or finding constructors or methods of an object.
 Members handlers use to cache all members for faster access.
 For fields handling we are going to use **Fields** component:
@@ -846,7 +846,7 @@ public class ConstructorsHandler {
 
 <br>
 
-# Getting and setting properties of a Java bean through path
+# <a name="Getting-and-setting-properties-of-a-Java-bean-through-path></a>Getting and setting properties of a Java bean through path
 Through **ByFieldOrByMethodPropertyAccessor** and **ByMethodOrByFieldPropertyAccessor** it is possible to get and set properties of a Java bean by using path. So for this example we will use these Java beans:
 
 ```java
