@@ -429,7 +429,7 @@ public class Finder {
 
 <br/>
 
-# Finding where a class is loaded from
+# <a name="Finding-where-a-class-is-loaded-from"></a>Finding where a class is loaded from
 
 For this purpose we are going to use the **ClassPathHunter** component:
 ```java
