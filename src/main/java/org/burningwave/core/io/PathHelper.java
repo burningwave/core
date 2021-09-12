@@ -62,7 +62,8 @@ public interface PathHelper {
 			defaultValues.put(
 				Key.MAIN_CLASS_PATHS_EXTENSION, 
 				"//${system.properties:java.home}/lib//children:.*?\\.jar" + PathHelper.Configuration.getPathsSeparator() +
-				"//${system.properties:java.home}/lib/ext//children:.*?\\.jar" + PathHelper.Configuration.getPathsSeparator()
+				"//${system.properties:java.home}/lib/ext//children:.*?\\.jar" + PathHelper.Configuration.getPathsSeparator() +
+				"//${system.properties:java.home}/../lib//children:.*?\\.jar" + PathHelper.Configuration.getPathsSeparator()
 			);
 			defaultValues.put(
 				Key.MAIN_CLASS_REPOSITORIES, 
