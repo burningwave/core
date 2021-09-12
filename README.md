@@ -972,7 +972,7 @@ public class GetAndSetPropertiesThroughPath{
 
 <br/>
 
-# Architectural overview and configuration
+# <a name="Architectural-overview-and-configuration"></a>Architectural overview and configuration
 
 **Burningwave Core** is based on the concept of component and component container. A **component** is a dynamic object that perform functionality related to the domain it belong to.
 A **component container** contains a set of dynamic components and could be of two types:
