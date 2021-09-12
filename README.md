@@ -1,4 +1,4 @@
-# Burningwave Core [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=%40Burningwave_fw%20Core%2C%20the%20%23Java%20frameworks%20building%20library%20%28works%20on%20%23Java8%20%23Java9%20%23Java10%20%23Java11%20%23Java12%20%23Java13%20%23Java14%20%23Java15%20%23Java16%20%23Java17%29&url=https://github.com/burningwave/core%23burningwave-core-)
+# Burningwave Core [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=%40Burningwave_fw%20Core%2C%20the%20%23Java%20frameworks%20building%20library%20%28works%20on%20%23Java8%20%23Java9%20%23Java10%20%23Java11%20%23Java12%20%23Java13%20%23Java14%20%23Java15%20%23Java16%20%23Java17%29&url=https://burningwave.github.io/core/)
 
 <a href="https://www.burningwave.org">
 <img src="https://raw.githubusercontent.com/burningwave/core/experimental/Burningwave-logo.png" alt="Burningwave-logo.png" height="180px" align="right"/>
@@ -158,7 +158,7 @@ public class RuntimeClassExtender {
 
 <br/>
 
-# Executing stringified source code
+# <a name="Executing-stringified-source-code"></a>Executing stringified source code
 It is possible to execute stringified source code by using the **CodeExecutor** in three three different ways:
 * [through **BodySourceGenerator**](#Executing-code-with-BodySourceGenerator)
 * [through a property located in Burningwave configuration file](#Executing-code-of-a-property-located-in-Burningwave-configuration-file)
@@ -166,7 +166,7 @@ It is possible to execute stringified source code by using the **CodeExecutor** 
 
 <br/>
 
-## Executing code with BodySourceGenerator
+## <a name="Executing-code-with-BodySourceGenerator"></a>Executing code with BodySourceGenerator
 For first way we must create a **ExecuteConfig** by using the within static method **`forBodySourceGenerator`** to which must be passed the **BodySourceGenerator** that contains the source code with the parameters used within: after that we must pass the created configuration to the **`execute`** method of CodeExecutor as shown below:
 ```java
 package org.burningwave.core.examples.codeexecutor;
@@ -206,7 +206,7 @@ public class SourceCodeExecutor {
 
 <br/>
 
-## Executing code of a property located in Burningwave configuration file
+## <a name="Executing-code-of-a-property-located-in-Burningwave-configuration-file"></a>Executing code of a property located in Burningwave configuration file
 To execute code from Burningwave configuration file ([**burningwave.properties**](#configuration-1) or other file that we have used to create the ComponentContainer: [**see architectural overview and configuration**](#Architectural-overview-and-configuration)) we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
 ```properties
 code-block-1=\
@@ -257,7 +257,7 @@ public class SourceCodeExecutor {
 
 <br/>
 
-## Executing code of a property located in a custom properties file
+## <a name="Executing-code-of-a-property-located-in-a-custom-properties-file"></a>Executing code of a property located in a custom properties file
 To execute code from a custom properties file we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
 ```properties
 code-block-1=\
@@ -320,7 +320,7 @@ public class SourceCodeExecutor {
 
 <br/>
 
-# Retrieving classes of runtime class paths or of other paths through the ClassHunter
+# <a name="Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter"></a>Retrieving classes of runtime class paths or of other paths through the ClassHunter
 The components of the class paths scanning engine are: **ByteCodeHunter**, [**ClassHunter**](https://github.com/burningwave/core/wiki/In-depth-look-to-ClassHunter-and-configuration-guide) and the **ClassPathHunter**. Now we are going to use the ClassHunter to search for all classes that have package name that matches a regex. So in this example we're looking for all classes whose package name contains "springframework" string in the runtime class paths:
 
 ```java
@@ -415,7 +415,7 @@ public class Finder {
 
 <br/>
 
-# Finding where a class is loaded from
+# <a name="Finding-where-a-class-is-loaded-from"></a>Finding where a class is loaded from
 
 For this purpose we are going to use the **ClassPathHunter** component:
 ```java
@@ -460,7 +460,7 @@ public class Finder {
 
 <br>
 
-# Performing tasks in parallel with different priorities
+# <a name="Performing-tasks-in-parallel-with-different-priorities"></a>Performing tasks in parallel with different priorities
 By using the **BackgroundExecutor** component you can launch different Runnables or Suppliers in a parallel way and wait for them starting or finishing. For obtaining threads the BackgroundExecutor uses the **ThreadSupplier** component which can be customized in the [burningwave.static.properties](#configuration) file. The ThreadSupplier provides a fixed number of reusable threads indicated by the **`thread-supplier.max-poolable-threads-count`** property and, if these threads have already been assigned, new non-reusable threads will be created whose quantity maximum is indicated by the **`thread-supplier.max-detached-threads-count`** property. Once this limit is reached if the request for a new thread exceeds the waiting time indicated by the **`thread-supplier.poolable-thread-request-timeout`** property, the ThreadSupplier will proceed to increase the limit indicated by the 'thread-supplier.max-detached-threads-count' property for the quantity indicated by the `thread-supplier.max-detached-threads-count.increasing-step` property. Resetting the 'thread-supplier.max-detached-threads-count' property to its initial value, will occur gradually only when there have been no more waits on thread requests for an amount of time indicated by the **`thread-supplier.max-detached-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value`** property.
 ```java
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
@@ -519,7 +519,7 @@ public class TaskLauncher implements ManagedLogger {
 
 <br/>
 
-# Reaching a resource of the file system
+# <a name="Reaching-a-resource-of-the-file-system"></a>Reaching a resource of the file system
 Through **FileSystemItem** you can reach a resource of the file system even if it is contained in a nested supported (**zip, jar, war, ear, jmod**) compressed archive and obtain the content of it or other informations such as if it is a folder or a file or a compressed archive or if it is a compressed entry or obtain, if it is a folder or a compressed archive, the direct children or all nested children or a filtered collection of them. You can retrieve a FileSystemItem through an absolute path or through a relative path referred to your classpath by using the PathHelper. FileSystemItems are cached and **there will only be one instance of them for an absolute path** and you can also clear the cache e reload all informations of a FileSystemItem. In the example below we show how to retrieve and use a FileSystemItem.
 
 ```java
@@ -594,7 +594,7 @@ public class ResourceReacher {
 
 <br/>
 
-# Resolving, collecting or retrieving paths
+# <a name="Resolving-collecting-or-retrieving-paths"></a>Resolving, collecting or retrieving paths
 
 Through **PathHelper** we can resolve or collect paths or retrieving resources even through supported archive files (zip, jar, jmod, ear and war).
 So we can create a path collection by adding an entry in **[burningwave.properties](#configuration-1)** file that **starts with `paths.` prefix (this is a fundamental requirement to allow PathHelper to load the paths)**, e.g.:
@@ -629,7 +629,7 @@ A **FSIL** expression encloses in a couple of double slash an absolute path or a
 
 <br/>
 
-# Retrieving placeholdered items from map and properties file
+# <a name="Retrieving-placeholdered-items-from-map-and-properties-file"></a>Retrieving placeholdered items from map and properties file
 
 With **IterableObjectHelper** component it is possible to retrieve items from map by using placeholder or not. In the following example we are going to show how to retrieve strings or objects from **[burningwave.properties](#configuration-1)** file and from maps.
 
@@ -689,7 +689,7 @@ public class ItemFromMapRetriever {
 ```
 <br>
 
-# Handling privates and all other members of an object
+# <a name="Handling-privates-and-all-other-members-of-an-object"></a>Handling privates and all other members of an object
 Through **Fields**, **Constructors** and **Methods** components it is possible to get or set fields value, invoking or finding constructors or methods of an object.
 Members handlers use to cache all members for faster access.
 For fields handling we are going to use **Fields** component:
@@ -832,7 +832,7 @@ public class ConstructorsHandler {
 
 <br>
 
-# Getting and setting properties of a Java bean through path
+# <a name="Getting-and-setting-properties-of-a-Java-bean-through-path"></a>Getting and setting properties of a Java bean through path
 Through **ByFieldOrByMethodPropertyAccessor** and **ByMethodOrByFieldPropertyAccessor** it is possible to get and set properties of a Java bean by using path. So for this example we will use these Java beans:
 
 ```java
@@ -958,7 +958,7 @@ public class GetAndSetPropertiesThroughPath{
 
 <br/>
 
-# Architectural overview and configuration
+# <a name="Architectural-overview-and-configuration"></a>Architectural overview and configuration
 
 **Burningwave Core** is based on the concept of component and component container. A **component** is a dynamic object that perform functionality related to the domain it belong to.
 A **component container** contains a set of dynamic components and could be of two types:
@@ -1084,7 +1084,7 @@ thread-supplier.poolable-thread-request-timeout=\
 	6000
 ```
 **If in your custom burningwave.static.properties or burningwave.static.default.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
-[Here an example of a **burningwave.static.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.static.properties#L1)
+[Here an example of a **burningwave.static.properties** file.](https://github.com/burningwave/core/blob/master/src/test/resources/burningwave.static.properties#L1)
 <br/>
 
 ## Dynamic component container
@@ -1267,7 +1267,8 @@ paths.main-class-paths=\
 	${system.properties:java.class.path}
 paths.main-class-paths.extension=\
 	//${system.properties:java.home}/lib//children:.*?\.jar;\
-	//${system.properties:java.home}/lib/ext//children:.*?\.jar;
+	//${system.properties:java.home}/lib/ext//children:.*?\.jar;\
+	//${system.properties:java.home}/../lib//children:.*?\.jar;
 paths.main-class-repositories=\
 	//${system.properties:java.home}/jmods//children:.*?\.jmod;
 ```
@@ -1277,9 +1278,9 @@ If you create a component container instance through method **`ComponentContaine
 ```java
 ComponentContainer.create("org/burningwave/custom-config-file.properties")
 ```
-[Here an example of a **burningwave.properties** file.](https://github.com/burningwave/core/blob/experimental/src/test/resources/burningwave.properties#L1)
+[Here an example of a **burningwave.properties** file.](https://github.com/burningwave/core/blob/master/src/test/resources/burningwave.properties#L1)
 
-### Other examples of using some components:
+### <a name="Other-examples-of-using-some-components"></a>Other examples of using some components:
 <details open>
 	<summary><b>BackgroundExecutor</b></summary>
 	<ul>
