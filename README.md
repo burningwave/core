@@ -45,7 +45,7 @@ And now we will see:
 
 <br/>
 
-# Including Burningwave Core in your project 
+# <a name="Including-Burningwave-Core-in-your-project"></a>Including Burningwave Core in your project 
 To include Burningwave Core library in your projects simply use with **Apache Maven**:
 
 ```xml
