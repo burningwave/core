@@ -18,13 +18,23 @@
 }
 
 .project-name {
-    font-family: 'Aldo Pro Book';
+    font-family: 'Aldo Pro Light';
     font-size: 5.25rem;
     font-style: italic;
 }
 
 @font-face {
-    font-family: 'Aldo Pro';
+    font-family: 'Aldo Pro Hairline';
+    src: local('Aldo Pro Hairline'), local('Aldo-Pro-Hairline'),
+        url('./../AldoPro-Hairline.woff2') format('woff2'),
+        url('./../AldoPro-Hairline.woff') format('woff'),
+        url('./../AldoPro-Hairline.ttf') format('truetype');
+    font-weight: 100;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Aldo Pro Light';
     src: local('Aldo Pro Light'), local('Aldo-Pro-Light'),
         url('./../fonts/AldoPro-Light.woff2') format('woff2'),
         url('./../fonts/AldoPro-Light.woff') format('woff'),
