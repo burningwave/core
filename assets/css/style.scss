@@ -18,8 +18,11 @@
 }
 
 @font-face {
-    font-family: Aldo Pro;
-    src: url("https://github.com/burningwave/core/blob/master/assets/fonts/AldoPro-Medium.ttf?raw=true") format('truetype');
-    font-weight: bold;
+    font-family: 'Aldo Pro';
+    src: local('Aldo Pro Medium'), local('Aldo-Pro-Medium'),
+        url('https://github.com/burningwave/core/blob/master/assets/fonts/AldoPro-Medium.woff2?raw=true') format('woff2'),
+        url('https://github.com/burningwave/core/blob/master/assets/fonts/AldoPro-Medium.woff?raw=true') format('woff'),
+        url('https://github.com/burningwave/core/blob/master/assets/fonts/AldoPro-Medium.ttf?raw=true') format('truetype');
+    font-weight: 500;
     font-style: normal;
-}
+  }
