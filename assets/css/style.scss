@@ -18,17 +18,27 @@
 }
 
 .project-name {
-    font-family: 'Aldo Pro';
-    font-size: 5.25rem;
+    font-family: 'Aldo Pro Regular';
+    font-size: 6.25rem;
     font-style: italic;
 }
 
 @font-face {
-    font-family: 'Aldo Pro';
+    font-family: 'Aldo Pro Medium';
     src: local('Aldo Pro Medium'), local('Aldo-Pro-Medium'),
-        url('./../fonts/AldoPro-Medium.woff2?raw=true') format('woff2'),
-        url('./../fonts/AldoPro-Medium.woff?raw=true') format('woff'),
-        url('./../fonts/AldoPro-Medium.ttf?raw=true') format('truetype');
+        url('./../fonts/AldoPro-Medium.woff2') format('woff2'),
+        url('./../fonts/AldoPro-Medium.woff') format('woff'),
+        url('./../fonts/AldoPro-Medium.ttf') format('truetype');
     font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Aldo Pro Regular';
+    src: local('Aldo Pro Regular'), local('Aldo-Pro-Regular'),
+        url('./../fonts/AldoPro-Regular.woff2') format('woff2'),
+        url('./../fonts/AldoPro-Regular.woff') format('woff'),
+        url('./../fonts/AldoPro-Regular.ttf') format('truetype');
+    font-weight: 400;
     font-style: normal;
 }
