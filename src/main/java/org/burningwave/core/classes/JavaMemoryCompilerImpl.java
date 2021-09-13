@@ -495,7 +495,12 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 
 		@Override
 		public void setLocation(Location location, Iterable<? extends File> paths) throws IOException {
-			javaFileManager.setLocation(location, paths);
+            try {
+            	javaFileManager.setLocation(location, paths);
+            } catch (IllegalArgumentException exc) {
+            	ManagedLoggersRepository.logWarn(getClass()::getName, exc.getMessage());
+            }
+			
 		}
 
 		@Override
