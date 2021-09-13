@@ -6,29 +6,21 @@
   background-image: linear-gradient(120deg, #e54d1d, #f7bc12);
 }
 .main-content {
-  h1 {
-    color: #e54d1d;
-  }
-  h2 {
-    color: #e54d1d;
-  }
-  h3 {
-    color: #e54d1d;
-  }
-}
-
-.project-name {
-    font-family: 'Aldo Pro Book';
-    font-size: 5.25rem;
-    font-style: italic;
-}
-
-h1, h2, h3 {
-    font-family: 'Aldo Pro Regular';
-}
-
-h2.project-tagline {
-	font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	h1 {
+		color: #e54d1d;
+	}
+	h2 {
+		color: #e54d1d;
+	}
+	h3 {
+		color: #e54d1d;
+	}
+  
+	.project-name {
+		font-family: 'Aldo Pro Book';
+		font-size: 5.25rem;
+		font-style: italic;
+	}
 }
 
 @font-face {
