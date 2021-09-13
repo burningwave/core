@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -107,7 +108,7 @@ public interface JavaMemoryCompiler {
 			
 			private String compiledClassesStorage;
 			private boolean useTemporaryFolderForStoring;
-			private String version;
+			Map<String, String> extraParameters;
 			
 			private Config() {
 				this.sources = new HashSet<>();
@@ -170,7 +171,14 @@ public interface JavaMemoryCompiler {
 			}
 			
 			public Config setVersion(String version) {
-				this.version = version;
+				return putExtraParameter("--release", version);
+			}
+			
+			public Config putExtraParameter(String parameterName, String parameterValue) {
+				if (extraParameters == null) {
+					extraParameters = new LinkedHashMap<>();
+				}
+				extraParameters.put(parameterName, parameterValue);
 				return this;
 			}
 
@@ -325,8 +333,8 @@ public interface JavaMemoryCompiler {
 				return useTemporaryFolderForStoring;
 			}
 			
-			String getVersion() {
-				return version;
+			Map<String, String> getExtraParameters() {
+				return extraParameters;
 			}
 		
 		}

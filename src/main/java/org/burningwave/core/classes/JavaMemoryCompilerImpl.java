@@ -103,10 +103,6 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 	
 	@Override
 	public ProducerTask<JavaMemoryCompiler.Compilation.Result> compile(JavaMemoryCompiler.Compilation.Config config) {
-		Map<String, String> extraOptions = new LinkedHashMap<>();
-		if (config.getVersion() != null) {
-			extraOptions.put("--release", config.getVersion());
-		}
 		return compile(
 			config.getSources(),
 			getClassPathsFrom(config),
@@ -114,7 +110,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			getBlackListedClassPaths(config),
 			config.getCompiledClassesStorage(),
 			config.useTemporaryFolderForStoring(),
-			extraOptions
+			config.getExtraParameters()
 		);
 	}
 
