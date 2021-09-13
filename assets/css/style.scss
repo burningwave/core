@@ -17,10 +17,14 @@
   }
 }
 
-h1, h2, .project-name {
+.project-name {
     font-family: 'Aldo Pro Book';
     font-size: 5.25rem;
     font-style: italic;
+}
+
+h1, h2, h3 {
+    font-family: 'Aldo Pro Light';
 }
 
 @font-face {
