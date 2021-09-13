@@ -5,6 +5,13 @@
 .page-header {
   background-image: linear-gradient(120deg, #e54d1d, #f7bc12);
 }
+
+h1.project-name {
+	font-family: 'Aldo Pro Book';
+	font-size: 5.25rem;
+	font-style: italic;
+}
+
 .main-content {
 	h1 {
 		color: #e54d1d;
@@ -14,12 +21,6 @@
 	}
 	h3 {
 		color: #e54d1d;
-	}
-  
-	.project-name {
-		font-family: 'Aldo Pro Book';
-		font-size: 5.25rem;
-		font-style: italic;
 	}
 }
 
