@@ -24,6 +24,16 @@
 }
 
 @font-face {
+    font-family: 'Aldo Pro';
+    src: local('Aldo Pro Light'), local('Aldo-Pro-Light'),
+        url('./../fonts/AldoPro-Light.woff2') format('woff2'),
+        url('./../fonts/AldoPro-Light.woff') format('woff'),
+        url('./../fonts/AldoPro-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
     font-family: 'Aldo Pro Book';
     src: local('Aldo Pro Book'), local('Aldo-Pro-Book'),
         url('./../fonts/AldoPro-Book.woff2') format('woff2'),
