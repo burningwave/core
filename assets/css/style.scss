@@ -18,18 +18,18 @@
 }
 
 .project-name {
-    font-family: 'Aldo Pro Regular';
-    font-size: 6.25rem;
+    font-family: 'Aldo Pro Book';
+    font-size: 7.25rem;
     font-style: italic;
 }
 
 @font-face {
-    font-family: 'Aldo Pro Medium';
-    src: local('Aldo Pro Medium'), local('Aldo-Pro-Medium'),
-        url('./../fonts/AldoPro-Medium.woff2') format('woff2'),
-        url('./../fonts/AldoPro-Medium.woff') format('woff'),
-        url('./../fonts/AldoPro-Medium.ttf') format('truetype');
-    font-weight: 500;
+    font-family: 'Aldo Pro Book';
+    src: local('Aldo Pro Book'), local('Aldo-Pro-Book'),
+        url('./../fonts/AldoPro-Book.woff2') format('woff2'),
+        url('./../fonts/AldoPro-Book.woff') format('woff'),
+        url('./../fonts/AldoPro-Book.ttf') format('truetype');
+    font-weight: normal;
     font-style: normal;
 }
 
@@ -40,5 +40,15 @@
         url('./../fonts/AldoPro-Regular.woff') format('woff'),
         url('./../fonts/AldoPro-Regular.ttf') format('truetype');
     font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Aldo Pro Medium';
+    src: local('Aldo Pro Medium'), local('Aldo-Pro-Medium'),
+        url('./../fonts/AldoPro-Medium.woff2') format('woff2'),
+        url('./../fonts/AldoPro-Medium.woff') format('woff'),
+        url('./../fonts/AldoPro-Medium.ttf') format('truetype');
+    font-weight: 500;
     font-style: normal;
 }
