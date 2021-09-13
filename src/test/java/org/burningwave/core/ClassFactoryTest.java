@@ -2,6 +2,7 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
+import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 import java.io.InputStream;
@@ -50,7 +51,7 @@ public class ClassFactoryTest extends BaseTest {
 							className					
 						)
 					)
-				).modifyCompilationConfig(config -> config.setVersion("8"))
+				)
 			).get(className);
 		});
 	}
@@ -88,6 +89,28 @@ public class ClassFactoryTest extends BaseTest {
 				method.getParameterTypes()[0].equals(String.class)).stream().findFirst().orElse(null);
 			PojoInterface pojoObject = (PojoInterface)createMethod.invoke(null, "try");
 			return pojoObject;
+		});
+	}
+	
+	@Test
+	public void getOrBuildPojoClassTestFour() throws Exception {
+		testNotNull(() -> {
+			String className = this.getClass().getPackage().getName() + ".SimpleVirtual";
+			ComponentSupplier componentSupplier = getComponentSupplier();
+			LoadOrBuildAndDefineConfig loadOrBuildAndDefineConfig = LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
+				UnitSourceGenerator.create(Classes.retrievePackageName(className)).
+				addClass(
+					PojoSourceGenerator.create().generate(
+						className					
+					)
+				)
+			);
+			if (JVMInfo.getVersion() > 8) {
+				loadOrBuildAndDefineConfig.modifyCompilationConfig(config -> config.setVersion("8"));
+			}
+			return componentSupplier.getClassFactory().loadOrBuildAndDefine(
+				loadOrBuildAndDefineConfig
+			).get(className);
 		});
 	}
 	
