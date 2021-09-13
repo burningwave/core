@@ -241,7 +241,11 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 				
 			});
 		}
-		try (MemoryFileManager memoryFileManager = new MemoryFileManager(compiler)) {
+		DiagnosticListener diagnosticListener = new DiagnosticListener(context);
+		try (MemoryFileManager memoryFileManager = new MemoryFileManager(
+				compiler.getStandardFileManager(diagnosticListener, null, null)
+			)
+		) {
 			CompilationTask task = compiler.getTask(
 				null, memoryFileManager,
 				new DiagnosticListener(context), options, null,
@@ -441,9 +445,11 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 	static class MemoryFileManager extends ForwardingJavaFileManager implements Component, StandardJavaFileManager {
 		
 		private List<MemoryFileObject> compiledFiles;
+		private StandardJavaFileManager javaFileManager;
 		
-		MemoryFileManager(JavaCompiler compiler) {
-	        super(compiler.getStandardFileManager(null, null, null));
+		MemoryFileManager(StandardJavaFileManager javaFileManager) {
+	        super(javaFileManager);
+	        this.javaFileManager = javaFileManager;
 	        compiledFiles = new CopyOnWriteArrayList<>();
 	    }
 		
@@ -468,36 +474,37 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			Executor.run(() -> {
 				super.close();
 			});
+			javaFileManager = null;
 		}
 
 		@Override
 		public Iterable<? extends JavaFileObject> getJavaFileObjectsFromFiles(Iterable<? extends File> files) {
-			throw new JavaMemoryCompiler.Compilation.Exception("Unsupported operation");
+			return javaFileManager.getJavaFileObjectsFromFiles(files);
 		}
 
 		@Override
 		public Iterable<? extends JavaFileObject> getJavaFileObjects(File... files) {
-			throw new JavaMemoryCompiler.Compilation.Exception("Unsupported operation");
+			return javaFileManager.getJavaFileObjects(files);
 		}
 
 		@Override
 		public Iterable<? extends JavaFileObject> getJavaFileObjectsFromStrings(Iterable<String> names) {
-			throw new JavaMemoryCompiler.Compilation.Exception("Unsupported operation");
+			return javaFileManager.getJavaFileObjectsFromStrings(names);
 		}
 
 		@Override
 		public Iterable<? extends JavaFileObject> getJavaFileObjects(String... names) {
-			throw new JavaMemoryCompiler.Compilation.Exception("Unsupported operation");
+			return javaFileManager.getJavaFileObjects(names);
 		}
 
 		@Override
 		public void setLocation(Location location, Iterable<? extends File> paths) throws IOException {
-
+			javaFileManager.setLocation(location, paths);
 		}
 
 		@Override
 		public Iterable<? extends File> getLocation(Location location) {
-			throw new JavaMemoryCompiler.Compilation.Exception("Unsupported operation");
+			return javaFileManager.getLocation(location);
 		}
 	   
 	}
