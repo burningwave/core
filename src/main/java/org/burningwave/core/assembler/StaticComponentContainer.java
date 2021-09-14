@@ -377,17 +377,45 @@ public class StaticComponentContainer {
 				);
 			}
 			if (JVMInfo.getVersion() > 8) {
-				Set<Module> everyOneSet = Fields.getStaticDirect(java.lang.Module.class, "EVERYONE_SET");
+				Set<Module> everyOneSet = Fields.getStaticDirect(java.lang.Module.class, "ALL_UNNAMED_MODULE_SET");
+				/*Map<String, Set<Module>> objPckgForModule =
+					Fields.getDirect(Object.class.getModule(), "exportedPackages");
+				objPckgForModule.forEach((pkgName_, moduleSet) -> {
+					moduleSet.forEach(module -> {
+						module.getPackages().forEach(pkgName -> {
+							Methods.invokeStatic(java.lang.Module.class, "addExportsToAllUnnamed0", module, pkgName);
+							Map<String, Set<Module>> pckgForModule = Fields.getDirect(module, "openPackages");
+							if (pckgForModule == null) {
+								pckgForModule = new HashMap<>();
+								Fields.setDirect(module, "openPackages", pckgForModule);
+							}
+							pckgForModule.put(pkgName, everyOneSet);
+							pckgForModule = Fields.getDirect(module, "exportedPackages");
+							if (pckgForModule == null) {
+								pckgForModule = new HashMap<>();
+								Fields.setDirect(module, "exportedPackages", pckgForModule);
+							}						
+							Fields.setDirect(module, "exportedPackages", pckgForModule);
+						});
+						
+					});
+				});		*/		
 				ModuleLayer.boot().modules().forEach(module -> {
 					module.getPackages().forEach(pkgName -> {
 						Methods.invokeStatic(java.lang.Module.class, "addExportsToAllUnnamed0", module, pkgName);
-						Map<String, Set<Module>> pckgForModule = Fields.getDirect(module, "openPackages");
+						Methods.invokeStatic(java.lang.Module.class, "addExportsToAll0", module, pkgName);
+						/*Map<String, Set<Module>> pckgForModule = Fields.getDirect(module, "openPackages");
 						if (pckgForModule == null) {
 							pckgForModule = new HashMap<>();
 							Fields.setDirect(module, "openPackages", pckgForModule);
-							Fields.setDirect(module, "exportedPackages", pckgForModule);
 						}
 						pckgForModule.put(pkgName, everyOneSet);
+						pckgForModule = Fields.getDirect(module, "exportedPackages");
+						if (pckgForModule == null) {
+							pckgForModule = new HashMap<>();
+							Fields.setDirect(module, "exportedPackages", pckgForModule);
+						}						
+						Fields.setDirect(module, "exportedPackages", pckgForModule);*/
 					});
 	            });
 			}
