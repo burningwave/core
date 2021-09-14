@@ -32,7 +32,6 @@
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
 	<version>9.1.1-SNAPSHOT</version>
-	
 	<packaging>jar</packaging>
 
 	<name>Burningwave Core</name>
@@ -94,11 +93,11 @@
 		<repository.url>https://burningwave@github.com/burningwave/core.git</repository.url>
 
 		<coveralls-maven-plugin.version>4.3.0</coveralls-maven-plugin.version>
-		<logback.version>1.2.3</logback.version>
+		<logback.version>1.2.6</logback.version>
 		<jacoco-maven-plugin.version>0.7.6.201602180812</jacoco-maven-plugin.version>
 		<jakarta.validation.version>2.0.2</jakarta.validation.version>
-		<junit-jupiter.version>5.7.0</junit-jupiter.version>
-		<junit.version>1.7.0</junit.version>
+		<junit-jupiter.version>5.8.0</junit-jupiter.version>
+		<junit.version>1.8.0</junit.version>
 		<jvm-driver.version>1.0.1</jvm-driver.version>
 		<maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
 		<maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
@@ -111,7 +110,7 @@
 		<maven-scm-provider-gitexe.version>1.9.5</maven-scm-provider-gitexe.version>
 		<maven-surefire-plugin.version>2.21.0</maven-surefire-plugin.version>
 		<nexus-staging-maven-plugin.version>1.6.8</nexus-staging-maven-plugin.version>
-		<slf4j.version>1.7.30</slf4j.version>
+		<slf4j.version>1.7.32</slf4j.version>
 	</properties>
 
 	<issueManagement>
