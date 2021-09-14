@@ -28,16 +28,22 @@
  */
 package org.burningwave.core.assembler;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
+
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
@@ -369,7 +375,20 @@ public class StaticComponentContainer {
 				BackgroundExecutor.startAllTasksMonitoring(
 					retrieveAllTasksMonitoringConfig()
 				);
-			}	
+			}
+			Set<Module> everyOneSet = Fields.getStaticDirect(java.lang.Module.class, "EVERYONE_SET");
+			Map<String, Set<Module>> modules = Fields.get(Object.class.getModule(), "exportedPackages");
+			modules.forEach((packageName, moduleSet) -> {
+				moduleSet.forEach(module -> {
+					Map<Field, ?> m = Fields.getAll(module);
+					//Fields.setDirect(module, "openPackages", everyOneSet);
+					//Fields.setDirect(module, "exportedPackages", everyOneSet);
+					module.getPackages().forEach(pkgName -> {
+						Methods.invokeStatic(java.lang.Module.class, "addExportsToAllUnnamed0", module, pkgName);
+					});
+					
+				});
+			});
 		} catch (Throwable exc){
 			exc.printStackTrace();
 			throw exc;
