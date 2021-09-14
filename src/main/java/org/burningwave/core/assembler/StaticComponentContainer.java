@@ -376,19 +376,21 @@ public class StaticComponentContainer {
 					retrieveAllTasksMonitoringConfig()
 				);
 			}
-			Set<Module> everyOneSet = Fields.getStaticDirect(java.lang.Module.class, "EVERYONE_SET");
-			Map<String, Set<Module>> modules = Fields.get(Object.class.getModule(), "exportedPackages");
-			modules.forEach((packageName, moduleSet) -> {
-				moduleSet.forEach(module -> {
-					Map<Field, ?> m = Fields.getAll(module);
-					//Fields.setDirect(module, "openPackages", everyOneSet);
-					//Fields.setDirect(module, "exportedPackages", everyOneSet);
+			if (JVMInfo.getVersion() > 8) {
+				Set<Module> everyOneSet = Fields.getStaticDirect(java.lang.Module.class, "EVERYONE_SET");
+				ModuleLayer.boot().modules().forEach(module -> {
 					module.getPackages().forEach(pkgName -> {
 						Methods.invokeStatic(java.lang.Module.class, "addExportsToAllUnnamed0", module, pkgName);
+						Map<String, Set<Module>> pckgForModule = Fields.getDirect(module, "openPackages");
+						if (pckgForModule == null) {
+							pckgForModule = new HashMap<>();
+							Fields.setDirect(module, "openPackages", pckgForModule);
+							Fields.setDirect(module, "exportedPackages", pckgForModule);
+						}
+						pckgForModule.put(pkgName, everyOneSet);
 					});
-					
-				});
-			});
+	            });
+			}
 		} catch (Throwable exc){
 			exc.printStackTrace();
 			throw exc;
