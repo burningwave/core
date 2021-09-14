@@ -196,7 +196,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		);
 	}
 	
-	private <T> T invoke(Object target, Method method, Object... params) {
+	public <T> T invoke(Object target, Method method, Object... params) {
 		if (params == null) {
 			params = new Object[] {null};
 		}
