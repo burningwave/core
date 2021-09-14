@@ -69,11 +69,11 @@ public class Resources {
 		return propertiesBag;
 	}
 	
-	FileSystemItem get(Class<?> cls) {
+	public FileSystemItem get(Class<?> cls) {
 		return FileSystemItem.of(Classes.getClassLoader(cls).getResource(Classes.toPath(cls)));
 	}
 	
-	FileSystemItem getClassPath(Class<?> cls) {
+	public FileSystemItem getClassPath(Class<?> cls) {
 		String classRelativePath = Classes.toPath(cls);
 		String classAbsolutePath = FileSystemItem.of(Classes.getClassLoader(cls).getResource(classRelativePath)).getAbsolutePath();
 		return FileSystemItem.ofPath(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf(classRelativePath) - 1) );
