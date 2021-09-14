@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
@@ -836,6 +837,10 @@ public class FileSystemItem {
 	
 	public ByteBuffer toByteBuffer() {
 		return Executor.get(this::toByteBuffer0, 2);
+	}
+	
+	public byte[] toByteArray() {
+		return BufferHandler.toByteArray(toByteBuffer());
 	}
 	
 	private ByteBuffer toByteBuffer0() {
