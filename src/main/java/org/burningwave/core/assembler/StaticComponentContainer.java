@@ -64,6 +64,7 @@ public class StaticComponentContainer {
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL = "background-executor.all-tasks-monitoring.interval";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY = "background-executor.all-tasks-monitoring.probable-dead-locked-tasks-handling.policy";
 			private static final String JVM_DRIVER = "jvm.driver";
+			private static final String MODULES_EXPORT_ALL_TO_ALL = "modules.export-all-to-all";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED = "synchronizer.all-threads-monitoring.enabled";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";	
 		}
@@ -125,6 +126,8 @@ public class StaticComponentContainer {
 			
 			defaultValues.put(Key.JVM_DRIVER, "org.burningwave.jvm.DefaultDriver");
 			
+			defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
+			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
@@ -148,6 +151,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 	public static final org.burningwave.core.classes.Members Members;
 	public static final org.burningwave.core.classes.Methods Methods;
+	public static final org.burningwave.core.classes.Modules Modules;
 	public static final org.burningwave.core.Objects Objects;
 	public static final org.burningwave.core.Strings.Paths Paths;
 	public static final org.burningwave.core.io.Resources Resources;
@@ -372,8 +376,14 @@ public class StaticComponentContainer {
 					retrieveAllTasksMonitoringConfig()
 				);
 			}
+			
 			if (JVMInfo.getVersion() > 8) {
-				exportAllModulesToAllModules();
+				Modules = org.burningwave.core.classes.Modules.create();
+				if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.MODULES_EXPORT_ALL_TO_ALL))) {
+					Modules.exportAllToAll();
+				}
+			} else {
+				Modules = null;
 			}
 		} catch (Throwable exc){
 			exc.printStackTrace();
@@ -382,49 +392,7 @@ public class StaticComponentContainer {
 		
 	}
 	
-	static void exportAllModulesToAllModules() {
-		try {
-			Class<?> moduleClass = Class.forName("java.lang.Module");
-			ClassLoader cls = ClassLoaders.getMaster(Classes.getClassLoader(moduleClass));
-			Set<?> everyOneSet = new HashSet<>();
-			everyOneSet.add(Fields.getStaticDirect(moduleClass, "ALL_UNNAMED_MODULE"));
-			everyOneSet.add(Fields.getStaticDirect(moduleClass, "EVERYONE_MODULE"));
-//			Map<String, Set<?>> objPckgForModule =
-//				Fields.getDirect(Methods.invoke(Object.class, "getModule"), "exportedPackages");
-//			objPckgForModule.forEach((pkgName_, moduleSet) -> {
-//				moduleSet.forEach(module -> {
-//					((Set<String>)Methods.invoke(module, "getPackages")).forEach(pkgName -> {
-//						addTo(moduleClass, everyOneSet, "exportedPackages", module, pkgName);
-//						addTo(moduleClass, everyOneSet, "openPackages", module, pkgName);
-//					});
-//					
-//				});
-//			});
-			Object moduleLayer = Methods.invokeStatic(Class.forName("java.lang.ModuleLayer"), "boot");
-			((Set<Object>)Methods.invoke(moduleLayer, "modules")).forEach(module -> {
-				((Set<String>)Methods.invoke(module, "getPackages")).forEach(pkgName -> {
-					addTo(moduleClass, everyOneSet, "exportedPackages", module, pkgName);
-					addTo(moduleClass, everyOneSet, "openPackages", module, pkgName);
-				});
-			});
-		} catch (ClassNotFoundException exc) {
-			Throwables.throwException(exc);
-		}
-	}
 	
-	static void addTo(Class<?> moduleClass, Set<?> everyOneSet, String fieldName, Object module, String pkgName) {
-		Map<String, Set<?>> pckgForModule = Fields.getDirect(module, fieldName);
-		if (pckgForModule == null) {
-			pckgForModule = new HashMap<>();
-			Fields.setDirect(module, fieldName, pckgForModule);
-		}
-		pckgForModule.put(pkgName, everyOneSet);
-		if (fieldName.startsWith("exported")) {	
-			Methods.invokeStatic(moduleClass, "addExportsToAllUnnamed0", module, pkgName);
-			Methods.invokeStatic(moduleClass, "addExportsToAll0", module, pkgName);
-		}
-	}
-
 	private static String getName(String simpleName) {
 		return Optional.ofNullable(GlobalProperties.resolveStringValue(Configuration.Key.GROUP_NAME_FOR_NAMED_ELEMENTS)).map(nm -> nm + " - ").orElseGet(() -> "") + simpleName;
 	}
