@@ -373,7 +373,8 @@ public class StaticComponentContainer {
 					retrieveAllTasksMonitoringConfig()
 				);
 			}
-			if (JVMInfo.getVersion() > 8) {
+			/*if (JVMInfo.getVersion() > 8) {
+				ClassLoader cls = ClassLoaders.getMaster(Classes.getClassLoader(java.lang.Module.class));
 				Set<Module> everyOneSet = new HashSet<>();
 				everyOneSet.add(Fields.getStaticDirect(java.lang.Module.class, "ALL_UNNAMED_MODULE"));
 				everyOneSet.add(Fields.getStaticDirect(java.lang.Module.class, "EVERYONE_MODULE"));
@@ -384,28 +385,26 @@ public class StaticComponentContainer {
 						module.getPackages().forEach(pkgName -> {
 							addTo(everyOneSet, "exportedPackages", module, pkgName);
 							addTo(everyOneSet, "openPackages", module, pkgName);
-							Methods.invokeStatic(java.lang.Module.class, "addExportsToAllUnnamed0", module, pkgName);
-							Methods.invokeStatic(java.lang.Module.class, "addExportsToAll0", module, pkgName);
 						});
 						
 					});
 				});
-				ModuleLayer.boot().modules().forEach(module -> {
+				ModuleLayer moduleLayer = ModuleLayer.boot();
+				moduleLayer.modules().forEach(module -> {
 					module.getPackages().forEach(pkgName -> {
 						addTo(everyOneSet, "exportedPackages", module, pkgName);
 						addTo(everyOneSet, "openPackages", module, pkgName);
-						Methods.invokeStatic(java.lang.Module.class, "addExportsToAllUnnamed0", module, pkgName);
-						Methods.invokeStatic(java.lang.Module.class, "addExportsToAll0", module, pkgName);
 					});
 	            });
-			}
+			}*/
 		} catch (Throwable exc){
 			exc.printStackTrace();
 			throw exc;
 		}
 		
 	}
-
+	
+	/*
 	static void addTo(Set<Module> everyOneSet, String fieldName, Module module, String pkgName) {
 		Map<String, Set<Module>> pckgForModule = Fields.getDirect(module, fieldName);
 		if (pckgForModule == null) {
@@ -413,7 +412,11 @@ public class StaticComponentContainer {
 			Fields.setDirect(module, fieldName, pckgForModule);
 		}
 		pckgForModule.put(pkgName, everyOneSet);
-	}
+		if (fieldName.startsWith("exported")) {	
+			Methods.invokeStatic(java.lang.Module.class, "addExportsToAllUnnamed0", module, pkgName);
+			Methods.invokeStatic(java.lang.Module.class, "addExportsToAll0", module, pkgName);
+		}
+	}*/
 
 	private static String getName(String simpleName) {
 		return Optional.ofNullable(GlobalProperties.resolveStringValue(Configuration.Key.GROUP_NAME_FOR_NAMED_ELEMENTS)).map(nm -> nm + " - ").orElseGet(() -> "") + simpleName;
