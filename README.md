@@ -988,7 +988,7 @@ public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
 public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 public static final org.burningwave.core.classes.Members Members;
 public static final org.burningwave.core.classes.Methods Methods;
-public static final org.burningwave.core.classes.Modules Modules;
+public static final org.burningwave.core.classes.Modules Modules; //Null on JDK 8
 public static final org.burningwave.core.Objects Objects;
 public static final org.burningwave.core.Strings.Paths Paths;
 public static final org.burningwave.core.io.Resources Resources;

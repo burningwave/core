@@ -103,7 +103,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		if (ClassLoaders.retrieveLoadedClass(this, className) == null) {
 			notLoadedByteCodes.put(className, byteCode);
 		} else {
-			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not add bytecode for class {} cause it's already present", className);
+			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not add bytecode for class {} cause it has already been added", className);
 		}
 	}
     
