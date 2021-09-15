@@ -28,17 +28,14 @@
  */
 package org.burningwave.core.assembler;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
-import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
-
-import java.lang.reflect.Field;
+import java.lang.Module;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,11 +43,11 @@ import java.util.Random;
 import java.util.Set;
 
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.classes.Methods;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
-import org.burningwave.core.jvm.BufferHandler;
 import org.burningwave.jvm.Driver;
 
 @SuppressWarnings("unused")
@@ -377,7 +374,9 @@ public class StaticComponentContainer {
 				);
 			}
 			if (JVMInfo.getVersion() > 8) {
-				Set<Module> everyOneSet = Fields.getStaticDirect(java.lang.Module.class, "ALL_UNNAMED_MODULE_SET");
+				Set<Module> everyOneSet = new HashSet<>();
+				everyOneSet.add(Fields.getStaticDirect(java.lang.Module.class, "ALL_UNNAMED_MODULE"));
+				everyOneSet.add(Fields.getStaticDirect(java.lang.Module.class, "EVERYONE_MODULE"));
 				/*Map<String, Set<Module>> objPckgForModule =
 					Fields.getDirect(Object.class.getModule(), "exportedPackages");
 				objPckgForModule.forEach((pkgName_, moduleSet) -> {
@@ -402,20 +401,10 @@ public class StaticComponentContainer {
 				});		*/		
 				ModuleLayer.boot().modules().forEach(module -> {
 					module.getPackages().forEach(pkgName -> {
+						addTo(everyOneSet, "exportedPackages", module, pkgName);
+						addTo(everyOneSet, "openPackages", module, pkgName);
 						Methods.invokeStatic(java.lang.Module.class, "addExportsToAllUnnamed0", module, pkgName);
 						Methods.invokeStatic(java.lang.Module.class, "addExportsToAll0", module, pkgName);
-						/*Map<String, Set<Module>> pckgForModule = Fields.getDirect(module, "openPackages");
-						if (pckgForModule == null) {
-							pckgForModule = new HashMap<>();
-							Fields.setDirect(module, "openPackages", pckgForModule);
-						}
-						pckgForModule.put(pkgName, everyOneSet);
-						pckgForModule = Fields.getDirect(module, "exportedPackages");
-						if (pckgForModule == null) {
-							pckgForModule = new HashMap<>();
-							Fields.setDirect(module, "exportedPackages", pckgForModule);
-						}						
-						Fields.setDirect(module, "exportedPackages", pckgForModule);*/
 					});
 	            });
 			}
@@ -424,6 +413,15 @@ public class StaticComponentContainer {
 			throw exc;
 		}
 		
+	}
+
+	static void addTo(Set<Module> everyOneSet, String fieldName, Module module, String pkgName) {
+		Map<String, Set<Module>> pckgForModule = Fields.getDirect(module, fieldName);
+		if (pckgForModule == null) {
+			pckgForModule = new HashMap<>();
+			Fields.setDirect(module, fieldName, pckgForModule);
+		}
+		pckgForModule.put(pkgName, everyOneSet);
 	}
 
 	private static String getName(String simpleName) {
