@@ -377,28 +377,19 @@ public class StaticComponentContainer {
 				Set<Module> everyOneSet = new HashSet<>();
 				everyOneSet.add(Fields.getStaticDirect(java.lang.Module.class, "ALL_UNNAMED_MODULE"));
 				everyOneSet.add(Fields.getStaticDirect(java.lang.Module.class, "EVERYONE_MODULE"));
-				/*Map<String, Set<Module>> objPckgForModule =
+				Map<String, Set<Module>> objPckgForModule =
 					Fields.getDirect(Object.class.getModule(), "exportedPackages");
 				objPckgForModule.forEach((pkgName_, moduleSet) -> {
 					moduleSet.forEach(module -> {
 						module.getPackages().forEach(pkgName -> {
+							addTo(everyOneSet, "exportedPackages", module, pkgName);
+							addTo(everyOneSet, "openPackages", module, pkgName);
 							Methods.invokeStatic(java.lang.Module.class, "addExportsToAllUnnamed0", module, pkgName);
-							Map<String, Set<Module>> pckgForModule = Fields.getDirect(module, "openPackages");
-							if (pckgForModule == null) {
-								pckgForModule = new HashMap<>();
-								Fields.setDirect(module, "openPackages", pckgForModule);
-							}
-							pckgForModule.put(pkgName, everyOneSet);
-							pckgForModule = Fields.getDirect(module, "exportedPackages");
-							if (pckgForModule == null) {
-								pckgForModule = new HashMap<>();
-								Fields.setDirect(module, "exportedPackages", pckgForModule);
-							}						
-							Fields.setDirect(module, "exportedPackages", pckgForModule);
+							Methods.invokeStatic(java.lang.Module.class, "addExportsToAll0", module, pkgName);
 						});
 						
 					});
-				});		*/		
+				});
 				ModuleLayer.boot().modules().forEach(module -> {
 					module.getPackages().forEach(pkgName -> {
 						addTo(everyOneSet, "exportedPackages", module, pkgName);
