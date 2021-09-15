@@ -373,7 +373,7 @@ public class StaticComponentContainer {
 				);
 			}
 			if (JVMInfo.getVersion() > 8) {
-				//exportAllModules();
+				exportAllModulesToAllModules();
 			}
 		} catch (Throwable exc){
 			exc.printStackTrace();
@@ -382,24 +382,24 @@ public class StaticComponentContainer {
 		
 	}
 	
-	static void exportAllModules() {
+	static void exportAllModulesToAllModules() {
 		try {
 			Class<?> moduleClass = Class.forName("java.lang.Module");
 			ClassLoader cls = ClassLoaders.getMaster(Classes.getClassLoader(moduleClass));
 			Set<?> everyOneSet = new HashSet<>();
 			everyOneSet.add(Fields.getStaticDirect(moduleClass, "ALL_UNNAMED_MODULE"));
 			everyOneSet.add(Fields.getStaticDirect(moduleClass, "EVERYONE_MODULE"));
-			Map<String, Set<?>> objPckgForModule =
-				Fields.getDirect(Methods.invoke(Object.class, "getModule"), "exportedPackages");
-			objPckgForModule.forEach((pkgName_, moduleSet) -> {
-				moduleSet.forEach(module -> {
-					((Set<String>)Methods.invoke(module, "getPackages")).forEach(pkgName -> {
-						addTo(moduleClass, everyOneSet, "exportedPackages", module, pkgName);
-						addTo(moduleClass, everyOneSet, "openPackages", module, pkgName);
-					});
-					
-				});
-			});
+//			Map<String, Set<?>> objPckgForModule =
+//				Fields.getDirect(Methods.invoke(Object.class, "getModule"), "exportedPackages");
+//			objPckgForModule.forEach((pkgName_, moduleSet) -> {
+//				moduleSet.forEach(module -> {
+//					((Set<String>)Methods.invoke(module, "getPackages")).forEach(pkgName -> {
+//						addTo(moduleClass, everyOneSet, "exportedPackages", module, pkgName);
+//						addTo(moduleClass, everyOneSet, "openPackages", module, pkgName);
+//					});
+//					
+//				});
+//			});
 			Object moduleLayer = Methods.invokeStatic(Class.forName("java.lang.ModuleLayer"), "boot");
 			((Set<Object>)Methods.invoke(moduleLayer, "modules")).forEach(module -> {
 				((Set<String>)Methods.invoke(module, "getPackages")).forEach(pkgName -> {
