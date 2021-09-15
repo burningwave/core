@@ -22,7 +22,7 @@ jobs:
 #        architecture: [x64, x64, x64, x64, x64]
         architecture: [x64]
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        java: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17-ea, 18-ea]
+        java: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18-ea]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
