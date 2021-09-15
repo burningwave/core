@@ -34,17 +34,19 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.classes.Methods;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
-import org.burningwave.core.jvm.BufferHandler;
 import org.burningwave.jvm.Driver;
 
 @SuppressWarnings("unused")
@@ -62,6 +64,7 @@ public class StaticComponentContainer {
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL = "background-executor.all-tasks-monitoring.interval";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY = "background-executor.all-tasks-monitoring.probable-dead-locked-tasks-handling.policy";
 			private static final String JVM_DRIVER = "jvm.driver";
+			private static final String MODULES_EXPORT_ALL_TO_ALL = "modules.export-all-to-all";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED = "synchronizer.all-threads-monitoring.enabled";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";	
 		}
@@ -123,6 +126,8 @@ public class StaticComponentContainer {
 			
 			defaultValues.put(Key.JVM_DRIVER, "org.burningwave.jvm.DefaultDriver");
 			
+			defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
+			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
@@ -146,6 +151,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 	public static final org.burningwave.core.classes.Members Members;
 	public static final org.burningwave.core.classes.Methods Methods;
+	public static final org.burningwave.core.classes.Modules Modules;
 	public static final org.burningwave.core.Objects Objects;
 	public static final org.burningwave.core.Strings.Paths Paths;
 	public static final org.burningwave.core.io.Resources Resources;
@@ -369,14 +375,24 @@ public class StaticComponentContainer {
 				BackgroundExecutor.startAllTasksMonitoring(
 					retrieveAllTasksMonitoringConfig()
 				);
-			}	
+			}
+			
+			if (JVMInfo.getVersion() > 8) {
+				Modules = org.burningwave.core.classes.Modules.create();
+				if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.MODULES_EXPORT_ALL_TO_ALL))) {
+					Modules.exportAllToAll();
+				}
+			} else {
+				Modules = null;
+			}
 		} catch (Throwable exc){
 			exc.printStackTrace();
-			throw exc;
-		}
+			throw new RuntimeException(exc);
+		} 
 		
 	}
-
+	
+	
 	private static String getName(String simpleName) {
 		return Optional.ofNullable(GlobalProperties.resolveStringValue(Configuration.Key.GROUP_NAME_FOR_NAMED_ELEMENTS)).map(nm -> nm + " - ").orElseGet(() -> "") + simpleName;
 	}
