@@ -126,7 +126,9 @@ public class StaticComponentContainer {
 			
 			defaultValues.put(Key.JVM_DRIVER, "org.burningwave.jvm.DefaultDriver");
 			
-			defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
+			if (org.burningwave.jvm.JVMInfo.getInstance().getVersion() > 8) {
+				defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
+			}
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
