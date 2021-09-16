@@ -46,7 +46,7 @@ import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 import org.burningwave.jvm.Driver;
 
-@SuppressWarnings("unused")
+
 public class StaticComponentContainer {
 	public static class Configuration {
 		public static class Key {
@@ -131,6 +131,7 @@ public class StaticComponentContainer {
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private static final org.burningwave.core.iterable.Properties.Listener GlobalPropertiesListener;
 	
 	public static final org.burningwave.core.concurrent.QueuedTasksExecutor.Group BackgroundExecutor;
