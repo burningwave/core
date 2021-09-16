@@ -385,7 +385,7 @@ public class StaticComponentContainer {
 					try { 
 						Modules.exportAllToAll();
 					} catch (Throwable exc) {
-						ManagedLoggersRepository.logError(StaticComponentContainer.class::getName, "Unable to export all modules in all modules", exc);
+						ManagedLoggersRepository.logError(StaticComponentContainer.class::getName, "Unable to export all modules to all modules", exc);
 					}
 				}
 			} else {
