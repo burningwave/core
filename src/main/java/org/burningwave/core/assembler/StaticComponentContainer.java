@@ -381,8 +381,7 @@ public class StaticComponentContainer {
 			
 			if (JVMInfo.getVersion() > 8) {
 				Modules = org.burningwave.core.classes.Modules.create();
-				Object exportAllModulesToAllModulesFlag = GlobalProperties.resolveValue(Configuration.Key.MODULES_EXPORT_ALL_TO_ALL);
-				if (exportAllModulesToAllModulesFlag != null && Objects.toBoolean(exportAllModulesToAllModulesFlag)) {
+				if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.MODULES_EXPORT_ALL_TO_ALL))) {
 					try { 
 						Modules.exportAllToAll();
 					} catch (Throwable exc) {
