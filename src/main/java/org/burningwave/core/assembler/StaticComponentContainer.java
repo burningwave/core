@@ -125,8 +125,9 @@ public class StaticComponentContainer {
 			);
 			
 			defaultValues.put(Key.JVM_DRIVER, "org.burningwave.jvm.DefaultDriver");
-			
-			defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
+			if (org.burningwave.jvm.JVMInfo.getInstance().getVersion() > 8) {
+				defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
+			}
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
@@ -151,7 +152,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 	public static final org.burningwave.core.classes.Members Members;
 	public static final org.burningwave.core.classes.Methods Methods;
-	public static final org.burningwave.core.classes.Modules Modules;
+	public static final org.burningwave.core.classes.Modules Modules; // null on JDK 8
 	public static final org.burningwave.core.Objects Objects;
 	public static final org.burningwave.core.Strings.Paths Paths;
 	public static final org.burningwave.core.io.Resources Resources;
@@ -379,7 +380,8 @@ public class StaticComponentContainer {
 			
 			if (JVMInfo.getVersion() > 8) {
 				Modules = org.burningwave.core.classes.Modules.create();
-				if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.MODULES_EXPORT_ALL_TO_ALL))) {
+				Object exportAllModulesToAllModulesFlag = GlobalProperties.resolveValue(Configuration.Key.MODULES_EXPORT_ALL_TO_ALL);
+				if (exportAllModulesToAllModulesFlag != null && Objects.toBoolean(exportAllModulesToAllModulesFlag)) {
 					try { 
 						Modules.exportAllToAll();
 					} catch (Throwable exc) {
