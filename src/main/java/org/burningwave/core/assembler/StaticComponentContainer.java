@@ -34,22 +34,19 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.Set;
 
 import org.burningwave.core.ManagedLogger;
-import org.burningwave.core.classes.Methods;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 import org.burningwave.jvm.Driver;
 
-@SuppressWarnings("unused")
+
 public class StaticComponentContainer {
 	public static class Configuration {
 		public static class Key {
@@ -134,6 +131,7 @@ public class StaticComponentContainer {
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private static final org.burningwave.core.iterable.Properties.Listener GlobalPropertiesListener;
 	
 	public static final org.burningwave.core.concurrent.QueuedTasksExecutor.Group BackgroundExecutor;
@@ -153,7 +151,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 	public static final org.burningwave.core.classes.Members Members;
 	public static final org.burningwave.core.classes.Methods Methods;
-	public static final org.burningwave.core.classes.Modules Modules;
+	public static final org.burningwave.core.classes.Modules Modules; // null on JDK 8
 	public static final org.burningwave.core.Objects Objects;
 	public static final org.burningwave.core.Strings.Paths Paths;
 	public static final org.burningwave.core.io.Resources Resources;
