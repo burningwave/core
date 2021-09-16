@@ -61,9 +61,9 @@ public class Modules {
 	
 	public void exportAllToAll() {
 		try {
-			Object moduleLayer = Methods.invokeStatic(moduleLayerClass, "boot");
-			((Set<Object>)Methods.invoke(moduleLayer, "modules")).forEach(module -> {
-				((Set<String>)Methods.invoke(module, "getPackages")).forEach(pkgName -> {
+			Object moduleLayer = Methods.invokeStaticDirect(moduleLayerClass, "boot");
+			((Set<Object>)Methods.invokeDirect(moduleLayer, "modules")).forEach(module -> {
+				((Set<String>)Methods.invokeDirect(module, "getPackages")).forEach(pkgName -> {
 					addTo("exportedPackages", module, pkgName);
 					addTo("openPackages", module, pkgName);
 				});
@@ -81,8 +81,8 @@ public class Modules {
 		}
 		pckgForModule.put(pkgName, everyOneSet);
 		if (fieldName.startsWith("exported")) {	
-			Methods.invokeStatic(moduleClass, "addExportsToAllUnnamed0", module, pkgName);
-			Methods.invokeStatic(moduleClass, "addExportsToAll0", module, pkgName);
+			Methods.invokeStaticDirect(moduleClass, "addExportsToAllUnnamed0", module, pkgName);
+			Methods.invokeStaticDirect(moduleClass, "addExportsToAll0", module, pkgName);
 		}
 	}
 

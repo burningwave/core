@@ -286,7 +286,7 @@ public class StaticComponentContainer {
 			URL globalPropertiesFileUrl = propBag.getValue();
 			if (globalPropertiesFileUrl != null) {
 				ManagedLoggersRepository.logInfo(
-					() -> StaticComponentContainer.class.getName(), 
+					StaticComponentContainer.class::getName, 
 					"Building static components by using " + Executor.get(() ->
 						URLDecoder.decode(
 							globalPropertiesFileUrl.toString(), StandardCharsets.UTF_8.name()
@@ -294,10 +294,10 @@ public class StaticComponentContainer {
 					)
 				);
 			} else {
-				ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Building static components by using default configuration");
+				ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Building static components by using default configuration");
 			}
-			ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Instantiated {}", ManagedLoggersRepository.getClass().getName());
-			ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(),
+			ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Instantiated {}", ManagedLoggersRepository.getClass().getName());
+			ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName,
 				"\n\n\tConfiguration values for static components:\n\n{}\n\n",
 				GlobalProperties.toPrettyString(2)
 			);
@@ -319,43 +319,43 @@ public class StaticComponentContainer {
 				ThreadSupplier.getOrCreate(getName("Resource releaser")).setExecutable(thread -> {
 					Executor.runAndIgnoreExceptions(
 						() -> {
-							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "... Waiting for all tasks ending before closing all component containers");
+							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "... Waiting for all tasks ending before closing all component containers");
 							BackgroundExecutor.waitForTasksEnding(true, true);
 						},
 						() -> {
-							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Closing all component containers");
+							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing all component containers");
 							ComponentContainer.closeAll();
 						},
 						() -> {
-							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Closing FileSystemHelper");
+							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing FileSystemHelper");
 							FileSystemHelper.close();
 						},
 						() -> {
-							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "... Waiting for all tasks ending before shuting down BackgroundExecutor");
+							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "... Waiting for all tasks ending before shuting down BackgroundExecutor");
 							BackgroundExecutor.waitForTasksEnding(true, true);
 						},
 						() -> {
-							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Shuting down BackgroundExecutor");
+							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Shuting down BackgroundExecutor");
 							BackgroundExecutor.shutDown(false);
 						},
 						() -> {
-							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Stopping all threads monitoring thread");
+							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Stopping all threads monitoring thread");
 							Synchronizer.stopAllThreadsMonitoring(false);
 						},
 						() -> {
-							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Closing ThreadHolder");
+							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing ThreadHolder");
 							ThreadHolder.close();
 						},
 						() -> {
-							ManagedLoggersRepository.logInfo(() -> StaticComponentContainer.class.getName(), "Shuting down ThreadSupplier");
+							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Shuting down ThreadSupplier");
 							ThreadSupplier.shutDownAll();
 						}
 					);
 				})
 			);
 			FileSystemHelper.startSweeping();
-			ManagedLoggersRepository.logInfo(() -> 
-				StaticComponentContainer.class.getName(), 
+			ManagedLoggersRepository.logInfo(
+				StaticComponentContainer.class::getName, 
 				"{} initialized in {} seconds",
 				StaticComponentContainer.class.getName(),
 				Double.valueOf(((double) (System.nanoTime() - startTime)) / 1_000_000_000).toString()
@@ -380,7 +380,11 @@ public class StaticComponentContainer {
 			if (JVMInfo.getVersion() > 8) {
 				Modules = org.burningwave.core.classes.Modules.create();
 				if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.MODULES_EXPORT_ALL_TO_ALL))) {
-					Modules.exportAllToAll();
+					try { 
+						Modules.exportAllToAll();
+					} catch (Throwable exc) {
+						ManagedLoggersRepository.logError(StaticComponentContainer.class::getName, "Unable to export all modules in all modules", exc);
+					}
 				}
 			} else {
 				Modules = null;
