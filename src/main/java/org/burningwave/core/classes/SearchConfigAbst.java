@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -56,7 +57,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 	boolean useDefaultPathScannerClassLoader;
 	boolean useDefaultPathScannerClassLoaderAsParent;
 	boolean waitForSearchEnding;
-	protected Predicate<String> checkForAddedClassesForAllPathThat;
+	protected BiPredicate<SearchConfigAbst<?>, String> checkForAddedClassesForAllPathThat;
 	protected FileSystemItem.Criteria scanFileCriteriaModifier;
 	
 
@@ -66,7 +67,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		paths = new HashSet<>();
 		addPaths(pathsColl);
 		classCriteria = ClassCriteria.create();
-		checkForAddedClassesForAllPathThat = (path) -> false;
+		checkForAddedClassesForAllPathThat = (searchConfig, path) -> false;
 	}
 	
 	void init(PathScannerClassLoader classSupplier) {
@@ -230,17 +231,16 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 	}
 	
 	public S checkForAddedClasses() {
-		return checkForAddedClassesForAllPathThat(path ->
-			this.paths.contains(path)
-		);
+		this.checkForAddedClassesForAllPathThat = (searchConfig, path) -> searchConfig.getPaths().contains(path); 
+		return (S)this;
 	}
 
 	public S checkForAddedClassesForAllPathThat(Predicate<String> refreshCacheFor) {
-		this.checkForAddedClassesForAllPathThat = refreshCacheFor;
+		this.checkForAddedClassesForAllPathThat = (searchConfig, path) -> refreshCacheFor.test(path);
 		return (S)this;
 	}
 	
-	Predicate<String> getCheckForAddedClassesPredicate() {
+	BiPredicate<SearchConfigAbst<?>, String> getCheckForAddedClassesPredicate() {
 		return checkForAddedClassesForAllPathThat;
 	}
 	

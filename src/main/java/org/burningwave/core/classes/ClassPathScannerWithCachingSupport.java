@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -143,8 +144,8 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 			boolean classCriteriaHasNoPredicate = searchConfig.getClassCriteria().hasNoPredicate();	
 			
 			FileSystemItem currentScannedPath = FileSystemItem.ofPath(basePath);
-			Predicate<String> refreshCache = searchConfig.getCheckForAddedClassesPredicate();
-			if (refreshCache != null && refreshCache.test(basePath)) {
+			BiPredicate<SearchConfigAbst<?>, String> refreshCache = searchConfig.getCheckForAddedClassesPredicate();
+			if (refreshCache != null && refreshCache.test(searchConfig, basePath)) {
 				Synchronizer.execute(instanceId + "_" + basePath, () -> {
 					Optional.ofNullable(cache.get(basePath)).ifPresent((classesForPath) -> {
 						cache.remove(basePath);
