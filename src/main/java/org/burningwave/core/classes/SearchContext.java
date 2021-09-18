@@ -203,7 +203,12 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 									if (pathScannerClassLoaderScannedPaths.isEmpty()) {
 										pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
 											getPathsToBeScanned(),
-											searchConfig.getCheckForAddedClassesPredicate().and(path -> !pathScannerClassLoaderScannedPaths.contains(path))
+											(path) -> {
+												return searchConfig.getCheckForAddedClassesPredicate().and(
+													(searchConfig, _path) ->
+														!pathScannerClassLoaderScannedPaths.contains(_path)
+												).test(searchConfig, path);
+											}
 										);
 										pathScannerClassLoaderScannedPaths.addAll(getPathsToBeScanned());
 									}
