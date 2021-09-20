@@ -39,6 +39,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.ManagedLogger;
@@ -91,11 +92,19 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		if (classLoader == null) {
 			if (resourceSupplier == null) {
 				resourceSupplier = (cl, paths) -> {
-					paths.addAll((ClassLoaders.getResources(cl, pathColls).stream().map(file -> file.getAbsolutePath()).collect(Collectors.toSet())));
+					Collection<String> resourcesPaths = ClassLoaders.getResources(cl, pathColls).stream().map(file -> file.getAbsolutePath()).collect(Collectors.toSet());
+					if (resourcesPaths.isEmpty()) {
+						Stream.of(pathColls).forEach(pathColl -> resourcesPaths.addAll(pathColl));
+					}
+					paths.addAll(resourcesPaths);
 				};
 			} else {
 				resourceSupplier = resourceSupplier.andThen((cl, paths) -> {
-					paths.addAll((ClassLoaders.getResources(cl, pathColls).stream().map(file -> file.getAbsolutePath()).collect(Collectors.toSet())));
+					Collection<String> resourcesPaths = ClassLoaders.getResources(cl, pathColls).stream().map(file -> file.getAbsolutePath()).collect(Collectors.toSet());
+					if (resourcesPaths.isEmpty()) {
+						Stream.of(pathColls).forEach(pathColl -> resourcesPaths.addAll(pathColl));
+					}
+					paths.addAll(resourcesPaths);
 				});
 			}
 			return (S)this;
