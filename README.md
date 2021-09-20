@@ -1493,7 +1493,7 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 
 # <a name="Ask-for-assistance"></a>Ask for assistance
 **For assistance you can**:
-* [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to-do/)
+* [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to/)
 * [open a discussion](https://github.com/burningwave/core/discussions) here on GitHub
 * [report a bug](https://github.com/burningwave/core/issues) here on GitHub
 * ask on [Stack Overflow](https://stackoverflow.com/search?q=burningwave)
