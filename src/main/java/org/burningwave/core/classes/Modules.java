@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.burningwave.core.function.TriConsumer;
 
@@ -94,24 +95,58 @@ public class Modules {
 		exportTo(name, this::exportToAll);
 	}
 	
-	public void export(String from, String to) {
+	
+	public void exportPackage(String moduleFromName, String moduleToName, String... packageNames) {
+		Object moduleFrom = checkAndGetModule(moduleFromName);
+		Object moduleTo = checkAndGetModule(moduleToName);
+		exportPackage(moduleFrom, moduleTo, packageNames);
+	}
+	
+	
+	public void exportPackageToAll(String moduleFromName, String... packageNames) {
+		Object moduleFrom = checkAndGetModule(moduleFromName);
+		exportPackage(moduleFrom, everyOneSet.iterator().next(), packageNames);
+	}
+	
+	
+	public void exportPackageToAllUnnamed(String moduleFromName, String... packageNames) {
+		Object moduleFrom = checkAndGetModule(moduleFromName);
+		exportPackage(moduleFrom, allUnnamedSet.iterator().next(), packageNames);
+	}
+	
+	
+	public void export(String moduleFromName, String moduleToName) {
 		try {
-			Object moduleFrom = checkAndGetModule(from);
-			Object moduleTo = checkAndGetModule(to);
+			Object moduleFrom = checkAndGetModule(moduleFromName);
+			Object moduleTo = checkAndGetModule(moduleToName);
 			((Set<String>)Methods.invokeDirect(moduleFrom, "getPackages")).forEach(pkgName -> {
 				export("exportedPackages", moduleFrom, pkgName, moduleTo);
-				export("exportedPackages", moduleFrom, pkgName, moduleTo);
+				export("openPackages", moduleFrom, pkgName, moduleTo);
 			});
 		} catch (Throwable exc) {
 			Throwables.throwException(exc);
 		}
 	}
 	
+	
+	void exportPackage(Object moduleFrom, Object moduleTo, String... packageNames) {
+		Set<String> modulePackages = Methods.invokeDirect(moduleFrom, "getPackages");
+		Stream.of(packageNames).forEach(pkgName -> {
+			if (!modulePackages.contains(pkgName)) {
+				throw new PackageNotFoundException(
+					Strings.compile("Package {} not found in module {}", pkgName, Fields.getDirect(moduleFrom, "name"))
+				);
+			}
+			export("exportedPackages", moduleFrom, pkgName, moduleTo);
+			export("openPackages", moduleFrom, pkgName, moduleTo);
+		});
+	}
+	
 
-	Object checkAndGetModule(String from) {
-		Object module = nameToModule.get(from);
+	Object checkAndGetModule(String name) {
+		Object module = nameToModule.get(name);
 		if (module == null) {
-			throw new NotFoundException(Strings.compile("Module named name {} not found", from));
+			throw new NotFoundException(Strings.compile("Module named name {} not found", name));
 		}
 		return module;
 	}
@@ -181,6 +216,16 @@ public class Modules {
 		private static final long serialVersionUID = 3095842376538548262L;
 		
 		public NotFoundException(String message) {
+	        super(message);
+	    }
+		
+	}
+	
+	public static class PackageNotFoundException extends RuntimeException {
+
+		private static final long serialVersionUID = 7545728769111299062L;
+
+		public PackageNotFoundException(String message) {
 	        super(message);
 	    }
 		
