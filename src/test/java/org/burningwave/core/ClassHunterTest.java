@@ -1301,6 +1301,24 @@ public class ClassHunterTest extends BaseTest {
 		);
 	}
 	
+	
+	@Test
+	public void findAllBurningWaveClassesThroughResources() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		componentSupplier.clearCache(true, true);
+		testNotEmpty(
+			() -> componentSupplier.getClassHunter().findBy(
+				SearchConfig.forResources("org/burningwave")
+				.useNewIsolatedClassLoader()
+				.useAsParentClassLoader(Thread.currentThread().getContextClassLoader())
+			),
+			(result) ->
+				result.getClasses(),
+			false
+		);
+	}
+	
+	
 //	@Test
 //	public void findAllWithModuleByIsolatedClassLoader() {
 //		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -1344,6 +1362,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
+	
 	
 	@Test
 	public void findByPackageNameTestOne() {
