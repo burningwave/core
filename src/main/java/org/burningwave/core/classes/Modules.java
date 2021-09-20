@@ -115,8 +115,9 @@ public class Modules {
 		}
 		return module;
 	}
+
 	
-	public void exportTo(String name, TriConsumer<String, Object, String> exporter) {
+	void exportTo(String name, TriConsumer<String, Object, String> exporter) {
 		try {
 			Object module = checkAndGetModule(name);
 			((Set<String>)Methods.invokeDirect(module, "getPackages")).forEach(pkgName -> {
