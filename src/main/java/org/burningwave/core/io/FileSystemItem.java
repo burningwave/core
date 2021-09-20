@@ -462,7 +462,11 @@ public class FileSystemItem {
 
 	public boolean isContainer() {
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
-		return conventionedAbsolutePath.endsWith("/");
+		try {
+			return conventionedAbsolutePath.endsWith("/");
+		} catch (NullPointerException e) {
+			throw new NotFoundException(Strings.compile("{} not found on the file system", absolutePath.getKey()));
+		}
 	}
 
 	public boolean isFile() {
@@ -1192,5 +1196,16 @@ public class FileSystemItem {
 			return copy;
 		}
 
+	}
+	
+	
+	public static class NotFoundException extends RuntimeException {
+
+		private static final long serialVersionUID = 1L;
+
+		public NotFoundException(String message) {
+	        super(message);
+	    }
+		
 	}
 }
