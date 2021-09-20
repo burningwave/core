@@ -38,10 +38,7 @@ And now we will see:
 * [**getting and setting properties of a Java bean through path**](#Getting-and-setting-properties-of-a-Java-bean-through-path)
 * [**architectural overview and configuration**](#Architectural-overview-and-configuration)
 * [**other examples of using some components**](#Other-examples-of-using-some-components)
-
-<br/>
-
-**For assistance you can [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to/) or you can ask on [Stack Overflow](https://stackoverflow.com/search?q=burningwave)**.
+* [**ask for assistance**](#Ask-for-assistance)
 
 <br/>
 
@@ -1501,4 +1498,10 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 
 ### [**Official site**](https://www.burningwave.org/)
 ### [**Help guide**](https://www.burningwave.org/forum/topic/help-guide/)
-### [**Ask the Burningwave community for assistance**](https://www.burningwave.org/forum/forum/how-to/)
+
+
+## <a name="Ask-for-assistance"></a>Ask for assistance
+**For assistance you can**:
+* [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to-do-3/)
+* [open a discussion](https://github.com/burningwave/jvm-driver/discussions) here on GitHub
+* ask on [Stack Overflow](https://stackoverflow.com/search?q=burningwave)
