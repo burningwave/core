@@ -47,9 +47,8 @@ For this purpose is necessary the use of **ClassFactory** component and of the *
 * see a [**complete example about source code generators**](https://github.com/burningwave/core/blob/experimental/src/test/java/org/burningwave/core/UnitSourceGeneratorTest.java#L153)
 * read this [**guide**](https://www.burningwave.org/forum/topic/how-can-i-use-classes-outside-the-runtime-class-path-in-my-generated-sources/) where you also can find a link to an [**example about generating classes by using libraries located outside the runtime class paths**](https://github.com/burningwave/core/blob/experimental/src/test/java/org/burningwave/core/examples/classfactory/ExternalClassRuntimeExtender.java)
 * go [**here**](https://github.com/burningwave/core/tree/experimental/src/test/java/org/burningwave/core/examples/classfactory) for more examples
-* ask for assistance at the [**official forum**](https://www.burningwave.org/forum/) (topic [**"How to do?"**](https://www.burningwave.org/forum/forum/how-to/))
-* [**ask Stack Overflow for assistance**](https://stackoverflow.com/search?q=burningwave)
-
+* [**ask for assistance**](https://github.com/burningwave/core#ask-for-assistance)
+* 
 Once the classes have been compiled and loaded, it is possible to invoke their methods in severals ways as shown at the end of the example below.
 
 ```java
