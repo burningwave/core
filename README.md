@@ -38,7 +38,7 @@ And now we will see:
 * [getting and setting properties of a Java bean through path](#Getting-and-setting-properties-of-a-Java-bean-through-path)
 * [architectural overview and configuration](#Architectural-overview-and-configuration)
 * [other examples of using some components](#Other-examples-of-using-some-components)
-* [**HOW TO ASK FOR ASSISTANCE**](#Ask-for-assistance)
+* [**how to ask for assistance**](#Ask-for-assistance)
 
 <br/>
 
