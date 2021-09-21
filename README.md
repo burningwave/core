@@ -25,20 +25,20 @@
 Burningwave Core contains **AN EXTREMELY POWERFUL CLASSPATH SCANNER**: it’s possible to search classes by every criteria that your imagination can make by using lambda expressions; **scan engine is highly optimized using direct allocated ByteBuffers to avoid heap saturation; searches are executed in multithreading context and are not affected by “_the issue of the same class loaded by different classloaders_”** (normally if you try to execute "isAssignableFrom" method on a same class loaded from different classloader it returns false).
 
 And now we will see:
-* [**including Burningwave Core in your project**](#Including-Burningwave-Core-in-your-project)
-* [**generating classes at runtime and invoking their methods with and without the use of reflection**](#Generating-classes-at-runtime-and-invoking-their-methods-with-and-without-the-use-of-reflection)
-* [**executing stringified source code**](#Executing-stringified-source-code)
-* [**retrieving classes of runtime class paths or of other paths through the ClassHunter**](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
-* [**finding where a class is loaded from**](#Finding-where-a-class-is-loaded-from)
-* [**performing tasks in parallel with different priorities**](#Performing-tasks-in-parallel-with-different-priorities)
-* [**reaching a resource of the file system**](#Reaching-a-resource-of-the-file-system)
-* [**resolving, collecting or retrieving paths**](#Resolving-collecting-or-retrieving-paths)
-* [**retrieving placeholdered items from map and properties file**](#Retrieving-placeholdered-items-from-map-and-properties-file)
-* [**handling privates and all other members of an object**](#Handling-privates-and-all-other-members-of-an-object)
-* [**getting and setting properties of a Java bean through path**](#Getting-and-setting-properties-of-a-Java-bean-through-path)
-* [**architectural overview and configuration**](#Architectural-overview-and-configuration)
-* [**other examples of using some components**](#Other-examples-of-using-some-components)
-* [**how to ask for assistance**](#Ask-for-assistance)
+* [including Burningwave Core in your project](#Including-Burningwave-Core-in-your-project)
+* [generating classes at runtime and invoking their methods with and without the use of reflection](#Generating-classes-at-runtime-and-invoking-their-methods-with-and-without-the-use-of-reflection)
+* [executing stringified source code](#Executing-stringified-source-code)
+* [retrieving classes of runtime class paths or of other paths through the ClassHunter](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
+* [finding where a class is loaded from](#Finding-where-a-class-is-loaded-from)
+* [performing tasks in parallel with different priorities](#Performing-tasks-in-parallel-with-different-priorities)
+* [reaching a resource of the file system](#Reaching-a-resource-of-the-file-system)
+* [resolving, collecting or retrieving paths](#Resolving-collecting-or-retrieving-paths)
+* [retrieving placeholdered items from map and properties file](#Retrieving-placeholdered-items-from-map-and-properties-file)
+* [handling privates and all other members of an object](#Handling-privates-and-all-other-members-of-an-object)
+* [getting and setting properties of a Java bean through path](#Getting-and-setting-properties-of-a-Java-bean-through-path)
+* [architectural overview and configuration](#Architectural-overview-and-configuration)
+* [other examples of using some components](#Other-examples-of-using-some-components)
+* [**HOW TO ASK FOR ASSISTANCE**](#Ask-for-assistance)
 
 <br/>
 
@@ -1501,7 +1501,7 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 <br />
 
 # <a name="Ask-for-assistance"></a>Ask for assistance
-**For assistance you can**:
+If the [**wiki**](https://github.com/burningwave/core/wiki) and the [**help guide**](https://www.burningwave.org/forum/topic/help-guide/) aren't enough you can:
 * [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to/)
 * [open a discussion](https://github.com/burningwave/core/discussions) here on GitHub
 * [report a bug](https://github.com/burningwave/core/issues) here on GitHub
