@@ -1492,4 +1492,3 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 * [open a discussion](https://github.com/burningwave/core/discussions) here on GitHub
 * [report a bug](https://github.com/burningwave/core/issues) here on GitHub
 * ask on [Stack Overflow](https://stackoverflow.com/search?q=burningwave)
-* [**ask for assistance**](https://github.com/burningwave/core/tree/experimental/#Ask-for-assistance)
