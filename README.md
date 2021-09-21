@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/9)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1253946238)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1256163796)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015%2C%2016%2C%2017-blueviolet)](https://github.com/burningwave/core/actions/runs/1253946238)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209%2C%2010%2C%2011%2C%2012%2C%2013%2C%2014%2C%2015%2C%2016%2C%2017-blueviolet)](https://github.com/burningwave/core/actions/runs/1256163796)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -49,7 +49,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>9.3.4</version>
+    <version>9.3.5</version>
 </dependency>
 ```
 
@@ -61,8 +61,7 @@ For this purpose is necessary the use of **ClassFactory** component and of the *
 * see a [**complete example about source code generators**](https://github.com/burningwave/core/blob/master/src/test/java/org/burningwave/core/UnitSourceGeneratorTest.java#L153)
 * read this [**guide**](https://www.burningwave.org/forum/topic/how-can-i-use-classes-outside-the-runtime-class-path-in-my-generated-sources/) where you also can find a link to an [**example about generating classes by using libraries located outside the runtime class paths**](https://github.com/burningwave/core/blob/master/src/test/java/org/burningwave/core/examples/classfactory/ExternalClassRuntimeExtender.java)
 * go [**here**](https://github.com/burningwave/core/tree/master/src/test/java/org/burningwave/core/examples/classfactory) for more examples
-* ask for assistance at the [**official forum**](https://www.burningwave.org/forum/) (topic [**"How to do?"**](https://www.burningwave.org/forum/forum/how-to/))
-* [**ask Stack Overflow for assistance**](https://stackoverflow.com/search?q=burningwave)
+* [**ask for assistance**](#Ask-for-assistance)
 
 Once the classes have been compiled and loaded, it is possible to invoke their methods in severals ways as shown at the end of the example below.
 
