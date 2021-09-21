@@ -3,9 +3,11 @@ package org.burningwave.core.examples.filesystemitem;
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.io.FileSystemItem;
 
+@SuppressWarnings("null")
 public class ResourceReacher {
     
-    private static void execute() {
+    
+	private static void execute() {
         //Obtaining FileSystemItem through absolute path
         FileSystemItem fSI = FileSystemItem.ofPath("C:/Program Files (x86)");
        
