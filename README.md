@@ -1496,7 +1496,6 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 </details>
 
 ### [**Official site**](https://www.burningwave.org/)
-### [**Help guide**](https://www.burningwave.org/forum/topic/help-guide/)
 
 <br />
 
