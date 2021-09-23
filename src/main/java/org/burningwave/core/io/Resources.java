@@ -80,11 +80,10 @@ public class Resources {
 	}
 	
 	public InputStream getAsInputStream(ClassLoader resourceClassLoader, String resourceRelativePath) {
-		return Optional.ofNullable(
-			resourceClassLoader
-		).orElseGet(() -> ClassLoader.getSystemClassLoader()).getResourceAsStream(
-			resourceRelativePath
-		);
+		if (resourceClassLoader == null) {
+			resourceClassLoader = ClassLoader.getSystemClassLoader();
+		}
+		return resourceClassLoader.getResourceAsStream(resourceRelativePath);
 	}
 	
 	public StringBuffer getAsStringBuffer(ClassLoader resourceClassLoader, String resourceRelativePath) {
