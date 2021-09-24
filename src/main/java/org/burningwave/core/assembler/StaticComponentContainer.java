@@ -121,7 +121,7 @@ public class StaticComponentContainer {
 				false
 			);
 			
-			defaultValues.put(Key.JVM_DRIVER, "org.burningwave.jvm.DefaultDriver");
+			defaultValues.put(Key.JVM_DRIVER, io.github.toolfactory.jvm.DefaultDriver.class.getName());
 			
 			if (io.github.toolfactory.jvm.JVMInfo.getInstance().getVersion() > 8) {
 				defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
