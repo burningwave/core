@@ -44,7 +44,7 @@ import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
-import org.burningwave.jvm.Driver;
+import io.github.toolfactory.jvm.Driver;
 
 
 public class StaticComponentContainer {
@@ -121,9 +121,9 @@ public class StaticComponentContainer {
 				false
 			);
 			
-			defaultValues.put(Key.JVM_DRIVER, org.burningwave.jvm.DefaultDriver.class.getName());
+			defaultValues.put(Key.JVM_DRIVER, io.github.toolfactory.jvm.DefaultDriver.class.getName());
 			
-			if (org.burningwave.jvm.JVMInfo.getInstance().getVersion() > 8) {
+			if (io.github.toolfactory.jvm.JVMInfo.getInstance().getVersion() > 8) {
 				defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
 			}
 			
@@ -141,13 +141,13 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Cache Cache;
 	public static final org.burningwave.core.classes.Classes Classes;
 	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
-	public static final org.burningwave.jvm.Driver Driver;
+	public static final io.github.toolfactory.jvm.Driver Driver;
 	public static final org.burningwave.core.classes.Constructors Constructors;
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.classes.Fields Fields;
 	public static final org.burningwave.core.iterable.Properties GlobalProperties;
 	public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
-	public static final org.burningwave.jvm.JVMInfo JVMInfo;
+	public static final io.github.toolfactory.jvm.JVMInfo JVMInfo;
 	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 	public static final org.burningwave.core.classes.Members Members;
 	public static final org.burningwave.core.classes.Methods Methods;
@@ -166,7 +166,7 @@ public class StaticComponentContainer {
 	static {
 		try {
 			long startTime = System.nanoTime();
-			JVMInfo = org.burningwave.jvm.JVMInfo.getInstance();
+			JVMInfo = io.github.toolfactory.jvm.JVMInfo.getInstance();
 			Strings = org.burningwave.core.Strings.create();
 			Throwables = org.burningwave.core.Throwables.create();
 			Objects = org.burningwave.core.Objects.create();
