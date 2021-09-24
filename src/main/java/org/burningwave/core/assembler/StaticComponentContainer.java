@@ -141,12 +141,14 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Cache Cache;
 	public static final org.burningwave.core.classes.Classes Classes;
 	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
+	//Since to 9.4.0 (previous version is 9.3.6)
 	public static final io.github.toolfactory.jvm.Driver Driver;
 	public static final org.burningwave.core.classes.Constructors Constructors;
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.classes.Fields Fields;
 	public static final org.burningwave.core.iterable.Properties GlobalProperties;
 	public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
+	//Since to 9.4.0
 	public static final io.github.toolfactory.jvm.JVMInfo JVMInfo;
 	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 	public static final org.burningwave.core.classes.Members Members;
