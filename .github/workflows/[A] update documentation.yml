@@ -1,0 +1,24 @@
+name: Update index page
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**README.md"
+
+jobs:
+  update-index-page:
+    runs-on: ubuntu-latest
+    name: Update index page
+    steps:
+      - uses: actions/checkout@master
+      - name: Overwrite the index.md
+        run: |
+          git config user.name "${{ github.event.head_commit.committer.name }}"
+          git config user.email "${{ github.event.head_commit.committer.email }}"
+          git pull origin ${{github.ref}} 
+          cp "./README.md" "./docs/index.md"
+          git add .
+          git commit -am "Update" --allow-empty
+          git push
