@@ -1030,7 +1030,7 @@ public class UseOfStaticComponentsExample {
 
 }
 ```
-### Configuration
+### <a name="static-components-configuration-file">Configuration
 The configuration of this type of container is done via **burningwave.static.properties** file or via **burningwave.static.default.properties** file: the library searches for the first file and if it does not find it, then it searches for the second file and if neither this one is found then the library sets the default configuration programmatically. **The default configuration loaded programmatically if no configuration file is found is the following**:
 ```properties
 background-executor.all-tasks-monitoring.enabled=\
