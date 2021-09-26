@@ -1106,7 +1106,7 @@ It is represented by the **org.burningwave.core.assembler.ComponentContainer** c
 public ByteCodeHunter getByteCodeHunter();
 public ClassFactory getClassFactory();
 public ClassHunter getClassHunter();
-public ClassPathHunter getClassPathHelper();
+public ClassPathHelper getClassPathHelper();
 public ClassPathHunter getClassPathHunter();
 public CodeExecutor getCodeExecutor();
 public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
