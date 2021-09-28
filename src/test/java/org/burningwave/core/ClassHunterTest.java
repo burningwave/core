@@ -275,7 +275,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).addPaths(
-					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src")
+					componentSupplier.getPathHelper().getAbsolutePathsOfResource("../../src")
 				).by(
 					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
@@ -297,7 +297,7 @@ public class ClassHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).addPaths(
-					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src")
+					componentSupplier.getPathHelper().getAbsolutePathsOfResource("../../src")
 				).by(
 					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
@@ -739,7 +739,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getPath((path) ->
+					componentSupplier.getPathHelper().getPaths((path) ->
 					path.endsWith("target/classes"))
 				).by(
 					ClassCriteria.create().allThoseThatMatch((currentScannedClass) -> 
@@ -1286,7 +1286,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getPath((path) ->
+					componentSupplier.getPathHelper().getPaths((path) ->
 					path.endsWith("target/classes"))
 				).by(
 					ClassCriteria.create().allThoseThatMatch((currentScannedClass) -> 

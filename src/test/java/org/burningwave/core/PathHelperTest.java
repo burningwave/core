@@ -19,7 +19,7 @@ public class PathHelperTest extends BaseTest {
 	public void getResourceAsStreamTestOne() {
 		testNotNull(() ->{ 
 			ComponentSupplier componentSupplier = getComponentSupplier();
-			try(InputStream inputStream = componentSupplier.getPathHelper().getResourceAsStream("io/github/toolfactory/jvm/ClassLoaderDelegateForJDK9.bwc")) {
+			try(InputStream inputStream = componentSupplier.getPathHelper().getResourceAsStream("io/github/toolfactory/jvm/function/util/ClassLoaderDelegateForJDK9.bwc")) {
 				return inputStream;
 			}
 		});

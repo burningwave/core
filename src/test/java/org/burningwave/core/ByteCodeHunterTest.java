@@ -200,7 +200,7 @@ public class ByteCodeHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getByteCodeHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/classes"))
+					componentSupplier.getPathHelper().getPaths((path) -> path.endsWith("target/classes"))
 				).by(
 					ClassCriteria.create().allThoseThatMatch((targetClass) -> 
 						Object.class.isAssignableFrom(targetClass)
