@@ -1286,7 +1286,7 @@ public class ClassHunterTest extends BaseTest {
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getPath((path) ->
+					componentSupplier.getPathHelper().getPaths((path) ->
 					path.endsWith("target/classes"))
 				).by(
 					ClassCriteria.create().allThoseThatMatch((currentScannedClass) -> 
