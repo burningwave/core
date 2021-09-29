@@ -39,7 +39,6 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.function.Executor;
@@ -61,7 +60,6 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 			Throwables.throwException("Constructor not found in {}", targetClass.getName());
 		}
 		return Executor.get(() -> {
-			//logInfo("Invoking " + ctor);
 			return (T)Classes.newInstance(
 				ctor,
 				getArgumentArray(
@@ -82,7 +80,6 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		Members.Handler.OfExecutable.Box<Constructor<?>> methodHandleBox = findDirectHandleBox(targetClass, argsType);
 		return Executor.get(() -> {
 				Constructor<?> ctor = methodHandleBox.getExecutable();
-				//logInfo("Direct invoking of " + ctor);
 				return (T)methodHandleBox.getHandler().invokeWithArguments(
 					getFlatArgumentList(ctor, ArrayList::new, arguments)
 				);
@@ -133,13 +130,11 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 			if (inputParameterTypesOrSubTypes != null && inputParameterTypesOrSubTypes.length == 0) {
 				criteria.or().parameter((parameters, idx) -> parameters.length == 1 && parameters[0].isVarArgs());
 			}
-			return Collections.unmodifiableCollection(
-				findAllAndApply(
-					criteria, 
-					targetClass,
-					(member) -> 
-						setAccessible(member, true)
-				)
+			return findAllAndApply(
+				criteria, 
+				targetClass,
+				(member) -> 
+					setAccessible(member, true)
 			);
 		});
 	}
@@ -151,11 +146,9 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		Collection<Constructor<?>> members = Cache.uniqueKeyForConstructors.getOrUploadIfAbsent(
 			targetClassClassLoader, cacheKey, () -> {
-				return Collections.unmodifiableCollection(
-					findAllAndApply(
-						ConstructorCriteria.withoutConsideringParentClasses(), targetClass, (member) -> 
-							setAccessible(member, true)
-					)
+				return findAllAndApply(
+					ConstructorCriteria.withoutConsideringParentClasses(), targetClass, (member) -> 
+					setAccessible(member, true)
 				);
 			}
 		);

@@ -98,6 +98,20 @@ public class MethodsTest extends BaseTest {
 	}
 	
 	@Test
+	public void invokeInterfaceDefaultMethod() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invoke(new Service(), "printMyName");
+		});
+	}
+	
+	@Test
+	public void invokeDirectInterfaceDefault() throws Throwable {
+		testDoesNotThrow(() -> {
+			Methods.invokeDirect(new Service(), "printMyName");
+		});
+	}
+	
+	@Test
 	public void invokeDirectVoidWithVarArgsTestOne() throws Throwable {
 		testDoesNotThrow(() -> {
 			Methods.invokeDirect(new Service(), "apply", "Hello", "World!", new String[]{"How are you?"});
