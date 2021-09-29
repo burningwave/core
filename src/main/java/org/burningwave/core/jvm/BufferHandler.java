@@ -94,8 +94,14 @@ public class BufferHandler implements Component {
 			listenTo((Properties)config);
 		}
 		Class<?> directByteBufferClass = ByteBuffer.allocateDirect(0).getClass();		
+		mainCycle:
 		while (directByteBufferClass != null && directAllocatedByteBufferAddressField == null) {
-			directAllocatedByteBufferAddressField = Driver.getDeclaredField(directByteBufferClass, "address");
+			for (Field field : Driver.getDeclaredFields(directByteBufferClass)) {
+				if (field.getName().equals("address")) {
+					directAllocatedByteBufferAddressField = field;
+					break mainCycle;
+				}
+			}
 			directByteBufferClass = directByteBufferClass.getSuperclass();
 		}
 	}
