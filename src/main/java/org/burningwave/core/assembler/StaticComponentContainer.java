@@ -121,8 +121,6 @@ public class StaticComponentContainer {
 				false
 			);
 			
-			defaultValues.put(Key.JVM_DRIVER, io.github.toolfactory.jvm.DefaultDriver.class.getName());
-			
 			if (io.github.toolfactory.jvm.Info.getInstance().getVersion() > 8) {
 				defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
 			}
@@ -254,11 +252,16 @@ public class StaticComponentContainer {
 				}				
 			}.listenTo(GlobalProperties = propBag.getKey());
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
-			Driver = Executor.get(() -> (Driver)StaticComponentContainer.class.getClassLoader().loadClass(
-				GlobalProperties.resolveValue(
-					Configuration.Key.JVM_DRIVER
-				)
-			).getDeclaredConstructor().newInstance());
+			String driverClassName = GlobalProperties.resolveValue(
+				Configuration.Key.JVM_DRIVER
+			);
+			if (driverClassName != null) {
+				Driver = Executor.get(() -> (Driver)StaticComponentContainer.class.getClassLoader().loadClass(
+					driverClassName
+				).getDeclaredConstructor().newInstance());
+			} else {
+				Driver = io.github.toolfactory.jvm.Driver.Factory.getNew();
+			}
 			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
 				getName("Thread supplier"),
 				GlobalProperties,
