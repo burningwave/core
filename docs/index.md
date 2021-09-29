@@ -49,7 +49,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>9.4.1</version>
+    <version>9.5.0</version>
 </dependency>
 ```
 
@@ -994,7 +994,7 @@ public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 public static final org.burningwave.core.classes.Fields Fields;
 public static final org.burningwave.core.iterable.Properties GlobalProperties;
 public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
-public static final org.burningwave.core.jvm.JVMInfo JVMInfo;
+public static final io.github.toolfactory.jvm.Info JVMInfo;
 public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 public static final org.burningwave.core.classes.Members Members;
 public static final org.burningwave.core.classes.Methods Methods;
@@ -1060,8 +1060,10 @@ iterable-object-helper.default-values-separator=\
 	;
 iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\
 	autodetect
-#It is possible to use a custom JVM driver which extends the abstract class org.burningwave.jvm.Driver.
-#Other possible value is: org.burningwave.jvm.HybridDriver
+#This property is optional: if it is not provided then the org.burningwave.jvm.Driver.Factory.getNew is
+#used to retrieve a Driver instance
+#It is also possible to use a custom JVM Driver which implements the org.burningwave.jvm.Driver interface.
+#Other possible values are: org.burningwave.jvm.HybridDriver, org.burningwave.jvm.HybridDriver
 jvm.driver=\
 	org.burningwave.jvm.DefaultDriver
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
