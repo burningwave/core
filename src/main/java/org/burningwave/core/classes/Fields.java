@@ -36,7 +36,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -210,16 +209,14 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 			targetClassClassLoader,
 			cacheKey, 
 			() -> 
-				Collections.unmodifiableCollection(
-					findAllAndMakeThemAccessible(
-						FieldCriteria.forEntireClassHierarchy().allThoseThatMatch(field -> {
-							if (valueType == null) {
-								return field.getName().equals(fieldName);
-							} else {
-								return field.getName().equals(fieldName) && Classes.isAssignableFrom(field.getType(), valueType);
-							}
-						}), targetClass
-					)
+				findAllAndMakeThemAccessible(
+					FieldCriteria.forEntireClassHierarchy().allThoseThatMatch(field -> {
+						if (valueType == null) {
+							return field.getName().equals(fieldName);
+						} else {
+							return field.getName().equals(fieldName) && Classes.isAssignableFrom(field.getType(), valueType);
+						}
+					}), targetClass
 				)
 		);
 	}
@@ -233,12 +230,9 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 			targetClassClassLoader, 
 			cacheKey, 
 			() -> 
-				Collections.unmodifiableCollection(
-					findAllAndMakeThemAccessible(
-						FieldCriteria.forEntireClassHierarchy(), targetClass
-					)
-				)
-			
+				findAllAndMakeThemAccessible(
+					FieldCriteria.forEntireClassHierarchy(), targetClass
+				)			
 		);
 	}	
 }

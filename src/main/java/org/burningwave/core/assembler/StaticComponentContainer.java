@@ -44,7 +44,7 @@ import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
-import io.github.toolfactory.jvm.Driver;
+import org.burningwave.jvm.Driver;
 
 
 public class StaticComponentContainer {
@@ -121,9 +121,7 @@ public class StaticComponentContainer {
 				false
 			);
 			
-			defaultValues.put(Key.JVM_DRIVER, io.github.toolfactory.jvm.DefaultDriver.class.getName());
-			
-			if (io.github.toolfactory.jvm.Info.getInstance().getVersion() > 8) {
+			if (org.burningwave.jvm.Info.getInstance().getVersion() > 8) {
 				defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
 			}
 			
@@ -142,14 +140,14 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.classes.Classes Classes;
 	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
 	//Since to 9.4.0 (previous version is 9.3.6)
-	public static final io.github.toolfactory.jvm.Driver Driver;
+	public static final org.burningwave.jvm.Driver Driver;
 	public static final org.burningwave.core.classes.Constructors Constructors;
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.classes.Fields Fields;
 	public static final org.burningwave.core.iterable.Properties GlobalProperties;
 	public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
 	//Since to 9.4.0
-	public static final io.github.toolfactory.jvm.Info JVMInfo;
+	public static final org.burningwave.jvm.Info JVMInfo;
 	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 	public static final org.burningwave.core.classes.Members Members;
 	public static final org.burningwave.core.classes.Methods Methods;
@@ -168,7 +166,7 @@ public class StaticComponentContainer {
 	static {
 		try {
 			long startTime = System.nanoTime();
-			JVMInfo = io.github.toolfactory.jvm.Info.getInstance();
+			JVMInfo = org.burningwave.jvm.Info.getInstance();
 			Strings = org.burningwave.core.Strings.create();
 			Throwables = org.burningwave.core.Throwables.create();
 			Objects = org.burningwave.core.Objects.create();
@@ -254,11 +252,16 @@ public class StaticComponentContainer {
 				}				
 			}.listenTo(GlobalProperties = propBag.getKey());
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
-			Driver = Executor.get(() -> (Driver)StaticComponentContainer.class.getClassLoader().loadClass(
-				GlobalProperties.resolveValue(
-					Configuration.Key.JVM_DRIVER
-				)
-			).getDeclaredConstructor().newInstance());
+			String driverClassName = GlobalProperties.resolveValue(
+				Configuration.Key.JVM_DRIVER
+			);
+			if (driverClassName != null) {
+				Driver = Executor.get(() -> (Driver)StaticComponentContainer.class.getClassLoader().loadClass(
+					driverClassName
+				).getDeclaredConstructor().newInstance());
+			} else {
+				Driver = org.burningwave.jvm.Driver.Factory.getNew();
+			}
 			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
 				getName("Thread supplier"),
 				GlobalProperties,

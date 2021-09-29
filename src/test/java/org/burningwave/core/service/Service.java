@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class Service implements Component {
+public class Service implements Component, ServiceInterface {
 	private final static Logger LOGGER = LoggerFactory.getLogger(Service.class);
 	
 	private String name;
@@ -119,4 +119,11 @@ public class Service implements Component {
 		LOGGER.info("withArray: " + String.join(", ", Arrays.asList(values)));
 	}
 	
+	public interface Interf {
+		
+		public default void printSomethingNew() {
+			System.out.println("Nothing new");
+		}
+		
+	}
 }

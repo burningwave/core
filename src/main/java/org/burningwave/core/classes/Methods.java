@@ -42,7 +42,6 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -136,12 +135,10 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 			}
 			MethodCriteria finalCriteria = criteria;
 			return Cache.uniqueKeyForMethods.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> 
-				Collections.unmodifiableCollection(
-					findAllAndApply(
-							finalCriteria, targetClass, (member) -> {
-							setAccessible(member, true);
-						}
-					)
+				findAllAndApply(
+						finalCriteria, targetClass, (member) -> {
+						setAccessible(member, true);
+					}
 				)
 			);
 		});
@@ -154,10 +151,8 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		Collection<Method> members = Cache.uniqueKeyForMethods.getOrUploadIfAbsent(
 			targetClassClassLoader, cacheKey, () -> {
-				return Collections.unmodifiableCollection(
-					findAllAndMakeThemAccessible(
-						MethodCriteria.forEntireClassHierarchy(), targetClass
-					)
+				return findAllAndMakeThemAccessible(
+					MethodCriteria.forEntireClassHierarchy(), targetClass
 				);
 			}
 		);

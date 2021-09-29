@@ -418,7 +418,7 @@ public class FileSystemItemTest extends BaseTest {
 					})
 				);
 				return new TreeSet<>(files);
-			}, true
+			}, false
 		);
 	}
 }
