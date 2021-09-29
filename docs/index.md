@@ -989,7 +989,7 @@ public static final org.burningwave.core.Cache Cache;
 public static final org.burningwave.core.classes.Classes Classes;
 public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
 public static final org.burningwave.core.classes.Constructors Constructors;
-public static final org.burningwave.jvm.Driver Driver;
+public static final io.github.toolfactory.jvm.Driver Driver;
 public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 public static final org.burningwave.core.classes.Fields Fields;
 public static final org.burningwave.core.iterable.Properties GlobalProperties;
