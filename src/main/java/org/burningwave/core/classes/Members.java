@@ -86,6 +86,7 @@ public class Members implements ManagedLogger {
 			criteria.getScanUpToPredicate(), 
 			criteria.getMembersSupplier(),
 			criteria.getPredicateOrTruePredicateIfPredicateIsNull(),
+			new HashSet<>(),
 			new LinkedHashSet<>()
 		);
 		Predicate<Collection<M>> resultPredicate = criteria.getResultPredicate();
@@ -102,6 +103,7 @@ public class Members implements ManagedLogger {
 		BiPredicate<Class<?>, Class<?>> clsPredicate, 
 		BiFunction<Class<?>, Class<?>, M[]> memberSupplier, 
 		Predicate<M> predicate,
+		Set<Class<?>> visitedInterfaces,
 		Collection<M> collection
 	) {	
 		for (M member : memberSupplier.apply(initialClsFrom, currentScannedClass)) {
@@ -110,7 +112,10 @@ public class Members implements ManagedLogger {
 			}
 		}
 		for (Class<?> interf : currentScannedClass.getInterfaces()) {
-			collection = findAll((Class<?>) initialClsFrom, interf, clsPredicate, memberSupplier, predicate, collection);
+			if (!visitedInterfaces.add(interf)) {
+				continue;
+			}
+			collection = findAll((Class<?>) initialClsFrom, interf, clsPredicate, memberSupplier, predicate, visitedInterfaces, collection);
 			if (!(collection instanceof Set)) {
 				return collection;
 			}
@@ -130,7 +135,8 @@ public class Members implements ManagedLogger {
 			superClass,
 			clsPredicate,
 			memberSupplier,
-			predicate, 
+			predicate,
+			visitedInterfaces,
 			collection
 		);
 	}
@@ -147,7 +153,8 @@ public class Members implements ManagedLogger {
 				classFrom,
 				criteria.getScanUpToPredicate(), 
 				criteria.getMembersSupplier(),
-				criteria.getPredicateOrTruePredicateIfPredicateIsNull()
+				criteria.getPredicateOrTruePredicateIfPredicateIsNull(),
+				new HashSet<>()
 			);
 		} else {
 			Collection<M> result = findAll(
@@ -156,6 +163,7 @@ public class Members implements ManagedLogger {
 				criteria.getScanUpToPredicate(), 
 				criteria.getMembersSupplier(),
 				criteria.getPredicateOrTruePredicateIfPredicateIsNull(),
+				new HashSet<>(),
 				new LinkedHashSet<>()
 			);
 			return resultPredicate.test(result) ?
@@ -165,18 +173,23 @@ public class Members implements ManagedLogger {
 	}
 	
 	private <M extends Member> M findFirst(
-			Class<?> initialClsFrom,
-			Class<?> currentScannedClass,			
-			BiPredicate<Class<?>, Class<?>> clsPredicate,
-			BiFunction<Class<?>, Class<?>, M[]> 
-			memberSupplier, Predicate<M> predicate) {
+		Class<?> initialClsFrom,
+		Class<?> currentScannedClass,			
+		BiPredicate<Class<?>, Class<?>> clsPredicate,
+		BiFunction<Class<?>, Class<?>, M[]> 
+		memberSupplier, Predicate<M> predicate,
+		Set<Class<?>> visitedInterfaces
+	) {
 		for (M member : memberSupplier.apply(initialClsFrom, currentScannedClass)) {
 			if (predicate.test(member)) {
 				return member;
 			}
 		}
 		for (Class<?> interf : currentScannedClass.getInterfaces()) {
-			M member = findFirst(initialClsFrom, interf, clsPredicate, memberSupplier, predicate);
+			if (!visitedInterfaces.add(interf)) {
+				continue;
+			}
+			M member = findFirst(initialClsFrom, interf, clsPredicate, memberSupplier, predicate, visitedInterfaces);
 			if (member != null || clsPredicate.test(initialClsFrom, currentScannedClass)) {
 				return member;
 			}
@@ -184,7 +197,7 @@ public class Members implements ManagedLogger {
 		return 
 			(clsPredicate.test(initialClsFrom, currentScannedClass) || currentScannedClass.getSuperclass() == null) ?
 				null :
-				findFirst(initialClsFrom, currentScannedClass.getSuperclass(), clsPredicate, memberSupplier, predicate);
+				findFirst(initialClsFrom, currentScannedClass.getSuperclass(), clsPredicate, memberSupplier, predicate, visitedInterfaces);
 	}
 	
 	public static abstract class Handler<M extends Member, C extends MemberCriteria<M, C, ?>> {	
