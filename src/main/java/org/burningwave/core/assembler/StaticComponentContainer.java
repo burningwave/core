@@ -44,7 +44,8 @@ import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
-import org.burningwave.jvm.Driver;
+
+import io.github.toolfactory.jvm.Driver;
 
 
 public class StaticComponentContainer {
@@ -140,7 +141,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.classes.Classes Classes;
 	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
 	//Since to 9.4.0 (previous version is 9.3.6)
-	public static final org.burningwave.jvm.Driver Driver;
+	public static final io.github.toolfactory.jvm.Driver Driver;
 	public static final org.burningwave.core.classes.Constructors Constructors;
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.classes.Fields Fields;
@@ -260,7 +261,7 @@ public class StaticComponentContainer {
 					driverClassName
 				).getDeclaredConstructor().newInstance());
 			} else {
-				Driver = org.burningwave.jvm.Driver.Factory.getNew();
+				Driver = io.github.toolfactory.jvm.Driver.Factory.getNew();
 			}
 			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
 				getName("Thread supplier"),
