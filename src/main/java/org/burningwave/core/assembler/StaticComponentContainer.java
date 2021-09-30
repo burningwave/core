@@ -28,16 +28,16 @@
  */
 package org.burningwave.core.assembler;
 
-import java.net.URL;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
@@ -46,6 +46,7 @@ import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
 import io.github.toolfactory.jvm.Driver;
+import io.github.toolfactory.jvm.Driver.Factory;
 
 
 public class StaticComponentContainer {
@@ -178,8 +179,18 @@ public class StaticComponentContainer {
 			properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.concurrent.Thread.Supplier.Configuration.DEFAULT_VALUES);
 			properties.putAll(Configuration.DEFAULT_VALUES);
-			Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
-				Resources.loadFirstOneFound(properties, "burningwave.static.properties", "burningwave.static.default.properties");
+			
+			Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
+			classLoaders.add(Factory.class.getClassLoader());
+			classLoaders.add(Thread.currentThread().getContextClassLoader());
+		
+			properties.putAll(
+				io.github.toolfactory.jvm.util.Properties.loadFromResourcesAndMerge(
+					"burningwave.static.properties",
+					"priority-of-this-configuration-file",
+					classLoaders.toArray(new ClassLoader[classLoaders.size()])
+				)
+			);
 			GlobalPropertiesListener = new org.burningwave.core.iterable.Properties.Listener() {
 				@Override
 				public <K, V> void processChangeNotification(Properties config, org.burningwave.core.iterable.Properties.Event event, K key, V newValue, V previousValue) {
@@ -251,7 +262,7 @@ public class StaticComponentContainer {
 					}
 					
 				}				
-			}.listenTo(GlobalProperties = propBag.getKey());
+			}.listenTo(GlobalProperties = properties);
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
 			String driverClassName = GlobalProperties.resolveValue(
 				Configuration.Key.JVM_DRIVER
@@ -289,19 +300,6 @@ public class StaticComponentContainer {
 				showBanner();
 			}
 			ManagedLoggersRepository = ManagedLogger.Repository.create(GlobalProperties);
-			URL globalPropertiesFileUrl = propBag.getValue();
-			if (globalPropertiesFileUrl != null) {
-				ManagedLoggersRepository.logInfo(
-					StaticComponentContainer.class::getName, 
-					"Building static components by using " + Executor.get(() ->
-						URLDecoder.decode(
-							globalPropertiesFileUrl.toString(), StandardCharsets.UTF_8.name()
-						)
-					)
-				);
-			} else {
-				ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Building static components by using default configuration");
-			}
 			ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Instantiated {}", ManagedLoggersRepository.getClass().getName());
 			ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName,
 				"\n\n\tConfiguration values for static components:\n\n{}\n\n",
