@@ -122,7 +122,7 @@ public class StaticComponentContainer {
 				false
 			);
 			
-			if (org.burningwave.jvm.Info.getInstance().getVersion() > 8) {
+			if (io.github.toolfactory.jvm.Info.Provider.getInfoInstance().getVersion() > 8) {
 				defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
 			}
 			
@@ -148,7 +148,7 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.iterable.Properties GlobalProperties;
 	public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
 	//Since to 9.4.0
-	public static final org.burningwave.jvm.Info JVMInfo;
+	public static final io.github.toolfactory.jvm.Info JVMInfo;
 	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 	public static final org.burningwave.core.classes.Members Members;
 	public static final org.burningwave.core.classes.Methods Methods;
@@ -167,7 +167,7 @@ public class StaticComponentContainer {
 	static {
 		try {
 			long startTime = System.nanoTime();
-			JVMInfo = org.burningwave.jvm.Info.getInstance();
+			JVMInfo = io.github.toolfactory.jvm.Info.Provider.getInfoInstance();
 			Strings = org.burningwave.core.Strings.create();
 			Throwables = org.burningwave.core.Throwables.create();
 			Objects = org.burningwave.core.Objects.create();
