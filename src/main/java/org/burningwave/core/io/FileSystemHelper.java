@@ -254,41 +254,47 @@ public class FileSystemHelper implements Component {
 			if (System.currentTimeMillis() - lastDeletionStartTime > deletingInterval) {
 				lastDeletionStartTime = System.currentTimeMillis();
 				for (File fileSystemItem : burningwaveTemporaryFolder.listFiles()) {
-					if (!fileSystemItem.getName().equals(fileSystemHelper.getOrCreateMainTemporaryFolder().getName()) &&
-						!fileSystemItem.getName().equals(fileSystemHelper.getOrCreatePingFile().getName()) 
-					) {
-						try {
+					try {
+						if (!fileSystemItem.getName().equals(fileSystemHelper.getOrCreateMainTemporaryFolder().getName()) &&
+							!fileSystemItem.getName().equals(fileSystemHelper.getOrCreatePingFile().getName()) 
+						) {
 							try {
-								if (fileSystemItem.isDirectory()) {
-									File pingFile = new File(
-										burningwaveTemporaryFolder.getAbsolutePath() + "/" + fileSystemItem.getName() + ".ping"
-									);
-									long pingTime = getCreationTime(fileSystemItem.getName());
-									if (pingFile.exists()) {
-										pingTime = getOrSetPingTime(pingFile);
+								try {
+									if (fileSystemItem.isDirectory()) {
+										File pingFile = new File(
+											burningwaveTemporaryFolder.getAbsolutePath() + "/" + fileSystemItem.getName() + ".ping"
+										);
+										long pingTime = getCreationTime(fileSystemItem.getName());
+										if (pingFile.exists()) {
+											pingTime = getOrSetPingTime(pingFile);
+										}
+										if (System.currentTimeMillis() - pingTime >= deletingInterval) {
+											delete(fileSystemItem);
+										}							
+									} else if (fileSystemItem.getName().endsWith("ping")) {
+										long pingTime = getOrSetPingTime(fileSystemItem);
+										if (System.currentTimeMillis() - pingTime >= deletingInterval) {
+											delete(fileSystemItem);
+										}
 									}
-									if (System.currentTimeMillis() - pingTime >= deletingInterval) {
+								} catch (Throwable exc) {
+									ManagedLoggersRepository.logWarn(getClass()::getName, "Exception occurred while cleaning temporary file system item '{}'", fileSystemItem.getAbsolutePath());
+									if (fileSystemItem.getName().contains("null")) {
+										ManagedLoggersRepository.logInfo(getClass()::getName, "Trying to force deleting of '{}'", fileSystemItem.getAbsolutePath());
 										delete(fileSystemItem);
-									}							
-								} else if (fileSystemItem.getName().endsWith("ping")) {
-									long pingTime = getOrSetPingTime(fileSystemItem);
-									if (System.currentTimeMillis() - pingTime >= deletingInterval) {
-										delete(fileSystemItem);
+									} else {
+										throw exc;
 									}
 								}
 							} catch (Throwable exc) {
-								ManagedLoggersRepository.logWarn(getClass()::getName, "Exception occurred while cleaning temporary file system item '{}'", fileSystemItem.getAbsolutePath());
-								if (fileSystemItem.getName().contains("null")) {
-									ManagedLoggersRepository.logInfo(getClass()::getName, "Trying to force deleting of '{}'", fileSystemItem.getAbsolutePath());
-									delete(fileSystemItem);
-								} else {
-									throw exc;
-								}
+								ManagedLoggersRepository.logError(getClass()::getName, "Could not delete '{}' automatically, To avoid this error remove it manually", fileSystemItem.getAbsolutePath());
+								ManagedLoggersRepository.logInfo(getClass()::getName, "Current execution id: {}", fileSystemHelper.id);
 							}
-						} catch (Throwable exc) {
-							ManagedLoggersRepository.logError(getClass()::getName, "Could not delete '{}' automatically, To avoid this error remove it manually", fileSystemItem.getAbsolutePath());
-							ManagedLoggersRepository.logInfo(getClass()::getName, "Current execution id: {}", fileSystemHelper.id);
 						}
+					} catch (Throwable exc) {
+						if (fileSystemHelper != null) {
+							ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);
+						}						
 					}
 				}
 			}
