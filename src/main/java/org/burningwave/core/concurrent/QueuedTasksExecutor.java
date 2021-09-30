@@ -87,11 +87,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 	QueuedTasksExecutor(String name, Thread.Supplier threadSupplier, int defaultPriority, boolean isDaemon) {
 		initializer = () -> {
 			this.threadSupplier = threadSupplier;
-			/* Code line disabled for deferred initialization (since 9.6.0, previous version is 9.5.2).
-			 * See also the:
-			 * - init0 method
-			 * - addToQueue method */
-			 //tasksQueue = new CopyOnWriteArrayList<>();		 
+			tasksQueue = new CopyOnWriteArrayList<>();
 			tasksInExecution = ConcurrentHashMap.newKeySet();
 			this.resumeCallerMutex = new Object();
 			this.executingFinishedWaiterMutex = new Object();
@@ -158,11 +154,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		tasksLauncher.setName(name + " launcher");
 		tasksLauncher.setPriority(this.defaultPriority);
 		tasksLauncher.setDaemon(isDaemon);
-		/* Code line disabled for deferred initialization (since 9.6.0, previous version is 9.5.2).
-		 * See also the:
-		 * - constructor
-		 * - addToQueue method */
-		//tasksLauncher.start();
+		tasksLauncher.start();
 	}
 	
 	private boolean checkAndNotifySuspension() {
@@ -257,22 +249,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		Object[] canBeExecutedBag = null;
 		if (skipCheck || (Boolean)(canBeExecutedBag = canBeExecuted(task))[1]) {
 			try {
-				try {
-					tasksQueue.add(task);
-				} catch (NullPointerException exc) {
-					/* Start of additional code for deferred initialization (since 9.6.0, previous version is 9.5.2)
-					 * The previous version did not have this try/catch block. See also the:
-					 * - constructor
-					 * - init0 method */
-					synchronized (tasksLauncher) {
-						if (tasksQueue == null) {
-							tasksQueue = new CopyOnWriteArrayList<>();
-							tasksLauncher.start();
-						}
-					}
-					tasksQueue.add(task);
-					/* End of additional code */
-				}
+				tasksQueue.add(task);
 				synchronized(executableCollectionFillerMutex) {
 					executableCollectionFillerMutex.notifyAll();
 				}
