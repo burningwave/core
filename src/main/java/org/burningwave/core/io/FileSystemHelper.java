@@ -89,7 +89,7 @@ public class FileSystemHelper implements Component {
 			if (mainTemporaryFolder != null && mainTemporaryFolder.exists()) {
 				return mainTemporaryFolder;
 			}			
-			return mainTemporaryFolder = Executor.get(() -> {
+			mainTemporaryFolder = Executor.get(() -> {
 				File toDelete = File.createTempFile("_BW_TEMP_", "_temp");
 				File tempFolder = toDelete.getParentFile();
 				File folder = new File(tempFolder.getAbsolutePath() + "/" + "Burningwave" +"/"+id);
@@ -100,6 +100,8 @@ public class FileSystemHelper implements Component {
 				toDelete.delete();
 				return folder;
 			});
+			startSweeping();
+			return mainTemporaryFolder;
 		}
 	}
 	

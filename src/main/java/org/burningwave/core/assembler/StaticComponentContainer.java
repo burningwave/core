@@ -348,7 +348,6 @@ public class StaticComponentContainer {
 					);
 				})
 			);
-			FileSystemHelper.startSweeping();
 			ManagedLoggersRepository.logInfo(
 				StaticComponentContainer.class::getName, 
 				"{} initialized in {} seconds",
