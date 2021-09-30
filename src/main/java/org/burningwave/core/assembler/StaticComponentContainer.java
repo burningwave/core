@@ -121,7 +121,7 @@ public class StaticComponentContainer {
 				false
 			);
 			
-			if (io.github.toolfactory.jvm.Info.getInstance().getVersion() > 8) {
+			if (io.github.toolfactory.jvm.Info.Provider.getInfoInstance().getVersion() > 8) {
 				defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
 			}
 			
@@ -166,7 +166,7 @@ public class StaticComponentContainer {
 	static {
 		try {
 			long startTime = System.nanoTime();
-			JVMInfo = io.github.toolfactory.jvm.Info.getInstance();
+			JVMInfo = io.github.toolfactory.jvm.Info.Provider.getInfoInstance();
 			Strings = org.burningwave.core.Strings.create();
 			Throwables = org.burningwave.core.Throwables.create();
 			Objects = org.burningwave.core.Objects.create();
