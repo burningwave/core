@@ -29,6 +29,7 @@
 package org.burningwave.core.assembler;
 
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -179,18 +180,8 @@ public class StaticComponentContainer {
 			properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.concurrent.Thread.Supplier.Configuration.DEFAULT_VALUES);
 			properties.putAll(Configuration.DEFAULT_VALUES);
+			properties.putAll(loadPropertiesFromFile());
 			
-			Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
-			classLoaders.add(Factory.class.getClassLoader());
-			classLoaders.add(Thread.currentThread().getContextClassLoader());
-		
-			properties.putAll(
-				io.github.toolfactory.jvm.util.Properties.loadFromResourcesAndMerge(
-					"burningwave.static.properties",
-					"priority-of-this-configuration-file",
-					classLoaders.toArray(new ClassLoader[classLoaders.size()])
-				)
-			);
 			GlobalPropertiesListener = new org.burningwave.core.iterable.Properties.Listener() {
 				@Override
 				public <K, V> void processChangeNotification(Properties config, org.burningwave.core.iterable.Properties.Event event, K key, V newValue, V previousValue) {
@@ -398,6 +389,19 @@ public class StaticComponentContainer {
 			throw new RuntimeException(exc);
 		} 
 		
+	}
+
+
+	static  java.util.Properties loadPropertiesFromFile() throws IOException {
+		Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
+		classLoaders.add(Factory.class.getClassLoader());
+		classLoaders.add(Thread.currentThread().getContextClassLoader());
+
+		return io.github.toolfactory.jvm.util.Properties.loadFromResourcesAndMerge(
+			"burningwave.static.properties",
+			"priority-of-this-configuration-file",
+			classLoaders.toArray(new ClassLoader[classLoaders.size()])
+		);
 	}
 	
 	
