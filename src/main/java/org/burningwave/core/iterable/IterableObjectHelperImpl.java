@@ -32,7 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Background
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -345,7 +345,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		if (value instanceof Collection) {
 			Collection<T> values = (Collection<T>)value;
 			if (values.size() > 1) {
-				Throwables.throwException("Found more than one item under key {}", key);
+				Driver.throwException("Found more than one item under key {}", key);
 			}
 			return values.stream().findFirst().orElseGet(() -> null);
 		} else {

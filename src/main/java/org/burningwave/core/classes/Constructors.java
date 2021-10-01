@@ -30,7 +30,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -57,7 +57,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 	) {	
 		Constructor<?> ctor = findFirstAndMakeItAccessible(targetClass, Classes.retrieveFrom(arguments));
 		if (ctor == null) {
-			Throwables.throwException("Constructor not found in {}", targetClass.getName());
+			Driver.throwException("Constructor not found in {}", targetClass.getName());
 		}
 		return Executor.get(() -> {
 			return (T)Classes.newInstance(
@@ -96,7 +96,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 			if (membersThatMatch.size() == 1) {
 				return membersThatMatch.stream().findFirst().get();
 			}
-			Throwables.throwException(
+			Driver.throwException(
 				"Found more than one of constructor with argument types {} in {} class",
 				String.join(", ", Arrays.asList(argumentTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),
 				targetClass.getName()

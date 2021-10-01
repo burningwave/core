@@ -32,7 +32,7 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,7 +64,7 @@ public class Modules {
 			allUnnamedSet = new HashSet<>();
 			allUnnamedSet.add(Fields.getStaticDirect(moduleClass, "ALL_UNNAMED_MODULE"));
 		} catch (Throwable exc) {
-			Throwables.throwException(exc);
+			Driver.throwException(exc);
 		}
 	}
 	
@@ -81,7 +81,7 @@ public class Modules {
 				});
 			});
 		} catch (Throwable exc) {
-			Throwables.throwException(exc);
+			Driver.throwException(exc);
 		}
 	}
 	
@@ -124,7 +124,7 @@ public class Modules {
 				export("openPackages", moduleFrom, pkgName, moduleTo);
 			});
 		} catch (Throwable exc) {
-			Throwables.throwException(exc);
+			Driver.throwException(exc);
 		}
 	}
 	
@@ -159,7 +159,7 @@ public class Modules {
 				exporter.accept("openPackages", module, pkgName);
 			});
 		} catch (Throwable exc) {
-			Throwables.throwException(exc);
+			Driver.throwException(exc);
 		}
 	}
 	

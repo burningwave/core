@@ -37,7 +37,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.File;
 import java.io.IOException;
@@ -428,7 +428,7 @@ public class FileSystemItem {
 		try {
 			return new URL(toURL());
 		} catch (MalformedURLException exc) {
-			return Throwables.throwException(exc);
+			return Driver.throwException(exc);
 		}
 	}
 
@@ -754,7 +754,7 @@ public class FileSystemItem {
 		IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);
 		try {
 			if (zIS == null) {
-				return Throwables.throwException(
+				return Driver.throwException(
 					new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
 				);
 			}
@@ -791,11 +791,11 @@ public class FileSystemItem {
 						return retrieveConventionedRelativePath(this, zIS2, null, relativePath1);
 					}
 					;
-					return Throwables.throwException(new FileSystemItemNotFoundException(
+					return Driver.throwException(new FileSystemItemNotFoundException(
 							"Absolute path \"" + absolutePath.getKey() + "\" not exists"));
 				}
 			} else {
-				return Throwables.throwException(
+				return Driver.throwException(
 					new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
 				);
 			}
@@ -895,7 +895,7 @@ public class FileSystemItem {
 		try (InputStream inputStream = toInputStream()) {
 			return Objects.deserialize(inputStream);
 		} catch (Throwable exc) {
-			return Throwables.throwException(exc);
+			return Driver.throwException(exc);
 		}
 	}	
 

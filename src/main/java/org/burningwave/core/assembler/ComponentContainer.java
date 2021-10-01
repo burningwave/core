@@ -38,7 +38,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.InputStream;
 import java.util.Arrays;
@@ -143,12 +143,12 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 					}
 					return config;
 				} catch (Throwable exc) {
-					return Throwables.throwException(exc);
+					return Driver.throwException(exc);
 				}
 			}).init();
 		} catch (Throwable exc){
 			ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
-			return Throwables.throwException(exc);
+			return Driver.throwException(exc);
 		}
 	}
 	
@@ -157,7 +157,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			return new ComponentContainer(() -> properties).init();
 		} catch (Throwable exc){
 			ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
-			return Throwables.throwException(exc);
+			return Driver.throwException(exc);
 		}
 	}
 	
@@ -533,7 +533,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				instanceId = null;
 			});
 		} else {
-			Throwables.throwException("Could not close singleton instance {}", LazyHolder.COMPONENT_CONTAINER_INSTANCE);
+			Driver.throwException("Could not close singleton instance {}", LazyHolder.COMPONENT_CONTAINER_INSTANCE);
 		}
 	}
 	

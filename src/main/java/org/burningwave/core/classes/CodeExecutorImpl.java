@@ -32,7 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoade
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.util.Arrays;
 import java.util.function.Function;
@@ -214,7 +214,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 				T retrievedElement = executor.executeAndCast(config.getParams());
 				return retrievedElement;
 			} catch (Throwable exc) {
-				return Throwables.throwException(exc);
+				return Driver.throwException(exc);
 			} finally {
 				if (defaultClassLoader instanceof MemoryClassLoader) {
 					((MemoryClassLoader)defaultClassLoader).unregister(executeClient, true);
@@ -237,7 +237,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 				}
 				return retrievedElement;
 			} catch (Throwable exc) {
-				return Throwables.throwException(exc);
+				return Driver.throwException(exc);
 			} finally {
 				if (defaultClassLoader instanceof MemoryClassLoader) {
 					((MemoryClassLoader)defaultClassLoader).unregister(executeClient, true);

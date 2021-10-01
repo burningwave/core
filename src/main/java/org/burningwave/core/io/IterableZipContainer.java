@@ -32,7 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.BufferHand
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.File;
 import java.io.InputStream;
@@ -206,7 +206,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 			loadZipEntryData
 		);
 		if (entriesFound.size() > 1) {
-			Throwables.throwException("Found more than one zip entry for predicate {}", zipEntryPredicate);
+			Driver.throwException("Found more than one zip entry for predicate {}", zipEntryPredicate);
 		}
 		return entriesFound.stream().findFirst().orElseGet(() -> null);
 	}

@@ -30,7 +30,7 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -115,7 +115,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener, Managed
 			copy(inputStream, outputStream);
 			return outputStream.toByteArray();
 		} catch (Throwable exc) {
-			return Throwables.throwException(exc);
+			return Driver.throwException(exc);
 		}
 	}
 	
@@ -134,7 +134,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener, Managed
 			}
 			return BufferHandler.shareContent(byteBuffer);
 		} catch (Throwable exc) {
-			return Throwables.throwException(exc);
+			return Driver.throwException(exc);
 		}
 	}
 	

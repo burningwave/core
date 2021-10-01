@@ -31,7 +31,7 @@ package org.burningwave.core;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -162,7 +162,7 @@ public interface ManagedLogger {
 				
 			} catch (Throwable exc) {
 				exc.printStackTrace();
-				return Throwables.throwException(exc);
+				return Driver.throwException(exc);
 			}
 		}
 		

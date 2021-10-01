@@ -33,7 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.ThreadHolder;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -630,7 +630,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		
 		public T runOnlyOnce(String id, Supplier<Boolean> hasBeenExecutedChecker) {
 			if (isSubmitted()) {
-				Throwables.throwException(new TaskStateException(this, "is submitted"));
+				Driver.throwException(new TaskStateException(this, "is submitted"));
 			}
 			runOnlyOnce = true;
 			this.id = id;
@@ -685,21 +685,21 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 									if (ignoreDeadLocked) {
 										return false;
 									}
-									Throwables.throwException(new TaskStateException(this, "could be dead locked"));
+									Driver.throwException(new TaskStateException(this, "could be dead locked"));
 								}
 								if (isAborted()) {
-									Throwables.throwException(new TaskStateException(this, "is aborted"));
+									Driver.throwException(new TaskStateException(this, "is aborted"));
 								}
 								wait();
 								return true;
 							} catch (InterruptedException exc) {
-								Throwables.throwException(exc);
+								Driver.throwException(exc);
 							}
 						}
 					}
 				}
 			} else {
-				Throwables.throwException(new TaskStateException(this, "is not submitted"));
+				Driver.throwException(new TaskStateException(this, "is not submitted"));
 			}
 			return false;
 		}		
@@ -727,21 +727,21 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 									if (ignoreDeadLocked) {
 										return false;
 									}
-									Throwables.throwException(new TaskStateException(this, "could be dead locked"));
+									Driver.throwException(new TaskStateException(this, "could be dead locked"));
 								}
 								if (isAborted()) {
-									Throwables.throwException(new TaskStateException(this, "is aborted"));
+									Driver.throwException(new TaskStateException(this, "is aborted"));
 								}
 								wait();
 								return true;
 							} catch (InterruptedException exc) {
-								Throwables.throwException(exc);
+								Driver.throwException(exc);
 							}
 						}
 					}
 				}
 			} else {
-				Throwables.throwException(new TaskStateException(this, "is not submitted"));
+				Driver.throwException(new TaskStateException(this, "is not submitted"));
 			}
 			return false;
 		}
@@ -861,18 +861,18 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		
 		public final T submit() {
 			if (aborted) {
-				Throwables.throwException(new TaskStateException(this, "is aborted"));
+				Driver.throwException(new TaskStateException(this, "is aborted"));
 			}
 			if (!submitted) {
 				synchronized(this) {
 					if (!submitted) {
 						submitted = true;
 					} else {
-						Throwables.throwException(new TaskStateException(this, "is already submitted"));
+						Driver.throwException(new TaskStateException(this, "is already submitted"));
 					}
 				}
 			} else {
-				Throwables.throwException(new TaskStateException(this, "is already submitted"));
+				Driver.throwException(new TaskStateException(this, "is already submitted"));
 			}
 			return addToQueue();
 		}
@@ -1357,7 +1357,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				allTasksMonitorer.start();
 				return this;
 			}
-			return Throwables.throwException("All tasks monitorer has not been configured");
+			return Driver.throwException("All tasks monitorer has not been configured");
 		}
 		
 		public Group stopAllTasksMonitoring() {

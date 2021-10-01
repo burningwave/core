@@ -29,7 +29,7 @@
 package org.burningwave.core.function;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 public interface Executor {
 
@@ -55,7 +55,7 @@ public interface Executor {
 		try {
 			runnable.run();
 		} catch (Throwable exc) {
-			Throwables.throwException(exc);
+			Driver.throwException(exc);
 		}
 	}
     
@@ -65,7 +65,7 @@ public interface Executor {
 				runnable.run();
 			} catch (Throwable exc) {
 				if (attemptsNumber > 1) {
-					Throwables.throwException(exc);
+					Driver.throwException(exc);
 				}
 			}
 			--attemptsNumber;
@@ -76,7 +76,7 @@ public interface Executor {
 		try {
 			return supplier.get();
 		} catch (Throwable exc) {
-			return Throwables.throwException(exc);
+			return Driver.throwException(exc);
 		}
 	}
 	
@@ -86,7 +86,7 @@ public interface Executor {
 				return supplier.get();
 			} catch (Throwable exc) {
 				if (attemptsNumber > 1) {
-					Throwables.throwException(exc);
+					Driver.throwException(exc);
 				}
 			}
 			--attemptsNumber;

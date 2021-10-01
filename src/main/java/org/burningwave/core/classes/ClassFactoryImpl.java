@@ -31,7 +31,7 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -164,7 +164,7 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 				classNames
 			);
 		} catch (Throwable exc) {
-			return Throwables.throwException(exc);
+			return Driver.throwException(exc);
 		}
 	}
 	

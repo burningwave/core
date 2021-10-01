@@ -32,7 +32,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -74,7 +73,7 @@ public class Members implements ManagedLogger {
 	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
 		Collection<M> members = findAll(criteria, classFrom);
 		if (members.size() > 1) {
-			Throwables.throwException("More than one member found for class {}", classFrom.getName());
+			Driver.throwException("More than one member found for class {}", classFrom.getName());
 		}
 		return members.stream().findFirst().orElse(null);
 	}
@@ -546,7 +545,7 @@ public class Members implements ManagedLogger {
 							retrieveMethodHandle(consulter, executable)
 						);
 					} catch (NoSuchMethodException | IllegalAccessException exc) {
-						return Throwables.throwException(exc);
+						return Driver.throwException(exc);
 					}
 				});	
 			}

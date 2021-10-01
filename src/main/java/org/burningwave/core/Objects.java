@@ -28,7 +28,7 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -90,7 +90,7 @@ public class Objects {
 		try (ObjectOutputStream out = new ObjectOutputStream(outputStream)) {
 	        out.writeObject(object);          
 		} catch (Throwable exc) {
-			Throwables.throwException(exc);
+			Driver.throwException(exc);
 		}
 	}
 	
@@ -98,7 +98,7 @@ public class Objects {
 		try (ObjectInputStream in = new ObjectInputStream(inputStream)) {
             return (S) in.readObject();           
 		} catch (Throwable exc) {
-			return Throwables.throwException(exc);
+			return Driver.throwException(exc);
 		}
 	}
 	
@@ -106,7 +106,7 @@ public class Objects {
 		try (FileOutputStream outputStream = FileOutputStream.create(absolutePath)) {
 			serialize(object, outputStream);
 		} catch (Throwable exc) {
-			Throwables.throwException(exc);
+			Driver.throwException(exc);
 		}
 		return FileSystemItem.ofPath(absolutePath);
 	}

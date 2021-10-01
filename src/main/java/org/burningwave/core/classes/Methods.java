@@ -32,7 +32,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -78,7 +77,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 			if (membersThatMatch.size() == 1) {
 				return membersThatMatch.stream().findFirst().get();
 			}
-			Throwables.throwException(
+			Driver.throwException(
 				"Found more than one of method named {} with argument types {} in {} hierarchy",
 				memberName,
 				String.join(", ", Arrays.asList(inputParameterTypesOrSubTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),
@@ -206,7 +205,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		return Executor.get(() -> {
 			Method method = findFirstAndMakeItAccessible(targetClass, methodName, Classes.retrieveFrom(arguments));
 			if (method == null) {
-				Throwables.throwException("Method {} not found in {} hierarchy", methodName, targetClass.getName());
+				Driver.throwException("Method {} not found in {} hierarchy", methodName, targetClass.getName());
 			}
 			return methodInvoker.apply(method);
 		});
@@ -251,7 +250,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		if (entry == null) {
 			Method method = findFirstAndMakeItAccessible(targetClass, methodName, inputParameterTypesOrSubTypes);
 			if (method == null) {
-				Throwables.throwException("Method {} not found in {} hierarchy", methodName, targetClass.getName());
+				Driver.throwException("Method {} not found in {} hierarchy", methodName, targetClass.getName());
 			}
 			entry = findDirectHandleBox(
 				method, targetClassClassLoader, cacheKey

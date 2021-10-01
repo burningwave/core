@@ -33,7 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.ThreadHolder;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -221,7 +221,7 @@ public class FileSystemHelper implements Component {
 				mainTemporaryFolder = null;
 			});
 		} else {
-			Throwables.throwException("Could not close singleton instance {}", this);
+			Driver.throwException("Could not close singleton instance {}", this);
 		}
 	}
 	

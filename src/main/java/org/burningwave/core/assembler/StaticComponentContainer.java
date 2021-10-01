@@ -176,14 +176,12 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.concurrent.Synchronizer Synchronizer;
 	public static final org.burningwave.core.concurrent.Thread.Holder ThreadHolder;
 	public static final org.burningwave.core.concurrent.Thread.Supplier ThreadSupplier;
-	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
 		try {
 			long startTime = System.nanoTime();
 			JVMInfo = io.github.toolfactory.jvm.Info.Provider.getInfoInstance();
 			Strings = org.burningwave.core.Strings.create();
-			Throwables = org.burningwave.core.Throwables.create();
 			Objects = org.burningwave.core.Objects.create();
 			Resources = new org.burningwave.core.io.Resources();
 			Properties properties = new Properties();
@@ -216,7 +214,7 @@ public class StaticComponentContainer {
 									}
 								}
 								if (mustThrowException) {
-									Throwables.throwException("The reconfiguration of property '{}' is not allowed", key);
+									Driver.throwException("The reconfiguration of property '{}' is not allowed", key);
 								}
 							} else if (keyAsString.equals(ManagedLogger.Repository.Configuration.Key.TYPE)) {
 								ManagedLogger.Repository toBeReplaced = ManagedLoggersRepository;

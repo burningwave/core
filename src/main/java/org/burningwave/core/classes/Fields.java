@@ -31,7 +31,6 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -178,7 +177,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	public Field findOneAndMakeItAccessible(Class<?> targetClass, String memberName) {
 		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, memberName, null);
 		if (members.size() != 1) {
-			Throwables.throwException("Field {} not found or found more than one field in {} hierarchy", memberName, targetClass.getName());
+			Driver.throwException("Field {} not found or found more than one field in {} hierarchy", memberName, targetClass.getName());
 		}
 		return members.stream().findFirst().get();
 	}
@@ -186,7 +185,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	public Field findFirstAndMakeItAccessible(Class<?> targetClass, String fieldName, Class<?> fieldTypeOrSubType) {
 		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, fieldName, fieldTypeOrSubType);
 		if (members.size() < 1) {
-			Throwables.throwException("Field {} not found in {} hierarchy", fieldName, targetClass.getName());
+			Driver.throwException("Field {} not found in {} hierarchy", fieldName, targetClass.getName());
 		}
 		return members.stream().findFirst().get();
 	}
