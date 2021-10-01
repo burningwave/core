@@ -28,14 +28,15 @@
  */
 package org.burningwave.core.function;
 
+
 import java.util.Objects;
 
-@FunctionalInterface
-public interface ThrowingRunnable<E extends Throwable> {
 
-    public abstract void run() throws E;
+@FunctionalInterface
+public interface Runnable extends java.lang.Runnable {
+
     
-    default ThrowingRunnable<E> andThen(ThrowingRunnable<E> after) {
+    default Runnable andThen(java.lang.Runnable after) {
         Objects.requireNonNull(after);
         return () -> { 
         	run();

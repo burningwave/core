@@ -33,25 +33,21 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Throwables
 
 public interface Executor {
 
-    @SafeVarargs
-	static <E extends Throwable> void runAndLogExceptions(ThrowingRunnable<? extends Throwable>... runnables) {
-		for (ThrowingRunnable<? extends Throwable> runnable : runnables) {
-	    	try {
-				runnable.run();
-			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(() -> Executor.class.getName(), exc);
-			}
+
+	static <E extends Throwable> void runAndLogExceptions(ThrowingRunnable<? extends Throwable> runnable) {
+    	try {
+			runnable.run();
+		} catch (Throwable exc) {
+			ManagedLoggersRepository.logError(() -> Executor.class.getName(), exc);
 		}
 	}
     
-    @SafeVarargs
-	static <E extends Throwable> void runAndIgnoreExceptions(ThrowingRunnable<? extends Throwable>... runnables) {
-		for (ThrowingRunnable<? extends Throwable> runnable : runnables) {
-	    	try {
-				runnable.run();
-			} catch (Throwable exc) {
-				
-			}
+
+	static <E extends Throwable> void runAndIgnoreExceptions(ThrowingRunnable<? extends Throwable> runnable) {
+    	try {
+			runnable.run();
+		} catch (Throwable exc) {
+			
 		}
 	}
     

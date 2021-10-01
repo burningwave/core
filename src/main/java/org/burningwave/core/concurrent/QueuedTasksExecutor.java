@@ -1277,21 +1277,26 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 		
 		public Group waitForTasksEnding(int priority, boolean waitForNewAddedTasks, boolean ignoreDeadLocked) {
-			QueuedTasksExecutor lastToBeWaitedFor = getByPriority(priority);
-			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
-				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
-				if (queuedTasksExecutor != lastToBeWaitedFor) {
-					queuedTasksExecutor.waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
+			Synchronizer.execute("queuedTasksExecutorGroup.initialization", () -> {
+				if (initializator != null) {
+					return;
 				}
-			}
-			lastToBeWaitedFor.waitForTasksEnding(priority, waitForNewAddedTasks);	
-			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
-				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
-				if (waitForNewAddedTasks && (!queuedTasksExecutor.tasksQueue.isEmpty() || !queuedTasksExecutor.tasksInExecution.isEmpty())) {
-					waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
-					break;
+				QueuedTasksExecutor lastToBeWaitedFor = getByPriority(priority);
+				for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+					QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
+					if (queuedTasksExecutor != lastToBeWaitedFor) {
+						queuedTasksExecutor.waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
+					}
 				}
-			}
+				lastToBeWaitedFor.waitForTasksEnding(priority, waitForNewAddedTasks);	
+				for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+					QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
+					if (waitForNewAddedTasks && (!queuedTasksExecutor.tasksQueue.isEmpty() || !queuedTasksExecutor.tasksInExecution.isEmpty())) {
+						waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
+						break;
+					}
+				}
+			});
 			return this;
 		}
 
@@ -1362,6 +1367,10 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		
 		public boolean shutDown(boolean waitForTasksTermination) {
 			Synchronizer.execute("queuedTasksExecutorGroup.initialization", () -> {
+				if (initializator != null) {
+					initializator = null;
+					return;
+				}
 				QueuedTasksExecutor lastToBeWaitedFor = getByPriority(java.lang.Thread.currentThread().getPriority());
 				for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 					QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
