@@ -31,7 +31,7 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -106,7 +106,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			if (!isClosed) {
 				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred while scanning {}", exc, childAndPath[0].getAbsolutePath());
 			} else {
-				Throwables.throwException(exc);
+				Driver.throwException(exc);
 			}
 			return false;
 		});

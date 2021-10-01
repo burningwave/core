@@ -32,7 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
@@ -74,7 +74,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	public <T> T getOrCreate(Class<?> targetClass, Class<?>... argumentTypes) {
 		Constructor<?> ctor = Constructors.findFirstAndMakeItAccessible(targetClass, argumentTypes);
 		if (ctor == null) {
-			Throwables.throwException(
+			Driver.throwException(
 				"Constructor with argument types {} not found in {} class",
 				String.join(", ", Arrays.asList(argumentTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),
 				targetClass.getName()
@@ -111,7 +111,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	private Method retrieveMethod(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
 		Method method = Methods.findFirstAndMakeItAccessible(targetClass, methodName, argumentTypes);
 		if (method == null) {
-			Throwables.throwException(
+			Driver.throwException(
 				"Method named {} with argument types {} not found in {} hierarchy",
 				methodName,
 				String.join(", ", Arrays.asList(argumentTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),

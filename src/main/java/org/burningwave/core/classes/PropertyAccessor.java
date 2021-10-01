@@ -31,7 +31,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -103,7 +103,7 @@ public abstract class PropertyAccessor implements Component {
 			}
 			message = message.substring(0, message.length() - 1);
 			if (exceptions.size() == propertyRetrievers.size()) {
-				Throwables.throwException(message.toString());
+				Driver.throwException(message.toString());
 			} else {
 				//logDebug("Warning: " + message);
 			}
@@ -149,7 +149,7 @@ public abstract class PropertyAccessor implements Component {
 			} else if (Map.class.isAssignableFrom(property.getClass())) {
 				propertyRetriever = () -> ((Map<?, ?>)property).get(index);
 			} else {
-				return Throwables.throwException("indexed property {} of type {} is not supporterd", property, property.getClass());
+				return Driver.throwException("indexed property {} of type {} is not supporterd", property, property.getClass());
 			}
 			return retrieveFromIndexedProperty(
 					propertyRetriever.get(), 
@@ -189,7 +189,7 @@ public abstract class PropertyAccessor implements Component {
 		} else if (Map.class.isAssignableFrom(property.getClass())) {
 			((Map<String, T>)property).put(index, (T)value);
 		} else {
-			Throwables.throwException("indexed property {} of type {} is not supporterd", property, property.getClass());
+			Driver.throwException("indexed property {} of type {} is not supporterd", property, property.getClass());
 		}
 	}
 

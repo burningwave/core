@@ -1,7 +1,7 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -187,7 +187,7 @@ public class BaseTest implements Component {
 		try {
 			Thread.sleep(seconds * 1000);
 		} catch (InterruptedException exc) {
-			Throwables.throwException(exc);
+			Driver.throwException(exc);
 		}
 	}
 	

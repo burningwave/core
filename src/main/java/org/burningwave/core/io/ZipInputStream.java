@@ -33,7 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -260,7 +260,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 				return Cache.pathForContents.getOrUploadIfAbsent(
 					getAbsolutePath(), () -> {
 						if (zipInputStream.getCurrentZipEntry() != this) {
-							Throwables.throwException("{} and his ZipInputStream are not aligned", Attached.class.getSimpleName());
+							Driver.throwException("{} and his ZipInputStream are not aligned", Attached.class.getSimpleName());
 						}
 						try {
 						    return Streams.toByteBuffer(zipInputStream, (int)super.getSize());

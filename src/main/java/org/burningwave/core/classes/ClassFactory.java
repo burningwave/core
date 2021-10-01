@@ -31,7 +31,7 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -292,7 +292,7 @@ public interface ClassFactory {
 		private Compilation.Result getCompilationResult() {
 			Compilation.Result compilationResult = getCompilationTask().join();
 			if (getCompilationTask().getException() != null) {
-				Throwables.throwException(getCompilationTask().getException());
+				Driver.throwException(getCompilationTask().getException());
 			}
 			return compilationResult;
 		}

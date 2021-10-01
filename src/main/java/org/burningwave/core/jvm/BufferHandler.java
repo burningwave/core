@@ -33,7 +33,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -270,7 +269,7 @@ public class BufferHandler implements Component {
 					try {
 						this.wait();
 					} catch (InterruptedException exc) {
-						Throwables.throwException(exc);
+						Driver.throwException(exc);
 					}
 				}
 			}

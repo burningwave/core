@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.iterable;
 
+
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 
@@ -39,6 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.burningwave.core.ManagedLogger;
+
 
 @SuppressWarnings("unchecked")
 public class Properties extends java.util.Properties implements ManagedLogger {

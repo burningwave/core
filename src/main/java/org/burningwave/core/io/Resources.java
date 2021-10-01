@@ -29,45 +29,28 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
 
-import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.function.Executor;
-import org.burningwave.core.iterable.Properties;
 
 public class Resources {
+
 	
-	public Map.Entry<Properties, URL> loadFirstOneFound(String... fileNames) {
-		return loadFirstOneFound(new Properties(), fileNames);
+	public InputStream getAsInputStream(ClassLoader resourceClassLoader, String resourceRelativePath) {
+		return io.github.toolfactory.jvm.util.Resources.getAsInputStream(resourceClassLoader, resourceRelativePath);
 	}
 	
-	public Map.Entry<Properties, URL> loadFirstOneFound(Properties properties, String... fileNames) {
-		Map.Entry<org.burningwave.core.iterable.Properties, URL> propertiesBag = new AbstractMap.SimpleEntry<>(properties, null);
-		for (String fileName : fileNames) {
-			ClassLoader classLoader = StaticComponentContainer.class.getClassLoader();
-			InputStream propertiesFileIS = getAsInputStream(classLoader, fileName);
-			if (propertiesFileIS != null) {				
-				try {
-					properties.load(propertiesFileIS);
-					URL configFileURL = getURL(classLoader, fileName);
-					propertiesBag.setValue(configFileURL);
-					break;
-				} catch (Throwable exc) {
-					Throwables.throwException(exc);
-				}
-			}
-		}
-		return propertiesBag;
+	public Map<URL, InputStream> getAsInputStreams(ClassLoader resourceClassLoader, String resourceRelativePath) throws IOException {
+		return io.github.toolfactory.jvm.util.Resources.getAsInputStreams(resourceClassLoader, resourceRelativePath);
 	}
+	
 	
 	public FileSystemItem get(Class<?> cls) {
 		return FileSystemItem.of(Classes.getClassLoader(cls).getResource(Classes.toPath(cls)));
@@ -77,13 +60,6 @@ public class Resources {
 		String classRelativePath = Classes.toPath(cls);
 		String classAbsolutePath = FileSystemItem.of(Classes.getClassLoader(cls).getResource(classRelativePath)).getAbsolutePath();
 		return FileSystemItem.ofPath(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf(classRelativePath) - 1) );
-	}
-	
-	public InputStream getAsInputStream(ClassLoader resourceClassLoader, String resourceRelativePath) {
-		if (resourceClassLoader == null) {
-			resourceClassLoader = ClassLoader.getSystemClassLoader();
-		}
-		return resourceClassLoader.getResourceAsStream(resourceRelativePath);
 	}
 	
 	public StringBuffer getAsStringBuffer(ClassLoader resourceClassLoader, String resourceRelativePath) {

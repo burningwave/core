@@ -37,7 +37,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -232,7 +232,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			if (className.startsWith("java.")) {
 				cls = Class.forName(className);
 			} else {
-				Throwables.throwException(exc);
+				Driver.throwException(exc);
 			}			
 		}
     	removeNotLoadedBytecode(className);
@@ -441,7 +441,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		return closeResources(MemoryClassLoader.class.getName() + "@" + System.identityHashCode(this), () -> isClosed, () -> {
 			Collection<Object> clients = this.clients;
 			if (clients != null && !clients.isEmpty()) {
-				Throwables.throwException("Could not close {} because there are {} registered clients", this, clients.size());
+				Driver.throwException("Could not close {} because there are {} registered clients", this, clients.size());
 			}
 			isClosed = true;
 			ClassLoader parentClassLoader = ClassLoaders.getParent(this);

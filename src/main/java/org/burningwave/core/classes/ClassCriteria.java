@@ -32,7 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.BufferHand
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.lang.reflect.Member;
 import java.util.Collection;
@@ -116,7 +116,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 			try {
 				return ClassLoaders.loadOrDefine(cls, classSupplier);
 			} catch (ClassNotFoundException exc) {
-				return Throwables.throwException(exc);
+				return Driver.throwException(exc);
 			}
 		};
 		this.byteCodeSupplier = Classes::getByteCode;

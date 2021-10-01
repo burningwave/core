@@ -33,7 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.ThreadHolder;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,6 +48,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -629,7 +630,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		
 		public T runOnlyOnce(String id, Supplier<Boolean> hasBeenExecutedChecker) {
 			if (isSubmitted()) {
-				Throwables.throwException(new TaskStateException(this, "is submitted"));
+				Driver.throwException(new TaskStateException(this, "is submitted"));
 			}
 			runOnlyOnce = true;
 			this.id = id;
@@ -684,21 +685,21 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 									if (ignoreDeadLocked) {
 										return false;
 									}
-									Throwables.throwException(new TaskStateException(this, "could be dead locked"));
+									Driver.throwException(new TaskStateException(this, "could be dead locked"));
 								}
 								if (isAborted()) {
-									Throwables.throwException(new TaskStateException(this, "is aborted"));
+									Driver.throwException(new TaskStateException(this, "is aborted"));
 								}
 								wait();
 								return true;
 							} catch (InterruptedException exc) {
-								Throwables.throwException(exc);
+								Driver.throwException(exc);
 							}
 						}
 					}
 				}
 			} else {
-				Throwables.throwException(new TaskStateException(this, "is not submitted"));
+				Driver.throwException(new TaskStateException(this, "is not submitted"));
 			}
 			return false;
 		}		
@@ -726,21 +727,21 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 									if (ignoreDeadLocked) {
 										return false;
 									}
-									Throwables.throwException(new TaskStateException(this, "could be dead locked"));
+									Driver.throwException(new TaskStateException(this, "could be dead locked"));
 								}
 								if (isAborted()) {
-									Throwables.throwException(new TaskStateException(this, "is aborted"));
+									Driver.throwException(new TaskStateException(this, "is aborted"));
 								}
 								wait();
 								return true;
 							} catch (InterruptedException exc) {
-								Throwables.throwException(exc);
+								Driver.throwException(exc);
 							}
 						}
 					}
 				}
 			} else {
-				Throwables.throwException(new TaskStateException(this, "is not submitted"));
+				Driver.throwException(new TaskStateException(this, "is not submitted"));
 			}
 			return false;
 		}
@@ -860,18 +861,18 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		
 		public final T submit() {
 			if (aborted) {
-				Throwables.throwException(new TaskStateException(this, "is aborted"));
+				Driver.throwException(new TaskStateException(this, "is aborted"));
 			}
 			if (!submitted) {
 				synchronized(this) {
 					if (!submitted) {
 						submitted = true;
 					} else {
-						Throwables.throwException(new TaskStateException(this, "is already submitted"));
+						Driver.throwException(new TaskStateException(this, "is already submitted"));
 					}
 				}
 			} else {
-				Throwables.throwException(new TaskStateException(this, "is already submitted"));
+				Driver.throwException(new TaskStateException(this, "is already submitted"));
 			}
 			return addToQueue();
 		}
@@ -952,39 +953,81 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		String name;
 		Map<String, QueuedTasksExecutor> queuedTasksExecutors;
 		TasksMonitorer allTasksMonitorer;
+		Consumer<Group> initializator;
+		
+		
 		
 		Group(String name, 
 			Thread.Supplier threadSupplierForHighPriorityTasksExecutor,
 			Thread.Supplier threadSupplierForNormalPriorityTasksExecutor,
 			Thread.Supplier threadSupplierForLowPriorityTasksExecutor,
 			boolean isDaemon
-		) {
-			this.name = name;
-			queuedTasksExecutors = new HashMap<>();
-			queuedTasksExecutors.put(
-				String.valueOf(java.lang.Thread.MAX_PRIORITY),
-				createQueuedTasksExecutor(
-					name + " - High priority tasks",
-					threadSupplierForHighPriorityTasksExecutor,
-					java.lang.Thread.MAX_PRIORITY, isDaemon
-				)
-			);
-			queuedTasksExecutors.put(
-				String.valueOf(java.lang.Thread.NORM_PRIORITY),
-				createQueuedTasksExecutor(
-					name + " - Normal priority tasks",
-					threadSupplierForNormalPriorityTasksExecutor,
-					java.lang.Thread.NORM_PRIORITY, isDaemon
-				)
-			);
-			queuedTasksExecutors.put(
-				String.valueOf(java.lang.Thread.MIN_PRIORITY),
-				createQueuedTasksExecutor(
-					name + " - Low priority tasks", 
-					threadSupplierForLowPriorityTasksExecutor,
-					java.lang.Thread.MIN_PRIORITY, isDaemon
-				)
-			);
+		) {	
+			//Implemented deferred initialization (since 10.0.0, the previous version is 9.5.2)
+			initializator = queuedTasksExecutorGroup -> {
+				queuedTasksExecutorGroup.name = name;
+				queuedTasksExecutorGroup.queuedTasksExecutors = new HashMap<>();
+				queuedTasksExecutorGroup.queuedTasksExecutors.put(
+					String.valueOf(java.lang.Thread.MAX_PRIORITY),
+					createQueuedTasksExecutor(
+						name + " - High priority tasks",
+						threadSupplierForHighPriorityTasksExecutor,
+						java.lang.Thread.MAX_PRIORITY, isDaemon
+					)
+				);
+				queuedTasksExecutorGroup.queuedTasksExecutors.put(
+					String.valueOf(java.lang.Thread.NORM_PRIORITY),
+					createQueuedTasksExecutor(
+						name + " - Normal priority tasks",
+						threadSupplierForNormalPriorityTasksExecutor,
+						java.lang.Thread.NORM_PRIORITY, isDaemon
+					)
+				);
+				queuedTasksExecutorGroup.queuedTasksExecutors.put(
+					String.valueOf(java.lang.Thread.MIN_PRIORITY),
+					createQueuedTasksExecutor(
+						name + " - Low priority tasks", 
+						threadSupplierForLowPriorityTasksExecutor,
+						java.lang.Thread.MIN_PRIORITY, isDaemon
+					)
+				);
+			};
+		}
+		
+		public Group setTasksCreationTrackingFlag(boolean flag) {
+			if (initializator == null) {
+				setTasksCreationTrackingFlag(this, flag);
+			} else {
+				initializator = initializator.andThen(queuedTasksExecutorGroup -> {
+					setTasksCreationTrackingFlag(queuedTasksExecutorGroup, flag);
+				});
+			}
+			return this;
+		}
+
+		private void setTasksCreationTrackingFlag(Group queuedTasksExecutorGroup, boolean flag) {
+			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutorGroup.queuedTasksExecutors.entrySet()) {
+				queuedTasksExecutorBox.getValue().setTasksCreationTrackingFlag(flag);
+			}
+		}
+		
+		public Group startAllTasksMonitoring(TasksMonitorer.Config config) {
+			if (initializator == null) {
+				startAllTasksMonitoring(this, config);
+			} else {
+				initializator = initializator.andThen(queuedTasksExecutorGroup -> {
+					startAllTasksMonitoring(this, config);
+				});
+			}			
+			return this;
+		}
+
+		void startAllTasksMonitoring(Group queuedTasksExecutorGroup, TasksMonitorer.Config config) {
+			TasksMonitorer allTasksMonitorer = queuedTasksExecutorGroup.allTasksMonitorer;
+			if (allTasksMonitorer != null) {
+				allTasksMonitorer.close();
+			}
+			queuedTasksExecutorGroup.allTasksMonitorer = new TasksMonitorer(queuedTasksExecutorGroup, config).start();
 		}
 		
 		public static Group create(
@@ -1064,7 +1107,23 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 
 		QueuedTasksExecutor getByPriority(int priority) {
-			QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutors.get(String.valueOf(priority));
+			QueuedTasksExecutor queuedTasksExecutor = null;
+			//Implemented deferred initialization (since 10.0.0, the previous version is 9.5.2)
+			try {
+				queuedTasksExecutor = queuedTasksExecutors.get(String.valueOf(priority));
+			} catch (Exception e) {
+				if (queuedTasksExecutor == null) {
+					if (initializator != null) {
+						Synchronizer.execute("queuedTasksExecutorGroup.initialization", () -> {
+							if (initializator != null) {
+								initializator.accept(this);
+								initializator = null;
+							}
+						});
+					}						
+				}
+				return getByPriority(priority);
+			}
 			if (queuedTasksExecutor == null) {
 				queuedTasksExecutor = queuedTasksExecutors.get(String.valueOf(checkAndCorrectPriority(priority)));
 			}	
@@ -1220,21 +1279,27 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 		
 		public Group waitForTasksEnding(int priority, boolean waitForNewAddedTasks, boolean ignoreDeadLocked) {
-			QueuedTasksExecutor lastToBeWaitedFor = getByPriority(priority);
-			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
-				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
-				if (queuedTasksExecutor != lastToBeWaitedFor) {
-					queuedTasksExecutor.waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
+			//Implemented deferred initialization (since 10.0.0, the previous version is 9.5.2)
+			Synchronizer.execute("queuedTasksExecutorGroup.initialization", () -> {
+				if (initializator != null) {
+					return;
 				}
-			}
-			lastToBeWaitedFor.waitForTasksEnding(priority, waitForNewAddedTasks);	
-			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
-				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
-				if (waitForNewAddedTasks && (!queuedTasksExecutor.tasksQueue.isEmpty() || !queuedTasksExecutor.tasksInExecution.isEmpty())) {
-					waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
-					break;
+				QueuedTasksExecutor lastToBeWaitedFor = getByPriority(priority);
+				for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+					QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
+					if (queuedTasksExecutor != lastToBeWaitedFor) {
+						queuedTasksExecutor.waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
+					}
 				}
-			}
+				lastToBeWaitedFor.waitForTasksEnding(priority, waitForNewAddedTasks);	
+				for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+					QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
+					if (waitForNewAddedTasks && (!queuedTasksExecutor.tasksQueue.isEmpty() || !queuedTasksExecutor.tasksInExecution.isEmpty())) {
+						waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
+						break;
+					}
+				}
+			});
 			return this;
 		}
 
@@ -1247,13 +1312,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				task.changePriority(priority);
 			}
 			task.waitForFinish(ignoreDeadLocked);
-			return this;
-		}
-		
-		public Group setTasksCreationTrackingFlag(boolean flag) {
-			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
-				queuedTasksExecutorBox.getValue().setTasksCreationTrackingFlag(flag);
-			}
 			return this;
 		}
 		
@@ -1293,22 +1351,13 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			return tasksInExecution;
 		}
 		
-		public Group startAllTasksMonitoring(TasksMonitorer.Config config) {
-			TasksMonitorer allTasksMonitorer = this.allTasksMonitorer;
-			if (allTasksMonitorer != null) {
-				allTasksMonitorer.close();
-			}
-			this.allTasksMonitorer = new TasksMonitorer(this, config).start();
-			return this;
-		}
-		
 		public Group startAllTasksMonitoring() {
 			TasksMonitorer allTasksMonitorer = this.allTasksMonitorer;
 			if (allTasksMonitorer != null) {
 				allTasksMonitorer.start();
 				return this;
 			}
-			return Throwables.throwException("All tasks monitorer has not been configured");
+			return Driver.throwException("All tasks monitorer has not been configured");
 		}
 		
 		public Group stopAllTasksMonitoring() {
@@ -1320,18 +1369,25 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 		
 		public boolean shutDown(boolean waitForTasksTermination) {
-			QueuedTasksExecutor lastToBeWaitedFor = getByPriority(java.lang.Thread.currentThread().getPriority());
-			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
-				QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
-				if (queuedTasksExecutor != lastToBeWaitedFor) {
-					queuedTasksExecutor.shutDown(waitForTasksTermination);
+			//Implemented deferred initialization (since 10.0.0, the previous version is 9.5.2)
+			Synchronizer.execute("queuedTasksExecutorGroup.initialization", () -> {
+				if (initializator != null) {
+					initializator = null;
+					return;
 				}
-			}
-			lastToBeWaitedFor.shutDown(waitForTasksTermination);
-			allTasksMonitorer.close(waitForTasksTermination);
-			allTasksMonitorer = null;
-			queuedTasksExecutors.clear();
-			queuedTasksExecutors = null;
+				QueuedTasksExecutor lastToBeWaitedFor = getByPriority(java.lang.Thread.currentThread().getPriority());
+				for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+					QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
+					if (queuedTasksExecutor != lastToBeWaitedFor) {
+						queuedTasksExecutor.shutDown(waitForTasksTermination);
+					}
+				}
+				lastToBeWaitedFor.shutDown(waitForTasksTermination);
+				allTasksMonitorer.close(waitForTasksTermination);
+				allTasksMonitorer = null;
+				queuedTasksExecutors.clear();
+				queuedTasksExecutors = null;
+			});
 			return true;
 		}
 		

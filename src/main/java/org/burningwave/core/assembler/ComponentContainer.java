@@ -32,13 +32,13 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Background
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.InputStream;
 import java.util.Arrays;
@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -133,22 +134,28 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	public final static ComponentContainer create(String configFileName) {
 		try {
 			return new ComponentContainer(() -> {
+				
+				
 				try(InputStream inputStream = Resources.getAsInputStream(ComponentContainer.class.getClassLoader(), configFileName)) {
-					Properties config = new Properties();
-					if (inputStream != null) {
-						config.load(inputStream);
-						ManagedLoggersRepository.logInfo(() -> ComponentContainer.class.getName(), configFileName + " loaded");
-					} else {
-						ManagedLoggersRepository.logInfo(() -> ComponentContainer.class.getName(), configFileName + " not found");
+					Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
+					classLoaders.add(ComponentContainer.class.getClassLoader());
+					classLoaders.add(Thread.currentThread().getContextClassLoader());
+					java.util.Properties config = io.github.toolfactory.jvm.util.Properties.loadFromResourcesAndMerge(
+						configFileName,
+						"priority-of-this-configuration-file",
+						classLoaders.toArray(new ClassLoader[classLoaders.size()])
+					);
+					if (config.isEmpty()) {
+						ManagedLoggersRepository.logInfo(ComponentContainer.class::getName, "No custom properties found for file {}", configFileName);
 					}
 					return config;
 				} catch (Throwable exc) {
-					return Throwables.throwException(exc);
+					return Driver.throwException(exc);
 				}
 			}).init();
 		} catch (Throwable exc){
 			ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
-			return Throwables.throwException(exc);
+			return Driver.throwException(exc);
 		}
 	}
 	
@@ -157,7 +164,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			return new ComponentContainer(() -> properties).init();
 		} catch (Throwable exc){
 			ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
-			return Throwables.throwException(exc);
+			return Driver.throwException(exc);
 		}
 	}
 	
@@ -533,7 +540,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				instanceId = null;
 			});
 		} else {
-			Throwables.throwException("Could not close singleton instance {}", LazyHolder.COMPONENT_CONTAINER_INSTANCE);
+			Driver.throwException("Could not close singleton instance {}", LazyHolder.COMPONENT_CONTAINER_INSTANCE);
 		}
 	}
 	

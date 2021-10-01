@@ -29,7 +29,7 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -207,7 +207,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 	
 	public S useAsParentClassLoader(ClassLoader classLoader) {
 		if (classLoader == null)  {
-			Throwables.throwException("Parent class loader could not be null");
+			Driver.throwException("Parent class loader could not be null");
 		}
 		useDefaultPathScannerClassLoader = false;
 		useDefaultPathScannerClassLoaderAsParent = false;

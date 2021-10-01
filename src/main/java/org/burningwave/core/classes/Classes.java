@@ -30,8 +30,8 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
-import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
@@ -43,7 +43,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -423,7 +422,7 @@ public class Classes implements MembersRetriever {
 						methods.stream().skip(methods.size() - 1).findFirst().get()
 					));
 				} catch (Throwable exc) {
-					Throwables.throwException(exc);
+					Driver.throwException(exc);
 				}
 			}
 			return classLoader;
@@ -478,7 +477,7 @@ public class Classes implements MembersRetriever {
 			try {
 				return getGetClassLoadingLockMethod(classLoader).invoke(classLoader, className);
 			} catch (Throwable exc) {
-				return Throwables.throwException(exc);
+				return Driver.throwException(exc);
 			}
 		}
 		
@@ -570,7 +569,7 @@ public class Classes implements MembersRetriever {
 			
 			}
 			if (packages == null) {
-				Throwables.throwException("Could not find packages Map on {}", classLoader);
+				Driver.throwException("Could not find packages Map on {}", classLoader);
 			}
 			return packages;
 			
@@ -736,7 +735,7 @@ public class Classes implements MembersRetriever {
 				if (byteCode == null) {
 					throw new ClassNotFoundException(className);
 				}
-				return Throwables.throwException(exc);
+				return Driver.throwException(exc);
 			}
 		}
 		
@@ -971,7 +970,7 @@ public class Classes implements MembersRetriever {
 							).collect(Collectors.toSet())
 						);
 					} catch (IOException exc) {
-						Throwables.throwException(exc);
+						Driver.throwException(exc);
 					}
 				}
 			}
@@ -994,7 +993,7 @@ public class Classes implements MembersRetriever {
 				this.classLoadersPackages = null;
 				this.builtinClassLoaderClassParentField = null;
 			} else {
-				Throwables.throwException("Could not close singleton instance {}", this);
+				Driver.throwException("Could not close singleton instance {}", this);
 			}
 		}
 		

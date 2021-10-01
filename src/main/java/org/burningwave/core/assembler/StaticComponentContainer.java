@@ -28,22 +28,24 @@
  */
 package org.burningwave.core.assembler;
 
-import java.net.URL;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
+
 import io.github.toolfactory.jvm.Driver;
 
 
@@ -63,7 +65,9 @@ public class StaticComponentContainer {
 			private static final String JVM_DRIVER = "jvm.driver";
 			private static final String MODULES_EXPORT_ALL_TO_ALL = "modules.export-all-to-all";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED = "synchronizer.all-threads-monitoring.enabled";
-			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";	
+			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";
+			private static final String ON_CLOSE_CLOSE_FILE_SYSTEM_HELPER = "static-component-container.on-close.close-file-system-helper";
+			private static final String ON_CLOSE_CLOSE_ALL_COMPONENT_CONTAINERS = "static-component-container.on-close.close-all-component-containers";
 		}
 		
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -125,6 +129,16 @@ public class StaticComponentContainer {
 				defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
 			}
 			
+			defaultValues.put(
+				Key.ON_CLOSE_CLOSE_ALL_COMPONENT_CONTAINERS,
+				true
+			);
+			
+			defaultValues.put(
+				Key.ON_CLOSE_CLOSE_FILE_SYSTEM_HELPER,
+				true
+			);
+			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
@@ -139,14 +153,14 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.Cache Cache;
 	public static final org.burningwave.core.classes.Classes Classes;
 	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
-	//Since to 9.4.0 (previous version is 9.3.6)
+	//Since 9.4.0 (previous version is 9.3.6)
 	public static final io.github.toolfactory.jvm.Driver Driver;
 	public static final org.burningwave.core.classes.Constructors Constructors;
 	public static final org.burningwave.core.io.FileSystemHelper FileSystemHelper;
 	public static final org.burningwave.core.classes.Fields Fields;
 	public static final org.burningwave.core.iterable.Properties GlobalProperties;
 	public static final org.burningwave.core.iterable.IterableObjectHelper IterableObjectHelper;
-	//Since to 9.4.0
+	//Since 9.4.0
 	public static final io.github.toolfactory.jvm.Info JVMInfo;
 	public static final org.burningwave.core.ManagedLogger.Repository ManagedLoggersRepository;
 	public static final org.burningwave.core.classes.Members Members;
@@ -161,14 +175,12 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.concurrent.Synchronizer Synchronizer;
 	public static final org.burningwave.core.concurrent.Thread.Holder ThreadHolder;
 	public static final org.burningwave.core.concurrent.Thread.Supplier ThreadSupplier;
-	public static final org.burningwave.core.Throwables Throwables;
 	
 	static {
 		try {
 			long startTime = System.nanoTime();
 			JVMInfo = io.github.toolfactory.jvm.Info.Provider.getInfoInstance();
 			Strings = org.burningwave.core.Strings.create();
-			Throwables = org.burningwave.core.Throwables.create();
 			Objects = org.burningwave.core.Objects.create();
 			Resources = new org.burningwave.core.io.Resources();
 			Properties properties = new Properties();
@@ -177,8 +189,10 @@ public class StaticComponentContainer {
 			properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.concurrent.Thread.Supplier.Configuration.DEFAULT_VALUES);
 			properties.putAll(Configuration.DEFAULT_VALUES);
-			Map.Entry<org.burningwave.core.iterable.Properties, URL> propBag =
-				Resources.loadFirstOneFound(properties, "burningwave.static.properties", "burningwave.static.default.properties");
+			String configFileName = "burningwave.static.properties";
+			java.util.Properties propertiesFromConfigurationFile = loadPropertiesFromFile(configFileName);
+			properties.putAll(propertiesFromConfigurationFile);
+	
 			GlobalPropertiesListener = new org.burningwave.core.iterable.Properties.Listener() {
 				@Override
 				public <K, V> void processChangeNotification(Properties config, org.burningwave.core.iterable.Properties.Event event, K key, V newValue, V previousValue) {
@@ -201,7 +215,7 @@ public class StaticComponentContainer {
 									}
 								}
 								if (mustThrowException) {
-									Throwables.throwException("The reconfiguration of property '{}' is not allowed", key);
+									Driver.throwException("The reconfiguration of property '{}' is not allowed", key);
 								}
 							} else if (keyAsString.equals(ManagedLogger.Repository.Configuration.Key.TYPE)) {
 								ManagedLogger.Repository toBeReplaced = ManagedLoggersRepository;
@@ -250,7 +264,7 @@ public class StaticComponentContainer {
 					}
 					
 				}				
-			}.listenTo(GlobalProperties = propBag.getKey());
+			}.listenTo(GlobalProperties = properties);
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
 			String driverClassName = GlobalProperties.resolveValue(
 				Configuration.Key.JVM_DRIVER
@@ -288,18 +302,8 @@ public class StaticComponentContainer {
 				showBanner();
 			}
 			ManagedLoggersRepository = ManagedLogger.Repository.create(GlobalProperties);
-			URL globalPropertiesFileUrl = propBag.getValue();
-			if (globalPropertiesFileUrl != null) {
-				ManagedLoggersRepository.logInfo(
-					StaticComponentContainer.class::getName, 
-					"Building static components by using " + Executor.get(() ->
-						URLDecoder.decode(
-							globalPropertiesFileUrl.toString(), StandardCharsets.UTF_8.name()
-						)
-					)
-				);
-			} else {
-				ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Building static components by using default configuration");
+			if (propertiesFromConfigurationFile.isEmpty()) {
+				ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "No custom properties found for file {}", configFileName);
 			}
 			ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Instantiated {}", ManagedLoggersRepository.getClass().getName());
 			ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName,
@@ -322,43 +326,60 @@ public class StaticComponentContainer {
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
 			Runtime.getRuntime().addShutdownHook(
 				ThreadSupplier.getOrCreate(getName("Resource releaser")).setExecutable(thread -> {
-					Executor.runAndIgnoreExceptions(
-						() -> {
-							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "... Waiting for all tasks ending before closing all component containers");
+					org.burningwave.core.function.ThrowingRunnable<Throwable> closingOperations = () -> {
+						Executor.runAndIgnoreExceptions(() -> {
+							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "... Waiting for all tasks ending");
 							BackgroundExecutor.waitForTasksEnding(true, true);
-						},
-						() -> {
-							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing all component containers");
-							ComponentContainer.closeAll();
-						},
-						() -> {
-							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing FileSystemHelper");
-							FileSystemHelper.close();
-						},
-						() -> {
-							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "... Waiting for all tasks ending before shuting down BackgroundExecutor");
+						});
+					};
+					if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.ON_CLOSE_CLOSE_ALL_COMPONENT_CONTAINERS))) {
+						closingOperations = closingOperations.andThen(() -> {
+							Executor.runAndIgnoreExceptions(() -> {
+								ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing all component containers");
+								ComponentContainer.closeAll();
+							});
+						});
+					}
+					if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.ON_CLOSE_CLOSE_FILE_SYSTEM_HELPER))) {
+						closingOperations = closingOperations.andThen(() -> {
+							Executor.runAndIgnoreExceptions(() -> {
+								ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing FileSystemHelper");
+								FileSystemHelper.close();
+							});
+						});
+					}
+					closingOperations = closingOperations.andThen(() -> {
+						Executor.runAndIgnoreExceptions(() -> {
+							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "... Waiting for all tasks ending before shutting down the BackgroundExecutor");
 							BackgroundExecutor.waitForTasksEnding(true, true);
-						},
-						() -> {
-							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Shuting down BackgroundExecutor");
+						});
+					}).andThen(() -> {
+						Executor.runAndIgnoreExceptions(() -> {
+							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Shutting down BackgroundExecutor");
 							BackgroundExecutor.shutDown(false);
-						},
-						() -> {
+						});
+
+					}).andThen(() -> {
+						Executor.runAndIgnoreExceptions(() -> {
 							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Stopping all threads monitoring thread");
 							Synchronizer.stopAllThreadsMonitoring(false);
-						},
-						() -> {
+						});
+					}).andThen(() -> {
+						Executor.runAndIgnoreExceptions(() -> {
 							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing ThreadHolder");
 							ThreadHolder.close();
-						},
-						() -> {
-							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Shuting down ThreadSupplier");
+						});
+					}).andThen(() -> {
+						Executor.runAndIgnoreExceptions(() -> {
+							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Shutting down ThreadSupplier");
 							ThreadSupplier.shutDownAll();
-						}
-					);
+						});
+					});
+					
+					Executor.runAndIgnoreExceptions(closingOperations);
+
 				})
 			);
-			FileSystemHelper.startSweeping();
 			ManagedLoggersRepository.logInfo(
 				StaticComponentContainer.class::getName, 
 				"{} initialized in {} seconds",
@@ -399,6 +420,19 @@ public class StaticComponentContainer {
 			throw new RuntimeException(exc);
 		} 
 		
+	}
+
+
+	static  java.util.Properties loadPropertiesFromFile(String fileName) throws IOException {
+		Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
+		classLoaders.add(StaticComponentContainer.class.getClassLoader());
+		classLoaders.add(Thread.currentThread().getContextClassLoader());
+
+		return io.github.toolfactory.jvm.util.Properties.loadFromResourcesAndMerge(
+			fileName,
+			"priority-of-this-configuration-file",
+			classLoaders.toArray(new ClassLoader[classLoaders.size()])
+		);
 	}
 	
 	

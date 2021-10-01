@@ -35,7 +35,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
-import static org.burningwave.core.assembler.StaticComponentContainer.Throwables;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -306,7 +306,7 @@ class PathHelperImpl implements Component, PathHelper {
 			}
 			return pathGroup;
 		} else {
-			return Throwables.throwException("classPaths parameter is null");
+			return Driver.throwException("classPaths parameter is null");
 		}
 	}
 	
@@ -387,11 +387,11 @@ class PathHelperImpl implements Component, PathHelper {
 					filesFound.put(fileSystemItem.getAbsolutePath(), fileSystemItem);
 					filesInfo.append("\t" + System.identityHashCode(file) + ": " + fileSystemItem.getAbsolutePath() + "\n");
 				} else {
-					Throwables.throwException("Found more than one resource under relative path {}",  resourceRelativePath);
+					Driver.throwException("Found more than one resource under relative path {}",  resourceRelativePath);
 				}
 			}
 			if (filesFound.size() > 1) {
-				Throwables.throwException("Found more than one resource under relative path " + resourceRelativePath + ":\n" + filesInfo.toString());
+				Driver.throwException("Found more than one resource under relative path " + resourceRelativePath + ":\n" + filesInfo.toString());
 			} else {
 				FileSystemItem fileSystemItem = FileSystemItem.ofPath(filesFound.keySet().stream().findFirst().get());
 				ManagedLoggersRepository.logWarn(getClass()::getName, "Found more than one resource under relative path " + resourceRelativePath + ":\n" + filesInfo.toString() + "\t" +
@@ -474,7 +474,7 @@ class PathHelperImpl implements Component, PathHelper {
 	public String getPath(Predicate<String> pathPredicate) {
 		Collection<String> classPathsFound = getPaths(pathPredicate);
 		if (classPathsFound.size() > 1) {
-			Throwables.throwException("Found more than one class path for predicate {}", pathPredicate);
+			Driver.throwException("Found more than one class path for predicate {}", pathPredicate);
 		}
 		return classPathsFound.stream().findFirst().orElseGet(() -> null);
 	}
