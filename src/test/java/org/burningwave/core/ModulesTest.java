@@ -9,7 +9,6 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 
-import org.burningwave.core.assembler.StaticComponentContainer;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -18,14 +17,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SuppressWarnings("unchecked")
 public class ModulesTest extends BaseTest {
-
-	public static void main(String[] args) {
-		if (StaticComponentContainer.Modules != null) {
-		    StaticComponentContainer.Modules.exportAllToAll();
-		}
-		System.out.println();
-	}
-	
 	
 	@Test
 	@Order(1)
