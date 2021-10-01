@@ -530,7 +530,7 @@ public class TaskLauncher implements ManagedLogger {
 <br/>
 
 # <a name="Reaching-a-resource-of-the-file-system"></a>Reaching a resource of the file system
-Through **FileSystemItem** you can reach a resource of the file system even if it is contained in a nested supported (**zip, jar, war, ear, jmod**) compressed archive and obtain the content of it or other informations such as if it is a folder or a file or a compressed archive or if it is a compressed entry or obtain, if it is a folder or a compressed archive, the direct children or all nested children or a filtered collection of them. You can retrieve a FileSystemItem through an absolute path or through a relative path referred to your classpath by using the PathHelper. FileSystemItems are cached and **there will only be one instance of them for an absolute path** and you can also clear the cache e reload all informations of a FileSystemItem. In the example below we show how to retrieve and use a FileSystemItem.
+Through **FileSystemItem** you can reach a resource of the file system even if it is contained in a nested supported (**zip, jar, war, ear, jmod**) compressed archive and obtain the content of it or other informations such as if it is a folder or a file or a compressed archive or if it is a compressed entry or obtain, if it is a folder or a compressed archive, the direct children or all nested children or a filtered collection of them. You can retrieve a FileSystemItem through an absolute path or through a relative path referred to your class path by using the PathHelper. FileSystemItems are cached and **there will only be one instance of them for an absolute path** and you can also clear the cache e reload all informations of a FileSystemItem. In the example below we show how to retrieve and use a FileSystemItem.
 
 ```java
 package org.burningwave.core.examples.filesystemitem;
@@ -1030,7 +1030,7 @@ public class UseOfStaticComponentsExample {
 }
 ```
 ### <a name="static-components-configuration-file">Configuration
-The configuration of this type of container is done via **burningwave.static.properties** file: the library looks for all files with this name and **merges them according to
+The configuration of this type of container is done via **burningwave.static.properties** file that must be located in the base path of your class path: the library looks for all files with this name and **merges them according to
 to the property `priority-of-this-configuration-file` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. **If no configuration files are found, the library programmatically sets the default configuration with following values**:
 ```properties
 background-executor.all-tasks-monitoring.enabled=\
@@ -1158,9 +1158,8 @@ public class RetrievingDynamicComponentContainerAndComponents {
 ```
 ### Configuration
 The configuration of this type of container can be done via Properties file or programmatically via a Properties object.
-If you use the singleton instance obtained via **`ComponentContainer.getInstance()`** method, you must create a **burningwave.properties** file and put it on base path of your classpath project: the library looks for all files with this name and **merges them according to
+If you use the singleton instance obtained via **`ComponentContainer.getInstance()`** method, you must create a **burningwave.properties** file and put it on base path of your class path project: the library looks for all files with this name and **merges them according to
 to the property `priority-of-this-configuration-file` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. **If no configuration files are found, the library programmatically sets the default configuration with following values**:
-**The default configuration automatically loaded if no configuration file is found is the following**:
 ```properties
 byte-code-hunter.default-path-scanner-class-loader=\
 	(Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
@@ -1296,7 +1295,7 @@ paths.main-class-repositories=\
 ```
 **If in your custom burningwave.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 
-If you create a component container instance through method **`ComponentContainer.create(String relativeConfigFileName)`**, you can specify the file name of your properties file and you can locate it everywhere in your classpath project but remember to use a relative path in this case, i.e.: if you name your file "custom-config-file.properties" and put it in package "org.burningwave" you must create the component container as follow: 
+If you create a component container instance through method **`ComponentContainer.create(String relativeConfigFileName)`**, you can specify the file name of your properties file and you can locate it everywhere in your class path project but remember to use a relative path in this case, i.e.: if you name your file "custom-config-file.properties" and put it in package "org.burningwave" you must create the component container as follow: 
 ```java
 ComponentContainer.create("org/burningwave/custom-config-file.properties")
 ```
@@ -1333,7 +1332,7 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 		</li>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/How-to-retrieve-all-classes-of-the-classpath">
-			<b>USE CASE</b>: retrieving  all classes of the classpath
+			<b>USE CASE</b>: retrieving  all classes of the class path
 			</a>
 		</li>
 		<li>
