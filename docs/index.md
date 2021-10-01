@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/9)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1287687100)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1294494753)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1287687100)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1294494753)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -49,7 +49,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>9.5.1</version>
+    <version>10.0.0</version>
 </dependency>
 ```
 
@@ -1008,7 +1008,6 @@ public static final org.burningwave.core.Strings Strings;
 public static final org.burningwave.core.concurrent.Synchronizer Synchronizer;
 public static final org.burningwave.core.concurrent.Thread.Holder ThreadHolder;
 public static final org.burningwave.core.concurrent.Thread.Supplier ThreadSupplier;
-public static final org.burningwave.core.Throwables Throwables;
 ```
 
 ... That can be used within your application, simply adding a static import to your compilation unit, i.e.:
@@ -1031,7 +1030,8 @@ public class UseOfStaticComponentsExample {
 }
 ```
 ### <a name="static-components-configuration-file">Configuration
-The configuration of this type of container is done via **burningwave.static.properties** file or via **burningwave.static.default.properties** file: the library searches for the first file and if it does not find it, then it searches for the second file and if neither this one is found then the library sets the default configuration programmatically. **The default configuration loaded programmatically if no configuration file is found is the following**:
+The configuration of this type of container is done via **burningwave.static.properties** file: the library looks for all files with this name and **merges them according to
+to the `priority-of-this-configuration-file` property contained within it** which is optional but becomes mandatory if in the classpaths there are multiple files with the file name indicated above. **If no configuration files are found, the library programmatically sets the default configuration whit following values**:
 ```properties
 background-executor.all-tasks-monitoring.enabled=\
 	true
@@ -1081,6 +1081,12 @@ managed-logger.repository.logging.warn.disabled-for=\
 	org.burningwave.core.classes.SearchContext;
 modules.export-all-to-all=\
 	true
+#mandatory if more burningwave.static.properties file are in the class paths
+priority-of-this-configuration-file=0
+static-component-container.on-close.close-all-component-containers=\
+	false
+static-component-container.on-close.close-file-system-helper=\
+	false
 synchronizer.all-threads-monitoring.enabled=\
 	false
 synchronizer.all-threads-monitoring.interval=\
