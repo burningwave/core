@@ -47,7 +47,6 @@ import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
 import io.github.toolfactory.jvm.Driver;
-import io.github.toolfactory.jvm.Driver.Factory;
 
 
 public class StaticComponentContainer {
@@ -190,8 +189,10 @@ public class StaticComponentContainer {
 			properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.concurrent.Thread.Supplier.Configuration.DEFAULT_VALUES);
 			properties.putAll(Configuration.DEFAULT_VALUES);
-			properties.putAll(loadPropertiesFromFile());
-			
+			String configFileName = "burningwave.static.properties";
+			java.util.Properties propertiesFromConfigurationFile = loadPropertiesFromFile(configFileName);
+			properties.putAll(propertiesFromConfigurationFile);
+	
 			GlobalPropertiesListener = new org.burningwave.core.iterable.Properties.Listener() {
 				@Override
 				public <K, V> void processChangeNotification(Properties config, org.burningwave.core.iterable.Properties.Event event, K key, V newValue, V previousValue) {
@@ -301,6 +302,9 @@ public class StaticComponentContainer {
 				showBanner();
 			}
 			ManagedLoggersRepository = ManagedLogger.Repository.create(GlobalProperties);
+			if (propertiesFromConfigurationFile.isEmpty()) {
+				ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "No custom properties found for file {}", configFileName);
+			}
 			ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Instantiated {}", ManagedLoggersRepository.getClass().getName());
 			ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName,
 				"\n\n\tConfiguration values for static components:\n\n{}\n\n",
@@ -419,13 +423,13 @@ public class StaticComponentContainer {
 	}
 
 
-	static  java.util.Properties loadPropertiesFromFile() throws IOException {
+	static  java.util.Properties loadPropertiesFromFile(String fileName) throws IOException {
 		Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
-		classLoaders.add(Factory.class.getClassLoader());
+		classLoaders.add(StaticComponentContainer.class.getClassLoader());
 		classLoaders.add(Thread.currentThread().getContextClassLoader());
 
 		return io.github.toolfactory.jvm.util.Properties.loadFromResourcesAndMerge(
-			"burningwave.static.properties",
+			fileName,
 			"priority-of-this-configuration-file",
 			classLoaders.toArray(new ClassLoader[classLoaders.size()])
 		);
