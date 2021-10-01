@@ -1031,7 +1031,7 @@ public class UseOfStaticComponentsExample {
 ```
 ### <a name="static-components-configuration-file">Configuration
 The configuration of this type of container is done via **burningwave.static.properties** file: the library looks for all files with this name and **merges them according to
-to the `priority-of-this-configuration-file` property contained within it** which is optional but becomes mandatory if in the classpaths there are multiple files with the file name indicated above. **If no configuration files are found, the library programmatically sets the default configuration whit following values**:
+to the property `priority-of-this-configuration-file` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. **If no configuration files are found, the library programmatically sets the default configuration with following values**:
 ```properties
 background-executor.all-tasks-monitoring.enabled=\
 	true
@@ -1104,7 +1104,7 @@ thread-supplier.max-poolable-threads-count=\
 thread-supplier.poolable-thread-request-timeout=\
 	6000
 ```
-**If in your custom burningwave.static.properties or burningwave.static.default.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
+**If in your custom burningwave.static.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 [Here an example of a **burningwave.static.properties** file.](https://github.com/burningwave/core/blob/master/src/test/resources/burningwave.static.properties#L1)
 <br/>
 
@@ -1158,7 +1158,8 @@ public class RetrievingDynamicComponentContainerAndComponents {
 ```
 ### Configuration
 The configuration of this type of container can be done via Properties file or programmatically via a Properties object.
-If you use the singleton instance obtained via **`ComponentContainer.getInstance()`** method, you must create a **burningwave.properties** file and put it on base path of your classpath project.
+If you use the singleton instance obtained via **`ComponentContainer.getInstance()`** method, you must create a **burningwave.properties** file and put it on base path of your classpath project: the library looks for all files with this name and **merges them according to
+to the property `priority-of-this-configuration-file` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. **If no configuration files are found, the library programmatically sets the default configuration with following values**:
 **The default configuration automatically loaded if no configuration file is found is the following**:
 ```properties
 byte-code-hunter.default-path-scanner-class-loader=\
