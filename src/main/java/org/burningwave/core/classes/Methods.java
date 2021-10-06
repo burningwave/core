@@ -197,7 +197,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		try {
 			return (T)method.invoke(target, params);
 		} catch (Throwable exc) {
-			return Driver.invoke(method, target, params);
+			return Driver.invoke(target, method, params);
 		}
 	}
 	
