@@ -76,7 +76,7 @@ import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 
-import io.github.toolfactory.jvm.util.ClenableSupplier;
+import io.github.toolfactory.jvm.util.CleanableSupplier;
 
 @SuppressWarnings({"unchecked", "resource"})
 public class Classes implements MembersRetriever {
@@ -323,7 +323,7 @@ public class Classes implements MembersRetriever {
 	}
 	
 	public static class Loaders implements Closeable {
-		protected Map<ClassLoader, ClenableSupplier<Collection<Class<?>>>> classLoadersClasses;
+		protected Map<ClassLoader, CleanableSupplier<Collection<Class<?>>>> classLoadersClasses;
 		protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 		protected Map<String, MethodHandle> classLoadersMethods;
 		protected Field builtinClassLoaderClassParentField;
@@ -529,14 +529,14 @@ public class Classes implements MembersRetriever {
 			return method;
 		}
 		
-		private ClenableSupplier<Collection<Class<?>>> retrieveCleanableSupplier(ClassLoader classLoader) {
-			ClenableSupplier<Collection<Class<?>>> clenableSupplier = classLoadersClasses.get(classLoader);
+		private CleanableSupplier<Collection<Class<?>>> retrieveCleanableSupplier(ClassLoader classLoader) {
+			CleanableSupplier<Collection<Class<?>>> clenableSupplier = classLoadersClasses.get(classLoader);
 			if (clenableSupplier != null) {
 				return clenableSupplier;
 			} else {
 				synchronized (classLoadersClasses) {
 					if ((clenableSupplier = classLoadersClasses.get(classLoader)) == null) {
-						classLoadersClasses.put(classLoader, (clenableSupplier = Driver.retrieveLoadedClasses(classLoader)));
+						classLoadersClasses.put(classLoader, (clenableSupplier = Driver.getLoadedClassesRetriever(classLoader)));
 					}
 				}
 			}
