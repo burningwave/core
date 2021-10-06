@@ -38,6 +38,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -192,8 +193,8 @@ public class Synchronizer implements Closeable, ManagedLogger {
 		return log.toString();
 	}
 	
-	public java.lang.Thread[] getAllThreads() {
-		return Methods.invokeStaticDirect(java.lang.Thread.class, "getThreads");
+	public Set<java.lang.Thread> getAllThreads() {
+		return Thread.getAllStackTraces().keySet();
 	}
 	
 	public void startAllThreadsMonitoring(Long interval) {

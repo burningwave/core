@@ -35,7 +35,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Array;
 import java.lang.reflect.Executable;
@@ -569,18 +568,18 @@ public class Members implements ManagedLogger {
 			abstract MethodHandle retrieveMethodHandle(MethodHandles.Lookup consulter, E executable) throws NoSuchMethodException, IllegalAccessException; 
 			
 			public static class Box<E extends Executable> {
-				Lookup consulter;
+				MethodHandles.Lookup consulter;
 				E executable;
 				MethodHandle handler;
 				
-				Box(Lookup consulter, E executable, MethodHandle handler) {
+				Box(MethodHandles.Lookup consulter, E executable, MethodHandle handler) {
 					super();
 					this.consulter = consulter;
 					this.executable = executable;
 					this.handler = handler;
 				}
 
-				public Lookup getConsulter() {
+				public MethodHandles.Lookup getConsulter() {
 					return consulter;
 				}
 
