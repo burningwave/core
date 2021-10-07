@@ -31,7 +31,8 @@
 
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
-	<version>10.1.0-SNAPSHOT</version>
+	
+	<version>10.1.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Burningwave Core</name>
@@ -98,6 +99,7 @@
 		<jakarta.validation.version>2.0.2</jakarta.validation.version>
 		<junit-jupiter.version>5.8.0</junit-jupiter.version>
 		<junit.version>1.8.0</junit.version>
+		
 		<jvm-driver.version>5.1.0</jvm-driver.version>
 		<maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
 		<maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
