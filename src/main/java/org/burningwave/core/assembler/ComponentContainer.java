@@ -134,6 +134,8 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	public final static ComponentContainer create(String configFileName) {
 		try {
 			return new ComponentContainer(() -> {
+				
+				
 				try(InputStream inputStream = Resources.getAsInputStream(ComponentContainer.class.getClassLoader(), configFileName)) {
 					Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
 					classLoaders.add(ComponentContainer.class.getClassLoader());
