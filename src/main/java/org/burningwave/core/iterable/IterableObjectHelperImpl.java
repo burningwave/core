@@ -569,7 +569,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		Collection<O> outputCollection,
 		Predicate<Collection<T>> predicate
 	) {
-		if (predicate.test(items) && maxThreadCountsForParallelIteration >= Synchronizer.getAllThreads().length) {
+		if (predicate.test(items) && maxThreadCountsForParallelIteration >= Synchronizer.getAllThreads().size()) {
 			return iterateParallel(items, action, outputCollection);
 		} else {
 			Consumer<O> outputItemCollector = outputCollection != null ? 
