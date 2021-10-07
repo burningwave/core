@@ -32,12 +32,12 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Background
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -49,8 +49,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Predicate;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
@@ -100,11 +98,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     }
 
 	void addByteCode0(String className, ByteBuffer byteCode) {
-		if (ClassLoaders.retrieveLoadedClass(this, className) == null) {
-			notLoadedByteCodes.put(className, byteCode);
-		} else {
-			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not add bytecode for class {} cause it has already been added", className);
-		}
+		notLoadedByteCodes.put(className, byteCode);
 	}
     
     public Map.Entry<String, ByteBuffer> getNotLoadedByteCode(String className) {
@@ -366,9 +360,9 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	
-	public Set<Class<?>> getLoadedClassesForPackage(Predicate<Package> packagePredicate	) {
+	/*public Set<Class<?>> getLoadedClassesForPackage(Predicate<Package> packagePredicate	) {
 		return ClassLoaders.retrieveLoadedClassesForPackage(this, packagePredicate);
-	}
+	}*/
 	
 	Map<String, ByteBuffer> getLoadedBytecodes() {
 		return loadedByteCodes;
@@ -451,8 +445,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			clear();
 			notLoadedByteCodes = null;
 			loadedByteCodes = null;
-			Collection<Class<?>> loadedClasses = ClassLoaders.retrieveLoadedClasses(this);
-			loadedClasses.clear();
+			ClassLoaders.clearLoadedClasses(this);
 			unregister();
 			this.clients.clear();
 			this.clients = null;

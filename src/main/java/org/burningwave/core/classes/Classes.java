@@ -76,6 +76,8 @@ import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 
+import io.github.toolfactory.jvm.util.CleanableSupplier;
+
 @SuppressWarnings({"unchecked", "resource"})
 public class Classes implements MembersRetriever {
 	public static class Symbol{
@@ -321,7 +323,7 @@ public class Classes implements MembersRetriever {
 	}
 	
 	public static class Loaders implements Closeable {
-		protected Map<ClassLoader, Collection<Class<?>>> classLoadersClasses;
+		protected Map<ClassLoader, CleanableSupplier<Collection<Class<?>>>> classLoadersClasses;
 		protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 		protected Map<String, MethodHandle> classLoadersMethods;
 		protected Field builtinClassLoaderClassParentField;
@@ -527,24 +529,26 @@ public class Classes implements MembersRetriever {
 			return method;
 		}
 		
-		public Collection<Class<?>> retrieveLoadedClasses(ClassLoader classLoader) {
-			Collection<Class<?>> classes = classLoadersClasses.get(classLoader);
-			if (classes != null) {
-				return classes;
+		private CleanableSupplier<Collection<Class<?>>> retrieveCleanableSupplier(ClassLoader classLoader) {
+			CleanableSupplier<Collection<Class<?>>> clenableSupplier = classLoadersClasses.get(classLoader);
+			if (clenableSupplier != null) {
+				return clenableSupplier;
 			} else {
-				classes = classLoadersClasses.get(classLoader);
-				if (classes == null) {
-					synchronized (classLoadersClasses) {
-						classes = classLoadersClasses.get(classLoader);
-						if (classes == null) {
-							classLoadersClasses.put(classLoader, (classes = Driver.retrieveLoadedClasses(classLoader)));
-							return classes;
-						}
+				synchronized (classLoadersClasses) {
+					if ((clenableSupplier = classLoadersClasses.get(classLoader)) == null) {
+						classLoadersClasses.put(classLoader, (clenableSupplier = Driver.getLoadedClassesRetriever(classLoader)));
 					}
 				}
 			}
-			ManagedLoggersRepository.logWarn(getClass()::getName, "'classes' collection has not been initialized on {}: trying recursive call", classLoader);
-			return retrieveLoadedClasses(classLoader);
+			return clenableSupplier;
+		}
+		
+		public Collection<Class<?>> retrieveLoadedClasses(ClassLoader classLoader) {
+			return retrieveCleanableSupplier(classLoader).get();
+		}
+		
+		public void clearLoadedClasses(ClassLoader classLoader) {
+			retrieveCleanableSupplier(classLoader).clear();
 		}
 		
 		public Collection<Class<?>> retrieveAllLoadedClasses(ClassLoader classLoader) {
