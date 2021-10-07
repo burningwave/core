@@ -43,10 +43,6 @@ import org.burningwave.core.function.Executor;
 public class Resources {
 
 	
-	public InputStream getAsInputStream(ClassLoader resourceClassLoader, String resourceRelativePath) {
-		return io.github.toolfactory.jvm.util.Resources.getAsInputStream(resourceClassLoader, resourceRelativePath);
-	}
-	
 	public Map<URL, InputStream> getAsInputStreams(ClassLoader resourceClassLoader, String resourceRelativePath) throws IOException {
 		return io.github.toolfactory.jvm.util.Resources.getAsInputStreams(resourceClassLoader, resourceRelativePath);
 	}
@@ -60,6 +56,13 @@ public class Resources {
 		String classRelativePath = Classes.toPath(cls);
 		String classAbsolutePath = FileSystemItem.of(Classes.getClassLoader(cls).getResource(classRelativePath)).getAbsolutePath();
 		return FileSystemItem.ofPath(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf(classRelativePath) - 1) );
+	}
+	
+	public InputStream getAsInputStream(ClassLoader resourceClassLoader, String resourceRelativePath) {
+		if (resourceClassLoader == null) {
+			resourceClassLoader = ClassLoader.getSystemClassLoader();
+		}
+		return resourceClassLoader.getResourceAsStream(resourceRelativePath);
 	}
 	
 	public StringBuffer getAsStringBuffer(ClassLoader resourceClassLoader, String resourceRelativePath) {
