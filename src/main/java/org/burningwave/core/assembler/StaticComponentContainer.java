@@ -30,6 +30,7 @@ package org.burningwave.core.assembler;
 
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -423,7 +424,7 @@ public class StaticComponentContainer {
 	}
 
 
-	static  java.util.Properties loadPropertiesFromFile(String fileName) throws IOException {
+	static  java.util.Properties loadPropertiesFromFile(String fileName) throws IOException, ParseException {
 		Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
 		classLoaders.add(StaticComponentContainer.class.getClassLoader());
 		classLoaders.add(Thread.currentThread().getContextClassLoader());
