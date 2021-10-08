@@ -31,7 +31,6 @@
 
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
-	
 	<version>10.1.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
@@ -99,8 +98,8 @@
 		<jakarta.validation.version>2.0.2</jakarta.validation.version>
 		<junit-jupiter.version>5.8.0</junit-jupiter.version>
 		<junit.version>1.8.0</junit.version>
-		
-		<jvm-driver.version>5.1.0</jvm-driver.version>
+		<jvm-driver.version>5.3.0</jvm-driver.version>
+		<maven-antrun-plugin.version>3.0.0</maven-antrun-plugin.version>
 		<maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
 		<maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
 		<maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
@@ -142,11 +141,10 @@
 	
 		<dependency>
 			<groupId>org.burningwave</groupId>
-			<!-- <groupId>io.github.toolfactory</groupId> -->
 			<artifactId>jvm-driver</artifactId>
 			<version>${jvm-driver.version}</version>
 		</dependency>
-
+		
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
@@ -159,21 +157,24 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>jul-to-slf4j</artifactId>
 			<version>${slf4j.version}</version>
-			<scope>test</scope>
+			<scope>provided</scope>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-core</artifactId>
 			<version>${logback.version}</version>
-			<scope>test</scope>
+			<scope>provided</scope>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 			<version>${logback.version}</version>
-			<scope>test</scope>
+			<scope>provided</scope>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>
@@ -243,14 +244,63 @@
 		</testResources>
 		<plugins>
 			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>${maven-antrun-plugin.version}</version>
+				<executions>
+					<execution>
+                        <id>add-module-info-to-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <jar update="true" destfile="${project.build.directory}/${project.build.finalName}.jar">
+                                    <zipfileset prefix="META-INF/versions/9" dir="${project.build.directory}/classes" includes="module-info.class" />
+                                </jar>
+                            </target>
+                        </configuration>
+                    </execution>
+				</executions>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>${maven-compiler-plugin.version}</version>
-				<configuration>
-					<source>${project_jdk_version}</source>
-					<target>${project_jdk_version}</target>
-					<verbose>true</verbose>
-				</configuration>
+				<executions>
+					<execution>
+						<id>default-compile</id>
+						<configuration>
+							<release>9</release>
+							<verbose>true</verbose>
+						</configuration>
+					</execution>
+					<execution>
+						<id>default-testCompile</id>
+						<configuration>
+							<testExcludes>
+								<testExclude>module-info.java</testExclude>
+							</testExcludes>
+							<release>${project_jdk_version}</release>
+							<verbose>true</verbose>
+						</configuration>
+					</execution>
+					<execution>
+						<id>base-compile</id>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+						<!-- recompile everything for target VM except the module-info.java -->
+						<configuration>
+							<excludes>
+								<exclude>module-info.java</exclude>
+							</excludes>
+							<source>${project_jdk_version}</source>
+							<target>${project_jdk_version}</target>
+							<verbose>true</verbose>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -277,14 +327,14 @@
 				<version>${maven-jar-plugin.version}</version>
 				<configuration>
 					<excludes>
-						<exclude>jdk/</exclude>
-						<exclude>java/</exclude>
+						<exclude>module-info.class</exclude>
 						<exclude>META-INF/maven/</exclude>
 					</excludes>
 					<archive>
 						<addMavenDescriptor>false</addMavenDescriptor>
 						<manifestEntries>
 							<built-by>Burningwave</built-by>
+							<Multi-Release>true</Multi-Release>
 						</manifestEntries>
 					</archive>
 				</configuration>

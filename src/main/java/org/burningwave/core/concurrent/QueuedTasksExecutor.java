@@ -963,7 +963,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			Thread.Supplier threadSupplierForLowPriorityTasksExecutor,
 			boolean isDaemon
 		) {	
-			//Implemented deferred initialization (since 9.6.0, the previous version is 9.5.2)
+			//Implemented deferred initialization (since 10.0.0, the previous version is 9.5.2)
 			initializator = queuedTasksExecutorGroup -> {
 				queuedTasksExecutorGroup.name = name;
 				queuedTasksExecutorGroup.queuedTasksExecutors = new HashMap<>();
@@ -1108,7 +1108,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 		QueuedTasksExecutor getByPriority(int priority) {
 			QueuedTasksExecutor queuedTasksExecutor = null;
-			//Implemented deferred initialization (since 9.6.0, the previous version is 9.5.2)
+			//Implemented deferred initialization (since 10.0.0, the previous version is 9.5.2)
 			try {
 				queuedTasksExecutor = queuedTasksExecutors.get(String.valueOf(priority));
 			} catch (Exception e) {
@@ -1279,7 +1279,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 		
 		public Group waitForTasksEnding(int priority, boolean waitForNewAddedTasks, boolean ignoreDeadLocked) {
-			//Implemented deferred initialization (since 9.6.0, the previous version is 9.5.2)
+			//Implemented deferred initialization (since 10.0.0, the previous version is 9.5.2)
 			Synchronizer.execute("queuedTasksExecutorGroup.initialization", () -> {
 				if (initializator != null) {
 					return;
@@ -1369,7 +1369,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 		
 		public boolean shutDown(boolean waitForTasksTermination) {
-			//Implemented deferred initialization (since 9.6.0, the previous version is 9.5.2)
+			//Implemented deferred initialization (since 10.0.0, the previous version is 9.5.2)
 			Synchronizer.execute("queuedTasksExecutorGroup.initialization", () -> {
 				if (initializator != null) {
 					initializator = null;

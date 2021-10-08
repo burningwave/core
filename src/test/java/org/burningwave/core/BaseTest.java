@@ -1,6 +1,6 @@
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -80,11 +80,11 @@ public class BaseTest implements Component {
 	public void testNotNull(ThrowingSupplier<?> supplier) {
 		Object object = null;
 		try {
-			ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - start execution");
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - start execution");
 			object = supplier.get();
-			ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - end execution");
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - end execution");
 		} catch (Throwable exc) {
-			ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 		}
 		assertNotNull(object);
 	}
@@ -99,17 +99,17 @@ public class BaseTest implements Component {
 		boolean isNotEmpty = false;
 		try {
 			coll = supplier.get();
-			ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 			isNotEmpty = !coll.isEmpty();
 			if (isNotEmpty && printAllElements) {
 				for (Object obj : coll) {
 					if (obj != null) {
-						ManagedLoggersRepository.logDebug(getClass()::getName, "{}", obj);
+						org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logDebug(getClass()::getName, "{}", obj);
 					}
 				}
 			}
 		} catch (Throwable exc) {
-			ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 		}
 		assertTrue(coll != null && !coll.isEmpty());
 	}
@@ -135,15 +135,15 @@ public class BaseTest implements Component {
 		boolean isNotEmpty = false;
 		try (T collectionSupplier = autoCloaseableSupplier.get()){
 			coll = collSupplier.apply(collectionSupplier);
-			ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 			isNotEmpty = !coll.isEmpty();
 			if (isNotEmpty && printAllElements) {
-				coll.forEach(element -> ManagedLoggersRepository.logDebug(getClass()::getName, 
+				coll.forEach(element -> org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logDebug(getClass()::getName, 
 					Optional.ofNullable(element.toString()).orElseGet(() -> null)
 				));
 			}
 		} catch (Throwable exc) {
-			ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 		}
 		assertTrue(isNotEmpty);
 	}
@@ -156,9 +156,9 @@ public class BaseTest implements Component {
 		long initialTime = System.currentTimeMillis();
 		try (T autoCloseable = autoCloseableSupplier.get()) {
 			assertNotNull(objectSupplier.apply(autoCloseable));
-			ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 		} catch (Throwable exc) {
-			ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 		}		
 	}
 	
@@ -167,11 +167,11 @@ public class BaseTest implements Component {
 		Throwable throwable = null;
 		long initialTime = System.currentTimeMillis();
 		try {
-			ManagedLoggersRepository.logDebug(getClass()::getName, getCallerMethod() + " - Initializing logger");
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logDebug(getClass()::getName, getCallerMethod() + " - Initializing logger");
 			executable.execute();
-			ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 		} catch (Throwable exc) {
-			ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 			throwable = exc;
 		}
 		assertNull(throwable);

@@ -51,10 +51,14 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -73,6 +77,7 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.assembler.StaticComponentContainer;
+import org.burningwave.core.classes.Fields.NoSuchFieldException;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 
@@ -261,7 +266,7 @@ public class Classes implements MembersRetriever {
 					return Driver.getDeclaredConstructors(cls);
 				} catch (Throwable exc) {
 					ManagedLoggersRepository.logWarn(getClass()::getName, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
-					return (Constructor<T>[])emptyConstructorsArray;
+					return emptyConstructorsArray;
 				}
 			}
 		);
@@ -698,14 +703,15 @@ public class Classes implements MembersRetriever {
 			} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException exc) {
 				String newNotFoundClassName = Classes.retrieveNames(exc).stream().findFirst().orElseGet(() -> null);
 				loadOrDefine(
-        			Class.forName(
-        				newNotFoundClassName, false, toLoad.getClassLoader()
+        			Driver.getClassByName(
+        				newNotFoundClassName, false,
+        				Classes.getClassLoader(toLoad), this.getClass()
         			),
         			classLoader, defineClassMethod, definePackageMethod
         		);
 				return (Class<T>)loadOrDefine(
-        			Class.forName(
-        				className, false, toLoad.getClassLoader()
+					Driver.getClassByName(
+        				className, false, Classes.getClassLoader(toLoad), this.getClass()
         			),
         			classLoader, defineClassMethod, definePackageMethod
         		);
@@ -948,9 +954,41 @@ public class Classes implements MembersRetriever {
 				return getURLs(Fields.getDirect(classLoader, "classLoader"));
 			} else if (Driver.isBuiltinClassLoader(classLoader)) {
 				Object urlClassPath = Fields.getDirect(classLoader, "ucp");
+				Collection<URL> urls = new ArrayList<>();
 				if (urlClassPath != null) {
-					return Methods.invoke(urlClassPath, "getURLs");
+					urls.addAll(Arrays.asList(Methods.invoke(urlClassPath, "getURLs")));
 				}
+				Map<String, ?> nameToModule = Fields.getDirect(classLoader, "nameToModule");
+				Map<?, ?> moduleToReader = Fields.getDirect(classLoader, "moduleToReader");
+				if (nameToModule != null) {
+					for (Object moduleReference : nameToModule.values() ) {
+						URI uri = Fields.getDirect(moduleReference, "location");
+						try {
+							URL url = uri.toURL();
+							if (url.toString().startsWith("file")) {
+								Object moduleReader = moduleToReader.get(moduleReference);
+								try {
+									Collection<?> finders = Fields.getDirect(moduleReader, "finders");
+									if (finders != null) {
+										for (Object finder : finders) {
+											Path path = Fields.getDirect(finder, "dir");
+											if (path != null) {
+												urls.add(path.toUri().toURL());
+											}
+										}
+									}
+								} catch (NoSuchFieldException exc) {
+									
+								}
+								urls.add(url);
+								
+							}
+						} catch (MalformedURLException exc) {
+							Driver.throwException(exc);
+						}
+					}
+				}
+				return urls.toArray(new URL[urls.size()]);
 			} else if (classLoader instanceof PathScannerClassLoader) {
 				return ((PathScannerClassLoader)classLoader).getURLs();
 			}

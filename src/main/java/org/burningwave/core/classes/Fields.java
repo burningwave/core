@@ -41,6 +41,8 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.function.Executor;
 
+import io.github.toolfactory.jvm.util.Strings;
+
 @SuppressWarnings("unchecked")
 public class Fields extends Members.Handler<Field, FieldCriteria> {
 	
@@ -177,7 +179,11 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	public Field findOneAndMakeItAccessible(Class<?> targetClass, String memberName) {
 		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, memberName, null);
 		if (members.size() != 1) {
-			Driver.throwException("Field {} not found or found more than one field in {} hierarchy", memberName, targetClass.getName());
+			Driver.throwException(
+				new NoSuchFieldException(
+					Strings.compile("Field {} not found or found more than one field in {} hierarchy", memberName, targetClass.getName())
+				)
+			);
 		}
 		return members.stream().findFirst().get();
 	}
@@ -185,7 +191,11 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	public Field findFirstAndMakeItAccessible(Class<?> targetClass, String fieldName, Class<?> fieldTypeOrSubType) {
 		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, fieldName, fieldTypeOrSubType);
 		if (members.size() < 1) {
-			Driver.throwException("Field {} not found in {} hierarchy", fieldName, targetClass.getName());
+			Driver.throwException(
+				new NoSuchFieldException(
+					Strings.compile("Field {} not found in {} hierarchy", fieldName, targetClass.getName())
+				)
+			);
 		}
 		return members.stream().findFirst().get();
 	}
@@ -233,5 +243,15 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 					FieldCriteria.forEntireClassHierarchy(), targetClass
 				)			
 		);
-	}	
+	}
+	
+	public static class NoSuchFieldException extends RuntimeException {
+
+		private static final long serialVersionUID = 3656790511956737635L;
+
+		public NoSuchFieldException(String message) {
+			super(message);
+		}
+		
+	}
 }

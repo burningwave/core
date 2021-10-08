@@ -78,10 +78,14 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 				return membersThatMatch.stream().findFirst().get();
 			}
 			Driver.throwException(
-				"Found more than one of method named {} with argument types {} in {} hierarchy",
-				memberName,
-				String.join(", ", Arrays.asList(inputParameterTypesOrSubTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),
-				targetClass.getName()
+				new IllegalArgumentException(
+					Strings.compile(
+						"Found more than one of method named {} with argument types {} in {} hierarchy",
+						memberName,
+						String.join(", ", Arrays.asList(inputParameterTypesOrSubTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),
+						targetClass.getName()
+					)
+				)
 			);
 		}
 		return null;
@@ -205,7 +209,13 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		return Executor.get(() -> {
 			Method method = findFirstAndMakeItAccessible(targetClass, methodName, Classes.retrieveFrom(arguments));
 			if (method == null) {
-				Driver.throwException("Method {} not found in {} hierarchy", methodName, targetClass.getName());
+				Driver.throwException(
+					new NoSuchMethodException(
+						Strings.compile(
+							"Method {} not found in {} hierarchy", methodName, targetClass.getName()
+						)
+					)
+				);
 			}
 			return methodInvoker.apply(method);
 		});
@@ -250,7 +260,13 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		if (entry == null) {
 			Method method = findFirstAndMakeItAccessible(targetClass, methodName, inputParameterTypesOrSubTypes);
 			if (method == null) {
-				Driver.throwException("Method {} not found in {} hierarchy", methodName, targetClass.getName());
+				Driver.throwException(
+					new NoSuchMethodException(
+						Strings.compile(
+							"Method {} not found in {} hierarchy", methodName, targetClass.getName()
+						)
+					)
+				);
 			}
 			entry = findDirectHandleBox(
 				method, targetClassClassLoader, cacheKey
@@ -261,7 +277,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 	
 	
 	@Override
-	MethodHandle retrieveMethodHandle(MethodHandles.Lookup consulter, Method method) throws NoSuchMethodException, IllegalAccessException {
+	MethodHandle retrieveMethodHandle(MethodHandles.Lookup consulter, Method method) throws java.lang.NoSuchMethodException, IllegalAccessException {
 		Class<?> methodDeclaringClass = method.getDeclaringClass(); 
 		return !Modifier.isStatic(method.getModifiers())?
 			consulter.findSpecial(
@@ -278,5 +294,15 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 	@Override
 	String retrieveNameForCaching(Method method) {
 		return method.getName();
+	}
+	
+	public static class NoSuchMethodException extends RuntimeException {
+
+		private static final long serialVersionUID = -2912826056405333039L;
+
+		public NoSuchMethodException(String message) {
+			super(message);
+		}
+		
 	}
 }

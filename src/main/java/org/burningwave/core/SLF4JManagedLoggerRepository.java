@@ -38,7 +38,6 @@ import java.util.Properties;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-import org.slf4j.LoggerFactory;
 
 public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst {
 	private Map<String, Map.Entry<org.slf4j.Logger, LoggingLevel.Mutable>> loggers;
@@ -96,7 +95,7 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 				loggerEntry = loggers.get(clientName);
 				if (loggerEntry == null) {
 					loggers.put(clientName, loggerEntry = new AbstractMap.SimpleEntry<>(
-						LoggerFactory.getLogger(clientName), new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_ENABLED))
+						org.slf4j.LoggerFactory.getLogger(clientName), new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_ENABLED))
 					);
 				}
 			}

@@ -28,10 +28,11 @@
  */
 package org.burningwave.core;
 
+
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,6 +46,7 @@ import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.iterable.Properties.Event;
+
 
 public interface ManagedLogger {	
 	
@@ -150,14 +152,20 @@ public interface ManagedLogger {
 				);
 				if ("autodetect".equalsIgnoreCase(className = className.trim())) {
 					try {
-						Class.forName("org.slf4j.Logger");
+						Driver.getClassByName("org.slf4j.Logger", false,
+							ManagedLogger.Repository.class.getClassLoader(),
+							ManagedLogger.Repository.class
+						);
 						return new org.burningwave.core.SLF4JManagedLoggerRepository(config);
 					} catch (Throwable exc2) {
 						return new org.burningwave.core.SimpleManagedLoggerRepository(config);
 					}
 				} else {
 					return (org.burningwave.core.ManagedLogger.Repository)
-						Class.forName(className).getConstructor(java.util.Properties.class).newInstance(config);
+						Driver.getClassByName(className, false,
+							ManagedLogger.Repository.class.getClassLoader(),
+							ManagedLogger.Repository.class
+						).getConstructor(java.util.Properties.class).newInstance(config);
 				}
 				
 			} catch (Throwable exc) {
