@@ -2,7 +2,7 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.classes.ClassFactory;
@@ -43,11 +43,11 @@ public class ComponentContainerTest extends BaseTest {
 	@Order(17)
 	public void clearAll() {
 		testDoesNotThrow(() -> {
-			ManagedLoggersRepository.logWarn(getClass()::getName, "Total memory before clearAll {}", Runtime.getRuntime().totalMemory());
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logWarn(getClass()::getName, "Total memory before clearAll {}", Runtime.getRuntime().totalMemory());
 			ComponentContainer.clearAll();
 			BackgroundExecutor.waitForTasksEnding(true);
 			System.gc();
-			ManagedLoggersRepository.logWarn(getClass()::getName, "Total memory after clearAll {}", Runtime.getRuntime().totalMemory());
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logWarn(getClass()::getName, "Total memory after clearAll {}", Runtime.getRuntime().totalMemory());
 		});
 	}
 	

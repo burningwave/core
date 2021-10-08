@@ -1,8 +1,6 @@
 package org.burningwave.core;
 
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
-
 import java.io.Closeable;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
@@ -212,6 +210,6 @@ public class ByteCodeHunterTest extends BaseTest {
 				return result.getClasses();
 			}
 		);
-		ManagedLoggersRepository.logDebug(getClass()::getName, "Items total size: " + bytesWrapper.get() + " bytes");
+		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logDebug(getClass()::getName, "Items total size: " + bytesWrapper.get() + " bytes");
 	}
 }

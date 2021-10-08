@@ -1,7 +1,5 @@
 package org.burningwave.core.examples.functionalinterfacefactory;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
-
 import java.util.UUID;
 
 import org.burningwave.core.ManagedLogger;
@@ -167,12 +165,12 @@ public class Service implements ManagedLogger {
     
     // Static methods
     private static Long staticDoSomething(String id, String name, String... items) {
-    	ManagedLoggersRepository.logInfo(() -> Service.class.getName(), "\nMultiparameter static method:\n\tid: {}\n\tname: {} \n\titems: {}", id, name, String.join(", ", items));
+    	org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(() -> Service.class.getName(), "\nMultiparameter static method:\n\tid: {}\n\tname: {} \n\titems: {}", id, name, String.join(", ", items));
         return System.currentTimeMillis();
     }
     
     private static Long staticDoSomething(String name, String... items) {
-        ManagedLoggersRepository.logInfo(
+        org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
         	() -> Service.class.getName(),
         	"\nMultiparameter static method:\n\tid: {}\n\tname: {} \n\titems: {}",
         	UUID.randomUUID().toString(), name, String.join(", ", items)
@@ -181,32 +179,32 @@ public class Service implements ManagedLogger {
     }
     
     private static Long staticDoSomething(String... name) {
-    	 ManagedLoggersRepository.logInfo(
+    	 org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
     	     () -> Service.class.getName(), "\nSingle parameter static varargs method:\n\tname: {}", name[0]
     	 );
         return System.currentTimeMillis();
     }
     
     private static Long staticDoSomething(String name) {
-   	    ManagedLoggersRepository.logInfo(
+   	    org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
     	    () -> Service.class.getName(), "\nSingle parameter static method:\n\tname: {}", name
     	);
         return System.currentTimeMillis();
     }
 
     private static Long staticDoSomething() {
-   	    ManagedLoggersRepository.logInfo(
+   	    org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
    	    	() -> Service.class.getName(), "\nNo parameter static  method:\n\tname: {}", "no name"
    	    );
         return System.currentTimeMillis();
     }
     
     private static void staticVoidDoSomething(String id, String name, String... items) {
-    	ManagedLoggersRepository.logInfo(() -> Service.class.getName(), "\nMultiparameter static void method:\n\tid: {}\n\tname: {} \n\titems: {}", id, name, String.join(", ", items));
+    	org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(() -> Service.class.getName(), "\nMultiparameter static void method:\n\tid: {}\n\tname: {} \n\titems: {}", id, name, String.join(", ", items));
     }
     
     private static void staticVoidDoSomething(String name, String... items) {
-        ManagedLoggersRepository.logInfo(
+        org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
         	() -> Service.class.getName(),
         	"\nMultiparameter static void method:\n\tid: {}\n\tname: {} \n\titems: {}",
         	UUID.randomUUID().toString(), name, String.join(", ", items)
@@ -214,30 +212,30 @@ public class Service implements ManagedLogger {
     }
     
     private static void staticVoidDoSomething(String... name) {
-    	 ManagedLoggersRepository.logInfo(
+    	 org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
     	     () -> Service.class.getName(), "\nSingle parameter static void varargs method:\n\tname: {}", name[0]
     	 );
     }
     
     private static void staticVoidDoSomething(String name) {
-   	    ManagedLoggersRepository.logInfo(
+   	    org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
     	    () -> Service.class.getName(), "\nSingle parameter static void method:\n\tname: {}", name
     	);
     }
 
     private static void staticVoidDoSomething() {
-   	    ManagedLoggersRepository.logInfo(
+   	    org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
    	    	() -> Service.class.getName(), "\nNo parameter static  void method:\n\tname: {}", "no name"
    	    );
     }
     
     private static boolean staticDoSomethingWithBooleanReturn(String id, String name, String... items) {
-    	ManagedLoggersRepository.logInfo(() -> Service.class.getName(), "\nMultiparameter static method:\n\tid: {}\n\tname: {} \n\titems: {}", id, name, String.join(", ", items));
+    	org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(() -> Service.class.getName(), "\nMultiparameter static method:\n\tid: {}\n\tname: {} \n\titems: {}", id, name, String.join(", ", items));
         return true;
     }
     
     private static boolean staticDoSomethingWithBooleanReturn(String name, String... items) {
-        ManagedLoggersRepository.logInfo(
+        org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
         	() -> Service.class.getName(),
         	"\nMultiparameter static method:\n\tid: {}\n\tname: {} \n\titems: {}",
         	UUID.randomUUID().toString(), name, String.join(", ", items)
@@ -246,21 +244,21 @@ public class Service implements ManagedLogger {
     }
     
     private static boolean staticDoSomethingWithBooleanReturn(String... name) {
-    	 ManagedLoggersRepository.logInfo(
+    	 org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
     	     () -> Service.class.getName(), "\nSingle parameter static varargs method:\n\tname: {}", name[0]
     	 );
     	 return true;
     }
     
     private static boolean staticDoSomethingWithBooleanReturn(String name) {
-   	    ManagedLoggersRepository.logInfo(
+   	    org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
     	    () -> Service.class.getName(), "\nSingle parameter static method:\n\tname: {}", name
     	);
    	    return true;
     }
 
     private static boolean staticDoSomethingWithBooleanReturn() {
-   	    ManagedLoggersRepository.logInfo(
+   	    org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
    	    	() -> Service.class.getName(), "\nNo parameter static  method:\n\tname: {}", "no name"
    	    );
    	    return true;
