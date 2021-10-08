@@ -19,7 +19,6 @@ jobs:
       fail-fast: false
       max-parallel: 15
       matrix:
-#        architecture: [x64, x64, x64, x64, x64]
         architecture: [x64]
         os: [ubuntu-latest, macOS-latest, windows-latest]
         java: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18-ea]
@@ -34,6 +33,3 @@ jobs:
       - if: endsWith(matrix.java, '8') != true 
         name: Build and test with final version JDK
         run: mvn -B clean test -DskipTests=false --file pom.xml
-      - if: endsWith(matrix.java, '8') == true 
-        name: Build and test with early access version JDK
-        run: mvn -B clean test -Djdk_version=${{ matrix.java }} -DskipTests=false --file pom.xml

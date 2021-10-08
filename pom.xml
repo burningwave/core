@@ -82,7 +82,6 @@
 	<properties>
 		<copyright.holder>Roberto Gentili</copyright.holder>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<jdk_version>9</jdk_version>
 		<target_version>8</target_version>
 		<javadocExecutable.relativePath>bin/javadoc</javadocExecutable.relativePath>
 		<skipTests>true</skipTests>
@@ -393,10 +392,7 @@
 		<profile>
 			<id>compile-with-jdk-8</id>
 			<activation>
-				<property>
-					<name>jdk_version</name>
-					<value>8</value>
-				</property>
+				<jdk>1.8</jdk>
 			</activation>
 			<build>
 				<plugins>
@@ -434,10 +430,7 @@
 		<profile>
 			<id>compile-with-jdk-9-or-later</id>
 			<activation>
-				<property>
-					<name>jdk_version</name>
-					<value>9</value>
-				</property>
+				<jdk>!1.8</jdk>
 			</activation>
 			<build>
 				<plugins>
