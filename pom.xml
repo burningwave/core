@@ -31,7 +31,7 @@
 
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
-	<version>10.2.0-SNAPSHOT</version>
+	<version>11.0.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Burningwave Core</name>
@@ -82,8 +82,7 @@
 	<properties>
 		<copyright.holder>Roberto Gentili</copyright.holder>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<!-- Can be changed with one of this values: 9, 10, 11, 12, 13, 14, 15, 16, 17 -->
-		<project_jdk_version>8</project_jdk_version>
+		<target_version>8</target_version>
 		<javadocExecutable.relativePath>bin/javadoc</javadocExecutable.relativePath>
 		<skipTests>true</skipTests>
 		<project.test.testSuite>AllExceptHeavyTestsSuite</project.test.testSuite>
@@ -99,6 +98,7 @@
 		<junit-jupiter.version>5.8.0</junit-jupiter.version>
 		<junit.version>1.8.0</junit.version>
 		<jvm-driver.version>5.3.0</jvm-driver.version>
+		<maven-antrun-plugin.version>3.0.0</maven-antrun-plugin.version>
 		<maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
 		<maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
 		<maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
@@ -156,21 +156,24 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>jul-to-slf4j</artifactId>
 			<version>${slf4j.version}</version>
-			<scope>test</scope>
+			<scope>provided</scope>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-core</artifactId>
 			<version>${logback.version}</version>
-			<scope>test</scope>
+			<scope>provided</scope>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 			<version>${logback.version}</version>
-			<scope>test</scope>
+			<scope>provided</scope>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>
@@ -240,14 +243,24 @@
 		</testResources>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${maven-compiler-plugin.version}</version>
-				<configuration>
-					<source>${project_jdk_version}</source>
-					<target>${project_jdk_version}</target>
-					<verbose>true</verbose>
-				</configuration>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>${maven-antrun-plugin.version}</version>
+				<executions>
+					<execution>
+                        <id>add-module-info-to-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <jar update="true" destfile="${project.build.directory}/${project.build.finalName}.jar">
+                                    <zipfileset prefix="META-INF/versions/9" dir="${project.build.directory}/classes" includes="module-info.class" />
+                                </jar>
+                            </target>
+                        </configuration>
+                    </execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -274,14 +287,14 @@
 				<version>${maven-jar-plugin.version}</version>
 				<configuration>
 					<excludes>
-						<exclude>jdk/</exclude>
-						<exclude>java/</exclude>
+						<exclude>module-info.class</exclude>
 						<exclude>META-INF/maven/</exclude>
 					</excludes>
 					<archive>
 						<addMavenDescriptor>false</addMavenDescriptor>
 						<manifestEntries>
 							<built-by>Burningwave</built-by>
+							<Multi-Release>true</Multi-Release>
 						</manifestEntries>
 					</archive>
 				</configuration>
@@ -351,7 +364,7 @@
 				<configuration>
 					<javadocExecutable>${java.home}/${javadocExecutable.relativePath}</javadocExecutable>
 					<encoding>UTF-8</encoding>
-					<source>${project_jdk_version}</source>
+					<source>${target_version}</source>
 				</configuration>
 				<executions>
 					<execution>
@@ -376,6 +389,93 @@
 	</reporting>
 
 	<profiles>
+		<profile>
+			<id>compile-with-jdk-8</id>
+			<activation>
+				<jdk>1.8</jdk>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<version>${maven-compiler-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>default-compile</id>
+								<configuration>
+									<source>${target_version}</source>
+									<target>${target_version}</target>
+									<excludes>
+										<exclude>module-info.java</exclude>
+									</excludes>
+								</configuration>
+							</execution>
+							<execution>
+								<id>default-testCompile</id>
+								<configuration>
+									<testExcludes>
+										<testExclude>module-info.java</testExclude>
+									</testExcludes>
+									<source>${target_version}</source>
+									<target>${target_version}</target>
+									<verbose>true</verbose>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>compile-with-jdk-9-or-later</id>
+			<activation>
+				<jdk>!1.8</jdk>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<version>${maven-compiler-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>default-compile</id>
+								<configuration>
+									<release>9</release>
+									<verbose>true</verbose>
+								</configuration>
+							</execution>
+							<execution>
+								<id>default-testCompile</id>
+								<configuration>
+									<testExcludes>
+										<testExclude>module-info.java</testExclude>
+									</testExcludes>
+									<release>${target_version}</release>
+									<verbose>true</verbose>
+								</configuration>
+							</execution>
+							<execution>
+								<id>base-compile</id>
+								<goals>
+									<goal>compile</goal>
+								</goals>
+								<!-- recompile everything for target VM except the module-info.java -->
+								<configuration>
+									<excludes>
+										<exclude>module-info.java</exclude>
+									</excludes>
+									<source>${target_version}</source>
+									<target>${target_version}</target>
+									<verbose>true</verbose>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 		<!-- GPG Signature on release -->
 		<profile>
 			<id>release-sign-artifacts</id>
