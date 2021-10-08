@@ -26,12 +26,8 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.architecture }}
-      - if: endsWith(matrix.java, '-ea') != true 
-        name: Build and test with final version JDK
-        run: mvn -B clean test -Dproject_jdk_version=${{ matrix.java }} -DskipTests=false --file pom.xml
-      - if: endsWith(matrix.java, '18-ea') == true 
-        name: Build and test with early access version JDK
-        run: mvn -B clean test -Dproject_jdk_version=18 -DskipTests=false --file pom.xml
+      - name: Build and test with final version JDK
+        run: mvn -B clean test -DskipTests=false --file pom.xml
   
   compute-coverage:
     name: Compute coverage
@@ -43,5 +39,5 @@ jobs:
           java-version: 8
           architecture: x64
       - name: Build and test
-        run: mvn clean test -DskipTests=false -Dproject_jdk_version=8 -P run-coveralls jacoco:report coveralls:report -DrepoToken=${{ secrets.coveralls_repo_token }}
+        run: mvn clean test -DskipTests=false -P run-coveralls jacoco:report coveralls:report -DrepoToken=${{ secrets.coveralls_repo_token }}
   

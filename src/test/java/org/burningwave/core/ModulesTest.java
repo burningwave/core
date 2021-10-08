@@ -23,7 +23,7 @@ public class ModulesTest extends BaseTest {
 	public void exportPackageToAllUnnamedTest() {
 		testDoesNotThrow(() -> {
 			if (JVMInfo.getVersion() > 8) {
-				Modules.exportPackageToAllUnnamed ("java.base", "java.net");
+				Modules.exportPackageToAll("java.base", "java.net");
 			    Method method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
 			    method.setAccessible(true);
 			    ClassLoader classLoader = new URLClassLoader(new URL[] {}, null);
