@@ -51,10 +51,13 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -948,9 +951,25 @@ public class Classes implements MembersRetriever {
 				return getURLs(Fields.getDirect(classLoader, "classLoader"));
 			} else if (Driver.isBuiltinClassLoader(classLoader)) {
 				Object urlClassPath = Fields.getDirect(classLoader, "ucp");
+				Collection<URL> urls = new ArrayList<>();
 				if (urlClassPath != null) {
-					return Methods.invoke(urlClassPath, "getURLs");
+					urls.addAll(Arrays.asList(Methods.invoke(urlClassPath, "getURLs")));
 				}
+				Map<String, ?> nameToModule = Fields.getDirect(classLoader, "nameToModule");
+				if (nameToModule != null) {
+					for (Object moduleReference : nameToModule.values() ) {
+						URI uri = Fields.getDirect(moduleReference, "location");
+						try {
+							URL url = uri.toURL();
+							if (url.toString().startsWith("file")) {
+								urls.add(url);
+							}
+						} catch (MalformedURLException exc) {
+							Driver.throwException(exc);
+						}
+					}
+				}
+				return urls.toArray(new URL[urls.size()]);
 			} else if (classLoader instanceof PathScannerClassLoader) {
 				return ((PathScannerClassLoader)classLoader).getURLs();
 			}
