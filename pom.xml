@@ -341,7 +341,6 @@
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>${maven-javadoc-plugin.version}</version>
 				<configuration>
-					<javadocExecutable>${java.home}/${javadocExecutable.relativePath}</javadocExecutable>
 					<encoding>UTF-8</encoding>
 					<source>${target_version}</source>
 				</configuration>
