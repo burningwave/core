@@ -224,7 +224,11 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			cls = super.loadClass(className, resolve);
 		} catch (Throwable exc) {
 			if (className.startsWith("java.")) {
-				cls = Driver.getClassByName(className, false, this.getClass().getClassLoader());
+				cls = Driver.getClassByName(
+					className, false,
+					Classes.getClassLoader(this.getClass()),
+					this.getClass()
+				);
 			} else {
 				Driver.throwException(exc);
 			}			

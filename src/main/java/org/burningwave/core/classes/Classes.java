@@ -704,13 +704,14 @@ public class Classes implements MembersRetriever {
 				String newNotFoundClassName = Classes.retrieveNames(exc).stream().findFirst().orElseGet(() -> null);
 				loadOrDefine(
         			Driver.getClassByName(
-        				newNotFoundClassName, false, toLoad.getClassLoader(), this.getClass()
+        				newNotFoundClassName, false,
+        				Classes.getClassLoader(toLoad), this.getClass()
         			),
         			classLoader, defineClassMethod, definePackageMethod
         		);
 				return (Class<T>)loadOrDefine(
 					Driver.getClassByName(
-        				className, false, toLoad.getClassLoader(), this.getClass()
+        				className, false, Classes.getClassLoader(toLoad), this.getClass()
         			),
         			classLoader, defineClassMethod, definePackageMethod
         		);

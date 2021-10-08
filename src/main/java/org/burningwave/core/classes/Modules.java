@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.classes;
 
-
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
@@ -54,12 +54,12 @@ public class Modules {
 		try {
 			moduleClass = Driver.getClassByName(
 				"java.lang.Module", false,
-				this.getClass().getClassLoader(),
+				Classes.getClassLoader(this.getClass()),
 				this.getClass()
 			);
 			Class<?> moduleLayerClass = Driver.getClassByName(
 				"java.lang.ModuleLayer", false,
-				this.getClass().getClassLoader(),
+				Classes.getClassLoader(this.getClass()),
 				this.getClass()
 			);
 			Object moduleLayer = Methods.invokeStaticDirect(moduleLayerClass, "boot");
