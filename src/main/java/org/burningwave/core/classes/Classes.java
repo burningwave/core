@@ -266,7 +266,7 @@ public class Classes implements MembersRetriever {
 					return Driver.getDeclaredConstructors(cls);
 				} catch (Throwable exc) {
 					ManagedLoggersRepository.logWarn(getClass()::getName, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
-					return (Constructor<T>[])emptyConstructorsArray;
+					return emptyConstructorsArray;
 				}
 			}
 		);
@@ -703,14 +703,14 @@ public class Classes implements MembersRetriever {
 			} catch (ClassNotFoundException | NoClassDefFoundError | InvocationTargetException exc) {
 				String newNotFoundClassName = Classes.retrieveNames(exc).stream().findFirst().orElseGet(() -> null);
 				loadOrDefine(
-        			Class.forName(
-        				newNotFoundClassName, false, toLoad.getClassLoader()
+        			Driver.getClassByName(
+        				newNotFoundClassName, false, toLoad.getClassLoader(), this.getClass()
         			),
         			classLoader, defineClassMethod, definePackageMethod
         		);
 				return (Class<T>)loadOrDefine(
-        			Class.forName(
-        				className, false, toLoad.getClassLoader()
+					Driver.getClassByName(
+        				className, false, toLoad.getClassLoader(), this.getClass()
         			),
         			classLoader, defineClassMethod, definePackageMethod
         		);

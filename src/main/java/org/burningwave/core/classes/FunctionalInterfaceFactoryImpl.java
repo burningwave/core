@@ -31,8 +31,8 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
-import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
@@ -355,10 +355,11 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 			String className = parametersCount == 2 ?
 				Optional.ofNullable(cls.getPackage()).map(pkg -> pkg.getName() + ".").orElse("") + "Bi" + cls.getSimpleName() :
 				cls.getName();
-			return Class.forName(
+			return Driver.getClassByName(
 				className, 
 				true,
-				Classes.getClassLoader(cls)
+				Classes.getClassLoader(cls),
+				this.getClass()
 			);	
 		} else {
 			return classRetriever.apply(parametersCount);

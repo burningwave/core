@@ -37,10 +37,8 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
-import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -134,9 +132,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	public final static ComponentContainer create(String configFileName) {
 		try {
 			return new ComponentContainer(() -> {
-				
-				
-				try(InputStream inputStream = Resources.getAsInputStream(ComponentContainer.class.getClassLoader(), configFileName)) {
+				try {
 					Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
 					classLoaders.add(ComponentContainer.class.getClassLoader());
 					classLoaders.add(Thread.currentThread().getContextClassLoader());

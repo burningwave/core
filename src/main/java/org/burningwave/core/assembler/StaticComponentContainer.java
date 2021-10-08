@@ -30,6 +30,7 @@ package org.burningwave.core.assembler;
 
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,6 +42,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 
+import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
@@ -63,7 +65,8 @@ public class StaticComponentContainer {
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED = "background-executor.all-tasks-monitoring.logger.enabled";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL = "background-executor.all-tasks-monitoring.interval";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY = "background-executor.all-tasks-monitoring.probable-dead-locked-tasks-handling.policy";
-			private static final String JVM_DRIVER = "jvm.driver";
+			private static final String JVM_DRIVER_TYPE = "jvm.driver.type";
+			private static final String JVM_DRIVER_INIT = "jvm.driver.init";
 			private static final String MODULES_EXPORT_ALL_TO_ALL = "modules.export-all-to-all";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED = "synchronizer.all-threads-monitoring.enabled";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";
@@ -129,6 +132,11 @@ public class StaticComponentContainer {
 			if (io.github.toolfactory.jvm.Info.Provider.getInfoInstance().getVersion() > 8) {
 				defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
 			}
+			
+			defaultValues.put(
+				Key.JVM_DRIVER_INIT,
+				false
+			);			
 			
 			defaultValues.put(
 				Key.ON_CLOSE_CLOSE_ALL_COMPONENT_CONTAINERS,
@@ -268,15 +276,18 @@ public class StaticComponentContainer {
 			}.listenTo(GlobalProperties = properties);
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
 			String driverClassName = GlobalProperties.resolveValue(
-				Configuration.Key.JVM_DRIVER
-			);
+				Configuration.Key.JVM_DRIVER_TYPE
+			);			
 			if (driverClassName != null) {
 				Driver = Executor.get(() -> (Driver)StaticComponentContainer.class.getClassLoader().loadClass(
 					driverClassName
 				).getDeclaredConstructor().newInstance());
 			} else {
 				Driver = io.github.toolfactory.jvm.Driver.Factory.getNew();
-			}
+			}			
+			if (!Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.JVM_DRIVER_INIT))) {
+				Driver.init();
+			}			
 			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
 				getName("Thread supplier"),
 				GlobalProperties,
@@ -456,14 +467,20 @@ public class StaticComponentContainer {
 		);
 	};
 	
-	static void showBanner() {
-		List<String> bannerList = Arrays.asList(
-			Resources.getAsStringBuffer(
-				StaticComponentContainer.class.getClassLoader(), GlobalProperties.resolveValue(Configuration.Key.BANNER_FILE)
-			).toString().split("-------------------------------------------------------------------------------------------------------------")	
-		);
-		Collections.shuffle(bannerList);
-		System.out.println("\n" + bannerList.get(new Random().nextInt(bannerList.size())));
+	static void showBanner() throws IOException {
+		try (InputStream inputStream = Resources.getFirstFoundAsInputStreams(
+			GlobalProperties.resolveValue(Configuration.Key.BANNER_FILE),
+			Component.class.getClassLoader(),
+			Thread.currentThread().getContextClassLoader()
+		)) {
+			List<String> bannerList = Arrays.asList(
+				Resources.getAsStringBuffer(
+					inputStream
+				).toString().split("-------------------------------------------------------------------------------------------------------------")	
+			);
+			Collections.shuffle(bannerList);
+			System.out.println("\n" + bannerList.get(new Random().nextInt(bannerList.size())));
+		}
 	}
 	
 }

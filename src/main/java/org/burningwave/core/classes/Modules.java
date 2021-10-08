@@ -29,10 +29,10 @@
 package org.burningwave.core.classes;
 
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,8 +52,16 @@ public class Modules {
 	
 	Modules() {
 		try {
-			moduleClass = Class.forName("java.lang.Module");
-			Class<?> moduleLayerClass = Class.forName("java.lang.ModuleLayer");
+			moduleClass = Driver.getClassByName(
+				"java.lang.Module", false,
+				this.getClass().getClassLoader(),
+				this.getClass()
+			);
+			Class<?> moduleLayerClass = Driver.getClassByName(
+				"java.lang.ModuleLayer", false,
+				this.getClass().getClassLoader(),
+				this.getClass()
+			);
 			Object moduleLayer = Methods.invokeStaticDirect(moduleLayerClass, "boot");
 			nameToModule = Fields.getDirect(moduleLayer, "nameToModule");
 			allSet = new HashSet<>();

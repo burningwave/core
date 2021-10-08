@@ -28,7 +28,9 @@
  */
 package org.burningwave.core.io;
 
+
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -36,17 +38,23 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Map;
-import java.util.Optional;
 
-import org.burningwave.core.function.Executor;
 
 public class Resources {
-
 	
-	public Map<URL, InputStream> getAsInputStreams(ClassLoader resourceClassLoader, String resourceRelativePath) throws IOException {
-		return io.github.toolfactory.jvm.util.Resources.getAsInputStreams(resourceClassLoader, resourceRelativePath);
+	
+	public Map<URL, InputStream> getAsInputStreams(String resourceRelativePath, ClassLoader... resourceClassLoaders) {
+		return Driver.getResourcesAsInputStreams(resourceRelativePath, resourceClassLoaders);
 	}
 	
+	public InputStream getFirstFoundAsInputStreams(String resourceRelativePath, ClassLoader... resourceClassLoaders) throws IOException {
+		Map<URL, InputStream> inputStreams = getAsInputStreams(resourceRelativePath, resourceClassLoaders);
+		if (!inputStreams.isEmpty()) {
+			return inputStreams.values().iterator().next();
+		}
+		return null;
+	}
+
 	
 	public FileSystemItem get(Class<?> cls) {
 		return FileSystemItem.of(Classes.getClassLoader(cls).getResource(Classes.toPath(cls)));
@@ -58,25 +66,13 @@ public class Resources {
 		return FileSystemItem.ofPath(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf(classRelativePath) - 1) );
 	}
 	
-	public InputStream getAsInputStream(ClassLoader resourceClassLoader, String resourceRelativePath) {
-		if (resourceClassLoader == null) {
-			resourceClassLoader = ClassLoader.getSystemClassLoader();
-		}
-		return resourceClassLoader.getResourceAsStream(resourceRelativePath);
+	
+	public StringBuffer getFirstFoundAsStringBuffer(String resourceRelativePath, ClassLoader... resourceClassLoaders) throws IOException {
+		return getAsStringBuffer(getFirstFoundAsInputStreams(resourceRelativePath, resourceClassLoaders));
 	}
 	
-	public StringBuffer getAsStringBuffer(ClassLoader resourceClassLoader, String resourceRelativePath) {
-		return Executor.get(() -> {
-			ClassLoader classLoader = Optional.ofNullable(resourceClassLoader).orElseGet(() ->
-				ClassLoader.getSystemClassLoader()
-			);
-			return getAsStringBuffer(					
-					classLoader.getResourceAsStream(resourceRelativePath)
-			);
-		});
-	}
-
-	private StringBuffer getAsStringBuffer(InputStream inputStream) throws IOException {
+	
+	public StringBuffer getAsStringBuffer(InputStream inputStream) throws IOException {
 		try (BufferedReader reader = new BufferedReader(
 				new InputStreamReader(
 					inputStream
@@ -90,14 +86,6 @@ public class Resources {
 			}
 			return result;
 		}
-	}
-
-	public URL getURL(ClassLoader resourceClassLoader, String fileName) {
-		return Optional.ofNullable(
-			resourceClassLoader
-		).orElseGet(() -> ClassLoader.getSystemClassLoader()).getResource(
-			fileName
-		);
 	}
 	
 }
