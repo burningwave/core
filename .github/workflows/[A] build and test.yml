@@ -30,6 +30,5 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.architecture }}
-      - if: endsWith(matrix.java, '8') != true 
-        name: Build and test with final version JDK
+      - name: Build and test with final version JDK
         run: mvn -B clean test -DskipTests=false --file pom.xml

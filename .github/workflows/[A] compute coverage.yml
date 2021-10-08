@@ -23,4 +23,3 @@ jobs:
           architecture: x64
       - name: Build and test
         run: mvn clean test -DskipTests=false -P run-coveralls jacoco:report coveralls:report -DrepoToken=${{ secrets.coveralls_repo_token }}
-
