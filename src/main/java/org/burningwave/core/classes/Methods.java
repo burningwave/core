@@ -277,7 +277,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 	
 	
 	@Override
-	MethodHandle retrieveMethodHandle(MethodHandles.Lookup consulter, Method method) throws NoSuchMethodException, IllegalAccessException {
+	MethodHandle retrieveMethodHandle(MethodHandles.Lookup consulter, Method method) throws java.lang.NoSuchMethodException, IllegalAccessException {
 		Class<?> methodDeclaringClass = method.getDeclaringClass(); 
 		return !Modifier.isStatic(method.getModifiers())?
 			consulter.findSpecial(
@@ -294,5 +294,15 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 	@Override
 	String retrieveNameForCaching(Method method) {
 		return method.getName();
+	}
+	
+	public static class NoSuchMethodException extends RuntimeException {
+
+		private static final long serialVersionUID = -2912826056405333039L;
+
+		public NoSuchMethodException(String message) {
+			super(message);
+		}
+		
 	}
 }

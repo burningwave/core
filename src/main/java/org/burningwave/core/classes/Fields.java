@@ -243,5 +243,15 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 					FieldCriteria.forEntireClassHierarchy(), targetClass
 				)			
 		);
-	}	
+	}
+	
+	public static class NoSuchFieldException extends RuntimeException {
+
+		private static final long serialVersionUID = 3656790511956737635L;
+
+		public NoSuchFieldException(String message) {
+			super(message);
+		}
+		
+	}
 }
