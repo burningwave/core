@@ -1064,8 +1064,10 @@ iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-coun
 #used to retrieve a Driver instance
 #It is also possible to use a custom JVM Driver which implements the org.burningwave.jvm.Driver interface.
 #Other possible values are: org.burningwave.jvm.HybridDriver, org.burningwave.jvm.HybridDriver
-jvm.driver=\
+jvm.driver.type=\
 	org.burningwave.jvm.DefaultDriver
+jvm.driver.init=\
+	false
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
 #the SLF4JManagedLoggerRepository will be instantiated, otherwise the SimpleManagedLoggerRepository will be instantiated
 managed-logger.repository=\
