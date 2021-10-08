@@ -393,9 +393,6 @@
 							<execution>
 								<id>default-testCompile</id>
 								<configuration>
-									<testExcludes>
-										<testExclude>module-info.java</testExclude>
-									</testExcludes>
 									<source>${target_version}</source>
 									<target>${target_version}</target>
 									<verbose>true</verbose>
@@ -428,10 +425,22 @@
 							<execution>
 								<id>default-testCompile</id>
 								<configuration>
-									<testExcludes>
-										<testExclude>module-info.java</testExclude>
-									</testExcludes>
 									<release>${target_version}</release>
+									<verbose>true</verbose>
+								</configuration>
+							</execution>
+							<execution>
+								<id>base-compile</id>
+								<goals>
+									<goal>compile</goal>
+								</goals>
+								<!-- recompile everything for target VM except the module-info.java -->
+								<configuration>
+									<excludes>
+										<exclude>module-info.java</exclude>
+									</excludes>
+									<source>${target_version}</source>
+									<target>${target_version}</target>
 									<verbose>true</verbose>
 								</configuration>
 							</execution>
