@@ -82,8 +82,8 @@
 	<properties>
 		<copyright.holder>Roberto Gentili</copyright.holder>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<!-- Can be changed with one of this values: 9, 10, 11, 12, 13, 14, 15, 16, 17 -->
-		<project_jdk_version>8</project_jdk_version>
+		<jdk_version>9</jdk_version>
+		<target_version>8</target_version>
 		<javadocExecutable.relativePath>bin/javadoc</javadocExecutable.relativePath>
 		<skipTests>true</skipTests>
 		<project.test.testSuite>AllExceptHeavyTestsSuite</project.test.testSuite>
@@ -265,45 +265,6 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${maven-compiler-plugin.version}</version>
-				<executions>
-					<execution>
-						<id>default-compile</id>
-						<configuration>
-							<release>9</release>
-							<verbose>true</verbose>
-						</configuration>
-					</execution>
-					<execution>
-						<id>default-testCompile</id>
-						<configuration>
-							<testExcludes>
-								<testExclude>module-info.java</testExclude>
-							</testExcludes>
-							<release>${project_jdk_version}</release>
-							<verbose>true</verbose>
-						</configuration>
-					</execution>
-					<execution>
-						<id>base-compile</id>
-						<goals>
-							<goal>compile</goal>
-						</goals>
-						<!-- recompile everything for target VM except the module-info.java -->
-						<configuration>
-							<excludes>
-								<exclude>module-info.java</exclude>
-							</excludes>
-							<source>${project_jdk_version}</source>
-							<target>${project_jdk_version}</target>
-							<verbose>true</verbose>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>${maven-surefire-plugin.version}</version>
 				<configuration>
@@ -404,7 +365,7 @@
 				<configuration>
 					<javadocExecutable>${java.home}/${javadocExecutable.relativePath}</javadocExecutable>
 					<encoding>UTF-8</encoding>
-					<source>${project_jdk_version}</source>
+					<source>${target_version}</source>
 				</configuration>
 				<executions>
 					<execution>
@@ -429,6 +390,99 @@
 	</reporting>
 
 	<profiles>
+		<profile>
+			<id>compile-with-jdk-8</id>
+			<activation>
+				<property>
+					<name>jdk_version</name>
+					<value>8</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<version>${maven-compiler-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>default-compile</id>
+								<configuration>
+									<source>${target_version}</source>
+									<target>${target_version}</target>
+									<excludes>
+										<exclude>module-info.java</exclude>
+									</excludes>
+								</configuration>
+							</execution>
+							<execution>
+								<id>default-testCompile</id>
+								<configuration>
+									<testExcludes>
+										<testExclude>module-info.java</testExclude>
+									</testExcludes>
+									<source>${target_version}</source>
+									<target>${target_version}</target>
+									<verbose>true</verbose>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>compile-with-jdk-9-or-later</id>
+			<activation>
+				<property>
+					<name>jdk_version</name>
+					<value>9</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<version>${maven-compiler-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>default-compile</id>
+								<configuration>
+									<release>9</release>
+									<verbose>true</verbose>
+								</configuration>
+							</execution>
+							<execution>
+								<id>default-testCompile</id>
+								<configuration>
+									<testExcludes>
+										<testExclude>module-info.java</testExclude>
+									</testExcludes>
+									<release>${target_version}</release>
+									<verbose>true</verbose>
+								</configuration>
+							</execution>
+							<execution>
+								<id>base-compile</id>
+								<goals>
+									<goal>compile</goal>
+								</goals>
+								<!-- recompile everything for target VM except the module-info.java -->
+								<configuration>
+									<excludes>
+										<exclude>module-info.java</exclude>
+									</excludes>
+									<source>${target_version}</source>
+									<target>${target_version}</target>
+									<verbose>true</verbose>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 		<!-- GPG Signature on release -->
 		<profile>
 			<id>release-sign-artifacts</id>
