@@ -242,26 +242,6 @@
 		</testResources>
 		<plugins>
 			<plugin>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<version>${maven-antrun-plugin.version}</version>
-				<executions>
-					<execution>
-                        <id>add-module-info-to-jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <target>
-                                <jar update="true" destfile="${project.build.directory}/${project.build.finalName}.jar">
-                                    <zipfileset prefix="META-INF/versions/9" dir="${project.build.directory}/classes" includes="module-info.class" />
-                                </jar>
-                            </target>
-                        </configuration>
-                    </execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>${maven-surefire-plugin.version}</version>
@@ -429,7 +409,7 @@
 		<profile>
 			<id>compile-with-jdk-9-or-later</id>
 			<activation>
-				<jdk>!1.8</jdk>
+				<jdk>[9,)</jdk>
 			</activation>
 			<build>
 				<plugins>
@@ -455,21 +435,26 @@
 									<verbose>true</verbose>
 								</configuration>
 							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<version>${maven-antrun-plugin.version}</version>
+						<executions>
 							<execution>
-								<id>base-compile</id>
-								<goals>
-									<goal>compile</goal>
-								</goals>
-								<!-- recompile everything for target VM except the module-info.java -->
-								<configuration>
-									<excludes>
-										<exclude>module-info.java</exclude>
-									</excludes>
-									<source>${target_version}</source>
-									<target>${target_version}</target>
-									<verbose>true</verbose>
-								</configuration>
-							</execution>
+		                        <id>add-module-info-to-jar</id>
+		                        <phase>package</phase>
+		                        <goals>
+		                            <goal>run</goal>
+		                        </goals>
+		                        <configuration>
+		                            <target>
+		                                <jar update="true" destfile="${project.build.directory}/${project.build.finalName}.jar">
+		                                    <zipfileset prefix="META-INF/versions/9" dir="${project.build.directory}/classes" includes="module-info.class" />
+		                                </jar>
+		                            </target>
+		                        </configuration>
+		                    </execution>
 						</executions>
 					</plugin>
 				</plugins>
