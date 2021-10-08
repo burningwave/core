@@ -214,7 +214,6 @@
 	</dependencies>
 
 	<build>
-		<finalName>${project.generated.artifacts.prefix}-${project.artifactId}-${project.version}</finalName>
 		<resources>
 			<resource>
 				<directory>${project.basedir}</directory>
