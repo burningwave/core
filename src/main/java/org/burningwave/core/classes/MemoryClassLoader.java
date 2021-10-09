@@ -320,17 +320,31 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	        	} catch (NoClassDefFoundError exc) {
 	        		String notFoundClassName = Classes.retrieveName(exc);
 	        		removeNotLoadedBytecode(className);
-	        		ManagedLoggersRepository.logWarn(getClass()::getName, "Could not load class " + className + " because class " + notFoundClassName + 
-						" could not be found, so it will be removed: " + exc.toString()
-					);
+	        		logWarn(className,
+	        			Strings.compile(
+	        				"Could not load class {} because class {} could not be found, so it will be removed: {}",
+	        				className, notFoundClassName, exc.toString()
+	        			)
+	        		);
 	    			throw exc;
 	        	}
 			} else {
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Bytecode of class {} not found", className);
+        		logWarn(className,
+        			Strings.compile(
+        				"Bytecode of class {} not found",
+        				className
+        			)
+        		);
 			}
 		} catch (Throwable exc) {
 			if (isClosed) {
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not load class {} because {} has been closed", className, this.toString());
+        		logWarn(className,
+        			Strings.compile(
+        				"Could not load class {} because {} has been closed",
+        				className,
+        				this.toString()
+        			)
+        		);
 			} else {
 				throw exc;
 			}
@@ -340,6 +354,10 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		} else {
 			throw new ClassNotFoundException(className);
 		}
+	}
+	
+	protected void logWarn(String className, String message) {
+		ManagedLoggersRepository.logWarn(getClass()::getName, message);
 	}
 	
 	Class<?> _defineClass(String className, java.nio.ByteBuffer byteCode, ProtectionDomain protectionDomain) {
