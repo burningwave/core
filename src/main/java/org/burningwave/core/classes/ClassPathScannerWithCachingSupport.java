@@ -49,6 +49,8 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
+import io.github.toolfactory.jvm.util.Strings;
+
 
 public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>> extends ClassPathScanner<I, R>{
 	
@@ -139,11 +141,14 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 		) {	
 			CacheableSearchConfig searchConfig = context.getSearchConfig();
 			FileSystemItem.Criteria fileFilter = searchConfig.buildScanFileCriteria();
-			FileSystemItem.Criteria filterAndExecutor = buildFileAndClassTesterAndExecutor(context, fileFilter);
+			FileSystemItem.Criteria filterAndExecutor = buildFileClassTesterAndElaborator(context, fileFilter);
 			boolean scanFileCriteriaHasNoPredicate = searchConfig.scanFileCriteriaHasNoPredicate();
 			boolean classCriteriaHasNoPredicate = searchConfig.getClassCriteria().hasNoPredicate();	
 			
 			FileSystemItem currentScannedPath = FileSystemItem.ofPath(basePath);
+			if (!currentScannedPath.isContainer()) {
+				throw new IllegalArgumentException(Strings.compile("{} is not a folder or archive", currentScannedPath.getAbsolutePath()));
+			}
 			BiPredicate<SearchConfigAbst<?>, String> refreshCache = searchConfig.getCheckForAddedClassesPredicate();
 			if (refreshCache != null && refreshCache.test(searchConfig, basePath)) {
 				Synchronizer.execute(instanceId + "_" + basePath, () -> {
@@ -156,7 +161,7 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 			}
 			Map<String, I> classesForPath = cache.get(basePath);
 			if (classesForPath == null) {
-				if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate) {
+				if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate && searchConfig.getFilesRetriever() == SearchConfigAbst.FIND_IN_ALL_CHILDREN) {
 					Mutex mutex = Synchronizer.getMutex(instanceId + "_" + basePath);
 					synchronized(mutex) {
 						classesForPath = cache.get(basePath);
@@ -176,7 +181,7 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 					context.addAllItemsFound(basePath, classesForPath);
 					return;
 				} else {
-					currentScannedPath.findInAllChildren(filterAndExecutor);
+					searchConfig.getFilesRetriever().apply(currentScannedPath, filterAndExecutor);
 					return;
 				}
 			}

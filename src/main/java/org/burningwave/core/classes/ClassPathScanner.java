@@ -50,6 +50,8 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
+import io.github.toolfactory.jvm.util.Strings;
+
 @SuppressWarnings("unchecked")
 public interface ClassPathScanner<I, R extends SearchResult<I>> {
 	
@@ -200,35 +202,43 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 		
 		void searchInFileSystem(C context) {
 			SearchConfigAbst<?> searchConfig = context.getSearchConfig();
-			FileSystemItem.Criteria filter = buildFileAndClassTesterAndExecutor(context, searchConfig.buildScanFileCriteria());
+			FileSystemItem.Criteria filter = buildFileClassTesterAndElaborator(context, searchConfig.buildScanFileCriteria());
 			IterableObjectHelper.iterateParallelIf(
 				context.getSearchConfig().getPaths(), 
-				basePath -> {
-					FileSystemItem.ofPath(basePath).refresh().findInAllChildren(filter);
+				currentScannedPath -> {
+					FileSystemItem currentScannedPathFis = FileSystemItem.ofPath(currentScannedPath);
+					if (!currentScannedPathFis.isContainer()) {
+						throw new IllegalArgumentException(Strings.compile("{} is not a folder or archive", currentScannedPathFis.getAbsolutePath()));
+					}
+					searchConfig.getFilesRetriever().apply(currentScannedPathFis.refresh(), filter);
 				},
 				item -> item.size() > 1
 			);		
 		}
 		
-		FileSystemItem.Criteria buildFileAndClassTesterAndExecutor(C context, FileSystemItem.Criteria fileFilter) {
-			Predicate<FileSystemItem[]> classFilePredicate = fileFilter.getOriginalPredicateOrTruePredicateIfPredicateIsNull();
-			FileSystemItem.Criteria classTesterAndExecutor = FileSystemItem.Criteria.forAllFileThat(
+		FileSystemItem.Criteria buildFileClassTesterAndElaborator(C context, FileSystemItem.Criteria fileFilter) {
+			Predicate<FileSystemItem[]> filePredicate = fileFilter.getOriginalPredicateOrTruePredicateIfPredicateIsNull();
+			FileSystemItem.Criteria classFileTesterAndElaborator = FileSystemItem.Criteria.forAllFileThat(
 				(child, basePath) -> {
-					boolean isClass = false;
-					if (isClass = classFilePredicate.test(new FileSystemItem[]{child, basePath})) {
-						analyzeAndAddItemsToContext(context, child, basePath);
+					boolean pathMustBeScanned = false;
+					if (pathMustBeScanned = filePredicate.test(new FileSystemItem[]{child, basePath})) {
+						try {
+							analyzeAndAddItemsToContext(context, child, basePath);
+						} catch (Throwable exc) {
+							ManagedLoggersRepository.logWarn(getClass()::getName, "Could not analyze {}: {}", child.getAbsolutePath(), exc.getMessage());
+						}
 					}
-					return isClass;
+					return pathMustBeScanned;
 				}
 			);
 			
 			if (fileFilter.hasNoExceptionHandler()) {
-				classTesterAndExecutor.setDefaultExceptionHandler();
+				classFileTesterAndElaborator.setDefaultExceptionHandler();
 			} else {
-				classTesterAndExecutor.setExceptionHandler(fileFilter.getExceptionHandler());
+				classFileTesterAndElaborator.setExceptionHandler(fileFilter.getExceptionHandler());
 			}
 			
-			return classTesterAndExecutor;
+			return classFileTesterAndElaborator;
 		}
 
 		void analyzeAndAddItemsToContext(C context, FileSystemItem child, FileSystemItem basePath) {

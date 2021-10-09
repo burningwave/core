@@ -229,11 +229,11 @@ public class FileSystemItem {
 		return findIn(this::getChildren0, filter, HashSet::new);
 	}
 	
-	public Collection<FileSystemItem> findInChildrenRecursive(FileSystemItem.Criteria filter) {
+	public Collection<FileSystemItem> findRecursiveInChildren(FileSystemItem.Criteria filter) {
 		Collection<FileSystemItem> fileSystemItems = findIn(this::getChildren0, filter, ConcurrentHashMap::newKeySet);
 		for (FileSystemItem fis : fileSystemItems) {
 			if (fis.isContainer()) {
-				fileSystemItems.addAll(fis.findInChildrenRecursive(filter));
+				fileSystemItems.addAll(fis.findRecursiveInChildren(filter));
 			}
 		}
 		return fileSystemItems;
