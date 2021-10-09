@@ -285,7 +285,7 @@ public class StaticComponentContainer {
 			} else {
 				Driver = io.github.toolfactory.jvm.Driver.Factory.getNew();
 			}			
-			if (!Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.JVM_DRIVER_INIT))) {
+			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.JVM_DRIVER_INIT))) {
 				Driver.init();
 			}			
 			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
