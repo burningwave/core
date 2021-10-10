@@ -161,7 +161,7 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 			}
 			Map<String, I> classesForPath = cache.get(basePath);
 			if (classesForPath == null) {
-				if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate && searchConfig.getFilesRetriever() == SearchConfigAbst.FIND_IN_ALL_CHILDREN) {
+				if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate && searchConfig.isDefaultFilesRetrieverSet()) {
 					Mutex mutex = Synchronizer.getMutex(instanceId + "_" + basePath);
 					synchronized(mutex) {
 						classesForPath = cache.get(basePath);

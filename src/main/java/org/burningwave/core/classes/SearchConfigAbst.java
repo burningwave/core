@@ -200,6 +200,10 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		return filesRetriever;
 	}
 	
+	boolean isDefaultFilesRetrieverSet() {
+		return filesRetriever == FIND_IN_ALL_CHILDREN;
+	}
+	
 	boolean scanFileCriteriaHasNoPredicate() {
 		return scanFileCriteriaSupplier == null && scanFileCriteriaModifier == null;
 	}

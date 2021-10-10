@@ -29,9 +29,9 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,6 +46,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -53,6 +54,7 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 
 
+@SuppressWarnings("resource")
 public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryClassLoader {
 	Collection<String> loadedPaths;
 	PathHelper pathHelper;
@@ -138,6 +140,51 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 								);
 							}
 							loadedPaths.add(path);
+							scannedPaths.add(path);
+						}
+					});
+				}
+			}
+		} catch (Throwable exc) {
+			if (isClosed) {
+				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute scanPathsAndAddAllByteCodesFound because {} has been closed", this.toString());
+			} else {
+				throw exc;
+			}
+		}
+		return scannedPaths;
+	}
+	
+	
+	Collection<String> scanPathsAndAddAllByteCodesFound(
+		Collection<String> paths,
+		BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> childrenSupplier,
+		FileSystemItem.Criteria classFileCriteriaAndConsumer,
+		Predicate<String> checkForAddedClasses
+	) {
+		Collection<String> scannedPaths = new HashSet<>();
+		final FileSystemItem.Criteria finalClassFileCriteriaAndConsumer =
+			classFileCriteriaAndConsumer != null ? classFileCriteriaAndConsumer.and().allFileThat((child, pathFIS) -> {
+				try {
+					JavaClass.use(child.toByteBuffer(), javaClass ->
+						addByteCode0(javaClass.getName(), javaClass.getByteCode())
+					);
+					return true;
+				} catch (Throwable exc) {
+					return false;
+				}
+				
+			}) : this.classFileCriteriaAndConsumer;
+		try {
+			for (String path : paths) {
+				if (checkForAddedClasses.test(path) || !hasBeenLoaded(path)) {
+					Synchronizer.execute(instanceId + "_" + path, () -> {
+						if (checkForAddedClasses.test(path) || !hasBeenLoaded(path)) {
+							FileSystemItem pathFIS = FileSystemItem.ofPath(path);
+							if (checkForAddedClasses.test(path)) {
+								pathFIS.refresh();
+							}
+							childrenSupplier.apply(pathFIS, finalClassFileCriteriaAndConsumer);
 							scannedPaths.add(path);
 						}
 					});
