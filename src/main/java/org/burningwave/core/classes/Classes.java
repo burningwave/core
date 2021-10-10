@@ -922,7 +922,8 @@ public class Classes implements MembersRetriever {
 		public Collection<String> getLoadedPaths(ClassLoader classLoader) {
 			Collection<String> paths = new LinkedHashSet<>();
 			if (classLoader instanceof PathScannerClassLoader) {
-				paths.addAll(((PathScannerClassLoader)classLoader).loadedPaths);
+				paths.addAll(((PathScannerClassLoader)classLoader).loadedPaths.entrySet()
+					.stream().filter(entry -> entry.getValue()).map(entry -> entry.getKey()).collect(Collectors.toSet()));
 			} else {
 				URL[] resUrl = getURLs(classLoader);
 				if (resUrl != null) {
