@@ -30,6 +30,7 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
@@ -37,7 +38,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.File;
 import java.io.IOException;
@@ -227,6 +227,16 @@ public class FileSystemItem {
 
 	public Collection<FileSystemItem> findInChildren(FileSystemItem.Criteria filter) {
 		return findIn(this::getChildren0, filter, HashSet::new);
+	}
+	
+	public Collection<FileSystemItem> findRecursiveInChildren(FileSystemItem.Criteria filter) {
+		Collection<FileSystemItem> fileSystemItems = findIn(this::getChildren0, filter, ConcurrentHashMap::newKeySet);
+		for (FileSystemItem fis : fileSystemItems) {
+			if (fis.isContainer()) {
+				fileSystemItems.addAll(fis.findRecursiveInChildren(filter));
+			}
+		}
+		return fileSystemItems;
 	}
 
 	public Collection<FileSystemItem> findInChildren(

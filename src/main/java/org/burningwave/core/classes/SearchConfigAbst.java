@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -44,9 +45,14 @@ import java.util.stream.Stream;
 import org.burningwave.core.Closeable;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.io.FileSystemItem;
+import org.burningwave.core.io.FileSystemItem.Criteria;
 
 @SuppressWarnings("unchecked")
 abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closeable, ManagedLogger {
+	final static BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> FIND_IN_CHILDREN = FileSystemItem::findInChildren;
+	final static BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> FIND_RECURSIVE_IN_CHILDREN = FileSystemItem::findRecursiveInChildren;
+	final static BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> FIND_IN_ALL_CHILDREN = FileSystemItem::findInAllChildren;
+	
 	
 	ClassCriteria classCriteria;
 	Collection<String> paths;
@@ -58,8 +64,9 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 	boolean useDefaultPathScannerClassLoader;
 	boolean useDefaultPathScannerClassLoaderAsParent;
 	boolean waitForSearchEnding;
-	protected BiPredicate<SearchConfigAbst<?>, String> checkForAddedClassesForAllPathThat;
-	protected FileSystemItem.Criteria scanFileCriteriaModifier;
+	BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> filesRetriever;
+	BiPredicate<SearchConfigAbst<?>, String> checkForAddedClassesForAllPathThat;
+	FileSystemItem.Criteria scanFileCriteriaModifier;
 	
 
 	SearchConfigAbst(Collection<String>... pathsColl) {
@@ -69,6 +76,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		addPaths(pathsColl);
 		classCriteria = ClassCriteria.create();
 		checkForAddedClassesForAllPathThat = (searchConfig, path) -> false;
+		filesRetriever = FIND_IN_ALL_CHILDREN;
 	}
 	
 	void init(PathScannerClassLoader classSupplier) {
@@ -164,8 +172,10 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		return (S)this;
 	}
 	
-	S withDefaultScanFileCriteria(FileSystemItem.Criteria scanFileCriteria) {
-		defaultScanFileCriteriaSupplier = () -> scanFileCriteria;
+	S withDefaultScanFileCriteriaIfNull(FileSystemItem.Criteria scanFileCriteria) {
+		if (defaultScanFileCriteriaSupplier == null) {
+			defaultScanFileCriteriaSupplier = () -> scanFileCriteria;
+		}
 		return (S)this;
 	}
 	
@@ -184,6 +194,14 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 			criteria = criteria.and(scanFileCriteriaModifier);
 		}
 		return criteria;
+	}
+	
+	BiFunction<FileSystemItem, Criteria, Collection<FileSystemItem>> getFilesRetriever() {
+		return filesRetriever;
+	}
+	
+	boolean isDefaultFilesRetrieverSet() {
+		return filesRetriever == FIND_IN_ALL_CHILDREN;
 	}
 	
 	boolean scanFileCriteriaHasNoPredicate() {
@@ -253,11 +271,27 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		return checkForAddedClassesForAllPathThat;
 	}
 	
+	public S findInChildren() {
+		filesRetriever = FIND_IN_CHILDREN;
+		return (S)this;
+	}
+	
+	public S findRecursiveInChildren() {
+		filesRetriever = FIND_RECURSIVE_IN_CHILDREN;
+		return (S)this;
+	}
+	
+	public S findInAllChildren() {
+		filesRetriever = FIND_IN_ALL_CHILDREN;
+		return (S)this;
+	}
+	
 	abstract S newInstance();
 	
 	@SuppressWarnings("hiding")
 	public <S extends SearchConfigAbst<S>> S copyTo(S destConfig) {
 		destConfig.classCriteria = this.classCriteria.createCopy();
+		destConfig.filesRetriever = this.filesRetriever;
 		destConfig.paths = new HashSet<>();
 		destConfig.paths.addAll(this.paths);
 		destConfig.resourceSupplier = this.resourceSupplier;
@@ -283,6 +317,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 	public void close() {
 		this.classCriteria.close();
 		this.classCriteria = null;
+		this.filesRetriever = null;
 		this.scanFileCriteriaSupplier = null;
 		this.defaultScanFileCriteriaSupplier = null;
 		this.resourceSupplier = null;

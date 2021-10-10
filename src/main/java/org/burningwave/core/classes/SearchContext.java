@@ -30,8 +30,9 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
@@ -199,20 +200,35 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 					if (!skippedClassNames.contains(notFoundClassName)) {
 						if (!isARecursiveCall) {
 							if (pathScannerClassLoaderScannedPaths.isEmpty()) {
-								synchronized(pathScannerClassLoaderScannedPaths) {
+								Synchronizer.execute(this + "_pathScannerClassLoaderScannedPaths", () -> {
 									if (pathScannerClassLoaderScannedPaths.isEmpty()) {
-										pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
-											getPathsToBeScanned(),
-											(path) -> {
-												return searchConfig.getCheckForAddedClassesPredicate().and(
-													(searchConfig, _path) ->
-														!pathScannerClassLoaderScannedPaths.contains(_path)
-												).test(searchConfig, path);
-											}
-										);
-										pathScannerClassLoaderScannedPaths.addAll(getPathsToBeScanned());
+										if (searchConfig.isDefaultFilesRetrieverSet() && searchConfig.scanFileCriteriaHasNoPredicate()) {
+											pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
+												getPathsToBeScanned(),
+												(path) -> {
+													return searchConfig.getCheckForAddedClassesPredicate().and(
+														(searchConfig, _path) ->
+															!pathScannerClassLoaderScannedPaths.contains(_path)
+													).test(searchConfig, path);
+												}
+											);
+											pathScannerClassLoaderScannedPaths.addAll(getPathsToBeScanned());
+										} else {
+											pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
+												getPathsToBeScanned(),
+												searchConfig.getFilesRetriever(),
+												searchConfig.buildScanFileCriteria(),
+												(path) -> {
+													return searchConfig.getCheckForAddedClassesPredicate().and(
+														(searchConfig, _path) ->
+															!pathScannerClassLoaderScannedPaths.contains(_path)
+													).test(searchConfig, path);
+												}
+											);
+											pathScannerClassLoaderScannedPaths.addAll(getPathsToBeScanned());
+										}
 									}
-								}
+								});
 							}
 							return execute(supplier, defaultValueSupplier, classNameSupplier, true);
 						} else {

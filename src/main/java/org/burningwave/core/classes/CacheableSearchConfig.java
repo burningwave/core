@@ -62,4 +62,5 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 		((CacheableSearchConfig)destConfig).checkForAddedClassesForAllPathThat = this.checkForAddedClassesForAllPathThat;
 		return super.copyTo(destConfig);
 	}
+
 }
