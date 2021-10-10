@@ -152,13 +152,11 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 		}
 
 		R findBy(SearchConfigAbst<?> input, Consumer<C> searcher) {
-			if (input.defaultScanFileCriteriaSupplier == null) {
-				input.withDefaultScanFileCriteria(
-					FileSystemItem.Criteria.forClassTypeFiles(
-						config.resolveStringValue(ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS)
-					)
-				);
-			}
+			input.withDefaultScanFileCriteriaIfNull(
+				FileSystemItem.Criteria.forClassTypeFiles(
+					config.resolveStringValue(ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS)
+				)
+			);
 			SearchConfigAbst<?> searchConfig = input.createCopy();
 			C context = createContext(
 				searchConfig
@@ -265,7 +263,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 						PathScannerClassLoader.create(
 							searchConfig.parentClassLoaderForPathScannerClassLoader, 
 							pathHelper,
-							searchConfig.withDefaultScanFileCriteria(
+							searchConfig.withDefaultScanFileCriteriaIfNull(
 								FileSystemItem.Criteria.forClassTypeFiles(
 									config.resolveStringValue(
 										getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()

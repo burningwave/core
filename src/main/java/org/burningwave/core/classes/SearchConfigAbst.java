@@ -172,8 +172,10 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		return (S)this;
 	}
 	
-	S withDefaultScanFileCriteria(FileSystemItem.Criteria scanFileCriteria) {
-		defaultScanFileCriteriaSupplier = () -> scanFileCriteria;
+	S withDefaultScanFileCriteriaIfNull(FileSystemItem.Criteria scanFileCriteria) {
+		if (defaultScanFileCriteriaSupplier == null) {
+			defaultScanFileCriteriaSupplier = () -> scanFileCriteria;
+		}
 		return (S)this;
 	}
 	
