@@ -179,6 +179,16 @@ public class ClassHunterTest extends BaseTest {
 			(result) ->
 				result.getClasses(), true
 		);
+		
+		testNotEmpty(
+			() -> componentSupplier.getClassHunter().findBy(
+				SearchConfig.forPaths(
+					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
+				)
+			),
+			(result) ->
+				result.getClasses(), true
+		);
 	}
 
 	@Test

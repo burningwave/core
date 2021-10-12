@@ -151,6 +151,10 @@ public class BaseTest implements Component {
 		} catch (Throwable exc) {
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 		}
+		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
+			getClass()::getName,
+			getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(),initialTime)
+		);
 		assertTrue(isNotEmpty);
 	}
 	

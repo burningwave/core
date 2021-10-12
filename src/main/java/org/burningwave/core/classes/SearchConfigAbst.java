@@ -79,6 +79,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		pathsSupplier = classLoader -> {
 			return new AbstractMap.SimpleEntry<>(classLoader, ConcurrentHashMap.newKeySet());
 		};
+		useDefaultPathScannerClassLoader(true);
 		waitForSearchEnding = true;
 		classCriteria = ClassCriteria.create();
 		filesRetriever = FIND_IN_ALL_CHILDREN;
@@ -86,16 +87,16 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 	
 	<I, C extends SearchContext<I>> C init(ClassPathScanner.Abst<I, C, ?> classPathScanner) {
 		if (fileFilter == null) {
-			fileFiltersExtenallySet = true && additionalFileFilters == null;
+			fileFiltersExtenallySet = additionalFileFilters != null;
 			fileFilter = FileSystemItem.Criteria.forClassTypeFiles(
 				classPathScanner.config.resolveStringValue(
 					classPathScanner.getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()
 				)
 			);
-		}
-		if (fileFiltersExtenallySet == null) {
+		} else {
 			fileFiltersExtenallySet = Boolean.TRUE;
 		}
+
 		PathScannerClassLoader defaultPathScannerClassLoader = classPathScanner.getDefaultPathScannerClassLoader(this);
 		if (useDefaultPathScannerClassLoaderAsParent) {
 			parentClassLoaderForPathScannerClassLoader = defaultPathScannerClassLoader;

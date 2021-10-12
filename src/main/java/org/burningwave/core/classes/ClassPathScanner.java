@@ -169,7 +169,8 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 					FileSystemItem.Criteria pathScannerClassLoaderFiller = null;
 					if (searchConfig.getRefreshPathIf().test(currentScannedPath) || 
 						!pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
-						if (!searchConfig.isFileFilterExternallySet() && searchConfig.getFilesRetriever() == SearchConfigAbst.FIND_IN_CHILDREN) {
+						if (!searchConfig.isFileFilterExternallySet() &&
+							searchConfig.getFilesRetriever() != SearchConfigAbst.FIND_IN_CHILDREN) {
 							loadPathCompletely.set(Boolean.TRUE);
 						} else {
 							loadPathCompletely.set(Boolean.FALSE);
