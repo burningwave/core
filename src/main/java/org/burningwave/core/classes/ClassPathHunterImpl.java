@@ -28,14 +28,9 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
-
 import java.util.Collection;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Predicate;
 
 import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.io.FileSystemItem;
@@ -75,7 +70,7 @@ class ClassPathHunterImpl extends ClassPathScannerWithCachingSupport.Abst<Collec
 	
 	@Override
 	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(
-		ClassPathHunterImpl.SearchContext context, String baseAbsolutePath, String currentScannedItemAbsolutePath, Collection<Class<?>> classes
+		ClassPathHunterImpl.SearchContext context, Collection<Class<?>> classes
 	) {
 		ClassCriteria.TestContext testContext;
 		for (Class<?> cls : classes) {
@@ -85,54 +80,7 @@ class ClassPathHunterImpl extends ClassPathScannerWithCachingSupport.Abst<Collec
 		}		
 		return testContext = context.test(null);
 	}
-	
-	@Override
-	TestContext testPathAndCachedItem(
-		ClassPathHunterImpl.SearchContext context,
-		FileSystemItem[] cachedItemPathAndBasePath, 
-		Collection<Class<?>> classes, 
-		Predicate<FileSystemItem[]> fileFilterPredicate
-	) {
-		AtomicReference<ClassCriteria.TestContext> criteriaTestContextAR = new AtomicReference<>();
-		cachedItemPathAndBasePath[0].findFirstInAllChildren(
-			FileSystemItem.Criteria.forAllFileThat(
-				(child, basePath) -> {
-					boolean matchPredicate = false;
-					if (matchPredicate = fileFilterPredicate.test(new FileSystemItem[]{child, basePath})) {
-						criteriaTestContextAR.set(
-							testCachedItem(
-								context, cachedItemPathAndBasePath[1].getAbsolutePath(), cachedItemPathAndBasePath[0].getAbsolutePath(), classes
-							)
-						);
-					}
-					return matchPredicate;
-				}
-			)
-		);
-		return criteriaTestContextAR.get() != null? criteriaTestContextAR.get() : context.test(null);
-	}
-	
-	@Override
-	void iterateAndTestCachedPaths(
-		ClassPathHunterImpl.SearchContext context,
-		String basePath,
-		Map<String, Collection<Class<?>>> itemsForPath,
-		FileSystemItem.Criteria fileFilter
-	) {
-		if (fileFilter.hasNoExceptionHandler()) {
-			fileFilter = fileFilter.createCopy().setDefaultExceptionHandler();
-		}
-		for (Entry<String, Collection<Class<?>>> cachedItemAsEntry : itemsForPath.entrySet()) {
-			String absolutePathOfItem = cachedItemAsEntry.getKey();
-			try {
-				if (FileSystemItem.ofPath(absolutePathOfItem).findFirstInAllChildren(fileFilter) != null) {
-					context.addItemFound(basePath, cachedItemAsEntry.getKey(), cachedItemAsEntry.getValue());
-				}
-			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(getClass()::getName, "Could not test cached entry of path " + absolutePathOfItem, exc);
-			}
-		}
-	}
+
 	
 	@Override
 	void addToContext(ClassPathHunterImpl.SearchContext context, TestContext criteriaTestContext,

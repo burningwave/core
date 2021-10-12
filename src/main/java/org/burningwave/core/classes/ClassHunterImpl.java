@@ -74,7 +74,7 @@ class ClassHunterImpl extends ClassPathScannerWithCachingSupport.Abst<Class<?>, 
 	}
 	
 	@Override
-	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(ClassHunterImpl.SearchContext context, String path, String key, Class<?> cls) {
+	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(ClassHunterImpl.SearchContext context, Class<?> cls) {
 		return context.test(context.retrieveClass(cls));
 	}
 	
