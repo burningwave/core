@@ -60,7 +60,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	Predicate<FileSystemItem> refreshPathIf;
 	Boolean fileFiltersExtenallySet;
 	FileSystemItem.Criteria fileFilter;
-	FileSystemItem.Criteria additionalFileFilters;
+	FileSystemItem.Criteria additionalFileFilter;
 	ClassCriteria classCriteria;
 	
 	Supplier<Collection<FileSystemItem>> pathsRetriever;
@@ -86,7 +86,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	
 	<I, C extends SearchContext<I>> C init(ClassPathScanner.Abst<I, C, ?> classPathScanner) {
 		if (fileFilter == null) {
-			fileFiltersExtenallySet = additionalFileFilters != null;
+			fileFiltersExtenallySet = additionalFileFilter != null;
 			fileFilter = FileSystemItem.Criteria.forClassTypeFiles(
 				classPathScanner.config.resolveStringValue(
 					classPathScanner.getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()
@@ -262,11 +262,11 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	}
 	
 	public SearchConfig addFileFilter(FileSystemItem.Criteria filter) {
-		if (additionalFileFilters == null) {
-			additionalFileFilters = filter;
+		if (additionalFileFilter == null) {
+			additionalFileFilter = filter;
 			return this;
 		}
-		additionalFileFilters = additionalFileFilters.and(filter);
+		additionalFileFilter = additionalFileFilter.and(filter);
 		return this;
 	}
 	
@@ -332,8 +332,8 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	}
 	
 	FileSystemItem.Criteria getAllFileFilters(){
-		if (additionalFileFilters != null) {
-			return fileFilter.and(additionalFileFilters);
+		if (additionalFileFilter != null) {
+			return fileFilter.and(additionalFileFilter);
 		}
 		return fileFilter;
 	}
@@ -398,7 +398,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		destConfig.findFunctionSupplier = this.findFunctionSupplier;
 		destConfig.refreshPathIf = this.refreshPathIf;
 		destConfig.fileFilter = this.fileFilter;
-		destConfig.additionalFileFilters = this.additionalFileFilters;
+		destConfig.additionalFileFilter = this.additionalFileFilter;
 		destConfig.pathsSupplier = this.pathsSupplier;
 		destConfig.optimizePaths = this.optimizePaths;
 		destConfig.useDefaultPathScannerClassLoader = this.useDefaultPathScannerClassLoader;
@@ -422,7 +422,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		this.refreshPathIf = null;
 		this.fileFilter = null;
 		this.pathsSupplier = null;
-		this.additionalFileFilters = null;
+		this.additionalFileFilter = null;
 		this.parentClassLoaderForPathScannerClassLoader = null;
 		this.pathScannerClassLoader = null;
 	}
