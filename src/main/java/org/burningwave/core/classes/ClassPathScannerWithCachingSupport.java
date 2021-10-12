@@ -38,7 +38,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -112,7 +111,6 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 			C context = searchConfig.isInitialized() ? searchConfig.getSearchContext() : searchConfig.init(this);
 			PathScannerClassLoader pathScannerClassLoader = context.pathScannerClassLoader;
 			Collection<FileSystemItem> pathsToBeScanned = searchConfig.getPathsSupplier().apply(pathScannerClassLoader).getValue();
-			final FileSystemItem.Criteria allFileFilters = searchConfig.getAllFileFilters();
 			Collection<Map.Entry<FileSystemItem, Collection<FileSystemItem>>> classFilesForPath = ConcurrentHashMap.newKeySet();
 			IterableObjectHelper.iterateParallelIf(
 				pathsToBeScanned, 
@@ -120,44 +118,43 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 					if (!currentScannedPath.isContainer()) {
 						throw new IllegalArgumentException(Strings.compile("{} is not a folder or archive", currentScannedPath.getAbsolutePath()));
 					}
-					AtomicReference<FileSystemItem.Criteria> finalFilter = new AtomicReference<>(allFileFilters);
-					AtomicReference<Boolean> loadPathCompletely = new AtomicReference<>();
-					FileSystemItem.Criteria pathScannerClassLoaderFiller = null;
-					if (searchConfig.getRefreshPathIf().test(currentScannedPath) || 
-						!pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
-						if (!searchConfig.isFileFilterExternallySet() &&
-							searchConfig.getFilesRetriever() != SearchConfigAbst.FIND_IN_CHILDREN) {
-							loadPathCompletely.set(Boolean.TRUE);
-						} else {
-							loadPathCompletely.set(Boolean.FALSE);
-						}
-						finalFilter.set(finalFilter.get().and(pathScannerClassLoaderFiller = getPathScannerClassLoaderFiller(pathScannerClassLoader)));
-					}
-					if (pathScannerClassLoaderFiller == null) {
+					if (!searchConfig.getRefreshPathIf().test(currentScannedPath) && pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
 						classFilesForPath.add(
 							new AbstractMap.SimpleImmutableEntry<>(
 								currentScannedPath,
 								searchConfig.getFilesRetriever().apply(
 									searchConfig.getRefreshPathIf().test(currentScannedPath) ?
 										currentScannedPath.refresh() : currentScannedPath	,
-									finalFilter.get()
+									searchConfig.getAllFileFilters()
 								)
 							)
 						);
 					} else {
 						Synchronizer.execute(pathScannerClassLoader.instanceId + "_" + currentScannedPath.getAbsolutePath(), () -> {
-							if (!pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
-								pathScannerClassLoader.loadedPaths.put(currentScannedPath.getAbsolutePath(), loadPathCompletely.get());
-								classFilesForPath.add(
-									new AbstractMap.SimpleImmutableEntry<>(
-										currentScannedPath,
-										searchConfig.getFilesRetriever().apply(
-											searchConfig.getRefreshPathIf().test(currentScannedPath) ?
-												currentScannedPath.refresh() : currentScannedPath	,
-											finalFilter.get()
-										)
+							Boolean loadPathCompletely = null;
+							FileSystemItem.Criteria allFileFilters = searchConfig.getAllFileFilters();
+							if (searchConfig.getRefreshPathIf().test(currentScannedPath) || 
+								!pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
+								if (!searchConfig.isFileFilterExternallySet() &&
+									searchConfig.getFilesRetriever() != SearchConfigAbst.FIND_IN_CHILDREN) {
+									loadPathCompletely = Boolean.TRUE;
+								} else {
+									loadPathCompletely = Boolean.FALSE;
+								}
+								allFileFilters = allFileFilters.and(getPathScannerClassLoaderFiller(pathScannerClassLoader));
+							}
+							classFilesForPath.add(
+								new AbstractMap.SimpleImmutableEntry<>(
+									currentScannedPath,
+									searchConfig.getFilesRetriever().apply(
+										searchConfig.getRefreshPathIf().test(currentScannedPath) ?
+											currentScannedPath.refresh() : currentScannedPath	,
+										allFileFilters
 									)
-								);
+								)
+							);
+							if (loadPathCompletely != null) {
+								pathScannerClassLoader.loadedPaths.put(currentScannedPath.getAbsolutePath(), loadPathCompletely);
 							}
 						});
 					}
