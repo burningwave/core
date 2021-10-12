@@ -39,7 +39,7 @@ import org.burningwave.core.io.FileSystemItem;
 
 
 @SuppressWarnings("resource")
-public class SearchConfig extends SearchConfigAbst<SearchConfig> {
+public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 	
 	SearchConfig() {
 		super();
@@ -100,7 +100,4 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig> {
 	}
 	
 	
-	public static class PathConfig {
-		
-	}
 }

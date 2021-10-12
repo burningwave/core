@@ -53,7 +53,6 @@ import org.burningwave.core.iterable.Properties.Event;
 
 import io.github.toolfactory.jvm.util.Strings;
 
-@SuppressWarnings("unchecked")
 public interface ClassPathScanner<I, R extends SearchResult<I>> {
 	
 	public static class Configuration {
@@ -158,21 +157,6 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			PathScannerClassLoader pathScannerClassLoader = context.pathScannerClassLoader;
 			Collection<FileSystemItem> pathsToBeScanned = searchConfig.getPathsSupplier().apply(pathScannerClassLoader).getValue();
 			final FileSystemItem.Criteria allFileFilters = searchConfig.getAllFileFilters();
-			FileSystemItem.Criteria pathScannerFiller = FileSystemItem.Criteria.forAllFileThat(fileSystemItem -> {
-				JavaClass javaClass = fileSystemItem.toJavaClass();
-				try {
-					String className = javaClass.getName();
-					if (pathScannerClassLoader.loadedByteCodes.get(className) == null &&
-						pathScannerClassLoader.notLoadedByteCodes.get(className) == null) {
-						pathScannerClassLoader.addByteCode0(className, javaClass.getByteCode());
-					}
-				} catch (NullPointerException exc) {
-					if (javaClass != null) {
-						throw exc;
-					}					
-				}
-				return true;
-			});
 			Collection<Map.Entry<FileSystemItem, Collection<FileSystemItem>>> classFilesForPath = ConcurrentHashMap.newKeySet();
 			IterableObjectHelper.iterateParallelIf(
 				pathsToBeScanned, 
@@ -180,17 +164,19 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 					if (!currentScannedPath.isContainer()) {
 						throw new IllegalArgumentException(Strings.compile("{} is not a folder or archive", currentScannedPath.getAbsolutePath()));
 					}
-					Synchronizer.execute(pathScannerClassLoader.instanceId + "_" + currentScannedPath.getAbsolutePath(), () -> {
-						AtomicReference<FileSystemItem.Criteria> finalFilter = new AtomicReference<>(allFileFilters);
-						if (searchConfig.getRefreshPathIf().test(currentScannedPath) || 
-							!pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
-							if (!searchConfig.isFileFilterExternallySet() && searchConfig.getFilesRetriever() == SearchConfigAbst.FIND_IN_CHILDREN) {
-								pathScannerClassLoader.loadedPaths.put(currentScannedPath.getAbsolutePath(), Boolean.TRUE);
-							} else {
-								pathScannerClassLoader.loadedPaths.putIfAbsent(currentScannedPath.getAbsolutePath(), Boolean.FALSE);
-							}
-							finalFilter.set(finalFilter.get().and(pathScannerFiller));
+					AtomicReference<FileSystemItem.Criteria> finalFilter = new AtomicReference<>(allFileFilters);
+					AtomicReference<Boolean> loadPathCompletely = new AtomicReference<>();
+					FileSystemItem.Criteria pathScannerClassLoaderFiller = null;
+					if (searchConfig.getRefreshPathIf().test(currentScannedPath) || 
+						!pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
+						if (!searchConfig.isFileFilterExternallySet() && searchConfig.getFilesRetriever() == SearchConfigAbst.FIND_IN_CHILDREN) {
+							loadPathCompletely.set(Boolean.TRUE);
+						} else {
+							loadPathCompletely.set(Boolean.FALSE);
 						}
+						finalFilter.set(finalFilter.get().and(pathScannerClassLoaderFiller = getPathScannerClassLoaderFiller(pathScannerClassLoader)));
+					}
+					if (pathScannerClassLoaderFiller == null) {
 						classFilesForPath.add(
 							new AbstractMap.SimpleImmutableEntry<>(
 								currentScannedPath,
@@ -201,7 +187,23 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 								)
 							)
 						);
-					});
+					} else {
+						Synchronizer.execute(pathScannerClassLoader.instanceId + "_" + currentScannedPath.getAbsolutePath(), () -> {
+							if (!pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
+								pathScannerClassLoader.loadedPaths.put(currentScannedPath.getAbsolutePath(), loadPathCompletely.get());
+								classFilesForPath.add(
+									new AbstractMap.SimpleImmutableEntry<>(
+										currentScannedPath,
+										searchConfig.getFilesRetriever().apply(
+											searchConfig.getRefreshPathIf().test(currentScannedPath) ?
+												currentScannedPath.refresh() : currentScannedPath	,
+											finalFilter.get()
+										)
+									)
+								);
+							}
+						});
+					}
 				},
 				item -> item.size() > 1
 			);
@@ -221,6 +223,24 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			R searchResult = resultSupplier.apply(context);
 			searchResult.setClassPathScanner(this);
 			return searchResult;
+		}
+
+		private FileSystemItem.Criteria getPathScannerClassLoaderFiller(PathScannerClassLoader pathScannerClassLoader) {
+			return FileSystemItem.Criteria.forAllFileThat(fileSystemItem -> {
+				JavaClass javaClass = fileSystemItem.toJavaClass();
+				try {
+					String className = javaClass.getName();
+					if (pathScannerClassLoader.loadedByteCodes.get(className) == null &&
+						pathScannerClassLoader.notLoadedByteCodes.get(className) == null) {
+						pathScannerClassLoader.addByteCode0(className, javaClass.getByteCode());
+					}
+				} catch (NullPointerException exc) {
+					if (javaClass != null) {
+						throw exc;
+					}					
+				}
+				return true;
+			});
 		}
 //		
 //		R findBy(SearchConfigAbst<?> input, Consumer<C> searcher) {

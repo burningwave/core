@@ -663,6 +663,14 @@ public class FileSystemItem {
 						child.parent = null;
 						child.allChildren = null;
 						child.children = null;
+						if (child.javaClassWrapper != null) {
+							JavaClass javaClass = child.javaClassWrapper.get();
+							if (javaClass != null) {
+								javaClass.close();
+								child.javaClassWrapper.set(null);
+							}				
+							child.javaClassWrapper = null;
+						}
 						if (removeLinkedResourcesFromCache) {
 							removeFromCache(child, removeFromCache);
 						}
@@ -1239,7 +1247,7 @@ public class FileSystemItem {
 	
 	public static class NotFoundException extends RuntimeException {
 
-		private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = -6767561476829612304L;
 
 		public NotFoundException(String message) {
 	        super(message);

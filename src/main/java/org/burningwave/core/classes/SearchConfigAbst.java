@@ -56,6 +56,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 	final static BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> FIND_RECURSIVE_IN_CHILDREN = FileSystemItem::findRecursiveInChildren;
 	final static BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> FIND_IN_ALL_CHILDREN = FileSystemItem::findInAllChildren;
 	
+	
 	Function<ClassLoader, Map.Entry<ClassLoader, Collection<FileSystemItem>>> pathsSupplier;
 	BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> filesRetriever;
 	Predicate<FileSystemItem> refreshPathIf;
@@ -84,10 +85,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 	}
 	
 	<I, C extends SearchContext<I>> C init(ClassPathScanner.Abst<I, C, ?> classPathScanner) {
-		PathScannerClassLoader defaultPathScannerClassLoader = classPathScanner.getDefaultPathScannerClassLoader(this);
-		if (useDefaultPathScannerClassLoaderAsParent) {
-			parentClassLoaderForPathScannerClassLoader = defaultPathScannerClassLoader;
-		}
 		if (fileFilter == null) {
 			fileFiltersExtenallySet = true && additionalFileFilters == null;
 			fileFilter = FileSystemItem.Criteria.forClassTypeFiles(
@@ -98,6 +95,10 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		}
 		if (fileFiltersExtenallySet == null) {
 			fileFiltersExtenallySet = Boolean.TRUE;
+		}
+		PathScannerClassLoader defaultPathScannerClassLoader = classPathScanner.getDefaultPathScannerClassLoader(this);
+		if (useDefaultPathScannerClassLoaderAsParent) {
+			parentClassLoaderForPathScannerClassLoader = defaultPathScannerClassLoader;
 		}
 		PathScannerClassLoader pathScannerClassLoader = useDefaultPathScannerClassLoader ?
 			defaultPathScannerClassLoader :
@@ -232,7 +233,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		return (S)this;
 	}
 	
-	public ClassCriteria getClassCriteria() {
+	ClassCriteria getClassCriteria() {
 		return this.classCriteria;
 	}
 	
