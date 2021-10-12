@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
@@ -36,20 +35,15 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.classes.SearchContext.InitContext;
-import org.burningwave.core.concurrent.Synchronizer.Mutex;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
-
-import io.github.toolfactory.jvm.util.Strings;
 
 
 public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>> extends ClassPathScanner<I, R>{
@@ -106,7 +100,7 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 		}
 	
 		public R findBy(CacheableSearchConfig searchConfig) {
-			return findBy(searchConfig, this::searchInCacheOrInFileSystem);
+			return findBy(searchConfig.withoutUsingCache());
 		}
 		
 		public void clearCache(boolean closeSearchResults) {
