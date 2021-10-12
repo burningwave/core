@@ -210,7 +210,7 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 	}
 	
 	public S checkForAddedClasses() {
-		this.refreshPathIf = FileSystemItem -> false;
+		this.refreshPathIf = FileSystemItem -> true;
 		return (S)this;
 	}
 	
