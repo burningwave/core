@@ -85,6 +85,7 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 		
 		public CacheScanner<I, R> loadInCache(CacheableSearchConfig searchConfig) {
 			CacheableSearchConfig searchConfigCopy = searchConfig.isInitialized()? searchConfig : searchConfig.createCopy();
+			searchConfigCopy.init(this);
 			CacheableSearchConfig flatSearchConfig = SearchConfig.forFileSystemItems(
 				searchConfigCopy.getPathsToBeScanned()
 			);

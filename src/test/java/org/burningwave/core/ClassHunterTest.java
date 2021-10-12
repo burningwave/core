@@ -170,20 +170,29 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findRecursiveInChildrenExcludingZipAndJar() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
-				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
-				)
-			),
-			(result) ->
-				result.getClasses(), true
-		);
+//		testNotEmpty(
+//			() -> componentSupplier.getClassHunter().findBy(
+//				SearchConfig.forPaths(
+//					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
+//				)
+//			),
+//			(result) ->
+//				result.getClasses(), true
+//		);
 		
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
+				).findRecursiveInChildren().setFileFilter(
+					FileSystemItem.Criteria.forAllFileThat(
+						fileSystemItem ->
+							fileSystemItem.isFolder() ||
+							(fileSystemItem.getExtension() != null &&
+							!fileSystemItem.getExtension().equals("zip") && 
+							!fileSystemItem.getExtension().equals("jar") && 
+							fileSystemItem.getExtension().equals("class"))
+					)
 				)
 			),
 			(result) ->
