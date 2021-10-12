@@ -66,7 +66,7 @@ public class ByteCodeHunterImpl extends ClassPathScanner.Abst<JavaClass, SearchC
 	}
 	
 	@Override
-	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testClassCriteria(SearchContext<JavaClass> context, JavaClass javaClass) {
+	ClassCriteria.TestContext testClassCriteria(SearchContext<JavaClass> context, JavaClass javaClass) {
 		return context.getSearchConfig().getClassCriteria().hasNoPredicate() ?
 			context.getSearchConfig().getClassCriteria().testWithTrueResultForNullEntityOrTrueResultForNullPredicate(null) :
 			super.testClassCriteria(context, javaClass);

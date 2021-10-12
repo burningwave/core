@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.lang.reflect.Member;
@@ -39,6 +40,7 @@ import java.util.Optional;
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Criteria;
 import org.burningwave.core.ManagedLogger;
+
 
 public class SearchResult<E> implements Closeable, ManagedLogger {
 	SearchContext<E> context;

@@ -49,7 +49,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 
 class SearchContext<T> implements Closeable, ManagedLogger {
 
-	SearchConfigAbst<?> searchConfig;
+	SearchConfig searchConfig;
 	Map<String, T> itemsFoundFlatMap;
 	Map<String, Map<String, T>> itemsFoundMap;
 	PathScannerClassLoader sharedPathScannerClassLoader;
@@ -149,9 +149,9 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		return items;
 	}
 	
-	@SuppressWarnings("unchecked")
-	<C extends SearchConfigAbst<C>> C getSearchConfig() {
-		return (C)searchConfig;
+
+	SearchConfig getSearchConfig() {
+		return searchConfig;
 	}
 	
 	Map<String, T> getItemsFoundFlatMap() {
@@ -225,7 +225,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 			loadClass(cls.getName());
 	}
 	
-	<C extends SearchConfigAbst<C>> ClassCriteria.TestContext test(Class<?> cls) {
+	ClassCriteria.TestContext test(Class<?> cls) {
 		return execute(
 			() -> searchConfig.getClassCriteria().testWithFalseResultForNullEntityOrTrueResultForNullPredicate(cls), 
 			() -> searchConfig.getClassCriteria().testWithFalseResultForNullEntityOrFalseResultForNullPredicate(null), 
@@ -262,7 +262,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		InitContext(
 			PathScannerClassLoader sharedPathMemoryClassLoader, 
 			PathScannerClassLoader pathScannerClassLoader,
-			SearchConfigAbst<?> searchConfig
+			SearchConfig searchConfig
 		) {
 			super();
 			put(Elements.SHARED_PATH_SCANNER_CLASS_LOADER, sharedPathMemoryClassLoader);
@@ -273,7 +273,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		static InitContext create(
 			PathScannerClassLoader sharedPathMemoryClassLoader, 
 			PathScannerClassLoader pathScannerClassLoader,
-			SearchConfigAbst<?> searchConfig
+			SearchConfig searchConfig
 		) {
 			return new InitContext(sharedPathMemoryClassLoader, pathScannerClassLoader, searchConfig);
 		}
@@ -287,7 +287,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		}
 		
 		
-		<C extends SearchConfigAbst<C>> C getSearchConfig() {
+		SearchConfig getSearchConfig() {
 			return get(Elements.SEARCH_CONFIG);
 		}
 	}

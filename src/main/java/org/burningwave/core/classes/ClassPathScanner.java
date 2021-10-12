@@ -144,13 +144,9 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			return findBy(SearchConfig.create());
 		}
 		
-		public R findBy(SearchConfig input) {
-			return findBy((SearchConfigAbst<?>)input);
-		}
-		
 		//Not cached search
-		R findBy(SearchConfigAbst<?> input) {
-			SearchConfigAbst<?> searchConfig = input.isInitialized() ? input : input.createCopy();
+		public R findBy(SearchConfig input) {
+			SearchConfig searchConfig = input.isInitialized() ? input : input.createCopy();
 			C context = searchConfig.isInitialized() ? searchConfig.getSearchContext() : searchConfig.init(this);
 			context.executeSearch(() -> {
 				Collection<FileSystemItem> pathsToBeScanned = searchConfig.getPathsToBeScanned();
@@ -187,13 +183,13 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 		Map.Entry<FileSystemItem, Collection<FileSystemItem>> scanAndAddToPathScannerClassLoader(
 			C context, FileSystemItem currentScannedPath
 		) {
-			SearchConfigAbst<?> searchConfig = context.searchConfig;
+			SearchConfig searchConfig = context.searchConfig;
 			PathScannerClassLoader pathScannerClassLoader = context.pathScannerClassLoader;
 			if (!searchConfig.getRefreshPathIf().test(currentScannedPath) &&
 				pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
 				return new AbstractMap.SimpleImmutableEntry<>(
 					currentScannedPath,
-					searchConfig.getFilesRetriever().apply(
+					searchConfig.getFindFunction(currentScannedPath).apply(
 						searchConfig.getRefreshPathIf().test(currentScannedPath) ?
 							currentScannedPath.refresh() : currentScannedPath	,
 						searchConfig.getAllFileFilters()
@@ -206,7 +202,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 					if (searchConfig.getRefreshPathIf().test(currentScannedPath) || 
 						!pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
 						if (!searchConfig.isFileFilterExternallySet() &&
-							searchConfig.getFilesRetriever() != SearchConfigAbst.FIND_IN_CHILDREN) {
+							searchConfig.getFindFunction(currentScannedPath) != FileSystemItem.Find.IN_CHILDREN) {
 							loadPathCompletely = Boolean.TRUE;
 						} else {
 							loadPathCompletely = Boolean.FALSE;
@@ -217,7 +213,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 					}
 					Map.Entry<FileSystemItem, Collection<FileSystemItem>> itemsFound = new AbstractMap.SimpleImmutableEntry<>(
 						currentScannedPath,
-						searchConfig.getFilesRetriever().apply(
+						searchConfig.getFindFunction(currentScannedPath).apply(
 							searchConfig.getRefreshPathIf().test(currentScannedPath) ?
 								currentScannedPath.refresh() : currentScannedPath	,
 							allFileFilters
@@ -278,7 +274,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 		}
 
 		
-		<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testClassCriteria(C context, JavaClass javaClass) {
+		ClassCriteria.TestContext testClassCriteria(C context, JavaClass javaClass) {
 			return context.test(context.loadClass(javaClass.getName()));
 		}
 		

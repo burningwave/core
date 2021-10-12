@@ -32,7 +32,9 @@ public class ClassHunterTest extends BaseTest {
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
-				)
+				).setFindFunction(fileSystemItem -> {
+					return FileSystemItem.Find.IN_ALL_CHILDREN;
+				})
 			),
 			(result) ->
 				result.getClasses()

@@ -52,6 +52,7 @@ class ClassPathHunterImpl extends ClassPathScanner.Abst<Collection<Class<?>>, Cl
 			config
 		);
 	}
+
 	
 	@Override
 	String getNameInConfigProperties() {

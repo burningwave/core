@@ -61,6 +61,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -71,6 +72,42 @@ import org.burningwave.core.function.Executor;
 
 @SuppressWarnings("resource")
 public class FileSystemItem {
+	
+	public static enum Find implements BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> {
+		IN_ALL_CHILDREN(FileSystemItem::findInAllChildren),
+		RECURSIVE_IN_CHILDREN(FileSystemItem::findRecursiveInChildren),
+		IN_CHILDREN(FileSystemItem::findInChildren);
+		
+		BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> function;
+		
+		Find(BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> function) {
+			this.function = function;
+		}
+
+		@Override
+		public Collection<FileSystemItem> apply(FileSystemItem fileSystemItem, FileSystemItem.Criteria criteria) {
+			return function.apply(fileSystemItem, criteria);
+		}
+		
+		public static enum FunctionSupplier implements Function<FileSystemItem, FileSystemItem.Find> {
+			OF_IN_ALL_CHILDREN(fileSystemItem -> Find.IN_ALL_CHILDREN),
+			OF_RECURSIVE_IN_CHILDREN(fileSystemItem -> Find.RECURSIVE_IN_CHILDREN),
+			OF_IN_CHILDREN(fileSystemItem -> Find.IN_CHILDREN);
+			
+			Function<FileSystemItem, FileSystemItem.Find> supplier;
+			
+			FunctionSupplier(Function<FileSystemItem, FileSystemItem.Find> supplier) {
+				this.supplier = supplier;
+			}
+
+			@Override
+			public Find apply(FileSystemItem fileSystemItem) {
+				return supplier.apply(fileSystemItem);
+			}
+			
+		}
+	}
+	
 	private final static String instanceIdPrefix;
 	
 	private Map.Entry<String, String> absolutePath;
