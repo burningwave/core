@@ -141,7 +141,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 		}
 		
 		public R find() {
-			return findBy(SearchConfig.withoutUsingCache());
+			return findBy(SearchConfig.create());
 		}
 		
 		public R findBy(SearchConfig input) {

@@ -4,7 +4,6 @@ import java.io.Closeable;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.bean.Complex;
-import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.SearchConfig;
 import org.junit.jupiter.api.Test;
@@ -55,7 +54,7 @@ public class ClassPathHunterTest extends BaseTest {
 	@Test
 	public void cacheTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+		SearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		testNotEmpty(
@@ -83,13 +82,13 @@ public class ClassPathHunterTest extends BaseTest {
 	@Test
 	public void findAllTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearHuntersCache(false);
+		componentSupplier.closeHuntersSearchResults();
 		testNotEmpty(
-			() -> componentSupplier.getClassPathHunter().loadInCache(
+			() -> componentSupplier.getClassPathHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 				)
-			).find(),
+			),
 			(result) -> {
 				return result.getClassPaths();				
 			}, true

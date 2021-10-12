@@ -575,7 +575,9 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	
 	@Override
 	public void clearCache(boolean closeHuntersResults, boolean closeClassRetrievers) {
-		clearHuntersCache(closeHuntersResults);
+		if (closeHuntersResults) {
+			closeHuntersSearchResults();
+		}
 		ClassFactory classFactory = (ClassFactory)components.get(ClassFactory.class);
 		if (classFactory != null) {
 			classFactory.reset(closeClassRetrievers);
@@ -584,18 +586,18 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 	
 	@Override
-	public void clearHuntersCache(boolean closeHuntersResults) {
-		ByteCodeHunter byteCodeHunter = (ByteCodeHunter)components.get(ByteCodeHunter.class);
-		if (byteCodeHunter != null) {
-			byteCodeHunter.clearCache(closeHuntersResults);
+	public void closeHuntersSearchResults() {
+		ClassPathScanner.Abst<?, ?, ?> hunter = (ClassPathScanner.Abst<?, ?, ?>)components.get(ByteCodeHunter.class);
+		if (hunter != null) {
+			hunter.closeSearchResults();
 		}
-		ClassHunter classHunter = (ClassHunter)components.get(ClassHunter.class);
-		if (classHunter != null) {
-			classHunter.clearCache(closeHuntersResults);
+		 hunter = (ClassPathScanner.Abst<?, ?, ?>)components.get(ClassHunter.class);
+		if (hunter != null) {
+			hunter.closeSearchResults();
 		}
-		ClassPathHunter classPathHunter = (ClassPathHunter)components.get(ClassPathHunter.class);
-		if (classPathHunter != null) {
-			classPathHunter.clearCache(closeHuntersResults);
+		hunter = (ClassPathScanner.Abst<?, ?, ?>)components.get(ClassPathHunter.class);
+		if (hunter != null) {
+			hunter.closeSearchResults();
 		}
 	}
 

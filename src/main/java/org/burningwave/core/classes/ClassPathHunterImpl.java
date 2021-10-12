@@ -37,7 +37,7 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
-class ClassPathHunterImpl extends ClassPathScannerWithCachingSupport.Abst<Collection<Class<?>>, ClassPathHunterImpl.SearchContext, ClassPathHunter.SearchResult> implements ClassPathHunter {
+class ClassPathHunterImpl extends ClassPathScanner.Abst<Collection<Class<?>>, ClassPathHunterImpl.SearchContext, ClassPathHunter.SearchResult> implements ClassPathHunter {
 	
 	ClassPathHunterImpl(
 		PathHelper pathHelper,
@@ -68,20 +68,7 @@ class ClassPathHunterImpl extends ClassPathScannerWithCachingSupport.Abst<Collec
 		return ClassPathHunter.Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS;
 	}
 	
-	@Override
-	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(
-		ClassPathHunterImpl.SearchContext context, Collection<Class<?>> classes
-	) {
-		ClassCriteria.TestContext testContext;
-		for (Class<?> cls : classes) {
-			if ((testContext = context.test(context.retrieveClass(cls))).getResult()) {
-				return testContext;
-			}
-		}		
-		return testContext = context.test(null);
-	}
 
-	
 	@Override
 	void addToContext(ClassPathHunterImpl.SearchContext context, TestContext criteriaTestContext,
 		String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
@@ -93,7 +80,7 @@ class ClassPathHunterImpl extends ClassPathScannerWithCachingSupport.Abst<Collec
 	
 	@Override
 	public void close() {
-		closeResources(() -> this.cache == null, () -> {
+		closeResources(() -> this.pathHelper == null, () -> {
 			super.close();
 		});
 	}

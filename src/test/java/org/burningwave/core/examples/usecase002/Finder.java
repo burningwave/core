@@ -5,7 +5,6 @@ import java.util.Date;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassHunter.SearchResult;
@@ -29,7 +28,7 @@ public class Finder {
             classes.get(Object.class) == examinedClass
         );            
 
-        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+        SearchConfig searchConfig = SearchConfig.forPaths(
             //Here you can add all absolute path you want:
             //both folders, zip and jar will be recursively scanned.
             //For example you can add: "C:\\Users\\user\\.m2"

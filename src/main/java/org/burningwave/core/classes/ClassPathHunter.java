@@ -42,7 +42,7 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
-public interface ClassPathHunter extends ClassPathScannerWithCachingSupport<Collection<Class<?>>, ClassPathHunter.SearchResult> { 
+public interface ClassPathHunter extends ClassPathScanner<Collection<Class<?>>, ClassPathHunter.SearchResult> { 
 	
 	public static class Configuration {
 		

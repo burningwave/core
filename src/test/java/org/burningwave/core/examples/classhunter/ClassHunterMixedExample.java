@@ -4,7 +4,6 @@ import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassHunter.SearchResult;
@@ -26,7 +25,7 @@ public class ClassHunterMixedExample {
         PathHelper pathHelper = componentSupplier.getPathHelper();
         ClassHunter classHunter = componentSupplier.getClassHunter();
         
-        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+        SearchConfig searchConfig = SearchConfig.forPaths(
             //Here you can add all absolute path you want:
             //both folders, zip and jar will be recursively scanned.
             //With the row below the search will be executed on runtime Classpaths
@@ -36,7 +35,7 @@ public class ClassHunterMixedExample {
                 return cls.getPackage().getName().matches(packageNameRegex);
             })
         );
-        SearchResult searchResult = classHunter.loadInCache(searchConfig).find();
+        SearchResult searchResult = classHunter.findBy(searchConfig);
         
         return searchResult.getClasses();
     }
@@ -46,7 +45,7 @@ public class ClassHunterMixedExample {
         PathHelper pathHelper = componentSupplier.getPathHelper();
         ClassHunter classHunter = componentSupplier.getClassHunter();
 
-        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+        SearchConfig searchConfig = SearchConfig.forPaths(
             pathHelper.getMainClassPaths()
         ).by(
             ClassCriteria.create().allThoseThatMatch((cls) -> {
@@ -69,7 +68,7 @@ public class ClassHunterMixedExample {
             )
         );
 
-        SearchResult searchResult = classHunter.loadInCache(searchConfig).find();
+        SearchResult searchResult = classHunter.findBy(searchConfig);
 
         //If you need all annotated fields, methods and constructor you can iterate the collection below
         searchResult.getMembersFlatMap().values();

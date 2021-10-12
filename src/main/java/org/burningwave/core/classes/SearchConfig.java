@@ -43,54 +43,47 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 	
 	SearchConfig() {
 		super();
-		checkForAddedClasses();
 	}	
 	
-	public static CacheableSearchConfig create() {
-		return new CacheableSearchConfig(); 
-	}
-	
-	public static SearchConfig withoutUsingCache() {
-		return new SearchConfig();
-	}
-	
-	
-	@SafeVarargs
-	public static CacheableSearchConfig forPaths(Collection<String>... pathsColl) {
-		return new CacheableSearchConfig().addPaths(pathsColl);
+	public static SearchConfig create() {
+		return new SearchConfig(); 
 	}
 	
 	@SafeVarargs
-	public static CacheableSearchConfig forFileSystemItems(Collection<FileSystemItem>... pathsColl) {
-		return new CacheableSearchConfig().addFileSystemItems(pathsColl);
+	public static SearchConfig forPaths(Collection<String>... pathsColl) {
+		return new SearchConfig().addPaths(pathsColl);
 	}
 	
 	@SafeVarargs
-	public static CacheableSearchConfig forPaths(String... paths) {
+	public static SearchConfig forFileSystemItems(Collection<FileSystemItem>... pathsColl) {
+		return new SearchConfig().addFileSystemItems(pathsColl);
+	}
+	
+	@SafeVarargs
+	public static SearchConfig forPaths(String... paths) {
 		return SearchConfig.forPaths((Collection<String>)Stream.of(paths).collect(Collectors.toCollection(HashSet::new)));
 	}
 	@SafeVarargs
-	public static CacheableSearchConfig forResources(String... paths) {
+	public static SearchConfig forResources(String... paths) {
 		return forResources(null, paths);
 	}
 	
 	@SafeVarargs
-	public static CacheableSearchConfig forResources(ClassLoader classLoader, String... paths) {
+	public static SearchConfig forResources(ClassLoader classLoader, String... paths) {
 		return forResources(classLoader, Arrays.asList(paths)); 
 	}	
 	
 	@SafeVarargs
-	public static CacheableSearchConfig forResources(Collection<String>... pathCollections) {
+	public static SearchConfig forResources(Collection<String>... pathCollections) {
 		return forResources(null, pathCollections);
 	}
 	
-	@SuppressWarnings("resource")
 	@SafeVarargs
-	public static CacheableSearchConfig forResources(ClassLoader classLoader, Collection<String>... pathCollections) {
-		return new CacheableSearchConfig().addResources(classLoader, pathCollections);
+	public static SearchConfig forResources(ClassLoader classLoader, Collection<String>... pathCollections) {
+		return new SearchConfig().addResources(classLoader, pathCollections);
 	}
 	
-	public static CacheableSearchConfig byCriteria(ClassCriteria classCriteria) {
+	public static SearchConfig byCriteria(ClassCriteria classCriteria) {
 		return forPaths(new HashSet<>()).by(classCriteria);
 	}
 		

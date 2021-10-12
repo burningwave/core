@@ -316,7 +316,7 @@ public interface ClassFactory {
 			Collection<String>... classPaths
 		) {
 			if (retrievedBytecodes.get() == null) {
-				try(ByteCodeHunter.SearchResult result = ((ClassFactoryImpl)this.classFactory).byteCodeHunter.loadInCache(
+				try(ByteCodeHunter.SearchResult result = ((ClassFactoryImpl)this.classFactory).byteCodeHunter.findBy(
 					SearchConfig.forPaths(
 						classPaths
 					).setFileFilter(
@@ -329,7 +329,7 @@ public interface ClassFactory {
 					).optimizePaths(
 						true
 					)
-				).find()) {
+				)) {
 					Map<String, ByteBuffer> extraClassPathsForClassLoaderByteCodes = new HashMap<>();
 					result.getItemsFoundFlatMap().values().forEach(javaClass -> {
 						extraClassPathsForClassLoaderByteCodes.put(javaClass.getName(), javaClass.getByteCode());

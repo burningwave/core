@@ -113,11 +113,11 @@ public class ClassLoadersTest extends BaseTest {
 			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
 				ComponentSupplier componentSupplier = getComponentSupplier();
 				PathHelper pathHelper = componentSupplier.getPathHelper();
-				try (SearchResult searchResult = componentSupplier.getByteCodeHunter().loadInCache(
+				try (SearchResult searchResult = componentSupplier.getByteCodeHunter().findBy(
 					SearchConfig.forPaths(
 							pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
 					)
-				).find();) {
+				)) {
 					return ClassLoaders.loadOrDefineByByteCode(searchResult.getByteCodesFlatMap().get("org.apache.commons.lang.ArrayUtils"), classLoader);
 				}
 			}
@@ -130,11 +130,11 @@ public class ClassLoadersTest extends BaseTest {
 			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
 				ComponentSupplier componentSupplier = getComponentSupplier();
 				PathHelper pathHelper = componentSupplier.getPathHelper();
-				try (SearchResult searchResult = componentSupplier.getByteCodeHunter().loadInCache(
+				try (SearchResult searchResult = componentSupplier.getByteCodeHunter().findBy(
 					SearchConfig.forPaths(
 							pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
 					)
-				).find();) {
+				)) {
 					Map<String, ByteBuffer> byteCodesFound = searchResult.getByteCodesFlatMap();
 					Map<String, JavaClass> byteCodes = new HashMap<>();
 					return JavaClass.extractByUsing(byteCodesFound.get("org.apache.commons.lang.ArrayUtils"), (javaClass) -> {

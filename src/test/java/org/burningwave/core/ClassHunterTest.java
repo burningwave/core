@@ -12,7 +12,6 @@ import java.util.Iterator;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.bean.Complex;
-import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ConstructorCriteria;
@@ -28,22 +27,22 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllTestOne() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearHuntersCache(false);
+		componentSupplier.closeHuntersSearchResults();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().loadInCache(
+			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/commons-lang")
 				)
-			).find(),
+			),
 			(result) ->
 				result.getClasses()
 		);
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().loadInCache(
+			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)
-			).find(),
+			),
 			(result) ->
 				result.getClasses()
 		);
@@ -54,7 +53,7 @@ public class ClassHunterTest extends BaseTest {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
 			() -> 
-				componentSupplier.getClassHunter().findAndCache(),
+				componentSupplier.getClassHunter().find(),
 			(result) ->
 				result.getClasses()
 		);
@@ -74,13 +73,13 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void getResourceAsStreamTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearHuntersCache(false);
+		componentSupplier.closeHuntersSearchResults();
 		testNotNull(
-			() -> componentSupplier.getClassHunter().loadInCache(
+			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)
-			).find(),
+			),
 			(result) ->{
 				Collection<Class<?>> classes = result.getClasses();
 				Iterator<Class<?>> itr = classes.iterator();
@@ -97,13 +96,13 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void getResourceAsStreamTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearHuntersCache(false);
+		componentSupplier.closeHuntersSearchResults();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().loadInCache(
+			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)
-			).find(),
+			),
 			(result) -> {
 				Collection<Class<?>> classes = result.getClasses();
 				Iterator<Class<?>> itr = classes.iterator();
@@ -121,23 +120,23 @@ public class ClassHunterTest extends BaseTest {
 	public void refreshCacheTestOne() throws Exception {
 		findAllTestOne();
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearHuntersCache(false);
+		componentSupplier.closeHuntersSearchResults();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().loadInCache(
+			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				)
-			).find(),
+			),
 			(result) ->
 				result.getClasses()
 		);
 		testNotEmpty(
 			() -> 
-				componentSupplier.getClassHunter().loadInCache(
+				componentSupplier.getClassHunter().findBy(
 					SearchConfig.forPaths(
 						componentSupplier.getPathHelper().getPath(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
 					).checkForAddedClasses()
-			).find(),
+			),
 			(result) ->
 				result.getClasses()
 		);
@@ -148,20 +147,20 @@ public class ClassHunterTest extends BaseTest {
 		findAllTestOne();
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().loadInCache(
+			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
 				).checkForAddedClasses()
-			).find(),
+			),
 			(result) ->
 				result.getClasses()
 		);
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().loadInCache(
+			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)
-			).find(),
+			),
 			(result) ->
 				result.getClasses()
 		);
@@ -414,7 +413,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findAllSubtypeOfTestNine() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().loadInCache(
+			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getMainClassPaths()
 				).by(
@@ -431,7 +430,7 @@ public class ClassHunterTest extends BaseTest {
 							fileSystemItem.getAbsolutePath().contains("/org/")
 					)
 				)
-			).find(),
+			),
 			(result) -> result.getClasses(
 				ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 					uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
@@ -723,7 +722,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void cacheTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+		SearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		testNotEmpty(
@@ -746,11 +745,11 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void cacheTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+		SearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().loadInCache(searchConfig).find(),
+			() -> componentSupplier.getClassHunter().findBy(searchConfig),
 			(result) -> result.getClasses()
 		);
 		searchConfig.by(
@@ -1266,7 +1265,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void cacheTestOneByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+		SearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		testNotEmpty(
@@ -1291,11 +1290,11 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void cacheTestTwoByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+		SearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getMainClassPaths()
 		);
 		testNotEmpty(
-			() -> componentSupplier.getClassHunter().loadInCache(searchConfig).find(),
+			() -> componentSupplier.getClassHunter().findBy(searchConfig),
 			(result) -> result.getClasses()
 		);
 		testNotEmpty(() -> 
@@ -1403,14 +1402,14 @@ public class ClassHunterTest extends BaseTest {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 	        ClassHunter classHunter = componentSupplier.getClassHunter();
 	        
-	        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+	        SearchConfig searchConfig = SearchConfig.forPaths(
 	            new ArrayList<String>()
 	        ).by(
 	            ClassCriteria.create().allThoseThatMatch((cls) -> {
 	                return cls.getPackage().getName().equals("org.junit.platform.engine");
 	            })
 	        );
-	        try (ClassHunter.SearchResult searchResult = classHunter.loadInCache(searchConfig).find()) {
+	        try (ClassHunter.SearchResult searchResult = classHunter.findBy(searchConfig)) {
 	            return searchResult.getClasses();
 	        }
 		}, true);
@@ -1424,14 +1423,14 @@ public class ClassHunterTest extends BaseTest {
 	        PathHelper pathHelper = componentSupplier.getPathHelper();
 	        ClassHunter classHunter = componentSupplier.getClassHunter();
 	        
-	        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+	        SearchConfig searchConfig = SearchConfig.forPaths(
 	            pathHelper.loadAndMapPaths("custom", "//${paths.custom-class-path}/ESC-Lib.ear/APP-INF/lib//children:.*?activation-1.1\\.jar;")
 	        ).by(
 	            ClassCriteria.create().allThoseThatMatch((cls) -> {
 	                return cls.getPackage().getName().matches(".*?activation");
 	            })
 	        );
-	        try (ClassHunter.SearchResult searchResult = classHunter.loadInCache(searchConfig).find()) {
+	        try (ClassHunter.SearchResult searchResult = classHunter.findBy(searchConfig)) {
 	            return searchResult.getClasses();
 	        }
 		}, true);

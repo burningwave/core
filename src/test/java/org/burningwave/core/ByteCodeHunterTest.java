@@ -8,14 +8,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("unused")
+
 public class ByteCodeHunterTest extends BaseTest {
 	
 	
@@ -63,7 +62,7 @@ public class ByteCodeHunterTest extends BaseTest {
 	@Test
 	public void cacheTestOneTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+		SearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear")
 		).by(
 			ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) -> 
@@ -80,7 +79,7 @@ public class ByteCodeHunterTest extends BaseTest {
 			() -> componentSupplier.getByteCodeHunter().findBy(searchConfig),
 			(result) -> result.getClasses()
 		);
-		CacheableSearchConfig searchConfig2 = SearchConfig.forPaths(
+		SearchConfig searchConfig2 = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear")
 		);
 		testNotEmpty(
@@ -92,7 +91,7 @@ public class ByteCodeHunterTest extends BaseTest {
 	@Test
 	public void cacheTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+		SearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		).by(
 			ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) -> 
@@ -115,7 +114,7 @@ public class ByteCodeHunterTest extends BaseTest {
 	@Test
 	public void uncachedTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		SearchConfig searchConfig = SearchConfig.withoutUsingCache().addPaths(
+		SearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		).by(
 			ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) -> 
@@ -136,7 +135,7 @@ public class ByteCodeHunterTest extends BaseTest {
 	@Test
 	public void parallelTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+		SearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		).by(
 			ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) -> 

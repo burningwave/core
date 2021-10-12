@@ -28,17 +28,12 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
-import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-
-import java.util.Map;
-
 import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
-public class ByteCodeHunterImpl extends ClassPathScannerWithCachingSupport.Abst<JavaClass, SearchContext<JavaClass>, ByteCodeHunter.SearchResult> implements ByteCodeHunter {
+public class ByteCodeHunterImpl extends ClassPathScanner.Abst<JavaClass, SearchContext<JavaClass>, ByteCodeHunter.SearchResult> implements ByteCodeHunter {
 	ByteCodeHunterImpl(
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
@@ -77,32 +72,12 @@ public class ByteCodeHunterImpl extends ClassPathScannerWithCachingSupport.Abst<
 			super.testClassCriteria(context, javaClass);
 	}
 	
-	@Override
-	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(SearchContext<JavaClass> context, JavaClass javaClass) {
-		return context.getSearchConfig().getClassCriteria().hasNoPredicate() ?
-			context.getSearchConfig().getClassCriteria().testWithTrueResultForNullEntityOrTrueResultForNullPredicate(null) :				
-			super.testClassCriteria(context, javaClass);
-	}
 	
 	@Override
 	void addToContext(SearchContext<JavaClass> context, TestContext criteriaTestContext,
 		String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
 	) {
 		context.addItemFound(basePath, fileSystemItem.getAbsolutePath(), javaClass.duplicate());		
-	}
-	
-	@Override
-	void clearItemsForPath(Map<String, JavaClass> items) {
-		BackgroundExecutor.createTask(() -> {
-			IterableObjectHelper.deepClear(items, (path, javaClass) -> javaClass.close());
-		}, Thread.MIN_PRIORITY).submit();
-	}
-	
-	@Override
-	public void close() {
-		closeResources(() -> this.cache == null, () -> {
-			super.close();
-		});
 	}
 
 }

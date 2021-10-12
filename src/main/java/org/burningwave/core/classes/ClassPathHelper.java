@@ -72,7 +72,7 @@ public interface ClassPathHelper {
 	public Supplier<Map<String, String>> computeByClassesSearching(Collection<String> classRepositories,
 			ClassCriteria classCriteria);
 
-	public Supplier<Map<String, String>> computeByClassesSearching(CacheableSearchConfig searchConfig);
+	public Supplier<Map<String, String>> computeByClassesSearching(SearchConfig searchConfig);
 
 	public Supplier<Map<String, String>> computeByClassesSearching(Collection<String> classRepositories,
 			Collection<String> pathsToBeRefreshed, ClassCriteria classCriteria);

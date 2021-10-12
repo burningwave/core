@@ -209,6 +209,15 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		return (S)this;
 	}
 	
+	public S checkForAddedClassesForAllPathThat(Predicate<FileSystemItem> refreshIf) {
+		if (refreshPathIf == null) {
+			refreshPathIf = refreshIf;
+		} else {
+			refreshPathIf = refreshPathIf.or(refreshIf);
+		}
+		return (S)this;
+	}
+	
 	public S checkForAddedClasses() {
 		this.refreshPathIf = FileSystemItem -> true;
 		return (S)this;

@@ -102,8 +102,8 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	}
 	
 	@Override
-	public Supplier<Map<String, String>> computeByClassesSearching(CacheableSearchConfig searchConfig) {
-		CacheableSearchConfig searchConfigCopy = searchConfig.createCopy();
+	public Supplier<Map<String, String>> computeByClassesSearching(SearchConfig searchConfig) {
+		SearchConfig searchConfigCopy = searchConfig.createCopy();
 		searchConfigCopy.init((ClassPathHunterImpl)classPathHunter);
 		return compute(
 			searchConfig.getPathsToBeScanned().stream().map(FileSystemItem::getAbsolutePath).collect(Collectors.toSet()), 
@@ -113,9 +113,9 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 						getClassFileCheckingOption()
 					)
 				);
-				try(SearchResult result = classPathHunter.loadInCache(
+				try(SearchResult result = classPathHunter.findBy(
 						searchConfigCopy
-					).find()
+					)
 				) {	
 					return result.getClassPaths();
 				}
@@ -130,7 +130,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		Collection<String> pathsToBeRefreshed,
 		ClassCriteria classCriteria
 	) {	
-		CacheableSearchConfig searchConfig = SearchConfig.forPaths(classRepositories).by(
+		SearchConfig searchConfig = SearchConfig.forPaths(classRepositories).by(
 			classCriteria
 		).optimizePaths(
 			true
@@ -179,7 +179,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 			getClassFileCheckingOption();
 		Collection<String> classPaths = new HashSet<>();
 		try (SearchResult result = classPathHunter.findBy(
-				SearchConfig.withoutUsingCache().addPaths(pathColls).by(
+				SearchConfig.forPaths(pathColls).by(
 					classCriteria
 				).setFileFilter(
 					FileSystemItem.Criteria.forClassTypeFiles(checkFileOption)

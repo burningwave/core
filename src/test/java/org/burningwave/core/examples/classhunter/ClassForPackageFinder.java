@@ -4,7 +4,6 @@ import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassHunter.SearchResult;
@@ -18,7 +17,7 @@ public class ClassForPackageFinder {
         PathHelper pathHelper = componentSupplier.getPathHelper();
         ClassHunter classHunter = componentSupplier.getClassHunter();
         
-        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+        SearchConfig searchConfig = SearchConfig.forPaths(
             //Here you can add all absolute path you want:
             //both folders, zip, jar, ear and war will be recursively scanned.
             //For example you can add: "C:\\Users\\user\\.m2", or a path of
@@ -43,7 +42,7 @@ public class ClassForPackageFinder {
         //it is recommended to perform this cleaning using the clearHuntersCache method of the ComponentSupplier.
         //To perform searches that do not use the cache you must intantiate the search configuration with 
         //SearchConfig.withoutUsingCache() method
-        try (SearchResult searchResult = classHunter.loadInCache(searchConfig).find()) {
+        try (SearchResult searchResult = classHunter.findBy(searchConfig)) {
             return searchResult.getClasses();
         }
     }

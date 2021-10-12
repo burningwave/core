@@ -44,7 +44,7 @@ import org.burningwave.core.iterable.Properties;
 
 
 @SuppressWarnings("unchecked")
-public interface ClassHunter extends ClassPathScannerWithCachingSupport<Class<?>, ClassHunter.SearchResult> {
+public interface ClassHunter extends ClassPathScanner<Class<?>, ClassHunter.SearchResult> {
 	
 	public static class Configuration {
 		
