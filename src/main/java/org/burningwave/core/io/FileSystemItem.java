@@ -58,6 +58,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
@@ -65,6 +66,7 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.function.Executor;
 
 @SuppressWarnings("resource")
@@ -77,6 +79,7 @@ public class FileSystemItem {
 	private Set<FileSystemItem> children;
 	private Set<FileSystemItem> allChildren;
 	private String instanceId;
+	private AtomicReference<JavaClass> javaClassWrapper;
 	
 	static {
 		instanceIdPrefix = FileSystemItem.class.getName();
@@ -673,6 +676,14 @@ public class FileSystemItem {
 			absolutePath.setValue(null);
 			parentContainer = null;
 			parent = null;
+			if (javaClassWrapper != null) {
+				JavaClass javaClass = this.javaClassWrapper.get();
+				if (javaClass != null) {
+					javaClass.close();
+					this.javaClassWrapper.set(null);
+				}				
+				javaClass = null;
+			}
 			if (removeLinkedResourcesFromCache) {
 				removeFromCache(this, removeFromCache);
 			}
@@ -851,6 +862,23 @@ public class FileSystemItem {
 	
 	public ByteBuffer toByteBuffer() {
 		return Executor.get(this::toByteBuffer0, 2);
+	}
+	
+	public JavaClass toJavaClass() {
+		if (this.javaClassWrapper != null) {
+			return javaClassWrapper.get();
+		} else {
+			return Synchronizer.execute(instanceId, () -> {
+				if (this.javaClassWrapper != null) {
+					return this.javaClassWrapper.get();
+				}
+				try {
+					return (javaClassWrapper = new AtomicReference<>(JavaClass.create(this.toByteBuffer()))).get();
+				} catch (Throwable exc) {
+					return (javaClassWrapper = new AtomicReference<>(null)).get();
+				}
+			});
+		}
 	}
 	
 	public byte[] toByteArray() {

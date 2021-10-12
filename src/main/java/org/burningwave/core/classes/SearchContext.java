@@ -32,7 +32,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Background
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
-import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
@@ -78,7 +77,6 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		this.searchConfig = initContext.getSearchConfig();
 		this.pathScannerClassLoader.register(this);
 		this.sharedPathScannerClassLoader.register(this);
-		this.sharedPathScannerClassLoader.unregister(searchConfig, true);
 	}
 	
 	public static <T> SearchContext<T> create(
@@ -152,10 +150,6 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		return items;
 	}
 	
-	Collection<String> getPathsToBeScanned() {
-		return searchConfig.getPaths();
-	}
-	
 	@SuppressWarnings("unchecked")
 	<C extends SearchConfigAbst<C>> C getSearchConfig() {
 		return (C)searchConfig;
@@ -187,59 +181,14 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 	}
 	
 	<O> O execute(ThrowingSupplier<O, Throwable> supplier, Supplier<O> defaultValueSupplier, Supplier<String> classNameSupplier) {
-		return execute(supplier, defaultValueSupplier, classNameSupplier, false);
-	}
-	
-	<O> O execute(ThrowingSupplier<O, Throwable> supplier, Supplier<O> defaultValueSupplier, Supplier<String> classNameSupplier, boolean isARecursiveCall) {
 		return Executor.get(() -> {
 			try {
 				return supplier.get();
 			} catch (ClassNotFoundException | NoClassDefFoundError exc) {
 				String notFoundClassName = Classes.retrieveName(exc);
-				if (notFoundClassName != null) {
-					if (!skippedClassNames.contains(notFoundClassName)) {
-						if (!isARecursiveCall) {
-							if (pathScannerClassLoaderScannedPaths.isEmpty()) {
-								Synchronizer.execute(this + "_pathScannerClassLoaderScannedPaths", () -> {
-									if (pathScannerClassLoaderScannedPaths.isEmpty()) {
-										if (searchConfig.isDefaultFilesRetrieverSet() && searchConfig.scanFileCriteriaHasNoPredicate()) {
-											pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
-												getPathsToBeScanned(),
-												(path) -> {
-													return searchConfig.getCheckForAddedClassesPredicate().and(
-														(searchConfig, _path) ->
-															!pathScannerClassLoaderScannedPaths.contains(_path)
-													).test(searchConfig, path);
-												}
-											);
-											pathScannerClassLoaderScannedPaths.addAll(getPathsToBeScanned());
-										} else {
-											pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
-												getPathsToBeScanned(),
-												searchConfig.getFilesRetriever(),
-												searchConfig.buildScanFileCriteria(),
-												(path) -> {
-													return searchConfig.getCheckForAddedClassesPredicate().and(
-														(searchConfig, _path) ->
-															!pathScannerClassLoaderScannedPaths.contains(_path)
-													).test(searchConfig, path);
-												}
-											);
-											pathScannerClassLoaderScannedPaths.addAll(getPathsToBeScanned());
-										}
-									}
-								});
-							}
-							return execute(supplier, defaultValueSupplier, classNameSupplier, true);
-						} else {
-							skippedClassNames.add(classNameSupplier.get());
-							skippedClassNames.add(notFoundClassName);
-						}
-					} 
-				} else {
-					ManagedLoggersRepository.logError(getClass()::getName, "Could not retrieve className from exception", exc);
-				}
-				return defaultValueSupplier.get();
+				skippedClassNames.add(classNameSupplier.get());
+				skippedClassNames.add(notFoundClassName);
+				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not load class {}: {}", classNameSupplier.get(), exc.toString());
 			} catch (LinkageError | SecurityException | InternalError exc) {
 				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not load class {}: {}", classNameSupplier.get(), exc.toString());
 			}

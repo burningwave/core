@@ -1,9 +1,9 @@
 /*
- * This file is part of Burningwave Core.
+ *This file is part of Burningwave Core.
  *
  * Author: Roberto Gentili
  *
- * Hosted at: https://github.com/burningwave/core
+ * Hosted at: h*ttps://github.com/burningwave/core
  *
  * --
  *
@@ -28,24 +28,27 @@
  */
 package org.burningwave.core.classes;
 
+
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.function.BiConsumer;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.FileSystemItem.Criteria;
+
 
 @SuppressWarnings("unchecked")
 abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closeable, ManagedLogger {
@@ -53,40 +56,113 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 	final static BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> FIND_RECURSIVE_IN_CHILDREN = FileSystemItem::findRecursiveInChildren;
 	final static BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> FIND_IN_ALL_CHILDREN = FileSystemItem::findInAllChildren;
 	
-	
+	Function<ClassLoader, Map.Entry<ClassLoader, Collection<FileSystemItem>>> pathsSupplier;
+	BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> filesRetriever;
+	Predicate<FileSystemItem> refreshPathIf;
+	Boolean fileFiltersExtenallySet;
+	FileSystemItem.Criteria fileFilter;
+	FileSystemItem.Criteria additionalFileFilters;
 	ClassCriteria classCriteria;
-	Collection<String> paths;
-	BiConsumer<ClassLoader, Collection<String>> resourceSupplier;
-	ClassLoader parentClassLoaderForPathScannerClassLoader;
-	Supplier<FileSystemItem.Criteria> defaultScanFileCriteriaSupplier;
-	Supplier<FileSystemItem.Criteria> scanFileCriteriaSupplier;
-	boolean optimizePaths;
+	
+	Supplier<Collection<FileSystemItem>> pathsRetriever;
+	SearchContext<?> searchContext;
+	
 	boolean useDefaultPathScannerClassLoader;
 	boolean useDefaultPathScannerClassLoaderAsParent;
-	boolean waitForSearchEnding;
-	BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> filesRetriever;
-	BiPredicate<SearchConfigAbst<?>, String> checkForAddedClassesForAllPathThat;
-	FileSystemItem.Criteria scanFileCriteriaModifier;
+	ClassLoader parentClassLoaderForPathScannerClassLoader;
 	
-
-	SearchConfigAbst(Collection<String>... pathsColl) {
-		useDefaultPathScannerClassLoader(true);
+	boolean waitForSearchEnding;
+	boolean optimizePaths;
+	
+	SearchConfigAbst() {
+		pathsSupplier = classLoader -> {
+			return new AbstractMap.SimpleEntry<>(classLoader, ConcurrentHashMap.newKeySet());
+		};
 		waitForSearchEnding = true;
-		paths = new HashSet<>();
-		addPaths(pathsColl);
 		classCriteria = ClassCriteria.create();
-		checkForAddedClassesForAllPathThat = (searchConfig, path) -> false;
 		filesRetriever = FIND_IN_ALL_CHILDREN;
 	}
 	
-	void init(PathScannerClassLoader classSupplier) {
-		classCriteria.init(classSupplier);
+	<I, C extends SearchContext<I>> C init(ClassPathScanner.Abst<I, C, ?> classPathScanner) {
+		PathScannerClassLoader defaultPathScannerClassLoader = classPathScanner.getDefaultPathScannerClassLoader(this);
+		if (useDefaultPathScannerClassLoaderAsParent) {
+			parentClassLoaderForPathScannerClassLoader = defaultPathScannerClassLoader;
+		}
+		if (fileFilter == null) {
+			fileFiltersExtenallySet = true && additionalFileFilters == null;
+			fileFilter = FileSystemItem.Criteria.forClassTypeFiles(
+				classPathScanner.config.resolveStringValue(
+					classPathScanner.getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()
+				)
+			);
+		}
+		if (fileFiltersExtenallySet == null) {
+			fileFiltersExtenallySet = Boolean.TRUE;
+		}
+		PathScannerClassLoader pathScannerClassLoader = useDefaultPathScannerClassLoader ?
+			defaultPathScannerClassLoader :
+			PathScannerClassLoader.create(
+				parentClassLoaderForPathScannerClassLoader, 
+				classPathScanner.pathHelper,
+				getAllFileFilters()
+					
+			);
+		C context = classPathScanner.contextSupplier.apply(
+			InitContext.create(
+				defaultPathScannerClassLoader,
+				pathScannerClassLoader,
+				this
+			)		
+		);
+		if (classCriteria != null) {
+			classCriteria.init(context.pathScannerClassLoader);
+		}
+		pathsRetriever = () -> {
+			Collection<FileSystemItem> pathsToBeScanned = pathsSupplier.apply(pathScannerClassLoader).getValue();
+			if (pathsToBeScanned.isEmpty()) {
+				pathsToBeScanned.addAll(classPathScanner.pathHelper.getPaths(ClassPathScanner.Configuration.Key.DEFAULT_SEARCH_CONFIG_PATHS)
+					.stream().map(FileSystemItem::ofPath).collect(Collectors.toSet()));
+			}
+			if (optimizePaths && filesRetriever != FIND_IN_CHILDREN && !fileFiltersExtenallySet) {
+				classPathScanner.pathHelper.optimizeFileSystemItems(pathsToBeScanned);
+			}
+			return pathsToBeScanned;
+		};
+		if (refreshPathIf == null) {
+			refreshPathIf = fileSystemItem -> false;
+		}
+		searchContext = context;
+		defaultPathScannerClassLoader.unregister(this, true);
+		return context;
+	}
+	
+	public S by(ClassCriteria classCriteria) {
+		this.classCriteria = classCriteria;
+		return (S)this;
 	}
 	
 	@SafeVarargs
 	public final S addPaths(Collection<String>... pathColls) {
-		for (Collection<String> paths : pathColls) {
-			this.paths.addAll(paths);
+		for (Collection<String> pathColl : pathColls) {
+			pathsSupplier = pathsSupplier.andThen(classLoaderAndPaths -> {
+				for (String absolutePath : pathColl) {
+					classLoaderAndPaths.getValue().add(FileSystemItem.ofPath(absolutePath));
+				}
+				return classLoaderAndPaths;
+			});
+		}
+		return (S)this;
+	}
+	
+	@SafeVarargs
+	public final S addFileSystemItems(Collection<FileSystemItem>... pathColls) {
+		for (Collection<FileSystemItem> pathColl : pathColls) {
+			pathsSupplier = pathsSupplier.andThen(classLoaderAndPaths -> {
+				for (FileSystemItem absolutePath : pathColl) {
+					classLoaderAndPaths.getValue().add(absolutePath);
+				}
+				return classLoaderAndPaths;
+			});
 		}
 		return (S)this;
 	}
@@ -97,27 +173,18 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 	
 	@SafeVarargs
 	public final S addResources(ClassLoader classLoader, Collection<String>... pathColls) {
-		if (classLoader == null) {
-			if (resourceSupplier == null) {
-				resourceSupplier = (cl, paths) -> {
-					Collection<String> resourcesPaths = ClassLoaders.getResources(cl, pathColls).stream().map(file -> file.getAbsolutePath()).collect(Collectors.toSet());
-					if (resourcesPaths.isEmpty()) {
-						Stream.of(pathColls).forEach(pathColl -> resourcesPaths.addAll(pathColl));
-					}
-					paths.addAll(resourcesPaths);
-				};
-			} else {
-				resourceSupplier = resourceSupplier.andThen((cl, paths) -> {
-					Collection<String> resourcesPaths = ClassLoaders.getResources(cl, pathColls).stream().map(file -> file.getAbsolutePath()).collect(Collectors.toSet());
-					if (resourcesPaths.isEmpty()) {
-						Stream.of(pathColls).forEach(pathColl -> resourcesPaths.addAll(pathColl));
-					}
-					paths.addAll(resourcesPaths);
-				});
-			}
-			return (S)this;
+		for (Collection<String> pathColl : pathColls) {
+			pathsSupplier = pathsSupplier.andThen(classLoaderAndPaths -> {
+				classLoaderAndPaths.getValue().addAll(
+					ClassLoaders.getResources(
+						classLoader != null? classLoader : classLoaderAndPaths.getKey(),
+						pathColl
+					)
+				);
+				return classLoaderAndPaths;
+			});
 		}
-		return addPaths(ClassLoaders.getResources(classLoader, pathColls).stream().map(file -> file.getAbsolutePath()).collect(Collectors.toSet()));
+		return (S)this;
 	}
 	
 	@SafeVarargs
@@ -135,85 +202,38 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		return addResources(null, pathCollections);
 	}
 	
-	Collection<String> getPaths() {
-		return paths;
-	}
-	
-	public S by(ClassCriteria classCriteria) {
-		this.classCriteria = classCriteria;
+	public S waitForSearchEnding(boolean waitForSearchEnding) {
+		this.waitForSearchEnding = waitForSearchEnding;
 		return (S)this;
 	}
 	
-	@SafeVarargs
-	public final S excludePathsThatMatch(Collection<String>... pathRegExCollections) {
-		for(Collection<String> pathRegExCollection : pathRegExCollections) {
-			for(String pathRegEx : pathRegExCollection) {
-				if (scanFileCriteriaModifier == null) {
-					scanFileCriteriaModifier = FileSystemItem.Criteria.create().excludePathsThatMatch(pathRegEx);
-				} else {
-					scanFileCriteriaModifier.and().excludePathsThatMatch(pathRegEx);
-				}
-			}
+	public S checkForAddedClasses() {
+		this.refreshPathIf = FileSystemItem -> true;
+		return (S)this;
+	}
+	
+	public S optimizePaths(boolean flag) {
+		this.optimizePaths = flag;
+		return (S)this;
+	}
+	
+	
+	public S setFileFilter(FileSystemItem.Criteria filter) {
+		this.fileFilter = filter;
+		return (S)this;
+	}
+	
+	public S addFileFilter(FileSystemItem.Criteria filter) {
+		if (additionalFileFilters == null) {
+			additionalFileFilters = filter;
+			return (S)this;
 		}
+		additionalFileFilters = additionalFileFilters.and(filter);
 		return (S)this;
 	}
 	
-	@SafeVarargs
-	public final S excludePathsThatMatch(String... regex) {
-		return excludePathsThatMatch(Arrays.asList(regex));
-	}
-	
-	public S notRecursiveOnPath(String path, boolean isAbsolute) {
-		if (scanFileCriteriaModifier == null) {
-			scanFileCriteriaModifier = FileSystemItem.Criteria.create().notRecursiveOnPath(path, isAbsolute);
-		} else {
-			scanFileCriteriaModifier.and().notRecursiveOnPath(path, isAbsolute);
-		}
-		return (S)this;
-	}
-	
-	S withDefaultScanFileCriteriaIfNull(FileSystemItem.Criteria scanFileCriteria) {
-		if (defaultScanFileCriteriaSupplier == null) {
-			defaultScanFileCriteriaSupplier = () -> scanFileCriteria;
-		}
-		return (S)this;
-	}
-	
-	public S withScanFileCriteria(FileSystemItem.Criteria scanFileCriteria) {
-		this.scanFileCriteriaSupplier = () -> scanFileCriteria;
-		return (S)this;
-	}
-	
-	FileSystemItem.Criteria buildScanFileCriteria(){
-		FileSystemItem.Criteria criteria = 
-			scanFileCriteriaSupplier == null ?
-				defaultScanFileCriteriaSupplier.get() :
-				scanFileCriteriaSupplier.get();
-			
-		if (scanFileCriteriaModifier != null) {
-			criteria = criteria.and(scanFileCriteriaModifier);
-		}
-		return criteria;
-	}
-	
-	BiFunction<FileSystemItem, Criteria, Collection<FileSystemItem>> getFilesRetriever() {
-		return filesRetriever;
-	}
-	
-	boolean isDefaultFilesRetrieverSet() {
-		return filesRetriever == FIND_IN_ALL_CHILDREN;
-	}
-	
-	boolean scanFileCriteriaHasNoPredicate() {
-		return scanFileCriteriaSupplier == null && scanFileCriteriaModifier == null;
-	}
-	
-	ClassCriteria getClassCriteria() {
-		return classCriteria;
-	}
-	
-	BiConsumer<ClassLoader, Collection<String>> getResourceSupllier() {
-		return this.resourceSupplier;
+	public ClassCriteria getClassCriteria() {
+		return this.classCriteria;
 	}
 	
 	public S useDefaultPathScannerClassLoader(boolean value) {
@@ -247,28 +267,21 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		return (S)this;
 	}
 	
-	public S waitForSearchEnding(boolean waitForSearchEnding) {
-		this.waitForSearchEnding = waitForSearchEnding;
-		return (S)this;
+	
+	Collection<FileSystemItem> getPathsToBeScanned() {
+		return pathsRetriever.get();
 	}
 	
-	public S optimizePaths(boolean flag) {
-		this.optimizePaths = flag;
-		return (S)this;
+	Function<ClassLoader, Map.Entry<ClassLoader, Collection<FileSystemItem>>> getPathsSupplier() {
+		return pathsSupplier;
 	}
 	
-	public S checkForAddedClasses() {
-		this.checkForAddedClassesForAllPathThat = (searchConfig, path) -> searchConfig.getPaths().contains(path); 
-		return (S)this;
-	}
-
-	public S checkForAddedClassesForAllPathThat(Predicate<String> refreshCacheFor) {
-		this.checkForAddedClassesForAllPathThat = (searchConfig, path) -> refreshCacheFor.test(path);
-		return (S)this;
+	BiFunction<FileSystemItem, Criteria, Collection<FileSystemItem>> getFilesRetriever() {
+		return filesRetriever;
 	}
 	
-	BiPredicate<SearchConfigAbst<?>, String> getCheckForAddedClassesPredicate() {
-		return checkForAddedClassesForAllPathThat;
+	boolean isDefaultFilesRetrieverSet() {
+		return filesRetriever == FIND_IN_ALL_CHILDREN;
 	}
 	
 	public S findInChildren() {
@@ -286,26 +299,45 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		return (S)this;
 	}
 	
+	Predicate<FileSystemItem> getRefreshPathIf() {
+		return this.refreshPathIf;
+	}
+	
+	FileSystemItem.Criteria getAllFileFilters(){
+		if (additionalFileFilters != null) {
+			return fileFilter.and(additionalFileFilters);
+		}
+		return fileFilter;
+	}
+	
+	boolean isFileFilterExternallySet() {
+		return fileFiltersExtenallySet;
+	}
+	
+	boolean isInitialized() {
+		return pathsRetriever != null && searchContext != null;
+	}
+	
+	<I, C extends SearchContext<I>> C getSearchContext() {
+		return (C)searchContext;
+	}
+	
 	abstract S newInstance();
 	
 	@SuppressWarnings("hiding")
 	public <S extends SearchConfigAbst<S>> S copyTo(S destConfig) {
 		destConfig.classCriteria = this.classCriteria.createCopy();
+		destConfig.pathsRetriever = this.pathsRetriever;
 		destConfig.filesRetriever = this.filesRetriever;
-		destConfig.paths = new HashSet<>();
-		destConfig.paths.addAll(this.paths);
-		destConfig.resourceSupplier = this.resourceSupplier;
-		destConfig.scanFileCriteriaSupplier = this.scanFileCriteriaSupplier;
-		destConfig.defaultScanFileCriteriaSupplier = this.defaultScanFileCriteriaSupplier;
-		if (this.scanFileCriteriaModifier != null) {
-			destConfig.scanFileCriteriaModifier = this.scanFileCriteriaModifier.createCopy();
-		}
+		destConfig.refreshPathIf = this.refreshPathIf;
+		destConfig.fileFilter = this.fileFilter;
+		destConfig.additionalFileFilters = this.additionalFileFilters;
+		destConfig.pathsSupplier = this.pathsSupplier;
 		destConfig.optimizePaths = this.optimizePaths;
 		destConfig.useDefaultPathScannerClassLoader = this.useDefaultPathScannerClassLoader;
 		destConfig.parentClassLoaderForPathScannerClassLoader = this.parentClassLoaderForPathScannerClassLoader;
 		destConfig.useDefaultPathScannerClassLoaderAsParent = this.useDefaultPathScannerClassLoaderAsParent;
 		destConfig.waitForSearchEnding = this.waitForSearchEnding;
-		destConfig.checkForAddedClassesForAllPathThat = this.checkForAddedClassesForAllPathThat;
 		return destConfig;
 	}
 	
@@ -318,16 +350,11 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		this.classCriteria.close();
 		this.classCriteria = null;
 		this.filesRetriever = null;
-		this.scanFileCriteriaSupplier = null;
-		this.defaultScanFileCriteriaSupplier = null;
-		this.resourceSupplier = null;
-		if (this.scanFileCriteriaModifier != null) {
-			this.scanFileCriteriaModifier.close();
-			this.scanFileCriteriaModifier = null;
-		}
-		this.paths.clear();
-		this.paths = null;
+		this.pathsRetriever = null;
+		this.refreshPathIf = null;
+		this.fileFilter = null;
+		this.pathsSupplier = null;
+		this.additionalFileFilters = null;
 		this.parentClassLoaderForPathScannerClassLoader = null;
 	}
-
 }

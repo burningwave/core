@@ -466,6 +466,36 @@ class PathHelperImpl implements Component, PathHelper {
 	
 	
 	@Override
+	public Collection<FileSystemItem> optimizeFileSystemItems(FileSystemItem... paths) {
+		return optimizeFileSystemItems(Arrays.asList(paths));
+	}
+	
+	
+	@Override
+	public Collection<FileSystemItem> optimizeFileSystemItems(Collection<FileSystemItem> paths) {
+		Collection<FileSystemItem> copyOfPaths = new HashSet<>(paths);
+		Collection<FileSystemItem> toBeRemoved = new HashSet<>();
+		Iterator<FileSystemItem> paths1Itr = copyOfPaths.iterator();
+		while (paths1Itr.hasNext()) {
+			FileSystemItem path1AsFile = paths1Itr.next();
+			Iterator<FileSystemItem> paths2Itr = copyOfPaths.iterator();
+			while (paths2Itr.hasNext()) {
+				FileSystemItem path2AsFile = paths2Itr.next();
+				if (path1AsFile.isChildOf(path2AsFile)) {
+					toBeRemoved.add(path1AsFile);
+				}
+			}
+		}
+		if (!toBeRemoved.isEmpty()) {
+			copyOfPaths.removeAll(toBeRemoved);
+			paths.clear();
+			paths.addAll(copyOfPaths);
+		}
+		return paths;
+	}
+	
+	
+	@Override
 	public Collection<String> getPaths(Predicate<String> pathPredicate) {
 		return getAllPaths().stream().filter(pathPredicate).collect(Collectors.toSet());
 	}

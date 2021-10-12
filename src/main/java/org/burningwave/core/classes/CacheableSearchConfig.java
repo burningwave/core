@@ -28,13 +28,14 @@
  */
 package org.burningwave.core.classes;
 
-import java.util.Collection;
+import java.util.function.Predicate;
+
+import org.burningwave.core.io.FileSystemItem;
 
 public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfig> {
 	
-	@SafeVarargs
-	CacheableSearchConfig(Collection<String>... pathsColl) {
-		super(pathsColl);
+	CacheableSearchConfig() {
+		super();
 	}
 	
 	@Override
@@ -44,23 +45,31 @@ public class CacheableSearchConfig extends SearchConfigAbst<CacheableSearchConfi
 	}
 	
 	public SearchConfig withoutUsingCache() {
-		return super.copyTo(SearchConfig.withoutUsingCache()).checkForAddedClasses();
+		return super.copyTo(SearchConfig.withoutUsingCache());
+	}
+	
+	public CacheableSearchConfig checkForAddedClassesForAllPathThat(Predicate<FileSystemItem> refreshIf) {
+		if (refreshPathIf == null) {
+			refreshPathIf = refreshIf;
+		} else {
+			refreshPathIf = refreshPathIf.or(refreshIf);
+		}
+		return this;
+	}
+	
+
+	@Override
+	CacheableSearchConfig newInstance() {
+		return new CacheableSearchConfig();
+	}
+	
+	@Override
+	public <S extends SearchConfigAbst<S>> S copyTo(S destConfig) {
+		return super.copyTo(destConfig);
 	}
 	
 	@Override
 	public void close() {
 		super.close();
 	}
-
-	@Override
-	CacheableSearchConfig newInstance() {
-		return new CacheableSearchConfig(this.paths);
-	}
-	
-	@Override
-	public <S extends SearchConfigAbst<S>> S copyTo(S destConfig) {
-		((CacheableSearchConfig)destConfig).checkForAddedClassesForAllPathThat = this.checkForAddedClassesForAllPathThat;
-		return super.copyTo(destConfig);
-	}
-
 }

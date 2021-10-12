@@ -174,15 +174,6 @@ public class ClassHunterTest extends BaseTest {
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
-				).findRecursiveInChildren().withScanFileCriteria(
-					FileSystemItem.Criteria.forAllFileThat(
-						fileSystemItem ->
-							fileSystemItem.isFolder() ||
-							(fileSystemItem.getExtension() != null &&
-							!fileSystemItem.getExtension().equals("zip") && 
-							!fileSystemItem.getExtension().equals("jar") && 
-							fileSystemItem.getExtension().equals("class"))
-					)
 				)
 			),
 			(result) ->
@@ -415,7 +406,7 @@ public class ClassHunterTest extends BaseTest {
 						Closeable.class,
 						Serializable.class
 					)
-				).withScanFileCriteria(
+				).setFileFilter(
 					FileSystemItem.Criteria.forClassTypeFiles(
 						FileSystemItem.CheckingOption.FOR_NAME).and().allFileThat(fileSystemItem -> 
 							fileSystemItem.getAbsolutePath().contains("/org/")

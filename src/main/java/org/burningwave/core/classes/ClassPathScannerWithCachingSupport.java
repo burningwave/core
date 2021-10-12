@@ -90,14 +90,15 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 		}
 		
 		public CacheScanner<I, R> loadInCache(CacheableSearchConfig searchConfig) {
-			CacheableSearchConfig flatSearchConfig = SearchConfig.forPaths(
-				retrievePathsToBeScanned(searchConfig)
+			CacheableSearchConfig searchConfigCopy = searchConfig.isInitialized()? searchConfig : searchConfig.createCopy();
+			CacheableSearchConfig flatSearchConfig = SearchConfig.forFileSystemItems(
+				searchConfigCopy.getPathsToBeScanned()
 			);
 			try (R result = findBy(
 				flatSearchConfig
 			)){};
 			return (srcCfg) -> 
-				findBy(srcCfg == null? searchConfig : srcCfg);
+				findBy(srcCfg == null? searchConfigCopy : srcCfg);
 		}
 		
 		public R findAndCache() {
@@ -124,76 +125,76 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 		}
 		
 		void searchInCacheOrInFileSystem(C context) {
-			IterableObjectHelper.iterateParallelIf(
-				context.getSearchConfig().getPaths(), 
-				basePath -> {
-					searchInCacheOrInFileSystem(
-						basePath, context
-					);
-				},
-				item -> item.size() > 1
-			);		
+//			IterableObjectHelper.iterateParallelIf(
+//				context.getSearchConfig().getPaths(), 
+//				basePath -> {
+//					searchInCacheOrInFileSystem(
+//						basePath, context
+//					);
+//				},
+//				item -> item.size() > 1
+//			);		
 		}
 	
 		private void searchInCacheOrInFileSystem(
 			String basePath,
 			C context
 		) {	
-			CacheableSearchConfig searchConfig = context.getSearchConfig();
-			FileSystemItem.Criteria fileFilter = searchConfig.buildScanFileCriteria();
-			FileSystemItem.Criteria filterAndExecutor = buildFileClassTesterAndElaborator(context, fileFilter);
-			boolean scanFileCriteriaHasNoPredicate = searchConfig.scanFileCriteriaHasNoPredicate();
-			boolean classCriteriaHasNoPredicate = searchConfig.getClassCriteria().hasNoPredicate();	
-			
-			FileSystemItem currentScannedPath = FileSystemItem.ofPath(basePath);
-			if (!currentScannedPath.isContainer()) {
-				throw new IllegalArgumentException(Strings.compile("{} is not a folder or archive", currentScannedPath.getAbsolutePath()));
-			}
-			BiPredicate<SearchConfigAbst<?>, String> refreshCache = searchConfig.getCheckForAddedClassesPredicate();
-			if (refreshCache != null && refreshCache.test(searchConfig, basePath)) {
-				Synchronizer.execute(instanceId + "_" + basePath, () -> {
-					Optional.ofNullable(cache.get(basePath)).ifPresent((classesForPath) -> {
-						cache.remove(basePath);
-						classesForPath.clear();
-					});
-				});
-				currentScannedPath.refresh();
-			}
-			Map<String, I> classesForPath = cache.get(basePath);
-			if (classesForPath == null) {
-				if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate && searchConfig.isDefaultFilesRetrieverSet()) {
-					Mutex mutex = Synchronizer.getMutex(instanceId + "_" + basePath);
-					synchronized(mutex) {
-						classesForPath = cache.get(basePath);
-						if (classesForPath == null) {
-							currentScannedPath.findInAllChildren(filterAndExecutor);
-							Map<String, I> itemsForPath = new ConcurrentHashMap<>();
-							Map<String, I> itemsFound = context.getItemsFound(basePath);
-							if (itemsFound != null) {
-								itemsForPath.putAll(itemsFound);
-							}
-							this.cache.put(basePath, itemsForPath);
-							Synchronizer.removeIfUnused(mutex);
-							return;
-						}
-						Synchronizer.removeIfUnused(mutex);
-					}
-					context.addAllItemsFound(basePath, classesForPath);
-					return;
-				} else {
-					searchConfig.getFilesRetriever().apply(currentScannedPath, filterAndExecutor);
-					return;
-				}
-			}
-			if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate) {
-				context.addAllItemsFound(basePath, classesForPath);
-			} else if (scanFileCriteriaHasNoPredicate) {
-				iterateAndTestCachedItems(context, basePath, classesForPath);
-			} else if (classCriteriaHasNoPredicate) {
-				iterateAndTestCachedPaths(context, basePath, classesForPath, fileFilter);
-			} else {
-				iterateAndTestCachedPathsAndItems(context, basePath, classesForPath, fileFilter);
-			}
+//			CacheableSearchConfig searchConfig = context.getSearchConfig();
+//			FileSystemItem.Criteria fileFilter = searchConfig.buildScanFileCriteria();
+//			FileSystemItem.Criteria filterAndExecutor = buildFileClassTesterAndElaborator(context, fileFilter);
+//			boolean scanFileCriteriaHasNoPredicate = searchConfig.scanFileCriteriaHasNoPredicate();
+//			boolean classCriteriaHasNoPredicate = searchConfig.getClassCriteria().hasNoPredicate();	
+//			
+//			FileSystemItem currentScannedPath = FileSystemItem.ofPath(basePath);
+//			if (!currentScannedPath.isContainer()) {
+//				throw new IllegalArgumentException(Strings.compile("{} is not a folder or archive", currentScannedPath.getAbsolutePath()));
+//			}
+//			BiPredicate<SearchConfigAbst<?>, String> refreshCache = searchConfig.getCheckForAddedClassesPredicate();
+//			if (refreshCache != null && refreshCache.test(searchConfig, basePath)) {
+//				Synchronizer.execute(instanceId + "_" + basePath, () -> {
+//					Optional.ofNullable(cache.get(basePath)).ifPresent((classesForPath) -> {
+//						cache.remove(basePath);
+//						classesForPath.clear();
+//					});
+//				});
+//				currentScannedPath.refresh();
+//			}
+//			Map<String, I> classesForPath = cache.get(basePath);
+//			if (classesForPath == null) {
+//				if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate && searchConfig.isDefaultFilesRetrieverSet()) {
+//					Mutex mutex = Synchronizer.getMutex(instanceId + "_" + basePath);
+//					synchronized(mutex) {
+//						classesForPath = cache.get(basePath);
+//						if (classesForPath == null) {
+//							currentScannedPath.findInAllChildren(filterAndExecutor);
+//							Map<String, I> itemsForPath = new ConcurrentHashMap<>();
+//							Map<String, I> itemsFound = context.getItemsFound(basePath);
+//							if (itemsFound != null) {
+//								itemsForPath.putAll(itemsFound);
+//							}
+//							this.cache.put(basePath, itemsForPath);
+//							Synchronizer.removeIfUnused(mutex);
+//							return;
+//						}
+//						Synchronizer.removeIfUnused(mutex);
+//					}
+//					context.addAllItemsFound(basePath, classesForPath);
+//					return;
+//				} else {
+//					searchConfig.getFilesRetriever().apply(currentScannedPath, filterAndExecutor);
+//					return;
+//				}
+//			}
+//			if (classCriteriaHasNoPredicate && scanFileCriteriaHasNoPredicate) {
+//				context.addAllItemsFound(basePath, classesForPath);
+//			} else if (scanFileCriteriaHasNoPredicate) {
+//				iterateAndTestCachedItems(context, basePath, classesForPath);
+//			} else if (classCriteriaHasNoPredicate) {
+//				iterateAndTestCachedPaths(context, basePath, classesForPath, fileFilter);
+//			} else {
+//				iterateAndTestCachedPathsAndItems(context, basePath, classesForPath, fileFilter);
+//			}
 		}
 		
 		void iterateAndTestCachedPaths(

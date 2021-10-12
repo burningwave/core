@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -138,9 +138,15 @@ public class BaseTest implements Component {
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 			isNotEmpty = !coll.isEmpty();
 			if (isNotEmpty && printAllElements) {
-				coll.forEach(element -> org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logDebug(getClass()::getName, 
-					Optional.ofNullable(element.toString()).orElseGet(() -> null)
-				));
+				int line = 0;
+				Iterator<?> collIterator = coll.iterator();
+				while (collIterator.hasNext()) {
+					Object obj = collIterator.next();
+					org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logDebug(
+						getClass()::getName,
+						++line + " " + (obj != null ? obj.toString() : "null")
+					);
+				}
 			}
 		} catch (Throwable exc) {
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);

@@ -119,8 +119,13 @@ public interface PathHelper {
 	public Collection<String> optimize(String... paths);
 
 	public Collection<String> optimize(Collection<String> paths);
+	
+	public Collection<FileSystemItem> optimizeFileSystemItems(FileSystemItem... paths);
+	
+	public Collection<FileSystemItem> optimizeFileSystemItems(Collection<FileSystemItem> paths);
 
 	public Collection<String> getPaths(Predicate<String> pathPredicate);
 
 	public String getPath(Predicate<String> pathPredicate);
+
 }

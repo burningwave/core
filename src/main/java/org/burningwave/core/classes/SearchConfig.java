@@ -28,31 +28,41 @@
  */
 package org.burningwave.core.classes;
 
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class SearchConfig extends SearchConfigAbst<SearchConfig>{
+import org.burningwave.core.io.FileSystemItem;
+
+
+@SuppressWarnings("resource")
+public class SearchConfig extends SearchConfigAbst<SearchConfig> {
 	
-		
-	@SafeVarargs
-	SearchConfig(Collection<String>... pathsColl) {
-		super(pathsColl);
+	SearchConfig() {
+		super();
+		checkForAddedClasses();
 	}	
 	
 	public static CacheableSearchConfig create() {
-		return new CacheableSearchConfig(new HashSet<>()); 
+		return new CacheableSearchConfig(); 
 	}
 	
 	public static SearchConfig withoutUsingCache() {
-		return new SearchConfig(new HashSet<>());
+		return new SearchConfig();
 	}
+	
 	
 	@SafeVarargs
 	public static CacheableSearchConfig forPaths(Collection<String>... pathsColl) {
-		return new CacheableSearchConfig(pathsColl);
+		return new CacheableSearchConfig().addPaths(pathsColl);
+	}
+	
+	@SafeVarargs
+	public static CacheableSearchConfig forFileSystemItems(Collection<FileSystemItem>... pathsColl) {
+		return new CacheableSearchConfig().addFileSystemItems(pathsColl);
 	}
 	
 	@SafeVarargs
@@ -77,7 +87,7 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 	@SuppressWarnings("resource")
 	@SafeVarargs
 	public static CacheableSearchConfig forResources(ClassLoader classLoader, Collection<String>... pathCollections) {
-		return new CacheableSearchConfig(new HashSet<>()).addResources(classLoader, pathCollections);
+		return new CacheableSearchConfig().addResources(classLoader, pathCollections);
 	}
 	
 	public static CacheableSearchConfig byCriteria(ClassCriteria classCriteria) {
@@ -86,8 +96,11 @@ public class SearchConfig extends SearchConfigAbst<SearchConfig>{
 		
 	@Override
 	SearchConfig newInstance() {
-		return new SearchConfig(this.paths);
+		return new SearchConfig();
 	}
 	
 	
+	public static class PathConfig {
+		
+	}
 }

@@ -47,6 +47,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassPathHunter.SearchResult;
@@ -102,19 +103,24 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	
 	@Override
 	public Supplier<Map<String, String>> computeByClassesSearching(CacheableSearchConfig searchConfig) {
-		return compute(((ClassPathHunterImpl)classPathHunter).retrievePathsToBeScanned(searchConfig), (toBeAdjuested) -> {
-			searchConfig.withDefaultScanFileCriteriaIfNull(
-				FileSystemItem.Criteria.forClassTypeFiles(
-					getClassFileCheckingOption()
-				)
-			);
-			try(SearchResult result = classPathHunter.loadInCache(
-					searchConfig
-				).find()
-			) {	
-				return result.getClassPaths();
+		CacheableSearchConfig searchConfigCopy = searchConfig.createCopy();
+		searchConfigCopy.init((ClassPathHunterImpl)classPathHunter);
+		return compute(
+			searchConfig.getPathsToBeScanned().stream().map(FileSystemItem::getAbsolutePath).collect(Collectors.toSet()), 
+			(toBeAdjuested) -> {
+				searchConfigCopy.setFileFilter(
+					FileSystemItem.Criteria.forClassTypeFiles(
+						getClassFileCheckingOption()
+					)
+				);
+				try(SearchResult result = classPathHunter.loadInCache(
+						searchConfigCopy
+					).find()
+				) {	
+					return result.getClassPaths();
+				}
 			}
-		});
+		);
 	}
 			
 	
@@ -130,7 +136,9 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 			true
 		);
 		if (pathsToBeRefreshed != null) {
-			searchConfig.checkForAddedClassesForAllPathThat(pathsToBeRefreshed::contains);
+			searchConfig.checkForAddedClassesForAllPathThat(fileSystemItem-> {
+				return pathsToBeRefreshed.contains(fileSystemItem.getAbsolutePath());
+			});
 		}
 		return computeByClassesSearching(searchConfig);
 	}
@@ -173,7 +181,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		try (SearchResult result = classPathHunter.findBy(
 				SearchConfig.withoutUsingCache().addPaths(pathColls).by(
 					classCriteria
-				).withScanFileCriteria(
+				).setFileFilter(
 					FileSystemItem.Criteria.forClassTypeFiles(checkFileOption)
 				).optimizePaths(
 					true
