@@ -110,7 +110,7 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 			SearchConfigAbst<?> searchConfig = input.isInitialized() ? input : input.createCopy();
 			C context = searchConfig.isInitialized() ? searchConfig.getSearchContext() : searchConfig.init(this);
 			PathScannerClassLoader pathScannerClassLoader = context.pathScannerClassLoader;
-			Collection<FileSystemItem> pathsToBeScanned = searchConfig.getPathsSupplier().apply(pathScannerClassLoader).getValue();
+			Collection<FileSystemItem> pathsToBeScanned = searchConfig.getPathsToBeScanned();
 			Collection<Map.Entry<FileSystemItem, Collection<FileSystemItem>>> classFilesForPath = ConcurrentHashMap.newKeySet();
 			IterableObjectHelper.iterateParallelIf(
 				pathsToBeScanned, 
