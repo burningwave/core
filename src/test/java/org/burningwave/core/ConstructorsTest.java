@@ -2,8 +2,6 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 
-import java.util.Arrays;
-
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.SearchConfig;
@@ -58,14 +56,14 @@ public class ConstructorsTest extends BaseTest {
 	@Test
 	public void newInstanceOfDirectTestThree() {
 		testNotNull(() ->
-			Constructors.newInstanceDirectOf(SearchConfig.class, Arrays.asList(ComponentSupplier.getInstance().getPathHelper().getBurningwaveRuntimeClassPath()))
+			Constructors.newInstanceDirectOf(SearchConfig.class)
 		);
 	}
 	
 	@Test
 	public void newInstanceOfTestThree() {
 		testNotNull(() ->
-			Constructors.newInstanceOf(SearchConfig.class, Arrays.asList(ComponentSupplier.getInstance().getPathHelper().getBurningwaveRuntimeClassPath()))
+			Constructors.newInstanceOf(SearchConfig.class)
 		);
 	}
 }

@@ -28,14 +28,17 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
+import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -44,6 +47,8 @@ import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
+
+import io.github.toolfactory.jvm.util.Strings;
 
 
 public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>> extends ClassPathScanner<I, R>{
@@ -102,8 +107,79 @@ public interface ClassPathScannerWithCachingSupport<I, R extends SearchResult<I>
 			return findBy(SearchConfig.create());
 		}
 	
-		public R findBy(CacheableSearchConfig searchConfig) {
-			return findBy(searchConfig.withoutUsingCache());
+		public R findBy(CacheableSearchConfig input) {
+			SearchConfigAbst<?> searchConfig = input.isInitialized() ? input : input.createCopy();
+			C context = searchConfig.isInitialized() ? searchConfig.getSearchContext() : searchConfig.init(this);
+			PathScannerClassLoader pathScannerClassLoader = context.pathScannerClassLoader;
+			Collection<FileSystemItem> pathsToBeScanned = searchConfig.getPathsSupplier().apply(pathScannerClassLoader).getValue();
+			final FileSystemItem.Criteria allFileFilters = searchConfig.getAllFileFilters();
+			Collection<Map.Entry<FileSystemItem, Collection<FileSystemItem>>> classFilesForPath = ConcurrentHashMap.newKeySet();
+			IterableObjectHelper.iterateParallelIf(
+				pathsToBeScanned, 
+				currentScannedPath -> {
+					if (!currentScannedPath.isContainer()) {
+						throw new IllegalArgumentException(Strings.compile("{} is not a folder or archive", currentScannedPath.getAbsolutePath()));
+					}
+					AtomicReference<FileSystemItem.Criteria> finalFilter = new AtomicReference<>(allFileFilters);
+					AtomicReference<Boolean> loadPathCompletely = new AtomicReference<>();
+					FileSystemItem.Criteria pathScannerClassLoaderFiller = null;
+					if (searchConfig.getRefreshPathIf().test(currentScannedPath) || 
+						!pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
+						if (!searchConfig.isFileFilterExternallySet() &&
+							searchConfig.getFilesRetriever() != SearchConfigAbst.FIND_IN_CHILDREN) {
+							loadPathCompletely.set(Boolean.TRUE);
+						} else {
+							loadPathCompletely.set(Boolean.FALSE);
+						}
+						finalFilter.set(finalFilter.get().and(pathScannerClassLoaderFiller = getPathScannerClassLoaderFiller(pathScannerClassLoader)));
+					}
+					if (pathScannerClassLoaderFiller == null) {
+						classFilesForPath.add(
+							new AbstractMap.SimpleImmutableEntry<>(
+								currentScannedPath,
+								searchConfig.getFilesRetriever().apply(
+									searchConfig.getRefreshPathIf().test(currentScannedPath) ?
+										currentScannedPath.refresh() : currentScannedPath	,
+									finalFilter.get()
+								)
+							)
+						);
+					} else {
+						Synchronizer.execute(pathScannerClassLoader.instanceId + "_" + currentScannedPath.getAbsolutePath(), () -> {
+							if (!pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
+								pathScannerClassLoader.loadedPaths.put(currentScannedPath.getAbsolutePath(), loadPathCompletely.get());
+								classFilesForPath.add(
+									new AbstractMap.SimpleImmutableEntry<>(
+										currentScannedPath,
+										searchConfig.getFilesRetriever().apply(
+											searchConfig.getRefreshPathIf().test(currentScannedPath) ?
+												currentScannedPath.refresh() : currentScannedPath	,
+											finalFilter.get()
+										)
+									)
+								);
+							}
+						});
+					}
+				},
+				item -> item.size() > 1
+			);
+			IterableObjectHelper.iterateParallelIf(
+				classFilesForPath,
+				currentScannedPath -> {
+					for (FileSystemItem child : currentScannedPath.getValue()) {
+						analyzeAndAddItemsToContext(context, child, currentScannedPath.getKey());
+					}
+				},
+				item -> item.size() > 1
+			);
+			Collection<String> skippedClassesNames = context.getSkippedClassNames();
+			if (!skippedClassesNames.isEmpty()) {
+				ManagedLoggersRepository.logWarn(getClass()::getName, "Skipped classes count: {}", skippedClassesNames.size());
+			}
+			R searchResult = resultSupplier.apply(context);
+			searchResult.setClassPathScanner(this);
+			return searchResult;
 		}
 		
 		public void clearCache(boolean closeSearchResults) {

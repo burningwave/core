@@ -222,7 +222,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 		}
 		
 
-		private FileSystemItem.Criteria getPathScannerClassLoaderFiller(PathScannerClassLoader pathScannerClassLoader) {
+		FileSystemItem.Criteria getPathScannerClassLoaderFiller(PathScannerClassLoader pathScannerClassLoader) {
 			return FileSystemItem.Criteria.forAllFileThat(fileSystemItem -> {
 				JavaClass javaClass = fileSystemItem.toJavaClass();
 				try {
