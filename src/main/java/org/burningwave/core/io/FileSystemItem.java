@@ -876,7 +876,7 @@ public class FileSystemItem {
 		if (this.javaClassWrapper != null) {
 			return javaClassWrapper.get();
 		} else {
-			return Synchronizer.execute(instanceId, () -> {
+			return Synchronizer.execute(instanceId + "_loadJavaClass", () -> {
 				if (this.javaClassWrapper != null) {
 					return this.javaClassWrapper.get();
 				}

@@ -38,7 +38,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Closeable;
@@ -85,12 +84,12 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		return new SearchContext<>(initContext);
 	}
 	
-	void executeSearch(Consumer<SearchContext<T>> searcher) {
+	void executeSearch(Runnable searcher) {
 		if (searchConfig.waitForSearchEnding) {
-			searcher.accept(this);
+			searcher.run();
 		} else {
 			searchTask = BackgroundExecutor.createTask(() -> {
-				searcher.accept(this);
+				searcher.run();
 			}).submit();
 		}
 	}
