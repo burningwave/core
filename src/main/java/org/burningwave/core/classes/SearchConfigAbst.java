@@ -274,10 +274,6 @@ abstract class SearchConfigAbst<S extends SearchConfigAbst<S>> implements Closea
 		return pathsRetriever.get();
 	}
 	
-	Function<ClassLoader, Map.Entry<ClassLoader, Collection<FileSystemItem>>> getPathsSupplier() {
-		return pathsSupplier;
-	}
-	
 	BiFunction<FileSystemItem, Criteria, Collection<FileSystemItem>> getFilesRetriever() {
 		return filesRetriever;
 	}
