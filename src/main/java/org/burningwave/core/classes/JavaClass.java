@@ -33,29 +33,22 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.nio.ByteBuffer;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.function.ThrowingFunction;
 import org.burningwave.core.io.FileSystemItem;
 
-public class JavaClass implements Closeable {
+public class JavaClass extends io.github.toolfactory.jvm.util.JavaClass implements Closeable {
 	private ByteBuffer byteCode;
-	private String classNameSlashed;
-	private String className;
-	
-	private JavaClass(String className, ByteBuffer byteCode) {
-		this.classNameSlashed = className;
-		this.byteCode = byteCode;
-	}
-	
+
 	JavaClass(Class<?> cls) {
-		this(cls.getName(), Classes.getByteCode(cls));
+		this(Classes.getByteCode(cls));
 	}
 	
 	JavaClass(ByteBuffer byteCode) {
-		this(Classes.retrieveName(byteCode), BufferHandler.shareContent(byteCode));
+		super(byteCode);
+		this.byteCode = byteCode;
 	}
 	
 	public static JavaClass create(Class<?> cls) {
@@ -78,35 +71,14 @@ public class JavaClass implements Closeable {
 		}
 	}
 	
-	private  String _getPackageName() {
-		return classNameSlashed.contains("/") ?
-			classNameSlashed.substring(0, classNameSlashed.lastIndexOf("/")) :
-			null;
-	}
-
-	private String _getSimpleName() {
-		return classNameSlashed.contains("/") ?
-			classNameSlashed.substring(classNameSlashed.lastIndexOf("/") + 1) :
-			classNameSlashed;
-	}	
-	
-	public String getPackageName() {
-		return Optional.ofNullable(_getPackageName()).map(value -> value.replace("/", ".")).orElse(null);
-	}
-	
-	public String getSimpleName() {
-		return Optional.ofNullable(_getSimpleName()).orElse(null);
-	}
-	
 	public String getPackagePath() {
-		String packageName = getPackageName();
 		return packageName != null? packageName.replace(".", "/") + "/" : null;
 	}
 	
 	public String getClassFileName() {
-		String classFileName = getSimpleName();
-		return classFileName != null? classFileName.replace(".", "$") + ".class" : null;
+		return simpleName.replace(".", "$") + ".class";
 	}
+	
 	
 	public String getPath() {
 		String packagePath = getPackagePath();
@@ -124,27 +96,6 @@ public class JavaClass implements Closeable {
 		return path;
 	}
 	
-	public String getName() {
-		if (className == null) {
-			String packageName = getPackageName();
-			String classSimpleName = getSimpleName();
-			String name = null;
-			if (packageName != null) {
-				name = packageName;
-			}
-			if (classSimpleName != null) {
-				if (packageName == null) {
-					name = "";
-				} else {
-					name += ".";
-				}
-				name += classSimpleName;
-			}
-			className = name;
-		}		
-		return className;
-	}
-	
 	public ByteBuffer getByteCode() {
 		return BufferHandler.duplicate(byteCode);
 	}
@@ -158,7 +109,7 @@ public class JavaClass implements Closeable {
 	}
 	
 	public JavaClass duplicate() {
-		return new JavaClass(classNameSlashed, byteCode);
+		return new JavaClass(byteCode);
 	}
 	
 	@Override
@@ -176,7 +127,6 @@ public class JavaClass implements Closeable {
 
 	@Override
 	public void close() {
-		classNameSlashed = null;
-		byteCode = null;		
+		byteCode = null;
 	}
 }

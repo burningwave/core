@@ -85,29 +85,6 @@ import io.github.toolfactory.jvm.util.CleanableSupplier;
 
 @SuppressWarnings({"unchecked", "resource"})
 public class Classes implements MembersRetriever {
-	public static class Symbol{
-		public static class Tag {
-			static final byte UTF8 = 1;
-			static final byte INTEGER = 3;
-			static final byte FLOAT = 4;
-			static final byte LONG = 5;
-			static final byte DOUBLE = 6;
-			static final byte CLASS = 7;
-			static final byte STRING = 8;
-			static final byte FIELD_REF = 9;
-			static final byte METHOD_REF = 10;
-			static final byte INTERFACE_METHOD_REF = 11;
-			static final byte NAME_AND_TYPE = 12;
-			static final byte METHOD_HANDLE = 15;
-			static final byte METHOD_TYPE = 16;
-			static final byte DYNAMIC = 17;
-			static final byte INVOKE_DYNAMIC = 18;
-			static final byte MODULE = 19;
-			static final byte PACKAGE = 20;
-
-	    }		
-	}
-	
 	Field[] emtpyFieldsArray;
 	Method[] emptyMethodsArray;
 	Constructor<?>[] emptyConstructorsArray;
@@ -200,15 +177,6 @@ public class Classes implements MembersRetriever {
 	public String toPath(String className) {
 		return className.replace(".", "/");
 	}
-	
-	public String retrieveName(final byte[] classFileBuffer) {
-		return io.github.toolfactory.jvm.util.Classes.retrieveName(classFileBuffer);
-	}
-	
-	public String retrieveName(final ByteBuffer classFileBuffer) {
-		return io.github.toolfactory.jvm.util.Classes.retrieveName(classFileBuffer);
-	}
-
 
 	public ClassLoader getClassLoader(Class<?> cls) {
 		ClassLoader clsLoader = cls.getClassLoader();
@@ -307,24 +275,7 @@ public class Classes implements MembersRetriever {
 	}
 	
 	public Class<?> getClassOrWrapper(Class<?> cls) {
-		if (cls.isPrimitive()) {
-			if (cls == int.class) {
-				return Integer.class;
-			} else if (cls == long.class) {
-				return Long.class;
-			} else if (cls == float.class) {
-				return Float.class;
-			} else if (cls == double.class) {
-				return Double.class;
-			} else if (cls == boolean.class) {
-				return Boolean.class;
-			} else if (cls == byte.class) {
-				return Byte.class;
-			} else if (cls == char.class) {
-				return Character.class;
-			}
-		}
-		return cls;
+		return io.github.toolfactory.jvm.util.Classes.getClassOrWrapper(cls);
 	}
 	
 	public static class Loaders implements Closeable {
