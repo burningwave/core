@@ -338,28 +338,24 @@ import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
-import org.burningwave.core.classes.ClassHunter.SearchResult;
 import org.burningwave.core.classes.SearchConfig;
+import org.burningwave.core.io.FileSystemItem;
     
 public class Finder {
     
-    public Collection<Class<?>> simplifiedFind() {
+   public Collection<Class<?>> find() {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         ClassHunter classHunter = componentSupplier.getClassHunter();
         
-        //With this the search will be executed on default configured paths that are the 
-        //runtime class paths plus, on java 9 and later, the jmods folder of the Java home.
-        //The default configured paths are indicated in the 'paths.hunters.default-search-config.paths'
-        //property of burningwave.properties file
-        //(see https://github.com/burningwave/core/wiki/In-depth-look-to-ClassHunter-and-configuration-guide)
-        try (SearchResult searchResult = classHunter.findBy(SearchConfig.byCriteria(
-            ClassCriteria.create().allThoseThatMatch((cls) -> {
-                return cls.getPackage().getName().matches(".*springframework.*");
-            })
-        ))
-        ) {
+        SearchConfig searchConfig = SearchConfig.create().setFileFilter(
+        	FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {
+        		String packageName = fileSystemItem.toJavaClass().getPackageName();       				
+        		return packageName != null && packageName.contains("springframework");
+        	})
+        );
+
+        try(ClassHunter.SearchResult searchResult = classHunter.findBy(searchConfig)) {
             return searchResult.getClasses();
         }
     }
@@ -376,7 +372,6 @@ import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
-import org.burningwave.core.classes.ClassHunter.SearchResult;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
@@ -410,7 +405,7 @@ public class Finder {
             })
         );
 
-        try(SearchResult searchResult = classHunter.findBy(searchConfig)) {
+        try(ClassHunter.SearchResult searchResult = classHunter.findBy(searchConfig)) {
             return searchResult.getClasses();
         }
     }
@@ -428,38 +423,35 @@ import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.ClassCriteria;
-import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassPathHunter;
-import org.burningwave.core.classes.ClassPathHunter.SearchResult;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-
+    
 public class Finder {
-
-    public Collection<FileSystemItem> find() {
+    
+   public Collection<FileSystemItem> find() {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         PathHelper pathHelper = componentSupplier.getPathHelper();
         ClassPathHunter classPathHunter = componentSupplier.getClassPathHunter();
+        
+        SearchConfig searchConfig = SearchConfig.forPaths(
+                //Here you can add all absolute path you want:
+                //both folders, zip and jar will be recursively scanned.
+                //For example you can add: "C:\\Users\\user\\.m2"
+                //With the row below the search will be executed on runtime Classpaths
+                pathHelper.getMainClassPaths()
+            ).setFileFilter(
+        	FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {     				
+        		return fileSystemItem.toJavaClass().getName().equals("Finder");
+        	})
+        );
 
-        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
-            //Here you can add all absolute path you want:
-            //both folders, zip and jar will be recursively scanned.
-            //For example you can add: "C:\\Users\\user\\.m2"
-            //With the row below the search will be executed on runtime Classpaths
-            pathHelper.getMainClassPaths()
-        ).by(
-            ClassCriteria.create().allThoseThatMatch(cls ->
-                cls.getName().equals("Finder")      
-            )
-        );        
-
-        try (SearchResult searchResult = classPathHunter.loadInCache(searchConfig).find()) {
+        try(ClassPathHunter.SearchResult searchResult = classPathHunter.findBy(searchConfig)) {
             return searchResult.getClassPaths();
         }
     }
-
+    
 }
 ```
 
