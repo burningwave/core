@@ -378,6 +378,7 @@ import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassHunter.SearchResult;
 import org.burningwave.core.classes.SearchConfig;
+import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
     
 public class Finder {
@@ -399,7 +400,11 @@ public class Finder {
             pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES)
             //If you want to scan only one jar you can replace the two line of code above with:
             //pathHelper.getPaths(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
-        ).by(
+        ).setFileFilter(
+        	FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {
+        		String packageName = fileSystemItem.toJavaClass().getPackageName();       				
+        		return packageName != null && packageName.contains("springframework");
+        	})).by(
             ClassCriteria.create().allThoseThatMatch((cls) -> {
                 return cls.getPackage().getName().matches(".*springframework.*");
             })
