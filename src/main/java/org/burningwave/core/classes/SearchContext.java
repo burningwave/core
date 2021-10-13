@@ -58,6 +58,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 	QueuedTasksExecutor.Task searchTask;
 	Collection<String> pathScannerClassLoaderScannedPaths;
 	Collection<T> itemsFound;
+	boolean requestToClosePathScannderClassLoaderOnClose;
 	
 	Collection<String> getSkippedClassNames() {
 		return skippedClassNames;
@@ -76,6 +77,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		this.searchConfig = initContext.getSearchConfig();
 		this.pathScannerClassLoader.register(this);
 		this.sharedPathScannerClassLoader.register(this);
+		this.requestToClosePathScannderClassLoaderOnClose = true;
 	}
 	
 	public static <T> SearchContext<T> create(
@@ -170,6 +172,10 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		return itemsFound;
 	}
 	
+	void setrequestToClosePathScannderClassLoaderOnClose(boolean flag) {
+		this.requestToClosePathScannderClassLoaderOnClose = flag;
+	}
+	
 	Map<String, T> getItemsFound(String path) {
 		return this.itemsFoundMap.get(path);
 	}
@@ -237,7 +243,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 	public void close() {
 		pathScannerClassLoader.unregister(this, true);
 		if (sharedPathScannerClassLoader != null) {
-			sharedPathScannerClassLoader.unregister(this, true);
+			sharedPathScannerClassLoader.unregister(this, requestToClosePathScannderClassLoaderOnClose);
 		}
 		itemsFoundFlatMap = null;
 		itemsFoundMap = null;
