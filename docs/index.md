@@ -443,8 +443,9 @@ public class Finder {
             //With the line below the search will be executed on runtime class paths
             pathHelper.getMainClassPaths()
         ).addFileFilter(
-            FileSystemItem.Criteria.forAllFileThat(fileSystemItem -> {     				
-        	return fileSystemItem.toJavaClass().getName().equals("Finder");
+            FileSystemItem.Criteria.forAllFileThat(fileSystemItem -> {
+	        JavaClass javaClass = fileSystemItem.toJavaClass();
+        	return javaClass != null && javaClass.getName().equals(Finder.class.getName());
             })
         );
 
