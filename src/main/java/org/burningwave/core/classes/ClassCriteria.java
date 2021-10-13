@@ -31,8 +31,8 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 
 import java.lang.reflect.Member;
 import java.util.Collection;
@@ -59,6 +59,36 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 	private ClassCriteria() {
 		super();
 		memberCriterias = new HashMap<>();
+	}
+	
+	void init(ClassLoader classSupplier) {
+		this.classSupplier = cls -> {
+			try {
+				return ClassLoaders.loadOrDefine(cls, classSupplier);
+			} catch (ClassNotFoundException exc) {
+				return Driver.throwException(exc);
+			}
+		};
+		this.byteCodeSupplier = Classes::getByteCode;
+		Collection<Class<?>> usedClasses = this.getClassesToBeUploaded() != null ?
+			this.getClassesToBeUploaded() : new HashSet<>();
+		for (MemberCriteria<?, ?, ?> memberCriteria : memberCriterias.values()) {
+			memberCriteria.init(this.classSupplier, this.byteCodeSupplier);
+			if (memberCriteria.getClassesToBeUploaded() != null) {
+				usedClasses.addAll(memberCriteria.getClassesToBeUploaded());
+			}
+		}
+		if (!usedClasses.isEmpty()) {
+			for (MemberCriteria<?, ?, ?> memberCriteria : memberCriterias.values()) {
+				memberCriteria.useClasses(usedClasses);
+			}
+			useClasses(usedClasses);
+		}
+		if (collectMembers) {
+			membersPredicate = this::testAndCollectMembers;
+		} else {
+			membersPredicate = this::testMembers;
+		}
 	}
 	
 	public ClassCriteria allThoseThatHaveAMatchInHierarchy(BiPredicate<TestContext, Class<?>> predicate) {
@@ -109,36 +139,6 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 	
 	public static ClassCriteria create() {
 		return new ClassCriteria();
-	}
-	
-	void init(ClassLoader classSupplier) {
-		this.classSupplier = cls -> {
-			try {
-				return ClassLoaders.loadOrDefine(cls, classSupplier);
-			} catch (ClassNotFoundException exc) {
-				return Driver.throwException(exc);
-			}
-		};
-		this.byteCodeSupplier = Classes::getByteCode;
-		Collection<Class<?>> usedClasses = this.getClassesToBeUploaded() != null ?
-			this.getClassesToBeUploaded() : new HashSet<>();
-		for (MemberCriteria<?, ?, ?> memberCriteria : memberCriterias.values()) {
-			memberCriteria.init(this.classSupplier, this.byteCodeSupplier);
-			if (memberCriteria.getClassesToBeUploaded() != null) {
-				usedClasses.addAll(memberCriteria.getClassesToBeUploaded());
-			}
-		}
-		if (!usedClasses.isEmpty()) {
-			for (MemberCriteria<?, ?, ?> memberCriteria : memberCriterias.values()) {
-				memberCriteria.useClasses(usedClasses);
-			}
-			useClasses(usedClasses);
-		}
-		if (!collectMembers) {
-			membersPredicate = this::testMembers;
-		} else {
-			membersPredicate = this::testAndCollectMembers;
-		}
 	}
 
 	@Override
@@ -221,11 +221,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 				return criteria.membersPredicate.test(criteria, context, memberCriteria, key, cls);
 			}
 		);
-		return this;
-	}
-	
-	ClassCriteria collectMembers(boolean collectMembers) {
-		this.collectMembers = collectMembers;
+		this.collectMembers = true;
 		return this;
 	}
 	

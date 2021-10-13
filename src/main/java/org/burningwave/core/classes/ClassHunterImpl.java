@@ -86,13 +86,6 @@ class ClassHunterImpl extends ClassPathScanner.Abst<Class<?>, ClassHunterImpl.Se
 
 	
 	@Override
-	public ClassHunter.SearchResult findBy(SearchConfig searchConfig) {
-		searchConfig.getClassCriteria().collectMembers(true);
-		return super.findBy(searchConfig);
-	}
-
-	
-	@Override
 	public void close() {
 		closeResources(() -> this.pathHelper == null, () -> {
 			this.defaultPathScannerClassLoaderManager.close();
