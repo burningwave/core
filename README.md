@@ -348,7 +348,7 @@ public class Finder {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         ClassHunter classHunter = componentSupplier.getClassHunter();
         
-        SearchConfig searchConfig = SearchConfig.create().setFileFilter(
+        SearchConfig searchConfig = SearchConfig.create().addFileFilter(
             FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {
                 String packageName = fileSystemItem.toJavaClass().getPackageName();       				
                 return packageName != null && packageName.contains("springframework");
