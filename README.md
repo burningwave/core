@@ -440,7 +440,7 @@ public class Finder {
             //Here you can add all absolute path you want:
             //both folders, zip and jar will be recursively scanned.
             //For example you can add: "C:\\Users\\user\\.m2"
-            //With the row below the search will be executed on runtime Classpaths
+            //With the line below the search will be executed on runtime class paths
             pathHelper.getMainClassPaths()
         ).setFileFilter(
             FileSystemItem.Criteria.forAllFileThat(fileSystemItem -> {     				
