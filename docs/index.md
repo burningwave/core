@@ -399,7 +399,8 @@ public class Finder {
         	FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {
         		String packageName = fileSystemItem.toJavaClass().getPackageName();       				
         		return packageName != null && packageName.contains("springframework");
-        	})).by(
+        	})
+	).by(
             ClassCriteria.create().allThoseThatMatch((cls) -> {
                 return cls.getPackage().getName().matches(".*springframework.*");
             })
@@ -436,15 +437,15 @@ public class Finder {
         ClassPathHunter classPathHunter = componentSupplier.getClassPathHunter();
         
         SearchConfig searchConfig = SearchConfig.forPaths(
-                //Here you can add all absolute path you want:
-                //both folders, zip and jar will be recursively scanned.
-                //For example you can add: "C:\\Users\\user\\.m2"
-                //With the row below the search will be executed on runtime Classpaths
-                pathHelper.getMainClassPaths()
-            ).setFileFilter(
-        	FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {     				
-        		return fileSystemItem.toJavaClass().getName().equals("Finder");
-        	})
+            //Here you can add all absolute path you want:
+            //both folders, zip and jar will be recursively scanned.
+            //For example you can add: "C:\\Users\\user\\.m2"
+            //With the row below the search will be executed on runtime Classpaths
+            pathHelper.getMainClassPaths()
+        ).setFileFilter(
+            FileSystemItem.Criteria.forAllFileThat(fileSystemItem -> {     				
+        	return fileSystemItem.toJavaClass().getName().equals("Finder");
+            })
         );
 
         try(ClassPathHunter.SearchResult searchResult = classPathHunter.findBy(searchConfig)) {
