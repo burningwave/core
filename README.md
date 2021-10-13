@@ -442,7 +442,7 @@ public class Finder {
             //For example you can add: "C:\\Users\\user\\.m2"
             //With the line below the search will be executed on runtime class paths
             pathHelper.getMainClassPaths()
-        ).setFileFilter(
+        ).addFileFilter(
             FileSystemItem.Criteria.forAllFileThat(fileSystemItem -> {     				
         	return fileSystemItem.toJavaClass().getName().equals("Finder");
             })
