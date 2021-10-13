@@ -349,10 +349,10 @@ public class Finder {
         ClassHunter classHunter = componentSupplier.getClassHunter();
         
         SearchConfig searchConfig = SearchConfig.create().setFileFilter(
-        	FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {
-        		String packageName = fileSystemItem.toJavaClass().getPackageName();       				
-        		return packageName != null && packageName.contains("springframework");
-        	})
+            FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {
+                String packageName = fileSystemItem.toJavaClass().getPackageName();       				
+                return packageName != null && packageName.contains("springframework");
+            })
         );
 
         try(ClassHunter.SearchResult searchResult = classHunter.findBy(searchConfig)) {
@@ -396,10 +396,10 @@ public class Finder {
             //If you want to scan only one jar you can replace the two line of code above with:
             //pathHelper.getPaths(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
         ).setFileFilter(
-        	FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {
-        		String packageName = fileSystemItem.toJavaClass().getPackageName();       				
-        		return packageName != null && packageName.contains("springframework");
-        	})
+            FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {
+                String packageName = fileSystemItem.toJavaClass().getPackageName();       				
+                return packageName != null && packageName.contains("springframework");
+            })
 	).by(
             ClassCriteria.create().allThoseThatMatch((cls) -> {
                 return cls.getPackage().getName().matches(".*springframework.*");
