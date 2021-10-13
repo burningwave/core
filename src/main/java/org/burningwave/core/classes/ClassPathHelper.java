@@ -32,7 +32,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -89,10 +88,10 @@ public interface ClassPathHelper {
 
 	public Supplier<Map<String, String>> computeFromSources(Collection<String> sources, Collection<String> classRepositories,
 			Predicate<FileSystemItem> pathsToBeRefreshedPredicate,
-			BiPredicate<FileSystemItem, JavaClass> javaClassFilterAdditionalFilter);
+			Predicate<FileSystemItem> javaClassFilterAdditionalFilter);
 
 	public Supplier<Map<String, String>> compute(Collection<String> classRepositories,
-			BiPredicate<FileSystemItem, JavaClass> javaClassProcessor);
+			Predicate<FileSystemItem> javaClassProcessor);
 
 	public Map<String, ClassLoader> computeAndAddAllToClassLoader(ClassLoader classLoader,
 			Collection<String> classRepositories, String className, Collection<String> notFoundClasses);
@@ -103,5 +102,5 @@ public interface ClassPathHelper {
 
 	public Supplier<Map<String, String>> compute(Collection<String> classRepositories,
 			Predicate<FileSystemItem> pathsToBeRefreshedPredicate,
-			BiPredicate<FileSystemItem, JavaClass> javaClassFilter);
+			Predicate<FileSystemItem> javaClassFilter);
 }

@@ -43,7 +43,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -90,7 +89,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	
 	@Override
 	public Supplier<Map<String, String>> computeByClassesSearching(Collection<String> classRepositories) {
-		return compute(classRepositories, null, (BiPredicate<FileSystemItem, JavaClass>)null);
+		return compute(classRepositories, null, (Predicate<FileSystemItem>)null);
 	}
 	
 	@Override
@@ -105,8 +104,9 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	public Supplier<Map<String, String>> computeByClassesSearching(SearchConfig searchConfig) {
 		SearchConfig searchConfigCopy = searchConfig.createCopy();
 		searchConfigCopy.init((ClassPathHunterImpl)classPathHunter);
-		return compute(
-			searchConfig.getPathsToBeScanned().stream().map(FileSystemItem::getAbsolutePath).collect(Collectors.toSet()), 
+		return compute0(
+			searchConfig.getPathsToBeScanned().stream().map(FileSystemItem::getAbsolutePath).collect(Collectors.toSet()),
+			fileSystemItem -> false,
 			(toBeAdjuested) -> {
 				searchConfigCopy.setFileFilter(
 					FileSystemItem.Criteria.forClassTypeFiles(
@@ -206,14 +206,14 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		Collection<String> sources,
 		Collection<String> classRepositories,
 		Predicate<FileSystemItem> pathsToBeRefreshedPredicate,
-		BiPredicate<FileSystemItem, JavaClass> javaClassFilterAdditionalFilter
+		Predicate<FileSystemItem> javaClassFilterAdditionalFilter
 	) {
 		Collection<String> imports = new HashSet<>();
 		for (String sourceCode : sources) {
 			imports.addAll(SourceCodeHandler.extractImports(sourceCode));
 		}
-		BiPredicate<FileSystemItem, JavaClass> javaClassFilter = (classFile, javaClass) -> 
-			imports.contains(javaClass.getName())
+		Predicate<FileSystemItem> javaClassFilter = (classFile) -> 
+			imports.contains(classFile.toJavaClass().getName())
 		;
 		
 		if (javaClassFilterAdditionalFilter != null) {
@@ -225,7 +225,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	@Override
 	public Supplier<Map<String, String>> compute(
 		Collection<String> classRepositories,
-		BiPredicate<FileSystemItem, JavaClass> javaClassProcessor
+		Predicate<FileSystemItem> javaClassProcessor
 	) {
 		return compute(classRepositories, null, javaClassProcessor);
 	}
@@ -254,7 +254,8 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		}
 		
 		Collection<String> notFoundClassClassPaths = new HashSet<>();
-		BiPredicate<FileSystemItem, JavaClass> criteriaOne = (fileSystemItemCls, javaClass) -> {
+		Predicate<FileSystemItem> criteriaOne = (fileSystemItemCls) -> {
+			JavaClass javaClass = fileSystemItemCls.toJavaClass(); 
 			if (javaClass.getName().equals(className)) {
 				String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
 				notFoundClassClassPaths.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
@@ -264,7 +265,8 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		};
 		
 		Collection<String> notFoundClassesClassPaths = new HashSet<>();
-		BiPredicate<FileSystemItem, JavaClass> criteriaTwo = (fileSystemItemCls, javaClass) -> {
+		Predicate<FileSystemItem> criteriaTwo = (fileSystemItemCls) -> {
+			JavaClass javaClass = fileSystemItemCls.toJavaClass();
 			for (String notFoundClass : notFoundClasses) {
 				if (javaClass.getName().equals(notFoundClass)) {
 					String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
@@ -346,7 +348,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	public Supplier<Map<String, String>> compute(
 		Collection<String> classRepositories,
 		Predicate<FileSystemItem> pathsToBeRefreshedPredicate,
-		BiPredicate<FileSystemItem, JavaClass> javaClassFilter
+		Predicate<FileSystemItem> javaClassFilter
 	) {		
 		FileSystemItem.Criteria classFileFilter = FileSystemItem.Criteria.forClassTypeFiles(
 			getClassFileCheckingOption()
@@ -354,10 +356,10 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		Predicate<FileSystemItem> finalPathsToBeRefreshedPredicate = pathsToBeRefreshedPredicate != null? pathsToBeRefreshedPredicate :
 			fileSystemItem -> false;
 		
-		BiPredicate<FileSystemItem, JavaClass> finalJavaClassFilter = javaClassFilter != null? javaClassFilter :
-			(fileSystemItem, javaClass) -> true;
+		Predicate<FileSystemItem> finalJavaClassFilter = javaClassFilter != null? javaClassFilter :
+			(fileSystemItem) -> true;
 		
-		return compute(
+		return compute0(
 			classRepositories, 
 			null,
 			clsRepositories -> {
@@ -367,20 +369,20 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 					if (finalPathsToBeRefreshedPredicate.test(classRepository)) {
 						classRepository.refresh();
 					}					
-					classRepository.findInAllChildren(classFileFilter.and().allFileThat(fileSystemItemCls -> 
-							JavaClass.extractByUsing(fileSystemItemCls.toByteBuffer(), javaClass -> {
-								if (finalJavaClassFilter.test(fileSystemItemCls, javaClass)) {
-									String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
-									classPaths.add(
-										FileSystemItem.ofPath(
-											classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath()))
-										)
-									);
-									return true;
-								}
-								return false;
-							})
-						).setDefaultExceptionHandler()
+					classRepository.findInAllChildren(
+						classFileFilter.and().allFileThat(fileSystemItemCls -> {
+							JavaClass javaClass = fileSystemItemCls.toJavaClass();
+							if (finalJavaClassFilter.test(fileSystemItemCls)) {
+								String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
+								classPaths.add(
+									FileSystemItem.ofPath(
+										classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath()))
+									)
+								);
+								return true;
+							}
+							return false;
+						}).setDefaultExceptionHandler()
 					);
 				}
 				return classPaths;
@@ -388,14 +390,8 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		);
 	}
 	
-	private Supplier<Map<String, String>> compute(
-		Collection<String> classRepositories,
-		Function<Collection<String>, Collection<FileSystemItem>> adjustedClassPathsSupplier
-	) {
-		return compute(classRepositories, fileSystemItem -> false, adjustedClassPathsSupplier);
-	}
 	
-	private Supplier<Map<String, String>> compute(
+	private Supplier<Map<String, String>> compute0(
 		Collection<String> classRepositories,
 		Predicate<FileSystemItem> pathsToBeRefreshedPredicate,
 		Function<Collection<String>, Collection<FileSystemItem>> callRepositoriesSupplier

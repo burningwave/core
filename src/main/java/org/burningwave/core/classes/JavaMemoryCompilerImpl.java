@@ -580,8 +580,8 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 							fileSystemItem.getAbsolutePath().equals(
 								((JavaMemoryCompilerImpl)javaMemoryCompiler).compiledClassesRepository.getAbsolutePath()
 							),
-						(classFile, javaClass) ->
-							Objects.equals(javaClass.getPackageName(), packageName)		
+						(classFile) ->
+							Objects.equals(classFile.toJavaClass().getPackageName(), packageName)		
 					).get().values()
 				);
 				if (classPaths.isEmpty()) {
@@ -590,8 +590,8 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 							sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
 							classRepositories,
 							null,
-							(classFile, javaClass) ->
-								Objects.equals(javaClass.getPackageName(), packageName)	
+							(classFile) ->
+								Objects.equals(classFile.toJavaClass().getPackageName(), packageName)	
 						).get().values()
 					);
 				}
@@ -606,8 +606,8 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 								fileSystemItem.getAbsolutePath().equals(
 									((JavaMemoryCompilerImpl)javaMemoryCompiler).compiledClassesRepository.getAbsolutePath()
 								),
-							(classFile, javaClass) ->
-								classPredicate.test(javaClass)
+							(classFile) ->
+								classPredicate.test(classFile.toJavaClass())
 						).get().values()
 					);
 					if (classPaths.isEmpty()) {
@@ -616,8 +616,8 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 								sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
 								classRepositories,
 								null,
-								(classFile, javaClass) ->
-									classPredicate.test(javaClass)
+								(classFile) ->
+									classPredicate.test(classFile.toJavaClass())
 							).get().values()
 						);
 					}
