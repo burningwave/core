@@ -20,8 +20,8 @@ jobs:
       max-parallel: 15
       matrix:
         architecture: [x64]
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-        java: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+        os: [ubuntu-latest, macOS-latest]
+        java: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18-ea]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
