@@ -17,7 +17,7 @@ public class MethodsTest extends BaseTest {
 		testNotNull(
 			() -> {
 				ComponentSupplier componentSupplier = getComponentSupplier();
-				componentSupplier.clearHuntersCache(false);
+				componentSupplier.closeHuntersSearchResults();
 				return Methods.invokeStatic(Integer.class, "valueOf", 1);	
 			}
 		);
@@ -28,7 +28,7 @@ public class MethodsTest extends BaseTest {
 		testNotNull(
 			() -> {
 				ComponentSupplier componentSupplier = getComponentSupplier();
-				componentSupplier.clearHuntersCache(false);
+				componentSupplier.closeHuntersSearchResults();
 				return Methods.invokeStaticDirect(Integer.class, "valueOf", 1);	
 			}
 		);
