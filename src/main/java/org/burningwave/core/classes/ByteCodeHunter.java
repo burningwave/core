@@ -40,7 +40,7 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
-public interface ByteCodeHunter extends ClassPathScannerWithCachingSupport<JavaClass, ByteCodeHunter.SearchResult> {
+public interface ByteCodeHunter extends ClassPathScanner<JavaClass, ByteCodeHunter.SearchResult> {
 	
 	public static class Configuration {
 		

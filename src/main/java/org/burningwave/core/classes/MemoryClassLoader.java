@@ -49,6 +49,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
@@ -76,8 +77,8 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		if (parentClassLoader instanceof MemoryClassLoader) {
 			((MemoryClassLoader)parentClassLoader).register(this);
 		}
-		this.notLoadedByteCodes = new HashMap<>();
-		this.loadedByteCodes = new HashMap<>();
+		this.notLoadedByteCodes = new ConcurrentHashMap<>();
+		this.loadedByteCodes = new ConcurrentHashMap<>();
 		this.clients = new HashSet<>();
 	}
 	

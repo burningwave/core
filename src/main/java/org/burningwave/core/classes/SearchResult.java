@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.lang.reflect.Member;
@@ -39,6 +40,7 @@ import java.util.Optional;
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Criteria;
 import org.burningwave.core.ManagedLogger;
+
 
 public class SearchResult<E> implements Closeable, ManagedLogger {
 	SearchContext<E> context;
@@ -61,25 +63,6 @@ public class SearchResult<E> implements Closeable, ManagedLogger {
 		return context.getItemsFoundFlatMap();
 	}
 	
-	public <C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends CriteriaWithClassElementsSupplyingSupport.TestContext<E, C>> Map<String, E> getClasses(C criteria) {
-		try (C criteriaCopy = createCriteriaCopy(criteria)) {
-			Map<String, E> itemsFound = new HashMap<>();
-			getItemsFoundFlatMap().forEach((path, javaClass) -> {
-				if (criteriaCopy.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(javaClass).getResult()) {
-					itemsFound.put(path, javaClass);
-				}
-			});
-			return itemsFound;
-		}
-	}
-	
-	public <C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends Criteria.TestContext<E, C>> Map.Entry<String, E> getUnique(C criteria) {
-		Map<String, E> itemsFound = getClasses(criteria);
-		if (itemsFound.size() > 1) {
-			Driver.throwException("Found more than one element");
-		}
-		return itemsFound.entrySet().stream().findFirst().orElseGet(() -> null);
-	}
 	
 	<C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends Criteria.TestContext<E, C>> C createCriteriaCopy(C criteria) {
 		C criteriaCopy = criteria.createCopy().init(
@@ -104,12 +87,37 @@ public class SearchResult<E> implements Closeable, ManagedLogger {
 		return (C) context.pathScannerClassLoader;
 	}
 	
+	public <C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends CriteriaWithClassElementsSupplyingSupport.TestContext<E, C>> Map<String, E> getClasses(C criteria) {
+		try (C criteriaCopy = createCriteriaCopy(criteria)) {
+			Map<String, E> itemsFound = new HashMap<>();
+			getItemsFoundFlatMap().forEach((path, javaClass) -> {
+				if (criteriaCopy.testWithFalseResultForNullEntityOrTrueResultForNullPredicate(javaClass).getResult()) {
+					itemsFound.put(path, javaClass);
+				}
+			});
+			return itemsFound;
+		}
+	}
+	
+	public <C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends Criteria.TestContext<E, C>> Map.Entry<String, E> getUnique(C criteria) {
+		Map<String, E> itemsFound = getClasses(criteria);
+		if (itemsFound.size() > 1) {
+			Driver.throwException("Found more than one element");
+		}
+		return itemsFound.entrySet().stream().findFirst().orElseGet(() -> null);
+	}
+	
+	
 	public void waitForSearchEnding() {
 		context.waitForSearchEnding();
 	}
 	
 	public Collection<String> getSkippedClassNames() {
 		return context.getSkippedClassNames();
+	}
+	
+	public void setRequestToClosePathScannerClassLoaderOnClose(boolean flag) {
+		context.setrequestToClosePathScannderClassLoaderOnClose(flag);
 	}
 	
 	@Override

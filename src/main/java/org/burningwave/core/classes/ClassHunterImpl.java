@@ -40,7 +40,7 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
-class ClassHunterImpl extends ClassPathScannerWithCachingSupport.Abst<Class<?>, ClassHunterImpl.SearchContext, ClassHunter.SearchResult> implements ClassHunter {
+class ClassHunterImpl extends ClassPathScanner.Abst<Class<?>, ClassHunterImpl.SearchContext, ClassHunter.SearchResult> implements ClassHunter {
 	
 	ClassHunterImpl(
 		PathHelper pathHelper,
@@ -74,11 +74,6 @@ class ClassHunterImpl extends ClassPathScannerWithCachingSupport.Abst<Class<?>, 
 	}
 	
 	@Override
-	<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testCachedItem(ClassHunterImpl.SearchContext context, String path, String key, Class<?> cls) {
-		return context.test(context.retrieveClass(cls));
-	}
-	
-	@Override
 	void addToContext(ClassHunterImpl.SearchContext context, TestContext criteriaTestContext,
 		String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
 	) {
@@ -88,34 +83,11 @@ class ClassHunterImpl extends ClassPathScannerWithCachingSupport.Abst<Class<?>, 
 			criteriaTestContext.getEntity()
 		);
 	}
-	
-	@Override
-	public CacheScanner<Class<?>, SearchResult> loadInCache(CacheableSearchConfig searchConfig) {
-		searchConfig.getClassCriteria().collectMembers(true);
-		return super.loadInCache(searchConfig);
-	}
-	
-	@Override
-	public ClassHunter.SearchResult findBy(SearchConfig searchConfig) {
-		searchConfig.getClassCriteria().collectMembers(true);
-		return super.findBy(searchConfig);
-	}
-	
-	@Override
-	public ClassHunter.SearchResult findBy(CacheableSearchConfig searchConfig) {
-		searchConfig.getClassCriteria().collectMembers(true);
-		return super.findBy(searchConfig);
-	}
-	
-	@Override
-	public void clearCache(boolean closeSearchResults) {
-		this.defaultPathScannerClassLoaderManager.reset();
-		super.clearCache(closeSearchResults);
-	}
+
 	
 	@Override
 	public void close() {
-		closeResources(() -> isClosed(), () -> {
+		closeResources(() -> this.pathHelper == null, () -> {
 			this.defaultPathScannerClassLoaderManager.close();
 			super.close();
 			this.defaultPathScannerClassLoaderManager = null;

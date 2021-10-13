@@ -30,8 +30,8 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -316,10 +316,10 @@ public interface ClassFactory {
 			Collection<String>... classPaths
 		) {
 			if (retrievedBytecodes.get() == null) {
-				try(ByteCodeHunter.SearchResult result = ((ClassFactoryImpl)this.classFactory).byteCodeHunter.loadInCache(
+				try(ByteCodeHunter.SearchResult result = ((ClassFactoryImpl)this.classFactory).byteCodeHunter.findBy(
 					SearchConfig.forPaths(
 						classPaths
-					).withScanFileCriteria(
+					).setFileFilter(
 						FileSystemItem.Criteria.forClassTypeFiles(
 							((ClassFactoryImpl)this.classFactory).config.resolveStringValue(
 								Configuration.Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
@@ -329,7 +329,7 @@ public interface ClassFactory {
 					).optimizePaths(
 						true
 					)
-				).find()) {
+				)) {
 					Map<String, ByteBuffer> extraClassPathsForClassLoaderByteCodes = new HashMap<>();
 					result.getItemsFoundFlatMap().values().forEach(javaClass -> {
 						extraClassPathsForClassLoaderByteCodes.put(javaClass.getName(), javaClass.getByteCode());

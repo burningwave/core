@@ -31,17 +31,16 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
+import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.SearchContext.InitContext;
@@ -52,7 +51,6 @@ import org.burningwave.core.iterable.Properties.Event;
 
 import io.github.toolfactory.jvm.util.Strings;
 
-@SuppressWarnings("unchecked")
 public interface ClassPathScanner<I, R extends SearchResult<I>> {
 	
 	public static class Configuration {
@@ -143,144 +141,143 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 		}
 		
 		public R find() {
-			return findBy(SearchConfig.withoutUsingCache());
+			return findBy(SearchConfig.create());
 		}
 		
 		//Not cached search
-		public R findBy(SearchConfig searchConfig) {
-			return findBy(searchConfig, this::searchInFileSystem);
-		}
-
-		R findBy(SearchConfigAbst<?> input, Consumer<C> searcher) {
-			input.withDefaultScanFileCriteriaIfNull(
-				FileSystemItem.Criteria.forClassTypeFiles(
-					config.resolveStringValue(ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS)
-				)
-			);
-			SearchConfigAbst<?> searchConfig = input.createCopy();
-			C context = createContext(
-				searchConfig
-			);
-			searchConfig.init(context.pathScannerClassLoader);
-			Collection<String> paths = searchConfig.getPaths();
-			if (searchConfig.getResourceSupllier() != null) {
-				searchConfig.getResourceSupllier().accept(context.pathScannerClassLoader, paths);
-			}
-			if (paths.isEmpty()) {
-				searchConfig.addPaths(pathHelper.getPaths(ClassPathScanner.Configuration.Key.DEFAULT_SEARCH_CONFIG_PATHS));
-			}
-			if (searchConfig.optimizePaths) {
-				pathHelper.optimize(paths);
-			}
-			context.executeSearch((Consumer<SearchContext<I>>)searcher);
-			Collection<String> skippedClassesNames = context.getSkippedClassNames();
-			if (!skippedClassesNames.isEmpty()) {
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Skipped classes count: {}", skippedClassesNames.size());
-			}
+		public R findBy(SearchConfig input) {
+			SearchConfig searchConfig = input.isInitialized() ? input : input.createCopy();
+			C context = searchConfig.isInitialized() ? searchConfig.getSearchContext() : searchConfig.init(this);
+			context.executeSearch(() -> {
+				Collection<FileSystemItem> pathsToBeScanned = searchConfig.getPathsToBeScanned();
+				Collection<Map.Entry<FileSystemItem, Collection<FileSystemItem>>> classFilesForPath = ConcurrentHashMap.newKeySet();
+				IterableObjectHelper.iterateParallelIf(
+					pathsToBeScanned, 
+					currentScannedPath -> {
+						if (!currentScannedPath.isContainer()) {
+							throw new IllegalArgumentException(Strings.compile("{} is not a folder or archive", currentScannedPath.getAbsolutePath()));
+						}
+						classFilesForPath.add(
+							scanAndAddToPathScannerClassLoader(context, currentScannedPath)
+						);
+					},
+					item -> item.size() > 1
+				);
+				IterableObjectHelper.iterateParallelIf(
+					classFilesForPath,
+					currentScannedPath -> {
+						analyzeAndAddItemsToContext(context, currentScannedPath);
+					},
+					item -> item.size() > 1
+				);
+				Collection<String> skippedClassesNames = context.getSkippedClassNames();
+				if (!skippedClassesNames.isEmpty()) {
+					ManagedLoggersRepository.logWarn(getClass()::getName, "Skipped classes count: {}", skippedClassesNames.size());
+				}
+			});
 			R searchResult = resultSupplier.apply(context);
 			searchResult.setClassPathScanner(this);
 			return searchResult;
 		}
-		
-		Collection<String> retrievePathsToBeScanned(SearchConfigAbst<?> searchConfig) {
-			Collection<String> paths = new HashSet<>(searchConfig.getPaths());
-			if (searchConfig.getResourceSupllier() != null) {
-				searchConfig = searchConfig.createCopy();
-				try (C context = createContext(
-					searchConfig
-				)) {
-					searchConfig.getResourceSupllier().accept(context.pathScannerClassLoader, paths);
-				}
-			}
-			if (paths.isEmpty()) {
-				paths.addAll(pathHelper.getPaths(ClassPathScanner.Configuration.Key.DEFAULT_SEARCH_CONFIG_PATHS));
-			}
-			return paths;
-		}
-		
-		void searchInFileSystem(C context) {
-			SearchConfigAbst<?> searchConfig = context.getSearchConfig();
-			FileSystemItem.Criteria filter = buildFileClassTesterAndElaborator(context, searchConfig.buildScanFileCriteria());
-			IterableObjectHelper.iterateParallelIf(
-				context.getSearchConfig().getPaths(), 
-				currentScannedPath -> {
-					FileSystemItem currentScannedPathFis = FileSystemItem.ofPath(currentScannedPath);
-					if (!currentScannedPathFis.isContainer()) {
-						throw new IllegalArgumentException(Strings.compile("{} is not a folder or archive", currentScannedPathFis.getAbsolutePath()));
-					}
-					searchConfig.getFilesRetriever().apply(currentScannedPathFis.refresh(), filter);
-				},
-				item -> item.size() > 1
-			);		
-		}
-		
-		FileSystemItem.Criteria buildFileClassTesterAndElaborator(C context, FileSystemItem.Criteria fileFilter) {
-			Predicate<FileSystemItem[]> filePredicate = fileFilter.getOriginalPredicateOrTruePredicateIfPredicateIsNull();
-			FileSystemItem.Criteria classFileTesterAndElaborator = FileSystemItem.Criteria.forAllFileThat(
-				(child, basePath) -> {
-					boolean pathMustBeScanned = false;
-					if (pathMustBeScanned = filePredicate.test(new FileSystemItem[]{child, basePath})) {
-						try {
-							analyzeAndAddItemsToContext(context, child, basePath);
-						} catch (Throwable exc) {
-							ManagedLoggersRepository.logWarn(getClass()::getName, "Could not analyze {}: {}", child.getAbsolutePath(), exc.getMessage());
-						}
-					}
-					return pathMustBeScanned;
-				}
-			);
-			
-			if (fileFilter.hasNoExceptionHandler()) {
-				classFileTesterAndElaborator.setDefaultExceptionHandler();
-			} else {
-				classFileTesterAndElaborator.setExceptionHandler(fileFilter.getExceptionHandler());
-			}
-			
-			return classFileTesterAndElaborator;
-		}
 
-		void analyzeAndAddItemsToContext(C context, FileSystemItem child, FileSystemItem basePath) {
-			JavaClass.use(child.toByteBuffer(), javaClass -> {
-				ClassCriteria.TestContext criteriaTestContext = testClassCriteria(context, javaClass);
-				if (criteriaTestContext.getResult()) {
-					addToContext(
-						context, criteriaTestContext, basePath.getAbsolutePath(), child, javaClass
-					);
+		Map.Entry<FileSystemItem, Collection<FileSystemItem>> scanAndAddToPathScannerClassLoader(
+			C context, FileSystemItem currentScannedPath
+		) {
+			SearchConfig searchConfig = context.searchConfig;
+			PathScannerClassLoader pathScannerClassLoader = context.pathScannerClassLoader;
+			if (!searchConfig.getRefreshPathIf().test(currentScannedPath) &&
+				pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
+				return new AbstractMap.SimpleImmutableEntry<>(
+					currentScannedPath,
+					searchConfig.getFindFunction(currentScannedPath).apply(
+						searchConfig.getRefreshPathIf().test(currentScannedPath) ?
+							currentScannedPath.refresh() : currentScannedPath	,
+						searchConfig.getAllFileFilters()
+					)
+				);
+			} else {
+				return Synchronizer.execute(pathScannerClassLoader.instanceId + "_" + currentScannedPath.getAbsolutePath(), () -> {
+					Boolean loadPathCompletely = null;
+					FileSystemItem.Criteria allFileFilters = searchConfig.getAllFileFilters();
+					if (searchConfig.getRefreshPathIf().test(currentScannedPath) || 
+						!pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
+						if (!searchConfig.isFileFilterExternallySet() &&
+							searchConfig.getFindFunction(currentScannedPath) != FileSystemItem.Find.IN_CHILDREN) {
+							loadPathCompletely = Boolean.TRUE;
+						} else {
+							loadPathCompletely = Boolean.FALSE;
+						}
+						allFileFilters = allFileFilters.and(
+							getPathScannerClassLoaderFiller(context, currentScannedPath)
+						);
+					}
+					Map.Entry<FileSystemItem, Collection<FileSystemItem>> itemsFound = new AbstractMap.SimpleImmutableEntry<>(
+						currentScannedPath,
+						searchConfig.getFindFunction(currentScannedPath).apply(
+							searchConfig.getRefreshPathIf().test(currentScannedPath) ?
+								currentScannedPath.refresh() : currentScannedPath	,
+							allFileFilters
+						)
+					); 
+					if (loadPathCompletely != null) {
+						pathScannerClassLoader.loadedPaths.put(currentScannedPath.getAbsolutePath(), loadPathCompletely);
+					}
+					return itemsFound;
+				});
+			}
+		}
+		
+
+		FileSystemItem.Criteria getPathScannerClassLoaderFiller(
+			C context,
+			FileSystemItem currentScannedPath
+		) {
+			PathScannerClassLoader pathScannerClassLoader = context.pathScannerClassLoader;
+			return FileSystemItem.Criteria.forAllFileThat(fileSystemItem -> {
+				JavaClass javaClass = fileSystemItem.toJavaClass();
+				try {
+					String className = javaClass.getName();
+					if (pathScannerClassLoader.loadedByteCodes.get(className) == null &&
+						pathScannerClassLoader.notLoadedByteCodes.get(className) == null) {
+						pathScannerClassLoader.addByteCode0(className, javaClass.getByteCode());
+					}
+				} catch (NullPointerException exc) {
+					if (javaClass != null) {
+						throw exc;
+					}					
 				}
+				return true;
 			});
 		}
+
 		
-		C createContext(SearchConfigAbst<?> searchConfig) {
-			PathScannerClassLoader defaultPathScannerClassLoader = getDefaultPathScannerClassLoader(searchConfig);
-			if (searchConfig.useDefaultPathScannerClassLoaderAsParent) {
-				searchConfig.parentClassLoaderForPathScannerClassLoader = defaultPathScannerClassLoader;
+		void analyzeAndAddItemsToContext(
+			C context,
+			Map.Entry<FileSystemItem, Collection<FileSystemItem>> currentScannedPath
+		) {
+			String currentScannedAbsolutePath = currentScannedPath.getKey().getAbsolutePath();
+			for (FileSystemItem child : currentScannedPath.getValue()) {
+				JavaClass javaClass = child.toJavaClass();
+				try {
+					ClassCriteria.TestContext criteriaTestContext = testClassCriteria(context, javaClass);
+					if (criteriaTestContext.getResult()) {
+						addToContext(
+							context, criteriaTestContext, currentScannedAbsolutePath, child, javaClass
+						);
+					}
+				} catch (NullPointerException exc) {
+					if (javaClass != null) {
+						throw exc;
+					}
+				}
 			}
-			C context = contextSupplier.apply(
-				InitContext.create(
-					defaultPathScannerClassLoader,
-					searchConfig.useDefaultPathScannerClassLoader ?
-						defaultPathScannerClassLoader :
-						PathScannerClassLoader.create(
-							searchConfig.parentClassLoaderForPathScannerClassLoader, 
-							pathHelper,
-							searchConfig.withDefaultScanFileCriteriaIfNull(
-								FileSystemItem.Criteria.forClassTypeFiles(
-									config.resolveStringValue(
-										getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()
-									)
-								)
-							).buildScanFileCriteria()
-								
-						),
-					searchConfig
-				)		
-			);
-			return context;
 		}
+
 		
-		<S extends SearchConfigAbst<S>> ClassCriteria.TestContext testClassCriteria(C context, JavaClass javaClass) {
+		ClassCriteria.TestContext testClassCriteria(C context, JavaClass javaClass) {
 			return context.test(context.loadClass(javaClass.getName()));
 		}
+		
 		
 		abstract void addToContext(
 			C context,

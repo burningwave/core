@@ -72,11 +72,7 @@ public interface ComponentSupplier extends Cleanable, Closeable {
 	
 	public PathScannerClassLoader getPathScannerClassLoader();
 	
-	public default void clearHuntersCache() {
-		clearHuntersCache(false);
-	}
-	
-	public void clearHuntersCache(boolean closeSearchResults);
+	public void closeHuntersSearchResults();
 	
 	public void clearCache(boolean closeSearchResults, boolean closeClassRetrievers);
 	

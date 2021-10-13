@@ -32,14 +32,12 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Background
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
-import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Closeable;
@@ -51,7 +49,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 
 class SearchContext<T> implements Closeable, ManagedLogger {
 
-	SearchConfigAbst<?> searchConfig;
+	SearchConfig searchConfig;
 	Map<String, T> itemsFoundFlatMap;
 	Map<String, Map<String, T>> itemsFoundMap;
 	PathScannerClassLoader sharedPathScannerClassLoader;
@@ -60,6 +58,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 	QueuedTasksExecutor.Task searchTask;
 	Collection<String> pathScannerClassLoaderScannedPaths;
 	Collection<T> itemsFound;
+	boolean requestToClosePathScannderClassLoaderOnClose;
 	
 	Collection<String> getSkippedClassNames() {
 		return skippedClassNames;
@@ -78,7 +77,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		this.searchConfig = initContext.getSearchConfig();
 		this.pathScannerClassLoader.register(this);
 		this.sharedPathScannerClassLoader.register(this);
-		this.sharedPathScannerClassLoader.unregister(searchConfig, true);
+		this.requestToClosePathScannderClassLoaderOnClose = true;
 	}
 	
 	public static <T> SearchContext<T> create(
@@ -87,12 +86,12 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		return new SearchContext<>(initContext);
 	}
 	
-	void executeSearch(Consumer<SearchContext<T>> searcher) {
+	void executeSearch(Runnable searcher) {
 		if (searchConfig.waitForSearchEnding) {
-			searcher.accept(this);
+			searcher.run();
 		} else {
 			searchTask = BackgroundExecutor.createTask(() -> {
-				searcher.accept(this);
+				searcher.run();
 			}).submit();
 		}
 	}
@@ -152,13 +151,9 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		return items;
 	}
 	
-	Collection<String> getPathsToBeScanned() {
-		return searchConfig.getPaths();
-	}
-	
-	@SuppressWarnings("unchecked")
-	<C extends SearchConfigAbst<C>> C getSearchConfig() {
-		return (C)searchConfig;
+
+	SearchConfig getSearchConfig() {
+		return searchConfig;
 	}
 	
 	Map<String, T> getItemsFoundFlatMap() {
@@ -177,6 +172,10 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		return itemsFound;
 	}
 	
+	void setrequestToClosePathScannderClassLoaderOnClose(boolean flag) {
+		this.requestToClosePathScannderClassLoaderOnClose = flag;
+	}
+	
 	Map<String, T> getItemsFound(String path) {
 		return this.itemsFoundMap.get(path);
 	}
@@ -187,59 +186,14 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 	}
 	
 	<O> O execute(ThrowingSupplier<O, Throwable> supplier, Supplier<O> defaultValueSupplier, Supplier<String> classNameSupplier) {
-		return execute(supplier, defaultValueSupplier, classNameSupplier, false);
-	}
-	
-	<O> O execute(ThrowingSupplier<O, Throwable> supplier, Supplier<O> defaultValueSupplier, Supplier<String> classNameSupplier, boolean isARecursiveCall) {
 		return Executor.get(() -> {
 			try {
 				return supplier.get();
 			} catch (ClassNotFoundException | NoClassDefFoundError exc) {
 				String notFoundClassName = Classes.retrieveName(exc);
-				if (notFoundClassName != null) {
-					if (!skippedClassNames.contains(notFoundClassName)) {
-						if (!isARecursiveCall) {
-							if (pathScannerClassLoaderScannedPaths.isEmpty()) {
-								Synchronizer.execute(this + "_pathScannerClassLoaderScannedPaths", () -> {
-									if (pathScannerClassLoaderScannedPaths.isEmpty()) {
-										if (searchConfig.isDefaultFilesRetrieverSet() && searchConfig.scanFileCriteriaHasNoPredicate()) {
-											pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
-												getPathsToBeScanned(),
-												(path) -> {
-													return searchConfig.getCheckForAddedClassesPredicate().and(
-														(searchConfig, _path) ->
-															!pathScannerClassLoaderScannedPaths.contains(_path)
-													).test(searchConfig, path);
-												}
-											);
-											pathScannerClassLoaderScannedPaths.addAll(getPathsToBeScanned());
-										} else {
-											pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
-												getPathsToBeScanned(),
-												searchConfig.getFilesRetriever(),
-												searchConfig.buildScanFileCriteria(),
-												(path) -> {
-													return searchConfig.getCheckForAddedClassesPredicate().and(
-														(searchConfig, _path) ->
-															!pathScannerClassLoaderScannedPaths.contains(_path)
-													).test(searchConfig, path);
-												}
-											);
-											pathScannerClassLoaderScannedPaths.addAll(getPathsToBeScanned());
-										}
-									}
-								});
-							}
-							return execute(supplier, defaultValueSupplier, classNameSupplier, true);
-						} else {
-							skippedClassNames.add(classNameSupplier.get());
-							skippedClassNames.add(notFoundClassName);
-						}
-					} 
-				} else {
-					ManagedLoggersRepository.logError(getClass()::getName, "Could not retrieve className from exception", exc);
-				}
-				return defaultValueSupplier.get();
+				skippedClassNames.add(classNameSupplier.get());
+				skippedClassNames.add(notFoundClassName);
+				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not load class {}: {}", classNameSupplier.get(), exc.toString());
 			} catch (LinkageError | SecurityException | InternalError exc) {
 				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not load class {}: {}", classNameSupplier.get(), exc.toString());
 			}
@@ -277,7 +231,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 			loadClass(cls.getName());
 	}
 	
-	<C extends SearchConfigAbst<C>> ClassCriteria.TestContext test(Class<?> cls) {
+	ClassCriteria.TestContext test(Class<?> cls) {
 		return execute(
 			() -> searchConfig.getClassCriteria().testWithFalseResultForNullEntityOrTrueResultForNullPredicate(cls), 
 			() -> searchConfig.getClassCriteria().testWithFalseResultForNullEntityOrFalseResultForNullPredicate(null), 
@@ -289,7 +243,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 	public void close() {
 		pathScannerClassLoader.unregister(this, true);
 		if (sharedPathScannerClassLoader != null) {
-			sharedPathScannerClassLoader.unregister(this, true);
+			sharedPathScannerClassLoader.unregister(this, requestToClosePathScannderClassLoaderOnClose);
 		}
 		itemsFoundFlatMap = null;
 		itemsFoundMap = null;
@@ -314,7 +268,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		InitContext(
 			PathScannerClassLoader sharedPathMemoryClassLoader, 
 			PathScannerClassLoader pathScannerClassLoader,
-			SearchConfigAbst<?> searchConfig
+			SearchConfig searchConfig
 		) {
 			super();
 			put(Elements.SHARED_PATH_SCANNER_CLASS_LOADER, sharedPathMemoryClassLoader);
@@ -325,7 +279,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		static InitContext create(
 			PathScannerClassLoader sharedPathMemoryClassLoader, 
 			PathScannerClassLoader pathScannerClassLoader,
-			SearchConfigAbst<?> searchConfig
+			SearchConfig searchConfig
 		) {
 			return new InitContext(sharedPathMemoryClassLoader, pathScannerClassLoader, searchConfig);
 		}
@@ -339,7 +293,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		}
 		
 		
-		<C extends SearchConfigAbst<C>> C getSearchConfig() {
+		SearchConfig getSearchConfig() {
 			return get(Elements.SEARCH_CONFIG);
 		}
 	}
