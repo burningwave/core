@@ -395,7 +395,7 @@ public class Finder {
             pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES)
             //If you want to scan only one jar you can replace the two line of code above with:
             //pathHelper.getPaths(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
-        ).setFileFilter(
+        ).addFileFilter(
             FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {
                 String packageName = fileSystemItem.toJavaClass().getPackageName();       				
                 return packageName != null && packageName.contains("springframework");
