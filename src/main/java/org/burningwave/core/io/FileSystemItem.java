@@ -71,42 +71,7 @@ import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.function.Executor;
 
 @SuppressWarnings("resource")
-public class FileSystemItem {
-	
-	public static enum Find implements BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> {
-		IN_ALL_CHILDREN(FileSystemItem::findInAllChildren),
-		RECURSIVE_IN_CHILDREN(FileSystemItem::findRecursiveInChildren),
-		IN_CHILDREN(FileSystemItem::findInChildren);
-		
-		BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> function;
-		
-		Find(BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> function) {
-			this.function = function;
-		}
-
-		@Override
-		public Collection<FileSystemItem> apply(FileSystemItem fileSystemItem, FileSystemItem.Criteria criteria) {
-			return function.apply(fileSystemItem, criteria);
-		}
-		
-		public static enum FunctionSupplier implements Function<FileSystemItem, FileSystemItem.Find> {
-			OF_IN_ALL_CHILDREN(fileSystemItem -> Find.IN_ALL_CHILDREN),
-			OF_RECURSIVE_IN_CHILDREN(fileSystemItem -> Find.RECURSIVE_IN_CHILDREN),
-			OF_IN_CHILDREN(fileSystemItem -> Find.IN_CHILDREN);
-			
-			Function<FileSystemItem, FileSystemItem.Find> supplier;
-			
-			FunctionSupplier(Function<FileSystemItem, FileSystemItem.Find> supplier) {
-				this.supplier = supplier;
-			}
-
-			@Override
-			public Find apply(FileSystemItem fileSystemItem) {
-				return supplier.apply(fileSystemItem);
-			}
-			
-		}
-	}
+public class FileSystemItem implements Comparable<FileSystemItem> {
 	
 	private final static String instanceIdPrefix;
 	
@@ -270,13 +235,27 @@ public class FileSystemItem {
 	}
 	
 	public Collection<FileSystemItem> findRecursiveInChildren(FileSystemItem.Criteria filter) {
-		Collection<FileSystemItem> fileSystemItems = findIn(this::getChildren0, filter, ConcurrentHashMap::newKeySet);
-		for (FileSystemItem fis : fileSystemItems) {
-			if (fis.isContainer()) {
-				fileSystemItems.addAll(fis.findRecursiveInChildren(filter));
+		Collection<FileSystemItem> fileSystemItems = ConcurrentHashMap.newKeySet();
+		findRecursiveInChildren(filter, () -> fileSystemItems);
+		return fileSystemItems;
+	}
+	
+	public Collection<FileSystemItem> findRecursiveInChildren(FileSystemItem.Criteria filter, Supplier<Collection<FileSystemItem>> outputCollectionSupplier) {
+		return findRecursiveInChildren(filter, outputCollectionSupplier.get());
+	}
+	
+	private Collection<FileSystemItem> findRecursiveInChildren(
+		FileSystemItem.Criteria filter,
+		Collection<FileSystemItem> outputCollection
+	) {
+		Collection<FileSystemItem> filteredItems = findIn(this::getChildren0, filter, ConcurrentHashMap::newKeySet);
+		for (FileSystemItem filteredItem : filteredItems) {
+			outputCollection.add(filteredItem);
+			if (filteredItem.isContainer()) {
+				filteredItem.findRecursiveInChildren(filter, outputCollection);
 			}
 		}
-		return fileSystemItems;
+		return outputCollection;
 	}
 
 	public Collection<FileSystemItem> findInChildren(
@@ -1052,6 +1031,15 @@ public class FileSystemItem {
 				: url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
 
 	}
+	
+
+	@Override
+	public int compareTo(FileSystemItem fileSystemItem) {
+		if(fileSystemItem == null) {
+			return -1;
+		}
+		return this.getAbsolutePath().compareTo(fileSystemItem.getAbsolutePath());
+	}
 
 	public static enum CheckingOption {
 		FOR_NAME("checkFileName"), FOR_SIGNATURE("checkFileSignature"),
@@ -1323,4 +1311,40 @@ public class FileSystemItem {
 	    }
 		
 	}
+	
+	public static enum Find implements BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> {
+		IN_ALL_CHILDREN(FileSystemItem::findInAllChildren),
+		RECURSIVE_IN_CHILDREN(FileSystemItem::findRecursiveInChildren),
+		IN_CHILDREN(FileSystemItem::findInChildren);
+		
+		BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> function;
+		
+		Find(BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> function) {
+			this.function = function;
+		}
+
+		@Override
+		public Collection<FileSystemItem> apply(FileSystemItem fileSystemItem, FileSystemItem.Criteria criteria) {
+			return function.apply(fileSystemItem, criteria);
+		}
+		
+		public static enum FunctionSupplier implements Function<FileSystemItem, FileSystemItem.Find> {
+			OF_IN_ALL_CHILDREN(fileSystemItem -> Find.IN_ALL_CHILDREN),
+			OF_RECURSIVE_IN_CHILDREN(fileSystemItem -> Find.RECURSIVE_IN_CHILDREN),
+			OF_IN_CHILDREN(fileSystemItem -> Find.IN_CHILDREN);
+			
+			Function<FileSystemItem, FileSystemItem.Find> supplier;
+			
+			FunctionSupplier(Function<FileSystemItem, FileSystemItem.Find> supplier) {
+				this.supplier = supplier;
+			}
+
+			@Override
+			public Find apply(FileSystemItem fileSystemItem) {
+				return supplier.apply(fileSystemItem);
+			}
+			
+		}
+	}
+
 }
