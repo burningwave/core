@@ -328,7 +328,9 @@ public class FileSystemItem {
 				}
 			},
 			outputCollectionSupplier.get(),
-			items -> items.size() > 1
+			filter.minimumCollectionSizeForParallelIterationPredicate != null ?
+				filter.minimumCollectionSizeForParallelIterationPredicate :			
+				FileSystemItem.Criteria.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE
 		);		
 		if (!iteratedFISWithErrors.isEmpty()) {
 			Predicate<FileSystemItem[]> nativePredicateWithExceptionManaging = filter.getPredicateOrTruePredicateIfPredicateIsNull();
@@ -1137,8 +1139,13 @@ public class FileSystemItem {
 	}
 
 	public static class Criteria extends org.burningwave.core.Criteria.Simple<FileSystemItem[], Criteria> {
+		public static int DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION = 2;
+		public static Predicate<Collection<FileSystemItem>> DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE =
+			coll -> coll.size() >= DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION;
 		
 		private BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler;
+		private Predicate<Collection<FileSystemItem>> minimumCollectionSizeForParallelIterationPredicate;
+		
 		
 		public static Criteria create() {
 			return new Criteria();
@@ -1181,6 +1188,16 @@ public class FileSystemItem {
 			return allFileThat(file -> {
 				return !file.getAbsolutePath().matches(regex);
 			});
+		}
+		
+		public Criteria setMinimumCollectionSizeForParallelIteration(int value) {
+			this.minimumCollectionSizeForParallelIterationPredicate = coll -> coll.size() >= value;
+			return this;
+		}
+		
+		public Criteria setMinimumCollectionSizeForParallelIteration(Predicate<Collection<FileSystemItem>> predicate) {
+			this.minimumCollectionSizeForParallelIterationPredicate = predicate;
+			return this;
 		}
 		
 		public Criteria notRecursiveOnPath(String path, boolean isAbsolute) {
@@ -1242,6 +1259,20 @@ public class FileSystemItem {
 			return super.getPredicateOrTruePredicateIfPredicateIsNull();
 		}
 		
+				
+		public Predicate<Collection<FileSystemItem>> getMinimumCollectionSizeForParallelIterationPredicate() {
+			return minimumCollectionSizeForParallelIterationPredicate;
+		}
+
+		@Override
+		protected Criteria logicOperation(Criteria leftCriteria, Criteria rightCriteria,
+				Function<Predicate<FileSystemItem[]>, Function<Predicate<? super FileSystemItem[]>, Predicate<FileSystemItem[]>>> binaryOperator,
+				Criteria targetCriteria) {
+			targetCriteria = super.logicOperation(leftCriteria, rightCriteria, binaryOperator, targetCriteria);
+			targetCriteria.setExceptionHandler(rightCriteria.exceptionHandler);
+			targetCriteria.setMinimumCollectionSizeForParallelIteration(rightCriteria.minimumCollectionSizeForParallelIterationPredicate);
+			return targetCriteria;
+		}
 		
 		private Predicate<FileSystemItem[]> nativePredicateToSomeExceptionManagedPredicate(
 			Predicate<FileSystemItem[]> filterPredicate
@@ -1276,6 +1307,7 @@ public class FileSystemItem {
 		public Criteria createCopy() {
 			Criteria copy = super.createCopy();
 			copy.exceptionHandler = this.exceptionHandler;
+			copy.minimumCollectionSizeForParallelIterationPredicate = this.minimumCollectionSizeForParallelIterationPredicate;
 			return copy;
 		}
 

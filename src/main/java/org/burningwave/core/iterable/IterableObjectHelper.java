@@ -87,8 +87,11 @@ public interface IterableObjectHelper {
 
 	public <V, E extends Throwable> void deepClear(Collection<V> map, ThrowingConsumer<V, E> itemDestroyer) throws E;
 
-	public <T> Collection<T> merge(Supplier<Collection<T>> baseCollectionSupplier,
-			Supplier<Collection<T>> additionalCollectionSupplier, Supplier<Collection<T>> defaultCollectionSupplier);
+	public <T> Collection<T> merge(
+		Supplier<Collection<T>> baseCollectionSupplier,
+		Supplier<Collection<T>> additionalCollectionSupplier,
+		Supplier<Collection<T>> defaultCollectionSupplier
+	);
 
 	public <T> T getRandom(Collection<T> coll);
 
@@ -122,25 +125,54 @@ public interface IterableObjectHelper {
 
 	public <T> T resolveValue(Map<?, ?> map, String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder);
 
-	public <T> Collection<T> resolveValues(Map<?, ?> map, String key, String valuesSeparator,
-			boolean deleteUnresolvedPlaceHolder);
+	public <T> Collection<T> resolveValues(
+		Map<?, ?> map, String key,
+		String valuesSeparator,
+		boolean deleteUnresolvedPlaceHolder
+	);
 
 	public String resolveStringValue(Map<?, ?> map, String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder);
 
-	public Collection<String> resolveStringValues(Map<?, ?> map, String key, String valuesSeparator,
-			boolean deleteUnresolvedPlaceHolder);
+	public Collection<String> resolveStringValues(
+		Map<?, ?> map, 
+		String key,
+		String valuesSeparator,
+		boolean deleteUnresolvedPlaceHolder
+	);
 
-	public <T> T resolveValue(Map<?, ?> map, String key, String valuesSeparator, String defaultValuesSeparator,
-			boolean deleteUnresolvedPlaceHolder, Map<?, ?> defaultValues);
+	public <T> T resolveValue(
+		Map<?, ?> map, 
+		String key,
+		String valuesSeparator,
+		String defaultValuesSeparator,
+		boolean deleteUnresolvedPlaceHolder,
+		Map<?, ?> defaultValues
+	);
 
-	public <T> Collection<T> resolveValues(Map<?, ?> map, String key, String valuesSeparator, String defaultValuesSeparator,
-			boolean deleteUnresolvedPlaceHolder, Map<?, ?> defaultValues);
+	public <T> Collection<T> resolveValues(
+		Map<?, ?> map, String key,
+		String valuesSeparator,
+		String defaultValuesSeparator,
+		boolean deleteUnresolvedPlaceHolder,
+		Map<?, ?> defaultValues
+	);
 
-	public String resolveStringValue(Map<?, ?> map, String key, String valuesSeparator, String defaultValuesSeparator,
-			boolean deleteUnresolvedPlaceHolder, Map<?, ?> defaultValues);
+	public String resolveStringValue(
+		Map<?, ?> map, String key,
+		String valuesSeparator,
+		String defaultValuesSeparator,
+		boolean deleteUnresolvedPlaceHolder,
+		Map<?, ?> defaultValues
+	);
 
-	public Collection<String> resolveStringValues(Map<?, ?> map, String key, String valuesSeparator,
-			String defaultValuesSeparator, boolean deleteUnresolvedPlaceHolder, Map<?, ?> defaultValues);
+	public Collection<String> resolveStringValues(
+		Map<?, ?> map,
+		String key, 
+		String valuesSeparator,
+		String defaultValuesSeparator,
+		boolean deleteUnresolvedPlaceHolder,
+		Map<?, ?> defaultValues
+	);
 
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map);
 
@@ -154,20 +186,35 @@ public interface IterableObjectHelper {
 
 	public boolean containsValue(Map<?, ?> map, String key, Object object, Map<?, ?> defaultValues);
 
-	public <T, O> Collection<O> iterateParallelIf(Collection<T> items, Consumer<T> action, Predicate<Collection<T>> predicate);
+	public <T, O> Collection<O> iterateParallelIf(
+		Collection<T> items,
+		Consumer<T> action,
+		Predicate<Collection<T>> predicate
+	);
 
-	public <T, O> Collection<O> iterateParallelIf(Collection<T> items, BiConsumer<T, Consumer<O>> action,
-			Collection<O> outputCollection, Predicate<Collection<T>> predicate);
+	public <T, O> Collection<O> iterateParallelIf(
+		Collection<T> items,
+		BiConsumer<T, Consumer<O>> action,
+		Collection<O> outputCollection,
+		Predicate<Collection<T>> predicate
+	);
 
 	public <T, O> void iterateParallel(Collection<T> items, Consumer<T> action);
 
-	public <T, O> Collection<O> iterateParallel(Collection<T> items, BiConsumer<T, Consumer<O>> action,
-			Collection<O> outputCollection);
+	public <T, O> Collection<O> iterateParallel(
+		Collection<T> items,
+		BiConsumer<T, Consumer<O>> action,
+		Collection<O> outputCollection
+	);
 
 	public String toPrettyString(Map<?, ?> map, String valuesSeparator, int marginTabCount);
 
 	public <K, V> String toString(Map<K, V> map, int marginTabCount);
 
-	public <K, V> String toString(Map<K, V> map, Function<K, String> keyTransformer, Function<V, String> valueTransformer,
-			int marginTabCount);
+	public <K, V> String toString(
+		Map<K, V> map,
+		Function<K, String> keyTransformer,
+		Function<V, String> valueTransformer,
+		int marginTabCount
+	);
 }

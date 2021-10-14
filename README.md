@@ -4,20 +4,12 @@
 <img src="https://raw.githubusercontent.com/burningwave/burningwave.github.io/main/logo.png" alt="logo.png" height="180px" align="right"/>
 </a>
 
-[![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/11)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
+[![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/12)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-<<<<<<< HEAD
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1316460775)
-=======
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1325430613)
->>>>>>> refs/remotes/origin/master
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1341485982)
 
-<<<<<<< HEAD
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1316460775)
-=======
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1325430613)
->>>>>>> refs/remotes/origin/master
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1341485982)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -57,11 +49,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-<<<<<<< HEAD
-    <version>10.1.0</version>
-=======
-    <version>11.0.5</version>
->>>>>>> refs/remotes/origin/master
+    <version>12.1.2</version>
 </dependency>
 ```
 
@@ -350,28 +338,24 @@ import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
-import org.burningwave.core.classes.ClassHunter.SearchResult;
 import org.burningwave.core.classes.SearchConfig;
+import org.burningwave.core.io.FileSystemItem;
     
 public class Finder {
     
-    public Collection<Class<?>> simplifiedFind() {
+   public Collection<Class<?>> find() {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         ClassHunter classHunter = componentSupplier.getClassHunter();
         
-        //With this the search will be executed on default configured paths that are the 
-        //runtime class paths plus, on java 9 and later, the jmods folder of the Java home.
-        //The default configured paths are indicated in the 'paths.hunters.default-search-config.paths'
-        //property of burningwave.properties file
-        //(see https://github.com/burningwave/core/wiki/In-depth-look-to-ClassHunter-and-configuration-guide)
-        try (SearchResult searchResult = classHunter.loadInCache(SearchConfig.byCriteria(
-            ClassCriteria.create().allThoseThatMatch((cls) -> {
-                return cls.getPackage().getName().matches(".*springframework.*");
+        SearchConfig searchConfig = SearchConfig.create().addFileFilter(
+            FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {
+                String packageName = fileSystemItem.toJavaClass().getPackageName();       				
+                return packageName != null && packageName.contains("springframework");
             })
-        )).find()
-        ) {
+        );
+
+        try(ClassHunter.SearchResult searchResult = classHunter.findBy(searchConfig)) {
             return searchResult.getClasses();
         }
     }
@@ -386,11 +370,11 @@ import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
-import org.burningwave.core.classes.ClassHunter.SearchResult;
+import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.SearchConfig;
+import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
     
 public class Finder {
@@ -400,7 +384,7 @@ public class Finder {
         PathHelper pathHelper = componentSupplier.getPathHelper();
         ClassHunter classHunter = componentSupplier.getClassHunter();
         
-        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+        SearchConfig searchConfig = SearchConfig.forPaths(
             //Here you can add all absolute path you want:
             //both folders, zip, jar, ear and war will be recursively scanned.
             //For example you can add: "C:\\Users\\user\\.m2", or a path of
@@ -412,22 +396,22 @@ public class Finder {
             pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES)
             //If you want to scan only one jar you can replace the two line of code above with:
             //pathHelper.getPaths(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
+        ).addFileFilter(
+            FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {
+                JavaClass javaClass = fileSystemItem.toJavaClass();
+                if (javaClass == null) {
+                    return false;
+                }
+                String packageName = fileSystemItem.toJavaClass().getPackageName();                       
+                return packageName != null && packageName.contains("springframework");
+            })
         ).by(
             ClassCriteria.create().allThoseThatMatch((cls) -> {
                 return cls.getPackage().getName().matches(".*springframework.*");
             })
         );
-        //The loadInCache method loads all classes in the paths of the SearchConfig received as input
-        //and then execute the queries of the ClassCriteria on the cached data. Once the data has been 
-        //cached, it is possible to take advantage of faster searches for the loaded paths also through 
-        //the findBy method. In addition to the loadCache method, loading data into the cache can also
-        //take place via the findBy method if the latter receives a SearchConfig without ClassCriteria
-        //as input. It is possible to clear the cache individually for every hunter (ClassHunter, 
-        //ByteCodeHunter and ClassPathHunter) with clearCache method but to avoid inconsistencies 
-        //it is recommended to perform this cleaning using the clearHuntersCache method of the ComponentSupplier.
-        //To perform searches that do not use the cache you must instantiate the search configuration with 
-        //SearchConfig.withoutUsingCache() method
-        try(SearchResult searchResult = classHunter.loadInCache(searchConfig).find()) {
+
+        try(ClassHunter.SearchResult searchResult = classHunter.findBy(searchConfig)) {
             return searchResult.getClasses();
         }
     }
@@ -445,38 +429,37 @@ import java.util.Collection;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.ClassCriteria;
-import org.burningwave.core.classes.CacheableSearchConfig;
 import org.burningwave.core.classes.ClassPathHunter;
-import org.burningwave.core.classes.ClassPathHunter.SearchResult;
+import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-
+    
 public class Finder {
-
-    public Collection<FileSystemItem> find() {
+    
+   public Collection<FileSystemItem> find() {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         PathHelper pathHelper = componentSupplier.getPathHelper();
         ClassPathHunter classPathHunter = componentSupplier.getClassPathHunter();
-
-        CacheableSearchConfig searchConfig = SearchConfig.forPaths(
+        
+        SearchConfig searchConfig = SearchConfig.forPaths(
             //Here you can add all absolute path you want:
             //both folders, zip and jar will be recursively scanned.
             //For example you can add: "C:\\Users\\user\\.m2"
-            //With the row below the search will be executed on runtime Classpaths
+            //With the line below the search will be executed on runtime class paths
             pathHelper.getMainClassPaths()
-        ).by(
-            ClassCriteria.create().allThoseThatMatch(cls ->
-                cls.getName().equals("Finder")      
-            )
-        );        
+        ).addFileFilter(
+            FileSystemItem.Criteria.forAllFileThat(fileSystemItem -> {
+	            JavaClass javaClass = fileSystemItem.toJavaClass();
+        	    return javaClass != null && javaClass.getName().equals(Finder.class.getName());
+            })
+        );
 
-        try (SearchResult searchResult = classPathHunter.loadInCache(searchConfig).find()) {
+        try(ClassPathHunter.SearchResult searchResult = classPathHunter.findBy(searchConfig)) {
             return searchResult.getClassPaths();
         }
     }
-
+    
 }
 ```
 

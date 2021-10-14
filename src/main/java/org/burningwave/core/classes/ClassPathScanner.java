@@ -31,9 +31,9 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
-import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,8 +48,6 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
-
-import io.github.toolfactory.jvm.util.Strings;
 
 public interface ClassPathScanner<I, R extends SearchResult<I>> {
 	
@@ -150,25 +148,26 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			C context = searchConfig.isInitialized() ? searchConfig.getSearchContext() : searchConfig.init(this);
 			context.executeSearch(() -> {
 				Collection<FileSystemItem> pathsToBeScanned = searchConfig.getPathsToBeScanned();
-				Collection<Map.Entry<FileSystemItem, Collection<FileSystemItem>>> classFilesForPath = ConcurrentHashMap.newKeySet();
+				Map<FileSystemItem, Collection<FileSystemItem>> classFilesForPath = new ConcurrentHashMap<>();
 				IterableObjectHelper.iterateParallelIf(
 					pathsToBeScanned, 
 					currentScannedPath -> {
 						if (!currentScannedPath.isContainer()) {
 							throw new IllegalArgumentException(Strings.compile("{} is not a folder or archive", currentScannedPath.getAbsolutePath()));
 						}
-						classFilesForPath.add(
+						classFilesForPath.put(
+							currentScannedPath,
 							scanAndAddToPathScannerClassLoader(context, currentScannedPath)
 						);
 					},
-					item -> item.size() > 1
+					coll -> coll.size() >= searchConfig.getMinimumCollectionSizeForParallelIteration()
 				);
 				IterableObjectHelper.iterateParallelIf(
-					classFilesForPath,
+					classFilesForPath.entrySet(),
 					currentScannedPath -> {
-						analyzeAndAddItemsToContext(context, currentScannedPath);
+						testClassCriteriaAndAddItemsToContext(context, currentScannedPath);
 					},
-					item -> item.size() > 1
+					coll -> coll.size() >= searchConfig.getMinimumCollectionSizeForParallelIteration()			
 				);
 				Collection<String> skippedClassesNames = context.getSkippedClassNames();
 				if (!skippedClassesNames.isEmpty()) {
@@ -180,20 +179,18 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			return searchResult;
 		}
 
-		Map.Entry<FileSystemItem, Collection<FileSystemItem>> scanAndAddToPathScannerClassLoader(
+		Collection<FileSystemItem> scanAndAddToPathScannerClassLoader(
 			C context, FileSystemItem currentScannedPath
 		) {
 			SearchConfig searchConfig = context.searchConfig;
 			PathScannerClassLoader pathScannerClassLoader = context.pathScannerClassLoader;
 			if (!searchConfig.getRefreshPathIf().test(currentScannedPath) &&
 				pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
-				return new AbstractMap.SimpleImmutableEntry<>(
-					currentScannedPath,
-					searchConfig.getFindFunction(currentScannedPath).apply(
-						searchConfig.getRefreshPathIf().test(currentScannedPath) ?
-							currentScannedPath.refresh() : currentScannedPath	,
-						searchConfig.getAllFileFilters()
-					)
+				return searchConfig.getFindFunction(currentScannedPath).apply(
+					searchConfig.getRefreshPathIf().test(
+						currentScannedPath
+					) ?	currentScannedPath.refresh() : currentScannedPath,
+					searchConfig.getAllFileFilters()
 				);
 			} else {
 				return Synchronizer.execute(pathScannerClassLoader.instanceId + "_" + currentScannedPath.getAbsolutePath(), () -> {
@@ -211,13 +208,11 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 							getPathScannerClassLoaderFiller(context, currentScannedPath)
 						);
 					}
-					Map.Entry<FileSystemItem, Collection<FileSystemItem>> itemsFound = new AbstractMap.SimpleImmutableEntry<>(
-						currentScannedPath,
-						searchConfig.getFindFunction(currentScannedPath).apply(
-							searchConfig.getRefreshPathIf().test(currentScannedPath) ?
-								currentScannedPath.refresh() : currentScannedPath	,
-							allFileFilters
-						)
+					Collection<FileSystemItem> itemsFound = searchConfig.getFindFunction(currentScannedPath).apply(
+						searchConfig.getRefreshPathIf().test(
+							currentScannedPath
+						) ? currentScannedPath.refresh() : currentScannedPath,
+						allFileFilters
 					); 
 					if (loadPathCompletely != null) {
 						pathScannerClassLoader.loadedPaths.put(currentScannedPath.getAbsolutePath(), loadPathCompletely);
@@ -251,26 +246,30 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 		}
 
 		
-		void analyzeAndAddItemsToContext(
+		void testClassCriteriaAndAddItemsToContext(
 			C context,
 			Map.Entry<FileSystemItem, Collection<FileSystemItem>> currentScannedPath
 		) {
 			String currentScannedAbsolutePath = currentScannedPath.getKey().getAbsolutePath();
-			for (FileSystemItem child : currentScannedPath.getValue()) {
-				JavaClass javaClass = child.toJavaClass();
-				try {
-					ClassCriteria.TestContext criteriaTestContext = testClassCriteria(context, javaClass);
-					if (criteriaTestContext.getResult()) {
-						addToContext(
-							context, criteriaTestContext, currentScannedAbsolutePath, child, javaClass
-						);
+			IterableObjectHelper.iterateParallelIf(
+				currentScannedPath.getValue(),
+				child -> {
+					JavaClass javaClass = child.toJavaClass();
+					try {
+						ClassCriteria.TestContext criteriaTestContext = testClassCriteria(context, javaClass);
+						if (criteriaTestContext.getResult()) {
+							addToContext(
+								context, criteriaTestContext, currentScannedAbsolutePath, child, javaClass
+							);
+						}
+					} catch (NullPointerException exc) {
+						if (javaClass != null) {
+							throw exc;
+						}
 					}
-				} catch (NullPointerException exc) {
-					if (javaClass != null) {
-						throw exc;
-					}
-				}
-			}
+				},
+				coll -> coll.size() >= context.searchConfig.getMinimumCollectionSizeForParallelIteration()	
+			);
 		}
 
 		
@@ -315,6 +314,8 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			contextSupplier = null;
 			config = null;
 			closeSearchResults();
+			defaultPathScannerClassLoaderManager.close();
+			defaultPathScannerClassLoaderManager = null;
 			this.searchResults = null;
 		}
 	}
