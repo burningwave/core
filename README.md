@@ -339,6 +339,7 @@ import java.util.Collection;
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassHunter;
+import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
     
@@ -350,7 +351,11 @@ public class Finder {
         
         SearchConfig searchConfig = SearchConfig.create().addFileFilter(
             FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {
-                String packageName = fileSystemItem.toJavaClass().getPackageName();       				
+                JavaClass javaClass = fileSystemItem.toJavaClass();
+                if (javaClass == null) {
+                    return false;
+                }
+                String packageName = fileSystemItem.toJavaClass().getPackageName();
                 return packageName != null && packageName.contains("springframework");
             })
         );
