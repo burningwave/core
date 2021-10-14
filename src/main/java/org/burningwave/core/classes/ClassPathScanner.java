@@ -190,12 +190,16 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 					searchConfig.getRefreshPathIf().test(
 						currentScannedPath
 					) ?	currentScannedPath.refresh() : currentScannedPath,
-					searchConfig.getAllFileFilters()
+					searchConfig.getAllFileFilters(currentScannedPath)
 				);
 			} else {
 				return Synchronizer.execute(pathScannerClassLoader.instanceId + "_" + currentScannedPath.getAbsolutePath(), () -> {
 					Boolean loadPathCompletely = null;
-					FileSystemItem.Criteria allFileFilters = searchConfig.getAllFileFilters();
+					FileSystemItem.Criteria allFileFilters = searchConfig.getAllFileFilters(currentScannedPath);
+					if (searchConfig.useDefaultPathScannerClassLoaderAsParent ||
+						(!searchConfig.useDefaultPathScannerClassLoaderAsParent && !searchConfig.useDefaultPathScannerClassLoader && searchConfig.pathScannerClassLoader == null)) {
+						pathScannerClassLoader.setFileFilter(allFileFilters);
+					}
 					if (searchConfig.getRefreshPathIf().test(currentScannedPath) || 
 						!pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
 						if (!searchConfig.isFileFilterExternallySet() &&

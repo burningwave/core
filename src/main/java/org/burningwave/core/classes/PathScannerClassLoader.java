@@ -93,11 +93,17 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	protected PathScannerClassLoader(
 		ClassLoader parentClassLoader,
 		PathHelper pathHelper,
-		FileSystemItem.Criteria scanFileCriteria
+		FileSystemItem.Criteria fileFilter
 	) {
 		super(parentClassLoader);
 		this.pathHelper = pathHelper;
 		this.loadedPaths = new ConcurrentHashMap<>();
+		if (fileFilter != null) {
+			setFileFilter(fileFilter);
+		}
+	}
+
+	void setFileFilter(FileSystemItem.Criteria scanFileCriteria) {
 		this.classFileCriteriaAndConsumer = scanFileCriteria.createCopy().and().allFileThat((child, pathFIS) -> {
 			JavaClass javaClass = child.toJavaClass();
 			addByteCode0(javaClass.getName(), javaClass.getByteCode());		
