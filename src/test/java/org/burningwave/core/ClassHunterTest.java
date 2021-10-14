@@ -178,8 +178,8 @@ public class ClassHunterTest extends BaseTest {
 			).addPaths(
 				pathHelper.getPaths(path -> path.endsWith("jar"))
 			).setFindFunction(
-				fileSystemItem -> {
-					return fileSystemItem.isFolder() ?
+				currentScannedPath -> {
+					return currentScannedPath.isFolder() ?
 						FileSystemItem.Find.RECURSIVE_IN_CHILDREN:
 						FileSystemItem.Find.IN_ALL_CHILDREN;
 				}
