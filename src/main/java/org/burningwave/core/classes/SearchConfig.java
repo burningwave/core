@@ -146,9 +146,6 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		} else {
 			fileFiltersExtenallySet = Boolean.TRUE;
 		}
-		if (additionalFileFilter != null) {
-			fileFilter = fileFilter.and(additionalFileFilter);
-		}
 		if (minimumCollectionSizeForParallelIteration == null) {
 			minimumCollectionSizeForParallelIteration = FileSystemItem.Criteria.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION;
 		}
