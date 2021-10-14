@@ -372,6 +372,7 @@ import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
+import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
@@ -397,10 +398,14 @@ public class Finder {
             //pathHelper.getPaths(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
         ).addFileFilter(
             FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {
-                String packageName = fileSystemItem.toJavaClass().getPackageName();       				
+                JavaClass javaClass = fileSystemItem.toJavaClass();
+                if (javaClass == null) {
+                    return false;
+                }
+                String packageName = fileSystemItem.toJavaClass().getPackageName();                       
                 return packageName != null && packageName.contains("springframework");
             })
-	).by(
+        ).by(
             ClassCriteria.create().allThoseThatMatch((cls) -> {
                 return cls.getPackage().getName().matches(".*springframework.*");
             })
@@ -425,6 +430,7 @@ import java.util.Collection;
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.ClassPathHunter;
+import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
@@ -444,8 +450,8 @@ public class Finder {
             pathHelper.getMainClassPaths()
         ).addFileFilter(
             FileSystemItem.Criteria.forAllFileThat(fileSystemItem -> {
-	        JavaClass javaClass = fileSystemItem.toJavaClass();
-        	return javaClass != null && javaClass.getName().equals(Finder.class.getName());
+	            JavaClass javaClass = fileSystemItem.toJavaClass();
+        	    return javaClass != null && javaClass.getName().equals(Finder.class.getName());
             })
         );
 
