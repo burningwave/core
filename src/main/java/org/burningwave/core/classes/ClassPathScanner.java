@@ -42,13 +42,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.Strings;
 import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
-
-import io.github.toolfactory.jvm.util.Strings;
 
 public interface ClassPathScanner<I, R extends SearchResult<I>> {
 	
@@ -168,7 +167,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 					currentScannedPath -> {
 						testClassCriteriaAndAddItemsToContext(context, currentScannedPath);
 					},
-					item -> item.size() > 1
+					searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
 				);
 				Collection<String> skippedClassesNames = context.getSkippedClassNames();
 				if (!skippedClassesNames.isEmpty()) {
