@@ -181,7 +181,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 	}
 			
 	
-	public void addByteCodeClassesToClassLoader(String className, ByteBuffer byteCode) {
+	void addByteCodeClassesToClassLoader(String className, ByteBuffer byteCode) {
 		pathScannerClassLoader.addByteCode(className, byteCode);			
 	}
 	
@@ -191,14 +191,20 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 				return supplier.get();
 			} catch (ClassNotFoundException | NoClassDefFoundError exc) {
 				String notFoundClassName = Classes.retrieveName(exc);
-				skippedClassNames.add(classNameSupplier.get());
-				skippedClassNames.add(notFoundClassName);
+				addToSkippedClassNames(classNameSupplier.get());
+				addToSkippedClassNames(notFoundClassName);
 				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not load class {}: {}", classNameSupplier.get(), exc.toString());
 			} catch (LinkageError | SecurityException | InternalError exc) {
 				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not load class {}: {}", classNameSupplier.get(), exc.toString());
 			}
 			return defaultValueSupplier.get();
 		});
+	}
+	
+	void addToSkippedClassNames(String className) {
+		if (className != null) {
+			skippedClassNames.add(className);
+		}
 	}
 	
 	Class<?> loadClass(String className) {
