@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.burningwave.core.Component;
@@ -162,10 +163,36 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 					},
 					coll -> coll.size() >= searchConfig.getMinimumCollectionSizeForParallelIteration()
 				);
+				if (searchConfig.getLinkedJavaClassPredicate() != null) {
+					LinkedJavaClassContainer linkedJavaClassContainer = new LinkedJavaClassContainer(this.pathHelper);
+					IterableObjectHelper.iterateParallelIf(
+						classFilesForPath.entrySet(),
+						currentScannedPath -> {
+							Collection<FileSystemItem> fileSystemItems = currentScannedPath.getValue();
+							IterableObjectHelper.iterateParallelIf(
+								fileSystemItems,
+								fileSystemItem -> {
+									if (!searchConfig.getLinkedJavaClassPredicate().test(
+										searchConfig.linkedJavaClassContainer,
+										(LinkedJavaClass)fileSystemItem.toJavaClass())
+									) {
+										fileSystemItems.remove(fileSystemItem);
+									}
+								},
+								coll -> coll.size() >= searchConfig.getMinimumCollectionSizeForParallelIteration()
+							);
+						},
+						coll -> coll.size() >= searchConfig.getMinimumCollectionSizeForParallelIteration()			
+					);
+				}				
 				IterableObjectHelper.iterateParallelIf(
 					classFilesForPath.entrySet(),
 					currentScannedPath -> {
-						testClassCriteriaAndAddItemsToContext(context, currentScannedPath);
+						IterableObjectHelper.iterateParallelIf(
+							currentScannedPath.getValue(),
+							getTestClassCriteriaAndAddToContextFunction(context, currentScannedPath.getKey()),
+							coll -> coll.size() >= searchConfig.getMinimumCollectionSizeForParallelIteration()
+						);
 					},
 					coll -> coll.size() >= searchConfig.getMinimumCollectionSizeForParallelIteration()			
 				);
@@ -246,30 +273,26 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 		}
 
 		
-		void testClassCriteriaAndAddItemsToContext(
+		Consumer<FileSystemItem> getTestClassCriteriaAndAddToContextFunction(
 			C context,
-			Map.Entry<FileSystemItem, Collection<FileSystemItem>> currentScannedPath
+			FileSystemItem currentScannedPath			
 		) {
-			String currentScannedAbsolutePath = currentScannedPath.getKey().getAbsolutePath();
-			IterableObjectHelper.iterateParallelIf(
-				currentScannedPath.getValue(),
-				child -> {
-					JavaClass javaClass = child.toJavaClass();
-					try {
-						ClassCriteria.TestContext criteriaTestContext = testClassCriteria(context, javaClass);
-						if (criteriaTestContext.getResult()) {
-							addToContext(
-								context, criteriaTestContext, currentScannedAbsolutePath, child, javaClass
-							);
-						}
-					} catch (NullPointerException exc) {
-						if (javaClass != null) {
-							throw exc;
-						}
+			String currentScannedAbsolutePath = currentScannedPath.getAbsolutePath();
+			return child -> {
+				JavaClass javaClass = child.toJavaClass();
+				try {
+					ClassCriteria.TestContext criteriaTestContext = testClassCriteria(context, javaClass);
+					if (criteriaTestContext.getResult()) {
+						addToContext(
+							context, criteriaTestContext, currentScannedAbsolutePath, child, javaClass
+						);
 					}
-				},
-				coll -> coll.size() >= context.searchConfig.getMinimumCollectionSizeForParallelIteration()	
-			);
+				} catch (NullPointerException exc) {
+					if (javaClass != null) {
+						throw exc;
+					}
+				}
+			};
 		}
 
 		

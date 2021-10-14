@@ -39,6 +39,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -58,11 +59,12 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	Function<ClassLoader, Map.Entry<ClassLoader, Collection<FileSystemItem>>> pathsSupplier;
 	Function<FileSystemItem, FileSystemItem.Find> findFunctionSupplier;
 	Predicate<FileSystemItem> refreshPathIf;
-	
-	Boolean fileFiltersExtenallySet;
 	FileSystemItem.Criteria fileFilter;
 	FileSystemItem.Criteria additionalFileFilter;
-	ClassCriteria classCriteria;
+	BiPredicate<LinkedJavaClassContainer, LinkedJavaClass> linkedJavaClassPredicate;
+	ClassCriteria classCriteria;	
+	
+	Boolean fileFiltersExtenallySet;
 	
 	Supplier<Collection<FileSystemItem>> pathsRetriever;
 	SearchContext<?> searchContext;
@@ -71,6 +73,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	boolean useDefaultPathScannerClassLoaderAsParent;
 	ClassLoader parentClassLoaderForPathScannerClassLoader;
 	PathScannerClassLoader pathScannerClassLoader;
+
 	Integer minimumCollectionSizeForParallelIteration;
 	
 	
@@ -326,6 +329,11 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		return this;
 	}
 	
+
+	public void setLinkedJavaClassPredicate(BiPredicate<LinkedJavaClassContainer, LinkedJavaClass> linkedJavaClassPredicate) {
+		this.linkedJavaClassPredicate = linkedJavaClassPredicate;
+	}
+	
 	public SearchConfig setMinimumCollectionSizeForParallelIteration(int value) {
 		this.minimumCollectionSizeForParallelIteration = value;
 		return this;
@@ -405,8 +413,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 
 	boolean isFileFilterExternallySet() {
 		return fileFiltersExtenallySet;
-	}
-	
+	}	
 
 	boolean isInitialized() {
 		return pathsRetriever != null && searchContext != null;
@@ -416,6 +423,12 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		return (C)searchContext;
 	}
 	
+	
+	
+	BiPredicate<LinkedJavaClassContainer, LinkedJavaClass> getLinkedJavaClassPredicate() {
+		return linkedJavaClassPredicate;
+	}
+
 	public SearchConfig copyTo(SearchConfig destConfig) {
 		destConfig.classCriteria = this.classCriteria.createCopy();
 		destConfig.pathsRetriever = this.pathsRetriever;
@@ -431,6 +444,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		destConfig.useDefaultPathScannerClassLoaderAsParent = this.useDefaultPathScannerClassLoaderAsParent;
 		destConfig.waitForSearchEnding = this.waitForSearchEnding;
 		destConfig.minimumCollectionSizeForParallelIteration = this.minimumCollectionSizeForParallelIteration;
+		destConfig.linkedJavaClassPredicate = this.linkedJavaClassPredicate;
 		return destConfig;
 	}
 	
@@ -450,6 +464,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		this.additionalFileFilter = null;
 		this.parentClassLoaderForPathScannerClassLoader = null;
 		this.pathScannerClassLoader = null;
-		this.minimumCollectionSizeForParallelIteration = null; 
+		this.minimumCollectionSizeForParallelIteration = null;
+		this.linkedJavaClassPredicate = null;
 	}
 }
