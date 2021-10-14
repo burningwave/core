@@ -1139,7 +1139,9 @@ public class FileSystemItem {
 	}
 
 	public static class Criteria extends org.burningwave.core.Criteria.Simple<FileSystemItem[], Criteria> {
-		public static Predicate<Collection<FileSystemItem>> DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE = coll -> coll.size() > 1;
+		public static int DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION = 2;
+		public static Predicate<Collection<FileSystemItem>> DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE =
+			coll -> coll.size() >= DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION;
 		
 		private BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler;
 		private Predicate<Collection<FileSystemItem>> minimumCollectionSizeForParallelIterationPredicate;
