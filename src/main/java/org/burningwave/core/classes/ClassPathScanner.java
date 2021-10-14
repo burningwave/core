@@ -33,7 +33,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
-import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -150,23 +149,24 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			C context = searchConfig.isInitialized() ? searchConfig.getSearchContext() : searchConfig.init(this);
 			context.executeSearch(() -> {
 				Collection<FileSystemItem> pathsToBeScanned = searchConfig.getPathsToBeScanned();
-				Collection<Map.Entry<FileSystemItem, Collection<FileSystemItem>>> classFilesForPath = ConcurrentHashMap.newKeySet();
+				Map<FileSystemItem, Collection<FileSystemItem>> classFilesForPath = new ConcurrentHashMap<>();
 				IterableObjectHelper.iterateParallelIf(
 					pathsToBeScanned, 
 					currentScannedPath -> {
 						if (!currentScannedPath.isContainer()) {
 							throw new IllegalArgumentException(Strings.compile("{} is not a folder or archive", currentScannedPath.getAbsolutePath()));
 						}
-						classFilesForPath.add(
+						classFilesForPath.put(
+							currentScannedPath,
 							scanAndAddToPathScannerClassLoader(context, currentScannedPath)
 						);
 					},
-					item -> item.size() > 1
+					searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
 				);
 				IterableObjectHelper.iterateParallelIf(
-					classFilesForPath,
+					classFilesForPath.entrySet(),
 					currentScannedPath -> {
-						analyzeAndAddItemsToContext(context, currentScannedPath);
+						testClassCriteriaAndAddItemsToContext(context, currentScannedPath);
 					},
 					item -> item.size() > 1
 				);
@@ -180,20 +180,18 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			return searchResult;
 		}
 
-		Map.Entry<FileSystemItem, Collection<FileSystemItem>> scanAndAddToPathScannerClassLoader(
+		Collection<FileSystemItem> scanAndAddToPathScannerClassLoader(
 			C context, FileSystemItem currentScannedPath
 		) {
 			SearchConfig searchConfig = context.searchConfig;
 			PathScannerClassLoader pathScannerClassLoader = context.pathScannerClassLoader;
 			if (!searchConfig.getRefreshPathIf().test(currentScannedPath) &&
 				pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
-				return new AbstractMap.SimpleImmutableEntry<>(
-					currentScannedPath,
-					searchConfig.getFindFunction(currentScannedPath).apply(
-						searchConfig.getRefreshPathIf().test(currentScannedPath) ?
-							currentScannedPath.refresh() : currentScannedPath	,
-						searchConfig.getAllFileFilters()
-					)
+				return searchConfig.getFindFunction(currentScannedPath).apply(
+					searchConfig.getRefreshPathIf().test(
+						currentScannedPath
+					) ?	currentScannedPath.refresh() : currentScannedPath,
+					searchConfig.getAllFileFilters()
 				);
 			} else {
 				return Synchronizer.execute(pathScannerClassLoader.instanceId + "_" + currentScannedPath.getAbsolutePath(), () -> {
@@ -211,13 +209,11 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 							getPathScannerClassLoaderFiller(context, currentScannedPath)
 						);
 					}
-					Map.Entry<FileSystemItem, Collection<FileSystemItem>> itemsFound = new AbstractMap.SimpleImmutableEntry<>(
-						currentScannedPath,
-						searchConfig.getFindFunction(currentScannedPath).apply(
-							searchConfig.getRefreshPathIf().test(currentScannedPath) ?
-								currentScannedPath.refresh() : currentScannedPath	,
-							allFileFilters
-						)
+					Collection<FileSystemItem> itemsFound = searchConfig.getFindFunction(currentScannedPath).apply(
+						searchConfig.getRefreshPathIf().test(
+							currentScannedPath
+						) ? currentScannedPath.refresh() : currentScannedPath,
+						allFileFilters
 					); 
 					if (loadPathCompletely != null) {
 						pathScannerClassLoader.loadedPaths.put(currentScannedPath.getAbsolutePath(), loadPathCompletely);
@@ -251,7 +247,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 		}
 
 		
-		void analyzeAndAddItemsToContext(
+		void testClassCriteriaAndAddItemsToContext(
 			C context,
 			Map.Entry<FileSystemItem, Collection<FileSystemItem>> currentScannedPath
 		) {
