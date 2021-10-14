@@ -171,23 +171,33 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findRecursiveInChildrenExcludingZipAndJar() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
-				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
-				).findRecursiveInChildren().setFileFilter(
-					FileSystemItem.Criteria.forAllFileThat(
-						fileSystemItem ->
-							fileSystemItem.isFolder() ||
-							(fileSystemItem.getExtension() != null &&
-							!fileSystemItem.getExtension().equals("zip") && 
-							!fileSystemItem.getExtension().equals("jar") && 
-							fileSystemItem.toJavaClass() != null)
-					)
-				)
-			),
-			(result) ->
-				result.getClasses(), true
+		PathHelper pathHelper = componentSupplier.getPathHelper();
+		componentSupplier.getClassHunter().findBy(
+			SearchConfig.forPaths(
+				pathHelper.getAbsolutePathOfResource("../../src/test/external-resources")
+			).addPaths(
+				pathHelper.getPaths(path -> path.endsWith("jar"))
+			).setFindFunction(
+				fileSystemItem -> {
+					return fileSystemItem.isFolder() ?
+						FileSystemItem.Find.RECURSIVE_IN_CHILDREN:
+						FileSystemItem.Find.IN_ALL_CHILDREN;
+				}
+			).setFileFilter(
+				currentScannedPath -> {
+					if (currentScannedPath.isFolder()) {
+						return FileSystemItem.Criteria.forAllFileThat(
+							fileSystemItem ->
+								fileSystemItem.isFolder() ||
+								(fileSystemItem.getExtension() != null &&
+								!fileSystemItem.getExtension().equals("zip") && 
+								!fileSystemItem.getExtension().equals("jar") && 
+								fileSystemItem.toJavaClass() != null)
+						);
+					}
+					return FileSystemItem.Criteria.forClassTypeFiles(FileSystemItem.CheckingOption.FOR_NAME);
+				}
+			)
 		);
 
 	}
