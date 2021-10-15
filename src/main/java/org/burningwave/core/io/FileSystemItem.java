@@ -247,22 +247,13 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		return fileSystemItems;
 	}
 	
-	public Collection<FileSystemItem> findRecursiveInChildren(
-		FileSystemItem.Criteria filter,
-		Supplier<Collection<FileSystemItem>> outputCollectionSupplier
-	) {	
-
-		return findRecursiveInChildren(filter, outputCollectionSupplier, false);
-	}
-	
 	
 	private Collection<FileSystemItem> findRecursiveInChildren(
 		FileSystemItem.Criteria filter,
-		Supplier<Collection<FileSystemItem>> outputCollectionSupplier,
-		boolean findFirst
+		Supplier<Collection<FileSystemItem>> outputCollectionSupplier
 	) {	
 		Collection<FileSystemItem> outputCollection = outputCollectionSupplier.get();
-		for (FileSystemItem filteredItem : findIn(this::getChildren0, filter, findFirst, ConcurrentHashMap::newKeySet)) {
+		for (FileSystemItem filteredItem : findIn(this::getChildren0, filter, false, ConcurrentHashMap::newKeySet)) {
 			outputCollection.add(filteredItem);
 			if (filteredItem.isContainer()) {
 				filteredItem.findRecursiveInChildren(filter, outputCollectionSupplier);
@@ -314,7 +305,9 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					collector.accept(child);
 				}
 				//Continue iteration flag
-				return true;
+				return firstMatch?
+					!match
+					:true;
 			},
 			outputCollectionSupplier.get(),
 			filter.minimumCollectionSizeForParallelIterationPredicate != null ?
