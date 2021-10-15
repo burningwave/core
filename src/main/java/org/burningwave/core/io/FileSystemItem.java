@@ -59,8 +59,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -222,7 +224,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public Collection<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getAllChildren0, filter, false, HashSet::new);
+		return findIn(this::getAllChildren0, filter, false, ConcurrentHashMap::newKeySet);
 	}
 
 	public Collection<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter,
@@ -231,7 +233,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public Collection<FileSystemItem> findInChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getChildren0, filter, false, HashSet::new);
+		return findIn(this::getChildren0, filter, false, ConcurrentHashMap::newKeySet);
 	}
 	
 	public Collection<FileSystemItem> findInChildren(
@@ -242,7 +244,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 	
 	public Collection<FileSystemItem> findRecursiveInChildren(FileSystemItem.Criteria filter) {
-		Collection<FileSystemItem> fileSystemItems = new HashSet<>();
+		Collection<FileSystemItem> fileSystemItems = ConcurrentHashMap.newKeySet();
 		findRecursiveInChildren(filter, () -> fileSystemItems);
 		return fileSystemItems;
 	}
@@ -253,7 +255,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		Supplier<Collection<FileSystemItem>> outputCollectionSupplier
 	) {	
 		Collection<FileSystemItem> outputCollection = outputCollectionSupplier.get();
-		for (FileSystemItem filteredItem : findIn(this::getChildren0, filter, false, HashSet::new)) {
+		for (FileSystemItem filteredItem : findIn(this::getChildren0, filter, false, ConcurrentHashMap::newKeySet)) {
 			outputCollection.add(filteredItem);
 			if (filteredItem.isContainer()) {
 				filteredItem.findRecursiveInChildren(filter, outputCollectionSupplier);
@@ -297,16 +299,21 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				return false;
 			}
 		};
-		final Collection<FileSystemItem> result = IterableObjectHelper.iterateParallelIf(
-			children,
+		BiConsumer<FileSystemItem, Consumer<FileSystemItem>> action = !firstMatch ?
 			(child, collector) -> {
 				if (filterPredicate.test(child)) {
 					collector.accept(child);
-					if (firstMatch) {
-						throw new org.burningwave.core.iterable.IterableObjectHelper.TerminatedIterationException();
-					}
 				}
-			},
+			} :
+			(child, collector) -> {
+				if (filterPredicate.test(child)) {
+					collector.accept(child);
+					throw new org.burningwave.core.iterable.IterableObjectHelper.TerminatedIterationException();
+				}
+			};
+				
+		final Collection<FileSystemItem> result = IterableObjectHelper.iterateParallelIf(
+			children, action,
 			outputCollectionSupplier.get(),
 			filter.minimumCollectionSizeForParallelIterationPredicate != null ?
 				filter.minimumCollectionSizeForParallelIterationPredicate :			
@@ -325,12 +332,14 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		return result;
 	}
 
+
+	
 	public FileSystemItem findFirstInAllChildren() {
 		return findFirstInAllChildren(FileSystemItem.Criteria.create());
 	}
 
 	public FileSystemItem findFirstInAllChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getAllChildren0, filter, true, HashSet::new).stream().findFirst().orElseGet(() -> null);
+		return findIn(this::getAllChildren0, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
 	}
 
 	public FileSystemItem findFirstInChildren() {
@@ -338,7 +347,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public FileSystemItem findFirstInChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getChildren0, filter, true, HashSet::new).stream().findFirst().orElseGet(() -> null);
+		return findIn(this::getChildren0, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
 	}
 
 	public String getAbsolutePath() {
