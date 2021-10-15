@@ -44,6 +44,10 @@ import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.Properties.Event;
 
 public interface IterableObjectHelper {
+	public static int DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION = 2;
+	public final static Predicate<Collection<?>> DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE =
+		coll -> coll.size() >= DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION;
+	
 	
 	public static class Configuration {
 		public static class Key {
@@ -189,14 +193,14 @@ public interface IterableObjectHelper {
 	public <T, O> Collection<O> iterateParallelIf(
 		Collection<T> items,
 		Consumer<T> action,
-		Predicate<Collection<T>> predicate
+		Predicate<Collection<?>> predicate
 	);
 
 	public <T, O> Collection<O> iterateParallelIf(
 		Collection<T> items,
 		BiConsumer<T, Consumer<O>> action,
 		Collection<O> outputCollection,
-		Predicate<Collection<T>> predicate
+		Predicate<Collection<?>> predicate
 	);
 
 	public <T, O> void iterateParallel(Collection<T> items, Consumer<T> action);
