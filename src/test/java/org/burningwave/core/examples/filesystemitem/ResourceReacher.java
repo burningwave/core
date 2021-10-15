@@ -1,5 +1,7 @@
 package org.burningwave.core.examples.filesystemitem;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.io.FileSystemItem;
 
@@ -18,7 +20,7 @@ public class ResourceReacher {
         for (FileSystemItem child : fSI.getChildren()) {
             System.out.println("child name:" + child.getAbsolutePath());
             if (firstFolderFound == null && child.isFolder()) {
-                 System.out.println(child.getAbsolutePath() + " is a folder: " + child.isFolder());
+            	 ManagedLoggersRepository.logInfo(ResourceReacher.class::getName, child.getAbsolutePath() + " is a folder: " + child.isFolder());
                  firstFolderFound = child;
             }
         }
@@ -29,7 +31,7 @@ public class ResourceReacher {
                 "txt".equals(fSIC.getExtension()) || "exe".equals(fSIC.getExtension()))
             )
         ){
-            System.out.println("child name: " + child.getName() + " - child parent: " + child.getParent().getName());
+        	 ManagedLoggersRepository.logInfo(ResourceReacher.class::getName, "child name: " + child.getName() + " - child parent: " + child.getParent().getName());
             //copy the file to a folder
             child.copyTo(System.getProperty("user.home") + "/Desktop/copy");
         }
@@ -40,10 +42,10 @@ public class ResourceReacher {
             "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar"
         );
         
-        System.out.println("is an archive:" + fSI.isArchive());
+        ManagedLoggersRepository.logInfo(ResourceReacher.class::getName, "is an archive:" + fSI.isArchive());
         
         //This method return true if the file or folder is located inside a compressed archive
-        System.out.println("is compressed:" + fSI.isCompressed());
+        ManagedLoggersRepository.logInfo(ResourceReacher.class::getName, "is compressed:" + fSI.isCompressed());
         
         //this clear cache
         fSI.refresh(true);
@@ -55,7 +57,7 @@ public class ResourceReacher {
         
         //Obtaining all nested children
         for (FileSystemItem child : fSI.getAllChildren()) {
-            System.out.println("child name:" + child.getAbsolutePath());
+        	 ManagedLoggersRepository.logInfo(ResourceReacher.class::getName, "child name:" + child.getAbsolutePath());
         }
         
         //Obtaining the content of the resource (once the content is loaded it will be cached)

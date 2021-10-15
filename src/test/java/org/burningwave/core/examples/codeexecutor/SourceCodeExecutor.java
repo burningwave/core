@@ -1,5 +1,7 @@
 package org.burningwave.core.examples.codeexecutor;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+
 import java.time.LocalDateTime;
 
 import org.burningwave.core.assembler.ComponentContainer;
@@ -10,7 +12,7 @@ public class SourceCodeExecutor {
     
     public static void execute() {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
-        System.out.println("Time is: " +
+        ManagedLoggersRepository.logInfo(SourceCodeExecutor.class::getName, "Time is: " +
             componentSupplier.getCodeExecutor().execute(
                 ExecuteConfig.forPropertiesFile("custom-folder/code.properties")
                 //Uncomment the line below if the path you have supplied is an absolute path
