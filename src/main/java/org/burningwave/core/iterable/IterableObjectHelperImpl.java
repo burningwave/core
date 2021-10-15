@@ -637,7 +637,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							continueIteration.set(false);
 							break;
 						}						
-						continueIteration.set(action.apply(item, outputItemCollector));
+						if (!action.apply(item, outputItemCollector)) {
+							continueIteration.set(false);
+						};
 					}
 				}).submit()
 			);
