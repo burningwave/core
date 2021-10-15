@@ -314,9 +314,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					collector.accept(child);
 				}
 				//Continue iteration flag
-				return firstMatch?
-					!match
-					:true;
+				return true;
 			},
 			outputCollectionSupplier.get(),
 			filter.minimumCollectionSizeForParallelIterationPredicate != null ?
