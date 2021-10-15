@@ -1311,7 +1311,9 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 ```
 [Here an example of a **burningwave.properties** file.](https://github.com/burningwave/core/blob/master/src/test/resources/burningwave.properties#L1)
 
-### <a name="Other-examples-of-using-some-components"></a>Other examples of using some components:
+<br/>
+
+# <a name="Other-examples-of-using-some-components"></a>Other examples of using some components:
 <details open>
 	<summary><b>BackgroundExecutor</b></summary>
 	<ul>
