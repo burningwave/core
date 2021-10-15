@@ -184,6 +184,11 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 		) {
 			SearchConfig searchConfig = context.searchConfig;
 			PathScannerClassLoader pathScannerClassLoader = context.pathScannerClassLoader;
+			FileSystemItem.Criteria allFileFilters = searchConfig.getAllFileFilters(currentScannedPath);
+			if (searchConfig.useDefaultPathScannerClassLoaderAsParent ||
+				(!searchConfig.useDefaultPathScannerClassLoaderAsParent && !searchConfig.useDefaultPathScannerClassLoader && searchConfig.pathScannerClassLoader == null)) {
+				pathScannerClassLoader.setFileFilter(allFileFilters);
+			}
 			if (!searchConfig.getRefreshPathIf().test(currentScannedPath) &&
 				pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
 				return searchConfig.getFindFunction(currentScannedPath).apply(
@@ -195,11 +200,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			} else {
 				return Synchronizer.execute(pathScannerClassLoader.instanceId + "_" + currentScannedPath.getAbsolutePath(), () -> {
 					Boolean loadPathCompletely = null;
-					FileSystemItem.Criteria allFileFilters = searchConfig.getAllFileFilters(currentScannedPath);
-					if (searchConfig.useDefaultPathScannerClassLoaderAsParent ||
-						(!searchConfig.useDefaultPathScannerClassLoaderAsParent && !searchConfig.useDefaultPathScannerClassLoader && searchConfig.pathScannerClassLoader == null)) {
-						pathScannerClassLoader.setFileFilter(allFileFilters);
-					}
+					FileSystemItem.Criteria allFileFiltersInternal = allFileFilters;
 					if (searchConfig.getRefreshPathIf().test(currentScannedPath) || 
 						!pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
 						if (!searchConfig.isFileFilterExternallySet() &&
@@ -208,7 +209,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 						} else {
 							loadPathCompletely = Boolean.FALSE;
 						}
-						allFileFilters = allFileFilters.and(
+						allFileFiltersInternal = allFileFiltersInternal.and(
 							getPathScannerClassLoaderFiller(context, currentScannedPath)
 						);
 					}
@@ -216,7 +217,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 						searchConfig.getRefreshPathIf().test(
 							currentScannedPath
 						) ? currentScannedPath.refresh() : currentScannedPath,
-						allFileFilters
+						allFileFiltersInternal
 					); 
 					if (loadPathCompletely != null) {
 						pathScannerClassLoader.loadedPaths.put(currentScannedPath.getAbsolutePath(), loadPathCompletely);
