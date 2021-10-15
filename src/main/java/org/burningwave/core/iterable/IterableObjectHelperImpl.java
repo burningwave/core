@@ -635,7 +635,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						} catch (NoSuchElementException exc) {
 							break;
 						}						
-						/*continueIteration =*/ action.apply(item, outputItemCollector);
+						continueIteration = action.apply(item, outputItemCollector);
 					}
 				}).submit()
 			);
