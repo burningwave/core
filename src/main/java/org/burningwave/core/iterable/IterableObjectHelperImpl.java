@@ -625,21 +625,19 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		for (int i = 0; i < taskCount && terminatedIterationException.get() == null; i++) {
 			tasks.add(
 				BackgroundExecutor.createTask(() -> {
-					try {
-						while (terminatedIterationException.get() == null) {
-							T item = null;
-							try {
-								synchronized (itemIterator) {
-									item = itemIterator.next();
-								}
-							} catch (NoSuchElementException exc) {
-								throw new TerminatedIterationException();
-							}						
+					while (terminatedIterationException.get() == null) {
+						T item = null;
+						try {
+							synchronized (itemIterator) {
+								item = itemIterator.next();
+							}
 							action.accept(item, outputItemCollector);
-						}
-					} catch (IterableObjectHelper.TerminatedIterationException exc) {
-						terminatedIterationException.set(exc);
-					}
+						} catch (NoSuchElementException exc) {
+							terminatedIterationException.set(new TerminatedIterationException());
+						} catch (IterableObjectHelper.TerminatedIterationException exc) {
+							terminatedIterationException.set(exc);
+						}	
+					}					
 				}).submit()
 			);
 		}
