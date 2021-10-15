@@ -201,7 +201,7 @@ public class ClassHunterTest extends BaseTest {
 					}
 					return FileSystemItem.Criteria.forClassTypeFiles(FileSystemItem.CheckingOption.FOR_NAME);
 				}
-			)
+			).useDefaultPathScannerClassLoaderAsParent(true)
 		);
 
 	}
