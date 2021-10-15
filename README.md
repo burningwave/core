@@ -49,17 +49,15 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.3.0</version>
+    <version>12.3.1</version>
 </dependency>
 ```
 
-### Use as a module
-
-The Burningwave Core jar file includes a `module-info.class` file, which means that it can be added to your project as a Java module. In fact, in JDK 9+, if you are trying to call Burningwave Core from code in a named module, Burningwave Core *must* be added to the module path as a module, rather than included in the traditional classpath (you can't call non-modular code from modular code).
+<br/>
 
 ### Requiring the Burningwave Core module
 
-To use Burningwave Core as a Java module, add the jar dependency to your project's module path, then add the following to your `module-info.java`: 
+To use Burningwave Core as a Java module, add the following to your `module-info.java`: 
 
 ```
 requires org.burningwave.core;
