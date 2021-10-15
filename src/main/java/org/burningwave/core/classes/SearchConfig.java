@@ -428,7 +428,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		return fileFilter;
 	}
 	
-	public Predicate<Collection<?>> getMinimumCollectionSizeForParallelIterationPredicate() {
+	Predicate<Collection<?>> getMinimumCollectionSizeForParallelIterationPredicate() {
 		return minimumCollectionSizeForParallelIterationPredicate;
 	}
 

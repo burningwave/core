@@ -28,7 +28,7 @@
  */
 package org.burningwave.core;
 
-class LoggingLevel {
+public class LoggingLevel {
 	public final static int ALL_LEVEL_ENABLED = 0b11111;
 	public final static int ALL_LEVEL_DISABLED = 0b00000;
 	public final static int TRACE_ENABLED = 0b00001;
