@@ -313,7 +313,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			};
 				
 		final Collection<FileSystemItem> result = IterableObjectHelper.iterateParallelIf(
-			children, action,
+			children, action, 
 			outputCollectionSupplier.get(),
 			filter.minimumCollectionSizeForParallelIterationPredicate != null ?
 				filter.minimumCollectionSizeForParallelIterationPredicate :			
