@@ -32,7 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiFunction;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -190,22 +190,22 @@ public interface IterableObjectHelper {
 
 	public <T, O> Collection<O> iterateParallelIf(
 		Collection<T> items,
-		Function<T, Boolean> action,
+		Consumer<T> action,
 		Predicate<Collection<?>> predicate
 	);
 
 	public <T, O> Collection<O> iterateParallelIf(
 		Collection<T> items,
-		BiFunction<T, Consumer<O>, Boolean> action,
+		BiConsumer<T, Consumer<O>> action,
 		Collection<O> outputCollection,
 		Predicate<Collection<?>> predicate
 	);
 
-	public <T, O> void iterateParallel(Collection<T> items, Function<T, Boolean> action);
+	public <T, O> void iterateParallel(Collection<T> items, Consumer<T> action);
 
 	public <T, O> Collection<O> iterateParallel(
 		Collection<T> items,
-		BiFunction<T, Consumer<O>, Boolean> action,
+		BiConsumer<T, Consumer<O>> action,
 		Collection<O> outputCollection
 	);
 
@@ -219,4 +219,10 @@ public interface IterableObjectHelper {
 		Function<V, String> valueTransformer,
 		int marginTabCount
 	);
+	
+	public static class TerminatedIterationException extends RuntimeException {
+
+		private static final long serialVersionUID = 4182825598193659018L;
+
+	}
 }

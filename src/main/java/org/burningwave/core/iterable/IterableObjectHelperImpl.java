@@ -47,8 +47,8 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiFunction;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -556,17 +556,17 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	@Override
 	public <T, O> Collection<O> iterateParallelIf(
 		Collection<T> items, 		
-		Function<T, Boolean> action,
+		Consumer<T> action,
 		Predicate<Collection<?>> predicate
 	) {
-		return iterateParallelIf(items, (item, outputItemCollector) -> action.apply(item), null, predicate);
+		return iterateParallelIf(items, (item, outputItemCollector) -> action.accept(item), null, predicate);
 	}
 	
 	
 	@Override
 	public <T, O> Collection<O> iterateParallelIf(
 		Collection<T> items, 		
-		BiFunction<T, Consumer<O>, Boolean> action,
+		BiConsumer<T, Consumer<O>> action,
 		Collection<O> outputCollection,
 		Predicate<Collection<?>> predicate
 	) {
@@ -579,9 +579,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				} 
 				: null;
 			for (T item : items) {
-				if (action.apply(item, outputItemCollector)) {
-					break;
-				}
+				action.accept(item, outputItemCollector);
 			}
 			return outputCollection;
 		}		
@@ -590,11 +588,11 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	@Override
 	public <T, O> void iterateParallel(
 		Collection<T> items,
-		Function<T, Boolean> action
+		Consumer<T> action
 	) {
 		iterateParallel(
 			items, (item, outputItemCollector) -> 
-				action.apply(item), 
+				action.accept(item), 
 			null
 		);
 	}
@@ -603,7 +601,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	@Override
 	public <T, O> Collection<O> iterateParallel(
 		Collection<T> items,
-		BiFunction<T, Consumer<O>, Boolean> action,
+		BiConsumer<T, Consumer<O>> action,
 		Collection<O> outputCollection
 	) {
 		Iterator<T> itemIterator = items.iterator();
@@ -623,23 +621,24 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				: null;
 		Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
 		int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items.size());
-		AtomicBoolean continueIteration = new AtomicBoolean(true);
-		for (int i = 0; i < taskCount; i++) {
+		AtomicReference<IterableObjectHelper.TerminatedIterationException> terminatedIterationException = new AtomicReference<>();
+		for (int i = 0; i < taskCount && terminatedIterationException.get() == null; i++) {
 			tasks.add(
 				BackgroundExecutor.createTask(() -> {
-					while (continueIteration.get()) {
-						T item = null;
-						try {
-							synchronized (itemIterator) {
-								item = itemIterator.next();
-							}
-						} catch (NoSuchElementException exc) {
-							continueIteration.set(false);
-							break;
-						}						
-						if (!action.apply(item, outputItemCollector)) {
-							continueIteration.set(false);
-						};
+					try {
+						while (terminatedIterationException.get() == null) {
+							T item = null;
+							try {
+								synchronized (itemIterator) {
+									item = itemIterator.next();
+								}
+							} catch (NoSuchElementException exc) {
+								throw new TerminatedIterationException();
+							}						
+							action.accept(item, outputItemCollector);
+						}
+					} catch (IterableObjectHelper.TerminatedIterationException exc) {
+						terminatedIterationException.set(exc);
 					}
 				}).submit()
 			);

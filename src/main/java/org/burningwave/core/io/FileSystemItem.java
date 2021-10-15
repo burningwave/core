@@ -300,14 +300,12 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		final Collection<FileSystemItem> result = IterableObjectHelper.iterateParallelIf(
 			children,
 			(child, collector) -> {
-				boolean match = filterPredicate.test(child);
-				if (match) {
+				if (filterPredicate.test(child)) {
 					collector.accept(child);
+					if (firstMatch) {
+						throw new org.burningwave.core.iterable.IterableObjectHelper.TerminatedIterationException();
+					}
 				}
-				//Continue iteration flag
-				return firstMatch?
-					!match
-					:true;
 			},
 			outputCollectionSupplier.get(),
 			filter.minimumCollectionSizeForParallelIterationPredicate != null ?
