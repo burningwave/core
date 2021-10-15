@@ -189,14 +189,14 @@ public interface IterableObjectHelper {
 	public <T, O> Collection<O> iterateParallelIf(
 		Collection<T> items,
 		Function<T, Boolean> action,
-		Predicate<Collection<T>> predicate
+		Predicate<Collection<?>> predicate
 	);
 
 	public <T, O> Collection<O> iterateParallelIf(
 		Collection<T> items,
 		BiFunction<T, Consumer<O>, Boolean> action,
 		Collection<O> outputCollection,
-		Predicate<Collection<T>> predicate
+		Predicate<Collection<?>> predicate
 	);
 
 	public <T, O> void iterateParallel(Collection<T> items, Function<T, Boolean> action);

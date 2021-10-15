@@ -556,7 +556,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	public <T, O> Collection<O> iterateParallelIf(
 		Collection<T> items, 		
 		Function<T, Boolean> action,
-		Predicate<Collection<T>> predicate
+		Predicate<Collection<?>> predicate
 	) {
 		return iterateParallelIf(items, (item, outputItemCollector) -> action.apply(item), null, predicate);
 	}
@@ -567,7 +567,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		Collection<T> items, 		
 		BiFunction<T, Consumer<O>, Boolean> action,
 		Collection<O> outputCollection,
-		Predicate<Collection<T>> predicate
+		Predicate<Collection<?>> predicate
 	) {
 		if (predicate.test(items) && maxThreadCountsForParallelIteration >= Synchronizer.getAllThreads().size()) {
 			return iterateParallel(items, action, outputCollection);

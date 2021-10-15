@@ -1141,11 +1141,11 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 
 	public static class Criteria extends org.burningwave.core.Criteria.Simple<FileSystemItem[], Criteria> {
 		public static int DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION = 2;
-		public static Predicate<Collection<FileSystemItem>> DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE =
+		public static Predicate<Collection<?>> DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE =
 			coll -> coll.size() >= DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION;
 		
 		private BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler;
-		private Predicate<Collection<FileSystemItem>> minimumCollectionSizeForParallelIterationPredicate;
+		private Predicate<Collection<?>> minimumCollectionSizeForParallelIterationPredicate;
 		
 		
 		public static Criteria create() {
@@ -1192,11 +1192,11 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		}
 		
 		public Criteria setMinimumCollectionSizeForParallelIteration(int value) {
-			this.minimumCollectionSizeForParallelIterationPredicate = coll -> coll.size() >= value;
+			this.minimumCollectionSizeForParallelIterationPredicate = coll -> value >= 0 && coll.size() >= value;
 			return this;
 		}
 		
-		public Criteria setMinimumCollectionSizeForParallelIteration(Predicate<Collection<FileSystemItem>> predicate) {
+		public Criteria setMinimumCollectionSizeForParallelIteration(Predicate<Collection<?>> predicate) {
 			this.minimumCollectionSizeForParallelIterationPredicate = predicate;
 			return this;
 		}
@@ -1261,7 +1261,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		}
 		
 				
-		public Predicate<Collection<FileSystemItem>> getMinimumCollectionSizeForParallelIterationPredicate() {
+		public Predicate<Collection<?>> getMinimumCollectionSizeForParallelIterationPredicate() {
 			return minimumCollectionSizeForParallelIterationPredicate;
 		}
 
