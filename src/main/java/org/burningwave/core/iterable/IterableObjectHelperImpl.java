@@ -47,7 +47,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -555,17 +555,17 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	@Override
 	public <T, O> Collection<O> iterateParallelIf(
 		Collection<T> items, 		
-		Consumer<T> action,
+		Function<T, Boolean> action,
 		Predicate<Collection<T>> predicate
 	) {
-		return iterateParallelIf(items, (item, outputItemCollector) -> action.accept(item), null, predicate);
+		return iterateParallelIf(items, (item, outputItemCollector) -> action.apply(item), null, predicate);
 	}
 	
 	
 	@Override
 	public <T, O> Collection<O> iterateParallelIf(
 		Collection<T> items, 		
-		BiConsumer<T, Consumer<O>> action,
+		BiFunction<T, Consumer<O>, Boolean> action,
 		Collection<O> outputCollection,
 		Predicate<Collection<T>> predicate
 	) {
@@ -578,7 +578,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				} 
 				: null;
 			for (T item : items) {
-				action.accept(item, outputItemCollector);
+				if (action.apply(item, outputItemCollector)) {
+					break;
+				}
 			}
 			return outputCollection;
 		}		
@@ -587,11 +589,11 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	@Override
 	public <T, O> void iterateParallel(
 		Collection<T> items,
-		Consumer<T> action
+		Function<T, Boolean> action
 	) {
 		iterateParallel(
 			items, (item, outputItemCollector) -> 
-				action.accept(item), 
+				action.apply(item), 
 			null
 		);
 	}
@@ -600,7 +602,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	@Override
 	public <T, O> Collection<O> iterateParallel(
 		Collection<T> items,
-		BiConsumer<T, Consumer<O>> action,
+		BiFunction<T, Consumer<O>, Boolean> action,
 		Collection<O> outputCollection
 	) {
 		Iterator<T> itemIterator = items.iterator();
@@ -623,7 +625,8 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		for (int i = 0; i < taskCount; i++) {
 			tasks.add(
 				BackgroundExecutor.createTask(() -> {
-					while (true) {
+					Boolean continueIteration = true;
+					while (continueIteration) {
 						T item = null;
 						try {
 							synchronized (itemIterator) {
@@ -632,7 +635,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						} catch (NoSuchElementException exc) {
 							break;
 						}						
-						action.accept(item, outputItemCollector);
+						continueIteration = action.apply(item, outputItemCollector);
 					}
 				}).submit()
 			);

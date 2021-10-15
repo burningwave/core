@@ -32,7 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -188,22 +188,22 @@ public interface IterableObjectHelper {
 
 	public <T, O> Collection<O> iterateParallelIf(
 		Collection<T> items,
-		Consumer<T> action,
+		Function<T, Boolean> action,
 		Predicate<Collection<T>> predicate
 	);
 
 	public <T, O> Collection<O> iterateParallelIf(
 		Collection<T> items,
-		BiConsumer<T, Consumer<O>> action,
+		BiFunction<T, Consumer<O>, Boolean> action,
 		Collection<O> outputCollection,
 		Predicate<Collection<T>> predicate
 	);
 
-	public <T, O> void iterateParallel(Collection<T> items, Consumer<T> action);
+	public <T, O> void iterateParallel(Collection<T> items, Function<T, Boolean> action);
 
 	public <T, O> Collection<O> iterateParallel(
 		Collection<T> items,
-		BiConsumer<T, Consumer<O>> action,
+		BiFunction<T, Consumer<O>, Boolean> action,
 		Collection<O> outputCollection
 	);
 
