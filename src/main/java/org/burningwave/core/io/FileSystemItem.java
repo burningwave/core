@@ -1311,7 +1311,9 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	public static enum Find implements BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> {
 		IN_ALL_CHILDREN(FileSystemItem::findInAllChildren),
 		RECURSIVE_IN_CHILDREN(FileSystemItem::findRecursiveInChildren),
-		IN_CHILDREN(FileSystemItem::findInChildren);
+		IN_CHILDREN(FileSystemItem::findInChildren),
+		FIRST_IN_ALL_CHILDREN((fileSystemItem, filter) -> Arrays.asList(fileSystemItem.findFirstInAllChildren(filter))),
+		FIRST_IN_CHILDREN((fileSystemItem, filter) -> Arrays.asList(fileSystemItem.findFirstInChildren(filter)));
 		
 		BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> function;
 		
@@ -1327,7 +1329,10 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		public static enum FunctionSupplier implements Function<FileSystemItem, FileSystemItem.Find> {
 			OF_IN_ALL_CHILDREN(fileSystemItem -> Find.IN_ALL_CHILDREN),
 			OF_RECURSIVE_IN_CHILDREN(fileSystemItem -> Find.RECURSIVE_IN_CHILDREN),
-			OF_IN_CHILDREN(fileSystemItem -> Find.IN_CHILDREN);
+			OF_IN_CHILDREN(fileSystemItem -> Find.IN_CHILDREN),
+			OF_FIRST_IN_ALL_CHILDREN(fileSystemItem -> FIRST_IN_ALL_CHILDREN),
+			OF_FIRST_IN_CHILDREN(fileSystemItem -> FIRST_IN_CHILDREN);
+
 			
 			Function<FileSystemItem, FileSystemItem.Find> supplier;
 			

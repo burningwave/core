@@ -302,9 +302,13 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		return this;
 	}
 	
+	public SearchConfig findFirstInAllChildren() {
+		findFunctionSupplier = FileSystemItem.Find.FunctionSupplier.OF_FIRST_IN_ALL_CHILDREN;
+		return this;
+	}
 	
-	public SearchConfig findInAllChildren() {
-		findFunctionSupplier = FileSystemItem.Find.FunctionSupplier.OF_IN_ALL_CHILDREN;
+	public SearchConfig findFirstInChildren() {
+		findFunctionSupplier = FileSystemItem.Find.FunctionSupplier.OF_FIRST_IN_CHILDREN;
 		return this;
 	}
 	
