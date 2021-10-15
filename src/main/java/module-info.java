@@ -28,11 +28,11 @@
  */
 module org.burningwave.core {
 	
-	requires java.base;
-	requires java.compiler;
-    requires io.github.toolfactory.jvm;
-    requires org.burningwave.jvm;
-    requires org.slf4j;
+    requires java.base;
+    requires java.compiler;
+    requires transitive io.github.toolfactory.jvm;
+    requires transitive org.burningwave.jvm;
+    requires static org.slf4j;
     
     exports org.burningwave.core;
     exports org.burningwave.core.assembler;
