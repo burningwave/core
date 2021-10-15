@@ -59,12 +59,14 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	Function<ClassLoader, Map.Entry<ClassLoader, Collection<FileSystemItem>>> pathsSupplier;
 	Function<FileSystemItem, FileSystemItem.Find> findFunctionSupplier;
 	Predicate<FileSystemItem> refreshPathIf;
-	FileSystemItem.Criteria fileFilter;
-	FileSystemItem.Criteria additionalFileFilter;
-	BiPredicate<LinkedJavaClassContainer, LinkedJavaClass> linkedJavaClassPredicate;
-	ClassCriteria classCriteria;	
 	
 	Boolean fileFiltersExtenallySet;
+	Function<FileSystemItem, FileSystemItem.Criteria> fileFilterSupplier;
+	Function<FileSystemItem, FileSystemItem.Criteria> additionalFileFilterSupplier;
+	
+	BiPredicate<LinkedJavaClassContainer, LinkedJavaClass> linkedJavaClassPredicate;
+	
+	ClassCriteria classCriteria;
 	
 	Supplier<Collection<FileSystemItem>> pathsRetriever;
 	SearchContext<?> searchContext;
@@ -73,7 +75,6 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	boolean useDefaultPathScannerClassLoaderAsParent;
 	ClassLoader parentClassLoaderForPathScannerClassLoader;
 	PathScannerClassLoader pathScannerClassLoader;
-
 	Integer minimumCollectionSizeForParallelIteration;
 	
 	
@@ -139,9 +140,9 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	}
 	
 	<I, C extends SearchContext<I>> C init(ClassPathScanner.Abst<I, C, ?> classPathScanner) {
-		if (fileFilter == null) {
-			fileFiltersExtenallySet = additionalFileFilter != null;
-			fileFilter = FileSystemItem.Criteria.forClassTypeFiles(
+		if (fileFilterSupplier == null) {
+			fileFiltersExtenallySet = additionalFileFilterSupplier != null;
+			fileFilterSupplier = fileSystemItem -> FileSystemItem.Criteria.forClassTypeFiles(
 				classPathScanner.config.resolveStringValue(
 					classPathScanner.getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()
 				)
@@ -149,16 +150,8 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		} else {
 			fileFiltersExtenallySet = Boolean.TRUE;
 		}
-		if (additionalFileFilter != null) {
-			fileFilter = fileFilter.and(additionalFileFilter);
-		}
 		if (minimumCollectionSizeForParallelIteration == null) {
 			minimumCollectionSizeForParallelIteration = FileSystemItem.Criteria.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION;
-		}
-		if (fileFilter.getMinimumCollectionSizeForParallelIterationPredicate() == null) {
-			fileFilter.setMinimumCollectionSizeForParallelIteration(
-				fileSystemItems -> fileSystemItems.size() >= minimumCollectionSizeForParallelIteration
-			);
 		}
 		PathScannerClassLoader pathScannerClassLoader = this.pathScannerClassLoader;
 		PathScannerClassLoader defaultPathScannerClassLoader = classPathScanner.getDefaultPathScannerClassLoader(this);
@@ -171,8 +164,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 				PathScannerClassLoader.create(
 					parentClassLoaderForPathScannerClassLoader, 
 					classPathScanner.pathHelper,
-					getAllFileFilters()
-						
+					null						
 				);
 		}
 		C context = classPathScanner.contextSupplier.apply(
@@ -222,6 +214,10 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		return this;
 	}
 	
+	public SearchConfig addPaths(String... paths) {
+		return addPaths(Arrays.asList(paths));
+	}
+	
 	@SafeVarargs
 	public final SearchConfig addFileSystemItems(Collection<FileSystemItem>... pathColls) {
 		for (Collection<FileSystemItem> pathColl : pathColls) {
@@ -235,8 +231,9 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		return this;
 	}
 	
-	public SearchConfig addPaths(String... paths) {
-		return addPaths(Arrays.asList(paths));
+	@SafeVarargs
+	public final SearchConfig addFileSystemItems(FileSystemItem... paths) {
+		return addFileSystemItems(Arrays.asList(paths));
 	}
 	
 	@SafeVarargs
@@ -315,17 +312,23 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		return this;
 	}
 	
-	public SearchConfig setFileFilter(FileSystemItem.Criteria filter) {
-		this.fileFilter = filter;
+	public SearchConfig setFileFilter(Function<FileSystemItem, FileSystemItem.Criteria> filterSupplier) {
+		this.fileFilterSupplier = filterSupplier;
 		return this;
 	}
 	
-	public SearchConfig addFileFilter(FileSystemItem.Criteria filter) {
-		if (additionalFileFilter == null) {
-			additionalFileFilter = filter;
+	public SearchConfig setFileFilter(FileSystemItem.Criteria filter) {
+		this.fileFilterSupplier = fileSystemItem -> filter;
+		return this;
+	}
+	
+	public SearchConfig addFileFilter(Function<FileSystemItem, FileSystemItem.Criteria> filterSupplier) {
+		if (additionalFileFilterSupplier == null) {
+			additionalFileFilterSupplier = filterSupplier;
 			return this;
 		}
-		additionalFileFilter = additionalFileFilter.and(filter);
+		Function<FileSystemItem, FileSystemItem.Criteria> previousAdditionalFileFilterSupplier = additionalFileFilterSupplier;
+		additionalFileFilterSupplier = fileSystemItem -> previousAdditionalFileFilterSupplier.apply(fileSystemItem).and(filterSupplier.apply(fileSystemItem));
 		return this;
 	}
 	
@@ -345,7 +348,8 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		}
 		useDefaultPathScannerClassLoader = false;
 		useDefaultPathScannerClassLoaderAsParent = false;
-		parentClassLoaderForPathScannerClassLoader = classLoader;
+		parentClassLoaderForPathScannerClassLoader = null;
+		pathScannerClassLoader = classLoader;
 		return this;
 	}
 	
@@ -400,9 +404,15 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		return this.refreshPathIf;
 	}
 	
-	FileSystemItem.Criteria getAllFileFilters(){
-		if (additionalFileFilter != null) {
-			return fileFilter.and(additionalFileFilter);
+	FileSystemItem.Criteria getAllFileFilters(FileSystemItem currentScannedPath){
+		if (additionalFileFilterSupplier != null) {
+			return fileFilterSupplier.apply(currentScannedPath).and(additionalFileFilterSupplier.apply(currentScannedPath));
+		}
+		FileSystemItem.Criteria fileFilter = fileFilterSupplier.apply(currentScannedPath);
+		if (fileFilter.getMinimumCollectionSizeForParallelIterationPredicate() == null) {
+			fileFilter.setMinimumCollectionSizeForParallelIteration(
+				fileSystemItems -> fileSystemItems.size() >= minimumCollectionSizeForParallelIteration
+			);
 		}
 		return fileFilter;
 	}
@@ -413,7 +423,8 @@ public class SearchConfig implements Closeable, ManagedLogger {
 
 	boolean isFileFilterExternallySet() {
 		return fileFiltersExtenallySet;
-	}	
+	}
+	
 
 	boolean isInitialized() {
 		return pathsRetriever != null && searchContext != null;
@@ -434,8 +445,8 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		destConfig.pathsRetriever = this.pathsRetriever;
 		destConfig.findFunctionSupplier = this.findFunctionSupplier;
 		destConfig.refreshPathIf = this.refreshPathIf;
-		destConfig.fileFilter = this.fileFilter;
-		destConfig.additionalFileFilter = this.additionalFileFilter;
+		destConfig.fileFilterSupplier = this.fileFilterSupplier;
+		destConfig.additionalFileFilterSupplier = this.additionalFileFilterSupplier;
 		destConfig.pathsSupplier = this.pathsSupplier;
 		destConfig.optimizePaths = this.optimizePaths;
 		destConfig.useDefaultPathScannerClassLoader = this.useDefaultPathScannerClassLoader;
@@ -459,9 +470,9 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		this.findFunctionSupplier = null;
 		this.pathsRetriever = null;
 		this.refreshPathIf = null;
-		this.fileFilter = null;
+		this.fileFilterSupplier = null;
 		this.pathsSupplier = null;
-		this.additionalFileFilter = null;
+		this.additionalFileFilterSupplier = null;
 		this.parentClassLoaderForPathScannerClassLoader = null;
 		this.pathScannerClassLoader = null;
 		this.minimumCollectionSizeForParallelIteration = null;

@@ -59,6 +59,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 	Collection<String> pathScannerClassLoaderScannedPaths;
 	Collection<T> itemsFound;
 	boolean requestToClosePathScannderClassLoaderOnClose;
+	LinkedJavaClassContainer linkedJavaClassContainer;
 	
 	Collection<String> getSkippedClassNames() {
 		return skippedClassNames;
@@ -107,6 +108,8 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 			Driver.throwException(exc);
 		}
 	}
+	
+	
 	
 	void addItemFound(String path, String key, T item) {
 		retrieveCollectionForPath(
@@ -261,6 +264,9 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		skippedClassNames.clear();
 		skippedClassNames = null;
 		searchTask = null;
+		if (linkedJavaClassContainer != null) {
+			linkedJavaClassContainer.close();
+		}
 	}
 	
 	
