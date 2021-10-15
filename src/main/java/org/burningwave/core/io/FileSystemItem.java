@@ -327,12 +327,24 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		return result;
 	}
 
-	public FileSystemItem findFirstInAllChildren() {
-		return findFirstInAllChildren(FileSystemItem.Criteria.create());
-	}
-
+//	public FileSystemItem findFirstInAllChildren() {
+//		return findFirstInAllChildren(FileSystemItem.Criteria.create());
+//	}
+//
+//	public FileSystemItem findFirstInAllChildren(FileSystemItem.Criteria filter) {
+//		return findIn(this::getAllChildren0, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
+//	}
+//
+//	public FileSystemItem findFirstInChildren() {
+//		return findFirstInAllChildren(FileSystemItem.Criteria.create());
+//	}
+//
+//	public FileSystemItem findFirstInChildren(FileSystemItem.Criteria filter) {
+//		return findIn(this::getChildren0, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
+//	}
+	
 	public FileSystemItem findFirstInAllChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getAllChildren0, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
+		return findFirstInChildren(this::getAllChildren0, filter);
 	}
 
 	public FileSystemItem findFirstInChildren() {
@@ -340,9 +352,22 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public FileSystemItem findFirstInChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getChildren0, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
+		return findFirstInChildren(this::getChildren0, filter);
 	}
 
+	private FileSystemItem findFirstInChildren(Supplier<Set<FileSystemItem>> childrenSupplier,
+			FileSystemItem.Criteria filter) {
+		Predicate<FileSystemItem[]> filterPredicate = filter.getPredicateOrTruePredicateIfPredicateIsNull();
+		FileSystemItem[] childAndThis = new FileSystemItem[] { null, this };
+		for (FileSystemItem fileSystemItem : childrenSupplier.get()) {
+			childAndThis[0] = fileSystemItem;
+			if (filterPredicate.test(childAndThis)) {
+				return fileSystemItem;
+			}
+		}
+		return null;
+	}
+	
 	public String getAbsolutePath() {
 		return absolutePath.getKey();
 	}
