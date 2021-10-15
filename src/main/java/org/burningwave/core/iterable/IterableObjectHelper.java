@@ -44,6 +44,8 @@ import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.Properties.Event;
 
 public interface IterableObjectHelper {
+	public static Predicate<Collection<?>> DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE =
+			coll -> coll.size() >= 2;
 	
 	public static class Configuration {
 		public static class Key {
