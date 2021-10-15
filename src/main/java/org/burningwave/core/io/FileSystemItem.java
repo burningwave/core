@@ -222,23 +222,16 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public Collection<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getAllChildren0, filter, false, ConcurrentHashMap::newKeySet);
+		return findIn(this::getAllChildren0, filter, HashSet::new);
 	}
 
 	public Collection<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter,
 			Supplier<Collection<FileSystemItem>> setSupplier) {
-		return findIn(this::getAllChildren0, filter, false, setSupplier);
+		return findIn(this::getAllChildren0, filter, setSupplier);
 	}
 
 	public Collection<FileSystemItem> findInChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getChildren0, filter, false, ConcurrentHashMap::newKeySet);
-	}
-	
-	public Collection<FileSystemItem> findInChildren(
-		FileSystemItem.Criteria filter,
-		Supplier<Collection<FileSystemItem>> setSupplier
-	) {
-		return findIn(this::getChildren0, filter, false, setSupplier);
+		return findIn(this::getChildren0, filter, HashSet::new);
 	}
 	
 	public Collection<FileSystemItem> findRecursiveInChildren(FileSystemItem.Criteria filter) {
@@ -247,25 +240,34 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		return fileSystemItems;
 	}
 	
+	public Collection<FileSystemItem> findRecursiveInChildren(FileSystemItem.Criteria filter, Supplier<Collection<FileSystemItem>> outputCollectionSupplier) {
+		return findRecursiveInChildren(filter, outputCollectionSupplier.get());
+	}
 	
 	private Collection<FileSystemItem> findRecursiveInChildren(
 		FileSystemItem.Criteria filter,
-		Supplier<Collection<FileSystemItem>> outputCollectionSupplier
-	) {	
-		Collection<FileSystemItem> outputCollection = outputCollectionSupplier.get();
-		for (FileSystemItem filteredItem : findIn(this::getChildren0, filter, false, ConcurrentHashMap::newKeySet)) {
+		Collection<FileSystemItem> outputCollection
+	) {
+		Collection<FileSystemItem> filteredItems = findIn(this::getChildren0, filter, ConcurrentHashMap::newKeySet);
+		for (FileSystemItem filteredItem : filteredItems) {
 			outputCollection.add(filteredItem);
 			if (filteredItem.isContainer()) {
-				filteredItem.findRecursiveInChildren(filter, outputCollectionSupplier);
+				filteredItem.findRecursiveInChildren(filter, outputCollection);
 			}
 		}
 		return outputCollection;
+	}
+
+	public Collection<FileSystemItem> findInChildren(
+		FileSystemItem.Criteria filter,
+		Supplier<Collection<FileSystemItem>> setSupplier
+	) {
+		return findIn(this::getChildren0, filter, setSupplier);
 	}
 	
 	private Collection<FileSystemItem> findIn(
 		Supplier<Set<FileSystemItem>> childrenSupplier,
 		FileSystemItem.Criteria filter,
-		boolean firstMatch,
 		Supplier<Collection<FileSystemItem>> outputCollectionSupplier
 	) {	
 		Set<FileSystemItem> children;
@@ -300,19 +302,14 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		final Collection<FileSystemItem> result = IterableObjectHelper.iterateParallelIf(
 			children,
 			(child, collector) -> {
-				boolean match = filterPredicate.test(child);
-				if (match) {
+				if (filterPredicate.test(child)) {
 					collector.accept(child);
 				}
-				//Continue iteration flag
-				return firstMatch?
-					!match
-					:true;
 			},
 			outputCollectionSupplier.get(),
 			filter.minimumCollectionSizeForParallelIterationPredicate != null ?
 				filter.minimumCollectionSizeForParallelIterationPredicate :			
-					org.burningwave.core.iterable.IterableObjectHelper.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE
+				FileSystemItem.Criteria.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE
 		);		
 		if (!iteratedFISWithErrors.isEmpty()) {
 			Predicate<FileSystemItem[]> nativePredicateWithExceptionManaging = filter.getPredicateOrTruePredicateIfPredicateIsNull();
@@ -332,7 +329,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public FileSystemItem findFirstInAllChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getAllChildren0, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
+		return findFirstInChildren(this::getAllChildren0, filter);
 	}
 
 	public FileSystemItem findFirstInChildren() {
@@ -340,7 +337,20 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public FileSystemItem findFirstInChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getChildren0, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
+		return findFirstInChildren(this::getChildren0, filter);
+	}
+
+	private FileSystemItem findFirstInChildren(Supplier<Set<FileSystemItem>> childrenSupplier,
+			FileSystemItem.Criteria filter) {
+		Predicate<FileSystemItem[]> filterPredicate = filter.getPredicateOrTruePredicateIfPredicateIsNull();
+		FileSystemItem[] childAndThis = new FileSystemItem[] { null, this };
+		for (FileSystemItem fileSystemItem : childrenSupplier.get()) {
+			childAndThis[0] = fileSystemItem;
+			if (filterPredicate.test(childAndThis)) {
+				return fileSystemItem;
+			}
+		}
+		return null;
 	}
 
 	public String getAbsolutePath() {
@@ -1117,8 +1127,12 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public static class Criteria extends org.burningwave.core.Criteria.Simple<FileSystemItem[], Criteria> {
+		public static int DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION = 2;
+		public static Predicate<Collection<FileSystemItem>> DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE =
+			coll -> coll.size() >= DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION;
+		
 		private BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler;
-		private Predicate<Collection<?>> minimumCollectionSizeForParallelIterationPredicate;
+		private Predicate<Collection<FileSystemItem>> minimumCollectionSizeForParallelIterationPredicate;
 		
 		
 		public static Criteria create() {
@@ -1165,11 +1179,11 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		}
 		
 		public Criteria setMinimumCollectionSizeForParallelIteration(int value) {
-			this.minimumCollectionSizeForParallelIterationPredicate = coll -> value >= 0 && coll.size() >= value;
+			this.minimumCollectionSizeForParallelIterationPredicate = coll -> coll.size() >= value;
 			return this;
 		}
 		
-		public Criteria setMinimumCollectionSizeForParallelIteration(Predicate<Collection<?>> predicate) {
+		public Criteria setMinimumCollectionSizeForParallelIteration(Predicate<Collection<FileSystemItem>> predicate) {
 			this.minimumCollectionSizeForParallelIterationPredicate = predicate;
 			return this;
 		}
@@ -1234,7 +1248,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		}
 		
 				
-		public Predicate<Collection<?>> getMinimumCollectionSizeForParallelIterationPredicate() {
+		public Predicate<Collection<FileSystemItem>> getMinimumCollectionSizeForParallelIterationPredicate() {
 			return minimumCollectionSizeForParallelIterationPredicate;
 		}
 
@@ -1301,9 +1315,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	public static enum Find implements BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> {
 		IN_ALL_CHILDREN(FileSystemItem::findInAllChildren),
 		RECURSIVE_IN_CHILDREN(FileSystemItem::findRecursiveInChildren),
-		IN_CHILDREN(FileSystemItem::findInChildren),
-		FIRST_IN_ALL_CHILDREN((fileSystemItem, filter) -> Arrays.asList(fileSystemItem.findFirstInAllChildren(filter))),
-		FIRST_IN_CHILDREN((fileSystemItem, filter) -> Arrays.asList(fileSystemItem.findFirstInChildren(filter)));
+		IN_CHILDREN(FileSystemItem::findInChildren);
 		
 		BiFunction<FileSystemItem, FileSystemItem.Criteria, Collection<FileSystemItem>> function;
 		
@@ -1319,10 +1331,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		public static enum FunctionSupplier implements Function<FileSystemItem, FileSystemItem.Find> {
 			OF_IN_ALL_CHILDREN(fileSystemItem -> Find.IN_ALL_CHILDREN),
 			OF_RECURSIVE_IN_CHILDREN(fileSystemItem -> Find.RECURSIVE_IN_CHILDREN),
-			OF_IN_CHILDREN(fileSystemItem -> Find.IN_CHILDREN),
-			OF_FIRST_IN_ALL_CHILDREN(fileSystemItem -> FIRST_IN_ALL_CHILDREN),
-			OF_FIRST_IN_CHILDREN(fileSystemItem -> FIRST_IN_CHILDREN);
-
+			OF_IN_CHILDREN(fileSystemItem -> Find.IN_CHILDREN);
 			
 			Function<FileSystemItem, FileSystemItem.Find> supplier;
 			
