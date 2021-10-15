@@ -269,6 +269,15 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		Supplier<Set<FileSystemItem>> childrenSupplier,
 		FileSystemItem.Criteria filter,
 		Supplier<Collection<FileSystemItem>> outputCollectionSupplier
+	) {
+		return findIn(childrenSupplier, filter, false, outputCollectionSupplier);
+	}
+	
+	private Collection<FileSystemItem> findIn(
+		Supplier<Set<FileSystemItem>> childrenSupplier,
+		FileSystemItem.Criteria filter,
+		boolean firstMatch,
+		Supplier<Collection<FileSystemItem>> outputCollectionSupplier
 	) {	
 		Set<FileSystemItem> children;
 		try {
@@ -302,9 +311,13 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		final Collection<FileSystemItem> result = IterableObjectHelper.iterateParallelIf(
 			children,
 			(child, collector) -> {
-				if (filterPredicate.test(child)) {
+				boolean match = filterPredicate.test(child);
+				if (match) {
 					collector.accept(child);
 				}
+				return firstMatch?
+					!match
+					:true;
 			},
 			outputCollectionSupplier.get(),
 			filter.minimumCollectionSizeForParallelIterationPredicate != null ?

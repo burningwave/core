@@ -159,6 +159,8 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 							currentScannedPath,
 							scanAndAddToPathScannerClassLoader(context, currentScannedPath)
 						);
+						//Continue iteration
+						return true;
 					},
 					coll -> coll.size() >= searchConfig.getMinimumCollectionSizeForParallelIteration()
 				);
@@ -166,6 +168,8 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 					classFilesForPath.entrySet(),
 					currentScannedPath -> {
 						testClassCriteriaAndAddItemsToContext(context, currentScannedPath);
+						//Continue iteration
+						return true;
 					},
 					coll -> coll.size() >= searchConfig.getMinimumCollectionSizeForParallelIteration()			
 				);
@@ -272,6 +276,8 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 							throw exc;
 						}
 					}
+					//Continue iteration
+					return true;
 				},
 				coll -> coll.size() >= context.searchConfig.getMinimumCollectionSizeForParallelIteration()	
 			);
