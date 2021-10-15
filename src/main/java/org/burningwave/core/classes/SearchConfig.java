@@ -210,6 +210,10 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		return this;
 	}
 	
+	public SearchConfig addPaths(String... paths) {
+		return addPaths(Arrays.asList(paths));
+	}
+	
 	@SafeVarargs
 	public final SearchConfig addFileSystemItems(Collection<FileSystemItem>... pathColls) {
 		for (Collection<FileSystemItem> pathColl : pathColls) {
@@ -223,8 +227,9 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		return this;
 	}
 	
-	public SearchConfig addPaths(String... paths) {
-		return addPaths(Arrays.asList(paths));
+	@SafeVarargs
+	public final SearchConfig addFileSystemItems(FileSystemItem... paths) {
+		return addFileSystemItems(Arrays.asList(paths));
 	}
 	
 	@SafeVarargs
