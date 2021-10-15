@@ -355,7 +355,7 @@ public class Finder {
                 if (javaClass == null) {
                     return false;
                 }
-                String packageName = fileSystemItem.toJavaClass().getPackageName();
+                String packageName = javaClass.getPackageName();
                 return packageName != null && packageName.contains("springframework");
             })
         );
@@ -390,24 +390,14 @@ public class Finder {
         ClassHunter classHunter = componentSupplier.getClassHunter();
         
         SearchConfig searchConfig = SearchConfig.forPaths(
-            //Here you can add all absolute path you want:
-            //both folders, zip, jar, ear and war will be recursively scanned.
-            //For example you can add: "C:\\Users\\user\\.m2", or a path of
-            //an ear file that contains nested war with nested jar files
-            //With the rows below the search will be executed on runtime class paths and
-            //on java 9 and later also on .jmod files contained in jmods folder of the Java home
-            //(see https://github.com/burningwave/core/wiki/In-depth-look-to-ClassHunter-and-configuration-guide)
-            pathHelper.getAllMainClassPaths(),
-            pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES)
-            //If you want to scan only one jar you can replace the two line of code above with:
-            //pathHelper.getPaths(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
+            pathHelper.getPaths(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
         ).addFileFilter(
             FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {
                 JavaClass javaClass = fileSystemItem.toJavaClass();
                 if (javaClass == null) {
                     return false;
                 }
-                String packageName = fileSystemItem.toJavaClass().getPackageName();                       
+                String packageName = javaClass.getPackageName();                       
                 return packageName != null && packageName.contains("springframework");
             })
         ).by(
