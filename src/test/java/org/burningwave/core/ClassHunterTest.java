@@ -179,7 +179,8 @@ public class ClassHunterTest extends BaseTest {
 				pathHelper.getPaths(path -> path.endsWith("jar"))
 			).setFindFunction(
 				currentScannedPath -> {
-					return currentScannedPath.isFolder() ?
+					// Check if the path is a folder outside of a zip archive
+					return currentScannedPath.isFolder()  && !currentScannedPath.isCompressed() ?
 						FileSystemItem.Find.RECURSIVE_IN_CHILDREN:
 						FileSystemItem.Find.IN_ALL_CHILDREN;
 				}
