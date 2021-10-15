@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/12)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1344841693)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1346474183)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1344841693)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1346474183)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -49,7 +49,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.2.1</version>
+    <version>12.2.2</version>
 </dependency>
 ```
 
@@ -355,7 +355,7 @@ public class Finder {
                 if (javaClass == null) {
                     return false;
                 }
-                String packageName = fileSystemItem.toJavaClass().getPackageName();
+                String packageName = javaClass.getPackageName();
                 return packageName != null && packageName.contains("springframework");
             })
         );
@@ -390,24 +390,14 @@ public class Finder {
         ClassHunter classHunter = componentSupplier.getClassHunter();
         
         SearchConfig searchConfig = SearchConfig.forPaths(
-            //Here you can add all absolute path you want:
-            //both folders, zip, jar, ear and war will be recursively scanned.
-            //For example you can add: "C:\\Users\\user\\.m2", or a path of
-            //an ear file that contains nested war with nested jar files
-            //With the rows below the search will be executed on runtime class paths and
-            //on java 9 and later also on .jmod files contained in jmods folder of the Java home
-            //(see https://github.com/burningwave/core/wiki/In-depth-look-to-ClassHunter-and-configuration-guide)
-            pathHelper.getAllMainClassPaths(),
-            pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES)
-            //If you want to scan only one jar you can replace the two line of code above with:
-            //pathHelper.getPaths(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
+            pathHelper.getPaths(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
         ).addFileFilter(
             FileSystemItem.Criteria.forAllFileThat( fileSystemItem -> {
                 JavaClass javaClass = fileSystemItem.toJavaClass();
                 if (javaClass == null) {
                     return false;
                 }
-                String packageName = fileSystemItem.toJavaClass().getPackageName();                       
+                String packageName = javaClass.getPackageName();                       
                 return packageName != null && packageName.contains("springframework");
             })
         ).by(
