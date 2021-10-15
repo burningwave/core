@@ -71,7 +71,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	boolean useDefaultPathScannerClassLoaderAsParent;
 	ClassLoader parentClassLoaderForPathScannerClassLoader;
 	PathScannerClassLoader pathScannerClassLoader;
-	Predicate<Collection<?>> minimumCollectionSizeForParallelIterationPredicate;
+	Integer minimumCollectionSizeForParallelIteration;
 	
 	
 	boolean waitForSearchEnding;
@@ -146,9 +146,8 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		} else {
 			fileFiltersExtenallySet = Boolean.TRUE;
 		}
-		if (minimumCollectionSizeForParallelIterationPredicate == null) {
-			minimumCollectionSizeForParallelIterationPredicate = 
-				org.burningwave.core.iterable.IterableObjectHelper.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE;
+		if (minimumCollectionSizeForParallelIteration == null) {
+			minimumCollectionSizeForParallelIteration = 2;
 		}
 		PathScannerClassLoader pathScannerClassLoader = this.pathScannerClassLoader;
 		PathScannerClassLoader defaultPathScannerClassLoader = classPathScanner.getDefaultPathScannerClassLoader(this);
@@ -301,20 +300,11 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	public SearchConfig findRecursiveInChildren() {
 		findFunctionSupplier = FileSystemItem.Find.FunctionSupplier.OF_RECURSIVE_IN_CHILDREN;
 		return this;
-	}	
+	}
+	
 	
 	public SearchConfig findInAllChildren() {
 		findFunctionSupplier = FileSystemItem.Find.FunctionSupplier.OF_IN_ALL_CHILDREN;
-		return this;
-	}
-	
-	public SearchConfig findFirstInAllChildren() {
-		findFunctionSupplier = FileSystemItem.Find.FunctionSupplier.OF_FIRST_IN_ALL_CHILDREN;
-		return this;
-	}
-	
-	public SearchConfig findFirstInChildren() {
-		findFunctionSupplier = FileSystemItem.Find.FunctionSupplier.OF_FIRST_IN_CHILDREN;
 		return this;
 	}
 	
@@ -349,7 +339,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	}
 	
 	public SearchConfig setMinimumCollectionSizeForParallelIteration(int value) {
-		this.minimumCollectionSizeForParallelIterationPredicate = collection -> collection.size() >= value;
+		this.minimumCollectionSizeForParallelIteration = value;
 		return this;
 	}
 	
@@ -422,14 +412,14 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		FileSystemItem.Criteria fileFilter = fileFilterSupplier.apply(currentScannedPath);
 		if (fileFilter.getMinimumCollectionSizeForParallelIterationPredicate() == null) {
 			fileFilter.setMinimumCollectionSizeForParallelIteration(
-				this.minimumCollectionSizeForParallelIterationPredicate
+				fileSystemItems -> fileSystemItems.size() >= minimumCollectionSizeForParallelIteration
 			);
 		}
 		return fileFilter;
 	}
 	
-	public Predicate<Collection<?>> getMinimumCollectionSizeForParallelIterationPredicate() {
-		return minimumCollectionSizeForParallelIterationPredicate;
+	int getMinimumCollectionSizeForParallelIteration() {
+		return minimumCollectionSizeForParallelIteration;
 	}
 
 	boolean isFileFilterExternallySet() {
@@ -459,7 +449,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		destConfig.pathScannerClassLoader = this.pathScannerClassLoader;
 		destConfig.useDefaultPathScannerClassLoaderAsParent = this.useDefaultPathScannerClassLoaderAsParent;
 		destConfig.waitForSearchEnding = this.waitForSearchEnding;
-		destConfig.minimumCollectionSizeForParallelIterationPredicate = this.minimumCollectionSizeForParallelIterationPredicate;
+		destConfig.minimumCollectionSizeForParallelIteration = this.minimumCollectionSizeForParallelIteration;
 		return destConfig;
 	}
 	
@@ -479,6 +469,6 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		this.additionalFileFilterSupplier = null;
 		this.parentClassLoaderForPathScannerClassLoader = null;
 		this.pathScannerClassLoader = null;
-		this.minimumCollectionSizeForParallelIterationPredicate = null; 
+		this.minimumCollectionSizeForParallelIteration = null; 
 	}
 }

@@ -159,19 +159,17 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 							currentScannedPath,
 							scanAndAddToPathScannerClassLoader(context, currentScannedPath)
 						);
-						//Continue iteration
 						return true;
 					},
-					searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
+					coll -> coll.size() >= searchConfig.getMinimumCollectionSizeForParallelIteration()
 				);
 				IterableObjectHelper.iterateParallelIf(
 					classFilesForPath.entrySet(),
 					currentScannedPath -> {
 						testClassCriteriaAndAddItemsToContext(context, currentScannedPath);
-						//Continue iteration
 						return true;
 					},
-					searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()			
+					coll -> coll.size() >= searchConfig.getMinimumCollectionSizeForParallelIteration()			
 				);
 				Collection<String> skippedClassesNames = context.getSkippedClassNames();
 				if (!skippedClassesNames.isEmpty()) {
@@ -184,12 +182,11 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 		}
 
 		Collection<FileSystemItem> scanAndAddToPathScannerClassLoader(
-			C context,
-			FileSystemItem currentScannedPath
+			C context, FileSystemItem currentScannedPath
 		) {
 			SearchConfig searchConfig = context.searchConfig;
-			FileSystemItem.Criteria allFileFilters = searchConfig.getAllFileFilters(currentScannedPath);
 			PathScannerClassLoader pathScannerClassLoader = context.pathScannerClassLoader;
+			FileSystemItem.Criteria allFileFilters = searchConfig.getAllFileFilters(currentScannedPath);
 			if (searchConfig.useDefaultPathScannerClassLoaderAsParent ||
 				(!searchConfig.useDefaultPathScannerClassLoaderAsParent && !searchConfig.useDefaultPathScannerClassLoader && searchConfig.pathScannerClassLoader == null)) {
 				pathScannerClassLoader.setFileFilter(allFileFilters);
@@ -258,13 +255,11 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 		
 		void testClassCriteriaAndAddItemsToContext(
 			C context,
-			Map.Entry<FileSystemItem, Collection<FileSystemItem>> currentScannedPathAndChildren
+			Map.Entry<FileSystemItem, Collection<FileSystemItem>> currentScannedPath
 		) {
-			FileSystemItem currentScannedPath = currentScannedPathAndChildren.getKey();
-			String currentScannedAbsolutePath = currentScannedPath.getAbsolutePath();
-			FileSystemItem.Criteria allFileFilters = context.searchConfig.getAllFileFilters(currentScannedPath);
+			String currentScannedAbsolutePath = currentScannedPath.getKey().getAbsolutePath();
 			IterableObjectHelper.iterateParallelIf(
-				currentScannedPathAndChildren.getValue(),
+				currentScannedPath.getValue(),
 				child -> {
 					JavaClass javaClass = child.toJavaClass();
 					try {
@@ -279,10 +274,9 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 							throw exc;
 						}
 					}
-					//Continue iteration
 					return true;
 				},
-				allFileFilters.getMinimumCollectionSizeForParallelIterationPredicate()	
+				coll -> coll.size() >= context.searchConfig.getMinimumCollectionSizeForParallelIteration()	
 			);
 		}
 
