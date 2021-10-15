@@ -53,8 +53,6 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 </dependency>
 ```
 
-<br/>
-
 ### Requiring the Burningwave Core module
 
 To use Burningwave Core as a Java module, add the following to your `module-info.java`: 
