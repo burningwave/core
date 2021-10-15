@@ -15,6 +15,7 @@ import org.burningwave.core.bean.Complex;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ConstructorCriteria;
+import org.burningwave.core.classes.LinkedJavaClass;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchConfig;
@@ -201,7 +202,12 @@ public class ClassHunterTest extends BaseTest {
 					}
 					return FileSystemItem.Criteria.forClassTypeFiles(FileSystemItem.CheckingOption.FOR_NAME);
 				}
-			).useDefaultPathScannerClassLoaderAsParent(true)
+			).setLinkedJavaClassPredicate((linkedJavaClassContainer, linkedJavaClass) -> {
+				LinkedJavaClass anotherClass = linkedJavaClassContainer.find(java.math.BigDecimal.class.getName());
+				anotherClass.getSuperClass();
+				anotherClass.getInterfaces();
+				return true;
+			}).useDefaultPathScannerClassLoaderAsParent(true)
 		);
 
 	}
