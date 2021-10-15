@@ -32,7 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -44,10 +44,8 @@ import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.Properties.Event;
 
 public interface IterableObjectHelper {
-	public static int DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION = 2;
-	public final static Predicate<Collection<?>> DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE =
-		coll -> coll.size() >= DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION;
-	
+	public static Predicate<Collection<?>> DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE =
+			coll -> coll.size() >= 2;
 	
 	public static class Configuration {
 		public static class Key {
@@ -192,22 +190,22 @@ public interface IterableObjectHelper {
 
 	public <T, O> Collection<O> iterateParallelIf(
 		Collection<T> items,
-		Consumer<T> action,
+		Function<T, Boolean> action,
 		Predicate<Collection<?>> predicate
 	);
 
 	public <T, O> Collection<O> iterateParallelIf(
 		Collection<T> items,
-		BiConsumer<T, Consumer<O>> action,
+		BiFunction<T, Consumer<O>, Boolean> action,
 		Collection<O> outputCollection,
 		Predicate<Collection<?>> predicate
 	);
 
-	public <T, O> void iterateParallel(Collection<T> items, Consumer<T> action);
+	public <T, O> void iterateParallel(Collection<T> items, Function<T, Boolean> action);
 
 	public <T, O> Collection<O> iterateParallel(
 		Collection<T> items,
-		BiConsumer<T, Consumer<O>> action,
+		BiFunction<T, Consumer<O>, Boolean> action,
 		Collection<O> outputCollection
 	);
 
