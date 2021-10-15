@@ -349,7 +349,8 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		}
 		useDefaultPathScannerClassLoader = false;
 		useDefaultPathScannerClassLoaderAsParent = false;
-		parentClassLoaderForPathScannerClassLoader = classLoader;
+		parentClassLoaderForPathScannerClassLoader = null;
+		pathScannerClassLoader = classLoader;
 		return this;
 	}
 	
