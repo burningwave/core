@@ -418,10 +418,6 @@ public class Finder {
                 String packageName = javaClass.getPackageName();                       
                 return packageName != null && packageName.contains("springframework");
             })
-        ).by(
-            ClassCriteria.create().allThoseThatMatch((cls) -> {
-                return cls.getPackage().getName().matches(".*springframework.*");
-            })
         );
 
         try(ClassHunter.SearchResult searchResult = classHunter.findBy(searchConfig)) {
