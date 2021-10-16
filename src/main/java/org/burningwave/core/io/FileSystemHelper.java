@@ -74,8 +74,13 @@ public class FileSystemHelper implements Component {
 	}
 	
 	public void clearMainTemporaryFolder() {
-		if (mainTemporaryFolder != null) {
-			delete(getOrCreateMainTemporaryFolder());
+		if (this.mainTemporaryFolder != null) {
+			synchronized(this) {
+				File mainTemporaryFolder = this.mainTemporaryFolder;
+				if (mainTemporaryFolder != null) {
+					delete(mainTemporaryFolder);
+				}
+			};
 		}
 	}
 	
@@ -87,10 +92,14 @@ public class FileSystemHelper implements Component {
 		if (mainTemporaryFolder != null && mainTemporaryFolder.exists()) {
 			return mainTemporaryFolder;
 		}
-		synchronized (this) {
+		synchronized(this) {
 			if (mainTemporaryFolder != null && mainTemporaryFolder.exists()) {
 				return mainTemporaryFolder;
 			}			
+			if (mainTemporaryFolder != null && !mainTemporaryFolder.exists()) {
+				mainTemporaryFolder.mkdirs();
+				return mainTemporaryFolder;
+			}
 			mainTemporaryFolder = Executor.get(() -> {
 				File toDelete = File.createTempFile("_BW_TEMP_", "_temp");
 				File tempFolder = toDelete.getParentFile();
@@ -207,6 +216,7 @@ public class FileSystemHelper implements Component {
 		return Optional.ofNullable(name).map(nm -> nm + " - ").orElseGet(() -> "") + "Temporary file scavenger";
 	}
 	
+
 	@Override
 	public void close() {
 		if (this != StaticComponentContainer.FileSystemHelper || 
@@ -216,12 +226,14 @@ public class FileSystemHelper implements Component {
 			if (scavenger != null) {
 				scavenger.close();
 			}
-			closeResources(() -> id == null, () -> {
-				clearMainTemporaryFolder();
-				this.scavenger = null;
-				id = null;
-				mainTemporaryFolder = null;
-			});
+			synchronized(this) {
+				if (id != null) {
+					clearMainTemporaryFolder();
+					this.scavenger = null;
+					id = null;
+					mainTemporaryFolder = null;
+				}
+			};
 		} else {
 			Driver.throwException("Could not close singleton instance {}", this);
 		}

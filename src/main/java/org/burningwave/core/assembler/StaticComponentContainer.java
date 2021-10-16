@@ -70,7 +70,6 @@ public class StaticComponentContainer {
 			private static final String MODULES_EXPORT_ALL_TO_ALL = "modules.export-all-to-all";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED = "synchronizer.all-threads-monitoring.enabled";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";
-			private static final String ON_CLOSE_CLOSE_FILE_SYSTEM_HELPER = "static-component-container.on-close.close-file-system-helper";
 			private static final String ON_CLOSE_CLOSE_ALL_COMPONENT_CONTAINERS = "static-component-container.on-close.close-all-component-containers";
 		}
 		
@@ -140,11 +139,6 @@ public class StaticComponentContainer {
 			
 			defaultValues.put(
 				Key.ON_CLOSE_CLOSE_ALL_COMPONENT_CONTAINERS,
-				true
-			);
-			
-			defaultValues.put(
-				Key.ON_CLOSE_CLOSE_FILE_SYSTEM_HELPER,
 				true
 			);
 			
@@ -282,11 +276,13 @@ public class StaticComponentContainer {
 				Driver = Executor.get(() -> (Driver)StaticComponentContainer.class.getClassLoader().loadClass(
 					driverClassName
 				).getDeclaredConstructor().newInstance());
-			} else {
+				if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.JVM_DRIVER_INIT))) {
+					Driver.init();
+				}
+			} else if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.JVM_DRIVER_INIT))) {
 				Driver = io.github.toolfactory.jvm.Driver.Factory.getNew();
-			}			
-			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.JVM_DRIVER_INIT))) {
-				Driver.init();
+			} else {
+				Driver = io.github.toolfactory.jvm.Driver.Factory.getNewDynamic();
 			}			
 			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
 				getName("Thread supplier"),
@@ -352,14 +348,12 @@ public class StaticComponentContainer {
 							});
 						});
 					}
-					if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.ON_CLOSE_CLOSE_FILE_SYSTEM_HELPER))) {
-						closingOperations = closingOperations.andThen(() -> {
-							Executor.runAndIgnoreExceptions(() -> {
-								ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing FileSystemHelper");
-								FileSystemHelper.close();
-							});
+					closingOperations = closingOperations.andThen(() -> {
+						Executor.runAndIgnoreExceptions(() -> {
+							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing FileSystemHelper");
+							FileSystemHelper.close();
 						});
-					}
+					});
 					closingOperations = closingOperations.andThen(() -> {
 						Executor.runAndIgnoreExceptions(() -> {
 							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "... Waiting for all tasks ending before shutting down the BackgroundExecutor");

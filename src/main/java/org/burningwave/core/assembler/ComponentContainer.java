@@ -288,7 +288,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 	
 	public static ComponentContainer getInstance() {
-		return LazyHolder.getComponentContainerInstance();
+		return Holder.getComponentContainerInstance();
 	}
 	
 	public String getConfigProperty(String propertyName) {
@@ -536,7 +536,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				instanceId = null;
 			});
 		} else {
-			Driver.throwException("Could not close singleton instance {}", LazyHolder.COMPONENT_CONTAINER_INSTANCE);
+			Driver.throwException("Could not close singleton instance {}", Holder.INSTANCE);
 		}
 	}
 	
@@ -602,11 +602,11 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 
 	
-	private static class LazyHolder {
-		private static final ComponentContainer COMPONENT_CONTAINER_INSTANCE = ComponentContainer.create("burningwave.properties").markAsUndestroyable();
+	private static class Holder {
+		private static final ComponentContainer INSTANCE = ComponentContainer.create("burningwave.properties").markAsUndestroyable();
 		
 		private static ComponentContainer getComponentContainerInstance() {
-			return COMPONENT_CONTAINER_INSTANCE;
+			return INSTANCE;
 		}
 	}
 
