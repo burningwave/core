@@ -1069,7 +1069,7 @@ iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-coun
 #It is also possible to use a custom JVM Driver which implements the org.burningwave.jvm.Driver interface.
 #Other possible values are: org.burningwave.jvm.HybridDriver, org.burningwave.jvm.HybridDriver
 jvm.driver.type=\
-	org.burningwave.jvm.DefaultDriver
+	org.burningwave.jvm.DynamicDriver
 jvm.driver.init=\
 	false
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
