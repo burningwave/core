@@ -70,7 +70,6 @@ public class StaticComponentContainer {
 			private static final String MODULES_EXPORT_ALL_TO_ALL = "modules.export-all-to-all";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED = "synchronizer.all-threads-monitoring.enabled";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";
-			private static final String ON_CLOSE_CLOSE_ALL_COMPONENT_CONTAINERS = "static-component-container.on-close.close-all-component-containers";
 		}
 		
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -136,11 +135,6 @@ public class StaticComponentContainer {
 				Key.JVM_DRIVER_INIT,
 				false
 			);			
-			
-			defaultValues.put(
-				Key.ON_CLOSE_CLOSE_ALL_COMPONENT_CONTAINERS,
-				true
-			);
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
@@ -340,14 +334,12 @@ public class StaticComponentContainer {
 							BackgroundExecutor.waitForTasksEnding(true, true);
 						});
 					};
-					if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.ON_CLOSE_CLOSE_ALL_COMPONENT_CONTAINERS))) {
-						closingOperations = closingOperations.andThen(() -> {
-							Executor.runAndIgnoreExceptions(() -> {
-								ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing all component containers");
-								ComponentContainer.closeAll();
-							});
+					closingOperations = closingOperations.andThen(() -> {
+						Executor.runAndIgnoreExceptions(() -> {
+							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing all component containers");
+							ComponentContainer.closeAll();
 						});
-					}
+					});
 					closingOperations = closingOperations.andThen(() -> {
 						Executor.runAndIgnoreExceptions(() -> {
 							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing FileSystemHelper");

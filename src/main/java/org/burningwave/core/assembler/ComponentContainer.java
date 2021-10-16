@@ -546,6 +546,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 	
 	static void closeAll() {
+		boolean clearCache = !instances.isEmpty();
 		for (ComponentContainer componentContainer : instances) {
 			try {
 				componentContainer.close(true);
@@ -553,7 +554,9 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception occurred while closing " + componentContainer, exc);
 			}
 		}
-		Cache.clear();
+		if (clearCache) {
+			Cache.clear();
+		}
 		System.gc();
 	}
 	
