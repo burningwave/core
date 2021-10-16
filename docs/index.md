@@ -1093,10 +1093,6 @@ modules.export-all-to-all=\
 	true
 #mandatory if more burningwave.static.properties file are in the class paths
 priority-of-this-configuration-file=0
-static-component-container.on-close.close-all-component-containers=\
-	false
-static-component-container.on-close.close-file-system-helper=\
-	false
 synchronizer.all-threads-monitoring.enabled=\
 	false
 synchronizer.all-threads-monitoring.interval=\
