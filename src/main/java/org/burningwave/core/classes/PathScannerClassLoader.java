@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
@@ -51,7 +52,6 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-
 
 
 public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryClassLoader {
