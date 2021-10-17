@@ -1067,7 +1067,7 @@ iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-coun
 #This property is optional: if it is not provided then the org.burningwave.jvm.Driver.Factory.getNew is
 #used to retrieve a Driver instance
 #It is also possible to use a custom JVM Driver which implements the org.burningwave.jvm.Driver interface.
-#Other possible values are: org.burningwave.jvm.HybridDriver, org.burningwave.jvm.HybridDriver
+#Other possible values are: org.burningwave.jvm.DefaultDriver, org.burningwave.jvm.HybridDriver, org.burningwave.jvm..NativeDriver
 jvm.driver.type=\
 	org.burningwave.jvm.DynamicDriver
 jvm.driver.init=\
