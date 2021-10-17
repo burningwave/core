@@ -126,14 +126,14 @@ public class Resources {
 					resourceURL.openStream()
 				);
 			} catch (Throwable exc) {
-				try {
-					streams.put(
-						resourceURL,
-						FileSystemItem.of(resourceURL).toInputStream()
-					);
-				} catch (Throwable exc2) {
+//				try {
+//					streams.put(
+//						resourceURL,
+//						FileSystemItem.of(resourceURL).toInputStream()
+//					);
+//				} catch (Throwable exc2) {
 					return Driver.throwException(exc);
-				}
+//				}
 			}
 		}
 		return streams;
@@ -166,14 +166,14 @@ public class Resources {
 					resourceURL.openStream()
 				);
 			} catch (Throwable exc) {
-				try {
-					return new AbstractMap.SimpleImmutableEntry<>(
-						resourceURL,
-						FileSystemItem.of(resourceURL).toInputStream()
-					);
-				} catch (Throwable exc2) {
+//				try {
+//					return new AbstractMap.SimpleImmutableEntry<>(
+//						resourceURL,
+//						FileSystemItem.of(resourceURL).toInputStream()
+//					);
+//				} catch (Throwable exc2) {
 					return Driver.throwException(exc);
-				}
+//				}
 			}
 		}
 		return EMPTY_RESOURCE;
