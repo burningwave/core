@@ -29,8 +29,8 @@
 package org.burningwave.core.classes;
 
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 
 import java.util.AbstractMap;
 import java.util.Arrays;
@@ -238,7 +238,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		for (Collection<String> pathColl : pathColls) {
 			pathsSupplier = pathsSupplier.andThen(classLoaderAndPaths -> {
 				classLoaderAndPaths.getValue().addAll(
-					ClassLoaders.getResources(
+					Resources.getAsFileSystemItems(
 						classLoader != null? classLoader : classLoaderAndPaths.getKey(),
 						pathColl
 					)

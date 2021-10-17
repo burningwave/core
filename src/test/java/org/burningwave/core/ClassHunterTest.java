@@ -96,29 +96,6 @@ public class ClassHunterTest extends BaseTest {
 	}
 	
 	@Test
-	public void getResourceAsStreamTestTwo() {
-		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.closeHuntersSearchResults();
-		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
-				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
-				)
-			),
-			(result) -> {
-				Collection<Class<?>> classes = result.getClasses();
-				Iterator<Class<?>> itr = classes.iterator();
-				Class<?> cls = itr.next();
-				while(cls.getClassLoader() == null || !(cls.getClassLoader() instanceof PathScannerClassLoader)) {
-					cls = itr.next();
-				}
-				return ((PathScannerClassLoader)cls.getClassLoader()).getResourcesAsStream("META-INF/MANIFEST.MF").values();
-				
-			}
-		);
-	}
-	
-	@Test
 	public void refreshCacheTestOne() throws Exception {
 		findAllTestOne();
 		ComponentSupplier componentSupplier = getComponentSupplier();

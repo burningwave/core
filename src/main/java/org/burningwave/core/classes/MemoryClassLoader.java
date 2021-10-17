@@ -36,6 +36,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
+import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
@@ -254,11 +255,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
     @Override
     public InputStream getResourceAsStream(String name) {
-    	ClassLoader parentClassLoader = ClassLoaders.getParent(this);
-    	InputStream inputStream = null;
-    	if (parentClassLoader != null) {
-    		inputStream = parentClassLoader.getResourceAsStream(name);
-    	}
+    	InputStream inputStream = Resources.getAsInputStream(name, this, true).getValue();
     	if (inputStream == null && name.endsWith(".class")) {
     		inputStream = getByteCodeAsInputStream(name);
     	}

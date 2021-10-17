@@ -579,7 +579,11 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				} 
 				: null;
 			for (T item : items) {
-				action.accept(item, outputItemCollector);
+				try {
+					action.accept(item, outputItemCollector);
+				} catch (IterableObjectHelper.TerminatedIterationException exc) {
+					
+				}	
 			}
 			return outputCollection;
 		}		

@@ -454,11 +454,11 @@ public class StaticComponentContainer {
 	};
 	
 	static void showBanner() throws IOException {
-		try (InputStream inputStream = Resources.getFirstFoundAsInputStreams(
+		try (InputStream inputStream = Resources.getAsInputStream(
 			GlobalProperties.resolveValue(Configuration.Key.BANNER_FILE),
 			Component.class.getClassLoader(),
-			Thread.currentThread().getContextClassLoader()
-		)) {
+			Thread.currentThread().getContextClassLoader()			
+		).getValue()) {
 			List<String> bannerList = Arrays.asList(
 				Resources.getAsStringBuffer(
 					inputStream

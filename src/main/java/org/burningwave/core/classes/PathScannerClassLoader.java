@@ -32,6 +32,7 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.io.IOException;
@@ -42,10 +43,8 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -167,11 +166,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	
 	@Override
 	public URL getResource(String name) {
-		ClassLoader parentClassLoader = ClassLoaders.getParent(this);
-		URL url = null;
-		if (parentClassLoader != null) {
-			url = parentClassLoader.getResource(name);
-		}
+		URL url = Resources.get(name, this, true);
 		if (url != null) {
 			return url;
 		}
@@ -194,7 +189,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	
 	@Override
 	public Enumeration<URL> getResources(String name) throws IOException {
-		List<URL> resourcesFound = getResourcesURLFromParent(name);
+		Collection<URL> resourcesFound = Resources.getAll(name, this, true);
 		FileSystemItem.Criteria scanFileCriteria = FileSystemItem.Criteria.forAllFileThat(child -> {
 			if (child.isFile() && child.getAbsolutePath().endsWith("/" + name)) {
 				resourcesFound.add(child.getURL());
@@ -208,17 +203,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		return Collections.enumeration(resourcesFound);
 	}
 
-	List<URL> getResourcesURLFromParent(String name) throws IOException {
-		ClassLoader parentClassLoader = ClassLoaders.getParent(this);
-		List<URL> resourcesFound = new CopyOnWriteArrayList<>();
-		if (parentClassLoader != null) {
-			Enumeration<URL> urlEnum = parentClassLoader.getResources(name);
-			while (urlEnum.hasMoreElements()) {
-				resourcesFound.add(urlEnum.nextElement());
-			}
-		}
-		return resourcesFound;
-	}
 	
 	@Override
 	public InputStream getResourceAsStream(String name) {
@@ -242,21 +226,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		}
 		return null;
 	}
-	
-	public Map<String, InputStream> getResourcesAsStream(String name) {
-		Map<String, InputStream> inputStreams = new ConcurrentHashMap<>();
-		FileSystemItem.Criteria scanFileCriteria = FileSystemItem.Criteria.forAllFileThat(child -> {
-			if (child.isFile() && child.getAbsolutePath().endsWith("/" + name)) {
-				inputStreams.put(child.getAbsolutePath(), child.toInputStream());
-				return true;
-			}
-			return false;
-		});
-		for (String loadedPath : loadedPaths.keySet()) {
-			FileSystemItem.ofPath(loadedPath).findInAllChildren(scanFileCriteria);
-		}
-		return inputStreams;
-	}
+
 	
 	public boolean hasBeenCompletelyLoaded(String path) {
 		Boolean hasBeenCompletelyLoaded = loadedPaths.get(path);

@@ -39,10 +39,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 
 public class Resources {
@@ -146,7 +149,7 @@ public class Resources {
 		);
 	}
 	
-	public Map.Entry<URL, InputStream> getAsInputStream(String resourceRelativePath, Supplier<Collection<URL>> resourceSupplier) {
+	private Map.Entry<URL, InputStream> getAsInputStream(String resourceRelativePath, Supplier<Collection<URL>> resourceSupplier) {
 		try {
 			Collection<URL> resourceURLs = resourceSupplier.get();
 			if (!resourceURLs.isEmpty()) {
@@ -161,14 +164,6 @@ public class Resources {
 		}
 		return EMPTY_RESOURCE;
 	}
-	
-	public InputStream getFirstFoundAsInputStreams(String resourceRelativePath, ClassLoader... resourceClassLoaders) throws IOException {
-		Map<URL, InputStream> inputStreams = getAsInputStreams(resourceRelativePath, resourceClassLoaders);
-		if (!inputStreams.isEmpty()) {
-			return inputStreams.values().iterator().next();
-		}
-		return null;
-	}
 
 	
 	public FileSystemItem get(Class<?> cls) {
@@ -182,8 +177,10 @@ public class Resources {
 	}
 	
 	
-	public StringBuffer getFirstFoundAsStringBuffer(String resourceRelativePath, ClassLoader... resourceClassLoaders) throws IOException {
-		return getAsStringBuffer(getFirstFoundAsInputStreams(resourceRelativePath, resourceClassLoaders));
+	public StringBuffer getAsStringBuffer(String resourceRelativePath, ClassLoader resourceClassLoader, boolean onlyParents) throws IOException {
+		try (InputStream inputSteram = getAsInputStream(resourceRelativePath, resourceClassLoader, onlyParents).getValue()) {
+			return getAsStringBuffer(inputSteram);
+		}
 	}
 	
 	
@@ -203,4 +200,23 @@ public class Resources {
 		}
 	}
 	
+	@SafeVarargs
+	public final Collection<FileSystemItem> getAsFileSystemItems(ClassLoader classLoader, String... paths) {
+		return getAsFileSystemItems(classLoader, Arrays.asList(paths)); 
+	}	
+	
+	@SafeVarargs
+	public final Collection<FileSystemItem> getAsFileSystemItems(ClassLoader classLoader, Collection<String>... pathCollections) {
+		Collection<FileSystemItem> paths = new HashSet<>();
+		for (Collection<String> pathCollection : pathCollections) {
+			for (String path : pathCollection) {
+				paths.addAll(
+					getAll(path, classLoader, false).stream().map(url ->
+						FileSystemItem.of(url)
+					).collect(Collectors.toSet())
+				);
+			}
+		}
+		return paths;
+	}
 }

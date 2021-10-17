@@ -44,7 +44,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;
@@ -61,7 +60,6 @@ import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -197,6 +195,14 @@ public class Classes implements MembersRetriever {
 		return Streams.toByteBuffer(
 			java.util.Objects.requireNonNull(inputStream, "Could not acquire bytecode for class " + cls.getName())
 		);
+//		InputStream inputStream = Resources.getAsInputStream(
+//			cls.getName().replace(".", "/") + ".class",
+//			clsLoader,
+//			false
+//		).getValue();
+//		return Streams.toByteBuffer(
+//			java.util.Objects.requireNonNull(inputStream, "Could not acquire bytecode for class " + cls.getName())
+//		);
 	}
 	
 	public <T> T newInstance(Constructor<T> ctor, Object... params) {
@@ -946,30 +952,7 @@ public class Classes implements MembersRetriever {
 			}
 			return null;
 		}
-		
-		@SafeVarargs
-		public final Collection<FileSystemItem> getResources(ClassLoader classLoader, String... paths) {
-			return getResources(classLoader, Arrays.asList(paths)); 
-		}	
-		
-		@SafeVarargs
-		public final Collection<FileSystemItem> getResources(ClassLoader classLoader, Collection<String>... pathCollections) {
-			Collection<FileSystemItem> paths = new HashSet<>();
-			for (Collection<String> pathCollection : pathCollections) {
-				for (String path : pathCollection) {
-					try {
-						paths.addAll(
-							Collections.list(classLoader.getResources(path)).stream().map(url ->
-								FileSystemItem.of(url)
-							).collect(Collectors.toSet())
-						);
-					} catch (IOException exc) {
-						Driver.throwException(exc);
-					}
-				}
-			}
-			return paths;
-		}
+
 		
 		public void unregister(ClassLoader classLoader) {
 			classLoadersClasses.remove(classLoader);
