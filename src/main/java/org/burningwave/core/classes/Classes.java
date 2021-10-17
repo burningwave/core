@@ -195,6 +195,7 @@ public class Classes implements MembersRetriever {
 		return Streams.toByteBuffer(
 			java.util.Objects.requireNonNull(inputStream, "Could not acquire bytecode for class " + cls.getName())
 		);
+//		To be retested
 //		InputStream inputStream = Resources.getAsInputStream(
 //			cls.getName().replace(".", "/") + ".class",
 //			clsLoader,
