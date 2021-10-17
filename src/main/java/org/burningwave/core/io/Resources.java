@@ -125,8 +125,15 @@ public class Resources {
 					resourceURL,
 					resourceURL.openStream()
 				);
-			} catch (IOException exc) {
-				return Driver.throwException(exc);
+			} catch (Throwable exc) {
+				try {
+					streams.put(
+						resourceURL,
+						FileSystemItem.of(resourceURL).toInputStream()
+					);
+				} catch (Throwable exc2) {
+					return Driver.throwException(exc);
+				}
 			}
 		}
 		return streams;
@@ -150,17 +157,24 @@ public class Resources {
 	}
 	
 	private Map.Entry<URL, InputStream> getAsInputStream(String resourceRelativePath, Supplier<Collection<URL>> resourceSupplier) {
-		try {
-			Collection<URL> resourceURLs = resourceSupplier.get();
-			if (!resourceURLs.isEmpty()) {
-				URL resourceURL = resourceURLs.iterator().next();
+		Collection<URL> resourceURLs = resourceSupplier.get();
+		if (!resourceURLs.isEmpty()) {
+			URL resourceURL = resourceURLs.iterator().next();
+			try {
 				return new AbstractMap.SimpleImmutableEntry<>(
 					resourceURL,
 					resourceURL.openStream()
 				);
+			} catch (Throwable exc) {
+				try {
+					return new AbstractMap.SimpleImmutableEntry<>(
+						resourceURL,
+						FileSystemItem.of(resourceURL).toInputStream()
+					);
+				} catch (Throwable exc2) {
+					return Driver.throwException(exc);
+				}
 			}
-		} catch (IOException exc) {
-			return Driver.throwException(exc);
 		}
 		return EMPTY_RESOURCE;
 	}
