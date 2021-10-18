@@ -664,16 +664,16 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		ThrowingRunnable<?> iterator = () -> {
 			while (true) {
 				T item = null;
-				synchronized (itemIterator) {
-					try {
+				try {
+					synchronized (itemIterator) {
 						item = itemIterator.next();
-					} catch (Throwable exc) {
-						if (!itemIterator.hasNext()) {
-							break;
-						}
-						Driver.throwException(exc);
 					}
-				}
+				} catch (Throwable exc) {
+					if (!itemIterator.hasNext()) {
+						break;
+					}
+					Driver.throwException(exc);
+				} 
 				action.accept(item, outputItemCollector);
 			}
 		};
