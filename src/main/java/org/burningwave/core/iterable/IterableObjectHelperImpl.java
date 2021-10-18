@@ -661,7 +661,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 					}
 				: null;
 		Iterator<T> itemIterator = items.iterator();
-		ThrowingRunnable<?> iterator =() -> {
+		ThrowingRunnable<?> iterator = () -> {
 			while (true) {
 				T item = null;
 				synchronized (itemIterator) {
