@@ -1062,6 +1062,8 @@ group-name-for-named-elements=\
 	Burningwave
 iterable-object-helper.default-values-separator=\
 	;
+iterable-object-helper.parallel-iteration.applicability.default-minimum-collection-size=\
+	2
 iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\
 	autodetect
 #This property is optional: if it is not provided then the org.burningwave.jvm.Driver.Factory.getNew is
