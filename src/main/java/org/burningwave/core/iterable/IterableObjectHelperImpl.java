@@ -63,26 +63,45 @@ import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings("unchecked")
 public class IterableObjectHelperImpl implements IterableObjectHelper, Properties.Listener {
+	private Integer defaultMinimumCollectionSizeForParallelIteration;
+	private Predicate<Collection<?>> defaultMinimumCollectionSizeForParallelIterationPredicate = coll ->
+		coll.size() >= defaultMinimumCollectionSizeForParallelIteration;
+	
 	private String defaultValuesSeparator;
 	private int maxThreadCountsForParallelIteration;
 	
-	IterableObjectHelperImpl(String defaultValuesSeparator, int maxThreadCountsForParallelIteration) {
-		if (defaultValuesSeparator == null || defaultValuesSeparator.isEmpty()) {
-			defaultValuesSeparator = (String)Configuration.DEFAULT_VALUES.get(Configuration.Key.DEFAULT_VALUES_SEPERATOR);
-		}
-		this.defaultValuesSeparator = defaultValuesSeparator;
-		this.maxThreadCountsForParallelIteration = maxThreadCountsForParallelIteration;
+	IterableObjectHelperImpl(Properties config) {
+		this.defaultValuesSeparator = resolveStringValue(
+			config,
+			Configuration.Key.DEFAULT_VALUES_SEPERATOR
+		);
+		this.defaultMinimumCollectionSizeForParallelIteration = Objects.toInt(
+			resolveValue(
+				config,
+				Configuration.Key.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION
+			)
+		);
+		this.maxThreadCountsForParallelIteration = computeMaxRuntimeThreadsCountThreshold(config);
 	}
 
 	@Override
 	public String getDefaultValuesSeparator() {
 		return this.defaultValuesSeparator;
 	}
+	
 
-	static int computeMatxRuntimeThreadsCountThreshold(Properties config) {
+	@Override
+	public Predicate<Collection<?>> getDefaultMinimumCollectionSizeForParallelIterationPredicate() {
+		return defaultMinimumCollectionSizeForParallelIterationPredicate;
+	}
+
+	int computeMaxRuntimeThreadsCountThreshold(Properties config) {
 		try {
 			return Objects.toInt(
-				config.getProperty(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD)
+				resolveValue(
+					config,
+					Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD
+				)
 			);
 		} catch (Throwable exc) {
 			return Runtime.getRuntime().availableProcessors() * 12;
@@ -90,9 +109,20 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	}
 	
 	@Override
-	public <K, V> void processChangeNotification(Properties properties, Event event, K key, V newValue, V previousValue) {
+	public <K, V> void processChangeNotification(Properties config, Event event, K key, V newValue, V previousValue) {
 		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.DEFAULT_VALUES_SEPERATOR) && newValue != null) {
 			this.defaultValuesSeparator = (String)newValue;
+		}
+		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION) && newValue != null) {
+			this.defaultMinimumCollectionSizeForParallelIteration = Objects.toInt(
+				resolveValue(
+					config,
+					Configuration.Key.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION
+				)
+			);
+		}
+		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD)) {
+			this.maxThreadCountsForParallelIteration = computeMaxRuntimeThreadsCountThreshold(config);
 		}
 	}
 	
@@ -569,6 +599,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		Collection<O> outputCollection,
 		Predicate<Collection<?>> predicate
 	) {
+		if (predicate == null) {
+			predicate = this.defaultMinimumCollectionSizeForParallelIterationPredicate;
+		}
 		if (predicate.test(items) && maxThreadCountsForParallelIteration >= Synchronizer.getAllThreads().size()) {
 			return iterateParallel(items, action, outputCollection);
 		} else {
@@ -675,4 +708,5 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		private static final long serialVersionUID = -8096435103182655041L;
 		
 	}
+
 }

@@ -315,9 +315,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		final Collection<FileSystemItem> result = IterableObjectHelper.iterateParallelIf(
 			children, action, 
 			outputCollectionSupplier.get(),
-			filter.minimumCollectionSizeForParallelIterationPredicate != null ?
-				filter.minimumCollectionSizeForParallelIterationPredicate :			
-					org.burningwave.core.iterable.IterableObjectHelper.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE
+			filter.minimumCollectionSizeForParallelIterationPredicate
 		);		
 		if (!iteratedFISWithErrors.isEmpty()) {
 			Predicate<FileSystemItem[]> nativePredicateWithExceptionManaging = filter.getPredicateOrTruePredicateIfPredicateIsNull();
@@ -1251,7 +1249,11 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				Criteria targetCriteria) {
 			targetCriteria = super.logicOperation(leftCriteria, rightCriteria, binaryOperator, targetCriteria);
 			targetCriteria.setExceptionHandler(rightCriteria.exceptionHandler);
-			targetCriteria.setMinimumCollectionSizeForParallelIteration(rightCriteria.minimumCollectionSizeForParallelIterationPredicate);
+			Predicate<Collection<?>> minimumCollectionSizeForParallelIterationPredicate = 
+				rightCriteria.minimumCollectionSizeForParallelIterationPredicate == null ?
+						leftCriteria.minimumCollectionSizeForParallelIterationPredicate :
+						rightCriteria.minimumCollectionSizeForParallelIterationPredicate;
+			targetCriteria.setMinimumCollectionSizeForParallelIteration(minimumCollectionSizeForParallelIterationPredicate);
 			return targetCriteria;
 		}
 		

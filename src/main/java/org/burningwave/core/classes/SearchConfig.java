@@ -146,10 +146,6 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		} else {
 			fileFiltersExtenallySet = Boolean.TRUE;
 		}
-		if (minimumCollectionSizeForParallelIterationPredicate == null) {
-			minimumCollectionSizeForParallelIterationPredicate = 
-				org.burningwave.core.iterable.IterableObjectHelper.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE;
-		}
 		PathScannerClassLoader pathScannerClassLoader = this.pathScannerClassLoader;
 		PathScannerClassLoader defaultPathScannerClassLoader = classPathScanner.getDefaultPathScannerClassLoader(this);
 		if (pathScannerClassLoader == null) {

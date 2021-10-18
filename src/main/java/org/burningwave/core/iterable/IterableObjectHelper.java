@@ -44,14 +44,16 @@ import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.Properties.Event;
 
 public interface IterableObjectHelper {
-	public static Predicate<Collection<?>> DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE =
-			coll -> coll.size() >= 2;
 	
 	public static class Configuration {
 		public static class Key {
 			public final static String DEFAULT_VALUES_SEPERATOR = "iterable-object-helper.default-values-separator";
 			public final static String PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD =
 				"iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold";
+			public final static String DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION = 
+				""
+				+ ""
+				+ "";
 		}
 		
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -62,20 +64,20 @@ public interface IterableObjectHelper {
 			defaultValues.put(Key.DEFAULT_VALUES_SEPERATOR, ";");
 			
 			defaultValues.put(Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD, "autodetect");
+			
+			defaultValues.put(Key.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION, 2);
 						
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
 	
 	public static IterableObjectHelper create(Properties config) {
-		IterableObjectHelperImpl iterableObjectHelper = new IterableObjectHelperImpl(
-			config.getProperty(Configuration.Key.DEFAULT_VALUES_SEPERATOR),
-			IterableObjectHelperImpl.computeMatxRuntimeThreadsCountThreshold(config)
-		);
+		IterableObjectHelperImpl iterableObjectHelper = new IterableObjectHelperImpl(config);
 		iterableObjectHelper.listenTo(config);
 		return iterableObjectHelper;
 	}
 	
+	public Predicate<Collection<?>> getDefaultMinimumCollectionSizeForParallelIterationPredicate();
 	
 	public String getDefaultValuesSeparator();
 
