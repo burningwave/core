@@ -29,6 +29,7 @@
 package org.burningwave.core.iterable;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -47,6 +48,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -57,8 +59,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.function.ThrowingBiConsumer;
+import org.burningwave.core.function.ThrowingBiPredicate;
 import org.burningwave.core.function.ThrowingConsumer;
+import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings("unchecked")
@@ -66,6 +71,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	private Predicate<Collection<?>> defaultMinimumCollectionSizeForParallelIterationPredicate;
 	private String defaultValuesSeparator;
 	private int maxThreadCountsForParallelIteration;
+
 	
 	IterableObjectHelperImpl(Properties config) {
 		this.defaultValuesSeparator = resolveStringValue(
@@ -619,7 +625,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				for (T item : items) {
 					action.accept(item, outputItemCollector);
 				}
-			} catch (IterableObjectHelper.TerminateIteration semaphore) {}
+			} catch (IterableObjectHelper.TerminateIteration t) {}
 			return outputCollection;
 		}		
 	}
@@ -643,12 +649,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		BiConsumer<T, Consumer<O>> action,
 		Collection<O> outputCollection
 	) {
-		Iterator<T> itemIterator = items.iterator();
 		Consumer<O> outputItemCollector =
 			outputCollection != null ?
-				outputCollection.getClass().getName().startsWith(ConcurrentHashMap.class.getName()) ||
-				outputCollection instanceof CopyOnWriteArrayList ||
-				outputCollection instanceof CopyOnWriteArraySet ?	
+				isConcurrent(outputCollection) ?
 					outputItem -> {
 						outputCollection.add(outputItem);
 					} : 
@@ -658,27 +661,47 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						}
 					}
 				: null;
+		Iterator<T> itemIterator = items.iterator();
+		ThrowingRunnable<?> iterator =() -> {
+			while (true) {
+				T item = null;
+				synchronized (itemIterator) {
+					item = itemIterator.next();
+				}
+				action.accept(item, outputItemCollector);
+			}
+		};
+		AtomicReference<Throwable> exceptionWrapper = new AtomicReference<>();
+		ThrowingBiPredicate<Task, Throwable, Throwable> exceptionHandler = (task, exception) -> {
+			if (exception instanceof NoSuchElementException || 
+				exception instanceof IterableObjectHelper.TerminateIteration
+			) {
+				exceptionWrapper.set(exception);
+				return true;
+			}
+			return false;
+		};
 		Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
 		int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items.size());
-		for (int i = 0; i < taskCount; i++) {
+		for (int i = 0; i < taskCount && exceptionWrapper.get() == null; i++) {
 			tasks.add(
-				BackgroundExecutor.createTask(() -> {
-					try {
-						while (true) {
-							T item = null;
-							synchronized (itemIterator) {
-								item = itemIterator.next();
-							}
-							action.accept(item, outputItemCollector);
-						}
-					} catch (NoSuchElementException | IterableObjectHelper.TerminateIteration exc) {}	
-				}).submit()
+				BackgroundExecutor.createTask(iterator).setExceptionHandler(exceptionHandler).submit()
 			);
 		}
 		tasks.stream().forEach(task -> task.waitForFinish());
 		return outputCollection;
 	}
-
+	
+	private boolean isConcurrent(Collection<?> coll) {
+		//Also include ConcurrentHashMap.KeySetView, ConcurrentHashMap.ValuesView, ConcurrentHashMap.EntrySetView
+		return
+			coll instanceof ConcurrentHashMap ||
+			coll instanceof ConcurrentHashMap.KeySetView ||
+			coll instanceof CopyOnWriteArrayList ||
+			coll instanceof CopyOnWriteArraySet ||
+			Classes.java_util_concurrent_ConcurrentHashMap_CollectionViewClass.isAssignableFrom(coll.getClass()) ||
+			coll.getClass().getName().startsWith(ConcurrentHashMap.class.getName());
+	}
 	
 	private String toPrettyKeyValueLabel(Entry<?, ?> entry, String valuesSeparator, int marginTabCount) {
 		String margin = new String(new char[marginTabCount]).replace('\0', '\t');
