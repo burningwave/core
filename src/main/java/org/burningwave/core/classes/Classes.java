@@ -63,11 +63,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -79,8 +77,6 @@ import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.classes.Fields.NoSuchFieldException;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
-
-import io.github.toolfactory.jvm.util.CleanableSupplier;
 
 @SuppressWarnings({"unchecked", "resource"})
 public class Classes implements MembersRetriever {
@@ -290,22 +286,39 @@ public class Classes implements MembersRetriever {
 	}
 	
 	public static class Loaders implements Closeable {
-		protected Map<ClassLoader, CleanableSupplier<Collection<Class<?>>>> classLoadersClasses;
 		protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 		protected Map<String, MethodHandle> classLoadersMethods;
 		protected Field builtinClassLoaderClassParentField;
+		protected Collection<NotificationListenerOfParentsChange> registeredNotificationListenerOfParentsChange;
+		
 		private Loaders() {
-			this.classLoadersClasses = new HashMap<>();
 			this.classLoadersPackages = new HashMap<>();
 			this.classLoadersMethods = new HashMap<>();
 			Class<?> builtinClassLoaderClass = Driver.getBuiltinClassLoaderClass();
 			if (builtinClassLoaderClass != null) {
 				this.builtinClassLoaderClassParentField = Fields.findFirstAndMakeItAccessible(builtinClassLoaderClass, "parent", builtinClassLoaderClass);
 			}
+			registeredNotificationListenerOfParentsChange = new HashSet<>();
 		}
 		
 		public static Loaders create() {
 			return new Loaders();
+		}
+		
+		public void registerNotificationListenerOfParentsChange(NotificationListenerOfParentsChange listener) {
+			synchronized (registeredNotificationListenerOfParentsChange) {
+				this.registeredNotificationListenerOfParentsChange.add(listener);
+			}
+		}
+		
+		public void notifyParentsChange(ChangeParentsContext context) {
+			this.registeredNotificationListenerOfParentsChange.stream().forEach(listener -> listener.receive(context));
+		}
+		
+		public void unregisterNotificationListenerOfParentsChange(NotificationListenerOfParentsChange listener) {
+			synchronized (registeredNotificationListenerOfParentsChange) {
+				this.registeredNotificationListenerOfParentsChange.remove(listener);
+			}
 		}
 		
 		public Collection<ClassLoader> getAllParents(ClassLoader classLoader) {
@@ -343,10 +356,20 @@ public class Classes implements MembersRetriever {
 			ClassLoader futureParent = futureParentTemp;
 			checkAndRegisterOrUnregisterMemoryClassLoaders(target, targetExParent, originalFutureParent);		
 			Fields.setDirect(target, "parent", futureParent);
+			notifyParentsChange(
+				new ChangeParentsContext(
+					target, futureParent, targetExParent
+				)
+			);
 			return (reset) -> {
 				if (reset) {
 					checkAndRegisterOrUnregisterMemoryClassLoaders(target, originalFutureParent, targetExParent);
 					Fields.setDirect(target, "parent", targetExParent);
+					notifyParentsChange(
+						new ChangeParentsContext(
+							target, targetExParent, futureParent
+						)
+					);
 				}
 				return targetExParent;
 			};
@@ -494,38 +517,6 @@ public class Classes implements MembersRetriever {
 				}
 			}
 			return method;
-		}
-		
-		private CleanableSupplier<Collection<Class<?>>> retrieveCleanableSupplier(ClassLoader classLoader) {
-			CleanableSupplier<Collection<Class<?>>> clenableSupplier = classLoadersClasses.get(classLoader);
-			if (clenableSupplier != null) {
-				return clenableSupplier;
-			} else {
-				synchronized (classLoadersClasses) {
-					if ((clenableSupplier = classLoadersClasses.get(classLoader)) == null) {
-						classLoadersClasses.put(classLoader, (clenableSupplier = Driver.getLoadedClassesRetriever(classLoader)));
-					}
-				}
-			}
-			return clenableSupplier;
-		}
-		
-		public Collection<Class<?>> retrieveLoadedClasses(ClassLoader classLoader) {
-			return retrieveCleanableSupplier(classLoader).get();
-		}
-		
-		public void clearLoadedClasses(ClassLoader classLoader) {
-			retrieveCleanableSupplier(classLoader).clear();
-		}
-		
-		public Collection<Class<?>> retrieveAllLoadedClasses(ClassLoader classLoader) {
-			Collection<Class<?>> allLoadedClasses = new LinkedHashSet<>();
-			allLoadedClasses.addAll(retrieveLoadedClasses(classLoader));
-			ClassLoader parentClassLoader = getParent(classLoader);
-			if (parentClassLoader != null) {
-				allLoadedClasses.addAll(retrieveAllLoadedClasses(parentClassLoader));
-			}
-			return allLoadedClasses;
 		}
 		
 		public Map<String, ?> retrieveLoadedPackages(ClassLoader classLoader) {
@@ -746,44 +737,7 @@ public class Classes implements MembersRetriever {
 				}	
 			}
 		}
-		
-		public <T> Class<T> retrieveLoadedClass(ClassLoader classLoader, String className) {
-			Collection<Class<?>> definedClasses = retrieveLoadedClasses(classLoader);
-			synchronized(definedClasses) {
-				Iterator<?> itr = definedClasses.iterator();
-				while(itr.hasNext()) {
-					Class<?> cls = (Class<?>)itr.next();
-					if (cls.getName().equals(className)) {
-						return (Class<T>) cls;
-					}
-				}
-			}
-			ClassLoader parentClassLoader = getParent(classLoader);
-			if (parentClassLoader != null) {
-				return retrieveLoadedClass(parentClassLoader, className);
-			}
-			return null;
-		}	
-		
-		public Set<Class<?>> retrieveLoadedClassesForPackage(ClassLoader classLoader, Predicate<Package> packagePredicate) {
-			Set<Class<?>> classesFound = new HashSet<>();
-			Collection<Class<?>> definedClasses = retrieveLoadedClasses(classLoader);
-			synchronized(definedClasses) {
-				Iterator<?> itr = definedClasses.iterator();
-				while(itr.hasNext()) {
-					Class<?> cls = (Class<?>)itr.next();
-					Package classPackage = cls.getPackage();
-					if (packagePredicate.test(classPackage)) {
-						classesFound.add(cls);
-					}
-				}
-			}
-			ClassLoader parentClassLoader = getParent(classLoader);
-			if (parentClassLoader != null) {
-				classesFound.addAll(retrieveLoadedClassesForPackage(parentClassLoader, packagePredicate));
-			}
-			return classesFound;
-		}
+
 		
 		public Package retrieveLoadedPackage(ClassLoader classLoader, String packageName) {
 			Map<String, ?> packages = retrieveLoadedPackages(classLoader);
@@ -960,15 +914,12 @@ public class Classes implements MembersRetriever {
 
 		
 		public void unregister(ClassLoader classLoader) {
-			classLoadersClasses.remove(classLoader);
 			classLoadersPackages.remove(classLoader);
 		}
 		
 		@Override
 		public void close() {
 			if (this != StaticComponentContainer.ClassLoaders) {
-				this.classLoadersClasses.clear();
-				this.classLoadersClasses = null;
 				this.classLoadersMethods.clear();
 				this.classLoadersMethods = null;
 				this.classLoadersPackages.clear();
@@ -990,7 +941,41 @@ public class Classes implements MembersRetriever {
 			public UnsupportedException(String s, Throwable cause) {
 				super(s, cause);
 			}
-		}	
+		}
+		
+		public static interface NotificationListenerOfParentsChange {
+			
+			public void receive(ChangeParentsContext context);
+			
+		}
+		
+		public static class ChangeParentsContext extends org.burningwave.core.Context {
+			
+			private enum Elements {
+				TARGET,
+				NEW_PARENT,
+				OLD_PARENT
+			}
+			
+			private ChangeParentsContext(ClassLoader target, ClassLoader newParent, ClassLoader oldParent) {
+				put(Elements.TARGET, target);
+				put(Elements.NEW_PARENT, newParent);
+				put(Elements.OLD_PARENT, oldParent);
+			}
+			
+			public <C extends ClassLoader> C getTarget() {
+				return get(Elements.TARGET);
+			}
+			
+			public <C extends ClassLoader> C getNewParent() {
+				return get(Elements.NEW_PARENT);
+			}
+			
+			public <C extends ClassLoader> C getOldParent() {
+				return get(Elements.OLD_PARENT);
+			}
+		}
+		
 	}
 
 }
