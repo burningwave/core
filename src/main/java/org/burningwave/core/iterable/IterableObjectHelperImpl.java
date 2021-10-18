@@ -42,7 +42,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -666,16 +665,21 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			while (true) {
 				T item = null;
 				synchronized (itemIterator) {
-					item = itemIterator.next();
+					try {
+						item = itemIterator.next();
+					} catch (Throwable exc) {
+						if (!itemIterator.hasNext()) {
+							break;
+						}
+						Driver.throwException(exc);
+					}
 				}
 				action.accept(item, outputItemCollector);
 			}
 		};
 		AtomicReference<Throwable> exceptionWrapper = new AtomicReference<>();
 		ThrowingBiPredicate<Task, Throwable, Throwable> exceptionHandler = (task, exception) -> {
-			if (exception instanceof NoSuchElementException || 
-				exception instanceof IterableObjectHelper.TerminateIteration
-			) {
+			if (exception == IterableObjectHelper.TerminateIteration.NOTIFICATION) {
 				exceptionWrapper.set(exception);
 				return true;
 			}
