@@ -28,12 +28,12 @@
  */
 package org.burningwave.core.concurrent;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.ThreadHolder;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.ManagedLogger;
-import org.burningwave.core.function.ThrowingBiConsumer;
+import org.burningwave.core.function.ThrowingBiPredicate;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
@@ -574,7 +574,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		E executable;		
 		Thread executor;
 		Throwable exc;
-		ThrowingBiConsumer<T, Throwable, Throwable> exceptionHandler;
+		ThrowingBiPredicate<T, Throwable, Throwable> exceptionHandler;
 		QueuedTasksExecutor queuedTasksExecutor;
 		
 		public TaskAbst(E executable, boolean creationTracking) {
@@ -615,7 +615,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			return (T)this;
 		}
 		
-		public T setExceptionHandler(ThrowingBiConsumer<T, Throwable, Throwable> exceptionHandler) {
+		public T setExceptionHandler(ThrowingBiPredicate<T, Throwable, Throwable> exceptionHandler) {
 			this.exceptionHandler = exceptionHandler;
 			return (T)this;
 		}
@@ -764,9 +764,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					execute0();					
 				} catch (Throwable exc) {
 					this.exc = exc;
-					if (exceptionHandler != null) {
-						exceptionHandler.accept((T)this, exc);
-					} else {
+					if (exceptionHandler == null || !exceptionHandler.test((T)this, exc)) {
 						throw exc;
 					}
 				}
