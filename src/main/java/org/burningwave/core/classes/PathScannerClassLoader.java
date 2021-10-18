@@ -166,7 +166,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	
 	@Override
 	public URL getResource(String name) {
-		URL url = Resources.get(name, this, true);
+		URL url = Resources.get(name, this.allParents);
 		if (url != null) {
 			return url;
 		}
@@ -189,7 +189,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	
 	@Override
 	public Enumeration<URL> getResources(String name) throws IOException {
-		Collection<URL> resourcesFound = Resources.getAll(name, this, true);
+		Collection<URL> resourcesFound = Resources.getAll(name, this.allParents);
 		FileSystemItem.Criteria scanFileCriteria = FileSystemItem.Criteria.forAllFileThat(child -> {
 			if (child.isFile() && child.getAbsolutePath().endsWith("/" + name)) {
 				resourcesFound.add(child.getURL());

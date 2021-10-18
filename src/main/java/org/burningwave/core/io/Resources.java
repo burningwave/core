@@ -56,16 +56,13 @@ public class Resources {
 	}
 	
 	public  Collection<URL> getAll(String resourceRelativePath, ClassLoader resourceClassLoader, boolean onlyParents) {
-		return getAll(
+		return Driver.getResources(
 			resourceRelativePath,
+			false,
 			onlyParents ? 
 				ClassLoaders.getAllParents(resourceClassLoader) : 
 				ClassLoaders.getHierarchy(resourceClassLoader)
 		);
-	}
-	
-	public Collection<URL> getAll(String resourceRelativePath, Collection<ClassLoader> resourceClassLoaders) {
-		return Driver.getResources(resourceRelativePath, false, resourceClassLoaders);
 	}
 	
 	public Collection<URL> getAll(String resourceRelativePath, ClassLoader... resourceClassLoaders) {
@@ -73,12 +70,14 @@ public class Resources {
 	}
 	
 	public URL get(String resourceRelativePath, ClassLoader resourceClassLoader, boolean onlyParents) {
-		return get(
-			resourceRelativePath, 
-			onlyParents ? 
-				ClassLoaders.getAllParents(resourceClassLoader) : 
-				ClassLoaders.getHierarchy(resourceClassLoader)
+		Collection<URL> resourceURLs = Driver.getResources(resourceRelativePath, true, onlyParents ? 
+			ClassLoaders.getAllParents(resourceClassLoader) : 
+			ClassLoaders.getHierarchy(resourceClassLoader)
 		);
+		if (!resourceURLs.isEmpty()) {
+			return  resourceURLs.iterator().next();
+		}
+		return null;
 	}
 	
 	public URL get(String resourceRelativePath, ClassLoader... resourceClassLoaders) {

@@ -53,18 +53,19 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.classes.Classes.Loaders.ChangeParentsContext;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.io.ByteBufferInputStream;
 
 
 @SuppressWarnings("unchecked")
-public class MemoryClassLoader extends ClassLoader implements Component {
+public class MemoryClassLoader extends ClassLoader implements Component, org.burningwave.core.classes.Classes.Loaders.NotificationListenerOfParentsChange {
 	Map<String, ByteBuffer> notLoadedByteCodes;
 	Map<String, ByteBuffer> loadedByteCodes;
 	Collection<Object> clients;
 	protected boolean isClosed;
 	String instanceId;
-	
+	ClassLoader[] allParents;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -81,6 +82,18 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		this.notLoadedByteCodes = new ConcurrentHashMap<>();
 		this.loadedByteCodes = new ConcurrentHashMap<>();
 		this.clients = new HashSet<>();
+		ClassLoaders.registerNotificationListenerOfParentsChange(this);
+		computeAllParents();
+	}
+
+	private void computeAllParents() {
+		Collection<ClassLoader> allParents = ClassLoaders.getAllParents(this);
+		this.allParents = allParents.toArray(new ClassLoader[allParents.size()]);
+	}	
+
+	@Override
+	public void receive(ChangeParentsContext context) {
+		computeAllParents();		
 	}
 	
 	public static MemoryClassLoader create(ClassLoader parentClassLoader) {
@@ -255,7 +268,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
     @Override
     public InputStream getResourceAsStream(String name) {
-    	InputStream inputStream = Resources.getAsInputStream(name, this, true).getValue();
+    	InputStream inputStream = Resources.getAsInputStream(name, allParents).getValue();
     	if (inputStream == null && name.endsWith(".class")) {
     		inputStream = getByteCodeAsInputStream(name);
     	}
@@ -415,6 +428,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	protected void unregister() {
 		ClassLoaders.unregister(this);
+		ClassLoaders.unregisterNotificationListenerOfParentsChange(this);
 		Cache.classLoaderForConstructors.remove(this, true);
 		Cache.classLoaderForFields.remove(this, true);
 		Cache.classLoaderForMethods.remove(this, true);
@@ -465,7 +479,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			clear();
 			notLoadedByteCodes = null;
 			loadedByteCodes = null;
-			ClassLoaders.clearLoadedClasses(this);
+			Driver.getLoadedClassesRetriever(this).clear();
 			unregister();
 			this.clients.clear();
 			this.clients = null;
