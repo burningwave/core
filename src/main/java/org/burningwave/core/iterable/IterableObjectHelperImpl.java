@@ -668,13 +668,13 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 					synchronized (itemIterator) {
 						item = itemIterator.next();
 					}
+					action.accept(item, outputItemCollector);
 				} catch (Throwable exc) {
 					if (!itemIterator.hasNext()) {
 						break;
 					}
 					Driver.throwException(exc);
 				} 
-				action.accept(item, outputItemCollector);
 			}
 		};
 		AtomicReference<Throwable> exceptionWrapper = new AtomicReference<>();
