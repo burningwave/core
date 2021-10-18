@@ -63,10 +63,7 @@ import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings("unchecked")
 public class IterableObjectHelperImpl implements IterableObjectHelper, Properties.Listener {
-	private Integer defaultMinimumCollectionSizeForParallelIteration;
-	private Predicate<Collection<?>> defaultMinimumCollectionSizeForParallelIterationPredicate = coll ->
-		coll.size() >= defaultMinimumCollectionSizeForParallelIteration;
-	
+	private Predicate<Collection<?>> defaultMinimumCollectionSizeForParallelIterationPredicate;
 	private String defaultValuesSeparator;
 	private int maxThreadCountsForParallelIteration;
 	
@@ -75,13 +72,24 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			config,
 			Configuration.Key.DEFAULT_VALUES_SEPERATOR
 		);
-		this.defaultMinimumCollectionSizeForParallelIteration = Objects.toInt(
+		this.defaultMinimumCollectionSizeForParallelIterationPredicate =
+			buildDefaultMinimumCollectionSizeForParallelIterationPredicate(config);
+		this.maxThreadCountsForParallelIteration = computeMaxRuntimeThreadsCountThreshold(config);
+	}
+
+	private Predicate<Collection<?>> buildDefaultMinimumCollectionSizeForParallelIterationPredicate(Properties config) {
+		int defaultMinimumCollectionSizeForParallelIteration = Objects.toInt(
 			resolveValue(
 				config,
 				Configuration.Key.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION
 			)
 		);
-		this.maxThreadCountsForParallelIteration = computeMaxRuntimeThreadsCountThreshold(config);
+		if (defaultMinimumCollectionSizeForParallelIteration >= 0) {
+			return coll ->
+				coll.size() >= defaultMinimumCollectionSizeForParallelIteration;
+		} else {
+			 return coll -> false;
+		}
 	}
 
 	@Override
@@ -114,12 +122,8 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			this.defaultValuesSeparator = (String)newValue;
 		}
 		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION) && newValue != null) {
-			this.defaultMinimumCollectionSizeForParallelIteration = Objects.toInt(
-				resolveValue(
-					config,
-					Configuration.Key.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION
-				)
-			);
+			this.defaultMinimumCollectionSizeForParallelIterationPredicate =
+				buildDefaultMinimumCollectionSizeForParallelIterationPredicate(config);
 		}
 		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD)) {
 			this.maxThreadCountsForParallelIteration = computeMaxRuntimeThreadsCountThreshold(config);
