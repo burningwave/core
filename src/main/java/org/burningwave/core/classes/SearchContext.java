@@ -35,7 +35,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -56,7 +55,6 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 	PathScannerClassLoader pathScannerClassLoader;
 	Collection<String> skippedClassNames;
 	QueuedTasksExecutor.Task searchTask;
-	Collection<String> pathScannerClassLoaderScannedPaths;
 	Collection<T> itemsFound;
 	boolean requestToClosePathScannderClassLoaderOnClose;
 	
@@ -71,7 +69,6 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		this.itemsFoundFlatMap = new ConcurrentHashMap<>();
 		this.itemsFoundMap = new ConcurrentHashMap<>();
 		this.skippedClassNames = ConcurrentHashMap.newKeySet();
-		this.pathScannerClassLoaderScannedPaths = new HashSet<>();
 		this.sharedPathScannerClassLoader = initContext.getSharedPathScannerClassLoader();
 		this.pathScannerClassLoader = initContext.getPathScannerClassLoader();
 		this.searchConfig = initContext.getSearchConfig();
