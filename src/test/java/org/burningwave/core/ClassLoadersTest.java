@@ -63,27 +63,6 @@ public class ClassLoadersTest extends BaseTest {
 	}
 	
 	@Test
-	public void retrieveLoadedClassesForPackageTest() {
-		testNotEmpty(() -> {
-			return ClassLoaders.retrieveLoadedClassesForPackage(Thread.currentThread().getContextClassLoader(), (pckg) -> pckg != null);
-		});
-	}
-	
-	@Test
-	public void retrieveLoadedClassesTest() {
-		testNotEmpty(() -> {
-			return ClassLoaders.retrieveLoadedClasses(Thread.currentThread().getContextClassLoader());
-		});
-	}
-	
-	@Test
-	public void retrieveLoadedAllClassesTest() {
-		testNotEmpty(() -> {
-			return ClassLoaders.retrieveAllLoadedClasses(Thread.currentThread().getContextClassLoader());
-		});
-	}
-	
-	@Test
 	public void addClassPathsTestOne() {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
