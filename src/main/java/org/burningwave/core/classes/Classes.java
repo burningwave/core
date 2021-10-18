@@ -40,6 +40,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
+import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
@@ -192,18 +193,21 @@ public class Classes implements MembersRetriever {
 		InputStream inputStream = clsLoader.getResourceAsStream(
 			cls.getName().replace(".", "/") + ".class"
 		);
-		return Streams.toByteBuffer(
-			java.util.Objects.requireNonNull(inputStream, "Could not acquire bytecode for class " + cls.getName())
-		);
-//		To be retested
-//		InputStream inputStream = Resources.getAsInputStream(
-//			cls.getName().replace(".", "/") + ".class",
-//			clsLoader,
-//			false
-//		).getValue();
-//		return Streams.toByteBuffer(
-//			java.util.Objects.requireNonNull(inputStream, "Could not acquire bytecode for class " + cls.getName())
-//		);
+		try {
+			return Streams.toByteBuffer(inputStream);
+		} catch (NullPointerException exc) {
+			if (inputStream == null) {
+				inputStream = Resources.getAsInputStream(
+					cls.getName().replace(".", "/") + ".class",
+					clsLoader,
+					false
+				).getValue();
+				return Streams.toByteBuffer(
+					java.util.Objects.requireNonNull(inputStream, "Could not acquire bytecode for class " + cls.getName())
+				);
+			}
+			return Driver.throwException(exc);			
+		}
 	}
 	
 	public <T> T newInstance(Constructor<T> ctor, Object... params) {

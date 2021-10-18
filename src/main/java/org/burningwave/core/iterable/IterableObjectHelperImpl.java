@@ -608,8 +608,8 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	) {
 		Iterator<T> itemIterator = items.iterator();
 		Consumer<O> outputItemCollector =
-			outputCollection != null ? 
-				outputCollection instanceof ConcurrentHashMap.KeySetView ||
+			outputCollection != null ?
+				outputCollection.getClass().getName().startsWith(ConcurrentHashMap.class.getName()) ||
 				outputCollection instanceof CopyOnWriteArrayList ||
 				outputCollection instanceof CopyOnWriteArraySet ?	
 					outputItem -> {
@@ -634,9 +634,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							}
 							action.accept(item, outputItemCollector);
 						}
-					} catch (NoSuchElementException | IterableObjectHelper.TerminateIteration exc) {
-						
-					}	
+					} catch (NoSuchElementException | IterableObjectHelper.TerminateIteration exc) {}	
 				}).submit()
 			);
 		}
