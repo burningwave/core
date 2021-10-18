@@ -47,7 +47,6 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -578,13 +577,12 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 					outputCollection.add(outputItem);
 				} 
 				: null;
-			for (T item : items) {
-				try {
+			
+			try {
+				for (T item : items) {
 					action.accept(item, outputItemCollector);
-				} catch (IterableObjectHelper.TerminatedIterationException exc) {
-					break;
-				}	
-			}
+				}
+			} catch (IterableObjectHelper.TerminateIteration semaphore) {}
 			return outputCollection;
 		}		
 	}
@@ -625,23 +623,20 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				: null;
 		Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
 		int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items.size());
-		AtomicReference<IterableObjectHelper.TerminatedIterationException> terminatedIterationException = new AtomicReference<>();
-		for (int i = 0; i < taskCount && terminatedIterationException.get() == null; i++) {
+		for (int i = 0; i < taskCount; i++) {
 			tasks.add(
 				BackgroundExecutor.createTask(() -> {
-					while (terminatedIterationException.get() == null) {
-						T item = null;
-						try {
+					try {
+						while (true) {
+							T item = null;
 							synchronized (itemIterator) {
 								item = itemIterator.next();
 							}
 							action.accept(item, outputItemCollector);
-						} catch (NoSuchElementException exc) {
-							terminatedIterationException.set(new TerminatedIterationException());
-						} catch (IterableObjectHelper.TerminatedIterationException exc) {
-							terminatedIterationException.set(exc);
-						}	
-					}					
+						}
+					} catch (NoSuchElementException | IterableObjectHelper.TerminateIteration exc) {
+						
+					}	
 				}).submit()
 			);
 		}

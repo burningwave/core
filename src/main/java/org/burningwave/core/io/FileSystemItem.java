@@ -308,7 +308,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			(child, collector) -> {
 				if (filterPredicate.test(child)) {
 					collector.accept(child);
-					throw new org.burningwave.core.iterable.IterableObjectHelper.TerminatedIterationException();
+					throw org.burningwave.core.iterable.IterableObjectHelper.TerminateIteration.NOTIFICATION;
 				}
 			};
 				

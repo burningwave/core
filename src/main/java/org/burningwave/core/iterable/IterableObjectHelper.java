@@ -220,8 +220,13 @@ public interface IterableObjectHelper {
 		int marginTabCount
 	);
 	
-	public static class TerminatedIterationException extends RuntimeException {
-
+	public static class TerminateIteration extends RuntimeException {
+		public static final TerminateIteration NOTIFICATION;
+		
+		static {
+			NOTIFICATION = new IterableObjectHelper.TerminateIteration();
+		}		
+		
 		private static final long serialVersionUID = 4182825598193659018L;
 
 	}
