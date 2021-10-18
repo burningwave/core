@@ -66,6 +66,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -306,7 +307,7 @@ public class Classes implements MembersRetriever {
 			if (builtinClassLoaderClass != null) {
 				this.builtinClassLoaderClassParentField = Fields.findFirstAndMakeItAccessible(builtinClassLoaderClass, "parent", builtinClassLoaderClass);
 			}
-			registeredNotificationListenerOfParentsChange = new HashSet<>();
+			registeredNotificationListenerOfParentsChange = ConcurrentHashMap.newKeySet();
 		}
 		
 		public static Loaders create() {
