@@ -40,6 +40,7 @@ import java.util.Optional;
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Criteria;
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 
 
 public class SearchResult<E> implements Closeable, ManagedLogger {
@@ -114,6 +115,10 @@ public class SearchResult<E> implements Closeable, ManagedLogger {
 	
 	public Collection<String> getSkippedClassNames() {
 		return context.getSkippedClassNames();
+	}
+	
+	public QueuedTasksExecutor.Task getSearchTask() {
+		return context.getSearchTask();
 	}
 	
 	public void setRequestToClosePathScannerClassLoaderOnClose(boolean flag) {

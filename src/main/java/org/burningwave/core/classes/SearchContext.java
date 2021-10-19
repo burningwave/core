@@ -115,11 +115,14 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 			QueuedTasksExecutor.Task searchTask = this.searchTask;
 			if (searchTask != null) {
 				searchTask.waitForFinish();
-				this.searchTask = null;
 			}
 		} catch (Throwable exc) {
 			Driver.throwException(exc);
 		}
+	}
+	
+	QueuedTasksExecutor.Task getSearchTask() {
+		return this.searchTask;
 	}
 	
 	void addItemFound(String path, String key, T item) {
