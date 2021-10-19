@@ -46,6 +46,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
@@ -149,25 +150,31 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			context.executeSearch(() -> {
 				Collection<FileSystemItem> pathsToBeScanned = searchConfig.getPathsToBeScanned();
 				Map<FileSystemItem, Collection<FileSystemItem>> classFilesForPath = new ConcurrentHashMap<>();
-				IterableObjectHelper.iterateParallelIf(
-					pathsToBeScanned, 
-					currentScannedPath -> {
-						if (!currentScannedPath.isContainer()) {
-							throw new IllegalArgumentException(Strings.compile("{} is not a folder or archive", currentScannedPath.getAbsolutePath()));
+				IterableObjectHelper.iterate(
+					IterationConfig.of(pathsToBeScanned).withAction(
+						currentScannedPath -> {
+							if (!currentScannedPath.isContainer()) {
+								throw new IllegalArgumentException(Strings.compile("{} is not a folder or archive", currentScannedPath.getAbsolutePath()));
+							}
+							classFilesForPath.put(
+								currentScannedPath,
+								scanAndAddToPathScannerClassLoader(context, currentScannedPath)
+							);
 						}
-						classFilesForPath.put(
-							currentScannedPath,
-							scanAndAddToPathScannerClassLoader(context, currentScannedPath)
-						);
-					},
-					searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
+					).parallelIf(
+						searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
+					)					
 				);
-				IterableObjectHelper.iterateParallelIf(
-					classFilesForPath.entrySet(),
-					currentScannedPath -> {
-						testClassCriteriaAndAddItemsToContext(context, currentScannedPath);
-					},
-					searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()			
+				IterableObjectHelper.iterate(
+					IterationConfig.of(
+						classFilesForPath.entrySet()
+					).withAction(
+						currentScannedPath -> {
+							testClassCriteriaAndAddItemsToContext(context, currentScannedPath);
+						}
+					).parallelIf(
+						searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
+					)	
 				);
 				Collection<String> skippedClassesNames = context.getSkippedClassNames();
 				if (!skippedClassesNames.isEmpty()) {
@@ -259,24 +266,28 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			FileSystemItem currentScannedPath = currentScannedPathAndChildren.getKey();
 			String currentScannedAbsolutePath = currentScannedPath.getAbsolutePath();
 			FileSystemItem.Criteria allFileFilters = context.searchConfig.getAllFileFilters(currentScannedPath);
-			IterableObjectHelper.iterateParallelIf(
-				currentScannedPathAndChildren.getValue(),
-				child -> {
-					JavaClass javaClass = child.toJavaClass();
-					try {
-						ClassCriteria.TestContext criteriaTestContext = testClassCriteria(context, javaClass);
-						if (criteriaTestContext.getResult()) {
-							addToContext(
-								context, criteriaTestContext, currentScannedAbsolutePath, child, javaClass
-							);
+			IterableObjectHelper.iterate(
+				IterationConfig.of(
+					currentScannedPathAndChildren.getValue()
+				).withAction(
+					child -> {
+						JavaClass javaClass = child.toJavaClass();
+						try {
+							ClassCriteria.TestContext criteriaTestContext = testClassCriteria(context, javaClass);
+							if (criteriaTestContext.getResult()) {
+								addToContext(
+									context, criteriaTestContext, currentScannedAbsolutePath, child, javaClass
+								);
+							}
+						} catch (NullPointerException exc) {
+							if (javaClass != null) {
+								throw exc;
+							}
 						}
-					} catch (NullPointerException exc) {
-						if (javaClass != null) {
-							throw exc;
-						}
-					}
-				},
-				allFileFilters.getMinimumCollectionSizeForParallelIterationPredicate()	
+					}		
+				).parallelIf(
+					allFileFilters.getMinimumCollectionSizeForParallelIterationPredicate()
+				)					
 			);
 		}
 

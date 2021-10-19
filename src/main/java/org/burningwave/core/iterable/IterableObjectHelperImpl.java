@@ -48,7 +48,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -590,111 +589,78 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}		
 		return object != null && value != null && object.equals(value);
 	}
+
 	
 	@Override
-	public <T, O> Collection<O> iterateParallelIf(
-		Collection<T> items, 		
-		Consumer<T> action,
-		Predicate<Collection<?>> predicate
+	public <I, O> Collection<O> iterate(
+		IterationConfig<I, O> config
 	) {
-		return iterateParallelIf(items, (item, outputItemCollector) -> action.accept(item), null, predicate);
-	}
-	
-	
-	@Override
-	public <T, O> Collection<O> iterateParallelIf(
-		Collection<T> items, 		
-		BiConsumer<T, Consumer<O>> action,
-		Collection<O> outputCollection,
-		Predicate<Collection<?>> predicate
-	) {
+		Predicate<Collection<?>> predicate = config.predicateForParallelIteration;
 		if (predicate == null) {
 			predicate = this.defaultMinimumCollectionSizeForParallelIterationPredicate;
 		}
-		if (predicate.test(items) && maxThreadCountsForParallelIteration >= Synchronizer.getAllThreads().size()) {
-			return iterateParallel(items, action, outputCollection);
+		if (predicate.test(config.items) && maxThreadCountsForParallelIteration >= Synchronizer.getAllThreads().size()) {
+			Consumer<O> outputItemCollector =
+				config.outputCollection != null ?
+					isConcurrent(config.outputCollection) ?
+						outputItem -> {
+							config.outputCollection.add(outputItem);
+						} : 
+						outputItem -> {
+							synchronized (config.outputCollection) {
+								config.outputCollection.add(outputItem);
+							}
+						}
+					: null;
+			Iterator<I> itemIterator = config.items.iterator();
+			ThrowingRunnable<?> iterator = () -> {
+				while (true) {
+					I item = null;
+					try {
+						synchronized (itemIterator) {
+							item = itemIterator.next();
+						}
+						config.action.accept(item, outputItemCollector);
+					} catch (Throwable exc) {
+						if (!itemIterator.hasNext()) {
+							break;
+						}
+						Driver.throwException(exc);
+					} 
+				}
+			};
+			AtomicReference<Throwable> exceptionWrapper = new AtomicReference<>();
+			ThrowingBiPredicate<Task, Throwable, Throwable> exceptionHandler = (task, exception) -> {
+				if (exception == IterableObjectHelper.TerminateIteration.NOTIFICATION) {
+					exceptionWrapper.set(exception);
+					return true;
+				}
+				return false;
+			};
+			Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
+			int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), config.items.size());
+			for (int i = 0; i < taskCount && exceptionWrapper.get() == null; i++) {
+				tasks.add(
+					BackgroundExecutor.createTask(iterator).setExceptionHandler(exceptionHandler).submit()
+				);
+			}
+			tasks.stream().forEach(task -> task.waitForFinish());
 		} else {
-			Consumer<O> outputItemCollector = outputCollection != null ? 
+			Consumer<O> outputItemCollector = config.outputCollection != null ? 
 				outputItem -> {
-					outputCollection.add(outputItem);
+					config.outputCollection.add(outputItem);
 				} 
 				: null;
 			
 			try {
-				for (T item : items) {
-					action.accept(item, outputItemCollector);
+				for (I item : config.items) {
+					config.action.accept(item, outputItemCollector);
 				}
 			} catch (IterableObjectHelper.TerminateIteration t) {}
-			return outputCollection;
-		}		
-	}
-	
-	@Override
-	public <T, O> void iterateParallel(
-		Collection<T> items,
-		Consumer<T> action
-	) {
-		iterateParallel(
-			items, (item, outputItemCollector) -> 
-				action.accept(item), 
-			null
-		);
+		}
+		return config.outputCollection;
 	}
 
-	
-	@Override
-	public <T, O> Collection<O> iterateParallel(
-		Collection<T> items,
-		BiConsumer<T, Consumer<O>> action,
-		Collection<O> outputCollection
-	) {
-		Consumer<O> outputItemCollector =
-			outputCollection != null ?
-				isConcurrent(outputCollection) ?
-					outputItem -> {
-						outputCollection.add(outputItem);
-					} : 
-					outputItem -> {
-						synchronized (outputCollection) {
-							outputCollection.add(outputItem);
-						}
-					}
-				: null;
-		Iterator<T> itemIterator = items.iterator();
-		ThrowingRunnable<?> iterator = () -> {
-			while (true) {
-				T item = null;
-				try {
-					synchronized (itemIterator) {
-						item = itemIterator.next();
-					}
-					action.accept(item, outputItemCollector);
-				} catch (Throwable exc) {
-					if (!itemIterator.hasNext()) {
-						break;
-					}
-					Driver.throwException(exc);
-				} 
-			}
-		};
-		AtomicReference<Throwable> exceptionWrapper = new AtomicReference<>();
-		ThrowingBiPredicate<Task, Throwable, Throwable> exceptionHandler = (task, exception) -> {
-			if (exception == IterableObjectHelper.TerminateIteration.NOTIFICATION) {
-				exceptionWrapper.set(exception);
-				return true;
-			}
-			return false;
-		};
-		Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
-		int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items.size());
-		for (int i = 0; i < taskCount && exceptionWrapper.get() == null; i++) {
-			tasks.add(
-				BackgroundExecutor.createTask(iterator).setExceptionHandler(exceptionHandler).submit()
-			);
-		}
-		tasks.stream().forEach(task -> task.waitForFinish());
-		return outputCollection;
-	}
 	
 	private boolean isConcurrent(Collection<?> coll) {
 		//Also include ConcurrentHashMap.KeySetView, ConcurrentHashMap.ValuesView, ConcurrentHashMap.EntrySetView

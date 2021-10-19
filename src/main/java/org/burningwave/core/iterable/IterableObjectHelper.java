@@ -181,33 +181,14 @@ public interface IterableObjectHelper {
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map, Predicate<String> propertyFilter);
 
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map, String propertyName);
+	
+	public <I, O> Collection<O> iterate(IterationConfig<I, O> config);
 
 	public boolean containsValue(Map<?, ?> map, String key, Object object);
 
 	public <K, V> void refresh(Map<K, V> source, Map<K, V> newValues);
 
 	public boolean containsValue(Map<?, ?> map, String key, Object object, Map<?, ?> defaultValues);
-
-	public <T, O> Collection<O> iterateParallelIf(
-		Collection<T> items,
-		Consumer<T> action,
-		Predicate<Collection<?>> predicate
-	);
-
-	public <T, O> Collection<O> iterateParallelIf(
-		Collection<T> items,
-		BiConsumer<T, Consumer<O>> action,
-		Collection<O> outputCollection,
-		Predicate<Collection<?>> predicate
-	);
-
-	public <T, O> void iterateParallel(Collection<T> items, Consumer<T> action);
-
-	public <T, O> Collection<O> iterateParallel(
-		Collection<T> items,
-		BiConsumer<T, Consumer<O>> action,
-		Collection<O> outputCollection
-	);
 
 	public String toPrettyString(Map<?, ?> map, String valuesSeparator, int marginTabCount);
 
@@ -228,6 +209,47 @@ public interface IterableObjectHelper {
 		}		
 		
 		private static final long serialVersionUID = 4182825598193659018L;
+
+	}
+	
+	
+	public static class IterationConfig<I, O> {
+		Collection<I> items;
+		BiConsumer<I, Consumer<O>> action;
+		Collection<O> outputCollection;
+		Predicate<Collection<?>> predicateForParallelIteration;
+
+		public IterationConfig(
+			Collection<I> items
+		) {
+			this.items = items;
+		}
+		
+		public static <I, O> IterationConfig<I, O> of(Collection<I> input) {
+			IterationConfig<I, O> config = new IterationConfig<I, O>(input);
+			return config;
+		}
+		
+		public IterationConfig<I, O> withAction(BiConsumer<I, Consumer<O>> action) {
+			this.action = action;
+			return this;
+		}		
+		
+		public IterationConfig<I, O> withAction(Consumer<I> action) {
+			this.action = (item, outputItemCollector) -> action.accept(item);
+			return this;
+		}		
+		
+		
+		public IterationConfig<I, O> parallelIf(Predicate<Collection<?>> predicate) {
+			this.predicateForParallelIteration = predicate;
+			return this;
+		}
+		
+		public IterationConfig<I, O> collectTo(Collection<O> output) {
+			this.outputCollection = output;
+			return this;
+		}
 
 	}
 }

@@ -71,6 +71,7 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.function.Executor;
+import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
 
 @SuppressWarnings("resource")
 public class FileSystemItem implements Comparable<FileSystemItem> {
@@ -312,11 +313,13 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				}
 			};
 				
-		final Collection<FileSystemItem> result = IterableObjectHelper.iterateParallelIf(
-			children, action, 
-			outputCollectionSupplier.get(),
-			filter.minimumCollectionSizeForParallelIterationPredicate
-		);		
+		final Collection<FileSystemItem> result = IterableObjectHelper.iterate(
+			new IterationConfig<FileSystemItem, FileSystemItem>(children)
+			.withAction(action)
+			.parallelIf(filter.minimumCollectionSizeForParallelIterationPredicate)
+			.collectTo(outputCollectionSupplier.get())
+		);
+		
 		if (!iteratedFISWithErrors.isEmpty()) {
 			Predicate<FileSystemItem[]> nativePredicateWithExceptionManaging = filter.getPredicateOrTruePredicateIfPredicateIsNull();
 			for (FileSystemItem child : iteratedFISWithErrors) {
