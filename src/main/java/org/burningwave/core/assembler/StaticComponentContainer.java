@@ -417,7 +417,6 @@ public class StaticComponentContainer {
 		
 	}
 
-
 	private static Map<String, Object> getAndAdjustConfigurationForBackgroundExecutor() {
 		if (IterableObjectHelper.resolveValues(GlobalProperties, key ->
 			key.matches("background-executor.queue-task-executor\\[\\d\\]\\.priority")).isEmpty()
@@ -451,7 +450,7 @@ public class StaticComponentContainer {
 	}
 
 
-	static  java.util.Properties loadPropertiesFromFile(String fileName) throws IOException, ParseException {
+	private static java.util.Properties loadPropertiesFromFile(String fileName) throws IOException, ParseException {
 		Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
 		classLoaders.add(StaticComponentContainer.class.getClassLoader());
 		classLoaders.add(Thread.currentThread().getContextClassLoader());
@@ -483,7 +482,7 @@ public class StaticComponentContainer {
 		);
 	};
 	
-	static void showBanner() throws IOException {
+	private static void showBanner() throws IOException {
 		try (InputStream inputStream = Resources.getAsInputStream(
 			GlobalProperties.resolveValue(Configuration.Key.BANNER_FILE),
 			Component.class.getClassLoader(),
