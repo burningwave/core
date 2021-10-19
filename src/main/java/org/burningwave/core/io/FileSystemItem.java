@@ -300,15 +300,23 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				return false;
 			}
 		};
-		BiConsumer<FileSystemItem, Consumer<FileSystemItem>> action = !firstMatch ?
-			(child, collector) -> {
+		BiConsumer<FileSystemItem, Consumer<Consumer<Collection<FileSystemItem>>>> action = !firstMatch ?
+			(child, outputCollectionHandler) -> {
 				if (filterPredicate.test(child)) {
-					collector.accept(child);
+					outputCollectionHandler.accept(
+						(outputCollection) -> {
+							outputCollection.add(child);
+						}
+					);
 				}
 			} :
-			(child, collector) -> {
+			(child, outputCollectionHandler) -> {
 				if (filterPredicate.test(child)) {
-					collector.accept(child);
+					outputCollectionHandler.accept(
+						(outputCollection) -> {
+							outputCollection.add(child);
+						}
+					);
 					throw org.burningwave.core.iterable.IterableObjectHelper.TerminateIteration.NOTIFICATION;
 				}
 			};
@@ -318,6 +326,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			.withAction(action)
 			.parallelIf(filter.minimumCollectionSizeForParallelIterationPredicate)
 			.collectTo(outputCollectionSupplier.get())
+			.withPriority(filter.priority)
 		);
 		
 		if (!iteratedFISWithErrors.isEmpty()) {
@@ -1127,7 +1136,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	public static class Criteria extends org.burningwave.core.Criteria.Simple<FileSystemItem[], Criteria> {
 		private BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler;
 		private Predicate<Collection<?>> minimumCollectionSizeForParallelIterationPredicate;
-		
+		private Integer priority;
 		
 		public static Criteria create() {
 			return new Criteria();
@@ -1179,6 +1188,11 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		
 		public Criteria setMinimumCollectionSizeForParallelIteration(Predicate<Collection<?>> predicate) {
 			this.minimumCollectionSizeForParallelIterationPredicate = predicate;
+			return this;
+		}
+		
+		public Criteria withPriority(Integer priority) {
+			this.priority = priority;
 			return this;
 		}
 		
@@ -1239,11 +1253,14 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		
 		public Predicate<FileSystemItem[]> getOriginalPredicateOrTruePredicateIfPredicateIsNull() {
 			return super.getPredicateOrTruePredicateIfPredicateIsNull();
-		}
-		
+		}		
 				
 		public Predicate<Collection<?>> getMinimumCollectionSizeForParallelIterationPredicate() {
 			return minimumCollectionSizeForParallelIterationPredicate;
+		}
+		
+		public Integer getPriority() {
+			return priority;
 		}
 
 		@Override
@@ -1257,6 +1274,8 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 						leftCriteria.minimumCollectionSizeForParallelIterationPredicate :
 						rightCriteria.minimumCollectionSizeForParallelIterationPredicate;
 			targetCriteria.setMinimumCollectionSizeForParallelIteration(minimumCollectionSizeForParallelIterationPredicate);
+			targetCriteria.priority = rightCriteria.priority == null ?
+				leftCriteria.priority : rightCriteria.priority;
 			return targetCriteria;
 		}
 		
@@ -1294,6 +1313,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			Criteria copy = super.createCopy();
 			copy.exceptionHandler = this.exceptionHandler;
 			copy.minimumCollectionSizeForParallelIterationPredicate = this.minimumCollectionSizeForParallelIterationPredicate;
+			copy.priority = this.priority;
 			return copy;
 		}
 

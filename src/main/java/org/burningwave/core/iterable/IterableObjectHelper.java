@@ -215,9 +215,10 @@ public interface IterableObjectHelper {
 	
 	public static class IterationConfig<I, O> {
 		Collection<I> items;
-		BiConsumer<I, Consumer<O>> action;
+		BiConsumer<I, Consumer<Consumer<Collection<O>>>> action;
 		Collection<O> outputCollection;
 		Predicate<Collection<?>> predicateForParallelIteration;
+		Integer priority;
 
 		public IterationConfig(
 			Collection<I> items
@@ -230,7 +231,10 @@ public interface IterableObjectHelper {
 			return config;
 		}
 		
-		public IterationConfig<I, O> withAction(BiConsumer<I, Consumer<O>> action) {
+		public IterationConfig<I, O> withAction(BiConsumer<I, Consumer<Consumer<Collection<O>>>> action) {
+			if (outputCollection == null) {
+				
+			}
 			this.action = action;
 			return this;
 		}		
@@ -240,6 +244,10 @@ public interface IterableObjectHelper {
 			return this;
 		}		
 		
+		public IterationConfig<I, O> withPriority(Integer priority) {
+			this.priority = priority;
+			return this;
+		} 
 		
 		public IterationConfig<I, O> parallelIf(Predicate<Collection<?>> predicate) {
 			this.predicateForParallelIteration = predicate;

@@ -163,7 +163,9 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 						}
 					).parallelIf(
 						searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
-					)					
+					).withPriority(
+						searchConfig.priority
+					)				
 				);
 				IterableObjectHelper.iterate(
 					IterationConfig.of(
@@ -174,6 +176,8 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 						}
 					).parallelIf(
 						searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
+					).withPriority(
+						searchConfig.priority
 					)	
 				);
 				Collection<String> skippedClassesNames = context.getSkippedClassNames();
@@ -287,7 +291,9 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 					}		
 				).parallelIf(
 					allFileFilters.getMinimumCollectionSizeForParallelIterationPredicate()
-				)					
+				).withPriority(
+					allFileFilters.getPriority()
+				)				
 			);
 		}
 

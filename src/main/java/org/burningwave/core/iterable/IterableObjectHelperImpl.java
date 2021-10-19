@@ -599,21 +599,26 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		Predicate<Collection<?>> predicate = config.predicateForParallelIteration;
 		Collection<I> items = config.items;
 		Collection<O> outputCollection = config.outputCollection;
-		BiConsumer<I, Consumer<O>> action = config.action;
+		BiConsumer<I, Consumer<Consumer<Collection<O>>>> action = config.action;
+		Integer priority = config.priority;
+		Thread currentThread = Thread.currentThread();
+		int initialThreadPriority = currentThread.getPriority();
+		if (priority == null) {
+			priority = initialThreadPriority;
+		}
 		if (predicate == null) {
 			predicate = this.defaultMinimumCollectionSizeForParallelIterationPredicate;
 		}
-		
 		if (predicate.test(items) && maxThreadCountsForParallelIteration >= Synchronizer.getAllThreads().size()) {
-			Consumer<O> outputItemCollector =
+			Consumer<Consumer<Collection<O>>> outputItemCollectionHandler =
 				outputCollection != null ?
 					isConcurrent(outputCollection) ?
-						outputItem -> {
-							outputCollection.add(outputItem);
+						(outputCollectionConsumer) -> {
+							outputCollectionConsumer.accept(outputCollection);
 						} : 
-						outputItem -> {
+						(outputCollectionConsumer) -> {
 							synchronized (outputCollection) {
-								outputCollection.add(outputItem);
+								outputCollectionConsumer.accept(outputCollection);
 							}
 						}
 					: null;
@@ -625,7 +630,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						synchronized (itemIterator) {
 							item = itemIterator.next();
 						}
-						action.accept(item, outputItemCollector);
+						action.accept(item, outputItemCollectionHandler);
 					} catch (Throwable exc) {
 						if (!itemIterator.hasNext()) {
 							break;
@@ -646,22 +651,29 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items.size());
 			for (int i = 0; i < taskCount && exceptionWrapper.get() == null; i++) {
 				tasks.add(
-					BackgroundExecutor.createTask(iterator).setExceptionHandler(exceptionHandler).submit()
+					BackgroundExecutor.createTask(iterator, priority).setExceptionHandler(exceptionHandler).submit()
 				);
 			}
 			tasks.stream().forEach(task -> task.waitForFinish());
 		} else {
-			Consumer<O> outputItemCollector = outputCollection != null ? 
-				outputItem -> {
-					outputCollection.add(outputItem);
-				} 
+			Consumer<Consumer<Collection<O>>> outputItemCollectionHandler =
+				outputCollection != null ?
+					(outputCollectionConsumer) -> {
+						outputCollectionConsumer.accept(outputCollection);
+					}
 				: null;
-			
+			if (initialThreadPriority != priority) {
+				currentThread.setPriority(priority);
+			}
 			try {
 				for (I item : items) {
-					action.accept(item, outputItemCollector);
+					action.accept(item, outputItemCollectionHandler);
 				}
-			} catch (IterableObjectHelper.TerminateIteration t) {}
+			} catch (IterableObjectHelper.TerminateIteration t) {} finally {
+				if (initialThreadPriority != priority) {
+					currentThread.setPriority(initialThreadPriority);
+				}
+			}			
 		}
 		return outputCollection;
 	}

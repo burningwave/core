@@ -84,12 +84,29 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 	}
 	
 	void executeSearch(Runnable searcher) {
+		Integer priority = searchConfig.priority;
+		Thread currentThread = Thread.currentThread();
+		int initialThreadPriority = currentThread.getPriority();
+		if (priority == null) {
+			priority = initialThreadPriority;
+		}
 		if (searchConfig.waitForSearchEnding) {
-			searcher.run();
+			try {
+				if (initialThreadPriority != priority) {
+					currentThread.setPriority(priority);
+				}
+				searcher.run();
+			} finally {
+				if (initialThreadPriority != priority) {
+					currentThread.setPriority(initialThreadPriority);
+				}
+			}
 		} else {
 			searchTask = BackgroundExecutor.createTask(() -> {
-				searcher.run();
-			}).submit();
+					searcher.run();
+				},
+				priority
+			).submit();
 		}
 	}
 	

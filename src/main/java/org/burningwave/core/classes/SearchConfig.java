@@ -75,6 +75,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	
 	
 	boolean waitForSearchEnding;
+	Integer priority;
 	boolean optimizePaths;
 	
 	SearchConfig() {
@@ -260,6 +261,11 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		return addResources(null, pathCollections);
 	}
 	
+	public SearchConfig withPriority(Integer priority) {
+		this.priority = priority;
+		return this;
+	}
+	
 	public SearchConfig waitForSearchEnding(boolean waitForSearchEnding) {
 		this.waitForSearchEnding = waitForSearchEnding;
 		return this;
@@ -421,6 +427,9 @@ public class SearchConfig implements Closeable, ManagedLogger {
 				this.minimumCollectionSizeForParallelIterationPredicate
 			);
 		}
+		if (fileFilter.getPriority() == null) {
+			fileFilter.withPriority(this.priority);
+		}
 		return fileFilter;
 	}
 	
@@ -455,6 +464,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		destConfig.pathScannerClassLoader = this.pathScannerClassLoader;
 		destConfig.useDefaultPathScannerClassLoaderAsParent = this.useDefaultPathScannerClassLoaderAsParent;
 		destConfig.waitForSearchEnding = this.waitForSearchEnding;
+		destConfig.priority = this.priority;
 		destConfig.minimumCollectionSizeForParallelIterationPredicate = this.minimumCollectionSizeForParallelIterationPredicate;
 		return destConfig;
 	}
@@ -476,5 +486,6 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		this.parentClassLoaderForPathScannerClassLoader = null;
 		this.pathScannerClassLoader = null;
 		this.minimumCollectionSizeForParallelIterationPredicate = null; 
+		this.priority = null;
 	}
 }
