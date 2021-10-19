@@ -48,6 +48,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -596,23 +597,27 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		IterationConfig<I, O> config
 	) {
 		Predicate<Collection<?>> predicate = config.predicateForParallelIteration;
+		Collection<I> items = config.items;
+		Collection<O> outputCollection = config.outputCollection;
+		BiConsumer<I, Consumer<O>> action = config.action;
 		if (predicate == null) {
 			predicate = this.defaultMinimumCollectionSizeForParallelIterationPredicate;
 		}
-		if (predicate.test(config.items) && maxThreadCountsForParallelIteration >= Synchronizer.getAllThreads().size()) {
+		
+		if (predicate.test(items) && maxThreadCountsForParallelIteration >= Synchronizer.getAllThreads().size()) {
 			Consumer<O> outputItemCollector =
-				config.outputCollection != null ?
-					isConcurrent(config.outputCollection) ?
+				outputCollection != null ?
+					isConcurrent(outputCollection) ?
 						outputItem -> {
-							config.outputCollection.add(outputItem);
+							outputCollection.add(outputItem);
 						} : 
 						outputItem -> {
-							synchronized (config.outputCollection) {
-								config.outputCollection.add(outputItem);
+							synchronized (outputCollection) {
+								outputCollection.add(outputItem);
 							}
 						}
 					: null;
-			Iterator<I> itemIterator = config.items.iterator();
+			Iterator<I> itemIterator = items.iterator();
 			ThrowingRunnable<?> iterator = () -> {
 				while (true) {
 					I item = null;
@@ -620,7 +625,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						synchronized (itemIterator) {
 							item = itemIterator.next();
 						}
-						config.action.accept(item, outputItemCollector);
+						action.accept(item, outputItemCollector);
 					} catch (Throwable exc) {
 						if (!itemIterator.hasNext()) {
 							break;
@@ -638,7 +643,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				return false;
 			};
 			Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
-			int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), config.items.size());
+			int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items.size());
 			for (int i = 0; i < taskCount && exceptionWrapper.get() == null; i++) {
 				tasks.add(
 					BackgroundExecutor.createTask(iterator).setExceptionHandler(exceptionHandler).submit()
@@ -646,19 +651,19 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			}
 			tasks.stream().forEach(task -> task.waitForFinish());
 		} else {
-			Consumer<O> outputItemCollector = config.outputCollection != null ? 
+			Consumer<O> outputItemCollector = outputCollection != null ? 
 				outputItem -> {
-					config.outputCollection.add(outputItem);
+					outputCollection.add(outputItem);
 				} 
 				: null;
 			
 			try {
-				for (I item : config.items) {
-					config.action.accept(item, outputItemCollector);
+				for (I item : items) {
+					action.accept(item, outputItemCollector);
 				}
 			} catch (IterableObjectHelper.TerminateIteration t) {}
 		}
-		return config.outputCollection;
+		return outputCollection;
 	}
 
 	
