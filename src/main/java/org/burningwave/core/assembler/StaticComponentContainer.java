@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -285,12 +286,8 @@ public class StaticComponentContainer {
 			);
 			ThreadHolder = new org.burningwave.core.concurrent.Thread.Holder(ThreadSupplier);
 			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create(
-				getName("BackgroundExecutor"),
-				ThreadSupplier,
-				ThreadSupplier, 
-				ThreadSupplier,
-				true,
-				true
+				"background-executor",
+				getAndAdjustConfigurationForBackgroundExecutor()
 			);
 			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(
 				Optional.ofNullable(GlobalProperties.resolveStringValue(Configuration.Key.GROUP_NAME_FOR_NAMED_ELEMENTS)).map(nm -> nm + " - ").orElseGet(() -> "") + "Synchronizer", 
@@ -418,6 +415,39 @@ public class StaticComponentContainer {
 			throw new RuntimeException(exc);
 		} 
 		
+	}
+
+
+	private static Map<String, Object> getAndAdjustConfigurationForBackgroundExecutor() {
+		if (IterableObjectHelper.resolveValues(GlobalProperties, key ->
+			key.matches("background-executor.queue-task-executor\\[\\d\\]\\.priority")).isEmpty()
+		) {
+			GlobalProperties.put("background-executor.queue-task-executor[0].priority", Thread.MIN_PRIORITY);
+			if (GlobalProperties.get("background-executor.queue-task-executor[0].name") == null) {
+				GlobalProperties.put("background-executor.queue-task-executor[0].name", "Low priority tasks");
+			}			
+			GlobalProperties.put("background-executor.queue-task-executor[1].priority", Thread.NORM_PRIORITY);
+			if (GlobalProperties.get("background-executor.queue-task-executor[1].name") == null) {
+				GlobalProperties.put("background-executor.queue-task-executor[1].name", "Normal priority tasks");
+			}
+			GlobalProperties.put("background-executor.queue-task-executor[2].priority", Thread.MAX_PRIORITY);
+			if (GlobalProperties.get("background-executor.queue-task-executor[2].name") == null) {
+				GlobalProperties.put("background-executor.queue-task-executor[2].name", "High priority tasks");
+			}
+		}
+		Map<String, Object> configuration = IterableObjectHelper.resolveValues(GlobalProperties, key -> key.startsWith("background-executor."));
+		configuration.put("background-executor.thread-supplier", ThreadSupplier);
+		configuration.put("background-executor.name", "BackgroundExecutor");
+		configuration.put("background-executor.daemon", true);
+		configuration.put("background-executor.undestroyable-from-external", true);
+		Map<String, Object> unvalidEntries = IterableObjectHelper.resolveValues(configuration, key -> key.endsWith("].daemon"));
+		Iterator<Map.Entry<String, Object>> unvalidEntriesItr = unvalidEntries.entrySet().iterator();
+		while (unvalidEntriesItr.hasNext()) {
+			String key = unvalidEntriesItr.next().getKey();
+			configuration.remove(key);
+			GlobalProperties.remove(key);
+		}
+		return configuration;
 	}
 
 

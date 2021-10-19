@@ -29,8 +29,10 @@
 package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.ThreadHolder;
@@ -949,45 +951,62 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 	
 	public static class Group {
 		String name;
-		Map<String, QueuedTasksExecutor> queuedTasksExecutors;
+		Map<Integer, QueuedTasksExecutor> queuedTasksExecutors;
 		TasksMonitorer allTasksMonitorer;
 		Consumer<Group> initializator;
+		Integer[] definedPriorites;		
 		
-		
-		
-		Group(String name, 
-			Thread.Supplier threadSupplierForHighPriorityTasksExecutor,
-			Thread.Supplier threadSupplierForNormalPriorityTasksExecutor,
-			Thread.Supplier threadSupplierForLowPriorityTasksExecutor,
-			boolean isDaemon
-		) {	
+		Group(Map<String, Object> configuration) {
 			//Implemented deferred initialization (since 10.0.0, the previous version is 9.5.2)
 			initializator = queuedTasksExecutorGroup -> {
+				String name = IterableObjectHelper.resolveStringValue(configuration, "name");
+				Thread.Supplier mainThreadSupplier = (Thread.Supplier)configuration.get("thread-supplier");
+				Boolean isDaemon = Objects.toBoolean(
+					IterableObjectHelper.resolveValue(configuration, "daemon")
+				);
 				queuedTasksExecutorGroup.name = name;
 				queuedTasksExecutorGroup.queuedTasksExecutors = new HashMap<>();
-				queuedTasksExecutorGroup.queuedTasksExecutors.put(
-					String.valueOf(java.lang.Thread.MAX_PRIORITY),
-					createQueuedTasksExecutor(
-						name + " - High priority tasks",
-						threadSupplierForHighPriorityTasksExecutor,
-						java.lang.Thread.MAX_PRIORITY, isDaemon
-					)
-				);
-				queuedTasksExecutorGroup.queuedTasksExecutors.put(
-					String.valueOf(java.lang.Thread.NORM_PRIORITY),
-					createQueuedTasksExecutor(
-						name + " - Normal priority tasks",
-						threadSupplierForNormalPriorityTasksExecutor,
-						java.lang.Thread.NORM_PRIORITY, isDaemon
-					)
-				);
-				queuedTasksExecutorGroup.queuedTasksExecutors.put(
-					String.valueOf(java.lang.Thread.MIN_PRIORITY),
-					createQueuedTasksExecutor(
-						name + " - Low priority tasks", 
-						threadSupplierForLowPriorityTasksExecutor,
-						java.lang.Thread.MIN_PRIORITY, isDaemon
-					)
+				for (int i = 0;  i < Thread.MAX_PRIORITY; i++) {
+					Object priorityAsObject = IterableObjectHelper.resolveValue(configuration, "queue-task-executor[" + i + "].priority");
+					if (priorityAsObject != null) {
+						int priority = Objects.toInt(priorityAsObject);
+						if (priority < Thread.MIN_PRIORITY || priority > Thread.MAX_PRIORITY) {
+							throw new IllegalArgumentException(
+								Strings.compile(
+									"Value of '{}' is not correct: it must be between {} and {}",
+									"queue-task-executor[" + i + "].priority",
+									Thread.MIN_PRIORITY, Thread.MAX_PRIORITY
+								)
+							);
+						}
+						String queuedTasksExecutorName =
+							IterableObjectHelper.resolveStringValue(configuration, "queue-task-executor[" + i + "].name"); 
+						Thread.Supplier queuedTasksExecutorThreadSupplier =
+							IterableObjectHelper.resolveValue(configuration, "queue-task-executor[" + i + "].thread-supplier"); 
+						if (queuedTasksExecutorThreadSupplier == null) {
+							queuedTasksExecutorThreadSupplier = mainThreadSupplier;
+						}
+						Object isQueuedTasksExecutorDaemonAsObject =
+							IterableObjectHelper.resolveValue(configuration, "queue-task-executor[" + i + "].daemon");
+						Boolean isQueuedTasksExecutorDaemon = isDaemon;
+						if (isQueuedTasksExecutorDaemonAsObject != null) {
+							isQueuedTasksExecutorDaemon = Objects.toBoolean(
+								isQueuedTasksExecutorDaemonAsObject	
+							);
+						}
+						queuedTasksExecutorGroup.queuedTasksExecutors.put(
+							priority,
+							createQueuedTasksExecutor(
+								name + " - " + queuedTasksExecutorName,
+								queuedTasksExecutorThreadSupplier,
+								priority,
+								isQueuedTasksExecutorDaemon
+							)
+						);
+					}
+				}
+				definedPriorites = queuedTasksExecutorGroup.queuedTasksExecutors.keySet().toArray(
+					definedPriorites = new Integer[queuedTasksExecutorGroup.queuedTasksExecutors.size()] 
 				);
 			};
 		}
@@ -1004,7 +1023,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 
 		private void setTasksCreationTrackingFlag(Group queuedTasksExecutorGroup, boolean flag) {
-			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutorGroup.queuedTasksExecutors.entrySet()) {
+			for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutorGroup.queuedTasksExecutors.entrySet()) {
 				queuedTasksExecutorBox.getValue().setTasksCreationTrackingFlag(flag);
 			}
 		}
@@ -1029,27 +1048,30 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 		
 		public static Group create(
-			String name,
-			Thread.Supplier threadSupplierForHighPriorityTasksExecutor,
-			Thread.Supplier threadSupplierForNormalPriorityTasksExecutor,
-			Thread.Supplier threadSupplierForLowPriorityTasksExecutor,
-			boolean isDaemon,
-			boolean undestroyableFromExternal
-		) {
+			String keyPrefix,
+			Map<String, Object> configuration
+		) {	
+			configuration = IterableObjectHelper.resolveValues(
+				configuration, (key) -> key.startsWith(keyPrefix + ".")
+			);
+			Map<String, Object> finalConfiguration = new HashMap<>();
+			boolean undestroyableFromExternal = Objects.toBoolean(
+				IterableObjectHelper.resolveValue(configuration, keyPrefix + ".undestroyable-from-external")
+			);
+			for (Entry<String, Object> entry : configuration.entrySet()) {
+				Object value = entry.getValue();
+				if (value instanceof Collection && ((Collection<Object>)value).size() == 1) {
+					value = ((Collection<Object>)value).iterator().next();	
+				}
+				finalConfiguration.put(entry.getKey().replace(keyPrefix +".", ""), value);
+			}
 			if (!undestroyableFromExternal) {
 				return new Group(
-					name, 
-					threadSupplierForHighPriorityTasksExecutor, 
-					threadSupplierForNormalPriorityTasksExecutor,
-					threadSupplierForLowPriorityTasksExecutor,
-					isDaemon
+					finalConfiguration
 				);
 			} else {
-				return new Group(name, 
-					threadSupplierForHighPriorityTasksExecutor, 
-					threadSupplierForNormalPriorityTasksExecutor,
-					threadSupplierForLowPriorityTasksExecutor,
-					isDaemon
+				return new Group(
+					finalConfiguration
 				) {
 					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
 					
@@ -1076,7 +1098,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			QueuedTasksExecutor queuedTasksExecutor = null;
 			//Implemented deferred initialization (since 10.0.0, the previous version is 9.5.2)
 			try {
-				queuedTasksExecutor = queuedTasksExecutors.get(String.valueOf(priority));
+				queuedTasksExecutor = queuedTasksExecutors.get(priority);
 			} catch (Exception e) {
 				if (queuedTasksExecutor == null) {
 					if (initializator != null) {
@@ -1091,25 +1113,33 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				return getByPriority(priority);
 			}
 			if (queuedTasksExecutor == null) {
-				queuedTasksExecutor = queuedTasksExecutors.get(String.valueOf(checkAndCorrectPriority(priority)));
+				queuedTasksExecutor = queuedTasksExecutors.get(checkAndCorrectPriority(priority));
 			}	
 			return queuedTasksExecutor;
 		}
 
 		int checkAndCorrectPriority(int priority) {
-			if (priority != java.lang.Thread.MIN_PRIORITY || 
-				priority != java.lang.Thread.NORM_PRIORITY || 
-				priority != java.lang.Thread.MAX_PRIORITY	
-			) {
-				if (priority < java.lang.Thread.NORM_PRIORITY) {
-					return java.lang.Thread.MIN_PRIORITY;
-				} else if (priority < java.lang.Thread.MAX_PRIORITY) {
-					return java.lang.Thread.NORM_PRIORITY;
-				} else {
-					return java.lang.Thread.MAX_PRIORITY;
+			if (queuedTasksExecutors.get(priority) != null) {
+				return priority;
+			}
+			if (priority < Thread.MIN_PRIORITY || priority > Thread.MAX_PRIORITY) {
+				throw new IllegalArgumentException(
+					Strings.compile(
+						"Priority value must be between {} and {}",
+						Thread.MIN_PRIORITY, Thread.MAX_PRIORITY
+					)
+				);
+			}
+			Integer currentMaxPriorityHandled = definedPriorites[definedPriorites.length -1];
+			if (priority > currentMaxPriorityHandled) {
+				return currentMaxPriorityHandled;
+			}
+			for (int i = 0; i < definedPriorites.length; i++) {
+				if (priority < definedPriorites[i]) {
+					return definedPriorites[i];
 				}
 			}
-			return priority;
+			return definedPriorites[definedPriorites.length -1];
 		}
 		
 		public Task createTask(ThrowingRunnable<? extends Throwable> executable) {
@@ -1251,14 +1281,14 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					return;
 				}
 				QueuedTasksExecutor lastToBeWaitedFor = getByPriority(priority);
-				for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+				for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 					QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
 					if (queuedTasksExecutor != lastToBeWaitedFor) {
 						queuedTasksExecutor.waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
 					}
 				}
 				lastToBeWaitedFor.waitForTasksEnding(priority, waitForNewAddedTasks);	
-				for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+				for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 					QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
 					if (waitForNewAddedTasks && (!queuedTasksExecutor.tasksQueue.isEmpty() || !queuedTasksExecutor.tasksInExecution.isEmpty())) {
 						waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
@@ -1292,14 +1322,14 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		
 		public String getInfoAsString() {
 			StringBuffer loggableMessage = new StringBuffer("");
-			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+			for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				loggableMessage.append(queuedTasksExecutorBox.getValue().getInfoAsString());
 			}
 			return loggableMessage.toString();
 		}
 
 		public <E, T extends TaskAbst<E, T>> boolean abort(T task) {
-			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+			for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				if (queuedTasksExecutorBox.getValue().abort(task)) {
 					return true;
 				}
@@ -1309,7 +1339,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		
 		public Collection<TaskAbst<?, ?>> getAllTasksInExecution() {
 			Collection<TaskAbst<?, ?>> tasksInExecution = new HashSet<>();
-			for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+			for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				tasksInExecution.addAll(
 					queuedTasksExecutorBox.getValue().tasksInExecution
 				);
@@ -1342,7 +1372,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					return;
 				}
 				QueuedTasksExecutor lastToBeWaitedFor = getByPriority(java.lang.Thread.currentThread().getPriority());
-				for (Entry<String, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+				for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 					QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
 					if (queuedTasksExecutor != lastToBeWaitedFor) {
 						queuedTasksExecutor.shutDown(waitForTasksTermination);
