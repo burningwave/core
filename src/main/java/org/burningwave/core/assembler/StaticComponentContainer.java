@@ -42,11 +42,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
+import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
@@ -418,8 +420,11 @@ public class StaticComponentContainer {
 	}
 
 	private static Map<String, Object> getAndAdjustConfigurationForBackgroundExecutor() {
-		if (IterableObjectHelper.resolveValues(GlobalProperties, key ->
-			key.matches("background-executor.queue-task-executor\\[\\d\\]\\.priority")).isEmpty()
+		if (IterableObjectHelper.resolveStringValues(
+				ResolveConfig.forAllKeysThat((Predicate<String>)key ->
+					key.matches("background-executor.queue-task-executor\\[\\d\\]\\.priority")
+				).on(GlobalProperties)
+			).isEmpty()
 		) {
 			GlobalProperties.put("background-executor.queue-task-executor[0].priority", Thread.MIN_PRIORITY);
 			if (GlobalProperties.get("background-executor.queue-task-executor[0].name") == null) {
@@ -434,12 +439,20 @@ public class StaticComponentContainer {
 				GlobalProperties.put("background-executor.queue-task-executor[2].name", "High priority tasks");
 			}
 		}
-		Map<String, Object> configuration = IterableObjectHelper.resolveValues(GlobalProperties, key -> key.startsWith("background-executor."));
+		Map<String, Object> configuration = IterableObjectHelper.resolveValues(
+			ResolveConfig.forAllKeysThat((Predicate<String>)key ->
+				key.startsWith("background-executor.")
+			).on(GlobalProperties)
+		);
 		configuration.put("background-executor.thread-supplier", ThreadSupplier);
 		configuration.put("background-executor.name", "BackgroundExecutor");
 		configuration.put("background-executor.daemon", true);
 		configuration.put("background-executor.undestroyable-from-external", true);
-		Map<String, Object> unvalidEntries = IterableObjectHelper.resolveValues(configuration, key -> key.endsWith("].daemon"));
+		Map<String, Object> unvalidEntries = IterableObjectHelper.resolveValues(
+			ResolveConfig.forAllKeysThat((Predicate<String>)key ->
+				key.endsWith("].daemon")
+			).on(GlobalProperties)
+		);
 		Iterator<Map.Entry<String, Object>> unvalidEntriesItr = unvalidEntries.entrySet().iterator();
 		while (unvalidEntriesItr.hasNext()) {
 			String key = unvalidEntriesItr.next().getKey();

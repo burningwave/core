@@ -45,6 +45,7 @@ import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.PathScannerClassLoader;
+import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 import org.burningwave.core.iterable.Properties.Event;
 
 
@@ -242,10 +243,12 @@ public interface ManagedLogger {
 			abstract void resetSpecificElements();
 			
 			boolean getEnabledLoggingFlag(Properties properties) {
-				return Objects.toBoolean(IterableObjectHelper.resolveStringValue(
-					properties,
-					Configuration.Key.ENABLED_FLAG
-				));
+				return Objects.toBoolean(
+					IterableObjectHelper.resolveStringValue(
+						ResolveConfig.forNamedKey(Configuration.Key.ENABLED_FLAG)
+						.on(properties)
+					)
+				);
 			}
 			
 			@Override

@@ -40,6 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 
 @SuppressWarnings("unchecked")
@@ -74,73 +75,165 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 ////////////////////
 	
 	public <T> T resolveValue(String key) {
-		return IterableObjectHelper.resolveValue(this, key, null, defaultValuesSeparator, false, this.defaults);
+		return IterableObjectHelper.resolveValue(
+			ResolveConfig.forNamedKey(key)
+			.on(this)
+			.withDefaultValueSeparator(defaultValuesSeparator)
+			.withDefaultValues(this.defaults)
+		);
 	}
 	
 	public <T> Collection<T> resolveValues(String key) {
-		return IterableObjectHelper.resolveValues(this, key, null, defaultValuesSeparator, false, this.defaults);
+		return IterableObjectHelper.resolveValues(
+			ResolveConfig.forNamedKey(key)
+			.on(this)
+			.withDefaultValueSeparator(defaultValuesSeparator)
+			.withDefaultValues(this.defaults)
+		);
 	}
 	
 	public String resolveStringValue(String key) {
-		return IterableObjectHelper.resolveStringValue(this, key, null, defaultValuesSeparator, false, this.defaults);
+		return IterableObjectHelper.resolveStringValue(
+			ResolveConfig.forNamedKey(key)
+			.on(this)
+			.withDefaultValueSeparator(defaultValuesSeparator)
+			.withDefaultValues(this.defaults)
+		);
 	}
 	
 	public Collection<String> resolveStringValues(String key) {
-		return IterableObjectHelper.resolveStringValues(this, key, null, defaultValuesSeparator, false, this.defaults);
+		return IterableObjectHelper.resolveStringValues(
+			ResolveConfig.forNamedKey(key)
+			.on(this)
+			.withDefaultValueSeparator(defaultValuesSeparator)
+			.withDefaultValues(this.defaults)
+		);
 	}
 	
 ////////////////////
 	
 	public <T> T resolveValue(String key, Map<?, ?> defaultValues) {
-		return IterableObjectHelper.resolveValue(this, key, null, defaultValuesSeparator, false, defaultValues);
+		return IterableObjectHelper.resolveValue(
+			ResolveConfig.forNamedKey(key)
+			.on(this)
+			.withDefaultValueSeparator(defaultValuesSeparator)
+			.withDefaultValues(this.defaults)
+		);
 	}
 	
 	public <T> Collection<T> resolveValues(String key, Map<?, ?> defaultValues) {
-		return IterableObjectHelper.resolveValues(this, key, null, defaultValuesSeparator, false, defaultValues);
+		return IterableObjectHelper.resolveValues(
+			ResolveConfig.forNamedKey(key)
+			.on(this)
+			.withDefaultValueSeparator(defaultValuesSeparator)
+			.withDefaultValues(this.defaults)
+		);
 	}
 	
 	public String resolveStringValue(String key, Map<?, ?> defaultValues) {
-		return IterableObjectHelper.resolveStringValue(this, key, null, defaultValuesSeparator, false, defaultValues);
+		return IterableObjectHelper.resolveStringValue(
+			ResolveConfig.forNamedKey(key)
+			.on(this)
+			.withDefaultValueSeparator(defaultValuesSeparator)
+			.withDefaultValues(this.defaults)
+		);
 	}
 	
 	public Collection<String> resolveStringValues(String key, Map<?, ?> defaultValues) {
-		return IterableObjectHelper.resolveStringValues(this, key, null, defaultValuesSeparator, false, defaultValues);
+		return IterableObjectHelper.resolveStringValues(
+			ResolveConfig.forNamedKey(key)
+			.on(this)
+			.withDefaultValueSeparator(defaultValuesSeparator)
+			.withDefaultValues(this.defaults)
+		);
 	}
 
 ////////////////////
 	
 	public <T> T resolveValue(String key, String valuesSeparator) {
-		return IterableObjectHelper.resolveValue(this, key, valuesSeparator, defaultValuesSeparator, false, this.defaults);
+		return IterableObjectHelper.resolveValue(
+			ResolveConfig.forNamedKey(key)
+			.on(this)
+			.withValuesSeparator(valuesSeparator)
+			.withDefaultValueSeparator(defaultValuesSeparator)
+			.withDefaultValues(this.defaults)
+		);
 	}
 	
 	public <T> Collection<T> resolveValues(String key, String valuesSeparator) {
-		return IterableObjectHelper.resolveValues(this, key, valuesSeparator, defaultValuesSeparator, false, this.defaults);
+		return IterableObjectHelper.resolveValues(
+			ResolveConfig.forNamedKey(key)
+			.on(this)
+			.withValuesSeparator(valuesSeparator)
+			.withDefaultValueSeparator(defaultValuesSeparator)
+			.withDefaultValues(this.defaults)
+		);
 	}
 	
 	public String resolveStringValue(String key, String valuesSeparator) {
-		return IterableObjectHelper.resolveStringValue(this, key, valuesSeparator, defaultValuesSeparator, false, this.defaults);
+		return IterableObjectHelper.resolveStringValue(
+			ResolveConfig.forNamedKey(key)
+			.on(this)
+			.withValuesSeparator(valuesSeparator)
+			.withDefaultValueSeparator(defaultValuesSeparator)
+			.withDefaultValues(this.defaults)
+		);
 	}
 	
 	public Collection<String> resolveStringValues(String key, String valuesSeparator) {
-		return IterableObjectHelper.resolveStringValues(this, key, valuesSeparator, defaultValuesSeparator, false, this.defaults);
+		return IterableObjectHelper.resolveStringValues(
+			ResolveConfig.forNamedKey(key)
+			.on(this)
+			.withValuesSeparator(valuesSeparator)
+			.withDefaultValueSeparator(defaultValuesSeparator)
+			.withDefaultValues(this.defaults)
+		);
 	}
 
 ////////////////////
 	
 	public <T> T resolveValue(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return IterableObjectHelper.resolveValue(this, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, this.defaults);
+		return IterableObjectHelper.resolveValue(
+			ResolveConfig.forNamedKey(key)
+			.on(this)
+			.withValuesSeparator(valuesSeparator)
+			.withDefaultValueSeparator(defaultValuesSeparator)
+			.deleteUnresolvedPlaceHolder(deleteUnresolvedPlaceHolder)
+			.withDefaultValues(this.defaults)
+		);
 	}
 	
 	public <T> Collection<T> resolveValues(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return IterableObjectHelper.resolveValues(this, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, this.defaults);
+		return IterableObjectHelper.resolveValues(
+			ResolveConfig.forNamedKey(key)
+			.on(this)
+			.withValuesSeparator(valuesSeparator)
+			.withDefaultValueSeparator(defaultValuesSeparator)
+			.deleteUnresolvedPlaceHolder(deleteUnresolvedPlaceHolder)
+			.withDefaultValues(this.defaults)
+		);
 	}
 	
 	public String resolveStringValue(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return IterableObjectHelper.resolveStringValue(this, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, this.defaults);
+		return IterableObjectHelper.resolveStringValue(
+			ResolveConfig.forNamedKey(key)
+			.on(this)
+			.withValuesSeparator(valuesSeparator)
+			.withDefaultValueSeparator(defaultValuesSeparator)
+			.deleteUnresolvedPlaceHolder(deleteUnresolvedPlaceHolder)
+			.withDefaultValues(this.defaults)
+		);
 	}
 	
 	public Collection<String> resolveStringValues(String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder) {
-		return IterableObjectHelper.resolveStringValues(this, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, this.defaults);
+		return IterableObjectHelper.resolveStringValues(
+			ResolveConfig.forNamedKey(key)
+			.on(this)
+			.withValuesSeparator(valuesSeparator)
+			.withDefaultValueSeparator(defaultValuesSeparator)
+			.deleteUnresolvedPlaceHolder(deleteUnresolvedPlaceHolder)
+			.withDefaultValues(this.defaults)
+		);
 	}
 
 ////////////////////

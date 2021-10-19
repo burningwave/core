@@ -52,6 +52,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -60,6 +61,7 @@ import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingBiPredicate;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
+import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 @SuppressWarnings({"unchecked", "resource"})
 public class QueuedTasksExecutor implements Closeable, ManagedLogger {
@@ -959,15 +961,24 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		Group(Map<String, Object> configuration) {
 			//Implemented deferred initialization (since 10.0.0, the previous version is 9.5.2)
 			initializator = queuedTasksExecutorGroup -> {
-				String name = IterableObjectHelper.resolveStringValue(configuration, "name");
+				String name = IterableObjectHelper.resolveStringValue(
+					ResolveConfig.forNamedKey("name")
+					.on(configuration)	
+				);
 				Thread.Supplier mainThreadSupplier = (Thread.Supplier)configuration.get("thread-supplier");
 				Boolean isDaemon = Objects.toBoolean(
-					IterableObjectHelper.resolveValue(configuration, "daemon")
+					IterableObjectHelper.resolveValue(
+						ResolveConfig.forNamedKey("daemon")
+						.on(configuration)	
+					)
 				);
 				queuedTasksExecutorGroup.name = name;
 				queuedTasksExecutorGroup.queuedTasksExecutors = new HashMap<>();
 				for (int i = 0;  i < Thread.MAX_PRIORITY; i++) {
-					Object priorityAsObject = IterableObjectHelper.resolveValue(configuration, "queue-task-executor[" + i + "].priority");
+					Object priorityAsObject = IterableObjectHelper.resolveValue(
+						ResolveConfig.forNamedKey("queue-task-executor[" + i + "].priority")
+						.on(configuration)	
+					);
 					if (priorityAsObject != null) {
 						int priority = Objects.toInt(priorityAsObject);
 						if (priority < Thread.MIN_PRIORITY || priority > Thread.MAX_PRIORITY) {
@@ -980,14 +991,23 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 							);
 						}
 						String queuedTasksExecutorName =
-							IterableObjectHelper.resolveStringValue(configuration, "queue-task-executor[" + i + "].name"); 
+							IterableObjectHelper.resolveStringValue(
+								ResolveConfig.forNamedKey("queue-task-executor[" + i + "].name")
+								.on(configuration)
+							); 
 						Thread.Supplier queuedTasksExecutorThreadSupplier =
-							IterableObjectHelper.resolveValue(configuration, "queue-task-executor[" + i + "].thread-supplier"); 
+							IterableObjectHelper.resolveValue(
+								ResolveConfig.forNamedKey("queue-task-executor[" + i + "].thread-supplier")
+								.on(configuration)	
+						);
 						if (queuedTasksExecutorThreadSupplier == null) {
 							queuedTasksExecutorThreadSupplier = mainThreadSupplier;
 						}
 						Object isQueuedTasksExecutorDaemonAsObject =
-							IterableObjectHelper.resolveValue(configuration, "queue-task-executor[" + i + "].daemon");
+							IterableObjectHelper.resolveValue(
+								ResolveConfig.forNamedKey("queue-task-executor[" + i + "].daemon")
+								.on(configuration)	
+							);
 						Boolean isQueuedTasksExecutorDaemon = isDaemon;
 						if (isQueuedTasksExecutorDaemonAsObject != null) {
 							isQueuedTasksExecutorDaemon = Objects.toBoolean(
@@ -1052,11 +1072,16 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			Map<String, Object> configuration
 		) {	
 			configuration = IterableObjectHelper.resolveValues(
-				configuration, (key) -> key.startsWith(keyPrefix + ".")
+				ResolveConfig.forAllKeysThat((Predicate<String>)(key) -> 
+					key.startsWith(keyPrefix + "."))
+				.on(configuration)	
 			);
 			Map<String, Object> finalConfiguration = new HashMap<>();
 			boolean undestroyableFromExternal = Objects.toBoolean(
-				IterableObjectHelper.resolveValue(configuration, keyPrefix + ".undestroyable-from-external")
+				IterableObjectHelper.resolveValue(
+					ResolveConfig.forNamedKey(keyPrefix + ".undestroyable-from-external")
+					.on(configuration)	
+				)
 			);
 			for (Entry<String, Object> entry : configuration.entrySet()) {
 				Object value = entry.getValue();

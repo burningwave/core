@@ -46,6 +46,7 @@ import java.util.function.Consumer;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 public class Thread extends java.lang.Thread implements ManagedLogger {
 	
@@ -212,14 +213,24 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			Properties config
 		) {			
 			this.name = name;
-			this.daemon = Objects.toBoolean(IterableObjectHelper.resolveValue(config, Configuration.Key.DEFAULT_DAEMON_FLAG_VALUE));
+			this.daemon = Objects.toBoolean(
+				IterableObjectHelper.resolveValue(
+					ResolveConfig.forNamedKey(Configuration.Key.DEFAULT_DAEMON_FLAG_VALUE)
+					.on(config)
+				)
+			);
 			this.runningThreads = ConcurrentHashMap.newKeySet();
 			this.poolableSleepingThreads = ConcurrentHashMap.newKeySet();
 			
 			int maxPoolableThreadsCountAsInt;
 			double multiplier = 3;
 			try {
-				maxPoolableThreadsCountAsInt = Objects.toInt(IterableObjectHelper.resolveValue(config, Configuration.Key.MAX_POOLABLE_THREADS_COUNT));
+				maxPoolableThreadsCountAsInt = Objects.toInt(
+					IterableObjectHelper.resolveValue(
+						ResolveConfig.forNamedKey(Configuration.Key.MAX_POOLABLE_THREADS_COUNT)
+						.on(config)
+					)						
+				);
 			} catch (Throwable exc) {
 				maxPoolableThreadsCountAsInt = (int)(Runtime.getRuntime().availableProcessors() * multiplier);
 			}			
@@ -229,7 +240,12 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			
 			int maxDetachedThreadsCountAsInt;			
 			try {
-				maxDetachedThreadsCountAsInt = Objects.toInt(IterableObjectHelper.resolveValue(config, Configuration.Key.MAX_DETACHED_THREADS_COUNT));
+				maxDetachedThreadsCountAsInt = Objects.toInt(
+					IterableObjectHelper.resolveValue(
+						ResolveConfig.forNamedKey(Configuration.Key.MAX_DETACHED_THREADS_COUNT)
+						.on(config)
+					)
+				);
 			} catch (Throwable exc) {
 				maxDetachedThreadsCountAsInt = 
 					((int)(Runtime.getRuntime().availableProcessors() * 3 * multiplier)) - 
@@ -240,10 +256,26 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 			this.maxPoolableThreadsCount = maxPoolableThreadsCountAsInt;
 			this.inititialMaxThreadsCount = this.maxThreadsCount = maxPoolableThreadsCountAsInt + maxDetachedThreadsCountAsInt;
-			this.poolableThreadRequestTimeout = Objects.toLong(IterableObjectHelper.resolveValue(config, Configuration.Key.POOLABLE_THREAD_REQUEST_TIMEOUT));
+			this.poolableThreadRequestTimeout = Objects.toLong(
+				IterableObjectHelper.resolveValue(
+					ResolveConfig.forNamedKey(Configuration.Key.POOLABLE_THREAD_REQUEST_TIMEOUT)
+					.on(config)
+				)
+			);
 			this.elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxDetachedThreadsCount =
-				Objects.toLong(IterableObjectHelper.resolveValue(config, Configuration.Key.MAX_DETACHED_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE));
-			this.maxDetachedThreadsCountIncreasingStep = Objects.toInt(IterableObjectHelper.resolveValue(config, Configuration.Key.MAX_DETACHED_THREADS_COUNT_INCREASING_STEP));
+				Objects.toLong(IterableObjectHelper.resolveValue(
+					ResolveConfig.forNamedKey(
+						Configuration.Key.MAX_DETACHED_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE
+					)
+					.on(config)
+				)
+			);
+			this.maxDetachedThreadsCountIncreasingStep = Objects.toInt(
+				IterableObjectHelper.resolveValue(
+					ResolveConfig.forNamedKey(Configuration.Key.MAX_DETACHED_THREADS_COUNT_INCREASING_STEP)
+					.on(config)
+				)
+			);
 			if (maxDetachedThreadsCountIncreasingStep < 1) {
 				poolableThreadRequestTimeout = 0;
 				config.put(Configuration.Key.POOLABLE_THREAD_REQUEST_TIMEOUT, poolableThreadRequestTimeout);

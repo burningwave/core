@@ -75,8 +75,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	
 	IterableObjectHelperImpl(Properties config) {
 		this.defaultValuesSeparator = resolveStringValue(
-			config,
-			Configuration.Key.DEFAULT_VALUES_SEPERATOR
+			ResolveConfig.ForNamedKey.forNamedKey(
+				Configuration.Key.DEFAULT_VALUES_SEPERATOR
+			).on(config)
 		);
 		this.defaultMinimumCollectionSizeForParallelIterationPredicate =
 			buildDefaultMinimumCollectionSizeForParallelIterationPredicate(config);
@@ -86,8 +87,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	private Predicate<Collection<?>> buildDefaultMinimumCollectionSizeForParallelIterationPredicate(Properties config) {
 		int defaultMinimumCollectionSizeForParallelIteration = Objects.toInt(
 			resolveValue(
-				config,
-				Configuration.Key.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION
+				ResolveConfig.ForNamedKey.forNamedKey(
+					Configuration.Key.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION
+				).on(config)
 			)
 		);
 		if (defaultMinimumCollectionSizeForParallelIteration >= 0) {
@@ -113,8 +115,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		try {
 			return Objects.toInt(
 				resolveValue(
-					config,
-					Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD
+					ResolveConfig.ForNamedKey.forNamedKey(
+						Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD
+					).on(config)
 				)
 			);
 		} catch (Throwable exc) {
@@ -220,206 +223,79 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		return retrieveStream(object).count();
 	}
 
-////////////////////	
+/////////////
 	
 	@Override
-	public <T> T resolveValue(Map<?,?> map, String key) {
-		return resolveValue(key, () -> resolve(map, key, null, null, false, null));
+	public <T> T resolveValue(ResolveConfig.ForNamedKey config) {
+		return resolveValue(
+			config.filter, () -> 
+			resolve(
+				config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+				config.deleteUnresolvedPlaceHolder, config.defaultValues
+			)
+		);
 	}	
 	
 	@Override
-	public <T> Collection<T> resolveValues(Map<?,?> map, String key) {
-		return resolve(map, key, null, null, false, null);
+	public <K, T> T resolveValue(ResolveConfig.ForAllKeysThat<K> config) {
+		return resolveValue(
+			config.filter, () -> 
+			resolve(
+				config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+				config.deleteUnresolvedPlaceHolder, config.defaultValues
+			)
+		);
+	}
+		
+	@Override
+	public String resolveStringValue(ResolveConfig.ForNamedKey config) {
+		return resolveValue(config);
 	}
 	
 	@Override
-	public <V> Map<String, V> resolveValues(Map<?,?> map, Predicate<String> key) {
-		return resolveForKeys(map, key, null, null, false, null);
+	public <K> String resolveStringValue(ResolveConfig.ForAllKeysThat<K> config) {
+		return resolveValue(config);
 	}
-	
-	@Override
-	public Collection<String> resolveStringValues(Map<?,?> map, String key) {
-		return resolveValues(map, key);
-	}
-	
-	@Override
-	public Map<String, String> resolveStringValues(Map<?,?> map, Predicate<String> keyPredicate) {
-		return resolveValues(map, keyPredicate);
-	}
-	
-	@Override
-	public String resolveStringValue(Map<?,?> map, String key) {
-		return resolveValue(map, key);
-	}
-
-////////////////////
-	
-	@Override
-	public <T> T resolveValue(Map<?,?> map, String key, Map<String, ?> defaultValues) {
-		return resolveValue(key, () -> resolve(map, key, null, null, false, defaultValues));
-	}	
-	
-	@Override
-	public <T> Collection<T> resolveValues(Map<?,?> map, String key, Map<String, ?> defaultValues) {
-		return resolve(map, key, null, null, false, defaultValues);
-	}
-	
-	@Override
-	public String resolveStringValue(Map<?,?> map, String key, Map<String, ?> defaultValues) {
-		return resolveValue(map, key, defaultValues);
-	}
-	
-	@Override
-	public Collection<String> resolveStringValues(Map<?,?> map, String key, Map<String, ?> defaultValues) {
-		return resolveValues(map, key, defaultValues);
-	}
-
-////////////////////
-	
-	@Override
-	public <T> T resolveValue(Map<?,?> map, String key, String valuesSeparator) {
-		return resolveValue(key, () -> resolve(map, key, valuesSeparator, null, false, null));
-	}	
-	
-	@Override
-	public <T> Collection<T> resolveValues(Map<?,?> map, String key, String valuesSeparator) {
-		return resolve(map, key, valuesSeparator, null, false, null);
-	}
-	
-	@Override
-	public String resolveStringValue(Map<?,?> map, String key, String valuesSeparator) {
-		return resolveValue(map, key, valuesSeparator);
-	}
-	
-	@Override
-	public Collection<String> resolveStringValues(Map<?,?> map, String key, String valuesSeparator) {
-		return resolveValues(map, key, valuesSeparator);
-	}
-	
-////////////////////
 
 	
 	@Override
-	public <T> T resolveValue(
-		Map<?,?> map,
-		String key,
-		String valuesSeparator,
-		boolean deleteUnresolvedPlaceHolder
-	) {
-		return resolveValue(key, () -> resolve(map, key, valuesSeparator, null, deleteUnresolvedPlaceHolder, null));
-	}
-
-	@Override
-	public <T> Collection<T> resolveValues(
-		Map<?,?> map, String key,
-		String valuesSeparator,
-		boolean deleteUnresolvedPlaceHolder
-	) {
-		return resolve(map, key, valuesSeparator, null, deleteUnresolvedPlaceHolder, null);
-	}
-
-	@Override
-	public String resolveStringValue(
-		Map<?,?> map,
-		String key,
-		String valuesSeparator,
-		boolean deleteUnresolvedPlaceHolder
-	) {
-		return resolveValue(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
-	}
-
-	@Override
-	public Collection<String> resolveStringValues(
-		Map<?,?> map,
-		String key,
-		String valuesSeparator,
-		boolean deleteUnresolvedPlaceHolder
-	) {
-		return resolveValues(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
-	}
-	
-////////////////////
-	@Override
-	public <T> T resolveValue(
-		Map<?,?> map,
-		String key,
-		String valuesSeparator,
-		String defaultValuesSeparator,
-		boolean deleteUnresolvedPlaceHolder,
-		Map<?,?> defaultValues
-	) {
-		return resolveValue(key, () -> resolve(map, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues));
-	}
-
-	@Override
-	public <T> Collection<T> resolveValues(
-		Map<?,?> map,
-		String key,
-		String valuesSeparator,
-		String defaultValuesSeparator,
-		boolean deleteUnresolvedPlaceHolder,
-		Map<?,?> defaultValues
-	) {
-		return resolve(map, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+	public <T> Collection<T> resolveValues(ResolveConfig.ForNamedKey config) {
+		return resolve(
+			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+			config.deleteUnresolvedPlaceHolder, config.defaultValues
+		);
 	}
 	
 	@Override
-	public <V> Map<String, V> resolveValues(
-		Map<?,?> map,
-		Predicate<String> keyPredicate,
-		String valuesSeparator,
-		String defaultValuesSeparator,
-		boolean deleteUnresolvedPlaceHolder,
-		Map<?,?> defaultValues
-	) {
-		return resolveForKeys(map, keyPredicate, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
-	}
-
-	@Override
-	public String resolveStringValue(
-		Map<?,?> map,
-		String key,
-		String valuesSeparator,
-		String defaultValuesSeparator,
-		boolean deleteUnresolvedPlaceHolder,
-		Map<?,?> defaultValues
-	) {
-		return resolveValue(map, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
-	}
-
-	@Override
-	public Collection<String> resolveStringValues(
-		Map<?,?> map,
-		String key,
-		String valuesSeparator,
-		String defaultValuesSeparator,
-		boolean deleteUnresolvedPlaceHolder,
-		Map<?,?> defaultValues
-	) {
-		return resolveValues(map, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+	public <K, V> Map<K, V> resolveValues(ResolveConfig.ForAllKeysThat<K> config) {
+		return (Map<K, V>) resolveForKeys(
+			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+			config.deleteUnresolvedPlaceHolder, config.defaultValues
+		);
 	}
 	
 	@Override
-	public Map<String, String> resolveStringValues(
-		Map<?, ?> map,
-		Predicate<String> keyPredicate, 
-		String valuesSeparator,
-		String defaultValuesSeparator,
-		boolean deleteUnresolvedPlaceHolder,
-		Map<?, ?> defaultValues
-	) {
-		return resolveForKeys(map, keyPredicate, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+	public Collection<String> resolveStringValues(ResolveConfig.ForNamedKey config) {
+		return resolve(
+			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+			config.deleteUnresolvedPlaceHolder, config.defaultValues
+		);
 	}
 	
-////////////////////	
+	@Override
+	public <K> Map<K, Collection<String>> resolveStringValues(ResolveConfig.ForAllKeysThat<K> config) {
+		return resolveForKeys(
+			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+			config.deleteUnresolvedPlaceHolder, config.defaultValues
+		);
+	}
 	
-	
-	private <T> T resolveValue(String key, Supplier<Object> valuesSupplier) {
+	private <T> T resolveValue(Object key, Supplier<Object> valuesSupplier) {
 		Object value = valuesSupplier.get();
 		if (value instanceof Collection) {
 			Collection<T> values = (Collection<T>)value;
 			if (values.size() > 1) {
-				Driver.throwException("Found more than one item under key {}", key);
+				Driver.throwException("Found more than one item under key/predicate {}", key);
 			}
 			return values.stream().findFirst().orElseGet(() -> null);
 		} else {

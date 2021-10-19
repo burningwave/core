@@ -72,6 +72,7 @@ import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.FileSystemItem.Criteria;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
@@ -292,11 +293,13 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 	
 	public String getConfigProperty(String propertyName) {
-		return IterableObjectHelper.resolveStringValue(config, propertyName);
+		return IterableObjectHelper.resolveStringValue(ResolveConfig.forNamedKey(propertyName).on(config));
 	}
 	
 	public String getConfigProperty(String propertyName, Map<String, String> defaultValues) {
-		return IterableObjectHelper.resolveStringValue(config, propertyName, defaultValues);
+		return IterableObjectHelper.resolveStringValue(
+			ResolveConfig.forNamedKey(propertyName).on(config).withDefaultValues(defaultValues)
+		);
 	}
 	
 	public Object setConfigProperty(String propertyName, Object propertyValue) {
@@ -468,7 +471,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 	
 	public <T> T resolveProperty(java.util.Properties properties, String configKey, Map<?, ?> defaultValues) {
-		T object = IterableObjectHelper.resolveValue(properties, configKey, null, null, false, defaultValues);
+		T object = IterableObjectHelper.resolveValue(ResolveConfig.forNamedKey(configKey).on(config).withDefaultValues(defaultValues));
 		if (object instanceof String) {
 			ExecuteConfig.ForProperties executeConfig = ExecuteConfig.fromDefaultProperties()
 			.setPropertyName(configKey)

@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.iterable;
 
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,6 +44,8 @@ import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.Properties.Event;
 
+
+@SuppressWarnings("unchecked")
 public interface IterableObjectHelper {
 	
 	public static class Configuration {
@@ -101,103 +104,25 @@ public interface IterableObjectHelper {
 
 	public long getSize(Object object);
 
-	public <T> T resolveValue(Map<?, ?> map, String key);
-
-	public <T> Collection<T> resolveValues(Map<?, ?> map, String key);
 	
-	public <V> Map<String, V> resolveValues(Map<?, ?> map, Predicate<String> key);
-
-	public Collection<String> resolveStringValues(Map<?, ?> map, String key);
+	public <T> T resolveValue(ResolveConfig.ForNamedKey config);
 	
-	public Map<String, String> resolveStringValues(Map<?, ?> map, Predicate<String> key);
+	public <K, T> T resolveValue(ResolveConfig.ForAllKeysThat<K> config);
 
-	public String resolveStringValue(Map<?, ?> map, String key);
-
-	public <T> T resolveValue(Map<?, ?> map, String key, Map<String, ?> defaultValues);
-
-	public <T> Collection<T> resolveValues(Map<?, ?> map, String key, Map<String, ?> defaultValues);
-
-	public String resolveStringValue(Map<?, ?> map, String key, Map<String, ?> defaultValues);
-
-	public Collection<String> resolveStringValues(Map<?, ?> map, String key, Map<String, ?> defaultValues);
-
-	public <T> T resolveValue(Map<?, ?> map, String key, String valuesSeparator);
-
-	public <T> Collection<T> resolveValues(Map<?, ?> map, String key, String valuesSeparator);
-
-	public String resolveStringValue(Map<?, ?> map, String key, String valuesSeparator);
-
-	public Collection<String> resolveStringValues(Map<?, ?> map, String key, String valuesSeparator);
-
-	public <T> T resolveValue(Map<?, ?> map, String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder);
-
-	public <T> Collection<T> resolveValues(
-		Map<?, ?> map, String key,
-		String valuesSeparator,
-		boolean deleteUnresolvedPlaceHolder
-	);
-
-	public String resolveStringValue(Map<?, ?> map, String key, String valuesSeparator, boolean deleteUnresolvedPlaceHolder);
-
-	public Collection<String> resolveStringValues(
-		Map<?, ?> map, 
-		String key,
-		String valuesSeparator,
-		boolean deleteUnresolvedPlaceHolder
-	);
-
-	public <T> T resolveValue(
-		Map<?, ?> map, 
-		String key,
-		String valuesSeparator,
-		String defaultValuesSeparator,
-		boolean deleteUnresolvedPlaceHolder,
-		Map<?, ?> defaultValues
-	);
-
-	public <T> Collection<T> resolveValues(
-		Map<?, ?> map, String key,
-		String valuesSeparator,
-		String defaultValuesSeparator,
-		boolean deleteUnresolvedPlaceHolder,
-		Map<?, ?> defaultValues
-	);
+	public String resolveStringValue(ResolveConfig.ForNamedKey config);
 	
-	public <V> Map<String, V> resolveValues(
-		Map<?, ?> map,
-		Predicate<String> keyPredicate,
-		String valuesSeparator,
-		String defaultValuesSeparator, 
-		boolean deleteUnresolvedPlaceHolder,
-		Map<?, ?> defaultValues
-	);
-
-	public String resolveStringValue(
-		Map<?, ?> map, String key,
-		String valuesSeparator,
-		String defaultValuesSeparator,
-		boolean deleteUnresolvedPlaceHolder,
-		Map<?, ?> defaultValues
-	);
-
-	public Map<String, String> resolveStringValues(
-		Map<?, ?> map,
-		Predicate<String> key, 
-		String valuesSeparator,
-		String defaultValuesSeparator,
-		boolean deleteUnresolvedPlaceHolder,
-		Map<?, ?> defaultValues
-	);
+	public <K> String resolveStringValue(ResolveConfig.ForAllKeysThat<K> config);
 	
-	public Collection<String> resolveStringValues(
-		Map<?, ?> map,
-		String key, 
-		String valuesSeparator,
-		String defaultValuesSeparator,
-		boolean deleteUnresolvedPlaceHolder,
-		Map<?, ?> defaultValues
-	);
 
+	public <T> Collection<T> resolveValues(ResolveConfig.ForNamedKey config);
+
+	public <K, V> Map<K, V> resolveValues(ResolveConfig.ForAllKeysThat<K> config);
+	
+	public Collection<String> resolveStringValues(ResolveConfig.ForNamedKey config);
+	
+	public <K> Map<K, Collection<String>> resolveStringValues(ResolveConfig.ForAllKeysThat<K> config);
+	
+	
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map);
 
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map, Predicate<String> propertyFilter);
@@ -282,4 +207,65 @@ public interface IterableObjectHelper {
 		}
 
 	}
+	
+	public static class ResolveConfig<T, K> {
+		
+		Map<?,?> map;
+		K filter;
+		String valuesSeparator;
+		String defaultValueSeparator;
+		boolean deleteUnresolvedPlaceHolder;
+		Map<?,?> defaultValues;
+		
+		private ResolveConfig(K filter) {
+			this.filter = filter;
+		}
+		
+		public static ForNamedKey forNamedKey(Object key) {
+			return new ForNamedKey(key);
+		}
+		
+		public static <K> ForAllKeysThat<K> forAllKeysThat(Predicate<K> filter) {
+			return new ForAllKeysThat<K>(filter);
+		}
+		
+		public T on(Map<?,?> map) {
+			this.map = map;
+			return (T)this;
+		}
+		
+		public T withDefaultValues(Map<?,?> defaultValues) {
+			this.defaultValues = defaultValues;
+			return (T)this;
+		}
+		
+		public T withValuesSeparator(String valuesSeparator) {
+			this.valuesSeparator = valuesSeparator;
+			return (T)this;
+		}
+		
+		public T withDefaultValueSeparator(String defaultValueSeparator) {
+			this.defaultValueSeparator = defaultValueSeparator;
+			return (T)this;
+		}
+		
+		public T deleteUnresolvedPlaceHolder(boolean flag) {
+			this.deleteUnresolvedPlaceHolder = flag;
+			return (T)this;
+		}
+		
+		public static class ForNamedKey extends ResolveConfig<ForNamedKey, Object> {
+			private ForNamedKey(Object filter) {
+				super(filter);
+			}
+		}
+		
+		public static class ForAllKeysThat<K> extends ResolveConfig<ForAllKeysThat<K>, Predicate<K>> {
+			private ForAllKeysThat(Predicate<K> filter) {
+				super(filter);
+			}
+		}
+
+	}
+
 }
