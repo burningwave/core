@@ -1034,38 +1034,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			Thread.Supplier threadSupplierForNormalPriorityTasksExecutor,
 			Thread.Supplier threadSupplierForLowPriorityTasksExecutor,
 			boolean isDaemon,
-			long allTasksMonitoringInterval,
-			long minimumElapsedTimeToConsiderATaskAsDeadLocked,
-			boolean deadLockedTasksKillingEnabled
-		) {
-			return create(
-				name,
-				threadSupplierForHighPriorityTasksExecutor, 
-				threadSupplierForNormalPriorityTasksExecutor,
-				threadSupplierForLowPriorityTasksExecutor,
-				isDaemon,
-				false
-			);
-		}
-		
-		public static Group create(
-			String name,
-			Thread.Supplier threadSupplier,
-			boolean isDaemon,
-			long allTasksMonitoringInterval,
-			long minimumElapsedTimeToConsiderATaskAsDeadLocked,
-			boolean deadLockedTasksKillingEnabled,
-			boolean undestroyableFromExternal
-		) {
-			return create(name, threadSupplier, threadSupplier, threadSupplier, isDaemon, allTasksMonitoringInterval, minimumElapsedTimeToConsiderATaskAsDeadLocked, undestroyableFromExternal);
-		}
-		
-		public static Group create(
-			String name,
-			Thread.Supplier threadSupplierForHighPriorityTasksExecutor,
-			Thread.Supplier threadSupplierForNormalPriorityTasksExecutor,
-			Thread.Supplier threadSupplierForLowPriorityTasksExecutor,
-			boolean isDaemon,
 			boolean undestroyableFromExternal
 		) {
 			if (!undestroyableFromExternal) {
