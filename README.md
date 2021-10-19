@@ -1045,15 +1045,27 @@ background-executor.all-tasks-monitoring.logger.enabled=\
 	false
 background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-probable-dead-locked=\
 	300000
+#Other possible values are: 'mark as probable dead locked', 'abort' or both comma separated
+background-executor.all-tasks-monitoring.probable-dead-locked-tasks-handling.policy=\
+	log only
+background-executor.queue-task-executor[0].name=\
+	Low priority tasks
+background-executor.queue-task-executor[0].priority=\
+	1
+background-executor.queue-task-executor[1].name=\
+	Normal priority tasks
+background-executor.queue-task-executor[1].priority=\
+	5
+background-executor.queue-task-executor[2].name=\
+	High priority tasks
+background-executor.queue-task-executor[2].priority=\
+	10
+background-executor.task-creation-tracking.enabled=\
+	${background-executor.all-tasks-monitoring.enabled}
 banner.hide=\
 	false
 banner.file=\
 	org/burningwave/banner.bwb
-#Other possible values are: 'mark as probable dead locked', 'abort' or both comma separated
-background-executor.all-tasks-monitoring.probable-dead-locked-tasks-handling.policy=\
-	log only
-background-executor.task-creation-tracking.enabled=\
-	${background-executor.all-tasks-monitoring.enabled}
 buffer-handler.default-buffer-size=\
 	1024
 buffer-handler.default-allocation-mode=\
