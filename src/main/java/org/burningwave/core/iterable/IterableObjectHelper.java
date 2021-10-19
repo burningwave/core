@@ -104,8 +104,12 @@ public interface IterableObjectHelper {
 	public <T> T resolveValue(Map<?, ?> map, String key);
 
 	public <T> Collection<T> resolveValues(Map<?, ?> map, String key);
+	
+	public <V> Map<String, V> resolveValues(Map<?, ?> map, Predicate<String> key);
 
 	public Collection<String> resolveStringValues(Map<?, ?> map, String key);
+	
+	public Map<String, String> resolveStringValues(Map<?, ?> map, Predicate<String> key);
 
 	public String resolveStringValue(Map<?, ?> map, String key);
 
@@ -158,6 +162,15 @@ public interface IterableObjectHelper {
 		boolean deleteUnresolvedPlaceHolder,
 		Map<?, ?> defaultValues
 	);
+	
+	public <V> Map<String, V> resolveValues(
+		Map<?, ?> map,
+		Predicate<String> keyPredicate,
+		String valuesSeparator,
+		String defaultValuesSeparator, 
+		boolean deleteUnresolvedPlaceHolder,
+		Map<?, ?> defaultValues
+	);
 
 	public String resolveStringValue(
 		Map<?, ?> map, String key,
@@ -167,6 +180,15 @@ public interface IterableObjectHelper {
 		Map<?, ?> defaultValues
 	);
 
+	public Map<String, String> resolveStringValues(
+		Map<?, ?> map,
+		Predicate<String> key, 
+		String valuesSeparator,
+		String defaultValuesSeparator,
+		boolean deleteUnresolvedPlaceHolder,
+		Map<?, ?> defaultValues
+	);
+	
 	public Collection<String> resolveStringValues(
 		Map<?, ?> map,
 		String key, 

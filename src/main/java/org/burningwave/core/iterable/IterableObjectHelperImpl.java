@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -229,11 +230,21 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	@Override
 	public <T> Collection<T> resolveValues(Map<?,?> map, String key) {
 		return resolve(map, key, null, null, false, null);
-	}	
+	}
+	
+	@Override
+	public <V> Map<String, V> resolveValues(Map<?,?> map, Predicate<String> key) {
+		return resolveForKeys(map, key, null, null, false, null);
+	}
 	
 	@Override
 	public Collection<String> resolveStringValues(Map<?,?> map, String key) {
 		return resolveValues(map, key);
+	}
+	
+	@Override
+	public Map<String, String> resolveStringValues(Map<?,?> map, Predicate<String> keyPredicate) {
+		return resolveValues(map, keyPredicate);
 	}
 	
 	@Override
@@ -351,6 +362,18 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	) {
 		return resolve(map, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 	}
+	
+	@Override
+	public <V> Map<String, V> resolveValues(
+		Map<?,?> map,
+		Predicate<String> keyPredicate,
+		String valuesSeparator,
+		String defaultValuesSeparator,
+		boolean deleteUnresolvedPlaceHolder,
+		Map<?,?> defaultValues
+	) {
+		return resolveForKeys(map, keyPredicate, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+	}
 
 	@Override
 	public String resolveStringValue(
@@ -376,6 +399,18 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		return resolveValues(map, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 	}
 	
+	@Override
+	public Map<String, String> resolveStringValues(
+		Map<?, ?> map,
+		Predicate<String> keyPredicate, 
+		String valuesSeparator,
+		String defaultValuesSeparator,
+		boolean deleteUnresolvedPlaceHolder,
+		Map<?, ?> defaultValues
+	) {
+		return resolveForKeys(map, keyPredicate, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
+	}
+	
 ////////////////////	
 	
 	
@@ -390,6 +425,51 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		} else {
 			return (T)value;
 		}	
+	}
+	
+	private <K, V> Map<K, V> resolveForKeys(
+		Map<?,?> map,
+		Predicate<K> keyPredicate,
+		String valuesSeparator,
+		String defaultValueSeparator,
+		boolean deleteUnresolvedPlaceHolder,
+		Map<?,?> defaultValues
+	) {
+		Collection<K> keys = new LinkedHashSet<>();
+		for (Object key : map.keySet()) {
+			try {
+				if (keyPredicate.test((K) key)) {
+					keys.add((K)key);
+				}
+			} catch (ClassCastException exc) {
+				
+			}
+		}
+		if (defaultValues != null) {
+			for (Object key : defaultValues.keySet()) {
+				try {
+					if (keyPredicate.test((K) key)) {
+						keys.add((K)key);
+					}
+				} catch (ClassCastException exc) {
+					
+				}
+			}
+		}
+		Map<K, V> values = new HashMap<>();
+		for (K key : keys) {
+			values.put(
+				key,
+				resolve(
+					map, key,
+					valuesSeparator, 
+					defaultValueSeparator, 
+					deleteUnresolvedPlaceHolder,
+					defaultValues
+				)
+			);
+		}
+		return values;
 	}
 	
 	private <T> T resolve(
