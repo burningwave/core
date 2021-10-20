@@ -379,7 +379,13 @@ public class Classes implements MembersRetriever {
 				ClassLoader oldParent = getParent(target);
 				AtomicReference<Function<Boolean, ClassLoader>> resetterOne = new AtomicReference<>();
 				if (oldParent != null) {
-					resetterOne.set(setAsParent0(originalFutureParent, oldParent));
+					ClassLoader masterClassLoaderOfOriginalFutureParent = getMaster(originalFutureParent);
+					if (masterClassLoaderOfOriginalFutureParent != originalFutureParent) {
+						resetterOne.set(setAsParent0(masterClassLoaderOfOriginalFutureParent, oldParent));
+					} else {
+						resetterOne.set(setAsParent0(originalFutureParent, oldParent));
+					}
+					
 				}
 				Function<Boolean, ClassLoader> resetterTwo = setAsParent0(target, originalFutureParent);
 				return resetterOne.get() != null ? (reset) -> {
