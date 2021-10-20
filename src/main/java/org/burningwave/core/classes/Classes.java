@@ -63,6 +63,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -325,8 +326,18 @@ public class Classes implements MembersRetriever {
 			}
 		}
 		
-		public void notifyParentsChange(ChangeParentsContext context) {
-			this.registeredNotificationListenerOfParentsChange.stream().forEach(listener -> listener.receive(context));
+		private void notifyParentsChange(ChangeParentsContext context) {
+			Iterator<NotificationListenerOfParentsChange> itr = this.registeredNotificationListenerOfParentsChange.iterator();
+			while (itr.hasNext()) {
+				NotificationListenerOfParentsChange listener = itr.next();
+				try {
+					listener.receive(context);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(
+						getClass()::getName, "Could not notify parent change to listener {}", exc, listener
+					);
+				}
+			}
 		}
 		
 		public void unregisterNotificationListenerOfParentsChange(NotificationListenerOfParentsChange listener) {
