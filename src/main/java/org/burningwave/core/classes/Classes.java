@@ -68,6 +68,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -370,6 +371,28 @@ public class Classes implements MembersRetriever {
 		}
 		
 		public Function<Boolean, ClassLoader> setAsParent(ClassLoader target, ClassLoader originalFutureParent) {
+			return setAsParent(target, originalFutureParent, true);
+		}
+		
+		public Function<Boolean, ClassLoader> setAsParent(ClassLoader target, ClassLoader originalFutureParent, boolean mantainHierarchy) {
+			if (mantainHierarchy) {
+				ClassLoader oldParent = getParent(target);
+				AtomicReference<Function<Boolean, ClassLoader>> resetterOne = new AtomicReference<>();
+				if (oldParent != null) {
+					resetterOne.set(setAsParent0(originalFutureParent, oldParent));
+				}
+				Function<Boolean, ClassLoader> resetterTwo = setAsParent0(target, originalFutureParent);
+				return resetterOne.get() != null ? (reset) -> {
+					ClassLoader targetExParent = resetterTwo.apply(reset);
+					resetterOne.get().apply(reset);
+					return targetExParent;
+				} : resetterTwo;
+			} else {
+				return setAsParent0(target, originalFutureParent);
+			}
+		}
+		
+		private Function<Boolean, ClassLoader> setAsParent0(ClassLoader target, ClassLoader originalFutureParent) {
 			if (Driver.isClassLoaderDelegate(target)) {
 				return setAsParent(Fields.getDirect(target, "classLoader"), originalFutureParent);
 			}
