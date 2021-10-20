@@ -308,6 +308,11 @@ public class Classes implements MembersRetriever {
 				this.builtinClassLoaderClassParentField = Fields.findFirstAndMakeItAccessible(builtinClassLoaderClass, "parent", builtinClassLoaderClass);
 			}
 			registeredNotificationListenerOfParentsChange = ConcurrentHashMap.newKeySet();
+			
+			//Preload required for the setAsMaster method
+			@SuppressWarnings("unused")
+			Class<?> cls = ChangeParentsContext.class;
+			cls = ChangeParentsContext.Elements.class; 
 		}
 		
 		public static Loaders create() {
