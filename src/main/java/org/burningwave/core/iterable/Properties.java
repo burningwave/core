@@ -29,6 +29,7 @@
 package org.burningwave.core.iterable;
 
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 
@@ -245,7 +246,12 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 	
 	@Override
 	public synchronized Object put(Object key, Object value) {
-		Object oldValue = super.put(key, value);
+		Object oldValue = null;
+		if (value != null) {
+			oldValue = super.put(key, value);
+		} else {
+			oldValue = super.remove(key);
+		}
 		notifyChange(Event.PUT, key, value, oldValue);
 		return oldValue;
 	}
@@ -288,8 +294,7 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 				listener.processChangeNotification(this, event, key, newValue, oldValue);
 			} catch (Throwable exc){
 				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred while notifying: " + event.name() + " -> (" + key + " - " + newValue + ") to " + listener, exc);
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Resetting {} to previous value: {}", key, oldValue);
-				put(key, oldValue);
+				Driver.throwException(exc);
 			}
 		}
 	}

@@ -374,27 +374,33 @@ public class Classes implements MembersRetriever {
 			return setAsParent(target, originalFutureParent, true);
 		}
 		
-		public Function<Boolean, ClassLoader> setAsParent(ClassLoader target, ClassLoader originalFutureParent, boolean mantainHierarchy) {
+		public Function<Boolean, ClassLoader> setAsParent(ClassLoader target, ClassLoader newParent, boolean mantainHierarchy) {
+			if (target == newParent) {
+				throw new IllegalArgumentException("The target cannot be the same instance");
+			}
+			ClassLoader oldParent = getParent(target);
+			if (oldParent == newParent) {
+				throw new IllegalArgumentException("The new parent cannot be the same of the old parent");
+			}
 			if (mantainHierarchy) {
-				ClassLoader oldParent = getParent(target);
 				AtomicReference<Function<Boolean, ClassLoader>> resetterOne = new AtomicReference<>();
-				if (oldParent != null) {
-					ClassLoader masterClassLoaderOfOriginalFutureParent = getMaster(originalFutureParent);
-					if (masterClassLoaderOfOriginalFutureParent != originalFutureParent) {
+				if (oldParent != null && newParent != null) {
+					ClassLoader masterClassLoaderOfOriginalFutureParent = getMaster(newParent);
+					if (masterClassLoaderOfOriginalFutureParent != newParent) {
 						resetterOne.set(setAsParent0(masterClassLoaderOfOriginalFutureParent, oldParent));
 					} else {
-						resetterOne.set(setAsParent0(originalFutureParent, oldParent));
+						resetterOne.set(setAsParent0(newParent, oldParent));
 					}
 					
 				}
-				Function<Boolean, ClassLoader> resetterTwo = setAsParent0(target, originalFutureParent);
+				Function<Boolean, ClassLoader> resetterTwo = setAsParent0(target, newParent);
 				return resetterOne.get() != null ? (reset) -> {
 					ClassLoader targetExParent = resetterTwo.apply(reset);
 					resetterOne.get().apply(reset);
 					return targetExParent;
 				} : resetterTwo;
 			} else {
-				return setAsParent0(target, originalFutureParent);
+				return setAsParent0(target, newParent);
 			}
 		}
 		
