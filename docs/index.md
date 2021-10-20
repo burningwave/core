@@ -210,7 +210,7 @@ public class SourceCodeExecutor {
                 .addCodeLine("System.out.println(\"number list size: \" + numbers.size());")
                 .addCodeLine("System.out.println(\"number in the list: \" + numbers.get(0));")
                 .addCodeLine("Integer inputNumber = (Integer)parameter[0];")
-                .addCodeLine("return (T)new Integer(inputNumber + (Integer)parameter[1]);")
+                .addCodeLine("return Integer.valueOf(inputNumber + (Integer)parameter[1]);")
             ).withParameter(Integer.valueOf(5), Integer.valueOf(3))
         );
         
