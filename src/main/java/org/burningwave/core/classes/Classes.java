@@ -459,7 +459,7 @@ public class Classes implements MembersRetriever {
 		}
 		
 		private ClassLoader checkAndConvertBuiltinClassLoader(ClassLoader classLoader) {
-			if (!isBuiltinClassLoader(classLoader)) {
+			if (classLoader != null && !isBuiltinClassLoader(classLoader)) {
 				try {
 					Collection<Method> methods = Members.findAll(
 						MethodCriteria.byScanUpTo(
