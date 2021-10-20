@@ -1316,7 +1316,7 @@ paths.main-class-paths.extension=\
 	//${system.properties:java.home}/../lib//children:.*?\.jar;
 paths.main-class-repositories=\
 	//${system.properties:java.home}/jmods//children:.*?\.jmod;
-#mandatory if more burningwave.static.properties file are in the class paths
+#mandatory if more burningwave.properties file are in the class paths
 priority-of-this-configuration-file=0
 ```
 **If in your custom burningwave.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
