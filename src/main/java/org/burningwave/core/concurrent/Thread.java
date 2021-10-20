@@ -482,6 +482,14 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			};
 		}
 
+		public void printStatus() {
+			ManagedLoggersRepository.logInfo(
+				getClass()::getName,
+				"\n\tRunning threads: {}\n\tPoolable sleeping threads: {}\n\tThreads count: {}",
+				runningThreads.size(), poolableSleepingThreads.size(), threadsCount
+			);
+		}
+		
 		private Thread get() {
 			Iterator<Thread> itr = poolableSleepingThreads.iterator();
 			while (itr.hasNext()) {
