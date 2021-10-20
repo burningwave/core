@@ -471,7 +471,7 @@ public class Classes implements MembersRetriever {
 						), classLoader.getClass()
 					);					
 					classLoader = (ClassLoader)Constructors.newInstanceOf(Driver.getClassLoaderDelegateClass(), null, classLoader, Methods.findDirectHandle(
-						methods.stream().skip(methods.size() - 1).findFirst().get()
+						methods.stream().findFirst().get()
 					));
 				} catch (Throwable exc) {
 					Driver.throwException(exc);
