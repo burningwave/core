@@ -409,7 +409,7 @@ public class Classes implements MembersRetriever {
 				return setAsParent(Fields.getDirect(target, "classLoader"), originalFutureParent);
 			}
 			ClassLoader futureParentTemp = originalFutureParent;
-			if (isBuiltinClassLoader(target)) {
+			if (isBuiltinClassLoader(target) && futureParentTemp != null) {
 				futureParentTemp = checkAndConvertBuiltinClassLoader(futureParentTemp);
 			}
 			ClassLoader targetExParent = Fields.get(target, "parent");
@@ -459,7 +459,7 @@ public class Classes implements MembersRetriever {
 		}
 		
 		private ClassLoader checkAndConvertBuiltinClassLoader(ClassLoader classLoader) {
-			if (classLoader != null && !isBuiltinClassLoader(classLoader)) {
+			if (!isBuiltinClassLoader(classLoader)) {
 				try {
 					Collection<Method> methods = Members.findAll(
 						MethodCriteria.byScanUpTo(
