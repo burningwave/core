@@ -487,14 +487,13 @@ import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 public class TaskLauncher implements ManagedLogger {
     
     public void launch() {
-        
-        ProducerTask<Long> taskOne = BackgroundExecutor.createTask(() -> {
+        ProducerTask<Long> taskOne = BackgroundExecutor.createProducerTask(task -> {
             Long startTime = System.currentTimeMillis();
             logInfo("task one started");
             synchronized (this) {                
                 wait(5000);
             }
-            Task internalTask = BackgroundExecutor.createTask(() -> {
+            Task internalTask = BackgroundExecutor.createTask(tsk -> {
                 logInfo("internal task started");    
                 synchronized (this) {                
                     wait(5000);
@@ -505,22 +504,18 @@ public class TaskLauncher implements ManagedLogger {
             logInfo("task one finished");
             return startTime;
         }, Thread.MAX_PRIORITY).submit();
-
-        Task taskTwo = BackgroundExecutor.createTask(() -> {
+        Task taskTwo = BackgroundExecutor.createTask(task -> {
             logInfo("task two started and wait for task one finishing");
             taskOne.waitForFinish();
             logInfo("task two finished");    
         }, Thread.NORM_PRIORITY).submit();
-
-        ProducerTask<Long> taskThree = BackgroundExecutor.createTask(() -> {
+        ProducerTask<Long> taskThree = BackgroundExecutor.createProducerTask(task -> {
             logInfo("task three started and wait for task two finishing");
             taskTwo.waitForFinish();
-            logInfo("task three finished");
+            logInfo("task two finished");
             return System.currentTimeMillis();
         }, Thread.MIN_PRIORITY).submit();
-
         taskThree.waitForFinish();
-
         logInfo("Elapsed time: {}ms", taskThree.join() - taskOne.join());
     }
     
