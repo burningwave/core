@@ -178,7 +178,14 @@ public class ClassHunterTest extends BaseTest {
 					}
 					return FileSystemItem.Criteria.forClassTypeFiles(FileSystemItem.CheckingOption.FOR_NAME);
 				}
-			).useDefaultPathScannerClassLoaderAsParent(true)
+			)
+//			.setLinkedJavaClassPredicate((linkedJavaClassContainer, linkedJavaClass) -> {
+//				LinkedJavaClass anotherClass = linkedJavaClassContainer.find(java.math.BigDecimal.class.getName());
+//				anotherClass.getSuperClass();
+//				anotherClass.getInterfaces();
+//				return true;
+//			})
+			.useDefaultPathScannerClassLoaderAsParent(true)
 		);
 
 	}

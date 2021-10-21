@@ -6,6 +6,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.junit.jupiter.api.Tag;
@@ -109,7 +110,7 @@ public class FileSystemItemTest extends BaseTest {
 	public void readTestSeven() {
 		testNotEmpty(() -> {
 				return FileSystemItem.ofPath(
-					System.getProperty("os.name").toLowerCase().contains("windows")?
+					StaticComponentContainer.SystemProperties.get("os.name").toLowerCase().contains("windows")?
 						"C:" : "/"
 				).getChildren();
 			}, 
@@ -121,7 +122,7 @@ public class FileSystemItemTest extends BaseTest {
 	public void readTestTwentyThree() {
 		testNotEmpty(() -> {
 				return FileSystemItem.ofPath(
-					System.getProperty("os.name").toLowerCase().contains("windows")?
+					StaticComponentContainer.SystemProperties.get("os.name").toLowerCase().contains("windows")?
 						"C:/Windows" : "/home"
 				).getParent().getChildren();
 			}, true
@@ -323,7 +324,7 @@ public class FileSystemItemTest extends BaseTest {
 		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/../../src/test/external-resources/libs-for-test.zip"
-		).copyTo(System.getProperty("user.home") + "/Desktop/bw-tests").getChildren());
+		).copyTo(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests").getChildren());
 	}
 	
 	@Test
@@ -332,7 +333,7 @@ public class FileSystemItemTest extends BaseTest {
 		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar"
-		).copyTo(System.getProperty("user.home") + "/Desktop/bw-tests").getChildren());
+		).copyTo(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests").getChildren());
 	}
 	
 	@Test
@@ -341,7 +342,7 @@ public class FileSystemItemTest extends BaseTest {
 		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/../../src/test/external-resources/libs-for-test.zip/META-INF"
-		).copyTo(System.getProperty("user.home") + "/Desktop/bw-tests").getChildren());
+		).copyTo(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests").getChildren());
 	}
 	
 	@Test
@@ -351,7 +352,7 @@ public class FileSystemItemTest extends BaseTest {
 			componentSupplier.getPathHelper().getResource(
 				"/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
 			).copyTo(
-				System.getProperty("user.home") + "/Desktop/bw-tests"
+				StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests"
 			).getChildren()
 		);
 	}
@@ -376,7 +377,7 @@ public class FileSystemItemTest extends BaseTest {
 		testNotEmpty(() -> 
 			pathHelper.getResource(
 				"/../../src/test/external-resources/libs-for-test.zip"
-			).copyAllChildrenTo(System.getProperty("user.home") + "/Desktop/bw-tests").getAllChildren()
+			).copyAllChildrenTo(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests").getAllChildren()
 		);
 	}
 	
@@ -386,7 +387,7 @@ public class FileSystemItemTest extends BaseTest {
 		testNotEmpty(() -> 
 			componentSupplier.getPathHelper().getResource(
 				"/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar"
-			).copyAllChildrenTo(System.getProperty("user.home") + "/Desktop/bw-tests").findFirstInAllChildren(
+			).copyAllChildrenTo(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests").findFirstInAllChildren(
 				FileSystemItem.Criteria.forAllFileThat(file -> "org".equals(file.getName()))
 			).getAllChildren()
 		);
@@ -409,7 +410,7 @@ public class FileSystemItemTest extends BaseTest {
 	public void javaHomeTreeTest() {
 		testNotEmpty(() -> {
 				Set<String> files = ConcurrentHashMap.newKeySet();
-				FileSystemItem.ofPath(System.getProperty("java.home")).findInAllChildren(
+				FileSystemItem.ofPath(StaticComponentContainer.SystemProperties.get("java.home")).findInAllChildren(
 					FileSystemItem.Criteria.forAllFileThat(fileSystemItem -> {
 						files.add(fileSystemItem.getAbsolutePath());
 						return true;

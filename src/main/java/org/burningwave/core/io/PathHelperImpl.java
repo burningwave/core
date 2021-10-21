@@ -57,6 +57,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
@@ -226,11 +227,11 @@ class PathHelperImpl implements Component, PathHelper {
 					Collection<String> placeHolderPaths;
 					if (placeHolderName.contains("system.properties")) {
 						placeHolderPaths = Arrays.asList(
-							System.getProperty(
+							StaticComponentContainer.SystemProperties.get(
 								placeHolderName.split(
 									":"
 								)[1]
-							).split(System.getProperty("path.separator"))
+							).split(StaticComponentContainer.SystemProperties.get("path.separator"))
 						);
 					} else {
 						placeHolderPaths = getPaths(placeHolderName);

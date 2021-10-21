@@ -3,6 +3,7 @@ package org.burningwave.core.examples.filesystemitem;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 
 import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.io.FileSystemItem;
 
 @SuppressWarnings("null")
@@ -33,7 +34,7 @@ public class ResourceReacher {
         ){
         	 ManagedLoggersRepository.logInfo(ResourceReacher.class::getName, "child name: " + child.getName() + " - child parent: " + child.getParent().getName());
             //copy the file to a folder
-            child.copyTo(System.getProperty("user.home") + "/Desktop/copy");
+            child.copyTo(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/copy");
         }
         
         //Obtaining a FileSystemItem through a relative path (in this case we are obtaining a reference to a jar

@@ -44,6 +44,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.function.Executor;
 
 public class Strings implements ManagedLogger {
@@ -241,7 +242,7 @@ public class Strings implements ManagedLogger {
 		Function<String, String> uRLPathConverter;
 		
 		private Paths() {
-			if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+			if (StaticComponentContainer.SystemProperties.get("os.name").toLowerCase().contains("windows")) {
 				pathCleaner = (path) -> {
 					path = path.replace("\\", "/");
 					if (path.startsWith("/")) {

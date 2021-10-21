@@ -167,6 +167,31 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 						searchConfig.priority
 					)				
 				);
+//				if (searchConfig.getLinkedJavaClassPredicate() != null) {
+//					LinkedJavaClassContainer linkedJavaClassContainer = new LinkedJavaClassContainer(this.pathHelper);
+//					linkedJavaClassContainer.addClassPaths(searchConfig.getPathsToBeScanned());
+//					linkedJavaClassContainer.addClassPaths(pathHelper.getPaths(PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES).stream().map(FileSystemItem::ofPath).collect(Collectors.toSet()));
+//					IterableObjectHelper.iterateParallelIf(
+//						classFilesForPath.entrySet(),
+//						currentScannedPath -> {
+//							Collection<FileSystemItem> fileSystemItems = currentScannedPath.getValue();
+//							IterableObjectHelper.iterateParallelIf(
+//								fileSystemItems,
+//								fileSystemItem -> {
+//									if (!searchConfig.getLinkedJavaClassPredicate().test(
+//										linkedJavaClassContainer,
+//										linkedJavaClassContainer.find(fileSystemItem.toJavaClass())
+//									)) {
+//										fileSystemItems.remove(fileSystemItem);
+//									}
+//									
+//								},
+//								searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
+//							);
+//						},
+//						searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()	
+//					);
+//				}
 				IterableObjectHelper.iterate(
 					IterationConfig.of(
 						classFilesForPath.entrySet()

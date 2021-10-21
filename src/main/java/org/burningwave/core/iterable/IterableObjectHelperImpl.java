@@ -58,6 +58,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.function.ThrowingBiConsumer;
@@ -372,10 +373,10 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							if (!placeHolder.startsWith("system.properties:")) {
 								valueObjects = resolve(map, placeHolder, valuesSeparator, defaultValueSeparator, deleteUnresolvedPlaceHolder, defaultValues);
 							} else {
-								valueObjects = System.getProperty(placeHolder.split(":")[1]);
+								valueObjects = StaticComponentContainer.SystemProperties.get(placeHolder.split(":")[1]);
 								if (valuesSeparatorForSplitting != null) {
 									valueObjects = ((String)valueObjects).replace(
-										System.getProperty("path.separator"), valuesSeparatorForSplitting
+										StaticComponentContainer.SystemProperties.get("path.separator"), valuesSeparatorForSplitting
 									);
 								}
 							}

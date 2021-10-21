@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
+import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.classes.AnnotationSourceGenerator;
 import org.burningwave.core.classes.BodySourceGenerator;
 import org.burningwave.core.classes.ClassSourceGenerator;
@@ -145,7 +146,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 		).addImport(
 			FunctionalInterface.class
 		).storeToClassPath(
-			System.getProperty("user.home") + "/Desktop/bw-tests"
+			StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests"
 		);
 	}
 	
@@ -162,10 +163,10 @@ public class UnitSourceGeneratorTest extends BaseTest {
 				)
 			)
 		);
-		unitSG.storeToClassPath(System.getProperty("user.home") + "/Desktop/bw-tests");
+		unitSG.storeToClassPath(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests");
 		System.out.println("\nGenerated code:\n" + unitSG.make());
-		unitSG.serializeToPath(System.getProperty("user.home") + "/Desktop/bw-tests/GenerateUnitTwo.UnitSourceGenerator.ser");
-		unitSG = SourceGenerator.deserializeFromPath(System.getProperty("user.home") + "/Desktop/bw-tests/GenerateUnitTwo.UnitSourceGenerator.ser");
+		unitSG.serializeToPath(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests/GenerateUnitTwo.UnitSourceGenerator.ser");
+		unitSG = SourceGenerator.deserializeFromPath(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests/GenerateUnitTwo.UnitSourceGenerator.ser");
 		System.out.println("\nGenerated code:\n" + unitSG.make());
 	}
 
@@ -307,7 +308,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 			UnitSourceGenerator unitSG = UnitSourceGenerator.create("org.burningwave.core.examples.classfactory").addClass(
 				createEnum()				
 			);
-			unitSG.storeToClassPath(System.getProperty("user.home") + "/Desktop/bw-tests");
+			unitSG.storeToClassPath(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests");
 			System.out.println("\nGenerated code:\n" + unitSG.make());
 		});
 	}
