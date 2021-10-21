@@ -1015,6 +1015,7 @@ public static final org.burningwave.core.classes.SourceCodeHandler SourceCodeHan
 public static final org.burningwave.core.io.Streams Streams;
 public static final org.burningwave.core.Strings Strings;
 public static final org.burningwave.core.concurrent.Synchronizer Synchronizer;
+public static final java.util.Map<String, String> SystemProperties;
 public static final org.burningwave.core.concurrent.Thread.Holder ThreadHolder;
 public static final org.burningwave.core.concurrent.Thread.Supplier ThreadSupplier;
 ```
