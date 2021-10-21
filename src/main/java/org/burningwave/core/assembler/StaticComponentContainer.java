@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 import org.burningwave.core.Component;
@@ -180,11 +181,10 @@ public class StaticComponentContainer {
 	static {
 		try {
 			long startTime = System.nanoTime();
-			Map<String, String> systemProperties = new HashMap<>();
+			Map<String, String> systemProperties = new ConcurrentHashMap<>();
 			for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
 				systemProperties.put((String)entry.getKey(), (String)entry.getValue());
 			}
-			
 			SystemProperties = Collections.unmodifiableMap(systemProperties);
 			JVMInfo = io.github.toolfactory.jvm.Info.Provider.getInfoInstance();
 			Strings = org.burningwave.core.Strings.create();
