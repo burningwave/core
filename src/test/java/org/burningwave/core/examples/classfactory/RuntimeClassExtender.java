@@ -10,6 +10,7 @@ import java.util.Date;
 import org.burningwave.core.Virtual;
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.classes.AnnotationSourceGenerator;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassSourceGenerator;
@@ -45,7 +46,7 @@ public class RuntimeClassExtender {
         );
         System.out.println("\nGenerated code:\n" + unitSG.make());
         //With this we store the generated source to a path
-        unitSG.storeToClassPath(System.getProperty("user.home") + "/Desktop/bw-tests");
+        unitSG.storeToClassPath(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests");
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         ClassFactory classFactory = componentSupplier.getClassFactory();
         //this method compile all compilation units and upload the generated classes to default
