@@ -173,12 +173,19 @@ public class StaticComponentContainer {
 	public static final org.burningwave.core.io.Streams Streams;
 	public static final org.burningwave.core.Strings Strings;
 	public static final org.burningwave.core.concurrent.Synchronizer Synchronizer;
+	public static final java.util.Map<String, String> SystemProperties;
 	public static final org.burningwave.core.concurrent.Thread.Holder ThreadHolder;
 	public static final org.burningwave.core.concurrent.Thread.Supplier ThreadSupplier;
 	
 	static {
 		try {
 			long startTime = System.nanoTime();
+			Map<String, String> systemProperties = new HashMap<>();
+			for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
+				systemProperties.put((String)entry.getKey(), (String)entry.getValue());
+			}
+			
+			SystemProperties = Collections.unmodifiableMap(systemProperties);
 			JVMInfo = io.github.toolfactory.jvm.Info.Provider.getInfoInstance();
 			Strings = org.burningwave.core.Strings.create();
 			Objects = org.burningwave.core.Objects.create();
