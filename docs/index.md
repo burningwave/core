@@ -1083,14 +1083,16 @@ iterable-object-helper.parallel-iteration.applicability.default-minimum-collecti
 	2
 iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\
 	autodetect
-#This property is optional and it is possible to use a custom JVM Driver which implements the io.github.toolfactory.jvm.Driver interface.
-#Other possible values are: io.github.toolfactory.jvm.DefaultDriver, org.burningwave.jvm.HybridDriver, org.burningwave.jvm.NativeDriver
+#This property is optional and it is possible to use a custom JVM Driver which implements
+#the io.github.toolfactory.jvm.Driver interface. Other possible values are: 
+#io.github.toolfactory.jvm.DefaultDriver, org.burningwave.jvm.HybridDriver, org.burningwave.jvm.NativeDriver
 jvm.driver.type=\
 	org.burningwave.jvm.DynamicDriver
 jvm.driver.init=\
 	false
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
-#the SLF4JManagedLoggerRepository will be instantiated, otherwise the SimpleManagedLoggerRepository will be instantiated
+#the SLF4JManagedLoggerRepository will be instantiated, otherwise
+#the SimpleManagedLoggerRepository will be instantiated
 managed-logger.repository=\
 	autodetect
 #to increase performance set it to false
